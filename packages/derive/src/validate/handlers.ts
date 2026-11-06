@@ -21,6 +21,7 @@ import { at, type Rec } from "./shape.ts";
 import { nativeReceiver } from "./native-capacity.ts";
 import { declaredBy } from "../capability.ts";
 import { recordFrame } from "../program/reads.ts";
+import { beginBody, endBody } from "../program/structure.ts";
 
 const members = (v: unknown): Rec => (isObject(v) ? v : {});
 /** Whether an item type is `many`, as the definition writes it. */
@@ -213,6 +214,7 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
     // Section 6.4: a comment changes no item and meets no guard.
     if (step === "comment") for (const k of ["guards", "effects", "sends"]) if (!Array.isArray(o[k]) || o[k].length > 0) bad("shape", at(path, k), "a comment has none");
     if (step === "comment" && ctx.also.size > 0) bad("shape", at(path, "also"), "a comment names no other item");
+    const traced = beginBody(d, { kind: "body", source: o });
     guards(d, o["guards"], at(path, "guards"), ctx, true);
     // Section 16.1, "The subjects that an entry observes": the rows of an act, in platform data. A source reads what a guard of the
     // act may read, and no name of `also` that a mark binds.
@@ -222,6 +224,7 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
     // A child's genesis sends the platform's one result beside what its act declares.
     entrySends(d, path, sends(d, o["sends"], at(path, "sends"), ctx, top, pendingWork.requests), attention(d, o["attention"], at(path, "attention"), ctx), name === top["genesis"] ? 1 : 0);
     recordFrame(d, ctx, path, "act");
+    endBody(d, traced);
     d.pendingWork.push(pendingWork);
     if (step === "open" && on) {
       const set = new Set(Array.isArray(o["effects"]) ? o["effects"].map(setsSlot) : []);
@@ -310,6 +313,7 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
     // Independent contexts: a replacement branch cannot borrow proofs from
     // normal guards that it never evaluates. Each body has its own bounds.
     for (const { body: o, where: path, context: ctx, replacement } of bodies) {
+      const traced = beginBody(d, { kind: "body", source: o });
       guards(d, o["guards"], at(path, "guards"), ctx, true);
       const copy = cls === "relate" && message !== null && isScopeKind(from?.["kind"]) ? { name: message, kind: from["kind"] } : null;
       const settles = "settles" in o ? settling(d, o["settles"], at(path, "settles"), ctx, copy, top) : null;
@@ -321,6 +325,7 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
       // The entry that decides a request sends the platform's one result.
       entrySends(d, path, sends(d, o["sends"], at(path, "sends"), ctx, top, pendingWork.requests), attention(d, o["attention"], at(path, "attention"), ctx), cls === "advisory" ? 0 : 1);
       recordFrame(d, ctx, path, replacement ? "replacement" : "handler");
+      endBody(d, traced);
       d.pendingWork.push(pendingWork);
       // Section 6.4: an advisory has no result, so its handler ends the exchange: it sends nothing and tells nobody.
       if (cls === "advisory") for (const k of ["sends", "attention"]) if (Array.isArray(o[k]) && o[k].length > 0) bad("advisory-sends", at(path, k), "a handler of class advisory declares none");

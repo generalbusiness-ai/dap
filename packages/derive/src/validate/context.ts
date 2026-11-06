@@ -10,6 +10,7 @@ import { isObject } from "../values.ts";
 import type { Underived } from "./capability.ts";
 import type { Shapes } from "./shape.ts";
 import { recordSubject } from "../program/reads.ts";
+import { recordNativeForm } from "../program/structure.ts";
 
 export interface Slot { kind: "party" | "ref" | "value"; fixed: boolean; required: boolean; list: boolean; type: FieldType; hasDefault: boolean; capability?: CapabilityName }
 /**
@@ -117,6 +118,7 @@ export function mark(d: Defining, v: unknown, path: string, kind: MarkKind, more
   const o = d.rec(v, path, ["code", "row", ...more], optional);
   if (!o || d.str(o["code"], `${path}.code`) === null || d.str(o["row"], `${path}.row`) === null) return null;
   d.marks.push({ place: PLACES[kind], kind, path, code: o["code"] as string, row: o["row"] as string });
+  recordNativeForm(d, kind, path, o);
   return o;
 }
 

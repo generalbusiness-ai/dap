@@ -12,6 +12,7 @@ import { isDetached, operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { RECORD_BYTES, stated } from "./sizes.ts";
 import { recordFrame, recordSlot } from "../program/reads.ts";
+import { beginBody, endBody, enterForm, leaveForm, type SendOp } from "../program/structure.ts";
 
 /**
  * A range that a send reads whole: the items of a fan-out, and of a
@@ -81,7 +82,7 @@ const resultIdentity = (result: unknown, observes: unknown): string => canonical
 );
 
 /** The result clauses of one request. Each is its own list of effects, which run in a later entry. Returns what each reserved clause can set. */
-function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, conflict: boolean, observed?: unknown, senderKind?: string): ClauseSet[] {
+function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, owner: object, conflict: boolean, observed?: unknown, senderKind?: string): ClauseSet[] {
   const r = d.rec(v, path, [], ["applied", "refused", "superseded", "undelivered", ...(conflict ? ["conflict"] : [])]);
   const reserved: ClauseSet[] = [];
   const rows = isObject(observed) ? observed : {};
@@ -95,8 +96,10 @@ function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, conflict: bool
     // selected through a slot that is not fixed cannot be selected again when the clause runs, so a clause names none.
     const settled = new Map([...ctx.also].filter(([also]) => !ctx.unsettled?.has(also)));
     const within: Ctx = { ...ctx, also: settled, clause: true, senderKind };
+    const traced = beginBody(d, { kind: "clause", owner, clause: name });
     effects(d, e, at(path, name), within, true);
     recordFrame(d, within, at(path, name), "clause");
+    endBody(d, traced);
     if (d.clause) { d.clauseSets.push(d.clause); d.clauseRetains.set(d.clause, own(rows, name)); d.clausePaths.set(d.clause, at(path, name)); reserved.push(d.clause); }
     d.clause = null;
   }
@@ -143,7 +146,7 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
       // own, as data, with the `conflict` clause of a creation. It is counted as one send and one request.
       // Revision 19, "More than one send mark": a mark may state `always: true`. Its rule then gives exactly one request.
       const o = mark(d, s, at(path, i), "send", ["result"], ["always"]);
-      if (o) requests.push({ send: i, most: 1, clauses: clauses(d, o["result"], at(at(path, i), "result"), ctx, true) });
+      if (o) requests.push({ send: i, most: 1, clauses: clauses(d, o["result"], at(at(path, i), "result"), ctx, o, true) });
       if (o && "always" in o && o["always"] !== true) bad("shape", at(at(path, i), "always"), "is true, or is left out");
       marks.push(at(path, i));
       if (!isObject(s) || s["always"] !== true) unsure.push(at(path, i));
@@ -152,86 +155,89 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
     }
     const f = form(s, at(path, i), ["create", "tell", "relate", "index"]);
     if (!f) return;
-    const [k, x] = f;
-    const p = at(at(path, i), k);
-    const before = problems.length;
-    let kind: unknown[] = [k];
-    let always = true;
-    let made = 1;
-    let result: unknown = null;
-    if (k === "create") {
-      const r = rec(x, p, ["kind", "definition", "fields", "result"], ROWS(d));
-      if (!r) return;
-      if ("observes" in r) clauseObserves(d, r["observes"], at(p, "observes"), ctx, true);
-      if (!isScopeKind(r["kind"])) bad("shape", at(p, "kind"), "is not a scope kind");
-      // Section 6.6: a definition cannot hold its own digest, so `self` names the creating scope's own pinned definition.
-      if (r["definition"] !== "self" && !isDigest(r["definition"]) && !isPlatformDefinition(r["definition"])) bad("shape", at(p, "definition"), "is a definition digest, a platform definition, or self");
-      sources(d, r["fields"], at(p, "fields"), ctx, r["kind"] === "lane");
-      requests.push({ send: i, most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, true, r["observes"], typeof r["kind"] === "string" ? r["kind"] : undefined) });
-      [kind, result] = [[k, r["kind"], r["definition"]], r["result"]];
-    } else if (k === "tell") {
-      const r = rec(x, p, ["to", "message", "fields", "result"], ["if", ...ROWS(d)]);
-      if (!r) return;
-      if ("observes" in r) clauseObserves(d, r["observes"], at(p, "observes"), ctx, false);
-      // Section 6.6: a `tell` is addressed by a reference slot, of any subject. A field is not an address.
-      const to = rec(r["to"], at(p, "to"), ["slot"], ["of"]) && source(d, r["to"], at(p, "to"), ctx, false);
-      if (to && to.type?.type !== "scope") bad("name", at(p, "to"), "names no slot that holds a scope");
-      str(r["message"], at(p, "message"));
-      condition(d, r, p, ctx);
-      sources(d, r["fields"], at(p, "fields"), ctx, to?.type?.type === "scope" && to.type.kind === "lane");
-      requests.push({ send: i, most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, false, r["observes"], to?.type?.type === "scope" ? to.type.kind : undefined) });
-      [kind, result, always] = [[k, r["message"]], r["result"], !("if" in r) && alsoRead(r["to"]).length === 0];
-    } else if (k === "relate") {
-      const r = rec(x, p, ["to", "name", "item", "state", "detail", "result"], ["each", "if", ...ROWS(d)]);
-      if (!r) return;
-      // Section 6.6: a fan-out makes one send for each item its range covers. Its sends are bounded because the range reads live items
-      // only, and the type's `max` bounds those.
-      const each = "each" in r ? ranged(d, r["each"], at(p, "each"), ctx) : null;
-      if ("each" in r && ++fanOuts > 1) bad("fan-out-unbounded", at(p, "each"), "another send of this list is a fan-out; a list has at most one");
-      const written = each && isObject(top["items"]) ? own(top["items"], each.type.name) : null;
-      const max = !each ? 1 : isObject(written) && typeof written["max"] === "number" ? written["max"] : Infinity;
-      if (each && (!each.live || max > bounds.fanOut)) bad("fan-out-unbounded", at(p, "each"), `a fan-out reads live items only, of a type whose max is at most ${bounds.fanOut}`);
-      const within: Ctx = each ? { ...ctx, each: each.type, eachPath: at(p, "each") } : ctx;
-      const to = source(d, r["to"], at(p, "to"), within, false);
-      if (r["to"] === "self" || (to?.type && to.type.type !== "scope")) bad("name", at(p, "to"), "names nothing that holds a scope");
-      const item = source(d, r["item"], at(p, "item"), within, false);
-      if (r["item"] === "self" ? !ctx.nascent : item?.type && item.type.type !== "item") bad("name", at(p, "item"), "names no local item: self in an entry that opens one, or an operand that holds an item");
-      str(r["name"], at(p, "name"));
-      str(r["state"], at(p, "state"));
-      condition(d, r, p, within);
-      sources(d, r["detail"], at(p, "detail"), within, to?.type?.type === "scope" && to.type.kind === "lane");
-      // Section 6.6: a clause of a fan-out send may read `each`, the item of that send. The entry records the item of each update and
-      // nothing else of the range. So `each` is found again, when the result is recorded, only where the update's `item` is `each`.
-      const clauseCtx = each && canonicalize(r["item"]) === canonicalize({ item: "each" }) ? within : ctx;
-      requests.push({ send: i, most: Number.isFinite(max) ? max : 0, clauses: clauses(d, r["result"], at(p, "result"), clauseCtx, false, r["observes"], to?.type?.type === "scope" ? to.type.kind : undefined) });
-      if ("observes" in r) clauseObserves(d, r["observes"], at(p, "observes"), clauseCtx, false);
-      [kind, result, always, made] = [[k, r["name"], r["state"]], r["result"], !("if" in r) && !each && alsoRead([r["to"], r["item"]]).length === 0, Number.isFinite(max) ? max : 0];
-      if (problems.length === before) {
-        // Section 6.4: no two `relate` sends written with the same `to`, `item` and `name`.
-        const key = canonicalize([r["to"], r["item"], r["name"]]);
-        if (relations.has(key)) bad("duplicate-relation", p, "another relate send of this entry is written with the same to, item and name");
-        relations.add(key);
+    const traced = enterForm(d, "send", f[0] as SendOp, at(path, i), s);
+    try {
+      const [k, x] = f;
+      const p = at(at(path, i), k);
+      const before = problems.length;
+      let kind: unknown[] = [k];
+      let always = true;
+      let made = 1;
+      let result: unknown = null;
+      if (k === "create") {
+        const r = rec(x, p, ["kind", "definition", "fields", "result"], ROWS(d));
+        if (!r) return;
+        if ("observes" in r) clauseObserves(d, r["observes"], at(p, "observes"), ctx, true);
+        if (!isScopeKind(r["kind"])) bad("shape", at(p, "kind"), "is not a scope kind");
+        // Section 6.6: a definition cannot hold its own digest, so `self` names the creating scope's own pinned definition.
+        if (r["definition"] !== "self" && !isDigest(r["definition"]) && !isPlatformDefinition(r["definition"])) bad("shape", at(p, "definition"), "is a definition digest, a platform definition, or self");
+        sources(d, r["fields"], at(p, "fields"), ctx, r["kind"] === "lane");
+        requests.push({ send: i, most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, s as object, true, r["observes"], typeof r["kind"] === "string" ? r["kind"] : undefined) });
+        [kind, result] = [[k, r["kind"], r["definition"]], r["result"]];
+      } else if (k === "tell") {
+        const r = rec(x, p, ["to", "message", "fields", "result"], ["if", ...ROWS(d)]);
+        if (!r) return;
+        if ("observes" in r) clauseObserves(d, r["observes"], at(p, "observes"), ctx, false);
+        // Section 6.6: a `tell` is addressed by a reference slot, of any subject. A field is not an address.
+        const to = rec(r["to"], at(p, "to"), ["slot"], ["of"]) && source(d, r["to"], at(p, "to"), ctx, false);
+        if (to && to.type?.type !== "scope") bad("name", at(p, "to"), "names no slot that holds a scope");
+        str(r["message"], at(p, "message"));
+        condition(d, r, p, ctx);
+        sources(d, r["fields"], at(p, "fields"), ctx, to?.type?.type === "scope" && to.type.kind === "lane");
+        requests.push({ send: i, most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, s as object, false, r["observes"], to?.type?.type === "scope" ? to.type.kind : undefined) });
+        [kind, result, always] = [[k, r["message"]], r["result"], !("if" in r) && alsoRead(r["to"]).length === 0];
+      } else if (k === "relate") {
+        const r = rec(x, p, ["to", "name", "item", "state", "detail", "result"], ["each", "if", ...ROWS(d)]);
+        if (!r) return;
+        // Section 6.6: a fan-out makes one send for each item its range covers. Its sends are bounded because the range reads live items
+        // only, and the type's `max` bounds those.
+        const each = "each" in r ? ranged(d, r["each"], at(p, "each"), ctx) : null;
+        if ("each" in r && ++fanOuts > 1) bad("fan-out-unbounded", at(p, "each"), "another send of this list is a fan-out; a list has at most one");
+        const written = each && isObject(top["items"]) ? own(top["items"], each.type.name) : null;
+        const max = !each ? 1 : isObject(written) && typeof written["max"] === "number" ? written["max"] : Infinity;
+        if (each && (!each.live || max > bounds.fanOut)) bad("fan-out-unbounded", at(p, "each"), `a fan-out reads live items only, of a type whose max is at most ${bounds.fanOut}`);
+        const within: Ctx = each ? { ...ctx, each: each.type, eachPath: at(p, "each") } : ctx;
+        const to = source(d, r["to"], at(p, "to"), within, false);
+        if (r["to"] === "self" || (to?.type && to.type.type !== "scope")) bad("name", at(p, "to"), "names nothing that holds a scope");
+        const item = source(d, r["item"], at(p, "item"), within, false);
+        if (r["item"] === "self" ? !ctx.nascent : item?.type && item.type.type !== "item") bad("name", at(p, "item"), "names no local item: self in an entry that opens one, or an operand that holds an item");
+        str(r["name"], at(p, "name"));
+        str(r["state"], at(p, "state"));
+        condition(d, r, p, within);
+        sources(d, r["detail"], at(p, "detail"), within, to?.type?.type === "scope" && to.type.kind === "lane");
+        // Section 6.6: a clause of a fan-out send may read `each`, the item of that send. The entry records the item of each update and
+        // nothing else of the range. So `each` is found again, when the result is recorded, only where the update's `item` is `each`.
+        const clauseCtx = each && canonicalize(r["item"]) === canonicalize({ item: "each" }) ? within : ctx;
+        requests.push({ send: i, most: Number.isFinite(max) ? max : 0, clauses: clauses(d, r["result"], at(p, "result"), clauseCtx, s as object, false, r["observes"], to?.type?.type === "scope" ? to.type.kind : undefined) });
+        if ("observes" in r) clauseObserves(d, r["observes"], at(p, "observes"), clauseCtx, false);
+        [kind, result, always, made] = [[k, r["name"], r["state"]], r["result"], !("if" in r) && !each && alsoRead([r["to"], r["item"]]).length === 0, Number.isFinite(max) ? max : 0];
+        if (problems.length === before) {
+          // Section 6.4: no two `relate` sends written with the same `to`, `item` and `name`.
+          const key = canonicalize([r["to"], r["item"], r["name"]]);
+          if (relations.has(key)) bad("duplicate-relation", p, "another relate send of this entry is written with the same to, item and name");
+          relations.add(key);
+        }
+      } else {
+        const r = rec(x, p, ["fields"]);
+        if (r) sources(d, r["fields"], at(p, "fields"), ctx, false);
+        // An `index` send is made only by a scope that records a directory.
+        always = false;
       }
-    } else {
-      const r = rec(x, p, ["fields"]);
-      if (r) sources(d, r["fields"], at(p, "fields"), ctx, false);
-      // An `index` send is made only by a scope that records a directory.
-      always = false;
-    }
-    if (!always) steady = false;
-    most += made;
-    if (problems.length !== before) return;
-    // A request's result names it by its ordinal, and a send that is not made takes none. So the form that made a recorded send is
-    // found again from what the message says: its type and its name. Two forms that say the same are told apart only by their
-    // order, which holds when each always makes exactly one send. Otherwise
-    // their result effects and observation rows must be identical (revision 24).
-    const said = canonicalize(kind);
-    const others = kinds.get(said) ?? [];
-    const observes = d.platform && isObject(x) ? x["observes"] : undefined;
-    const clause = hasClause(result) || hasClause(observes);
-    const identity = resultIdentity(result, observes);
-    if (others.some((o) => (o.clause || clause) && !(o.always && always) && o.identity !== identity)) bad("ambiguous-send", p, "another send of this list makes a message of the same type and name, one of the two is not always made, and their result effects or observation rows differ: the clause of a result could not be found again");
-    kinds.set(said, [...others, { always, clause, identity }]);
+      if (!always) steady = false;
+      most += made;
+      if (problems.length !== before) return;
+      // A request's result names it by its ordinal, and a send that is not made takes none. So the form that made a recorded send is
+      // found again from what the message says: its type and its name. Two forms that say the same are told apart only by their
+      // order, which holds when each always makes exactly one send. Otherwise
+      // their result effects and observation rows must be identical (revision 24).
+      const said = canonicalize(kind);
+      const others = kinds.get(said) ?? [];
+      const observes = d.platform && isObject(x) ? x["observes"] : undefined;
+      const clause = hasClause(result) || hasClause(observes);
+      const identity = resultIdentity(result, observes);
+      if (others.some((o) => (o.clause || clause) && !(o.always && always) && o.identity !== identity)) bad("ambiguous-send", p, "another send of this list makes a message of the same type and name, one of the two is not always made, and their result effects or observation rows differ: the clause of a result could not be found again");
+      kinds.set(said, [...others, { always, clause, identity }]);
+    } finally { leaveForm(d, traced); }
   });
   // A result names its request by ordinal, and a rule's request states no type or name in the data. So the form that made a
   // recorded send is found again, in a list with a mark, by counting (section 6.1, the points on EJ4 and "More than one send
@@ -254,17 +260,20 @@ export function attention(d: Defining, v: unknown, path: string, ctx: Ctx): numb
     const o = rec(n, at(path, i), ["notify"]);
     const r = o && rec(o["notify"], at(path, i), ["slot", "of", "when", "reason"], ["if"]);
     if (!r) return;
-    const s = subject(d, r["of"], at(path, i), ctx, false);
-    const slot = s && s !== "scope" && typeof r["slot"] === "string" ? s.slots.get(r["slot"]) : undefined;
-    if (s && s !== "scope" && slot?.kind !== "party") bad("name", at(path, i), "names no party slot");
-    if (slot?.kind === "party") told += slot.type.type === "list" ? slot.type.max : 1;
-    if (s && s !== "scope" && slot) recordSlot(d, ctx, at(at(path, i), "slot"), s,
-      { kind: "subject", name: r["of"] as string }, r["slot"] as string, slot, "read");
-    if (r["when"] !== "before" && r["when"] !== "after") bad("shape", at(path, i), "when is before or after");
-    str(r["reason"], at(path, i));
-    // A timed entry is always written (section 6.4). A condition that is not completed would leave it not judged, so a timed rule's notice has none.
-    if ("if" in r && ctx.timed) bad("timed", at(at(path, i), "if"), "a notice of a timed rule has no condition");
-    else condition(d, r, at(path, i), ctx);
+    const traced = enterForm(d, "attention", "notify", at(path, i), n);
+    try {
+      const s = subject(d, r["of"], at(path, i), ctx, false);
+      const slot = s && s !== "scope" && typeof r["slot"] === "string" ? s.slots.get(r["slot"]) : undefined;
+      if (s && s !== "scope" && slot?.kind !== "party") bad("name", at(path, i), "names no party slot");
+      if (slot?.kind === "party") told += slot.type.type === "list" ? slot.type.max : 1;
+      if (s && s !== "scope" && slot) recordSlot(d, ctx, at(at(path, i), "slot"), s,
+        { kind: "subject", name: r["of"] as string }, r["slot"] as string, slot, "read");
+      if (r["when"] !== "before" && r["when"] !== "after") bad("shape", at(path, i), "when is before or after");
+      str(r["reason"], at(path, i));
+      // A timed entry is always written (section 6.4). A condition that is not completed would leave it not judged, so a timed rule's notice has none.
+      if ("if" in r && ctx.timed) bad("timed", at(at(path, i), "if"), "a notice of a timed rule has no condition");
+      else condition(d, r, at(path, i), ctx);
+    } finally { leaveForm(d, traced); }
   });
   // Section 6.6: attention is bounded by the definition, so no entry has to drop a notice.
   if (told > bounds.attentionMembers) bad("attention-unbounded", path, `could tell ${told} members; at most ${bounds.attentionMembers}`);

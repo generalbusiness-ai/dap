@@ -4,6 +4,7 @@ import type { Ctx, Defining, MarkPlace, OwnerIdentity, Slot, Type } from "../val
 import type { Underived } from "../validate/capability.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { immutable, type Phase } from "./model.ts";
+import { finishStructure, noteFrame, recordResolution } from "./structure.ts";
 
 export type ReadType = { readonly kind: "declared"; readonly type: FieldType }
   | { readonly kind: "native"; readonly mark: TypeMark } | { readonly kind: "unknown" };
@@ -46,14 +47,17 @@ export interface ResolvedReads {
 /** Called only where the existing operand validator returns its successful resolution. */
 export function recordRead(d: Defining, node: OperandRead): void {
   collection(d).operands.push(node);
+  recordResolution(d, "operands", node);
 }
 
 /** Attach only after every admission check has succeeded, using the actual returned object. */
 export function bindReads(d: Defining, definition: ValidDefinition): ValidDefinition {
   const reads = collection(d);
-  admitted.set(definition, Object.freeze({ validation: validation(d), operands: Object.freeze([...reads.operands]),
+  const evidence: ResolvedReads = Object.freeze({ validation: validation(d), operands: Object.freeze([...reads.operands]),
     subjects: Object.freeze([...reads.subjects]), slots: Object.freeze([...reads.slots]), fields: Object.freeze([...reads.fields]),
-    foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]), frames: Object.freeze([...reads.frames]), marks: immutable(d.marks), underived: immutable(d.underived) }));
+    foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]), frames: Object.freeze([...reads.frames]), marks: immutable(d.marks), underived: immutable(d.underived) });
+  finishStructure(d, definition, evidence);
+  admitted.set(definition, evidence);
   return definition;
 }
 
@@ -106,27 +110,33 @@ export interface FrameRead extends ResolutionSite {
 export function recordFrame(d: Defining, ctx: Ctx, path: string, kind: FrameKind): void {
   const fields = (entries: ReadonlyMap<string, FieldType>): readonly (readonly [string, ReadType])[] =>
     Object.freeze([...entries].map(([name, type]) => Object.freeze([name, readType(type)] as const)));
-  collection(d).frames.push(Object.freeze({ path, context: contextOf(d, ctx), kind,
+  const frame: FrameRead = Object.freeze({ path, context: contextOf(d, ctx), kind,
     on: ctx.on ? subjectRead(ctx.on, { kind: "subject", name: "on" }) : null,
     also: Object.freeze([...ctx.also].map(([name, type]) => subjectRead(type, { kind: "subject", name: `also.${name}` }))),
     fields: ctx.fields === null ? null : fields(ctx.fields), presented: fields(ctx.presented), signer: ctx.signer, timed: ctx.timed,
-    nascent: ctx.nascent, unsettled: Object.freeze([...(ctx.unsettled ?? [])]) }));
+    nascent: ctx.nascent, unsettled: Object.freeze([...(ctx.unsettled ?? [])]) });
+  collection(d).frames.push(frame); noteFrame(d, frame);
 }
 
 export function recordSubject(d: Defining, ctx: Ctx, path: string, type: Type | "scope", name: string): void {
-  collection(d).subjects.push(Object.freeze({ path, context: contextOf(d, ctx), subject: type === "scope" ? "scope" : subjectRead(type, { kind: "subject", name }) }));
+  const read = Object.freeze({ path, context: contextOf(d, ctx), subject: type === "scope" ? "scope" as const : subjectRead(type, { kind: "subject", name }) });
+  collection(d).subjects.push(read); recordResolution(d, "subjects", read);
 }
 export function recordSlot(d: Defining, ctx: Ctx, path: string, type: Type, identity: SubjectRead["identity"], name: string, slot: Slot, access: SlotResolution["access"]): void {
-  collection(d).slots.push(Object.freeze({ path, context: contextOf(d, ctx), slot: slotRead(subjectRead(type, identity), name, slot), access }));
+  const read = Object.freeze({ path, context: contextOf(d, ctx), slot: slotRead(subjectRead(type, identity), name, slot), access });
+  collection(d).slots.push(read); recordResolution(d, "slots", read);
 }
 export function recordField(d: Defining, ctx: Ctx, path: string, name: string, type: FieldType): void {
-  collection(d).fields.push(Object.freeze({ path, context: contextOf(d, ctx), name, type: readType(type) }));
+  const read = Object.freeze({ path, context: contextOf(d, ctx), name, type: readType(type) });
+  collection(d).fields.push(read); recordResolution(d, "fields", read);
 }
 export function recordForeignField(d: Defining, ctx: Ctx, path: string, factField: string, name: string): void {
-  collection(d).foreignFields.push(Object.freeze({ path, context: contextOf(d, ctx), factField, name, type: unknown }));
+  const read = Object.freeze({ path, context: contextOf(d, ctx), factField, name, type: unknown });
+  collection(d).foreignFields.push(read); recordResolution(d, "foreignFields", read);
 }
 export function recordRange(d: Defining, ctx: Ctx, path: string, type: Type, states: readonly string[]): void {
-  collection(d).ranges.push(Object.freeze({ path, context: contextOf(d, ctx), subject: subjectRead(type, { kind: "range", path, type: type.name }), states: Object.freeze([...states]) }));
+  const read = Object.freeze({ path, context: contextOf(d, ctx), subject: subjectRead(type, { kind: "range", path, type: type.name }), states: Object.freeze([...states]) });
+  collection(d).ranges.push(read); recordResolution(d, "ranges", read);
 }
 export interface SubjectRead { readonly identity: OwnerIdentity | { readonly kind: "fan-out"; readonly path: string | null }; readonly type: string; readonly declaration: string }
 export const subjectRead = (type: Type, identity: SubjectRead["identity"]): SubjectRead =>

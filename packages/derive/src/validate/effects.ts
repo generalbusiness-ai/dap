@@ -9,12 +9,13 @@ import { bindElement, mark, marked, onSubject, ownerOf, subject, type Ctx, type 
 import { assignable } from "./fields.ts";
 import { guards, range } from "./guards.ts";
 import { holdEffect } from "./hold.ts";
-import { copy, isDetached, operand } from "./operands.ts";
+import { copy, isDetached, operand, type Read } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { memberBytes, stated } from "./sizes.ts";
 import { recordSlot } from "../program/reads.ts";
+import { enterForm, leaveForm, recordValueSource, type EffectOp } from "../program/structure.ts";
 
-const EFFECTS = ["state", "party", "ref", "value", "attribute", "hold", "redact", "capability"];
+const EFFECTS = ["state", "party", "ref", "value", "attribute", "hold", "redact", "capability"] as const satisfies readonly EffectOp[];
 const MEMBER: FieldType = { type: "member" };
 
 /** The slot of the primary item that a written effect may set to a value, if any. An effect under a condition is one: the commit checks what was set. */
@@ -32,9 +33,15 @@ interface Sets { what: string; successive: boolean }
 
 /** One effect. `later`: it runs in a later entry, as a result clause does. Returns what it sets, for the conflict check. */
 export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: boolean): Sets | null {
-  const { bounds, bad, rec, form, int, list, str } = d;
-  const f = form(v, path, EFFECTS, ["of", "if", "unless"]);
+  const f = d.form(v, path, EFFECTS, ["of", "if", "unless"]);
   if (!f) return null;
+  const traced = enterForm(d, "effect", f[0] as EffectOp, path, v);
+  try { return effectBody(d, v, path, ctx, later, f); }
+  finally { leaveForm(d, traced); }
+}
+
+function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: boolean, f: readonly [string, unknown]): Sets | null {
+  const { bounds, bad, rec, int, list, str } = d;
   const [k, x] = f;
   const o = v as Rec;
   const of = o["of"];
@@ -75,9 +82,9 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
    * what the operand reads, it must be assignable to `to`. Where only the
    * commit knows it, the commit checks the value against the slot.
    */
-  const source = (from: unknown, fp: string, to: FieldType): void => {
+  const source = (from: unknown, fp: string, to: FieldType): Read | null => {
     const read = operand(d, from, fp, ctx, ownerOf(() => s, { kind: "subject", name: sk }), false, true);
-    if (!read) return;
+    if (!read) return null;
     if (read.form === "none") bad("shape", fp, "a source that is none is never applied; null empties a slot");
     // Section 6.2: the bytes of a detached text are kept for the field that names it. So a slot for one is set only from a
     // detached field or slot, whose bytes this scope then holds. A constant, or a value that only the commit knows, names bytes
@@ -92,6 +99,7 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
     else if (read.form === "source" && (from as Rec)["source"] === "ref" && to.type === "fact" && ctx.handler?.under != null && ctx.handler.under !== to.under) bad("name", fp, "the source entry is under the definition that the handler's `from` names, and the slot is under another");
     // Section 6.4: a timed rule's effects are total, so each source is one whose value the validator has shown the slot can hold.
     if (ctx.timed && (read.type === null || read.open) && !(read.form === "const" && k === "value")) bad("timed-partial", fp, "a timed rule copies only what the validator can show the slot holds");
+    return read;
   };
   switch (k) {
     case "state":
@@ -145,12 +153,16 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
         // No offset is longer than the whole span a timestamp can name. So the sum with any reading is a number the runtime can
         // compare with that span, and effect derivation refuses a time past it; nothing throws.
         const plus = t && int(t["plusSeconds"], at(p, "from"));
+        if (typeof plus === "number") recordValueSource(d, { op: "commit-clock", path: at(p, "from"), plusSeconds: plus });
         if (typeof plus === "number" && plus * 1000 > LAST_MS) bad("bound", at(p, "from"), "is longer than the span a timestamp can name");
         // Section 6.4: a timed rule's effects are total. A time derived from the commit clock can pass the last timestamp, which the
         // commit would refuse; and a timed rule ends its deadline by leaving its states, not by moving it.
         if (ctx.timed) bad("timed-partial", p, "a timed rule sets no time from the commit clock");
         if (sl.type.type !== "time") bad("name", p, "the commit time goes in a slot of type time");
-      } else if (from !== null) source(from, at(p, "from"), sl.type);
+      } else if (from !== null) {
+        const read = source(from, at(p, "from"), sl.type);
+        if (read) recordValueSource(d, { op: "read", read: read.node });
+      } else recordValueSource(d, { op: "clear" });
       d.clause?.push({ subject: sk, type: s.name, slot: String(r["slot"]) });
       // Section 6.4, "`settles` by a mark": a mark is set once, so a written effect on it is a `value` effect of the constant `true`.
       // Which slots are marks is known when every form is read (`setOnce`, in `markers.ts`).

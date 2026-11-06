@@ -7,8 +7,9 @@ import { bindElement, mark, marked, onSubject, ownerOf, subject, type Ctx, type 
 import { fieldOf, isDetached, operand, type Read } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { recordField, recordForeignField, recordRange, recordSlot } from "../program/reads.ts";
+import { enterForm, leaveForm, type GuardOp } from "../program/structure.ts";
 
-const GUARDS = ["state", "signer", "notIn", "set", "unset", "equals", "differs", "some", "none", "count", "every", "fact", "before", "after", "rule", "each", "has", "anyOf", "distinct", "sameSet", "capability"];
+const GUARDS = ["state", "signer", "notIn", "set", "unset", "equals", "differs", "some", "none", "count", "every", "fact", "before", "after", "rule", "each", "has", "anyOf", "distinct", "sameSet", "capability"] as const satisfies readonly GuardOp[];
 
 /** The guards of one written list, counted with those nested in them (section 6.1). */
 interface Nesting { count: number }
@@ -63,10 +64,16 @@ export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readon
 
 /** One guard of an act or handler. `depth`: how deep it is nested; a guard as written is at 1. `inherited`: the subject of the guard that holds it. */
 export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nesting = { count: 0 }, depth = 1, inherited?: unknown): void {
-  const { bounds, rules, bad, rec, form, list, int, bool, names, str } = d;
   nesting.count++;
-  const f = form(v, path, GUARDS, ["of", "ifPresent", "reason"]);
+  const f = d.form(v, path, GUARDS, ["of", "ifPresent", "reason"]);
   if (!f) return;
+  const traced = enterForm(d, "guard", f[0] as GuardOp, path, v);
+  try { guardBody(d, v, path, ctx, nesting, depth, inherited, f); }
+  finally { leaveForm(d, traced); }
+}
+
+function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nesting, depth: number, inherited: unknown, f: readonly [string, unknown]): void {
+  const { bounds, rules, bad, rec, form, list, int, bool, names, str } = d;
   const [k, x] = f;
   const o = v as Rec;
   const p = at(path, k);
