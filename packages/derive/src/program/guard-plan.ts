@@ -1,6 +1,7 @@
 /** Closed guard instructions captured by admission; child references stay local to the owning graph. */
 import type { FieldType, Guard, Subject } from "@generalbusiness/dap-contract";
 import type { ElementBinding, FieldResolution, OperandRead, SlotRead } from "./reads.ts";
+import { immutable } from "./model.ts";
 
 export interface MissingRead { readonly kind: "field" | "presented"; readonly name: string }
 export interface GuardSite {
@@ -46,7 +47,9 @@ export function mapGuardChildren<A, B>(plan: GuardPlan<A>, child: (value: A) => 
   switch (code.op) {
     case "anyOf": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, alternatives: Object.freeze(code.alternatives.map(group => Object.freeze(group.map(child)))) }) });
     case "each": case "has": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, guards: Object.freeze(code.guards.map(child)) }) });
-    case "state": case "signer": case "notIn": case "set": case "unset": case "equals": case "differs": case "some": case "none": case "count": case "every": case "fact": case "before": case "after": case "rule": case "capability": case "distinct": case "sameSet":
+    case "fact": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, type: immutable(code.type) }) });
+    case "capability": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, capability: immutable(code.capability) }) });
+    case "state": case "signer": case "notIn": case "set": case "unset": case "equals": case "differs": case "some": case "none": case "count": case "every": case "before": case "after": case "rule": case "distinct": case "sameSet":
       return Object.freeze({ site: plan.site, code });
     default: return exhaustive(code);
   }

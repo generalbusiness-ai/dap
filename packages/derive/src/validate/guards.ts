@@ -8,7 +8,6 @@ import { fieldOf, isDetached, operand, type Read } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { recordElementBinding, recordField, recordForeignField, recordRange, recordSlot } from "../program/reads.ts";
 import { enterForm, leaveForm, type GuardOp } from "../program/structure.ts";
-import { immutable } from "../program/model.ts";
 import type { BoundPlan, FactMatch, FactSource, GuardCode, GuardPlan, ListSource, MissingRead, RangePlan, WherePlan } from "../program/guard-plan.ts";
 import { recordGuardPlan, type FormTrace } from "../program/structure.ts";
 import type { ElementBinding, EntryRead, OperandRead, SlotRead } from "../program/reads.ts";
@@ -254,7 +253,7 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
         named(read);
         // The kind and the definition's name are compared with the type, so the definition must state it.
         if (read && read.type?.type !== "fact") bad("name", at(p, by[0]), `names no ${by[0] === "presented" ? "presented fact" : "element"} of type fact`);
-        if (read?.type?.type === "fact") code = { op: "fact", source: Object.freeze({ op: "read", read: read.node }), type: immutable(read.type), where: Object.freeze([]) };
+        if (read?.type?.type === "fact") code = { op: "fact", source: Object.freeze({ op: "read", read: read.node }), type: read.type, where: Object.freeze([]) };
         break;
       }
       // `a` is a field of the named entry's intent or message, which this definition cannot resolve; `b` is read in this act.
@@ -273,7 +272,7 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
           if (name !== null && reads?.[1]) matches.push(Object.freeze({ name, value: reads[1].node }));
         }
       });
-      if (source && factType) code = { op: "fact", source: Object.freeze(source), type: immutable(factType), where: Object.freeze(matches) };
+      if (source && factType) code = { op: "fact", source: Object.freeze(source), type: factType, where: Object.freeze(matches) };
       break;
     }
     case "before": case "after": {
@@ -295,7 +294,7 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
     case "capability":
       // Section 6.11: a guard that a listed capability declares. Its refusal has the name the capability gives, so a `reason` names nothing.
       capabilityGuard(d, x, p, ctx, item);
-      code = { op: "capability", capability: immutable(x as Extract<GuardCode<FormTrace>, { op: "capability" }>["capability"]) };
+      code = { op: "capability", capability: x as Extract<GuardCode<FormTrace>, { op: "capability" }>["capability"] };
       break;
     case "each": case "has": {
       const r = k === "each" ? rec(x, p, ["list", "as", "guards"], ["where"]) : rec(x, p, ["list", "as", "where"], ["guards"]);

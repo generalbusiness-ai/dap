@@ -11,6 +11,7 @@ import { asks } from "./definition-corpus/forms-operand-data.ts";
 import { gate } from "./definition-corpus/marks-data.ts";
 import { lateDefinition } from "./definition-corpus/source-order-data.ts";
 import { definitionCorpus } from "./definition-corpus/index.ts";
+import { capabilityStagingData } from "./definition-corpus/capability-staging-data.ts";
 
 function admitted(input: DeclaredDefinition): ValidDefinition {
   const result = validateDefinition(input, PROPOSED_BOUNDS);
@@ -185,4 +186,15 @@ test("aliased guards retain the binder they read when a nested list shadows its 
   ]);
   expect(reads[0]?.context.validation).toBe(body.frame.context.validation);
   expect(Object.isFrozen(outerBinding?.identity)).toBe(true);
+});
+
+test("a refused capability argument does not copy the value its name already excludes", () => {
+  const input = capabilityStagingData(), guard = input.acts["stage"]!.guards[1]!;
+  if (!("capability" in guard)) return expect.fail("expected capability guard");
+  // validateDefinition accepts object input. The ignored value need not have JSON bytes.
+  const cycle: Record<string, unknown> = {}; cycle["self"] = cycle;
+  Object.defineProperty(guard.capability.with, "unlisted", { value: cycle, enumerable: true });
+  let result: ReturnType<typeof validateDefinition> | undefined;
+  expect(() => { result = validateDefinition(input, PROPOSED_BOUNDS); }).not.toThrow();
+  expect(result).toEqual({ ok: false, problems: [{ code: "capability", path: "acts.stage.guards.1.capability.with.unlisted", message: "is not an argument of the guard staged of hold@1" }] });
 });
