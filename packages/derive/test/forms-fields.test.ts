@@ -4,7 +4,7 @@ import type { DeclaredDefinition, FieldType } from "@generalbusiness/dap-contrac
 import { isSealed } from "@generalbusiness/dap-bytes";
 import { operand, validateDefinition, type Judging, type ProblemCode } from "../src/index.ts";
 import { equal } from "../src/operand.ts";
-import { naming, type Defining } from "../src/validate/context.ts";
+import { bindElement, naming, ownerOf, type Defining } from "../src/validate/context.ts";
 import { operand as operandType } from "../src/validate/operands.ts";
 import { shapes } from "../src/validate/shape.ts";
 import { Scope, arrive, d, decided, fields, keys, on, otherLane, t, ticket, board, boardDefinition } from "./fixtures-entry.ts";
@@ -49,7 +49,7 @@ describe("the record type (section 6.2)", () => {
     const element = row.type === "list" ? row.of : (null as never);
     const read = (name: string, bound: FieldType | null = element) => {
       const defining = { ...shapes(PROPOSED_BOUNDS), bounds: PROPOSED_BOUNDS } as unknown as Defining;
-      const type = operandType(defining, { element: name }, "x", { ...naming(), elements: new Map([["k", bound]]) }, () => null)?.type;
+      const type = operandType(defining, { element: name }, "x", bindElement(naming(), "k", bound, "fixture.k"), ownerOf(() => null, { kind: "subject", name: "on" }))?.type;
       return defining.problems.length > 0 ? defining.problems.map((p) => p.code) : type;
     };
     expect([read("k"), read("k.job"), read("k.by")]).toEqual([element, { type: "item", of: "job", required: true }, { type: "fact", kind: ["ask"], under: "board", required: false }]);

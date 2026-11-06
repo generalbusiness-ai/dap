@@ -9,10 +9,12 @@
  * clause, and the names that an act presents or a list form binds.
  */
 
-import type { FieldType } from "@generalbusiness/dap-contract";
+import type { FieldType, FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
+import { immutable } from "../program/model.ts";
+import { readSite, readType, recordRead, slotRead, subjectRead, type EntryData, type EntryRead, type EntryWord, type OperandData, type OperandKind, type OperandRead, type PartRead } from "../program/reads.ts";
 import { isObject } from "../values.ts";
-import { onSubject, subject, type Ctx, type Defining, type Type } from "./context.ts";
+import { onSubject, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";
 import { carried } from "./capability.ts";
 import { assignable, memberType } from "./fields.ts";
 import { at, type Rec } from "./shape.ts";
@@ -25,9 +27,9 @@ import { at, type Rec } from "./shape.ts";
  * also inside a part. `slot`: the name of the slot, when it is a slot of the
  * form's own subject with no part.
  */
-export interface Read { form: string; type: FieldType | null; open: boolean; fields: readonly string[]; slot: string | null }
+export interface Read { form: string; type: FieldType | null; open: boolean; fields: readonly string[]; slot: string | null; node: OperandRead }
 
-const OPERANDS = ["field", "presented", "slot", "element", "item", "signer", "sender", "source", "update", "result", "scope", "intent", "none", "const"];
+const OPERANDS: readonly OperandKind[] = ["field", "presented", "slot", "element", "item", "signer", "sender", "source", "update", "result", "scope", "intent", "none", "const"];
 /** The operands that hold a value a part may read inside. */
 const WITH_PART = ["field", "presented", "slot", "element"];
 /** The parts that are one word. The first three are read from the reference, and the others from the entry's bytes. */
@@ -49,58 +51,67 @@ const POSITION: FieldType = { type: "int", min: 0, max: Number.MAX_SAFE_INTEGER 
  * of a send. Every other place is refused one, as `redactable-read`
  * (section 6.2). Null: it is not an operand here, which is reported.
  */
-export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: () => Type | null, guard = true, detached = false): Read | null {
+export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: ReadOwner, guard = true, detached = false): Read | null {
   const { bad, rec, str } = d;
   const f = d.form(v, path, OPERANDS, ["of", "part"]);
   if (!f) return null;
-  const [k, x] = f;
+  const [form, x] = f;
+  const k = form as OperandKind;
   const o = v as Rec;
   if ("of" in o && k !== "slot") return bad("shape", at(path, "of"), "only a slot names a subject");
   if ("part" in o && !WITH_PART.includes(k)) return bad("shape", at(path, "part"), "a part is read from a field, a presented fact, a slot or an element");
   const fields: string[] = [];
   const nascent = (of: unknown) => guard && ctx.nascent && onSubject(of);
 
-  /** One part that is not `{ of, then }`. Returns the type of what it reads when the definition states it. */
-  const entryPart = (p: unknown, pp: string, base: FieldType | null): FieldType | null | undefined => {
+  type EntryResult = { type: FieldType | null; node: EntryRead };
+  const entry = (type: FieldType | null, pp: string, data: EntryData): EntryResult =>
+    ({ type, node: Object.freeze({ ...readSite(d, ctx, pp, guard, type), ...data }) });
+  /** Resolve each part in the same validator branch that checks its type and names. */
+  const entryPart = (p: unknown, pp: string, base: FieldType | null): EntryResult | undefined => {
     if (typeof p === "string") {
       if (!WORDS.includes(p)) return bad("shape", pp, `must be one of: ${WORDS.join(", ")}, or a part with a name`) ?? undefined;
-      return p === "ref" ? base : p === "seq" ? POSITION : p === "intent" ? { type: "digest" } : p === "time" ? { type: "time" } : null;
+      const type = p === "ref" ? base : p === "seq" ? POSITION : p === "intent" ? { type: "digest" } as const : p === "time" ? { type: "time" } as const : null;
+      return entry(type, pp, { op: p as EntryWord });
     }
     const pf = d.form(p, pp, ["field", "opened", "set", "carried"]);
     if (!pf) return undefined;
-    // Section 6.11: a member of a capability record that the entry's effects hold. Its type is the capability's to state.
-    if (pf[0] === "carried") return carried(d, pf[1], at(pp, "carried")) ? null : undefined;
-    if (pf[0] !== "set") return str(pf[1], at(pp, pf[0])) === null ? undefined : null;
+    if (pf[0] === "carried") return carried(d, pf[1], at(pp, "carried")) ? entry(null, pp, { op: "carried", name: pf[1] as string }) : undefined;
+    if (pf[0] !== "set") {
+      const name = str(pf[1], at(pp, pf[0]));
+      return name === null ? undefined : entry(null, pp, { op: pf[0] as "field" | "opened", name });
+    }
     const r = rec(pf[1], at(pp, "set"), ["item", "slot"]);
-    // The item is an operand of this judgment: it gives a local ID in the entry's own scope.
     const item = r && operand(d, r["item"], at(at(pp, "set"), "item"), ctx, owner, guard);
     if (!r || !item || str(r["slot"], at(at(pp, "set"), "slot")) === null) return undefined;
     fields.push(...item.fields);
-    return null;
+    return entry(null, pp, { op: "set", item: item.node, slot: r["slot"] as string });
   };
-  /** A part of the entry that the value of type `base` names. */
-  const part = (p: unknown, pp: string, base: FieldType | null): FieldType | null | undefined => {
-    // A part reads inside an entry that a fact reference names. Where the definition states the type, it is a fact.
+  const part = (p: unknown, pp: string, base: FieldType | null): { type: FieldType | null; node: PartRead } | undefined => {
     if (base && base.type !== "fact") return bad("name", pp, "a part reads inside an entry that a fact names") ?? undefined;
     if (!isObject(p) || !("of" in p)) return entryPart(p, pp, base);
     const r = rec(p, pp, ["of", "then"]);
-    if (!r || entryPart(r["of"], at(pp, "of"), base) === undefined) return undefined;
+    const of = r && entryPart(r["of"], at(pp, "of"), base);
+    if (!r || !of) return undefined;
     if (r["then"] !== "scope" && r["then"] !== "seq") return bad("shape", at(pp, "then"), "is scope or seq") ?? undefined;
-    return r["then"] === "seq" ? POSITION : null;
+    const type = r["then"] === "seq" ? POSITION : null;
+    return { type, node: Object.freeze({ ...readSite(d, ctx, pp, guard, type), op: "project", of: of.node, then: r["then"] }) };
   };
 
   let type: FieldType | null = null;
   let slot: string | null = null;
+  let data: OperandData;
   switch (k) {
     case "field":
       if (typeof x !== "string" || (ctx.fields && !ctx.fields.has(x))) return bad("name", path, "names no field");
       fields.push(x);
       type = ctx.fields?.get(x) ?? null;
+      data = { op: "field", name: x, required: type && "required" in type && typeof type.required === "boolean" ? type.required : null };
       break;
     case "presented": {
       const presented = typeof x === "string" ? ctx.presented.get(x) : undefined;
       if (!presented) return bad("name", path, "names no fact that the act presents");
       type = presented;
+      data = { op: "presented", name: x as string };
       break;
     }
     case "slot": {
@@ -116,15 +127,26 @@ export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: 
       const matched = typeof x === "string" ? t.slots.get(x) : undefined;
       if (!matched) return bad("name", path, `names no slot of ${t.name}`);
       type = matched.type;
+      const identity = !("of" in o) ? owner.identity : o["of"] === "each"
+        ? { kind: "fan-out" as const, path: ctx.eachPath } : { kind: "subject" as const, name: o["of"] as string };
+      data = { op: "slot", slot: slotRead(subjectRead(t, identity), x as string, matched) };
       if (!("of" in o) && !("part" in o)) slot = x as string;
       break;
     }
     case "element": {
       // Section 6.2: a member of a record element is named after the element, with a dot.
       // I2 merge: a member of a record field, and of a record slot, is not read yet. `ifPresent` in guards.ts reads a field's name whole.
-      const element = typeof x === "string" ? memberType((name) => (ctx.elements.has(name) ? ctx.elements.get(name) : undefined), x) : undefined;
+      let binding: string | null = null;
+      const element = typeof x === "string" ? memberType((name) => {
+        if (!ctx.elements.has(name)) return undefined;
+        binding = name;
+        return ctx.elements.get(name);
+      }, x) : undefined;
       if (element === undefined) return bad("name", path, "names no element that an enclosing form binds, and no member of one");
       type = element;
+      const name = binding!;
+      data = { op: "element", binding: Object.freeze({ name, declaration: ctx.elementBindings.get(name) ?? null,
+        type: readType(ctx.elements.get(name) ?? null), members: Object.freeze(x === name ? [] : (x as string).slice(name.length + 1).split(".")) }) };
       break;
     }
     case "item": {
@@ -132,50 +154,65 @@ export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: 
       if (s === null || s === "scope") return null;
       if (x !== "each" && nascent(x)) return bad("nascent-guard", path, "a guard may not read the item its act opens");
       type = { type: "item", of: s.name };
+      data = { op: "item", subject: subjectRead(s, x === "each" ? { kind: "fan-out", path: ctx.eachPath }
+        : { kind: "subject", name: typeof x === "string" ? x : "on" }) };
       break;
     }
     case "signer":
       if (x !== true || !ctx.signer) return bad("name", path, "there is no signer here");
       type = { type: "member" };
+      data = { op: "signer" };
       break;
     case "sender":
       if (x !== true || !(ctx.handler || ctx.clause)) return bad("name", path, "there is no sender here: a handler and a result clause have one");
+      data = { op: "sender" };
       break;
     case "source": {
       if (!ctx.handler) return bad("name", path, "there is no source entry here: a handler has one");
       const read = entryPart(x, at(path, "source"), null);
       if (read === undefined) return null;
-      type = read;
+      type = read.type;
+      data = { op: "source", entry: read.node };
       break;
     }
     case "update":
       if (!ctx.handler?.update) return bad("name", path, "there is no update here: a relate handler has one");
       if (x !== "state" && x !== "item" && x !== "revision") return bad("shape", path, "is state, item or revision");
       if (x === "revision") type = POSITION;
+      data = { op: "update", part: x };
       break;
     case "result":
       if (!ctx.clause) return bad("name", path, "there is no result here: a result clause has one");
       if (x !== "reason") return bad("shape", path, "is reason");
+      data = { op: "result", part: x };
       break;
     case "intent":
       if (x !== true || !ctx.signer) return bad("name", path, "there is no intent here: an act has one");
       type = { type: "digest" };
+      data = { op: "intent" };
       break;
     case "scope": case "none":
       if (x !== true) return bad("shape", path, "is true");
+      data = { op: k };
       break;
     case "const":
       try { canonicalize(x); } catch { return bad("shape", path, "is not a value"); }
+      data = { op: "const", value: immutable(x as FieldValue) };
       break;
   }
   // Section 6.2: no guard, and no form that only compares or lists, reads a detached value.
   if (!detached && isDetached(type)) return bad("redactable-read", path, "reads a detached text, which only the source of an effect and a field of a send to a lane may read");
+  const baseType = readType(type);
+  let projection: PartRead | null = null;
   if ("part" in o) {
     const read = part(o["part"], at(path, "part"), type);
     if (read === undefined) return null;
-    type = read;
+    type = read.type;
+    projection = read.node;
   }
-  return { form: k, type, open: type === POSITION, fields, slot };
+  const node: OperandRead = Object.freeze({ ...readSite(d, ctx, path, guard, type), ...data, baseType, projection });
+  recordRead(d, node);
+  return { form: k, type, open: type === POSITION, fields, slot, node };
 }
 
 /** True for the type of a detached text (section 6.2). */

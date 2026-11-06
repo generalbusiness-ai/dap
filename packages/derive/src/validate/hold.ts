@@ -10,7 +10,7 @@
 
 import type { DeclaredDefinition, TimedRule } from "@generalbusiness/dap-contract";
 import { isObject, own } from "../values.ts";
-import { onSubject, type Ctx, type Defining, type Type } from "./context.ts";
+import { onSubject, ownerOf, type Ctx, type Defining, type Type } from "./context.ts";
 import { operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { RECORD_BYTES } from "./sizes.ts";
@@ -69,7 +69,7 @@ export function holdEffect(d: Defining, x: unknown, p: string, s: Type, sk: stri
   // It counts as a `state` effect (section 6.8), so in an act or a handler it needs what one needs: a subject that a guard shows is live.
   else if (what === "end" && !ctx.clause && !ctx.live.has(sk)) bad("final", p, "hold: end needs a `state` guard on its subject that lists no final state");
   // Section 6.8: `extent` is an operand that the validator checks. It is recorded only by an ordinary `value` effect.
-  if ("extent" in r) operand(d, r["extent"], at(p, "extent"), ctx, () => s, false);
+  if ("extent" in r) operand(d, r["extent"], at(p, "extent"), ctx, ownerOf(() => s, { kind: "subject", name: sk }), false);
   return what === "end" ? `the state of ${sk}` : `the hold of ${sk}`;
 }
 

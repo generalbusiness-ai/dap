@@ -20,6 +20,8 @@ import { attention, sends } from "./sends.ts";
 import { at, type Rec } from "./shape.ts";
 import { nativeReceiver } from "./native-capacity.ts";
 import { declaredBy } from "../capability.ts";
+import { recordFrame } from "../program/reads.ts";
+import { beginBody, endBody } from "../program/structure.ts";
 
 const members = (v: unknown): Rec => (isObject(v) ? v : {});
 /** Whether an item type is `many`, as the definition writes it. */
@@ -212,6 +214,7 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
     // Section 6.4: a comment changes no item and meets no guard.
     if (step === "comment") for (const k of ["guards", "effects", "sends"]) if (!Array.isArray(o[k]) || o[k].length > 0) bad("shape", at(path, k), "a comment has none");
     if (step === "comment" && ctx.also.size > 0) bad("shape", at(path, "also"), "a comment names no other item");
+    const traced = beginBody(d, { kind: "body", source: o });
     guards(d, o["guards"], at(path, "guards"), ctx, true);
     // Section 16.1, "The subjects that an entry observes": the rows of an act, in platform data. A source reads what a guard of the
     // act may read, and no name of `also` that a mark binds.
@@ -220,6 +223,8 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
     pendingWork.sets = setsOf(d, step === "open" ? on : null, () => effects(d, o["effects"], at(path, "effects"), ctx, false, o["guards"]));
     // A child's genesis sends the platform's one result beside what its act declares.
     entrySends(d, path, sends(d, o["sends"], at(path, "sends"), ctx, top, pendingWork.requests), attention(d, o["attention"], at(path, "attention"), ctx), name === top["genesis"] ? 1 : 0);
+    recordFrame(d, ctx, path, "act");
+    endBody(d, traced);
     d.pendingWork.push(pendingWork);
     if (step === "open" && on) {
       const set = new Set(Array.isArray(o["effects"]) ? o["effects"].map(setsSlot) : []);
@@ -278,7 +283,7 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
     if ("bound" in o && o["order"] === "source") bad("shape", at(path, "order"), "source order is not supported on an item-bound native handler");
     if ("bound" in o && from?.["pin"] !== undefined) bad("shape", at(at(path, "from"), "pin"), "a pin is not supported on an item-bound native handler");
     const context = (): Ctx => ({ ...naming(), on, also: named.types, nascent: on !== null, fields, kind: cls === "advisory" ? null : message, handler: { update: cls === "relate", under: typeof from?.["under"] === "string" ? from["under"] : null }, senderKind: typeof from?.["kind"] === "string" ? from["kind"] : undefined, unsettled: new Set(named.unsettled) });
-    const bodies: { body: Rec; where: string; context: Ctx }[] = [{ body: o, where: path, context: context() }];
+    const bodies: { body: Rec; where: string; context: Ctx; replacement: boolean }[] = [{ body: o, where: path, context: context(), replacement: false }];
     if ("late" in o) {
       const latePath = at(path, "late"), late = rec(o["late"], latePath, ["within", "reason"], ["then"]);
       if (cls === "advisory") bad("late-on-advisory", latePath, "late is a form of a request handler");
@@ -300,14 +305,15 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
           const branch = rec(late["then"], at(latePath, "then"), [], ["effects", "sends", "attention"]);
           if (branch) {
             if (holdDoes(branch["effects"], "open")) bad("hold", at(latePath, "then"), "a handler cannot open a hold");
-            bodies.push({ body: { ...o, guards: [], effects: branch["effects"] ?? [], sends: branch["sends"] ?? [], attention: branch["attention"] ?? [] }, where: at(latePath, "then"), context: context() });
+            bodies.push({ body: { ...o, guards: [], effects: branch["effects"] ?? [], sends: branch["sends"] ?? [], attention: branch["attention"] ?? [] }, where: at(latePath, "then"), context: context(), replacement: true });
           }
         }
       }
     }
     // Independent contexts: a replacement branch cannot borrow proofs from
     // normal guards that it never evaluates. Each body has its own bounds.
-    for (const { body: o, where: path, context: ctx } of bodies) {
+    for (const { body: o, where: path, context: ctx, replacement } of bodies) {
+      const traced = beginBody(d, { kind: "body", source: o });
       guards(d, o["guards"], at(path, "guards"), ctx, true);
       const copy = cls === "relate" && message !== null && isScopeKind(from?.["kind"]) ? { name: message, kind: from["kind"] } : null;
       const settles = "settles" in o ? settling(d, o["settles"], at(path, "settles"), ctx, copy, top) : null;
@@ -318,6 +324,8 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
       nativeReceiver(d, pendingWork, fields, o["also"], cls, message, from?.["kind"]);
       // The entry that decides a request sends the platform's one result.
       entrySends(d, path, sends(d, o["sends"], at(path, "sends"), ctx, top, pendingWork.requests), attention(d, o["attention"], at(path, "attention"), ctx), cls === "advisory" ? 0 : 1);
+      recordFrame(d, ctx, path, replacement ? "replacement" : "handler");
+      endBody(d, traced);
       d.pendingWork.push(pendingWork);
       // Section 6.4: an advisory has no result, so its handler ends the exchange: it sends nothing and tells nobody.
       if (cls === "advisory") for (const k of ["sends", "attention"]) if (Array.isArray(o[k]) && o[k].length > 0) bad("advisory-sends", at(path, k), "a handler of class advisory declares none");

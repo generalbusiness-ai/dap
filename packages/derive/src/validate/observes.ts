@@ -17,7 +17,7 @@ import type { Bounds, Observe } from "@generalbusiness/dap-contract";
 import { RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import { isMemberRef } from "@generalbusiness/dap-bytes";
 import { isObject } from "../values.ts";
-import type { Ctx, Defining } from "./context.ts";
+import { bindElement, ownerOf, type Ctx, type Defining } from "./context.ts";
 import { operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { ENTRY_BYTES, SCOPE_BYTES } from "./sizes.ts";
@@ -151,7 +151,7 @@ function source(d: Defining, r: Rec, p: string, standing: Extract<Standing, { ct
   if (reads(from, "signer").length > 0 || reads(from, "intent").some((x) => x === true)) { bad("name", fp, "a source reads no signer and no intent: the subjects are derived before the grant is judged"); return; }
   const bound = alsoNames(from).find((name) => selected.has(name));
   if (bound !== undefined) { bad("name", fp, `a source reads no slot and no item of ${bound}, which a mark binds`); return; }
-  const owner = () => ctx.on ?? bad("name", fp, "there is no primary item whose slot this could be");
+  const owner = ownerOf(() => ctx.on ?? bad("name", fp, "there is no primary item whose slot this could be"), { kind: "subject", name: "on" });
   const member = (type: unknown): boolean => isObject(type) && type["type"] === "member";
   if (isObject(from) && "each" in from) {
     const e = rec(from, fp, ["each", "as", "value"]);
@@ -163,13 +163,13 @@ function source(d: Defining, r: Rec, p: string, standing: Extract<Standing, { ct
     const read = operand(d, e["each"], at(fp, "each"), ctx, owner);
     if (!read) return;
     if (read.type !== null && read.type.type !== "list") { bad("name", at(fp, "each"), "names no list"); return; }
-    const value = operand(d, e["value"], at(fp, "value"), { ...ctx, elements: new Map([[as, read.type?.type === "list" ? read.type.of : null]]) }, owner);
+    const value = operand(d, e["value"], at(fp, "value"), bindElement(ctx, as, read.type?.type === "list" ? read.type.of : null, at(fp, "as"), true), owner);
     // Check 3: with `each`, the type of `value` is `member`.
     if (value && !member(value.type) && !(value.type === null && isObject(e["value"]) && "part" in e["value"])) bad("name", at(fp, "value"), "the value of each element is of the type member");
     return;
   }
   if (reads(from, "element").length > 0) { bad("name", fp, "an element is read only in the value of the row's own each, by its as"); return; }
-  const read = operand(d, from, fp, { ...ctx, elements: new Map() }, owner);
+  const read = operand(d, from, fp, { ...ctx, elements: new Map(), elementBindings: new Map() }, owner);
   if (!read) return;
   // Check 3: the static type is `member`, or a list of `member`. A part of an entry states no type, and the commit reads the value.
   // A constant is a member reference.

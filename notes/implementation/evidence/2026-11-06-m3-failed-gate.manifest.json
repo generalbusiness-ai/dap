@@ -1,0 +1,42 @@
+{
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-failed-gate-validation",
+  "qualification": "Failed source gate at cb614e2f; Native unreached. Raw originals remain private and read-only.",
+  "fileCount": 7,
+  "files": [
+    {
+      "path": "after.json",
+      "bytes": 1839,
+      "sha256": "68e89294fb8bc053a77d73f6ba305e06e6f5e650d06546a1d22bc58171f90e90"
+    },
+    {
+      "path": "before.json",
+      "bytes": 1839,
+      "sha256": "68e89294fb8bc053a77d73f6ba305e06e6f5e650d06546a1d22bc58171f90e90"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "private-retention.json",
+      "bytes": 376,
+      "sha256": "c6ba7f3ba73ecbada85932042b306efc97896419b8090067fa24f0409b1af017"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 611,
+      "sha256": "4ad29c05c9e068f809395efa64d6079756fa11d1fd944d2f771844408fe08468"
+    },
+    {
+      "path": "receipt.json",
+      "bytes": 538,
+      "sha256": "84a545ff7899153b16ff47dc372094e82d5b1f9076211edbfb85eb239f64be67"
+    },
+    {
+      "path": "test-summary.json",
+      "bytes": 4776,
+      "sha256": "f541145a217d5be87500b2c300107068929ec461dafb5c27780f0e2882336b4e"
+    }
+  ]
+}

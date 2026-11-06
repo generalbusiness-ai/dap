@@ -17,7 +17,8 @@ import { signerOf } from "./fold.ts";
 import { judgeGuards, slotOf, type Fetched, type Judging } from "./guards.ts";
 import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, markOf, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
-import { conditionsReadClock, deriveSends, formOf, readsClock } from "./sends.ts";
+import { deriveSends, formOf } from "./sends.ts";
+import { bodyJudgesClock, bodyStructure, clauseStructure } from "./program/structure.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isLocalId, isObject, own, same } from "./values.ts";
@@ -368,9 +369,6 @@ export type Ran =
 /** Section 4.2: when a failed guard declares a `reason`, that is the refusal's name. */
 export const refusalName = (guard: Guard): { name?: string } => (guard.reason === undefined ? {} : { name: guard.reason });
 
-/** True when an effect sets a slot from the commit time, or its condition reads the clock. */
-const timesEffect = (e: EffectForm): boolean => ("value" in e && e.value.from !== null && "time" in e.value.from) || readsClock(e.if) || readsClock(e.unless);
-
 /** What a judge gives a rule before the forms of a row are derived: at check 7 no subject is bound, and at check 8 those bound so far. A handler has no signer. */
 export const giving = (view: StateView, context: Reading, scope: Pick<ScopeState, "at" | "creator">, self: number, judged: JudgedInput, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, Fetched>, source?: Fetched): Giving =>
   ({ view, clock: context.clock, bounds: context.bounds, scope, self, fields, subjects: new Map(), signer: null, facts, own: context.own, source, platform: context.platform, judged, ran });
@@ -383,6 +381,8 @@ export const giving = (view: StateView, context: Reading, scope: Pick<ScopeState
  * records, when the entry is its genesis.
  */
 export function derive(j: Judging, forms: Forms, opens: string | null, cause: Digest, first = 0, directory?: ScopeRef | null): Ran {
+  const structure = bodyStructure(j.definition, forms, j.kind);
+  if (!structure) throw new TypeError("body was not captured by its validation");
   // Section 6.4, "A rule of a form that declares `settles` sets no state": the effects of a rule are checked against it.
   if (forms.settles !== undefined) j.settling = true;
   // Section 6.5: the guards are one list with three results. A guard that is false refuses, also after one that is not completed.
@@ -409,7 +409,7 @@ export function derive(j: Judging, forms: Forms, opens: string | null, cause: Di
   const full = effects.opened === null ? null : overMax(j.view, j.definition, effects.opened.type, effects.opened.state);
   if (full !== null) return { result: "refused", reason: "type-full", detail: full, prepared: j.used };
   // Section 6.1, "A rule that reads the clock": an entry for which such a rule was run judges time.
-  const judgesTime = readsClock(forms.guards) || forms.effects.some(timesEffect) || conditionsReadClock(forms.sends, forms.attention) || j.ran?.clock === true;
+  const judgesTime = bodyJudgesClock(structure) || j.ran?.clock === true;
   // Section 17.3: a form that declares `settles` is judged in full. It settles when its subject is in a listed state at the
   // commit and the entry takes it out of the listed states. Any other entry of the form is new work.
   // By a mark (revision 21): before the entry the subject's state was one of `in` and its mark was `false`, and after the entry's
@@ -541,7 +541,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   const { declared } = definition;
   const input = origin.input;
   /** What the origin gives its clauses: its fields, how it selects its items, its primary item by ID, and its signer. */
-  let frame: { kind: string; fields: Record<string, FieldValue>; fieldTypes: ActType["fields"]; also: Readonly<Record<string, AlsoRule>>; on: number | null; signer: Signer | null; sends: readonly SendForm[];
+  let frame: { kind: string; body: Forms | null; fields: Record<string, FieldValue>; fieldTypes: ActType["fields"]; also: Readonly<Record<string, AlsoRule>>; on: number | null; signer: Signer | null; sends: readonly SendForm[];
                presents?: ActType["presents"]; presented?: Readonly<Record<string, FieldValue>>;
                /** The send of an outcome's mark, which made the request: an outcome entry has no written list to find it in. */
                sent?: SendMark };
@@ -557,7 +557,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     // the fold adds no principal for it; a principal here would put a member in an `attribute` effect whom the fold then leaves
     // out of the item's history. A grant is judged for the entry it is presented with, and for no later entry.
     const signed = signerOf(origin);
-    frame = { kind, fields: read.fields, fieldTypes: act.fields, also: act.also, on: typeof on === "number" ? on : null, signer: signed && { member: signed.member, principal: null }, sends: act.sends };
+    frame = { kind, body: act, fields: read.fields, fieldTypes: act.fields, also: act.also, on: typeof on === "number" ? on : null, signer: signed && { member: signed.member, principal: null }, sends: act.sends };
     // The facts that were presented beside the origin's intent, which a clause may read as the act's guards did.
     if (input.type === "act") [frame.presents, frame.presented] = [act.presents, input.presented];
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
@@ -569,7 +569,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     if (!read.ok) throw new Error(`entry ${origin.seq} was sealed with fields its handler does not take`);
     // The handler's primary item: the one the origin opened, or the one item of the type that it found.
     const on = handler.opens === null ? null : origin.effects.some((e) => e.effect === "open") ? origin.seq : (ones(view, definition, handler.opens, origin.seq)[0]?.id ?? null);
-    frame = { kind: b.kind, fields: read.fields, fieldTypes: handler.fields, also: handler.also, on, signer: null, sends: handler.sends };
+    frame = { kind: b.kind, body: handler, fields: read.fields, fieldTypes: handler.fields, also: handler.also, on, signer: null, sends: handler.sends };
   } else if (input.type === "outcome") {
     // Platform data, section 6.1, place 7: an outcome entry has no row in the data. The mark of its kind may hold one `send`, whose
     // clauses are the mark's own (revision 17, "A request of an outcome's rule, and its clauses"). Such an entry sends that one
@@ -578,7 +578,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     const marked = input.owner === context.platform?.named ? own((declared as unknown as PlatformData).outcomes, input.kind)?.send : undefined;
     if (!marked || request.n !== 0) return { result: "ran", effects: [], uses: [], judgesTime: false };
     // An outcome has no field, no subject and no signer: each effect of the clause is an effect mark, whose rule finds its items.
-    frame = { kind: input.kind, fields: {}, fieldTypes: {}, also: {}, on: null, signer: null, sends: [], sent: marked as unknown as SendMark };
+    frame = { kind: input.kind, body: null, fields: {}, fieldTypes: {}, also: {}, on: null, signer: null, sends: [], sent: marked as unknown as SendMark };
   } else throw new Error(`entry ${origin.seq} is not one that sends a request`);
 
   // A send that was not made took no ordinal, and a fan-out made several: the form is found from the send the entry recorded.
@@ -589,6 +589,10 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   const written = marked ? null : (form as Exclude<SendForm, { index: unknown }>);
   const clauses = (marked ? marked.result : "create" in written! ? written.create.result : "tell" in written! ? written.tell.result : written!.relate.result) as ResultClauses & { conflict?: readonly EffectForm[] };
   const forms = clauses[clause] ?? [];
+  const originBody = frame.body ? bodyStructure(definition, frame.body, frame.kind) : null;
+  if (frame.body && !originBody) throw new TypeError("origin body was not captured by its validation");
+  const structure = forms.length > 0 ? clauseStructure(definition, form, clause, originBody, frame.kind) : null;
+  if (forms.length > 0 && !structure) throw new TypeError("result clause was not captured by its validation");
   // Revision 20, section 16.1: the rows of this clause, for the delivery of a result that runs it, under a definition whose data
   // states rows. A request that a rule gave states none: its mark holds its clauses, and no text gives a mark rows (I3 deltas,
   // entry GA5). A diagnosis holds no observation, so `undelivered` has none.
@@ -643,5 +647,5 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. In platform data a rule of the clause may open
   // one. Past the bound the clause's effects cannot apply now, and it changes nothing, as above.
   const applies = effects.ok && (effects.opened === null || overMax(view, definition, effects.opened.type, effects.opened.state) === null);
-  return { result: "ran", effects: applies ? effects.effects : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: forms.some(timesEffect) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
+  return { result: "ran", effects: applies ? effects.effects : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: (structure !== null && bodyJudgesClock(structure)) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
 }

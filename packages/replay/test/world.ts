@@ -11,9 +11,9 @@
  *   I: 0 genesis, 1 confirmation, 2 P's update
  */
 
-import type { Entry, RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
-import { born, deliver, fields, created, keys, type Ledger } from "@generalbusiness/dap-derive/testing";
+import type { DeclaredDefinition, Entry, RetainedInput } from "@generalbusiness/dap-contract";
+import { canonicalize, definitionDigest, digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { born, deliver, fields, created, keys, notesDefinition, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, hashOfBytes, type MemoryScope } from "../src/index.ts";
 
 function written(judgment: { result: string }): void {
@@ -50,6 +50,19 @@ export function served(ledger: Ledger, all: readonly Ledger[]): MemoryScope {
     }
   }
   return { scope: ledger.at, entries: ledger.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };
+}
+
+/** Untrusted synthetic bytes for replay refusal; the runtime never admits this declaration. */
+export function unsupportedDefinitionHistory(declared: DeclaredDefinition, key: string): MemoryScope {
+  const ledger = created(notesDefinition, {}, key), history = served(ledger, [ledger]);
+  const genesis = entryOf(history, 0);
+  if (history.entries.length !== 1 || genesis.input.type !== "genesis") throw new Error("unsupported definition fixture needs one genesis");
+  const digest = definitionDigest(declared), seed = { ...genesis.input.seed, definition: digest };
+  const at = { ...history.scope, scope: scopeIdOf(seed) };
+  const entry: Entry = { ...genesis, at, input: { ...genesis.input, seed } };
+  const bytes = canonicalize(entry);
+  return { scope: at, entries: [{ seq: 0, hash: hashOfBytes(bytes), bytes }],
+    retained: [{ kind: "definition", digest, bytes: canonicalize(declared) }] };
 }
 
 const GOOD = (() => {

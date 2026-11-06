@@ -60,7 +60,7 @@ async function water(amount = 400, time = 101, policyPresent = true): Promise<Ju
 function agree(j: Judging, body = program(j.definition, j.kind), first = 0): Ran {
   const legacy = { ...j, used: [], ...(j.asked === undefined ? {} : { asked: [] }), ran: { clock: j.ran?.clock === true } };
   const act = j.definition.declared.acts[j.kind]!, expected = derive(legacy, act, act.step === "open" ? act.on : null, cause, first);
-  const plain = evaluate(body, j, cause, first), traced = evaluate(body, j, cause, first, 10000), exhausted = evaluate(body, j, cause, first, 0);
+  const plain = evaluate(body, j, first), traced = evaluate(body, j, first, 10000), exhausted = evaluate(body, j, first, 0);
   expect(plain.ran).toEqual(expected); expect(traced.ran).toEqual(expected); expect(exhausted.ran).toEqual(expected);
   expect(canonicalBytes(exhausted.ran)).toEqual(canonicalBytes(plain.ran));
   expect(traced.asked).toEqual(legacy.asked ?? []); expect(traced.primitives).toEqual(plain.primitives); expect(exhausted.primitives).toEqual(plain.primitives);
@@ -129,7 +129,7 @@ describe("typed derivation program", () => {
     const definition = variant(raw, data => { data.acts.window.guards = [{ rule: "ready" }, { state: ["live"] }, { after: { slot: "until" } }, { rule: "ready" }]; });
     const j = context(definition, "window"), on = { ...item(definition, "note", 1), values: { until: t(100), text: "old" } }; j.subjects = new Map([["on", on]]);
     j.asked = []; expect(agree(j)).toMatchObject({ result: "ran", judgesTime: true, prepared: [] });
-    const collected = evaluate(program(definition, "window"), j, cause); expect(collected.asked).toHaveLength(1);
+    const collected = evaluate(program(definition, "window"), j); expect(collected.asked).toHaveLength(1);
     delete j.asked; j.subjects = new Map([["on", { ...on, state: "done" }]]);
     expect(agree(j)).toEqual({ result: "refused", reason: "guard-failed", detail: "guards.1", prepared: [] });
   });
@@ -137,7 +137,7 @@ describe("typed derivation program", () => {
     const result = lower(fixture, "send", bounds); expect(result.supported).toBe(true);
     const unsupported = variant(raw, data => { data.acts.send.guards.push({ set: "text" }); });
     expect(lower(unsupported, "send", bounds)).toEqual({ supported: false, paths: ["acts.send.guards.1"] });
-    expect(() => evaluate({ op: "body" } as m.Program, context(fixture, "send"), cause)).toThrow("unchecked program");
+    expect(() => evaluate({ op: "body" } as m.Program, context(fixture, "send"))).toThrow("unchecked program");
   });
   test("constructors reject forged evidence, incompatible descriptors, and working-phase guards", () => {
     const context = m.schema(fixture, "window"), on = m.subject(context, "on"), target = m.slot(on, "until");
@@ -163,17 +163,17 @@ describe("typed derivation program", () => {
     const guards = Object.freeze<m.All>({ op: "all", path: "acts.send.guards", guards: [{ op: "state", states, metadata: { subject: on, path: "acts.send.guards.0" } }] });
     const body = m.body(schema, guards, [], []), j = context(fixture, "send");
     j.subjects = new Map([["on", item(fixture, "note", 1)]]);
-    const before = evaluate(body, j, cause).ran;
+    const before = evaluate(body, j).ran;
     expect(before).toMatchObject({ result: "ran", effects: [], sends: [] });
     expect(() => { states[0] = "done"; }).toThrow(TypeError);
-    expect(evaluate(body, j, cause).ran).toEqual(before);
+    expect(evaluate(body, j).ran).toEqual(before);
   });
   test("a Grow refusal display names the source and the actual deadline and supplied time", async () => {
-    const j = await water(400, 100), body = program(grow, "water"), result = evaluate(body, j, cause, 0, 100);
+    const j = await water(400, 100), body = program(grow, "water"), result = evaluate(body, j, 0, 100);
     expect(explain(body, result)).toEqual({ sourcePath: "acts.water.guards.1", values: { subject: "also.policy", deadline: t(100), clock: t(100) }, opaque: false, incomplete: false,
       text: `acts.water.guards.1: after failed (subject="also.policy", deadline=${JSON.stringify(t(100))}, clock=${JSON.stringify(t(100))}).` });
-    expect(explain(body, evaluate(body, j, cause, 0, 0))).toMatchObject({ incomplete: true, values: {}, sourcePath: "acts.water.guards.1" });
-    const amount = await water(401), opaque = explain(body, evaluate(body, amount, cause, 0, 100));
+    expect(explain(body, evaluate(body, j, 0, 0))).toMatchObject({ incomplete: true, values: {}, sourcePath: "acts.water.guards.1" });
+    const amount = await water(401), opaque = explain(body, evaluate(body, amount, 0, 100));
     expect(opaque).toMatchObject({ sourcePath: "acts.water.guards.3", opaque: true, values: { input: ruleInput(amount) } });
     expect(opaque.text).toContain("The prepared rule body is opaque.");
   });
@@ -181,7 +181,7 @@ describe("typed derivation program", () => {
     const definition = variant(raw, data => { data.acts.send.effects.push({ value: { slot: "until", from: { time: { plusSeconds: 1 } } }, if: [{ of: "also.other", state: ["live"] }, { after: { slot: "until" } }] }); });
     const j = context(definition, "send"), on = item(definition, "note", 1); j.subjects = new Map([["on", on]]); j.fields = { next: directory, text: "new" };
     expect(agree(j)).toMatchObject({ result: "ran", judgesTime: true });
-    const body = program(definition, "send"), captured = evaluate(body, j, cause, 0, 100);
+    const body = program(definition, "send"), captured = evaluate(body, j, 0, 100);
     expect(captured.trace.some(event => event.op === "after" || event.op === "time")).toBe(false);
     expect(dependencies(body)).toContainEqual({ kind: "clock" });
     expect(dependencies(body)).toContainEqual({ kind: "subject", name: "on", phase: "before", part: "slot:value:until" });

@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "qualification": "Intermediate validator metadata foundation. Exact uncommitted source patches and hashes retained at base c5dc2502. Initial source compiler failed on a missing Type import; next source compiler passed and test compiler found one direct fixture owner; final test compiler passed after that fixture supplied owner and binder metadata. Three existing forms owners pass14 cases. No complete descriptors, clock visitor, production clock caller cutover, final gate or M3 acceptance.",
+  "fileCount": 33,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-foundation-compilers",
+      "fileCount": 7,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 465,
+          "sha256": "e6ce42da671a20b3ec352f936eb7a605e4d780618c4fc58f38dc8870cc67eba1"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1260,
+          "sha256": "832dad354a93ca3248eb9eb970cb866f9ec1cd8487cb65b81ff5dfe703312c67"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 1883,
+          "sha256": "041c132f9f5120962a37aa523453e9b239e0a395fc58d7e9deff5d6cd8553a16"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 23253,
+          "sha256": "3eecc1ac63fe3c116c98ab16f288deec25a58e41bca70e3423bb36ca949cc797"
+        },
+        {
+          "path": "result.json",
+          "bytes": 506,
+          "sha256": "28972180d9061ee977a684bd9c1827bfe2ca2f9fa368fb07236ae02278b84d20"
+        },
+        {
+          "path": "source.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "source.log",
+          "bytes": 73,
+          "sha256": "6a10321ba3e7483f98f658fd7f149c63ed018f2ade27e9014a2947546c33897a"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-foundation-compilers-2",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 618,
+          "sha256": "a744224aa89ee8e67cfdd166068217b600cb773d90d4a43a558ccb5b71017f48"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1260,
+          "sha256": "f211609b09b22b283ad5f8d6722efcb4cfd186b607a52e99ee0e99565d3163b9"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 1975,
+          "sha256": "14a9d715c342376c7aadb5c705640ee94ced82457bd3dcb4d82de99046a97160"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 23224,
+          "sha256": "d44f7958baecee68609a433d9f624d6efb484669d520c0db0243640a0a59b595"
+        },
+        {
+          "path": "result.json",
+          "bytes": 832,
+          "sha256": "7fad4744c0b2edf054ff767a2d2cc5c8d2040e1c15b517ae708800a497fdbcf8"
+        },
+        {
+          "path": "source.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "source.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tests.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "tests.log",
+          "bytes": 135,
+          "sha256": "e5eca8e06164eca94c3c2d147f87737898b4eac608af6939dbbc66d5d4ff8d6c"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-foundation-compilers-3",
+      "fileCount": 7,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 463,
+          "sha256": "64cef082be5b8bf0a7d64c3e6ea22b543ec280faffbf4fdedd66e25687ccc6b8"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1377,
+          "sha256": "0581f6d8e40eb98aa2205a09ee4206d06f53a70239df84510e867ba42f4a3684"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 1948,
+          "sha256": "10a1fd52e9be18f33901ca342ae935f11906a4ab7260d743170d6bade89184be"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 25070,
+          "sha256": "fbfade6aa473d75fb71b877c5544f354b456ead9fe0f9021e19ec38c21168f7e"
+        },
+        {
+          "path": "result.json",
+          "bytes": 511,
+          "sha256": "b68e298a12c19127e2ccda613c9d89279bfca408294d4ea0830ab771d6283764"
+        },
+        {
+          "path": "tests.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "tests.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-foundation-forms",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 696,
+          "sha256": "6be16fe77453a771dcea81530ad6c324e9a6e582811e71908d29e025f4833eaa"
+        },
+        {
+          "path": "compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compat.log",
+          "bytes": 363,
+          "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 1929,
+          "sha256": "377e37a23a832a393ac853f7cc51569e422559a69206a3d463ad561bf02aecd1"
+        },
+        {
+          "path": "forms.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "forms.log",
+          "bytes": 3207,
+          "sha256": "13ac1c7c381ffedddd42c626b6d6e53c319dd123e335ab96931054fdd91b3543"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 25070,
+          "sha256": "fbfade6aa473d75fb71b877c5544f354b456ead9fe0f9021e19ec38c21168f7e"
+        },
+        {
+          "path": "result.json",
+          "bytes": 844,
+          "sha256": "c7a6d423005f5e6f0ae354e0d41dd692ae23424759b133f6d0e0cedae1e208de"
+        },
+        {
+          "path": "source.json",
+          "bytes": 1383,
+          "sha256": "4c3ad2c52046a8393dde1afbc1d84188a2f1027cd1e7e82664c1c8312d9a661f"
+        },
+        {
+          "path": "vitest.json",
+          "bytes": 7379,
+          "sha256": "a229613d8978870f02e9b7086dcab3e1145ad16bd3001d7d4139ce5f2b5bedcd"
+        }
+      ]
+    }
+  ]
+}

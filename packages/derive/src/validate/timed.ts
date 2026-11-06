@@ -11,6 +11,8 @@ import { effectBytes, effects } from "./effects.ts";
 import { endedState, holdDoes } from "./hold.ts";
 import { attention, notifyBytes } from "./sends.ts";
 import { at } from "./shape.ts";
+import { recordFrame } from "../program/reads.ts";
+import { beginBody, endBody } from "../program/structure.ts";
 import { ENTRY_BYTES, RECORD_BYTES, memberBytes, mostBytes, stated } from "./sizes.ts";
 
 /** What the kind of a timed entry begins with (section 6.2). Its rule's key follows. */
@@ -93,6 +95,7 @@ export function timedRules(d: Defining, v: unknown, timedTypes: Set<string>, out
     // Section 6.2: the kind of the entry a rule writes is `timed:` and the rule's key. So an effect may set a slot of the rule's
     // item from `self` when the slot's kinds include that kind (section 6.4). It is then total, like a `state` effect.
     const ctx: Ctx = { ...naming(), on: t, fields: new Map(), timed: true, live: new Set(["on"]), kind: TIMED + name };
+    const traced = beginBody(d, { kind: "body", source: o });
     // Section 6.4: a timed rule's effects are total. With no field, no signer and no other subject, what is left that a commit
     // could refuse is an effect that needs room in a party list, or a time derived from the commit clock, and `effect` refuses
     // each as `timed-partial`.
@@ -104,6 +107,8 @@ export function timedRules(d: Defining, v: unknown, timedTypes: Set<string>, out
     if (to === null) bad("timed", at(path, "effects"), "a timed rule takes its item out of the rule's states");
     else moves.push({ name, type: t.name, states, to, deadline: String(o["deadline"]) });
     attention(d, o["attention"], at(path, "attention"), ctx);
+    recordFrame(d, ctx, path, "timed");
+    endBody(d, traced);
   }
   return moves;
 }

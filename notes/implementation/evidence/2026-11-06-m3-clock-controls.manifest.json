@@ -1,0 +1,64 @@
+{
+  "qualification": "Initial controls: removing declared clock use fails exactly5 selected assertions; removing Native contribution survives all8 cases. The driver stops on that unexpected survival before the future-clause control. Both source files restored. Retain this failed control-design attempt.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-clock-controls",
+  "fileCount": 11,
+  "files": [
+    {
+      "path": "declared-clock.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "declared-clock.log",
+      "bytes": 20843,
+      "sha256": "37b25adcb90e3799f637e8c53aacddccbc22870ae46c9303428075eb5e13eaf2"
+    },
+    {
+      "path": "declared-clock.patch",
+      "bytes": 495,
+      "sha256": "5ffc0c72826376c158bc1d16b59bccc3f2d3ff9adb2ec0628a4b8628a4171549"
+    },
+    {
+      "path": "declared-clock.vitest.json",
+      "bytes": 42563,
+      "sha256": "0ef0850ff7c91b874923d26973ca67734a94877950a4567b028c66831537f8c0"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 4531,
+      "sha256": "0dbfbaa603a25284fe8d5d2f30fa7d9f9d2b6f9f2e441aa3ca879e1098b0f41e"
+    },
+    {
+      "path": "native-clock.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "native-clock.log",
+      "bytes": 16638,
+      "sha256": "709aa826a8c1751b5f6558d62fa4f68450357b332fb78b964226e9a5ff7b48b7"
+    },
+    {
+      "path": "native-clock.patch",
+      "bytes": 908,
+      "sha256": "8bd5fcdcb3289eb13bbb9efa72297471a365cfa5638ae4dfa41515c57f1a4215"
+    },
+    {
+      "path": "native-clock.vitest.json",
+      "bytes": 35820,
+      "sha256": "ada27253458e55cadfadb080ceeb706c222158e1948d6685527ce6ec9d147fa5"
+    },
+    {
+      "path": "recovery.json",
+      "bytes": 486,
+      "sha256": "10414664d8e24d2e9f2a5e454a5a41b7d97c7c95f7aa8725210d77c6a9bdc2ae"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 850,
+      "sha256": "ee3ca13a577ec58f3b42d98095a6254c4d854c711d0c0b287a5533f2816a14ea"
+    }
+  ],
+  "finalCutoverCheckpoint": "395326e65ffc32512a808e3b5790f81d0e3dfa9a",
+  "checkpointQualification": "Only revised controls unit reconstructs this final checkpoint exactly; older units describe their own saved source inputs."
+}

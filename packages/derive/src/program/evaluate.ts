@@ -1,5 +1,5 @@
 /** One concrete evaluator. Optional trace collection never reruns a primitive. */
-import type { Digest, Effect as RecordedEffect, FieldValue, Send, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Effect as RecordedEffect, FieldValue, Send, UnavailableReason } from "@generalbusiness/dap-contract";
 import { held } from "../effects.ts";
 import { changeItem, newItem, type ItemEffect } from "../fold.ts";
 import { preparedRule, slotOf, type GuardResult, type Judging, type RuleInput } from "../guards.ts";
@@ -13,7 +13,7 @@ import { judgesClock } from "./dependencies.ts";
 
 export interface TraceEvent { path: string; op: string; result: unknown; reads?: Readonly<Record<string, unknown>> }
 export interface Evaluation { ran: Ran; asked: readonly RuleInput[]; trace: readonly TraceEvent[]; truncated: boolean; primitives: Readonly<Record<"expressions" | "guards" | "effects" | "sends" | "prepared", number>> }
-export function evaluate(program: Program, input: Judging, _cause: Digest, first = 0, traceBudget?: number): Evaluation {
+export function evaluate(program: Program, input: Judging, first = 0, traceBudget?: number): Evaluation {
   checkedProgram(program);
   if (program.definition !== input.definition.digest || program.kind !== input.kind) throw new TypeError("program belongs to another body");
   const j: Judging = { ...input, used: [], ...(input.asked === undefined ? {} : { asked: [] }), ran: { clock: input.ran?.clock === true } };

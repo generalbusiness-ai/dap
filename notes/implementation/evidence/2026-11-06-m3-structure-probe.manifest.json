@@ -1,0 +1,103 @@
+{
+  "qualification": "Source/test compilers and1458 existing admission/form cases. The later graph witness file is absent here; production source matches its source checkpoint. No production clock caller cutover or final gate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-structure-probe",
+  "checkpoint": "70d12b3d973a00a86baa84d6caffe5aa0c608884",
+  "tree": "d919f7958f428b1acb3b0e4f0c5192b1d2a80888",
+  "fileCount": 16,
+  "files": [
+    {
+      "path": "checkpoint-proof.json",
+      "bytes": 624,
+      "sha256": "83ff4d6f9fa23656b3a97f32520e32a29a9cb9c3d02815ac1fdc0267411e78e8"
+    },
+    {
+      "path": "compat.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "compat.log",
+      "bytes": 363,
+      "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 2760,
+      "sha256": "f78fe358a9bfccb39a14d787c152214eeff432dd3d6bc6f7b132243d9e856540"
+    },
+    {
+      "path": "extra-inputs/packages/derive/src/program/structure.ts",
+      "bytes": 14403,
+      "sha256": "7a964b23ff2675f4be2edb2ca1835a8e5bda13c7715887fcd0c759d3e13e67d1"
+    },
+    {
+      "path": "forms.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "forms.log",
+      "bytes": 177313,
+      "sha256": "eefdd363059697ee71f39b56f04f3834b4f64aa8c68363f9a145e0015c717305"
+    },
+    {
+      "path": "input.patch",
+      "bytes": 42010,
+      "sha256": "1a43076cd23a399751bf8601ab1025edd40091a7175b3f6e01114b2e9a085604"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1656,
+      "sha256": "6daa6875269795247df7c55e3d51d24eb834af040b465da3fb2a7b04241ce112"
+    },
+    {
+      "path": "source-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "source-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "source.json",
+      "bytes": 1581,
+      "sha256": "94383f1e0a03c19c3758904778b828571793824300425345b94c2a556466bb77"
+    },
+    {
+      "path": "test-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vitest.json",
+      "bytes": 405732,
+      "sha256": "ae3b163d73f30cc08f21917c779e8c80130abdbc6c91690a81982d4ea233449a"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1246,
+      "sha256": "3f2a99cb7dc81ca2c6371462e9f5aac1a3235d206c9c750e8c9e55daf78392bc"
+    }
+  ],
+  "inputBase": "0aabad6c339ca2fa7d133f945179d8a87fed62df",
+  "inputReconstruction": {
+    "base": "0aabad6c339ca2fa7d133f945179d8a87fed62df",
+    "checkpoint": "70d12b3d973a00a86baa84d6caffe5aa0c608884",
+    "tree": "d919f7958f428b1acb3b0e4f0c5192b1d2a80888",
+    "trackedPatchEqualsCommittedSubset": true,
+    "extraInputsMatchAddedBlobs": true,
+    "noOtherCommittedPaths": true,
+    "extraInputs": [
+      "packages/derive/src/program/structure.ts"
+    ],
+    "sourceUnchangedDuringChecks": true,
+    "qualification": "Source/test compilers and1458 existing admission/form cases. The later graph witness file is absent here; production source matches its source checkpoint. No production clock caller cutover or final gate."
+  }
+}

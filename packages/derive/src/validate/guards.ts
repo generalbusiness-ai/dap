@@ -3,11 +3,13 @@
 import type { FieldType } from "@generalbusiness/dap-contract";
 import { isObject } from "../values.ts";
 import { capabilityGuard } from "./capability.ts";
-import { mark, marked, onSubject, subject, type Ctx, type Defining, type Type } from "./context.ts";
+import { bindElement, mark, marked, onSubject, ownerOf, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";
 import { fieldOf, isDetached, operand, type Read } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
+import { recordField, recordForeignField, recordRange, recordSlot } from "../program/reads.ts";
+import { enterForm, leaveForm, type GuardOp } from "../program/structure.ts";
 
-const GUARDS = ["state", "signer", "notIn", "set", "unset", "equals", "differs", "some", "none", "count", "every", "fact", "before", "after", "rule", "each", "has", "anyOf", "distinct", "sameSet", "capability"];
+const GUARDS = ["state", "signer", "notIn", "set", "unset", "equals", "differs", "some", "none", "count", "every", "fact", "before", "after", "rule", "each", "has", "anyOf", "distinct", "sameSet", "capability"] as const satisfies readonly GuardOp[];
 
 /** The guards of one written list, counted with those nested in them (section 6.1). */
 interface Nesting { count: number }
@@ -17,7 +19,7 @@ interface Nesting { count: number }
  * two operands. A slot with no `of` is read from the item that `owner`
  * gives. Returns the slots of that item which the clauses read.
  */
-function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, owner: () => Type | null, guard: boolean): Set<string> {
+function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, owner: ReadOwner, guard: boolean): Set<string> {
   const slots = new Set<string>();
   d.list(v, path, d.bounds.guards).forEach((w, i) => {
     const f = d.form(w, at(path, i), ["equals", "differs"]);
@@ -45,9 +47,10 @@ export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readon
   if (!r) return null;
   const t = typeof r["type"] === "string" ? types.get(r["type"]) : undefined;
   if (!t) return bad("name", at(p, "type"), "names no item type");
-  names(r["states"], at(p, "states"), t.states, "state");
+  const states = names(r["states"], at(p, "states"), t.states, "state");
+  recordRange(d, ctx, p, t, states);
   // In a `where`, a slot with no `of` is a slot of each item the range covers.
-  const slots = clauses(d, r["where"] ?? [], at(p, "where"), ctx, () => t, guard);
+  const slots = clauses(d, r["where"] ?? [], at(p, "where"), ctx, ownerOf(() => t, { kind: "range", path: p, type: t.name }), guard);
   if (slots.size > 0 || (Array.isArray(r["where"]) && r["where"].length > 0)) indexes.push({ path: p, type: t.name, slots: [...slots].sort() });
   // Section 6.5: the items of those subjects are left out. A subject of another type could leave nothing out.
   if ("except" in r) list(r["except"], at(p, "except"), bounds.also + 1).forEach((s, i) => {
@@ -61,10 +64,16 @@ export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readon
 
 /** One guard of an act or handler. `depth`: how deep it is nested; a guard as written is at 1. `inherited`: the subject of the guard that holds it. */
 export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nesting = { count: 0 }, depth = 1, inherited?: unknown): void {
-  const { bounds, rules, bad, rec, form, list, int, bool, names, str } = d;
   nesting.count++;
-  const f = form(v, path, GUARDS, ["of", "ifPresent", "reason"]);
+  const f = d.form(v, path, GUARDS, ["of", "ifPresent", "reason"]);
   if (!f) return;
+  const traced = enterForm(d, "guard", f[0] as GuardOp, path, v);
+  try { guardBody(d, v, path, ctx, nesting, depth, inherited, f); }
+  finally { leaveForm(d, traced); }
+}
+
+function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nesting, depth: number, inherited: unknown, f: readonly [string, unknown]): void {
+  const { bounds, rules, bad, rec, form, list, int, bool, names, str } = d;
   const [k, x] = f;
   const o = v as Rec;
   const p = at(path, k);
@@ -72,11 +81,15 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
   // Section 6.5: a nested guard takes the enclosing guard's subject unless it names its own.
   const of = "of" in o ? o["of"] : inherited;
   /** The subject as an item this guard reads. The item an `open` act opens has nothing to read yet. */
-  const item = (): Type | null => {
+  const item = ownerOf((): Type | null => {
     const s = subject(d, of, path, ctx, false);
     if (s === null || s === "scope") return null;
     if (ctx.nascent && onSubject(of)) return bad("nascent-guard", path, "a guard may not read the item its act opens");
     return s;
+  }, { kind: "subject", name: typeof of === "string" ? of : "on" });
+  const readSlot = (type: Type, name: string, slotPath: string) => {
+    const slot = type.slots.get(name);
+    if (slot) recordSlot(d, ctx, slotPath, type, item.identity, name, slot, "read");
   };
   let namesField = false;
   /** A field or a presented fact that the operand names: what `ifPresent` is for. */
@@ -106,7 +119,7 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
     if (!read || as === null) return null;
     if (read.type !== null && read.type.type !== "list") return bad("name", at(p, "list"), "names no list");
     const element: FieldType | null = read.type?.type === "list" ? read.type.of : null;
-    return { ...ctx, elements: new Map(ctx.elements).set(as, element), live: new Set() };
+    return { ...bindElement(ctx, as, element, at(p, "as")), live: new Set() };
   };
   switch (k) {
     case "state": {
@@ -117,12 +130,13 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
     case "signer": case "notIn": {
       if (!ctx.signer) bad("name", p, "there is no signer here");
       const t = item();
-      if (t) names(x, p, { has: (s) => t.slots.get(s)?.kind === "party" }, "party slot");
+      if (t) for (const name of names(x, p, { has: (s) => t.slots.get(s)?.kind === "party" }, "party slot")) readSlot(t, name, p);
       break;
     }
     case "set": case "unset": {
       const t = item();
       if (t && (typeof x !== "string" || !t.slots.has(x))) bad("name", p, "names no slot");
+      if (t && typeof x === "string") readSlot(t, x, p);
       break;
     }
     case "equals": case "differs":
@@ -149,11 +163,15 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       if (!r) break;
       // A field of that name, when the act has one; otherwise a slot of the subject.
       let type = fieldOf({ field: r["list"] }, ctx);
-      if (type) namesField = true;
+      if (type) {
+        namesField = true;
+        recordField(d, ctx, at(p, "list"), r["list"] as string, type);
+      }
       else {
         const t = item();
         if (!t) break;
         type = (typeof r["list"] === "string" && t.slots.get(r["list"])?.type) || null;
+        if (type) readSlot(t, r["list"] as string, at(p, "list"));
       }
       const listed = type?.type === "list" && type.of.type === "item" ? d.types.get(type.of.of) : undefined;
       if (!listed) bad("name", at(p, "list"), "names no field or slot that is a list of items");
@@ -167,7 +185,9 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       const r = x as Rec;
       if (by[0] === "field") {
         namesField = true;
-        if (fieldOf(r, ctx)?.type !== "fact") bad("name", at(p, "field"), "names no field of type fact");
+        const type = fieldOf(r, ctx);
+        if (type?.type !== "fact") bad("name", at(p, "field"), "names no field of type fact");
+        if (type) recordField(d, ctx, at(p, "field"), by[1] as string, type);
       } else {
         if ("where" in r) { bad("shape", at(p, "where"), "is for a fact that a field names"); break; }
         const read = operand(d, { [by[0]]: by[1] }, at(p, by[0]), ctx, item);
@@ -179,7 +199,13 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       // `a` is a field of the named entry's intent or message, which this definition cannot resolve; `b` is read in this act.
       list(r["where"] ?? [], at(p, "where"), bounds.guards).forEach((w, i) => {
         const wo = rec(w, at(at(p, "where"), i), ["equals"]);
-        if (wo) pair(wo["equals"], at(at(p, "where"), i), (a, ap) => (isObject(a) && Object.keys(a).length === 1 && typeof a["field"] === "string" ? null : bad("shape", ap, "must be a field of the entry's intent or message")));
+        if (wo) pair(wo["equals"], at(at(p, "where"), i), (a, ap) => {
+          if (isObject(a) && Object.keys(a).length === 1 && typeof a["field"] === "string") {
+            recordForeignField(d, ctx, ap, by[1] as string, a["field"]);
+            return null;
+          }
+          return bad("shape", ap, "must be a field of the entry's intent or message");
+        });
       });
       break;
     }
@@ -188,6 +214,7 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       const t = r && item();
       const s = t && typeof r["slot"] === "string" ? t.slots.get(r["slot"]) : undefined;
       if (t && !(s?.kind === "value" && s.type.type === "time")) bad("name", p, "names no value slot of type time");
+      if (t && s) recordSlot(d, ctx, at(p, "slot"), t, item.identity, r!["slot"] as string, s, "read");
       break;
     }
     case "rule":
@@ -228,7 +255,7 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       const items = range(d, r["items"], at(p, "items"), ctx);
       if (!items) break;
       if (key?.type?.type === "item" && key.type.of !== items.type.name) bad("name", at(p, "key"), `names no item of type ${items.type.name}`);
-      clauses(d, r["match"] ?? [], at(p, "match"), inner, () => items.type, true);
+      clauses(d, r["match"] ?? [], at(p, "match"), inner, ownerOf(() => items.type, { kind: "range", path: at(p, "items"), type: items.type.name }), true);
       if ("ordered" in r) bool(r["ordered"], at(p, "ordered"));
       break;
     }

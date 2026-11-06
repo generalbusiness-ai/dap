@@ -1,0 +1,52 @@
+{
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-final-focused-2",
+  "qualification": "Corrected frozen focused plan at cb614e2f: both compilers and111 complete cases pass with exact source/tool/selection fences. Actual pipeline exit0.",
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "body.log",
+      "bytes": 21594,
+      "sha256": "765af36d8ce8c2b7f62ea45c6c9b611b078211a3e8856b3a7f1651369417f845"
+    },
+    {
+      "path": "coverage-ledger.json",
+      "bytes": 145011,
+      "sha256": "f50acd8ff1cd75b2bbc6f8b1ca36bbcd36e9044bac49a8181b26d24d7f1c3c52"
+    },
+    {
+      "path": "coverage.jsonl",
+      "bytes": 167761,
+      "sha256": "46c45a460fa6deb7488343b93d5c0735123f54b815ef4dd64ed171cb1a64a2fe"
+    },
+    {
+      "path": "derive-source.log",
+      "bytes": 29,
+      "sha256": "ffddaf0b3aebeafe11509b0843dfab6aec7fb32ace090397283f08da24d4e2fb"
+    },
+    {
+      "path": "derive-test.log",
+      "bytes": 29,
+      "sha256": "06497647551b715afe17456a026cc16940ee3a21c91b0b8c300d029e95b9455e"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 1057,
+      "sha256": "d4255cf57ef955fa1306ed08109ec52da0d06b2ca776cb9339ad806b6d390ea6"
+    },
+    {
+      "path": "plan.json",
+      "bytes": 367950,
+      "sha256": "32d534d6bc89a8f814a2e31f3dc5901ed5f125995d1f686eb3db16e123d623e0"
+    },
+    {
+      "path": "result.json",
+      "bytes": 9145,
+      "sha256": "a088f9a8fcf0de31a006ffb54d369c7c517d51e68773ae9cd802aece07a5da55"
+    },
+    {
+      "path": "vitest.json",
+      "bytes": 49290,
+      "sha256": "13713272ee4afd50a6fa796eec647b7c2d3d93a9482188bd96ff89d795cc554c"
+    }
+  ]
+}

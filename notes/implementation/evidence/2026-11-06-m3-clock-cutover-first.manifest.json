@@ -1,0 +1,89 @@
+{
+  "qualification": "Both compilers and1512 cases in16 selected complete owners pass on the first cutover input. The Native witness assertion was later strengthened without changing its title or production code. This unit is not the final gate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-clock-cutover-first",
+  "fileCount": 16,
+  "files": [
+    {
+      "path": "compat.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "compat.log",
+      "bytes": 363,
+      "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 2805,
+      "sha256": "1e8a003818e06e938674f5a35addb88db6ab0b4940e70a4301b0391189c29a89"
+    },
+    {
+      "path": "extra-inputs/packages/derive/test/definition-corpus/clock-cutover-data.ts",
+      "bytes": 4305,
+      "sha256": "312b8234b9c75474e7c567d0ad9b0a28335af737023c9b84df59b36edd77a75f"
+    },
+    {
+      "path": "extra-inputs/packages/derive/test/fixtures-clock-cutover.ts",
+      "bytes": 1451,
+      "sha256": "3595f38a7330c650cd7c29dfdf3043deece4099dd029d3faa0ef5d6172daabbe"
+    },
+    {
+      "path": "forms.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "forms.log",
+      "bytes": 184388,
+      "sha256": "b72dc20a2b6b038cd7676c4ce8fa475a9f1fdcf9a7d88a510096a521e481eb04"
+    },
+    {
+      "path": "input.patch",
+      "bytes": 30074,
+      "sha256": "fcafbd891b7d1b0f3346a610f26c524acf1b3ae9bb8d4ac3800a9424119267a8"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1656,
+      "sha256": "33c5eebb8ef726a2239465d3f67741081f2ac55c571b2cd9f787ab6af4a4f96e"
+    },
+    {
+      "path": "source-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "source-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "source.json",
+      "bytes": 1885,
+      "sha256": "16daaccb5eab0397062d9ddd8fcac74d41e5317690fadddc5020ee1ab1ca2523"
+    },
+    {
+      "path": "test-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vitest.json",
+      "bytes": 422435,
+      "sha256": "c96ad7bacb60f0a95ab1a3d125938dede2de7a9afb5c0d0423111189daf5b8dd"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1304,
+      "sha256": "876a5b72a6adfab407a63ffbe6258ba48cbafaba43ba5279bf1b05cb2ba9e11a"
+    }
+  ],
+  "finalCutoverCheckpoint": "395326e65ffc32512a808e3b5790f81d0e3dfa9a",
+  "checkpointQualification": "Only revised controls unit reconstructs this final checkpoint exactly; older units describe their own saved source inputs."
+}

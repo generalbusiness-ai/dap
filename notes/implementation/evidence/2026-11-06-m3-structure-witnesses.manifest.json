@@ -1,0 +1,99 @@
+{
+  "qualification": "Test compiler and6 new graph witnesses, including full admitted opcode vocabulary. Static metadata only; public production clock caller integration and final gate remain pending.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-structure-witnesses",
+  "checkpoint": "9f063f180427fc07b9ef8dfb529cbc6b962edb76",
+  "tree": "b4ce8d52bcfa175799749e2f87a32804186907fd",
+  "fileCount": 15,
+  "files": [
+    {
+      "path": "checkpoint-proof.json",
+      "bytes": 652,
+      "sha256": "937615f7422dbdc1fc7a4d1afa182c594e28995a0153b87ee7ed1afa7106eb2f"
+    },
+    {
+      "path": "compat.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "compat.log",
+      "bytes": 363,
+      "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 2530,
+      "sha256": "b43f7910c48cff5546bbef05cefa7f3f0aee41b05f3673198265849d07f800fa"
+    },
+    {
+      "path": "extra-inputs/packages/derive/src/program/structure.ts",
+      "bytes": 14403,
+      "sha256": "7a964b23ff2675f4be2edb2ca1835a8e5bda13c7715887fcd0c759d3e13e67d1"
+    },
+    {
+      "path": "extra-inputs/packages/derive/test/program-structure.test.ts",
+      "bytes": 10284,
+      "sha256": "ed7aeba3e17f0520db77da40e5e9c0b00778aa10d3de54dd02b5c8dd44ed5318"
+    },
+    {
+      "path": "forms.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "forms.log",
+      "bytes": 1173,
+      "sha256": "20adff3d4c9b6477aa89dfe0afe05bace549aa25b51db3f25468177b169a8c0e"
+    },
+    {
+      "path": "input.patch",
+      "bytes": 42010,
+      "sha256": "1a43076cd23a399751bf8601ab1025edd40091a7175b3f6e01114b2e9a085604"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1090,
+      "sha256": "65b8877c0fb944254c34a039ce7b1d18ec5def8a2b8bc52e5603b8bce2e5985b"
+    },
+    {
+      "path": "source.json",
+      "bytes": 1743,
+      "sha256": "c909b450094bddbf0ba122c2277b15f0a05cf932a2cbb2cbbca2b9fcc3252574"
+    },
+    {
+      "path": "test-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vitest.json",
+      "bytes": 2516,
+      "sha256": "cae5bb6da733c1f2e1960934dba65d441aee40166ba7d4ff27df476f72554626"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1199,
+      "sha256": "ea2dc000310595a589a15130d29ff685c857457121af338527ccfe91215c66c6"
+    }
+  ],
+  "inputBase": "0aabad6c339ca2fa7d133f945179d8a87fed62df",
+  "inputReconstruction": {
+    "base": "0aabad6c339ca2fa7d133f945179d8a87fed62df",
+    "checkpoint": "9f063f180427fc07b9ef8dfb529cbc6b962edb76",
+    "tree": "b4ce8d52bcfa175799749e2f87a32804186907fd",
+    "trackedPatchEqualsCommittedSubset": true,
+    "extraInputsMatchAddedBlobs": true,
+    "noOtherCommittedPaths": true,
+    "extraInputs": [
+      "packages/derive/src/program/structure.ts",
+      "packages/derive/test/program-structure.test.ts"
+    ],
+    "sourceUnchangedDuringChecks": true,
+    "qualification": "Test compiler and6 new graph witnesses, including full admitted opcode vocabulary. Static metadata only; public production clock caller integration and final gate remain pending."
+  }
+}

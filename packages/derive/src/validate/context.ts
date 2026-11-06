@@ -9,6 +9,8 @@ import type { Bounds, CapabilityName, FieldType } from "@generalbusiness/dap-con
 import { isObject } from "../values.ts";
 import type { Underived } from "./capability.ts";
 import type { Shapes } from "./shape.ts";
+import { recordSubject } from "../program/reads.ts";
+import { recordNativeForm } from "../program/structure.ts";
 
 export interface Slot { kind: "party" | "ref" | "value"; fixed: boolean; required: boolean; list: boolean; type: FieldType; hasDefault: boolean; capability?: CapabilityName }
 /**
@@ -17,6 +19,14 @@ export interface Slot { kind: "party" | "ref" | "value"; fixed: boolean; require
  * where the type states none.
  */
 export interface Type { name: string; states: Map<string, boolean>; initial: string; slots: Map<string, Slot>; indexes?: readonly string[]; decisions?: ReadonlyMap<string, number> }
+
+/** The validator's identity for an implicit operand owner; equal item types need not name the same subject. */
+export type OwnerIdentity = { readonly kind: "subject"; readonly name: string }
+  | { readonly kind: "range"; readonly path: string; readonly type: string };
+export interface ReadOwner { (): Type | null; readonly identity: OwnerIdentity }
+/** Keep the existing lazy type lookup and the identity already known by its caller. */
+export const ownerOf = (read: () => Type | null, identity: OwnerIdentity): ReadOwner =>
+  Object.freeze(Object.assign(read, { identity: Object.freeze({ ...identity }) }));
 
 /** What the forms of one act, handler or timed rule may name. */
 export interface Ctx {
@@ -33,16 +43,24 @@ export interface Ctx {
   clause: boolean;                        // a result clause: it has a sender and a result
   senderKind?: string | undefined;        // the verified handler source, or the recipient kind of a future result
   presented: Map<string, FieldType>;      // an act: the facts presented beside the intent, by name
+  elementBindings: Map<string, string>;   // lexical declaration paths, including shadowed names
   elements: Map<string, FieldType | null>;// inside a list form: each element it binds, by its `as` name, with its type when the definition states it
   each: Type | null;                      // a fan-out send: the type of the items its range covers
+  eachPath: string | null;                // the declaration path of that fan-out range
   unsettled?: ReadonlySet<string>;        // the `also` names that a later entry cannot select again: selected through a slot that is not fixed
 }
 
 /** Forms that name nothing yet. Each act, handler and timed rule starts from this and says what it has. */
 export const naming = (): Ctx => ({
   on: null, also: new Map(), nascent: false, fields: null, signer: false, timed: false, live: new Set(),
-  kind: null, handler: null, clause: false, presented: new Map(), elements: new Map(), each: null,
+  kind: null, handler: null, clause: false, presented: new Map(), elements: new Map(), elementBindings: new Map(), each: null, eachPath: null,
 });
+
+/** Bind a lexical element without losing its declaration identity or the enclosing bindings. */
+export function bindElement(ctx: Ctx, name: string, type: FieldType | null, path: string, replace = false): Ctx {
+  return { ...ctx, elements: new Map(replace ? [] : ctx.elements).set(name, type),
+    elementBindings: new Map(replace ? [] : ctx.elementBindings).set(name, path) };
+}
 
 /** What a `where` of one range guard reads: the slots an index on that type must cover (section 6.5). */
 export interface RangeIndex { path: string; type: string; slots: readonly string[] }
@@ -100,6 +118,7 @@ export function mark(d: Defining, v: unknown, path: string, kind: MarkKind, more
   const o = d.rec(v, path, ["code", "row", ...more], optional);
   if (!o || d.str(o["code"], `${path}.code`) === null || d.str(o["row"], `${path}.row`) === null) return null;
   d.marks.push({ place: PLACES[kind], kind, path, code: o["code"] as string, row: o["row"] as string });
+  recordNativeForm(d, kind, path, o);
   return o;
 }
 
@@ -145,8 +164,12 @@ export const onSubject = (of: unknown) => of === undefined || of === "on";
 
 /** The item type a subject names, or `scope`. Null: it names nothing here, which is reported. */
 export function subject(d: Defining, of: unknown, path: string, ctx: Ctx, scopeToo: boolean): Type | "scope" | null {
-  if (onSubject(of)) return ctx.on ?? d.bad("name", path, "there is no primary item here; name a subject with `of`");
-  if (of === "scope") return scopeToo ? "scope" : d.bad("name", path, "the scope is not an item");
+  const resolved = (type: Type | "scope" | null): Type | "scope" | null => {
+    if (type !== null) recordSubject(d, ctx, path, type, typeof of === "string" ? of : "on");
+    return type;
+  };
+  if (onSubject(of)) return resolved(ctx.on ?? d.bad("name", path, "there is no primary item here; name a subject with `of`"));
+  if (of === "scope") return resolved(scopeToo ? "scope" : d.bad("name", path, "the scope is not an item"));
   const named = typeof of === "string" && of.startsWith("also.") ? ctx.also.get(of.slice(5)) : undefined;
-  return named ?? d.bad("name", path, "names no subject");
+  return resolved(named ?? d.bad("name", path, "names no subject"));
 }
