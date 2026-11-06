@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:45d11dfe57776dbb66195970f310bf487be531d2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m3-body-frames.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4bc459ff64db04bf958b66089e93a6d18fed7a0d","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/evaluate.ts."}
