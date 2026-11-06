@@ -1,0 +1,259 @@
+{
+  "version": 1,
+  "sourceHeads": [
+    "2786b7174bbe480950044da0e77dd7eb8a0e015a",
+    "8d4ed685d19bc8c46786249f42b24a440c6d1acc"
+  ],
+  "qualification": "Intermediate resolved-read model and validator integration. Source and test compilers passed. New witness compile first found a missing required record-member flag. Targeted run passed 22 and failed 1 because the fixture omitted hold@1 for the pin record. After that fixture correction, only its three witnesses reran and all passed. Twenty existing cases and three new cases now pass at their recorded inputs; do not sum overlapping attempts. The initial compiler unit omitted the new untracked module from its pre-run diff snapshot and copied it afterward; later units capture all extra inputs before checks. No static body graph, production clock cutover or full M3 gate yet.",
+  "fileCount": 44,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-resolved-read-compilers",
+      "fileCount": 11,
+      "inputHead": "2786b7174bbe480950044da0e77dd7eb8a0e015a",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 781,
+          "sha256": "2a63de2f5c445db8f6f1a4c19d739b82d6af2243754f8bce49caa850b9bc1248"
+        },
+        {
+          "path": "additional-input.json",
+          "bytes": 389,
+          "sha256": "a215ba6cf64bdc529768c578652a4598ad685ea0ad685b7d3abea2129cb71d60"
+        },
+        {
+          "path": "before.json",
+          "bytes": 457,
+          "sha256": "e16eeb7dd323a480f7a75033e0e93b8886238149f811364e462b1057d6ad591f"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 1980,
+          "sha256": "619f9eb7c30756ee76c953f6c499a949b72144f97399ef88e925841858deddb0"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 12149,
+          "sha256": "b8db77b59e83f3d323093c08f2b4323b50fafce5bbce33264c3b8df40c6ccf1d"
+        },
+        {
+          "path": "reads.ts",
+          "bytes": 4557,
+          "sha256": "8ee5cf8ff959c5e73d4f7edf87c84d78078aaa5a446b6d816d51b85e93dea356"
+        },
+        {
+          "path": "result.json",
+          "bytes": 836,
+          "sha256": "6ffee1d728bf3825a91ea007a476bd37e804d95ba46a55a5e75bf1c4c9d11e03"
+        },
+        {
+          "path": "source.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "source.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tests.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "tests.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-resolved-read-checks",
+      "fileCount": 9,
+      "inputHead": "2786b7174bbe480950044da0e77dd7eb8a0e015a",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 717,
+          "sha256": "039122e51c2692d2caeb722b4687b942bd6936e8f1294a9de17294e289999133"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2413,
+          "sha256": "eb56bf315584afadacbc5ff32d6181859634e784ffac905c03c70b0c660f9acd"
+        },
+        {
+          "path": "extra-inputs/packages/derive/src/program/reads.ts",
+          "bytes": 4557,
+          "sha256": "8ee5cf8ff959c5e73d4f7edf87c84d78078aaa5a446b6d816d51b85e93dea356"
+        },
+        {
+          "path": "extra-inputs/packages/derive/test/program-reads.test.ts",
+          "bytes": 7694,
+          "sha256": "290abf4ce95ab964b9950551b360991707431d884ca08ce5f957824f6bb1b77e"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 12149,
+          "sha256": "b8db77b59e83f3d323093c08f2b4323b50fafce5bbce33264c3b8df40c6ccf1d"
+        },
+        {
+          "path": "result.json",
+          "bytes": 389,
+          "sha256": "b2267b30e263e66ea805bbdb3e52ae81ffc28069677be9a520d70cd390a32090"
+        },
+        {
+          "path": "source.json",
+          "bytes": 758,
+          "sha256": "76b97a022038f02cfb517d75c5a31dc8b3f9e1e0a8fa22cef470246c9363b1b9"
+        },
+        {
+          "path": "test-compiler.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "test-compiler.log",
+          "bytes": 463,
+          "sha256": "0447f7fbecf99912c90129bb2d3bb24ff8e3c77c0a0dc35463453598ed60deb8"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-resolved-read-checks-2",
+      "fileCount": 14,
+      "inputHead": "2786b7174bbe480950044da0e77dd7eb8a0e015a",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1103,
+          "sha256": "40d71af979bed88e30c60e4f822f2a91bff22ba1cb43a914fbe53a8ceecaeb10"
+        },
+        {
+          "path": "compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compat.log",
+          "bytes": 363,
+          "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2415,
+          "sha256": "bf275d694c3d7591a9ba796e6b1243b2833b2a35daf7bf7356c596e659859e06"
+        },
+        {
+          "path": "extra-inputs/packages/derive/src/program/reads.ts",
+          "bytes": 4557,
+          "sha256": "8ee5cf8ff959c5e73d4f7edf87c84d78078aaa5a446b6d816d51b85e93dea356"
+        },
+        {
+          "path": "extra-inputs/packages/derive/test/program-reads.test.ts",
+          "bytes": 7749,
+          "sha256": "7f0b2fcce4af2b149171ec00a38e21475d2a6eda4bb12096aa98a907327135e8"
+        },
+        {
+          "path": "forms.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "forms.log",
+          "bytes": 6567,
+          "sha256": "02c8be30916b25de3a7d9b30fdc63ddafa48be2e1cda437662a80f48b1665639"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 12149,
+          "sha256": "b8db77b59e83f3d323093c08f2b4323b50fafce5bbce33264c3b8df40c6ccf1d"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1190,
+          "sha256": "4b9196ecfdbbe08f2cb40ac3a0ab6a4f28de247d7ae66ae48cca748bec4c336c"
+        },
+        {
+          "path": "source.json",
+          "bytes": 758,
+          "sha256": "d32b3f69f40b9a1bdae77fdff335e3b8d531903b98027f2519127dc5a97c723b"
+        },
+        {
+          "path": "test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "test-compiler.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "vitest.json",
+          "bytes": 13919,
+          "sha256": "cf6f13f4e2a414f4121af61d0c8353b9d483cdcab10f31487c84eb4a4a2ab0f3"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-resolved-read-checks-3",
+      "fileCount": 10,
+      "inputHead": "8d4ed685d19bc8c46786249f42b24a440c6d1acc",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 696,
+          "sha256": "e549c597dc9a9bc017b19d757048ec8558f6aabca42f76c5d6d95a61ec607b26"
+        },
+        {
+          "path": "compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compat.log",
+          "bytes": 363,
+          "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2302,
+          "sha256": "48e31c287315913b7185f68421196047ce917fadd14fd7d52d32c1eb80489256"
+        },
+        {
+          "path": "forms.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "forms.log",
+          "bytes": 776,
+          "sha256": "dc3c2b34de6c3a44834f627aa8a5b7303b21645f75a506f93ce772f47b5a092f"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 919,
+          "sha256": "2cfad654f54ccda902d25cf6ed2e5131ef36cfb78cad47f4540eb3c779b68ef6"
+        },
+        {
+          "path": "result.json",
+          "bytes": 799,
+          "sha256": "0cd21286cd589ad7242b8f87bb63b77335fc31850cb8736cdec75b90a8326672"
+        },
+        {
+          "path": "source.json",
+          "bytes": 583,
+          "sha256": "d79574e6908c719d539db96408af02cd0c687f6f4ed132ab858a8d263a9d64d4"
+        },
+        {
+          "path": "vitest.json",
+          "bytes": 1658,
+          "sha256": "2ef7451a3981205cb0aeb7de42fde38e17eadad9406d61ed0dab2300c8521b32"
+        }
+      ]
+    }
+  ]
+}

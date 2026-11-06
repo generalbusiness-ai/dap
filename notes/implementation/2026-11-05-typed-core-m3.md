@@ -5,8 +5,9 @@ identities. Production clock analysis and its callers remain unchanged.
 Request `21d8e638e266295ff7f0a39a5718185b4cb0cd94` and promise
 `287adf75f90ab89d086f62c047c3544fa2f4bcac` own M3 under scheduling request
 `e99550e9`. Planner ruling `3b239919`, step 5, permits M3 while an independent
-review waits. The revised register packet now waits for review `b0d59473` at
-`6756b53c`; it retains landing priority. O4 takes precedence when browser
+review waits. The revised register packet landed on origin main at `26fc8e0b`, with
+approval `af97b88e` and receipt `cce90dd3`. Its actual deployment and hosted
+acceptance record remain planner work. O4 takes precedence when browser
 access returns.
 
 The checkout now merges landed main `a4e62771`. Reconciliation against the
@@ -114,15 +115,24 @@ The new `program/reads.ts` model retains base and final types, before/working
 phase, subject identity, slot rules, lexical bindings, and validation identity.
 The structural body graph and the production clock cutover remain unfinished.
 
-Intermediate compiler checks pass. The first new test compile found a missing
-`required` flag in the fixture's record member; the corrected fixture compiles.
-The first targeted descriptor run still has a failing witness. Its raw output
-and exact source copies remain in
-`~/play/artroom-evidence/2026-11-06-m3-resolved-read-checks-2/`.
-This checkpoint pauses descriptor work for the approved register packet landing.
-It claims no descriptor test pass or M3 acceptance. The initial compiler unit
-also retains an explicit limit: it copied the new untracked read-model module
-after compilation; the later test units copy untracked inputs before execution.
+The [resolved-read manifest](evidence/2026-11-06-m3-resolved-reads.manifest.json)
+seals 44 files. Its SHA256 is
+`8937acd6ed7e025956c445a4d31969f4bae64dc90078824f549933ff443b18ff`.
+The source and test compilers pass. The new test compile first found a missing
+`required` flag in a record-member fixture; the corrected fixture compiles.
+The targeted run passes twenty existing cases and two new witnesses, then
+fails the carried-part witness because the fixture lists no owner for `pin`.
+The existing admitted fixture shows that `hold@1` owns that record. Adding it
+to the test's capability list lets all three new witnesses pass. Only those
+three rerun after this fixture correction. Production bytes stay unchanged.
+
+The witnesses cover all fourteen Operand forms and eleven EntryPart forms,
+Part projection, a nested `set.item`, subject identities with equal item types,
+lexical binding paths, and ownership after input mutation. They establish no
+structural body graph or production clock cutover. All failed attempts remain
+retained. The initial compiler unit has a stated identity limit: it copied the
+new untracked read-model module after compilation. Later units copy all extra
+inputs before their checks.
 
 ## Prove the production cutover
 

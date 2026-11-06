@@ -8,7 +8,7 @@ import { shapes } from "../src/validate/shape.ts";
 function fixture() {
   const bounds = structuredClone(PROPOSED_BOUNDS);
   const defining = { ...shapes(bounds), bounds, name: "read-model", platform: false,
-    capabilities: new Map([["git-read", "git-read@1"]]), underived: [] } as unknown as Defining;
+    capabilities: new Map([["hold", "hold@1"], ["git-read", "git-read@1"]]), underived: [] } as unknown as Defining;
   const integer: FieldType = { type: "int", min: 0, max: 10 };
   const fact: FieldType = { type: "fact", kind: ["created"], under: "remote" };
   const record: FieldType = { type: "record", of: { value: { ...integer, required: true } } };
