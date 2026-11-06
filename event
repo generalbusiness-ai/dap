@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:41d8a71e1b99181dbc2ac15beadced173b54711b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m3-gate-fixes-focused.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:42af2ab4d89fc3a51e89d9363a9bc1f4f4a45252","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/forms-marks.test.ts."}
