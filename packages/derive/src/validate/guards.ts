@@ -6,7 +6,7 @@ import { capabilityGuard } from "./capability.ts";
 import { bindElement, mark, marked, onSubject, ownerOf, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";
 import { fieldOf, isDetached, operand, type Read } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
-import { recordField, recordForeignField, recordRange, recordSlot } from "../program/reads.ts";
+import { recordElementBinding, recordField, recordForeignField, recordRange, recordSlot } from "../program/reads.ts";
 import { enterForm, leaveForm, type GuardOp } from "../program/structure.ts";
 
 const GUARDS = ["state", "signer", "notIn", "set", "unset", "equals", "differs", "some", "none", "count", "every", "fact", "before", "after", "rule", "each", "has", "anyOf", "distinct", "sameSet", "capability"] as const satisfies readonly GuardOp[];
@@ -119,7 +119,9 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
     if (!read || as === null) return null;
     if (read.type !== null && read.type.type !== "list") return bad("name", at(p, "list"), "names no list");
     const element: FieldType | null = read.type?.type === "list" ? read.type.of : null;
-    return { ...bindElement(ctx, as, element, at(p, "as")), live: new Set() };
+    const inner = bindElement(ctx, as, element, at(p, "as"));
+    recordElementBinding(d, inner, as, element, at(p, "as"));
+    return { ...inner, live: new Set() };
   };
   switch (k) {
     case "state": {

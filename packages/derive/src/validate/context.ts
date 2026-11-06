@@ -24,6 +24,8 @@ export interface Type { name: string; states: Map<string, boolean>; initial: str
 export type OwnerIdentity = { readonly kind: "subject"; readonly name: string }
   | { readonly kind: "range"; readonly path: string; readonly type: string };
 export interface ReadOwner { (): Type | null; readonly identity: OwnerIdentity }
+/** One lexical declaration, even when nested binders reuse the same written name. */
+export type ElementIdentity = Readonly<object>;
 /** Keep the existing lazy type lookup and the identity already known by its caller. */
 export const ownerOf = (read: () => Type | null, identity: OwnerIdentity): ReadOwner =>
   Object.freeze(Object.assign(read, { identity: Object.freeze({ ...identity }) }));
@@ -44,6 +46,7 @@ export interface Ctx {
   senderKind?: string | undefined;        // the verified handler source, or the recipient kind of a future result
   presented: Map<string, FieldType>;      // an act: the facts presented beside the intent, by name
   elementBindings: Map<string, string>;   // lexical declaration paths, including shadowed names
+  elementIdentities: Map<string, ElementIdentity>; // identity does not depend on a diagnostic path
   elements: Map<string, FieldType | null>;// inside a list form: each element it binds, by its `as` name, with its type when the definition states it
   each: Type | null;                      // a fan-out send: the type of the items its range covers
   eachPath: string | null;                // the declaration path of that fan-out range
@@ -53,13 +56,14 @@ export interface Ctx {
 /** Forms that name nothing yet. Each act, handler and timed rule starts from this and says what it has. */
 export const naming = (): Ctx => ({
   on: null, also: new Map(), nascent: false, fields: null, signer: false, timed: false, live: new Set(),
-  kind: null, handler: null, clause: false, presented: new Map(), elements: new Map(), elementBindings: new Map(), each: null, eachPath: null,
+  kind: null, handler: null, clause: false, presented: new Map(), elements: new Map(), elementBindings: new Map(), elementIdentities: new Map(), each: null, eachPath: null,
 });
 
 /** Bind a lexical element without losing its declaration identity or the enclosing bindings. */
 export function bindElement(ctx: Ctx, name: string, type: FieldType | null, path: string, replace = false): Ctx {
   return { ...ctx, elements: new Map(replace ? [] : ctx.elements).set(name, type),
-    elementBindings: new Map(replace ? [] : ctx.elementBindings).set(name, path) };
+    elementBindings: new Map(replace ? [] : ctx.elementBindings).set(name, path),
+    elementIdentities: new Map(replace ? [] : ctx.elementIdentities).set(name, Object.freeze({})) };
 }
 
 /** What a `where` of one range guard reads: the slots an index on that type must cover (section 6.5). */

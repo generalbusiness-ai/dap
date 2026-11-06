@@ -2,7 +2,7 @@
 import type { Digest, EffectForm, Guard, Mark, MarkMost, Notify, SendForm, SendMark } from "@generalbusiness/dap-contract";
 import type { Defining } from "../validate/context.ts";
 import type { ValidDefinition } from "../validate/index.ts";
-import type { FieldResolution, ForeignFieldResolution, FrameRead, OperandRead, RangeResolution, ReadValidation, ResolvedReads, SlotResolution, SubjectResolution } from "./reads.ts";
+import type { ElementBinding, FieldResolution, ForeignFieldResolution, FrameRead, OperandRead, RangeResolution, ReadValidation, ResolvedReads, SlotResolution, SubjectResolution } from "./reads.ts";
 import { immutable } from "./model.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
@@ -16,12 +16,13 @@ export interface ResolutionGroup {
   readonly fields: readonly FieldResolution[];
   readonly foreignFields: readonly ForeignFieldResolution[];
   readonly ranges: readonly RangeResolution[];
+  readonly bindings: readonly ElementBinding[];
 }
 type MutableResolutions = { -readonly [K in keyof ResolutionGroup]: ResolutionGroup[K][number][] };
-const resolutions = (): MutableResolutions => ({ operands: [], subjects: [], slots: [], fields: [], foreignFields: [], ranges: [] });
+const resolutions = (): MutableResolutions => ({ operands: [], subjects: [], slots: [], fields: [], foreignFields: [], ranges: [], bindings: [] });
 const ownResolutions = (reads: MutableResolutions): ResolutionGroup => Object.freeze({
   operands: Object.freeze([...reads.operands]), subjects: Object.freeze([...reads.subjects]), slots: Object.freeze([...reads.slots]),
-  fields: Object.freeze([...reads.fields]), foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]),
+  fields: Object.freeze([...reads.fields]), foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]), bindings: Object.freeze([...reads.bindings]),
 });
 interface NodeBase { readonly path: string; readonly reads: ResolutionGroup; readonly children: readonly StructureNode[] }
 type WrittenNode<C extends string, K extends PropertyKey, D> = NodeBase & { readonly category: C; readonly op: K; readonly data: Readonly<D> };

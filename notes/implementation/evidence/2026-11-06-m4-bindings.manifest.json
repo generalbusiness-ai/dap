@@ -1,0 +1,198 @@
+{
+  "scope": "M4 lexical binding checkpoint; no production caller cutover and no full gate yet",
+  "base": "4ef739bf1b478197d7b30d5afbd9ab1a303a14f2",
+  "inputState": "Seven changed source/test files on the context-binding checkpoint; exact file hashes below bind the focused checks to this checkpoint.",
+  "inputs": [
+    {
+      "path": "packages/derive/src/program/reads.ts",
+      "sha256": "d3ab8a98f7a9f957423e965c6c1b7a1b611500e417d918fe585e3e4a0481487e"
+    },
+    {
+      "path": "packages/derive/src/program/structure.ts",
+      "sha256": "3890581b892161fa17ffa69efcfffbb3b23c37e2398ff1ff596c80af0fd1383f"
+    },
+    {
+      "path": "packages/derive/src/validate/context.ts",
+      "sha256": "2add0b94a0010a7e7481d3d6a377f736e9cb95b39b8eaf249642e8103b98376c"
+    },
+    {
+      "path": "packages/derive/src/validate/guards.ts",
+      "sha256": "d1d2d5880291d12ceee4dc280e4d9b98359323a7d69c092d1e745304cef08742"
+    },
+    {
+      "path": "packages/derive/src/validate/operands.ts",
+      "sha256": "b3691577d3ff6c0d4015d89ca3802db5a893d53097e114e05053a8d209e22521"
+    },
+    {
+      "path": "packages/derive/test/program-reads.test.ts",
+      "sha256": "ab018f813307d2e77e7c60d2628eb527ff99aeb58cefbdd2a4c5a98552d3c5ea"
+    },
+    {
+      "path": "packages/derive/test/program-structure.test.ts",
+      "sha256": "28540147810e7bc282ad0933435b377d9a786565c1614fc9f6f270c03637e2b4"
+    }
+  ],
+  "checks": {
+    "sourceAndTestCompilers": 0,
+    "metadataOwnersPassed": 16,
+    "lexicalShadowingControl": "One selected assertion fails when a nested binder reuses the outer identity; restored owners pass all sixteen cases.",
+    "gate": "Not run; M4 remains incomplete."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/changed-source.patch",
+          "bytes": 17084,
+          "sha256": "a750a534849d70c6b4074b8988a49371c5958d95672c56468c2c0486a0e44a78"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/driver.py",
+          "bytes": 1936,
+          "sha256": "d88876760446acf1aab29bdfd79b714963394f37e6e155913eb7c5a21958523b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/owner.json",
+          "bytes": 5887,
+          "sha256": "da5ad92433ee4b953eb34deafc8caa0a11490810064c1330a397c78fe839c199"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/owner.stdout",
+          "bytes": 103,
+          "sha256": "7a44b91932b2e34232084d07c865599ec800a752161f81f6f9cbbb48371ab3b8"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/result.json",
+          "bytes": 107,
+          "sha256": "ee796be4923b958f21b5b6339dd77cdfe02b0cfe4d7f04a48652770418b37bd4"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/source-after.json",
+          "bytes": 520811,
+          "sha256": "2d9f944e2774787e16844bec3162723791790edc4a69ca3c0d74154d5dd7c101"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-focused/source-before.json",
+          "bytes": 520811,
+          "sha256": "2d9f944e2774787e16844bec3162723791790edc4a69ca3c0d74154d5dd7c101"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/baseline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/baseline.json",
+          "bytes": 5892,
+          "sha256": "70ef4b9a3f77fd47359e4260c3d9ccebce31da202bc7322af07567a7cf81ec6d"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/baseline.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/baseline.stdout",
+          "bytes": 106,
+          "sha256": "9c0e8e2fe4c24680f784e41e9ec8aed837d2db19e897b457150336ed8161433d"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/driver.py",
+          "bytes": 2405,
+          "sha256": "aab5f9514951f40405b438a2a46c60eec4c50510a13bf3d470670d7613bebe88"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/restored.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/restored.json",
+          "bytes": 5889,
+          "sha256": "c0d84ad1c9668d882db73ecad3c7ff7f986dfaeff5fc13c7ca7b0f4d95badd24"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/restored.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/restored.stdout",
+          "bytes": 106,
+          "sha256": "c19de8e628f64ebea6b40aada428141940a6d99a383b76870762643dcb4db746"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/result.json",
+          "bytes": 2039,
+          "sha256": "04d632458603797607de34c68bb30bfce3bf5f2cdf5e0f1737c90892c0f23eaf"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/reuse-shadowed-identity.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/reuse-shadowed-identity.json",
+          "bytes": 7209,
+          "sha256": "e32a25686c9affaf27e27d7d60f0ed0a499250d2e6ba4411a6e7376525da3851"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/reuse-shadowed-identity.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-bindings-control/reuse-shadowed-identity.stdout",
+          "bytes": 121,
+          "sha256": "80db7a7e21023fbda9a955dd3e0e1055da43c92e5e06c309d2b18b506e6e6300"
+        }
+      ]
+    }
+  ]
+}

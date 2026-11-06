@@ -160,3 +160,24 @@ test("timed execution binds only its admitted rule and original form arrays", ()
   expect(timedStructure(checked, "unknown", rule.effects, rule.attention)).toBeNull();
   expect(timedStructure({ ...checked }, "hold-end", rule.effects, rule.attention)).toBeNull();
 });
+
+test("aliased guards retain the binder they read when a nested list shadows its name", () => {
+  const input = structuredClone(small), act = input.acts["edit"]!;
+  act.fields["counts"] = { type: "list", of: { type: "int", min: 0, max: 9 }, max: 4, required: true };
+  const shared = { equals: { a: { element: "row" }, b: { const: 1 } } } as const;
+  act.guards = [{ state: ["draft"] }, { each: { list: { field: "counts" }, as: "row", guards: [
+    shared, { each: { list: { field: "counts" }, as: "row", guards: [shared] } }, shared,
+  ] } }];
+  const checked = admitted(input), body = bodyStructure(checked, act, "edit")!;
+  const outer = body.nodes[1]!, inner = outer.children[1]!;
+  const [outerBinding] = outer.reads.bindings, [innerBinding] = inner.reads.bindings;
+  expect(outerBinding?.name).toBe("row"); expect(innerBinding?.name).toBe("row");
+  expect(outerBinding?.identity).not.toBe(innerBinding?.identity);
+  const reads = formStructures(checked, body, shared).map(node => node.reads.operands[0]!);
+  if (reads.some(read => read.op !== "element")) return expect.fail("expected element operands");
+  expect(reads.map(read => read.op === "element" && read.binding.identity)).toEqual([
+    outerBinding!.identity, innerBinding!.identity, outerBinding!.identity,
+  ]);
+  expect(reads[0]?.context.validation).toBe(body.frame.context.validation);
+  expect(Object.isFrozen(outerBinding?.identity)).toBe(true);
+});
