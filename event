@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f213c421f35c4ad05da91ed655c5ddd8754cb501","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m3-admitted-read-binding.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f4c69d04ae7dce3d429ba70aa3f92104e5257770","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/forms-operand.test.ts."}
