@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:355a102a866beb773106439e0d4b607a401d3a0a","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/verify.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ae35fe2ae70d617017af6f6112ca46658588d6a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m3-clock-before-cutover.manifest.json."}
