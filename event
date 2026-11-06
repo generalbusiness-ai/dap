@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fed2f23037f633df30c292a394677ecfd25eb00a","text":"Replaced by request 6349fd8a and review request 9aa84ebc; this chain went stale when the packet landing retired bases it rested on."}
+{"kind":"promise","text":"Re-review the exact 5 November report head 45872c39 against e2b99b64 and file a verdict."}
