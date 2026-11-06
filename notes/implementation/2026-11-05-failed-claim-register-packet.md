@@ -217,8 +217,26 @@ Both attempts retain their inputs and outputs. Production bytes stay unchanged
 between attempts. Node's loader deprecation warning remains in the output.
 These synthetic checks prove no Native birth or live provider access.
 
-The final gate remains pending. No command in this revision creates a register,
-room, token, deployment, or live clone.
+The complete revision gate at `3bd61d15e43d5e3cb3f4f5c475af21c55b29d4ae`, tree
+`ddd9d711dcfbc95256ad0dde89d0f6d1ecce5688`, passes. I read its actual `gate.exit`: `exit 0`.
+The [revision gate manifest](evidence/2026-11-06-register-packet-revision-gate.manifest.json)
+has SHA256 `bcc3c4cf58e554ba57c5b222bc52e0d3e49f7a5a50f936359ea9922cefc9e791` and 13 public files.
+Kernel, 135 Node cases, 56 Counting cases,
+3,943 Plain passes with 1 skip, and
+1,111 Native passes with 2 skips all have complete terminal records.
+There are no unhandled errors or contradictions. The checkout and dependency
+identity stay unchanged, and the owned process group closes.
+
+The gate runs from 2026-11-06T02:54:38.709950+00:00 to 2026-11-06T03:15:11.851663+00:00.
+Python monotonic time measures 1233.159616 seconds.
+The raw unit retains the separate outer `time` output and stage timings.
+The passing archive owner establishes no cause for historical source `64552d40`.
+
+After this freeze, only this report, the new gate manifest, and the procedure's
+Site baseline clarification change. The procedure now records the known Site
+URL and content digest before cutover. No renderer, template, token observer,
+production source, test, dependency, or live configuration changes after the gate.
+No command in this revision creates a register, room, token, deployment, or live clone.
 
 ## Open limits
 

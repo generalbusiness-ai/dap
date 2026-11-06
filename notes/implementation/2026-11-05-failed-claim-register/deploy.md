@@ -68,7 +68,9 @@ Record the existing demo rooms to check, including their directory, membership,
 rules, Destination, and Inbox references and pins. Use their existing member
 homes for reads. Identify one retained test room whose ordinary member may
 create a new Inbox or lane after the switch. An existing-room read alone does
-not prove that its children can still be born.
+not prove that its children can still be born. Record one old-root TEST room's
+existing Site URL and a known file's response and content digest before cutover.
+Use that same URL and file for the mandatory after-switch Site check.
 
 Prepare the pinned Wrangler tool in a scratch directory, never in a checkout.
 Use `wrangler@4.147.0`, the existing operator login, and `--keep-vars`.
