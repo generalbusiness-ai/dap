@@ -159,6 +159,36 @@ The [admitted-read manifest](evidence/2026-11-06-m3-admitted-read-binding.manife
 seals 15 public files. Its SHA-256 is
 `80c3e7f58cb3189024070965abdd2cc8c8efc545346fbe12f8390750c8480305`. The complete final M3 checks and gate remain pending.
 
+## Retain implicit resolutions
+
+The validator retains its existing subject and range choices, direct guard-slot
+reads, shorthand field reads, and ordinary effect targets. These records reuse
+its resolved types and subject identities. They add no admission decision or
+execution route. Resolution sites carry no phase until their owning form states
+how it uses the handle.
+
+The new witness gives `every` both a field and a same-named slot. It records the
+field; removing that field records the slot. A nested guard retains its inherited
+`also.other` subject even though it has the same item type as `on`. The witness
+also checks a range identity, a time-slot read, an effect target, and frozen
+metadata. Other implicit sources and complete structural body nodes remain work
+for M3; this checkpoint does not claim exhaustive graph coverage.
+
+Both compilers and all 26 cases in the five complete selected owners pass at
+checkpoint `27e98062`, tree `498863ae`. The input patch applied to base
+`cff5a05b` equals that committed diff. The selected owners are `program-reads`,
+`forms-fields`, `forms-guards`, `forms-effects`, and `fixed-slot-index`.
+
+| Check | Command | Exit | Output SHA-256 |
+|---|---|---|---|
+| source-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| test-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| forms | `node node_modules/vitest/vitest.mjs run --project derive program-reads forms-fields forms-guards forms-effects fixed-slot-index` | 0 | `619d1f1be507a1a336f5559734a2beab6e4de74e59b5e02f16aee4df4636416d` |
+
+The [implicit-read manifest](evidence/2026-11-06-m3-implicit-read-capture.manifest.json)
+seals 15 public files. Its SHA-256 is
+`5cbf14781ecf8267684ca02688b77023cb378efed99443639863cc7af77dae2b`. The complete final M3 checks and gate remain pending.
+
 ## Prove the production cutover
 
 Use public clock-behind judgments, or clause `judgesTime` where that is the
