@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/replay/test/world.ts","body":{"commit":"e50d9eebb27f47d0f33549486751ab8bdce8de80","path":"packages/replay/test/world.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:00a722bd150f597024cfdeffcd6f2c31e94505b0","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/sends.ts."}
