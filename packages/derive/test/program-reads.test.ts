@@ -7,6 +7,8 @@ import { shapes } from "../src/validate/shape.ts";
 import { resolvedReads } from "../src/program/reads.ts";
 import { validateDefinition } from "../src/validate/index.ts";
 import { asks } from "./definition-corpus/forms-operand-data.ts";
+import { small } from "./definition-corpus/fixture-data.ts";
+import { jobs } from "./definition-corpus/forms-guards-data.ts";
 
 function fixture() {
   const bounds = structuredClone(PROPOSED_BOUNDS);
@@ -122,4 +124,31 @@ test("the actual validation result retains its own resolved reads across equal d
   expect([Object.isFrozen(firstReads), Object.isFrozen(firstReads.operands)]).toEqual([true, true]);
   expect(resolvedReads({ ...first.definition })).toBeNull();
   expect(validateDefinition({ ...input, genesis: "missing" }, PROPOSED_BOUNDS).ok).toBe(false);
+});
+
+test("implicit guard reads retain the chosen field or slot, inherited subject, range and effect target", () => {
+  const input = structuredClone(small);
+  input.items["note"]!.refs["notes"] = { fixed: false, required: false, to: { type: "list", of: { type: "item", of: "note" }, max: 4 } };
+  input.acts["edit"]!.guards = [...input.acts["edit"]!.guards, { of: "also.other", anyOf: [[{ set: "text" }]] }];
+  const first = validateDefinition(input, PROPOSED_BOUNDS);
+  if (!first.ok) return expect.fail(JSON.stringify(first.problems));
+  const reads = resolvedReads(first.definition)!;
+  expect(reads.fields.find(read => read.path === "acts.edit.guards.3.every.list")).toMatchObject({ name: "notes", type: { kind: "declared", type: { type: "list", of: { type: "item", of: "note" } } } });
+  expect(reads.slots.some(read => read.path === "acts.edit.guards.3.every.list")).toBe(false);
+  expect(reads.slots.find(read => read.path === "acts.edit.guards.2.before.slot")).toMatchObject({ access: "read", slot: { name: "due", subject: { identity: { kind: "subject", name: "on" } } } });
+  expect(reads.slots.find(read => read.path === "acts.edit.guards.4.anyOf.0.0.set")).toMatchObject({ slot: { name: "text", subject: { identity: { kind: "subject", name: "also.other" }, type: "note" } } });
+  expect(reads.slots.find(read => read.path === "acts.edit.effects.0.value.slot")).toMatchObject({ access: "write", slot: { name: "text", subject: { identity: { kind: "subject", name: "on" } } } });
+  expect(reads.subjects.some(read => read.subject !== "scope" && read.subject.identity.kind === "subject" && read.subject.identity.name === "also.other")).toBe(true);
+  delete input.acts["edit"]!.fields["notes"];
+  input.acts["edit"]!.guards = input.acts["edit"]!.guards.map((guard, i) => i === 3 ? { every: { list: "notes", states: ["kept"] } } : guard);
+  const fallback = validateDefinition(input, PROPOSED_BOUNDS);
+  if (!fallback.ok) return expect.fail(JSON.stringify(fallback.problems));
+  const fallbackReads = resolvedReads(fallback.definition)!;
+  expect(fallbackReads.fields.some(read => read.path === "acts.edit.guards.3.every.list")).toBe(false);
+  expect(fallbackReads.slots.find(read => read.path === "acts.edit.guards.3.every.list")).toMatchObject({ access: "read", slot: { name: "notes", kind: "ref", type: { kind: "declared", type: { type: "list", of: { type: "item", of: "note" } } } } });
+  const rangeInput = structuredClone(jobs), ranges = validateDefinition(rangeInput, PROPOSED_BOUNDS);
+  if (!ranges.ok) return expect.fail(JSON.stringify(ranges.problems));
+  const range = resolvedReads(ranges.definition)!.ranges.find(read => read.path === "acts.merge.guards.0.each.guards.0.none");
+  expect(range).toMatchObject({ states: ["failed"], subject: { type: "job", identity: { kind: "range", path: "acts.merge.guards.0.each.guards.0.none", type: "job" } } });
+  expect([Object.isFrozen(range), Object.isFrozen(range?.states), Object.isFrozen(reads.slots)]).toEqual([true, true, true]);
 });

@@ -12,6 +12,7 @@ import { holdEffect } from "./hold.ts";
 import { copy, isDetached, operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { memberBytes, stated } from "./sizes.ts";
+import { recordSlot } from "../program/reads.ts";
 
 const EFFECTS = ["state", "party", "ref", "value", "attribute", "hold", "redact", "capability"];
 const MEMBER: FieldType = { type: "member" };
@@ -63,6 +64,7 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
   const slot = (name: unknown, kind: Slot["kind"]): Slot | null => {
     const matched = typeof name === "string" ? s.slots.get(name) : undefined;
     if (matched?.kind !== kind) return bad("name", p, `names no ${kind} slot of ${s.name}`);
+    recordSlot(d, ctx, at(p, "slot"), s, { kind: "subject", name: sk }, name as string, matched, "write");
     if (matched.capability) return bad("capability-slot-owned", p, `${matched.capability} owns ${String(name)}; an ordinary effect cannot write it`);
     // Section 6.3: a fixed slot is set by the act that opens the item and never again.
     return matched.fixed && !nascent ? bad("fixed", p, "a fixed slot is set only by the act that opens its item") : matched;

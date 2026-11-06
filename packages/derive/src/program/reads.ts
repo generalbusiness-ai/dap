@@ -11,25 +11,36 @@ export const readType = (type: FieldType | null): ReadType => type === null ? un
 /** Each validator invocation has its own identity, even when declaration digests agree. */
 export interface ReadValidation { readonly bounds: Bounds; readonly definition: string | null; readonly platform: boolean }
 const validations = new WeakMap<Defining, ReadValidation>();
-const captured = new WeakMap<Defining, OperandRead[]>();
+interface ReadCollection { operands: OperandRead[]; subjects: SubjectResolution[]; slots: SlotResolution[]; fields: FieldResolution[]; ranges: RangeResolution[] }
+const captured = new WeakMap<Defining, ReadCollection>();
 const admitted = new WeakMap<ValidDefinition, ResolvedReads>();
+
+function collection(d: Defining): ReadCollection {
+  let reads = captured.get(d);
+  if (!reads) { reads = { operands: [], subjects: [], slots: [], fields: [], ranges: [] }; captured.set(d, reads); }
+  return reads;
+}
 
 /** A validation result owns its reads; equal declaration digests do not share this evidence. */
 export interface ResolvedReads {
   readonly validation: ReadValidation;
   readonly operands: readonly OperandRead[];
+  readonly subjects: readonly SubjectResolution[];
+  readonly slots: readonly SlotResolution[];
+  readonly fields: readonly FieldResolution[];
+  readonly ranges: readonly RangeResolution[];
 }
 
 /** Called only where the existing operand validator returns its successful resolution. */
 export function recordRead(d: Defining, node: OperandRead): void {
-  const reads = captured.get(d);
-  if (reads) reads.push(node);
-  else captured.set(d, [node]);
+  collection(d).operands.push(node);
 }
 
 /** Attach only after every admission check has succeeded, using the actual returned object. */
 export function bindReads(d: Defining, definition: ValidDefinition): ValidDefinition {
-  admitted.set(definition, Object.freeze({ validation: validation(d), operands: Object.freeze([...(captured.get(d) ?? [])]) }));
+  const reads = collection(d);
+  admitted.set(definition, Object.freeze({ validation: validation(d), operands: Object.freeze([...reads.operands]),
+    subjects: Object.freeze([...reads.subjects]), slots: Object.freeze([...reads.slots]), fields: Object.freeze([...reads.fields]), ranges: Object.freeze([...reads.ranges]) }));
   return definition;
 }
 
@@ -50,12 +61,32 @@ export interface ReadContext {
   readonly handler: Readonly<{ update: boolean; under: string | null }> | null;
   readonly senderKind: string | null;
 }
+function contextOf(d: Defining, ctx: Ctx): ReadContext {
+  return Object.freeze({ validation: validation(d), kind: ctx.kind, clause: ctx.clause,
+    handler: ctx.handler ? Object.freeze({ ...ctx.handler }) : null, senderKind: ctx.senderKind ?? null });
+}
 export interface ReadSite { readonly path: string; readonly phase: Phase; readonly context: ReadContext; readonly type: ReadType }
 export function readSite(d: Defining, ctx: Ctx, path: string, guard: boolean, type: FieldType | null): ReadSite {
-  return Object.freeze({ path, phase: guard ? "before" : "working", type: readType(type), context: Object.freeze({
-    validation: validation(d), kind: ctx.kind, clause: ctx.clause,
-    handler: ctx.handler ? Object.freeze({ ...ctx.handler }) : null, senderKind: ctx.senderKind ?? null,
-  }) });
+  return Object.freeze({ path, phase: guard ? "before" : "working", type: readType(type), context: contextOf(d, ctx) });
+}
+/** Resolution sites have no phase until their owning form states how it uses the handle. */
+interface ResolutionSite { readonly path: string; readonly context: ReadContext }
+export interface SubjectResolution extends ResolutionSite { readonly subject: SubjectRead | "scope" }
+export interface SlotResolution extends ResolutionSite { readonly slot: SlotRead; readonly access: "read" | "write" }
+export interface FieldResolution extends ResolutionSite { readonly name: string; readonly type: ReadType }
+export interface RangeResolution extends ResolutionSite { readonly subject: SubjectRead; readonly states: readonly string[] }
+
+export function recordSubject(d: Defining, ctx: Ctx, path: string, type: Type | "scope", name: string): void {
+  collection(d).subjects.push(Object.freeze({ path, context: contextOf(d, ctx), subject: type === "scope" ? "scope" : subjectRead(type, { kind: "subject", name }) }));
+}
+export function recordSlot(d: Defining, ctx: Ctx, path: string, type: Type, identity: SubjectRead["identity"], name: string, slot: Slot, access: "read" | "write"): void {
+  collection(d).slots.push(Object.freeze({ path, context: contextOf(d, ctx), slot: slotRead(subjectRead(type, identity), name, slot), access }));
+}
+export function recordField(d: Defining, ctx: Ctx, path: string, name: string, type: FieldType): void {
+  collection(d).fields.push(Object.freeze({ path, context: contextOf(d, ctx), name, type: readType(type) }));
+}
+export function recordRange(d: Defining, ctx: Ctx, path: string, type: Type, states: readonly string[]): void {
+  collection(d).ranges.push(Object.freeze({ path, context: contextOf(d, ctx), subject: subjectRead(type, { kind: "range", path, type: type.name }), states: Object.freeze([...states]) }));
 }
 export interface SubjectRead { readonly identity: OwnerIdentity | { readonly kind: "fan-out"; readonly path: string | null }; readonly type: string; readonly declaration: string }
 export const subjectRead = (type: Type, identity: SubjectRead["identity"]): SubjectRead =>

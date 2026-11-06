@@ -9,6 +9,7 @@ import type { Bounds, CapabilityName, FieldType } from "@generalbusiness/dap-con
 import { isObject } from "../values.ts";
 import type { Underived } from "./capability.ts";
 import type { Shapes } from "./shape.ts";
+import { recordSubject } from "../program/reads.ts";
 
 export interface Slot { kind: "party" | "ref" | "value"; fixed: boolean; required: boolean; list: boolean; type: FieldType; hasDefault: boolean; capability?: CapabilityName }
 /**
@@ -161,8 +162,12 @@ export const onSubject = (of: unknown) => of === undefined || of === "on";
 
 /** The item type a subject names, or `scope`. Null: it names nothing here, which is reported. */
 export function subject(d: Defining, of: unknown, path: string, ctx: Ctx, scopeToo: boolean): Type | "scope" | null {
-  if (onSubject(of)) return ctx.on ?? d.bad("name", path, "there is no primary item here; name a subject with `of`");
-  if (of === "scope") return scopeToo ? "scope" : d.bad("name", path, "the scope is not an item");
+  const resolved = (type: Type | "scope" | null): Type | "scope" | null => {
+    if (type !== null) recordSubject(d, ctx, path, type, typeof of === "string" ? of : "on");
+    return type;
+  };
+  if (onSubject(of)) return resolved(ctx.on ?? d.bad("name", path, "there is no primary item here; name a subject with `of`"));
+  if (of === "scope") return resolved(scopeToo ? "scope" : d.bad("name", path, "the scope is not an item"));
   const named = typeof of === "string" && of.startsWith("also.") ? ctx.also.get(of.slice(5)) : undefined;
-  return named ?? d.bad("name", path, "names no subject");
+  return resolved(named ?? d.bad("name", path, "names no subject"));
 }

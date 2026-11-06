@@ -6,6 +6,7 @@ import { capabilityGuard } from "./capability.ts";
 import { bindElement, mark, marked, onSubject, ownerOf, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";
 import { fieldOf, isDetached, operand, type Read } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
+import { recordField, recordRange, recordSlot } from "../program/reads.ts";
 
 const GUARDS = ["state", "signer", "notIn", "set", "unset", "equals", "differs", "some", "none", "count", "every", "fact", "before", "after", "rule", "each", "has", "anyOf", "distinct", "sameSet", "capability"];
 
@@ -45,7 +46,8 @@ export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readon
   if (!r) return null;
   const t = typeof r["type"] === "string" ? types.get(r["type"]) : undefined;
   if (!t) return bad("name", at(p, "type"), "names no item type");
-  names(r["states"], at(p, "states"), t.states, "state");
+  const states = names(r["states"], at(p, "states"), t.states, "state");
+  recordRange(d, ctx, p, t, states);
   // In a `where`, a slot with no `of` is a slot of each item the range covers.
   const slots = clauses(d, r["where"] ?? [], at(p, "where"), ctx, ownerOf(() => t, { kind: "range", path: p, type: t.name }), guard);
   if (slots.size > 0 || (Array.isArray(r["where"]) && r["where"].length > 0)) indexes.push({ path: p, type: t.name, slots: [...slots].sort() });
@@ -78,6 +80,10 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
     if (ctx.nascent && onSubject(of)) return bad("nascent-guard", path, "a guard may not read the item its act opens");
     return s;
   }, { kind: "subject", name: typeof of === "string" ? of : "on" });
+  const readSlot = (type: Type, name: string, slotPath: string) => {
+    const slot = type.slots.get(name);
+    if (slot) recordSlot(d, ctx, slotPath, type, item.identity, name, slot, "read");
+  };
   let namesField = false;
   /** A field or a presented fact that the operand names: what `ifPresent` is for. */
   const named = (read: Read | null) => { if (read && (read.fields.length > 0 || read.form === "presented")) namesField = true; };
@@ -117,12 +123,13 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
     case "signer": case "notIn": {
       if (!ctx.signer) bad("name", p, "there is no signer here");
       const t = item();
-      if (t) names(x, p, { has: (s) => t.slots.get(s)?.kind === "party" }, "party slot");
+      if (t) for (const name of names(x, p, { has: (s) => t.slots.get(s)?.kind === "party" }, "party slot")) readSlot(t, name, p);
       break;
     }
     case "set": case "unset": {
       const t = item();
       if (t && (typeof x !== "string" || !t.slots.has(x))) bad("name", p, "names no slot");
+      if (t && typeof x === "string") readSlot(t, x, p);
       break;
     }
     case "equals": case "differs":
@@ -149,11 +156,15 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       if (!r) break;
       // A field of that name, when the act has one; otherwise a slot of the subject.
       let type = fieldOf({ field: r["list"] }, ctx);
-      if (type) namesField = true;
+      if (type) {
+        namesField = true;
+        recordField(d, ctx, at(p, "list"), r["list"] as string, type);
+      }
       else {
         const t = item();
         if (!t) break;
         type = (typeof r["list"] === "string" && t.slots.get(r["list"])?.type) || null;
+        if (type) readSlot(t, r["list"] as string, at(p, "list"));
       }
       const listed = type?.type === "list" && type.of.type === "item" ? d.types.get(type.of.of) : undefined;
       if (!listed) bad("name", at(p, "list"), "names no field or slot that is a list of items");
@@ -167,7 +178,9 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       const r = x as Rec;
       if (by[0] === "field") {
         namesField = true;
-        if (fieldOf(r, ctx)?.type !== "fact") bad("name", at(p, "field"), "names no field of type fact");
+        const type = fieldOf(r, ctx);
+        if (type?.type !== "fact") bad("name", at(p, "field"), "names no field of type fact");
+        if (type) recordField(d, ctx, at(p, "field"), by[1] as string, type);
       } else {
         if ("where" in r) { bad("shape", at(p, "where"), "is for a fact that a field names"); break; }
         const read = operand(d, { [by[0]]: by[1] }, at(p, by[0]), ctx, item);
@@ -188,6 +201,7 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       const t = r && item();
       const s = t && typeof r["slot"] === "string" ? t.slots.get(r["slot"]) : undefined;
       if (t && !(s?.kind === "value" && s.type.type === "time")) bad("name", p, "names no value slot of type time");
+      if (t && s) recordSlot(d, ctx, at(p, "slot"), t, item.identity, r!["slot"] as string, s, "read");
       break;
     }
     case "rule":
