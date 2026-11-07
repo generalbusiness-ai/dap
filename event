@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/platform/test/rules-scope-v13.test.ts","body":{"commit":"f04ff0f29edfb8cb831a1dd4ab4f3c3a84d32fdb","path":"packages/platform/test/rules-scope-v13.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05d2bf3f793cf87ae7654be264eee3d2d47e40ec","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/effect-plan.ts."}
