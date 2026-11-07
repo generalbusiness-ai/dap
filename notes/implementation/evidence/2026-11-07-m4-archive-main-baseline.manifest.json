@@ -1,0 +1,67 @@
+{
+  "qualification": "Main passed. Follow the ruling by reporting this result and continuing M4 diagnosis. This does not establish that the failed M4 prefix confirmation predates M4. No M4 review, gate-pass, acceptance or deployment claim.",
+  "plannerRuling": "260399f69e0ff2b225ace232385df22c1dcd3ab6",
+  "baseHead": "e50d9eebb27f47d0f33549486751ab8bdce8de80",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-archive-main-paired-validation",
+      "files": [
+        {
+          "path": "owners.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owners.receipt.json",
+          "bytes": 214,
+          "sha256": "2b4e009cc5737f8d6b245e71e6881899f431f68bbdb35a0e12df62dad1ab98a2"
+        },
+        {
+          "path": "preflight.json",
+          "bytes": 2893,
+          "sha256": "12ab917f4eef984d37fd51adec466859b861c171f99dbd54e02d0415da933747"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 342,
+          "sha256": "7b829c740c7b6da8dbe7818b982b6dc78e10cfcd5d5d5ae9bc6b0e6be02d2424"
+        },
+        {
+          "path": "result.json",
+          "bytes": 978,
+          "sha256": "6a0e9c89b39eabe2f5f4ae6a3a26fb4bd5c54cae798f895c1dfb30732af7d6cb"
+        },
+        {
+          "path": "scope-test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "scope-test-compiler.receipt.json",
+          "bytes": 227,
+          "sha256": "774bcb1a783112efea609b6e8f2d809d19c87475f6d39ce90c2504b301d4f9d6"
+        },
+        {
+          "path": "sealer.py",
+          "bytes": 4393,
+          "sha256": "ae66368e34e86ea7cc6e643ef462abea5d486e19f1ead708c5e5a71dc456045a"
+        },
+        {
+          "path": "source-continuity.json",
+          "bytes": 571,
+          "sha256": "aed597314d847101cd661ab3bc48b27314217c1eefabc4de7c1f940da0c618ce"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 773,
+          "sha256": "d18ac0e2b7889393f268f27af421f397b661f97d8cc67f25c52f21a8cbda3f7d"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 846,
+          "sha256": "8f6aa862f97663de511fce47a4e678f17410767b1b07747311a55b1a1b0b1b53"
+        }
+      ]
+    }
+  ]
+}

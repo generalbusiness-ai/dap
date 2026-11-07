@@ -232,3 +232,27 @@ and wrapper reconciliation. The protected judge and source seals stay
 unchanged. This repair does not explain the archive refusal or clear either
 failed gate. A complete gate at the repaired candidate remains due before
 review, subject to the archive investigation's no-repeat ruling.
+
+## The ordered main baseline passes
+
+Planner ruling `260399f6` orders one unchanged four-case baseline at exact
+main `e50d9eeb` before more archive failure-path mapping. A fresh worktree
+with owned dependencies runs the same floor and capacity owner files.
+The scope test compiler exits 0, and the actual `owners.exit` records 0.
+All four cases pass. The original sources, assertions, limits, deadlines,
+and Native worker settings stay unchanged. The worktree stays clean and
+both owned process groups close.
+
+The [main baseline manifest](evidence/2026-11-07-m4-archive-main-baseline.manifest.json),
+SHA-256 `57d79fc9fc374f430245b21613f19671fcd9a4f432f117da8603406c0cc98f3d`,
+seals the exact selection, source continuity, terminal results, and private
+raw retention. The first sealer attempt has a Python syntax error before
+any statement runs. Its transcribed refusal remains; the corrected sealer
+runs without another test execution.
+
+This baseline adds no tracing to the source. Verbose and JSON reporters
+retain ordinary output and structured case states; their work can affect
+timing. The earlier M4 probe used temporary tracing. Neither the differing
+observations nor either pass establishes the historical cause. Under the
+ruling's passing branch, M4 diagnosis continues. The failed gate does not
+become a known pre-M4 failure, and this result grants no review exception.
