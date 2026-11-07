@@ -200,7 +200,7 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
         } else if (wk === "list") members(wo["list"], at(wp, "list"), ctx);
         else {
           // A party slot of each local item that a range covers, or of another subject.
-          const from: Type | "scope" | null = wk === "items" ? (range(d, wo["items"], at(wp, "items"), ctx, [], false)?.type ?? null) : subject(d, wo["subject"], at(wp, "subject"), ctx, false);
+          const from: Type | "scope" | null = wk === "items" ? (range(d, wo["items"], at(wp, "items"), ctx, [], false, `attribute:${i}`)?.type ?? null) : subject(d, wo["subject"], at(wp, "subject"), ctx, false);
           const slot = from && from !== "scope" && typeof wo["slot"] === "string" ? from.slots.get(wo["slot"]) : undefined;
           if (from && from !== "scope" && slot?.kind !== "party") bad("name", at(wp, "slot"), `names no party slot of ${from.name}`);
           if (from && from !== "scope" && slot) recordSlot(d, ctx, at(wp, "slot"), from, wk === "items"

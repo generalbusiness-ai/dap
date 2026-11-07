@@ -12,7 +12,7 @@ import { isDetached, operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { RECORD_BYTES, stated } from "./sizes.ts";
 import { recordFrame, recordSlot } from "../program/reads.ts";
-import { beginBody, endBody, enterForm, leaveForm, type SendOp } from "../program/structure.ts";
+import { beginBody, endBody, enterForm, leaveForm, type SendOp, type RangeUse } from "../program/structure.ts";
 
 /**
  * A range that a send reads whole: the items of a fan-out, and of a
@@ -20,8 +20,8 @@ import { beginBody, endBody, enterForm, leaveForm, type SendOp } from "../progra
  * and `except`. `live`: it lists no final state, so the type's `max` bounds
  * the items it covers.
  */
-function ranged(d: Defining, v: unknown, path: string, ctx: Ctx): { type: Type; live: boolean } | null {
-  const r = range(d, v, path, ctx, [], false);
+function ranged(d: Defining, v: unknown, path: string, ctx: Ctx, use: RangeUse): { type: Type; live: boolean } | null {
+  const r = range(d, v, path, ctx, [], false, use);
   if (!r) return null;
   const states = Array.isArray(r.read["states"]) ? r.read["states"] : [];
   return { type: r.type, live: states.every((s) => typeof s !== "string" || r.type.states.get(s) !== true) };
@@ -37,7 +37,7 @@ function ranged(d: Defining, v: unknown, path: string, ctx: Ctx): { type: Type; 
  * another kind, and an `index` send, read no detached text. A message to a
  * lane carries the digest, and the receiver reads the bytes from the sender.
  */
-function source(d: Defining, v: unknown, path: string, ctx: Ctx, field: boolean, lane = false): { type: FieldType | null } | null {
+function source(d: Defining, v: unknown, path: string, ctx: Ctx, field: string | false, lane = false): { type: FieldType | null } | null {
   const { bounds, bad, rec, entries } = d;
   const redactable = () => bad("redactable-read", path, "reads a detached text, which only a message to a lane carries");
   if (v === "self") return { type: null };
@@ -45,7 +45,7 @@ function source(d: Defining, v: unknown, path: string, ctx: Ctx, field: boolean,
     const c = field ? rec(v, path, ["collect"]) : bad("shape", path, "a collect is a field of a send");
     const r = c && rec(c["collect"], at(path, "collect"), ["items", "fields"]);
     if (!r) return null;
-    const items = ranged(d, r["items"], at(at(path, "collect"), "items"), ctx);
+    const items = ranged(d, r["items"], at(at(path, "collect"), "items"), ctx, `collect:${field}`);
     // Section 6.6: a `collect` needs complete evidence, and holds at most the type's `max` records.
     if (items && !items.live) bad("bound", at(at(path, "collect"), "items"), "a collect reads live items only: its range lists no final state");
     for (const [name, member] of entries(r["fields"], at(at(path, "collect"), "fields"), bounds.sendFields)) {
@@ -62,7 +62,7 @@ function source(d: Defining, v: unknown, path: string, ctx: Ctx, field: boolean,
   return read && { type: read.type };
 }
 /** The fields of one message. `lane`: the message goes to a lane, so a field may carry a detached text. */
-const sources = (d: Defining, v: unknown, path: string, ctx: Ctx, lane: boolean) => { for (const [name, s] of d.entries(v, path, d.bounds.sendFields)) source(d, s, at(path, name), ctx, true, lane); };
+const sources = (d: Defining, v: unknown, path: string, ctx: Ctx, lane: boolean) => { for (const [name, s] of d.entries(v, path, d.bounds.sendFields)) source(d, s, at(path, name), ctx, name, lane); };
 
 /** Section 16.1, check 1: in platform data a `create`, a `tell` and a `relate` may state rows of `observes`, by clause, beside `result`. */
 const ROWS = (d: Defining): string[] => (d.platform ? ["observes"] : []);
@@ -191,7 +191,7 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
         if (!r) return;
         // Section 6.6: a fan-out makes one send for each item its range covers. Its sends are bounded because the range reads live items
         // only, and the type's `max` bounds those.
-        const each = "each" in r ? ranged(d, r["each"], at(p, "each"), ctx) : null;
+        const each = "each" in r ? ranged(d, r["each"], at(p, "each"), ctx, "fanout") : null;
         if ("each" in r && ++fanOuts > 1) bad("fan-out-unbounded", at(p, "each"), "another send of this list is a fan-out; a list has at most one");
         const written = each && isObject(top["items"]) ? own(top["items"], each.type.name) : null;
         const max = !each ? 1 : isObject(written) && typeof written["max"] === "number" ? written["max"] : Infinity;

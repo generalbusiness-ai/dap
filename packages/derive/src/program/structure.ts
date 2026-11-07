@@ -76,10 +76,12 @@ export interface BodyTrace {
   readonly ranges: PendingRange[];
 }
 export type GuardListPlace = "guards" | "if" | "unless";
+/** The caller supplies the semantic use, independent of diagnostic paths. */
+export type RangeUse = "guard" | "same-set" | "fanout" | `capability:${string}` | `attribute:${number}` | `collect:${string}`;
 interface PendingGuardList { readonly source: object; readonly owner: PendingNode | null; readonly place: GuardListPlace; readonly nodes: readonly PendingNode[] }
-interface PendingRange { readonly source: object; readonly owner: PendingNode | null; readonly plan: RangePlan }
+interface PendingRange { readonly source: object; readonly owner: PendingNode | null; readonly use: RangeUse; readonly plan: RangePlan }
 interface GuardListBinding { readonly body: BodyStructure; readonly owner: StructureNode | null; readonly place: GuardListPlace; readonly nodes: readonly GuardNode[] }
-interface RangeBinding { readonly body: BodyStructure; readonly owner: StructureNode | null; readonly plan: RangePlan }
+interface RangeBinding { readonly body: BodyStructure; readonly owner: StructureNode | null; readonly use: RangeUse; readonly plan: RangePlan }
 interface Trace { readonly roots: BodyTrace[]; active: BodyTrace | null }
 const pending = new WeakMap<Defining, Trace>();
 interface Compiled {
@@ -135,9 +137,9 @@ export function endGuardList(d: Defining, list: GuardListTrace | null): void {
   if (nodes.some(node => node.category !== "guard")) throw new TypeError("guard list captured a non-guard form");
   list.body.guardLists.push({ source: list.source, owner: list.owner, place: list.place, nodes });
 }
-export function recordRangePlan(d: Defining, source: object, plan: RangePlan): void {
+export function recordRangePlan(d: Defining, source: object, use: RangeUse, plan: RangePlan): void {
   const body = pending.get(d)?.active;
-  if (body) body.ranges.push({ source, owner: body.stack.at(-1) ?? null, plan });
+  if (body) body.ranges.push({ source, owner: body.stack.at(-1) ?? null, use, plan });
 }
 export function enterForm(d: Defining, category: Category, op: Opcode, path: string, data: unknown): FormTrace | null {
   const body = pending.get(d)?.active;
@@ -222,7 +224,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
       guardLists.set(list.source, Object.freeze([...(guardLists.get(list.source) ?? []), entry]));
     }
     for (const range of root.ranges) {
-      const entry = Object.freeze({ body, owner: range.owner ? nodeOf(range.owner) : null, plan: range.plan });
+      const entry = Object.freeze({ body, owner: range.owner ? nodeOf(range.owner) : null, use: range.use, plan: range.plan });
       ranges.set(range.source, Object.freeze([...(ranges.get(range.source) ?? []), entry]));
     }
     if (root.binding.kind === "body") {
@@ -286,9 +288,9 @@ export function guardList(definition: ValidDefinition, body: BodyStructure, owne
   const matches = found.guardLists.get(original)?.filter(list => list.body === body && list.owner === owner && list.place === place);
   return matches?.length === 1 ? matches[0]!.nodes : null;
 }
-export function rangePlan(definition: ValidDefinition, body: BodyStructure, owner: StructureNode | null, source: object): RangePlan | null {
+export function rangePlan(definition: ValidDefinition, body: BodyStructure, owner: StructureNode | null, source: object, use: RangeUse): RangePlan | null {
   const found = checkedOwner(definition, body, owner), original = found.origins.get(source) ?? source;
-  const matches = found.ranges.get(original)?.filter(range => range.body === body && range.owner === owner);
+  const matches = found.ranges.get(original)?.filter(range => range.body === body && range.owner === owner && range.use === use);
   return matches?.length === 1 ? matches[0]!.plan : null;
 }
 /** Unsupported instructions stay explicit until the complete M4 capture reaches its callers. */

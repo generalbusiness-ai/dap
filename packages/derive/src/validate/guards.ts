@@ -9,7 +9,7 @@ import { at, type Rec } from "./shape.ts";
 import { recordElementBinding, recordField, recordForeignField, recordRange, recordSlot } from "../program/reads.ts";
 import { enterForm, leaveForm, type GuardOp } from "../program/structure.ts";
 import type { BoundPlan, FactMatch, FactSource, GuardCode, GuardPlan, ListSource, MissingRead, RangePlan, WherePlan } from "../program/guard-plan.ts";
-import { beginGuardList, endGuardList, recordGuardPlan, recordRangePlan, type FormTrace, type GuardListPlace } from "../program/structure.ts";
+import { beginGuardList, endGuardList, recordGuardPlan, recordRangePlan, type FormTrace, type GuardListPlace, type RangeUse } from "../program/structure.ts";
 import type { ElementBinding, EntryRead, OperandRead, SlotRead } from "../program/reads.ts";
 
 const GUARDS = ["state", "signer", "notIn", "set", "unset", "equals", "differs", "some", "none", "count", "every", "fact", "before", "after", "rule", "each", "has", "anyOf", "distinct", "sameSet", "capability"] as const satisfies readonly GuardOp[];
@@ -49,7 +49,7 @@ function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, owner: ReadOwn
  * the range is read by a guard, which may not read the item that its act
  * opens. Returns the type, and the record as it was read.
  */
-export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readonly string[] = [], guard = true): { type: Type; read: Rec; program: RangePlan } | null {
+export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readonly string[] = [], guard = true, use: RangeUse = "guard"): { type: Type; read: Rec; program: RangePlan } | null {
   const { bounds, types, indexes, bad, rec, list, names } = d;
   const r = rec(x, p, ["type", "states"], ["where", "except", ...more]);
   if (!r) return null;
@@ -70,7 +70,7 @@ export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readon
     except.push(typeof s === "string" ? s as Subject : "on");
   });
   const program = Object.freeze({ type: t.name, states: Object.freeze([...states]), where: where.plan, except: Object.freeze(except) });
-  recordRangePlan(d, r, program);
+  recordRangePlan(d, r, use, program);
   return { type: t, read: r, program };
 }
 
@@ -329,7 +329,7 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
       }
       // Section 6.5: the keys are the local IDs of the items that the range covers, and `match` holds between each element and its item.
       // The range is read once for the whole form, so its `where` names no element.
-      const items = range(d, r["items"], at(p, "items"), ctx);
+      const items = range(d, r["items"], at(p, "items"), ctx, [], true, "same-set");
       if (!items) break;
       if (key?.type?.type === "item" && key.type.of !== items.type.name) bad("name", at(p, "key"), `names no item of type ${items.type.name}`);
       const match = clauses(d, r["match"] ?? [], at(p, "match"), inner.ctx, ownerOf(() => items.type, { kind: "range", path: at(p, "items"), type: items.type.name }), true);

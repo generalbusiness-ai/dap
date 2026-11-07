@@ -217,21 +217,25 @@ test("aliased conditions resolve by their owning form and semantic place", () =>
   expect(() => guardList(checked, { ...body }, owned, shared, "if")).toThrow("another validation");
 });
 
-test("an owned capability argument retains its range plan without borrowing another form", () => {
+test("aliased capability ranges retain their semantic argument and admitted owner", () => {
   const input = capabilityStagingData(), act = input.acts["stage"]!, source = act.guards[2]!;
   if (!("capability" in source)) return expect.fail("expected capability guard");
   const argument = source.capability.with["earlier"];
   if (!argument || !("items" in argument)) return expect.fail("expected range argument");
+  source.capability.with["selected"] = { items: argument.items, slot: argument.slot };
   const checked = admitted(input), body = bodyStructure(checked, act, "stage")!, owner = formStructures(checked, body, source)[0]!;
   if (owner.category !== "guard") return expect.fail("expected guard instruction");
   const code = guardPlan(checked, body, owner)?.code;
   if (code?.op !== "capability") return expect.fail("expected capability instruction");
   const ownedArgument = code.capability.with["earlier"];
   if (!ownedArgument || !("items" in ownedArgument)) return expect.fail("expected owned range argument");
-  const plan = rangePlan(checked, body, owner, argument.items)!;
+  const plan = rangePlan(checked, body, owner, argument.items, "capability:earlier")!;
   expect(plan).toMatchObject({ type: "note", states: ["draft"], where: [], except: [] });
   expect(ownedArgument.items).not.toBe(argument.items);
-  expect(rangePlan(checked, body, owner, ownedArgument.items)).toBe(plan);
-  expect(rangePlan(checked, body, body.nodes[0]!, argument.items)).toBeNull();
-  expect(() => rangePlan(checked, { ...body }, owner, argument.items)).toThrow("another validation");
+  const selected = rangePlan(checked, body, owner, argument.items, "capability:selected");
+  expect(selected).not.toBeNull(); expect(selected).not.toBe(plan);
+  expect(rangePlan(checked, body, owner, argument.items, "capability:unknown")).toBeNull();
+  expect(rangePlan(checked, body, owner, ownedArgument.items, "capability:earlier")).toBe(plan);
+  expect(rangePlan(checked, body, body.nodes[0]!, argument.items, "capability:earlier")).toBeNull();
+  expect(() => rangePlan(checked, { ...body }, owner, argument.items, "capability:earlier")).toThrow("another validation");
 });
