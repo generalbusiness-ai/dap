@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "qualification": "Read-only successful Page browser workflow metadata at a0d26a3a; named script/runtime/dependency inputs equal repaired gate head94db5a0b. No workflow rerun, local test or deployment.",
+  "fileCount": 9,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-ci",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 654,
+          "sha256": "04203dd014d2740645d1755eb78617b4dad993d10807011cda17f068467c9617"
+        },
+        {
+          "path": "input-equality.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "input-equality.json",
+          "bytes": 1220,
+          "sha256": "e9cc7c71a620cd68da22bbb8e4b67378237b72b1bc66eb9e2cfe0f2fbc72dc9a"
+        },
+        {
+          "path": "input-equality.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "input-equality.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "request.json",
+          "bytes": 355,
+          "sha256": "09993b04b876e439a81ff255644e4025d1bc285eca6bf1e76485fe7e21029276"
+        },
+        {
+          "path": "run.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2681,
+          "sha256": "b6e762344b8ba59e761bc6e0406a16fd9cdf11b14546972d9f51c9d55f027072"
+        },
+        {
+          "path": "run.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ]
+}

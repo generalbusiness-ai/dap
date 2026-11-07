@@ -2,8 +2,8 @@
 
 M4 remains in progress under request `7a36b673` and promise `393c4f98`.
 The branch executes declared guards, range predicates, and list binders through
-admitted typed instructions. The full gate, independent review, and landing
-remain due.
+admitted typed instructions. The repaired-head gate passes as recorded below.
+Independent review and landing remain due.
 
 ## Shared ranges keep their semantic use
 
@@ -72,7 +72,17 @@ The [Page asset manifest](evidence/2026-11-07-m4-page-assets.manifest.json),
 SHA-256 `1b07e3861f6dfe9bb5742aa59d2b948963a64685c4dd3407ec7025939641d5dd`, seals the build and owner output.
 
 Regenerate with `node scripts/assets.mjs` from `apps/room/page`.
-The corrected full gate fails as recorded below. The [Page browser workflow](https://github.com/generalbusiness-ai/dap/actions/runs/42377362267) passes at `6204ddadde`, after the bundle build. That browser result does not clear the gate failure.
+The earlier [Page browser workflow](https://github.com/generalbusiness-ai/dap/actions/runs/42377362267)
+passes at `6204ddadde`, after the bundle build. After the projected-set repair,
+the [Page browser workflow](https://github.com/generalbusiness-ai/dap/actions/runs/42382562941)
+passes at `a0d26a3ac8`. A read-only GitHub query confirms that result.
+Its named script, shared runtime, dependency, and workflow inputs match the
+repaired gate head `94db5a0ba9`. The
+[Page CI manifest](evidence/2026-11-07-m4-page-ci.manifest.json), SHA-256
+`986dbbef79c1c5ab598e3c8e34262d0a40ddb9d9d28a7eb143fa34120ece7a2e`,
+records the query and exact input comparison. The query reads existing metadata without rerunning the
+workflow. These browser results do not explain either historical gate
+failure.
 
 ## Gate failures expose two unadmitted test helpers
 
@@ -113,8 +123,8 @@ Only these two test owners and explanatory records change after the first
 gate. Production source, imported helpers, configuration, dependencies,
 and Page assets stay unchanged. Two repaired test files exceed the
 single-file follow-up exception in `docs/testing.md`. A fresh complete
-gate remains due at the corrected candidate. Neither earlier failure
-becomes a pass.
+gate was due at the corrected candidate. Neither earlier failure becomes
+a pass.
 
 ## Capture preserves admission refusals
 
@@ -150,9 +160,10 @@ identical production source. That pass does not explain this failure.
 Existing archive request `64552d40`, promise `4903fa50`, requires a causal
 retry diagnosis and forbids repeated full gates to chase it. This is a
 different owner and position from its original 14,601 observation. Neither
-that original cause nor this one is proven. M4 remains unreviewed and
-unlanded while the investigation continues. The investigation retains every assertion, deadline, allowance, and cache
-charge. Archive source stays unchanged.
+that original cause nor this one is proven. At that checkpoint M4 stayed
+unreviewed and unlanded while diagnosis continued. The investigation retains
+every assertion, deadline, allowance, and cache charge. Archive source stays
+unchanged.
 
 The [failed corrected gate manifest](evidence/2026-11-07-m4-failed-gate-2.manifest.json),
 SHA-256 `d02b8c090685039f17a6674222fab3432be33967d476758ec3342c0d95cc1e4a`, seals the terminal phase results and the exact
@@ -197,7 +208,8 @@ retains the four-case ledger, bounded trace, unchanged obligations, and
 restoration proof. Raw synthetic TEST custody remains private.
 
 Neither workload reproduces the historical refusal. The cause remains
-unproven, both gates remain failed, and M4 remains unreviewed and unlanded.
+unproven, and both gates remain failed. M4 stayed unreviewed and unlanded
+at this checkpoint.
 These probes establish no real-room outcome or completion-time guarantee.
 No further full gate runs to chase this archive failure.
 
@@ -230,8 +242,8 @@ SHA-256 `cf0d88a605c90ef60ee5c2f5ad3c962b531c3de4e1032e54373d44c3a101f7d1`,
 seals the failing assertion, passing focused checks, exact source changes,
 and wrapper reconciliation. The protected judge and source seals stay
 unchanged. This repair does not explain the archive refusal or clear either
-failed gate. A complete gate at the repaired candidate remains due before
-review, subject to the archive investigation's no-repeat ruling.
+failed gate. A complete gate at the repaired candidate was due before
+review. The later ruling below authorizes that gate.
 
 ## The ordered main baseline passes
 
@@ -254,7 +266,7 @@ This baseline adds no tracing to the source. Verbose and JSON reporters
 retain ordinary output and structured case states; their work can affect
 timing. The earlier M4 probe used temporary tracing. Neither the differing
 observations nor either pass establishes the historical cause. Under the
-ruling's passing branch, M4 diagnosis continues. The failed gate does not
+ruling's passing branch, M4 diagnosis continued. The failed gate does not
 become a known pre-M4 failure, and this result grants no review exception.
 
 ## The stop-only observer also passes
@@ -296,6 +308,49 @@ seals eight public files. Full host log metadata stays private. The first
 sandboxed query refuses before reading logs; the separately retained
 query exits 0. This observation changes no source or system setting.
 
-M4 stays unreviewed and unlanded. Archive request `64552d40` stays open.
-Both complete gates remain failed. No further test or gate execution
-follows from this checkpoint without a concrete diagnostic or repair.
+At this checkpoint M4 stayed unreviewed and unlanded. Archive request
+`64552d40` stays open, and both complete gates remain failed. The next
+execution needs the concrete ruling below.
+
+## The repaired candidate passes its required gate
+
+Planner ruling `677da3fe`, adopted by `a926a5e0`, distinguishes the due gate
+after the projected-set repair from a retry to chase the archive failure.
+Merge `94db5a0ba9b1aa85daa230037bbc0737c5ba2ec2` takes main `9d96cf25`
+into M4 at `e1480a00`. The gated tree is
+`016746e0f66f4894fcd246de303437cd8f335df2`.
+
+The actual `gate.exit` reads `exit 0`. Node passes 135 cases, Counting
+passes 56, Plain passes 4,003 with one skip, and Native passes 1,111 with
+two skips. All four case-report phases are complete. The reporters record
+no contradictions, report errors, or unhandled Vitest errors. The notes
+check reports zero warnings with main now an ancestor.
+
+| Evidence | Result |
+| --- | --- |
+| [Repaired gate manifest](evidence/2026-11-07-m4-repaired-gate.manifest.json), SHA-256 `bf2e73ea04065fbd28416b763c3cac8b592dac2942eafc18a780a5acaa4809b1` | Fifteen read-only public files preserve the actual exit, terminal counts, source identity, timings, and raw retention. |
+| Same manifest, `before.json`, `after.json`, and `receipt.json` | The snapshots match exactly. Source and dependency bytes stay unchanged, and the owned process group closes. |
+| Same manifest, `test-summary.json`, `stages.json`, and `result.json` | Every phase completes. The 99 suite or unclassified observations stay outside the case counts. The skipped record module has no duration. The report leaves it absent. |
+| Same manifest, `started.json` and `gate.time` | The run spans 17:04:37–17:25:54 UTC. The timing command reports 1,276.78 seconds elapsed, 2,428.58 user, and 324.78 system. The separate Python monotonic interval is 1,276.867 seconds. |
+| Same manifest, `private-retention.json` | The sealer verifies all 2,299 raw regular files, then makes them read-only. The private unit has no symlinks. |
+
+The documented progress observer records 1,095 Native ready callbacks,
+1,070 result callbacks, and 1,113 final case records. Final framework
+records establish the 1,111 passes and two skips. Missing intermediate
+callbacks prove neither continuing execution nor a cause. Other builder
+lanes ran no tests, builds, or gates during this gate.
+
+Both earlier failed gates remain failed. In particular, the `00ffedf892`
+archive-floor refusal at position 5,308 remains unexplained under
+`64552d40`, with its original manifest and bounded diagnostic intact.
+This gate has no recurrence, so the ruling's conditional six-run timing
+comparison does not run. Active archive diagnosis stops until a future
+gate recurrence yields the existing SQL, cursor, awaited-action, and
+backwards-clock capture. No further archive probe or driver patch follows
+from this pass.
+
+The documentation after `94db5a0ba9` adds this result and its manifests.
+It changes no production source, test, dependency, or generated asset.
+The review request records both the gated tree and the final documented
+tree. This head still owes independent review and landing. M5 through M8,
+live cohort acceptance, and deployment remain outside this result.
