@@ -62,3 +62,35 @@ for (const { name, identical, distinct, conditional, choices } of clauseMatrices
     }
   }
 });
+
+for (const cohort of ["legacy", "whole-scope"] as const) for (const effectList of ["empty", "omitted"] as const) test(`M6: ${cohort}: ${effectList} observation-only result clauses retain observations without effect forms`, () => {
+  const checked = weighed(data => {
+    clauseSends(true, false, true, false)(data);
+    if (effectList === "omitted") for (const form of data.acts.go.sends) delete form.tell.result.applied;
+    if (cohort === "whole-scope") data.capacity = { name: "whole-scope", version: 1 };
+  });
+  expect(checked.ok).toBe(true);
+  const s = new Scope(valid(checked));
+  s.did(keys.rita, "point", { on: 0, expected: { on: 1 }, fields: { peer: otherLane } });
+  const origin = s.did(keys.rita, "go", { on: 0, expected: { on: 2 }, fields: { choice: false, first: keys.una.member, second: keys.vic.member } });
+  expect(origin.sends.map(({ n }) => n)).toEqual([0]);
+  const sent = origin.sends[0]!;
+  const request = { from: s.fact(origin.seq), n: sent.n };
+  const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
+  const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
+  const arrival = { ...answer, from: factRefOf(source.entry) };
+  s.now = t(8);
+  const record = (observed: readonly ObservationUse[]) => judgeDelivery(s.state, s.definition, arrival, {
+    ...arriving(s, arrival, source), platform: weigherRules(), observed, observing: { membership },
+  });
+  const right = memberSeen(keys.una.member.member, 1, t(3));
+  const wrong = memberSeen(keys.vic.member.member, 2, t(3));
+  const results: ReturnType<typeof judgeDelivery>[] = [];
+  expect(() => results.push(record([right]))).not.toThrow();
+  const got = results[0];
+  expect(got?.result).toBe("write");
+  if (!got || got.result !== "write") return expect.fail(JSON.stringify(got));
+  expect({ effects: got.draft.effects, observed: "observed" in got.draft.input ? got.draft.input.observed : null })
+    .toEqual({ effects: [], observed: [right] });
+  expect(record([wrong])).toMatchObject({ result: "unavailable", reason: "authority-unavailable" });
+});

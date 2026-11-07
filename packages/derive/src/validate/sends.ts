@@ -88,20 +88,29 @@ function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, owner: object,
   const rows = isObject(observed) ? observed : {};
   const names = new Set(Object.keys(r ?? {}));
   if (d.wholeCapacity) for (const name of Object.keys(rows)) names.add(name);
+  // A clause keeps the origin's stable subjects, including when only its rows run.
+  const withinClause = (): Ctx => ({ ...ctx, clause: true, senderKind,
+    also: new Map([...ctx.also].filter(([also]) => !ctx.unsettled?.has(also))) });
   for (const name of names) {
     const e = r && Object.hasOwn(r, name) ? r[name] : [];
     // Section 17.2: a `conflict` is not reserved. Its entry is new work, and what its clause starts is counted when it is admitted.
     d.clause = name === "conflict" ? null : [];
     // Section 6.6: a clause's subjects are those of the entry that made the send, as that entry resolved them. A name that was
     // selected through a slot that is not fixed cannot be selected again when the clause runs, so a clause names none.
-    const settled = new Map([...ctx.also].filter(([also]) => !ctx.unsettled?.has(also)));
-    const within: Ctx = { ...ctx, also: settled, clause: true, senderKind };
+    const within = withinClause();
     const traced = beginBody(d, { kind: "clause", owner, clause: name });
     effects(d, e, at(path, name), within, true);
     recordFrame(d, within, at(path, name), "clause");
     endBody(d, traced);
     if (d.clause) { d.clauseSets.push(d.clause); d.clauseRetains.set(d.clause, own(rows, name)); d.clausePaths.set(d.clause, at(path, name)); reserved.push(d.clause); }
     d.clause = null;
+  }
+  // Legacy accounting does not reserve an omitted clause. Capture its empty
+  // executable body without adding a reservation or validating new syntax.
+  for (const name of Object.keys(rows)) if (!names.has(name)) {
+    const traced = beginBody(d, { kind: "clause", owner, clause: name });
+    recordFrame(d, withinClause(), at(path, name), "clause");
+    endBody(d, traced);
   }
   return reserved;
 }

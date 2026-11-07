@@ -597,7 +597,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   const forms = clauses[clause] ?? [];
   const originBody = frame.body ? bodyStructure(definition, frame.body, frame.kind) : null;
   if (frame.body && !originBody) throw new TypeError("origin body was not captured by its validation");
-  const structure = forms.length > 0 ? clauseStructure(definition, form, clause, originBody, frame.kind) : null;
+  const structure = clauseStructure(definition, form, clause, originBody, frame.kind);
   if (forms.length > 0 && !structure) throw new TypeError("result clause was not captured by its validation");
   // Revision 20, section 16.1: the rows of this clause, for the delivery of a result that runs it, under a definition whose data
   // states rows. A request that a rule gave states none: its mark holds its clauses, and no text gives a mark rows (I3 deltas,
