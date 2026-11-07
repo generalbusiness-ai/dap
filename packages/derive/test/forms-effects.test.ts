@@ -1,4 +1,4 @@
-import { auditedData, refusingTicketData } from "./definition-corpus/forms-effects-variants.ts";
+import { auditedData, refusingTicketData, unboundConditionData } from "./definition-corpus/forms-effects-variants.ts";
 import { effectFormCases } from "./definition-corpus/forms-effects-cases.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -17,7 +17,7 @@ const { rita, una, vic, paul, sam } = keys;
 import { cards } from "./definition-corpus/forms-effects-data.ts";
 import { clockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
 import { clockScene } from "./fixtures-clock-cutover.ts";
-import { runClause } from "../src/handlers.ts";
+import { derive, runClause } from "../src/handlers.ts";
 import { bodyStructure } from "../src/program/structure.ts";
 import { t } from "./fixtures-entry.ts";
 
@@ -143,6 +143,22 @@ const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Re
   const body = act.effects === forms && attention.length === 0 ? bodyStructure(s.definition, act, kind) : null;
   return deriveEffects(judging(s, kind, bound, more), forms, attention, more.opens ?? null, body);
 };
+
+test("M5: a nested constant subject in if skips effects and attention while unbound and applies both when bound", () => {
+  const checked = valid(validateDefinition(unboundConditionData(), PROPOSED_BOUNDS));
+  const s = new Scope(checked), p = s.did(rita, "add", fields({ text: "before" })).seq;
+  const parent = s.did(una, "add").seq, act = checked.declared.acts["probe"]!;
+  // Production admission and body execution; the fixture supplies the resolved subjects and authority.
+  const without = derive(judging(s, "probe", { on: p }), act, null, s.head.hash);
+  const withParent = derive(judging(s, "probe", { on: p, "also.parent": parent }), act, null, s.head.hash);
+  expect([without, withParent]).toEqual([
+    { result: "ran", effects: [], sends: [], prepared: [], judgesTime: false, settles: false },
+    { result: "ran", effects: [
+      { effect: "value", item: p, slot: "text", value: "applied" },
+      { effect: "attention", item: p, members: [rita.member], reason: "told" },
+    ], sends: [], prepared: [], judgesTime: false, settles: false },
+  ]);
+});
 
 describe("attribution: its sources and its order (section 6.7)", () => {
   /**

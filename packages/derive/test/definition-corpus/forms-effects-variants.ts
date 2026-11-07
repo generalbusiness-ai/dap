@@ -1,6 +1,7 @@
 /** Raw declarations used by handler/result-clause histories. */
-import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, Guard } from "@generalbusiness/dap-contract";
 import { desk, ticket } from "./fixture-data.ts";
+import { cards } from "./forms-effects-data.ts";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function auditedData(kind: string, under: string): DeclaredDefinition {
   const d = structuredClone(desk) as any;
@@ -18,4 +19,17 @@ export function refusingTicketData(): DeclaredDefinition {
   d.receives.closes.fields.why = { type: "int", min: 0, max: 9, required: true };
   d.receives.closes.guards = [{ differs: { a: { field: "why" }, b: { const: 1 } }, reason: "one" }, { differs: { a: { field: "why" }, b: { const: 2 } }, reason: "two" }];
   return d;
+}
+
+/** Admission permits this constant; the existing condition skip also reads its nested subject name. */
+export function unboundConditionData(): DeclaredDefinition {
+  const d = structuredClone(cards);
+  const condition: Guard[] = [{ equals: { a: { const: { nested: { of: "also.parent" } } }, b: { const: { nested: { of: "also.parent" } } } } }];
+  return { ...d, acts: { ...d.acts, probe: {
+    ...d.acts["edit"]!,
+    fields: { parent: { type: "item", of: "card", required: false } },
+    also: { parent: { item: "card", by: "parent" } },
+    effects: [{ value: { slot: "text", from: { const: "applied" } }, if: condition }],
+    attention: [{ notify: { of: "on", slot: "owner", when: "after", reason: "told", if: condition } }],
+  } } };
 }

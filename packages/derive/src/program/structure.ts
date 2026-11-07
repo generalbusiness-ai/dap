@@ -5,6 +5,7 @@ import type { ValidDefinition } from "../validate/index.ts";
 import type { ElementBinding, FieldResolution, ForeignFieldResolution, FrameRead, OperandRead, RangeResolution, ReadValidation, ResolvedReads, SlotResolution, SubjectResolution } from "./reads.ts";
 import { immutable } from "./model.ts";
 import { mapGuardChildren, type GuardPlan, type RangePlan } from "./guard-plan.ts";
+import { conditionSubjects, type ConditionPlan } from "./condition-plan.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
 export type GuardOp = Exclude<Keys<Guard>, "of" | "reason" | "ifPresent">;
@@ -68,6 +69,7 @@ interface PendingNode {
   readonly category: Category; readonly op: Opcode; readonly path: string; readonly data: unknown;
   readonly reads: MutableResolutions; readonly children: PendingNode[]; readonly future: FutureClause[]; source?: ValueSource;
   guard?: GuardPlan<FormTrace>;
+  conditions?: Partial<Record<"if" | "unless", PendingGuardList>>;
 }
 export interface BodyTrace {
   readonly id: RootIdentity; readonly binding: RootBinding; readonly origin: BodyTrace | null;
@@ -78,7 +80,7 @@ export interface BodyTrace {
 export type GuardListPlace = "guards" | "if" | "unless";
 /** The caller supplies the semantic use, independent of diagnostic paths. */
 export type RangeUse = "guard" | "same-set" | "fanout" | `capability:${string}` | `attribute:${number}` | `collect:${string}`;
-interface PendingGuardList { readonly source: object; readonly owner: PendingNode | null; readonly place: GuardListPlace; readonly nodes: readonly PendingNode[] }
+interface PendingGuardList { readonly source: object; readonly owner: PendingNode | null; readonly place: GuardListPlace; readonly nodes: readonly PendingNode[]; readonly absentSubjects: readonly string[] }
 interface PendingRange { readonly source: object; readonly owner: PendingNode | null; readonly use: RangeUse; readonly plan: RangePlan }
 interface GuardListBinding { readonly body: BodyStructure; readonly owner: StructureNode | null; readonly place: GuardListPlace; readonly nodes: readonly GuardNode[] }
 interface RangeBinding { readonly body: BodyStructure; readonly owner: StructureNode | null; readonly use: RangeUse; readonly plan: RangePlan }
@@ -98,6 +100,7 @@ const compiled = new WeakMap<ValidDefinition, Compiled>(), checkedRoots = new We
 const rootOwners = new WeakMap<BodyStructure, ValidDefinition>();
 const nodeRoots = new WeakMap<StructureNode, BodyStructure>(), guardPlans = new WeakMap<GuardNode, GuardPlan<GuardNode>>();
 const guardSources = new WeakMap<GuardNode, object>();
+const conditionPlans = new WeakMap<StructureNode, ConditionPlan<GuardNode>>();
 function traceOf(d: Defining): Trace {
   let trace = pending.get(d);
   if (!trace) { trace = { roots: [], active: null }; pending.set(d, trace); }
@@ -135,7 +138,14 @@ export function endGuardList(d: Defining, list: GuardListTrace | null): void {
   if (pending.get(d)?.active !== list.body || (list.body.stack.at(-1) ?? null) !== list.owner) throw new TypeError("unclosed guard list scope");
   const nodes = list.nodes.slice(list.start);
   if (nodes.some(node => node.category !== "guard")) throw new TypeError("guard list captured a non-guard form");
-  list.body.guardLists.push({ source: list.source, owner: list.owner, place: list.place, nodes });
+  const captured: PendingGuardList = { source: list.source, owner: list.owner, place: list.place, nodes,
+    absentSubjects: list.place === "if" ? Object.freeze([...conditionSubjects(list.source)]) : Object.freeze([]) };
+  list.body.guardLists.push(captured);
+  if (list.owner && list.place !== "guards") {
+    list.owner.conditions ??= {};
+    if (list.owner.conditions[list.place]) throw new TypeError("condition has two groups in the same semantic place");
+    list.owner.conditions[list.place] = captured;
+  }
 }
 export function recordRangePlan(d: Defining, source: object, use: RangeUse, plan: RangePlan): void {
   const body = pending.get(d)?.active;
@@ -192,6 +202,17 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     if (typeof node.data !== "object" || node.data === null) throw new TypeError("structural form has no source object");
     bindings.push({ source: node.data, node: owned });
     ownedNodes.set(node, owned);
+    const conditionGuards = (place: "if" | "unless"): readonly GuardNode[] | null => {
+      const group = node.conditions?.[place];
+      return group ? Object.freeze(group.nodes.map(pending => {
+        const child = nodeOf(pending);
+        if (child.category !== "guard") throw new TypeError("condition has a non-guard instruction");
+        return child;
+      })) : null;
+    };
+    if (owned.category === "effect" || owned.category === "attention") conditionPlans.set(owned, Object.freeze({
+      if: conditionGuards("if"), unless: conditionGuards("unless"), absentSubjects: node.conditions?.if?.absentSubjects ?? Object.freeze([]),
+    }));
     if (owned.category === "guard" && node.guard) guardPlans.set(owned, mapGuardChildren(node.guard, trace => {
       const child = nodeOf(trace.node);
       if (child.category !== "guard") throw new TypeError("guard instruction has a non-guard child");
@@ -317,6 +338,14 @@ export function guardSource(definition: ValidDefinition, body: BodyStructure, no
   const source = guardSources.get(node);
   if (!source) throw new TypeError("guard instruction has no source identity");
   return source as Guard;
+}
+
+/** Select conditions by the admitted occurrence, never by a declaration path. */
+export function conditionPlan(definition: ValidDefinition, body: BodyStructure, node: EffectNode | AttentionNode): ConditionPlan<GuardNode> {
+  checkedOwner(definition, body, node);
+  const plan = conditionPlans.get(node);
+  if (!plan) throw new TypeError("form has no admitted condition instruction");
+  return plan;
 }
 
 /** Timed judges pass their exact effect and attention arrays rather than a body object. */

@@ -15,10 +15,10 @@ import { attribution, byMember, historyOf } from "./attribution.ts";
 import { capabilityEffect } from "./capability.ts";
 import { isEntryOf, isLocalFact } from "./fields.ts";
 import { changeItem, newItem, type ItemEffect } from "./fold.ts";
-import { members, readsUnbound, slotOf, type Judging } from "./guards.ts";
+import { members, slotOf, type Judging } from "./guards.ts";
 import { EPOCH, HOLDER, deriveHold, endsUnder, type HoldEffect } from "./hold.ts";
-import { judgeGuardNodes } from "./program/guard-value.ts";
-import { formContext, guardList, timedStructure, type BodyStructure, type FormContext } from "./program/structure.ts";
+import { judgeCondition } from "./program/condition-value.ts";
+import { formContext, timedStructure, type BodyStructure, type FormContext } from "./program/structure.ts";
 import { bindEach, covered, typeOfElement } from "./lists.ts";
 import { givenTo, markOf, ofCodedType, outside, ruleFor, run, type RuleEffect } from "./marks.ts";
 import { ruleMayNot } from "./markers.ts";
@@ -303,16 +303,10 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
    * unbound subject is not applied.
    */
   const lets = (c: Condition, context: () => FormContext): boolean | UnavailableReason => {
-    const judge = (source: NonNullable<Condition["if"]>, place: "if" | "unless") => {
-      const { body, owner } = context(), nodes = guardList(j.definition, body, owner, source, place);
-      if (!nodes) throw new TypeError("condition has no admitted form context");
-      return judgeGuardNodes(j, body, nodes).result;
-    };
-    if (c.if && readsUnbound(j, c.if)) return false;
-    const holds = c.if ? judge(c.if, "if") : "pass";
-    const bars = c.unless ? judge(c.unless, "unless") : "fail";
-    if (holds === "fail" || bars === "pass") return false;
-    return holds !== "pass" ? holds : bars !== "fail" ? bars : true;
+    if (!c.if && !c.unless) return true;
+    const { body, owner } = context();
+    if (owner.category !== "effect" && owner.category !== "attention") throw new TypeError("condition has no effect or attention owner");
+    return judgeCondition(j, body, owner);
   };
 
   if (opens !== null) {

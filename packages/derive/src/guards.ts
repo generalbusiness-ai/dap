@@ -19,6 +19,7 @@ import { own } from "./values.ts";
 
 import { judgeGuardNode, judgeGuardNodes } from "./program/guard-value.ts";
 import { guardContext, guardListContext } from "./program/structure.ts";
+import { conditionSubjects } from "./program/condition-plan.ts";
 
 export { operand, slotOf };
 
@@ -97,17 +98,14 @@ export function ruleInput(j: Judging): unknown {
  * not among the subjects. A guard whose subject is unbound is not evaluated,
  * and the input does not rest on it.
  */
-const unbound = (j: Pick<Judging, "subjects">, of: string): boolean => of.startsWith("also.") && !j.subjects.has(of);
-
 /**
  * True when a written form reads an unbound `also` name as a subject: as an
  * `of`, or as the `item` of an operand. Section 6.4: an effect, a send or a
  * notice whose `if` reads one is not applied.
  */
 export function readsUnbound(j: Pick<Judging, "subjects">, v: unknown): boolean {
-  if (Array.isArray(v)) return v.some((x) => readsUnbound(j, x));
-  if (typeof v !== "object" || v === null) return false;
-  return Object.entries(v).some(([k, x]) => ((k === "of" || k === "item") && typeof x === "string" ? unbound(j, x) : readsUnbound(j, x)));
+  for (const name of conditionSubjects(v)) if (!j.subjects.has(name)) return true;
+  return false;
 }
 
 /**
