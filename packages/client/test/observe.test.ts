@@ -15,6 +15,62 @@ function stream(){const queue:Uint8Array[]=[];let waiting:ReturnType<typeof gate
 afterEach(()=>vi.useRealTimers());
 const drain=async()=>{for(let i=0;i<30;i++)await Promise.resolve();};
 
+test("a timed-out opening can finish while its replacement streams without releasing the replacement's body or renewal timer", async () => {
+ vi.useFakeTimers();
+ const opening = gate<{ ok: true; body: ByteStream }>();
+ const replacement = stream();
+ const states: ObservationState<number>[] = [];
+ let opens = 0, auths = 0, reads = 1, lateCancels = 0;
+ const lateBody = {
+  getReader: () => ({
+   read: () => new Promise<{ done: boolean }>(() => {}),
+   cancel: () => { lateCancels++; return new Promise<void>(() => {}); },
+  }),
+ } as ByteStream;
+ const observer = observeScope({
+  context, current: () => true, seconds: 0.01,
+  authenticate: async () => {
+   const admitted = session();
+   return { ok: true, session: ++auths === 1
+    ? new Session("private-token", { ...admitted.claims, ends: timeOf(Date.now() + 20) })
+    : admitted };
+  },
+  open: () => ++opens === 1 ? opening.promise : Promise.resolve({ ok: true, body: replacement.body }),
+  snapshot: async () => {
+   const value = snapshot(++reads);
+   return { ok: true, at: value.at, value, complete: true };
+  },
+  reconnectDelay: async () => {}, emit: state => states.push(state),
+ });
+ try {
+  await drain();
+  expect(opens).toBe(1);
+  await vi.advanceTimersByTimeAsync(10);
+  expect(opens).toBe(2);
+  replacement.notice(2);
+  await drain();
+  expect(states.at(-1)).toEqual({ status: "current", snapshot: snapshot(2) });
+  opening.resolve({ ok: true, body: lateBody });
+  await drain();
+  expect(lateCancels).toBe(1);
+  expect(replacement.cancelled).toBe(0);
+  expect(vi.getTimerCount()).toBe(1);
+  // Cross the old session's expiry while the replacement remains current.
+  await vi.advanceTimersByTimeAsync(15);
+  expect(opens).toBe(2);
+  observer.refresh();
+  await drain();
+  expect(states.at(-1)).toEqual({ status: "current", snapshot: snapshot(3) });
+  expect(replacement.cancelled).toBe(0);
+ } finally {
+  observer.cancel();
+  await observer.done;
+ }
+ expect(replacement.cancelled).toBe(1);
+ expect(lateCancels).toBe(1);
+ expect(vi.getTimerCount()).toBe(0);
+});
+
 test("head codec accepts fragmented frames but rejects oversized raw bytes, malformed UTF8 and truncated frames before yielding",async()=>{
  const body=stream(),abort=new AbortController(),lines=headLines(body.body,abort.signal);const first=lines.next();const bytes=utf8(JSON.stringify({at:head(1)})+"\n");body.send(bytes.slice(0,12));body.send(bytes.slice(12));expect((await first).value).toEqual(head(1));abort.abort();await lines.return(undefined);expect(body.cancelled).toBe(1);
  for(const bytes of[new Uint8Array(1025).fill(97),new Uint8Array([255,10]),utf8('{"at":')]){const broken=stream(),stop=new AbortController(),reading=headLines(broken.body,stop.signal).next();broken.send(bytes);await drain();if(bytes.length===6)broken.end();await expect(reading).rejects.toThrow();}
