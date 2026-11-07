@@ -209,6 +209,8 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
     const six = new Full(m);
     const a = six.started();
     expect(six.does("mark-a", on(six, a))).toBe("settles");
+    // Free room exposes the judgment itself: an already true mark is new work.
+    expect(six.free(10).does("mark-a", on(six, a))).toBe("new work");
     expect(six.free(0).does("mark-a", on(six, a))).toBe("scope-full");
     // Case 7. `mark-a-far` settles (job, a), which reserved for the larger of its two forms. Its request holds the 2 entries.
     const seven = new Full(m);

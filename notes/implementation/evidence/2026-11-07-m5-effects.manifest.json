@@ -1,0 +1,857 @@
+{
+  "request": "053c4f4b1c42b41ca7152d60e19051bd43195d28",
+  "promise": "3a9595b12fe9e6d5800c519682297842399ed93d",
+  "headBeforeDraft": "5728fa343001e51bb7ec5cdb3b40fba2d76103b1",
+  "status": "Complete ordinary effect/attention/item-settlement source draft; Page scope/regeneration, full gate, independent review and landing remain pending. Native interiors remain opaque; M6/M7/M8 stay separate.",
+  "distinctFocusedCasesAcrossCheckpoints": 366,
+  "finalRepairPassed": 40,
+  "controlsDistinguish": 2,
+  "fileCount": 168,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m5-effects",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 20356,
+          "sha256": "064a7d7c7c9b49c871f919f1ab154136777954d34c61bddde4dcb6f8ef314828"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/argv.json",
+          "bytes": 264,
+          "sha256": "f802358508f59056ea1af61c92fa9cac6210602ec7b596a1713b32761f54c716"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/before.json",
+          "bytes": 212,
+          "sha256": "731e48741544ff35958612c56bdae9d022395a4b53bb202e6800e55f20e9bcd9"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/draft/packages/derive/src/effects.ts",
+          "bytes": 36810,
+          "sha256": "23ceae41141f0310eebc17f99513af9367ada10c1a0d67d40cb5f8a2dc8fcc41"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/draft/packages/derive/src/outcomes.ts",
+          "bytes": 21647,
+          "sha256": "1e47886bf573abf2be2cb759830c67bd6439966144e257327bc384b478183191"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/owner.json",
+          "bytes": 5929,
+          "sha256": "e280430d21c1928a46776a32bdfd74d81464c692e9b93c0bb90234834f2c678f"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/qualification.txt",
+          "bytes": 252,
+          "sha256": "e1aafde8feddfa850f8cd55a979d35a025cd186d40f47ef9cb0937756b095f37"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/restored.json",
+          "bytes": 212,
+          "sha256": "731e48741544ff35958612c56bdae9d022395a4b53bb202e6800e55f20e9bcd9"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107/stdout",
+          "bytes": 93,
+          "sha256": "4b7c9c206d53641d6b20275192d54aa832edb47faed3cb1d1726d22f2c1e19c3"
+        },
+        {
+          "path": "artroom-m5-admitted-fixture-baseline-20261107.py",
+          "bytes": 2102,
+          "sha256": "457792cf2843bc8a055d80ae0eacd02dc78b73b8bfa673ef304173c6c35f7ef0"
+        },
+        {
+          "path": "artroom-m5-current-request-20261107.json",
+          "bytes": 7472,
+          "sha256": "5fcdc978825815e8849a340fc627e738ebe1f83d09c7c065022f3adce4b5570e"
+        },
+        {
+          "path": "artroom-m5-dependency-copy-20261107.json",
+          "bytes": 1879,
+          "sha256": "04b8b65510f3f292ad1c2a0f70775c26d4f02a41d545aba37c788c2d125e2c74"
+        },
+        {
+          "path": "artroom-m5-effect-capture-compiler-20261107.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "artroom-m5-effect-capture-compiler-20261107.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-capture-compiler-20261107.stdout",
+          "bytes": 1580,
+          "sha256": "14b024c8aff1297eed392cdb07106dd9b53b7ec271b28c4034bb465e8baecf3a"
+        },
+        {
+          "path": "artroom-m5-effect-capture-fixed-compiler-20261107.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-effect-capture-fixed-compiler-20261107.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-capture-fixed-compiler-20261107.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-capture-focused-20261107/after.json",
+          "bytes": 773,
+          "sha256": "4395e79766833d60a8e2cfcaaae7faf00cfb4a31e4aad7ff6aec4b8b8f69fda8"
+        },
+        {
+          "path": "artroom-m5-effect-capture-focused-20261107/argv.json",
+          "bytes": 398,
+          "sha256": "2411db5e920f72fe089d5129725b86031ec9eed31623699e3caa995d5bd29cc7"
+        },
+        {
+          "path": "artroom-m5-effect-capture-focused-20261107/before.json",
+          "bytes": 773,
+          "sha256": "4395e79766833d60a8e2cfcaaae7faf00cfb4a31e4aad7ff6aec4b8b8f69fda8"
+        },
+        {
+          "path": "artroom-m5-effect-capture-focused-20261107/exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-effect-capture-focused-20261107/owners.json",
+          "bytes": 31297,
+          "sha256": "b2edeb853708078a8996acbca0f6c80da013457a883faf566c53aaafbd7794df"
+        },
+        {
+          "path": "artroom-m5-effect-capture-focused-20261107/stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-capture-focused-20261107/stdout",
+          "bytes": 91,
+          "sha256": "7e44bc3b39cd80f009d954c56a8d5d1c75330d648079d8e27a0e3bfeffb1a1f2"
+        },
+        {
+          "path": "artroom-m5-effect-capture-focused-20261107.py",
+          "bytes": 1751,
+          "sha256": "2dd8dfd0c206c6b5deb48d4ce9c6cf59ef4e5cc7de76200a6c46f6bb4d21276c"
+        },
+        {
+          "path": "artroom-m5-effect-execution-compiler-20261107.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "artroom-m5-effect-execution-compiler-20261107.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-execution-compiler-20261107.stdout",
+          "bytes": 94,
+          "sha256": "a84c6532e766d5d81a94140bdb2dcc2dedca53f2d301982c57efad5dc2cd8673"
+        },
+        {
+          "path": "artroom-m5-effect-execution-first-20261107/after.json",
+          "bytes": 1132,
+          "sha256": "83d5052d336bb3a124a4ddb4611763cf0357d454fb614559c2fa97cb766d9f80"
+        },
+        {
+          "path": "artroom-m5-effect-execution-first-20261107/argv.json",
+          "bytes": 586,
+          "sha256": "ea82f66e7adfca6ecd10bb6701efbd71e62092f1a5d7c20ccd62ada897549dd4"
+        },
+        {
+          "path": "artroom-m5-effect-execution-first-20261107/before.json",
+          "bytes": 1132,
+          "sha256": "83d5052d336bb3a124a4ddb4611763cf0357d454fb614559c2fa97cb766d9f80"
+        },
+        {
+          "path": "artroom-m5-effect-execution-first-20261107/exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-effect-execution-first-20261107/owners.json",
+          "bytes": 43574,
+          "sha256": "a59f49b2d2adaad0a7b120e348282aaf6f0791916a9d62e62ae086bb7f4b5bf0"
+        },
+        {
+          "path": "artroom-m5-effect-execution-first-20261107/stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-execution-first-20261107/stdout",
+          "bytes": 91,
+          "sha256": "e1e54ac6175a96985050324c56e9ecaf321746d36060219d04f732de16a24def"
+        },
+        {
+          "path": "artroom-m5-effect-execution-first-20261107.py",
+          "bytes": 1997,
+          "sha256": "70d8496971fcaea6c0878066cb3c31a6e55dffeb079c4e431e5099d4b3888f8d"
+        },
+        {
+          "path": "artroom-m5-effect-execution-fixed-compiler-20261107.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-effect-execution-fixed-compiler-20261107.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-execution-fixed-compiler-20261107.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/after.argv.json",
+          "bytes": 354,
+          "sha256": "4786506252e8c67e028b0c5a3b045fb2d15c091f7a9869fa4d279c29c9f184ed"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/after.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/after.json",
+          "bytes": 10368,
+          "sha256": "4a89aa694be0804cd683ad9fc5e6224c851cc0def4b2d581a54e7a8f7cbf9e1c"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/after.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/after.stdout",
+          "bytes": 104,
+          "sha256": "d7bc72b05c86e88679659455efaeca4ece4f5eca5481ae53821b222dac5bdce6"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/before.argv.json",
+          "bytes": 355,
+          "sha256": "94c9156b66bfb23d397bb524e7919719e9c262e9bc7842c6f73d03a8277e22b8"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/before.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/before.json",
+          "bytes": 9048,
+          "sha256": "0db8f4333bc5025681585d0b61de50d49c480afc3bab4995ca8b66f0894e4850"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/before.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/before.stdout",
+          "bytes": 105,
+          "sha256": "28caa031f5002526c5bc6f67cb7468d73eab2f4617bb9972aa76d3b1a7f28056"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/control.json",
+          "bytes": 509,
+          "sha256": "543929e4ead1c136cec8f04c81923000d0f5c9fa75781746e15ffe9a2733dcf0"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/restored.sha256",
+          "bytes": 65,
+          "sha256": "f0ee83666e1459899c877ba9aaf777d7132ad4005b99d3aba0131232877247e6"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/once-mark/source-before.ts",
+          "bytes": 1752,
+          "sha256": "5b62ec05cbab381f019e0a864331de0937b15e0057b7a38583c567474ee3f004"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/results.json",
+          "bytes": 4343,
+          "sha256": "37a8884c0d2e403daa9ed148ebe443c14cc10cc9cc51e624e6aa1860cb29a505"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/after.argv.json",
+          "bytes": 375,
+          "sha256": "9608222084b279c942227898766a9ef38ac743fe7b7f12db7f5c99de6d65001a"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/after.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/after.json",
+          "bytes": 7301,
+          "sha256": "0b436690ff03099d8ccd1528ff920f1da3cce6c3f2fb883dc21d488ab50ee934"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/after.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/after.stdout",
+          "bytes": 109,
+          "sha256": "954dc675aa0cc47301423a620449d806d78dcc83eddf0718cbbbe7bdbf21b77c"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/before.argv.json",
+          "bytes": 376,
+          "sha256": "7fe19c7e600c6a660f7857c9724fb077091b4ef089e3519df44fc4e85ba1a780"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/before.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/before.json",
+          "bytes": 5959,
+          "sha256": "c72e0e70256f6c55f4616758fe2dfc1447c9dc8c58e2097f9f6322c3ea9994a9"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/before.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/before.stdout",
+          "bytes": 110,
+          "sha256": "d6fb7ab7f527ae630bf24d7ea40d1d26487d127713720dadf17cdd9c9008f028"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/control.json",
+          "bytes": 394,
+          "sha256": "9e6aa38b8e89abe94d7d02ac8835db4e42feb67969fa18ec8360d6159dfac5a2"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/restored.sha256",
+          "bytes": 65,
+          "sha256": "fc4e1f4122adffadfa6bb3739318e81aae64cb3350a397986ef25d6ed6c3b4e8"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107/unknown-source/source-before.ts",
+          "bytes": 36843,
+          "sha256": "14f51540a71a0c26e606a9a2a72512d9c9062725e773bda5700b3988386cfed9"
+        },
+        {
+          "path": "artroom-m5-effect-settlement-controls-20261107.py",
+          "bytes": 2749,
+          "sha256": "28bbf01877fae5c90a3742b1ed643a19b3fc3e0754376fd0a593a99ddd910d70"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/after.json",
+          "bytes": 1702,
+          "sha256": "eff23af5be3c66f733485be5b4c6e46d66ed696b849906a9163e0496f90f7d23"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/before.json",
+          "bytes": 1702,
+          "sha256": "eff23af5be3c66f733485be5b4c6e46d66ed696b849906a9163e0496f90f7d23"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/owners.argv.json",
+          "bytes": 354,
+          "sha256": "73f11d33f29686a5e5b24b6d3b71df5c4fdefc943c519e43cc31e5e0abb0a97e"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/owners.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/owners.json",
+          "bytes": 18741,
+          "sha256": "5e2882cc78c457b180cab6fabc716976e74960285d6b6ecc632b0514d8119611"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/owners.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/owners.stdout",
+          "bytes": 87,
+          "sha256": "564d079d79b6a838eeb6714cb185f9520d193885427abf16448697752ad4e9a0"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/source-compiler.argv.json",
+          "bytes": 126,
+          "sha256": "d3eca4e99c0c0a6565ddb4256eb957f4617b9e9a10ac7417fbef1a96b418e065"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/source-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/source-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/source-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/test-compiler.argv.json",
+          "bytes": 131,
+          "sha256": "74a6061f29082ebe1f1ea420db278de237e63d7d574e0c1ea9492bb1f8022c4c"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/test-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107/test-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-final-owner-repair-20261107.py",
+          "bytes": 2494,
+          "sha256": "01bc65fb87d3bf97a301c75cfb99865e78b247f442cd91f0590d08ae07513c91"
+        },
+        {
+          "path": "artroom-m5-interpretation-replay-focused-20261107/after.json",
+          "bytes": 1212,
+          "sha256": "c42196986bcc37838ed56b5d0f5888e39e08052b73576b9b42308eaac8f9e181"
+        },
+        {
+          "path": "artroom-m5-interpretation-replay-focused-20261107/argv.json",
+          "bytes": 787,
+          "sha256": "a14d557982face1a2525f17e6e46988556a48cb8f25235e05ba06c61dd0b1647"
+        },
+        {
+          "path": "artroom-m5-interpretation-replay-focused-20261107/before.json",
+          "bytes": 1212,
+          "sha256": "c42196986bcc37838ed56b5d0f5888e39e08052b73576b9b42308eaac8f9e181"
+        },
+        {
+          "path": "artroom-m5-interpretation-replay-focused-20261107/exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-interpretation-replay-focused-20261107/owners.json",
+          "bytes": 62648,
+          "sha256": "de26b3f2ba23ee0bcc32f2f84be9a0ac22f90a1a881680fb08c1448dd33ca5d4"
+        },
+        {
+          "path": "artroom-m5-interpretation-replay-focused-20261107/stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-interpretation-replay-focused-20261107/stdout",
+          "bytes": 98,
+          "sha256": "49d3ccd3324e58f2dd319c9880259cb96fd455512409a413e17fb52e176b0605"
+        },
+        {
+          "path": "artroom-m5-interpretation-replay-focused-20261107/test-hashes.json",
+          "bytes": 1363,
+          "sha256": "378704513642908983b615679a9474990ce9d71b323eb09528d67fcaf2f8c450"
+        },
+        {
+          "path": "artroom-m5-interpretation-replay-focused-20261107.py",
+          "bytes": 2506,
+          "sha256": "b73faf0d0325663dfca85b992c7abdf548b68fefe1c0e3f3ed64753d6d5062d3"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-baseline-20261107/after.json",
+          "bytes": 356,
+          "sha256": "de84852d05b9d6d773e93a61f534eb342133fd1b909e6cd697c47d0b7bc601df"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-baseline-20261107/argv.json",
+          "bytes": 337,
+          "sha256": "1ae23ca92a9d2b82cbc9ea8583b8a89160d80ed49a8de679498d891618ea37b2"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-baseline-20261107/before.json",
+          "bytes": 356,
+          "sha256": "de84852d05b9d6d773e93a61f534eb342133fd1b909e6cd697c47d0b7bc601df"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-baseline-20261107/exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-baseline-20261107/owner.json",
+          "bytes": 5121,
+          "sha256": "d7b2f81871863df80a4ce669300bd27dc64c985781c0f80d6335c55916c14349"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-baseline-20261107/stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-baseline-20261107/stdout",
+          "bytes": 94,
+          "sha256": "2406c7e4dca9d5bf60cb18152bd597993bc5317815d935b9db430f75bb827c02"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-baseline-20261107.py",
+          "bytes": 1413,
+          "sha256": "6e55adfa886809105694e4ec93bc0c4f67204c2395f83fc7bcf87d2cc2308275"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-repaired-20261107/after.json",
+          "bytes": 356,
+          "sha256": "6e4c6cb6d284da1aded8de8841ffe3420967c4822866958890f756bccf7aa2b5"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-repaired-20261107/argv.json",
+          "bytes": 269,
+          "sha256": "b63b10e3ad542157d5259fbc179315483f62ac4a2930a6e0ecbb8422e32cc74b"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-repaired-20261107/before.json",
+          "bytes": 356,
+          "sha256": "6e4c6cb6d284da1aded8de8841ffe3420967c4822866958890f756bccf7aa2b5"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-repaired-20261107/exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-repaired-20261107/owner.json",
+          "bytes": 3933,
+          "sha256": "1028c65c943fd33c947b99e5e998f6e5966afb2b2ed885162d4dae9770b83606"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-repaired-20261107/stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-repaired-20261107/stdout",
+          "bytes": 94,
+          "sha256": "c0d2dde555552d3a120053541b379ff07c69c5023a4f993c5f1322832905ccf6"
+        },
+        {
+          "path": "artroom-m5-invalid-condition-repaired-20261107.py",
+          "bytes": 1347,
+          "sha256": "7863c0f2920c00d8b1f49291892dc3ffadc866337a29ee6df5579f64847736f3"
+        },
+        {
+          "path": "artroom-m5-joined-draft-compiler-20261107.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-joined-draft-compiler-20261107.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-joined-draft-compiler-20261107.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/after.json",
+          "bytes": 1466,
+          "sha256": "db123483aae20f58ce53c962ce9b2797c39770ed2a39fc7ececef8cea6c253ea"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/before.json",
+          "bytes": 1466,
+          "sha256": "db123483aae20f58ce53c962ce9b2797c39770ed2a39fc7ececef8cea6c253ea"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/compiler.argv.json",
+          "bytes": 131,
+          "sha256": "74a6061f29082ebe1f1ea420db278de237e63d7d574e0c1ea9492bb1f8022c4c"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/owners.argv.json",
+          "bytes": 843,
+          "sha256": "2a7fad6167394de7c5be43d1dc85eaf1944fec27ec8810b15b92b43efb55907e"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/owners.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/owners.json",
+          "bytes": 94431,
+          "sha256": "b436a8e0b2972129bc9e50e0bda1f746d339ca68f00508e1a56d6516f96c2008"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/owners.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107/owners.stdout",
+          "bytes": 83,
+          "sha256": "1b6530cf488c07ec25b3724d914cb336e628f9fc4b1d659d51f411beb251dc7d"
+        },
+        {
+          "path": "artroom-m5-joined-focused-20261107.py",
+          "bytes": 2530,
+          "sha256": "0fe2498191dbcb4642e6a2e3720163532985142220b6412dec1ab7788adb9775"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/argv.json",
+          "bytes": 331,
+          "sha256": "0fc5a704932d4f8b32ae12f41398977586fd3743c1a06fae29cfb3f3978927f7"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/before.json",
+          "bytes": 212,
+          "sha256": "65c17cd44a0aa1e5f53c74ae469befc79e5a1d9ea39b91671b55250f89ffd337"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/draft/packages/derive/src/effects.ts",
+          "bytes": 36843,
+          "sha256": "14f51540a71a0c26e606a9a2a72512d9c9062725e773bda5700b3988386cfed9"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/draft/packages/derive/src/outcomes.ts",
+          "bytes": 21647,
+          "sha256": "1e47886bf573abf2be2cb759830c67bd6439966144e257327bc384b478183191"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/owner.json",
+          "bytes": 8052,
+          "sha256": "307a70b9d800ed678e665e5fd20a95f0e2a1e078360ab2bfbcc848f0785901fe"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/qualification.txt",
+          "bytes": 252,
+          "sha256": "e1aafde8feddfa850f8cd55a979d35a025cd186d40f47ef9cb0937756b095f37"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/restored.json",
+          "bytes": 212,
+          "sha256": "65c17cd44a0aa1e5f53c74ae469befc79e5a1d9ea39b91671b55250f89ffd337"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107/stdout",
+          "bytes": 89,
+          "sha256": "c2d3e97bf004f6ddc0f54f2011edc15a566b2bd9e7ef14016420b6cd8c6198dc"
+        },
+        {
+          "path": "artroom-m5-owned-effect-baseline-20261107.py",
+          "bytes": 2167,
+          "sha256": "b23c6241e138af7c87f8c2ef7a591c8c6a56db16d92001dc2a7eb3c49bc1cfaa"
+        },
+        {
+          "path": "artroom-m5-owned-effect-compiler-20261107.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-owned-effect-compiler-20261107.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-owned-effect-compiler-20261107.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-page-read-closure-20261107.json",
+          "bytes": 1101,
+          "sha256": "36f84751e28b92635a35ec4b41e3f230bde21adb73767888df6972fd6cab15c0"
+        },
+        {
+          "path": "artroom-m5-page-read-probe-20261107.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-page-read-probe-20261107.json",
+          "bytes": 1069557,
+          "sha256": "a24acee173b832f358e4efd51521c80ef1ed6064bc236b12906d4770d8097637"
+        },
+        {
+          "path": "artroom-m5-page-read-probe-20261107.mjs",
+          "bytes": 1626,
+          "sha256": "a9453a4cb364b6c6254794838a5c4bf63df7423006afed4e8d86f98466554bea"
+        },
+        {
+          "path": "artroom-m5-page-read-probe-20261107.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-page-read-probe-20261107.stdout",
+          "bytes": 385,
+          "sha256": "3d0558a153edfe3f9a85b111932f3e1e04ff2a8b6335475f1f3f24d163795186"
+        },
+        {
+          "path": "artroom-m5-seal-effects-20261107.py",
+          "bytes": 9011,
+          "sha256": "89025bb3a187596f56b49ab2a91f04e985f28bed591d1c8a02f0ea898cb4d50d"
+        },
+        {
+          "path": "artroom-m5-settlement-compiler-20261107.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-m5-settlement-compiler-20261107.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-settlement-compiler-20261107.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-m5-shared-leaf-proof-20261107.json",
+          "bytes": 1598,
+          "sha256": "b99a3c014d4ea76ea185cfb50c74ecd82f3014564a7d39ce5864f0bc1d689280"
+        },
+        {
+          "path": "final-draft/packages/derive/src/effects.ts",
+          "bytes": 36843,
+          "sha256": "14f51540a71a0c26e606a9a2a72512d9c9062725e773bda5700b3988386cfed9"
+        },
+        {
+          "path": "final-draft/packages/derive/src/handlers.ts",
+          "bytes": 51597,
+          "sha256": "38fbda801eed4a8b3219874993ebc176bc8570d4e7ae7fbf28ed8b68f9bf60f9"
+        },
+        {
+          "path": "final-draft/packages/derive/src/judge.ts",
+          "bytes": 31949,
+          "sha256": "86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959"
+        },
+        {
+          "path": "final-draft/packages/derive/src/outcomes.ts",
+          "bytes": 21647,
+          "sha256": "1e47886bf573abf2be2cb759830c67bd6439966144e257327bc384b478183191"
+        },
+        {
+          "path": "final-draft/packages/derive/src/program/effect-plan.ts",
+          "bytes": 4219,
+          "sha256": "e8f45435d05e23eddad0aa1025641b756d8d40ade9be586635be9de6abcae263"
+        },
+        {
+          "path": "final-draft/packages/derive/src/program/settlement.ts",
+          "bytes": 1752,
+          "sha256": "5b62ec05cbab381f019e0a864331de0937b15e0057b7a38583c567474ee3f004"
+        },
+        {
+          "path": "final-draft/packages/derive/src/program/structure.ts",
+          "bytes": 29542,
+          "sha256": "b15254f6c5bd28a541098db14b05514e8010b11a5dbd91c20aabb3ddb2794ce5"
+        },
+        {
+          "path": "final-draft/packages/derive/src/validate/effects.ts",
+          "bytes": 29768,
+          "sha256": "b41068a7f098a1eeccbca4a40b9b4579af6bbab7e979ab03237bbdc4c4ecff74"
+        },
+        {
+          "path": "final-draft/packages/derive/src/validate/handlers.ts",
+          "bytes": 26971,
+          "sha256": "ed7fe2afaa158bb361043bcceb0c44558270c36748d3b5d7de8b6d00bac4549e"
+        },
+        {
+          "path": "final-draft/packages/derive/src/validate/hold.ts",
+          "bytes": 12570,
+          "sha256": "9f5355f6c81593bafa7fe439e5ee246b9d4244be751e6c88ff687d8d932c6b8e"
+        },
+        {
+          "path": "final-draft/packages/derive/src/validate/sends.ts",
+          "bytes": 20594,
+          "sha256": "4a9cedb20ee16eb27d8e1130ec34450766d4a63c34e5d9eb7af31386454ece59"
+        },
+        {
+          "path": "final-draft/packages/derive/test/definition-corpus/forms-effects-variants.ts",
+          "bytes": 5023,
+          "sha256": "477c543ed390a38d68cf973b23654746dff6f96d970716dffd3d164990a517b8"
+        },
+        {
+          "path": "final-draft/packages/derive/test/forms-effects.test.ts",
+          "bytes": 27763,
+          "sha256": "537dfebadaba98e3692a67d0c3dab4e96f067c2e2ada83ef538103653da7a8fd"
+        },
+        {
+          "path": "final-draft/packages/derive/test/forms-settles.test.ts",
+          "bytes": 29424,
+          "sha256": "3ef3767c03a170f4eddea9dd00e73916e454fb1a8ac15fe0ec4840f275b8f367"
+        },
+        {
+          "path": "final-draft/packages/derive/test/program-structure.test.ts",
+          "bytes": 18532,
+          "sha256": "bc172396a63bd2daeb2b987c6cb5a049b615f9bb05c5491bee7a7731ca6d5e16"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 4855,
+          "sha256": "07b184672238e5ae0ae0170bbb67a6e5db2d30ad08e456742c25010e55feaf75"
+        },
+        {
+          "path": "tracked-draft.patch",
+          "bytes": 87105,
+          "sha256": "e4f5c92e89f0d5ff58ef5993d6b52fe62bdd6d3079da282505c42dcbefa42274"
+        }
+      ]
+    }
+  ]
+}

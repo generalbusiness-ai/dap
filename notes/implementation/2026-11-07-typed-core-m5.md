@@ -1,79 +1,142 @@
 # Typed effects, attention and settlement
 
-M5 remains in progress under request `053c4f4b1c42b41ca7152d60e19051bd43195d28`
-and promise `3a9595b1`. This branch includes the approved M4 and S2 landings.
-The condition checkpoint passes its two owning files, 16 cases. The eight-form
-effect dispatcher, attribution and attention instructions, item settlement,
-trusted Native joining bridge, final analysis updates, full focused validation,
-gate, independent review, and landing remain pending.
+Status: the complete M5 source draft implements ordinary effects, attention and
+item settlement through admitted instructions. The broader focused checkpoints
+pass 366 distinct cases across 26 files. After the final capture-order repair,
+both derive compilers and all 40 cases in its three affected owners pass.
+The generated Page update, full gate, independent review, and audited landing
+remain pending. The planner owns deployment.
 
-## Conditions retain admitted groups and the existing skip rule
+Request `053c4f4b1c42b41ca7152d60e19051bd43195d28` and promise `3a9595b1`
+own this branch. It includes the reviewed M4 and S2 landings. Parent 035 stays
+open through M8. The earlier documentation commit links M4's six missing
+context, binding, read-value, guard-capture, guard-value, and caller manifests.
 
-Admission now captures each effect and attention condition's actual guard nodes,
-body, owner, and semantic `if` or `unless` place. `conditionPlan` checks the
-owning validation and body before returning that occurrence's groups. The guard
-nodes retain their existing source and lexical binder identities.
+## Admission records the instructions that execution consumes
 
-`judgeCondition` evaluates these groups on the before-entry view. It evaluates
-`if` before `unless`, including when one group might already decide the result.
-A false `if` or true `unless` skips the form. Otherwise, an incomplete group
-leaves the input not judged, as before.
+The existing successful validator branches emit the closed `EffectCode` union:
+state, party, ref, value, attribute, hold, redact, and capability. Each plan owns
+its resolved target, slots, operand descriptors, and source policy. The actual
+validation, body, occurrence, semantic condition group, and lexical binder
+identify the instruction. Digests and diagnostic paths select no execution root.
 
-The existing skip walker reads any nested `of` or `item` string beginning with
-`also.`, including inside constant payloads. Admission captures those names for
-`if`. If one remains unbound at execution, the effect or notice skips before
-judging either group. A shared traversal in `program/condition-plan.ts` serves
-both capture and the remaining `readsUnbound` callers. The narrow `guards.ts`
-adapter preserves that leaf while the rest of M5 moves to typed instructions.
+`deriveEffects` keeps its signature as a thin adapter. It checks the actual
+admitted body and every effect and attention occurrence before execution.
+`executeEffects` dispatches on typed instructions. The old ordinary `EffectForm`
+interpreter and its raw source selector are gone. Native marks retain their
+original declared identity and the existing rule-effect joining leaf. Versioned
+capability interiors remain opaque through M7.
 
-The remaining dispatcher still uses its existing raw-form presence check for
-unconditional forms. Its complete replacement must bind every effect and
-attention occurrence to the admitted body. The trusted outcome caller also
-still needs its explicit joining bridge; fabricated syntax must supply no
-admission evidence.
+The source variants distinguish clear, read, whole party operand list, ref self,
+and commit-clock derivation. An absent read skips an effect; clear empties its
+slot. `sourceStated` resolves the old policy from the admitted read, including
+entry parts and unknown types. Value instructions and structural clock metadata
+share one owned source object. Actual Native `ran.clock` still contributes at
+the existing caller boundary.
 
-## A characterization protects nested constant subject reads
+Attribution instructions own complete-range, subject-slot, list-read, and
+`each` sources. Each occurrence keeps the binder that its validation created,
+even when two occurrences share the same source object. Execution uses the
+shared range scan, value reader, history union, member ordering, and bounds.
+Attention instructions own their recipient slot, before/after phase, reason,
+and captured condition.
 
-No existing effects case pinned this skip inside a constant. The new case uses
-an admitted `probe` act with the same condition on its value effect and notice.
-It compares the complete `Ran` output with the optional parent unbound and
-bound. The fixture supplies resolved subjects and authority; production
-admission and body execution perform the checks.
+## Conditions and settlement keep their original decisions
 
-The case passes on unchanged production source. A control that stops the
-original walker at `const` fails the literal `Ran` assertion. The captured
-condition path then passes all 16 cases in `forms-effects.test.ts` and
-`forms-handlers.test.ts`, with every existing assertion and deadline intact.
-A second control that omits the typed condition's subject-skip check fails the
-same assertion. Both controls restore exact source bytes.
+`judgeCondition` evaluates admitted `if` and `unless` groups on the before-entry
+view, in their previous order. It preserves incomplete results and the recursive
+unbound-subject skip, including nested `of` and `item` strings inside constants.
+The same subject traversal serves the remaining `readsUnbound` callers.
 
-The test compiler passes before the characterization and at both capture and
-execution checkpoints. The earlier one-case and 11-case runs remain separate
-checkpoints. They do not add to the final 16 cases.
+Final admission now precedes that recursive capture. A strengthened existing
+witness found that the earlier draft walked an ignored cyclic value in a
+rejected condition and overflowed. The retained failing run records the
+`not.toThrow` assertion. The repaired path returns the exact capability refusal
+without reading that value. The full structural owner and final affected
+40-case selection pass after the repair. This finding concerns the local draft.
+
+Admitted settlement plans distinguish state, once-mark, and relationship-copy
+forms. The judge and fold share `settlementMatches` for the actual before/after
+item decision. The existing fold adapter receives a projection of the captured
+item plan. Relationship-copy reconstruction remains in M8. A repeated true
+mark remains new work, including when free room exposes the judgment directly.
+
+The outcome caller uses `joinReturnedEffects` for its already-returned Native
+effects. It fabricates no `EffectForm` as admission evidence. Its synthetic rule
+keeps the existing callback, joining checks, output bounds, and fault behavior.
+The `outcomes.ts` edit changes only that call and its imports.
+
+## Focused evidence covers complete outputs and meaningful failures
+
+The existing opening witness now compares the complete ordered effects, working
+map, and opened item against literal expectations. Its original recorded-effect
+assertion remains. The attribution witness reuses one `each` source at two
+written occurrences while retaining its exact union, order, and bound assertions.
+Every existing assertion and deadline stays in place.
+
+The old helper supplied undeclared fields and partial opening lists directly to
+the interpreter. Its probes now use admitted bodies. A hashed fetched-entry
+stand-in supplies unknown field values; it proves no provider judgment or
+authority. The previous effects and outcomes execution passes all 11 effects
+cases on these repaired fixtures. New admission capture remains in that run,
+so the record does not claim a whole-source baseline.
+
+A new complete-`Ran` witness mutates ordinary effect and notice payloads after
+admission. The previous interpreter fails its assertion, recording the changed
+text, 999-second deadline, helper, and notice. Typed execution retains the
+captured values, two-second deadline, helper, and notice.
+
+Two narrow controls distinguish the source and settlement checks:
+
+- Bypassing unknown-source validation loses reference normalization and fails
+  the existing literal copy results.
+- Omitting the mark's prior false value returns `settles` instead of `new work`.
+
+Each named case passes before its control and fails by the intended assertion
+afterward. Both controls restore exact source and test hashes. The earlier
+condition checkpoint separately distinguishes the recursive skip on both sides
+of its cutover.
 
 The [condition manifest](evidence/2026-11-07-m5-conditions.manifest.json),
 SHA-256 `20ac8778d7a88e59c27c720069b596e9227981e728b4629a2b37b1ce162f7534`,
-seals 67 read-only files with the original-source characterization, both
-controls, compiler outputs, final focused report, and exact draft.
+seals 67 read-only files. The
+[effect and settlement manifest](evidence/2026-11-07-m5-effects.manifest.json),
+SHA-256 `bef269aa09636719e746527ec28ea30e7bee9ac54bb704c7dca83cbcf8a9a903`,
+seals another 168 files. These retain both initial compiler refusals, repaired
+fixtures, the ownership assertion failure, controls, capture-order failure and
+repair, source snapshots, and complete reports.
 
-## The remaining migration keeps its boundaries
+The 250-case joined checkpoint and disjoint 116-case interpretation, replay,
+and Grow checkpoint precede the final capture-order repair. The later 40 cases
+cover its affected complete owners at the final source bytes. These overlapping
+counts are not added. The final full gate still remains.
 
+## Shared leaves, analysis limits and remaining work
+
+Ten whole files or source slices remain byte-identical to the condition
+checkpoint: `held`, the Native join, `paired`, item transformations, fold,
+range/history readers, Native primitives, and the protected judge. In particular,
 `judge.ts` retains SHA-256
 `86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959`.
-The current checkpoint changes no accepted declaration bytes, digests, profiles,
-bounds, wire, dependency manifest, persistence, authority, Native implementation,
-or application API. The branch uses an owned copy of existing-lock dependencies
-with all 14 workspace aliases inside this worktree.
+The final snapshot records that proof.
 
-M5 must still preserve ordered effects, working and opened items, required,
-fixed, final and author decisions, absence versus explicit null, unavailable
-reads, list ordering, joined-rule conflicts, resource refusals, Native fault
-identity, retained observations, and actual `ran.clock`. Native interiors remain
-M7, sends and clause routes remain M6, and orchestration remains M8. Parent 035
-stays open through M8. The M4 note already links its six missing manifests in
-this branch's earlier documentation commit.
+The prototype `lower`, `evaluate`, `explain`, and `dependencies` remain limited
+to their first slice. Their existing unsupported paths reject a whole body;
+they execute no supported prefix. Typed production effect coverage grants no
+new explanation or precise dependency coverage for attribution, opaque Native
+code, capability interiors, or settlement. The focused prototype, replay, and
+Grow owners preserve their current full-`Ran` agreement and coverage limits.
 
-These runtime inputs affect the generated Page dependency closure. A concrete
-Page scope addendum must precede regeneration. Page assets, security baselines,
-live rooms, custody, and deployments remain unchanged at this checkpoint.
-The planner owns deployment.
+A read-only Page build confirms that the shared validator changes its generated
+module. The committed module has SHA-256
+`19e94de9b5004a2c34ff2c8c91764ddbf9b3fb09627c347f7c5df191211ebf4f`;
+the draft produces
+`d6c3744ab02e1900567eeb65dd6536ace54b9ab83fb78579e87e4c619ff75a4d`.
+The probe writes no asset. A concrete scope addendum precedes regeneration.
+The asset owner, exact-source Page workflow, and final gate remain required.
+
+Production declaration bytes, digests, profiles, bounds, Native pins and grants,
+wire, dependency manifests, persistence, authority, application APIs, and
+security baselines stay unchanged. M6 owns sends and clause routes, M7 owns
+Native interiors, and M8 owns the remaining orchestration. The branch uses
+owned existing-lock dependencies with all 14 workspace aliases inside it.

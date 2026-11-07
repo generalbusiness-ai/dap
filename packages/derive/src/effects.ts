@@ -10,7 +10,7 @@
  * nothing and is judged by no rule.
  */
 
-import type { Condition, Effect, EffectForm, FieldType, FieldValue, Mark, MarkMost, MemberRef, Notify, Operand, PlatformData, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Effect, EffectForm, FieldType, FieldValue, Mark, MarkMost, MemberRef, Notify, PlatformData, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { attribution, byMember, historyOf } from "./attribution.ts";
 import { capabilityEffect } from "./capability.ts";
 import { isEntryOf, isLocalFact } from "./fields.ts";
@@ -18,15 +18,16 @@ import { changeItem, newItem, type ItemEffect } from "./fold.ts";
 import { members, slotOf, type Judging } from "./guards.ts";
 import { EPOCH, HOLDER, deriveHold, endsUnder, type HoldEffect } from "./hold.ts";
 import { judgeCondition } from "./program/condition-value.ts";
-import { formContext, timedStructure, type BodyStructure, type FormContext } from "./program/structure.ts";
-import { bindEach, covered, typeOfElement } from "./lists.ts";
+import { attentionPlan, checkedBody, effectPlan, effectSource, formContext, timedStructure, type AttentionNode, type BodyStructure, type EffectNode } from "./program/structure.ts";
+import type { AttentionPlan, EffectPlan } from "./program/effect-plan.ts";
+import { readValue } from "./program/read-value.ts";
+import { coveredItems } from "./lists.ts";
 import { givenTo, markOf, ofCodedType, outside, ruleFor, run, type RuleEffect } from "./marks.ts";
 import { ruleMayNot } from "./markers.ts";
-import { kindOf, operand } from "./operand.ts";
+import { kindOf } from "./operand.ts";
 import type { Item } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { LAST_MS, timeMs, timeOf } from "./time.ts";
-import { unsupported } from "./unsupported.ts";
 import { isFactRef, isLocalId, isMemberRef, isObject, isValue, memberFits, own, same } from "./values.ts";
 import { isDigest, isEffect } from "@generalbusiness/dap-bytes";
 
@@ -37,25 +38,6 @@ import { isDigest, isEffect } from "@generalbusiness/dap-bytes";
  * (sections 6.6 and 6.7).
  */
 export type Derived<T> = ({ ok: true } & T) | { ok: false; reason: RefusalReason; detail: string } | { ok: false; unavailable: UnavailableReason };
-
-const isList = (from: unknown): from is readonly Operand[] => Array.isArray(from);
-
-/**
- * True when the definition states the type of what the operand reads. The
- * validator has then shown that the slot can hold it (section 6.6). It is
- * the validator's own rule: a part that is read from an entry's bytes has
- * no stated type, and a position, the `seq` of an entry or the revision of
- * an update, has a type and no stated bounds. The commit checks both.
- */
-function stated(j: Judging, o: Operand): boolean {
-  const part = "part" in o ? o.part : undefined;
-  if (part !== undefined && part !== "ref") return part === "intent";
-  if ("field" in o) return Object.hasOwn(j.fieldTypes, o.field);
-  if ("element" in o) return typeOfElement(j, o.element) !== null;
-  if ("update" in o) return false;
-  if ("source" in o) return o.source === "intent";
-  return "slot" in o || "presented" in o || "item" in o || "signer" in o || "intent" in o;
-}
 
 /**
  * Section 6.6: a slot never holds a value outside its type. Where the
@@ -127,7 +109,43 @@ const BY_RULE: readonly string[] = ["open", "state", "party", "list", "ref", "va
  * whose type is a mark is checked by that mark's rule, for each effect that
  * sets it.
  */
-export function deriveEffects(j: Judging, forms: readonly EffectForm[], attention: readonly Notify[], opens: string | null, body: BodyStructure | null = timedStructure(j.definition, j.kind, forms, attention)): Derived<{ effects: Effect[]; working: Map<string, Item>; opened: Item | null }> {
+type EffectResult = Derived<{ effects: Effect[]; working: Map<string, Item>; opened: Item | null }>;
+type EffectInstruction = { readonly kind: "native"; readonly mark: Mark }
+  | { readonly kind: "written"; readonly body: BodyStructure; readonly node: EffectNode; readonly plan: EffectPlan };
+interface AttentionInstruction { readonly body: BodyStructure; readonly node: AttentionNode; readonly plan: AttentionPlan }
+
+/** Raw callers must identify every occurrence in one actual admitted body. */
+export function deriveEffects(j: Judging, forms: readonly EffectForm[], attention: readonly Notify[], opens: string | null, body: BodyStructure | null = timedStructure(j.definition, j.kind, forms, attention)): EffectResult {
+  if (!body) throw new TypeError("effects have no admitted body context");
+  checkedBody(j.definition, body);
+  if (body.nodes.filter(node => node.category === "effect").length !== forms.length
+    || body.nodes.filter(node => node.category === "attention").length !== attention.length) throw new TypeError("effect lists do not match their admitted body");
+  const instructions = forms.map((form, i): EffectInstruction => {
+    const { owner } = formContext(j.definition, body, "effect", i, form);
+    if (owner.category !== "effect") throw new TypeError("effect has another admitted category");
+    if (owner.op === "native") {
+      const mark = markOf(effectSource(j.definition, body, owner));
+      if (!mark) throw new TypeError("native effect has no declared mark");
+      return { kind: "native", mark };
+    }
+    const plan = effectPlan(j.definition, body, owner);
+    if (!plan) throw new TypeError("effect has no admitted executable instruction");
+    return { kind: "written", body, node: owner, plan };
+  });
+  const notices = attention.map((form, i): AttentionInstruction => {
+    const { owner } = formContext(j.definition, body, "attention", i, form);
+    if (owner.category !== "attention") throw new TypeError("attention has another admitted category");
+    return { body, node: owner, plan: attentionPlan(j.definition, body, owner) };
+  });
+  return executeEffects(j, instructions, notices, opens);
+}
+
+/** Trusted outcome callers join already-returned rule effects without fabricating admitted syntax. */
+export function joinReturnedEffects(j: Judging, mark: Mark): EffectResult {
+  return executeEffects(j, [{ kind: "native", mark }], [], null);
+}
+
+function executeEffects(j: Judging, instructions: readonly EffectInstruction[], attention: readonly AttentionInstruction[], opens: string | null): EffectResult {
   const items = j.definition.declared.items;
   const working = new Map(j.subjects);
   const effects: Effect[] = [];
@@ -294,182 +312,158 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
       if (!effects.some((e) => e.effect === "attempt" && typeof e.operation === "object" && e.operation.k === k)) throw outside(mark, "an operation that its entry leaves with no first attempt");
     }
   };
-  /**
-   * Section 6.6, `if` and `unless`: with `if`, the form is applied only when
-   * every guard holds; with `unless`, only when not every guard holds. The
-   * guards are judged on the state before the entry's effects. A condition
-   * that is not completed, and that no other condition of the form decides,
-   * leaves the input not judged. Section 6.4: a form whose `if` reads an
-   * unbound subject is not applied.
-   */
-  const lets = (c: Condition, context: () => FormContext): boolean | UnavailableReason => {
-    if (!c.if && !c.unless) return true;
-    const { body, owner } = context();
-    if (owner.category !== "effect" && owner.category !== "attention") throw new TypeError("condition has no effect or attention owner");
-    return judgeCondition(j, body, owner);
-  };
-
   if (opens !== null) {
-    // Section 6.3, "Opening, exactly": the initial state, each default, then the opening effects in the order written.
+    // Section 6.3: initial state and defaults precede the written opening effects.
     const open = { effect: "open", item: j.self, type: opens, state: own(items, opens)!.initial } as const;
     effects.push(open);
     working.set("on", newItem(open, own(items, opens)!, null));
   }
 
-  for (const [i, form] of forms.entries()) {
-    const mark = markOf(form);
-    if (mark) {
-      const stopped = join(mark, i);
+  for (const [i, instruction] of instructions.entries()) {
+    if (instruction.kind === "native") {
+      const stopped = join(instruction.mark, i);
       if (stopped) return stopped as Derived<never>;
       continue;
     }
-    const subject = form.of ?? "on";
-    if ("capability" in form) {
-      // Capability records and declared owned slots follow the ordinary effects.
-      // Arguments read each bound subject as preceding effects left it.
-      if (form.of !== undefined && !working.has(subject)) continue;
-      const through = lets(form, () => formContext(j.definition, body, "effect", i, form));
+    const { site, code } = instruction.plan;
+    const subject = site.target ? subjectName(site.target) : "on";
+    if (code.op === "capability") {
+      // Opaque capability records follow ordinary effects and read the working view.
+      if (site.explicitSubject && !working.has(subject)) continue;
+      const through = judgeCondition(j, instruction.body, instruction.node);
       if (through === false) continue;
       if (through !== true) return notJudged(through);
-      const derived = capabilityEffect(after, form.capability, working.get(subject) ?? null);
+      const derived = capabilityEffect(after, code.capability, working.get(subject) ?? null);
       if (typeof derived === "string") return notJudged(derived);
       records.push(...derived);
       continue;
     }
     const item = working.get(subject);
-    // Section 6.6: an effect whose subject is unbound is not applied.
     if (!item) continue;
-    const through = lets(form, () => formContext(j.definition, body, "effect", i, form));
+    const through = judgeCondition(j, instruction.body, instruction.node);
     if (through === false) continue;
     if (through !== true) return notJudged(through);
     const type = own(items, item.type)!;
     const id = item.id;
     const bad = (what: string) => refuse("bad-field", `effects.${i}: ${what}`);
+    const copied = (code.op === "party" || code.op === "ref" || code.op === "value") && code.source.op === "read" ? code.source : null;
+    const source = copied ? readValue(after, copied.read, item) : null;
+    // An absent read skips; the distinct clear instruction empties a slot.
+    if (copied && source === null) continue;
+    if (code.op === "attribute" && !working.has(subjectName(code.of))) continue;
 
-    // Section 6.6, "An absent source": an effect whose source reads none is not applied. `null` is written to empty a slot.
-    const from = "party" in form ? form.party.from : "ref" in form ? form.ref.from : "value" in form ? form.value.from : null;
-    const reads = from !== null && from !== "self" && !isList(from) && !("time" in from) ? from : null;
-    const source = reads ? operand(after, reads, item) : null;
-    if (reads && source === null) continue;
-    // Section 6.7: the base of an attribution is the history of the subject it names. When that subject is unbound the effect is not applied.
-    if ("attribute" in form && !working.has(form.attribute.of)) continue;
-
-    // Section 6.6: no effect of any kind changes an item that was final before the entry, however the entry orders its effects.
-    // An entry that takes a live item to a final state may carry its other effects on that item. The rule covers every effect
-    // that is applied, also one that records no change.
+    // Every applied effect checks finality on the state before the entry.
     const was = j.subjects.get(subject);
     if (was && own(type.states, was.state)?.final) return refuse("final", `effects.${i}: item ${id} is ${was.state}`);
-    /**
-     * The value as the slot holds it. The validator has shown it for a source of a stated type; the commit checks any other.
-     * Section 6.1, place 3: a slot whose type is a mark is checked by that mark's rule, for each effect that would set it.
-     */
     const fits = (to: FieldType, slot: string): FieldValue | undefined => {
       const coded = ofCodedType(j, to, source, { item: id, slot });
-      return coded !== null ? (coded ? (source as FieldValue) : undefined) : stated(j, reads!) ? (source as FieldValue) : held(j, to, source);
+      if (coded !== null) return coded ? source as FieldValue : undefined;
+      if (!copied) throw new TypeError("copied effect value has no admitted source");
+      return copied.stated ? source as FieldValue : held(j, to, source);
     };
-    /** Whatever its source, a member put in a slot is a member reference within the bound of a handle. */
-    const member = (v: unknown): MemberRef | null => (isMemberRef(v) && memberFits(v, j.bounds) ? v : null);
+    const member = (v: unknown): MemberRef | null => isMemberRef(v) && memberFits(v, j.bounds) ? v : null;
     const listed = (slot: string) => members(own(working.get(subject)!.parties, slot));
-    /** The most members a list may hold. */
     const most = (slot: string) => Math.min(own(type.parties, slot)?.max ?? j.bounds.partyMembers, j.bounds.partyMembers);
 
-    if ("state" in form) {
-      apply(subject, { effect: "state", item: id, state: form.state });
-    } else if ("party" in form) {
-      const { slot, list } = form.party;
-      const has = (m: MemberRef) => listed(slot).some((x) => same(x, m));
-      if (from === null) apply(subject, { effect: "party", item: id, slot, member: null });
-      else if (list !== undefined || !own(type.parties, slot)!.list) {
-        const one = member(source);
-        if (!one) return bad("the source is not a member, or its handle is longer than a handle may be");
-        if (list === undefined) apply(subject, { effect: "party", item: id, slot, member: one });
-        else if (list === "add" && !has(one)) {
-          if (listed(slot).length >= most(slot)) return refuse("slot-full", `effects.${i}: ${slot}`);
-          apply(subject, { effect: "list", item: id, slot, change: "add", member: one });
-        } else if (list === "remove" && has(one)) apply(subject, { effect: "list", item: id, slot, change: "remove", member: one });
-      } else {
-        // Section 6.6: a list slot is set whole, from a list operand or from a list of member operands. An operand of the list that reads none gives no member.
-        const given = isList(from) ? from.map((o) => operand(after, o, item)).filter((v) => v !== null) : source;
-        if (!Array.isArray(given)) return bad("the source is not a list of members");
-        const whole: MemberRef[] = [];
-        for (const v of given) {
-          const one = member(v);
-          if (!one) return bad("the source holds a value that is not a member, or a handle longer than a handle may be");
-          if (!whole.some((m) => same(m, one))) whole.push(one);
+    switch (code.op) {
+      case "state": apply(subject, { effect: "state", item: id, state: code.state }); break;
+      case "party": {
+        const slot = code.slot.name, change = code.change;
+        const has = (m: MemberRef) => listed(slot).some(x => same(x, m));
+        if (code.source.op === "clear") apply(subject, { effect: "party", item: id, slot, member: null });
+        else if (change !== null || !own(type.parties, slot)!.list) {
+          const one = member(source);
+          if (!one) return bad("the source is not a member, or its handle is longer than a handle may be");
+          if (change === null) apply(subject, { effect: "party", item: id, slot, member: one });
+          else if (change === "add" && !has(one)) {
+            if (listed(slot).length >= most(slot)) return refuse("slot-full", `effects.${i}: ${slot}`);
+            apply(subject, { effect: "list", item: id, slot, change: "add", member: one });
+          } else if (change === "remove" && has(one)) apply(subject, { effect: "list", item: id, slot, change: "remove", member: one });
+        } else {
+          const given = code.source.op === "members" ? code.source.reads.map(read => readValue(after, read, item)).filter(value => value !== null) : source;
+          if (!Array.isArray(given)) return bad("the source is not a list of members");
+          const whole: MemberRef[] = [];
+          for (const value of given) {
+            const one = member(value);
+            if (!one) return bad("the source holds a value that is not a member, or a handle longer than a handle may be");
+            if (!whole.some(m => same(m, one))) whole.push(one);
+          }
+          if (whole.length > most(slot)) return refuse("slot-full", `effects.${i}: ${slot}`);
+          const before = listed(slot);
+          for (const gone of before.filter(m => !whole.some(w => same(w, m))).sort(byMember)) apply(subject, { effect: "list", item: id, slot, change: "remove", member: gone });
+          for (const joined of whole.filter(w => !before.some(m => same(m, w))).sort(byMember)) apply(subject, { effect: "list", item: id, slot, change: "add", member: joined });
         }
-        if (whole.length > most(slot)) return refuse("slot-full", `effects.${i}: ${slot}`);
-        // One `list` record for each member that leaves, and then one for each that joins, each in byte order of member identifier.
-        const before = listed(slot);
-        for (const gone of before.filter((m) => !whole.some((w) => same(w, m))).sort(byMember)) apply(subject, { effect: "list", item: id, slot, change: "remove", member: gone });
-        for (const joined of whole.filter((w) => !before.some((m) => same(m, w))).sort(byMember)) apply(subject, { effect: "list", item: id, slot, change: "add", member: joined });
+        break;
       }
-    } else if ("ref" in form) {
-      const { slot } = form.ref;
-      // Section 6.4: inside a scope, `self` is a local reference to the entry being written, and so to the item it opens.
-      // Section 6.6: a copy preserves its source. A slot source is the slot of that name, of whatever kind.
-      const to = from === null ? null : from === "self" ? j.self : fits(own(type.refs, slot)!.to, slot);
-      if (to === undefined) return bad("the source is not a value of the slot's type");
-      apply(subject, { effect: "ref", item: id, slot, to });
-    } else if ("value" in form) {
-      const { slot } = form.value;
-      // The commit time plus a constant: a derived deadline, such as a new hold's end (section 5.2, step 6.4).
-      // The validator bounds the offset, so the sum is a safe integer. A time past the last timestamp is not a value of the slot.
-      const derived = form.value.from !== null && "time" in form.value.from ? timeMs(j.clock.reading)! + form.value.from.time.plusSeconds * 1000 : null;
-      if (derived !== null && derived > LAST_MS) return bad("the derived time is past the last timestamp");
-      const value = derived !== null ? timeOf(derived) : from === null ? null : fits(own(type.values, slot)!.of, slot);
-      if (value === undefined) return bad("the source is not a value of the slot's type");
-      apply(subject, { effect: "value", item: id, slot, value });
-    } else if ("attribute" in form) {
-      // Section 6.7: the attribution of the named subject, not of the item that receives it, as it stands after the effects
-      // written before this one: a member whom an earlier effect of this entry made the holder of a hold under the subject is in it.
-      const { slot } = form.attribute;
-      const more: MemberRef[] = [];
-      for (const [n, w] of (form.attribute.with ?? []).entries()) {
-        // Each further source gives party slots, or lists of members. One that reads an unbound subject or an absent fact adds nothing.
-        let lists: readonly unknown[];
-        if ("items" in w) {
-          // A range in a source is an exact set, so it needs complete evidence, as a guard does.
-          const range = covered(j, w.items, formContext(j.definition, body, "effect", i, form), `attribute:${n}`);
-          if (range === null) return notJudged("guard-incomplete");
-          lists = range.map((r) => members(own(r.parties, w.slot)));
-        } else if ("subject" in w) lists = [members(own(working.get(w.subject)?.parties, w.slot))];
-        else if ("each" in w) {
-          const bound = bindEach(after, w.each, w.as, item);
-          if (bound === null) return bad(`with.${n} reads a value that is not a list`);
-          lists = bound.map((b) => operand(b, w.list, item));
-        } else lists = [operand(after, w.list, item)];
-        for (const list of lists) {
-          if (list === null) continue;
-          if (!Array.isArray(list)) return bad(`with.${n} reads a value that is not a list of members`);
-          for (const v of list) {
-            const one = member(v);
-            if (!one) return bad(`with.${n} holds a value that is not a member, or a handle longer than a handle may be`);
-            more.push(one);
+      case "ref": {
+        const slot = code.slot.name;
+        const to = code.source.op === "clear" ? null : code.source.op === "self" ? j.self : fits(own(type.refs, slot)!.to, slot);
+        if (to === undefined) return bad("the source is not a value of the slot's type");
+        apply(subject, { effect: "ref", item: id, slot, to });
+        break;
+      }
+      case "value": {
+        const slot = code.slot.name;
+        const derived = code.source.op === "commit-clock" ? timeMs(j.clock.reading)! + code.source.plusSeconds * 1000 : null;
+        if (derived !== null && derived > LAST_MS) return bad("the derived time is past the last timestamp");
+        const value = derived !== null ? timeOf(derived) : code.source.op === "clear" ? null : fits(own(type.values, slot)!.of, slot);
+        if (value === undefined) return bad("the source is not a value of the slot's type");
+        apply(subject, { effect: "value", item: id, slot, value });
+        break;
+      }
+      case "attribute": {
+        const slot = code.slot.name, more: MemberRef[] = [];
+        for (const [n, from] of code.with.entries()) {
+          let lists: readonly unknown[];
+          switch (from.op) {
+            case "items": {
+              const range = coveredItems(j, from.range);
+              if (range === null) return notJudged("guard-incomplete");
+              lists = range.map(row => members(own(row.parties, from.slot.name)));
+              break;
+            }
+            case "subject": lists = [members(own(working.get(subjectName(from.slot.subject))?.parties, from.slot.name))]; break;
+            case "each": {
+              const value = readValue(after, from.read, item);
+              if (value !== null && !Array.isArray(value)) return bad(`with.${n} reads a value that is not a list`);
+              lists = ((value ?? []) as readonly unknown[]).map(element => readValue(after, from.list, item, new Map([[from.binding.identity, element]])));
+              break;
+            }
+            case "list": lists = [readValue(after, from.read, item)]; break;
+            default: return exhaustive(from);
+          }
+          for (const list of lists) {
+            if (list === null) continue;
+            if (!Array.isArray(list)) return bad(`with.${n} reads a value that is not a list of members`);
+            for (const value of list) {
+              const one = member(value);
+              if (!one) return bad(`with.${n} holds a value that is not a member, or a handle longer than a handle may be`);
+              more.push(one);
+            }
           }
         }
+        for (const one of attribution(historyOf(working.get(subjectName(code.of))!, working.values(), j.definition, j.signer), j.signer, more)) {
+          if (listed(slot).some(m => same(m, one))) continue;
+          if (!memberFits(one, j.bounds)) return bad("a member's handle is longer than a handle may be");
+          if (listed(slot).length >= most(slot)) return refuse("slot-full", `effects.${i}: ${slot}`);
+          apply(subject, { effect: "list", item: id, slot, change: "add", member: one });
+        }
+        break;
       }
-      // The union of the base and every source, with duplicates removed, in byte order of member identifier. No truncation.
-      for (const one of attribution(historyOf(working.get(form.attribute.of)!, working.values(), j.definition, j.signer), j.signer, more)) {
-        if (listed(slot).some((m) => same(m, one))) continue;
-        if (!memberFits(one, j.bounds)) return bad("a member's handle is longer than a handle may be");
-        if (listed(slot).length >= most(slot)) return refuse("slot-full", `effects.${i}: ${slot}`);
-        apply(subject, { effect: "list", item: id, slot, change: "add", member: one });
+      case "redact": {
+        const slot = code.slot.name, texts = [...j.view.texts(id, slot)];
+        const now = own(working.get(subject)!.values, slot);
+        if (isDigest(now) && now !== own(was?.values, slot) && !texts.includes(now)) texts.push(now);
+        if (texts.length > 0) effects.push({ effect: "redact", item: id, slot, texts });
+        break;
       }
-    } else if ("redact" in form) {
-      // Section 6.6: the bytes of every text the slot has held are removed: each digest that the scope keeps for the slot, and the
-      // one an earlier effect of this entry put there. The effect records those digests, and its entry is the tombstone. The
-      // slot keeps its digest. With no text to remove the effect would change nothing, and is not recorded.
-      const { slot } = form.redact;
-      const texts = [...j.view.texts(id, slot)];
-      const now = own(working.get(subject)!.values, slot);
-      if (isDigest(now) && now !== own(was?.values, slot) && !texts.includes(now)) texts.push(now);
-      if (texts.length > 0) effects.push({ effect: "redact", item: id, slot, texts });
-    } else if (!("hold" in form)) return unsupported("that effect");
-    else {
-      // Section 6.8: the hold capability's effect on the hold item.
-      const hold = deriveHold(j, item, form.hold.do);
-      if (!hold.ok) return refuse(hold.reason, `effects.${i}: ${hold.detail}`);
-      apply(subject, hold.effect);
+      case "hold": {
+        const hold = deriveHold(j, item, code.action);
+        if (!hold.ok) return refuse(hold.reason, `effects.${i}: ${hold.detail}`);
+        apply(subject, hold.effect);
+        break;
+      }
+      default: return exhaustive(code);
     }
   }
   // The whole-entry boundary for what the rules gave: every form of the list is derived, so every mark has joined. Section 4.3,
@@ -520,15 +514,20 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
     }
   }
 
-  for (const [i, form] of attention.entries()) {
-    const { notify } = form;
-    // Section 6.6: a notice with `if` is made only when its guards hold, on the state before the effects.
-    const through = lets(notify.if ? { if: notify.if } : {}, () => formContext(j.definition, body, "attention", i, form));
+  for (const instruction of attention) {
+    const { slot, when, reason } = instruction.plan;
+    const through = judgeCondition(j, instruction.body, instruction.node);
     if (through === false) continue;
     if (through !== true) return notJudged(through);
-    // The members in that slot as it was before the effects, or as it is after. An unbound subject has none.
-    const told = members(own((notify.when === "before" ? j.subjects : working).get(notify.of)?.parties, notify.slot));
-    if (told.length > 0) effects.push({ effect: "attention", item: working.get(notify.of)!.id, members: told, reason: notify.reason });
+    const of = subjectName(slot.subject);
+    const told = members(own((when === "before" ? j.subjects : working).get(of)?.parties, slot.name));
+    if (told.length > 0) effects.push({ effect: "attention", item: working.get(of)!.id, members: told, reason });
   }
   return { ok: true, effects, working, opened };
 }
+
+function subjectName(read: import("./program/reads.ts").SubjectRead): string {
+  if (read.identity.kind !== "subject") throw new TypeError("effect subject has no admitted subject identity");
+  return read.identity.name;
+}
+function exhaustive(value: never): never { throw new TypeError(`unknown effect instruction: ${String(value)}`); }
