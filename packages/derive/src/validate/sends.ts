@@ -42,7 +42,7 @@ function source(d: Defining, v: unknown, path: string, ctx: Ctx, field: string |
   const redactable = () => bad("redactable-read", path, "reads a detached text, which only a message to a lane carries");
   if (v === "self") return { type: null };
   if (isObject(v) && "collect" in v) {
-    const c = field ? rec(v, path, ["collect"]) : bad("shape", path, "a collect is a field of a send");
+    const c = field !== false ? rec(v, path, ["collect"]) : bad("shape", path, "a collect is a field of a send");
     const r = c && rec(c["collect"], at(path, "collect"), ["items", "fields"]);
     if (!r) return null;
     const items = ranged(d, r["items"], at(at(path, "collect"), "items"), ctx, `collect:${field}`);

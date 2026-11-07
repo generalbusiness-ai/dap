@@ -40,6 +40,21 @@ test("M3: a future clock-reading result clause adds no clock use to its sending 
   }
 });
 
+test("M6: an empty send-field name preserves the collect's complete refusal diagnostics", () => {
+  const data = { ...pull, acts: { ...pull.acts, merge: { ...pull.acts["merge"]!, sends: [{ tell: {
+    to: { slot: "staging", of: "also.proposal" }, message: "reserve", result: {},
+    fields: { "": { collect: { items: { type: "link", states: ["removed"] }, fields: { bad: "missing" } } } },
+  } }] } } };
+  const result = validateDefinition(data, PROPOSED_BOUNDS);
+  expect(result.ok).toBe(false);
+  if (result.ok) return expect.fail("the empty field name must remain refused");
+  expect(result.problems).toEqual([
+    { code: "shape", path: "acts.merge.sends.0.tell.fields", message: "has an empty name" },
+    { code: "bound", path: "acts.merge.sends.0.tell.fields..collect.items", message: "a collect reads live items only: its range lists no final state" },
+    { code: "name", path: "acts.merge.sends.0.tell.fields..collect.fields.bad", message: "is item, state or a slot of link" },
+  ]);
+});
+
 /** The fan-out is at its limit here: the type takes three live links, and one fan-out makes at most three sends. */
 const tight = { ...PROPOSED_BOUNDS, fanOut: 3 };
 const pullDefinition = valid(validateDefinition(pull, tight));
