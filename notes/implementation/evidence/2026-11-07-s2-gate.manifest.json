@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "qualification": "One full S2 gate from frozen clean source39b996b9, including complete terminal phases, exact source/dependency identity and durable raw retention. Focused evidence covers the unchanged observer API, connection-attempt resource ownership, obsolete reply rejection, coalescing, late-opening characterization and timer-cleanup control. No deployment or live acceptance. Historical archive request64552d40 remains open.",
+  "fileCount": 15,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s2-gate-validation",
+      "fileCount": 15,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1131,
+          "sha256": "035847019cda113db9bfb10fd9afa5b6478f1f98fbdb8473b29d4cb43d372b1e"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1881,
+          "sha256": "21394f1977a4108a295dc618c1fa19fd31a27a8368f700cdac39aa4d9f0e27bd"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1838,
+          "sha256": "25352194ebc32beda35942b069682e27a75985a91753d5d811ea0e2023d20ee5"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1881,
+          "sha256": "21394f1977a4108a295dc618c1fa19fd31a27a8368f700cdac39aa4d9f0e27bd"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "ffbd80cdab5b811ebd0dcda991c5e5dcf4c154993cbf0c17673cea2af0affb33"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 7353,
+          "sha256": "366746435785f44fd86fdcae40821f7c7a27856201995411b18cf92ce8d58ff1"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "c03c46312b326740baf9fa4f0e49c72b66761d7aa8f30db037a755ec40ed9a6c"
+        },
+        {
+          "path": "result.json",
+          "bytes": 3619,
+          "sha256": "d85ea52e810cebf47e81b6301d9cd019dc74a397a805fd715077e84e2c60fe89"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 969,
+          "sha256": "dd10c50a20e9ab263b705ceaec8a474a4e4b5b0deea11bb000d31fd9ad3e0730"
+        },
+        {
+          "path": "started.json",
+          "bytes": 640,
+          "sha256": "ad9fcbbfea66b0197e51cac0d5807ce20809a80b288bebe9f20b3575e67684a0"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 558,
+          "sha256": "7764af6ee2b48028a71a4146b1a56870b6fd6073566544197ab4c780d80c5fc7"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5825,
+          "sha256": "9aa1432c91e4ec1dd3dc70b07fdbd644d08aeb8eec9c64b3355206864c6e0d88"
+        }
+      ]
+    }
+  ],
+  "sourceHead": "39b996b9ac962720cedf6e8cd14f10c42fa16c53",
+  "sourceTree": "c72bec3dcd58a685600bfbe0f6a64b872b78467d"
+}
