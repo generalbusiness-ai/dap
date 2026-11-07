@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:37f365795e1a98a64f5b19d18ce29c02d83f9725","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.demo.jsonc."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:459c0d48d69005963dea357858738e0fb9f532ae","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-05-failed-claim-register/token-clone.mjs."}
