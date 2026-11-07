@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:96ca255962573939b5e5b11530cfa001a0b19563","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m4-caller-bindings.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9748384eff91cdc3ec123dc0113b10c9d6f89f22","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/forms-effects.test.ts."}
