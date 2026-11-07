@@ -94,11 +94,6 @@ export function ruleInput(j: Judging): unknown {
 }
 
 /**
- * Section 6.4: an `also` name is unbound when it selects no item. It is then
- * not among the subjects. A guard whose subject is unbound is not evaluated,
- * and the input does not rest on it.
- */
-/**
  * True when a written form reads an unbound `also` name as a subject: as an
  * `of`, or as the `item` of an operand. Section 6.4: an effect, a send or a
  * notice whose `if` reads one is not applied.

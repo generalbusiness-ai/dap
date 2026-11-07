@@ -4,7 +4,8 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Input, Request, Result, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
-import { validateDefinition, type ProblemCode } from "../src/index.ts";
+import { clockOf, validateDefinition, type Judging, type ProblemCode } from "../src/index.ts";
+import { derive } from "../src/handlers.ts";
 import { Scope, arrive, born, decided, deliver, desk, directory, fields, created, keys, on, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
 
 const { rita, una } = keys;
@@ -73,6 +74,38 @@ function answer(P: Scope, from: Scope, seq: number, n: number, outcome: "applied
 const told = (s: Scope) => s.last.effects.filter((e) => e.effect === "attention");
 
 describe("sends (section 6.6)", () => {
+  test("M6: admitted send instructions retain their target, message and payload after declaration mutation", () => {
+    const target = { slot: "staging" }, payload = { const: "captured" };
+    const form = { tell: { to: target, message: "kept", fields: { text: payload }, result: {} } };
+    const input = { ...pull, items: { ...pull.items, proposal: { ...pull.items["proposal"]!, refs: {
+      ...pull.items["proposal"]!.refs, alternate: { fixed: false, required: false, to: { type: "scope", kind: "lane" } },
+    } } }, acts: { ...pull.acts,
+      "point-both": { step: "transition", on: "proposal", grant: "write", also: {},
+        fields: { main: { type: "scope", kind: "lane", required: true }, alternate: { type: "scope", kind: "lane", required: true } },
+        guards: [{ state: ["open"] }], effects: [
+          { ref: { slot: "staging", from: { field: "main" } } },
+          { ref: { slot: "alternate", from: { field: "alternate" } } },
+        ], sends: [], attention: [] },
+      probe: { step: "transition", on: "proposal", grant: "write", also: {}, fields: {}, guards: [{ state: ["open"] }], effects: [], sends: [form], attention: [] },
+    } };
+    const checked = valid(validateDefinition(input, PROPOSED_BOUNDS)), s = new Scope(checked);
+    const [main, alternate] = [address(1), address(2)];
+    s.did(rita, "point-both", { ...on(s, 0), fields: { main, alternate } });
+    const act = checked.declared.acts["probe"]!;
+    target.slot = "alternate";
+    form.tell.message = "mutated";
+    payload.const = "mutated";
+    // Actual body execution over fixture state; the probe seals no entry.
+    const judging: Judging = { view: s.state, definition: checked, bounds: PROPOSED_BOUNDS, clock: clockOf(s.state, s.now),
+      scope: s.state.scope()!, self: s.head.seq + 1, kind: "probe", fields: {}, fieldTypes: act.fields,
+      subjects: new Map([["on", s.item(0)]]), signer: { member: rita.member, principal: null },
+      facts: new Map(), prepared: [], used: [], own: s.own, ran: { clock: false } };
+    const actual = derive(judging, act, null, s.head.hash, 7);
+    expect(actual, JSON.stringify(actual)).toEqual({ result: "ran", effects: [], sends: [
+      { n: 7, to: main, message: { class: "request", type: "tell", body: { message: "kept", fields: { text: "captured" } } } },
+    ], prepared: [], judgesTime: false, settles: false });
+  });
+
   test.each(["legacy", "whole-scope"] as const)("%s: a fan-out at its limit keeps each request's ordinal and reservation when a later conditional send is omitted", cohort => {
     const [X, issue] = [9, 1].map((n) => new Scope(ticketDefinition, rita.member, true, n)) as [Scope, Scope];
     const [A, B, C, S] = [issue.at, ...[2, 3, 4].map(address)] as [ScopeRef, ScopeRef, ScopeRef, ScopeRef];

@@ -7,6 +7,7 @@ import { immutable } from "./model.ts";
 import { mapGuardChildren, type GuardPlan, type RangePlan } from "./guard-plan.ts";
 import { conditionSubjects, type ConditionPlan } from "./condition-plan.ts";
 import { ownEffectPlan, type AttentionPlan, type EffectPlan, type EffectValueSource } from "./effect-plan.ts";
+import { ownSendPlan, type PendingSendPlan, type SendPlan } from "./send-plan.ts";
 import { ownSettlementPlan, type SettlementPlan } from "./settlement.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
@@ -72,6 +73,7 @@ interface PendingNode {
   guard?: GuardPlan<FormTrace>;
   effect?: EffectPlan;
   attention?: AttentionPlan;
+  send?: PendingSendPlan;
   conditions?: Partial<Record<"if" | "unless", PendingGuardList>>;
 }
 export interface BodyTrace {
@@ -106,6 +108,8 @@ const nodeRoots = new WeakMap<StructureNode, BodyStructure>(), guardPlans = new 
 const guardSources = new WeakMap<GuardNode, object>();
 const conditionPlans = new WeakMap<StructureNode, ConditionPlan<GuardNode>>();
 const effectPlans = new WeakMap<EffectNode, EffectPlan>(), attentionPlans = new WeakMap<AttentionNode, AttentionPlan>();
+const sendPlans = new WeakMap<SendNode, SendPlan>();
+const sendSources = new WeakMap<SendNode, SendForm | SendMark>();
 const effectSources = new WeakMap<EffectNode, EffectForm>();
 function traceOf(d: Defining): Trace {
   let trace = pending.get(d);
@@ -184,6 +188,12 @@ export function recordEffectPlan(d: Defining, plan: EffectPlan): void {
   if (node.category !== "effect" || node.op !== plan.code.op) throw new TypeError("effect instruction has no matching admitted form scope");
   node.effect = plan;
 }
+export function recordSendPlan(d: Defining, plan: PendingSendPlan): void {
+  const node = pending.get(d)?.active?.stack.at(-1);
+  if (!node) return;
+  if (node.category !== "send" || node.op !== plan.code.op) throw new TypeError("send instruction has no matching admitted form scope");
+  node.send = plan;
+}
 export function recordAttentionPlan(d: Defining, plan: AttentionPlan): void {
   const node = pending.get(d)?.active?.stack.at(-1);
   if (!node) return;
@@ -214,6 +224,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     if (existing) return existing;
     const data = immutable(node.data, origins), children = Object.freeze(node.children.map(nodeOf));
     if (node.category === "effect" && node.op !== "native" && !node.effect) throw new TypeError("effect form has no captured instruction");
+    if (node.category === "send" && node.op !== "native" && !node.send) throw new TypeError("send form has no captured instruction");
     if (node.category === "attention" && !node.attention) throw new TypeError("attention form has no captured instruction");
     const effect = node.effect ? ownEffectPlan(node.effect, origins) : null;
     const valueSource = effect?.code.op === "value" ? effect.code.source : null;
@@ -225,6 +236,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     bindings.push({ source: node.data, node: owned });
     ownedNodes.set(node, owned);
     if (owned.category === "effect" && effect) effectPlans.set(owned, effect);
+    if (owned.category === "send" && node.send) sendPlans.set(owned, ownSendPlan(node.send));
     if (owned.category === "attention" && node.attention) attentionPlans.set(owned, Object.freeze({ ...node.attention }));
     const conditionGuards = (place: "if" | "unless"): readonly GuardNode[] | null => {
       const group = node.conditions?.[place];
@@ -234,7 +246,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
         return child;
       })) : null;
     };
-    if (owned.category === "effect" || owned.category === "attention") conditionPlans.set(owned, Object.freeze({
+    if (owned.category === "effect" || owned.category === "attention" || owned.category === "send") conditionPlans.set(owned, Object.freeze({
       if: conditionGuards("if"), unless: conditionGuards("unless"),
       // Only final admission permits traversing a whole condition. A refused
       // argument can hold a cyclic ignored value without canonical bytes.
@@ -262,6 +274,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
       nodeRoots.set(node, body);
       if (node.category === "guard") guardSources.set(node, source);
       if (node.category === "effect") effectSources.set(node, source as EffectForm);
+      if (node.category === "send") sendSources.set(node, source as SendForm | SendMark);
       forms.set(source, Object.freeze([...(forms.get(source) ?? []), Object.freeze({ body, node })]));
     }
     for (const list of root.guardLists) {
@@ -319,6 +332,29 @@ export function clauseStructure(definition: ValidDefinition, owner: object, clau
   return found?.length === 1 ? found[0]! : null;
 }
 
+/** Select a future root by the actual admitted send occurrence. */
+export function sendClauseStructure(definition: ValidDefinition, body: BodyStructure, node: SendNode, clause: string): BodyStructure | null {
+  checkedOwner(definition, body, node);
+  const link = node.future.find(future => future.clause === clause);
+  if (!link) return null;
+  const root = compiled.get(definition)!.structure.roots.find(root => root.id === link.root);
+  if (!root || root.origin !== body.id) throw new TypeError("send result root belongs to another admitted body");
+  return root;
+}
+/** The M5 effect adapter still verifies each original occurrence before execution. */
+export function bodyEffectForms(definition: ValidDefinition, body: BodyStructure): readonly EffectForm[] {
+  checkedBody(definition, body);
+  return body.nodes.filter(node => node.category === "effect").map(node => effectSource(definition, body, node));
+}
+/** Compatibility with a raw send list requires one unique actual admitted body. */
+export function sendListBody(definition: ValidDefinition, forms: readonly SendForm[]): BodyStructure | null {
+  const candidates = compiled.get(definition)?.structure.roots.filter(body => {
+    const nodes = body.nodes.filter(node => node.category === "send");
+    return nodes.length === forms.length && nodes.every((node, ordinal) => sendSources.get(node) === forms[ordinal]);
+  });
+  return candidates?.length === 1 ? candidates[0]! : null;
+}
+
 /** Resolve occurrences by their source object and admitted body, including lexical aliases. */
 export function formStructures(definition: ValidDefinition, body: BodyStructure, source: object): readonly StructureNode[] {
   checkedBody(definition, body);
@@ -370,7 +406,7 @@ export function guardSource(definition: ValidDefinition, body: BodyStructure, no
 }
 
 /** Select conditions by the admitted occurrence, never by a declaration path. */
-export function conditionPlan(definition: ValidDefinition, body: BodyStructure, node: EffectNode | AttentionNode): ConditionPlan<GuardNode> {
+export function conditionPlan(definition: ValidDefinition, body: BodyStructure, node: EffectNode | AttentionNode | SendNode): ConditionPlan<GuardNode> {
   checkedOwner(definition, body, node);
   const plan = conditionPlans.get(node);
   if (!plan) throw new TypeError("form has no admitted condition instruction");
@@ -385,6 +421,16 @@ export function effectSource(definition: ValidDefinition, body: BodyStructure, n
   checkedOwner(definition, body, node);
   const source = effectSources.get(node);
   if (!source) throw new TypeError("effect instruction has no source identity");
+  return source;
+}
+export function sendPlan(definition: ValidDefinition, body: BodyStructure, node: SendNode): SendPlan | null {
+  checkedOwner(definition, body, node);
+  return sendPlans.get(node) ?? null;
+}
+export function sendSource(definition: ValidDefinition, body: BodyStructure, node: SendNode): SendForm | SendMark {
+  checkedOwner(definition, body, node);
+  const source = sendSources.get(node);
+  if (!source) throw new TypeError("send instruction has no source identity");
   return source;
 }
 export function attentionPlan(definition: ValidDefinition, body: BodyStructure, node: AttentionNode): AttentionPlan {

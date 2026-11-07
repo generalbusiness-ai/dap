@@ -1,12 +1,11 @@
 # Typed sends and result bodies
 
-Status: M6 has its own request, promise, branch, and isolated checkout. The first
-checkpoint repairs the M4 collect diagnostic and passes both derive compilers
-and all nine send-owner cases. The next checkpoint repairs observation-only
-result clauses and passes both compilers and all 11 clause-owner cases, with
-four literal results matching pre-M5 main. Typed send execution and complete
-result routing, Page validation, the full gate, independent review, and landing
-remain pending. These are separate focused checkpoints.
+Status: local M6 source now captures and executes all four ordinary send forms,
+selects retained sends by admitted occurrence, and follows each send's future
+result root. Fourteen complete owners pass 161 distinct cases across two focused
+checkpoints, and both derive compilers exit 0. Earlier diagnostic and F1 evidence
+remains below. Page validation, one full gate, independent review, and landing
+remain pending.
 
 Request `0b0d278680c4dde3a9b278d4a76a547ef83223cc` and promise `c8c85693`
 own this work. The branch starts at M5 candidate `449979c2`, approved by
@@ -106,24 +105,92 @@ successors within reviewed scope, 44 artifacts left live, child closure,
 successful atomic push, and published planner deployment handoff `8926547d`.
 It changes no failed gate into a pass and proves no deployment.
 
-## Complete the admitted send path next
+## Execute sends from admitted instructions
 
-The request's caller query finds the ordinary send executor, retained form
-matching, result execution, two outcome-send callers, and originating-send
-reservation lookup. The runtime and validator branches have been read, and the
-contract inventory records their source hashes. No typed M6 send instruction or
-replacement dispatcher exists at this checkpoint. F1 repairs the existing
-clause caller; complete typed send and clause selection still follow.
+The validator records a closed `SendCode` for create, tell, relate, and index.
+Each payload source is self, an admitted operand read, or a collect with its
+admitted range and ordered member reads. Final admission owns these plans and
+captures the existing recursive subject-skip names, including names inside
+constant payloads. Rejected arguments never reach that final traversal.
 
-The next change captures create, tell, relate, index, source, fanout, collect,
-and result-body instructions from actual successful admission. It must preserve
-before-state conditions, working payloads, skipped ordinals, complete scans,
-creation context, original occurrence and binder identities, current-state
-result reconstruction, Native faults, reservation attribution, and actual clock
-use. Native interiors remain M7, and final orchestration remains M8. Prototype
-interpretation and dependency coverage retain their current conservative limits.
+`deriveSends` verifies the actual body and every source occurrence before its
+private executor runs the captured instructions. Conditions read the earlier
+state. Addresses, payloads, and range predicates read working subjects. The
+existing `coveredItems` leaf still requires a complete bounded scan. `sendValue`
+keeps reference encoding in one place, with the old field, slot, item, and
+presented-fact conversion policy. Party slots retain their old opaque wire
+behavior. Omitted values, emitted ordinals, duplicate relations, creation causes,
+creation context, membership, and directory lookup keep their existing order.
 
-The protected judge remains byte-identical. No security baseline, dependency
-manifest, live room, credential, custody, mini configuration, or deployment
-changes. The full M6 source and validation still follow under
+The new ownership witness mutates a target slot, message, and payload after
+admission, then compares literal full `Ran` output over actual fixture state.
+The valid legacy baseline fails its assertion and retains the full mutated
+answer. Typed execution returns the admitted target, message, and payload. An
+earlier fixture attempt used a comment act, which cannot send; that admission
+refusal remains an inconclusive attempt, separate from the valid baseline.
+
+The two outcome callers use an explicit `joinReturnedSends` bridge. They keep
+Native requests at their existing checked boundary. The Native validation block
+in `sends.ts` remains byte-identical to the preceding checkpoint. Rules retain
+their original mark and fault identity. Native implementations remain M7 work.
+
+## Follow each retained send to its result body
+
+`sendOrigin` matches retained requests and advisory sends against captured
+signatures in their admitted order. It preserves same-name conditional matching,
+fanout reuse, and the Native always/optional counting rule. The selected node
+identifies the result root directly. No declaration path or digest selects an
+execution root. Reservation transfer uses that actual node's existing ledger
+key, replacing the raw form object's first array index.
+
+`runClause` follows the selected node's future root and supplies its original
+effect occurrences to the strict M5 adapter. It reconstructs the existing fields,
+subjects, signer, facts, and observations from the retained origin and current
+state. Observation rows come from the admitted owned send data; their existing
+freshness and retention leaf stays in place. An outcome send keeps its explicit
+Native clause boundary. Empty observation-only roots retain the earlier F1 fix.
+
+Four new public-result cases cover declaration mutation and aliased send objects
+in both capacity cohorts. Exact M5 source `449979c2` fails all four assertions:
+mutation loses the recorded request, and aliases make the old clause lookup
+ambiguous. Its characterization checkout returns to clean status. M6 passes the
+same cases, preserving literal effects, retained observations, full request
+reservations, and the wrong-observation refusal for both request ordinals.
+
+The first send checkpoint passes its test compiler and all 10 send-owner cases.
+After result routing, the test compiler and eight complete owners pass 84 cases:
+forms-sends 10, clause-identity 15, compose 21, creation-context 6, late 14,
+late-reservation-identity 2, platform-request-amounts 5, and program-structure 11.
+The next checkpoint passes both derive compilers and six more complete owners:
+forms-marks 47, forms-ledger 6, forms-observes 11, forms-operand 7,
+source-order 4, and source-order-reserved 2. Those 77 cases bring the two broader
+checkpoints to 161 distinct cases. The first 10-case run overlaps that total.
+No case skips, original assertions change, or original deadlines change.
+
+## Complete the bounded M5 review cleanup
+
+Effective scope addendum `8783d4eec52ae902d50a484b9690bdbc3822e89b`
+names the three extra source paths before their final edits. It carries the four
+nonblocking simplifications from M5 approval `80ef411d` and landing check
+`fbfb93a0`. The unused `unsupported.ts` helper has no caller and is removed.
+`readsUnbound` loses its orphaned preceding comment. Validator `alsoRead` shares
+`conditionSubjects`, preserving recursive visits, duplicates, and order. Explicit
+package exports keep both outcome-only join bridges internal while retaining all
+other effect and send exports.
+
+## Keep analysis and remaining work bounded
+
+The production send and result routes now execute captured instructions. The
+prototype lowerer, evaluator, explanation, and dependency visitor still cover
+only their declared first slice. Unsupported whole bodies return their coverage
+failure before execution. M6 claims no complete trace or dependency analysis for
+its new send plans and no inspection of Native implementations. M7 owns Native
+interiors. M8 still owns final body orchestration and adapter removal.
+
+The protected judge remains byte-identical, SHA-256
+`86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959`.
+No security baseline, dependency manifest, live room, credential, custody, mini
+configuration, or deployment changes. Focused raw reports and baseline failures
+await the send checkpoint's evidence seal. Page validation, the single M6 gate,
+review, and audited landing still follow under
 [plan 035](../plans/035-2026-11-04-typed-derivation-core.md).
