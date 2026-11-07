@@ -1,0 +1,50 @@
+{
+  "qualification": "Read-only host clock observation, not causal evidence. No absolute failure-case timestamp establishes overlap, and the missing original clock samples remain missing. No assertion of complete host-log retention.",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-archive-timed-clock-validation",
+      "files": [
+        {
+          "path": "initial-sandbox-refusal.json",
+          "bytes": 255,
+          "sha256": "c4f95f123abcc290eef543cce63b5a9512cdb09508d265b592d45ed847417eb8"
+        },
+        {
+          "path": "interpretation.json",
+          "bytes": 657,
+          "sha256": "8ac53f469061a19f917033d9bc90a6554b36c69a768ab14286c90098024f5af9"
+        },
+        {
+          "path": "observations.json",
+          "bytes": 1144,
+          "sha256": "7840c337f1162dff6c3f4337583e987d2f3126aef965d30fe57f4dd271f269e9"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1442,
+          "sha256": "369b30918839204203053590e9974dc564ab731f654b2bb2ed523896ac806487"
+        },
+        {
+          "path": "read.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "run-driver.py",
+          "bytes": 1157,
+          "sha256": "ba49ed0f535a97f3d8c547f8ddc56fc999c8a9f95e3933f2f6ccb1f96507520e"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 632,
+          "sha256": "be96dbc63dcaf5d60aadca32ce770f6957e55038b11f62bb4c57df3c605f93a7"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 589,
+          "sha256": "875da7bbf6571a2173da678b37047139ba28c0111fd2a3f994ec687449ef06d2"
+        }
+      ]
+    }
+  ]
+}

@@ -256,3 +256,46 @@ timing. The earlier M4 probe used temporary tracing. Neither the differing
 observations nor either pass establishes the historical cause. Under the
 ruling's passing branch, M4 diagnosis continues. The failed gate does not
 become a known pre-M4 failure, and this result grants no review exception.
+
+## The stop-only observer also passes
+
+Plan `6878b280` narrows the observer under addendum `e944419f`. The earlier
+probe returned a new rejection-handler promise from every budget `wait`.
+This probe inherits the original `wait` and records only actual synchronous
+`stop` exceptions after their original decision. It retains four clock
+values from the existing reads and at most 32 bounded stack samples.
+Observer overhead can still change timing.
+
+At exact head `5908a78cbc3eaffe4f8ba8dadf59a102ccc18bde`, the scope test
+compiler and all four cases pass. Actual compiler and owner exit files
+both read 0. The complete floor owner and unchanged capacity companion
+keep their original assertions, loops, deadlines, limits, and worker
+configuration. The original test restores exactly, source hashes match,
+and owned process groups close.
+
+The observed 30,000-entry case records zero calls to `stop`. This observer
+does not record directly thrown errors or handled lookahead signals.
+The missing original exception remains missing. The
+[stop-only manifest](evidence/2026-11-07-m4-archive-stop-only.manifest.json),
+SHA-256 `17d5fa28d3cc23d5c7d0344c593ad1da843e622475535a962a43f360d5ce6a65`,
+seals 15 public files and retains 251 raw files privately. The pass clears
+neither failed gate and proves no historical cause.
+
+## The host clock logs establish no overlap
+
+A read-only query finds four time-service records at 08:19:44 EST within
+the failed gate's broader 08:05–08:26 interval. The retained timing stream
+records case durations without absolute case timestamps. No retained
+clock sample or timestamp establishes that this adjustment overlaps the
+failed pass. These logs establish neither its cause nor the absence of
+other clock changes. No direction or magnitude inference follows.
+
+The [clock observation manifest](evidence/2026-11-07-m4-archive-clock-observation.manifest.json),
+SHA-256 `5cc335cc36e53b7b36159a15d861bbe95302f5d4234d256bd15fa5829f53a78c`,
+seals eight public files. Full host log metadata stays private. The first
+sandboxed query refuses before reading logs; the separately retained
+query exits 0. This observation changes no source or system setting.
+
+M4 stays unreviewed and unlanded. Archive request `64552d40` stays open.
+Both complete gates remain failed. No further test or gate execution
+follows from this checkpoint without a concrete diagnostic or repair.
