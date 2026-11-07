@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5c62e472ee0017ae60905eb04acd889f47010b8e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m5-effects.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:63121b445b8b87c041777c10759ba7664e31be84","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/handlers.ts."}
