@@ -1,11 +1,10 @@
 # Typed sends and result bodies
 
-Status: local M6 source now captures and executes all four ordinary send forms,
-selects retained sends by admitted occurrence, and follows each send's future
-result root. Fourteen complete owners pass 161 distinct cases across two focused
-checkpoints, and both derive compilers exit 0. Earlier diagnostic and F1 evidence
-remains below. Page validation, one full gate, independent review, and landing
-remain pending.
+Status: M6 source and validation are complete locally. All ordinary sends execute
+captured instructions, retained sends select their admitted occurrence, and result
+execution follows that occurrence's future root. The exact source candidate's
+Page browser workflow and single full gate pass. Independent review and landing
+remain pending. The planner owns deployment; parent 035 stays open through M8.
 
 Request `0b0d278680c4dde3a9b278d4a76a547ef83223cc` and promise `c8c85693`
 own this work. The branch starts at M5 candidate `449979c2`, approved by
@@ -190,8 +189,7 @@ interiors. M8 still owns final body orchestration and adapter removal.
 The protected judge remains byte-identical, SHA-256
 `86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959`.
 No security baseline, dependency manifest, live room, credential, custody, mini
-configuration, or deployment changes. The focused evidence and local Page checks have their seals below. Page browser
-CI, the single M6 gate, review, and audited landing still follow under
+configuration, or deployment changes. The focused evidence and local Page checks have their seals below. Independent review and audited landing still follow under
 [plan 035](../plans/035-2026-11-04-typed-derivation-core.md).
 
 ## Retain the source and generated Page checkpoints
@@ -221,4 +219,56 @@ The generated module has 2355922 bytes, SHA-256
 matching the probe byte for byte. The [Page asset manifest](evidence/2026-11-07-m6-page-assets.manifest.json),
 SHA-256 `f3632f3a0c21dfcaa1bc4f643b83e7082dea05ef808aca9f1cf533e5194573bd`,
 seals 35 read-only files. No dependency install or hand edit occurs. The exact
-candidate's Page browser workflow and full gate remain pending.
+candidate's Page browser workflow and full gate pass below.
+
+## Complete Page CI and the single full gate
+
+[Page browser run 42425270968](https://github.com/generalbusiness-ai/dap/actions/runs/42425270968)
+succeeds at exact candidate `71863e063412035f18212341eaba21d2d6348c15`,
+tree `0292a9385ed23786d06955833e668a62a3a8582d`. All job steps and all four
+browser commands succeed: screenshots, recorded demo captures, the room-claim
+witness, and the label witness. This is the actual pushed branch workflow, with
+no dispatch, rerun, or local browser substitute. The
+[CI manifest](evidence/2026-11-07-m6-page-ci.manifest.json), SHA-256
+`49372edc5d84ad9d24c6f1bbfa51f9b4b871f0d1dedf65af1cf230782635040b`,
+seals six read-only files.
+
+Effective published gate booking `2b375c62` reserves the next full gate for M6.
+After Page CI succeeds, one `npm run gate` runs at that clean candidate. Its
+actual `gate.exit` says `exit 0`. The driver verifies all 4193 tracked hashes,
+head, tree, dependency lock stamp, and 14 internal aliases before and after.
+Its owned process group closes. No other lane test or build overlaps the gate.
+The verified lock stamp skips installation. Every repository check and the
+complete typecheck pass, with zero note warnings.
+
+| Stage | Passed | Skipped |
+|---|---:|---:|
+| Fixed Node owners | 135 | 0 |
+| Counting | 56 | 0 |
+| Plain | 4016 | 1 |
+| Native | 1111 | 2 |
+
+All four case phases have complete terminal reports: 5318 passes, three skips,
+no failures, no report issues, and no unhandled errors. The retained summary
+also holds 99 file-level Node events, one enqueue, dequeue, and complete event for
+each of 33 successful file wrappers. Those records are not unresolved leaf
+cases. One skipped recorder module has no final duration; every passed module
+has one. A first metadata classifier expects `test:pass` and refuses before
+writing a record; classifying the actual `test:complete` records changes no test,
+gate, or original report.
+
+The [gate manifest](evidence/2026-11-07-m6-gate-validation.manifest.json),
+SHA-256 `1191db8b6317234eed749dc48bbe5116a0fbbfd41c0c6960aa699a2c86e6b005`,
+seals 16 public read-only files. The complete 2314 original regular files stay
+private and read-only, with a sealed inventory. The recorded UTC interval,
+Python monotonic duration, outer command timing, and runner timings remain
+separate measurements. Sealing repeats no command or case. This new passing M6
+gate leaves the earlier M5 failed gate and reviewed follow-up unchanged.
+
+Eight current manifests verify 332 distinct read-only evidence files, including
+40 from the prerequisite M5 landing. Later review documentation changes no
+runtime, test, script, configuration, dependency, or generated asset input from
+the validated candidate. The review still owes independent approval and an
+audited landing. These local fixtures and reports establish no deployment,
+live-room acceptance, archive-incident root cause, migration of Native implementations,
+or complete prototype explanation or dependency analysis.

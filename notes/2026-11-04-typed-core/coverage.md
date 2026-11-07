@@ -167,5 +167,5 @@ send and clause execution now uses those admitted instructions in the local
 candidate. This extends execution coverage without extending the prototype
 explanation or dependency visitors. Their whole-body unsupported result remains
 conservative. Native interiors remain M7 work, and final orchestration remains
-M8 work. Focused owners pass; Page checks, the M6 gate, review, and landing remain
-pending.
+M8 work. Focused owners, exact-source Page CI, and the single M6 gate pass. Independent
+review and landing remain pending.

@@ -142,4 +142,6 @@ its earlier diagnostic and F1 checkpoints from the later send migration.
 The two broader local checkpoints pass 161 distinct cases across 14 complete
 owners. The initial 10-case send run overlaps that count. These focused checks
 establish no live-room, deployment, full explanation, or general dependency
-claim. Page checks, one M6 gate, review, and landing remain pending.
+claim. Exact-source Page CI and the single M6 gate pass at `71863e06`, with
+5318 passes and three skips in complete terminal case reports. Independent
+review and landing remain pending.
