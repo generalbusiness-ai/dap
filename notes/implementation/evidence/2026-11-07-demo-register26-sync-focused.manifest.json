@@ -1,0 +1,116 @@
+{
+  "qualification": "Focused source/config checks and two dry runs; no deployment or live authority. Gate/review remain due.",
+  "baseHead": "bf6ffe617fb1ac6f0e14c39a6f1f93534182bc31",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-demo-register26-sync-validation",
+      "files": [
+        {
+          "path": "bindings.json",
+          "bytes": 941,
+          "sha256": "501b7780dbe22a67293f605c931c6288f456af9dab7adaeae8cf11bdc21bffc8"
+        },
+        {
+          "path": "cli-test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "config-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "config-owner.json",
+          "bytes": 1675,
+          "sha256": "a352cd866fbee5c36983887190838635f501709f49e22842d661bacea1eef6cf"
+        },
+        {
+          "path": "config-probe.json",
+          "bytes": 1549,
+          "sha256": "a3616352b645fd3743591fd97c41e33a57d07a122a8666bcb16dd9d2a8b917e5"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 5330,
+          "sha256": "2e00ceeec0639ce111c109a4e111f29cae32079262516e0c2d2343f2f2435aca"
+        },
+        {
+          "path": "dry-run-comparison.json",
+          "bytes": 2869,
+          "sha256": "c5118fa296d0157b1fb2680f476d05861bb7f57cd52e4f31ad582787d27c63b1"
+        },
+        {
+          "path": "dry-run-offer.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "dry-run-offer.stdout",
+          "bytes": 2815,
+          "sha256": "b5e92913f5b4fc0fdc61c65ea37bd102aad509a71e07e4ce708d26887829224a"
+        },
+        {
+          "path": "dry-run-synced.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "dry-run-synced.stdout",
+          "bytes": 2707,
+          "sha256": "b9fc9438fb7c116628986247ebc3949ca4d07c20f9cd498c4a4ea975d42224fb"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 10461,
+          "sha256": "ed710df065e3545e564533e62aa67bb0b5da12316596cbcbbbec2f6a83447404"
+        },
+        {
+          "path": "old-config-control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "old-config-control.json",
+          "bytes": 2976,
+          "sha256": "3604c4d554bbee9845a11336add3a9ee75d0be5f5900e47de84f7aa3d19cd900"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 451,
+          "sha256": "e3a45ab0af8ab780ae9268d54ca53f8b7a54ef759728eb367357057d5e27455f"
+        },
+        {
+          "path": "probe.mjs",
+          "bytes": 3898,
+          "sha256": "ff57f9fd6d8f30b31964a7d41c6aa46098baf270400413b00d8ba3c86cb51c3b"
+        },
+        {
+          "path": "result.json",
+          "bytes": 5695,
+          "sha256": "a7c6ae831f6563203fb9cef9f9c05356f2f8f800a20c398098da12ebe67e290d"
+        },
+        {
+          "path": "sealer.py",
+          "bytes": 6931,
+          "sha256": "da9d412f2e79086c022f935a4c55d87581da72adc88f91dfb9d1085027788a51"
+        },
+        {
+          "path": "source-continuity.json",
+          "bytes": 641,
+          "sha256": "1849069499c8a907541c77ee0d8b9287bece8fb6f25db3459a1cb5f43a6f0d48"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 729,
+          "sha256": "f00b6767874a128e2a951826422e3bce7e8ce432664162174f26eb6d3a42f7db"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1678,
+          "sha256": "aedd9fea2ab690ca6e126348357a8e6a5dd6da6a007875ca1c4b8ecd62843e71"
+        }
+      ]
+    }
+  ]
+}
