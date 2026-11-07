@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0b503af480fc337ed7d70f1f10e58b294deacbc5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m5-page-ci.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0c681b92f5b58c7182ac1a046288dee6f269b2c5","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/condition-plan.ts."}
