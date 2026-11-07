@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d50d451ecabfe69c535a33b746b2c62d2089a706","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-07-typed-core-m4.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc42b8d22edf96ffe9a6ec94f0fb6ece5bafb1f4","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/condition-value.ts."}
