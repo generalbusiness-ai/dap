@@ -3,11 +3,11 @@
  * timers are explicit stand-ins. No RPC cancellation or membership judgment
  * belongs to this component witness. */
 import { env, runInDurableObject } from "cloudflare:test";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import type { MemberId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { secretSigner } from "@generalbusiness/dap-client";
-import { McpHttp } from "../src/http.ts";
+import { McpHttp, type SessionRow } from "../src/http.ts";
 import { OAuthAccess, type OAuthAccessGrant } from "../src/oauth-access.ts";
 import { OAuthHttpLayers } from "../src/oauth-http.ts";
 import { McpService } from "../src/service.ts";
@@ -84,5 +84,61 @@ test("grant stream cancellation releases timers and a held standing refresh cann
     await retiring;
     expect(await pendingOpen).toBeNull();
     expect(order).toEqual(["closed", "opening released"]);
+  });
+});
+
+// Component boundary only: the held factory already owns restored rows. This
+// does not assert that HostedAgent's epoch fences admit this order at ingress.
+test("abrupt disposal of a held OAuth opening rejects the late layer and retains its restored session rows", async () => {
+  const stub = env.AGENTS.get(env.AGENTS.newUniqueId());
+  await runInDurableObject(stub, async (_instance, state) => {
+    const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
+    const now = Date.parse("2099-01-01T00:00:00Z");
+    const signer = secretSigner(new Uint8Array(32).fill(23));
+    const scopes = new StandIn(signer.key);
+    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+    const access = new OAuthAccess(sql, { now: () => now, agent: () => ({ state: "enrolled", membership, key: signer.key, handle: "@agent" }), charge: () => {},
+      observe: async (_membership, ask) => "key" in ask
+        ? { keyState: "active", memberState: "active", member: "@agent", controller: "@owner" }
+        : { memberState: "active" } });
+    const id = b64url(new Uint8Array(32).fill(3)), secret = b64url(new Uint8Array(32).fill(4));
+    const grant: OAuthAccessGrant = { controller: "@owner" as MemberId, resource: SERVICE + "/mcp", created: now, ends: now + 86_400_000,
+      accessIssued: now, accessExpires: now + 3_600_000, accessDigest: digestBytes(utf8(secret)) };
+    sql.exec(`INSERT INTO oauth_grant (id, row, state, created) VALUES (?, ?, 'active', ?)`, id, canonicalize(grant), now);
+    const candidate = access.inspect(id, secret, grant.resource)!;
+    expect(await access.standing(candidate)).toBe(true);
+    const layers = new OAuthHttpLayers(access, { now: () => now });
+    const service = new McpService({ service: SERVICE, signer, fetch: scopes.fetch, custody: memoryStore(), now: () => now, every: () => () => {},
+      config: { read: async () => scopes.config(), addRoot: async () => {} } });
+    // Session persistence is an explicit stand-in. HTTP owns disposal and the
+    // write/removal ordering; the grant checker above uses actual DO SQLite.
+    const row: SessionRow = { id: "TEST-late-abrupt", version: LEGACY, initialized: true, capabilities: {}, listed: null, created: now };
+    const rows = new Map([[row.id, structuredClone(row)]]);
+    const http = new McpHttp({ wire: new Wire(service), now: () => now, bodyBytes: 1024, authorized: () => true,
+      mintSession: () => "TEST-unused", remove: session => { rows.delete(session); } });
+    http.restore([row]);
+    const closing = vi.spyOn(http, "closeAll");
+    let release!: () => void, entered!: () => void;
+    const held = new Promise<void>(resolve => { release = resolve; });
+    const started = new Promise<void>(resolve => { entered = resolve; });
+    try {
+      const opening = layers.open(candidate, async () => { entered(); await held; return http; });
+      await started;
+      layers.abrupt();
+      expect(rows.has(row.id)).toBe(true);
+      release();
+      expect(await opening).toBeNull();
+      // Join only close operations production started. Calling closeAll as
+      // test cleanup here would erase the row and contaminate the observation.
+      await Promise.all(closing.mock.results.filter(result => result.type === "return").map(result => result.value));
+      expect(rows.get(row.id)).toEqual(row);
+      const refused = await http.handle(new Request(SERVICE + "/mcp", { method: "POST", headers: {
+        "mcp-protocol-version": LEGACY, "mcp-session-id": row.id,
+      }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }) }));
+      expect(refused.status).toBe(404);
+    } finally {
+      closing.mockRestore();
+      http.abrupt();
+    }
   });
 });
