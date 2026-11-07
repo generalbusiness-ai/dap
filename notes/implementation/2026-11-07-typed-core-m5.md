@@ -4,8 +4,8 @@ Status: the complete M5 source draft implements ordinary effects, attention and
 item settlement through admitted instructions. The broader focused checkpoints
 pass 366 distinct cases across 26 files. After the final capture-order repair,
 both derive compilers and all 40 cases in its three affected owners pass.
-The generated Page update, full gate, independent review, and audited landing
-remain pending. The planner owns deployment.
+The generated Page update passes its compiler and one-case asset owner. The
+Page workflow, full gate, independent review, and audited landing remain pending. The planner owns deployment.
 
 Request `053c4f4b1c42b41ca7152d60e19051bd43195d28` and promise `3a9595b1`
 own this branch. It includes the reviewed M4 and S2 landings. Parent 035 stays
@@ -132,8 +132,20 @@ module. The committed module has SHA-256
 `19e94de9b5004a2c34ff2c8c91764ddbf9b3fb09627c347f7c5df191211ebf4f`;
 the draft produces
 `d6c3744ab02e1900567eeb65dd6536ace54b9ab83fb78579e87e4c619ff75a4d`.
-The probe writes no asset. A concrete scope addendum precedes regeneration.
-The asset owner, exact-source Page workflow, and final gate remain required.
+The probe writes no asset. Scope addendum `92117542` then authorizes only
+`apps/room/page/assets.ts`. The maintained generator produces the expected
+module. The Page test compiler and complete one-case asset owner each exit 0.
+Only that generated module changes among tracked source files.
+
+The evidence wrapper later repeats a full hash scan once per path while
+assembling its receipt. I interrupt that receipt-only loop after all three
+commands finish. The wrapper exits 130; its raw traceback remains. A separate
+reconciliation verifies the existing exit files, one-case report, source
+snapshots, expected module hash, and process closure. It reruns no command.
+The [Page asset manifest](evidence/2026-11-07-m5-page-assets.manifest.json),
+SHA-256 `9028aabaa1dc3bc60cd05d61b6d7aa9c4f1da7bf2d855df082e7b49fe482a511`,
+seals 26 files with both the interruption and reconciliation. The Page workflow
+and final gate still remain.
 
 Production declaration bytes, digests, profiles, bounds, Native pins and grants,
 wire, dependency manifests, persistence, authority, application APIs, and

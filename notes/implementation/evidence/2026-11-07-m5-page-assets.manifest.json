@@ -1,0 +1,161 @@
+{
+  "request": "053c4f4b1c42b41ca7152d60e19051bd43195d28",
+  "promise": "3a9595b12fe9e6d5800c519682297842399ed93d",
+  "sourceHead": "05b70e8f18360afe4cae0662066216d30818c0e1",
+  "scopeAddendum": "921175426efc575aa62dce1d4fcea3fe5a8fad7b",
+  "compilerExit": 0,
+  "generatorExit": 0,
+  "ownerExit": 0,
+  "ownerCasesPassed": 1,
+  "wrapperExit": 130,
+  "wrapperFailure": "Owned receipt-only loop interrupted after all command checks; it recomputed a full source snapshot for every path.",
+  "reconciliation": "This script computes one current snapshot, verifies the retained pre/post snapshots and actual reports, and reruns no compiler, generator or test.",
+  "trackedChanges": [
+    "apps/room/page/assets.ts"
+  ],
+  "assetBefore": "19e94de9b5004a2c34ff2c8c91764ddbf9b3fb09627c347f7c5df191211ebf4f",
+  "assetAfter": "d6c3744ab02e1900567eeb65dd6536ace54b9ab83fb78579e87e4c619ff75a4d",
+  "assetMatchesReadProbe": true,
+  "sourceUnchangedDuringOwner": true,
+  "ownedWrapperClosed": true,
+  "timingQualification": "Per-command wall durations lived only in the interrupted wrapper memory and are not reconstructed.",
+  "originalResultStillAbsent": true,
+  "fileCount": 26,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m5-page-assets",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2154,
+          "sha256": "785f845d6a8bd0646e8da7e47ce199639ceaba3b50e37a5a6c9b80ee7ea6baca"
+        },
+        {
+          "path": "after.json",
+          "bytes": 526558,
+          "sha256": "206b5746948e5eefa48b58b3e32047637d1a241af0417ff960e5a15506a961cb"
+        },
+        {
+          "path": "aliases.json",
+          "bytes": 1487,
+          "sha256": "5becae52ea28eea6e696a5dba0adab9455fd96fce0143fd07e20b1e6f06004b4"
+        },
+        {
+          "path": "artroom-m5-page-asset-addendum-20261107.receipt",
+          "bytes": 100,
+          "sha256": "83eac09170fbc06daf913b3f0ac4c3d504a9daaf48f42a342fa4939d18638ee1"
+        },
+        {
+          "path": "artroom-m5-page-asset-addendum-20261107.txt",
+          "bytes": 1466,
+          "sha256": "89e097dc9e886f7a3554e4c76fb131b094e8e4b0b537b79d58930502590ca320"
+        },
+        {
+          "path": "artroom-m5-page-generate-20261107.py",
+          "bytes": 3283,
+          "sha256": "84d07d35d8b11b868140f0dba9b82ee7bee6d6e9522d8a0ce53ba3d008d1f33f"
+        },
+        {
+          "path": "artroom-m5-reconcile-page-20261107.py",
+          "bytes": 2319,
+          "sha256": "82b6fd49fa34e6e5fb3b14942afdaa65d0d7c11a9e3e5fdf264c4d7ecfb3fddd"
+        },
+        {
+          "path": "artroom-m5-seal-page-20261107.py",
+          "bytes": 2435,
+          "sha256": "dcce3168b75036f3418f93b2f89780f7d7331700d281a2889731cdffdcedd5d7"
+        },
+        {
+          "path": "before.json",
+          "bytes": 526558,
+          "sha256": "76522e4c7b4a0e6e56ab8ce24cac5aba042b26399a84b233b700e887cad8de22"
+        },
+        {
+          "path": "build.argv.json",
+          "bytes": 177,
+          "sha256": "56165efed4094adae1eff6d3d2eba757ac2bd69ffaf03a1d2d37d70edcc4fdde"
+        },
+        {
+          "path": "build.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "build.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "build.stdout",
+          "bytes": 135,
+          "sha256": "8805ba23df35845a43c4f657f96bc84b5c081736387b57e89ca163ccef1b4afd"
+        },
+        {
+          "path": "compiler.argv.json",
+          "bytes": 221,
+          "sha256": "ff67351957ca97ff7c75281a06c64a3e0c6cb10a98be4ce9360c0987a51e5da7"
+        },
+        {
+          "path": "compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "owner.argv.json",
+          "bytes": 333,
+          "sha256": "39ecba04ac89b41cae10e1dff80a500420abb6c751e5397d9284c6d47bba84b9"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.json",
+          "bytes": 1116,
+          "sha256": "85d383b5b89a32369c9f1bfc3defb2dd86b65fe04dfa56d8efcadf61c9459e29"
+        },
+        {
+          "path": "owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "owner.stdout",
+          "bytes": 81,
+          "sha256": "b3e8aaba5c55076b3c2ec9f6f3e95771a3be7d9e652551a060c069327e7016bd"
+        },
+        {
+          "path": "qualification.txt",
+          "bytes": 549,
+          "sha256": "dbfe3023e8282b56a7a2d033864c0cedb1bb300934959e0917b11c07ee3381ba"
+        },
+        {
+          "path": "receipt-loop-interruption.json",
+          "bytes": 503,
+          "sha256": "e2665c1da2d9956f0bb0148987a5122a8c8e8dd9e0c296ad0fa44aa6851f8392"
+        },
+        {
+          "path": "reconciled.json",
+          "bytes": 1034,
+          "sha256": "62ab26b0a55600966684ce9f7c8290941460a688cad36cabccfb9b3dc6386d0f"
+        },
+        {
+          "path": "wrapper-terminal.txt",
+          "bytes": 2937,
+          "sha256": "ae30758aa864c669dee95f101d8bbfe4644d607472e444792c827462b7c7721f"
+        }
+      ]
+    }
+  ]
+}
