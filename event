@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/cli/test/demo-config.test.ts","body":{"commit":"9d96cf25ec4ee8d1f586e32569011bd17c08a6de","path":"packages/cli/test/demo-config.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2df0e718fe69d5908dc8d7290025a0da3872e0d0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-demo-register26-sync-focused.manifest.json."}
