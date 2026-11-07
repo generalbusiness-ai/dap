@@ -31,8 +31,9 @@ authority landing `a4e62771` and the packet landing `26fc8e0b`. The packet's
 | Install | `7c33b0cdb438bc0eb15d3cb474c52b13d44b1c164868bfcc0c5f83b480498175` | `5ce6ac72-c63f-421c-8866-d57eee8d8de3` |
 | Offer | `14fb81a152cf646867ddcd9a3ddfab83e816f8c5fe054f4e1f6ce83983e0bca6` | `ab0f3784-5a7d-45e2-b4d4-00f33a595eaf` |
 
-The offer configuration differs from the checked-in file in four settings and
-in `main`, which names the checkout's absolute `apps/room/worker.ts`:
+The offer configuration differs from the checked-in file at `93c1600b` in four
+settings and in `main`, which names the checkout's absolute
+`apps/room/worker.ts`:
 
 | Setting | Value |
 |---|---|
@@ -160,11 +161,11 @@ No clone in this record crossed the one-hour boundary.
 - The builder's tool first refused the old-room run with an existing
   member's home (`5cbb2dad`), until Hugh approved the exact run.
 
-## Open limits
+## Limits after the record
 
-- `apps/room/wrangler.demo.jsonc` still selects Register 17 only. A deploy
-  from it would make dap-demo single-root again. Until a reviewed head syncs
-  it with the offer configuration above, the planner deploys dap-demo only
-  from the rendered offer configuration.
-- `token-clone.mjs` in the packet still asserts the Worker host.
+- Config sync `4d262a0d` landed on main `9d96cf25` on 7 November at 10:53.
+  It brings `apps/room/wrangler.demo.jsonc` into line with the offer
+  configuration and corrects the host assertions in the packet's
+  `token-clone.mjs`. From `9d96cf25` on, the planner deploys dap-demo from the
+  checked-in file.
 - dap-grow keeps its register. Its archive bridge still checks one root.
