@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "qualification": "Supplemental exact-head documentation preflight after the passing M4 source gate. Source and tests unchanged. No project test or gate rerun.",
+  "head": "886d147f76a5a415f2d92d7e846450af557fcfb0",
+  "tree": "57957b2ecda420e42076342072531e67495c3576",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-final-documentation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1042,
+          "sha256": "9a49fc1641859c0aef61c7f91923a231eb7aaabed78fa2fa9b1e42ddf4ff7ad7"
+        },
+        {
+          "path": "links.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "links.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "links.stdout",
+          "bytes": 36,
+          "sha256": "6f5a27f656a8f0182109521cc547b7ca02b53de6c56159bf0c29bc43d8f14429"
+        },
+        {
+          "path": "messages.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "messages.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "messages.stdout",
+          "bytes": 39,
+          "sha256": "0c02ad02d54c25fb073c77789fb69f497b27d00838fc72d0fab945eeb4d4036c"
+        },
+        {
+          "path": "notes.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "notes.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "notes.stdout",
+          "bytes": 18,
+          "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1550,
+          "sha256": "fb88c6c5891daf17fe6b7b95de22bfe160736d55aac4fa47569ce1d51127b10e"
+        },
+        {
+          "path": "whitespace.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "whitespace.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "whitespace.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ]
+}

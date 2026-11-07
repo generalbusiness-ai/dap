@@ -1,0 +1,118 @@
+{
+  "manifests": 22,
+  "uniquePublicFiles": 581,
+  "publicUnits": 38,
+  "allSizesHashesAndReadOnlyVerified": true,
+  "rows": [
+    {
+      "path": "notes/implementation/evidence/2026-11-06-m4-bindings.manifest.json",
+      "sha256": "55d8a708c51809da1ce05886a50f2e286d6d67a94f14099ed8fc0c1101477a6c",
+      "fileEntries": 29
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-06-m4-context.manifest.json",
+      "sha256": "c432ce560ec0b323991f6f4167c0a0ce6ba08868ec2b1379bb62c90b3cab733a",
+      "fileEntries": 29
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-06-m4-copy-after-refusal.manifest.json",
+      "sha256": "ee2aeb91ca6675a23d4fbdd5bdb835aada9f9eca73d350e1fd9bd62b3425f1cc",
+      "fileEntries": 34
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-06-m4-guard-capture.manifest.json",
+      "sha256": "8a12014916752135a33dd9abf433d7cd55d5eb690a2c5c9b0acebde3df9e10fd",
+      "fileEntries": 16
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-06-m4-guard-value.manifest.json",
+      "sha256": "810544a803ff50fb5de8332df88dd1bbe389854489a683329dcabe5480f3e5cb",
+      "fileEntries": 69
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-06-m4-read-value.manifest.json",
+      "sha256": "0b8aca8ecc8562f592e09bee4c71db70cad84e8d75bff3ad08b0a92dac981aef",
+      "fileEntries": 48
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-archive-clock-observation.manifest.json",
+      "sha256": "5cc335cc36e53b7b36159a15d861bbe95302f5d4234d256bd15fa5829f53a78c",
+      "fileEntries": 8
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-archive-main-baseline.manifest.json",
+      "sha256": "57d79fc9fc374f430245b21613f19671fcd9a4f432f117da8603406c0cc98f3d",
+      "fileEntries": 11
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-archive-paired.manifest.json",
+      "sha256": "698079a92c90c40c957180c6c6c9d8402cf95cdbd4f517515d2bd6459fdd015f",
+      "fileEntries": 14
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-archive-probes.manifest.json",
+      "sha256": "3707376e9c9f15ef5f57e44dc992a0dc5830ecef37df742cfa2911ceb705454c",
+      "fileEntries": 13
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-archive-stop-only.manifest.json",
+      "sha256": "17d5fa28d3cc23d5c7d0344c593ad1da843e622475535a962a43f360d5ce6a65",
+      "fileEntries": 15
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-caller-bindings.manifest.json",
+      "sha256": "46b50164fcd93ffb6103d5449ca759537f1b529c1ab2db608265ba8ee1c35641",
+      "fileEntries": 15
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-caller-cutover.manifest.json",
+      "sha256": "2002236ebd33967ea77826740a008a1f0f0479880d6f4f92b94454b5b6f429bd",
+      "fileEntries": 108
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-failed-followup.manifest.json",
+      "sha256": "6b4c17d0744ca7ba65ca50f0a4c0fa683218726f7d1069bc8fcbe2e0431808bf",
+      "fileEntries": 20
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-failed-gate-2.manifest.json",
+      "sha256": "d02b8c090685039f17a6674222fab3432be33967d476758ec3342c0d95cc1e4a",
+      "fileEntries": 14
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-failed-gate.manifest.json",
+      "sha256": "2e3f4edc45933a42a53f8ef62f9dc7753c16f7c3110ee112125db2e72a0145a7",
+      "fileEntries": 12
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-ifpresent-projection.manifest.json",
+      "sha256": "cf0d88a605c90ef60ee5c2f5ad3c962b531c3de4e1032e54373d44c3a101f7d1",
+      "fileEntries": 55
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-page-assets.manifest.json",
+      "sha256": "1b07e3861f6dfe9bb5742aa59d2b948963a64685c4dd3407ec7025939641d5dd",
+      "fileEntries": 9
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-page-ci.manifest.json",
+      "sha256": "986dbbef79c1c5ab598e3c8e34262d0a40ddb9d9d28a7eb143fa34120ece7a2e",
+      "fileEntries": 9
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-range-uses.manifest.json",
+      "sha256": "f0ee3590d6ee6df980884529cf4cb3e51cf6edb6cc3d471218cc36bfa0af6c94",
+      "fileEntries": 31
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-repaired-gate.manifest.json",
+      "sha256": "bf2e73ea04065fbd28416b763c3cac8b592dac2942eafc18a780a5acaa4809b1",
+      "fileEntries": 15
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-07-m4-test-repairs.manifest.json",
+      "sha256": "37a214112c54f6e223dd5300d5f9c025d7868bb3362b14afa6c2762462a61756",
+      "fileEntries": 7
+    }
+  ]
+}
