@@ -1,7 +1,7 @@
 # Observation connection and refresh ownership
 
-Status: S2 implementation and focused checks complete. The full gate, Page
-browser workflow, independent review, and landing remain pending.
+Status: the full gate and Page browser workflow pass. Independent review
+and landing remain pending.
 Request `839eaad1948b6e5bf4150a22a59f80232b7e7cd5` and promise `c5204968`
 own this head. Parallel order `0d6d0fba` permits its start. The branch includes
 the reviewed M4 landing `8d9080f3`.
@@ -72,3 +72,53 @@ The [focused manifest](evidence/2026-11-07-s2-focused.manifest.json), SHA-256
 seals 93 read-only files. It records the checked source hashes, command output,
 compiler exits, complete owner reports, original-source characterization,
 assertion-failing control, restoration, and startup qualifications.
+
+
+## The frozen source passes the full gate
+
+The gate ran once at `39b996b9ac962720cedf6e8cd14f10c42fa16c53`, tree
+`c72bec3dcd58a685600bfbe0f6a64b872b78467d`. Its actual `gate.exit` reads
+`exit 0`. The before and after snapshots match, and no owned process remains.
+The dependency lock stamp matches the checked-in lockfile. No package installed.
+
+| Phase | Terminal result |
+|---|---|
+| Node | 135 pass. |
+| Counter | 56 pass. |
+| Plain | 4,004 pass, 1 skip. |
+| Native | 1,111 pass, 2 skips. |
+
+Every test phase completes. The report finds no contradictory record, report
+error, or unhandled Vitest error. Detailed callback records remain observations;
+the final framework records determine completeness. A skipped record module
+has no reported duration. The evidence leaves that duration absent.
+
+The timing command reports 1,255.36 seconds elapsed, 2,393.23 user, and 306.04
+system. The separate Python monotonic interval is 1,255.442 seconds. The run
+spans 18:44:01–19:04:57 UTC on 7 November. These measurements describe this run,
+and establish no performance improvement or cause for an earlier failure.
+
+The [gate manifest](evidence/2026-11-07-s2-gate.manifest.json), SHA-256
+`7844c6e32200698b2b9818557e55ca7b105b5c47f4a7595a4c34160c4d475358`,
+seals 15 public metadata files and records retention of all 2,299 raw files.
+The raw unit has no symlinks. A PATH wrapper places only bare `mktemp -d`
+output under that durable unit. The gate commands, deadlines, and pass conditions
+stay unchanged.
+
+The archive owner passes in this gate. Historical archive request `64552d40`
+stays open. This result establishes no cause for its earlier failures.
+
+## Page browser CI passes at the same source
+
+[Page browser run 42402655252](https://github.com/generalbusiness-ai/dap/actions/runs/42402655252)
+succeeds at `39b996b9ac962720cedf6e8cd14f10c42fa16c53`. It runs the screenshots,
+recorded demo captures, create-room witness, and local-label witness. The
+[CI manifest](evidence/2026-11-07-s2-page-ci.manifest.json), SHA-256
+`ae37dcdf6370a55fb6270c8c63cdff0845233b520f4964e614fa44bff270bc1a`,
+seals five files with the completed workflow metadata, workflow bytes, and
+exact source-tree inventory.
+
+After the source gate and CI run, the branch changes only this note and the
+two result manifests. Source, tests, the generated bundle, dependencies, and
+workflow inputs remain unchanged. The review request records both tree hashes.
+The planner owns deployment after review and landing.

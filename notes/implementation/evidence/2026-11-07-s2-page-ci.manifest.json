@@ -1,0 +1,39 @@
+{
+  "scope": "S2 actual successful Page browser workflow metadata and source tree; no rerun.",
+  "sourceHead": "39b996b9ac962720cedf6e8cd14f10c42fa16c53",
+  "sourceTree": "c72bec3dcd58a685600bfbe0f6a64b872b78467d",
+  "fileCount": 5,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s2-page-ci",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 315,
+          "sha256": "4cf0febbd1e24a0ae72a50f51c5deac0a08cd8c41205ea4bc47cf4eee257c368"
+        },
+        {
+          "path": "result.json",
+          "bytes": 502,
+          "sha256": "8ac9f2a50713642f9ba25fe6c0da771b5c1fc65afa1213a85854c2c86c1824f6"
+        },
+        {
+          "path": "run.json",
+          "bytes": 3766,
+          "sha256": "5e8803804641b44a3691e1d6fba37a18601a69318fa9e9d36355f442d9cd17e4"
+        },
+        {
+          "path": "tracked-tree.txt",
+          "bytes": 441967,
+          "sha256": "17e6964ae69da3376318b14000e3cf73e44b03c9e03a8e04b2491cbb94abee9f"
+        },
+        {
+          "path": "workflow.yml",
+          "bytes": 2855,
+          "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+        }
+      ]
+    }
+  ]
+}
