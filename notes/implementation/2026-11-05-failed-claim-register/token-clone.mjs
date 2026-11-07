@@ -27,7 +27,7 @@ if (process.argv[2] === "--help") {
     let captured = false;
     const ctx = { store, git: { ...git, archiveRun: async (args, env) => {
       if (!captured) {
-        assert.ok(args[0] === "clone" && args[1] === "--" && args[2]?.startsWith("https://dap-demo.inguz.workers.dev/git/"), "clone only this Worker's scratch repository");
+        assert.ok(args[0] === "clone" && args[1] === "--" && args[2]?.startsWith("https://6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net/git/dap-demo/"), "clone only this Worker's scratch repository");
         assert.deepEqual(Object.keys(env).sort(), ["GIT_CONFIG_COUNT", "GIT_CONFIG_KEY_0", "GIT_CONFIG_VALUE_0"]);
         assert.equal(env.GIT_CONFIG_COUNT, "1");
         assert.equal(env.GIT_CONFIG_KEY_0, "http.extraHeader");
@@ -55,7 +55,7 @@ if (process.argv[2] === "--help") {
     assert.equal(prior.actualCliExit, 0, "the earlier real clone and archive fetch must both succeed");
     assert.ok(prior.captured && prior.calls.length === 2 && prior.calls.every(call => call.exitCode === 0));
     assert.ok(typeof prior.ends === "string" && Number.isFinite(Date.parse(prior.ends)) && Date.now() >= Date.parse(prior.ends) + 2000, "the actual recorded token hour has not ended");
-    assert.ok(typeof prior.remote === "string" && prior.remote.startsWith("https://dap-demo.inguz.workers.dev/git/"));
+    assert.ok(typeof prior.remote === "string" && prior.remote.startsWith("https://6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net/git/dap-demo/"));
     const env = JSON.parse(await readFile(custody, "utf8")), startedUtc = new Date().toISOString();
     const code = await git.archiveRun(["clone", "--", prior.remote, destination], env);
     const record = { phase, startedUtc, endedUtc: new Date().toISOString(), tokenEnds: prior.ends, actualGitExit: code,

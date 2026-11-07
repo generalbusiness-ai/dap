@@ -1,15 +1,22 @@
-# Deploy the failed-claim register on dap-demo
+# Historical packet: dap-demo Register 26 switch
 
-Status: revised after host source landing
-`a4e62771c3dc8547b0e0065761df71799242bff6`, approval `dde2c6de` and
-receipt `168243a0`. This revised packet still needs independent exact-head
-review and landing before the planner runs it.
+Status: historical procedure for the switch on 6 November 2026. The planner
+completed that switch with this packet's reviewed source and rendered offer
+configuration. The checked-in `apps/room/wrangler.demo.jsonc` now selects
+Register 26 and retains Register 17. The renderer still pins the old file's
+SHA-256 in `packet.json`; it deliberately refuses the synchronized file.
+Do not refresh that historical digest or rerun this installation procedure.
 
-The planner runs this procedure after request
-`c448c870cf6a2f93a30c285a1a4d4a6c9f4bd8ad` passes review and lands.
-The builder creates no live register or room and deploys nothing in this packet.
-Keep parent `8a8902f3e9ad526371cb0a73db4117bc0197cd60` open until its actual
-hosted acceptance record lands.
+The rollback commands below apply only to the 6 November switch and its
+retained source. From the synchronized configuration, a runtime rollback
+must preserve the current Register 26 selector, its exact Page offer, and
+both installed roots. Keep the bindings, namespace, secrets, and serving
+limits. A rollback must never remove either root. A later selector change
+needs its own reviewed plan and continuity checks.
+
+This source synchronization records no deployment or parent acceptance.
+The planner deploys, and parent `8a8902f3` stays open until the reviewed live
+record lands and the planner rules on acceptance.
 
 ## Scope: demo only
 
@@ -18,7 +25,7 @@ Do not use this packet to switch `dap-grow` to another register.
 `packages/scope/src/archive-host-item.ts`, through `apps/room/archive.ts`,
 still checks one configured root. Fix and review that bridge before any
 Grow register switch. This retained packet changes only `dap-demo` and
-still waits for its new packet review.
+is retained here as the historical demo switch procedure.
 
 ## Prepare before the fourteen-minute window
 
@@ -255,7 +262,7 @@ a fresh `dap clone` starts again. This packet does not prove the behavior of a
 download already underway across expiry, nor does it claim that such a clone
 has crossed a real one-hour token boundary.
 
-## Roll back without discarding a root
+## Historical rollback for the 6 November switch
 
 Stop new TEST work and keep the original plan, acknowledgements, private homes,
 configs, tokens, and outputs. Render the reviewed rollback with the same

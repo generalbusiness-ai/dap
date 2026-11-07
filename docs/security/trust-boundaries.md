@@ -224,7 +224,7 @@ The operator sets `SESSION_SECRET` and `DEPLOYMENT`. The file does not list bind
 
 ## dap-demo
 
-[`apps/room/wrangler.demo.jsonc`](../../apps/room/wrangler.demo.jsonc) uses the ordinary room entry with local `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It sets the index to `enforce`. It pins the Start origin, the register 17 reference, and the register in `REGISTER_SCOPE` and `ARTIFACTS_CONFIG`.
+[`apps/room/wrangler.demo.jsonc`](../../apps/room/wrangler.demo.jsonc) uses the ordinary room entry with local `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It sets the index to `enforce`. It pins the Start origin and Register 26 reference, selects Register 26 in `REGISTER_SCOPE` and `ARTIFACTS_CONFIG`, and lists both Register 17 and Register 26 in `INSTALLED_REGISTER_SCOPES`.
 
 Its Artifacts namespace is `dap-demo`. It shares dataset `artroom_metrics_v1` with `artroom-scope` and `dap-grow`, but declares no application content bucket. `APPLICATION_TRUST` lists one release, publisher and host. Without the `APPLICATION_CONTENT` binding, the Worker stores and serves no package for that release. `APPLICATION_SCREEN_HOSTS` is empty. The file sets no MCP opt-in variable.
 
