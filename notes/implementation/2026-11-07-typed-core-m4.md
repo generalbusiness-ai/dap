@@ -124,3 +124,38 @@ validator's original capability refusal. The repair defers that copy until
 final admission. The [admission repair evidence](evidence/2026-11-06-m4-copy-after-refusal.manifest.json)
 retains the failing assertion, the exact refusal, both passing compilers,
 and the passing structural, concrete-guard, and capability owners.
+
+## The corrected gate stops on an archive prefix
+
+The fresh full gate at `00ffedf892`, tree
+`dd3e21070ed28fa1d5c6007fce40be09737b8f82`, also exits 1. Its actual
+`gate.exit` records that result. Kernel and all pre-test checks pass.
+Node passes 135 cases, Counting passes 56, and Plain passes 4,002 with
+one skip. Native passes 1,110, fails one, and skips two. Both repaired
+fixture owners pass in this run. The source stays unchanged and the
+owned process group closes. The reporters record no contradictions or
+unhandled Vitest errors.
+
+The failing case is the 30,000-entry archive-floor writer in
+`packages/scope/test/floor-archive.test.ts`. It stops during prefix
+confirmation, before writing a floor. Alarm 252 confirms position 5,308.
+Alarm 253 retains that position, with mint and send counts unchanged at
+253. The diagnostic reports `plan`, `retry`, and `unavailable`. It records
+no pending pass, capacity refusal, or source failure. Its attribution and
+finish geometry are incomplete. Those scalar records do not identify a
+causal stop site.
+
+The same unchanged case passed in the earlier Native follow-up under
+identical production source. That pass does not explain this failure.
+Existing archive request `64552d40`, promise `4903fa50`, requires a causal
+retry diagnosis and forbids repeated full gates to chase it. This is a
+different owner and position from its original 14,601 observation. Neither
+that original cause nor this one is proven. M4 remains unreviewed and
+unlanded while the investigation continues. The investigation retains every assertion, deadline, allowance, and cache
+charge. Archive source stays unchanged.
+
+The [failed corrected gate manifest](evidence/2026-11-07-m4-failed-gate-2.manifest.json),
+SHA-256 `d02b8c090685039f17a6674222fab3432be33967d476758ec3342c0d95cc1e4a`, seals the terminal phase results and the exact
+bounded diagnostic around the failed confirmation. Raw synthetic custody
+remains private. This failed run does not support an acceptance or
+deployment claim.
