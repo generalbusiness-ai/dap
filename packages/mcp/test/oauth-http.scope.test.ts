@@ -48,7 +48,7 @@ test("grant stream cancellation releases timers and a held standing refresh cann
     const http = await layers.open(candidate, async layer => {
       const result = new McpHttp({ wire: new Wire(service), now: () => now, bodyBytes: 1024 * 1024,
         authorized: () => true, mintSession: () => "TEST-session", lifetime: { get expires() { return layer.deadline; }, schedule },
-        streamsChanged: () => layers.watch(candidate) });
+        streamsChanged: () => layers.watch(candidate) }, layer.generation);
       result.restore([{ id: "TEST-session", version: LEGACY, initialized: true, capabilities: {}, listed: null, created: start }]);
       return result;
     });
@@ -74,8 +74,10 @@ test("grant stream cancellation releases timers and a held standing refresh cann
     expect(await access.standing(candidate, true)).toBe(true);
     let releaseOpening!: () => void;
     const heldOpening = new Promise<void>(resolve => { releaseOpening = resolve; });
-    const lateHttp = new McpHttp({ wire: new Wire(service), now: () => now, bodyBytes: 1024, authorized: () => true, mintSession: () => "TEST-late-session" });
-    const pendingOpen = layers.open(candidate, async () => { await heldOpening; return lateHttp; });
+    const pendingOpen = layers.open(candidate, async layer => {
+      const lateHttp = new McpHttp({ wire: new Wire(service), now: () => now, bodyBytes: 1024, authorized: () => true, mintSession: () => "TEST-late-session" }, layer.generation);
+      await heldOpening; return lateHttp;
+    });
     const order: string[] = [];
     const retiring = layers.closeGrant(id, true).then(() => { order.push("closed"); });
     // Explicit TEST scheduler event: release the held load on the next turn.
@@ -114,30 +116,37 @@ test("abrupt disposal of a held OAuth opening rejects the late layer and retains
     // write/removal ordering; the grant checker above uses actual DO SQLite.
     const row: SessionRow = { id: "TEST-late-abrupt", version: LEGACY, initialized: true, capabilities: {}, listed: null, created: now };
     const rows = new Map([[row.id, structuredClone(row)]]);
-    const http = new McpHttp({ wire: new Wire(service), now: () => now, bodyBytes: 1024, authorized: () => true,
-      mintSession: () => "TEST-unused", remove: session => { rows.delete(session); } });
-    http.restore([row]);
-    const closing = vi.spyOn(http, "closeAll");
+    let http!: McpHttp;
+    let closeResults: () => Promise<void>[] = () => [];
+    let restoreClosingSpy: () => void = () => {};
     let release!: () => void, entered!: () => void;
     const held = new Promise<void>(resolve => { release = resolve; });
     const started = new Promise<void>(resolve => { entered = resolve; });
     try {
-      const opening = layers.open(candidate, async () => { entered(); await held; return http; });
+      const opening = layers.open(candidate, async layer => {
+        http = new McpHttp({ wire: new Wire(service), now: () => now, bodyBytes: 1024, authorized: () => true,
+          mintSession: () => "TEST-unused", remove: session => { rows.delete(session); } }, layer.generation);
+        http.restore([row]);
+        const closing = vi.spyOn(layer.generation, "graceful");
+        closeResults = () => closing.mock.results.filter(result => result.type === "return").map(result => result.value);
+        restoreClosingSpy = () => closing.mockRestore();
+        entered(); await held; return http;
+      });
       await started;
       layers.abrupt();
       expect(rows.has(row.id)).toBe(true);
       release();
       expect(await opening).toBeNull();
-      // Join only close operations production started. Calling closeAll as
+      // Join only owner close operations production started. Calling closeAll as
       // test cleanup here would erase the row and contaminate the observation.
-      await Promise.all(closing.mock.results.filter(result => result.type === "return").map(result => result.value));
+      await Promise.all(closeResults());
       expect(rows.get(row.id)).toEqual(row);
       const refused = await http.handle(new Request(SERVICE + "/mcp", { method: "POST", headers: {
         "mcp-protocol-version": LEGACY, "mcp-session-id": row.id,
       }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }) }));
       expect(refused.status).toBe(404);
     } finally {
-      closing.mockRestore();
+      restoreClosingSpy();
       http.abrupt();
     }
   });
