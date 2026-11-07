@@ -19,8 +19,14 @@ directory and give it the absolute path of the file:
 ```sh
 DAP_REPO=/absolute/path/to/the-reviewed-checkout
 cd "$(mktemp -d)"
-npx -y wrangler@4.147.0 deploy --keep-vars --config "$DAP_REPO/apps/room/wrangler.demo.jsonc"
+npx -y wrangler@4.147.0 deploy --keep-vars --config "$DAP_REPO/apps/room/wrangler.grow.jsonc"
 ```
+
+`apps/room/wrangler.demo.jsonc` still selects Register 17 only, and dap-demo
+now serves Register 26 with both roots installed. Deploy dap-demo only from
+the offer configuration in the
+[Register 26 live record](../notes/implementation/2026-11-07-demo-register-26-live-record.md)
+until a reviewed head brings the checked-in file up to date.
 
 Repeat the Worker's reviewed `--var` overrides on the same command. A value
 in the file or in `--var` needs review, because it replaces what the Worker
@@ -117,7 +123,8 @@ does not govern this path or revive the retired demo-offer route. Keep the
 existing `dap-demo`, `dap-grow` and `dap-lending` registers, and leave
 `ALLOW_OPEN_CREATION` unset. Commons rooms use this Worker until the
 [register succession design](../notes/2026-10-22-definition-succession.md)
-lands. Rooms on `dap-demo` stay on its Register 17.
+lands. Existing rooms on `dap-demo` stay on Register 17, and new rooms there
+use Register 26.
 
 ## Roll out new creation versions
 

@@ -1,0 +1,305 @@
+{
+  "version": 1,
+  "qualification": "The dap-demo switch to Register 26 on 6 November and its scratch-room and token scenes on 7 November: actual outputs, config digests, observer copies, the paired expired-credential probe and later read-only room reads. Credential bytes, member homes and rendered configs stay private. No Grow or Lending register change, live replay, or crossed-boundary clone.",
+  "fileCount": 56,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-demo-register-cutover",
+      "fileCount": 39,
+      "files": [
+        {
+          "path": "00-census.stdout",
+          "bytes": 141,
+          "sha256": "a1e2ea02868f6e24f2a802d191c78ba5e7e46e830255f6172a37d3f32feccb2e"
+        },
+        {
+          "path": "01-grow-lending.time",
+          "bytes": 29,
+          "sha256": "aac355a77708f52e6020ec48e9613b9251a9e0b9eb620246ca1f2a82a013b0e2"
+        },
+        {
+          "path": "01-grow.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "01-grow.stdout",
+          "bytes": 2980,
+          "sha256": "a964375b680a2d62fa5ac576254d1022ac350ab1568cb14d73331c6b1e1164f6"
+        },
+        {
+          "path": "01-lending.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "01-lending.stdout",
+          "bytes": 2260,
+          "sha256": "d51ade96cbd3284a687cc30e3ac6863a8e7aa6538e9f1a12b857fecc1be72049"
+        },
+        {
+          "path": "03-install-config.sha256",
+          "bytes": 139,
+          "sha256": "d2b992cedfc8088464dfe84b6293224f1e9d102e16b5ad21051d3477c437548d"
+        },
+        {
+          "path": "05-install.stdout",
+          "bytes": 232,
+          "sha256": "4c80ca993b747c33fac615b9a8f4b6d4a1cfe39dbf4cd4d531404379fe7a5e0d"
+        },
+        {
+          "path": "06-offer-config.sha256",
+          "bytes": 137,
+          "sha256": "b109ccc5cbad303654c89d7b98830433b313897f35452fa7468ea0d1449f7124"
+        },
+        {
+          "path": "06-render.stderr",
+          "bytes": 191,
+          "sha256": "888b84058cc3a73175ce42ff147633dcdf0fa3e68c4198c3321ee90927ae3fcf"
+        },
+        {
+          "path": "06-render.stdout",
+          "bytes": 1160,
+          "sha256": "f45ed7d34ce995aafe75d216acc35ef0fe334151122b6f5bffc4f7d6c5ae8cf6"
+        },
+        {
+          "path": "07-deploy-offer.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "07-deploy-offer.stdout",
+          "bytes": 2980,
+          "sha256": "acaaa36eeea6b7b2ba4f7a8d014ec6055c954f29b006490787ccde9afe5cc13d"
+        },
+        {
+          "path": "08-checks.txt",
+          "bytes": 1064,
+          "sha256": "55a86a82b7f5ead3fd3531d30b99c7123ca69f9c37b5d3b85c3193b9573366fe"
+        },
+        {
+          "path": "09-site.body",
+          "bytes": 2111,
+          "sha256": "f536e5548e2a6b2d6f6587816c2c344fab8191c49423635ef427b5a246a0b5a8"
+        },
+        {
+          "path": "09-site.headers",
+          "bytes": 908,
+          "sha256": "9a8ede195133cfcaa6088694084b4b1b55c69415eb3b08414f96be9d299c61ac"
+        },
+        {
+          "path": "09-site.time",
+          "bytes": 21,
+          "sha256": "1ffebad7475f6480591f013dddc3540c005b620053fede230a5ed08039ecaf35"
+        },
+        {
+          "path": "10-create.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "10-create.stdout",
+          "bytes": 603,
+          "sha256": "74af7a69badf64f7e6f8ddaa7fec2b0602620c6b928a1166694bc983f30934a1"
+        },
+        {
+          "path": "11-before.stderr",
+          "bytes": 1171,
+          "sha256": "77b121a1ea4fbd9c7c0900971ab9b26bcd88c1503f031c4ec2e1c93b3b4dc392"
+        },
+        {
+          "path": "11-before.stdout",
+          "bytes": 35,
+          "sha256": "2aa6da9ca331dc6de6fe72460146b9d1ebc22c8df24f3eb2a4c4f7c3c41b93ca"
+        },
+        {
+          "path": "12-before.json",
+          "bytes": 1927,
+          "sha256": "22bbd4ca30a1f035de6587b99bddcc2d318c383c145c2b740b2385269dd43558"
+        },
+        {
+          "path": "12-before.stderr",
+          "bytes": 191,
+          "sha256": "56524a187b2c6deec709f404a2b258b535cfb975998a042e67b6bcee16e3a7ce"
+        },
+        {
+          "path": "12-before.stdout",
+          "bytes": 1694,
+          "sha256": "f28af692967c37c0a463287876b92a90b0d2eb269018913d3dd6c62a5f9de9a2"
+        },
+        {
+          "path": "13-replay.json",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "13-replay.stderr",
+          "bytes": 61,
+          "sha256": "e2443aacf7ce13b3f04ac57ec5a28e5d99753d1142143c61172f86d0bac7e85f"
+        },
+        {
+          "path": "14-digest-check.txt",
+          "bytes": 100,
+          "sha256": "d3be997631d2a44298e9b1ef7dbda60b3b02853d9099a1a428b97bf5e2e2ddb5"
+        },
+        {
+          "path": "15-after.json",
+          "bytes": 420,
+          "sha256": "15a5bfed81030f07aaba80b31f9157ba1c00445360cd72cfd024722d97578687"
+        },
+        {
+          "path": "15-after.stderr",
+          "bytes": 191,
+          "sha256": "e04d58fb9f22ab472b4e0ce9585dfb5b6101734c9caad104e8fac46fa42fea84"
+        },
+        {
+          "path": "15-after.stdout",
+          "bytes": 391,
+          "sha256": "560acbb10e25321d17ab707696a31a21165bcd9ac7f737ebe4435bf65a8d7e1a"
+        },
+        {
+          "path": "16-expired-refusal-probe.mjs",
+          "bytes": 2086,
+          "sha256": "4c87f21e73573793c42531a9f7f09773d46430c89d503f37f3b9f7f86da35eb2"
+        },
+        {
+          "path": "16-probe-expired.stderr",
+          "bytes": 237,
+          "sha256": "b121c742a1b2b0d61caccb5cf75d3907f30bf7c87109f9d64eb37bc39e82fac4"
+        },
+        {
+          "path": "16-probe-no-header.stderr",
+          "bytes": 189,
+          "sha256": "b66d1166e71f474f2902483f97a860b9cfe577679a5b2938a6d444a8f9e9d808"
+        },
+        {
+          "path": "16-probe.json",
+          "bytes": 685,
+          "sha256": "89d9b89431b97e8c802e319772540f3d230b98ea63fb3f56edc343a0eb987d3b"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 3292,
+          "sha256": "e3d4efbdbf7ec77f17ddc4f0d4f5f2777a378754a31803d22bd75d46c96f1d1c"
+        },
+        {
+          "path": "timeline.txt",
+          "bytes": 1478,
+          "sha256": "0f336597180cb99ceb4bbd687a9f693934bfe4ee8715fa3ee9e1fa624e76a771"
+        },
+        {
+          "path": "token-clone-artifacts.diff",
+          "bytes": 692,
+          "sha256": "b819014bf0fde5130e2a749d04a264a787bef14f21df9507f3e3bf1f1be825d4"
+        },
+        {
+          "path": "token-clone-artifacts.mjs",
+          "bytes": 5680,
+          "sha256": "dba7ef31599026ce06e3e9b9d95b708840a22ff627e5d6cdad5ebbf5c6f2bae5"
+        },
+        {
+          "path": "token-clone-reviewed.sha256",
+          "bytes": 94,
+          "sha256": "51707078a84731d96fa5fef43ed3b80b1aa888e163f5cfbf317d5777fb6d00bd"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-demo-r26-token-act",
+      "fileCount": 4,
+      "files": [
+        {
+          "path": "01-show.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "01-show.stdout",
+          "bytes": 251,
+          "sha256": "966a3fdbac98ccdf971d4b34f7de4300ff385cdecce3613adefec62e3623563b"
+        },
+        {
+          "path": "01-show.time",
+          "bytes": 28,
+          "sha256": "c294cab349674760393856f8175756ee08df9cc5c89b0a04697c6086b915647d"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 241,
+          "sha256": "ad360ced7fd7b82f9c78c07dc51eaa3a7ea408ada676bb7c925f02d0fd4d8a8f"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-demo-r26-room-reads",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1184,
+          "sha256": "b64de6dbe108dec6ad928729d1aad299d1069e82a16ddc74c963e4ebc93e889b"
+        },
+        {
+          "path": "clone-before-2.refs",
+          "bytes": 90,
+          "sha256": "fbcbeb1517aac332df22697f8d11edb600cda010db07218e3f6a42d562271228"
+        },
+        {
+          "path": "reads.time",
+          "bytes": 302,
+          "sha256": "6d169f6dce4ba6f47be738970c3fba11daba4bcf95025046709ca375bd84b810"
+        },
+        {
+          "path": "show-sc_mdqalhagf-11.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "show-sc_mdqalhagf-11.stdout",
+          "bytes": 294,
+          "sha256": "a7c0d50a447b3773ddff02501fec916cdc83699f561dfa3542bf9e025709330e"
+        },
+        {
+          "path": "show-sc_mdqalhagf-8.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "show-sc_mdqalhagf-8.stdout",
+          "bytes": 250,
+          "sha256": "e667d1c93ba19b47509dafff2fcb6d85fe3e3404b1e45c735849e95ae1836ad7"
+        },
+        {
+          "path": "show-sc_mdqalhagf-9.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "show-sc_mdqalhagf-9.stdout",
+          "bytes": 292,
+          "sha256": "5c5fd7c33471cef79f2a75f6f9cc16c141b11f777814afc7670c2ab16bcdb76f"
+        },
+        {
+          "path": "show-sc_xodj55cck-0.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "show-sc_xodj55cck-0.stdout",
+          "bytes": 672,
+          "sha256": "50c451007dbc8718f7f10aa3c3f41b53b74e9c3c508c86b1e48875ae9ad4515d"
+        },
+        {
+          "path": "status-inbox.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "status-inbox.stdout",
+          "bytes": 978,
+          "sha256": "b2a1a54268b74a789fde257e4800e50809e5d9272dfb92710a782dbe74ce70ad"
+        }
+      ]
+    }
+  ]
+}
