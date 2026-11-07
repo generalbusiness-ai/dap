@@ -14,7 +14,10 @@ same credential was refused with HTTP 403 "Invalid or expired token".
 Times are EST unless marked UTC. The evidence manifest is
 [2026-11-07-demo-register-26-live-record.manifest.json](evidence/2026-11-07-demo-register-26-live-record.manifest.json).
 Credential bytes, member homes, the rendered configurations and the clone stay
-in the private rollout directory.
+in the private rollout directory. The unit `2026-11-06-demo-register-cutover` also holds
+the 7 November token files, and its `timeline.txt` gives times without dates:
+lines from 08:15 on are 7 November, and the 09:17:12 qualification line follows
+the 09:18:10 line.
 
 ## Source and settings
 
@@ -53,7 +56,7 @@ the same offer configuration, as `83d7baf2-12c4-4a0c-9937-238d87be8955`
 
 | Time | Step | Result |
 |---|---|---|
-| 00:01 | Operator census | 115 scopes, 13 rooms, one register: Register 17, as in `packet.json` |
+| 00:01 | Operator census | 115 scopes (`00-census.stdout`); 13 rooms and one register, Register 17, as in `packet.json` (`9f4eb5f1`) |
 | 00:02–00:04 | dap-grow and dap-lending deploys | exit 0 |
 | 00:05:28 | `dap install --plan … --register-policy open`, no `--cohort` | `sc_zm56yco5…` under `platform:register@26`, host `artifacts`, namespace `dap-demo` |
 | 00:06:33 | Install-stage deploy | `5ce6ac72`, exit 0 |

@@ -236,8 +236,8 @@
       "files": [
         {
           "path": "SHA256SUMS",
-          "bytes": 1184,
-          "sha256": "b64de6dbe108dec6ad928729d1aad299d1069e82a16ddc74c963e4ebc93e889b"
+          "bytes": 1105,
+          "sha256": "534bd18c9788e03979591c987ebca8295563f1c15b0cd6be2da1982d475428f3"
         },
         {
           "path": "clone-before-2.refs",
