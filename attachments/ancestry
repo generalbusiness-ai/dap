@@ -1,0 +1,30 @@
+{
+  "checkedUtc": "2026-11-07T16:44:17.351512+00:00",
+  "heads": {
+    "main": "9d96cf25ec4ee8d1f586e32569011bd17c08a6de",
+    "originMain": "9d96cf25ec4ee8d1f586e32569011bd17c08a6de"
+  },
+  "clean": true,
+  "incorporations": [
+    {
+      "label": "capacity",
+      "candidate": "746b5baf61618475fca2f8f882e2e931fc355581",
+      "ancestorExit": 0,
+      "firstMainlineDescendant": "afcf416e8c077499abbe7efd16bbdbe329811445",
+      "priorReceiptApproval": [
+        "Gitseq-Approval: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:04e50ac0434489c3d2569f354f4bc103b976c217"
+      ],
+      "qualification": "Git ancestry only, not commitment satisfaction or current approval authority."
+    },
+    {
+      "label": "apps",
+      "candidate": "80976213df684ed6bed200c793e76001eed74b11",
+      "ancestorExit": 0,
+      "firstMainlineDescendant": "0548b726d0a3e17ec171e71d93365d5311f61ccf",
+      "priorReceiptApproval": [
+        "Gitseq-Approval: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f60511b282636a2402e2a220f76dcf6fc930df7d"
+      ],
+      "qualification": "Git ancestry only, not commitment satisfaction or current approval authority."
+    }
+  ]
+}
