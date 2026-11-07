@@ -4,8 +4,12 @@ Status: the complete M5 source draft implements ordinary effects, attention and
 item settlement through admitted instructions. The broader focused checkpoints
 pass 366 distinct cases across 26 files. After the final capture-order repair,
 both derive compilers and all 40 cases in its three affected owners pass.
-The generated Page update passes its compiler and one-case asset owner. The
-Page workflow, full gate, independent review, and audited landing remain pending. The planner owns deployment.
+The generated Page update passes its compiler, one-case asset owner, and exact-head
+Page workflow. The full gate ends with one test fixture failure; its isolated
+repair passes the compiler and all four owning cases. The previously unreached
+Native phase passes 1,111 cases with two skips. Independent review and audited
+landing follow.
+The planner owns deployment.
 
 Request `053c4f4b1c42b41ca7152d60e19051bd43195d28` and promise `3a9595b1`
 own this branch. It includes the reviewed M4 and S2 landings. Parent 035 stays
@@ -98,10 +102,10 @@ condition checkpoint separately distinguishes the recursive skip on both sides
 of its cutover.
 
 The [condition manifest](evidence/2026-11-07-m5-conditions.manifest.json),
-SHA-256 `20ac8778d7a88e59c27c720069b596e9227981e728b4629a2b37b1ce162f7534`,
+SHA-256 `908e6423b3f6e39ac5b71d585163862fc972be82d30b92f72cb3c2817edef72b`,
 seals 67 read-only files. The
 [effect and settlement manifest](evidence/2026-11-07-m5-effects.manifest.json),
-SHA-256 `bef269aa09636719e746527ec28ea30e7bee9ac54bb704c7dca83cbcf8a9a903`,
+SHA-256 `8222f61bdcf84d3ddcd19565b4a23e9391222a75846ef0d655779dd787be9a5f`,
 seals another 168 files. These retain both initial compiler refusals, repaired
 fixtures, the ownership assertion failure, controls, capture-order failure and
 repair, source snapshots, and complete reports.
@@ -109,7 +113,12 @@ repair, source snapshots, and complete reports.
 The 250-case joined checkpoint and disjoint 116-case interpretation, replay,
 and Grow checkpoint precede the final capture-order repair. The later 40 cases
 cover its affected complete owners at the final source bytes. These overlapping
-counts are not added. The final full gate still remains.
+counts are not added. The full gate and its bounded follow-up appear below.
+
+The earlier three manifests now name the committed source head and tree that
+match their final draft or Page generator input. Their historical checkpoint
+status and every retained evidence file/hash stay unchanged. Earlier runs keep
+their own snapshots; the committed head does not replace those run identities.
 
 ## Shared leaves, analysis limits and remaining work
 
@@ -128,7 +137,7 @@ code, capability interiors, or settlement. The focused prototype, replay, and
 Grow owners preserve their current full-`Ran` agreement and coverage limits.
 
 A read-only Page build confirms that the shared validator changes its generated
-module. The committed module has SHA-256
+module. Before regeneration, the committed module had SHA-256
 `19e94de9b5004a2c34ff2c8c91764ddbf9b3fb09627c347f7c5df191211ebf4f`;
 the draft produces
 `d6c3744ab02e1900567eeb65dd6536ace54b9ab83fb78579e87e4c619ff75a4d`.
@@ -143,9 +152,53 @@ commands finish. The wrapper exits 130; its raw traceback remains. A separate
 reconciliation verifies the existing exit files, one-case report, source
 snapshots, expected module hash, and process closure. It reruns no command.
 The [Page asset manifest](evidence/2026-11-07-m5-page-assets.manifest.json),
-SHA-256 `9028aabaa1dc3bc60cd05d61b6d7aa9c4f1da7bf2d855df082e7b49fe482a511`,
-seals 26 files with both the interruption and reconciliation. The Page workflow
-and final gate still remain.
+SHA-256 `851aadbfe37ed11561f07d77ab8d52c341db32ff0ed748c459db2c9cded9f86e`,
+seals 26 files with both the interruption and reconciliation.
+
+
+## The failed gate and isolated follow-up stay separate
+
+The full gate at `a14c41505fe15151ed12794706125e9a89f0625c`, tree
+`79e5555e75e6fe5de8d8039112100cdc6211668a`, ends with actual `gate.exit`
+`exit 1`. The source stays clean and unchanged, and the owned process group closes.
+The gate passes 135 Node, 56 Counting, and 4,005 plain cases. One plain case
+fails; one skips. Native does not run. No unhandled error or contradictory
+record appears. The plain report's completeness stays `partial`.
+
+The failure comes from the platform Rules test's direct call to `deriveEffects`:
+it slices the publish effects without an admitted body. The typed adapter
+rejects that call with `effects have no admitted body context`. Only
+`packages/platform/test/rules-scope-v13.test.ts` changes in the follow-up.
+Its boundary stand-in now admits its one-effect probe through the existing
+validator and passes the actual body. Every original assertion, case, and
+deadline stays literal. No file imports that test. Production code, dependencies,
+configuration, and shared helpers stay unchanged from the failed gate.
+
+Under the isolated test-file rule in [Testing](../../docs/testing.md#follow-up-after-a-gate),
+the platform test compiler and complete four-case owner each exit 0. The
+previously unreached Native phase runs once. Its actual `native.exit` says `exit 0`: 1,111 cases pass and two skip. The
+terminal report is complete, with no contradictory record or unhandled error.
+Tracked input hashes match across the entire follow-up, and the owned Native
+process group closes.
+The failed gate stays failed. No second full gate or plain phase runs.
+The [follow-up manifest](evidence/2026-11-07-m5-platform-followup.manifest.json),
+SHA-256 `6b17d5b9d0b4d963a337c243805c081c9874fe4a6f4f50b229e7bebf1c66c640`,
+seals 18 public files and retains 260 raw files privately. The archive owner
+passes here; its earlier failure still has no established cause, and request
+`64552d40` stays open.
+
+The [failed-gate manifest](evidence/2026-11-07-m5-gate-validation.manifest.json),
+SHA-256 `dc2940beb943586d4de32292cc61960044b5c184b89153ae225370acd7d805b4`,
+seals 15 public metadata files. It retains 2,279 read-only raw files privately;
+those originals may contain TEST custody and request bodies. The public manifest
+publishes their selected hashes without their contents.
+
+[Page workflow 42416131810](https://github.com/generalbusiness-ai/dap/actions/runs/42416131810)
+succeeds at the same gate head. All four browser commands pass. The isolated
+platform test repair changes no Page workflow input. The
+[Page CI manifest](evidence/2026-11-07-m5-page-ci.manifest.json), SHA-256
+`ec20221389569c02f9d60a37e5456eb2b7128a82e039252ec9424d8889f0e2eb`,
+seals six files covering workflow metadata and the tracked source tree.
 
 Production declaration bytes, digests, profiles, bounds, Native pins and grants,
 wire, dependency manifests, persistence, authority, application APIs, and

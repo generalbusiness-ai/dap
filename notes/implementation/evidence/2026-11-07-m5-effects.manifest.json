@@ -853,5 +853,8 @@
         }
       ]
     }
-  ]
+  ],
+  "sourceHead": "05b70e8f18360afe4cae0662066216d30818c0e1",
+  "sourceTree": "3bf3b9a20a78bdac52468062fb52fbb0556ee5bc",
+  "checkpointQualification": "The committed source checkpoint identifies the retained final draft. Earlier runs and controls retain their distinct source snapshots and outcomes; no evidence file or hash changes."
 }
