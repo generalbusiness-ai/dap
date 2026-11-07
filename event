@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8c2293e420245e2aea9c2d098d9bf10ababdda8a","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/structure.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:933f326514ba3bec56be59c55936a62ec264591b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-07-typed-core-m4.md."}
