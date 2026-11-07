@@ -72,7 +72,7 @@ The [Page asset manifest](evidence/2026-11-07-m4-page-assets.manifest.json),
 SHA-256 `1b07e3861f6dfe9bb5742aa59d2b948963a64685c4dd3407ec7025939641d5dd`, seals the build and owner output.
 
 Regenerate with `node scripts/assets.mjs` from `apps/room/page`.
-The full gate and exact-head Page browser workflow remain due.
+The corrected full gate fails as recorded below. The [Page browser workflow](https://github.com/generalbusiness-ai/dap/actions/runs/42377362267) passes at `6204ddadde`, after the bundle build. That browser result does not clear the gate failure.
 
 ## Gate failures expose two unadmitted test helpers
 
@@ -159,3 +159,44 @@ SHA-256 `d02b8c090685039f17a6674222fab3432be33967d476758ec3342c0d95cc1e4a`, seal
 bounded diagnostic around the failed confirmation. Raw synthetic custody
 remains private. This failed run does not support an acceptance or
 deployment claim.
+
+## Bounded probes do not reproduce the archive refusal
+
+Scope addendum `e944419f` permits temporary tracing in the failing floor
+test. The test-local budget subclass keeps the original clock reads,
+30-second ledger, cost limits, assertions, loops, and case deadlines.
+It records at most 32 stop or wait-rejection samples, with four clock
+values and a bounded stack per sample. Observer overhead can alter timing.
+The driver restores the exact original test after each child exits.
+The sealed archive driver and its source seal stay unchanged.
+
+The first preflight compares the parser source seal with a whole-file
+hash and refuses before editing or running a compiler or test. Those hash
+domains differ. The corrected probe verifies both domains independently.
+Its compiler and all three owner cases pass, but the JSON-only reporter
+discards the console trace. Missing observation proves no absence of stops.
+The next probe transports the summary through `task.meta`. Its compiler
+and all three cases pass. It captures four handled lookahead-limit signals
+from `ArchiveBudget.spend`; it captures no `unavailable` stop.
+
+The failed gate output interleaves this floor owner with
+`directory-partition-success-capacity.scope.test.ts`. Output overlap proves
+neither exact runtime overlap nor causal load. Plan act `0c8f3536` selects
+that unchanged capacity owner as the companion for one four-case probe
+under the existing Native configuration. The compiler and all four cases
+pass. The bounded summary again captures four handled lookahead-limit
+signals and no `unavailable` stop. Both completed probes restore the source
+exactly and close their owned process groups.
+
+The [isolated probe manifest](evidence/2026-11-07-m4-archive-probes.manifest.json),
+SHA-256 `3707376e9c9f15ef5f57e44dc992a0dc5830ecef37df742cfa2911ceb705454c`,
+retains the preflight refusal, missing trace, and complete metadata probe.
+The [paired probe manifest](evidence/2026-11-07-m4-archive-paired.manifest.json),
+SHA-256 `698079a92c90c40c957180c6c6c9d8402cf95cdbd4f517515d2bd6459fdd015f`,
+retains the four-case ledger, bounded trace, unchanged obligations, and
+restoration proof. Raw synthetic TEST custody remains private.
+
+Neither workload reproduces the historical refusal. The cause remains
+unproven, both gates remain failed, and M4 remains unreviewed and unlanded.
+These probes establish no real-room outcome or completion-time guarantee.
+No further full gate runs to chase this archive failure.
