@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a50348c3a339024904f5d774e6e5efa0ab3240cf","text":"Replaced by the review request for exact head ac00495fce97f3900de37193897483a1e786b0c1; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"Re-review the dap-demo config sync at exact head ac00495f against d814bc41"}
