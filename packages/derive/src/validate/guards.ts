@@ -113,7 +113,9 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
     if (read.op === "field" || read.op === "presented") absent.push(Object.freeze({ kind: read.op, name: read.name }));
     const entry = (part: EntryRead) => { if (part.op === "set") missing(part.item); };
     if (read.op === "source") entry(read.entry);
-    if (read.projection) entry(read.projection.op === "project" ? read.projection.of : read.projection);
+    // Preserve the original skip boundary: projection wrappers do not add
+    // their nested set selectors to ifPresent's missing-field checks.
+    if (read.projection && read.projection.op !== "project") entry(read.projection);
   };
   let namesField = false;
   /** A field or a presented fact that the operand names: what `ifPresent` is for. */

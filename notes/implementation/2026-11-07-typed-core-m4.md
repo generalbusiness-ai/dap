@@ -200,3 +200,35 @@ Neither workload reproduces the historical refusal. The cause remains
 unproven, both gates remain failed, and M4 remains unreviewed and unlanded.
 These probes establish no real-room outcome or completion-time guarantee.
 No further full gate runs to chase this archive failure.
+
+## Preserve the original projected-set skip decision
+
+A later comparison finds an M4 regression outside the archive path. Both
+main and M4 admit the same `ifPresent` guard. Its required proof is present,
+but an optional selector inside a projected historical `set` is absent.
+Main evaluates the comparison and returns `fail`; M4 skips it and returns
+`pass`. The new missing-read collector had descended the projection wrapper,
+which the original skip rule ignores.
+
+Finding act `505f2cba` records the repair within M4's existing validator scope.
+The collector now retains the original skip boundary. The complete typed
+operand descriptor and read execution stay intact, and admission rules do
+not change. A direct `set` still skips when its selector is absent. A
+projected `set` still evaluates. An absent outer proof skips both forms.
+
+The new witness compiles and fails by assertion before the repair; its
+other five owner cases pass. After the repair, both derive compilers and
+all 32 cases in the five complete guard, read, structure, guard-form, and
+field-form owners pass. Every earlier test byte stays unchanged.
+The Page bundle rebuilds from the shared validator, and its complete
+one-case asset owner passes. The Page wrapper then fails its mistaken
+two-case expectation. A separate reconciliation checks the actual title
+and exit files without rerunning the owner. That wrapper failure remains.
+
+The [projected-set manifest](evidence/2026-11-07-m4-ifpresent-projection.manifest.json),
+SHA-256 `cf0d88a605c90ef60ee5c2f5ad3c962b531c3de4e1032e54373d44c3a101f7d1`,
+seals the failing assertion, passing focused checks, exact source changes,
+and wrapper reconciliation. The protected judge and source seals stay
+unchanged. This repair does not explain the archive refusal or clear either
+failed gate. A complete gate at the repaired candidate remains due before
+review, subject to the archive investigation's no-repeat ruling.

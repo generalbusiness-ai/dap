@@ -75,3 +75,22 @@ test("the complete guard list is checked before preparation runs, including empt
   expect(f.run()).toEqual({ result: "fail", at: 1 });
   expect(f.j.asked).toHaveLength(1);
 });
+
+test("ifPresent keeps direct set skips separate from projected historical set reads", () => {
+  const set = { set: { item: { field: "selected", part: "on" }, slot: "text" } } as const;
+  const guard = (projected: boolean): Guard => ({ ifPresent: true,
+    equals: { a: { field: "proof", part: projected ? { of: set, then: "seq" } : set }, b: { const: 99 } },
+  });
+  const make = (projected: boolean) => fixture([guard(projected)], data => {
+    const fields = data.acts["edit"]!.fields;
+    fields["proof"] = { type: "fact", kind: ["write"], under: data.name, required: true };
+    fields["selected"] = { type: "fact", kind: ["write"], under: data.name, required: false };
+  });
+  const direct = make(false), projected = make(true);
+  for (const f of [direct, projected]) f.j.fields = { proof: f.j.subjects.get("on")!.id };
+  // Only a direct set's selector participates in the original skip rule.
+  // A projected set still evaluates to none and fails this comparison.
+  expect([direct.run(), projected.run()]).toEqual([{ result: "pass", at: -1 }, { result: "fail", at: 0 }]);
+  for (const f of [direct, projected]) f.j.fields = {};
+  expect([direct.run(), projected.run()]).toEqual([{ result: "pass", at: -1 }, { result: "pass", at: -1 }]);
+});
