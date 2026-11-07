@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:215fecb7171720e5978088a01600dfcc9512a7ce","text":"Merge retired a covered predecessor; the successor is at packages/client/test/observe.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:29eba4566099e69773ed4cdaf645117d70eaf903","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-s2-page-ci.manifest.json."}
