@@ -55,78 +55,330 @@ async function reconnectWait(run:(signal:Expiry)=>Promise<void>,signal:Expiry):P
   finally{signal.removeEventListener("abort",stop);}
 }
 
-export function observeScope<T>(options:ObservationOptions<T>):Observation{
-  const context=JSON.parse(canonicalize(options.context)) as ObservationContext;
-  Object.freeze(context.scope);Object.freeze(context.membership);Object.freeze(context);
-  const seconds=options.seconds??30;if(!Number.isFinite(seconds)||seconds<=0||seconds>300)throw new RangeError("An observation read bound is more than zero and at most300seconds.");
-  if(!observationOrigin(context.origin)||!isScopeRef(context.scope)||!isScopeRef(context.membership)||typeof context.deployment!=="string"||!context.deployment||context.deployment.length>128)throw new Error("Observation needs an exact origin and full native references.");
-  const lifetime=new AbortController();let attempt:AbortController|undefined;let last:CompleteSnapshot<T>|undefined;let latest:Head|undefined;let dirty=false;let refreshRunning=false;let refreshAgain:(()=>void)|undefined;let generation=0;let cancelled=false;
-  const now=options.now??Date.now;
-  const usable=()=>!lifetime.signal.aborted&&options.current();
-  const emit=(state:ObservationState<T>)=>{if(usable())options.emit(state);else cancel();};
-  const retained=()=>last?{retained:last}:{};
-  const check=(at:number)=>{if(!usable()||at!==generation)throw new Stopped();};
-  function cancel(){if(cancelled)return;cancelled=true;generation++;lifetime.abort();attempt?.abort();if(options.current())options.emit({status:"cancelled"});}
-  const done=(async()=>{
-    let failures=0;let outage=false;
-    const fallback=(reason:string)=>{if(!outage){outage=true;emit({status:"fallback",reason,...retained()});}};
-    while(usable()){
-      const at=++generation;attempt=new AbortController();const active=attempt;let renewal:ReturnType<typeof setTimeout>|undefined;let renewalExpired=false;let openedBody:HeadBodyResult|undefined;let readerOwned=false;let streamAlive=true;let streamEnd!:()=>void;
-      const connectionEnded=new Promise<void>(resolve=>{streamEnd=resolve;});
-      const lifeAbort=()=>active.abort();lifetime.signal.addEventListener("abort",lifeAbort);
-      try{
-        emit({status:failures?"reconnecting":"connecting",...retained()});
-        const auth=await bounded(signal=>options.authenticate(signal),active.signal,seconds);check(at);
-        if(!auth.ok)throw new ObservationFailure(auth.reason==="unauthorized"?"forbidden":auth.reason==="expired"?"expired":auth.reason==="unsupported"?"unsupported":"unavailable",auth.reason);
-        const session=auth.session;
-        if(session.claims.deployment!==context.deployment||!same(session.claims.membership,context.membership)||session.claims.member!==context.member||session.claims.key!==context.key||!session.claims.reads.includes("summary"))throw new ObservationFailure("error","session-context-mismatch");
-        const ends=timeMs(session.claims.ends);if(ends===null||session.endedBy(timeOf(now())))throw new ObservationFailure("expired","session-expired");
-        renewal=setTimeout(()=>{renewalExpired=true;active.abort();streamEnd();},Math.max(1,ends-now()));
-        const opened=await bounded(signal=>options.open(session,signal),active.signal,seconds,value=>{if(value.ok){try{void value.body.getReader().cancel().catch(()=>undefined);}catch{/* Late body's upstream may refuse disposal. */}}});openedBody=opened;check(at);
-        if(!opened.ok)throw new ObservationFailure(opened.reason==="forbidden"?"forbidden":opened.reason==="unsupported"?"unsupported":"unavailable",opened.reason);
-        const lines=headLines(opened.body,active.signal);latest=undefined;
-        readerOwned=true;const first=await bounded(()=>lines.next(),active.signal,seconds);check(at);
-        if(first.done)throw new ObservationFailure("unavailable","stream-ended-before-head");
-        if(last&&first.value.seq===last.at.seq&&first.value.hash!==last.at.hash)throw new ObservationFailure("error","head-hash-conflict");
-        latest=first.value;failures=0;outage=false;emit({status:"streaming",...retained()});check(at);
-        let streamFailure:ObservationFailure|undefined;
-        const pump=(async()=>{try{for await(const notice of lines){check(at);if(latest&&notice.seq===latest.seq&&notice.hash!==latest.hash||last&&notice.seq===last.at.seq&&notice.hash!==last.at.hash)throw new ObservationFailure("error","head-hash-conflict");if(!latest||notice.seq>latest.seq){latest=notice;refreshAgain?.();}}}catch(error){if(!(error instanceof Stopped)&&!active.signal.aborted)streamFailure=error instanceof ObservationFailure?error:new ObservationFailure("error","malformed-head-stream");}finally{streamAlive=false;active.abort();streamEnd();}})();
-        const refresh=async()=>{
-          if(refreshRunning){dirty=true;return;}refreshRunning=true;
-          try{do{
-            dirty=false;check(at);emit({status:"refreshing",...retained()});
-            const read=await bounded(signal=>options.snapshot(session,signal),active.signal,seconds);check(at);
-            if(!read.ok)throw new ObservationFailure(read.reason==="forbidden"?"forbidden":"unavailable",read.reason);
-            const snapshot=read.value;
-            if(!read.complete||read.next!==undefined||!isHead(snapshot.at)||!isScopeRef(snapshot.scope)||!isHead(read.at)||!same(read.at,snapshot.at)||!same(snapshot.scope,context.scope)||snapshot.definition!==context.definition)throw new ObservationFailure("error","incomplete-or-mismatched-snapshot");
-            if(last&&snapshot.at.seq===last.at.seq&&snapshot.at.hash!==last.at.hash||latest&&snapshot.at.seq===latest.seq&&snapshot.at.hash!==latest.hash)throw new ObservationFailure("error","head-hash-conflict");
-            if(last&&snapshot.at.seq<last.at.seq){emit({status:"retained",snapshot:last,reason:"older-snapshot"});}
-            else{last=snapshot;if(!streamAlive){emit({status:"retained",snapshot,reason:"subscription-ended"});}else if(latest&&snapshot.at.seq<latest.seq){emit({status:"retained",snapshot,reason:"newer-notice"});dirty=true;}else emit({status:"current",snapshot});}
-            if(dirty)await delay(0,active.signal);
-          }while(dirty);
-          }finally{refreshRunning=false;}
-        };
-        let pending:Promise<void>|undefined;let refreshFailure:ObservationFailure|undefined;
-        refreshAgain=()=>{dirty=true;if(!pending&&!refreshRunning){pending=refresh().catch(error=>{if(!(error instanceof Stopped))refreshFailure=error instanceof ObservationFailure?error:new ObservationFailure("unavailable","snapshot-read-failed");active.abort();streamEnd();}).finally(()=>{
-          pending=undefined;
-          if(dirty&&streamAlive&&!active.signal.aborted&&usable()&&at===generation){
-            // Hand off completion-boundary invalidations after a task yield;
-            // they may arrive after refreshRunning clears but before this slot.
-            void delay(0,active.signal).then(()=>{
-              if(dirty&&streamAlive&&!active.signal.aborted&&usable()&&at===generation)refreshAgain?.();
-            },()=>undefined);
-          }
-        });}};
-        refreshAgain();await connectionEnded;active.abort();await pump;await pending;refreshAgain=undefined;
-        if(streamFailure)throw streamFailure;if(refreshFailure)throw refreshFailure;
-        check(at);fallback(renewalExpired?"session-expired":"stream-ended");failures++;emit({status:"reconnecting",...retained()});
-      }catch(error){
-        if(error instanceof Stopped){if(!usable())break;fallback(renewalExpired?"session-expired":"stream-interrupted");failures++;}
-        else{const failure=error instanceof ObservationFailure?error:error instanceof HeadStreamUnavailable?new ObservationFailure("unavailable",error.reason):new ObservationFailure("unavailable","observation-transport-failed");if(failure.status==="unavailable"||failure.status==="expired")fallback(failure.reason);emit({status:failure.status,reason:failure.reason,...retained()});if(["forbidden","unsupported","error"].includes(failure.status))break;failures++;}
-      }finally{active.abort();if(openedBody?.ok&&!readerOwned) { try { void openedBody.body.getReader().cancel().catch(()=>undefined); } catch { /* Iterator owns a locked native body and observes active.abort. */ } }if(renewal!==undefined)clearTimeout(renewal);lifetime.signal.removeEventListener("abort",lifeAbort);refreshAgain=undefined;}
-      if(usable()){try{await reconnectWait(signal=>options.reconnectDelay?.(failures,signal)??delay(Math.min(30000,1000*2**Math.min(failures-1,5)),signal),lifetime.signal);}catch{break;}}
+/** An attempt releases only the controller, timer and body that it acquired. */
+class ConnectionAttempt {
+  readonly controller = new AbortController();
+  readonly ended: Promise<void>;
+  private finish!: () => void;
+  private renewal: ReturnType<typeof setTimeout> | undefined;
+  private body: HeadBodyResult | undefined;
+  private readerOwned = false;
+  private phase: "opening" | "streaming" | "ended" | "disposed" = "opening";
+  renewalExpired = false;
+  private readonly lifeAbort = () => this.controller.abort();
+
+  constructor(private readonly lifetime: Expiry) {
+    this.ended = new Promise(resolve => { this.finish = resolve; });
+    lifetime.addEventListener("abort", this.lifeAbort);
+    if (lifetime.aborted) this.controller.abort();
+  }
+  get signal(): Expiry { return this.controller.signal; }
+  get streaming(): boolean { return this.phase === "streaming"; }
+  renewIn(milliseconds: number): void {
+    this.renewal = setTimeout(() => {
+      this.renewalExpired = true;
+      this.controller.abort();
+      this.finish();
+    }, Math.max(1, milliseconds));
+  }
+  opened(body: HeadBodyResult): void { this.body = body; }
+  handToReader(): void { this.readerOwned = true; }
+  startStream(): void { this.phase = "streaming"; }
+  interrupt(): void { this.controller.abort(); this.finish(); }
+  end(): void {
+    if (this.phase !== "disposed") this.phase = "ended";
+    this.controller.abort();
+    this.finish();
+  }
+  dispose(): void {
+    if (this.phase === "disposed") return;
+    this.controller.abort();
+    if (this.body && !this.readerOwned) disposeBody(this.body);
+    if (this.renewal !== undefined) clearTimeout(this.renewal);
+    this.lifetime.removeEventListener("abort", this.lifeAbort);
+    this.phase = "disposed";
+    this.finish();
+  }
+}
+
+function disposeBody(value: HeadBodyResult): void {
+  if (!value.ok) return;
+  try { void value.body.getReader().cancel().catch(() => undefined); }
+  catch { /* A reader already owns the body, or upstream refuses disposal. */ }
+}
+
+interface RefreshCycle {
+  readonly generation: number;
+  readonly attempt: ConnectionAttempt;
+  readonly session: Session;
+  readonly fail: (error: unknown) => void;
+}
+interface RefreshTask { readonly cycle: RefreshCycle; done: Promise<void> }
+type RefreshWork = { readonly status: "idle" }
+  | { readonly status: "refreshing" | "reread" | "finishing" | "handoff"; readonly task: RefreshTask };
+
+/** Retained data, notice ordering and obsolete-reply checks have one owner. */
+class RefreshCoordinator<T> {
+  private generation = 0;
+  private last: CompleteSnapshot<T> | undefined;
+  private latest: Head | undefined;
+  private cycle: RefreshCycle | undefined;
+  private work: RefreshWork = { status: "idle" };
+
+  constructor(
+    private readonly options: ObservationOptions<T>,
+    private readonly context: ObservationContext,
+    private readonly seconds: number,
+    private readonly usable: () => boolean,
+    private readonly emit: (state: ObservationState<T>) => void,
+  ) {}
+
+  retained(): { retained?: CompleteSnapshot<T> } { return this.last ? { retained: this.last } : {}; }
+  nextGeneration(): number { return ++this.generation; }
+  invalidateGeneration(): void { this.generation++; }
+  check(generation: number): void {
+    if (!this.usable() || generation !== this.generation) throw new Stopped();
+  }
+  first(notice: Head): void {
+    if (this.last && notice.seq === this.last.at.seq && notice.hash !== this.last.at.hash) {
+      throw new ObservationFailure("error", "head-hash-conflict");
     }
-    if(!options.current()&&!cancelled)cancel();
-  })();
-  return{refresh(){if(!usable()){cancel();return;}dirty=true;refreshAgain?.();},cancel,done};
+    this.latest = notice;
+  }
+  notice(notice: Head): void {
+    if (this.latest && notice.seq === this.latest.seq && notice.hash !== this.latest.hash
+      || this.last && notice.seq === this.last.at.seq && notice.hash !== this.last.at.hash) {
+      throw new ObservationFailure("error", "head-hash-conflict");
+    }
+    if (!this.latest || notice.seq > this.latest.seq) {
+      this.latest = notice;
+      this.refresh();
+    }
+  }
+  activate(cycle: RefreshCycle): void {
+    this.check(cycle.generation);
+    this.cycle = cycle;
+  }
+  release(cycle: RefreshCycle): void {
+    if (this.cycle === cycle) this.cycle = undefined;
+  }
+  async joined(cycle: RefreshCycle): Promise<void> {
+    if (this.work.status !== "idle" && this.work.task.cycle === cycle) await this.work.task.done;
+  }
+  refresh(): void {
+    const cycle = this.cycle;
+    if (!cycle) return;
+    if (this.work.status !== "idle") {
+      // A completion callback can invalidate after the read loop finishes but
+      // before its promise releases the occupied slot.
+      const status = this.work.status === "finishing" || this.work.status === "handoff" ? "handoff" : "reread";
+      this.work = { status, task: this.work.task };
+      return;
+    }
+    const task: RefreshTask = { cycle, done: Promise.resolve() };
+    this.work = { status: "refreshing", task };
+    task.done = this.read(task).catch(error => cycle.fail(error)).finally(() => {
+      if (this.work.status === "idle" || this.work.task !== task) return;
+      const handoff = this.work.status === "handoff";
+      this.work = { status: "idle" };
+      if (handoff && this.eligible(cycle)) {
+        void delay(0, cycle.attempt.signal).then(() => {
+          if (this.eligible(cycle)) this.refresh();
+        }, () => undefined);
+      }
+    });
+  }
+  private eligible(cycle: RefreshCycle): boolean {
+    return this.cycle === cycle && cycle.attempt.streaming && !cycle.attempt.signal.aborted
+      && this.usable() && cycle.generation === this.generation;
+  }
+  private async read(task: RefreshTask): Promise<void> {
+    const { cycle } = task;
+    for (;;) {
+      this.work = { status: "refreshing", task };
+      this.check(cycle.generation);
+      this.emit({ status: "refreshing", ...this.retained() });
+      const read = await bounded(signal => this.options.snapshot(cycle.session, signal), cycle.attempt.signal, this.seconds);
+      this.check(cycle.generation);
+      if (!read.ok) throw new ObservationFailure(read.reason === "forbidden" ? "forbidden" : "unavailable", read.reason);
+      const snapshot = read.value;
+      if (!read.complete || read.next !== undefined || !isHead(snapshot.at) || !isScopeRef(snapshot.scope)
+        || !isHead(read.at) || !same(read.at, snapshot.at) || !same(snapshot.scope, this.context.scope)
+        || snapshot.definition !== this.context.definition) {
+        throw new ObservationFailure("error", "incomplete-or-mismatched-snapshot");
+      }
+      if (this.last && snapshot.at.seq === this.last.at.seq && snapshot.at.hash !== this.last.at.hash
+        || this.latest && snapshot.at.seq === this.latest.seq && snapshot.at.hash !== this.latest.hash) {
+        throw new ObservationFailure("error", "head-hash-conflict");
+      }
+      if (this.last && snapshot.at.seq < this.last.at.seq) {
+        this.emit({ status: "retained", snapshot: this.last, reason: "older-snapshot" });
+      } else {
+        this.last = snapshot;
+        if (!cycle.attempt.streaming) this.emit({ status: "retained", snapshot, reason: "subscription-ended" });
+        else if (this.latest && snapshot.at.seq < this.latest.seq) {
+          this.emit({ status: "retained", snapshot, reason: "newer-notice" });
+          this.work = { status: "reread", task };
+        } else this.emit({ status: "current", snapshot });
+      }
+      // Public emit callbacks may request a refresh synchronously.
+      if (this.needsReread(task)) await delay(0, cycle.attempt.signal);
+      else { this.work = { status: "finishing", task }; return; }
+    }
+  }
+  private needsReread(task: RefreshTask): boolean {
+    return this.work.status === "reread" && this.work.task === task;
+  }
+}
+
+/** Own the observation lifetime and each connect/stream/renew/reconnect attempt. */
+class ObservationConnection<T> {
+  private readonly lifetime = new AbortController();
+  private attempt: ConnectionAttempt | undefined;
+  private cancelled = false;
+  private readonly refreshes: RefreshCoordinator<T>;
+  readonly done: Promise<void>;
+
+  constructor(
+    private readonly options: ObservationOptions<T>,
+    private readonly context: ObservationContext,
+    private readonly seconds: number,
+  ) {
+    this.refreshes = new RefreshCoordinator(options, context, seconds, () => this.usable(), state => this.emit(state));
+    this.done = this.run();
+  }
+  private usable(): boolean { return !this.lifetime.signal.aborted && this.options.current(); }
+  private emit(state: ObservationState<T>): void {
+    if (this.usable()) this.options.emit(state);
+    else this.cancel();
+  }
+  cancel(): void {
+    if (this.cancelled) return;
+    this.cancelled = true;
+    this.refreshes.invalidateGeneration();
+    this.lifetime.abort();
+    this.attempt?.controller.abort();
+    if (this.options.current()) this.options.emit({ status: "cancelled" });
+  }
+  refresh(): void {
+    if (!this.usable()) { this.cancel(); return; }
+    this.refreshes.refresh();
+  }
+  private async run(): Promise<void> {
+    let failures = 0;
+    let outage = false;
+    const fallback = (reason: string) => {
+      if (!outage) { outage = true; this.emit({ status: "fallback", reason, ...this.refreshes.retained() }); }
+    };
+    while (this.usable()) {
+      const generation = this.refreshes.nextGeneration();
+      const active = new ConnectionAttempt(this.lifetime.signal);
+      this.attempt = active;
+      let cycle: RefreshCycle | undefined;
+      try {
+        this.emit({ status: failures ? "reconnecting" : "connecting", ...this.refreshes.retained() });
+        const auth = await bounded(signal => this.options.authenticate(signal), active.signal, this.seconds);
+        this.refreshes.check(generation);
+        if (!auth.ok) throw new ObservationFailure(auth.reason === "unauthorized" ? "forbidden" : auth.reason === "expired" ? "expired" : auth.reason === "unsupported" ? "unsupported" : "unavailable", auth.reason);
+        const session = auth.session;
+        if (session.claims.deployment !== this.context.deployment || !same(session.claims.membership, this.context.membership)
+          || session.claims.member !== this.context.member || session.claims.key !== this.context.key || !session.claims.reads.includes("summary")) {
+          throw new ObservationFailure("error", "session-context-mismatch");
+        }
+        const now = this.options.now ?? Date.now;
+        const ends = timeMs(session.claims.ends);
+        if (ends === null || session.endedBy(timeOf(now()))) throw new ObservationFailure("expired", "session-expired");
+        active.renewIn(ends - now());
+        const opened = await bounded(signal => this.options.open(session, signal), active.signal, this.seconds, disposeBody);
+        active.opened(opened);
+        this.refreshes.check(generation);
+        if (!opened.ok) throw new ObservationFailure(opened.reason === "forbidden" ? "forbidden" : opened.reason === "unsupported" ? "unsupported" : "unavailable", opened.reason);
+        const lines = headLines(opened.body, active.signal);
+        active.handToReader();
+        const first = await bounded(() => lines.next(), active.signal, this.seconds);
+        this.refreshes.check(generation);
+        if (first.done) throw new ObservationFailure("unavailable", "stream-ended-before-head");
+        this.refreshes.first(first.value);
+        failures = 0;
+        outage = false;
+        active.startStream();
+        this.emit({ status: "streaming", ...this.refreshes.retained() });
+        this.refreshes.check(generation);
+        let streamFailure: ObservationFailure | undefined;
+        const pump = (async () => {
+          try {
+            for await (const notice of lines) {
+              this.refreshes.check(generation);
+              this.refreshes.notice(notice);
+            }
+          } catch (error) {
+            if (!(error instanceof Stopped) && !active.signal.aborted) {
+              streamFailure = error instanceof ObservationFailure ? error : new ObservationFailure("error", "malformed-head-stream");
+            }
+          } finally { active.end(); }
+        })();
+        let refreshFailure: ObservationFailure | undefined;
+        cycle = {
+          generation, attempt: active, session,
+          fail: error => {
+            if (!(error instanceof Stopped)) refreshFailure = error instanceof ObservationFailure ? error : new ObservationFailure("unavailable", "snapshot-read-failed");
+            // The pump owns stream completion; interrupt only wakes its owner.
+            active.interrupt();
+          },
+        };
+        this.refreshes.activate(cycle);
+        this.refreshes.refresh();
+        await active.ended;
+        active.controller.abort();
+        await pump;
+        await this.refreshes.joined(cycle);
+        this.refreshes.release(cycle);
+        if (streamFailure) throw streamFailure;
+        if (refreshFailure) throw refreshFailure;
+        this.refreshes.check(generation);
+        fallback(active.renewalExpired ? "session-expired" : "stream-ended");
+        failures++;
+        this.emit({ status: "reconnecting", ...this.refreshes.retained() });
+      } catch (error) {
+        if (error instanceof Stopped) {
+          if (!this.usable()) break;
+          fallback(active.renewalExpired ? "session-expired" : "stream-interrupted");
+          failures++;
+        } else {
+          const failure = error instanceof ObservationFailure ? error : error instanceof HeadStreamUnavailable
+            ? new ObservationFailure("unavailable", error.reason) : new ObservationFailure("unavailable", "observation-transport-failed");
+          if (failure.status === "unavailable" || failure.status === "expired") fallback(failure.reason);
+          this.emit({ status: failure.status, reason: failure.reason, ...this.refreshes.retained() });
+          if (["forbidden", "unsupported", "error"].includes(failure.status)) break;
+          failures++;
+        }
+      } finally {
+        active.dispose();
+        if (cycle) this.refreshes.release(cycle);
+        if (this.attempt === active) this.attempt = undefined;
+      }
+      if (this.usable()) {
+        try {
+          await reconnectWait(signal => this.options.reconnectDelay?.(failures, signal)
+            ?? delay(Math.min(30000, 1000 * 2 ** Math.min(failures - 1, 5)), signal), this.lifetime.signal);
+        } catch { break; }
+      }
+    }
+    if (!this.options.current() && !this.cancelled) this.cancel();
+  }
+}
+
+export function observeScope<T>(options: ObservationOptions<T>): Observation {
+  const context = JSON.parse(canonicalize(options.context)) as ObservationContext;
+  Object.freeze(context.scope);
+  Object.freeze(context.membership);
+  Object.freeze(context);
+  const seconds = options.seconds ?? 30;
+  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 300) throw new RangeError("An observation read bound is more than zero and at most300seconds.");
+  if (!observationOrigin(context.origin) || !isScopeRef(context.scope) || !isScopeRef(context.membership)
+    || typeof context.deployment !== "string" || !context.deployment || context.deployment.length > 128) {
+    throw new Error("Observation needs an exact origin and full native references.");
+  }
+  const connection = new ObservationConnection(options, context, seconds);
+  return { refresh: () => connection.refresh(), cancel: () => connection.cancel(), done: connection.done };
 }
