@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/client/test/observe.test.ts","body":{"commit":"3cb223b853bbcb55c943e4717edf58b8f5d27ccc","path":"packages/client/test/observe.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:072d14f99c9a803aef411f42cad8e44464460476","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-s2-gate.manifest.json."}
