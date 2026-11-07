@@ -51,8 +51,8 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
   // own `if` that lists no final state shows a live subject to a `state` effect. One in an `unless` shows nothing.
   const live = new Set(ctx.live);
   const judged: Ctx = { ...ctx, nascent: ctx.nascent && !later };
-  if ("if" in o) guards(d, o["if"], at(path, "if"), { ...judged, live });
-  if ("unless" in o) guards(d, o["unless"], at(path, "unless"), { ...judged, live: new Set() });
+  if ("if" in o) guards(d, o["if"], at(path, "if"), { ...judged, live }, false, "if");
+  if ("unless" in o) guards(d, o["unless"], at(path, "unless"), { ...judged, live: new Set() }, false, "unless");
   // Section 6.4: a timed rule's effects are total. A condition could leave its item due, and one that is not completed leaves the entry unwritten.
   if (ctx.timed && ("if" in o || "unless" in o)) bad("timed-partial", path, "a timed rule's effects take no condition");
   if (k === "capability") {

@@ -9,7 +9,7 @@ import { at, type Rec } from "./shape.ts";
 import { recordElementBinding, recordField, recordForeignField, recordRange, recordSlot } from "../program/reads.ts";
 import { enterForm, leaveForm, type GuardOp } from "../program/structure.ts";
 import type { BoundPlan, FactMatch, FactSource, GuardCode, GuardPlan, ListSource, MissingRead, RangePlan, WherePlan } from "../program/guard-plan.ts";
-import { recordGuardPlan, type FormTrace } from "../program/structure.ts";
+import { beginGuardList, endGuardList, recordGuardPlan, recordRangePlan, type FormTrace, type GuardListPlace } from "../program/structure.ts";
 import type { ElementBinding, EntryRead, OperandRead, SlotRead } from "../program/reads.ts";
 
 const GUARDS = ["state", "signer", "notIn", "set", "unset", "equals", "differs", "some", "none", "count", "every", "fact", "before", "after", "rule", "each", "has", "anyOf", "distinct", "sameSet", "capability"] as const satisfies readonly GuardOp[];
@@ -69,7 +69,9 @@ export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readon
     else if (ctx.nascent && onSubject(s)) bad("nascent-guard", at(at(p, "except"), i), "the item this entry opens is not in the range yet");
     except.push(typeof s === "string" ? s as Subject : "on");
   });
-  return { type: t, read: r, program: Object.freeze({ type: t.name, states: Object.freeze([...states]), where: where.plan, except: Object.freeze(except) }) };
+  const program = Object.freeze({ type: t.name, states: Object.freeze([...states]), where: where.plan, except: Object.freeze(except) });
+  recordRangePlan(d, r, program);
+  return { type: t, read: r, program };
 }
 
 /** One guard of an act or handler. `depth`: how deep it is nested; a guard as written is at 1. `inherited`: the subject of the guard that holds it. */
@@ -131,7 +133,9 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
   const nested = (gs: unknown, gp: string, inner: Ctx): readonly FormTrace[] => {
     if (depth >= bounds.guardDepth) { bad("bound", gp, `guards are nested at most ${bounds.guardDepth} deep`); return []; }
     const children: FormTrace[] = [];
-    list(gs, gp, bounds.guards).forEach((g, i) => { const child = guard(d, g, at(gp, i), inner, nesting, depth + 1, of); if (child) children.push(child); });
+    const scope = beginGuardList(d, gs, "guards");
+    try { list(gs, gp, bounds.guards).forEach((g, i) => { const child = guard(d, g, at(gp, i), inner, nesting, depth + 1, of); if (child) children.push(child); }); }
+    finally { endGuardList(d, scope); }
     return Object.freeze(children);
   };
   /**
@@ -349,11 +353,14 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
  * names no subject. Inside a list form, and in a condition, a mark is read
  * as a guard, which it is not.
  */
-export function guards(d: Defining, v: unknown, path: string, ctx: Ctx, written = false): void {
+export function guards(d: Defining, v: unknown, path: string, ctx: Ctx, written = false, place: GuardListPlace = "guards"): void {
   const nesting: Nesting = { count: 0 };
-  d.list(v, path, d.bounds.guards).forEach((g, i) => {
-    if (d.platform && written && marked(g)) { nesting.count++; mark(d, g, at(path, i), "guard"); } else guard(d, g, at(path, i), ctx, nesting);
-  });
+  const scope = beginGuardList(d, v, place);
+  try {
+    d.list(v, path, d.bounds.guards).forEach((g, i) => {
+      if (d.platform && written && marked(g)) { nesting.count++; mark(d, g, at(path, i), "guard"); } else guard(d, g, at(path, i), ctx, nesting);
+    });
+  } finally { endGuardList(d, scope); }
   // Section 6.1: the guards of one act or handler, counting those nested in `each`, `has` and `anyOf`.
   if (nesting.count > d.bounds.nestedGuards) d.bad("bound", path, `has ${nesting.count} guards, counting those nested; at most ${d.bounds.nestedGuards}`);
 }

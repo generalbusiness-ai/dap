@@ -42,13 +42,13 @@ export type GuardCode<N> =
 export interface GuardPlan<N> { readonly site: GuardSite; readonly code: GuardCode<N> }
 
 /** Replace pending child references once, without copying admitted read or binder identities. */
-export function mapGuardChildren<A, B>(plan: GuardPlan<A>, child: (value: A) => B): GuardPlan<B> {
+export function mapGuardChildren<A, B>(plan: GuardPlan<A>, child: (value: A) => B, origins?: WeakMap<object, object>): GuardPlan<B> {
   const code = plan.code;
   switch (code.op) {
     case "anyOf": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, alternatives: Object.freeze(code.alternatives.map(group => Object.freeze(group.map(child)))) }) });
     case "each": case "has": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, guards: Object.freeze(code.guards.map(child)) }) });
-    case "fact": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, type: immutable(code.type) }) });
-    case "capability": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, capability: immutable(code.capability) }) });
+    case "fact": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, type: immutable(code.type, origins) }) });
+    case "capability": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, capability: immutable(code.capability, origins) }) });
     case "state": case "signer": case "notIn": case "set": case "unset": case "equals": case "differs": case "some": case "none": case "count": case "every": case "before": case "after": case "rule": case "distinct": case "sameSet":
       return Object.freeze({ site: plan.site, code });
     default: return exhaustive(code);

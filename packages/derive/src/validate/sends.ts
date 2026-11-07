@@ -109,7 +109,7 @@ function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, owner: object,
 /** The condition of a send or a notice: guards, judged on the state before the entry's effects (section 6.6). */
 function condition(d: Defining, r: Rec, path: string, ctx: Ctx): void {
   // A state guard here shows nothing to the effects of the act, so what it finds live is not kept.
-  if ("if" in r) guards(d, r["if"], at(path, "if"), { ...ctx, live: new Set(ctx.live) });
+  if ("if" in r) guards(d, r["if"], at(path, "if"), { ...ctx, live: new Set(ctx.live) }, false, "if");
 }
 
 /** The `also` names that a written form reads as a subject: every `of`, and every `item` of an operand, that names one. */

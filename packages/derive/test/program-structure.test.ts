@@ -2,7 +2,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { validateDefinition, type ValidDefinition } from "../src/validate/index.ts";
-import { bodyJudgesClock, bodyStructure, clauseStructure, declaredClockReads, formStructures, guardPlan, structureOf, timedStructure, type BodyStructure, type StructureNode } from "../src/program/structure.ts";
+import { bodyJudgesClock, bodyStructure, clauseStructure, declaredClockReads, formStructures, guardList, guardPlan, rangePlan, structureOf, timedStructure, type BodyStructure, type StructureNode } from "../src/program/structure.ts";
 import { resolvedReads } from "../src/program/reads.ts";
 import { handlerBranch } from "../src/handler-branch.ts";
 import { lower } from "../src/program/lower.ts";
@@ -197,4 +197,41 @@ test("a refused capability argument does not copy the value its name already exc
   let result: ReturnType<typeof validateDefinition> | undefined;
   expect(() => { result = validateDefinition(input, PROPOSED_BOUNDS); }).not.toThrow();
   expect(result).toEqual({ ok: false, problems: [{ code: "capability", path: "acts.stage.guards.1.capability.with.unlisted", message: "is not an argument of the guard staged of hold@1" }] });
+});
+
+test("aliased conditions resolve by their owning form and semantic place", () => {
+  const input = clockData(), act = input.acts["edit"]!, shared = [{ before: { slot: "due" } }];
+  const effect = { value: { slot: "text", from: { const: "kept" } }, if: shared, unless: shared };
+  const second = { value: { slot: "due", from: { slot: "due" } }, if: shared, unless: shared };
+  act.effects = [effect, second];
+  const checked = admitted(input), body = bodyStructure(checked, act, "edit")!;
+  const owners = [formStructures(checked, body, effect)[0]!, formStructures(checked, body, second)[0]!];
+  const firstIf = guardList(checked, body, owners[0]!, shared, "if")!, firstUnless = guardList(checked, body, owners[0]!, shared, "unless")!;
+  const secondIf = guardList(checked, body, owners[1]!, shared, "if")!;
+  expect(firstIf).toHaveLength(1); expect(firstUnless).toHaveLength(1); expect(secondIf).toHaveLength(1);
+  expect(firstIf[0]).not.toBe(firstUnless[0]); expect(firstIf[0]).not.toBe(secondIf[0]);
+  const owned = owners[0]!;
+  if (owned.category !== "effect" || owned.op !== "value") return expect.fail("expected value effect");
+  expect(guardList(checked, body, owned, owned.data.if!, "if")).toBe(firstIf);
+  expect(guardList(checked, body, owned, [...shared], "if")).toBeNull();
+  expect(() => guardList(checked, { ...body }, owned, shared, "if")).toThrow("another validation");
+});
+
+test("an owned capability argument retains its range plan without borrowing another form", () => {
+  const input = capabilityStagingData(), act = input.acts["stage"]!, source = act.guards[2]!;
+  if (!("capability" in source)) return expect.fail("expected capability guard");
+  const argument = source.capability.with["earlier"];
+  if (!argument || !("items" in argument)) return expect.fail("expected range argument");
+  const checked = admitted(input), body = bodyStructure(checked, act, "stage")!, owner = formStructures(checked, body, source)[0]!;
+  if (owner.category !== "guard") return expect.fail("expected guard instruction");
+  const code = guardPlan(checked, body, owner)?.code;
+  if (code?.op !== "capability") return expect.fail("expected capability instruction");
+  const ownedArgument = code.capability.with["earlier"];
+  if (!ownedArgument || !("items" in ownedArgument)) return expect.fail("expected owned range argument");
+  const plan = rangePlan(checked, body, owner, argument.items)!;
+  expect(plan).toMatchObject({ type: "note", states: ["draft"], where: [], except: [] });
+  expect(ownedArgument.items).not.toBe(argument.items);
+  expect(rangePlan(checked, body, owner, ownedArgument.items)).toBe(plan);
+  expect(rangePlan(checked, body, body.nodes[0]!, argument.items)).toBeNull();
+  expect(() => rangePlan(checked, { ...body }, owner, argument.items)).toThrow("another validation");
 });
