@@ -1,4 +1,4 @@
-/** Concrete guard decisions over real in-memory ledger state; no production caller cutover yet. */
+/** Concrete guard decisions over real in-memory ledger state. Public callers have separate witnesses. */
 import { expect, test, vi } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Guard } from "@generalbusiness/dap-contract";
 import type { Judging } from "../src/guards.ts";

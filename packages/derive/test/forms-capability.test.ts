@@ -67,6 +67,27 @@ describe("capability forms (section 6.11), with a stand-in for the capability's 
     expect([reads(s.last.seq), reads(1)]).toEqual([["write", ""], ["refused", "pin-mismatch"]]);
   });
 
+  test("a capability range inside each reads the lexical element and preserves aliased arguments", () => {
+    const input = capabilityStagingData(), act = input.acts["stage"]!;
+    const original = act.guards[2]!;
+    if (!("capability" in original)) return expect.fail("expected capability guard");
+    const items = { type: "note", states: ["draft"], where: [{ equals: { a: { slot: "text" }, b: { element: "label" } } }] };
+    original.capability.with["earlier"] = { items, slot: "text" };
+    original.capability.with["selected"] = { items, slot: "text" };
+    act.fields["labels"] = { type: "list", of: { type: "text", max: 40 }, max: 4, required: true };
+    act.guards = [...act.guards.slice(0, 2), { each: { list: { field: "labels" }, as: "label", guards: [original] } }];
+    const s = new Scope(valid(validateDefinition(input, PROPOSED_BOUNDS))), rules = standIn();
+    const stage = (labels: string[]) => s.act(rita, "stage", { ...on(s, 0), fields: { commit: C1, labels } }, { capabilities: rules });
+    expect(stage([]).result).toBe("write");
+    rules.asked.length = 0;
+    expect(stage(["staged", "absent"]).result).toBe("write");
+    expect(rules.asked).toEqual([
+      ["hold@1", "staged", { commit: C1, under: 0 }],
+      ["git-read@1", "ancestry", { commit: C1, row: "report", selected: ["staged"], earlier: ["staged"] }],
+      ["git-read@1", "ancestry", { commit: C1, row: "report", selected: [], earlier: [] }],
+    ]);
+  });
+
   test("the validator checks each form against what the listed version declares, and a valid definition lists the forms that need a capability's own code", () => {
     // What this package reads and does not derive by itself, in the order read. A runtime with no code for them cannot run the definition.
     expect(staging.underived).toEqual([

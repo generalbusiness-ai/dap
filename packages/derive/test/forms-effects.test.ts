@@ -18,6 +18,7 @@ import { cards } from "./definition-corpus/forms-effects-data.ts";
 import { clockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
 import { clockScene } from "./fixtures-clock-cutover.ts";
 import { runClause } from "../src/handlers.ts";
+import { bodyStructure } from "../src/program/structure.ts";
 import { t } from "./fixtures-entry.ts";
 
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
@@ -137,7 +138,11 @@ const judging = (s: Scope, kind: string, bound: Record<string, number>, more: Gi
   signer: { member: rita.member, principal: null }, facts: new Map(), prepared: [], used: [], own: s.own,
 });
 /** What those effects derive there. Nothing is written. */
-const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}) => deriveEffects(judging(s, kind, bound, more), forms, more.attention ?? [], more.opens ?? null);
+const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}) => {
+  const act = s.definition.declared.acts[kind]!, attention = more.attention ?? [];
+  const body = act.effects === forms && attention.length === 0 ? bodyStructure(s.definition, act, kind) : null;
+  return deriveEffects(judging(s, kind, bound, more), forms, attention, more.opens ?? null, body);
+};
 
 describe("attribution: its sources and its order (section 6.7)", () => {
   /**
@@ -180,15 +185,28 @@ describe("attribution: its sources and its order (section 6.7)", () => {
     const some: Guard = { some: { type: "card", states: ["done"], where: [{ equals: { a: { slot: "parent" }, b: { item: "also.parent" } } }] } };
     const set: EffectForm = { value: { slot: "text", from: { const: "x" } } };
     const notice: Notify = { notify: { slot: "owner", of: "on", when: "after", reason: "told" } };
+    // Conditions execute under an admitted transition on the card they read.
+    // The older raw helper called these card forms under the opening summary act.
+    const transition = (forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}, guards: Guard[] = []) => {
+      const input = structuredClone(cards), attention = more.attention ?? [];
+      input.acts["probe"] = { ...input.acts["sum"]!, step: "transition", on: "card", effects: [...forms], attention, guards };
+      const checked = valid(validateDefinition(input, PROPOSED_BOUNDS)), act = checked.declared.acts["probe"]!;
+      const j = { ...judging(s, "sum", bound, more), definition: checked, kind: "probe", fieldTypes: act.fields };
+      return { j, act, body: bodyStructure(checked, act, "probe")! };
+    };
+    const conditional = (forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}) => {
+      const { j, act, body } = transition(forms, bound, more);
+      return deriveEffects(j, act.effects, act.attention, null, body);
+    };
     expect([
       // The range of the first source is not read whole. It is an exact set, so the input is not judged.
       derived(s, "sum", sum, { "also.parent": p }, { opens: "summary", bounds: stopped }),
       // A condition that is not completed, on an effect and on a notice. With every page read, the guard holds, and both are made.
-      derived(s, "sum", [{ ...set, of: "also.parent", if: [some] }], { "also.parent": p }, { bounds: stopped }),
-      derived(s, "sum", [], { on: p, "also.parent": p }, { bounds: stopped, attention: [{ notify: { ...notice.notify, if: [some] } }] }),
-      derived(s, "sum", [{ ...set, of: "also.parent", if: [some] }], { on: p, "also.parent": p }, { attention: [{ notify: { ...notice.notify, if: [some] } }] }),
+      conditional([{ ...set, of: "also.parent", if: [some] }], { "also.parent": p }, { bounds: stopped }),
+      conditional([], { on: p, "also.parent": p }, { bounds: stopped, attention: [{ notify: { ...notice.notify, if: [some] } }] }),
+      conditional([{ ...set, of: "also.parent", if: [some] }], { on: p, "also.parent": p }, { attention: [{ notify: { ...notice.notify, if: [some] } }] }),
       // A condition that fails makes no notice.
-      derived(s, "sum", [], { on: p, "also.parent": p }, { attention: [{ notify: { ...notice.notify, if: [{ unset: "owner" }] } }] }),
+      conditional([], { on: p, "also.parent": p }, { attention: [{ notify: { ...notice.notify, if: [{ unset: "owner" }] } }] }),
       // No subject is bound to `also.parent`: an effect on it is not applied. Nor is an attribution of it, which has no base, and the list is required.
       derived(s, "sum", [{ ...set, of: "also.parent" }], {}),
       derived(s, "sum", sum, {}, { opens: "summary" }),
@@ -222,7 +240,8 @@ describe("attribution: its sources and its order (section 6.7)", () => {
     expect([{ card: q }, { card: s.fact(q) }, { card: forged }, { card: 0 }, {}, { card: q, more: 1 }].map((sent) => copy("value", "near", sent))).toEqual([[{ card: q }], [{ card: q }], "bad-field", "bad-field", "bad-field", "bad-field"]);
 
     // The guards of one written list: the first is not completed and the second is false, so the list is false, by its second guard.
-    expect(judgeGuards(judging(s, "sum", { on: p, "also.parent": p }, { bounds: stopped }), [some, { unset: "owner" }])).toEqual({ result: "fail", at: 1 });
+    const ordered = transition([], { on: p, "also.parent": p }, { bounds: stopped }, [some, { unset: "owner" }]);
+    expect(judgeGuards(ordered.j, ordered.act.guards)).toEqual({ result: "fail", at: 1 });
   });
 });
 

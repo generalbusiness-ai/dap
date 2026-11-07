@@ -1,11 +1,13 @@
 /** Execute admitted operand descriptors over the shared value and entry-history leaves. */
 import type { FactRef } from "@generalbusiness/dap-contract";
 import type { Judging } from "../guards.ts";
-import { entryValue, slotOf, type EntrySelection } from "../operand.ts";
+import { entryValue, equal, slotOf, type EntrySelection } from "../operand.ts";
 import type { Item } from "../state.ts";
 import type { ElementIdentity } from "../validate/context.ts";
 import { isFactRef, isLocalId, isObject, own } from "../values.ts";
 import { checkedOperand, type EntryRead, type OperandRead, type PartRead, type SubjectRead } from "./reads.ts";
+
+import type { WherePlan } from "./guard-plan.ts";
 
 export type ElementValues = ReadonlyMap<ElementIdentity, unknown>;
 const noElements: ElementValues = new Map();
@@ -55,3 +57,8 @@ export function readValue(j: Judging, read: OperandRead, item: Item | null, elem
 }
 
 function exhaustive(value: never): never { throw new TypeError(`unknown operand descriptor: ${String(value)}`); }
+
+/** The admitted predicate vocabulary is shared by guards and whole-range consumers. */
+export function whereMatches(j: Judging, where: readonly WherePlan[], item: Item | null, elements: ElementValues = noElements): boolean {
+  return where.every(pair => equal(j, readValue(j, pair.a, item, elements), readValue(j, pair.b, item, elements)) === (pair.op === "equals"));
+}

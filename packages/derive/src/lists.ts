@@ -1,16 +1,13 @@
-/**
- * Ranges and list guards (scope contract, section 6.5): the local items a
- * range covers, and the forms `each`, `has`, `anyOf`, `distinct` and
- * `sameSet`. A list of guards has three results, and so has each of these
- * forms: true, false, or not completed. None is true or false on evidence
- * that the rest of an enumeration could overturn.
- */
+/** Ranges, shared three-outcome strategies, and opaque capability argument bindings. */
 
-import type { FieldType, Guard, Operand, Range, Subject, Where } from "@generalbusiness/dap-contract";
+import type { FieldType, Operand, Range } from "@generalbusiness/dap-contract";
 import type { GuardResult, Judging } from "./guards.ts";
-import { equal, operand } from "./operand.ts";
+import { operand } from "./operand.ts";
 import type { Item } from "./state.ts";
 import { own } from "./values.ts";
+import { whereMatches, type ElementValues } from "./program/read-value.ts";
+import type { RangePlan } from "./program/guard-plan.ts";
+import { rangePlan, type FormContext, type RangeUse } from "./program/structure.ts";
 
 // ---------------------------------------------------------------- three results
 
@@ -43,10 +40,6 @@ export function any(results: Iterable<() => GuardResult>): GuardResult {
 
 // ---------------------------------------------------------------- ranges
 
-/** One clause of a `where` or a `match`. A slot with no `of` is read from `item`. */
-export const holds = (j: Judging, w: Where, item: Item | null): boolean =>
-  ("equals" in w ? equal(j, operand(j, w.equals.a, item), operand(j, w.equals.b, item)) : !equal(j, operand(j, w.differs.a, item), operand(j, w.differs.b, item)));
-
 /** The items of the `except` subjects, once each. An unbound subject leaves nothing out. */
 export function excepted(j: Judging, r: Pick<Range, "except">): Item[] {
   const left = new Map<number, Item>();
@@ -64,12 +57,6 @@ export function excepted(j: Judging, r: Pick<Range, "except">): Item[] {
  * was read, which is complete evidence. `stopped`: `each` said so.
  * `unfinished`: the scan stopped at the work limit, and completes nothing.
  */
-export function scan(j: Judging, r: Range, each: (item: Item) => boolean): "all" | "stopped" | "unfinished" {
-  const where = r.where ?? [];
-  return scanItems(j, r, item => where.every(w => holds(j, w, item)), each);
-}
-
-/** Shared paging strategy; callers supply their already selected clause evaluator. */
 export function scanItems(j: Judging, r: Pick<Range, "type" | "states" | "except">, matches: (item: Item) => boolean, each: (item: Item) => boolean): "all" | "stopped" | "unfinished" {
   const states = [...new Set(r.states)];
   const left = new Set(excepted(j, r).map((i) => i.id));
@@ -91,9 +78,16 @@ export function scanItems(j: Judging, r: Pick<Range, "type" | "states" | "except
 }
 
 /** Every item a range covers, from complete evidence. Null: the scan did not finish, so the set is not known. */
-export function covered(j: Judging, r: Range): Item[] | null {
+export function covered(j: Judging, r: Range, context: FormContext, use: RangeUse, elements?: ElementValues): Item[] | null {
+  const plan = rangePlan(j.definition, context.body, context.owner, r, use);
+  if (!plan) throw new TypeError("range has no admitted caller context");
+  return coveredItems(j, plan, elements);
+}
+/** Shared complete-range strategy after the caller selects its admitted plan. */
+export function coveredItems(j: Judging, plan: RangePlan, elements?: ElementValues): Item[] | null {
   const items: Item[] = [];
-  return scan(j, r, (item) => { items.push(item); return false; }) === "all" ? items : null;
+  return scanItems(j, plan, item => whereMatches(j, plan.where, item, elements),
+    item => { items.push(item); return false; }) === "all" ? items : null;
 }
 
 // ---------------------------------------------------------------- elements
@@ -131,40 +125,4 @@ export function bindEach(j: Judging, list: Operand, as: string, item: Item | nul
   if (value !== null && !Array.isArray(value)) return null;
   const type = elementType(j, list, item);
   return ((value ?? []) as readonly unknown[]).map((element) => ({ ...j, elements: new Map(j.elements).set(as, element), elementTypes: new Map(j.elementTypes).set(as, type) }));
-}
-
-// ---------------------------------------------------------------- the list forms
-
-type ListGuard = Extract<Guard, { each: unknown } | { has: unknown } | { anyOf: unknown } | { distinct: unknown } | { sameSet: unknown }>;
-
-/**
- * A list form. `of` is the form's subject, which each nested guard takes
- * unless it names its own, and `item` is that subject's item. `judge`
- * judges one nested guard.
- */
-export function listGuard(j: Judging, g: ListGuard, of: Subject, item: Item | null, judge: (j: Judging, g: Guard, of: Subject) => GuardResult): GuardResult {
-  const list = (inner: Judging, guards: readonly Guard[]) => all(guards.map((n) => () => judge(inner, n, of)));
-  if ("anyOf" in g) return any(g.anyOf.map((alternative) => () => list(j, alternative)));
-  const form = "each" in g ? g.each : "has" in g ? g.has : "distinct" in g ? g.distinct : g.sameSet;
-  const bound = bindEach(j, form.list, form.as, item);
-  // A value that is not a list has no elements to judge. It fails closed.
-  if (bound === null) return "fail";
-  const where = (clauses: readonly Where[] | undefined) => bound.filter((b) => (clauses ?? []).every((w) => holds(b, w, item)));
-  // An empty list holds for `each` and fails for `has`. The enumeration of the list is always complete; the form is not, when a nested guard that it needs is not.
-  if ("each" in g) return all(where(g.each.where).flatMap((b) => g.each.guards.map((n) => () => judge(b, n, of))));
-  if ("has" in g) return any(where(g.has.where).map((b) => () => list(b, g.has.guards ?? [])));
-
-  // `sameSet` is an exact set, so it needs complete evidence for the range it reads.
-  const items = "sameSet" in g ? covered(j, g.sameSet.items) : [];
-  if (items === null) return "guard-incomplete";
-  // No two elements have equal keys, and no key is none.
-  const by = "sameSet" in g ? g.sameSet.key : g.distinct.key;
-  const keys = bound.map((b) => operand(b, by, item));
-  if (keys.some((key, i) => key === null || keys.slice(0, i).some((earlier) => equal(j, earlier, key)))) return "fail";
-  if (!("sameSet" in g)) return "pass";
-  // The keys are distinct, so they are exactly the local IDs of the items when there are as many and each is one of them.
-  const matched = keys.map((key) => items.find((i) => equal(j, key, i.id)));
-  if (keys.length !== items.length || !matched.every((m) => m !== undefined)) return "fail";
-  if (!bound.every((b, n) => (g.sameSet.match ?? []).every((w) => holds(b, w, matched[n]!)))) return "fail";
-  return g.sameSet.ordered && matched.some((m, n) => n > 0 && matched[n - 1]!.id >= m!.id) ? "fail" : "pass";
 }

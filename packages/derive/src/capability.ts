@@ -20,6 +20,8 @@ import type { Bounds, Capability, CapabilityArg, CapabilityName, DeclaredDefinit
 import type { GuardResult, Judging } from "./guards.ts";
 import type { Underived } from "./validate/capability.ts";
 import { bindEach, covered } from "./lists.ts";
+import type { ElementValues } from "./program/read-value.ts";
+import type { FormContext } from "./program/structure.ts";
 import { operand, slotOf } from "./operand.ts";
 import type { HoldEffect } from "./hold.ts";
 import type { Most } from "./ledger.ts";
@@ -212,7 +214,7 @@ function rulesFor(j: Judging, name: string, form: "guard" | "effect", of: string
  * guard does not hold, the refusal is `capability-refused` with the name
  * that the capability gives: `declined` keeps it for the judge.
  */
-export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unknown }>, item: Item | null, identity: Guard = g): GuardResult {
+export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unknown }>, item: Item | null, identity: Guard = g, context?: FormContext & { readonly elements: ElementValues }): GuardResult {
   const { name, guard, with: written } = g.capability;
   const matched = rulesFor(j, name, "guard", guard);
   if (!matched) return "unavailable";
@@ -224,7 +226,8 @@ export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unkn
       if (bound === null) return "fail";
       args.push([arg, bound.map((b) => operand(b, from.value, item))]);
     } else if ("items" in from) {
-      const range = covered(j, from.items);
+      if (!context) throw new TypeError("capability range has no admitted form context");
+      const range = covered(j, from.items, context, `capability:${arg}`, context.elements);
       if (range === null) return "guard-incomplete";
       args.push([arg, range.map((i) => slotOf(i, from.slot))]);
     } else args.push([arg, operand(j, from, item)]);

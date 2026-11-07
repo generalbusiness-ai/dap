@@ -3,14 +3,14 @@ import type { FieldType, MemberRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { capabilityGuard } from "../capability.ts";
 import { members, preparedRule, type GuardResult, type Judging } from "../guards.ts";
-import { all, any, excepted, scanItems } from "../lists.ts";
+import { all, any, coveredItems, excepted, scanItems } from "../lists.ts";
 import { guardByRule } from "../marks.ts";
 import { entryValue, equal, kindOf, normalValue, slotOf } from "../operand.ts";
 import type { Item } from "../state.ts";
 import { timeMs } from "../time.ts";
 import { isFactRef, isLocalId, own, same } from "../values.ts";
 import type { BoundPlan, GuardCode, RangePlan, WherePlan } from "./guard-plan.ts";
-import { readValue, type ElementValues } from "./read-value.ts";
+import { readValue, whereMatches, type ElementValues } from "./read-value.ts";
 import type { OperandRead } from "./reads.ts";
 import { checkedBody, guardPlan, guardSource, type BodyStructure, type GuardNode } from "./structure.ts";
 
@@ -18,7 +18,7 @@ const noElements: ElementValues = new Map();
 const ok = (holds: boolean): GuardResult => holds ? "pass" : "fail";
 interface Reading { readonly j: Judging; readonly elements: ElementValues }
 const matches = ({ j, elements }: Reading, where: readonly WherePlan[], item: Item | null): boolean =>
-  where.every(pair => equal(j, readValue(j, pair.a, item, elements), readValue(j, pair.b, item, elements)) === (pair.op === "equals"));
+  whereMatches(j, where, item, elements);
 
 function range(reading: Reading, op: "some" | "none" | "count", r: RangePlan, min?: number, max?: number): GuardResult {
   const { j, elements } = reading;
@@ -48,11 +48,6 @@ function range(reading: Reading, op: "some" | "none" | "count", r: RangePlan, mi
   const end = scanItems(j, r, item => matches(reading, r.where, item), () => (decided = decide(++matched, false)) !== null);
   return end === "stopped" ? decided! : end === "all" ? decide(matched, true)! : "guard-incomplete";
 }
-function covered(reading: Reading, r: RangePlan): Item[] | null {
-  const items: Item[] = [];
-  return scanItems(reading.j, r, item => matches(reading, r.where, item), item => { items.push(item); return false; }) === "all" ? items : null;
-}
-
 /** Top-level and nested lists retain the shared three-outcome ordering. */
 export function judgeGuardNodes(j: Judging, body: BodyStructure, nodes: readonly GuardNode[], elements: ElementValues = noElements): { result: GuardResult; at: number } {
   checkedBody(j.definition, body);
@@ -130,7 +125,7 @@ function executeGuard(j: Judging, body: BodyStructure, node: GuardNode, elements
       return ok(deadline !== null && (code.op === "before" ? now < deadline : now > deadline));
     }
     case "rule": return preparedRule(j, code.rule).result;
-    case "capability": return capabilityGuard(j, { capability: code.capability }, item, guardSource(j.definition, body, node));
+    case "capability": return capabilityGuard(j, { capability: code.capability }, item, guardSource(j.definition, body, node), { body, owner: node, elements });
     case "anyOf": return any(code.alternatives.map(group => () => judgeList(j, body, group, elements).result));
     case "each": case "has": case "distinct": case "sameSet": return listGuard(reading, body, code, item);
     default: return exhaustive(code);
@@ -152,7 +147,7 @@ function listGuard(reading: Reading, body: BodyStructure, code: Extract<GuardCod
     return code.op === "each" ? all(selected.flatMap(inner => code.guards.map(guard => () => executeGuard(inner.j, body, guard, inner.elements))))
       : any(selected.map(inner => () => judgeList(inner.j, body, code.guards, inner.elements).result));
   }
-  const items = code.op === "sameSet" ? covered(reading, code.items) : [];
+  const items = code.op === "sameSet" ? coveredItems(j, code.items, elements) : [];
   if (items === null) return "guard-incomplete";
   const keys = bound.map(inner => readValue(inner.j, code.key, item, inner.elements));
   if (keys.some((key, index) => key === null || keys.slice(0, index).some(earlier => equal(j, earlier, key)))) return "fail";

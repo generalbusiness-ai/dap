@@ -293,7 +293,20 @@ export function rangePlan(definition: ValidDefinition, body: BodyStructure, owne
   const matches = found.ranges.get(original)?.filter(range => range.body === body && range.owner === owner && range.use === use);
   return matches?.length === 1 ? matches[0]!.plan : null;
 }
-/** Unsupported instructions stay explicit until the complete M4 capture reaches its callers. */
+/** An existing raw-list caller must name one actual admitted group. */
+export function guardListContext(definition: ValidDefinition, source: object, kind: string): { readonly body: BodyStructure; readonly nodes: readonly GuardNode[] } | null {
+  const found = compiled.get(definition), original = found?.origins.get(source) ?? source;
+  const matches = found?.guardLists.get(original)?.filter(list => list.body.frame.context.kind === kind || list.body.frame.context.kind === null);
+  return matches?.length === 1 ? { body: matches[0]!.body, nodes: matches[0]!.nodes } : null;
+}
+/** Compatibility with a single raw guard requires its unique actual occurrence. */
+export function guardContext(definition: ValidDefinition, source: Guard, kind: string, inherited: string): { readonly body: BodyStructure; readonly node: GuardNode } | null {
+  const matches = compiled.get(definition)?.forms.get(source)?.filter((binding): binding is { body: BodyStructure; node: GuardNode } =>
+    binding.node.category === "guard" && (binding.body.frame.context.kind === kind || binding.body.frame.context.kind === null)
+    && (binding.node.op === "native" || guardPlans.get(binding.node)?.site.subject === (source.of ?? inherited)));
+  return matches?.length === 1 ? matches[0]! : null;
+}
+/** Each declared guard reads its actual admitted executable instruction. Native stays opaque. */
 export function guardPlan(definition: ValidDefinition, body: BodyStructure, node: GuardNode): GuardPlan<GuardNode> | null {
   if (rootOwners.get(body) !== definition || nodeRoots.get(node) !== body) throw new TypeError("guard instruction belongs to another admitted body");
   return guardPlans.get(node) ?? null;
@@ -312,6 +325,16 @@ export function timedStructure(definition: ValidDefinition, kind: string, effect
   if (!source || source.effects !== effects || source.attention !== attention) return null;
   const body = bodyStructure(definition, source, `timed:${kind}`);
   return body?.frame.kind === "timed" ? body : null;
+}
+
+export interface FormContext { readonly body: BodyStructure; readonly owner: StructureNode }
+/** Select the actual written occurrence, even when two forms share one object. */
+export function formContext(definition: ValidDefinition, body: BodyStructure | null, category: Category, ordinal: number, source: object): FormContext {
+  if (!body) throw new TypeError("form has no admitted body context");
+  checkedBody(definition, body);
+  const owner = body.nodes.filter(node => node.category === category)[ordinal];
+  if (!owner || !formStructures(definition, body, source).includes(owner)) throw new TypeError("form does not match its admitted occurrence");
+  return { body, owner };
 }
 
 export interface ClockRead { readonly path: string; readonly kind: "before" | "after" | "value-time" }
