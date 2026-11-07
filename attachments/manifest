@@ -1,0 +1,179 @@
+{
+  "request": "e39e7cef7b8ed71c445ae1285de6dec9b2fbe1ae",
+  "plan": "17ed150da7f5433a853d4bfd8917d398d12b684c",
+  "sourceHead": "9d96cf25ec4ee8d1f586e32569011bd17c08a6de",
+  "sealedUtc": "2026-11-07T16:38:25.769315+00:00",
+  "qualification": "Read-only S1 preparation. Loader refusal exit9 ran no cases. One subsequent component probe exit1 exposed late-abrupt row deletion; three controlled scenarios matched their expected rows. No HostedAgent ingress reachability, Native judgment, provider result, deployment, source edit, gate, review or S1 implementation acceptance. Existing source witnesses were inspected, not rerun. M4 remains first through review.",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s1-opening-loader-refusal",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 793,
+          "sha256": "687d0086084e1a1793fdd96487f472e54181d482004b3765285dec35263efc6b"
+        },
+        {
+          "path": "after.json",
+          "bytes": 605,
+          "sha256": "25766448a415974c2af7af9db8343ea01168b5acfdb368832fb5a87d3d87fa3c"
+        },
+        {
+          "path": "before.json",
+          "bytes": 605,
+          "sha256": "25766448a415974c2af7af9db8343ea01168b5acfdb368832fb5a87d3d87fa3c"
+        },
+        {
+          "path": "post-run-refusal.json",
+          "bytes": 425,
+          "sha256": "395f920e8db49233f1e36afc88d99e50c6024132600edcf822199d77357ed5e4"
+        },
+        {
+          "path": "probe.exit",
+          "bytes": 7,
+          "sha256": "2e2d3376a3d7f938809b5720833e5d2f14bc1e9ce3ba9566faf94126688bf610"
+        },
+        {
+          "path": "probe.mjs",
+          "bytes": 3889,
+          "sha256": "fcd9bfecf62bb066e29b49a22e02189e33cb7e71784f90db79706717c73a2cc6"
+        },
+        {
+          "path": "probe.stderr",
+          "bytes": 67,
+          "sha256": "66732246ef327de66c9f5e0e10eecb0210025db3c619145f12158f244152a7be"
+        },
+        {
+          "path": "probe.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "process-closure.json",
+          "bytes": 202,
+          "sha256": "bca0dca788060e2deade41c55bacb3d99dfbcaf06e334e472b0de2ab97b31a01"
+        },
+        {
+          "path": "run.py",
+          "bytes": 2356,
+          "sha256": "0547b4120153c1c9886398802b101c201e7e05c2dccb0345a5360831082303b2"
+        },
+        {
+          "path": "started.json",
+          "bytes": 237,
+          "sha256": "b4bee0cba200d3f2f6d86ac3a36f8a87c09ee25dd984ff3cf937331fa06ec9f7"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s1-opening-component",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1028,
+          "sha256": "cbf20e2593a8b96ebdb4ce5c856ca2582d40011b038c1384c7fa02a42bbde790"
+        },
+        {
+          "path": "after.json",
+          "bytes": 605,
+          "sha256": "25766448a415974c2af7af9db8343ea01168b5acfdb368832fb5a87d3d87fa3c"
+        },
+        {
+          "path": "before.json",
+          "bytes": 605,
+          "sha256": "25766448a415974c2af7af9db8343ea01168b5acfdb368832fb5a87d3d87fa3c"
+        },
+        {
+          "path": "loader.json",
+          "bytes": 415,
+          "sha256": "92772349066d2c28bbc79117b36c1391b8ee612bf6ba409e74512018c74734fd"
+        },
+        {
+          "path": "probe.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "probe.mjs",
+          "bytes": 3889,
+          "sha256": "fcd9bfecf62bb066e29b49a22e02189e33cb7e71784f90db79706717c73a2cc6"
+        },
+        {
+          "path": "probe.stderr",
+          "bytes": 191,
+          "sha256": "24bbd04ee1998a71f4544d6020bf9e541412fae55db1746c81ce16f198f0b449"
+        },
+        {
+          "path": "probe.stdout",
+          "bytes": 118,
+          "sha256": "08206bd114dc74ca3db4338714599fa3c222c6da456b6db9bd42c1b090d55c29"
+        },
+        {
+          "path": "process-closure.json",
+          "bytes": 202,
+          "sha256": "3a5374013b193f0b83fa59640dbd85b9c25e88f531639d096fcd75f59bec728a"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 221,
+          "sha256": "b7b2d9f76d615f391d7003e9a7d499f49d52117d886237d865738f14f59a9b81"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1947,
+          "sha256": "ef36edbc348bd02577d97fd3f1e194db60d9c78788cd719a335a9e3f3f800e37"
+        },
+        {
+          "path": "run.py",
+          "bytes": 2430,
+          "sha256": "1eaf772b59c66f5e77e55f0e80cbd9535031e9c05aff0e89c9e47eba2cff56a4"
+        },
+        {
+          "path": "started.json",
+          "bytes": 288,
+          "sha256": "995f76999dfb4f7a081e28fc4f992612a1c55fc8b210f51155185d8ee4c75d72"
+        },
+        {
+          "path": "test-title-index.json",
+          "bytes": 6272,
+          "sha256": "344fb2af5896e2e90320c4395c3bd87f9040ea32a5d5ba9da628c35d77a347d1"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s1-lifecycle-witness-map",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 528,
+          "sha256": "4aed9522379eee374fbb951afe033a18b4188dee9a3485d0a115cdc8d7953715"
+        },
+        {
+          "path": "artroom-s1-complete-seal-20261107.py",
+          "bytes": 3235,
+          "sha256": "915d504d37991ef3e0376bee0900b15fd78e6d57170bdd76ec4edc0355334c5c"
+        },
+        {
+          "path": "artroom-s1-lifecycle-witness-map-20261107.json",
+          "bytes": 12543,
+          "sha256": "18ba33fa02eba57d0cb753fa5adfbdf4431ceb8e515364095a57e96435e6dae8"
+        },
+        {
+          "path": "artroom-s1-opening-observation-plan-20261107.txt",
+          "bytes": 1559,
+          "sha256": "bab8e01b5eb82303cd8dcaa9069ad16026a14b207d0a7b945342f19041b4d857"
+        },
+        {
+          "path": "artroom-s1-seal-opening-evidence-20261107.py",
+          "bytes": 3672,
+          "sha256": "943a228d46dcdd1bf65f78b434692d3d167a8ed9ad43959b3f58f6abc4ae0486"
+        },
+        {
+          "path": "sealer-refusal.json",
+          "bytes": 447,
+          "sha256": "6d65300c61ec6d23c7ae9ec6b3278e14d912dce19f8d5eb6222adddee705d3a2"
+        }
+      ]
+    }
+  ]
+}

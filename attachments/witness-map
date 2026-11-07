@@ -1,0 +1,192 @@
+{
+  "request": "e39e7cef7b8ed71c445ae1285de6dec9b2fbe1ae",
+  "sourceHead": "9d96cf25ec4ee8d1f586e32569011bd17c08a6de",
+  "scope": "Read-only S1 preparation. No source edit, implementation branch, gate, hosted action or current implementation approval. M4 remains first through review.",
+  "sources": [
+    {
+      "path": "packages/mcp/src/http.ts",
+      "wholeFileSha256": "e16ff14102cbdd7e511e50bcf1281450d2c78f2d8c62568a3edd75f3318abc75",
+      "sameAtMainAndAuditBase": true
+    },
+    {
+      "path": "packages/mcp/src/oauth-http.ts",
+      "wholeFileSha256": "1dba1fca13727519084092f3bd903d8d06ff71172922e0d9f884ded3e1d93626",
+      "sameAtMainAndAuditBase": true
+    },
+    {
+      "path": "packages/mcp/src/hosted.ts",
+      "wholeFileSha256": "f43b0057127640626f1f3d1f17e3a14517c305fa8644e6e12c38ed27d2f53e29",
+      "sameAtMainAndAuditBase": true
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "packages/mcp/test/http-idle.test.ts",
+      "line": 53,
+      "title": "legacy activity renews durable idle time; exact expiry closes streams after authorization and revision checks",
+      "property": "Authenticated legacy activity renews durable idle time; exact idle expiry removes rows and closes streams. Modern/origin/bearer refusals do not renew legacy idle state.",
+      "boundary": "Actual HTTP/Wire; scope reads, persistence and clocks are stand-ins.",
+      "fileSha256": "a38a5d4077f3d1125d6fa7597f55201a72bbcc938d604c5eb70f834ef755a5f7",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/http-idle.test.ts",
+      "line": 84,
+      "title": "restored idle deadlines survive eviction and expiry orders removal after a pending activity write",
+      "property": "Eviction preserves last activity; removal waits behind admitted writes; late activity cannot recreate an expired row.",
+      "boundary": "Actual HTTP/Wire, scripted store and held persistence.",
+      "fileSha256": "a38a5d4077f3d1125d6fa7597f55201a72bbcc938d604c5eb70f834ef755a5f7",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/http-idle.test.ts",
+      "line": 120,
+      "title": "hosted lifetime closes both stream eras at bounded rechecks and canceled callbacks cannot close a replacement layer",
+      "property": "Hard deadline closes legacy and modern streams; cancellation generation fences a dequeued callback from closing a replacement.",
+      "boundary": "Actual HTTP/Wire with explicit scheduler and store stand-ins.",
+      "fileSha256": "a38a5d4077f3d1125d6fa7597f55201a72bbcc938d604c5eb70f834ef755a5f7",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/http-idle.test.ts",
+      "line": 182,
+      "title": "hosted expiry fences deferred openings and initialization while an admitted custodial call still settles once",
+      "property": "Deferred stream opening and initialization cannot attach after expiry; already-admitted custodial work settles once.",
+      "boundary": "Actual HTTP/Wire/service with scope-fetch, scheduler and session-store stand-ins.",
+      "fileSha256": "a38a5d4077f3d1125d6fa7597f55201a72bbcc938d604c5eb70f834ef755a5f7",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/oauth-http.scope.test.ts",
+      "line": 19,
+      "title": "grant stream cancellation releases timers and a held standing refresh cannot extend the previous read deadline",
+      "property": "Canceling the last stream releases timers. A held standing refresh cannot extend the prior successful lease. closeGrant(id,true) disposes a late opening without waiting for it.",
+      "boundary": "Actual OAuth access and grant-layer manager with DO SQLite; scope/standing/session/timer stand-ins. The late-opening block has no restored rows and does not test abrupt retirement.",
+      "fileSha256": "6cc576a502cea3ab588ca7c1dd2b8962226b8e3befd429e69b04d00d9d7c71d4",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/hosted.scope.test.ts",
+      "line": 1351,
+      "title": "a listing pending while its session is deleted persists nothing: the old ID stays 404 across a reset, the accounting is as before the session, and a fresh session is issued",
+      "property": "Late listing after session deletion creates no row; accounting and 404 survive reset.",
+      "boundary": "Hosted/Worker route and native fixture with actual agent SQL; config hold is a test fence.",
+      "fileSha256": "0d9832d0dc16134d4b6dbb0306735c533ea84e7277e1e51e427a88e245e35a13",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/hosted.scope.test.ts",
+      "line": 791,
+      "title": "H2, H3 and H4: agents kept apart, control authority, the bearer and revocation",
+      "property": "Rotating a bearer closes its already-open stream, removes old sessions, refuses the old bearer and serves the new one.",
+      "boundary": "Hosted Native route owner. This named portion does not hold installed-application service opening across the epoch change.",
+      "fileSha256": "0d9832d0dc16134d4b6dbb0306735c533ea84e7277e1e51e427a88e245e35a13",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/oauth-hosted.scope.test.ts",
+      "line": 61,
+      "title": "refresh retains its own sessions and revocation removes only that grant's sessions",
+      "property": "Refresh retains its own durable session; revocation removes only that grant and retirement ends all grants.",
+      "boundary": "Production hosted/grant classes over actual DO SQLite; authority and transport replies use fixture ports.",
+      "fileSha256": "3a9a439941ede1da6f705f36e1b0857f52c84fa21e79c660fa711b10ed5f3d26",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/oauth-access.scope.test.ts",
+      "line": 18,
+      "title": "a removed controller ends a valid grant at the standing bound and rejoining cannot revive it",
+      "property": "A retired grant cannot revive when its controller rejoins.",
+      "boundary": "Production grant checker over actual Durable Object SQLite; standing answers and clock are explicit stand-ins. This does not prove Native membership judgment or issuance.",
+      "fileSha256": "391e1bb878a8e6b41d6700a95fdeb70be9bc488c52d32b9e2ac41d3766999e32",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/http.test.ts",
+      "line": 218,
+      "title": "two GETs that enter while the snapshot is held cannot both pass the limit",
+      "property": "Opening and replacement generation owns one stream slot until it has neither a live stream nor a pending opening.",
+      "boundary": "Loopback HTTP/Wire with controlled snapshot/client cancellation.",
+      "fileSha256": "5cbb53d87741b1ce808047a8e2767d937b50ed600d6350746ad16ebea95bbc07",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/http.test.ts",
+      "line": 243,
+      "title": "the held opening releases its slot and attaches no stream; four healthy opens follow",
+      "property": "Opening and replacement generation owns one stream slot until it has neither a live stream nor a pending opening.",
+      "boundary": "Loopback HTTP/Wire with controlled snapshot/client cancellation.",
+      "fileSha256": "5cbb53d87741b1ce808047a8e2767d937b50ed600d6350746ad16ebea95bbc07",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/http.test.ts",
+      "line": 270,
+      "title": "four live incumbents stay counted as four: the aborted replacement gives the slot back, and a fifth session is refused",
+      "property": "Opening and replacement generation owns one stream slot until it has neither a live stream nor a pending opening.",
+      "boundary": "Loopback HTTP/Wire with controlled snapshot/client cancellation.",
+      "fileSha256": "5cbb53d87741b1ce808047a8e2767d937b50ed600d6350746ad16ebea95bbc07",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/http.test.ts",
+      "line": 300,
+      "title": "its client's going away still reaches the opening: the live stream stays",
+      "property": "Opening and replacement generation owns one stream slot until it has neither a live stream nor a pending opening.",
+      "boundary": "Loopback HTTP/Wire with controlled snapshot/client cancellation.",
+      "fileSha256": "5cbb53d87741b1ce808047a8e2767d937b50ed600d6350746ad16ebea95bbc07",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/http.test.ts",
+      "line": 339,
+      "title": "R1 and R2 replace A; R1 installs B; R3 replaces B and goes away; R2 goes away last: B stays counted, a fifth is refused",
+      "property": "Opening and replacement generation owns one stream slot until it has neither a live stream nor a pending opening.",
+      "boundary": "Loopback HTTP/Wire with controlled snapshot/client cancellation.",
+      "fileSha256": "5cbb53d87741b1ce808047a8e2767d937b50ed600d6350746ad16ebea95bbc07",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    },
+    {
+      "path": "packages/mcp/test/http.test.ts",
+      "line": 385,
+      "title": "the incumbent's slot passes to the replacement: its cancellation frees nothing for another session",
+      "property": "Opening and replacement generation owns one stream slot until it has neither a live stream nor a pending opening.",
+      "boundary": "Loopback HTTP/Wire with controlled snapshot/client cancellation.",
+      "fileSha256": "5cbb53d87741b1ce808047a8e2767d937b50ed600d6350746ad16ebea95bbc07",
+      "runStatus": "Existing source inspected; this preparation did not rerun this owner."
+    }
+  ],
+  "dispositions": {
+    "graceful": "Ends streams and queues durable row removal after admitted writes.",
+    "detach": "Ends the old credential transport with final events, retaining durable session rows for its replacement credential.",
+    "abrupt": "Ends transport without final stream events and retains durable session rows.",
+    "preservationRule": "Automatic late-opening cleanup must use the disposal mode that retired that generation. Do not silently replace abrupt/detach cleanup with graceful row deletion."
+  },
+  "observedGap": {
+    "label": "late-abrupt",
+    "actualCallOrder": [
+      "abrupt",
+      "wire.endLegacy",
+      "closeAll",
+      "wire.endLegacy",
+      "wire.closeAll",
+      "remove"
+    ],
+    "expectedRetainedRows": 1,
+    "actualRetainedRows": 0,
+    "childExit": 1,
+    "qualification": "Confirmed only at the component boundary with actual OAuthHttpLayers and McpHttp and explicit standing/Wire/store stand-ins. HostedAgent ingress reachability remains unproven.",
+    "requiredCharacterizationName": "abrupt disposal of a held OAuth opening rejects the late layer and retains its restored session rows"
+  },
+  "gapToConfirm": {
+    "guarantee": "Hosted bearer-epoch retirement during a deferred installed-application opening",
+    "sourceFences": [
+      "hosted.ts #httpOf/#openHttp captures epoch and refuses stale results before restore/install",
+      "hosted.ts fetch reauthorizes after opening before dispatch",
+      "hosted.ts bearer/retire and abrupt increment epochs before disposal"
+    ],
+    "searchScope": "Named witnesses in six indexed HTTP/OAuth/hosted owners plus literal applicationContent search across packages/mcp/test.",
+    "qualification": "Existing rotation witness covers already-open transport. No dedicated held installed-application opening witness was identified in this scan. Confirm at S1 implementation before adding a characterization."
+  },
+  "securityOwners": "All three source paths have parser source seals in scripts/security-entry-points.test.mjs. No seal changed; future exact seal patch requires the standing approval rule. Whole-file hashes above are a different domain."
+}
