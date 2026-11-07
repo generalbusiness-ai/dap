@@ -44,9 +44,11 @@ which moves guards and lists onto the typed path, was under way at the close.
 - The Site refusal. Cost: one stop and one read-only follow-up for a Cloudflare
   edge block on a scripted client. Alternative: send a normal User-Agent from
   every probe. Revisit: no.
-- Refiled requests. Cost: the 5 November report and M3 each had a request
-  chain go stale when a landing retired bases upstream, and each was refiled.
-  Alternative: rest a report request on nothing. Revisit: yes.
+- Refiled requests. Cost: two request chains went stale and were refiled.
+  The 5 November report's chain went stale when a landing retired the bases
+  it rested on. M3's chain went stale when the builder replaced the packet's
+  first review request. Alternative for the report: rest a report request on
+  nothing. Revisit: yes.
 - Survey gaps. Cost: no planner survey from 01:00 to 06:00, and none after
   07:05, because no survey prompt reached the planner. Revisit: no.
 
@@ -57,8 +59,9 @@ which moves guards and lists onto the typed path, was under way at the close.
 - The builder runs old-room steps with existing homes; the planner runs the
   switch and the new room from a fresh home (`103f8413`).
 - No rollback for the Site 403; it is a Cloudflare edge refusal (`ec5b86e0`).
-- dap-demo deploys only from its rendered rollout configuration until that
-  configuration's record lands.
+- The planner deploys dap-demo only from its reviewed offer configuration,
+  as an operating practice, until that configuration's record lands
+  (`55b77e8b`).
 
 ## Corrections
 
