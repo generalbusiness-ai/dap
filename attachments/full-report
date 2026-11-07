@@ -1,0 +1,304 @@
+# DAP implicit state-machine inventory
+
+Source: /Users/hughpyle/play/artroom at e50d9eebb27f47d0f33549486751ab8bdce8de80.
+Audit date: 7 November 2026. Read-only source audit. No source changes, tests, or gate runs.
+
+This inventory treats a state machine as implicit when legal next steps depend on flags, nullable fields, collections, retained records, or prior calls. Some machines expose phase labels but keep important substates across other fields. The names below describe inferred machines, not confirmed defects.
+
+Coverage: live libraries, apps, examples, and tooling. Exclusions: dependencies, generated copies, historical notes, test fixtures, and ordinary accumulation loops. Rows group repeated implementations. Paths below resolve against the source checkout and commit above. This inventory does not claim formal proof of exhaustiveness.
+
+## Core derivation and folded state
+
+| Machine | State carrier and transitions | Source |
+|---|---|---|
+| Scope activation and held work | Genesis establishes provisional, active, or refused status. Confirmation activates the scope and releases held sends and operations. Explicit status labels participate in a distributed lifecycle. | packages/derive/src/fold.ts:58 |
+| Outgoing request settlement | result and diagnosis distinguish pending, unavailable, undelivered, and answered. A late authentic result can follow an unavailable diagnosis. | packages/derive/src/state.ts:44; packages/derive/src/settle.ts:53 |
+| Incoming delivery consumption | Absence from decided means unconsumed. Recording consumes permanently. sourceOrder separately determines whether an ordered tell has become stale. | packages/derive/src/fold.ts:210 |
+| Intent acceptance and preparation | Accepted-key and prepared-step indexes distinguish unseen, prepared, accepted, repeat, and conflicting requests. Preparation does not consume the act idempotency key. | packages/derive/src/fold.ts:199 |
+| Operation attempts | Attempt-array length and outcomes encode held → opened → unknown → late decisive answer, or opened → decisive answer. Retries add numbered attempts within most. | packages/derive/src/ledger.ts:341 |
+| Operation selection and settlement | selected, attempt outcomes, and sent evolve independently. Selection happens once. Settlement requires every opened attempt to become decisive. A selected operation can remain unsettled. | packages/derive/src/ledger.ts:279 |
+| Child-incarnation selection | The first applied creation result binds a seed to an incarnation. Later conflicting incarnations do not replace it. | packages/derive/src/fold.ts:223 |
+| Hold ownership and fencing | Holder, epoch, and finality encode opening, same-holder renewal, takeover, and termination. Finalizing the underlying item ends its holds. | packages/derive/src/hold.ts:43 |
+| Reservation and duty ownership | Holder counts, request accounts, item duties, and settled-holder membership encode reserved → drawn → outstanding → releasable. Finality alone does not release every reservation. | packages/derive/src/draws.ts:211; packages/derive/src/item-duties.ts:48; packages/derive/src/request-duties.ts:11 |
+| Marker completion | Item state plus boolean marker slots determines independent pending tasks and retained capacity. | packages/derive/src/markers.ts:138 |
+| Standing-capacity consumption | Singleton absence, identity, and monotonic count encode unopened capacity → partly consumed → exhausted. Replacement and count regression refuse. | packages/derive/src/standing.ts:17 |
+| Deadline eligibility | Item state, deadline, and clamped clock determine not due → due → transitioned. Due work precedes ordinary admission. | packages/derive/src/timed.ts:22; packages/derive/src/time.ts:28 |
+| Observation acceptance and settlement | Highest retained heads prevent regression. Row settlement tracks missing, served, over-bound, chosen, and retained observations. | packages/derive/src/fold.ts:239; packages/derive/src/observes.ts:375 |
+| Detached-text retention | Slots accumulate digests. Redaction clears outstanding retained texts while preserving the tombstone and slot digest. | packages/derive/src/fold.ts:123 |
+| Journal retention and index validity | Floor, kept positions, dependency hashes, and readiness markers distinguish retained, archived, explicitly kept, stale-index, and current-index states. | packages/derive/src/floor.ts:1; packages/derive/src/state.ts:395 |
+| Definition-admission capture | Weak maps, active bodies, and form stacks encode capture → nested capture → closed → compiled. Unclosed scopes cannot finish. | packages/derive/src/program/structure.ts:70; packages/derive/src/program/reads.ts:27 |
+| Program evaluation | Before-state and working subjects, effects, prepared-rule usage, and trace budget encode guards → opening → ordered effects → sends → result. | packages/derive/src/program/evaluate.ts:16 |
+| Rule-engine readiness | A shared promise encodes unchecked → checking → checked and resets after failure. | packages/derive/src/rule/evaluator.ts:293 |
+| Rule-execution budgets | Active AST ancestry, depth, step count, inspected bytes, and prepared-input memo encode active evaluation → completed or deterministic refusal/runtime failure. | packages/derive/src/rule/evaluator.ts:181 |
+
+Capability records have explicit state names. Their distributed workflows still span records, operations, and evidence: token mint/revoke; root creation/retirement; fork creation/selection/cleanup; pin admission/release; receiver-pin decisions; current/past workspace instances; and device-command completion. Sources: packages/derive/src/capability/hold.ts:387, :428, :532, :592, :654, :680, :700, :762, :838, :955; packages/derive/src/capability/gitread.ts:313; packages/derive/src/capability/device-command.ts:41.
+
+## Scope runtime and recovery
+
+| Machine | State carrier and transitions | Source |
+|---|---|---|
+| Serial turn admission | Predecessor promise encodes queued → running → completed. Rejection does not poison later turns. | packages/scope/src/turn.ts:103 |
+| Optimistic turn execution | Captured head, resume, prepared rules, and restart count encode drain → capture → external preparation → compare → commit/restart. | packages/scope/src/turn.ts:209 |
+| Observation acquisition | Retained observations and missing requirements encode attempt → discover dependency → fetch → retry within bounds. | packages/scope/src/core.ts:214 |
+| Outbox delivery | Attempt history, next wake, acknowledgements, diagnoses, and held sends encode held → due → attempted → acknowledged, retry, or diagnosed. Timeout preserves unanswered attempts. | packages/scope/src/outbox.ts:165; packages/scope/src/sqlite.ts:693 |
+| Dispatcher ownership | running and again encode idle → running → another pass requested → drain → idle. | packages/scope/src/outbox.ts:104 |
+| Shared alarm arbitration | Independent wake causes compete for the earliest alarm. Removing one cause preserves the others. | packages/scope/src/outbox.ts:51 |
+| Outside-effect dispatch and recovery | Durable sent, outcome, and next encode recorded → ready → possibly sent → decisive/unknown. Restart must not resend a marked mutation. | packages/scope/src/operations.ts:375; packages/scope/src/sqlite.ts:718 |
+| Outside-effect reply custody | held, retained replies, and replyMore encode received → recording unavailable → retained → reoffered → cleared. Late answers can settle unknown attempts. | packages/scope/src/operations.ts:244, :473, :638 |
+| Outside-effect parked scan | Walk cursor, waiting/refusal flags, and driver ownership encode scan → park → reset after evidence/owner support → reconsider. | packages/scope/src/operations.ts:228, :252, :259, :291 |
+| First-ingress recovery | fresh distinguishes restarted-object first ingress and schedules pending work once. Alarm and explicit invocation also clear it. | packages/scope/src/object.ts:180, :864, :886, :893 |
+| Archive-alarm recovery | Revision, running/recovery flags, diagnostics, and durable wake distinguish inspection, stale inspection, rearming, and live-handler ownership. | packages/scope/src/object.ts:410, :425, :893 |
+| Preparation-flight ownership | Pending promise and abandonment distinguish caller timeout from physical completion. Timeout keeps the slot occupied until the task settles. | packages/scope/src/preparation-flight.ts:8 |
+| Prepared-read validity | Captured scope/genesis/definition and current support encode reusable frame → invalidated → recapture. | packages/scope/src/read-preparation.ts:24 |
+| Genesis-proof acquisition | Flight, cache, identity, and abandonment encode uncached → shared traversal → cache. Timeout or changed identity prevents late publication. | packages/scope/src/genesis-proof.ts:25 |
+| Partition-proof acquisition | Pending maps, serial tail, counters, stopped latch, and cached frames encode queued → shared read → validated cache/terminal stop. | packages/scope/src/partition-proof.ts:39 |
+| Application-admission lookup | Identity-bound cache, pending lookup, and provenance encode unknown → shared lookup → cached → revalidated/invalidated. | packages/scope/src/applications/act-admission.ts:42 |
+| Minimum-head waiting | Callback registration, deadline, head/hash, and floor encode wait → awaken → satisfy, conflict, archive refusal, timeout, or cancel. | packages/scope/src/read-wait.ts:7 |
+| Session-request replay protection | Retained issuance identities, expiry, and bounds distinguish unseen, repeated, expired, and capacity-refused issuance. | packages/scope/src/sessions.ts:417 |
+| Head-stream subscription | Controller, last head, backpressure, subscription map, and released flag encode open → publish/pause → resume → expire/cancel/release once. | packages/scope/src/sessions.ts:484 |
+| Stream relay ownership | Reader plus released flag encode pull → EOF/error/cancel → release subscription exactly once. | packages/scope/src/sessions.ts:570 |
+| Credential custody | Metadata, nullable plaintext, attempt/mint binding, and revocation binding distinguish held secret, live metadata, consumed plaintext, expired custody, and revoked credential. | packages/scope/src/credential-store.ts:87, :218, :240, :270, :320, :336, :355 |
+| Credential-expiry migration | Backfill cursor and expiry queue encode incomplete indexing → bounded batches → complete, then due plaintext removal. | packages/scope/src/credential-store.ts:128 |
+| Original-request custody | Retained rows, deadlines, quotas, and sweep cursor encode keep/repeat → explicit end/expiry → removal. | packages/scope/src/originals.ts:116 |
+| Cause-chain discovery | Claims, discoveries, retry set, and cursor encode unseen → discovered → cached, or unavailable → retry after update. | packages/scope/src/signed-reads.ts:255 |
+| Site-token reuse | Generation, reservation, plaintext, flight, and mintEntered distinguish reserved-before-send, uncertain mint, ready, unavailable, consumed, and expired. Before-mint failure may release reservation. | packages/scope/src/site/token-reuse.ts:23 |
+| Serving-budget failure | Remaining allowances, active callback, and failure latch encode usable → debited → permanently failed for that operation. | packages/scope/src/preparation-budget.ts:7; packages/scope/src/item-query-budget.ts:31 |
+| Fixed-index readiness | Definition/scope/head markers encode stale → rebuild → exact-head ready. | packages/scope/src/sqlite.ts:180 |
+| Optional request-index availability | ready records schema initialization success/failure without changing native facts. | packages/scope/src/request-index.ts:35 |
+
+## Archive, Git, and replay
+
+| Machine | State carrier and transitions | Source |
+|---|---|---|
+| Archive writer | Confirmed/pending row, attempts, next wake, stop reason, repository, and format encode bind → mark → attempt → readback → confirm/retry/stop. | packages/scope/src/archive-row.ts:41; packages/scope/src/archive-driver.ts:146 |
+| Archive scheduling | Durable wake, capacity-deferral count, fallback, and disabled latch encode signal → schedule/backoff → retry → clear/stop. | packages/scope/src/archive-row.ts:345; packages/scope/src/archive-driver.ts:127 |
+| Archive restart authorization | Generation, command digest, exact stopped-row digest, and expiry encode eligible → applied/repeat or stale refusal. | packages/scope/src/archive-row.ts:202 |
+| Frontier publication | Confirmed/pending records and opaque tokens encode capture → prepare → stage → promote. Exact-row comparisons reject stale preparation. | packages/scope/src/archive-frontier-store.ts:177, :378 |
+| Frontier bootstrap | Missing frontier plus confirmed receipt encode bootstrap capture → remote validation → exact-match installation. | packages/scope/src/archive-frontier-store.ts:335 |
+| Archive window continuation | Position, closed flag, and one-use checkpoint encode open → advance → checkpoint/close → consume checkpoint → resume. | packages/scope/src/archive-window.ts:40 |
+| Archive scout | Blocked/finished/frame-open flags, checkpoint, and rows encode scout → suspend → resume → select/finish or permanently block. | packages/scope/src/archive-scout.ts:59 |
+| Archive admission fence | Through-position, started, checked, and finished enforce append → boundary selection → ordered final checks → finish once. | packages/scope/src/archive-plan-fence.ts:59 |
+| Archive foreign planning | Rows, copies, declarations, and blocked latch encode contiguous accumulation → footprint selection, or permanent rejection. | packages/scope/src/archive-foreign-plan.ts:29 |
+| Archive allowance settlement | Reservations, unsettled/released metadata, reserve, and lookahead flags encode reserve → receive → settle once. Local lookahead stop preserves finish reserve; terminal failure does not reset. | packages/scope/src/archive-budget.ts:30 |
+| Git gateway lifetime | Explicit phase plus plaintext, forwarded count, durable record, and closing promises encode opening → open → reserved → sent → closed. Close races awaits. | packages/git/src/gateway.ts:214 |
+| Git publication knowledge | Transport answer, durable forwarding, applied report, and ref read distinguish not sent, refused, unknown, and confirmed. Apparent transport success alone does not confirm. | packages/git/src/push-outcome.ts:61 |
+| Smart-HTTP source ownership | Busy, abandoned, deadline/abort, cache, and one-use parent flag encode idle → active → idle or permanent abandonment. | packages/git/src/http-read.ts:627 |
+| Git work-admission failure | First admission failure records an error, abandons the source, and makes subsequent calls fail consistently. | packages/git/src/http-read.ts:87 |
+| Journal budget failure | stopped plus external budget encode active → terminal limit failure. | packages/git/src/journal-work.ts:51 |
+| Journal-pass preparation | Used/busy flags, owned patch, and budget encode begin → serial prepare/forecast → consume once. Consumption precedes binding validation. | packages/git/src/journal-v2-preparation.ts:30 |
+| Journal-tree construction | Preparing/finished flags and staged files encode path preparation → forecast → payload stage → emit once. | packages/git/src/journal-v2-tree.ts:58 |
+| Journal segmentation | Last sequence, line count, segment bytes, and allowance encode start → append → rotate → continue/fail. | packages/git/src/journal-segments.ts:16 |
+| Diff traversal and truncation | Last file, current pair, cut flag, counters, and omissions distinguish whole file, partial patch, completed file, and bounded remainder. | packages/git/src/diff.ts:104 |
+| Replay traversal | Per-scope run, next position, busy flag, and dependency depth encode unopened → genesis checked → advancing → dependency proof → complete prefix. | packages/replay/src/verify.ts:351 |
+| Replay evidence reconciliation | Debts, redactions, text judgments, proven facts, and version encode unresolved → new evidence → reconsider until judgments stop changing. | packages/replay/src/verify.ts:490 |
+| Replay-session lifetime | Closed/terminal flags distinguish reusable active checks, terminal resource failure, and explicit close. | packages/replay/src/verify.ts:510 |
+| Archive-replay lifetime | Lazy session, shared open promises, receipts, counters, deadline, and stopped latch encode unopened → reusable bounded reads → permanent stop. | packages/replay/src/archive.ts:77 |
+
+## Client and CLI
+
+| Machine | State carrier and transitions | Source |
+|---|---|---|
+| Browser database lifetime | Cached promise encodes unopened → opening → open. Failed/blocked opening clears it. Transactions commit/abort independently. | packages/client/src/browser-storage.ts:27 |
+| Portable request custody | Explicit phases combine with slot validity/presence, context, lock, and receipt verification: retain → dispatch → uncertain/terminal → verify → clear. | packages/client/src/request-custody.ts:12 |
+| Browser join custody | Empty slot → signed original retained → send → unknown/refused/confirmed → clear. Reload preserves the original; Continue and Check differ. | packages/client/src/browser-joining.ts:63 |
+| First-dispatch permission | Persisted inflight state precedes closure-local one-use permission. Restored inflight work reconciles instead of gaining fresh dispatch. | packages/client/src/request-dispatch.ts:40 |
+| Request succession | Journal, active index, and trusted refusal evidence permit successors only after earlier refusals. Terminal attempts cannot regress. | packages/client/src/request-attempts.ts:28 |
+| Observation connection | Attempt, generation, failures, outage, renewal timer, and cancellation encode connect → stream → renew/reconnect → stop. | packages/client/src/observe.ts:63 |
+| Observation refresh | Dirty/running/pending, latest head, and snapshot encode idle → refresh → current/retained → coalesced reread. Generation rejects obsolete replies. | packages/client/src/observe.ts:92 |
+| Bounded async ownership | Abandonment distinguishes timely result from late result requiring disposal after timeout/abort. | packages/client/src/observe.ts:40 |
+| Clone-to-live reading | Clone position, refresh state, and repeat count encode clone → service → archived response → clone refresh → retry/bounded incomplete. | packages/client/src/journal-tail.ts:27 |
+| Query-page collection | Cursor, pinned head, pages, byte reserve, and restart count encode accumulate → stale restart, complete, or bounded partial. | packages/client/src/item-query.ts:24 |
+| Commons journal collection | Last sequence/hash, initial head, ended, cursor, and budgets encode genesis validation → contiguous scan → complete/partial. | packages/client/src/commons.ts:63 |
+| Planned installation | Optional selected/attempted/acknowledged/register fields encode planned → selected → possibly sent → acknowledged → configured. | packages/cli/src/store.ts:65; packages/cli/src/commands.ts:250 |
+| Repository claim | Found/repository/seat/first-key, accepted facts, and failure encode prepare → creation → directory → seat → key → configuration. Check and Continue resume differently. | packages/cli/src/store.ts:33; packages/cli/src/claim.ts:122 |
+| Person join | Config.join, private original, accepted fact, repository, and handle encode prepare → uncertain send → accepted → enrollment verified → configured. | packages/cli/src/store.ts:44; packages/cli/src/commands.ts:592 |
+| Invitation issuance | Private append-only snapshots and public pointer encode root → member prepare/attempt/settle → invitation prepare/attempt/settle. | packages/cli/src/invitations.ts:37 |
+| Agent/checker/device enrollment | Private original, join kind, refusal/receipt, and native key standing encode retained → uncertain → recorded → verified identity → configured. | packages/cli/src/invitations.ts:439 |
+| Read-session cache | Cache bytes and weak-map flights encode absent/malformed/expired → shared issuance → usable → discarded. Discard compares original bytes. | packages/cli/src/read-session-cache.ts:16 |
+| Read authentication/renewal | Undefined/null/credential selection, hadSession, used, and readers distinguish initial fallback from renewal. Forbidden → probe → discard/renew → one retry. | packages/cli/src/command-support.ts:156 |
+| Mint-outcome wait | Cursor, polls, read/pause phase, end reason, and abort encode scan ↔ pause → found/cancelled/expired/refused/exhausted. | packages/cli/src/clone-outcome.ts:39 |
+| Issue wait | End latch, observation ownership, and timer encode wait → decided/withdrawn/changes-requested/feed failure/time bound. | packages/cli/src/issue-wait.ts:67 |
+| Verification lifetime | Closed/source-invalid flags, reason, phase/cursor, budgets, and abort encode active → bounded stop/conflict → cleanup → closed. | packages/cli/src/verification.ts:24 |
+| Development-server lifetime | Loaded/error/revision, build queue, watcher timer, clients, and closing encode build → serve → rebuild → retained failed preview/new revision → close. | packages/cli/src/application-dev.ts:46 |
+| Local-scope lifetime | Construction, fixture setup, optional readers/history, and closed flag encode initialize → active → permanently closed. | packages/cli/src/application-local.ts:62 |
+
+## MCP, OAuth, and checker execution
+
+| Machine | State carrier and transitions | Source |
+|---|---|---|
+| MCP read-session acquisition | Entry identity, flights, refusal cooldown, expiry, and held history encode absent → issuing → usable/refused → expired/forgotten. Late replies cannot revive retired entries. | packages/mcp/src/reads.ts:25 |
+| Catalogue freshness/watch ownership | Snapshot, stale flag, config digest, listeners, watcher, and told generation encode compute → invalidate → recompute; first/last listener starts/stops watch. | packages/mcp/src/service.ts:236 |
+| Legacy handshake | Version, initialized/ended flags, and persistence encode new → initialization received → live → ended. | packages/mcp/src/wire.ts:80 |
+| List-change delivery | Listed/notified generations encode unseen → notified → acknowledged by listing. Stream replacement resets delivery memory separately. | packages/mcp/src/wire.ts:154 |
+| Listen ownership | Owner map, request ID, closed/told, unsubscribe, and callbacks encode listen → notify → cancel/end. Equal IDs have separate owners. | packages/mcp/src/wire.ts:102 |
+| HTTP transport lifetime | Closed/discarded, lifetime generation, timers, and closing promise encode active → detached/discarded or closing → closed. | packages/mcp/src/http.ts:129 |
+| Stream-slot ownership | Open/pending sets and session stream pointer encode no slot → opening → live → replacement pending → released. | packages/mcp/src/http.ts:113 |
+| Persisted-session writes | Per-session write chain, row identity, and issuing set encode issue → queued update → persist → retire. Late updates cannot recreate retired rows. | packages/mcp/src/http.ts:125 |
+| Native custody | Phase tags combine with locks, admitted capacity, completion reservation, outcomes, segments, and attempt succession. | packages/mcp/src/custody.ts:96 |
+| Custody-capacity settlement | Live/reservation/index/segment rows encode admit → dispatch reserve → consume completion reserve → terminal archive/release. Uncertain children prevent premature release. | packages/mcp/src/sqlite-custody.ts:191 |
+| Hosted control operation | Operation ID, fingerprint, reserve, and answer encode absent → reserved → complete/refused → answer expiry → tombstone. | packages/mcp/src/hosted.ts:168 |
+| Hosted enrollment | Agent state plus seed, original, receipt, native verification, config, and bearer encode enrolling → verified access or refusal/retirement. | packages/mcp/src/hosted.ts:476 |
+| Bearer lifetime | Digest, expiry, rotation, retirement, and transport epoch encode not issued → active → expired/rotated/retired. Winning control returns plaintext once. | packages/mcp/src/hosted.ts:94 |
+| Bearer failure window | Failure timestamps per address encode admissible → failed attempts → limited → admissible after expiry; capacity can refuse new failure keys. | packages/mcp/src/hosted.ts:66 |
+| Hosted service opening | Nullable service/HTTP/opening plus epochs encode absent → opening → open → invalidated. Stale openings cannot install. | packages/mcp/src/hosted.ts:491 |
+| OAuth client metadata | Client/cache rows, deadlines, and pending fetch encode missing → register/fetch → valid → expired → refresh/refuse. | packages/mcp/src/oauth-clients.ts:57 |
+| OAuth grant/refresh chain | State, code-used, code expiry, refresh digest, and reserve encode code pending → one redemption → active rotating chain → ended. | packages/mcp/src/oauth-issuer.ts:140 |
+| OAuth standing lease | Shared promise, start time, and optional active encode unchecked → checking → active/inactive/unavailable → expired/replaced. | packages/mcp/src/oauth-access.ts:39 |
+| OAuth HTTP lifetime | Opening/layer/closing promises, candidate, timer, and hard deadline encode opening → open → standing refresh → closing → removed. Late openings get disposed. | packages/mcp/src/oauth-http.ts:6 |
+| Server view lifetime | Instance map, current screen, cut revision, projection, and busy encode opening → ready/unavailable → refresh/navigation → superseded. Superseded views cannot dispatch. | packages/mcp/src/views/session.ts:170 |
+| Server action custody | Dispatch promises and pending originals encode idle → admitted/busy → outcome → unresolved Check → resolved, guarded by revision/current view. | packages/mcp/src/views/session.ts:470 |
+| Exact-read retention | Reads/current/busy/cut/truncation encode absent → signed read → complete/truncated retained answer → redisplay/permitted retry. | packages/mcp/src/views/session.ts:412 |
+| Browser bridge | Pending requests, timers, timed-out records, and closed encode wait → resolve/reject or timeout → late-result reconciliation. | packages/mcp/browser/bridge.ts:23 |
+| Browser card lifetime | Display/view/opening, busy/reread, history, connection, alive, and timer encode boot → open → ready → refresh/deferred refresh → reconnect/close. | packages/mcp/browser/main.ts:15 |
+| Browser context reporting | Pending/sending/reported context and error encode queue → report → acknowledge/retry; newer queued context can replace older queued context. | packages/mcp/browser/main.ts:69 |
+| Browser action knowledge | Accepted/late-reply/notices/busy distinguish send, acknowledgement, uncertain timeout, and late acknowledgement. | packages/mcp/browser/main.ts:216 |
+| Declared surface lifetime | Panel, renderer, last data, error, and abort encode initialize → register renderer → update → fail/close. | packages/mcp/browser/surface.ts:18 |
+| Checker execution recovery | Durable started/kept/admitted/superseded plus process-local flying distinguishes live execution from restart recovery; recovery cannot start another execution. | packages/checkers/src/service.ts:190 |
+| Checker result submission | Optional stored signature distinguishes unsigned result → retained exact signature → uncertain submit → retry → admitted/superseded. | packages/checkers/src/store.ts:67; packages/checkers/src/service.ts:402 |
+| Persistent execution fence | Claim/ask/launch/supervisor/started/origin-closed/terminal files encode allocate → launch → execute → prove cleanup → terminal. Grace distinguishes partial setup from lost execution. | packages/checkers/src/container.ts:51; packages/checkers/src/container-supervisor.ts:18 |
+| Container engine/relay | Ready/busy/ran/stopped/expired/memory-loss and removal promises encode ready → one execution → report → remove, with distinct failure paths. | packages/checkers/src/container-engine.ts:155 |
+| Container-origin retirement | Accepting, request controllers, owned promises, closing, and retirement failure encode accept → stop admission → drain/abort → acknowledge close → dispose. | packages/checkers/src/container-origin.ts:94 |
+
+## Room page
+
+| Machine | State carrier and transitions | Source |
+|---|---|---|
+| Workbench ownership | Active, pending work, and retirement encode active/idle ↔ busy → retired/draining → settled. | apps/room/page/src/workbench-work.ts:5 |
+| Room opening/reuse | Current slot, pending load, result, and reuse predicate encode empty → loading → reusable, failed, or replaced. | apps/room/page/src/shell.ts:41 |
+| Scope submission fence | Map absence means idle. Tags/digest encode prepare → submit → idle/unknown. | apps/room/page/src/shell.ts:55 |
+| Render ownership | Draw generation distinguishes current from superseded asynchronous render. | apps/room/page/src/main.ts:136 |
+| Creation-follow retry | Follow identity, active, timer, and read count encode check ↔ backoff → confirm/navigate or stop. | apps/room/page/src/main.ts:154 |
+| Observation/fallback | Owned controller, polling/timer, physical work, and active encode load → stream/poll → cancel → join retirement. | apps/room/page/src/page-observation.ts:23 |
+| Head acceptance | Remembered head advances monotonically. Equal sequence with conflicting hash stops stream and polling. | apps/room/page/src/page-observation.ts:81 |
+| Entry/connection setup | Drafts, busy, settings, signers, claim offer, and verified context encode restore/connect → serialized entry → context invalidation. | apps/room/page/src/main.ts:66 |
+| Modal ownership | Nullable modal/disclosures encode closed → open → close/replace, with focus restoration and peer disclosure closure. | apps/room/page/src/popups.ts:2 |
+| Context-bound task dialogs | Dialog, route, context, subject binding, blocked/offered encode open/current → disable/close after context change. | apps/room/page/src/main.ts:187; apps/room/page/src/tasks.ts:10 |
+| Action drafts | Draft/version maps and submitted latch encode editable → submitted → captured-version removal. Later edits survive older acceptance. | apps/room/page/src/actions.ts:52 |
+| Rules confirmation | Pending confirmation, submitted, and draft encode edit → confirm → submit; editing cancels confirmation. | apps/room/page/src/rules-editor.ts:14 |
+| Retained editor presentation | Opened/preparing and task encode collapsed → edit → prepare → task. Returning to edit requires every step unsent. | apps/room/page/src/retained-editor.ts:9 |
+| Retained edit execution | Task state, busy, step attempts/answers, receipts, optional lane/source/version encode prepared → prerequisites → source recorded → recorded, with reconcile/halt paths. | apps/room/page/src/retained-editor-data.ts:16 |
+| Claim recovery | Active operation, saved config, completion/failure encode absent → prepared/pending → complete/failed. New claim requires settlement. | apps/room/page/src/claim.ts:112 |
+| Start custody | Key reference, claim original, recovery flag, and journal encode key prepared → claim pending → complete/failed; export changes one-time recoverySaved. | apps/room/page/src/start-custody.ts:10 |
+| Join custody | Key, prepared original, phase, receipts/refusals/history encode prepared → unknown → verified/refused. Unresolved custody blocks invitation replacement. | apps/room/page/src/join-custody.ts:13 |
+| Connection invitation custody | Active pointer and public/private stages encode reserved → entered → prepared/unknown → verified/refused. Missing private stages cannot reset entered work. | apps/room/page/src/connection-custody.ts:13 |
+| OAuth consent custody | Native identity, agent/link/grant, and attempted marker encode invite → ready → grant uncertain → done/refused. | apps/room/page/src/oauth-custody.ts:14 |
+| OAuth entry presentation | Authorization, selection, connections readiness, invitation drafts, busy/check encode load → selectable/blocked → submit → resumable/result. | apps/room/page/src/oauth-main.ts:5 |
+| Key migration | Legacy secret, IDB key slot, and settings reference encode retain → verify custody → publish replacement reference. | apps/room/page/src/browser-key-store.ts:78; apps/room/page/src/page-key-migration.ts:7 |
+
+## Counter and other apps
+
+| Machine | State carrier and transitions | Source |
+|---|---|---|
+| Counter device lifetime | Generation, key/voice, custody epoch, busy, and mounted device encode restore → selected → replace/disconnect. | apps/counter/browser/main.ts:17 |
+| Counter enrollment | Device/join/seat slots encode key → join pending → seat verified → join cleared → device saved. Seat survives later save failure. | apps/counter/browser/installed.ts:14 |
+| Counter gateway readiness | Session/view/freshness/pending/commandPrepared encode stale → current → retained request → unresolved/terminal → refresh. Voice and command share custody exclusion. | apps/counter/browser/client.ts:37 |
+| Counter participation | Joined/busy/epoch, runner lease, roster encode disconnected → participating → activate → armed. Leave stops speech before native deactivation. | apps/counter/browser/app.ts:28 |
+| Counter candidate suppression | Candidate tuple/outcome map and original pointer encode unseen → pending → retained outcome. Repeated relevant state does not recommit; memory ceiling disables joining. | apps/counter/browser/app.ts:34 |
+| Counter audio | Armed voice, active, durable audioStart, completion, generation, and attempted set encode arm → mark → speak → complete/uncertain. | apps/counter/browser/voice-controller.ts:132 |
+| Counter reporting | Completion, journal, busy, custody block encode prepare/persist → submit → recorded/refused/unknown. Correction/resume require different evidence. | apps/counter/browser/voice-controller.ts:262 |
+| Counter restoration/archive | Loaded/disposed, audio/report slots encode load → idle/report/uncertain/blocked → archive terminal → clear active pointer. | apps/counter/browser/voice-controller.ts:321 |
+| Counter storage | DB promise, blocked flag, transaction callbacks, and epochs encode open/commit/abort and fence stale credential updates. | apps/counter/browser/storage.ts:30 |
+| Counter combined domain mode | Board state, pledge, pending promise, generation, serial, deadline, last speaker, and count distinguish modes no single declared state represents. | apps/counter/browser/model.ts:55 |
+| Lending gateway | Alive/read-generation/session/observer/view/freshness encode load → current → behind → refresh/dispose; stale reads cannot restore actions. | examples/lending/browser/client.ts:70 |
+| Lending retained act | Exact envelope/pending phase encode absent → prepare → attempted/unresolved → recorded/refused → clear after matching evidence. | examples/lending/browser/client.ts:118 |
+| Lending page ownership | Epoch, busy, polling, abort, results, drafts encode open → current/behind → act/check → refresh/device replacement. | examples/lending/browser/main.ts:28 |
+| Jam player progression | Arrivals, coveredUntil, ownBar, recorded takes encode arrival → introduced → coverage → next coverage due. | apps/jam/src/band.ts:27 |
+| Jam effective-time progression | Recorded events/effective bars encode pending → active interpretation/mood/pattern. | apps/jam/src/record.ts:133 |
+| Jam playback | Nullable audio/live, time origin, nextBar encode dormant → started → scheduling; late/silent bars still advance. | apps/jam/page/app.ts:16; apps/jam/page/live.ts:8 |
+| Views collection | Closed/failure/discovery flags, counters, caches encode collect → complete/failed/closed. | apps/views/src/reads.ts:30 |
+| Reviewed-head publication | Lock, temp file, marks, per-scope head encode lock → validate → flush temp → rename → flush directory → unlock. | apps/views/src/review-store.ts:57 |
+| Grow scheduled controller | Phase, original, accepted/covered facts, ack cursor, native items encode owner check → reports/observe → climate → complete/stop. | examples/grow/simulator-host.ts:59; examples/grow/simulator-tick.ts:71 |
+| Grow escalation | Device errors/exhaustion, alert/incident/task, zone, summary sequence encode fault → remedies exhausted → escalate → human authorize → recover/close. | examples/grow/simulator-tick.ts:193 |
+| Repo-in-AI session custody | Active original, busy, retained args, mode encode idle → bound request → result → idle with different New/Check/Continue permissions. | examples/repo-in-ai/session.ts:72 |
+| Repo-in-AI retained phases | Args/done records, prerequisite receipts, targets encode retain → attempt/unresolved → complete → later phase eligible. | examples/repo-in-ai/workflow.ts:45; examples/repo-in-ai/publication.ts:45 |
+| Repo-in-AI credential/clone use | Use marker, result, credential, clone directory encode unused → consumed/attempted → known result. Marker without result preserves uncertainty. | examples/repo-in-ai/workspace.ts:56; examples/repo-in-ai/publication.ts:75 |
+| Repo-in-AI seed publication | Candidate, invocation marker, attempted, answer, remote ref encode prepare → possibly sent → confirmed/unknown/not sent. Check only observes. | examples/repo-in-ai/workspace.ts:112 |
+| Hosted-session knowledge | Seen/literal values, listed, catalogue digest, call history determine admissible provenance of later arguments. | examples/repo-in-ai/hosted-loop/hosted-session.ts:27 |
+| Task-list persistence | Writable/issue distinguish unloaded/unavailable, writable, and invalid/read-only. Failure preserves in-memory work. | examples/repo-in-ai/task-list/storage.mjs:9 |
+| Task completion/capacity | completed toggles unfinished/completed; list capacity separately governs input/submit enablement. | examples/repo-in-ai/task-list/app.mjs:40 |
+| Mac installation/startup | Prefix, inventory, launchd, readiness evidence encode absent → partial → recorded → bootstrapped. Startup waits for store/fsync/readiness. | apps/room/celld/mac/kit.py:294; apps/room/celld/mac/service.py:32 |
+| Mac preparation/deployment | Plan, private files, stage, bucket, subprocess encode unprepared → partial → prepared → deployment attempted/completed/refused. Completion does not prove readiness. | apps/room/celld/mac/prepare-project.mjs:17; apps/room/celld/mac/deploy.py:240 |
+| Mac shutdown | Process identity, launchd, logs, operator response, deadline, closure proof encode disable → preserve/observe → assess preparation → stop dependents. Missing closure keeps store. | apps/room/celld/mac/shutdown.py:200 |
+
+## Tooling
+
+| Machine | State carrier and transitions | Source |
+|---|---|---|
+| Reversible control experiment | Original, baseline, changed, signals, scratch encode baseline → temporary edit → run → restore → distinguish/inconclusive. | scripts/control.mjs:38 |
+| Gate failure/finalization | Failure latch, exit code, traps govern advance → first failure → final summary; summary can fail success. | scripts/gate.sh:7 |
+| Dependency freshness | Lock digest/stamp encode missing/mismatch → install → stamp after success, or matching → reuse. | scripts/gate.sh:44 |
+| Test-stage ownership | Child, first failure, interruption, stage ledger encode unreached → running → terminal → finalization. | scripts/test.mjs:83 |
+| Test-observation reconciliation | Case/module events, EOF, interruption, stage exit distinguish partial from complete evidence. Conflicts produce issues. | scripts/test-summary.mjs:47 |
+| Focused verification/sealing | Stage/status/phases/output/permissions encode guards → compile → test → coverage → manifest → read-only seal. Seal failure overrides result. | scripts/focused-check.mjs:182 |
+| Focused case lifecycle | Required/start/terminal events distinguish unrun, unfinished, passed once, and duplicate/repeated failures. | scripts/focused-check.mjs:129 |
+| Bounded subprocess shutdown | Child/timers/killed/truncated/bytes encode run → close/overflow/timeout → TERM → KILL → join logs. | scripts/test-evidence-runner.mjs:34; scripts/test-j3-runner.mjs:33 |
+| Celld proxy ownership | Exchanges/children/closures/interruption/networkClosed/forceTimer encode active → interrupt → destroy/TERM → KILL survivors → join → release. | scripts/test-celld-proxy.mjs:79 |
+| Celld backend lifetime | Backend pointer, child exit, startup rounds, logs, serial encode absent → spawn → readiness → use → TERM/KILL → join → absent. | scripts/test-celld-proxy.mjs:170 |
+| Celld smoke custody | One-shot marker/config/invitation/member encode plan → mark started → install/create/join/verify/health. Second run refuses because prior work may have entered. | scripts/celld-smoke.mjs:113 |
+| Health readiness | Counter/status encode pending 503 → retry, ready 200 → success, other/exhausted → fail. | scripts/celld-smoke.mjs:87 |
+| Bounded HTTP intake | Reader/abort/deadline/byte/chunk counts encode fetch → read → decode or cancel → release. | scripts/deploy-check.mjs:37; scripts/usage-report.mjs:289; scripts/test-celld-proxy.mjs:147 |
+| Sensitive stdin | Closed/ended/iterator/timer/buffers encode read → EOF/decode or deadline/bounds failure → erase/close. | scripts/usage-report.mjs:263 |
+| Lazy inventory | Promise encodes absent → shared pending → retained fulfilled/rejected. | scripts/usage-report.mjs:36 |
+| Private demo preparation | Private directory/state/immutable plan/receipts encode keys and IDs → signed plan → accepted install → creation eligible. Existing files refuse replacement. | scripts/demo-git-host.mjs:115 |
+| Rehearsal identity | Captured people/values/taken shots/identityStop encode verified identities → dependent shots or permanent dependent stop. | scripts/demo/rehearse.ts:625 |
+| Rehearsal readiness | Bounded polls encode wait proposal → wait revision → submit stale action → judge refusal. | scripts/demo/rehearse.ts:570 |
+| SDK release ancestry | Completed packages/outputs/links/tarballs/manifest encode compile → verify → expose downstream → pack → recheck → seal. | scripts/public-release.mjs:8 |
+| Dependency materialization | Link shape/hashes/staging/ownership encode cache link → private copy → verify → patch → rename/verify; failure restores link. | scripts/cloudflare-pool-compat.mjs:41 |
+| Homepage replacement | Staging directory encodes stage → copy → remove destination → rename → cleanup. | homepage/build.mjs:7 |
+
+## Parser and traversal machines
+
+These hold algorithmic state rather than application lifecycle state.
+
+| Machine | Hidden state | Source |
+|---|---|---|
+| Canonical JSON | Cursor, nesting, escapes, and number parsing. | packages/bytes/src/canonical.ts:118 |
+| Bounded byte reader | Reading, complete, oversized, expired, late disposal. | packages/bytes/src/take.ts:53 |
+| Query scanner | Quoted/unquoted, escapes, depth. | packages/bytes/src/item-query.ts:18; packages/bytes/src/item-query-read.ts:51 |
+| Head-stream decoder | Partial frame, first announcement, EOF, truncation, cancel. | packages/client/src/head-stream.ts:49 |
+| Markdown blocks | Open containers, tip, indentation, fence, blank/all-closed. | packages/scope/src/site/blocks.ts:74 |
+| Markdown inlines | Cursor, delimiter/bracket stacks, match/literal fallback. | packages/scope/src/site/inlines.ts:68 |
+| Markdown tree iterator | Node and enter/exit flag. | packages/scope/src/site/node.ts:123 |
+| Git protocol/object decoding | Packets, capabilities, sidebands, pack/object state, bit/decompression cursors. | packages/git/src/http-read.ts:144, :203, :264, :513, :587, :906 |
+| Ancestry traversal | Known objects, branch, visited commits, basis, stops. | packages/derive/src/capability/ancestry.ts:267 |
+| Package cycle traversal | Unvisited → active recursion → completed. | packages/package-graph/src/cycles.ts:39 |
+| Instance-bound recursion | Unseen → open → memoized finite/unknown. | packages/package-graph/src/fan-in.ts:39 |
+| Reservation-closure traversal | Open/done/known sets and active forms detect cycles and memoize bounded closures. | packages/derive/src/validate/capacity.ts:115; packages/derive/src/markers.ts:83 |
+| Rule-source nesting | Quote mode, escapes, bracket depth. | packages/derive/src/rule/evaluator.ts:112 |
+| MCP stdio framing | Partial → frame, oversized discard → newline reset → EOF/drain. | packages/mcp/src/node.ts:311 |
+| Container response framing | Head → chunks → done, request-ID ownership. | packages/checkers/runner/relay.go:145 |
+| Container output framing | Partial line → line/oversized discard → bounded close. | packages/checkers/src/container-engine.ts:68 |
+| TAP diagnostics | Outside → diagnostic delimiter/body → close → classification. | scripts/control.mjs:122 |
+| Rehearsal proof sections | Numeric section and expected line progression. | scripts/demo/rehearse.ts:441 |
+| Markdown fence scanner | Prose → fence → matching close → prose. | scripts/check-doc-links.mjs:51 |
+| Module lexer | Code/comment/string/template/interpolation/regex modes and brace depth. | scripts/public-release-modules.mjs:31 |
+| Module-reference parser | Import/export bindings → from literal/terminator → complete; unsupported/incomplete refuses. | scripts/public-release-modules.mjs:86 |
+
+## Explicit machines and exclusions
+
+Do not classify explicit domain declarations as wholly implicit:
+
+- Scope status provisional/active/refused. Its held work participates in the distributed runtime machines above.
+- LocalSigners.Control.phase building/ready/stopped, with cross-field cursor/cutoff/tail/generation constraints: packages/scope/src/local-signers.ts:12, :93, :159.
+- ArchivePass.state idle/disabled/retry/stopped/confirmed, distinct from durable archive writer state: packages/scope/src/archive-driver.ts:82.
+- Native platform register claims, membership invitations/keys, directory creation, destination/reservation/evidence: packages/platform/src/register.ts:103; membership.ts:264, :280; directory.ts:231; destination-v17.ts:61.
+- Room issue/change/review/check/source/merge workflows: apps/room/lanes/src/issue.ts; change.ts; change3.ts; change4.ts; issue4.ts.
+- Room question/approval and finding lifecycles: apps/room/lanes/src/issue-questions.ts:16; change-finding.ts:25.
+- Counter board/participant/commitment declarations: apps/counter/commitments.ts.
+- Lending available/lent/gone: examples/lending/definition.ts.
+- Grow room creation, alert/incident, presence, zone, task/bench, watering: examples/grow/site.ts:17; room.ts:29; presence.ts:6; zone.ts:18; work.ts:12; watering.ts:8.
+
+Combined workflows across those explicit items can still have hidden state, as the inventory identifies.
+
+examples/grow/simulator.ts:67 reconstructs physical state from time and recorded commands; its workflow lives in the tick controller. apps/sandbox/worker.ts mainly delegates lifetimes to shared machinery. Static homepage and starter HTML add no runtime machines. Experimental typed-surface spikes do not form live production behavior.
+
+## Main finding
+
+Uncertainty and completion differ. Across operations, publication, credentials, requests, and audio, apparent success or timeout alone does not determine whether work settled. Refactors must preserve that distinction, exact retained originals, durable marks before external effects, and ownership of late asynchronous results.
+
+## Tracking
+
+Inventory request: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e37eed42e425de451a1cf5467dda5a78dea489d8
+Inventory report: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e89410718e0fb207183f8fc9b0c97b76402e55ba
+Prioritization request: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4ddccc913e4a8952dd9e28b7cf008793fa40159e
+Prioritization report: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8611fdba3688c7a9ebc7eebe13b8f24ce2c1ef1c
