@@ -20,6 +20,7 @@ import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type 
 import { deriveSends, formOf } from "./sends.ts";
 import { judgeGuardNodes } from "./program/guard-value.ts";
 import { bodyJudgesClock, bodyStructure, clauseStructure } from "./program/structure.ts";
+import { settlementForm, settlementMatches, settlementSubject } from "./program/settlement.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isLocalId, isObject, own, same } from "./values.ts";
@@ -310,8 +311,7 @@ export interface ItemSettlement { item: number; form: Extract<Settles, { of: unk
 
 /** The judge and fold use the same condition for an actual item settlement. */
 export function itemSettledBy(form: ItemSettlement["form"], before: Item | undefined, after: Item | undefined): boolean {
-  if (!before || !after || !form.in.includes(before.state)) return false;
-  return "sets" in form ? own(before.values, form.sets) === false && own(after.values, form.sets) === true : !form.in.includes(after.state);
+  return settlementMatches(form.in, "sets" in form ? form.sets : null, before, after);
 }
 
 /** Identify the recorded form's item on the pre-entry state. Guards and
@@ -322,8 +322,10 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
   // no item effect. It must not reconstruct failed fields as a settlement.
   if (!scope || !entry.effects.some(effect => effect.effect === "state" || effect.effect === "value" || effect.effect === "hold")) return null;
   if (input.type === "act") {
-    const act = own(definition.declared.acts, input.signed.intent.kind), form = act?.settles;
-    if (!act || !form || !("of" in form)) return null;
+    const act = own(definition.declared.acts, input.signed.intent.kind);
+    const plan = act ? bodyStructure(definition, act, input.signed.intent.kind)?.settlement : null;
+    if (!act || !plan || plan.op === "copy") return null;
+    const form = settlementForm(plan);
     if (form.of === "on") return input.signed.intent.on === null ? null : { item: input.signed.intent.on, form };
     const read = readFields(act.fields, input.signed.intent.fields, context.bounds);
     if (!read.ok) throw new RuleFault("an item settlement cannot reconstruct its act fields");
@@ -345,8 +347,10 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
   if (input.type !== "delivery" || (input.message.class !== "request" && input.message.class !== "advisory")) return null;
   if ("decision" in input && input.decision !== "applied") return null;
   const source = context.facts.find(fact => same(fact.fact, input.from));
-  const matched = bound(definition, input.message, input.from, source?.under), form = matched?.handler?.settles;
-  if (!matched?.handler || !matched.fields || !form || !("of" in form)) return null;
+  const matched = bound(definition, input.message, input.from, source?.under);
+  const plan = matched?.handler ? bodyStructure(definition, matched.handler, matched.kind)?.settlement : null;
+  if (!matched?.handler || !matched.fields || !plan || plan.op === "copy") return null;
+  const form = settlementForm(plan);
   if (!source || !isEntryOf(source.entry, input.from)) throw new RuleFault("an item settlement has no retained source entry");
   const ready = prepareHandler(view, definition, context, scope, matched.handler, matched.kind, matched.fields,
     { source, update: input.message.class === "request" ? updateOf(input.message, input.from) : null },
@@ -385,7 +389,7 @@ export function derive(j: Judging, forms: Forms, opens: string | null, cause: Di
   const structure = bodyStructure(j.definition, forms, j.kind);
   if (!structure) throw new TypeError("body was not captured by its validation");
   // Section 6.4, "A rule of a form that declares `settles` sets no state": the effects of a rule are checked against it.
-  if (forms.settles !== undefined) j.settling = true;
+  if (structure.settlement !== null) j.settling = true;
   // Section 6.5: the guards are one list with three results. A guard that is false refuses, also after one that is not completed.
   // Section 6.4: a guard whose subject is unbound is not evaluated, and an effect whose subject is unbound is not applied.
   const guards = judgeGuardNodes(j, structure, structure.nodes.filter(node => node.category === "guard"));
@@ -415,9 +419,10 @@ export function derive(j: Judging, forms: Forms, opens: string | null, cause: Di
   // commit and the entry takes it out of the listed states. Any other entry of the form is new work.
   // By a mark (revision 21): before the entry the subject's state was one of `in` and its mark was `false`, and after the entry's
   // effects the mark is `true`. An entry of the form that finds the mark `true` already, or the state outside `in`, is new work.
-  const settled = forms.settles && "of" in forms.settles ? forms.settles : null;
-  const [was, is] = settled ? [j.subjects.get(settled.of), effects.working.get(settled.of)] : [];
-  const settles = settled !== null && itemSettledBy(settled, was, is);
+  const settled = structure.settlement;
+  const subject = settled && settled.op !== "copy" ? settlementSubject(settled) : null;
+  const [was, is] = subject !== null ? [j.subjects.get(subject), effects.working.get(subject)] : [];
+  const settles = settled !== null && settled.op !== "copy" && settlementMatches(settled.states, settled.op === "mark" ? settled.slot.name : null, was, is);
   return { result: "ran", effects: effects.effects, sends: sends.sends, prepared: j.used, judgesTime, settles };
 }
 

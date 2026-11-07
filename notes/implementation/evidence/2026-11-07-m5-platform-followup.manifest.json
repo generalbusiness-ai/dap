@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "qualification": "Isolated platform test-file repair after actual failed M5 gate. Compiler and complete four-case owner pass; previously unreached Native passes 1111 with 2 skips. Every original assertion/case/deadline remains literal. No second full gate or plain phase. Original gate stays failed.",
+  "sourceHead": "a14c41505fe15151ed12794706125e9a89f0625c",
+  "sourceTree": "79e5555e75e6fe5de8d8039112100cdc6211668a",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m5-platform-followup-validation",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1380,
+          "sha256": "876956b669c4205464651158665a057525db706f3e4902270dc0891d588fc198"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2023,
+          "sha256": "a6026e2c213ef56a07aace3af5b9429e29447ee23e9ae5201a84a11377726859"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compiler.argv.json",
+          "bytes": 133,
+          "sha256": "908b02ff61bd224943739cd8d94b3cb01864009a43296f66baf4128115390626"
+        },
+        {
+          "path": "compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compiler.time",
+          "bytes": 29,
+          "sha256": "b11e60de890a6a38f1c0924e67b6e1dae3b3bb81920b47f1a2ffc1b87baea07c"
+        },
+        {
+          "path": "isolation.json",
+          "bytes": 830,
+          "sha256": "b36b5a268e6f7dfd7d24962bf49d10fd69da6d83b7e4e4f0f36bfba988a1e3ab"
+        },
+        {
+          "path": "native.argv.json",
+          "bytes": 129,
+          "sha256": "18fbb8152a0dc0b89bdb7a3ecfe7795144a7961a7c2a086c059c2e204002fa87"
+        },
+        {
+          "path": "native.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "native.time",
+          "bytes": 37,
+          "sha256": "07bc8e28c47d2ab8c5c2aa56ec12e4a5212355254aba6223c3d915ead336d1bb"
+        },
+        {
+          "path": "owner.argv.json",
+          "bytes": 281,
+          "sha256": "24e94740c2128fb6636bda8c901fac0d47b058a246c29aeb65d79914a90f11a8"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 29,
+          "sha256": "61a7bda3635288adaee9be867fbaac613577cf7a99499e928d564fa1aa3fecc2"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 5400,
+          "sha256": "71427974ffac198508032726c5231373e66e8247425fb96146b9e9a33f163645"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 808,
+          "sha256": "533b17faa00220ee6b81460677c3acb800769b958f8e038422609add991caf48"
+        },
+        {
+          "path": "repair.patch",
+          "bytes": 3352,
+          "sha256": "1d4833ea894c15c4f10920974a3e2e175f28440d8554b0853f41e8bba67c787b"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 2370,
+          "sha256": "ee19dda85257831940e36bf58ff3f8c8a6dcbe711e6fa9394fb7059351912e0c"
+        }
+      ]
+    }
+  ]
+}

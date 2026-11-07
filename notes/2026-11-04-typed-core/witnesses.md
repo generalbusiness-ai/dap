@@ -104,3 +104,24 @@ stress: composition around native code without pretending to inspect that code.
 The historical design verification accompanies plan 035. The M1–M2
 implementation note records the later compiler and interpreter checks.
 Neither record claims a measured implementation speedup or general dependency soundness.
+
+## M5 effect and settlement evidence
+
+The [M5 record](../implementation/2026-11-07-typed-core-m5.md) links actual
+checkpoint reports, failures, controls, and the final source snapshot.
+
+| Obligation | M5 witness |
+|---|---|
+| Complete ordered effects, working subjects and opened item | The existing source/condition case in `forms-effects.test.ts` now asserts the entire opening result and retains its recorded-effect assertion. |
+| Input ownership | The added admitted-instruction case compares literal full `Ran` output after effect and notice payload mutation. The previous execution fails; typed execution passes. |
+| Recursive skip boundary | The added nested-constant case compares full `Ran` output with an optional subject unbound and bound. Original and typed skip controls fail its assertion. |
+| Lexical attribution identity | The existing attribution union case reuses one `each` source object at two occurrences and retains exact member order and bound results. |
+| Unknown-source normalization | The existing copy results fail when the typed path bypasses `held`. The admitted probe uses a hashed fetched-entry stand-in for the unknown value. |
+| Once-mark judgment | The existing cases 6–8 assert `new work` for an already true mark with free room, then retain the full-scope refusal. Omitting the prior false-value check fails that assertion. |
+| Refusal before capture | The existing ignored-capability-argument case now includes an effect condition. The earlier draft overflows on its rejected cyclic value; capture after final admission preserves the exact refusal. |
+
+The broader source checkpoints pass 366 distinct cases across 26 complete
+owners. The final capture-order repair passes both derive compilers and the
+40 cases in its three affected complete owners. These overlapping counts
+remain separate. Page validation, one final full gate, independent review,
+and audited landing still follow.

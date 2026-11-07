@@ -197,6 +197,14 @@ test("a refused capability argument does not copy the value its name already exc
   let result: ReturnType<typeof validateDefinition> | undefined;
   expect(() => { result = validateDefinition(input, PROPOSED_BOUNDS); }).not.toThrow();
   expect(result).toEqual({ ok: false, problems: [{ code: "capability", path: "acts.stage.guards.1.capability.with.unlisted", message: "is not an argument of the guard staged of hold@1" }] });
+  const conditional = capabilityStagingData(), nested = structuredClone(conditional.acts["stage"]!.guards[1]!);
+  if (!("capability" in nested)) return expect.fail("expected capability condition");
+  Object.defineProperty(nested.capability.with, "unlisted", { value: cycle, enumerable: true });
+  conditional.acts["stage"]!.effects[1]!.if = [nested];
+  // Rejected condition arguments must not reach the later recursive skip capture.
+  let conditionalResult: ReturnType<typeof validateDefinition> | undefined;
+  expect(() => { conditionalResult = validateDefinition(conditional, PROPOSED_BOUNDS); }).not.toThrow();
+  expect(conditionalResult).toEqual({ ok: false, problems: [{ code: "capability", path: "acts.stage.effects.1.if.0.capability.with.unlisted", message: "is not an argument of the guard staged of hold@1" }] });
 });
 
 test("aliased conditions resolve by their owning form and semantic place", () => {

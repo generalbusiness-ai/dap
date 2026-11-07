@@ -7,6 +7,7 @@ import { rulesScopeV12 } from "../src/rules-scope-v12.ts";
 import { rulesAnswerV13, rulesObservedValuesV13, rulesScopeRulesV13, rulesScopeV13 } from "../src/rules-scope-v13.ts";
 import { firstExtentsV13, rulesPolicyProposalV13, RULES_CONTENT_BYTES_V13, RULES_EXTENTS_VALUE_V13 } from "../src/rules-policy-v13.ts";
 import { checkedPlatformData } from "./fixtures.ts";
+import { bodyStructure } from "../../derive/src/program/structure.ts";
 
 // Folded state and membership observations are explicit stand-ins. No certificate or native turn runs here.
 const rules: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "rules" };
@@ -17,14 +18,16 @@ const item = { id: 0, refs: {}, values: { configured: false, membership: members
 const state = { page: () => ({ items: [item] }), incarnations: () => [membership.inc], scope: () => ({ status: "active", at: rules, head: { seq: 0, hash: digest } }) } as unknown as StateView;
 
 test("a native service-generation effect holds its real local position, without fabricating a self fact", () => {
-  const definition = checkedPlatformData(rulesScopeV13);
   const row: Item = { ...item, type: "rules", state: "current", revision: 0, opened: digest, parties: {}, attributed: [] };
   // Explicit boundary stand-in: it emits the same native self reference as
   // q13-publish-policy, without claiming a certificate or publication was judged.
   // The real cohort test separately proves mark changes and unchanged generations.
   const at = (self: number, data: PlatformData = rulesScopeV13): ReturnType<typeof deriveEffects> => {
+    // Admit this one-effect boundary probe before asking the typed executor to run it.
+    const probe: PlatformData = { ...data, acts: { ...data.acts, publish: { ...data.acts["publish"]!, effects: data.acts["publish"]!.effects.slice(0, 1) } } };
+    const definition = checkedPlatformData(probe), act = definition.declared.acts["publish"]!;
     const judging: Judging = {
-      view: state, definition: data === rulesScopeV13 ? definition : checkedPlatformData(data), bounds: PROPOSED_BOUNDS,
+      view: state, definition, bounds: PROPOSED_BOUNDS,
       clock: { reading: "2026-10-28T00:00:00Z", asOf: "2026-10-28T00:00:00Z", behind: false },
       scope: { at: rules, creator: null }, self, kind: "publish", fields: {}, fieldTypes: {}, subjects: new Map([["on", row]]),
       signer: null, facts: new Map(), prepared: [], used: [],
@@ -32,7 +35,7 @@ test("a native service-generation effect holds its real local position, without 
       platform: { named: "platform:rules@13", rules: { "q13-publish-policy": { place: "effect", most: 1,
         run: given => [{ effect: "ref", item: row.id, slot: "roomServiceChanged", to: given.resolved.self }] } } },
     };
-    return deriveEffects(judging, judging.definition.declared.acts["publish"]!.effects.slice(0, 1), [], null);
+    return deriveEffects(judging, act.effects, act.attention, null, bodyStructure(definition, act, "publish"));
   };
   for (const self of [1, 7, 1_000_000_000]) {
     const result = at(self);

@@ -16,9 +16,9 @@
  * and for every other owner as the given owners do.
  */
 
-import type { Digest, EffectForm, OutcomeMark, PlatformData, Send, SendForm } from "@generalbusiness/dap-contract";
+import type { Digest, OutcomeMark, PlatformData, Send, SendForm } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
-import { deriveEffects } from "./effects.ts";
+import { joinReturnedEffects } from "./effects.ts";
 import type { Own, Reading } from "./fields.ts";
 import type { Fetched, Judging } from "./guards.ts";
 import { overMax } from "./handlers.ts";
@@ -194,7 +194,7 @@ function given(mark: OutcomeMark, j: Judging, kinds: Readonly<Record<string, Out
   const effectCode = fresh("effects"), sendCodes = sends.map((_, n) => fresh(`send.${n}`));
   const rules: [string, Rules[string]][] = [[effectCode, { place: "effect", most: effects.length, run: () => effects }], ...sends.map((request, n): [string, Rules[string]] => [sendCodes[n]!, { place: "send", run: () => request }])];
   const joining: Judging = { ...j, platform: { named: j.platform!.named, rules: { ...native, ...Object.fromEntries(rules) } } };
-  const joined = deriveEffects(joining, [{ code: effectCode, row: mark.row } as unknown as EffectForm], [], null);
+  const joined = joinReturnedEffects(joining, { code: effectCode, row: mark.row });
   if (!joined.ok) throw outside(mark, `effects that the entry cannot hold: ${"reason" in joined ? joined.reason : joined.unavailable}`);
   // The synthetic rule joins and validates the callback's effects; its
   // length is no declaration of what the originating outcome may start.

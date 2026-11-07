@@ -11,8 +11,8 @@ import { clauseObserves } from "./observes.ts";
 import { isDetached, operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { RECORD_BYTES, stated } from "./sizes.ts";
-import { recordFrame, recordSlot } from "../program/reads.ts";
-import { beginBody, endBody, enterForm, leaveForm, type SendOp, type RangeUse } from "../program/structure.ts";
+import { recordFrame, recordSlot, type SlotRead } from "../program/reads.ts";
+import { beginBody, endBody, enterForm, leaveForm, recordAttentionPlan, type SendOp, type RangeUse } from "../program/structure.ts";
 
 /**
  * A range that a send reads whole: the items of a fan-out, and of a
@@ -266,13 +266,17 @@ export function attention(d: Defining, v: unknown, path: string, ctx: Ctx): numb
       const slot = s && s !== "scope" && typeof r["slot"] === "string" ? s.slots.get(r["slot"]) : undefined;
       if (s && s !== "scope" && slot?.kind !== "party") bad("name", at(path, i), "names no party slot");
       if (slot?.kind === "party") told += slot.type.type === "list" ? slot.type.max : 1;
-      if (s && s !== "scope" && slot) recordSlot(d, ctx, at(at(path, i), "slot"), s,
-        { kind: "subject", name: r["of"] as string }, r["slot"] as string, slot, "read");
+      let captured: SlotRead | null = null;
+      if (s && s !== "scope" && slot) captured = recordSlot(d, ctx, at(at(path, i), "slot"), s,
+        { kind: "subject", name: r["of"] as string }, r["slot"] as string, slot, "read").slot;
       if (r["when"] !== "before" && r["when"] !== "after") bad("shape", at(path, i), "when is before or after");
       str(r["reason"], at(path, i));
       // A timed entry is always written (section 6.4). A condition that is not completed would leave it not judged, so a timed rule's notice has none.
       if ("if" in r && ctx.timed) bad("timed", at(at(path, i), "if"), "a notice of a timed rule has no condition");
       else condition(d, r, at(path, i), ctx);
+      if (captured && (r["when"] === "before" || r["when"] === "after") && typeof r["reason"] === "string") {
+        recordAttentionPlan(d, { slot: captured, when: r["when"], reason: r["reason"] });
+      }
     } finally { leaveForm(d, traced); }
   });
   // Section 6.6: attention is bounded by the definition, so no entry has to drop a notice.

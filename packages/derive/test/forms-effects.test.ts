@@ -1,10 +1,10 @@
-import { auditedData, refusingTicketData } from "./definition-corpus/forms-effects-variants.ts";
+import { aliasedAttributionData, auditedData, effectOwnershipData, effectProbeData, refusingTicketData, unboundConditionData } from "./definition-corpus/forms-effects-variants.ts";
 import { effectFormCases } from "./definition-corpus/forms-effects-cases.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/dap-bytes";
-import { clockOf, deriveEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Judging } from "../src/index.ts";
+import { clockOf, deriveEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Item, type Judging } from "../src/index.ts";
 import { Scope, arriving, deliver, fields, forged, created, keys, member, on, ticketDefinition, valid, type Actor, type Over } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
@@ -17,9 +17,9 @@ const { rita, una, vic, paul, sam } = keys;
 import { cards } from "./definition-corpus/forms-effects-data.ts";
 import { clockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
 import { clockScene } from "./fixtures-clock-cutover.ts";
-import { runClause } from "../src/handlers.ts";
+import { derive, runClause } from "../src/handlers.ts";
 import { bodyStructure } from "../src/program/structure.ts";
-import { t } from "./fixtures-entry.ts";
+import { otherLane, t } from "./fixtures-entry.ts";
 
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
 
@@ -73,13 +73,21 @@ describe("effects: sources, conditions and what is not applied (section 6.6)", (
     const p = s.did(una, "add", fields({ text: "p" })).seq;
     // The parent's owner, its ID and its text are copied. The parent has no size, so that effect is not applied, and records nothing.
     // The last source reads the new card as the effects before it left it: its helper is set by then.
-    const child = s.did(rita, "child", under(s, p));
-    const c = child.seq;
-    expect(child.effects).toEqual([
+    const c = s.head.seq + 1;
+    const expectedEffects = [
       { effect: "open", item: c, type: "card", state: "draft" }, { effect: "party", item: c, slot: "owner", member: rita.member },
       { effect: "party", item: c, slot: "helper", member: una.member }, { effect: "ref", item: c, slot: "parent", to: p }, { effect: "value", item: c, slot: "text", value: "p" },
       listed(c, "add", una),
-    ]);
+    ];
+    const expectedOpened: Item = { id: c, type: "card", state: "draft", revision: 1, opened: null,
+      parties: { owner: rita.member, helper: una.member, team: [una.member] }, refs: { parent: p },
+      values: { text: "p", size: null, tags: null, near: null }, attributed: [rita.member] };
+    const act = definition.declared.acts["child"]!;
+    expect(deriveEffects(judging(s, "child", { "also.parent": p }, { given: { parent: p } }), act.effects, act.attention, "card", bodyStructure(definition, act, "child"))).toEqual({
+      ok: true, effects: expectedEffects, working: new Map([["also.parent", s.item(p)], ["on", expectedOpened]]), opened: expectedOpened,
+    });
+    const child = s.did(rita, "child", under(s, p));
+    expect(child.effects).toEqual(expectedEffects);
 
     const edit = (f: Record<string, FieldValue>) => written(s, s.act(rita, "edit", at(s, p, f)));
     expect(edit({ size: 3 })).toEqual([{ effect: "value", item: p, slot: "size", value: 3 }]);
@@ -140,9 +148,56 @@ const judging = (s: Scope, kind: string, bound: Record<string, number>, more: Gi
 /** What those effects derive there. Nothing is written. */
 const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}) => {
   const act = s.definition.declared.acts[kind]!, attention = more.attention ?? [];
-  const body = act.effects === forms && attention.length === 0 ? bodyStructure(s.definition, act, kind) : null;
-  return deriveEffects(judging(s, kind, bound, more), forms, attention, more.opens ?? null, body);
+  if (act.effects === forms && attention.length === 0) return deriveEffects(judging(s, kind, bound, more), forms, attention, more.opens ?? null, bodyStructure(s.definition, act, kind));
+  const checked = valid(validateDefinition(effectProbeData(kind, forms, attention, more.opens ?? null), PROPOSED_BOUNDS));
+  const probe = checked.declared.acts["probe"]!;
+  if (s.last.input.type !== "act") return expect.fail("the effect probe requires an act entry template");
+  // Explicit fetched-entry stand-in, hashed as production requires. It proves no provider judgment or authority.
+  const entry = { ...s.last, at: otherLane, input: { ...s.last.input, signed: s.intent(rita, "test-input", { to: otherLane, ...fields(more.given ?? {}) }) }, effects: [], sends: [] };
+  const fact = factRefOf(entry);
+  const j: Judging = { ...judging(s, kind, bound, more), definition: checked, kind: "probe", fieldTypes: probe.fields,
+    fields: { ...more.given, "test-proof": fact }, facts: new Map([[fact.hash, { fact, entry, under: "test-effects-source" }]]) };
+  return deriveEffects(j, probe.effects, probe.attention, more.opens ?? null, bodyStructure(checked, probe, "probe"));
 };
+
+test("M5: a nested constant subject in if skips effects and attention while unbound and applies both when bound", () => {
+  const checked = valid(validateDefinition(unboundConditionData(), PROPOSED_BOUNDS));
+  const s = new Scope(checked), p = s.did(rita, "add", fields({ text: "before" })).seq;
+  const parent = s.did(una, "add").seq, act = checked.declared.acts["probe"]!;
+  // Production admission and body execution; the fixture supplies the resolved subjects and authority.
+  const without = derive(judging(s, "probe", { on: p }), act, null, s.head.hash);
+  const withParent = derive(judging(s, "probe", { on: p, "also.parent": parent }), act, null, s.head.hash);
+  expect([without, withParent]).toEqual([
+    { result: "ran", effects: [], sends: [], prepared: [], judgesTime: false, settles: false },
+    { result: "ran", effects: [
+      { effect: "value", item: p, slot: "text", value: "applied" },
+      { effect: "attention", item: p, members: [rita.member], reason: "told" },
+    ], sends: [], prepared: [], judgesTime: false, settles: false },
+  ]);
+});
+
+test("M5: admitted effect and attention instructions keep their captured meaning after the declaration mutates", () => {
+  const input = effectOwnershipData(), checked = valid(validateDefinition(input, PROPOSED_BOUNDS));
+  const s = new Scope(checked), p = s.did(rita, "add", fields({ text: "before" })).seq;
+  const act = input.acts["edit"]!, [text, clock, helper] = act.effects;
+  if (!text || !("value" in text) || !text.value.from || !("const" in text.value.from)
+    || !clock || !("value" in clock) || !clock.value.from || !("time" in clock.value.from)
+    || !helper || !("party" in helper)) return expect.fail("expected the owned-instruction fixture");
+  text.value.from.const = "mutated";
+  clock.value.from.time.plusSeconds = 999;
+  helper.party.from = { const: una.member };
+  act.attention[0]!.notify.reason = "mutated";
+  // Production body execution over fixture state; no entry is sealed here.
+  const actual = derive(judging(s, "edit", { on: p }), act, null, s.head.hash);
+  expect(actual, JSON.stringify(actual)).toEqual({
+    result: "ran", effects: [
+      { effect: "value", item: p, slot: "text", value: "captured" },
+      { effect: "value", item: p, slot: "due", value: t(2) },
+      { effect: "party", item: p, slot: "helper", member: rita.member },
+      { effect: "attention", item: p, members: [rita.member], reason: "captured" },
+    ], sends: [], prepared: [], judgesTime: true, settles: false,
+  });
+});
 
 describe("attribution: its sources and its order (section 6.7)", () => {
   /**
@@ -150,8 +205,8 @@ describe("attribution: its sources and its order (section 6.7)", () => {
    * is a finished child of p, with wes in its team. Card q is vic's, who
    * acts for quinn. Entry `staffed` gave q's team zed.
    */
-  function deck() {
-    const s = new Scope(definition);
+  function deck(checked = definition) {
+    const s = new Scope(checked);
     const p = s.did(una, "add").seq;
     s.did(rita, "staff", at(s, p, { team: [sam.member, una.member] }));
     const c = s.did(rita, "child", under(s, p)).seq;
@@ -163,7 +218,8 @@ describe("attribution: its sources and its order (section 6.7)", () => {
   }
 
   test("the list is the union of the subject's attribution and every source, each member once, in byte order of member identifier; a longer list than the slot holds is refused", () => {
-    const { s, p, q, staffed } = deck();
+    // Reusing the same each-source object must bind each admitted occurrence independently.
+    const { s, p, q, staffed } = deck(valid(validateDefinition(aliasedAttributionData(), PROPOSED_BOUNDS)));
     // Of q. Base: its owner vic, vic's principal quinn, and the signer, who is vic. The subject's own team: zed. No field is given, so the last two sources read nothing.
     const earlier = s.did(vic, "sum", under(s, q));
     expect(names(s.item(earlier.seq).parties["authors"])).toEqual(["@quinn", "@vic", "@zed"]);

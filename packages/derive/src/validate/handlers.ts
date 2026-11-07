@@ -20,8 +20,8 @@ import { attention, sends } from "./sends.ts";
 import { at, type Rec } from "./shape.ts";
 import { nativeReceiver } from "./native-capacity.ts";
 import { declaredBy } from "../capability.ts";
-import { recordFrame } from "../program/reads.ts";
-import { beginBody, endBody } from "../program/structure.ts";
+import { recordFrame, recordSlot, subjectRead } from "../program/reads.ts";
+import { beginBody, endBody, recordSettlementPlan } from "../program/structure.ts";
 
 const members = (v: unknown): Rec => (isObject(v) ? v : {});
 /** Whether an item type is `many`, as the definition writes it. */
@@ -152,6 +152,7 @@ function settling(d: Defining, v: unknown, path: string, ctx: Ctx, copy: { name:
     if (!copy) return bad("shape", at(path, "copy"), "only a relate handler settles a copy");
     const states = list(f[1], at(path, "copy"), d.bounds.listElements);
     if (states.length === 0 || !states.every((s) => typeof s === "string" && s !== "")) return bad("shape", at(path, "copy"), "is a list of states of the relationship, and is not empty");
+    recordSettlementPlan(d, { op: "copy", states: states as string[], ...copy });
     return { copy: states as string[], ...copy };
   }
   // Revision 21: the third form, `{ of, sets, in }`, settles the item by a mark that the entry sets.
@@ -162,8 +163,14 @@ function settling(d: Defining, v: unknown, path: string, ctx: Ctx, copy: { name:
   if (ctx.nascent && onSubject(r["of"])) return bad("name", at(path, "of"), "an entry settles an item that exists before it, and not the one it opens");
   const states = names(r["in"], at(path, "in"), s.states, "state");
   if (states.length === 0 || states.some((state) => !s.states.has(state))) return null;
-  if (!("sets" in r)) return { subject: (r["of"] as string | undefined) ?? "on", type: s.name, states };
+  const name = (r["of"] as string | undefined) ?? "on", target = subjectRead(s, { kind: "subject", name });
+  if (!("sets" in r)) {
+    recordSettlementPlan(d, { op: "state", subject: target, states });
+    return { subject: name, type: s.name, states };
+  }
   const slot = settlesByMark(d, r, s, states, path, top);
+  if (slot !== null) recordSettlementPlan(d, { op: "mark", subject: target, states,
+    slot: recordSlot(d, ctx, at(path, "sets"), s, { kind: "subject", name }, slot, s.slots.get(slot)!, "read").slot });
   return slot === null ? null : { subject: (r["of"] as string | undefined) ?? "on", type: s.name, states, slot };
 }
 

@@ -136,3 +136,24 @@ separate supported-primitive contract. They are not completion conditions here.
 Run `node notes/2026-11-04-typed-core/check-baseline.mjs` to detect source drift.
 The check verifies frozen bytes, not semantic completeness. Any changed source
 requires review of its inventory rows and witnesses before refreshing the hashes.
+
+## M5 implementation mapping
+
+The vocabulary above stays frozen. The
+[M5 implementation record](../implementation/2026-11-07-typed-core-m5.md)
+tracks its source draft, evidence, and remaining gate and review obligations.
+
+| Boundary | Current source and treatment |
+|---|---|
+| Eight ordinary effects and four attribution sources | `validate/effects.ts` records `program/effect-plan.ts` instructions from its existing successful branches. `effects.ts` executes them with the shared item, value, range, history and Native joining leaves. |
+| Hold form | `validate/hold.ts` reports its already-validated action and extent read to the effect recorder. `deriveHold` retains the concrete operation. |
+| Effect and attention conditions | `program/structure.ts` captures actual groups and lexical identities after final admission. `program/condition-value.ts` preserves before-state order, recursive unbound skips, and incomplete results. |
+| Attention recipients | `validate/sends.ts` records the resolved slot, phase and reason; the effect executor derives recipients from that instruction. Send interpretation stays in M6. |
+| Item settlement | `validate/handlers.ts` records body-owned state or once-mark plans. `program/settlement.ts` holds the shared before/after decision. Relationship-copy orchestration stays in M8. |
+| Returned Native effects | `outcomes.ts` enters the existing joining leaf through `joinReturnedEffects`, without presenting fabricated forms as admitted syntax. Native interiors stay in M7. |
+| Clock summary | `declaredClockReads` uses the same owned value source as execution and still visits every declared condition. Callers also retain actual Native `ran.clock`. |
+
+Production instruction coverage does not extend the first-slice prototype's
+`lower`, `explain`, or `dependencies` grammar. Unsupported forms still reject
+the whole prototype body. No precise dependency or explanation claim follows
+for an opaque rule, capability interior, attribution, or settlement.
