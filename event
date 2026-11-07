@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3eb4966fc426ba3aa002c0a16b13c5013d50432f","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/handlers.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4c965819829760156c56253f680f6b77b58280b1","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m4-range-uses.manifest.json."}
