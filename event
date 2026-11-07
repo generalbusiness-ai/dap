@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4ed02a2c9715da1351e4ebfba6e6a9acb1ee6d42","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m4-page-ci.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4f19c14da5a7a15717b530504fa545d3c43989ba","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/lists.ts."}
