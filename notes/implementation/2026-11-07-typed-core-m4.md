@@ -62,3 +62,14 @@ The protected judge source stays byte-identical at SHA-256
 `86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959`.
 No source-seal, definition, grant, wire, or dependency changes accompany this
 cutover. M5 through M8 remain separate work under the parent request.
+
+## The Page bundle follows the shared source
+
+Scope addendum `6ec32b66` covers only the generated Page module.
+The existing pinned build regenerates `apps/room/page/assets.ts`; it changes
+no Page source, HTML, or UI. Both selected Page asset cases pass.
+The [Page asset manifest](evidence/2026-11-07-m4-page-assets.manifest.json),
+SHA-256 `1b07e3861f6dfe9bb5742aa59d2b948963a64685c4dd3407ec7025939641d5dd`, seals the build and owner output.
+
+Regenerate with `node scripts/assets.mjs` from `apps/room/page`.
+The full gate and exact-head Page browser workflow remain due.
