@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d02bd29ddfc43db7fef005f022c5bf4292f6cb20","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/reads.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d26b9a8b0b69f1534b0c38c7711f2482d5aaf4c6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m4-guard-value.manifest.json."}
