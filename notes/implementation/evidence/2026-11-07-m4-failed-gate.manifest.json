@@ -1,0 +1,72 @@
+{
+  "qualification": "Actual frozen M4 gate at 7b4534a699 exits 1, read. One Plain test failed; Native unreached. This unit stays failed. Raw TEST custody remains private and read-only.",
+  "sourceHead": "7b4534a699c3fcf71206da11c8870ad3939a2c92",
+  "sourceTree": "1d24c159987ab089f0fb515956bd2ac0bd359712",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-failed-gate-validation",
+      "files": [
+        {
+          "path": "after.json",
+          "bytes": 1839,
+          "sha256": "1e0f64870a09c6272d13c168c92a9637e28d3b652820382646ccc0c916fa5b11"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1884,
+          "sha256": "592965d60edebe446d22923d5d7a4b1bfd635c51316458e2cf1f2ff9863f303f"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1839,
+          "sha256": "1e0f64870a09c6272d13c168c92a9637e28d3b652820382646ccc0c916fa5b11"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 384,
+          "sha256": "d16cd97f430afc724a372c3d4c384221c3b40b8e4e16e39fdc173a20b65e5460"
+        },
+        {
+          "path": "qualification.json",
+          "bytes": 542,
+          "sha256": "3687d0897bd0c78d446819aa26f7075a34eeac16b4f3b50cb05b5cfde3b04355"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "2e443dc1e81c7ec5feef50abfba04053c1e8e7f2191c69b34dba36db50a1617a"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 978,
+          "sha256": "a63e039c2b06b0a58f84a7870e0674906fac71dd24c4a2e6ef9349e708809722"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 558,
+          "sha256": "96f95e94a9f8b9123b7478c52e12dce487a56702964c33ed632de4b6761e39d5"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 4794,
+          "sha256": "e9e819c84cd421e7b7835ffc063cf70156f5e334f4cca669a27d50bffdc4ab15"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 901,
+          "sha256": "08a57a94c22ffafdad3ddc83f096eba88d706373ec31c175b82affa913999182"
+        }
+      ]
+    }
+  ]
+}

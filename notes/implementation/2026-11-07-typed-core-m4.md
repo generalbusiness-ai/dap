@@ -73,3 +73,54 @@ SHA-256 `1b07e3861f6dfe9bb5742aa59d2b948963a64685c4dd3407ec7025939641d5dd`, seal
 
 Regenerate with `node scripts/assets.mjs` from `apps/room/page`.
 The full gate and exact-head Page browser workflow remain due.
+
+## Gate failures expose two unadmitted test helpers
+
+The first full gate at `7b4534a699` exits 1. The actual `gate.exit` records
+that failure. Node passes 135 cases, Counting passes 56, and Plain passes
+4,001 cases with one skip. One lane test stops because its direct effects
+call supplies no admitted body. Native is unreached.
+
+Scope addendum `76900c64` covers the lane test repair. The test already
+validates the real issue and change declarations. Its effects calls now
+receive the actual admitted act or notice body. All seven assertion lines,
+three loop headers, and the test declaration stay unchanged. The lanes test
+compiler and complete one-case owner pass.
+
+The subsequent Native phase exits 1: 1,110 cases pass, one fails, and two
+skip. Its fixed-index storage witness passes a fresh guard literal under an
+invented kind. That guard has no admitted occurrence. Scope addendum
+`45b03212` covers only this second test owner. The same guard and needle
+field now belong to a file-local transition act. The direct SQLite witness
+uses that admitted guard, kind, and field types. Its 70 assertion lines,
+16 loop headers, and five top-level test declarations stay unchanged.
+The twelve parameterized history cases also remain.
+
+The first fixture repair copied a comment act, which forbids guards, and
+admission stopped before any case ran. After the fixture changes to a
+transition, the scope test compiler and all 17 owner cases pass. The wrapper
+then fails its mistaken five-case expectation. A separate ledger audit
+matches the retained output to all five top-level titles and the four by
+three history table, without rerunning tests. The wrapper failure remains.
+
+| Evidence | Result |
+| --- | --- |
+| [Failed gate](evidence/2026-11-07-m4-failed-gate.manifest.json), SHA-256 `2e3f4edc45933a42a53f8ef62f9dc7753c16f7c3110ee112125db2e72a0145a7` | Actual full gate exit 1; one Plain failure; Native unreached. Source stays unchanged and the owned process group closes. |
+| [Failed Native follow-up](evidence/2026-11-07-m4-failed-followup.manifest.json), SHA-256 `6b4c17d0744ca7ba65ca50f0a4c0fa683218726f7d1069bc8fcbe2e0431808bf` | Lanes compiler and owner pass. Native exits 1 with 1,110 passing cases, one failure, and two skips. Source stays unchanged and the owned process groups close. |
+| [Test repairs](evidence/2026-11-07-m4-test-repairs.manifest.json), SHA-256 `37a214112c54f6e223dd5300d5f9c025d7868bb3362b14afa6c2762462a61756` | Scope compiler and the complete 17-case fixed-index owner pass. The invalid comment-act attempt and the wrapper's mistaken five-case ledger remain qualified. |
+
+Only these two test owners and explanatory records change after the first
+gate. Production source, imported helpers, configuration, dependencies,
+and Page assets stay unchanged. Two repaired test files exceed the
+single-file follow-up exception in `docs/testing.md`. A fresh complete
+gate remains due at the corrected candidate. Neither earlier failure
+becomes a pass.
+
+## Capture preserves admission refusals
+
+The earlier guard capture copied a capability argument before admission
+finished. An ignored cyclic value then threw instead of returning the
+validator's original capability refusal. The repair defers that copy until
+final admission. The [admission repair evidence](evidence/2026-11-06-m4-copy-after-refusal.manifest.json)
+retains the failing assertion, the exact refusal, both passing compilers,
+and the passing structural, concrete-guard, and capability owners.

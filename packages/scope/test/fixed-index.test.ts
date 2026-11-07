@@ -24,6 +24,11 @@ const indexed = variant(definition.declared, data => {
       } } },
     },
   };
+  // The direct SQLite witness uses an admitted guard, without claiming act admission for its stored rows.
+  data.acts["probe-uniqueness"] = {
+    ...data.acts["remark"]!, step: "transition", fields: { needle: { type: "text", max: 64, required: true } },
+    guards: [{ none: { type: "job", states: ["live"], where: [{ equals: { a: { slot: "name" }, b: { field: "needle" } } }] }, reason: "handle-in-use" }],
+  };
 });
 
 const fixedTables = (sql: Sql) => ({
@@ -142,10 +147,10 @@ test("rollforward rebuilds a formerly ready index after a base writer advances t
     store.ensureFixed(indexed);
     // Keep this behavioral assertion first: skipping the marker's head
     // comparison must fail here, rather than at a marker-shape assertion.
+    const probe = indexed.declared.acts["probe-uniqueness"]!;
     const duplicate = judgeGuard({ view: store, definition: indexed, bounds: { ...PROPOSED_BOUNDS, guardScan: 1 }, clock: clockOf(store, scope.time),
-      scope, self: scope.head.seq + 1, kind: "TEST uniqueness", fields: { needle: "base-two" }, fieldTypes: { needle: { type: "text", max: 64 } },
-      subjects: new Map(), signer: null, facts: new Map(), prepared: [], used: [] },
-    { none: { type: "job", states: ["live"], where: [{ equals: { a: { slot: "name" }, b: { field: "needle" } } }] }, reason: "handle-in-use" });
+      scope, self: scope.head.seq + 1, kind: "probe-uniqueness", fields: { needle: "base-two" }, fieldTypes: probe.fields,
+      subjects: new Map(), signer: null, facts: new Map(), prepared: [], used: [] }, probe.guards[0]!);
     expect(store.fixedCount("job", "name", '"base-two"', ["live"], "normalized")).toBe(1);
     expect(duplicate).toBe("fail");
     expect(store.fixedReady(indexed.digest, scope.at, scope.head)).toBe(true);
