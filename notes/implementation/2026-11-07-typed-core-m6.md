@@ -190,7 +190,35 @@ interiors. M8 still owns final body orchestration and adapter removal.
 The protected judge remains byte-identical, SHA-256
 `86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959`.
 No security baseline, dependency manifest, live room, credential, custody, mini
-configuration, or deployment changes. Focused raw reports and baseline failures
-await the send checkpoint's evidence seal. Page validation, the single M6 gate,
-review, and audited landing still follow under
+configuration, or deployment changes. The focused evidence and local Page checks have their seals below. Page browser
+CI, the single M6 gate, review, and audited landing still follow under
 [plan 035](../plans/035-2026-11-04-typed-derivation-core.md).
+
+## Retain the source and generated Page checkpoints
+
+Source checkpoint `7d8706abc5a687d3875972bc35c1af49003b9672`, tree
+`e5c30ec87315654a5eb440cdd0137764e83a6b29`, contains the send migration,
+result routing, new witnesses, and bounded M5 cleanup. The final focused source
+snapshot matches all 14 changed derive source and test paths, including the
+unused helper's deletion. The earlier 84-case run and initial 10-case run retain
+their own snapshots; their overlapping counts do not add to the final total.
+
+The [send execution manifest](evidence/2026-11-07-m6-send-execution.manifest.json),
+SHA-256 `71aa613431ba02dc2f567186215c9b38a5f497cdd707021fb32ace42e2f5dfcd`,
+seals 111 read-only files. It includes the inconclusive fixture, valid ownership
+failure, four result failures, three complete-owner runs, compiler records,
+source patch and files, and effective cleanup scope. Sealing runs no tests.
+
+Effective Page scope addendum `80bba3acc05d4be08b5550d15c209ac78cdf39a2`
+names `apps/room/page/assets.ts` before generation. A read-only probe at the
+source checkpoint leaves every tracked hash unchanged and predicts the new
+module. The Page test compiler, maintained generator, and complete one-case
+asset owner each exit 0. Only `assets.ts` changes among tracked files; the
+maintained generator also writes its ignored `dist` outputs.
+
+The generated module has 2355922 bytes, SHA-256
+`78e81844a0f1c6878a849ae4037f28bc360ca90f3c447062f2cd969ace4f5aee`,
+matching the probe byte for byte. The [Page asset manifest](evidence/2026-11-07-m6-page-assets.manifest.json),
+SHA-256 `f3632f3a0c21dfcaa1bc4f643b83e7082dea05ef808aca9f1cf533e5194573bd`,
+seals 35 read-only files. No dependency install or hand edit occurs. The exact
+candidate's Page browser workflow and full gate remain pending.
