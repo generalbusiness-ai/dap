@@ -1,0 +1,162 @@
+{
+  "qualification": "One complete source gate at the frozen config-sync head: actual exit0 read, source unchanged and owned group closed. All phase ledgers reconcile; raw synthetic custody remains private. The failed first sealing attempt is retained separately, without another test execution. No deployment or parent acceptance claim.",
+  "head": "4f36c828462ad1c104bc6a7323c3b3c100371570",
+  "tree": "61382429e3c01acb2e8684eb7fe9aee07605ae54",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-demo-register26-sync-gate-validation",
+      "files": [
+        {
+          "path": "after.json",
+          "bytes": 1937,
+          "sha256": "abe3367888b85af6c03e4c0f8c65f972574523404ad790788310624160025319"
+        },
+        {
+          "path": "analyzer.mjs",
+          "bytes": 4057,
+          "sha256": "16e00b8b637f625f2cf36d8a1378d41dfb737ae868698288f78d1157a5ce8f15"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1937,
+          "sha256": "abe3367888b85af6c03e4c0f8c65f972574523404ad790788310624160025319"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 4114,
+          "sha256": "6a138fd943c1ed3ef7a00a1bc0c086fd60fe815f5d902fa3368f1614a8e617b6"
+        },
+        {
+          "path": "gate-case-ledger.json",
+          "bytes": 3011691,
+          "sha256": "41ee98c5a42219bd0b317752bbf245844dcacad0614f1ca5b3c6cb29d973cf1c"
+        },
+        {
+          "path": "gate-summary.json",
+          "bytes": 3300,
+          "sha256": "e445b4ba46f3b7a43dedb8f20619d73f4e8793fe2f6cd4e6c526c86a70c2c164"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "d0fc6194780f8e5292a071b8f99056e2168d659dc32412ce0d19adab7fcced6e"
+        },
+        {
+          "path": "observation-limits.json",
+          "bytes": 3096,
+          "sha256": "4b394159d1326c05696c0c902d2e4211a622de0de6937a39eb5a3d0b7997440b"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 384,
+          "sha256": "637a1f17e8df57cf93c9052885fa1d9f95dffb5574b142f794680c8b5cfa82bf"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 372,
+          "sha256": "77202bb30433c6b6dc198bb7a94f0ffdd43f6c7999317f29e5a0d3ea259189a7"
+        },
+        {
+          "path": "sealer.py",
+          "bytes": 5321,
+          "sha256": "3b9190b8dc478bde62e81164f0bf56a12114b2ee427dcb1b7fe9dd3a48de8375"
+        },
+        {
+          "path": "started.json",
+          "bytes": 609,
+          "sha256": "0fb879baa71f232f43aed3b355b1e4a0e0633bebb98b203bcec43defb0474a37"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 404,
+          "sha256": "a1ecd56e1592df26ee748ff919e5ed30dd06a5ec9bb32c9d5fddce7d7dff643f"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1136,
+          "sha256": "f0387601e9bce5345835645bccffd9e13018d13be611062d203407072a915dc2"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-demo-register26-sync-gate-validation-sealer-refusal",
+      "files": [
+        {
+          "path": "after.json",
+          "bytes": 1937,
+          "sha256": "abe3367888b85af6c03e4c0f8c65f972574523404ad790788310624160025319"
+        },
+        {
+          "path": "analyzer.mjs",
+          "bytes": 4057,
+          "sha256": "16e00b8b637f625f2cf36d8a1378d41dfb737ae868698288f78d1157a5ce8f15"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1937,
+          "sha256": "abe3367888b85af6c03e4c0f8c65f972574523404ad790788310624160025319"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 4114,
+          "sha256": "6a138fd943c1ed3ef7a00a1bc0c086fd60fe815f5d902fa3368f1614a8e617b6"
+        },
+        {
+          "path": "gate-case-ledger.json",
+          "bytes": 3011691,
+          "sha256": "41ee98c5a42219bd0b317752bbf245844dcacad0614f1ca5b3c6cb29d973cf1c"
+        },
+        {
+          "path": "gate-summary.json",
+          "bytes": 3300,
+          "sha256": "e445b4ba46f3b7a43dedb8f20619d73f4e8793fe2f6cd4e6c526c86a70c2c164"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "d0fc6194780f8e5292a071b8f99056e2168d659dc32412ce0d19adab7fcced6e"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 372,
+          "sha256": "77202bb30433c6b6dc198bb7a94f0ffdd43f6c7999317f29e5a0d3ea259189a7"
+        },
+        {
+          "path": "refusal.json",
+          "bytes": 359,
+          "sha256": "a01e52d4ae692a9d8e0c7c25ba674854349631d4375a42d39932d2a08d3a2286"
+        },
+        {
+          "path": "sealer.py",
+          "bytes": 4921,
+          "sha256": "16ded6c5def0a1efd36ee6670d57a1023361dc2a1b980100c27b09069320836f"
+        },
+        {
+          "path": "started.json",
+          "bytes": 609,
+          "sha256": "0fb879baa71f232f43aed3b355b1e4a0e0633bebb98b203bcec43defb0474a37"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 404,
+          "sha256": "a1ecd56e1592df26ee748ff919e5ed30dd06a5ec9bb32c9d5fddce7d7dff643f"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1036,
+          "sha256": "bc44cf417842c40ab0aa2746f4c07de705517ca5ae30eb7e429e2402860e18de"
+        }
+      ]
+    }
+  ]
+}

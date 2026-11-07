@@ -56,5 +56,34 @@ seals 21 public evidence files and retains 64 raw files privately. Source
 hashes stay unchanged during the commands. The named offer config's digest
 stays unchanged. The config probe reads no credential or custody file.
 
-One complete gate and independent exact-head review remain due. This record
-claims no deployment or parent acceptance.
+## The complete gate passes
+
+The one complete gate at `4f36c828462ad1c104bc6a7323c3b3c100371570`, tree
+`61382429e3c01acb2e8684eb7fe9aee07605ae54`, records actual `gate.exit` 0.
+All pre-test checks pass. Node passes 135 cases, Counting passes 56, Plain
+passes 3,987 with one skip, and Native passes 1,111 with two skips. Every
+phase has complete terminal evidence, with no contradictory record or
+unhandled Vitest error. Source stays unchanged and the owned process group
+closes. The existing archive-floor and one-entry owners pass in this run.
+This config gate does not explain the separate M4 archive refusal.
+
+The [gate manifest](evidence/2026-11-07-demo-register26-sync-gate.manifest.json),
+SHA-256 `b349575ce8527acb74d3c171ee1ac46a35c543b2272e7c48e1f6182493dc14ea`,
+seals 29 public files and retains 2,291 raw files privately. The first
+sealing attempt stops on a report-shape mismatch before changing raw
+evidence. Its original script and partial copies remain in a separate
+sealed unit; the corrected sealer runs without another test execution.
+The report keeps 99 unknown or suite observations outside case rankings.
+Scope project timings remain partial because module durations are missing;
+functional phase completion remains complete. No timing comparison follows.
+
+| Evidence | Files in its manifest | What it establishes |
+| --- | --- | --- |
+| Focused checks | `config-owner.json`, `old-config-control.json`, `config-probe.json` | Three owner cases pass, the old config fails the intended assertion, and production parsers accept both roots and the Page offer. |
+| Dry runs | `dry-run-synced.stdout`, `dry-run-offer.stdout`, `dry-run-comparison.json` | Both exits are 0; all 20 emitted bindings and the complete variable strings match. |
+| Complete gate | `gate.exit`, `gate-summary.json`, `gate-case-ledger.json`, `before.json`, `after.json`, `receipt.json` | The actual gate passes at the frozen head; every phase reconciles, source stays unchanged, and the owned process group closes. |
+| Observation limits | `observation-limits.json`, `private-retention.json` | Timing gaps stay explicit; full raw logs and synthetic custody remain private and read-only. |
+
+The later note and manifest changes leave source and tests unchanged.
+Independent exact-head review and landing remain due. The planner deploys.
+This record claims no deployment or parent acceptance.
