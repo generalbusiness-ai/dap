@@ -1,0 +1,83 @@
+{
+  "qualification": "Cause UNPROVEN. Both gates remain failed. No real-room, acceptance, review, landing or deployment claim. No full-gate retry.",
+  "scopeAddendum": "e944419f1f6f6b7c5ea383e826c5a5259a50d791",
+  "planAct": "0c8f35366b3cc6a8cacd97b542e23e406f634dba",
+  "baseHead": "6204ddaddeaf080d786d206eeddaca0165ca0936",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-archive-floor-paired-validation",
+      "files": [
+        {
+          "path": "driver.py",
+          "bytes": 4836,
+          "sha256": "801c89d5ef3e2ee338ca69801a93445f8331e23f8e4f379e175447db768029da"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 4811,
+          "sha256": "6df23b66fd4b8b405723e0c829c242291e10414086a18998eb8ec67e87b7df8a"
+        },
+        {
+          "path": "obligations.json",
+          "bytes": 441,
+          "sha256": "f0f3d5fc84da9d0f01e8e999e31ad55ba6277e761265276435b655b6b9003ed2"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 334,
+          "sha256": "3f883c2c38f7dc9c90f40a38abd52de4dd278db261d360ca3b65621086c19fd8"
+        },
+        {
+          "path": "restoration.json",
+          "bytes": 391,
+          "sha256": "598233898da2742f9fa179c7c77aa9aadb748d9c3a08d2eaeb64f53718eb066c"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1147,
+          "sha256": "2220105d18e8c2c9b484fb7b2cc1aa38a406ca0ee1abd5bfcd87f34883bce087"
+        },
+        {
+          "path": "scope-test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "seal-preflight.json",
+          "bytes": 273,
+          "sha256": "c64ec6e1c35ea6de844514adcb00bff198ba4170bce7822e9f9f818559669086"
+        },
+        {
+          "path": "selection-source.json",
+          "bytes": 451,
+          "sha256": "302b7358e8b3327955b78e93c3ce91fbf8eddefc965a0b31a347e0a2ebbfb9df"
+        },
+        {
+          "path": "selection.json",
+          "bytes": 1399,
+          "sha256": "18f3b940b2e23f2330e3210ff8a0e552d6a80139cfa72abfb1ad0552b78e5aa6"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 886,
+          "sha256": "2c55ecb503686eb84a966a6ef88e714ff41a3136f30c744722df48f8c8dd592c"
+        },
+        {
+          "path": "traces.json",
+          "bytes": 7836,
+          "sha256": "7a0dbe6a0e29ef0242d6b12199055aeb477094560e5292d5bc391fc7bca8cb53"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1067,
+          "sha256": "24a270da3c4b579d4830beeb43470beb08ad5aec6aedda7161272b0008fb468a"
+        }
+      ]
+    }
+  ]
+}

@@ -14,10 +14,11 @@ import { boundTo, decisionCounts, selectedByIndex, selectorOf } from "./binding.
 import { deriveEffects } from "./effects.ts";
 import { creationFields, factsNamed, isEntryOf, isLocalFact, messageFields, presentedTypes, readFacts, readFields, textsNamed, updateOf, type Reading, type Update } from "./fields.ts";
 import { signerOf } from "./fold.ts";
-import { judgeGuards, slotOf, type Fetched, type Judging } from "./guards.ts";
+import { slotOf, type Fetched, type Judging } from "./guards.ts";
 import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, markOf, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
 import { deriveSends, formOf } from "./sends.ts";
+import { judgeGuardNodes } from "./program/guard-value.ts";
 import { bodyJudgesClock, bodyStructure, clauseStructure } from "./program/structure.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -387,7 +388,7 @@ export function derive(j: Judging, forms: Forms, opens: string | null, cause: Di
   if (forms.settles !== undefined) j.settling = true;
   // Section 6.5: the guards are one list with three results. A guard that is false refuses, also after one that is not completed.
   // Section 6.4: a guard whose subject is unbound is not evaluated, and an effect whose subject is unbound is not applied.
-  const guards = judgeGuards(j, forms.guards);
+  const guards = judgeGuardNodes(j, structure, structure.nodes.filter(node => node.category === "guard"));
   if (guards.result === "fail") {
     const failed = forms.guards[guards.at]!;
     // Section 4.2: a capability guard that does not hold is `capability-refused`, with the name its capability declares.
@@ -401,9 +402,9 @@ export function derive(j: Judging, forms: Forms, opens: string | null, cause: Di
   }
   if (guards.result !== "pass") return { result: "unavailable", reason: guards.result };
   // Sections 6.6 and 6.7: a condition, or a range that a source or a send reads, that is not completed leaves the input not judged.
-  const effects = deriveEffects(j, forms.effects, forms.attention, opens);
+  const effects = deriveEffects(j, forms.effects, forms.attention, opens, structure);
   if (!effects.ok) return "unavailable" in effects ? { result: "unavailable", reason: effects.unavailable } : { result: "refused", reason: effects.reason, detail: effects.detail, prepared: j.used };
-  const sends = deriveSends(j, forms.sends, effects.working, cause, first, directory, effects.opened !== null);
+  const sends = deriveSends(j, forms.sends, effects.working, cause, first, directory, effects.opened !== null, structure);
   if (!sends.ok) return "unavailable" in sends ? { result: "unavailable", reason: sends.unavailable } : { result: "refused", reason: sends.reason, detail: sends.detail, prepared: j.used };
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item: the row, or in platform data a rule.
   const full = effects.opened === null ? null : overMax(j.view, j.definition, effects.opened.type, effects.opened.state);
@@ -641,7 +642,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     const { status } = settled;
     beside.rows = { status: rows.map((_, n) => status.get(n) ?? null), listed: settled.listed, retained: settled.retained, values: settled.values };
   }
-  const effects = deriveEffects(j, forms, [], null);
+  const effects = deriveEffects(j, forms, [], null, structure);
   // Section 6.6: a clause's condition that is not completed leaves the result not recorded now. It is offered again.
   if (!effects.ok && "unavailable" in effects) return { result: "unavailable", reason: effects.unavailable };
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. In platform data a rule of the clause may open

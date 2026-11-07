@@ -1,0 +1,120 @@
+{
+  "scope": "M4 validator-side guard instruction capture, including range/where data and lexical child groups. Execution and caller cutover remain incomplete.",
+  "base": "267a3ffe3a152e20f44fc1b9049b7a836302e9e4",
+  "inputs": [
+    {
+      "path": "packages/derive/src/program/guard-plan.ts",
+      "sha256": "1e11203659f4415f65283b35192550121c091f1dc2e726312494c7d6fa80deef"
+    },
+    {
+      "path": "packages/derive/src/program/reads.ts",
+      "sha256": "132f12909ea5a5e2ab83cab6894c7c2236ce6775d40dee5b8e7fbca77b318801"
+    },
+    {
+      "path": "packages/derive/src/program/structure.ts",
+      "sha256": "94c94438b4b27dc37ec88243b7e99c571ea01037f2a97c0d3626260f35c91932"
+    },
+    {
+      "path": "packages/derive/src/validate/guards.ts",
+      "sha256": "9dbd8bbcbe8c82e41df57df90dd8c1078f8c9f54c6b81d90dee7839b0679830e"
+    },
+    {
+      "path": "packages/derive/test/program-structure.test.ts",
+      "sha256": "ba5d1d687532b68d3c3bcb211112abf1dae61515a057a10c87eaaf22c59b38db"
+    }
+  ],
+  "checks": {
+    "compilers": "Both derive compilers exit 0.",
+    "owners": "29 cases pass across the five selected complete metadata, guard admission, fixed-slot and rule files; source unchanged.",
+    "coverage": "Every declared guard opcode in the admitted corpus has a matching captured instruction. Native boundaries remain opaque. This is capture coverage, not concrete execution or caller evidence.",
+    "controls": "Concrete guard controls remain due with the executor and production cutover. Earlier binding/reader controls stay in their own manifests.",
+    "gate": "Not run; M4 remains incomplete."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/driver.py",
+          "bytes": 2030,
+          "sha256": "0661ccda2bb8fc59f62dbd588f60b034e5111cbf04842bedb6448f299fa43218"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/guard-plan.ts",
+          "bytes": 4005,
+          "sha256": "1e11203659f4415f65283b35192550121c091f1dc2e726312494c7d6fa80deef"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/owner.json",
+          "bytes": 12223,
+          "sha256": "b8a6782e59df9536474b1905bee932e85f6bc1e0b90e46821958063b7c6836bf"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/owner.stdout",
+          "bytes": 108,
+          "sha256": "9bee4b4bf847c3b8e778d4493a8ac9787dc9303084e0f86d65c31bebdf754a7b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/result.json",
+          "bytes": 107,
+          "sha256": "0514847c200d60872ea94f45b07a44b43fc9932923c5c1a8d7602dd07f37b537"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/source-after.json",
+          "bytes": 521444,
+          "sha256": "349ac841c5019b65d88140dbf87e1efca92ba60df12cd8b02d8745c4f5ebd9d5"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/source-before.json",
+          "bytes": 521444,
+          "sha256": "349ac841c5019b65d88140dbf87e1efca92ba60df12cd8b02d8745c4f5ebd9d5"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-capture-focused/tracked-source.patch",
+          "bytes": 35488,
+          "sha256": "d8de5a2fd502289d7516a37e09773fa94e3d24774938c3355fafe27e76212a7e"
+        }
+      ]
+    }
+  ]
+}

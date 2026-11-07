@@ -1,0 +1,643 @@
+{
+  "scope": "M4 production guard/list caller cutover. Full gate, exact-head independent review and landing remain due.",
+  "base": "5c481bc5b649283b60c72e863b657c476d75d22e",
+  "scopeAddenda": [
+    "f25ab3d0956c01b04fb62aeba1e20401b4a869f1",
+    "0c3672556fad094480b91307e22f53cd27a58311"
+  ],
+  "inputs": [
+    {
+      "path": "packages/derive/src/capability.ts",
+      "sha256": "eddcf19cd45c0a4341e1f377a822179caf3a31b5775604bea0364d2afc6257f5"
+    },
+    {
+      "path": "packages/derive/src/effects.ts",
+      "sha256": "3215b7e73ec274c7bc0be7cf0a9dbf521889df301ffccc3b018d1a426df57602"
+    },
+    {
+      "path": "packages/derive/src/guards.ts",
+      "sha256": "586be413c2b6d92e0e7ab3c417aa01723e5989bee64527be4c6c6b2ac2d49bd6"
+    },
+    {
+      "path": "packages/derive/src/handlers.ts",
+      "sha256": "8c371840fd09327347820c8d9805349a429cc05aa5f01878649078aea832ccac"
+    },
+    {
+      "path": "packages/derive/src/lists.ts",
+      "sha256": "111e84b237f4aefc06b7f18d962b9cc1e42d49f645d32c093b4c2acd53c0137a"
+    },
+    {
+      "path": "packages/derive/src/program/guard-value.ts",
+      "sha256": "dd94227dc866349412e4a0de0a41458bd929668f52df247204ac76994e02e352"
+    },
+    {
+      "path": "packages/derive/src/program/read-value.ts",
+      "sha256": "4f6bd484e1539defb699b18e566dea764bea3b2217bfdf9474185ee29e77bc12"
+    },
+    {
+      "path": "packages/derive/src/program/structure.ts",
+      "sha256": "2d84fbefa6fdc2016fa46765d4047d31e64ffcdf31818d30fee767a4e19d47e6"
+    },
+    {
+      "path": "packages/derive/src/sends.ts",
+      "sha256": "1de083a42e3bda6059e03182f85523e2b28adbaabd9c916a5c54ad564f0fe673"
+    },
+    {
+      "path": "packages/derive/test/forms-capability.test.ts",
+      "sha256": "1d59c4a6e077b258a1b1be348dee645b8fbdc68362489c0f38af16904ce048d5"
+    },
+    {
+      "path": "packages/derive/test/forms-effects.test.ts",
+      "sha256": "02dc0b1cb761614ea87e62708107b19a7db91efbeb967111dfc1bb3d29c56f88"
+    },
+    {
+      "path": "packages/derive/test/program-guard-value.test.ts",
+      "sha256": "77cb172dbf5b0f8411d5a04535099e2ff3aa9087f366b3ce713c1d0a4700e13a"
+    }
+  ],
+  "protectedJudgeSha256": "86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959",
+  "checks": {
+    "final": "Both derive compilers pass. All 186 selected cases pass in complete guard, capability, effect, send, operand, Native mark, handler, timed, replacement, preparation, fixed-index, binding and program owners. Source unchanged.",
+    "earlierFailure": "First caller run: compilers pass, 114 cases pass, one effects case throws because its raw helper supplied no admitted body. Fixtures now admit a card transition and retain the exact original behavior assertions. A later test compiler refuses an assignment through readonly Guard[]; the repair assigns a new array. All raw failed attempts remain in separate units.",
+    "intermediate": "Repaired 115, lexical 116 and expanded 149-case passes remain separate from the final 186-case run.",
+    "controls": "Each of two compiled targeted controls fails exactly one capability case by assertion: bypassed range filtering and lost original refusal-map key. Each has 2 passing cases and 1 failed case. Exact source restored; all 3 cases pass.",
+    "gate": "Not started. No gate-pass, acceptance or deployment claim."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/driver.py",
+          "bytes": 2142,
+          "sha256": "111f8b708f624b0ad45cb447563bc1dc45904ec42aa8d80809cdd4acdc594b83"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/owner.json",
+          "bytes": 52537,
+          "sha256": "0a423b35cb9be1c99566a550c0b3b1ca7b073c511cfe3b003d293613d87f85db"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/owner.stdout",
+          "bytes": 109,
+          "sha256": "9b47fe425d54aff21d5453dc60d30d15d450be7fbf6d3425123e4fdfeb8092fc"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/source-before.json",
+          "bytes": 522531,
+          "sha256": "96186b60cc3782e12e85aa06609afb43caf6b01ccc4ddd265f5173c262b11831"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-focused/SHA256SUMS",
+          "bytes": 955,
+          "sha256": "b203363fea9f4cf19a7dc9d2a906f892b6d769476ced637ac26c7b3252b3ad16"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/driver.py",
+          "bytes": 2151,
+          "sha256": "6c5757eaf0fcccd22ef9155c4b9ade4072d386c55cdec374f677a41e1e474163"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/owner.json",
+          "bytes": 51165,
+          "sha256": "eeb9e165561e9da52782c3a44a4a25b44bd07b43c037e76f8d5575d0ff915509"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/owner.stdout",
+          "bytes": 118,
+          "sha256": "4ced849b7faca22caa33a22e6598842c7e75eb5e45f011791a0bf4c2d3a8d76e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/result.json",
+          "bytes": 108,
+          "sha256": "58e4c4bfe1b003696adbf6a4ec256700557d5eb529a7e7697dc464ad258c5293"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/source-after.json",
+          "bytes": 522531,
+          "sha256": "4a741e5d1c0842097ec479fba323cf7d3be0c9e17fc3d8ed51a0e9128653b1e8"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/source-before.json",
+          "bytes": 522531,
+          "sha256": "4a741e5d1c0842097ec479fba323cf7d3be0c9e17fc3d8ed51a0e9128653b1e8"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-repaired-focused/SHA256SUMS",
+          "bytes": 1117,
+          "sha256": "0e7c809928fabd56cb6db1f6ee55bf0a3f8142003ed3a8dabca1a44e100348c6"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused/compiler.stderr",
+          "bytes": 442,
+          "sha256": "b1b029497b394492c8f04323ae535d4fdeb92a4dd2d8dafed991b28f8c34d7db"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused/compiler.stdout",
+          "bytes": 222,
+          "sha256": "c4fd27f5f1d13dc933656978193836cb9a65ab5db2750704b7c7d15f54989517"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused/driver.py",
+          "bytes": 2150,
+          "sha256": "226ab50b98458386c7cbfb3513ae29298fd6107f8b56935fce04d29b4a30b6c1"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused/source-before.json",
+          "bytes": 522531,
+          "sha256": "16ea2e2d51de0b149b998e245ebbc922fdb5cba3d8e7be603ae4a6ed5b42e7d2"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-focused/SHA256SUMS",
+          "bytes": 643,
+          "sha256": "51fbcf9c59cff76290ddd69f39ed8789fc4c151c05c2f6b8a11146e20e3dad5c"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/driver.py",
+          "bytes": 2157,
+          "sha256": "7a62e11903dc152d3c6507b715100a763209ca855acc9389a5d4e9d0837795dc"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/owner.json",
+          "bytes": 51625,
+          "sha256": "0654ee66edfd98a7d3a4e9429c3dd43d389ad506fe45e18fc588bb17f883c02c"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/owner.stdout",
+          "bytes": 124,
+          "sha256": "01bd989c10b9a36a004ea2eccf4f3cb656063918c0c0038f16ff7c30b7e9be42"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/result.json",
+          "bytes": 108,
+          "sha256": "f2a1bf31d20752a55d18bf2b28b9947878cdbc9a2125461baa27f430a079684b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/source-after.json",
+          "bytes": 522531,
+          "sha256": "f0edd84fa20b4a51b2e28bbde49ae57c8407c264b013ef1eef7be18d10c059d7"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/source-before.json",
+          "bytes": 522531,
+          "sha256": "f0edd84fa20b4a51b2e28bbde49ae57c8407c264b013ef1eef7be18d10c059d7"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-lexical-repair-focused/SHA256SUMS",
+          "bytes": 1117,
+          "sha256": "738cfdeaf68fd202d5ffe5c7de3f981a77ff86ee792ca7a084c962253afa1a1a"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/driver.py",
+          "bytes": 2181,
+          "sha256": "aa60b7162efb327368dc9bf5660df9f9e72f154bd864adbb3b5977db9c9099ab"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/owner.json",
+          "bytes": 65465,
+          "sha256": "8d2e12daa5c361bf90fea859ac5d0edc8daf77f2b992610dd1fb5ee8851ca9a6"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/owner.stdout",
+          "bytes": 115,
+          "sha256": "7c5236fd06827e19758fa8e74dd87fdfcdecfe48264b151293e391927ae83e0d"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/result.json",
+          "bytes": 108,
+          "sha256": "f17847a9df1d71b578c3053cd622e5fbf7ae2b7f6c03e6fa1858c31d10da63c7"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/source-after.json",
+          "bytes": 522531,
+          "sha256": "f7952a9f77a5b2866b513e424935a10be53cc6585d47ff85e6d392dd4ce086c8"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/source-before.json",
+          "bytes": 522531,
+          "sha256": "f7952a9f77a5b2866b513e424935a10be53cc6585d47ff85e6d392dd4ce086c8"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-final-focused/SHA256SUMS",
+          "bytes": 1117,
+          "sha256": "46038875c7fbf6017ea2b5d8db7377e9843e79effc48206d2483e6426e1ad7cb"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/driver.py",
+          "bytes": 2233,
+          "sha256": "184d1cee9e5bc02437c4429c6ef32ba53e7c415cabea97205a962c307e232be8"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/owner.json",
+          "bytes": 83811,
+          "sha256": "837fc1c9e4157a0d1b0801e164397e88b5e2b95f5d55659488e6bbcbd45d43dd"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/owner.stdout",
+          "bytes": 116,
+          "sha256": "73105d0586ebf0cf9d4d2cb5e01a0a81e0a188e15076fe1fcddd0dbb2410cc36"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/result.json",
+          "bytes": 108,
+          "sha256": "e37a23d96d1551a6a05b09a6e3b32d1cab186cb830df6dff4659519cb2f4922c"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/source-after.json",
+          "bytes": 522531,
+          "sha256": "f4466ece4b0fdc6a5671a92a309d830586034103889f328a88e39e4611a678a4"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/source-before.json",
+          "bytes": 522531,
+          "sha256": "f4466ece4b0fdc6a5671a92a309d830586034103889f328a88e39e4611a678a4"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/source.patch",
+          "bytes": 57271,
+          "sha256": "f372f823dee4a25942afcc1433fc04dd3e1395c59c76e2ae70fe13193cc4c304"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-cutover-shared-focused/SHA256SUMS",
+          "bytes": 1196,
+          "sha256": "830c777690a3877598636ff340a2a9af4e7061b48c8e2c021675aa5b413bf2e8"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/baseline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/baseline.json",
+          "bytes": 2448,
+          "sha256": "d3e01a6e2ac0c1dbfb88d5ec6f1aa89f761dc49cdf23648d71f7230968389b49"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/baseline.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/baseline.stdout",
+          "bytes": 105,
+          "sha256": "8c66d633b8ce528c9a03480f3889797daab5f11a6cea108338f19c1ae58c02ff"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/driver.py",
+          "bytes": 3186,
+          "sha256": "83489f3b0816978be1b73fd2d4507e9f623d925b5a77a35ce862cad9c1e5dc7b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/lose-original-refusal-key-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/lose-original-refusal-key-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/lose-original-refusal-key-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/lose-original-refusal-key.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/lose-original-refusal-key.json",
+          "bytes": 3820,
+          "sha256": "e2e4947ca9d629b5227f8e916b22a326816fe651fb2b89eb3e1f6ee0d2ea1715"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/lose-original-refusal-key.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/lose-original-refusal-key.stdout",
+          "bytes": 122,
+          "sha256": "f2a4611ec1ed33a23594fc04b0a29e539efa76ad116226e479fc5c89ce85d8da"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/omit-caller-range-filter-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/omit-caller-range-filter-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/omit-caller-range-filter-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/omit-caller-range-filter.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/omit-caller-range-filter.json",
+          "bytes": 3770,
+          "sha256": "6debc6ef50beba3d366b2ab362b1c8b574c1b508175a0eb731041cf3cd5dfb4c"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/omit-caller-range-filter.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/omit-caller-range-filter.stdout",
+          "bytes": 121,
+          "sha256": "8a8278d2bc503dbc3e6000ce5b96386b99a19c4cb0d7d29689ab05ebbaebffa9"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/restored.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/restored.json",
+          "bytes": 2456,
+          "sha256": "20fb2522d808bdfaadce222c6787339d5f8a61b2873b26c1db805af148f01653"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/restored.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/restored.stdout",
+          "bytes": 105,
+          "sha256": "6ebc66ceb3c4daaac09b7b52160ed7263575363bc1c7b943a02d5b0fc6f7731c"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/result.json",
+          "bytes": 4177,
+          "sha256": "0036e0a8895777be18fc1404295cad86d83537e32ac9772d52602ed0afddd61e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-controls/SHA256SUMS",
+          "bytes": 2223,
+          "sha256": "f7f30ad01377f9f5c202f0dfa7e9879e0aa77269a02803462b1e4cb28df76676"
+        }
+      ]
+    }
+  ]
+}

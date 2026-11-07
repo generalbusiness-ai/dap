@@ -1,0 +1,203 @@
+{
+  "scope": "Semantic range-use bindings within the actual admitted form. M4 production caller migration remains incomplete.",
+  "base": "b9ef7ec6e252feb3492076cbdb32ffea8a38b8fc",
+  "inputs": [
+    {
+      "path": "packages/derive/src/program/structure.ts",
+      "sha256": "0979eba59abdf3428e5904a3b18df80f87c40d23797d63fe70fe820c2c8effe3"
+    },
+    {
+      "path": "packages/derive/src/validate/capability.ts",
+      "sha256": "1e0533bbec859aede934b407dd6957b74c58a559bbfa5e411700f05cdf5c75ee"
+    },
+    {
+      "path": "packages/derive/src/validate/effects.ts",
+      "sha256": "5a3868febb7c856f5bd1cf9b7c2e51d05e0ea7e3ea5ca612154a81a399e12a36"
+    },
+    {
+      "path": "packages/derive/src/validate/guards.ts",
+      "sha256": "60b4db1b4fe1bd37fce665ca30e2d51ecda1ebb69cb8e0e526d964d956a46be1"
+    },
+    {
+      "path": "packages/derive/src/validate/sends.ts",
+      "sha256": "8e30aaf6ecdbc2355f4f187ce00c5acebd7ebb6d1bc98ee5105a3dfb1a6a64f6"
+    },
+    {
+      "path": "packages/derive/test/program-structure.test.ts",
+      "sha256": "ab487b60fefdb2ef393753dfe9e2149d5d0e6db0a351e5cb7b631ccab686ea47"
+    }
+  ],
+  "checks": {
+    "compilers": "Both derive compilers pass.",
+    "owners": "43 cases pass in selected complete owners; source unchanged.",
+    "control": "Ignoring the range-use key fails the aliased capability range witness by assertion: 10 pass, 1 fail. Exact source restored; 11 structural cases pass.",
+    "gate": "Not started; full M4 cutover remains due."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/driver.py",
+          "bytes": 2036,
+          "sha256": "1cd5cfa5bdf6b9e41f7d155912e423a587378875d04eefcedf005107d9288e3f"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/owner.json",
+          "bytes": 17419,
+          "sha256": "764017a736f6b9a8866fd5c28b3b2962676b70d0dbe6681515cb0af7bd9b3274"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/owner.stdout",
+          "bytes": 105,
+          "sha256": "f794a0f55659cb46effa0bea221f00b24c32388b7645ea3d6c3859eccbc55370"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/result.json",
+          "bytes": 107,
+          "sha256": "3686a1c8d4047dc6d5d06deb7ec4e5f2cd59f8d22f986646300d62a8d3900031"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/source-after.json",
+          "bytes": 522267,
+          "sha256": "66b2b974532b8074971fbcf39e6c511206a14350a80c91a9b10f3a435e3f7c3f"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/source-before.json",
+          "bytes": 522267,
+          "sha256": "66b2b974532b8074971fbcf39e6c511206a14350a80c91a9b10f3a435e3f7c3f"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/source.patch",
+          "bytes": 17420,
+          "sha256": "b75146e0a7a2b3772f0ca69e762c717852d8fb6d982dbb31cea41410ed4d093b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-focused/SHA256SUMS",
+          "bytes": 1196,
+          "sha256": "fcc7b160566d4263b43b70030c6335fe24443eda2c81aebcaf0d341ca6dc6d04"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/baseline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/baseline.json",
+          "bytes": 3935,
+          "sha256": "9fb97c70f741c34abfe3eee6e6ed5714e1409ef1e3446c845edee981e6be066b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/baseline.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/baseline.stdout",
+          "bytes": 108,
+          "sha256": "1a1a19928dd127701c7fc59c5cc5af82b68c9e7e0a5e32074facd47ffc6b30fc"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/driver.py",
+          "bytes": 2257,
+          "sha256": "a9cb1d0b4dd06367eb0a8a6bb39daa01a57fe00f02726d631683e2ee966fddbb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/ignore-range-use.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/ignore-range-use.json",
+          "bytes": 5375,
+          "sha256": "3362ad0a7b930d27f02ece3245b15b8c055bff13a736269283d7047c7aed9aba"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/ignore-range-use.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/ignore-range-use.stdout",
+          "bytes": 116,
+          "sha256": "f51fac8277475b657357eb9b56ad4af462e03b5731d3fecbc20695536d5eaac2"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/restored.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/restored.json",
+          "bytes": 3940,
+          "sha256": "7b00eb1540e9911b42209db369e52ee85745178e56dab971a1353c67438a7ef1"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/restored.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/restored.stdout",
+          "bytes": 108,
+          "sha256": "21770108fba3ad3f9493c2300ba4b0f966cea6588afbbaee684096658d23b113"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/result.json",
+          "bytes": 2155,
+          "sha256": "a23f6e6c7c3c3c7f067b00178fd84e63f5081030d5b69c16e18bab734f42866b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-range-uses-control/SHA256SUMS",
+          "bytes": 1158,
+          "sha256": "3182fc6cb366f62719ca63bf8fb1dcde69cb97ad6ce7dd353dc1ba78fdd0e44e"
+        }
+      ]
+    }
+  ]
+}

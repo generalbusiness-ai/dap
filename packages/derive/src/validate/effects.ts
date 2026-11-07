@@ -51,8 +51,8 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
   // own `if` that lists no final state shows a live subject to a `state` effect. One in an `unless` shows nothing.
   const live = new Set(ctx.live);
   const judged: Ctx = { ...ctx, nascent: ctx.nascent && !later };
-  if ("if" in o) guards(d, o["if"], at(path, "if"), { ...judged, live });
-  if ("unless" in o) guards(d, o["unless"], at(path, "unless"), { ...judged, live: new Set() });
+  if ("if" in o) guards(d, o["if"], at(path, "if"), { ...judged, live }, false, "if");
+  if ("unless" in o) guards(d, o["unless"], at(path, "unless"), { ...judged, live: new Set() }, false, "unless");
   // Section 6.4: a timed rule's effects are total. A condition could leave its item due, and one that is not completed leaves the entry unwritten.
   if (ctx.timed && ("if" in o || "unless" in o)) bad("timed-partial", path, "a timed rule's effects take no condition");
   if (k === "capability") {
@@ -200,7 +200,7 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
         } else if (wk === "list") members(wo["list"], at(wp, "list"), ctx);
         else {
           // A party slot of each local item that a range covers, or of another subject.
-          const from: Type | "scope" | null = wk === "items" ? (range(d, wo["items"], at(wp, "items"), ctx, [], false)?.type ?? null) : subject(d, wo["subject"], at(wp, "subject"), ctx, false);
+          const from: Type | "scope" | null = wk === "items" ? (range(d, wo["items"], at(wp, "items"), ctx, [], false, `attribute:${i}`)?.type ?? null) : subject(d, wo["subject"], at(wp, "subject"), ctx, false);
           const slot = from && from !== "scope" && typeof wo["slot"] === "string" ? from.slots.get(wo["slot"]) : undefined;
           if (from && from !== "scope" && slot?.kind !== "party") bad("name", at(wp, "slot"), `names no party slot of ${from.name}`);
           if (from && from !== "scope" && slot) recordSlot(d, ctx, at(wp, "slot"), from, wk === "items"

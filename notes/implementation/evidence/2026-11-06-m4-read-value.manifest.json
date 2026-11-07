@@ -1,0 +1,286 @@
+{
+  "scope": "M4 admitted operand execution over shared entry-history leaves. No guard caller cutover or complete M4 gate yet.",
+  "base": "1b4df9d4c85e45338556cc67ce485f58a0b81b68",
+  "inputs": [
+    {
+      "path": "packages/derive/src/operand.ts",
+      "sha256": "0f4c97c8269c29390ed73da24c75916a49929281f23a2a62126059d9d0004b72"
+    },
+    {
+      "path": "packages/derive/src/program/reads.ts",
+      "sha256": "5a39517e2b149e2a06262a8559814cb3d7d7bb887c27d9d4bacd5596482109f4"
+    },
+    {
+      "path": "packages/derive/src/program/read-value.ts",
+      "sha256": "acc6ec990b640747f5039eb61f1df8df8793552643ad04c3625f5051d55cefad"
+    },
+    {
+      "path": "packages/derive/test/program-read-value.test.ts",
+      "sha256": "4f01c93384cc10de0e4081a4cdf08fdd76a813fb7627764fe20f792e45a7b6cf"
+    }
+  ],
+  "checks": {
+    "compilers": "Both pass on final reader inputs. The initial source compiler failed on a nondistributed word union; the observed tool result is retained, not presented as raw child output.",
+    "firstFocused": "Exit 1: seven cases pass, new history fixture throws required-unset for its omitted owner; the fixture repair supplies that owner without changing production.",
+    "finalFocused": "Exit 0: both compilers and eight cases in two complete owners pass; source unchanged.",
+    "controls": "Two explicit controls each fail exactly one intended assertion; restored source passes all eight cases.",
+    "gate": "Not run; M4 remains incomplete."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/driver.py",
+          "bytes": 1981,
+          "sha256": "e2d07a758b2f9ad81009893f3bb9cc1ca79c2413c258e8c58d8c8104af64f2b7"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/initial-compiler-observed.json",
+          "bytes": 632,
+          "sha256": "e2bdf4882dd10e4adcc1b07052bc4f9aeb7aafbc92b4d7300f332e31d10412e4"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/owner.json",
+          "bytes": 5427,
+          "sha256": "6314d688ae6a7c4080b6171015eb88826a00e59c7c5a3bfad0c105bc067e5293"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/owner.stdout",
+          "bytes": 105,
+          "sha256": "f99fc9000f5ebce1847f5046de432ada2cc705832b935206e1a968c973042637"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused/source-before.json",
+          "bytes": 521187,
+          "sha256": "6f9e57ebef56509be887c0f6298bc18b7f6e949c56eaf5e0932c5f90edfc42d9"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/driver.py",
+          "bytes": 1983,
+          "sha256": "bf7a94f113e3dd7f8e6fcdee067471a7e323b904837deffac0fad2cdad9cbd28"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/owner.json",
+          "bytes": 3966,
+          "sha256": "dbd48491a6fe287e6b644eae0c1c202cf8b38d4e0cc6378c89a38567fa362e08"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/owner.stdout",
+          "bytes": 107,
+          "sha256": "94d65606e47605e720b4e2f5ffad4715879f55038a8e72344ae24d3ac0165a22"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/program-read-value.test.ts",
+          "bytes": 5769,
+          "sha256": "4f01c93384cc10de0e4081a4cdf08fdd76a813fb7627764fe20f792e45a7b6cf"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/read-value.ts",
+          "bytes": 3375,
+          "sha256": "acc6ec990b640747f5039eb61f1df8df8793552643ad04c3625f5051d55cefad"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/result.json",
+          "bytes": 106,
+          "sha256": "a43d2dbb5d7b06b5bad05f2df209998c32227fcd915aa5831b403c79a77d405c"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/source-after.json",
+          "bytes": 521187,
+          "sha256": "26c13b7ba67f04356b5ea17183f6872e4ef9c4f36c1ca1a756b16eab834d558e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/source-before.json",
+          "bytes": 521187,
+          "sha256": "26c13b7ba67f04356b5ea17183f6872e4ef9c4f36c1ca1a756b16eab834d558e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-focused-2/tracked-source.patch",
+          "bytes": 6936,
+          "sha256": "90402eb363e75eee27d01dc1f71a3023cda958f3e70811f118aff4193eb8e953"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/baseline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/baseline.json",
+          "bytes": 3977,
+          "sha256": "4d77e05959850bcd995fcc4fa3f3e80c38e971f70cc8d0fdbbfe5fa1a28148bc"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/baseline.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/baseline.stdout",
+          "bytes": 109,
+          "sha256": "aa42ebec0fc5ff431d92dace8fca5500f0a861f0c49e66e3a2b38d94f3a11c31"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/driver.py",
+          "bytes": 3073,
+          "sha256": "8af3d364bd78388def5098c8bedd66934666a683154f7b2442c9ae46525d9cd2"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/eager-set-item.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/eager-set-item.json",
+          "bytes": 5288,
+          "sha256": "1634314d6222f02174b9f16ff721453701c9e3244d8e0eee85f4633fac87d722"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/eager-set-item.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/eager-set-item.stdout",
+          "bytes": 115,
+          "sha256": "ecc6faafce69b97083ec8c95301ad0683e7e74c19ae733b7fd4c22a7a0f43550"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/restored.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/restored.json",
+          "bytes": 3977,
+          "sha256": "6f9703d437fb9ce02685b606103e00fad4d4940ff45a1ca5369c90a22ea4a918"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/restored.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/restored.stdout",
+          "bytes": 109,
+          "sha256": "56b858f2ae26f0651faf2732c47e71d0eaf621e18298c2663185a7c14c99b636"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/result.json",
+          "bytes": 3914,
+          "sha256": "1cdfe3e906e8e6e9015549c28f5af30ad7fb88b13add3b0f85afb1e720f745c6"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/without-read-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/without-read-owner.json",
+          "bytes": 5394,
+          "sha256": "932b2b873b3955ddc2c7a3faf7d13993579a9172b1a8a425062a6c8388178853"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/without-read-owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-read-value-controls/without-read-owner.stdout",
+          "bytes": 119,
+          "sha256": "71fdb0efe6c787d4c62a04eeb74a82509e5808b41a1ceb2f3796ac613b82468b"
+        }
+      ]
+    }
+  ]
+}

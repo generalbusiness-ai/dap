@@ -62,7 +62,7 @@ test("all operand families retain resolved types and the actual subject or lexic
     { identity: { kind: "subject", name: "on" }, type: "thing", declaration: "items.thing" },
   ]);
   expect(implicit.slot).toMatchObject({ declaration: "items.thing.values.amount", required: true, fixed: false, hasDefault: true });
-  expect(element.binding).toEqual({ name: "row", declaration: "acts.check.guards.0.each.as",
+  expect(element.binding).toEqual({ name: "row", identity: expect.any(Object), declaration: "acts.check.guards.0.each.as",
     type: { kind: "declared", type: { type: "record", of: { value: { type: "int", min: 0, max: 10, required: true } } } }, members: ["value"] });
   expect([read({ slot: "amount" }).node.phase, read({ slot: "amount" }, "effect.from", false).node.phase]).toEqual(["before", "working"]);
 });

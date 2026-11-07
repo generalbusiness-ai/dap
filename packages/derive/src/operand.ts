@@ -168,34 +168,50 @@ function fieldOf(j: Judging, entry: Entry, local: boolean, name: string): unknow
   return input.type === "delivery" ? (own(bound(j.definition, message, input.from)?.fields ?? null, name) ?? null) : null;
 }
 
-/** One part of the entry that `ref` names. `at` is that entry's scope. */
-function entryPart(j: Judging, ref: Held, at: ScopeRef, part: EntryPart, item: Item | null): unknown {
+/** Runtime leaf arguments. The lazy item read is never stored in an admitted graph. */
+type EntryWord = Extract<EntryPart, string>;
+export type EntrySelection = { [K in EntryWord]: { readonly op: K } }[EntryWord]
+  | { readonly op: "field" | "opened" | "carried"; readonly name: string }
+  | { readonly op: "set"; readonly slot: string; readonly item: () => unknown };
+
+/** One shared entry-history primitive, for both declared operands and typed reads. */
+export function entryValue(j: Judging, ref: Held, at: ScopeRef, part: EntrySelection): unknown {
   // Read from the reference. Nothing is fetched.
-  if (part === "ref") return ref;
-  if (part === "scope") return at;
-  if (part === "seq") return typeof ref === "number" ? ref : ref.seq;
+  if (part.op === "ref") return ref;
+  if (part.op === "scope") return at;
+  if (part.op === "seq") return typeof ref === "number" ? ref : ref.seq;
   // Read from the entry's bytes.
   const matched = entryOf(j, ref);
   if (!matched) return null;
   const { entry, local } = matched;
   const input = entry.input;
-  if (part === "kind") return kindOf(entry);
-  if (part === "time") return entry.time;
-  if (part === "intent") return input.type === "act" ? intentDigest(input.signed.intent) : input.type === "genesis" && input["founding"] ? intentDigest(input["founding"].intent) : null;
+  if (part.op === "kind") return kindOf(entry);
+  if (part.op === "time") return entry.time;
+  if (part.op === "intent") return input.type === "act" ? intentDigest(input.signed.intent) : input.type === "genesis" && input["founding"] ? intentDigest(input["founding"].intent) : null;
   // The primary item: the item the entry opens, by the entry's own `seq`, or the item an act or a timed entry is on.
-  if (part === "on") return entry.effects.some((e) => e.effect === "open") ? entry.seq : input.type === "act" ? input.signed.intent.on : input.type === "timed" ? input.item : null;
-  if ("field" in part) return fieldOf(j, entry, local, part.field);
-  if ("opened" in part) return entry.effects.some((e) => e.effect === "open") ? given(entry, entry.seq, part.opened) : null;
-  if ("set" in part) {
-    const id = operand(j, part.set.item, item);
-    return isLocalId(id) ? given(entry, id, part.set.slot) : null;
+  if (part.op === "on") return entry.effects.some((e) => e.effect === "open") ? entry.seq : input.type === "act" ? input.signed.intent.on : input.type === "timed" ? input.item : null;
+  if (part.op === "field") return fieldOf(j, entry, local, part.name);
+  if (part.op === "opened") return entry.effects.some((e) => e.effect === "open") ? given(entry, entry.seq, part.name) : null;
+  if (part.op === "set") {
+    const id = part.item();
+    return isLocalId(id) ? given(entry, id, part.slot) : null;
   }
   // Section 6.5: a member of a capability record that this entry's effects hold, written `kind.member`. None when the entry holds
   // no record of that kind, or more than one.
-  const [kind, ...member] = part.carried.split(".");
+  const [kind, ...member] = part.name.split(".");
   const records = entry.effects.filter((e) => e.effect === "record" && e.kind === kind);
   const record = records.length === 1 ? records[0] : undefined;
   return record?.effect === "record" ? (own(record.values, member.join(".")) ?? null) : null;
+}
+
+/** Adapt the remaining declared operand callers to the shared history primitive. */
+function entryPart(j: Judging, ref: Held, at: ScopeRef, part: EntryPart, item: Item | null): unknown {
+  const selected: EntrySelection = typeof part === "string" ? { op: part }
+    : "field" in part ? { op: "field", name: part.field }
+    : "opened" in part ? { op: "opened", name: part.opened }
+    : "set" in part ? { op: "set", slot: part.set.slot, item: () => operand(j, part.set.item, item) }
+    : { op: "carried", name: part.carried };
+  return entryValue(j, ref, at, selected);
 }
 
 /** A part of the entry that a fact reference names. Null when the value is not a fact reference, or the entry does not have the part. */

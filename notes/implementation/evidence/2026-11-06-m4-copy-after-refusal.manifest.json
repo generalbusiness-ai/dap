@@ -1,0 +1,212 @@
+{
+  "scope": "Preserve admission refusal before copying unused capability arguments. M4 production caller cutover remains incomplete.",
+  "base": "65d47ffa3bd00af367f03ac9c64e2c336cfee930",
+  "inputs": [
+    {
+      "path": "packages/derive/src/program/guard-plan.ts",
+      "sha256": "b45d9417fd1a1b08a0ebb5bc79acddcfebd70777508ca886ec8f36e1a4f10f9c"
+    },
+    {
+      "path": "packages/derive/src/validate/guards.ts",
+      "sha256": "aa4bde8bd9a021b005c18bb569b4549a1be89b5493f6240b4e8016c0fdb48cb0"
+    },
+    {
+      "path": "packages/derive/test/program-structure.test.ts",
+      "sha256": "b2fb6fac113a42abc21ea747dbcbdecc958b84d7c3a81318303f439de27e7c22"
+    }
+  ],
+  "checks": {
+    "baseline": "Same raw object input: main e50d9eeb returns its exact capability refusal; unlanded M4 at 65d47ffa throws RangeError while copying the excluded value. Probe processes exit0 because they report both outcomes as data.",
+    "witnessBefore": "Test compiler exit0; eight structural cases pass and the new refusal witness fails by assertion.",
+    "repair": "Keep pending literal references during validation; copy admitted fact types and capability specifications only while finalizing the already admitted graph. The same witness remains unchanged.",
+    "after": "Both compilers and sixteen cases across complete structural, concrete guard and capability owners pass; source unchanged.",
+    "gate": "Not run; M4 remains incomplete."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-baseline",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-baseline/driver.mjs",
+          "bytes": 1020,
+          "sha256": "33b8ee9ff3eb23350ba878ff8fac3118fd5806c808e7a1e2244955ff16c1fc04"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-baseline/m4-before.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-baseline/m4-before.stderr",
+          "bytes": 191,
+          "sha256": "43ff71c9e0dfba4a3eecf92d28671ae7939c931dfc50e5bc9cf93d96d307714d"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-baseline/m4-before.stdout",
+          "bytes": 127,
+          "sha256": "506bab49302239c139574e70f2a058339042087a382fc466e57095d919be196f"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-baseline/main.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-baseline/main.stderr",
+          "bytes": 191,
+          "sha256": "0918393161d2b3f8158c8e0550135026307684318dcad73fd59db2d171ad3c57"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-baseline/main.stdout",
+          "bytes": 223,
+          "sha256": "4251933adf0038c192bf18f6295cb26191c4285851c603368ee97db439df8d4f"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/driver.py",
+          "bytes": 1990,
+          "sha256": "b507c498359280f1c80c392b47d2e31dbb5c17d849c3660b5ad7a9dd85aa9198"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/owner.json",
+          "bytes": 4863,
+          "sha256": "822e976522fc6b64f46cded31e0712c1f16648bc35a026acc3682011caaf2106"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/owner.stdout",
+          "bytes": 112,
+          "sha256": "933c6a33810b40e004794a9ab8aa6a0033be9354712239a024e2655db59a92fa"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-before/source-before.json",
+          "bytes": 521970,
+          "sha256": "68bd33c9b534206cbcc2a9d3fc306ddf0c78124b206c641861653f60d34b5805"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/driver.py",
+          "bytes": 2012,
+          "sha256": "e918b48c533e2fd80a7ae5503f23df892f3a98865979b9b96a20351173ad8380"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/owner.json",
+          "bytes": 6670,
+          "sha256": "aecadc6cdbf8d4dd81fa2fd0b5c174a0af55811aca01311accc7147eb1ef2f31"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/owner.stdout",
+          "bytes": 111,
+          "sha256": "f3d76006b0f1fcb5e21a6f9118a361db34e1640351276d7fb695041e400994ab"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/result.json",
+          "bytes": 107,
+          "sha256": "ee796be4923b958f21b5b6339dd77cdfe02b0cfe4d7f04a48652770418b37bd4"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/source-after.json",
+          "bytes": 521970,
+          "sha256": "3c577932092e97771a7c91440af3e5a80e7d36dbc031740bd0406480ed8df02f"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/source-before.json",
+          "bytes": 521970,
+          "sha256": "3c577932092e97771a7c91440af3e5a80e7d36dbc031740bd0406480ed8df02f"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-copy-after-refusal-after/source.patch",
+          "bytes": 6994,
+          "sha256": "058645c0513500bfa6fa037bd15ef6bbdb8aa3df3e16daa7c7c5bb88cc8de42f"
+        }
+      ]
+    }
+  ]
+}

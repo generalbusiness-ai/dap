@@ -1,0 +1,82 @@
+{
+  "qualification": "Actual frozen M4 gate 2 at 00ffedf892 exits 1, read. Node: 135 pass. Counting: 56 pass. Plain: 4002 pass and 1 skip. Native: 1110 pass, 1 failure and 2 skips; terminal exit 1. The archive-prefix test returns unavailable during planning; causal stop site remains UNPROVEN. No contradictory records or unhandled Vitest errors. This unit stays failed. Raw TEST custody remains private and read-only.",
+  "sourceHead": "00ffedf892f0f60abdadb0feae458deab8a8766f",
+  "sourceTree": "dd3e21070ed28fa1d5c6007fce40be09737b8f82",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-failed-gate-2-validation",
+      "files": [
+        {
+          "path": "after.json",
+          "bytes": 1839,
+          "sha256": "a1782626e0cab59c2daadcd51a2afd60222616d0b327a3529a95643e3c5917b5"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1884,
+          "sha256": "592965d60edebe446d22923d5d7a4b1bfd635c51316458e2cf1f2ff9863f303f"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "archive-plan-fragment.log",
+          "bytes": 2829,
+          "sha256": "ac81c6d221090025dea43af6754879b484b341756b2421bc06a883874a2ede5d"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1839,
+          "sha256": "a1782626e0cab59c2daadcd51a2afd60222616d0b327a3529a95643e3c5917b5"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "observed-stop.json",
+          "bytes": 907,
+          "sha256": "d4be3ca93a310554ce6c5518f5bad0578fa9f4c67b01049947b9cbd52a28eae7"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 386,
+          "sha256": "9419cbe9a88d201eea2c58a80ae6b89f558677f9196c987c858f7b62f0be5404"
+        },
+        {
+          "path": "qualification.json",
+          "bytes": 605,
+          "sha256": "ed7a1683df7c49488a429c6595339d63fc4e08982318d8d85f7f0a8b8a8a069b"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "20bd66320370d9865e756dbf374f4f010d0e4adffa559a43635968d26c4bc75c"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 965,
+          "sha256": "49a9a31c02b6c14f4292f9b8841875a4bbda4f07132e9a16e0d1a3153cce8222"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 562,
+          "sha256": "abdd21e46f623304a22290d6b34d96782a4e6a584b014d2ce92c4c35c2427cb4"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5833,
+          "sha256": "7918cc14c048c6161c2c9544fa525d3d43b0d9fd87ffd23b44a0a28ceaff59b7"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1078,
+          "sha256": "9de93c70f7f5c67a5a1872c5df9c7e19266711d07daaefd72cf767d3655aa173"
+        }
+      ]
+    }
+  ]
+}

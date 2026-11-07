@@ -1,0 +1,178 @@
+{
+  "scope": "M4 context binding checkpoint; no production caller cutover and no full gate yet",
+  "base": "e50d9eebb27f47d0f33549486751ab8bdce8de80",
+  "inputState": "Two changed source/test files on the clean M3 base; exact file hashes below bind the focused checks to this checkpoint.",
+  "inputs": [
+    {
+      "path": "packages/derive/src/program/structure.ts",
+      "sha256": "eade0fdf70ca64bf30b2ea2ae9134894c2a4df77e7b793fbae227fc6868c19fd"
+    },
+    {
+      "path": "packages/derive/test/program-structure.test.ts",
+      "sha256": "5ee6db2a95cdc6c5e5a08e5746b8067cd71c1d975c7023b4adfb6798da9c73b2"
+    }
+  ],
+  "checks": {
+    "sourceAndTestCompilers": 0,
+    "structuralOwnerPassed": 7,
+    "ownershipControl": "One selected assertion fails when the ownership refusal is omitted; restored owner passes all seven cases.",
+    "gate": "Not run; M4 remains incomplete."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/changed-source.patch",
+          "bytes": 9960,
+          "sha256": "f4e050c2b57d55f78644002cd3a92205947ad481e63289bc72224a57d1bafdbd"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/driver.py",
+          "bytes": 1919,
+          "sha256": "f694022bd5269f33f93cd97c003cddf52107427e3f5f8335b907b6966bc283e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/owner.json",
+          "bytes": 2798,
+          "sha256": "2f490618c74ae63eec32a21bb5f1bf290e6e19bbf1fad3c7c0c3befd49f68dd7"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/owner.stdout",
+          "bytes": 102,
+          "sha256": "2578da7af908837c9e55fcc7e1a6e649397176cb2f4b12c76da3a1d8040f989b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/result.json",
+          "bytes": 106,
+          "sha256": "3f750283ba59fdd0bb88f56c76b3be04927f35fbf9a03520f1c05dde64388c4b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/source-after.json",
+          "bytes": 520672,
+          "sha256": "4c3ecd4c185b59574e6e323ba2434911daf3236c8f690361f93e2b54eee0b9c4"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-focused/source-before.json",
+          "bytes": 520672,
+          "sha256": "4c3ecd4c185b59574e6e323ba2434911daf3236c8f690361f93e2b54eee0b9c4"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/baseline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/baseline.json",
+          "bytes": 2794,
+          "sha256": "464b2c092c1e03475247942b55cf1117aa5257af643976e15cdd45d5bf5b7ea3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/baseline.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/baseline.stdout",
+          "bytes": 105,
+          "sha256": "f37c1dbd691f654f3ef282a68f3019242b7cb5ed6fd6ce78aa271cb21a821dde"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/driver.py",
+          "bytes": 2337,
+          "sha256": "bddc9f3c5697dd48b94efe62e778f6ea032ae74f33220ed4e987d513ef4bdd86"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/restored.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/restored.json",
+          "bytes": 2798,
+          "sha256": "5ed33feb1747f999f6fca15c455e74363bcf0c7d7332ab465c52f256b66f052c"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/restored.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/restored.stdout",
+          "bytes": 105,
+          "sha256": "4fa38ecaa085f211777938b4f06410c2796efcc2f5d9e4e9d0b6225f2f74a6cf"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/result.json",
+          "bytes": 2140,
+          "sha256": "1e367dbd4e834f5e9ea190ef3d27cc19f9c91f0c5424bef33ca0d12fbe559f64"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/without-owner-refusal.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/without-owner-refusal.json",
+          "bytes": 4209,
+          "sha256": "cd1e7a17971955698e9d64d4f60de1f737215715f657ae90dea28edd2d228b6b"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/without-owner-refusal.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-context-control/without-owner-refusal.stdout",
+          "bytes": 118,
+          "sha256": "f3e1f49c8eb190ce0518a7a5c346f5f20d1398e182a1bd490c8fb306f08811c3"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "qualification": "FAILED Native follow-up after the isolated lane test repair. The original full gate remains FAILED exit 1. The lane compiler and whole owner pass; Native fails on a fresh unadmitted guard in the fixed-index fixture. A second test repair requires a fresh full gate. No production/configuration/dependency/imported-source changes after the gate.",
+  "gateHead": "7b4534a699c3fcf71206da11c8870ad3939a2c92",
+  "onlyChangedTest": "apps/room/lanes/test/evidence-results.test.ts",
+  "testSha256": "a527a5b88310436bda03a6388d1c3ec1363631358bd1b0e48ccbd345902921b6",
+  "scopeAddendum": "76900c6440159ee41e24b45fcd649d199e160b78",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-failed-followup-validation",
+      "files": [
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1421,
+          "sha256": "28b92e8965f1ff79af9f5400af629341d65b0f590a8d8237885b341f70ab662a"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "input.patch",
+          "bytes": 4650,
+          "sha256": "ef186cd179d7c3fec52dec1fd00b85918e4a0b9a3d85cf4eaae291b7a45b04ea"
+        },
+        {
+          "path": "lanes-test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "lanes-test-compiler.receipt.json",
+          "bytes": 229,
+          "sha256": "a224a2f26d66ccdc2ca012274c90e0b329432d601fcbc1b800853036fbd8b0bf"
+        },
+        {
+          "path": "lanes-test-compiler.time",
+          "bytes": 29,
+          "sha256": "7ffd5b025f6005403a4ae760c3726ba15173aa268282cf557a84739756b4b41d"
+        },
+        {
+          "path": "native-summary.json",
+          "bytes": 939,
+          "sha256": "8bb792dd9509da161f2c975d7f4dd6a7e80563646a0c20ea076f01dfa0e6e26e"
+        },
+        {
+          "path": "native.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "native.receipt.json",
+          "bytes": 215,
+          "sha256": "9dd596206387033a3ff4f7744da8ccf8dee508de018a65f18db193748a6bf82e"
+        },
+        {
+          "path": "native.time",
+          "bytes": 37,
+          "sha256": "342324da8cd6ad1422c55ea7db33a0e8ab5045f918d9c1214d2ae952a9ee95ba"
+        },
+        {
+          "path": "optional-parser-probe.json",
+          "bytes": 382,
+          "sha256": "8706b3ae4cdbe87debd73b5580cecf27202fd595a381b497119bf5986dc85667"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.receipt.json",
+          "bytes": 214,
+          "sha256": "5146fab59276fa64b13c2dc907cc4dc1824061cd1b4a7bd5c2ae2e2d37ef61b9"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 29,
+          "sha256": "aeee204be7bc64743ad89d4f4d6d051f7bfc5e579d7fc85f16af150c431adea9"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 393,
+          "sha256": "4b77f2e672959b2fe4ef4242ab1a8d615b612f74f07e86f780d5c645ea064d4b"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1795,
+          "sha256": "ac413f389e7e4274b6f6c79e40abb127054c4da1bf66af8237f9abc546a42b82"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 522820,
+          "sha256": "7d9c9261704d43f3199693848e85ae0fd908d95ae63d761fddf09185bca3cceb"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 522820,
+          "sha256": "7d9c9261704d43f3199693848e85ae0fd908d95ae63d761fddf09185bca3cceb"
+        },
+        {
+          "path": "test-obligations.json",
+          "bytes": 936,
+          "sha256": "a73af1685f977ac6b7dc65b5bdbb03411a8ec3a7e111ef02c952c9c3a24b5ea1"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1609,
+          "sha256": "827cc85af886d7e306b1f008c3fc7bade3114e4912db44f194ac6fbe0109af1b"
+        }
+      ]
+    }
+  ]
+}

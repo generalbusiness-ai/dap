@@ -1,0 +1,409 @@
+{
+  "scope": "M4 concrete guard execution over admitted instructions and shared paging/history leaves. Production callers still use the legacy route.",
+  "base": "0ca7158122ade420b1d118b7690e7e0c3a0557f7",
+  "scopeAddendum": "f25ab3d0956c01b04fb62aeba1e20401b4a869f1",
+  "inputs": [
+    {
+      "path": "packages/derive/src/capability.ts",
+      "sha256": "37130ba599940f6d63fefaf3c041c3d7eaaea3409f564abb0d03349d2b55a5fe"
+    },
+    {
+      "path": "packages/derive/src/lists.ts",
+      "sha256": "97df41587aaa07d77ce25f6f2aac024cbb92e55cc7ffb8211b33f679855d72ce"
+    },
+    {
+      "path": "packages/derive/src/program/guard-plan.ts",
+      "sha256": "ebce66cd0c8fb64ee73abc09a764c46700e424aef98760636ecd0e678cd01b26"
+    },
+    {
+      "path": "packages/derive/src/program/structure.ts",
+      "sha256": "0576bf49ba710549da4b391bd86e9fe8f616b40489cc32eacfea2e260f10b143"
+    },
+    {
+      "path": "packages/derive/src/validate/guards.ts",
+      "sha256": "76e6f22d133a1e619fa879fa9de41cd0b357dc2ddbe53e9a4638f29267cc52e5"
+    },
+    {
+      "path": "packages/derive/src/program/guard-value.ts",
+      "sha256": "26bce2194b5b35a5257cbbfd28117987ea912acd6f74f28ada5e8979f19167d9"
+    },
+    {
+      "path": "packages/derive/test/program-guard-value.test.ts",
+      "sha256": "315c3de5dc4380da68861a734bf39e747eb88e31b0d7f939762366cda9ba67e5"
+    }
+  ],
+  "checks": {
+    "firstAttempt": "Source compiler exit1; broad string exclusion type and grouped each/has alternatives failed narrowing. Tests unreached. Corrected with Subject typing and distributed alternatives, without weakening the compiler.",
+    "secondAttempt": "Both compilers exit0; twenty cases pass and five new cases fail during fixture setup because the helper exceeded the existing two-live-note limit.",
+    "fixtureFollowup": "Only the new test file changes: remove its extra opening. Test compiler and its complete five-case owner exit0. Production inputs equal the second attempt; the twenty passing cases are retained.",
+    "controls": "Each of three selected mutants compiles and fails exactly its intended assertion: outcome order, fixed-count strategy, whole-list ownership before preparation. Restored source passes all five cases. No sweep.",
+    "gate": "Not run; M4 production cutover and public caller witnesses remain due."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused/compiler.stderr",
+          "bytes": 442,
+          "sha256": "b1b029497b394492c8f04323ae535d4fdeb92a4dd2d8dafed991b28f8c34d7db"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused/compiler.stdout",
+          "bytes": 3013,
+          "sha256": "16641c13dc0c912178aee5b4a5432eccb130d9f1b6efc0785d2a61a6ae1f98bf"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused/driver.py",
+          "bytes": 2035,
+          "sha256": "63f5d109436b79c95758beb4a568e9d71ac0bd0b4dff096e4c09d274161e3b61"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused/source-before.json",
+          "bytes": 521827,
+          "sha256": "697b259b6d88dbf962f5743505e1b07194d577f8c701347ef8b74085a1b23c47"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/driver.py",
+          "bytes": 2037,
+          "sha256": "39c85b4d151f0edc3e5a2492b8fed1c143c844013f54c10dd3d9f8563ca45d2e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/owner.json",
+          "bytes": 18507,
+          "sha256": "6da0e5e1448a72c52fb25d4e0c681362be65163d6518218bf28e9782c755c6b1"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/owner.stdout",
+          "bytes": 108,
+          "sha256": "3309345b1787e81fa1a4cbfcafdaabf54d3c789a150a30921a4fca185f030928"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-focused-2/source-before.json",
+          "bytes": 521827,
+          "sha256": "eb5799a35b2a81df556888d790b26530348c38aee9d9301d9b2b7fd71114ea62"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/capability-scope-addendum.txt",
+          "bytes": 1389,
+          "sha256": "6bf3c469f86e2d650009de8fabec6d690384bca6fe963cc6c38ccb25a2dfe039"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/driver.py",
+          "bytes": 1995,
+          "sha256": "e44b214390afaf422b44d99f8d167097596a08209321a831ddf4f825278ba06c"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/guard-value.ts",
+          "bytes": 11300,
+          "sha256": "26bce2194b5b35a5257cbbfd28117987ea912acd6f74f28ada5e8979f19167d9"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/owner.json",
+          "bytes": 2256,
+          "sha256": "6d5f7672677da8a270e8f24ac45d9b23e2c17bd8b199f02b8c5aacdbe2c534a7"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/owner.stdout",
+          "bytes": 115,
+          "sha256": "5b3ed09fe5dd82296cc2f91781de8a145b14179df2acabeea55d4abeabf3323e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/program-guard-value.test.ts",
+          "bytes": 5508,
+          "sha256": "315c3de5dc4380da68861a734bf39e747eb88e31b0d7f939762366cda9ba67e5"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/result.json",
+          "bytes": 106,
+          "sha256": "f630289f0ae4d3305f9a31a4d4a0dec5891fad58db8def965e8c5a929aee1c11"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/source-after.json",
+          "bytes": 521827,
+          "sha256": "0a496d9c6524502d4f74f4b875d3dc7eccc15fa9c2f8ac07c9eb39986782de95"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/source-before.json",
+          "bytes": 521827,
+          "sha256": "0a496d9c6524502d4f74f4b875d3dc7eccc15fa9c2f8ac07c9eb39986782de95"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-fixture-followup/tracked-source.patch",
+          "bytes": 11373,
+          "sha256": "4a4684e5765e41d3eae146658d1047546bd28b3dd02158f4dc290451e6a87c2e"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/baseline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/baseline.json",
+          "bytes": 2258,
+          "sha256": "86a764ca50cd52763d1a2d384e13315f7f853208d7eb8e163e9f42582a0ab9e1"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/baseline.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/baseline.stdout",
+          "bytes": 110,
+          "sha256": "fa48219547d036cb5f4227160272567c8bdf305f5410271a2d64ed8322ab341a"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/driver.py",
+          "bytes": 3417,
+          "sha256": "aaca8a38839fc8a0edc17eab26e7e165cb82febc9cab18d9b855fd5f3d9aaa75"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-fixed-count-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-fixed-count-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-fixed-count-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-fixed-count.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-fixed-count.json",
+          "bytes": 3613,
+          "sha256": "cd322a04d35a18d846576713f79b63aa9c5e0dbaebcd63dfeca253543375cafb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-fixed-count.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-fixed-count.stdout",
+          "bytes": 118,
+          "sha256": "390bcf60fdc43b03d5322d8384934045fbd524ba08d5bb9606f5e59d9776be46"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-whole-list-check-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-whole-list-check-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-whole-list-check-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-whole-list-check.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-whole-list-check.json",
+          "bytes": 3581,
+          "sha256": "5040180f44e8b252239906ffccd4f6b111edec1fea617c24a5f33f0b48ffc971"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-whole-list-check.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/omit-whole-list-check.stdout",
+          "bytes": 123,
+          "sha256": "481ede2b63936759aa9eb010e2159f6e29f0625f8957c2def74be4930613ec14"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/restored.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/restored.json",
+          "bytes": 2259,
+          "sha256": "facf106201688f07a45a731898f1809f86eb1d1681cdb1b42668bb9adbecfc39"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/restored.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/restored.stdout",
+          "bytes": 110,
+          "sha256": "4b0359ca5f5df1cfa82aece5d40245fbe236d62b91906b81fe0def92b88bfc3d"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/result.json",
+          "bytes": 5591,
+          "sha256": "22f46bb7959b809c0b5a054c5e91988ecafa9adf04ea391e7a5547ae8ffbf095"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/stop-at-unavailable-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/stop-at-unavailable-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/stop-at-unavailable-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/stop-at-unavailable.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/stop-at-unavailable.json",
+          "bytes": 3611,
+          "sha256": "2a27f43cbb3ed4f78dfd9df64b943c20d620238ee4c14749c41aa15ec1143bd8"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/stop-at-unavailable.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m4-guard-value-controls/stop-at-unavailable.stdout",
+          "bytes": 121,
+          "sha256": "5fff5ee8f8edf692dbbacc8eeb6225e8499b0e91b41ab8d1c486e1ea0b263d9c"
+        }
+      ]
+    }
+  ]
+}

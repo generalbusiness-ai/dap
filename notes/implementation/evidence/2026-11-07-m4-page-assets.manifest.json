@@ -1,0 +1,65 @@
+{
+  "scope": "Generated Page bundle follows the M4 derive source, under addendum 6ec32b66. Existing pinned build; no installs.",
+  "sourceHead": "365cb33682b0017318a463c6d7083b94bca67fea",
+  "input": {
+    "path": "apps/room/page/assets.ts",
+    "sha256": "efe2a9a35e5a4e806325cef72fde182f00fe16ec090174966d708e08b1d3fedb"
+  },
+  "checks": {
+    "buildExit": 0,
+    "assetOwnerCases": 2,
+    "fullGate": "Not started."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets/assets.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets/assets.json",
+          "bytes": 1612,
+          "sha256": "c9379e7e5dcb559a056af2a08cd8363c0cec0552a2a3bcc5397d10cbed643f3d"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets/assets.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets/assets.stdout",
+          "bytes": 99,
+          "sha256": "735bb9c1d35d5dca6575e2636e868959c1c0aef754c82c22018a448c4d1c3ea3"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets/build.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets/build.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets/build.stdout",
+          "bytes": 135,
+          "sha256": "749e4df91ffe6796d88436941470400de0c07e2ccf7d5d4abbea43c41c990f8a"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets/result.json",
+          "bytes": 386,
+          "sha256": "5e46bca0fe8cbf07ec591af9f312fec5efe7e8b6c822c3f2294f08956c90bc16"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-page-assets/SHA256SUMS",
+          "bytes": 629,
+          "sha256": "2a353eff65a23691cff3a5e8daa59ccf1e73272fc97c66588c3785869f7a737d"
+        }
+      ]
+    }
+  ]
+}

@@ -15,8 +15,10 @@ import { attribution, byMember, historyOf } from "./attribution.ts";
 import { capabilityEffect } from "./capability.ts";
 import { isEntryOf, isLocalFact } from "./fields.ts";
 import { changeItem, newItem, type ItemEffect } from "./fold.ts";
-import { judgeGuards, members, readsUnbound, slotOf, type Judging } from "./guards.ts";
+import { members, readsUnbound, slotOf, type Judging } from "./guards.ts";
 import { EPOCH, HOLDER, deriveHold, endsUnder, type HoldEffect } from "./hold.ts";
+import { judgeGuardNodes } from "./program/guard-value.ts";
+import { formContext, guardList, timedStructure, type BodyStructure, type FormContext } from "./program/structure.ts";
 import { bindEach, covered, typeOfElement } from "./lists.ts";
 import { givenTo, markOf, ofCodedType, outside, ruleFor, run, type RuleEffect } from "./marks.ts";
 import { ruleMayNot } from "./markers.ts";
@@ -125,7 +127,7 @@ const BY_RULE: readonly string[] = ["open", "state", "party", "list", "ref", "va
  * whose type is a mark is checked by that mark's rule, for each effect that
  * sets it.
  */
-export function deriveEffects(j: Judging, forms: readonly EffectForm[], attention: readonly Notify[], opens: string | null): Derived<{ effects: Effect[]; working: Map<string, Item>; opened: Item | null }> {
+export function deriveEffects(j: Judging, forms: readonly EffectForm[], attention: readonly Notify[], opens: string | null, body: BodyStructure | null = timedStructure(j.definition, j.kind, forms, attention)): Derived<{ effects: Effect[]; working: Map<string, Item>; opened: Item | null }> {
   const items = j.definition.declared.items;
   const working = new Map(j.subjects);
   const effects: Effect[] = [];
@@ -300,10 +302,15 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
    * leaves the input not judged. Section 6.4: a form whose `if` reads an
    * unbound subject is not applied.
    */
-  const lets = (c: Condition): boolean | UnavailableReason => {
+  const lets = (c: Condition, context: () => FormContext): boolean | UnavailableReason => {
+    const judge = (source: NonNullable<Condition["if"]>, place: "if" | "unless") => {
+      const { body, owner } = context(), nodes = guardList(j.definition, body, owner, source, place);
+      if (!nodes) throw new TypeError("condition has no admitted form context");
+      return judgeGuardNodes(j, body, nodes).result;
+    };
     if (c.if && readsUnbound(j, c.if)) return false;
-    const holds = c.if ? judgeGuards(j, c.if).result : "pass";
-    const bars = c.unless ? judgeGuards(j, c.unless).result : "fail";
+    const holds = c.if ? judge(c.if, "if") : "pass";
+    const bars = c.unless ? judge(c.unless, "unless") : "fail";
     if (holds === "fail" || bars === "pass") return false;
     return holds !== "pass" ? holds : bars !== "fail" ? bars : true;
   };
@@ -327,7 +334,7 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
       // Capability records and declared owned slots follow the ordinary effects.
       // Arguments read each bound subject as preceding effects left it.
       if (form.of !== undefined && !working.has(subject)) continue;
-      const through = lets(form);
+      const through = lets(form, () => formContext(j.definition, body, "effect", i, form));
       if (through === false) continue;
       if (through !== true) return notJudged(through);
       const derived = capabilityEffect(after, form.capability, working.get(subject) ?? null);
@@ -338,7 +345,7 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
     const item = working.get(subject);
     // Section 6.6: an effect whose subject is unbound is not applied.
     if (!item) continue;
-    const through = lets(form);
+    const through = lets(form, () => formContext(j.definition, body, "effect", i, form));
     if (through === false) continue;
     if (through !== true) return notJudged(through);
     const type = own(items, item.type)!;
@@ -428,7 +435,7 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
         let lists: readonly unknown[];
         if ("items" in w) {
           // A range in a source is an exact set, so it needs complete evidence, as a guard does.
-          const range = covered(j, w.items);
+          const range = covered(j, w.items, formContext(j.definition, body, "effect", i, form), `attribute:${n}`);
           if (range === null) return notJudged("guard-incomplete");
           lists = range.map((r) => members(own(r.parties, w.slot)));
         } else if ("subject" in w) lists = [members(own(working.get(w.subject)?.parties, w.slot))];
@@ -519,9 +526,10 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
     }
   }
 
-  for (const { notify } of attention) {
+  for (const [i, form] of attention.entries()) {
+    const { notify } = form;
     // Section 6.6: a notice with `if` is made only when its guards hold, on the state before the effects.
-    const through = lets(notify.if ? { if: notify.if } : {});
+    const through = lets(notify.if ? { if: notify.if } : {}, () => formContext(j.definition, body, "attention", i, form));
     if (through === false) continue;
     if (through !== true) return notJudged(through);
     // The members in that slot as it was before the effects, or as it is after. An unbound subject has none.

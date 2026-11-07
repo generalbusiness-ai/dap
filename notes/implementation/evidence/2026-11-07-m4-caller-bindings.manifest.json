@@ -1,0 +1,123 @@
+{
+  "scope": "M4 exact condition-list and range ownership, including admitted copies of capability arguments. Production caller cutover remains due.",
+  "base": "5cc7387b1f9678712d5993b8ec9cbdc655f74eb7",
+  "inputs": [
+    {
+      "path": "packages/derive/src/program/model.ts",
+      "sha256": "5aebe41709dda1ae505e25b8d5ccd200339f60180ac89cee4c03cda2f183450e"
+    },
+    {
+      "path": "packages/derive/src/program/guard-plan.ts",
+      "sha256": "d53386aa4f36424a98a5b1d8f907e221b12cfcdb601e685b0191969126140560"
+    },
+    {
+      "path": "packages/derive/src/program/structure.ts",
+      "sha256": "504bf064d66d17c2a5e7d485e6084477dd77d0a57cb6a5215c84ccee5e2c8ee8"
+    },
+    {
+      "path": "packages/derive/src/validate/guards.ts",
+      "sha256": "70a1fa4df3e8e881d87e6ac2b8edfcec3af7feeaa3b5be50d9ef016e72dc30d5"
+    },
+    {
+      "path": "packages/derive/src/validate/effects.ts",
+      "sha256": "536ddead3b34549810af01e64c2048d2db8adbfc31b53e3abfb6d77283dadc02"
+    },
+    {
+      "path": "packages/derive/src/validate/sends.ts",
+      "sha256": "40a0659ac49fd1a3b898aef9840f152433b0a1e7e1eb7f1283e3826b71a48ee6"
+    },
+    {
+      "path": "packages/derive/test/program-structure.test.ts",
+      "sha256": "5696096e4310d2068c736b5ef2780ce23eb52dd6240716da105dfb7ab906ea73"
+    }
+  ],
+  "checks": {
+    "compilers": "Both derive compilers pass.",
+    "owners": "43 cases pass in the complete selected structural, concrete guard, prototype program, declared guard and capability owners. Source unchanged.",
+    "identity": "Condition lookup separates owning forms and if/unless places. Copied admitted argument data resolves through its actual source identity. Unadmitted copies and foreign roots refuse.",
+    "limit": "Ambiguous duplicate source/owner registrations return null; reconcile any such actual callers before cutover. No digest or diagnostic-path selection.",
+    "gate": "Not run; M4 remains incomplete."
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused",
+      "files": [
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/compat.stdout",
+          "bytes": 363,
+          "sha256": "e33f9407268a7462b6a3b6b60d667855d21a93eb79bbbaf3e657a80a4c02b83e"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/compiler.stdout",
+          "bytes": 106,
+          "sha256": "9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/driver.py",
+          "bytes": 2041,
+          "sha256": "2f058bd16254ce883209fa9fdc34ec3bfb8cd1922424209f043d9ee1f4ee6cf7"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/owner.json",
+          "bytes": 17444,
+          "sha256": "0dabd08bce3acea355bc88be77913669ed058014a357f35bc6af481ae63ddeeb"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/owner.stdout",
+          "bytes": 110,
+          "sha256": "9d00543c0aca6a11970d573d268823146e71e60a03ec559474233bca930ab050"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/result.json",
+          "bytes": 107,
+          "sha256": "3686a1c8d4047dc6d5d06deb7ec4e5f2cd59f8d22f986646300d62a8d3900031"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/source-after.json",
+          "bytes": 522120,
+          "sha256": "0c16b95ee6d11dd2c6b391022b2eb1d4020096db7a510edcecc5065fe6a7019c"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/source-before.json",
+          "bytes": 522120,
+          "sha256": "0c16b95ee6d11dd2c6b391022b2eb1d4020096db7a510edcecc5065fe6a7019c"
+        },
+        {
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-caller-bindings-focused/source.patch",
+          "bytes": 24968,
+          "sha256": "33e8bcb951975b72fafd8c512d2dcf4a127a6cfd5bc7771a510e93cd0d89b074"
+        }
+      ]
+    }
+  ]
+}

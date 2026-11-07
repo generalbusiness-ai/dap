@@ -145,7 +145,7 @@ export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: 
       if (element === undefined) return bad("name", path, "names no element that an enclosing form binds, and no member of one");
       type = element;
       const name = binding!;
-      data = { op: "element", binding: Object.freeze({ name, declaration: ctx.elementBindings.get(name) ?? null,
+      data = { op: "element", binding: Object.freeze({ name, identity: ctx.elementIdentities.get(name) ?? null, declaration: ctx.elementBindings.get(name) ?? null,
         type: readType(ctx.elements.get(name) ?? null), members: Object.freeze(x === name ? [] : (x as string).slice(name.length + 1).split(".")) }) };
       break;
     }
