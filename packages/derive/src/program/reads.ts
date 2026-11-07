@@ -1,6 +1,6 @@
 /** Owned data from the validator's resolutions; no name checker or executable fallback. */
 import type { Bounds, FieldType, FieldValue, TypeMark } from "@generalbusiness/dap-contract";
-import type { Ctx, Defining, MarkPlace, OwnerIdentity, Slot, Type } from "../validate/context.ts";
+import type { Ctx, Defining, ElementIdentity, MarkPlace, OwnerIdentity, Slot, Type } from "../validate/context.ts";
 import type { Underived } from "../validate/capability.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { immutable, type Phase } from "./model.ts";
@@ -20,13 +20,14 @@ export function readType(type: FieldType | null): ReadType {
 /** Each validator invocation has its own identity, even when declaration digests agree. */
 export interface ReadValidation { readonly bounds: Bounds; readonly definition: string | null; readonly platform: boolean }
 const validations = new WeakMap<Defining, ReadValidation>();
-interface ReadCollection { operands: OperandRead[]; subjects: SubjectResolution[]; slots: SlotResolution[]; fields: FieldResolution[]; foreignFields: ForeignFieldResolution[]; ranges: RangeResolution[]; frames: FrameRead[] }
+interface ReadCollection { operands: OperandRead[]; subjects: SubjectResolution[]; slots: SlotResolution[]; fields: FieldResolution[]; foreignFields: ForeignFieldResolution[]; ranges: RangeResolution[]; bindings: ElementBinding[]; frames: FrameRead[] }
 const captured = new WeakMap<Defining, ReadCollection>();
 const admitted = new WeakMap<ValidDefinition, ResolvedReads>();
+const operandOwners = new WeakMap<OperandRead, ValidDefinition>();
 
 function collection(d: Defining): ReadCollection {
   let reads = captured.get(d);
-  if (!reads) { reads = { operands: [], subjects: [], slots: [], fields: [], foreignFields: [], ranges: [], frames: [] }; captured.set(d, reads); }
+  if (!reads) { reads = { operands: [], subjects: [], slots: [], fields: [], foreignFields: [], ranges: [], bindings: [], frames: [] }; captured.set(d, reads); }
   return reads;
 }
 
@@ -39,6 +40,7 @@ export interface ResolvedReads {
   readonly fields: readonly FieldResolution[];
   readonly ranges: readonly RangeResolution[];
   readonly foreignFields: readonly ForeignFieldResolution[];
+  readonly bindings: readonly ElementBinding[];
   readonly marks: readonly MarkPlace[];
   readonly underived: readonly Underived[];
   readonly frames: readonly FrameRead[];
@@ -55,14 +57,19 @@ export function bindReads(d: Defining, definition: ValidDefinition): ValidDefini
   const reads = collection(d);
   const evidence: ResolvedReads = Object.freeze({ validation: validation(d), operands: Object.freeze([...reads.operands]),
     subjects: Object.freeze([...reads.subjects]), slots: Object.freeze([...reads.slots]), fields: Object.freeze([...reads.fields]),
-    foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]), frames: Object.freeze([...reads.frames]), marks: immutable(d.marks), underived: immutable(d.underived) });
+    foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]), bindings: Object.freeze([...reads.bindings]), frames: Object.freeze([...reads.frames]), marks: immutable(d.marks), underived: immutable(d.underived) });
   finishStructure(d, definition, evidence);
+  for (const operand of evidence.operands) operandOwners.set(operand, definition);
   admitted.set(definition, evidence);
   return definition;
 }
 
 /** No digest cache or reconstruction from caller-supplied declarations. */
 export const resolvedReads = (definition: ValidDefinition): ResolvedReads | null => admitted.get(definition) ?? null;
+/** Executable visitors accept the validator's actual descriptor, never a structural copy. */
+export function checkedOperand(definition: ValidDefinition, operand: OperandRead): void {
+  if (operandOwners.get(operand) !== definition) throw new TypeError("operand was not admitted by this validation");
+}
 function validation(d: Defining): ReadValidation {
   let found = validations.get(d);
   if (!found) {
@@ -122,13 +129,15 @@ export function recordSubject(d: Defining, ctx: Ctx, path: string, type: Type | 
   const read = Object.freeze({ path, context: contextOf(d, ctx), subject: type === "scope" ? "scope" as const : subjectRead(type, { kind: "subject", name }) });
   collection(d).subjects.push(read); recordResolution(d, "subjects", read);
 }
-export function recordSlot(d: Defining, ctx: Ctx, path: string, type: Type, identity: SubjectRead["identity"], name: string, slot: Slot, access: SlotResolution["access"]): void {
+export function recordSlot(d: Defining, ctx: Ctx, path: string, type: Type, identity: SubjectRead["identity"], name: string, slot: Slot, access: SlotResolution["access"]): SlotResolution {
   const read = Object.freeze({ path, context: contextOf(d, ctx), slot: slotRead(subjectRead(type, identity), name, slot), access });
   collection(d).slots.push(read); recordResolution(d, "slots", read);
+  return read;
 }
-export function recordField(d: Defining, ctx: Ctx, path: string, name: string, type: FieldType): void {
+export function recordField(d: Defining, ctx: Ctx, path: string, name: string, type: FieldType): FieldResolution {
   const read = Object.freeze({ path, context: contextOf(d, ctx), name, type: readType(type) });
   collection(d).fields.push(read); recordResolution(d, "fields", read);
+  return read;
 }
 export function recordForeignField(d: Defining, ctx: Ctx, path: string, factField: string, name: string): void {
   const read = Object.freeze({ path, context: contextOf(d, ctx), factField, name, type: unknown });
@@ -137,6 +146,20 @@ export function recordForeignField(d: Defining, ctx: Ctx, path: string, factFiel
 export function recordRange(d: Defining, ctx: Ctx, path: string, type: Type, states: readonly string[]): void {
   const read = Object.freeze({ path, context: contextOf(d, ctx), subject: subjectRead(type, { kind: "range", path, type: type.name }), states: Object.freeze([...states]) });
   collection(d).ranges.push(read); recordResolution(d, "ranges", read);
+}
+export interface ElementBinding {
+  readonly name: string;
+  readonly identity: ElementIdentity;
+  readonly declaration: string;
+  readonly type: ReadType;
+}
+/** Keep the binder identity created by the existing lexical validation step. */
+export function recordElementBinding(d: Defining, ctx: Ctx, name: string, type: FieldType | null, path: string): ElementBinding {
+  const identity = ctx.elementIdentities.get(name);
+  if (!identity) throw new TypeError("element binder has no lexical identity");
+  const binding = Object.freeze({ name, identity, declaration: path, type: readType(type) });
+  collection(d).bindings.push(binding); recordResolution(d, "bindings", binding);
+  return binding;
 }
 export interface SubjectRead { readonly identity: OwnerIdentity | { readonly kind: "fan-out"; readonly path: string | null }; readonly type: string; readonly declaration: string }
 export const subjectRead = (type: Type, identity: SubjectRead["identity"]): SubjectRead =>
@@ -151,7 +174,7 @@ export function slotRead(subject: SubjectRead, name: string, slot: Slot): SlotRe
   return Object.freeze({ subject, name, declaration: `${subject.declaration}.${family}.${name}`, kind: slot.kind,
     type: readType(slot.type), required: slot.required, fixed: slot.fixed, capability: slot.capability ?? null, hasDefault: slot.hasDefault });
 }
-export interface ElementRead { readonly name: string; readonly declaration: string | null; readonly type: ReadType; readonly members: readonly string[] }
+export interface ElementRead { readonly name: string; readonly identity: ElementIdentity | null; readonly declaration: string | null; readonly type: ReadType; readonly members: readonly string[] }
 export type EntryWord = "ref" | "scope" | "seq" | "kind" | "intent" | "on" | "time";
 export type EntryData = (
   | { readonly op: EntryWord }

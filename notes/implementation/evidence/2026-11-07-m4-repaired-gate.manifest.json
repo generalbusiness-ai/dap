@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "qualification": "One due repaired-head M4 gate at 94db5a0ba9 under planner 677da3fe, including complete terminal Native phases, exact source/dependency identity and durable raw retention. Production declared guard/list/range callers consume admitted instructions. Remaining effect/send execution stays on its scheduled M5/M6 route. Relative to main 9d96, M4 changes no protected judge, Native pin, wire, dependency or live Wrangler configuration. The merged checked-in Register config stays as reviewed on main. No deployment or live acceptance.",
+  "fileCount": 15,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-repaired-gate-validation",
+      "fileCount": 15,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1131,
+          "sha256": "6a104366e2548233ef2586c15038cab3ba92ad5bc7f713dc67ea3d026d1d8bc9"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1839,
+          "sha256": "1b1952b464947ff7ba24eef690790c2c19f88001076a3c3d625bc89ba57610e0"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1835,
+          "sha256": "3ea1d35b6482353a6d6c7e9a9a91e28a666365a0c9cee7002e984cfdadb2bce3"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1839,
+          "sha256": "1b1952b464947ff7ba24eef690790c2c19f88001076a3c3d625bc89ba57610e0"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "2c93705304ba10cd1ca2fb76d825a75fc0210c0109053049948007207297fd2f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 7361,
+          "sha256": "0d7f281630d4fa99d72b057fb0fdee62b5298a056b9e26ed9be4e32645599fff"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "d2a8442ed7e0a1fb9e72285a94ce72c246d4adaeefbc96c33340a3fb129a44d5"
+        },
+        {
+          "path": "result.json",
+          "bytes": 3754,
+          "sha256": "e00cbd324e21c22a36f764ddddb3147a7b1139d2d618367484feb49e28741c5e"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 968,
+          "sha256": "3a7176c5022f67f58978fac9f74619810ff9fcc8d43883542d4eea181a2da6e7"
+        },
+        {
+          "path": "started.json",
+          "bytes": 646,
+          "sha256": "9344619162c862f1d4133a0d99344a60cef4c7193682924417e1088a7bf5b4a6"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 576,
+          "sha256": "29603647af427945b06a4cdb6b05d760c3c801376edf9bcdc8baefac82f963b3"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5817,
+          "sha256": "c8ba25ae8c76b795b5ff2cd9ad52845b45b31a7f268ffa7c390488af7d5a5adf"
+        }
+      ]
+    }
+  ],
+  "sourceHead": "94db5a0ba9b1aa85daa230037bbc0737c5ba2ec2",
+  "sourceTree": "016746e0f66f4894fcd246de303437cd8f335df2"
+}

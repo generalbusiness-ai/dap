@@ -1,0 +1,77 @@
+{
+  "qualification": "Reversible test-only archive probes under M4/archive promises. Both complete owner runs pass3 cases but the unavailable condition is not reproduced; the first lacks console trace, the second captures4 handled lookahead-limit signals. Preflight hash-domain refusal retained. No cause/fix/gate-pass claim.",
+  "scopeAddendum": "e944419f1f6f6b7c5ea383e826c5a5259a50d791",
+  "baseHead": "6204ddaddeaf080d786d206eeddaca0165ca0936",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-archive-floor-probes-validation",
+      "files": [
+        {
+          "path": "driver.py",
+          "bytes": 5829,
+          "sha256": "e416e172e1b53804dba4f8a64ae635ed7a3f9bd1de52217264574346fcb75303"
+        },
+        {
+          "path": "missing-console-trace.json",
+          "bytes": 481,
+          "sha256": "21f02d3e6d0a9e1bcacb1ad5f3664ac6210c50cce1049b8b26fa93eea5188531"
+        },
+        {
+          "path": "preflight-refusal.json",
+          "bytes": 406,
+          "sha256": "139d9dc03639ba4364cb81475a0744076be7a779c7986d5fc5a18b1d47fded72"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 945,
+          "sha256": "58692f0f507f6c9fd8864f3734f791e2b06db0de0b5e449ce13d0865077e52ee"
+        },
+        {
+          "path": "probe-2-restoration.json",
+          "bytes": 391,
+          "sha256": "dc61c93e2fc7e42f236b4eb3e336196744536beac6c8efe4da51f092346df054"
+        },
+        {
+          "path": "probe-3-restoration.json",
+          "bytes": 391,
+          "sha256": "598233898da2742f9fa179c7c77aa9aadb748d9c3a08d2eaeb64f53718eb066c"
+        },
+        {
+          "path": "probe-3-result.json",
+          "bytes": 1110,
+          "sha256": "7530a6f37c726c8dd265f1347102cf5a951520d8848852c8242fd08097d051f2"
+        },
+        {
+          "path": "probe-3-source.patch",
+          "bytes": 4811,
+          "sha256": "6df23b66fd4b8b405723e0c829c242291e10414086a18998eb8ec67e87b7df8a"
+        },
+        {
+          "path": "probe-3-traces.json",
+          "bytes": 7836,
+          "sha256": "f37d56b25f5d9e09244aa93a2273621cec97280f7de36b0410bd7b8dfb1e7910"
+        },
+        {
+          "path": "seal-preflight.json",
+          "bytes": 273,
+          "sha256": "c64ec6e1c35ea6de844514adcb00bff198ba4170bce7822e9f9f818559669086"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 1366,
+          "sha256": "5164079fa3fc61f660a6da3b83f470b6f201529636e1c8ee104610b5f92afb3e"
+        },
+        {
+          "path": "unchanged-obligations.json",
+          "bytes": 441,
+          "sha256": "f0f3d5fc84da9d0f01e8e999e31ad55ba6277e761265276435b655b6b9003ed2"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1046,
+          "sha256": "daafdcb756d8871e5a839c7d382abc35604d7ade66a893fb61443923b84f01ed"
+        }
+      ]
+    }
+  ]
+}

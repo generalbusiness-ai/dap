@@ -59,9 +59,10 @@ export function schema(definition: ValidDefinition, kind: string): Schema {
   const value = Object.freeze({ definition, kind }); schemas.add(value); return value;
 }
 /** Copy declaration data so later caller mutation cannot change a compiled body. */
-export function immutable<T>(value: T): T {
+export function immutable<T>(value: T, origins?: WeakMap<object, object>): T {
   if (value !== null && typeof value === "object") {
-    const copied: unknown = Array.isArray(value) ? value.map(immutable) : Object.fromEntries(Object.entries(value).map(([k, v]) => [k, immutable(v)]));
+    const copied: object = Array.isArray(value) ? value.map(item => immutable(item, origins)) : Object.fromEntries(Object.entries(value).map(([k, v]) => [k, immutable(v, origins)]));
+    origins?.set(copied, value);
     return Object.freeze(copied) as T;
   }
   return value;
