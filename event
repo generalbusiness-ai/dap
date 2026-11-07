@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ce90052d463aa1754a8bca330da3596b92e14b2c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m4-copy-after-refusal.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d02bd29ddfc43db7fef005f022c5bf4292f6cb20","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/reads.ts."}
