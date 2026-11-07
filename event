@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:77c27102814bbb144cc66b4acbd542330dfdf90d","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/effects.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7893db9454732d9a60c9757b1a3ef7820b335c7e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m4-failed-gate-2.manifest.json."}
