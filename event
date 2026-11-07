@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a5eeade7e023690cdf1a07f4c1c77cb151927dd4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m4-archive-clock-observation.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b4e4aee767a935648ce7f535307fc5c129cb13e2","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/guard-value.ts."}
