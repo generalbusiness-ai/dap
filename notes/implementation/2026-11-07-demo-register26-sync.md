@@ -85,5 +85,11 @@ functional phase completion remains complete. No timing comparison follows.
 | Observation limits | `observation-limits.json`, `private-retention.json` | Timing gaps stay explicit; full raw logs and synthetic custody remain private and read-only. |
 
 The later note and manifest changes leave source and tests unchanged.
+The review follow-up also corrects the Demo description in
+[trust boundaries](../../docs/security/trust-boundaries.md#dap-demo):
+Register 26 is current and both roots remain installed. This follow-up
+changes only documents. The next review request records the gated and final
+tree hashes; the complete gate does not run again under
+[the documented follow-up rule](../../docs/testing.md#follow-up-after-a-gate).
 Independent exact-head review and landing remain due. The planner deploys.
 This record claims no deployment or parent acceptance.
