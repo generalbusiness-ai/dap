@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9d68488a5994444450df2bb6461424d379e17819","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m5-platform-followup.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aa602cb80e0ddecae860662615cceedd9d30ffc6","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/sends.ts."}
