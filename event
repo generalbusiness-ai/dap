@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b7d6be34b1c89108e97e1a5c8ad21b53cf71d643","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m4-archive-main-baseline.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bc035a5685250661399006bf51df59e72386ed11","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/capability.ts."}
