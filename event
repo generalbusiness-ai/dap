@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f574bed56d74bf9b1f7064188009917f22979c3d","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/fixed-index.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f7227a5f8f357b4daf1ad1ebe11360166882b702","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m4-failed-gate.manifest.json."}
