@@ -83,7 +83,7 @@ export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, it
       else operand(d, e["value"], at(ap, "value"), bindElement(ctx, as, read.type?.type === "list" ? read.type.of : null, at(ap, "as")), item);
     } else if (isObject(arg) && "items" in arg) {
       const e = rec(arg, ap, ["items", "slot"]);
-      const items = e && range(d, e["items"], at(ap, "items"), ctx);
+      const items = e && range(d, e["items"], at(ap, "items"), ctx, [], true, `capability:${name}`);
       if (items && !(typeof e["slot"] === "string" && items.type.slots.has(e["slot"]))) bad("name", at(ap, "slot"), `names no slot of ${items.type.name}`);
       const slot = items && e && typeof e["slot"] === "string" ? items.type.slots.get(e["slot"]) : undefined;
       if (items && slot) recordSlot(d, ctx, at(ap, "slot"), items.type,

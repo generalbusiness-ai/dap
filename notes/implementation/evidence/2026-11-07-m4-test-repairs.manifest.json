@@ -1,0 +1,50 @@
+{
+  "qualification": "Only two scoped test owners change after failed source gate 7b4534a699. Lane compiler/whole owner pass in earlier unit. Corrected scope compiler and all17 fixed-index cases pass; wrapper remains failed for mistaken 5-case ledger, reconciled without rerun. First invalid comment-act attempt remains failed with0 cases. Fresh complete gate required.",
+  "scopeAddenda": [
+    "76900c6440159ee41e24b45fcd649d199e160b78",
+    "45b0321202349a3559f6177e8c6b19e539a6e184"
+  ],
+  "baseHead": "7b4534a699c3fcf71206da11c8870ad3939a2c92",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m4-test-repairs-validation",
+      "files": [
+        {
+          "path": "driver.py",
+          "bytes": 4258,
+          "sha256": "2a5567ead32b9393b0124c86ce50d32479afedde19ec07c589b4372c5ac49136"
+        },
+        {
+          "path": "earlier-attempt.json",
+          "bytes": 284,
+          "sha256": "700dab39e08fa4eac02e8375e028f5f6ce66877bf90500cbfe7aa5d5f5383d3c"
+        },
+        {
+          "path": "ledger-reconciliation.json",
+          "bytes": 2238,
+          "sha256": "763f4214e70d71af89d367c02b3d8d1f28c547b18a4db56102ca4182f2902f5d"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 706,
+          "sha256": "d57660ca697b0e8a29e8c91e00f4dd54549e09ceca4f2623aeffbbbc1aaa0d22"
+        },
+        {
+          "path": "source.patch",
+          "bytes": 6756,
+          "sha256": "52d2862d8e0f15d26273098fcb7225a164b050def26ac697b5339c4785bd01f4"
+        },
+        {
+          "path": "test-obligations.json",
+          "bytes": 445,
+          "sha256": "dca0d7a7ad472bc7c12dc8260a8cfdbd3da4c90383c3f017f44340702f0c4f4e"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 512,
+          "sha256": "367987f2e763c2e82d60fc2cb1655c07ce9e0c5a35962b68a0247f2d90af9244"
+        }
+      ]
+    }
+  ]
+}

@@ -11,8 +11,10 @@ import { isDigest, isSend } from "@generalbusiness/dap-bytes";
 import { creationContextOf, type CreationContext } from "./creation-context.ts";
 import type { Derived } from "./effects.ts";
 import { isLocalFact } from "./fields.ts";
-import { judgeGuards, readsUnbound, slotOf, type Judging } from "./guards.ts";
+import { readsUnbound, slotOf, type Judging } from "./guards.ts";
 import { covered } from "./lists.ts";
+import { judgeGuardNodes } from "./program/guard-value.ts";
+import { formContext, guardList, type BodyStructure, type FormContext, type RangeUse } from "./program/structure.ts";
 import { givenTo, markOf, outside, ruleFor, run } from "./marks.ts";
 import { operand } from "./operand.ts";
 import { sendValue } from "./send-value.ts";
@@ -61,9 +63,12 @@ export function membershipOf(genesis: Pick<Extract<Input, { type: "genesis" }>, 
  * false and one is not completed, the input is not judged. Effect derivation
  * judges the `if` of a notice by the same rule.
  */
-function holds(j: Judging, guards: readonly Guard[] | undefined): boolean | UnavailableReason {
+function holds(j: Judging, guards: readonly Guard[] | undefined, context: () => FormContext): boolean | UnavailableReason {
   if (readsUnbound(j, guards ?? [])) return false;
-  const { result } = judgeGuards(j, guards ?? []);
+  if (!guards) return true;
+  const { body, owner } = context(), nodes = guardList(j.definition, body, owner, guards, "if");
+  if (!nodes) throw new TypeError("send condition has no admitted form context");
+  const { result } = judgeGuardNodes(j, body, nodes);
   return result === "pass" ? true : result === "fail" ? false : result;
 }
 
@@ -83,7 +88,7 @@ function holds(j: Judging, guards: readonly Guard[] | undefined): boolean | Unav
  * A relationship is of an item, so only such an entry may name `self` as
  * the item of a `relate`, as the validator has it for a written send.
  */
-export function deriveSends(j: Judging, forms: readonly SendForm[], working: ReadonlyMap<string, Item>, cause: Digest, first = 0, recorded?: ScopeRef | null, opening = false): Sends {
+export function deriveSends(j: Judging, forms: readonly SendForm[], working: ReadonlyMap<string, Item>, cause: Digest, first = 0, recorded?: ScopeRef | null, opening = false, body: BodyStructure | null = null): Sends {
   const items = j.definition.declared.items;
   const on = working.get("on") ?? null;
   let unresolved: string | null = null;
@@ -161,27 +166,33 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
    * limit, and a `where` reads each subject as the effects left it. Null: the
    * scan did not finish, so the range has no complete evidence.
    */
-  const ranged = (range: Range, each: Item | null): readonly Item[] | null => covered(reading(each), range);
+  let current: FormContext | null = null;
+  const context = (): FormContext => {
+    if (!current) throw new TypeError("send has no admitted form context");
+    return current;
+  };
+  const ranged = (range: Range, each: Item | null, use: RangeUse): readonly Item[] | null => covered(reading(each), range, context(), use);
 
   let incomplete = false;
   /** A source's value as it is sent. `each`: the item of a fan-out send. */
-  const sent = (s: SendSource, each: Item | null): unknown => {
+  const sent = (s: SendSource, each: Item | null, field?: string): unknown => {
     if (s === "self") return wire(j.self, { type: "item", of: "" });
     if (!("collect" in s)) return wire(operand(reading(each), s, on), typeOf(s, each));
     // Section 6.6: one record for each item the range covers, with the named members. A member whose slot is empty is left out.
-    const all = ranged(s.collect.items, each);
+    const all = ranged(s.collect.items, each, `collect:${field}`);
     if (!all) incomplete = true;
     return (all ?? []).map((item) => Object.fromEntries(Object.entries(s.collect.fields)
       .map(([name, member]) => [name, member === "item" ? local(item.id) : member === "state" ? item.state : wire(slotOf(item, member), slotType(item, member))] as const)
       .filter(([, v]) => v !== null)));
   };
   /** An absent value is left out of a message, as an absent field is left out of an intent. */
-  const fields = (sources: Record<string, SendSource>, each: Item | null = null) => Object.fromEntries(Object.entries(sources).map(([name, s]) => [name, sent(s, each)] as const).filter(([, v]) => v !== null));
+  const fields = (sources: Record<string, SendSource>, each: Item | null = null) => Object.fromEntries(Object.entries(sources).map(([name, s]) => [name, sent(s, each, name)] as const).filter(([, v]) => v !== null));
 
   const sends: Send[] = [];
   const relations = new Set<string>();
   let creations = 0;
   for (const [i, form] of forms.entries()) {
+    current = body ? formContext(j.definition, body, "send", i, form) : null;
     const refuse = (what: string) => ({ ok: false, reason: "send-unresolved", detail: `sends.${i}: ${what}` }) as const;
     const next = () => first + sends.length;
     const mark = markOf(form);
@@ -245,7 +256,7 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
     } else if ("tell" in form) {
       // Section 6.4: a send whose subject is unbound is not made.
       if (readsUnbound(reading(null), form.tell.to)) continue;
-      const made = holds(j, form.tell.if);
+      const made = holds(j, form.tell.if, context);
       if (typeof made === "string") return { ok: false, unavailable: made };
       if (!made) continue;
       // Section 6.6: a `tell` is addressed by a reference slot, read after the entry's effects.
@@ -256,10 +267,10 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
       const { relate } = form;
       if (readsUnbound(reading(null), [relate.to, relate.item])) continue;
       // Section 6.6: a fan-out makes one send for each item that its range covers, in ascending order of item ID.
-      const all = relate.each ? ranged(relate.each, null) : [null];
+      const all = relate.each ? ranged(relate.each, null, "fanout") : [null];
       if (!all) return { ok: false, unavailable: "guard-incomplete" };
       for (const each of all) {
-        const made = holds(each ? { ...j, each } : j, relate.if);
+        const made = holds(each ? { ...j, each } : j, relate.if, context);
         if (typeof made === "string") return { ok: false, unavailable: made };
         if (!made) continue;
         const to = relate.to === "self" || "collect" in relate.to ? null : operand(reading(each), relate.to, on);
