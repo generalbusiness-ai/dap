@@ -249,8 +249,8 @@ const seals = {
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
   "packages/scope/src/applications/act-admission.ts": "bec337cfdbc35247da587bf794715062537b89a1894c6c0829b7c5fa0c7b1884", // Exact native provenance and current trust; actual maintained parser output.
-  "packages/derive/src/genesis.ts": "3547884710d4828533e670740169e7f33d470775db12a0f7c02c4a7e2e2b08de",
-  "packages/derive/src/judge.ts": "89d7601ff9b19dc562e183f836e60ed6c804a70fd428cf6e0e17424e353101dd",
+  "packages/derive/src/genesis.ts": "15a4adb0e86d62a5be70249c176a2677717a0616119eedcb7b7427a5291fbc2c",
+  "packages/derive/src/judge.ts": "7bafa496e7f0d647ffb84a7fa1131fe682335bb293b1ceeb7bee5c9b50693560",
   "packages/scope/src/sessions.ts": "ee2afb1a928446d146b81a3adfd4794cbacac9322f9a9a5142658a7036005ebb",
   "packages/scope/src/originals.ts": "c8a5185ad8a57a851ecbe77d87649b0bbfd45bf9c93e685d7dc3a35982ef72cc", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.
