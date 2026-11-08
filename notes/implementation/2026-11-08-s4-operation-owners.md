@@ -1,6 +1,6 @@
 # Give parked attempts and replies their own owners
 
-Status: focused checkpoint under request `12f63139`, promise `50f7d6d7`. Scope `4c53d3ea` records the extraction before edits. Both scope compiler contexts and 27 cases in six complete owners pass at `f10b1b63`. The precedence control distinguishes after restoring clean source. Main integration, the full gate, archive audit, independent review and landing remain ahead. The planner deploys.
+Status: gate passed, review pending. Focused checkpoint under request `12f63139`, promise `50f7d6d7`. Scope `4c53d3ea` records the extraction before edits. Both scope compiler contexts and 27 cases in six complete owners pass at `f10b1b63`. The precedence control distinguishes after restoring clean source. Main integration, the final full gate and the retained-gate archive audit now pass as recorded below. Independent review and landing remain ahead. The planner deploys.
 
 ## Change
 
@@ -47,6 +47,18 @@ The [focused manifest](evidence/2026-11-08-s4-operations-focused.manifest.json) 
 
 ## Evidence still due
 
-Integrate current main, run one final maintained gate, complete the archive audit and obtain independent review before landing.
+Obtain independent exact-head review and audit the merge plan before landing. The final gate and archive audit below complete their earlier obligations.
 
-Ruling `217e53e9` keeps archive watch `64552d40` open. Before review, record one line naming every retained full gate since M4 landing `8d9080f3` and its archive-retry observation. Keep failed gates and unreached Native stages distinct from passes. A new archive retry stops S4 for planner classification. No S4 change touches archive or fold code.
+Ruling `217e53e9` keeps archive watch `64552d40` open. The audit below names every retained full gate since M4 landing `8d9080f3` and its archive-retry observation. Failed gates and unreached Native stages remain distinct from passes. A new archive retry stops S4 for planner classification. No S4 change touches archive or fold code.
+
+## Integrate M8 and complete the final gate
+
+S4 integrates published main `0914c89e` at `d9927a103a9c1678cef33467f04210e83c0458aa`, tree `c7b7bf7d81dcf59e8a664b9ff19deb59f89618e2`. Only the four S4 paths differ from that main. Both changed operation files retain the focused checkpoint bytes. No focused test or control repeats.
+
+Booking `8be9bf3fc08122ea2d9dbfe057bd85cb2a0ec598` runs one maintained `npm run gate`. I read the actual `gate.exit`: `exit 0`. All stages pass. Node passes 135, Counting passes 56, Plain passes 4026 with 1 skip, and Native passes 1117 with 2 skips. The reports contain no contradiction or unhandled error. All tracked inputs stay unchanged, the checkout stays clean, and every owned process closes. Process checks before and during the gate find no other validation body; those observations do not prove continuous exclusivity. The outer monotonic observation takes 1323.109 seconds, separate from command and runner timings.
+
+The [gate manifest](evidence/2026-11-08-s4-gate.manifest.json) hashes to `565bc5dda0a56486f13ed0db6b59dfb046a809956de28f150eec6d0bf4ef8774`. It names 20 public files and inventories 2334 read-only private files. It retains the frozen task, source snapshots, complete raw stages, actual exit, command timings, report classification and archive audit. Sealing runs no tests.
+
+Archive watch audit since M4: `2026-11-07-m5-gate` (a14c4150): Native unreached, no archive observation; `2026-11-07-m6-gate` (71863e06): archive scale passed, no retry observed; `2026-11-07-m7-gate` (6da48104): archive scale passed, no retry observed; `2026-11-07-s1-gate` (446e50d4): archive scale passed, no retry observed; `2026-11-07-s2-gate` (39b996b9): archive scale passed, no retry observed; `2026-11-07-s3-gate` (4f4944ae): Native unreached, no archive observation; `2026-11-08-s1-f1-cleanup-gate` (2f8b80af): archive scale passed, no retry observed; `2026-11-08-s1-f1-gate` (821f4ec3): archive scale passed, no retry observed; `2026-11-08-m8-final-gate` (136708cd): Native unreached, no archive observation; `2026-11-08-m8-repaired-final-gate` (0c416f8b): archive scale passed, no retry observed; `2026-11-08-m8-isolated-final-gate` (0c416f8b): archive scale passed, no retry observed; `2026-11-08-m8-cache-final-gate` (d54c8842): archive scale passed, no retry observed; `2026-11-08-s4-final-gate` (d9927a10): archive scale passed, no retry observed.
+
+The thirteen held full gates contain ten archive-scale passes and three Native-unreached failures. Other Native failures remain failures, including the two M8 archive-scale passes inside failed gates. This audit closes no archive watch. No S4 source changes archive or fold code. Independent review and landing remain due. The planner deploys.
