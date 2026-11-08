@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "09455f62f16d36c00974a4e4000d766c9c099e87",
+  "sourceTree": "ba3a4dcf68837276e9d8989c3a4521f363e43c01",
+  "qualification": "Admitted metadata checkpoint only: six compiler contexts and250cases23completeowners pass once; one isolated raw-window control fails at the strengthened ownership result and restores cleanly. Complete interpretations/prototype retirement, finalgate, generated assets, workflow, independent review and landing remain.",
+  "fileCount": 16,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-owned-metadata-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1277,
+          "sha256": "25e4c1210ab5c3d2bfb52161a5f95101d140c9ada571e461e6c57a52ae37d94b"
+        },
+        {
+          "path": "control-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "control-owner.time",
+          "bytes": 29,
+          "sha256": "6b7b1e298b9d92c06e222b1a55713c4f5f89f6ccaf77fd633ee6e997343458bf"
+        },
+        {
+          "path": "control-source-comparison.json",
+          "bytes": 461,
+          "sha256": "d8435aa9df52f3f48f1768ea0b2814177e484d67067b01a9402dd634e597bae1"
+        },
+        {
+          "path": "control-summary.json",
+          "bytes": 869,
+          "sha256": "e022f32b513a9851e26fbba98d95c2895205f4278aadd30812378f97d43815dc"
+        },
+        {
+          "path": "controls.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 101650,
+          "sha256": "61952bea23be256526475ab1fab8bbdf9c7d7ccc2842db861e694809823de6c1"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 2046,
+          "sha256": "6ee33dae2f3b0931187037842671ce6d58762a3c09f1b38582bcd5a526490181"
+        },
+        {
+          "path": "mutant-grant.ts",
+          "bytes": 18593,
+          "sha256": "c14841b190d5dd1ae91dae0fd792715ac168177cbc296f435db82233a263069d"
+        },
+        {
+          "path": "original-grant.ts",
+          "bytes": 18599,
+          "sha256": "3cd6e112ddedeb10cbe44f6f745a5cdc372844fcf49c149d602e8a8c7899af96"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 566,
+          "sha256": "2255e1d279ae59dd52600cfaa8146ca698849dd3edc78a261f114f633dcef402"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 8805,
+          "sha256": "4659eb873dfb44e3579cf026ab9b08efed2de61a191ee3f118f2736073072ef8"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 51553,
+          "sha256": "09441bde1a6525d121e4508eddc0c00105e8891ca76beede70e2d2bbb972b19f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1659,
+          "sha256": "02568aa40fb8c1041db91e8ae9c33d1f061832131a3321e6eb3da1c209890611"
+        },
+        {
+          "path": "result.json",
+          "bytes": 764,
+          "sha256": "ccfcb0cb252e1c21807f079285f4f9ddaa5831489c597078668cf3c6b2d84528"
+        }
+      ]
+    }
+  ]
+}
