@@ -96,13 +96,13 @@ The fixture paired its v1 package with `DECLARED_APPLICATION_COHORT`.
 which requires a v2 package. The correction selects
 `TRUSTED_APPLICATION_COHORT`, the existing v1 native installation cohort.
 It changes no package codec, graph rule or production admission behavior.
-The corrected witness still needs its own result.
+The next run establishes the corrected witness below.
 
 The [first-run manifest](evidence/2026-11-08-m0-initial.manifest.json) hashes
 to `e0e5586f3efb2a330ac14d555c9c1aa29affd9ebe569299f712724fb35cfc9d8`.
 It retains five public files and inventories 252 private originals under
 `~/play/artroom-evidence/2026-11-08-m0-initial-*`. The original failed run
-remains failed. M0 will validate the correction after M8's active gate ends.
+remains failed. The corrected run below follows that failure.
 
 ## The corrected native witness passes
 
@@ -144,3 +144,18 @@ It names seven public files and inventories 252 read-only private originals
 and inventory files under `~/play/artroom-evidence/2026-11-08-m0-sender-*`.
 The intended test failure, parser failure and independent classification
 remain separate. The final gate and independent review remain due.
+
+## Evidence table
+
+The table names preserved copies of the executed drivers under `~/play/artroom-evidence/`. It does not claim that those copies supplied the original invocation paths. Each manifest inventories the complete commands and raw output. The initial pipeline uses `6824e907`; the corrected pipeline and control use `63bb22a3` and its tree recorded above.
+
+| Check | Retained command driver | Actual exit | Public output and SHA-256 |
+|---|---|---|---|
+| Initial two compilers and native case | `2026-11-08-m0-initial-focused-launch/driver.py` | 1; compilers pass, installation assertion fails | `2026-11-08-m0-initial-validation/result.json`: `eb6469b44a01d263a43776fc44770645fdd5bbf9ac53a7827627fc78adddfaa7` |
+| Corrected two compilers and complete native case | `2026-11-08-m0-cohort-focused-launch/driver.py` | 0 | `2026-11-08-m0-cohort-validation/result.json`: `a2d2fbc372449b9cac0c19a5b58c6b386b4dc0f6801468875d59e873429ee40f` |
+| Sender guard fault | `2026-11-08-m0-sender-guard-control/driver.py` | Owner 1 at the intended assertion; original classifier 1 | `2026-11-08-m0-sender-control-validation/result.json`: `8ced12e9912287f1c87a97cf7df16897bd1c6f13294bd38411be34cefff8df89` |
+| Independent retained-output classification | `2026-11-08-m0-sender-control-classification/driver.py` | 0; no test rerun | `2026-11-08-m0-sender-control-validation/result.json`: `8ced12e9912287f1c87a97cf7df16897bd1c6f13294bd38411be34cefff8df89` |
+
+## Open limits
+
+Live request `f131d4e8` still requires integration of landed S4, one final maintained gate, independent review and landing. Ruling `d3f960ab` assigns v2 cross-room receive-port design to M1. Ruling `99f628a5` preserves the deciding refusal entry; the pre-entry refusal question belongs to M1 and M2. This witness establishes no live-room or deployment acceptance.
