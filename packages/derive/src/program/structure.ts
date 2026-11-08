@@ -1,5 +1,5 @@
 /** Structural data recorded by the existing validator, with future clauses in separate roots. */
-import type { Digest, EffectForm, Guard, Mark, MarkMost, Notify, SendForm, SendMark } from "@generalbusiness/dap-contract";
+import type { ActType, Digest, EffectForm, Guard, Mark, MarkMost, Notify, ReceiveType, SendForm, SendMark, TimedRule } from "@generalbusiness/dap-contract";
 import type { Defining } from "../validate/context.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import type { ElementBinding, FieldResolution, ForeignFieldResolution, FrameRead, OperandRead, RangeResolution, ReadValidation, ResolvedReads, SlotResolution, SubjectResolution } from "./reads.ts";
@@ -11,7 +11,8 @@ import { ownSendPlan, type PendingSendPlan, type SendPlan } from "./send-plan.ts
 import { ownSettlementPlan, type SettlementPlan } from "./settlement.ts";
 import { bindNative, nativeBoundaries, nativeBoundary, nativeSource, recordNative, type NativeBoundary } from "./native.ts";
 import type { MarkKind } from "../validate/context.ts";
-import { bindDeclaration } from "./declaration.ts";
+import { bindDeclaration, declarationSource } from "./declaration.ts";
+import { bindRows, currentRow, rowOf, rowsOf, type RowIdentity, type RowRead } from "./rows.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
 export type GuardOp = Exclude<Keys<Guard>, "of" | "reason" | "ifPresent">;
@@ -55,6 +56,7 @@ export interface BodyStructure {
   readonly id: RootIdentity;
   readonly origin: RootIdentity | null;
   readonly frame: FrameRead;
+  readonly row: RowRead;
   readonly reads: ResolutionGroup;
   readonly nodes: readonly StructureNode[];
   readonly settlement: SettlementPlan | null;
@@ -69,6 +71,7 @@ export interface DefinitionStructure {
   readonly marks: ResolvedReads["marks"];
   readonly underived: ResolvedReads["underived"];
   readonly native: readonly NativeBoundary[];
+  readonly rows: readonly RowRead[];
 }
 export type RootBinding = { readonly kind: "body"; readonly source: object }
   | { readonly kind: "clause"; readonly owner: object; readonly clause: string };
@@ -84,6 +87,7 @@ interface PendingNode {
 }
 export interface BodyTrace {
   readonly id: RootIdentity; readonly binding: RootBinding; readonly origin: BodyTrace | null;
+  readonly row: RowIdentity | null;
   readonly nodes: PendingNode[]; readonly reads: MutableResolutions; readonly stack: PendingNode[]; frame?: FrameRead;
   readonly guardLists: PendingGuardList[];
   readonly ranges: PendingRange[];
@@ -101,7 +105,8 @@ const pending = new WeakMap<Defining, Trace>();
 interface Compiled {
   readonly structure: DefinitionStructure;
   readonly bodies: WeakMap<object, readonly BodyStructure[]>;
-  readonly replacements: readonly { readonly source: object; readonly body: BodyStructure }[];
+  readonly headers: WeakMap<BodyStructure, ActType | ReceiveType | TimedRule>;
+  readonly rowBodies: WeakMap<RowIdentity, readonly BodyStructure[]>;
   readonly clauses: WeakMap<object, ReadonlyMap<string, readonly BodyStructure[]>>;
   readonly forms: WeakMap<object, readonly { readonly body: BodyStructure; readonly node: StructureNode }[]>;
   readonly origins: WeakMap<object, object>;
@@ -117,6 +122,23 @@ const effectPlans = new WeakMap<EffectNode, EffectPlan>(), attentionPlans = new 
 const sendPlans = new WeakMap<SendNode, SendPlan>();
 const sendSources = new WeakMap<SendNode, SendForm | SendMark>();
 const effectSources = new WeakMap<EffectNode, EffectForm>();
+
+/** Replacement headers reuse only their admitted row's immutable common data. */
+function headerOf(frame: FrameRead, row: RowRead): ActType | ReceiveType | TimedRule | null {
+  if (frame.kind === "clause" || frame.kind === "outcome-clause") return null;
+  if (row.kind === "act" && frame.kind === "act") return row.declaration;
+  if (row.kind === "timed" && frame.kind === "timed") return row.declaration;
+  if (row.kind === "receive") {
+    if (frame.kind === "handler") return row.declaration;
+    if (frame.kind === "replacement") {
+      const { late, ...common } = row.declaration;
+      if (!late?.then) throw new TypeError("replacement body has no admitted late branch");
+      return Object.freeze({ ...common, guards: Object.freeze([]), effects: late.then.effects ?? Object.freeze([]),
+        sends: late.then.sends ?? Object.freeze([]), attention: late.then.attention ?? Object.freeze([]) });
+    }
+  }
+  throw new TypeError("body frame does not belong to its declaration row");
+}
 function traceOf(d: Defining): Trace {
   let trace = pending.get(d);
   if (!trace) { trace = { roots: [], active: null }; pending.set(d, trace); }
@@ -125,7 +147,7 @@ function traceOf(d: Defining): Trace {
 
 /** These scopes follow existing validation calls. They make no admission decision. */
 export function beginBody(d: Defining, binding: RootBinding): BodyTrace {
-  const trace = traceOf(d), body: BodyTrace = { id: Object.freeze({}), binding, origin: trace.active, nodes: [], reads: resolutions(), stack: [], guardLists: [], ranges: [] };
+  const trace = traceOf(d), body: BodyTrace = { id: Object.freeze({}), binding, origin: trace.active, row: currentRow(d), nodes: [], reads: resolutions(), stack: [], guardLists: [], ranges: [] };
   if (binding.kind === "clause" && body.origin) {
     const send = body.origin.stack.at(-1) ?? body.origin.nodes.at(-1);
     if (send?.category === "send" && send.data === binding.owner) send.future.push({ clause: binding.clause, root: body.id });
@@ -223,6 +245,7 @@ export function recordNativeForm(d: Defining, kind: MarkKind, path: string, data
 /** Called only after the actual final admission and canonical-byte checks. */
 export function finishStructure(d: Defining, definition: ValidDefinition, reads: ResolvedReads): void {
   bindDeclaration(definition);
+  bindRows(d, definition);
   bindNative(d, definition, reads.validation);
   const trace = pending.get(d);
   if (!trace) return;
@@ -277,14 +300,20 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
   const bodies = new WeakMap<object, BodyStructure[]>(), clauses = new WeakMap<object, Map<string, BodyStructure[]>>();
   const forms = new WeakMap<object, readonly { readonly body: BodyStructure; readonly node: StructureNode }[]>();
   const guardLists = new WeakMap<object, readonly GuardListBinding[]>(), ranges = new WeakMap<object, readonly RangeBinding[]>();
-  const replacements: { source: object; body: BodyStructure }[] = [];
+  const headers = new WeakMap<BodyStructure, ActType | ReceiveType | TimedRule>();
+  const rowBodies = new WeakMap<RowIdentity, readonly BodyStructure[]>();
   const roots = trace.roots.map((root): BodyStructure => {
     if (!root.frame) throw new TypeError("structural body has no validator frame");
+    const row = root.row && rowOf(definition, root.row);
+    if (!row || root.frame.context.row !== row.id) throw new TypeError("body has no matching admitted declaration row");
     bindings.length = 0;
-    const body = Object.freeze({ id: root.id, origin: root.origin?.id ?? null, frame: root.frame, nodes: Object.freeze(root.nodes.map(nodeOf)), reads: ownResolutions(root.reads),
+    const body = Object.freeze({ id: root.id, origin: root.origin?.id ?? null, frame: root.frame, row, nodes: Object.freeze(root.nodes.map(nodeOf)), reads: ownResolutions(root.reads),
       settlement: root.settlement ? ownSettlementPlan(root.settlement) : null });
     checkedRoots.add(body);
     rootOwners.set(body, definition);
+    rowBodies.set(row.id, Object.freeze([...(rowBodies.get(row.id) ?? []), body]));
+    const header = headerOf(root.frame, row);
+    if (header) headers.set(body, header);
     for (const { source, node } of bindings) {
       nodeRoots.set(node, body);
       if (node.category === "guard") guardSources.set(node, source);
@@ -307,7 +336,9 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     }
     if (root.binding.kind === "body") {
       const existing = bodies.get(root.binding.source) ?? []; existing.push(body); bodies.set(root.binding.source, existing);
-      if (root.frame.kind === "replacement") replacements.push({ source: root.binding.source, body });
+      if (header && header !== root.binding.source) {
+        const owned = bodies.get(header) ?? []; owned.push(body); bodies.set(header, owned);
+      }
     } else {
       const existing = clauses.get(root.binding.owner) ?? new Map<string, BodyStructure[]>();
       const named = existing.get(root.binding.clause) ?? []; named.push(body); existing.set(root.binding.clause, named); clauses.set(root.binding.owner, existing);
@@ -316,30 +347,36 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
   });
   const structure: DefinitionStructure = Object.freeze({ validation: reads.validation, digest: definition.digest,
     profile: immutable(definition.declared.profile), rules: immutable(definition.declared.rules), capabilities: immutable(definition.declared.capabilities),
-    roots: Object.freeze(roots), marks: reads.marks, underived: reads.underived, native: nativeBoundaries(definition) });
-  compiled.set(definition, { structure, bodies, clauses, forms, origins, guardLists, ranges, replacements: Object.freeze(replacements) });
+    roots: Object.freeze(roots), marks: reads.marks, underived: reads.underived, native: nativeBoundaries(definition), rows: rowsOf(definition) });
+  compiled.set(definition, { structure, bodies, headers, rowBodies, clauses, forms, origins, guardLists, ranges });
   pending.delete(d);
 }
 export const structureOf = (definition: ValidDefinition): DefinitionStructure | null => compiled.get(definition)?.structure ?? null;
 
-/** A replacement keeps its parent's headers and declared nonempty form arrays. */
-function replacementMatches(source: object, body: object): boolean {
-  const a = source as Record<string, unknown>, b = body as Record<string, unknown>;
-  for (const key of ["fields", "also", "from", "class", "message", "opens", "settles"]) if (a[key] !== b[key]) return false;
-  for (const key of ["guards", "effects", "sends", "attention"]) {
-    if (a[key] === b[key]) continue;
-    if (!(Array.isArray(a[key]) && (a[key] as unknown[]).length === 0 && Array.isArray(b[key]) && (b[key] as unknown[]).length === 0)) return false;
-  }
-  return true;
-}
 export function bodyStructure(definition: ValidDefinition, source: object, kind?: string): BodyStructure | null {
   const found = compiled.get(definition);
   const candidates = found?.bodies.get(source);
   if (candidates?.length === 1) return candidates[0]!;
   const direct = candidates?.filter(body => kind === undefined || body.frame.context.kind === kind);
   if (direct?.length === 1) return direct[0]!;
-  const replacements = found?.replacements.filter(entry => replacementMatches(entry.source, source) && (kind === undefined || entry.body.frame.context.kind === kind));
-  return replacements?.length === 1 ? replacements[0]!.body : null;
+  return null;
+}
+
+/** Late selection follows the actual admitted row, never a reconstructed shape. */
+export function handlerBody(definition: ValidDefinition, source: ReceiveType, late?: { readonly reason: string }): BodyStructure | null {
+  const body = bodyStructure(definition, source);
+  if (!body || body.row.kind !== "receive" || (body.frame.kind !== "handler" && body.frame.kind !== "replacement")) return null;
+  if (!late) return body;
+  if (body.row.declaration.late?.reason !== late.reason) return null;
+  const candidates = compiled.get(definition)?.rowBodies.get(body.row.id)?.filter(body => body.frame.kind === "replacement");
+  return candidates?.length === 1 ? candidates[0]! : null;
+}
+export function handlerHeader(definition: ValidDefinition, body: BodyStructure): ReceiveType {
+  checkedBody(definition, body);
+  if (body.row.kind !== "receive" || (body.frame.kind !== "handler" && body.frame.kind !== "replacement")) throw new TypeError("body has no admitted handler header");
+  const header = compiled.get(definition)?.headers.get(body);
+  if (!header) throw new TypeError("handler header was not captured by its validation");
+  return header as ReceiveType;
 }
 export function clauseStructure(definition: ValidDefinition, owner: object, clause: string, origin: BodyStructure | null, kind: string): BodyStructure | null {
   const found = compiled.get(definition)?.clauses.get(nativeSource(definition, owner))?.get(clause)?.filter(body =>
@@ -373,7 +410,8 @@ export function sendListBody(definition: ValidDefinition, forms: readonly SendFo
 /** Resolve occurrences by their source object and admitted body, including lexical aliases. */
 export function formStructures(definition: ValidDefinition, body: BodyStructure, source: object): readonly StructureNode[] {
   checkedBody(definition, body);
-  return Object.freeze((compiled.get(definition)?.forms.get(source) ?? []).filter(binding => binding.body === body).map(binding => binding.node));
+  const found = compiled.get(definition), original = found?.origins.get(source) ?? declarationSource(definition, source);
+  return Object.freeze((found?.forms.get(original) ?? []).filter(binding => binding.body === body).map(binding => binding.node));
 }
 export function checkedBody(definition: ValidDefinition, body: BodyStructure): void {
   if (rootOwners.get(body) !== definition) throw new TypeError("body structure belongs to another validation");
@@ -385,24 +423,25 @@ function checkedOwner(definition: ValidDefinition, body: BodyStructure, owner: S
 }
 /** A condition's semantic place distinguishes aliased if/unless lists on one form. */
 export function guardList(definition: ValidDefinition, body: BodyStructure, owner: StructureNode | null, source: object, place: GuardListPlace): readonly GuardNode[] | null {
-  const found = checkedOwner(definition, body, owner), original = found.origins.get(source) ?? source;
+  const found = checkedOwner(definition, body, owner), original = found.origins.get(source) ?? declarationSource(definition, source);
   const matches = found.guardLists.get(original)?.filter(list => list.body === body && list.owner === owner && list.place === place);
   return matches?.length === 1 ? matches[0]!.nodes : null;
 }
 export function rangePlan(definition: ValidDefinition, body: BodyStructure, owner: StructureNode | null, source: object, use: RangeUse): RangePlan | null {
-  const found = checkedOwner(definition, body, owner), original = found.origins.get(source) ?? source;
+  const found = checkedOwner(definition, body, owner), original = found.origins.get(source) ?? declarationSource(definition, source);
   const matches = found.ranges.get(original)?.filter(range => range.body === body && range.owner === owner && range.use === use);
   return matches?.length === 1 ? matches[0]!.plan : null;
 }
 /** An existing raw-list caller must name one actual admitted group. */
 export function guardListContext(definition: ValidDefinition, source: object, kind: string): { readonly body: BodyStructure; readonly nodes: readonly GuardNode[] } | null {
-  const found = compiled.get(definition), original = found?.origins.get(source) ?? source;
+  const found = compiled.get(definition), original = found?.origins.get(source) ?? declarationSource(definition, source);
   const matches = found?.guardLists.get(original)?.filter(list => list.body.frame.context.kind === kind || list.body.frame.context.kind === null);
   return matches?.length === 1 ? { body: matches[0]!.body, nodes: matches[0]!.nodes } : null;
 }
 /** Compatibility with a single raw guard requires its unique actual occurrence. */
 export function guardContext(definition: ValidDefinition, source: Guard, kind: string, inherited: string): { readonly body: BodyStructure; readonly node: GuardNode } | null {
-  const matches = compiled.get(definition)?.forms.get(source)?.filter((binding): binding is { body: BodyStructure; node: GuardNode } =>
+  const found = compiled.get(definition), original = found?.origins.get(source) ?? declarationSource(definition, source);
+  const matches = found?.forms.get(original)?.filter((binding): binding is { body: BodyStructure; node: GuardNode } =>
     binding.node.category === "guard" && (binding.body.frame.context.kind === kind || binding.body.frame.context.kind === null)
     && (binding.node.op === "native" || guardPlans.get(binding.node)?.site.subject === (source.of ?? inherited)));
   return matches?.length === 1 ? matches[0]! : null;

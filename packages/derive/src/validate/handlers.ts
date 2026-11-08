@@ -22,6 +22,7 @@ import { nativeReceiver } from "./native-capacity.ts";
 import { declaredBy } from "../capability.ts";
 import { recordFrame, recordSlot, subjectRead } from "../program/reads.ts";
 import { beginBody, endBody, recordSettlementPlan } from "../program/structure.ts";
+import { withRow } from "../program/rows.ts";
 
 const members = (v: unknown): Rec => (isObject(v) ? v : {});
 /** Whether an item type is `many`, as the definition writes it. */
@@ -186,11 +187,11 @@ function setsOf(d: Defining, opens: Type | null, read: () => void): ClauseSet {
 /** Every act. `timed`: the timed rules as written, which the opening of a hold reads. `top`: the definition as written. */
 export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unknown>>, top: Rec): void {
   const { bounds, types, bad, rec, entries, str } = d;
-  for (const [name, av] of entries(v, "acts", bounds.acts)) {
+  for (const [name, av] of entries(v, "acts", bounds.acts)) withRow(d, "act", name, at("acts", name), () => {
     const path = at("acts", name);
     // Section 17.2a: in platform data an act may state `adds`. `holds.ts` reads it.
     const o = rec(av, path, ["step", "on", "also", "fields", "grant", "guards", "effects", "sends", "attention"], ["settles", "presents", ...(d.platform ? ["adds", "observes"] : [])]);
-    if (!o) continue;
+    if (!o) return;
     const step = o["step"];
     if (step !== "open" && step !== "transition" && step !== "comment") bad("shape", at(path, "step"), "is open, transition or comment");
     const on = typeof o["on"] === "string" ? (types.get(o["on"]) ?? null) : null;
@@ -240,7 +241,7 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
       if (!coded(d, o["effects"])) for (const [s, slot] of on.slots) if (slot.required && !slot.hasDefault && !set.has(s)) bad("required-unset", at(path, "effects"), `no effect sets the required slot ${s}`);
       opensHold(d, o["effects"], on, set, timed, at(path, "effects"));
     }
-  }
+  });
 }
 
 /** The classes of a handler, and for an advisory the types its message may be (section 6.4). */
@@ -251,10 +252,10 @@ const ADVISORIES = ["index", "notify"];
 export function receives(d: Defining, v: unknown, top: Rec): void {
   const { bounds, types, bad, rec, entries, str, int } = d;
   const handled = new Set<string>();
-  for (const [name, hv] of entries(v, "receives", bounds.receives)) {
+  for (const [name, hv] of entries(v, "receives", bounds.receives)) withRow(d, "receive", name, at("receives", name), () => {
     const path = at("receives", name);
     const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", "order", "late", ...(d.platform ? ["bound"] : [])]);
-    if (!o) continue;
+    if (!o) return;
     const message = str(o["message"], at(path, "message"));
     const cls = o["class"];
     if ("order" in o && (cls !== "tell" || (o["order"] !== "arrival" && o["order"] !== "source"))) bad("shape", at(path, "order"), "only a tell handler declares arrival or source order");
@@ -351,5 +352,5 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
         if ("state" in e && [...on.states.values()].some((final) => final)) bad("final", at(at(path, "effects"), i), "the one item of this type may exist before the entry, in a final state");
       }
     }
-  }
+  });
 }

@@ -20,7 +20,7 @@ export function requestReservation(definition: ValidDefinition, entry: Entry, n:
     body = act ? bodyStructure(definition, act, kind) : null;
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
     const binding = bound(definition, input.message, input.from);
-    const handler: ReceiveType | null = binding?.handler ? handlerBranch(binding.handler, "decision" in input ? input.late : undefined) : null;
+    const handler: ReceiveType | null = binding?.handler ? handlerBranch(definition, binding.handler, "decision" in input ? input.late : undefined) : null;
     body = handler && binding ? bodyStructure(definition, handler, binding.kind) : null;
   } else if (input.type === "outcome") {
     // A native outcome without a data send mark has no result clause,

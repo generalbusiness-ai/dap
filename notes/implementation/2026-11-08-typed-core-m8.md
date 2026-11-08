@@ -85,3 +85,13 @@ Two sequential controls use a separate owned worktree and dependency namespace a
 The [metadata validation manifest](evidence/2026-11-08-m8-metadata-validation.manifest.json), SHA-256 `5c6961a73618aaf1fc62efd3322b188fbdcfb146017a4039235fde1b82c6d0e3`, binds 23 read-only public files. The [preparation manifest](evidence/2026-11-08-m8-preparation-validation.manifest.json), SHA-256 `4cd3160858919a0bed6a5c75d0bd8ba83c37493bcc3a8650d48a45f204998361`, binds five more. Their inventories retain 98 private originals across the focused run, outer driver, controls and preparation. Exact external inputs, complete reports, source snapshots and failure messages remain durable and read-only. No command reruns during retention.
 
 These 73 cases include the strengthened witnesses, and the two controls execute one of those cases under faults. The counts overlap and are not added. No full M8 gate, generated asset update, workflow, review, deployment or live acceptance follows from this checkpoint.
+
+## The second draft assigns rows and registers late branches
+
+Each existing item, act, receive, timed and outcome validator now captures an explicit row identity during its original synchronous validation. Final admission binds that identity to the same validation's immutable declaration. Body frames and Native boundaries retain their actual row owner. Aliased declarations in separate rows keep distinct owners even when the caller supplies the same object.
+
+Late-handler selection now returns a registered immutable header from the admitted receive row. `replacementMatches` and its shape-based fallback are gone. A copied header cannot select a body, and repeated selection returns the same registered header. The existing reads test therefore replaces its assertion about fresh object allocation with stable identity, equal effect values and a distinct immutable effect array. Every assertion about production behavior and every deadline remains.
+
+The existing structure owners now check row ownership, copied-row refusal, aliased act and outcome marks, stable late selection, copied-header refusal and wrong-reason refusal. Ordinary refusal names come from the captured guard instruction; capability and coded refusals keep their original source-keyed records.
+
+The next focused plan covers both derive compiler contexts, both scope compiler contexts, complete affected derive owners, the full existing definition corpus and the real-scope late-branch owner. No compiler or test result follows from this draft. Header occurrences within one row, the missing result-clause assertion and complete program interpretation remain ahead.

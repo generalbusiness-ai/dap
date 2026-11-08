@@ -231,7 +231,7 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
     if (sourceTime + handler.late.within.seconds * 1000 < now) {
       if (!handler.late.then) return refuse({ code: "late", name: handler.late.reason });
       lateBranch = { reason: handler.late.reason };
-      selected = handlerBranch(handler, lateBranch)!;
+      selected = handlerBranch(definition, handler, lateBranch)!;
     }
   }
   const ran = runHandler(view, definition, context, scope, selected, b.kind, given, cause(), sent, judged);

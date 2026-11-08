@@ -21,7 +21,7 @@ import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type 
 import { sendOrigin } from "./program/send-origin.ts";
 import { deriveSends } from "./sends.ts";
 import { judgeGuardNodes } from "./program/guard-value.ts";
-import { bodyEffectForms, bodyJudgesClock, bodyStructure, clauseStructure, sendClauseStructure } from "./program/structure.ts";
+import { bodyEffectForms, bodyJudgesClock, bodyStructure, clauseStructure, guardSource, sendClauseStructure } from "./program/structure.ts";
 import { settlementForm, settlementMatches, settlementSubject } from "./program/settlement.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -396,7 +396,8 @@ export function derive(j: Judging, forms: Forms, opens: string | null, cause: Di
   // Section 6.4: a guard whose subject is unbound is not evaluated, and an effect whose subject is unbound is not applied.
   const guards = judgeGuardNodes(j, structure, structure.nodes.filter(node => node.category === "guard"));
   if (guards.result === "fail") {
-    const failed = forms.guards[guards.at]!;
+    const failedNode = structure.nodes.filter(node => node.category === "guard")[guards.at]!;
+    const failed = guardSource(j.definition, structure, failedNode);
     // Section 4.2: a capability guard that does not hold is `capability-refused`, with the name its capability declares.
     const declined = j.declined?.get(failed);
     if (declined !== undefined) return { result: "refused", reason: "capability-refused", name: declined, detail: `guards.${guards.at}`, prepared: j.used };
@@ -404,7 +405,7 @@ export function derive(j: Judging, forms: Forms, opens: string | null, cause: Di
     // its rule states. The code is `guard-failed`, or the one that the rule's specification states.
     const coded = j.coded?.get(failed);
     if (coded) return { result: "refused", reason: coded.code ?? "guard-failed", name: coded.name, detail: `guards.${guards.at}`, prepared: j.used };
-    return { result: "refused", reason: "guard-failed", ...refusalName(failed), detail: `guards.${guards.at}`, prepared: j.used };
+    return { result: "refused", reason: "guard-failed", ...(failedNode.op === "native" ? {} : refusalName(failedNode.data)), detail: `guards.${guards.at}`, prepared: j.used };
   }
   if (guards.result !== "pass") return { result: "unavailable", reason: guards.result };
   // Sections 6.6 and 6.7: a condition, or a range that a source or a send reads, that is not completed leaves the input not judged.
@@ -571,7 +572,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
     const b = bound(definition, input.message, input.from);
     if (!b?.handler || !b.fields) throw new Error(`entry ${origin.seq} sent a request and ran no handler`);
-    const handler = handlerBranch(b.handler, "decision" in input ? input.late : undefined);
+    const handler = handlerBranch(definition, b.handler, "decision" in input ? input.late : undefined);
     if (!handler) throw new RuleFault(`entry ${origin.seq} names no declared late branch`);
     const read = messageRead(view, scope.at, handler, b.fields, context.bounds);
     if (!read.ok) throw new Error(`entry ${origin.seq} was sealed with fields its handler does not take`);

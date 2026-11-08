@@ -28,6 +28,7 @@ import type { Profile, ValidateOptions, Validation } from "./index.ts";
 import { bindReads, recordFrame } from "../program/reads.ts";
 import { beginBody, endBody } from "../program/structure.ts";
 import { recordNativeOutcome } from "../program/native.ts";
+import { withRow } from "../program/rows.ts";
 
 /** The sole currently supported definition-format binding; not a new format. */
 export const FORMAT_1 = "artroom-definition-1";
@@ -127,7 +128,7 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
   // "A request of an outcome's rule, and its clauses" (revision 17; row I3-23): the mark may hold one `send`. It is a send mark,
   // because an outcome has no subject and no field for a written send to read, and each effect of its clauses is an effect mark.
   if (platform) {
-    for (const [kind, m] of entries(top["outcomes"], "outcomes", null)) {
+    for (const [kind, m] of entries(top["outcomes"], "outcomes", null)) withRow(d, "outcome", kind, at("outcomes", kind), () => {
       // Revision 21, section 17.2: the mark may state `attempts` and `most`, and its send `once`. `holds.ts` reads the three.
       const o = mark(d, m, at("outcomes", kind), "outcome", [], ["send", "attempts", "most", "origin", "observes"]);
       if (o) recordNativeOutcome(d, kind, o);
@@ -138,7 +139,7 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
       }
       // Section 16.1, "The subjects that an entry observes": the rows of each outcome entry of an operation of this kind.
       if (o && "observes" in o) observes(d, o["observes"], at(at("outcomes", kind), "observes"), { where: "outcome" });
-      if (!o || !("send" in o)) continue;
+      if (!o || !("send" in o)) return;
       const p = at(at("outcomes", kind), "send");
       const send = marked(o["send"]) ? mark(d, o["send"], p, "send", ["result"], ["once"]) : bad("shape", p, "an outcome's mark holds at most one send, and it is a mark: an outcome's row writes no send");
       const clauses = send ? rec(send["result"], at(p, "result"), [], ["applied", "refused", "superseded", "undelivered", "conflict"]) : null;
@@ -152,7 +153,7 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
         });
         endBody(d, traced);
       }
-    }
+    });
   }
 
   // Section 6.4: a genesis opens no timed item.

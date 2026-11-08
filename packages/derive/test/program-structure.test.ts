@@ -13,7 +13,8 @@ import { lateDefinition } from "./definition-corpus/source-order-data.ts";
 import { definitionCorpus } from "./definition-corpus/index.ts";
 import { capabilityStagingData } from "./definition-corpus/capability-staging-data.ts";
 import { declarationOf } from "../src/program/declaration.ts";
-import { nativeMark } from "../src/program/native.ts";
+import { nativeBoundaryOfMark, nativeMark, nativeOutcomes } from "../src/program/native.ts";
+import { checkedRow, namedRow, rowOf } from "../src/program/rows.ts";
 
 function admitted(input: DeclaredDefinition): ValidDefinition {
   const result = validateDefinition(input, PROPOSED_BOUNDS);
@@ -40,6 +41,7 @@ test("the admitted corpus supplies every structural opcode and binds every root 
     seen.add(`${node.category}:${node.op}`);
     if (node.op === "native") {
       expect(node.native.body).toBe(body.id);
+      expect(node.native.owner).toBe(body.row.id);
       expect(node.native.mark).toBe(node.data);
       expect(structureOf(definition)!.native).toContain(node.native);
     }
@@ -56,11 +58,16 @@ test("the admitted corpus supplies every structural opcode and binds every root 
     expect(graph!.native.map(hook => [hook.kind, hook.path, hook.mark.code, hook.mark.row, hook.dependencies]), row.name)
       .toEqual(reads.marks.map(mark => [mark.kind, mark.path, mark.code, mark.row, "unknown"]));
     expect(new Set(graph!.native.map(hook => hook.id)).size, row.name).toBe(graph!.native.length);
-    for (const hook of graph!.native) expect(hook.validation, row.name).toBe(reads.validation);
+    for (const hook of graph!.native) {
+      expect(hook.validation, row.name).toBe(reads.validation);
+      expect(hook.owner !== null && rowOf(checked.definition, hook.owner) !== null, row.name).toBe(true);
+    }
     expect(graph!.roots.length, row.name).toBe(reads.frames.length);
     for (const root of graph!.roots) {
       expect(reads.frames.includes(root.frame), row.name).toBe(true);
       expect(root.frame.context.validation, row.name).toBe(graph!.validation);
+      expect(root.frame.context.row, row.name).toBe(root.row.id);
+      expect(rowOf(checked.definition, root.row.id), row.name).toBe(root.row);
       root.nodes.forEach(node => visit(checked.definition, root, node));
     }
   }
@@ -114,6 +121,10 @@ test("aliased act and send objects keep distinct body and clause contexts", () =
   const checked = admitted(input), original = bodyStructure(checked, act, "edit")!, alias = bodyStructure(checked, act, "alias")!;
   expect(bodyStructure(checked, act)).toBeNull();
   expect(original.id).not.toBe(alias.id);
+  expect(original.row.id).not.toBe(alias.row.id);
+  expect([original.row.name, alias.row.name]).toEqual(["edit", "alias"]);
+  expect(namedRow(checked, "act", "edit")).toBe(original.row);
+  expect(namedRow(checked, "act", "alias")).toBe(alias.row);
   const guard = act.guards[0]!;
   expect(formStructures(checked, original, guard)).toEqual([original.nodes[0]]);
   expect(formStructures(checked, alias, guard)).toEqual([alias.nodes[0]]);
@@ -127,13 +138,21 @@ test("aliased act and send objects keep distinct body and clause contexts", () =
 
 test("replacement bodies and native result clauses resolve without merging their roots", () => {
   const input = lateDefinition(true), checked = admitted(input), handler = input.receives["sample"]!;
-  const normal = bodyStructure(checked, handler, "sample")!, replacement = bodyStructure(checked, handlerBranch(handler, { reason: "old-sample" })!, "sample")!;
+  const normal = bodyStructure(checked, handler, "sample")!, replacement = bodyStructure(checked, handlerBranch(checked, handler, { reason: "old-sample" })!, "sample")!;
   expect([normal.frame.kind, replacement.frame.kind]).toEqual(["handler", "replacement"]);
   expect(normal.id).not.toBe(replacement.id);
+  expect(normal.row).toBe(replacement.row);
+  const branch = handlerBranch(checked, handler, { reason: "old-sample" })!;
+  expect(branch).toBe(handlerBranch(checked, handler, { reason: "old-sample" }));
+  expect(bodyStructure(checked, { ...branch }, "sample")).toBeNull();
+  expect(handlerBranch(checked, { ...handler }, { reason: "old-sample" })).toBeNull();
+  expect(handlerBranch(checked, handler, { reason: "another-reason" })).toBeNull();
   const nativeInput = structuredClone(gate), mark = nativeInput.acts["enter"]!.sends[0]!;
   if (!("code" in mark)) return expect.fail("expected send mark");
   mark.result.applied = [{ code: "clause", row: "P18" }];
   nativeInput.outcomes["probe"]!.send = { code: "probe-send", row: "P18", result: { applied: [{ code: "clause", row: "P18" }] } };
+  nativeInput.acts["enter-alias"] = nativeInput.acts["enter"]!;
+  nativeInput.outcomes["probe-alias"] = nativeInput.outcomes["probe"]!;
   const native = validateDefinition(nativeInput, PROPOSED_BOUNDS, undefined, { platform: true });
   if (!native.ok) return expect.fail(JSON.stringify(native.problems));
   const body = bodyStructure(native.definition, nativeInput.acts["enter"]!, "enter")!;
@@ -147,6 +166,13 @@ test("replacement bodies and native result clauses resolve without merging their
   expect(sent?.category === "send" && sent.future.map(link => link.clause)).toEqual(["applied", "refused"]);
   const capturedGrant = declarationOf(native.definition).acts["enter"]!.grant;
   expect(nativeMark(native.definition, capturedGrant, "grant")).toEqual(nativeMark(native.definition, nativeInput.acts["enter"]!.grant, "grant"));
+  const aliasGrant = nativeMark(native.definition, declarationOf(native.definition).acts["enter-alias"]!.grant, "grant")!;
+  expect(nativeBoundaryOfMark(native.definition, aliasGrant, "grant")?.owner).toBe(namedRow(native.definition, "act", "enter-alias")?.id);
+  expect(nativeBoundaryOfMark(native.definition, aliasGrant, "grant")?.path).toBe("acts.enter-alias.grant");
+  const aliasOutcome = nativeOutcomes(native.definition)["probe-alias"]!;
+  expect(nativeBoundaryOfMark(native.definition, aliasOutcome, "outcome")?.owner).toBe(namedRow(native.definition, "outcome", "probe-alias")?.id);
+  expect(nativeBoundaryOfMark(native.definition, aliasOutcome.send!, "send")?.owner).toBe(namedRow(native.definition, "outcome", "probe-alias")?.id);
+  expect(nativeBoundaryOfMark(native.definition, aliasOutcome.send!, "send")?.path).toBe("outcomes.probe-alias.send");
   const separate = validateDefinition(nativeInput, PROPOSED_BOUNDS, undefined, { platform: true });
   if (!separate.ok) return expect.fail(JSON.stringify(separate.problems));
   expect(() => nativeMark(separate.definition, capturedGrant, "grant")).toThrow("not captured");
@@ -166,6 +192,9 @@ test("compiled data owns its inputs and cannot be borrowed through a copied vali
   expect(declaration.acts["edit"]).not.toBe(act);
   expect(Object.isFrozen(declaration.acts["edit"]!.fields)).toBe(true);
   expect(() => declarationOf({ ...first })).toThrow("not admitted");
+  expect(rowOf(second, body.row.id)).toBeNull();
+  expect(() => checkedRow(second, body.row)).toThrow("another validation");
+  expect(() => checkedRow(first, { ...body.row })).toThrow("another validation");
   expect(nativeMark(first, {}, "grant")).toBeNull();
   expect(() => nativeMark({ ...first }, "ordinary-action", "grant")).toThrow("no admitted definition");
   expect(() => nativeMark(first, { code: "uncaptured", row: "missing" }, "grant")).toThrow("not captured");

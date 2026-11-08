@@ -5,6 +5,7 @@ import type { Underived } from "../validate/capability.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { immutable, type Phase } from "./model.ts";
 import { finishStructure, noteFrame, recordResolution } from "./structure.ts";
+import { currentRow, type RowIdentity } from "./rows.ts";
 
 export type ReadType = { readonly kind: "declared"; readonly type: FieldType }
   | { readonly kind: "native"; readonly mark: TypeMark } | { readonly kind: "unknown" };
@@ -81,12 +82,13 @@ function validation(d: Defining): ReadValidation {
 export interface ReadContext {
   readonly validation: ReadValidation;
   readonly kind: string | null;
+  readonly row: RowIdentity | null;
   readonly clause: boolean;
   readonly handler: Readonly<{ update: boolean; under: string | null }> | null;
   readonly senderKind: string | null;
 }
 function contextOf(d: Defining, ctx: Ctx): ReadContext {
-  return Object.freeze({ validation: validation(d), kind: ctx.kind, clause: ctx.clause,
+  return Object.freeze({ validation: validation(d), kind: ctx.kind, row: currentRow(d), clause: ctx.clause,
     handler: ctx.handler ? Object.freeze({ ...ctx.handler }) : null, senderKind: ctx.senderKind ?? null });
 }
 export interface ReadSite { readonly path: string; readonly phase: Phase; readonly context: ReadContext; readonly type: ReadType }
