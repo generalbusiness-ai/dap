@@ -208,7 +208,7 @@ test("compiled data owns its inputs and cannot be borrowed through a copied vali
   if (!("value" in effect) || effect.value.from === null || !("time" in effect.value.from)) return expect.fail("expected commit time");
   effect.value.from.time.plusSeconds = 999; act.guards = []; act.grant = "work.export";
   expect(windowOf(first, "lane", "edit")).toEqual({ seconds: 300, once: false });
-  input.timed["after-admission"] = { on: "note", in: ["draft"], deadline: "due", effects: [], attention: [] };
+  input.timed["after-admission"] = { on: "note", states: ["draft"], deadline: "due", effects: [], attention: [] };
   expect(ruleMayNot(first, true, "note", { effect: "value", slot: "due", value: null })).toBeNull();
   expect(JSON.stringify(structureOf(first))).toBe(before);
   expect(JSON.stringify(declarationOf(first))).toBe(written);
