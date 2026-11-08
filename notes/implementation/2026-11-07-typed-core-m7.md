@@ -104,7 +104,6 @@ The table hashes each retained output, report or exit file. Earlier records rema
 | S1 integration read-only Page probe | `node --input-type=module -e 'import { pageAssets } from "./apps/room/page/scripts/assets.mjs"; process.stdout.write(await pageAssets());'` | 0 | `28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320` |
 | Approved security inventory, 11 Node cases | `node --test scripts/security-entry-points.test.mjs` | 0 | `aff0e256a0c9e8a099aa00d2d265f00f24691ae129b5c20c6b008cab958e8cde` |
 | Four trace-source Page browser commands | `gh run view 42438618696 --json status,conclusion,headSha,url,jobs,createdAt,updatedAt,event,workflowName` | 0 | `1277996c65fa4245954773f10ce79a3da6765d74ded36d4c41e95ac487bc143b` |
-
 | Combined-source Page browser commands | `Page browser scripts`, run `42442926609` | 0 | `489c1aaa5b1814a8f54879bb7d3078a994ebe43a3a5f7fea43026452ae2b353c` |
 | First CI collection refusal | `first-collector.py` rejects incomplete step details | 1 | `2bb4a4ca293b8d1804d76fb5724758caf8fb2f0a72f6df9dc71ee42c3c37bfe1` |
 | Complete fresh CI records | Read uncached job-specific and attempt-specific records; no rerun | 0 | `0fbe16bbb1f70ff22fb0beae462aa89c5ce97138907497061f574c8c9dee5434` |
@@ -127,7 +126,7 @@ The gate manifest's SHA-256 is `f84d95de46f998e1faf465ec46e7923ff86e00269026d398
 
 The combined Page run was one explicit dispatch because incoming MCP paths do not match the workflow's push filter. Its first collector exited 1 before sealing: the run summary reported success while job details still showed pending steps. Later uncached job-specific and attempt-specific records both show every step completed successfully, including all four browser commands. The initial refusal stays retained and does not become a pass. No workflow reran. The combined CI manifest's SHA-256 is `e2bd49895f118b394fecc149b1b837a38fdf8dc9d8393e9a9501cd074951b684`.
 
-Main integration `b98090cd` includes S1's published landing and retains the exact gated tree. The following review commit changes only this note and the two evidence manifests. Runtime source, tests, dependencies, configuration and test scripts stay unchanged; the final input comparison records the exact review tree.
+Main integration `b98090cd` includes S1's published landing and retains the exact gated tree. After that integration, only this note and the two evidence manifests change. Runtime source, tests, dependencies, configuration and test scripts stay unchanged; the final input comparison records the exact review tree.
 
 ## Open limits
 
