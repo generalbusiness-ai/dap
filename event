@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4967a022f907cb496c4b4aad2b90e5a1a2850ec9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-s1-characterization-baseline.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6719364bb3e8143f78d5671817c738c35be1a90c","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/http.ts."}
