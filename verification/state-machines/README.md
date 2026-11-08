@@ -1,5 +1,7 @@
 # Verify the five priority state machines
 
+Review repairs await validation. The Editor model now includes failed receipt verification, but the charts and counts below still describe the original checked models at `13e704a47a`. Regenerate the Editor charts and run its check and model fault during the formal validation turn. Review the Effects correspondence after S4 lands, then run its check and source control.
+
 The 7 November survey lives in gitseq request `a99e32d9` at `attachments/full-report` and `attachments/priority-list`. It audited `e50d9eebb27f47d0f33549486751ab8bdce8de80`. This verification follows the five-item shortlist, not the full inventory. Gitseq request `3c6d197df2db35e3d1603f63acfa63953da7c1a0` tracks this delivery, under promise `5c826d7435eef1e7a2b8df3c7db6efdf94f4654b`.
 
 The models describe source at `8faa38dcf31855a0a6264e5912b58061b5eda223`. MCP, observation and editor refactors already landed after the survey. Each model checks a narrow safety obligation in the current implementation. None proves its entire subsystem.
@@ -16,7 +18,7 @@ TLC 1.7.4 exhaustively explored each finite model. All eight safety invariants p
 
 ## Run a subsystem check
 
-Use the project skill for the subsystem. Set `TLA2TOOLS` to the TLC 1.7.4 jar and `JAVA` to a Java executable. The runner verifies the jar's SHA-256 before it starts. The recorded environment used Temurin 25.0.5 and one TLC worker.
+Use the project skill for the subsystem. Reserve the single validation slot and use a dedicated worktree. Never run `check.mjs` or `control.mjs` from the shared checkout at `~/play/artroom`. Run no other validation or builds during that interval. Keep the checked worktree's source fixed, except for the control's recorded fault and restoration. Set `TLA2TOOLS` to the TLC 1.7.4 jar and `JAVA` to a Java executable. The runner verifies the jar's SHA-256 before it starts. The recorded environment used Temurin 25.0.5 and one TLC worker.
 
 ```sh
 node verification/state-machines/check.mjs Editor
@@ -26,7 +28,7 @@ Choose `Transport`, `Observation`, `Editor`, `Effects` or `Voice`. The runner re
 
 For diagrams, use `/statechart` with a scratch copy of the selected model, its config and `view.mjs`, and a new output folder. The skill supplies the current command. Render `chart.mmd` with Pele 1.9.0. Each SVG below comes from the checked model's generated Mermaid text.
 
-To repeat one source fault, run `control.mjs` with a subsystem and a new external evidence directory. Read `controls.json` first. Never run a control while another process edits that source. The script checks the baseline, changes one guard or dispatch, restores the exact original bytes, and checks the restored source. Inspect the failure assertion: an exception from another guard, a timeout or a missing test proves nothing.
+To repeat one source fault, run `control.mjs` with a subsystem and a new external evidence directory. Read `controls.json` first. Never run a control while another process edits that source. The script refuses a dirty checkout or a failed Git status before it creates evidence or runs a baseline. It then checks the baseline, changes one guard or dispatch, restores the exact original bytes, and checks the restored source. Inspect the failure assertion: an exception from another guard, a timeout or a missing test proves nothing.
 
 ```sh
 node verification/state-machines/control.mjs Editor "$HOME/play/artroom-evidence/$(date +%Y%m%d-%H%M%S)-editor-control"
@@ -38,11 +40,13 @@ node verification/state-machines/control.mjs Editor "$HOME/play/artroom-evidence
 |---|---|---|
 | Transport `FactoryReturns`, `Retire`, `LateFactoryDisposed` | `HttpGeneration.open`, `#discard`, and `graceful` | Retirement changes the owner before awaiting cleanup. The factory return checks that owner before opening. Disposal completion abstracts resource cleanup. |
 | Observation `Invalidate`, `ReadReturns`, `Discard` | `ObservationConnection.cancel`, `RefreshCoordinator.check` and `read`, and the guarded `emit` callbacks | JavaScript checks and publication run synchronously. The snapshot await separates request from return. Invalidation represents loss of view ownership or cancellation. |
-| Editor `Attempt`, `Accept`, `Verify`, `Advance`, `Refuse` | `transitionEdit` result cases | Each reducer call changes one value synchronously. The executor supplies receipt-verification evidence separately. |
+| Editor `Attempt`, `Accept`, `Verify`, `VerificationFailed`, `Advance`, `Refuse` | `transitionEdit` result cases | Each reducer call changes one value synchronously. The executor supplies receipt-verification evidence separately. |
 | Effects `Mark`, `Send`, `Restart`, `LateAnswer` | `Operations.#pass`, `#send`, `#offer`, and SQLite `markSent` | The durable mark precedes the queued outside call. Restart loses the local dispatch closure. The model admits a matching late answer conservatively even when it cannot tell whether the call left. |
 | Voice `SaveStart`, `Speak`, `Interrupt`, `Complete`, `VerifyReport`, `Clear` | `start`, `stopAudio`, restoration in `ready`, and `settle` | `SaveStart` represents successful durable write and exact readback. Interruption after persistence but before playback keeps uncertainty. Verified reporting abstracts the reporter's proof checks. |
 
 ## Scope and evidence
+
+The finite-model invariants mostly restate the guards in those models. They provide review checklists and diagrams; the real-source witnesses provide regression protection. Neither establishes refinement of the implementation.
 
 The source hashes detect drift. They do not prove that a handwritten model matches the implementation. Each skill names the functions that require review when source changes. Move its sync commit and hashes only after that review and the affected checks pass.
 

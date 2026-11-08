@@ -27,6 +27,6 @@
     "source": "apps/counter/browser/voice-controller.ts",
     "old": "if (marker) {",
     "new": "if (false) {",
-    "assertion": "true !== false"
+    "assertion": "voice-controller.test.ts:445:"
   }
 }

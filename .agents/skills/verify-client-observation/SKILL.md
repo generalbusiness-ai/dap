@@ -24,7 +24,9 @@ One read and one cancellation. A successful read represents a complete, context-
 
 Use TLC 1.7.4 and Java 11 or later outside the checkout. Set `TLA2TOOLS` to the installed jar and `JAVA` to the Java executable. The runner checks the jar digest before use. The recorded run used Temurin 25.0.5.
 
-From the repository root, run:
+Use a dedicated worktree and reserve the single validation slot before any check or control. Never run either command from the shared checkout at `~/play/artroom`. Run no other validation or builds during that interval. Keep the checked worktree's source fixed, except for the control's recorded fault and restoration. The control refuses a dirty checkout or an unreadable Git status.
+
+From the dedicated worktree root, run:
 
 ```sh
 node verification/state-machines/check.mjs Observation
