@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "qualification": "Actual branch workflow after push; no dispatch, rerun or local browser substitute. The exact source head and tree match the successful workflow; only the explicitly listed untracked implementation note and focused-evidence manifest are pending in the checkout. No runtime source changed.",
+  "sourceHead": "6e68b26f3053b7a1ae0a09a962f1f11290311c91",
+  "sourceTree": "eb9cd73114093a25bf72d6ae2b3cf3d305af93ff",
+  "fileCount": 6,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-page-ci",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 391,
+          "sha256": "30c9fe7ae1227cc6953125119dbea70c2dc18d0daed78626a47024f0cbaf0f73"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2897,
+          "sha256": "1c7f6f85a07bdd0c00545f7eccada8fa635eab536ba2e8c4a04ef05689257280"
+        },
+        {
+          "path": "result.json",
+          "bytes": 841,
+          "sha256": "6fac40b95a63d61715f3b7cc79a51803d04e30bf5069e30383a70207e54b06ec"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2704,
+          "sha256": "86b7c5a2f9b49d7b9ddd95059ad7034f8d65f21e4fbc3200b60dea797e7579b4"
+        },
+        {
+          "path": "tracked-tree.txt",
+          "bytes": 444844,
+          "sha256": "84bb7e6efbe9acab8438a8f80b10de67f5f59d245dd6cacadc5caac91ca85a28"
+        },
+        {
+          "path": "workflow.yml",
+          "bytes": 2855,
+          "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+        }
+      ]
+    }
+  ]
+}
