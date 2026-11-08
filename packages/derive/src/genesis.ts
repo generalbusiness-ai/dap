@@ -17,7 +17,10 @@ import { deliveryCauseDigest, intentDigest, isDigest, isIncarnation, isSeed, mes
 import { judgeDelivery, reasonOf, sentBy, type DeliveryContext } from "./delivery.ts";
 import { creationFields, isEntryOf, isIntent, readFacts, readFields, textsNamed, useOf, type Texts } from "./fields.ts";
 import type { Fetched, Judging } from "./guards.ts";
-import { derive, giving } from "./handlers.ts";
+import { giving } from "./handlers.ts";
+import { executeBody } from "./program/body.ts";
+import { namedBody } from "./program/structure.ts";
+import { declarationOf } from "./program/declaration.ts";
 import { withinCounts } from "./draws.ts";
 import { fieldOutsideType, grantByRule, unjudged, type JudgedInput } from "./marks.ts";
 import { directoryOf } from "./sends.ts";
@@ -43,7 +46,7 @@ export interface Creation { name: ScopeId; inc: Incarnation; to: Seed; from: Fac
  * a historical replay answer: birth requires presence, while replay still
  * has to recover the payload or prove the later redaction. */
 export function genesisBodiesPresent(definition: ValidDefinition, creation: SignedIntent, texts?: Texts): boolean {
-  return !definition.declared.capacity || textsNamed(own(definition.declared.acts, definition.declared.genesis)!.fields, creation.intent.fields).every(digest => texts?.(digest) !== undefined);
+  return !declarationOf(definition).capacity || textsNamed(own(declarationOf(definition).acts, declarationOf(definition).genesis)!.fields, creation.intent.fields).every(digest => texts?.(digest) !== undefined);
 }
 
 /** The name that the creation register's definition states (section 7.1; authority note, section 12.1). */
@@ -131,7 +134,7 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
     // The register is created by an `install` intent, under its own definition and no other. A directory with no creator is the
     // first delivery's stand-in, by a `found` intent. No other kind of scope has no creator.
     const asks = seed.kind === "register" ? "install" : seed.kind === "directory" ? "found" : null;
-    if (seed.creator !== null || asks === null || (seed.kind === "register") !== (definition.declared.name === REGISTER) || seed.ordinal !== 0 || intentDigest(intent) !== seed.cause) return unverified("the seed is not the one this creation intent asks for");
+    if (seed.creator !== null || asks === null || (seed.kind === "register") !== (declarationOf(definition).name === REGISTER) || seed.ordinal !== 0 || intentDigest(intent) !== seed.cause) return unverified("the seed is not the one this creation intent asks for");
     if (intent.to !== null || intent.kind !== asks || intent.on !== null || Object.keys(intent.expected).length > 0) return { result: "refused", reason: "bad-intent", detail: `a creation intent has kind ${asks}, and names no scope and no item` };
     const now = timeMs(clock.reading)!;
     const notAfter = timeMs(intent.notAfter)!;
@@ -155,7 +158,7 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
     (child ? [{ n: 0, to: child.from.at, message: { class: "result", of: { from: child.from, n: child.n }, outcome, ...(reason ? { reason } : {}) } }] : []);
   // Section 4.1: the genesis states its act kind, from the definition that the scope pins. No sender supplies it. A refused genesis holds it too.
   const input = (decision: "applied" | "refused") =>
-    ({ type: "genesis", seed, inc: asked.inc, kind: definition.declared.genesis, "founding": creation, source: child?.from ?? null, n: child?.n ?? null, message: child?.message ?? null, decision }) as const;
+    ({ type: "genesis", seed, inc: asked.inc, kind: declarationOf(definition).genesis, "founding": creation, source: child?.from ?? null, n: child?.n ?? null, message: child?.message ?? null, decision }) as const;
   const sourceUse = source ? [useOf(source.fact, source.entry)] : [];
   /**
    * Section 7.2: a refused genesis is written, sends its `refused` result and
@@ -173,7 +176,7 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
 
   // The genesis act, with the opener's parties from the creation message, or with the creation intent's fields. It has no signer:
   // nobody signs for a scope that does not exist yet, and the creation rule is the authority note's.
-  const act = own(definition.declared.acts, definition.declared.genesis)!;
+  const act = own(declarationOf(definition).acts, declarationOf(definition).genesis)!;
   const given = creation ? creation.intent.fields : creationFields(child!.message, child!.from, act.fields);
   const read = given ? readFields(act.fields, given, bounds) : null;
   if (!read?.ok) return refuse({ code: "bad-field" });
@@ -199,13 +202,13 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
   const signer = passed?.pass && passed.member ? { member: passed.member, principal: null } : null;
 
   const j: Judging = {
-    view, definition, bounds, clock, scope: { at, creator: seed.creator }, self: 0, kind: definition.declared.genesis, fields: named.fields, fieldTypes: act.fields,
+    view, definition, bounds, clock, scope: { at, creator: seed.creator }, self: 0, kind: declarationOf(definition).genesis, fields: named.fields, fieldTypes: act.fields,
     subjects: new Map(), signer, facts: named.facts, prepared: context.prepared, used: [], asked: context.asked, capabilities: context.capabilities,
     platform: context.platform, judged, ran: clocked, source: source ?? undefined,
   };
   // A child's result is at ordinal 0; the sends its act declares follow. Each scope a genesis creates has that genesis's own seed digest as its cause.
   // Section 6.6: the scope records its directory with this entry: its creator, or the directory that its creator put in the creation.
-  const ran = derive(j, act, act.on, seedDigest(seed), child ? 1 : 0, directoryOf({ seed, message: child?.message ?? null }));
+  const ran = executeBody(j, namedBody(definition, "act", declarationOf(definition).genesis, "act"), seedDigest(seed), child ? 1 : 0, directoryOf({ seed, message: child?.message ?? null }));
   if (ran.result === "unavailable") return ran;
   if (ran.result === "refused") return refuse(reasonOf(ran), uses, ran.prepared);
   // No item exists before a genesis, so no transition is due (section 5.2, step 6.3), and no entry precedes it, so the clock is not behind.

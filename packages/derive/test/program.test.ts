@@ -3,7 +3,8 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type ActType, type DeclaredDefinition, type FieldType, type ItemType } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
 import { room } from "../../../examples/grow/room.ts";
-import { derive, type Ran } from "../src/handlers.ts";
+import { executeBody, type Ran } from "../src/program/body.ts";
+import { namedBody } from "../src/program/structure.ts";
 import { ruleInput, type Judging } from "../src/guards.ts";
 import { newItem } from "../src/fold.ts";
 import { MemoryState } from "../src/state.ts";
@@ -58,12 +59,12 @@ async function water(amount = 400, time = 101, policyPresent = true): Promise<Ju
   return j;
 }
 function agree(j: Judging, body = program(j.definition, j.kind), first = 0): Ran {
-  const legacy = { ...j, used: [], ...(j.asked === undefined ? {} : { asked: [] }), ran: { clock: j.ran?.clock === true } };
-  const act = j.definition.declared.acts[j.kind]!, expected = derive(legacy, act, act.step === "open" ? act.on : null, cause, first);
+  const runtime = { ...j, used: [], ...(j.asked === undefined ? {} : { asked: [] }), ran: { clock: j.ran?.clock === true } };
+  const expected = executeBody(runtime, namedBody(j.definition, "act", j.kind, "act"), cause, first);
   const plain = evaluate(body, j, first), traced = evaluate(body, j, first, 10000), exhausted = evaluate(body, j, first, 0);
   expect(plain.ran).toEqual(expected); expect(traced.ran).toEqual(expected); expect(exhausted.ran).toEqual(expected);
   expect(canonicalBytes(exhausted.ran)).toEqual(canonicalBytes(plain.ran));
-  expect(traced.asked).toEqual(legacy.asked ?? []); expect(traced.primitives).toEqual(plain.primitives); expect(exhausted.primitives).toEqual(plain.primitives);
+  expect(traced.asked).toEqual(runtime.asked ?? []); expect(traced.primitives).toEqual(plain.primitives); expect(exhausted.primitives).toEqual(plain.primitives);
   expect(j.used).toEqual([]); if (j.asked) expect(j.asked).toEqual([]);
   expect(exhausted.truncated).toBe(traced.trace.length > 0);
   return plain.ran;

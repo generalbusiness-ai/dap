@@ -7,8 +7,8 @@
  *
  * This file holds the judges of an act and of a timed transition, and what
  * every judge returns. `genesis.ts`, `delivery.ts` and `settle.ts` hold the
- * others. Each builds a `Judging`, derives the written forms with `derive`
- * or `evaluateEffects`, and returns a `Draft`.
+ * others. Each builds a `Judging`, executes its admitted body instructions,
+ * and returns a `Draft`.
  */
 
 import { nativeMark } from "./program/native.ts";
@@ -18,11 +18,12 @@ import type { Signer } from "./attribution.ts";
 import { withinCounts } from "./draws.ts";
 import { evaluateEffects } from "./effects.ts";
 import { namedBody } from "./program/structure.ts";
+import { executeBody } from "./program/body.ts";
 import { declarationOf } from "./program/declaration.ts";
 import { isIntent, presentedTypes, readFacts, readFields, type Reading } from "./fields.ts";
 import { covers } from "./grant.ts";
 import type { Judging } from "./guards.ts";
-import { alsoItems, derive, giving } from "./handlers.ts";
+import { alsoItems, giving } from "./handlers.ts";
 import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, placeWithoutValue, placesOf, retainedOf, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
 import { listedBy, rowsOfAct, settle, type Listed, type Needed, type Observing, type Settled } from "./observes.ts";
 import type { Item, StateView } from "./state.ts";
@@ -206,7 +207,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   if (!scope) return { result: "unavailable", reason: "unavailable" };
   const refused = (reason: RefusalReason, detail: string): Refused => ({ result: "refused", reason, detail, judgedAt: scope.head });
   const { clock, bounds } = context;
-  const { declared } = definition;
+  const declared = declarationOf(definition);
 
   // The signature and the shape are immutable facts about the input (section 5.1). A verifier needs them judged here too.
   if (!verifySignedIntent(signed) || !isIntent(signed.intent)) return refused("bad-intent", "not a signed intent");
@@ -379,7 +380,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   };
 
   // Guards, then effects, then sends, then the bound on the type it opens, as for a handler. The cause of a scope it creates is the intent's digest.
-  const ran = derive(j, act, act.step === "open" ? act.on : null, digest);
+  const ran = executeBody(j, namedBody(definition, "act", intent.kind, "act"), digest);
   if (ran.result === "unavailable") return ran;
   if (ran.result === "refused") return { ...refused(ran.reason, ran.detail), ...(ran.name === undefined ? {} : { name: ran.name }) };
 

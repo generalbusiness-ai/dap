@@ -3,6 +3,7 @@
  * derived from the items. No list of pending transitions is kept.
  */
 
+import { declarationOf } from "./program/declaration.ts";
 import type { Timestamp } from "@generalbusiness/dap-contract";
 import type { StateView } from "./state.ts";
 import { timeMs } from "./time.ts";
@@ -23,9 +24,9 @@ export function nextDue(view: StateView, definition: ValidDefinition, asOf: Time
   const limit = timeMs(asOf);
   if (limit === null) throw new Error("asOf is a timestamp");
   let best: { due: Due; ms: number } | null = null;
-  for (const [name, rule] of Object.entries(definition.declared.timed)) {
+  for (const [name, rule] of Object.entries(declarationOf(definition).timed)) {
     // A rule's states are live, and a type's `max` bounds its live items, so this one page is all of them.
-    for (const item of view.page(rule.on, rule.states, null, own(definition.declared.items, rule.on)!.max).items) {
+    for (const item of view.page(rule.on, rule.states, null, own(declarationOf(definition).items, rule.on)!.max).items) {
       const due = own(item.values, rule.deadline);
       const ms = timeMs(due);
       if (ms === null || ms > limit) continue;

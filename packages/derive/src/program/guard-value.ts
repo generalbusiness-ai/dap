@@ -1,4 +1,5 @@
 /** Execute the closed admitted guard vocabulary over shared judgment and paging leaves. */
+import { declarationOf } from "./declaration.ts";
 import type { MemberRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { capabilityGuard } from "../capability.ts";
@@ -114,7 +115,7 @@ function executeGuard(j: Judging, body: BodyStructure, node: GuardNode, elements
       if (ref === undefined || ref === null) return "fail";
       const local = isLocalId(ref), fetched = local ? j.own?.(ref) : isFactRef(ref) ? j.facts.get(ref.hash) : undefined;
       if (!fetched) return local ? "unavailable" : "dependency-unavailable";
-      const kind = kindOf(fetched.entry), under = "under" in fetched ? fetched.under : j.definition.declared.name;
+      const kind = kindOf(fetched.entry), under = "under" in fetched ? fetched.under : declarationOf(j.definition).name;
       if (kind === null || !code.type.kind.includes(kind) || under !== code.type.under) return "fail";
       if (code.source.op !== "field") return "pass";
       return ok(code.where.every(pair => equal(j, isLocalId(ref) || isFactRef(ref) ? entryValue(j, ref, isLocalId(ref) ? j.scope.at : ref.at, { op: "field", name: pair.name }) : null, read(pair.value))));

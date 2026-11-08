@@ -10,6 +10,7 @@
  * nothing and is judged by no rule.
  */
 
+import { declarationOf } from "./program/declaration.ts";
 import type { Effect, FieldType, FieldValue, Mark, MarkMost, MemberRef, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { attribution, byMember, historyOf } from "./attribution.ts";
 import { capabilityEffect } from "./capability.ts";
@@ -84,7 +85,7 @@ export function held(j: Judging, type: FieldType, value: unknown): FieldValue | 
     const fetched = local ? undefined : j.source && same(j.source.fact, value) ? j.source : j.facts.get(value.hash);
     const entry = kept?.hash === value.hash ? kept.entry : fetched && isEntryOf(fetched.entry, value) ? fetched.entry : null;
     const kind = entry && kindOf(entry);
-    const under = fetched ? fetched.under : j.definition.declared.name;
+    const under = fetched ? fetched.under : declarationOf(j.definition).name;
     return kind && type.kind.includes(kind) && under === type.under ? (local ? value.seq : value) : undefined;
   }
   return isValue(type, value, j.bounds) ? (value as FieldValue) : undefined;
@@ -92,7 +93,7 @@ export function held(j: Judging, type: FieldType, value: unknown): FieldValue | 
 
 /** The slot that holds the end of a hold of that type: the deadline of the timed rule that ends it, of which a hold type has one (section 6.8). */
 const endOf = (definition: ValidDefinition, type: string): string | undefined =>
-  Object.values(definition.declared.timed).find((rule) => rule.on === type && rule.effects.some((e) => "hold" in e && e.hold.do === "end"))?.deadline;
+  Object.values(declarationOf(definition).timed).find((rule) => rule.on === type && rule.effects.some((e) => "hold" in e && e.hold.do === "end"))?.deadline;
 
 /** The members of `Effect` that a rule returns (section 6.1). Every other member is a fault of the rule. */
 const BY_RULE: readonly string[] = ["open", "state", "party", "list", "ref", "value", "operation", "attempt"];
@@ -141,7 +142,7 @@ export function joinReturnedEffects(j: Judging, mark: Mark): EffectResult {
 }
 
 function executeEffects(j: Judging, instructions: readonly EffectInstruction[], attention: readonly AttentionInstruction[], opens: string | null): EffectResult {
-  const items = j.definition.declared.items;
+  const items = declarationOf(j.definition).items;
   const working = new Map(j.subjects);
   const effects: Effect[] = [];
   /** The items that a rule's effects change and that are no subject of the row, by ID, as the effects left them. The item that a rule opens is one. */
@@ -493,7 +494,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const k = effects.filter((effect) => effect.effect === "operation").length;
     const derived = j.capabilities.workspace(j.view, j.definition, j.self, k, holds, (id) => [...working.values()].find((held) => held.id === id) ?? null);
     // Section 6.1, "In the commit": code that returns more than it declared has a fault, and the input is not judged.
-    const listed = new Set(j.definition.declared.capabilities.map(c => `${c.name}@${c.version}`));
+    const listed = new Set(declarationOf(j.definition).capabilities.map(c => `${c.name}@${c.version}`));
     const most = j.capabilities.maxima?.filter((m) => m.form === "workspace" && listed.has(m.capability)).reduce((n, m) => n + m.effects, 0);
     if (most !== undefined && derived.length > holds.length * most) throw new Error(`the workspace of ${holds.length} holds declares at most ${holds.length * most} effects, and it returned ${derived.length}`);
     effects.push(...derived);

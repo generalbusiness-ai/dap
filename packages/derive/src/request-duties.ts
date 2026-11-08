@@ -1,4 +1,5 @@
 /** Transfer a send form's existing Amount to the request it actually made. */
+import { declarationOf } from "./program/declaration.ts";
 import type { Entry, ReceiveType } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { bound } from "./handlers.ts";
@@ -15,8 +16,8 @@ export function requestReservation(definition: ValidDefinition, entry: Entry, n:
   const input = entry.input;
   let body: BodyStructure | null = null;
   if (input.type === "act" || input.type === "genesis") {
-    const kind = input.type === "act" ? input.signed.intent.kind : definition.declared.genesis;
-    const act = own(definition.declared.acts, kind);
+    const kind = input.type === "act" ? input.signed.intent.kind : declarationOf(definition).genesis;
+    const act = own(declarationOf(definition).acts, kind);
     body = act ? bodyStructure(definition, act, kind) : null;
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
     const binding = bound(definition, input.message, input.from);

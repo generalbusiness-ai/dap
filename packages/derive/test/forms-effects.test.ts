@@ -17,8 +17,9 @@ const { rita, una, vic, paul, sam } = keys;
 import { cards } from "./definition-corpus/forms-effects-data.ts";
 import { clockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
 import { clockScene } from "./fixtures-clock-cutover.ts";
-import { derive, runClause } from "../src/handlers.ts";
-import { bodyStructure } from "../src/program/structure.ts";
+import { runClause } from "../src/handlers.ts";
+import { bodyStructure, namedBody } from "../src/program/structure.ts";
+import { executeBody } from "../src/program/body.ts";
 import { otherLane, t } from "./fixtures-entry.ts";
 
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
@@ -163,10 +164,10 @@ const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Re
 test("M5: a nested constant subject in if skips effects and attention while unbound and applies both when bound", () => {
   const checked = valid(validateDefinition(unboundConditionData(), PROPOSED_BOUNDS));
   const s = new Scope(checked), p = s.did(rita, "add", fields({ text: "before" })).seq;
-  const parent = s.did(una, "add").seq, act = checked.declared.acts["probe"]!;
+  const parent = s.did(una, "add").seq;
   // Production admission and body execution; the fixture supplies the resolved subjects and authority.
-  const without = derive(judging(s, "probe", { on: p }), act, null, s.head.hash);
-  const withParent = derive(judging(s, "probe", { on: p, "also.parent": parent }), act, null, s.head.hash);
+  const without = executeBody(judging(s, "probe", { on: p }), namedBody(s.definition, "act", "probe", "act"), s.head.hash);
+  const withParent = executeBody(judging(s, "probe", { on: p, "also.parent": parent }), namedBody(s.definition, "act", "probe", "act"), s.head.hash);
   expect([without, withParent]).toEqual([
     { result: "ran", effects: [], sends: [], prepared: [], judgesTime: false, settles: false },
     { result: "ran", effects: [
@@ -187,8 +188,11 @@ test("M5: admitted effect and attention instructions keep their captured meaning
   clock.value.from.time.plusSeconds = 999;
   helper.party.from = { const: una.member };
   act.attention[0]!.notify.reason = "mutated";
+  const j = judging(s, "edit", { on: p }), body = namedBody(checked, "act", "edit", "act")!;
+  expect(() => executeBody(j, { ...body }, s.head.hash)).toThrow("another validation");
+  expect(() => executeBody({ ...j, kind: "add" }, body, s.head.hash)).toThrow("another body");
   // Production body execution over fixture state; no entry is sealed here.
-  const actual = derive(judging(s, "edit", { on: p }), act, null, s.head.hash);
+  const actual = executeBody(j, body, s.head.hash);
   expect(actual, JSON.stringify(actual)).toEqual({
     result: "ran", effects: [
       { effect: "value", item: p, slot: "text", value: "captured" },

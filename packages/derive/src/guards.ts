@@ -5,6 +5,7 @@
  * evidence that the rest of an enumeration could overturn.
  */
 
+import { declarationOf } from "./program/declaration.ts";
 import type { Bounds, Entry, FactRef, FieldType, FieldValue, Guard, MemberRef, Prepared, Reason, ScopeRef, Subject, UnavailableReason, Digest } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
@@ -137,7 +138,7 @@ export function preparedRule(j: Judging, rule: string): { result: GuardResult; i
   const digest = digestBytes(canonicalBytes(input));
   if (j.asked) {
     // Preparation: the result is not known yet, so the guard is passed over and the guards after it are met.
-    if (!j.asked.some((a) => a.rule === rule && a.digest === digest)) j.asked.push({ rule, source: own(j.definition.declared.rules, rule)!, input, digest });
+    if (!j.asked.some((a) => a.rule === rule && a.digest === digest)) j.asked.push({ rule, source: own(declarationOf(j.definition).rules, rule)!, input, digest });
     return { result: "pass", input, digest };
   }
   // Section 5.2, step 6.4: a rule's result from preparation is reused only when it was prepared over these inputs.
