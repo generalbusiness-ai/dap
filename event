@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:78a2db365704a21ec17e31fe882f720c0f15261d","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/oauth-http.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:83ca9d034411b8736e9973af389d3c968ef9f29b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-s1-f1-cleanup-focused.manifest.json."}
