@@ -86,8 +86,8 @@ export class OAuthHttpLayers {
   }
   #close(layer: OAuthHttpLayer, disposition: "graceful" | "detach" = "graceful"): Promise<void> {
     const owner = layer.generation;
-    if (owner.closed) return owner.disposed();
-    const done = disposition === "detach" ? (owner.detach(), Promise.resolve())
+    const done = owner.closed ? owner.disposed()
+      : disposition === "detach" ? (owner.detach(), Promise.resolve())
       : owner.graceful();
     return done.finally(() => { if (this.#layers.get(layer.candidate.id) === layer) this.#layers.delete(layer.candidate.id); });
   }
