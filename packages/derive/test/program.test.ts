@@ -156,8 +156,8 @@ describe("typed derivation program", () => {
       const definition = valid(validateDefinition(input, bounds, undefined, { platform: true })), body = program(definition, "edit"), j = context(definition, "edit");
       j.subjects = new Map([["on", item(definition, "note", 1)]]);
       let nativeCalls = 0, capabilityCalls = 0;
-      j.platform = { named: "platform:coverage-refusal@1" as PlatformDefinition, rules: { first: { place: "guard", run() { nativeCalls++; return { holds: true as const }; } } } };
-      j.capabilities = { implements: () => true, guard() { capabilityCalls++; return null; }, effect() { throw new Error("no effect may run"); } };
+      j.platform = { named: "platform:coverage-refusal@1" as PlatformDefinition, rules: { first: { place: "guard", refusals: [], run() { nativeCalls++; return { holds: true as const }; } } } };
+      j.capabilities = { implements: () => true, guard() { capabilityCalls++; return true as const; }, effect() { throw new Error("no effect may run"); } };
       j.judged = { type: "act", signed: signIntent({ v: 1, to: directory, actor: keys.rita.key, kind: "edit", on: 1, expected: {}, fields: {}, idempotencyKey: "coverage", notAfter: t(200) }, keys.rita.secret), grant: null, presented: {} };
       const nodes = body.nodes.filter((node): node is GuardNode => node.category === "guard");
       const observed = observeProgram(definition, 100, () => {

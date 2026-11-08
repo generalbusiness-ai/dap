@@ -1,6 +1,8 @@
 # Retire the prototype and retain its witnesses
 
-Status: draft under planner ruling `24e2a8d` and before-edit scope `6690335d`. This draft removes the five prototype modules and the dead timed-array adapter. M8 validation has not run for this checkpoint. S1 F1 completed its full gate before M8 takes the machine's validation slot. The earlier M8 checkpoints retain their own results and failures.
+Status: draft under planner ruling `24e2a8d` and before-edit scope `6690335d`. This draft removes the five prototype modules and the dead timed-array adapter. The first retirement pipeline at `3de1f230` passes the source compiler, then fails the test compiler on two callback fixture declarations. Grow and the test body remain unrun. The repair below changes only those declarations. The earlier M8 checkpoints retain their own results and failures.
+
+The Native fixture now supplies its required empty `refusals` list. The capability fixture returns its valid `true` result. Their callbacks must still remain uncalled at the refused boundary; all zero-count assertions remain. The original pipeline keeps actual exit 1. A follow-up must check exact production/configuration/tool equality before carrying its passed source compiler, then run the failed test compiler and both unreached stages. No complete retirement test result exists yet.
 
 ## One admitted program
 
