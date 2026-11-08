@@ -251,7 +251,7 @@ describe("attribution: its sources and its order (section 6.7)", () => {
       return { j, act, body: bodyStructure(checked, act, "probe")! };
     };
     const conditional = (forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}) => {
-      const { j, act, body } = transition(forms, bound, more);
+      const { j, body } = transition(forms, bound, more);
       return evaluateEffects(j, body, null);
     };
     expect([
