@@ -1,6 +1,6 @@
 # Assemble and verify the completed M8 program
 
-Status: the fresh full M8 gate passes at `d54c8842` with actual exit 0. All maintained stages pass, including 1,117 Native cases with two explicit skips. Three earlier full gates remain failed and retained. The archive cache repair has separate passing focused evidence. The exact-source Page workflow, independent source seal review, final review and landing remain due under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
+Status: the fresh full M8 gate passes at `d54c8842` with actual exit 0. All maintained stages pass, including 1,117 Native cases with two explicit skips. Three earlier full gates remain failed and retained. The archive cache repair has separate passing focused evidence. The exact-source Page workflow passes all four commands at `8bfe700f`. Independent source seal review, final review and landing remain due under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
 
 ## Assemble from the completed runtime
 
@@ -26,11 +26,11 @@ The outer focused observation is 2.469 seconds. The raw receipt keeps that inter
 
 The [maintained-assets manifest](evidence/2026-11-08-m8-maintained-assets.manifest.json) hashes to `276d5973396e7bc6ad074138d383eb426bcbcd6b9dea38780bbe65d9982b6a54`. It names 11 public files and inventories 53 read-only private originals in four units under `~/play/artroom-evidence/2026-11-08-m8-maintained-assets*` and `2026-11-08-m8-assets-focused*`. The originals retain the generator, generated files, tracked input comparisons, complete compiler logs, case reports and frozen plan.
 
-## Keep the final gate and workflow obligations
+## Retain the gate and workflow evidence
 
-The final full gate must cover the repaired runtime and committed generated module. Fetch `origin/main`, run the maintained `npm run gate` once at the frozen candidate, read its actual `gate.exit`, and retain complete terminal reports. The first full M8 gate below remains failed. Earlier focused and control evidence does not replace the due gate.
+The passing full gate below covers the repaired runtime and committed generated module. Its actual exit and complete terminal reports remain sealed. The three earlier full gates remain failed. Focused and control evidence supports the changed boundaries separately.
 
-The exact-source [Page browser workflow](../../.github/workflows/page-browser.yml) must then pass all four maintained commands:
+The exact-source [Page browser workflow](../../.github/workflows/page-browser.yml) passes all four maintained commands:
 
 ```sh
 node apps/room/page/test/screens.mjs
@@ -39,7 +39,7 @@ node --import tsx --no-warnings scripts/demo-captures.ts --recorded --claim-witn
 node --import tsx --no-warnings scripts/demo-captures.ts --recorded --label-witness --out /tmp/label-witness
 ```
 
-Keep its exact source head, job results and complete logs before review. The workflow retains its existing pinned scratch browser setup. This checkpoint claims no browser run, review approval, deployment or live-room acceptance. Independent review must cover the two M8 body seals, the completed program, witness retirement, generated assets and all preserved failures before the audited landing.
+The workflow record below retains the exact source head, job results and complete logs. The workflow uses its existing pinned scratch browser setup. Independent review must cover the two M8 body seals, the completed program, witness retirement, generated assets and all preserved failures before the audited landing. No deployment or live-room acceptance follows from these checks.
 
 ## Preserve the first failed gate and repair its causes
 
@@ -56,7 +56,7 @@ Scope `d9e2a399` records the repair before source edits. The unchanged `definiti
 
 The replay historical-index case creates definition copies with missing keyed metadata. M8 correctly refuses those unadmitted copies. Its repair uses the actual validated definition for every fold. Local state-writer stand-ins omit the second opening's index writes, or all index writes, before `View.putIndexed` records them. Every existing historical index, fixed count, visit order, deadline and future-row assertion stays unchanged. The admission identity guard and replay production source stay unchanged.
 
-Both repairs now pass the focused checks below. Fresh maintained assets also pass their owning checks. The production repair still requires a new full gate. The single-file test-only follow-up exception does not apply. Machine release `5c32466f` lets the planner deploy F1 main `8faa38dc`; builder starts no executable validation body during that deployment. Independent review must assess the failed gate and the later repair evidence together. The failed gate remains failed.
+At this checkpoint, both repairs pass the focused checks below, and fresh maintained assets pass their owning checks. The production repair requires a new full gate, recorded later in this note. The single-file test-only follow-up exception does not apply. Machine release `5c32466f` lets the planner deploy F1 main `8faa38dc`; builder starts no executable validation body during that deployment. Independent review must assess the failed gate and the later repair evidence together. The failed gate remains failed.
 
 ## Verify the repair and rebuild the Page
 
@@ -169,3 +169,27 @@ configuration and generated assets equal the gate head's bytes. The
 carries the gate result through that integration. This evidence note and
 manifest also change only documents. The exact-source Page workflow and
 independent review still remain due.
+
+## The exact-source Page workflow passes
+
+[Page run 42528596255](https://github.com/generalbusiness-ai/dap/actions/runs/42528596255)
+passes on its first attempt at `8bfe700fdaa2a3f5092f110ff177425d99001d1e`,
+tree `05aa12dbd33004f9a4195c0e324d989a4ab4508c`. Every job step succeeds,
+including screenshots, recorded demo captures, the create-room witness and
+the local-label witness. No workflow dispatch or rerun occurs.
+
+The [Page CI manifest](evidence/2026-11-08-m8-page-ci.manifest.json) hashes
+to `509118d4ae58c939859ce1c757814f9325ad954d325ae8cfa31b7ac82a49bee4`.
+It names four public files and inventories 21 read-only private files under
+`~/play/artroom-evidence/2026-11-08-m8-page-ci-42528596255`. The originals
+retain all observations, attempt-specific job records, individual job detail,
+the exact workflow source and the complete runner log.
+
+Only four documents separate the passing gate head `d54c8842` from the
+workflow head `8bfe700f`. The public source comparison records both tree
+hashes and confirms that every non-document Git object stays unchanged.
+This citation and manifest add only documents. The full gate and browser
+workflow therefore describe the final candidate's production source, tests,
+configuration and generated assets. Independent review must still assess
+the exact final head, including both body source seals and the retired paths.
+No local browser substitute or live-room acceptance claim follows from CI.
