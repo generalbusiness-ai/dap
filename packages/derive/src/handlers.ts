@@ -598,8 +598,10 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   if (!form || "index" in form) throw new Error(`entry ${origin.seq} declares no request at ordinal ${request.n}`);
   const marked = selected?.node.op === "native" ? selected.node.data : nativeMark(definition, form, "send");
   const written = marked ? null : (form as Exclude<SendForm, { index: unknown }>);
+  const clauses = (marked ? marked.result : "create" in written! ? written.create.result : "tell" in written! ? written.tell.result : written!.relate.result) as ResultClauses & { conflict?: readonly EffectForm[] };
   const structure = selected && originBody ? sendClauseStructure(definition, originBody, selected.node, clause)
     : clauseStructure(definition, form, clause, null, frame.kind);
+  if ((clauses[clause]?.length ?? 0) > 0 && !structure) throw new TypeError("result clause was not captured by its validation");
   const forms = structure ? bodyEffectForms(definition, structure) : [];
   // Revision 20, section 16.1: the rows of this clause, for the delivery of a result that runs it, under a definition whose data
   // states rows. A request that a rule gave states none: its mark holds its clauses, and no text gives a mark rows (I3 deltas,

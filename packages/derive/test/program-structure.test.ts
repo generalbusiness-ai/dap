@@ -151,6 +151,9 @@ test("replacement bodies and native result clauses resolve without merging their
   if (!("code" in mark)) return expect.fail("expected send mark");
   mark.result.applied = [{ code: "clause", row: "P18" }];
   nativeInput.outcomes["probe"]!.send = { code: "probe-send", row: "P18", result: { applied: [{ code: "clause", row: "P18" }] } };
+  nativeInput.acts["enter"]!.also["other"] = nativeInput.acts["enter"]!.also["ticket"]!;
+  nativeInput.acts["enter"]!.fields["otherNote"] = nativeInput.acts["enter"]!.fields["note"]!;
+  nativeInput.items["ticket"]!.values["otherNote"] = { ...nativeInput.items["ticket"]!.values["note"]! };
   nativeInput.acts["enter-alias"] = nativeInput.acts["enter"]!;
   nativeInput.outcomes["probe-alias"] = nativeInput.outcomes["probe"]!;
   const native = validateDefinition(nativeInput, PROPOSED_BOUNDS, undefined, { platform: true });
@@ -169,6 +172,16 @@ test("replacement bodies and native result clauses resolve without merging their
   const aliasGrant = nativeMark(native.definition, declarationOf(native.definition).acts["enter-alias"]!.grant, "grant")!;
   expect(nativeBoundaryOfMark(native.definition, aliasGrant, "grant")?.owner).toBe(namedRow(native.definition, "act", "enter-alias")?.id);
   expect(nativeBoundaryOfMark(native.definition, aliasGrant, "grant")?.path).toBe("acts.enter-alias.grant");
+  const metadata = declarationOf(native.definition), header = metadata.acts["enter"]!;
+  const selector = nativeMark(native.definition, header.also["other"], "also")!;
+  const field = nativeMark(native.definition, header.fields["otherNote"], "type")!;
+  const slot = nativeMark(native.definition, metadata.items["ticket"]!.values["otherNote"]!.of, "type")!;
+  expect(nativeBoundaryOfMark(native.definition, selector, "also")).toMatchObject({ path: "acts.enter.also.other", header: { kind: "also", name: "other" } });
+  expect(nativeBoundaryOfMark(native.definition, field, "type")).toMatchObject({ path: "acts.enter.fields.otherNote", header: { kind: "field", name: "otherNote" } });
+  expect(nativeBoundaryOfMark(native.definition, slot, "type")).toMatchObject({ path: "items.ticket.values.otherNote.of", header: { kind: "slot", slot: "value", name: "otherNote" } });
+  expect(selector).not.toBe(nativeMark(native.definition, header.also["ticket"], "also"));
+  expect(field).not.toBe(nativeMark(native.definition, header.fields["note"], "type"));
+  expect(slot).not.toBe(nativeMark(native.definition, metadata.items["ticket"]!.values["note"]!.of, "type"));
   const aliasOutcome = nativeOutcomes(native.definition)["probe-alias"]!;
   expect(nativeBoundaryOfMark(native.definition, aliasOutcome, "outcome")?.owner).toBe(namedRow(native.definition, "outcome", "probe-alias")?.id);
   expect(nativeBoundaryOfMark(native.definition, aliasOutcome.send!, "send")?.owner).toBe(namedRow(native.definition, "outcome", "probe-alias")?.id);

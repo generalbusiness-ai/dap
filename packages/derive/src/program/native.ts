@@ -5,7 +5,7 @@ import type { ValidDefinition } from "../validate/index.ts";
 import { immutable } from "./model.ts";
 import type { ReadValidation } from "./reads.ts";
 import { declarationOwner, declarationSource } from "./declaration.ts";
-import { currentRow, type RowIdentity } from "./rows.ts";
+import { currentHeader, currentRow, rowOf, type HeaderUse, type RowIdentity, type RowRead } from "./rows.ts";
 
 interface NativeMarks {
   readonly grant: GrantMark;
@@ -23,10 +23,11 @@ export interface NativeBoundary<K extends MarkKind = MarkKind> {
   readonly path: string;
   readonly body: Readonly<object> | null;
   readonly owner: RowIdentity | null;
+  readonly header: HeaderUse | null;
   readonly mark: NativeMarks[K];
   readonly dependencies: "unknown";
 }
-interface Pending { readonly id: Readonly<object>; readonly kind: MarkKind; readonly path: string; readonly body: Readonly<object> | null; readonly owner: RowIdentity | null; readonly source: object }
+interface Pending { readonly id: Readonly<object>; readonly kind: MarkKind; readonly path: string; readonly body: Readonly<object> | null; readonly owner: RowIdentity | null; readonly header: HeaderUse | null; readonly source: object }
 const pending = new WeakMap<Defining, Pending[]>();
 const outcomeNames = new WeakMap<Defining, Map<string, { readonly source: object; readonly owner: RowIdentity | null }>>();
 interface Admitted {
@@ -45,7 +46,16 @@ const admitted = new WeakMap<ValidDefinition, Admitted>();
 export function recordNative(d: Defining, kind: MarkKind, path: string, source: object, body: Readonly<object> | null): Readonly<object> {
   const all = pending.get(d) ?? [];
   const id = Object.freeze({});
-  all.push({ id, kind, path, source, body, owner: currentRow(d) }); pending.set(d, all); return id;
+  all.push({ id, kind, path, source, body, owner: currentRow(d), header: currentHeader(d) }); pending.set(d, all); return id;
+}
+function headerSource(row: RowRead, use: HeaderUse): unknown {
+  switch (use.kind) {
+    case "grant": if (row.kind === "act") return row.declaration.grant; break;
+    case "also": if (row.kind === "act" || row.kind === "receive") return row.declaration.also[use.name]; break;
+    case "field": if (row.kind === "act" || row.kind === "receive") return row.declaration.fields[use.name]; break;
+    case "slot": if (row.kind === "item") return use.slot === "ref" ? row.declaration.refs[use.name]?.to : row.declaration.values[use.name]?.of; break;
+  }
+  throw new TypeError("Native header has no matching declaration row");
 }
 /** Final admission owns metadata without following a rejected declaration. */
 export function bindNative(d: Defining, definition: ValidDefinition, validation: ReadValidation): void {
@@ -55,9 +65,16 @@ export function bindNative(d: Defining, definition: ValidDefinition, validation:
   const owners = new WeakMap<object, RowIdentity>();
   const boundaries = Object.freeze((pending.get(d) ?? []).map(value => {
     const boundary: NativeBoundary = Object.freeze({ id: value.id, validation, kind: value.kind,
-      path: value.path, body: value.body, owner: value.owner, mark: immutable(value.source, origins) as NativeMarks[MarkKind], dependencies: "unknown" });
+      path: value.path, body: value.body, owner: value.owner, header: value.header, mark: immutable(value.source, origins) as NativeMarks[MarkKind], dependencies: "unknown" });
     sources.set(value.source, Object.freeze([...(sources.get(value.source) ?? []), boundary]));
     identities.set(boundary.id, boundary); marks.set(boundary.mark, boundary);
+    if (value.header !== null) {
+      const row = value.owner && rowOf(definition, value.owner);
+      if (!row) throw new TypeError("Native header has no admitted row owner");
+      const source = headerSource(row, value.header);
+      if (typeof source !== "object" || source === null || declarationSource(definition, source) !== value.source || marks.has(source)) throw new TypeError("Native header has no unique captured occurrence");
+      marks.set(source, boundary);
+    }
     const owner = value.owner;
     if (owner !== null) {
       const keepOwner = (value: object): void => {

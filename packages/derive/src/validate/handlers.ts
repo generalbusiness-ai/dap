@@ -22,7 +22,7 @@ import { nativeReceiver } from "./native-capacity.ts";
 import { declaredBy } from "../capability.ts";
 import { recordFrame, recordSlot, subjectRead } from "../program/reads.ts";
 import { beginBody, endBody, recordSettlementPlan } from "../program/structure.ts";
-import { withRow } from "../program/rows.ts";
+import { withHeader, withRow } from "../program/rows.ts";
 
 const members = (v: unknown): Rec => (isObject(v) ? v : {});
 /** Whether an item type is `many`, as the definition writes it. */
@@ -72,7 +72,7 @@ function also(d: Defining, v: unknown, path: string, fields: Map<string, FieldTy
       // Section 6.1, place 2: the rule gives one local item of the type that the mark states, or none.
       // Section 17.2a, revision 23: the mark that binds the name which `bound.of` names is a binding selector, and states `index`
       // and `key`. No other mark at place 2 states either.
-      const o = alsoMark(d, a, p, binds?.name === name ? binds : null);
+      const o = withHeader(d, { kind: "also", name }, () => alsoMark(d, a, p, binds?.name === name ? binds : null));
       const t = o && typeof o["item"] === "string" ? types.get(o["item"]) : undefined;
       if (o && !t) bad("name", p, "names no item type");
       if (t) { out.set(name, t); selected.add(name); }
@@ -199,7 +199,7 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
     if (o["on"] === null && step !== "comment") bad("shape", at(path, "on"), "an open or a transition has a primary item type");
     // Section 6.1, place 1: in platform data the `grant` of an act may be a mark, which may state an action as well.
     if (d.platform && marked(o["grant"])) {
-      const g = mark(d, o["grant"], at(path, "grant"), "grant", [], ["grant"]);
+      const g = withHeader(d, { kind: "grant" }, () => mark(d, o["grant"], at(path, "grant"), "grant", [], ["grant"]));
       if (g && "grant" in g) str(g["grant"], at(at(path, "grant"), "grant"));
     } else str(o["grant"], at(path, "grant"));
     const fields = declaredFields(d, o["fields"], at(path, "fields"), true);

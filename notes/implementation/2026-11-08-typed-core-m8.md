@@ -109,3 +109,11 @@ Two sequential controls run only the existing replacement/Native-root case in th
 The [row validation manifest](evidence/2026-11-08-m8-rows-validation.manifest.json), SHA-256 `70b4dc1c84999ff55f544788c7213eeaf9c8eb2c2d6de76f25e82748173379b7`, binds 27 read-only public files. Its inventories retain 329 private originals across the focused pipeline, outer launch, corpus, controls and preparation. Those originals include the exact external config, drivers, complete reports and failure stacks. No validation command reruns during retention.
 
 The 202 selected cases and 1,364 corpus cases cover separate owners. Each control reruns one selected case under a fault; those two executions add no passing coverage. This checkpoint establishes row ownership and registered late selection. It supplies no complete M8 lowering, final gate, asset, workflow, review, deployment or live acceptance result.
+
+## The third draft binds each Native header occurrence
+
+Validator header scopes now record a semantic use: grant, named `also` selector, named field, or named reference/value slot. Final Native admission resolves that use against its actual owned row and registers the exact metadata object with its captured boundary. Diagnostic paths remain descriptions. No path parser, declaration digest or first-match source lookup selects an owned header occurrence.
+
+The existing replacement/Native-root witness now aliases selector and type marks under two names within the same row. It checks distinct captured boundaries and their semantic uses for selector, field and slot headers. The existing aliased-row, outcome and cross-validation assertions remain. No case or deadline changes.
+
+`runClause` again throws `result clause was not captured by its validation` when a send declares effect forms for a clause whose structure is missing. This restores M7 finding F2's construction assertion; admitted definitions already capture those clauses. `sendOrigin` retains the matched send code from its search instead of looking up the same instruction again. The next focused checks must cover these edits before any result claim.

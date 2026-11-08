@@ -6,7 +6,7 @@ import { held, indexes } from "./binding.ts";
 import type { Defining, Slot } from "./context.ts";
 import { codeOf, fieldType } from "./fields.ts";
 import { at } from "./shape.ts";
-import { withRow } from "../program/rows.ts";
+import { withHeader, withRow } from "../program/rows.ts";
 
 /** Reads every item type into `d.types`. One with a problem is reported and left out. */
 export function itemTypes(d: Defining, v: unknown): void {
@@ -40,7 +40,7 @@ export function itemTypes(d: Defining, v: unknown): void {
           // Section 6.3: a party list holds at most 64 members. One that declares no `max` holds the bound itself.
           if ("max" in so && (!so["list"] || (int(so["max"], at(p, "max"), 1) ?? 0) > bounds.partyMembers)) bad("bound", at(p, "max"), `only a list has a max, of at most ${bounds.partyMembers}`);
           type = so["list"] ? { type: "list", of: { type: "member" }, max: (so["max"] as number | undefined) ?? bounds.partyMembers } : { type: "member" };
-        } else type = fieldType(d, so[kind === "ref" ? "to" : "of"], at(p, kind === "ref" ? "to" : "of"), [], false, kind === "value", true);
+        } else type = withHeader(d, { kind: "slot", slot: kind, name: s }, () => fieldType(d, so[kind === "ref" ? "to" : "of"], at(p, kind === "ref" ? "to" : "of"), [], false, kind === "value", true));
         if (!type) continue;
         const capability = so["capability"];
         if (capability !== undefined) {

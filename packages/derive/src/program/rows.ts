@@ -13,12 +13,16 @@ interface RowDeclarations {
 }
 export type RowKind = keyof RowDeclarations;
 export type RowIdentity = Readonly<object>;
+export type HeaderUse = { readonly kind: "grant" }
+  | { readonly kind: "also" | "field"; readonly name: string }
+  | { readonly kind: "slot"; readonly slot: "ref" | "value"; readonly name: string };
 interface RowScope { readonly id: RowIdentity; readonly kind: RowKind; readonly name: string; readonly path: string }
 export type RowRead<K extends RowKind = RowKind> = { [P in K]: RowScope & {
   readonly kind: P;
   readonly declaration: Readonly<RowDeclarations[P]>;
 } }[K];
 const pending = new WeakMap<Defining, RowScope[]>(), active = new WeakMap<Defining, RowScope>();
+const headers = new WeakMap<Defining, HeaderUse>();
 interface AdmittedRows {
   readonly rows: readonly RowRead[];
   readonly identities: WeakMap<RowIdentity, RowRead>;
@@ -36,6 +40,15 @@ export function withRow(d: Defining, kind: RowKind, name: string, path: string, 
   finally { active.delete(d); }
 }
 export const currentRow = (d: Defining): RowIdentity | null => active.get(d)?.id ?? null;
+export const currentHeader = (d: Defining): HeaderUse | null => headers.get(d) ?? null;
+
+/** Named semantic uses distinguish aliases without reading a diagnostic path. */
+export function withHeader<T>(d: Defining, use: HeaderUse, read: () => T): T {
+  if (!active.has(d) || headers.has(d)) throw new TypeError("header use has no unique declaration row scope");
+  headers.set(d, Object.freeze({ ...use }));
+  try { return read(); }
+  finally { headers.delete(d); }
+}
 
 /** Final admission resolves semantic row names against its owned declaration. */
 export function bindRows(d: Defining, definition: ValidDefinition): void {
