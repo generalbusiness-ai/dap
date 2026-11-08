@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6a6869bb1fbd340e82c24e02f8c606b9dbfcc656","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-cache-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d43b77da9d8cba2b34212c3103078b17ade6485","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/fixed-index.test.ts."}
