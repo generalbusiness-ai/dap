@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f9f7b245af2687af6e41ed55de4aad6d072c9759","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/binding.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f9f7f056aa70c823595ac88c3321f02a680cf2f3","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/native-trace.ts."}
