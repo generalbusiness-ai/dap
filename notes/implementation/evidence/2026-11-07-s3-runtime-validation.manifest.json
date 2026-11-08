@@ -1,0 +1,148 @@
+{
+  "qualification": "Three compiler contexts and14distinct cases pass; one conditional recorder case skips. One isolated receipt-verification control fails by the intended assertion and restores cleanly. No full gate, Page asset generation or live acceptance.",
+  "sourceHead": "116fcbab9156017df8856a1bf24932dc2112e417",
+  "sourceTree": "f03f094a330aaee6b14ae2d2088dce0eb1f17994",
+  "fileCount": 27,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-runtime-validation",
+      "files": [
+        {
+          "path": "QUALIFICATION.md",
+          "bytes": 967,
+          "sha256": "7355ecc817dde0abb180f964ca9bed173d92f3c5684121652626fc64b8c76d84"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2330,
+          "sha256": "4e912ee58054dcd34e87a8fc2e37a68739804d6ba98ff14c3eaaaffbb25b8d59"
+        },
+        {
+          "path": "cases.json",
+          "bytes": 5010,
+          "sha256": "4242ca5e348f72603a00daa6f08e1f84700237671dfea9a8e3f074ea03601f73"
+        },
+        {
+          "path": "control/control.before.json",
+          "bytes": 540323,
+          "sha256": "b2411ff8a536ace84c677d8f1e1dc0dd72307ae2bc0c2e0a987211aabd1cfa81"
+        },
+        {
+          "path": "control/control.restored.json",
+          "bytes": 540323,
+          "sha256": "b2411ff8a536ace84c677d8f1e1dc0dd72307ae2bc0c2e0a987211aabd1cfa81"
+        },
+        {
+          "path": "control/dependencies.json",
+          "bytes": 2029,
+          "sha256": "55960a04b2cbdf4f7b61041168bfed17d312f4a6ab6ac24e6cb0a30a0050b341"
+        },
+        {
+          "path": "control/mutant.ts",
+          "bytes": 33121,
+          "sha256": "20d1d1bc0722742ce62f2e68897b1d0e1e8ca24e262d0794f7467d8967ffa9bd"
+        },
+        {
+          "path": "control/original.ts",
+          "bytes": 33158,
+          "sha256": "adedf46d11c10a1bb614ff76c3258af6b202dffec5e697f2230094f3da7651c8"
+        },
+        {
+          "path": "control/owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "control/owner.time",
+          "bytes": 29,
+          "sha256": "6beb6697fa059147b36593119b5215fa9e39479a56a4161123519984816310dd"
+        },
+        {
+          "path": "control/production.after.json",
+          "bytes": 540323,
+          "sha256": "b2411ff8a536ace84c677d8f1e1dc0dd72307ae2bc0c2e0a987211aabd1cfa81"
+        },
+        {
+          "path": "control/production.before.json",
+          "bytes": 540323,
+          "sha256": "b2411ff8a536ace84c677d8f1e1dc0dd72307ae2bc0c2e0a987211aabd1cfa81"
+        },
+        {
+          "path": "control/result.json",
+          "bytes": 1422,
+          "sha256": "e5dacda993eeb71d4cd458d333abc895989393550f691c9b09b832778e32bc51"
+        },
+        {
+          "path": "focused/after.json",
+          "bytes": 541973,
+          "sha256": "c52444d36c82d2dde24fc2e12cdcb89740647036b25a2231340d4f29dd991d50"
+        },
+        {
+          "path": "focused/before.json",
+          "bytes": 541973,
+          "sha256": "c52444d36c82d2dde24fc2e12cdcb89740647036b25a2231340d4f29dd991d50"
+        },
+        {
+          "path": "focused/compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused/node-test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused/node-test-compiler.time",
+          "bytes": 29,
+          "sha256": "31732f955afa55cad63664328c810a29b42f19ad2f613dd7de402189f7eff891"
+        },
+        {
+          "path": "focused/owners.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused/owners.time",
+          "bytes": 31,
+          "sha256": "2b13da1ac39ced584d07e786cda3a0b2e14acb75098b16e8f4ef086647bbf81e"
+        },
+        {
+          "path": "focused/result.json",
+          "bytes": 1115,
+          "sha256": "ab4ec82568695ac1b774e7988a15df086eb9d961b3d22c9a748eb53c9e5fbffb"
+        },
+        {
+          "path": "focused/scope-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused/scope-compiler.time",
+          "bytes": 29,
+          "sha256": "d4d5240c250de07f5b2df7d765f7b0420e3444ad4159809faadc713c68b4b57d"
+        },
+        {
+          "path": "focused/source-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused/source-compiler.time",
+          "bytes": 29,
+          "sha256": "136f4b6f09f72c241587444e3b61a515ab09cd5dc0413b419ad2ffb6aa5cc5a3"
+        },
+        {
+          "path": "focused/task.json",
+          "bytes": 742,
+          "sha256": "a94ef7289582b4fc3978adb48e656597021aecc30c4a148ce6c7f283550f1400"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 940,
+          "sha256": "1b545f260201166b2ce7737456b8cb8052e73ea5ff40798644213bca98a83655"
+        }
+      ]
+    }
+  ]
+}
