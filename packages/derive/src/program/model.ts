@@ -6,7 +6,8 @@ import { own } from "../values.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { LAST_MS } from "../time.ts";
 
-export type Phase = "before" | "working";
+import { immutable, type Phase } from "./data.ts";
+export { immutable, type Phase } from "./data.ts";
 declare const invariant: unique symbol;
 type Typed<T extends FieldType, P extends Phase> = { readonly [invariant]: (value: [T, P]) => [T, P] };
 export interface Subject { readonly name: string; readonly type: string; readonly path: string }
@@ -57,15 +58,6 @@ const schemas = new WeakSet<object>(), handles = new WeakMap<object, Schema>(), 
 export function schema(definition: ValidDefinition, kind: string): Schema {
   if (!own(definition.declared.acts, kind)) throw new TypeError("unknown act");
   const value = Object.freeze({ definition, kind }); schemas.add(value); return value;
-}
-/** Copy declaration data so later caller mutation cannot change a compiled body. */
-export function immutable<T>(value: T, origins?: WeakMap<object, object>): T {
-  if (value !== null && typeof value === "object") {
-    const copied: object = Array.isArray(value) ? value.map(item => immutable(item, origins)) : Object.fromEntries(Object.entries(value).map(([k, v]) => [k, immutable(v, origins)]));
-    origins?.set(copied, value);
-    return Object.freeze(copied) as T;
-  }
-  return value;
 }
 export function subject(context: Schema, name: string): Subject {
   if (!schemas.has(context)) throw new TypeError("unchecked schema");

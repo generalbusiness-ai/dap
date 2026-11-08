@@ -3,7 +3,7 @@ import type { ActType, Digest, EffectForm, Guard, Mark, MarkMost, Notify, Receiv
 import type { Defining } from "../validate/context.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import type { ElementBinding, FieldResolution, ForeignFieldResolution, FrameKind, FrameRead, OperandRead, RangeResolution, ReadValidation, ResolvedReads, SlotResolution, SubjectResolution } from "./reads.ts";
-import { immutable } from "./model.ts";
+import { immutable } from "./data.ts";
 import { mapGuardChildren, type GuardPlan, type RangePlan } from "./guard-plan.ts";
 import { conditionSubjects, type ConditionPlan } from "./condition-plan.ts";
 import { ownEffectPlan, type AttentionPlan, type EffectPlan, type EffectValueSource } from "./effect-plan.ts";

@@ -8,6 +8,7 @@ import { isFactRef, isLocalId, isObject, own } from "../values.ts";
 import { checkedOperand, type EntryRead, type OperandRead, type PartRead, type SubjectRead } from "./reads.ts";
 
 import type { WherePlan } from "./guard-plan.ts";
+import { observeInstruction } from "./observe.ts";
 
 export type ElementValues = ReadonlyMap<ElementIdentity, unknown>;
 const noElements: ElementValues = new Map();
@@ -15,6 +16,9 @@ const noElements: ElementValues = new Map();
 /** The caller supplies the before or working view required by its admitted form. */
 export function readValue(j: Judging, read: OperandRead, item: Item | null, elements: ElementValues = noElements): unknown {
   checkedOperand(j.definition, read);
+  return observeInstruction(j.definition, "expressions", null, null, read.path, read.op, () => executeRead(j, read, item, elements));
+}
+function executeRead(j: Judging, read: OperandRead, item: Item | null, elements: ElementValues): unknown {
   const subject = (value: SubjectRead): Item | null => value.identity.kind === "range" ? item
     : value.identity.kind === "fan-out" ? j.each ?? null : j.subjects.get(value.identity.name) ?? null;
   const entry = (ref: FactRef | number, part: EntryRead): unknown => {

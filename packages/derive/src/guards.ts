@@ -19,6 +19,7 @@ import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
 
 import { conditionSubjects } from "./program/condition-plan.ts";
+import { captureProgramReads, recordProgramLeaf } from "./program/observe.ts";
 
 export { operand, slotOf };
 
@@ -106,14 +107,20 @@ export function readsUnbound(j: Pick<Judging, "subjects">, v: unknown): boolean 
 export function preparedRule(j: Judging, rule: string): { result: GuardResult; input: unknown; digest: Digest } {
   const input = ruleInput(j);
   const digest = digestBytes(canonicalBytes(input));
+  const reported = (result: GuardResult) => {
+    const reads = { rule, digest, input, opaque: true };
+    captureProgramReads(j.definition, reads);
+    recordProgramLeaf(j.definition, "prepared", `rules.${rule}`, "prepared", result, reads);
+    return { result, input, digest };
+  };
   if (j.asked) {
     // Preparation: the result is not known yet, so the guard is passed over and the guards after it are met.
     if (!j.asked.some((a) => a.rule === rule && a.digest === digest)) j.asked.push({ rule, source: own(declarationOf(j.definition).rules, rule)!, input, digest });
-    return { result: "pass", input, digest };
+    return reported("pass");
   }
   // Section 5.2, step 6.4: a rule's result from preparation is reused only when it was prepared over these inputs.
   const prepared = j.prepared.find((p) => p.rule === rule && p.input === digest);
-  if (!prepared) return { result: "unavailable", input, digest };
+  if (!prepared) return reported("unavailable");
   if (!j.used.includes(prepared)) j.used.push(prepared);
-  return { result: ok(prepared.result), input, digest };
+  return reported(ok(prepared.result));
 }

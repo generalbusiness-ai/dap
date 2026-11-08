@@ -3,6 +3,7 @@ import type { Mark } from "@generalbusiness/dap-contract";
 import type { MarkKind } from "../validate/context.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { nativeBoundaryOfMark, nativeValidation } from "./native.ts";
+import { captureProgramReads, programObserved, recordProgramLeaf } from "./observe.ts";
 
 export type OutcomeHook = "reservation" | "values" | "ready" | "beforeSend" | "publicationOrigin" | "retries" | "holds" | "wellFormed" | "unknown" | "derives" | "origin" | "subjects";
 export type NativeHook = "run" | "bind" | OutcomeHook;
@@ -68,11 +69,11 @@ export function observeNativeCalls<T>(definition: ValidDefinition, budget: numbe
 /** The caller resolves arguments first, then invokes its existing callback exactly once. */
 export function observeNativeCall<T>(definition: ValidDefinition, mark: Mark, kind: MarkKind, hook: NativeHook, callback: unknown, call: () => T): T {
   const observers = active.get(definition);
-  if (!observers?.length || typeof callback !== "function") return call();
+  if ((!observers?.length && !programObserved(definition)) || typeof callback !== "function") return call();
   const boundary = nativeBoundaryOfMark(definition, mark, kind);
   // Trusted returned joins use synthetic marks and do not count as admitted hooks.
   if (!boundary || boundary.kind !== kind) return call();
-  const pending = observers.map(observer => {
+  const pending = (observers ?? []).map(observer => {
     const key = `${kind}/${mark.code}/${hook}`;
     observer.calls.set(key, (observer.calls.get(key) ?? 0) + 1);
     const ordinal = observer.ordinal++;
@@ -83,5 +84,9 @@ export function observeNativeCall<T>(definition: ValidDefinition, mark: Mark, ki
   });
   let returned = false;
   try { const value = call(); returned = true; return value; }
-  finally { for (const event of pending) if (event) event.result = returned ? "returned" : "threw"; }
+  finally {
+    for (const event of pending) if (event) event.result = returned ? "returned" : "threw";
+    captureProgramReads(definition, { opaque: true, dependencies: "unknown", code: mark.code, row: mark.row, hook });
+    recordProgramLeaf(definition, "native", boundary.path, `${kind}.${hook}`, returned ? "returned" : "threw", { opaque: true, dependencies: "unknown", code: mark.code, row: mark.row });
+  }
 }

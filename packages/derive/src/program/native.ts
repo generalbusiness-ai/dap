@@ -2,7 +2,7 @@
 import type { AlsoMark, BindingMark, GrantMark, Mark, MarkMost, OutcomeMark, SendMark, TypeMark } from "@generalbusiness/dap-contract";
 import type { Defining, MarkKind } from "../validate/context.ts";
 import type { ValidDefinition } from "../validate/index.ts";
-import { immutable } from "./model.ts";
+import { immutable } from "./data.ts";
 import type { ReadValidation } from "./reads.ts";
 import { declarationOwner, declarationSource } from "./declaration.ts";
 import { currentHeader, currentRow, rowOf, type HeaderUse, type RowIdentity, type RowRead } from "./rows.ts";

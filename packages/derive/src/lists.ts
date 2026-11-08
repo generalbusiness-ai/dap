@@ -5,6 +5,7 @@ import type { GuardResult, Judging } from "./guards.ts";
 import type { Item } from "./state.ts";
 import { whereMatches, type ElementValues } from "./program/read-value.ts";
 import type { RangePlan } from "./program/guard-plan.ts";
+import { observeInstruction } from "./program/observe.ts";
 
 // ---------------------------------------------------------------- three results
 
@@ -55,6 +56,9 @@ export function excepted(j: Judging, r: Pick<Range, "except">): Item[] {
  * `unfinished`: the scan stopped at the work limit, and completes nothing.
  */
 export function scanItems(j: Judging, r: Pick<Range, "type" | "states" | "except">, matches: (item: Item) => boolean, each: (item: Item) => boolean): "all" | "stopped" | "unfinished" {
+  return observeInstruction(j.definition, "scans", null, null, `items.${r.type}`, "scan", () => scan(j, r, matches, each));
+}
+function scan(j: Judging, r: Pick<Range, "type" | "states" | "except">, matches: (item: Item) => boolean, each: (item: Item) => boolean): "all" | "stopped" | "unfinished" {
   const states = [...new Set(r.states)];
   const left = new Set(excepted(j, r).map((i) => i.id));
   let read = 0;

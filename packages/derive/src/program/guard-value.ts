@@ -14,6 +14,7 @@ import type { BoundPlan, GuardCode, RangePlan, WherePlan } from "./guard-plan.ts
 import { readValue, whereMatches, type ElementValues } from "./read-value.ts";
 import type { OperandRead } from "./reads.ts";
 import { checkedBody, guardPlan, guardSource, type BodyStructure, type GuardNode } from "./structure.ts";
+import { captureProgramReads, observeInstruction } from "./observe.ts";
 
 const noElements: ElementValues = new Map();
 const ok = (holds: boolean): GuardResult => holds ? "pass" : "fail";
@@ -79,6 +80,9 @@ export function judgeGuardNode(j: Judging, body: BodyStructure, node: GuardNode,
   return executeGuard(j, body, node, elements);
 }
 function executeGuard(j: Judging, body: BodyStructure, node: GuardNode, elements: ElementValues): GuardResult {
+  return observeInstruction(j.definition, "guards", body, node, node.path, node.op, () => executeGuardValue(j, body, node, elements));
+}
+function executeGuardValue(j: Judging, body: BodyStructure, node: GuardNode, elements: ElementValues): GuardResult {
   if (node.op === "native") return guardByRule(j, guardSource(j.definition, body, node), node.data);
   const plan = guardPlan(j.definition, body, node);
   if (!plan) throw new TypeError("guard has no admitted executable instruction");
@@ -96,7 +100,11 @@ function executeGuard(j: Judging, body: BodyStructure, node: GuardNode, elements
     return typeof answer === "number" && Number.isSafeInteger(answer) && answer >= 0 ? answer : null;
   };
   switch (code.op) {
-    case "state": return ok(!!item && code.states.includes(item.state));
+    case "state": {
+      const state = item?.state ?? null;
+      captureProgramReads(j.definition, { subject: site.subject, state });
+      return ok(state !== null && code.states.includes(state));
+    }
     case "signer": return ok(inSlots(code.slots, j.signer?.member));
     case "notIn": return ok(!inSlots(code.slots, j.signer?.member) && !inSlots(code.slots, j.signer?.principal));
     case "set": return ok(!!item && slotOf(item, code.slot.name) !== null);
@@ -121,12 +129,16 @@ function executeGuard(j: Judging, body: BodyStructure, node: GuardNode, elements
       return ok(code.where.every(pair => equal(j, isLocalId(ref) || isFactRef(ref) ? entryValue(j, ref, isLocalId(ref) ? j.scope.at : ref.at, { op: "field", name: pair.name }) : null, read(pair.value))));
     }
     case "before": case "after": {
-      if (j.clock.behind) return "clock-behind";
-      const deadline = item ? timeMs(own(item.values, code.slot.name)) : null, now = timeMs(j.clock.reading)!;
+      if (j.clock.behind) { captureProgramReads(j.definition, { clockBehind: true }); return "clock-behind"; }
+      const value = item ? own(item.values, code.slot.name) : null;
+      const deadline = timeMs(value), clock = j.clock.reading, now = timeMs(clock)!;
+      captureProgramReads(j.definition, { subject: site.subject, deadline: value ?? null, clock });
       return ok(deadline !== null && (code.op === "before" ? now < deadline : now > deadline));
     }
     case "rule": return preparedRule(j, code.rule).result;
-    case "capability": return capabilityGuard(j, code.capability, item, guardSource(j.definition, body, node), elements);
+    case "capability":
+      captureProgramReads(j.definition, { opaque: true, capability: code.capability.version, guard: code.capability.guard });
+      return capabilityGuard(j, code.capability, item, guardSource(j.definition, body, node), elements);
     case "anyOf": return any(code.alternatives.map(group => () => judgeList(j, body, group, elements).result));
     case "each": case "has": case "distinct": case "sameSet": return listGuard(reading, body, code, item);
     default: return exhaustive(code);

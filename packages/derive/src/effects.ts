@@ -33,6 +33,7 @@ import type { ValidDefinition } from "./validate/index.ts";
 import { LAST_MS, timeMs, timeOf } from "./time.ts";
 import { isFactRef, isLocalId, isMemberRef, isObject, isValue, memberFits, own, same } from "./values.ts";
 import { isDigest, isEffect } from "@generalbusiness/dap-bytes";
+import { captureProgramReads, enterProgramInstruction, recordProgramLeaf } from "./program/observe.ts";
 
 /**
  * What a derivation gives: its result, a refusal, or `unavailable`. The last
@@ -113,7 +114,7 @@ const BY_RULE: readonly string[] = ["open", "state", "party", "list", "ref", "va
  * sets it.
  */
 type EffectResult = Derived<{ effects: Effect[]; working: Map<string, Item>; opened: Item | null }>;
-type EffectInstruction = { readonly kind: "native"; readonly mark: Mark }
+type EffectInstruction = { readonly kind: "native"; readonly mark: Mark; readonly body?: BodyStructure; readonly node?: EffectNode }
   | { readonly kind: "written"; readonly body: BodyStructure; readonly node: EffectNode; readonly plan: EffectPlan };
 interface AttentionInstruction { readonly body: BodyStructure; readonly node: AttentionNode; readonly plan: AttentionPlan }
 
@@ -124,7 +125,7 @@ export function evaluateEffects(j: Judging, body: BodyStructure | null, opens: s
   const instructions = body.nodes.filter(node => node.category === "effect").map((owner): EffectInstruction => {
     if (owner.op === "native") {
       const mark = owner.data;
-      return { kind: "native", mark };
+      return { kind: "native", mark, body, node: owner };
     }
     const plan = effectPlan(j.definition, body, owner);
     if (!plan) throw new TypeError("effect has no admitted executable instruction");
@@ -316,9 +317,13 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const open = { effect: "open", item: j.self, type: opens, state: own(items, opens)!.initial } as const;
     effects.push(open);
     working.set("on", newItem(open, own(items, opens)!, null));
+    recordProgramLeaf(j.definition, "effects", `items.${opens}`, "open", open);
   }
 
   for (const [i, instruction] of instructions.entries()) {
+    const finish = enterProgramInstruction(j.definition, "effects", instruction.body ?? null, instruction.node ?? null,
+      instruction.node?.path ?? `effects.${i}`, instruction.kind === "native" ? "native" : instruction.plan.code.op);
+    try {
     if (instruction.kind === "native") {
       const stopped = join(instruction.mark, i);
       if (stopped) return stopped as Derived<never>;
@@ -327,6 +332,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const { site, code } = instruction.plan;
     const subject = site.target ? subjectName(site.target) : "on";
     if (code.op === "capability") {
+      captureProgramReads(j.definition, { opaque: true, capability: code.capability.version, action: code.capability.action });
       // Opaque capability records follow ordinary effects and read the working view.
       if (site.explicitSubject && !working.has(subject)) continue;
       const through = judgeCondition(j, instruction.body, instruction.node);
@@ -347,6 +353,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const bad = (what: string) => refuse("bad-field", `effects.${i}: ${what}`);
     const copied = (code.op === "party" || code.op === "ref" || code.op === "value") && code.source.op === "read" ? code.source : null;
     const source = copied ? readValue(after, copied.read, item) : null;
+    if (copied) captureProgramReads(j.definition, { source });
     // An absent read skips; the distinct clear instruction empties a slot.
     if (copied && source === null) continue;
     if (code.op === "attribute" && !working.has(subjectName(code.of))) continue;
@@ -404,6 +411,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
       case "value": {
         const slot = code.slot.name;
         const derived = code.source.op === "commit-clock" ? timeMs(j.clock.reading)! + code.source.plusSeconds * 1000 : null;
+        if (code.source.op === "commit-clock") recordProgramLeaf(j.definition, "expressions", code.source.path, "time", derived, { plusSeconds: code.source.plusSeconds });
         if (derived !== null && derived > LAST_MS) return bad("the derived time is past the last timestamp");
         const value = derived !== null ? timeOf(derived) : code.source.op === "clear" ? null : fits(own(type.values, slot)!.of, slot);
         if (value === undefined) return bad("the source is not a value of the slot's type");
@@ -464,6 +472,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
       }
       default: return exhaustive(code);
     }
+    } finally { finish(); }
   }
   // The whole-entry boundary for what the rules gave: every form of the list is derived, so every mark has joined. Section 4.3,
   // item 1: a genesis may seal an operation as a held task, with no attempt. Which genesis does is not built yet (I3 deltas, entry

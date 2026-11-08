@@ -3,7 +3,7 @@ import type { Bounds, FieldType, FieldValue, TypeMark } from "@generalbusiness/d
 import type { Ctx, Defining, ElementIdentity, MarkPlace, OwnerIdentity, Slot, Type } from "../validate/context.ts";
 import type { Underived } from "../validate/capability.ts";
 import type { ValidDefinition } from "../validate/index.ts";
-import { immutable, type Phase } from "./model.ts";
+import { immutable, type Phase } from "./data.ts";
 import { finishStructure, noteFrame, recordResolution } from "./structure.ts";
 import { currentRow, type RowIdentity } from "./rows.ts";
 

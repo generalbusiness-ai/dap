@@ -22,6 +22,7 @@ import { observeNativeCall } from "./program/native-trace.ts";
 import { sendValue } from "./send-value.ts";
 import type { Item } from "./state.ts";
 import { isFactRef, isLocalId, isObject, isScopeRef, same } from "./values.ts";
+import { enterProgramInstruction } from "./program/observe.ts";
 
 /** What the send forms of one input made. */
 export type Sends = Derived<{ sends: Send[] }>;
@@ -75,7 +76,7 @@ export function membershipOf(genesis: Pick<Extract<Input, { type: "genesis" }>, 
  */
 interface WrittenSend { readonly op: "written"; readonly body: BodyStructure; readonly node: SendNode; readonly plan: SendPlan }
 type NativeSendMark = Pick<SendMark, "code" | "row" | "always">;
-interface NativeSend { readonly op: "native"; readonly mark: NativeSendMark }
+interface NativeSend { readonly op: "native"; readonly mark: NativeSendMark; readonly body?: BodyStructure; readonly node?: SendNode }
 type SendInstruction = WrittenSend | NativeSend;
 
 /** Execute only the send instructions of this admitted body. */
@@ -83,7 +84,7 @@ export function evaluateSends(j: Judging, body: BodyStructure, working: Readonly
   checkedBody(j.definition, body);
   const nodes = body.nodes.filter(node => node.category === "send");
   const instructions = nodes.map((owner): SendInstruction => {
-    if (owner.op === "native") return { op: "native", mark: owner.data };
+    if (owner.op === "native") return { op: "native", mark: owner.data, body, node: owner };
     const plan = sendPlan(j.definition, body, owner);
     if (!plan) throw new TypeError("send has no captured executable instruction");
     return { op: "written", body, node: owner, plan };
@@ -174,6 +175,9 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
   const relations = new Set<string>();
   let creations = 0;
   for (const [i, instruction] of instructions.entries()) {
+    const finish = enterProgramInstruction(j.definition, "sends", instruction.body ?? null, instruction.node ?? null,
+      instruction.node?.path ?? `sends.${i}`, instruction.op === "native" ? "native" : instruction.plan.code.op);
+    try {
     const refuse = (what: string) => ({ ok: false, reason: "send-unresolved", detail: `sends.${i}: ${what}` }) as const;
     const next = () => first + sends.length;
     const mark = instruction.op === "native" ? instruction.mark : null;
@@ -277,6 +281,7 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
     } else exhaustive(form);
     if (incomplete) return { ok: false, unavailable: "guard-incomplete" };
     if (unresolved !== null) return refuse(unresolved);
+    } finally { finish(); }
   }
   return { ok: true, sends };
 }

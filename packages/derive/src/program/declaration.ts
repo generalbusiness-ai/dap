@@ -1,6 +1,6 @@
 /** Declaration metadata belongs to the actual successful validation. */
 import type { ValidDefinition } from "../validate/index.ts";
-import { immutable } from "./model.ts";
+import { immutable } from "./data.ts";
 
 interface AdmittedDeclaration {
   readonly data: ValidDefinition["declared"];
