@@ -112,14 +112,17 @@ describe("typed derivation program", () => {
     j.fields = { ...j.fields, unused: true }; expect(agree(j, undefined, 4)).toEqual(expected);
     expect(requirements(fixture, program(fixture, "send")).reads).toContainEqual({ kind: "field", name: "text", presence: true });
     j.fields = { ...j.fields, text: "changed" };
-    expect(agree(j, undefined, 4)).toMatchObject({ result: "ran", effects: [{ effect: "state" }, { effect: "ref" }, { effect: "value", slot: "text", value: "changed" }], sends: [{ message: { body: { fields: { text: "changed" } } } }] });
+    expect(agree(j, undefined, 4)).toEqual({ result: "ran", effects: [{ effect: "state", item: 1, state: "done" }, { effect: "ref", item: 1, slot: "peer", to: directory }, { effect: "value", item: 1, slot: "text", value: "changed" }],
+      sends: [{ n: 4, to: directory, message: { class: "request", type: "tell", body: { message: "changed", fields: { text: "changed", self: { self: true } } } } }], prepared: [], judgesTime: false, settles: false });
   });
   test("an absent source leaves the default and an explicit clear records null", () => {
     const j = context(fixture, "send"), on = item(fixture, "note", 1); j.subjects = new Map([["on", on]]); j.fields = { next: directory };
-    const result = agree(j); expect(result).toMatchObject({ result: "ran", effects: [{ effect: "state" }, { effect: "ref" }], sends: [{ message: { body: { fields: { text: "old" } } } }] });
+    const result = agree(j); expect(result).toEqual({ result: "ran", effects: [{ effect: "state", item: 1, state: "done" }, { effect: "ref", item: 1, slot: "peer", to: directory }],
+      sends: [{ n: 0, to: directory, message: { class: "request", type: "tell", body: { message: "changed", fields: { text: "old", self: { self: true } } } } }], prepared: [], judgesTime: false, settles: false });
     const cleared = variant(raw, data => { data.acts.send.effects[2].value.from = null; });
     const clear = agree({ ...j, definition: cleared });
-    expect(clear).toMatchObject({ result: "ran", effects: [{ effect: "state" }, { effect: "ref" }, { effect: "value", value: null }], sends: [{ message: { body: { fields: { self: { self: true } } } } }] });
+    expect(clear).toEqual({ result: "ran", effects: [{ effect: "state", item: 1, state: "done" }, { effect: "ref", item: 1, slot: "peer", to: directory }, { effect: "value", item: 1, slot: "text", value: null }],
+      sends: [{ n: 0, to: directory, message: { class: "request", type: "tell", body: { message: "changed", fields: { self: { self: true } } } } }], prepared: [], judgesTime: false, settles: false });
     if (clear.result === "ran") {
       const message = clear.sends[0]!.message;
       expect(message.class).toBe("request");
@@ -135,7 +138,7 @@ describe("typed derivation program", () => {
   test("preparation collects once, unavailable does not hide a later false guard, and structural time includes skipped reads", () => {
     const definition = variant(raw, data => { data.acts.window.guards = [{ rule: "ready" }, { state: ["live"] }, { after: { slot: "until" } }, { rule: "ready" }]; });
     const j = context(definition, "window"), on = { ...item(definition, "note", 1), values: { until: t(100), text: "old" } }; j.subjects = new Map([["on", on]]);
-    j.asked = []; expect(agree(j)).toMatchObject({ result: "ran", judgesTime: true, prepared: [] });
+    j.asked = []; expect(agree(j)).toEqual({ result: "ran", effects: [], sends: [], prepared: [], judgesTime: true, settles: false });
     const collected = evaluate(program(definition, "window"), j); expect(collected.asked).toHaveLength(1);
     delete j.asked; j.subjects = new Map([["on", { ...on, state: "done" }]]);
     expect(agree(j)).toEqual({ result: "refused", reason: "guard-failed", detail: "guards.1", prepared: [] });
@@ -236,7 +239,8 @@ describe("typed derivation program", () => {
   test("the structural visitor includes skipped clock reads and the complete opaque input", async () => {
     const definition = variant(raw, data => { data.acts.send.effects.push({ value: { slot: "until", from: { time: { plusSeconds: 1 } } }, if: [{ of: "also.other", state: ["live"] }, { after: { slot: "until" } }] }); });
     const j = context(definition, "send"), on = item(definition, "note", 1); j.subjects = new Map([["on", on]]); j.fields = { next: directory, text: "new" };
-    expect(agree(j)).toMatchObject({ result: "ran", judgesTime: true });
+    expect(agree(j)).toEqual({ result: "ran", effects: [{ effect: "state", item: 1, state: "done" }, { effect: "ref", item: 1, slot: "peer", to: directory }, { effect: "value", item: 1, slot: "text", value: "new" }],
+      sends: [{ n: 0, to: directory, message: { class: "request", type: "tell", body: { message: "changed", fields: { text: "new", self: { self: true } } } } }], prepared: [], judgesTime: true, settles: false });
     const body = program(definition, "send"), captured = evaluate(body, j, 0, 100);
     expect(captured.trace.some(event => event.op === "after" || event.op === "time")).toBe(false);
     expect(requirements(definition, body).reads).toContainEqual({ kind: "clock" });
@@ -246,8 +250,19 @@ describe("typed derivation program", () => {
     expect(reads).toContainEqual({ kind: "prepared-input", rule: "water-amount", parts: ["kind", "fields", "signer", "subjects", "facts"] });
     expect(reads.some(read => read.kind === "opaque")).toBe(true);
     expect(reads).toContainEqual({ kind: "live-count", type: "watering", state: "asked" });
-    const incoming = await water(); incoming.ran = { clock: true }; expect(agree(incoming)).toMatchObject({ result: "ran", judgesTime: true });
-    const noClock = context(fixture, "found"); noClock.ran = { clock: true }; expect(agree(noClock)).toMatchObject({ result: "ran", judgesTime: true });
+    const incoming = await water(); incoming.ran = { clock: true }; expect(agree(incoming)).toEqual({ result: "ran", effects: [
+      { effect: "open", item: 20, type: "watering", state: "asked" },
+      { effect: "state", item: 20, state: "done" },
+      { effect: "ref", item: 20, slot: "zone", to: 1 },
+      { effect: "value", item: 20, slot: "amountMl", value: 400 },
+      { effect: "value", item: 20, slot: "mode", value: "scheduled" },
+      { effect: "value", item: 20, slot: "reason", value: "Scheduled irrigation." },
+      { effect: "party", item: 20, slot: "performedBy", member: keys.rita.member },
+      { effect: "value", item: 20, slot: "performedTime", value: t(101) },
+      { effect: "ref", item: 20, slot: "performedAt", to: 20 },
+    ],
+      sends: [], prepared: [{ rule: "water-amount", input: "sha256:45547bba2a16304ebc0176996365e14fc3c2e9acf10fc50e093bc59c51f67c4e", result: true }], judgesTime: true, settles: false });
+    const noClock = context(fixture, "found"); noClock.ran = { clock: true }; expect(agree(noClock)).toEqual({ result: "ran", effects: [{ effect: "open", item: 20, type: "note", state: "live" }], sends: [], prepared: [], judgesTime: true, settles: false });
   });
   test("effect conditions evaluate unless after false if and retain unavailable precedence", async () => {
     const definition = variant(raw, data => { data.acts.window.guards = [{ state: ["live"] }]; data.acts.window.effects = [{ value: { slot: "text", from: { const: "ignored" } }, if: [{ state: ["done"] }], unless: [{ rule: "ready" }] }]; });
