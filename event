@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2b8f505bf11ab80046de4070489b32f54a3c05ff","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/http.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:39b0ddf3d6a16f3d9001c6ed4584538ed6bb4f42","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-s1-approved-source-seals.manifest.json."}
