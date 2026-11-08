@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/dap-bytes";
-import { clockOf, deriveEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Item, type Judging } from "../src/index.ts";
+import { clockOf, evaluateEffects, judgeDelivery, validateDefinition, type ActJudgment, type Item, type Judging } from "../src/index.ts";
 import { Scope, arriving, deliver, fields, forged, created, keys, member, on, ticketDefinition, valid, type Actor, type Over } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
@@ -17,8 +17,10 @@ const { rita, una, vic, paul, sam } = keys;
 import { cards } from "./definition-corpus/forms-effects-data.ts";
 import { clockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
 import { clockScene } from "./fixtures-clock-cutover.ts";
-import { derive, runClause } from "../src/handlers.ts";
-import { bodyStructure } from "../src/program/structure.ts";
+import { runClause } from "../src/handlers.ts";
+import { bodyStructure, namedBody } from "../src/program/structure.ts";
+import { executeBody } from "../src/program/body.ts";
+import { judgeGuardNodes } from "../src/program/guard-value.ts";
 import { otherLane, t } from "./fixtures-entry.ts";
 
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
@@ -83,7 +85,7 @@ describe("effects: sources, conditions and what is not applied (section 6.6)", (
       parties: { owner: rita.member, helper: una.member, team: [una.member] }, refs: { parent: p },
       values: { text: "p", size: null, tags: null, near: null }, attributed: [rita.member] };
     const act = definition.declared.acts["child"]!;
-    expect(deriveEffects(judging(s, "child", { "also.parent": p }, { given: { parent: p } }), act.effects, act.attention, "card", bodyStructure(definition, act, "child"))).toEqual({
+    expect(evaluateEffects(judging(s, "child", { "also.parent": p }, { given: { parent: p } }), bodyStructure(definition, act, "child"), "card")).toEqual({
       ok: true, effects: expectedEffects, working: new Map([["also.parent", s.item(p)], ["on", expectedOpened]]), opened: expectedOpened,
     });
     const child = s.did(rita, "child", under(s, p));
@@ -148,7 +150,7 @@ const judging = (s: Scope, kind: string, bound: Record<string, number>, more: Gi
 /** What those effects derive there. Nothing is written. */
 const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}) => {
   const act = s.definition.declared.acts[kind]!, attention = more.attention ?? [];
-  if (act.effects === forms && attention.length === 0) return deriveEffects(judging(s, kind, bound, more), forms, attention, more.opens ?? null, bodyStructure(s.definition, act, kind));
+  if (act.effects === forms && attention.length === 0) return evaluateEffects(judging(s, kind, bound, more), bodyStructure(s.definition, act, kind), more.opens ?? null);
   const checked = valid(validateDefinition(effectProbeData(kind, forms, attention, more.opens ?? null), PROPOSED_BOUNDS));
   const probe = checked.declared.acts["probe"]!;
   if (s.last.input.type !== "act") return expect.fail("the effect probe requires an act entry template");
@@ -157,16 +159,16 @@ const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Re
   const fact = factRefOf(entry);
   const j: Judging = { ...judging(s, kind, bound, more), definition: checked, kind: "probe", fieldTypes: probe.fields,
     fields: { ...more.given, "test-proof": fact }, facts: new Map([[fact.hash, { fact, entry, under: "test-effects-source" }]]) };
-  return deriveEffects(j, probe.effects, probe.attention, more.opens ?? null, bodyStructure(checked, probe, "probe"));
+  return evaluateEffects(j, bodyStructure(checked, probe, "probe"), more.opens ?? null);
 };
 
 test("M5: a nested constant subject in if skips effects and attention while unbound and applies both when bound", () => {
   const checked = valid(validateDefinition(unboundConditionData(), PROPOSED_BOUNDS));
   const s = new Scope(checked), p = s.did(rita, "add", fields({ text: "before" })).seq;
-  const parent = s.did(una, "add").seq, act = checked.declared.acts["probe"]!;
+  const parent = s.did(una, "add").seq;
   // Production admission and body execution; the fixture supplies the resolved subjects and authority.
-  const without = derive(judging(s, "probe", { on: p }), act, null, s.head.hash);
-  const withParent = derive(judging(s, "probe", { on: p, "also.parent": parent }), act, null, s.head.hash);
+  const without = executeBody(judging(s, "probe", { on: p }), namedBody(s.definition, "act", "probe", "act"), s.head.hash);
+  const withParent = executeBody(judging(s, "probe", { on: p, "also.parent": parent }), namedBody(s.definition, "act", "probe", "act"), s.head.hash);
   expect([without, withParent]).toEqual([
     { result: "ran", effects: [], sends: [], prepared: [], judgesTime: false, settles: false },
     { result: "ran", effects: [
@@ -187,8 +189,11 @@ test("M5: admitted effect and attention instructions keep their captured meaning
   clock.value.from.time.plusSeconds = 999;
   helper.party.from = { const: una.member };
   act.attention[0]!.notify.reason = "mutated";
+  const j = judging(s, "edit", { on: p }), body = namedBody(checked, "act", "edit", "act")!;
+  expect(() => executeBody(j, { ...body }, s.head.hash)).toThrow("another validation");
+  expect(() => executeBody({ ...j, kind: "add" }, body, s.head.hash)).toThrow("another body");
   // Production body execution over fixture state; no entry is sealed here.
-  const actual = derive(judging(s, "edit", { on: p }), act, null, s.head.hash);
+  const actual = executeBody(j, body, s.head.hash);
   expect(actual, JSON.stringify(actual)).toEqual({
     result: "ran", effects: [
       { effect: "value", item: p, slot: "text", value: "captured" },
@@ -251,8 +256,8 @@ describe("attribution: its sources and its order (section 6.7)", () => {
       return { j, act, body: bodyStructure(checked, act, "probe")! };
     };
     const conditional = (forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}) => {
-      const { j, act, body } = transition(forms, bound, more);
-      return deriveEffects(j, act.effects, act.attention, null, body);
+      const { j, body } = transition(forms, bound, more);
+      return evaluateEffects(j, body, null);
     };
     expect([
       // The range of the first source is not read whole. It is an exact set, so the input is not judged.
@@ -297,7 +302,7 @@ describe("attribution: its sources and its order (section 6.7)", () => {
 
     // The guards of one written list: the first is not completed and the second is false, so the list is false, by its second guard.
     const ordered = transition([], { on: p, "also.parent": p }, { bounds: stopped }, [some, { unset: "owner" }]);
-    expect(judgeGuards(ordered.j, ordered.act.guards)).toEqual({ result: "fail", at: 1 });
+    expect(judgeGuardNodes(ordered.j, ordered.body, ordered.body.nodes.filter(node => node.category === "guard"))).toEqual({ result: "fail", at: 1 });
   });
 });
 

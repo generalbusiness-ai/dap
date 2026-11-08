@@ -36,6 +36,7 @@ import type { Item, StateView } from "./state.ts";
 import { NOTHING, amountMath, type Amount } from "./held.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
+import { declarationOf } from "./program/declaration.ts";
 
 /**
  * One form that settles an item of a type that has marks, as the amounts
@@ -157,11 +158,11 @@ export function itemAwaits(definition: Pick<ValidDefinition, "markers">, item: P
  * `deadline`: the validator counts no change of state for an effect mark of
  * such a form ("A rule of a form that declares `settles` sets no state").
  */
-export function ruleMayNot(definition: Pick<ValidDefinition, "markers" | "declared">, settling: boolean, type: string, effect: { effect: string; slot?: string; value?: unknown }): string | null {
+export function ruleMayNot(definition: ValidDefinition, settling: boolean, type: string, effect: { effect: string; slot?: string; value?: unknown }): string | null {
   if (effect.effect === "value" && effect.slot !== undefined && own(definition.markers, type)?.marks.includes(effect.slot) && effect.value !== true) return `a value of the mark ${effect.slot} that is not true: a mark is set once`;
   if (!settling) return null;
   if (effect.effect === "state") return "a change of state, in an entry of a form that declares settles";
-  if (effect.effect === "value" && Object.values(definition.declared.timed).some((rule) => rule.on === type && rule.deadline === effect.slot)) return `a deadline, ${effect.slot}, in an entry of a form that declares settles`;
+  if (effect.effect === "value" && Object.values(declarationOf(definition).timed).some((rule) => rule.on === type && rule.deadline === effect.slot)) return `a deadline, ${effect.slot}, in an entry of a form that declares settles`;
   return null;
 }
 

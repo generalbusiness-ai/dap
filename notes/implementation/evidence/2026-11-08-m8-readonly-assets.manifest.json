@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "c9f65d8f0418f5a86cac0bb3732fa826bab02846",
+  "sourceTree": "7bebec08790c325daad59eb2e443eba258fac573",
+  "qualification": "One maintained pageAssets write:false comparison and read-only parser seals. No committed asset, dist, inventory literal, gate assertion, pin or deployment changed. Prototype retirement and final exact-source validation remain.",
+  "fileCount": 7,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-readonly-assets-public",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 489,
+          "sha256": "450fffdf4e3a08a43f112d0f180330f02e8f45e976eaf83f74c8df7c6a7e72a8"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 428,
+          "sha256": "765075d38ccd83f534442dbc7ae789ad36934f781a044834fb7c41164fcd8e88"
+        },
+        {
+          "path": "probe.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 206,
+          "sha256": "2c5b8ec9e07168af90bd479082ecec33d82ed8c18b764b89f0dd86f2bfb9b498"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1814,
+          "sha256": "f464c22cc5f1c170883833c5f717f24bbb4a1674633b2a42059faae80c222c5d"
+        },
+        {
+          "path": "source-comparison.json",
+          "bytes": 270,
+          "sha256": "938bc09250565472ab741848eb055ff694c7605dd5d8780cac9a3366609bef6b"
+        },
+        {
+          "path": "tools.json",
+          "bytes": 1539,
+          "sha256": "4e62125b94af9021c2323f6719e7fb63717c211c70b46958ca0a75f69e77ed1e"
+        }
+      ]
+    }
+  ]
+}

@@ -7,20 +7,22 @@
  *
  * This file holds the judges of an act and of a timed transition, and what
  * every judge returns. `genesis.ts`, `delivery.ts` and `settle.ts` hold the
- * others. Each builds a `Judging`, derives the written forms with `derive`
- * or `deriveEffects`, and returns a `Draft`.
+ * others. Each builds a `Judging`, executes its admitted body instructions,
+ * and returns a `Draft`.
  */
 
 import { nativeMark } from "./program/native.ts";
-import type { Effect, Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, PlatformTimedRule, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Effect, Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { intentDigest, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { withinCounts } from "./draws.ts";
-import { deriveEffects } from "./effects.ts";
+import { namedBody } from "./program/structure.ts";
+import { executeBody } from "./program/body.ts";
+import { declarationOf } from "./program/declaration.ts";
 import { isIntent, presentedTypes, readFacts, readFields, type Reading } from "./fields.ts";
 import { covers } from "./grant.ts";
 import type { Judging } from "./guards.ts";
-import { alsoItems, derive, giving } from "./handlers.ts";
+import { alsoItems, giving } from "./handlers.ts";
 import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, placeWithoutValue, placesOf, retainedOf, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
 import { listedBy, rowsOfAct, settle, type Listed, type Needed, type Observing, type Settled } from "./observes.ts";
 import type { Item, StateView } from "./state.ts";
@@ -204,7 +206,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   if (!scope) return { result: "unavailable", reason: "unavailable" };
   const refused = (reason: RefusalReason, detail: string): Refused => ({ result: "refused", reason, detail, judgedAt: scope.head });
   const { clock, bounds } = context;
-  const { declared } = definition;
+  const declared = declarationOf(definition);
 
   // The signature and the shape are immutable facts about the input (section 5.1). A verifier needs them judged here too.
   if (!verifySignedIntent(signed) || !isIntent(signed.intent)) return refused("bad-intent", "not a signed intent");
@@ -377,7 +379,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   };
 
   // Guards, then effects, then sends, then the bound on the type it opens, as for a handler. The cause of a scope it creates is the intent's digest.
-  const ran = derive(j, act, act.step === "open" ? act.on : null, digest);
+  const ran = executeBody(j, namedBody(definition, "act", intent.kind, "act"), digest);
   if (ran.result === "unavailable") return ran;
   if (ran.result === "refused") return { ...refused(ran.reason, ran.detail), ...(ran.name === undefined ? {} : { name: ran.name }) };
 
@@ -408,7 +410,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
 export function judgeTimed(view: StateView, definition: ValidDefinition, selected: Due, context: Pick<JudgeContext, "clock" | "bounds" | "capabilities" | "platform">): TimedJudgment {
   const { clock, bounds } = context;
   const scope = view.scope();
-  const rule = own(definition.declared.timed, selected.rule);
+  const rule = own(declarationOf(definition).timed, selected.rule);
   const item = view.item(selected.item);
   if (!scope || !rule || !item || item.type !== rule.on || !rule.states.includes(item.state) || own(item.values, rule.deadline) !== selected.due) return { result: "dropped", failed: "held" };
   if (clock.behind) return { result: "unavailable", reason: "clock-behind" };
@@ -417,20 +419,15 @@ export function judgeTimed(view: StateView, definition: ValidDefinition, selecte
   if (next?.item !== selected.item || next.rule !== selected.rule) return { result: "dropped", failed: "next" };
 
   const j: Judging = { view, definition, bounds, clock, scope, self: scope.head.seq + 1, kind: selected.rule, fields: {}, fieldTypes: {}, subjects: new Map([["on", item]]), signer: null, facts: new Map(), prepared: [], used: [], capabilities: context.capabilities };
-  const effects = deriveEffects(j, rule.effects, rule.attention, null);
+  const ran = executeBody(j, namedBody(definition, "timed", selected.rule, "timed"), scope.head.hash, { timed: context });
   // Section 6.4: a timed rule's effects are total. The validator refuses, as `timed-partial`, a rule with an effect that could be
   // refused here, and requires one that takes the item out of the rule's states. So a selection that passes its three checks is
   // written, and its item is not due again under this rule: the drain makes progress. A refusal here is a fault of the validator,
   // and is never answered by passing over the due item.
-  if (!effects.ok) throw new Error(`timed rule ${selected.rule} cannot apply: ${"unavailable" in effects ? effects.unavailable : effects.reason}`);
-  const opened: Effect[] = [];
-  const opens = (rule as PlatformTimedRule).opens ?? [];
-  if (opens.length && ((context.platform?.named !== "platform:destination@3" && context.platform?.named !== "platform:destination@13" && context.platform?.named !== "platform:destination@14" && context.platform?.named !== "platform:destination@15" && context.platform?.named !== "platform:destination@19") || scope.at.kind !== "destination")) return { result: "unavailable", reason: "unavailable" };
-  for (const [k, open] of opens.entries()) opened.push(
-    { effect: "operation", k, owner: context.platform?.named === "platform:destination@19" ? "platform:destination@19" : context.platform?.named === "platform:destination@15" ? "platform:destination@15" : context.platform?.named === "platform:destination@14" ? "platform:destination@14" : context.platform?.named === "platform:destination@13" ? "platform:destination@13" : "platform:destination@3", kind: open.kind, attempts: open.attempts, for: selected.item },
-    { effect: "attempt", operation: { k }, attempt: 1, result: "opened", selected: null },
-  );
-  return withinCounts(view, definition, { result: "write", draft: { input: { type: "timed", item: selected.item, rule: selected.rule, due: selected.due }, uses: [], prepared: [], effects: [...effects.effects, ...opened], sends: [], judgesTime: true } } as TimedJudgment);
+  // The runner throws for non-total effects; its unavailable result here is the fixed operation-owner policy.
+  if (ran.result === "unavailable" && ran.reason === "unavailable") return { result: "unavailable", reason: ran.reason };
+  if (ran.result !== "ran") throw new Error(`timed rule ${selected.rule} cannot apply: ${ran.reason}`);
+  return withinCounts(view, definition, { result: "write", draft: { input: { type: "timed", item: selected.item, rule: selected.rule, due: selected.due }, uses: [], prepared: [], effects: ran.effects, sends: [], judgesTime: true } } as TimedJudgment);
 }
 
 /**

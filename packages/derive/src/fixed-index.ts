@@ -7,6 +7,7 @@ import { normalValue, slotOf, type HashOf } from "./operand.ts";
 import type { FixedDependency, FixedRow, Item, StateWriter } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isObject, own } from "./values.ts";
+import { declarationOf } from "./program/declaration.ts";
 
 export { normalValue, type HashOf } from "./operand.ts";
 export interface FixedWrite { row: FixedRow; dependencies: readonly FixedDependency[] }
@@ -27,7 +28,7 @@ export function fixedValueOf(raw: unknown, at: ScopeRef, hashOf: HashOf): { key:
 
 /** Every fixed slot, including unset slots, after all effects on an item. */
 export function fixedRowsOf(definition: ValidDefinition, item: Item, at: ScopeRef, hashOf: HashOf): readonly FixedWrite[] {
-  const type = own(definition.declared.items, item.type);
+  const type = own(declarationOf(definition).items, item.type);
   if (!type) throw new Error("fixed equality item names no declared type");
   return [type.parties, type.refs, type.values].flatMap(slots => Object.entries(slots).flatMap(([slot, rule]) => {
     if (!rule.fixed) return [];

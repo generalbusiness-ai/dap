@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "af6c48b1473074e6ef74bb8dc9bee222f809a8b2",
+  "sourceTree": "871f31767b401ed6556b55e56342954e3ec2f7cf",
+  "qualification": "Historical frame identity checkpoint only: one failed source compiler pipeline and its narrow repaired follow-up. All six compiler contexts and227cases13completeowners pass once. Equivalent direct identity selection changes no semantic guard. Prototype/timed-adapter witness rulings, final reconciliation, assets/seals, gate, workflow, independent review and landing remain.",
+  "fileCount": 12,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-history-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 958,
+          "sha256": "baf872ecafe0a2a08adcbb9e6781761894d22f388bf17e2e0b92418e6067507e"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 89465,
+          "sha256": "8eef062e034fb96c25dd43c0eaa410ee9abf1bc19ef4c870ed1ed3c6fcb8bba6"
+        },
+        {
+          "path": "failed-outer-receipt.json",
+          "bytes": 567,
+          "sha256": "224fa1e0b829a67c1a746fa11da478bf4c81087a21982fb5ce0490262cca9082"
+        },
+        {
+          "path": "failed-pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "followup-outer-receipt.json",
+          "bytes": 567,
+          "sha256": "e3b5d418bfe88c7e976e26a6676730b430971bee9cd3a590ad2af18069fcba54"
+        },
+        {
+          "path": "followup-pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 2574,
+          "sha256": "297f2d0d2ead4dd4f241803b18d91c4e626577f19593a1b9acfc59937611d852"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 8778,
+          "sha256": "71dd0e51428381c9e147dc863c50b3fc117cfe2743949c0c43b21dc1f3353a8d"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 44913,
+          "sha256": "c6d7ed56fd5912bef781334433d94328a9fd5f67bf03a03057f6bd8e86030ab7"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2116,
+          "sha256": "1546e25eca0c820fbe1c067e035549c958555f4f21af251fc6f43fa38187e0dd"
+        },
+        {
+          "path": "repair-proof.json",
+          "bytes": 740,
+          "sha256": "f8e72f9b7d04df14841d1924c57c5626b9fb2bfa930c2e99dff543dcbcde1500"
+        },
+        {
+          "path": "result.json",
+          "bytes": 840,
+          "sha256": "29b40ceeaa8853fe4d9a2ac036a438f12570444f6417041c07a8abcda5856946"
+        }
+      ]
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import { attention, notifyBytes } from "./sends.ts";
 import { at } from "./shape.ts";
 import { recordFrame } from "../program/reads.ts";
 import { beginBody, endBody } from "../program/structure.ts";
+import { withRow } from "../program/rows.ts";
 import { ENTRY_BYTES, RECORD_BYTES, memberBytes, mostBytes, stated } from "./sizes.ts";
 
 /** What the kind of a timed entry begins with (section 6.2). Its rule's key follows. */
@@ -70,12 +71,12 @@ export function timedKinds(d: Defining, acts: unknown, receives: unknown): void 
 export function timedRules(d: Defining, v: unknown, timedTypes: Set<string>, outcomes?: unknown): TimedMove[] {
   const { bounds, types, bad, rec, entries, names } = d;
   const moves: TimedMove[] = [];
-  for (const [name, rv] of entries(v, "timed", bounds.timedRules)) {
+  for (const [name, rv] of entries(v, "timed", bounds.timedRules)) withRow(d, "timed", name, at("timed", name), () => {
     const path = at("timed", name);
     const o = rec(rv, path, ["on", "states", "deadline", "effects", "attention"], d.platform && d.name === "platform:destination" ? ["opens"] : []);
-    if (!o) continue;
+    if (!o) return;
     const t = typeof o["on"] === "string" ? types.get(o["on"]) : undefined;
-    if (!t) { bad("name", at(path, "on"), "names no item type"); continue; }
+    if (!t) { bad("name", at(path, "on"), "names no item type"); return; }
     if (o["opens"] !== undefined) {
       const opens = d.list(o["opens"], at(path, "opens"), 2);
       if (opens.length !== 2 || !isObject(opens[0]) || opens[0]["kind"] !== "reservation-delete" || opens[0]["attempts"] !== 3 || !isObject(opens[1]) || opens[1]["kind"] !== "mint" || opens[1]["attempts"] !== 1) bad("shape", at(path, "opens"), "opens only the held three-attempt reservation deletion and its first mint");
@@ -109,7 +110,7 @@ export function timedRules(d: Defining, v: unknown, timedTypes: Set<string>, out
     attention(d, o["attention"], at(path, "attention"), ctx);
     recordFrame(d, ctx, path, "timed");
     endBody(d, traced);
-  }
+  });
   return moves;
 }
 
