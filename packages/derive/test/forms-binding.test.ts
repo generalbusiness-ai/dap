@@ -511,8 +511,14 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
     expect(loaded.all().items).toEqual(snapshot.items);
 
     // Case 23, its last sentence. A runtime whose index holds no row for that job answers no lookup: the delivery is not judged.
-    const lost = new MemoryState();
-    for (const { entry, hash } of G.entries) applyEntry(lost, entry.effects.some((e) => e.effect === "open" && e.item === job) ? { ...m, keyed: {} } : m, entry, hash, G.foldOptions);
+    // A missing derived row is a storage stand-in; the definition keeps its actual admission.
+    class MissingJobIndex extends MemoryState {
+      override putIndexed(type: string, slot: string, key: string, item: number): void {
+        if (item !== job) super.putIndexed(type, slot, key, item);
+      }
+    }
+    const lost = new MissingJobIndex();
+    for (const { entry, hash } of G.entries) applyEntry(lost, m, entry, hash, G.foldOptions);
     expect([lost.lookup("job", "ticket", keyOf(fresh.fact, G.at)!, 9), G.judged(stop, lost)]).toEqual([null, { result: "unavailable", reason: "unavailable" }]);
   });
 });
