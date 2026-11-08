@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2eae5f80fd4bdb7fa2e3621bede57af76d0c0bee","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-readonly-assets.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2fd88a29a451ae14858cd883a30f86a82f561919","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/capability.ts."}
