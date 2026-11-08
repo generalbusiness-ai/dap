@@ -9,6 +9,8 @@ import { conditionSubjects, type ConditionPlan } from "./condition-plan.ts";
 import { ownEffectPlan, type AttentionPlan, type EffectPlan, type EffectValueSource } from "./effect-plan.ts";
 import { ownSendPlan, type PendingSendPlan, type SendPlan } from "./send-plan.ts";
 import { ownSettlementPlan, type SettlementPlan } from "./settlement.ts";
+import { bindNative, nativeBoundaries, nativeSource, recordNative, type NativeBoundary } from "./native.ts";
+import type { MarkKind } from "../validate/context.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
 export type GuardOp = Exclude<Keys<Guard>, "of" | "reason" | "ifPresent">;
@@ -64,6 +66,7 @@ export interface DefinitionStructure {
   readonly roots: readonly BodyStructure[];
   readonly marks: ResolvedReads["marks"];
   readonly underived: ResolvedReads["underived"];
+  readonly native: readonly NativeBoundary[];
 }
 export type RootBinding = { readonly kind: "body"; readonly source: object }
   | { readonly kind: "clause"; readonly owner: object; readonly clause: string };
@@ -206,13 +209,15 @@ export function recordSettlementPlan(d: Defining, plan: SettlementPlan): void {
   if (body.stack.length || body.settlement) throw new TypeError("settlement has no unique admitted body scope");
   body.settlement = plan;
 }
-export function recordNativeForm(d: Defining, kind: string, path: string, data: unknown): void {
+export function recordNativeForm(d: Defining, kind: MarkKind, path: string, data: object): void {
+  recordNative(d, kind, path, data, pending.get(d)?.active?.id ?? null);
   if (kind !== "guard" && kind !== "effect" && kind !== "send") return;
   const scope = enterForm(d, kind, "native", path, data); leaveForm(d, scope);
 }
 
 /** Called only after the actual final admission and canonical-byte checks. */
 export function finishStructure(d: Defining, definition: ValidDefinition, reads: ResolvedReads): void {
+  bindNative(d, definition, reads.validation);
   const trace = pending.get(d);
   if (!trace) return;
   if (trace.active !== null) throw new TypeError("unclosed definition structure");
@@ -226,7 +231,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     if (node.category === "effect" && node.op !== "native" && !node.effect) throw new TypeError("effect form has no captured instruction");
     if (node.category === "send" && node.op !== "native" && !node.send) throw new TypeError("send form has no captured instruction");
     if (node.category === "attention" && !node.attention) throw new TypeError("attention form has no captured instruction");
-    const effect = node.effect ? ownEffectPlan(node.effect, origins) : null;
+    const effect = node.effect ? ownEffectPlan(node.effect) : null;
     const valueSource = effect?.code.op === "value" ? effect.code.source : null;
     // Each discriminant came from the existing validator's admitted form branch.
     const owned = Object.freeze({ category: node.category, op: node.op, path: node.path, data, children,
@@ -301,7 +306,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
   });
   const structure: DefinitionStructure = Object.freeze({ validation: reads.validation, digest: definition.digest,
     profile: immutable(definition.declared.profile), rules: immutable(definition.declared.rules), capabilities: immutable(definition.declared.capabilities),
-    roots: Object.freeze(roots), marks: reads.marks, underived: reads.underived });
+    roots: Object.freeze(roots), marks: reads.marks, underived: reads.underived, native: nativeBoundaries(definition) });
   compiled.set(definition, { structure, bodies, clauses, forms, origins, guardLists, ranges, replacements: Object.freeze(replacements) });
   pending.delete(d);
 }
@@ -327,7 +332,7 @@ export function bodyStructure(definition: ValidDefinition, source: object, kind?
   return replacements?.length === 1 ? replacements[0]!.body : null;
 }
 export function clauseStructure(definition: ValidDefinition, owner: object, clause: string, origin: BodyStructure | null, kind: string): BodyStructure | null {
-  const found = compiled.get(definition)?.clauses.get(owner)?.get(clause)?.filter(body =>
+  const found = compiled.get(definition)?.clauses.get(nativeSource(definition, owner))?.get(clause)?.filter(body =>
     body.origin === (origin?.id ?? null) && body.frame.context.kind === kind);
   return found?.length === 1 ? found[0]! : null;
 }

@@ -16,6 +16,7 @@
  * and nothing in an entry says that a rule ran.
  */
 
+import { nativeMark } from "./program/native.ts";
 import type { ActType, AlsoMark, Attempt, Bounds, CapabilityName, Digest, DomainTag, Effect, Evidence, FactRef, FieldType, FieldValue, Grant, GrantMark, Guard, KeyId, Mark, MemberId, MemberRef, Message, ObservationUse, OperationId, PlatformDefinition, Request, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, domainBytes, isDigest, isFieldValue, isMemberRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
@@ -471,7 +472,7 @@ export function unjudged<T>(judge: () => T): T | { result: "unavailable"; reason
 export const markOf = (v: unknown): Mark | null => (isObject(v) && typeof v["code"] === "string" && typeof v["row"] === "string" ? (v as unknown as Mark) : null);
 
 /** What a judge holds when it gives a rule its six things: the parts of a `Judging` that a rule is given. */
-export type Giving = Pick<Judging, "view" | "clock" | "bounds" | "scope" | "self" | "fields" | "subjects" | "signer" | "facts" | "own" | "source" | "platform" | "judged" | "ran" | "beside" | "outcome">;
+export type Giving = Pick<Judging, "definition" | "view" | "clock" | "bounds" | "scope" | "self" | "fields" | "subjects" | "signer" | "facts" | "own" | "source" | "platform" | "judged" | "ran" | "beside" | "outcome">;
 
 /** The six things, and no other (section 6.1). The entries in `uses` are those that the input's fields name, and for a delivery its source entry. */
 export function givenTo(g: Giving): RuleGiven {
@@ -540,7 +541,7 @@ export const outside = (mark: Mark, what: string): RuleFault => new RuleFault(`t
  * is one that the forms write, and the judge checks it as data.
  */
 export function ofCodedType(g: Giving, type: FieldType | undefined, value: unknown, of: { field: string } | { item: number; slot: string }): boolean | null {
-  const mark = markOf(type);
+  const mark = nativeMark(g.definition, type, "type");
   if (!mark) return null;
   if (!isFieldValue(value)) return false;
   const answer = run(mark, () => ruleFor(g, mark, "type").run(givenTo(g), value, of));
@@ -576,8 +577,8 @@ export function selectedBy(g: Giving, mark: AlsoMark): Item | null {
  * states none. Such a row reads no observation for the signer, whose key
  * membership may not know (section 4.2).
  */
-export const actionOf = (act: Pick<ActType, "grant">): string | null => {
-  const mark = markOf(act.grant) as GrantMark | null;
+export const actionOf = (act: Pick<ActType, "grant">, definition?: ValidDefinition): string | null => {
+  const mark = definition ? nativeMark(definition, act.grant, "grant") : markOf(act.grant) as GrantMark | null;
   return mark ? (mark.grant ?? null) : act.grant;
 };
 

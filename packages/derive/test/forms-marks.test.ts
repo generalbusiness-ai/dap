@@ -78,6 +78,22 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
   const enter = (s: Scope, who: Actor, secret: string, platform = gateRules(), note?: number) =>
     s.act(who, "enter", { on: 0, expected: { on: 1 }, fields: { secret, ...(note === undefined ? {} : { note }) } }, { platform });
 
+  test("M7: gate entry retains admitted Native declarations and whole judgment after their source codes change", () => {
+    let source: any;
+    const s = new Scope(gateWith(data => { source = data; }));
+    s.did(rita, "issue", { fields: { hash: textDigest("one") } });
+    const signed = s.intent(una, "enter", { on: 0, expected: { on: 1 }, fields: { secret: "one", note: 4 } });
+    const first = gateRules(), before = s.judge(signed, { platform: first, grants: null });
+    expect(before.result).toBe("write");
+    expect(first.ran).toEqual({ even: 2, find: 1, "by-ticket": 1, fresh: 1, "key-id": 1, refer: 1 });
+    for (const mark of [source.items.ticket.values.note.of, source.acts.enter.fields.note,
+      source.acts.enter.also.ticket, source.acts.enter.grant, source.acts.enter.guards[1],
+      source.acts.enter.effects[2], source.acts.enter.sends[0]]) mark.code = "unadmitted";
+    const second = gateRules(), after = s.judge(signed, { platform: second, grants: null });
+    expect(after).toEqual(before);
+    expect(second.ran).toEqual(first.ran);
+  });
+
   test("a name of `also` at check 8, a field's type at check 7, a guard at its position among the written guards, and an effect at its position among the written effects, with a slot's type checked by its rule", () => {
     const s = gated();
     const rules = gateRules();
@@ -211,6 +227,35 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
    */
   const OWNER = "platform:task@1" as PlatformDefinition;
   const owned = (over: Partial<Record<string, PlatformRule>>) => ({ ...gateRules(over), named: OWNER });
+
+  test("M7: probe outcome retains its admitted hook, whole judgment and supplied context after its source code changes", () => {
+    let source: any;
+    const s = new Scope(gateWith(data => { markRuntimeChange7(data); source = data; }));
+    s.did(rita, "issue", { fields: { hash: textDigest("one") } });
+    const opens = some(() => [{ effect: "operation", k: 0, owner: OWNER, kind: "probe", attempts: 2 }, { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }]);
+    expect(enter(s, una, "one", owned({ "key-id": opens })).result).toBe("write");
+    const operation = `${s.last.seq}:0` as OperationId, calls: unknown[] = [];
+    const platform = owned({ probe: { place: "outcome", rules: { selects: false, read: false,
+      retries: (result, of, given) => {
+        calls.push({ result, operation: of.id, input: given.input, time: given.time, fields: given.resolved.fields,
+          subjects: [...given.resolved.subjects], signer: given.resolved.signer, self: given.resolved.self,
+          own: given.own(s.head.seq)?.hash, rows: given.rows,
+          state: { scope: given.state.scope(), tickets: given.state.page("ticket", ["open", "used"], null, 100).items } });
+        return false;
+      },
+    } } });
+    const settle = () => settleOutcome(s.state, s.definition, { type: "outcome", operation, attempt: 1, result: "refused", evidence: { basis: "own-answer", body: {} } },
+      { clock: clockOf(s.state, s.now), bounds: PROPOSED_BOUNDS, own: s.own, platform });
+    const before = settle();
+    expect(before.result).toBe("write");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ result: "refused", operation, fields: {}, subjects: [], signer: null, self: s.head.seq + 1, own: s.head.hash });
+    const originalCalls = structuredClone(calls);
+    calls.length = 0;
+    source.outcomes.probe.code = "unadmitted";
+    expect(settle()).toEqual(before);
+    expect(calls).toEqual(originalCalls);
+  });
 
   test("what a rule returns meets what the validator asks of a written effect or send: nothing that only the hold capability sets, no operation without its first attempt, no relationship of an item that the entry does not open; a list change that changes nothing is not recorded, and a hold ends with an item that a rule ends", () => {
     // The gate with a pass: a hold under a ticket, with the forms that a hold type must have. A ticket also has a list of members.

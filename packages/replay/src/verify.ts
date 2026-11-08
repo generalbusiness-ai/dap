@@ -2211,7 +2211,7 @@ class Verifier {
           const row = own(definition.declared.acts, input.signed.intent.kind);
           // Authority note, section 3.3: a membership scope judges its own act on an observation that serves that one commit.
           const window = run.at!.kind === "membership" ? WINDOWS.once : windowOf(definition, run.at!.kind, input.signed.intent.kind);
-          await this.#granted(run, entry, grant, { key: input.signed.intent.actor, action: row ? actionOf(row) : null, window }, where, depth);
+          await this.#granted(run, entry, grant, { key: input.signed.intent.actor, action: row ? actionOf(row, definition) : null, window }, where, depth);
         }
         // Revision 20, section 16.1, "Replay": under a definition whose data states rows, the check is by the rows (`#byRows`, below).
         // Under any other, the older rule stands as a stand-in: the window of the act's own grant.

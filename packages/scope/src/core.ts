@@ -624,7 +624,7 @@ export class Scope {
     // An accepted key is answered from history at check 3, so nothing is read for it (section 5.2, step 1). A read that fails or
     // is late leaves nothing: the act is then not judged at check 9, `authority-unavailable`, and no earlier check is hidden.
     const given = (Array.isArray(grants) ? grants : []).filter(isGrant);
-    const standing = known ? null : await this.#standing({ scope: scope.at, signed, action: act ? actionOf(act) : null, grants: given, window: windowOf(definition, scope.at.kind, intent.kind) });
+    const standing = known ? null : await this.#standing({ scope: scope.at, signed, action: act ? actionOf(act, definition) : null, grants: given, window: windowOf(definition, scope.at.kind, intent.kind) });
     // Phase two is in the commit: what that read holds at the commit's head, on the commit's one reading. The judge is given the
     // answer and reads nothing.
     // Section 16.1, "The order before the turn": the rows of the act, under a definition whose data states rows. The observations

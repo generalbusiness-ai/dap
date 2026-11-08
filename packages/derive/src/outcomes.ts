@@ -16,6 +16,7 @@
  * and for every other owner as the given owners do.
  */
 
+import { nativeOutcomes } from "./program/native.ts";
 import type { Digest, OutcomeMark, PlatformData, Send } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
 import { joinReturnedEffects } from "./effects.ts";
@@ -57,7 +58,7 @@ export function operationValueSelector(rules: Pick<OperationRules, "values">): V
  */
 export function ownersOf(definition: ValidDefinition, platform: PlatformRules | null | undefined, owners: Owners | null | undefined, reading?: OutcomeReading): Owners | undefined {
   if (!platform) return owners ?? undefined;
-  const kinds: Readonly<Record<string, OutcomeMark>> = (definition.declared as unknown as PlatformData).outcomes ?? {};
+  const kinds: Readonly<Record<string, OutcomeMark>> = nativeOutcomes(definition);
   return {
     rules(owner: Owner, kind: string): OperationRules | null {
       if (owner !== platform.named) return owners?.rules(owner, kind) ?? null;

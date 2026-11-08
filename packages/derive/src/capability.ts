@@ -16,13 +16,13 @@
  */
 
 import { CAPABILITIES } from "@generalbusiness/dap-contract";
-import type { Bounds, Capability, CapabilityArg, CapabilityName, DeclaredDefinition, Effect, FieldValue, Guard, Operand, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Bounds, Capability, CapabilityName, DeclaredDefinition, Effect, FieldValue, Guard, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
 import type { GuardResult, Judging } from "./guards.ts";
 import type { Underived } from "./validate/capability.ts";
-import { bindEach, covered } from "./lists.ts";
-import type { ElementValues } from "./program/read-value.ts";
-import type { FormContext } from "./program/structure.ts";
-import { operand, slotOf } from "./operand.ts";
+import { coveredItems } from "./lists.ts";
+import { readValue, type ElementValues } from "./program/read-value.ts";
+import type { CapabilityEffectPlan, CapabilityGuardPlan } from "./program/capability-plan.ts";
+import { slotOf } from "./operand.ts";
 import type { HoldEffect } from "./hold.ts";
 import type { Most } from "./ledger.ts";
 import type { Item, StateView } from "./state.ts";
@@ -201,10 +201,9 @@ export const derivable = (definition: ValidDefinition, capabilities: Capabilitie
   definition.underived.every((u) => capabilities?.implements(u) === true);
 
 /** The rules for one guard or effect of the capability a form names. Null: the judge was given none for it, and the input is not judged. */
-function rulesFor(j: Judging, name: string, form: "guard" | "effect", of: string): { version: CapabilityName; rules: Capabilities; declared: Capability } | null {
-  const version = versionOf(j.definition.declared, name);
-  const declared = version ? declaredBy(version) : undefined;
-  return version && declared && j.capabilities?.implements({ capability: version, form, name: of }) ? { version, rules: j.capabilities, declared } : null;
+function rulesFor(j: Judging, version: CapabilityName, form: "guard" | "effect", of: string): { version: CapabilityName; rules: Capabilities; declared: Capability } | null {
+  const declared = declaredBy(version);
+  return declared && j.capabilities?.implements({ capability: version, form, name: of }) ? { version, rules: j.capabilities, declared } : null;
 }
 
 /**
@@ -214,23 +213,23 @@ function rulesFor(j: Judging, name: string, form: "guard" | "effect", of: string
  * guard does not hold, the refusal is `capability-refused` with the name
  * that the capability gives: `declined` keeps it for the judge.
  */
-export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unknown }>, item: Item | null, identity: Guard = g, context?: FormContext & { readonly elements: ElementValues }): GuardResult {
-  const { name, guard, with: written } = g.capability;
-  const matched = rulesFor(j, name, "guard", guard);
+export function capabilityGuard(j: Judging, plan: CapabilityGuardPlan, item: Item | null, identity: Guard, elements: ElementValues): GuardResult {
+  const { guard } = plan;
+  const matched = rulesFor(j, plan.version, "guard", guard);
   if (!matched) return "unavailable";
   const args: [string, unknown][] = [];
-  for (const [arg, from] of Object.entries(written) as [string, CapabilityArg][]) {
-    if ("each" in from) {
-      const bound = bindEach(j, from.each, from.as, item);
+  for (const [arg, from] of plan.arguments) {
+    if (from.op === "each") {
+      const values = readValue(j, from.list, item, elements);
       // A value that is not a list has no elements. It fails closed, as a list form does.
-      if (bound === null) return "fail";
-      args.push([arg, bound.map((b) => operand(b, from.value, item))]);
-    } else if ("items" in from) {
-      if (!context) throw new TypeError("capability range has no admitted form context");
-      const range = covered(j, from.items, context, `capability:${arg}`, context.elements);
+      if (values !== null && !Array.isArray(values)) return "fail";
+      args.push([arg, ((values ?? []) as readonly unknown[]).map(value =>
+        readValue(j, from.value, item, new Map(elements).set(from.binding.identity, value)))]);
+    } else if (from.op === "items") {
+      const range = coveredItems(j, from.range, elements);
       if (range === null) return "guard-incomplete";
-      args.push([arg, range.map((i) => slotOf(i, from.slot))]);
-    } else args.push([arg, operand(j, from, item)]);
+      args.push([arg, range.map((i) => slotOf(i, from.slot.name))]);
+    } else args.push([arg, readValue(j, from.read, item, elements)]);
   }
   const answer = matched.rules.guard(matched.version, guard, Object.fromEntries(args), given(j));
   if (answer === true) return "pass";
@@ -245,14 +244,15 @@ export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unkn
  * capability derives from the arguments. `unavailable`: the judge was given
  * no rules for that capability.
  */
-export function capabilityEffect(j: Judging, form: { name: string; do: string; with: Readonly<Record<string, Operand>> }, item: Item | null): Effect[] | UnavailableReason {
-  const matched = rulesFor(j, form.name, "effect", form.do);
+export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: Item | null): Effect[] | UnavailableReason {
+  const matched = rulesFor(j, plan.version, "effect", plan.action);
   if (!matched) return "unavailable";
-  const args = Object.fromEntries(Object.entries(form.with).map(([arg, from]) => [arg, operand(j, from, item)]));
+  const args = Object.fromEntries(plan.arguments.map(([arg, from]) => [arg, readValue(j, from.read, item)]));
   // The subject of each argument that is a slot operand: the form's own subject, the item of a range, or the subject it names.
-  const from = Object.fromEntries(Object.entries(form.with).flatMap(([arg, o]): [string, number][] => {
-    if (!("slot" in o) || o.part !== undefined) return [];
-    const of = o.of === undefined ? item : o.of === "each" ? (j.each ?? null) : (j.subjects.get(o.of) ?? null);
+  const from = Object.fromEntries(plan.arguments.flatMap(([arg, source]): [string, number][] => {
+    const identity = source.from?.identity;
+    if (!identity) return [];
+    const of = identity.kind === "range" ? item : identity.kind === "fan-out" ? (j.each ?? null) : (j.subjects.get(identity.name) ?? null);
     return of ? [[arg, of.id]] : [];
   }));
   const fromItems = Object.fromEntries(Object.entries(from).flatMap(([arg, id]): [string, Item][] => {
@@ -260,14 +260,14 @@ export function capabilityEffect(j: Judging, form: { name: string; do: string; w
     return read ? [[arg, read]] : [];
   }));
   const reading = { ...given(j), from, fromItems };
-  const made = matched.rules.deriveEffect ? matched.rules.deriveEffect(matched.version, form.do, args, reading)
-    : matched.rules.effect(matched.version, form.do, args, reading);
+  const made = matched.rules.deriveEffect ? matched.rules.deriveEffect(matched.version, plan.action, args, reading)
+    : matched.rules.effect(matched.version, plan.action, args, reading);
   if ("unavailable" in made) return "unavailable";
   const records = "records" in made ? made.records : made;
   const items = "records" in made ? (made.itemEffects ?? []) : [];
   // Section 6.1, "In the commit": code that returns more than it declared has a fault, and the input is not judged.
-  const most = maximumOf(matched.rules, "effect", matched.version, form.do);
-  if (most && records.length + items.length > most.effects) throw new Error(`${matched.version} declares at most ${most.effects} effects for its effect ${form.do}, and it returned ${records.length + items.length}`);
+  const most = maximumOf(matched.rules, "effect", matched.version, plan.action);
+  if (most && records.length + items.length > most.effects) throw new Error(`${matched.version} declares at most ${most.effects} effects for its effect ${plan.action}, and it returned ${records.length + items.length}`);
   const recorded = records.map((r): Extract<Effect, { effect: "record" }> => {
     const kind = own(matched.declared.records, r.kind);
     if (!kind?.states.includes(r.state)) throw new Error(`${matched.version} declares no record ${r.kind} with the state ${r.state}`);

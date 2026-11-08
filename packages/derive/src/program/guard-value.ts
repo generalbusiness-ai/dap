@@ -1,5 +1,5 @@
 /** Execute the closed admitted guard vocabulary over shared judgment and paging leaves. */
-import type { FieldType, MemberRef } from "@generalbusiness/dap-contract";
+import type { MemberRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { capabilityGuard } from "../capability.ts";
 import { members, preparedRule, type GuardResult, type Judging } from "../guards.ts";
@@ -125,7 +125,7 @@ function executeGuard(j: Judging, body: BodyStructure, node: GuardNode, elements
       return ok(deadline !== null && (code.op === "before" ? now < deadline : now > deadline));
     }
     case "rule": return preparedRule(j, code.rule).result;
-    case "capability": return capabilityGuard(j, { capability: code.capability }, item, guardSource(j.definition, body, node), { body, owner: node, elements });
+    case "capability": return capabilityGuard(j, code.capability, item, guardSource(j.definition, body, node), elements);
     case "anyOf": return any(code.alternatives.map(group => () => judgeList(j, body, group, elements).result));
     case "each": case "has": case "distinct": case "sameSet": return listGuard(reading, body, code, item);
     default: return exhaustive(code);
@@ -135,11 +135,8 @@ function executeGuard(j: Judging, body: BodyStructure, node: GuardNode, elements
 function listGuard(reading: Reading, body: BodyStructure, code: Extract<GuardCode<GuardNode>, { list: unknown; binding: unknown }>, item: Item | null): GuardResult {
   const { j, elements } = reading, value = readValue(j, code.list, item, elements);
   if (value !== null && !Array.isArray(value)) return "fail";
-  // Legacy opaque capability arguments still receive their written-name environment until M7.
-  const type: FieldType | null = code.binding.type.kind === "declared" ? code.binding.type.type
-    : code.binding.type.kind === "native" ? code.binding.type.mark as unknown as FieldType : null;
   const bound: Reading[] = ((value ?? []) as readonly unknown[]).map(element => ({
-    j: { ...j, elements: new Map(j.elements).set(code.binding.name, element), elementTypes: new Map(j.elementTypes).set(code.binding.name, type) },
+    j,
     elements: new Map(elements).set(code.binding.identity, element),
   }));
   if (code.op === "each" || code.op === "has") {

@@ -10,7 +10,7 @@
  * nothing and is judged by no rule.
  */
 
-import type { Effect, EffectForm, FieldType, FieldValue, Mark, MarkMost, MemberRef, Notify, PlatformData, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Effect, EffectForm, FieldType, FieldValue, Mark, MarkMost, MemberRef, Notify, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { attribution, byMember, historyOf } from "./attribution.ts";
 import { capabilityEffect } from "./capability.ts";
 import { isEntryOf, isLocalFact } from "./fields.ts";
@@ -18,11 +18,12 @@ import { changeItem, newItem, type ItemEffect } from "./fold.ts";
 import { members, slotOf, type Judging } from "./guards.ts";
 import { EPOCH, HOLDER, deriveHold, endsUnder, type HoldEffect } from "./hold.ts";
 import { judgeCondition } from "./program/condition-value.ts";
-import { attentionPlan, checkedBody, effectPlan, effectSource, formContext, timedStructure, type AttentionNode, type BodyStructure, type EffectNode } from "./program/structure.ts";
+import { attentionPlan, checkedBody, effectPlan, formContext, timedStructure, type AttentionNode, type BodyStructure, type EffectNode } from "./program/structure.ts";
+import { nativeOutcomes } from "./program/native.ts";
 import type { AttentionPlan, EffectPlan } from "./program/effect-plan.ts";
 import { readValue } from "./program/read-value.ts";
 import { coveredItems } from "./lists.ts";
-import { givenTo, markOf, ofCodedType, outside, ruleFor, run, type RuleEffect } from "./marks.ts";
+import { givenTo, ofCodedType, outside, ruleFor, run, type RuleEffect } from "./marks.ts";
 import { ruleMayNot } from "./markers.ts";
 import { kindOf } from "./operand.ts";
 import type { Item } from "./state.ts";
@@ -124,8 +125,7 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
     const { owner } = formContext(j.definition, body, "effect", i, form);
     if (owner.category !== "effect") throw new TypeError("effect has another admitted category");
     if (owner.op === "native") {
-      const mark = markOf(effectSource(j.definition, body, owner));
-      if (!mark) throw new TypeError("native effect has no declared mark");
+      const mark = owner.data;
       return { kind: "native", mark };
     }
     const plan = effectPlan(j.definition, body, owner);
@@ -203,7 +203,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
       if (!isEffect(effect) || !BY_RULE.includes(effect.effect)) throw outside(mark, "a value that is none of the effects that a rule returns");
       if (effect.effect === "operation") {
         // Section 6.1, "An operation that a rule opens": its owner is this definition, and its kind is one that `outcomes` lists.
-        const kinds = (j.definition.declared as unknown as PlatformData).outcomes;
+        const kinds = nativeOutcomes(j.definition);
         const k = effects.filter((e) => e.effect === "operation").length;
         if (effect.owner !== j.platform?.named || own(kinds, effect.kind) === undefined || effect.k !== k || !Number.isSafeInteger(effect.attempts) || effect.attempts < 1) throw outside(mark, "an operation that its definition does not own, or out of its ordinal");
         // Revision 17: the data states the most attempts of a kind. An operation states no more.

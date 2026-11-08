@@ -297,11 +297,12 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
       }
       if (typeof x === "string") code = { op: "rule", rule: x };
       break;
-    case "capability":
+    case "capability": {
       // Section 6.11: a guard that a listed capability declares. Its refusal has the name the capability gives, so a `reason` names nothing.
-      capabilityGuard(d, x, p, ctx, item);
-      code = { op: "capability", capability: x as Extract<GuardCode<FormTrace>, { op: "capability" }>["capability"] };
+      const capability = capabilityGuard(d, x, p, ctx, item);
+      if (capability) code = { op: "capability", capability };
       break;
+    }
     case "each": case "has": {
       const r = k === "each" ? rec(x, p, ["list", "as", "guards"], ["where"]) : rec(x, p, ["list", "as", "where"], ["guards"]);
       const inner = r && binding(r);

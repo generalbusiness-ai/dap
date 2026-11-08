@@ -21,10 +21,11 @@
  * judge's explanation: no entry records it, and no fold trusts it.
  */
 
+import { nativeMark } from "./program/native.ts";
 import type { BindingMark, Bound, FieldValue, PlatformReceive, ReceiveType, ScopeRef } from "@generalbusiness/dap-contract";
 import { CanonicalError, canonicalize } from "@generalbusiness/dap-bytes";
 import type { Judging } from "./guards.ts";
-import { RuleFault, markOf, outside, ruleFor, run, type Giving } from "./marks.ts";
+import { RuleFault, outside, ruleFor, run, type Giving } from "./marks.ts";
 import { equal, operand } from "./operand.ts";
 import type { Item, StateView, StateWriter } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -94,10 +95,10 @@ export type Indexed = Pick<Item, "id" | "state" | "parties" | "refs" | "values">
 export type BindingSelect = (items: readonly Indexed[], fields: Readonly<Record<string, FieldValue>>) => number | null;
 
 /** The mark of a handler that is its binding selector: the one that binds the name which `bound.of` names. Null: the handler states no `bound`, or a written rule binds the name. */
-export function selectorOf(handler: ReceiveType): BindingMark | null {
+export function selectorOf(handler: ReceiveType, definition: ValidDefinition): BindingMark | null {
   const stated = (handler as unknown as PlatformReceive).bound;
   const rule = stated && stated.of.startsWith("also.") ? own(handler.also, stated.of.slice(5)) : undefined;
-  return rule ? (markOf(rule) as BindingMark | null) : null;
+  return rule ? (nativeMark(definition, rule, "also") as BindingMark | null) : null;
 }
 
 /**
