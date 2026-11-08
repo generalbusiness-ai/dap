@@ -300,6 +300,10 @@ export function alsoItems(view: StateView, definition: ValidDefinition, also: Re
   return refusal === null ? { ok: true, items, marked } : { ok: false, detail: refusal };
 }
 
+/** The judge's rule input before body execution: no subjects at check 7, then the subjects bound at check 8. */
+export const giving = (view: StateView, definition: ValidDefinition, context: Reading, scope: Pick<ScopeState, "at" | "creator">, self: number, judged: JudgedInput, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, Fetched>, source?: Fetched): Giving =>
+  ({ view, definition, clock: context.clock, bounds: context.bounds, scope, self, fields, subjects: new Map(), signer: null, facts, own: context.own, source, platform: context.platform, judged, ran });
+
 export interface ItemSettlement { item: number; form: Extract<Settles, { of: unknown }> }
 
 /** The judge and fold use the same condition for an actual item settlement. */

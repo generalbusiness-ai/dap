@@ -175,10 +175,4 @@ export function boundTo(j: Judging, handler: ReceiveType, message: string, count
   return holds && counts(item, message) > 0 ? item : null;
 }
 
-/** The `decisions` that the `holds` of an item type states for one message: the count that the entry which opens such an item sets. Zero: the type states none. */
-export function decisionsOf(definition: Pick<ValidDefinition, "declared">, type: string, message: string): number {
-  const stated = (own(declarationOf(definition).items, type) as { holds?: { decisions?: Record<string, number> } } | undefined)?.holds?.decisions;
-  return own(stated, message) ?? 0;
-}
-
 export { bindingKey as keyOf };
