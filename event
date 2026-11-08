@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3b2930c8d5dd17f8b83ce427f7a5a6c0b87a6d7a","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/oauth-http.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:65969dea1823d130786bcbe988d97ec771a6ad50","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-s1-f1-gate.manifest.json."}
