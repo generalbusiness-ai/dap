@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f861fd7817cf01e19bd01aa604057a67080da129","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/outcomes.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:faf27870e48cc3fc956e016bf3f6aa2d2618f985","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m6-collect-diagnostic.manifest.json."}
