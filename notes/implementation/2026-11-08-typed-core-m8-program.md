@@ -80,3 +80,12 @@ Two sequential isolated controls each run one new case. Omitting the actual send
 The [admitted interpretation validation manifest](evidence/2026-11-08-m8-interpretations-validation.manifest.json), SHA-256 `852e9258df85de9d1a7c08bdd7894eab694bd86468be9170deb82e33e77e845e`, binds 25 read-only public files. Six read-only units retain 342 private originals, including the failed compiler, exact isolated repair, complete follow-up reports, both controls and all plan inputs. Retention reruns nothing.
 
 This checkpoint exercises the actual admitted interpretations. The first-slice prototype remains live while ruling `f0d2a338` waits, and its assertions remain unchanged. Prototype retirement, complete metadata and witness reconciliation, the final gate, generated assets, exact-source workflow and independent review remain. These focused results establish no complete M8 or live acceptance.
+
+
+## The read-only probe identifies the final asset and seal scope
+
+At clean evidence head `c9f65d8f0418f5a86cac0bb3732fa826bab02846`, the maintained `pageAssets()` function builds once with `write: false`. Its module differs from `apps/room/page/assets.ts`: committed bytes are 2,362,642 with SHA-256 `2e3c254998a402b1df43cfbe5a0a3b5efe083dda9dffafe811d2ac18fc6203f6`; the scratch result has 2,371,162 bytes and SHA-256 `a24780276a1981ad279b53a442c3e5713523b0ded8f0556f476f5b14db7d0bc0`. This is a source-specific comparison, not the final generated asset or a browser result. The checkout and `dist` remain unchanged.
+
+The maintained parser identifies two changed direct seal owners: `genesis.ts` and `judge.ts`. Their current AST hashes are `15a4adb0e86d62a5be70249c176a2677717a0616119eedcb7b7427a5291fbc2c` and `7bafa496e7f0d647ffb84a7fa1131fe682335bb293b1ceeb7bee5c9b50693560`. No inventory literal or assertion changes. Final source must supply exact reviewed seal evidence before adoption.
+
+The actual probe exit is 0. Complete tracked-source fingerprints match before and after, and no owned process remains. The [read-only asset manifest](evidence/2026-11-08-m8-readonly-assets.manifest.json), SHA-256 `f39695385af30f8e59ea652e8905792f3ec62430675a66b01e5c92c420dfe446`, binds seven public files and a read-only inventory of seventeen private originals. No build reruns during retention. A concrete before-edit addendum must precede the eventual maintained generator and seal updates. The final asset owner, exact-source Page workflow, gate and independent review remain ahead.
