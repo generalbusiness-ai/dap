@@ -1,6 +1,6 @@
 # Retained-editor stages and their evidence
 
-Status: characterization complete; runtime refactor pending. Request `8ae87346` and promise `a20e0cf1` own this branch. S1 has finished its gate. M7 follows, then S3. Runtime source remains unchanged. Both reply-fault characterization cases pass on that baseline.
+Status: runtime draft; checks pending. Request `8ae87346` and promise `a20e0cf1` own this branch. S1 has finished its gate. M7 holds the active gate slot, then S3 follows. Both reply-fault characterization cases pass on the earlier unchanged baseline. The runtime draft and caller adaptations below have not run through a compiler or test.
 
 ## Current state and the intended change
 
@@ -46,3 +46,13 @@ The [characterization manifest](evidence/2026-11-07-s3-characterization-validati
 | Saved-report classification | Read actual case statuses and quoted titles; compare snapshots | 0 | `474b7c192076a9eda66b300c5c6f29d3a1a0b7ac2bef060d89e2b8d9168a1f55` |
 
 This is a baseline characterization, not evidence for the pending S3 runtime refactor. The existing full owner set remains required after that change.
+
+## Draft the evidence-bearing stages
+
+The unvalidated draft adds `retained-editor-state.ts`. Each readonly stage carries its required facts: verified opening, lane and proposal, verified rules request, collected source or version. Unknown progress carries the attempted original request and the previous verified stage. A lane-ready stage holds the discovered lane before the rules request. It changes no rendered label.
+
+`transitionEdit` changes values without network calls. The controller assigns its result through one `applyEdit` function. Network helpers prepare and keep the exact envelope, submit it, follow its receipt, read the opened lane and check native rules. The controller records attempted before submission and the answer before receipt reads. A stopped result preserves an attempted unverified request as unknown. `checkEditRequest` uses that retained request under the original association.
+
+The current caller changes are `retained-editor.ts` and fixtures or evidence reads in `retained-editor.test.ts`, `retained-editor.scope.test.ts` and `editor-list1.scope.test.ts`. The DOM recovery fixture still tests contradictory task data through an explicit malformed-task stand-in; production readonly stages cannot construct those combinations. `record.scope.test.ts` still calls preparation without adapting its task representation. The draft retains every existing behavioral assertion and user-visible message. It keeps separate legacy and LIST1 results and no durable outbox.
+
+Next: after M7's gate ends, run the Page source, Node-test and scope compilers, then the complete changed owners and direct preparation caller. A focused control must show that accepting an unverifiable receipt advances incorrectly and fails the existing new witness. Regenerate Page assets with the maintained generator only after the runtime checks pass, cite the exact-source Page workflow, then run S3's one full gate. No draft pass or review is claimed yet.

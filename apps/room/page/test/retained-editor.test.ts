@@ -1,6 +1,7 @@
+import { preparedEditStage, transitionEdit } from "../src/retained-editor-state.ts";
 import { afterEach, expect, test, vi } from "vitest";
 import { canonicalize, definitionDigest, digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import type { Item, ScopeRef, Summary } from "@generalbusiness/dap-contract";
+import type { Answer, FactRef, Item, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { changeDemo } from "@generalbusiness/dap-lanes";
 import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import * as data from "../src/data.ts";
@@ -54,7 +55,7 @@ test("invalid retained path keeps its corrected draft through explicit unsent re
     source:{definition:digest,manifestFact:{at:sourceScope,seq:4,hash:opening},sourceFact:{at:sourceScope,seq:4,hash:opening},scope:sourceScope,manifest:4,opened:opening,base:"c".repeat(40),path:"../outside.md",digest:digestBytes(utf8(draft.content)),size:24,content:draft.content},
     draft:{...draft},base,definition:digest,definitionBytes:canonicalize(changeDemo),declared:changeDemo,
     context:{service:room.session.service,directory,membership:room.membership,key:room.key,rules:room.rules,destination:room.destination},
-    workflow:"legacy",directory,steps:[],state:"prepared",message:"Confirm this freshly read base",busy:false});
+    workflow:"legacy",directory,stage:preparedEditStage(),message:"Confirm this freshly read base",busy:false});
   const button=(label:string)=>rendered.all().find(e=>e.tag==="button"&&e.textContent===label);
   const flush=async()=>{await Promise.resolve();await Promise.resolve();};
   const fields=()=>rendered.all().filter(e=>e.tag==="input"||e.tag==="textarea");
@@ -64,7 +65,7 @@ test("invalid retained path keeps its corrected draft through explicit unsent re
   button("Back to edit")!.event("click");
   expect(fields().every(e=>!e.disabled)).toBe(true);expect(fields().map(e=>e.value)).toEqual([draft.title,draft.path,draft.content]);
   retiredConfirm.event("click");await flush();
-  expect(continueEdit).not.toHaveBeenCalled();expect(prepareEdit).toHaveBeenCalledTimes(1);expect(discarded.steps).toEqual([]);
+  expect(continueEdit).not.toHaveBeenCalled();expect(prepareEdit).toHaveBeenCalledTimes(1);expect(discarded.stage.steps).toEqual([]);
   draft.title="Fresh deliberate correction";
   const correctedTitle=rendered.all().find(e=>e.attrs.get("aria-label")==="Proposal title")!;correctedTitle.value=draft.title;correctedTitle.event("input");
 
@@ -72,14 +73,14 @@ test("invalid retained path keeps its corrected draft through explicit unsent re
   rendered.all().find(e=>e.tag==="form")!.event("submit");await flush();
   expect(fields().every(e=>e.disabled)).toBe(true);expect(continueEdit).not.toHaveBeenCalled();
   expect(vi.mocked(prepareEdit).mock.calls[1]![3]).toEqual(draft);
-  retiredConfirm.event("click");await flush();expect(continueEdit).not.toHaveBeenCalled();expect(moved.steps).toEqual([]);
+  retiredConfirm.event("click");await flush();expect(continueEdit).not.toHaveBeenCalled();expect(moved.stage.steps).toEqual([]);
   const freshConfirm=button("Confirm new proposal")!;
   current=false;freshConfirm.event("click");await flush();expect(continueEdit).not.toHaveBeenCalled();
   current=true;moved.busy=true;freshConfirm.event("click");await flush();expect(continueEdit).not.toHaveBeenCalled();
   moved.busy=false;
-  vi.mocked(continueEdit).mockImplementationOnce(async(_room,task)=>{task.state="stopped";task.message="The published base moved. Nothing new was sent.";});
+  vi.mocked(continueEdit).mockImplementationOnce(async(_room,task)=>{task.stage=transitionEdit(task.stage,{type:"stopped"});task.message="The published base moved. Nothing new was sent.";});
   button("Confirm new proposal")!.event("click");await flush();
-  expect(moved.steps).toEqual([]);expect(rendered.textContent).toContain("published base moved");
+  expect(moved.stage.steps).toEqual([]);expect(rendered.textContent).toContain("published base moved");
   button("Back to edit")!.event("click");
   expect(fields().every(e=>!e.disabled)).toBe(true);expect(fields().map(e=>e.value)).toEqual([draft.title,draft.path,draft.content]);
   expect(prepareEdit).toHaveBeenCalledTimes(2);expect(continueEdit).toHaveBeenCalledTimes(1);
@@ -89,9 +90,9 @@ test("invalid retained path keeps its corrected draft through explicit unsent re
   expect(rendered.textContent).toContain(fresh.base);expect(vi.mocked(prepareEdit).mock.calls[2]![3]).toEqual(draft);
   expect(continueEdit).toHaveBeenCalledTimes(1); // Prepare never confirms.
   const signed=await signedIntent(secretSigner(secret),{to:directory,kind:"open-pr",on:null,fields:{definition:digest,title:draft.title,body:"scripted source reference",draft:false},expected:{}});
-  vi.mocked(continueEdit).mockImplementationOnce(async(_room,task)=>{task.steps.push({kind:"open-pr",target:directory,signed,grants:[],beside:{},attempted:false});task.state="stopped";task.message="The first task-room read failed before submission.";});
+  vi.mocked(continueEdit).mockImplementationOnce(async(_room,task)=>{task.stage=transitionEdit(task.stage,{type:"prepared-step",step:{kind:"open-pr",target:directory,signed,grants:[],beside:{},status:"unsent",attempted:false}});task.stage=transitionEdit(task.stage,{type:"stopped"});task.message="The first task-room read failed before submission.";});
   button("Confirm new proposal")!.event("click");await flush();
-  expect(fresh.steps[0]!.attempted).toBe(false);expect(rendered.textContent).toContain("read failed");
+  expect(fresh.stage.steps[0]!.attempted).toBe(false);expect(rendered.textContent).toContain("read failed");
   const oldBack=button("Back to edit")!;
   current=false;oldBack.event("click");expect(fields().every(e=>e.disabled)).toBe(true);
   current=true;fresh.busy=true;oldBack.event("click");expect(fields().every(e=>e.disabled)).toBe(true);
@@ -102,26 +103,28 @@ test("invalid retained path keeps its corrected draft through explicit unsent re
   rendered.all().find(e=>e.tag==="form")!.event("submit");await flush();
   oldBack.event("click");expect(fields().every(e=>e.disabled)).toBe(true); // Old control cannot clear a newer task.
   const offered=button("Back to edit")!;
-  vi.mocked(continueEdit).mockImplementationOnce(async(_room,task)=>{task.steps.push({kind:"open-pr",target:directory,signed,grants:[],beside:{},attempted:true});task.state="unknown";task.message="Lost answer; original request retained.";});
+  vi.mocked(continueEdit).mockImplementationOnce(async(_room,task)=>{task.stage=transitionEdit(task.stage,{type:"prepared-step",step:{kind:"open-pr",target:directory,signed,grants:[],beside:{},status:"unsent",attempted:false}});task.stage=transitionEdit(task.stage,{type:"attempted"});task.message="Lost answer; original request retained.";});
   button("Confirm new proposal")!.event("click");await flush();
-  const original=JSON.stringify(uncertain.steps);offered.event("click");
-  expect(button("Back to edit")).toBeUndefined();expect(fields().every(e=>e.disabled)).toBe(true);expect(JSON.stringify(uncertain.steps)).toBe(original);
+  const original=JSON.stringify(uncertain.stage.steps);offered.event("click");
+  expect(button("Back to edit")).toBeUndefined();expect(fields().every(e=>e.disabled)).toBe(true);expect(JSON.stringify(uncertain.stage.steps)).toBe(original);
   expect(prepareEdit).toHaveBeenCalledTimes(4);expect(continueEdit).toHaveBeenCalledTimes(3);
 
   // Even a stopped tag cannot discard attempted/answered/unverified work or
   // partial native locators. Retain the same task; there is no fresh Prepare.
-  const step=uncertain.steps[0]!;uncertain.state="stopped";
+  // MALFORMED TASK STAND-IN: production transitions cannot create these contradictory combinations.
+  const corrupt=uncertain.stage as unknown as {state:string;previous:{lane?:ScopeId;proposal?:number;version?:FactRef;collectedSource?:FactRef};steps:{attempted:boolean;answer?:Answer;receiptVerified?:boolean}[]};
+  const step=corrupt.steps[0]!;corrupt.state="stopped";
   const redraw=()=>{rendered=retainedEditor(room,change,{current:()=>current}) as unknown as Element;};
   redraw();expect(button("Back to edit")).toBeUndefined();
   step.answer={answer:"accepted",receipt:{fact:{at:directory,seq:1,hash:opening},definition:"platform:directory@1",intent:null,effects:[],sends:[],epoch:0}};
-  uncertain.lane=scopeIdOf({v:1,kind:"lane",definition:digest,creator:directory,cause:opening,ordinal:4});uncertain.proposal=1;
+  corrupt.previous.lane=scopeIdOf({v:1,kind:"lane",definition:digest,creator:directory,cause:opening,ordinal:4});corrupt.previous.proposal=1;
   const partial=JSON.stringify(uncertain);redraw();expect(button("Back to edit")).toBeUndefined();offered.event("click");expect(JSON.stringify(uncertain)).toBe(partial);
   step.attempted=false;redraw();expect(button("Back to edit")).toBeUndefined(); // Answer alone still fences recovery.
   delete step.answer;step.receiptVerified=true;redraw();expect(button("Back to edit")).toBeUndefined();
   delete step.receiptVerified;redraw();expect(button("Back to edit")).toBeUndefined(); // Partial locators remain.
-  delete uncertain.lane;delete uncertain.proposal;uncertain.version={at:sourceScope,seq:4,hash:opening};redraw();expect(button("Back to edit")).toBeUndefined();
-  delete uncertain.version;uncertain.collectedSource={at:sourceScope,seq:4,hash:opening};redraw();expect(button("Back to edit")).toBeUndefined();
-  delete uncertain.collectedSource;uncertain.state="refused";redraw();expect(button("Back to edit")).toBeUndefined();
+  delete corrupt.previous.lane;delete corrupt.previous.proposal;corrupt.previous.version={at:sourceScope,seq:4,hash:opening};redraw();expect(button("Back to edit")).toBeUndefined();
+  delete corrupt.previous.version;corrupt.previous.collectedSource={at:sourceScope,seq:4,hash:opening};redraw();expect(button("Back to edit")).toBeUndefined();
+  delete corrupt.previous.collectedSource;corrupt.state="refused";redraw();expect(button("Back to edit")).toBeUndefined();
   expect(prepareEdit).toHaveBeenCalledTimes(4);expect(continueEdit).toHaveBeenCalledTimes(3);
 });
 
@@ -185,13 +188,13 @@ test("editor reads the inherited destination head through partition6 for both wo
       pin = `platform:destination@${version}`;
       const task: EditTask = { association: actAssociation(room, source.scope), source: { definition: digest, manifestFact: { at: source, seq: 1, hash: opening }, sourceFact: { at: source, seq: 1, hash: opening }, scope: source, manifest: 1, opened: opening, base: "a".repeat(40), path: "a.md", digest: opening, size: 0, content: "" },
         draft: { title: "Head route", path: "a.md", content: "" }, base: "a".repeat(40), definition: digest, definitionBytes: canonicalize(changeDemo), declared: changeDemo, workflow,
-        context: { service: room.session.service, directory, membership, key: room.key, rules: rules.scope, destination: destination.scope }, directory, steps: [], state: "prepared", message: "", busy: false };
+        context: { service: room.session.service, directory, membership, key: room.key, rules: rules.scope, destination: destination.scope }, directory, stage:preparedEditStage(), message: "", busy: false };
       const before = headReads;
       await actual.continueEdit(room, task, { current: () => true });
       expect(headReads - before).toBe(1);
-      expect(task.state).toBe("stopped");
+      expect(task.stage.state).toBe("stopped");
       expect(task.message).toContain(supported ? "published base moved" : "does not support the one-file text workflow");
-      expect(task.steps).toEqual([]);
+      expect(task.stage.steps).toEqual([]);
     }
     expect(mutations).toBe(0);
   } finally { refresh.mockRestore(); }

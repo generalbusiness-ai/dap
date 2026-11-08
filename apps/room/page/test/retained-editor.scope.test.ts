@@ -1,3 +1,4 @@
+import { editEvidence } from "../src/retained-editor-state.ts";
 import { expect, test, vi } from "vitest";
 import { ScopeHandle } from "@generalbusiness/dap-client";
 import { canonicalize, intentDigest, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
@@ -29,20 +30,20 @@ test("retained text creates a new member proposal with exact bytes and original 
     if (prepared.state !== "prepared") throw new Error(prepared.reason);
     const task = prepared.task;
     await continueEdit(room, task, options);
-    expect(task.state, task.message).toBe("recorded");
-    expect(task.lane).not.toBe(source.scope);
-    expect(task.steps.map(s => [s.kind, s.attempted, s.answer?.answer, s.receiptVerified])).toEqual([["open-pr",true,"accepted",true],["ask-rules",true,"accepted",true],["propose-file",true,"accepted",true]]);
-    const file = task.steps[2]!.signed.intent.fields;
+    expect(task.stage.state, task.message).toBe("recorded");
+    expect(editEvidence(task.stage).lane).not.toBe(source.scope);
+    expect(task.stage.steps.map(s => [s.kind, s.attempted, s.answer?.answer, s.receiptVerified])).toEqual([["open-pr",true,"accepted",true],["ask-rules",true,"accepted",true],["propose-file",true,"accepted",true]]);
+    const file = task.stage.steps[2]!.signed.intent.fields;
     expect(file).toMatchObject({ base: task.base, path: draft.path, content: draft.content, size: utf8(draft.content).length });
-    const corrected = await loadChange(room, task.lane!);
+    const corrected = await loadChange(room, editEvidence(task.stage).lane!);
     const afterProposal = await d.G.stub.summary(room.reader!.reader());
     expect(afterProposal.ok && afterProposal.value.items.find((item) => item.type === "branch")!.values["head"]).toEqual(publishedBefore);
     expect(corrected.state).toBe("open"); expect(corrected.merges).toEqual([]); expect(corrected.manifests[0]!.file?.content).toBe(draft.content);
     expect(corrected.body).toContain(source.scope);
     expect((await loadChange(room, source.scope)).manifests[0]).toEqual(original);
-    const rewrite = await act(room, task.lane!, "propose-file", { fields: file });
+    const rewrite = await act(room, editEvidence(task.stage).lane!, "propose-file", { fields: file });
     expect(rewrite.answer).toMatchObject({ answer: "refused", name: "one-version" });
-    const merge = await act(room, task.lane!, "merge", { fields: { manifest: corrected.manifests[0]!.id, reports: [] } });
+    const merge = await act(room, editEvidence(task.stage).lane!, "merge", { fields: { manifest: corrected.manifests[0]!.id, reports: [] } });
     expect(merge.answer).toMatchObject({ answer: "refused", reason: "unauthorized" });
 
     let mutationPosts = 0;
@@ -53,15 +54,15 @@ test("retained text creates a new member proposal with exact bytes and original 
     }) as typeof d.fetch } };
     const unknown = await prepareEdit(lost, source, original.id, { ...draft, title: "Lost opening" }, options);
     await continueEdit(lost, unknown, options);
-    expect(unknown.state).toBe("unknown"); expect(unknown.steps).toHaveLength(1); expect(unknown.steps[0]!.attempted).toBe(true);
-    const envelope = JSON.stringify(unknown.steps[0]!.signed);
+    expect(unknown.stage.state).toBe("unknown"); expect(unknown.stage.steps).toHaveLength(1); expect(unknown.stage.steps[0]!.attempted).toBe(true);
+    const envelope = JSON.stringify(unknown.stage.steps[0]!.signed);
     await continueEdit(lost, unknown, options);
-    expect(mutationPosts).toBe(1); expect(JSON.stringify(unknown.steps[0]!.signed)).toBe(envelope);
+    expect(mutationPosts).toBe(1); expect(JSON.stringify(unknown.stage.steps[0]!.signed)).toBe(envelope);
     await checkEditRequest(room, unknown, options);
-    expect(unknown.state).toBe("waiting-lane");
+    expect(unknown.stage.state).toBe("waiting-lane");
     await continueEdit(room, unknown, options);
-    expect(unknown.state, unknown.message).toBe("recorded");
-    expect(JSON.stringify(unknown.steps[0]!.signed)).toBe(envelope);
+    expect(unknown.stage.state, unknown.message).toBe("recorded");
+    expect(JSON.stringify(unknown.stage.steps[0]!.signed)).toBe(envelope);
   } finally { d.done(); }
 }, 180_000);
 
@@ -82,7 +83,7 @@ test("invalid target and stale context/base send nothing new; an invalid old pro
     expect(posts).toBe(0);
     const corrected = await prepareEdit(watched, old, old.manifests[0]!.id, { title: "Correct path", path: "inside.md", content: "# corrected\n" }, options);
     await continueEdit(watched, corrected, options);
-    expect(corrected.state, corrected.message).toBe("recorded");
+    expect(corrected.stage.state, corrected.message).toBe("recorded");
     expect((await loadChange(room, old.scope)).manifests[0]!.file?.path).toBe("../outside.md");
 
     const mutable = { title: "Captured draft", path: "capture.md", content: "original bytes" };
@@ -95,18 +96,18 @@ test("invalid target and stale context/base send nothing new; an invalid old pro
     const stopped = await prepareEdit(watched, old, old.manifests[0]!.id, { title: "Context guard", path: "context.md", content: "x" }, { current: () => same });
     const before = posts; same = false;
     await continueEdit(watched, stopped, { current: () => same });
-    expect(stopped.state).toBe("stopped"); expect(stopped.steps).toEqual([]); expect(posts).toBe(before);
+    expect(stopped.stage.state).toBe("stopped"); expect(stopped.stage.steps).toEqual([]); expect(posts).toBe(before);
 
     let current = true; let triggered = false; let crossed = 0;
     const raceRoom = { ...room, session: { ...room.session, fetch: (async (url: string, init?: Parameters<typeof d.fetch>[1]) => {
       const reply = await d.fetch(url, init);
       if (init?.method === "POST" && new URL(url).pathname.endsWith("/acts")) crossed++;
-      if (!triggered && race.steps.length > 0 && !race.steps[0]!.attempted && new URL(url).pathname.includes(room.destination)) { triggered = true; current = false; }
+      if (!triggered && race.stage.steps.length > 0 && !race.stage.steps[0]!.attempted && new URL(url).pathname.includes(room.destination)) { triggered = true; current = false; }
       return reply;
     }) as typeof d.fetch } };
     const race = await prepareEdit(room, old, old.manifests[0]!.id, { title: "Pre-POST context guard", path: "race.md", content: "x" }, options);
     await continueEdit(raceRoom, race, { current: () => current, pause: d.pause });
-    expect(triggered).toBe(true); expect(crossed).toBe(0); expect(race.steps[0]!.attempted).toBe(false); expect(race.state).toBe("stopped");
+    expect(triggered).toBe(true); expect(crossed).toBe(0); expect(race.stage.steps[0]!.attempted).toBe(false); expect(race.stage.state).toBe("stopped");
 
     let reIncPosts = 0;
     const reincarnated = await prepareEdit(room, old, old.manifests[0]!.id, { title: "Directory identity guard", path: "inc.md", content: "x" }, options);
@@ -123,15 +124,15 @@ test("invalid target and stale context/base send nothing new; an invalid old pro
       return reply;
     }) as typeof d.fetch } };
     await continueEdit(changedDirectory, reincarnated, options);
-    expect(reIncPosts).toBe(1); expect(reincarnated.state).toBe("stopped"); expect(reincarnated.message).toContain("directory incarnation");
-    expect(reincarnated.steps[0]!.answer?.answer).toBe("accepted");
+    expect(reIncPosts).toBe(1); expect(reincarnated.stage.state).toBe("stopped"); expect(reincarnated.message).toContain("directory incarnation");
+    expect(reincarnated.stage.steps[0]!.answer?.answer).toBe("accepted");
 
     const moved = await prepareEdit(watched, old, old.manifests[0]!.id, { title: "Moved base", path: "moved.md", content: "x" }, options);
     const published = await d.run(d.rita, "edit", "README.md", "--file", "readme.md", "--title", "Move base before editor submit");
     expect(published.code, published.lines.join("\n")).toBe(0);
     const beforeMoved = posts;
     await continueEdit(watched, moved, options);
-    expect(moved.state).toBe("stopped"); expect(moved.steps).toEqual([]); expect(posts).toBe(beforeMoved);
+    expect(moved.stage.state).toBe("stopped"); expect(moved.stage.steps).toEqual([]); expect(posts).toBe(beforeMoved);
   } finally { d.done(); }
 }, 180_000);
 
@@ -154,13 +155,13 @@ test("a failed list read stops the editor's step before its keep (STAND-IN Git/s
     }) as typeof d.fetch } };
     await continueEdit(failing, task, { current: () => true, pause: d.pause });
     expect([kept, sent]).toEqual([0, 0]);
-    expect(task.steps).toEqual([]);
-    expect(task.state).toBe("prepared");
+    expect(task.stage.steps).toEqual([]);
+    expect(task.stage.state).toBe("prepared");
     expect(task.message).toBe("This page could not read your open requests, so it cannot tell whether an earlier request here has an answer. This press sent nothing. Press again when your connection returns. The next press reads them first.");
     // The way forward: the route returns, and the same button signs the step and sends it.
     down = false;
     await continueEdit(failing, task, { current: () => true, pause: d.pause });
-    expect(task.steps[0]).toMatchObject({ kind: "open-pr", attempted: true, answer: { answer: "accepted" } });
+    expect(task.stage.steps[0]).toMatchObject({ kind: "open-pr", attempted: true, answer: { answer: "accepted" } });
     expect(sent).toBeGreaterThan(0);
   } finally { d.done(); }
 }, 180_000);
@@ -185,8 +186,8 @@ test("a room change after the editor's keep ends the copy and sends nothing (STA
     await continueEdit(raced, task, { current: () => current, pause: d.pause });
     expect(kept).toBe(1);
     expect(sent).toBe(0);
-    expect(task.steps[0]!.attempted).toBe(false);
-    expect(task.state).toBe("stopped");
+    expect(task.stage.steps[0]!.attempted).toBe(false);
+    expect(task.stage.state).toBe("stopped");
     const listed = await copiesOf(room)!.list();
     expect(listed).toEqual({ ok: true, rows: [] });
   } finally { d.done(); }
@@ -212,7 +213,7 @@ test.each([{ article: "a", mode: "refused" }, { article: "an", mode: "unverified
       if (signed.intent.kind === "ask-rules") {
         affectedIntent = intentDigest(signed.intent);
         if (mode === "refused") {
-          const opened = task.steps[0]!.answer;
+          const opened = task.stage.steps[0]!.answer;
           expect(opened?.answer).toBe("accepted");
           if (opened?.answer !== "accepted") return expect.fail("The fault follows a real accepted opening");
           return { answer: "refused", reason: "guard-failed", name: "TEST-later-refusal", judgedAt: { seq: opened.receipt.fact.seq, hash: opened.receipt.fact.hash } };
@@ -227,33 +228,33 @@ test.each([{ article: "a", mode: "refused" }, { article: "an", mode: "unverified
     });
     restoreFollow = () => followed.mockRestore();
     await continueEdit(room, task, options);
-    expect(task.state, task.message).toBe(mode === "refused" ? "refused" : "unknown");
-    expect(task.steps.map(step => step.kind)).toEqual(["open-pr", "ask-rules"]);
-    expect(task.steps[0]).toMatchObject({ attempted: true, answer: { answer: "accepted" }, receiptVerified: true });
-    expect(task.steps[1]!.attempted).toBe(true);
-    expect(task.steps[1]!.answer?.answer).toBe(mode === "refused" ? "refused" : "accepted");
-    expect(task.steps[1]!.receiptVerified).not.toBe(true);
-    const envelopes = task.steps.map(step => canonicalize(step.signed)), before = sent;
+    expect(task.stage.state, task.message).toBe(mode === "refused" ? "refused" : "unknown");
+    expect(task.stage.steps.map(step => step.kind)).toEqual(["open-pr", "ask-rules"]);
+    expect(task.stage.steps[0]).toMatchObject({ attempted: true, answer: { answer: "accepted" }, receiptVerified: true });
+    expect(task.stage.steps[1]!.attempted).toBe(true);
+    expect(task.stage.steps[1]!.answer?.answer).toBe(mode === "refused" ? "refused" : "accepted");
+    expect(task.stage.steps[1]!.receiptVerified).not.toBe(true);
+    const envelopes = task.stage.steps.map(step => canonicalize(step.signed)), before = sent;
     await continueEdit(room, task, options);
     expect(sent).toBe(before);
-    expect(task.steps.map(step => canonicalize(step.signed))).toEqual(envelopes);
+    expect(task.stage.steps.map(step => canonicalize(step.signed))).toEqual(envelopes);
     if (mode === "refused") {
       expect(task.message).toContain("Earlier accepted steps remain recorded");
-      expect(task.version).toBeUndefined();
+      expect(editEvidence(task.stage).version).toBeUndefined();
       return;
     }
     await checkEditRequest({ ...room, directory: source.scope }, task, options);
-    expect(task.state).toBe("unknown");
+    expect(task.stage.state).toBe("unknown");
     expect(task.message).toBe("Check this task using its original room/key context.");
     expect(sent).toBe(before);
     blockReceipt = false;
     await checkEditRequest(room, task, options);
-    expect(task.state, task.message).toBe("waiting-rules");
+    expect(task.stage.state, task.message).toBe("waiting-rules");
     expect(sent).toBe(before);
-    expect(task.steps[1]!.receiptVerified).toBe(true);
+    expect(task.stage.steps[1]!.receiptVerified).toBe(true);
     await continueEdit(room, task, options);
-    expect(task.state, task.message).toBe("recorded");
-    expect(task.steps.slice(0, 2).map(step => canonicalize(step.signed))).toEqual(envelopes);
-    expect(task.steps.map(step => step.kind)).toEqual(["open-pr", "ask-rules", "propose-file"]);
+    expect(task.stage.state, task.message).toBe("recorded");
+    expect(task.stage.steps.slice(0, 2).map(step => canonicalize(step.signed))).toEqual(envelopes);
+    expect(task.stage.steps.map(step => step.kind)).toEqual(["open-pr", "ask-rules", "propose-file"]);
   } finally { restoreFollow?.(); restoreSubmit?.(); d.done(); }
 }, 180_000);
