@@ -208,13 +208,19 @@ The first retention script exits 1 after those successful runs because its copie
 The [opaque-explanation validation manifest](evidence/2026-11-08-m8-opaque-explanation-validation.manifest.json), SHA-256 `dab0552fdec82d558ef1737a06f3e01e00625342ed372e97ff311136217603a8`, binds 21 public files and 93 private originals across six read-only units. Exact additive-owner proof, complete reports, distinguishing failures, restored snapshots and the initial retention failure remain durable. The two named witness rulings and prototype retirement, final assets and seals, the gate, exact-source Page workflow and independent review remain ahead.
 
 
-## Final assembly retains a concrete patch and maintained generator
+## Body source seals match the exact migrated adapters
 
-Before-edit scope `508fd6ed` names the maintained Page generator, complete asset owner and exactly two source-seal literals. The [assembly preparation manifest](evidence/2026-11-08-m8-final-assembly-preparation.manifest.json), SHA-256 `64fc5113d7517fe675776a2f3238b040b6398d5d702192d28170631c651ed96c`, binds six read-only preparation files at `8f7e8778`. It retains the exact patch, proof, scope act and current input hashes. Both source owners, parser and inventory still match the sealed probe. The patch has SHA-256 `c5620ba635cacdd8fcc8344a939b8c658c7c7b995c0abbe4e0f58f88089cde9f` and remains unapplied.
+Before-edit scope `508fd6ed` names the maintained Page generator, complete asset owner and exactly two source-seal literals. The [assembly preparation manifest](evidence/2026-11-08-m8-final-assembly-preparation.manifest.json), SHA-256 `64fc5113d7517fe675776a2f3238b040b6398d5d702192d28170631c651ed96c`, retains six read-only preparation files at `8f7e8778`.
 
-| Sealed source | Old literal | Prepared new literal |
+Fresh checks at `1b5ee5bf` confirm that both owners, parser and inventory still match that preparation. Commit `5b47520c1d73b73ac41eb9dc6fee2dc464a7998b` applies the exact patch in its own commit. Its SHA-256 is `c5620ba635cacdd8fcc8344a939b8c658c7c7b995c0abbe4e0f58f88089cde9f`. Only these two expected literals change. Every other test byte, assertion, case, route and gate remains identical.
+
+| Sealed source | Old literal | Adopted new literal |
 |---|---|---|
 | `packages/derive/src/genesis.ts` | `3547884710d4828533e670740169e7f33d470775db12a0f7c02c4a7e2e2b08de` | `15a4adb0e86d62a5be70249c176a2677717a0616119eedcb7b7427a5291fbc2c` |
 | `packages/derive/src/judge.ts` | `89d7601ff9b19dc562e183f836e60ed6c804a70fd428cf6e0e17424e353101dd` | `7bafa496e7f0d647ffb84a7fa1131fe682335bb293b1ceeb7bee5c9b50693560` |
 
-No asset has regenerated. Settled source must precede the maintained build, complete asset owner, final gate and exact-source Page workflow. Patch application must recheck the exact owner and inventory inputs and use its own commit. Hugh's standing patch approval applies, and the checker reviews the seals with the head. This preparation claims no final bytes, gate pass or acceptance.
+The complete Node inventory owner passes all eleven cases once at tree `63ff25cd82a17a3a9bbbc9f92b4db21bda609f04`, including its existing rejecting controls. Both actual `owner.exit` and `pipeline.exit` contain `exit 0` and have been read. Every frozen source, tool and dependency guard matches, the checkout stays clean during the run, and no owned process remains. The outer observation measures 4.047 seconds separately from child wall and CPU observations. No new semantic guard needs another mutant. The initial static-plan precheck counted a RegExp method as a test registration and exits 1 before any test or frozen plan; its original driver and receipt remain retained.
+
+The [body-seal owner manifest](evidence/2026-11-08-m8-body-seal-owner-validation.manifest.json), SHA-256 `63de7435654fefa3ed01661d37831f807da4f5f181bda0979d1f3cb315b7af28`, binds ten public files and 28 private originals across two read-only units. Full TAP, the exact application proof, initial preparation failure and complete source/process receipts remain durable. Retention reruns nothing. This inventory uses stand-in boundaries and proves no Native authority.
+
+No asset has regenerated. The named witness rulings and prototype retirement, maintained asset build and complete owner, one final gate, exact-source Page workflow and independent review still follow settled source. Hugh's standing patch approval applies; the checker reviews these seals with the M8 head. This focused result claims no full gate or acceptance.
