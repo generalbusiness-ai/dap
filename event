@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-07-demo-register-26-live-record.manifest.json","body":{"commit":"903ed9617cc37abe6854ff46127964f2701efb15","path":"notes/implementation/evidence/2026-11-07-demo-register-26-live-record.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3c8973973b403cccf92670ac1414944589dab628","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-07-demo-register-26-live-record.md."}
