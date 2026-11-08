@@ -1,6 +1,6 @@
 # Assemble and verify the completed M8 program
 
-Status: the first full M8 gate at `136708cd` fails with exit 1 in two plain cases. Native remains unreached. The repair passes 38 focused cases and four compiler contexts at `329ea607`. Fresh maintained assets and their owning checks pass at `5ba2d220`. Maintained assets and their owning checks passed at `976a5a77`; the repaired runtime now has its own assembly below. The exact-source Page workflow has not run. Independent review and landing remain ahead under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
+Status: three full M8 gates remain failed. The first fails two Plain cases. The second and third fail the same four Native cases at unchanged source `0c416f8b`; the third runs after the earlier validation overlap ends. Repair `8775043a` changes the archive schema cache key and passes both Scope compiler contexts and all 14 cases in its two unchanged owners. A fresh full gate, exact-source Page workflow, source seal review, independent review and landing remain due under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
 
 ## Assemble from the completed runtime
 
@@ -79,3 +79,59 @@ The first full gate remains failed. These passing focused checks and maintained 
 | Check | Command | Exit | `result.json` SHA-256 |
 |---|---|---|---|
 | Repaired Page build, three compiler contexts and asset owner | `npm run build --workspace @generalbusiness/dap-page; node scripts/focused-check.mjs <frozen plan> <evidence>` | 0 | `1d359f4bda5b15fe94476cfab764a7f74cd8774c66775b8077d3ac11a0667add` |
+
+## The isolated gate reproduces the archive failures
+
+The second gate at `0c416f8b` overlaps another validation body and ends with
+`gate.exit` equal to `exit 1`. Its [overlapped-gate manifest](evidence/2026-11-08-m8-overlapped-gate.manifest.json)
+hashes to `535156e366261501d8654c8a094f1345a2ee317089646ac1e9381ff5d7ab6bba`.
+It retains 17 public files and inventories 2,331 private originals and inventory files.
+
+Planner ruling `be8d9d81` requires an unchanged-source gate before a repair.
+Booking `c15b72e8` runs that third gate at the same head. I read its actual
+`gate.exit`: `exit 1`. The checkout stays clean and unchanged, and no owned
+process remains. Inspections before and during the run find no other
+validation body. They do not provide continuous process observation.
+
+Both gates pass Node 135, Counting 56 and Plain 4,026, with one Plain skip.
+Native passes 1,113 cases, fails four and skips two. The archive-scale case
+passes. Neither report has an unhandled error or a coverage contradiction.
+The third gate takes 1,251.489 seconds from its outer monotonic observation.
+Its [isolated-gate manifest](evidence/2026-11-08-m8-isolated-gate.manifest.json)
+hashes to `b52812be7a05a4a5a9f6944b1674daf901714366aa66cfcf41ca3cfc8dedea52`.
+It retains 19 public files and inventories 2,333 private originals and inventory files.
+
+The same four cases fail in both gates. Two `texts.test.ts` cases reach an
+`archive-mismatch` at `ArchiveDeliveryFields.project`'s schema lookup. The
+installed Grow production export case retries with reason `mismatch` and
+returns one entry where the assertion expects two. Its dependent public
+clone case has no preceding command session. These repeated results do not
+support attributing the failures to the earlier overlap alone.
+
+## Key archive schemas by the validated handler tuple
+
+Repair scope `c1596a0b` precedes source change `8775043a97fe00b040e7302c5a6a800f8f819e96`,
+tree `34bfbc21fb234555c41305f897ccec7157d900b9`. The cache previously keyed
+schemas by handler object identity from `definition.declared.receives`.
+M8's `bound()` returns owned immutable copies from `declarationOf`, so the
+lookup misses after selection of the same handler.
+
+`archive-delivery-fields.ts` now keys the cache by message class, message
+name and sender kind. The validator already requires that tuple to be unique
+within a definition. This metadata lookup changes no handler selection,
+source or definition check, SQL predicate, limit, budget, or body identity guard.
+No test assertion or deadline changes.
+
+The focused plan runs both Scope compiler contexts and all 14 unchanged
+cases in `texts.test.ts` and `archive-installed.test.ts`. I read the actual
+`pipeline.exit`: `exit 0`. Each case passes once. The reports contain no
+unexpected cases, errors, skips, retries or repeats. Source remains clean
+and unchanged, and no owned process remains. The outer observation takes
+70.609 seconds.
+
+The [archive-schema manifest](evidence/2026-11-08-m8-archive-schema.manifest.json)
+hashes to `a0a2905a33c7d11037952993c45ed4875386bdc047979000aac92c7dae036c76`.
+It retains seven public files and inventories 265 private originals and
+inventory files under `~/play/artroom-evidence/2026-11-08-m8-archive-schema-*`.
+The original failed gates remain failed. This focused result does not replace
+the fresh full gate, Page workflow or independent review.
