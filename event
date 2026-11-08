@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b996d1494fda2a156fcb78299828e279350de0ba","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-page-ci.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ba88b2520c5803d73d1ebd15ee0be0f23b084d11","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/native-trace.ts."}
