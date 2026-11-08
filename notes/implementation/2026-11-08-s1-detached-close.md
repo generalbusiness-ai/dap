@@ -1,6 +1,6 @@
 # Keep the first OAuth layer close disposition
 
-Status: checker report `3d0e64be` requests changes to the first candidate `ebd615fd`. The correction at `50ac1e7e` passes seven focused cases and the capacity control. Its fresh full gate, independent review and landing remain ahead under request `089ed1a1`, promise `4c2c799b`. The planner deploys.
+Status: checker report `3d0e64be` requests changes to the first candidate `ebd615fd`. The correction at `50ac1e7e` passes seven focused cases and the capacity control. Its fresh full gate at `2f8b80af` passes. Independent review and landing remain ahead under request `089ed1a1`, promise `4c2c799b`. The planner deploys.
 
 ## Change
 
@@ -47,3 +47,11 @@ The gate's before and after records match byte for byte. The source stayed clean
 The archive-scale owner, “the Native driver confirms 10,001 one-entry passes and preserves retained rule inputs from pass 3700”, passed. This gate shows no archive retry. It closes no archive watch.
 
 The [gate manifest](evidence/2026-11-08-s1-f1-gate.manifest.json) hashes to `0bc35cd967c97581ca74f7e3a7a7bf4c37bd7762350f86e3d34282da294d1737`. It names 17 public files and inventories 2,321 read-only private originals under `~/play/artroom-evidence/2026-11-08-s1-f1-gate`. Sealing ran no test again. At submitted head `ebd615fd`, only the note and manifest followed that gate. The checker then requested the production correction above; that correction requires its own full gate.
+
+## The corrected source passes its fresh full gate
+
+The fresh full gate at `2f8b80af`, tree `927d624d`, passed. I read the actual `gate.exit`: `exit 0`. The complete terminal reports show 135 Node, 56 Counting, 4,020 plain and 1,117 native passes, with three skips. No case failed, and no report or unhandled error occurred. All four case phases have complete terminal coverage. The 99 extra observations are exactly 33 enqueue, dequeue and complete Node file lifecycle events. One skipped module lacks a duration; no performance claim follows.
+
+The source stayed clean and unchanged, the before and after records match byte for byte, and no owned process remained. The outer monotonic observation is 1,261.329 seconds. The retained gate and runner timings remain separate. The archive scale case passed; this gate shows no archive retry and closes no archive watch.
+
+The [correction gate manifest](evidence/2026-11-08-s1-f1-cleanup-gate.manifest.json) hashes to `d37ff72ae6e63508cf9ab0e9975bf3233aecdd54e32b4296aa30a6d51da656cd`. It names 17 public files and inventories 2,321 read-only private originals under `~/play/artroom-evidence/2026-11-08-s1-f1-cleanup-gate`. Analysis and sealing reran no validation. Only this note and the correction gate manifest follow the gated head; executable source and tests remain unchanged. Independent review must assess the cleanup correction and the final one-literal seal before landing. This record proves no deployment or live-room acceptance.
