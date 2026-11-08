@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8185a5a34e689383acacae88f2f42ac411495e6c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-07-typed-core-m7.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:836402a2284f1d25b1ec682a21cf389df569877d","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/core.ts."}
