@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "request": "e39e7cef7b8ed71c445ae1285de6dec9b2fbe1ae",
+  "promise": "54aa90b3949bebb3ced81c8a4eb0bc65b27a0c33",
+  "qualification": "One complete S1 gate at frozen source446e50d4, after integrating M6 and the Register26record at captured gate base903ed961. No gate, stage or owner rerun occurs during sealing. Public reports retain test identity/counts and source metadata. Potentially sensitive original test outputs remain private. This proves no live-room acceptance, deployment, archive incident closure or unrelated migration acceptance.",
+  "sourceHead": "446e50d4b9fdebafeee019d829ea427981acac66",
+  "sourceTree": "c179e22f37a978f753ab9eb36664e3bb5e32033e",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s1-gate-validation",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1398,
+          "sha256": "08fffb883aa3ce35ac2e57633d1c7cbf0f8eb14d88a56051c85eda8e6406d490"
+        },
+        {
+          "path": "after.json",
+          "bytes": 539759,
+          "sha256": "cb21cbe181bc4b4531e45eaeb876cfa10fcbbedfbc7ef8164c99c62a7f606231"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1895,
+          "sha256": "616f199a084698d4d453d2c910856b101e0f32919d4c8561cda56af7313c328e"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 539759,
+          "sha256": "cb21cbe181bc4b4531e45eaeb876cfa10fcbbedfbc7ef8164c99c62a7f606231"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "25b41ec5224a24dbe1fb4f27fddc9ae5234fea305823c8de25f672830dd06951"
+        },
+        {
+          "path": "live-planner-order.inspect.json",
+          "bytes": 2542,
+          "sha256": "1978ee4d9804c9cf3188bf524066f142dcc6b1e952b44b0cba0ef9d63f47dfbc"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8064,
+          "sha256": "cddb82af4561d053298c2d9446fa5d5efb468008585d68691349fddf49fa4d43"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 537,
+          "sha256": "689ed9dca78bfae74bc8b1539ab9d181bad913ad84df86034bfef9cbc37e185a"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 701,
+          "sha256": "7edc7e1e6b7933888c0bb4a06af9eb20917f665f09b7ea276ef52bad1a3c97df"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2459,
+          "sha256": "ebf168f9df589b326ef3d6b76c2d075122ea1694b22a5b4e3084da82ab25a9be"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 969,
+          "sha256": "a42718ab212c97c8add335a205872724ebd2fe545ac8d906eec6226134cf8e29"
+        },
+        {
+          "path": "started.json",
+          "bytes": 642,
+          "sha256": "bae31b4a155aca07968072b883afafb1df76bbb6e07a9ea1512ec95f4ed29aa4"
+        },
+        {
+          "path": "task.json",
+          "bytes": 436,
+          "sha256": "5966068ff75a0813be447eab2d5279dc5b2c4668f555a1b73fd4753faa0ed7a0"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 558,
+          "sha256": "fba2ee293cfe4d565ab3864df51126642954aa0f5a50d9781e25d984a92c3c77"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5877,
+          "sha256": "ae580381eb518836db467a51bc66051b26f1fcad9e41b6930ac5da820023f36d"
+        }
+      ]
+    }
+  ]
+}

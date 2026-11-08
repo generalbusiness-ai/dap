@@ -1,0 +1,67 @@
+{
+  "qualification": "Exact S1 seal application and direct approval; integrated candidate gate remains pending.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s1-approved-source-seals",
+  "file_count": 12,
+  "files": [
+    {
+      "path": "QUALIFICATION.md",
+      "bytes": 522,
+      "sha256": "0ba4db5c4f07f64385fc4dc6082106f04b15e1c2628f03535adfca4892923b26"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 963,
+      "sha256": "2f49273b4809eab5f6f48bb237c5960e9d4ce4919b9c28c1612f6747fbfaef49"
+    },
+    {
+      "path": "after.security-entry-points.test.mjs",
+      "bytes": 61110,
+      "sha256": "6116a5ad757efc6773ce90eb30cc8d8d4c70ff87bb7e797005aafe96536b66b7"
+    },
+    {
+      "path": "before.security-entry-points.test.mjs",
+      "bytes": 61110,
+      "sha256": "9b10fb198fcf11fedd0febe5d5de04835ed171217029f099cb478d161c8f9d5e"
+    },
+    {
+      "path": "checkpoint.json",
+      "bytes": 487,
+      "sha256": "df627c718fe7112036ba31879441a1cc55bc80b08205c13cf71504704a884732"
+    },
+    {
+      "path": "exact-patch-ruling.inspect.json",
+      "bytes": 2358,
+      "sha256": "27fa6a0ce5afc4ef33b9b98279aa5191222a2715fddf5b90da709a54edc8d180"
+    },
+    {
+      "path": "exact.patch",
+      "bytes": 2964,
+      "sha256": "787934346a8752c8bbbd472391ee700221904eccb3b2e1e9bd03c7023ec5208d"
+    },
+    {
+      "path": "hosted.ts",
+      "bytes": 75835,
+      "sha256": "05d6e07c97e381c752c5d33e935cb38420f3b77215090f515384513c5391ef74"
+    },
+    {
+      "path": "http.ts",
+      "bytes": 33825,
+      "sha256": "f6644b9962dc21e351462d51c2fdede5d4481265c95834f86c9c40a1386d8e77"
+    },
+    {
+      "path": "human-approval.txt",
+      "bytes": 514,
+      "sha256": "8b9e7912fa02534c5c6cf6fc00046665e313cf5eccfbea88555346b0c2c0c92a"
+    },
+    {
+      "path": "oauth-http.ts",
+      "bytes": 5379,
+      "sha256": "68b2a4e35922c971b8a52fe03cc00e500d1a000b4c7bc7746a01a0e6590d4c7f"
+    },
+    {
+      "path": "standing-instruction.inspect.json",
+      "bytes": 2005,
+      "sha256": "a9469ea91927e697bf5ba74dc0cd8a49b0968ff077dd2b2835c0b6e0297be94f"
+    }
+  ]
+}
