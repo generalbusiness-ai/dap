@@ -1,7 +1,6 @@
 /** Closed effect instructions captured by the existing admission branches. */
-import type { EffectForm } from "@generalbusiness/dap-contract";
+import { ownCapabilityEffect, type CapabilityEffectPlan } from "./capability-plan.ts";
 import type { RangePlan } from "./guard-plan.ts";
-import { immutable } from "./model.ts";
 import type { ElementBinding, OperandRead, SlotRead, SubjectRead } from "./reads.ts";
 
 export type CopySource = { readonly op: "clear" }
@@ -23,7 +22,7 @@ export type EffectCode =
   | { readonly op: "attribute"; readonly slot: SlotRead; readonly of: SubjectRead; readonly with: readonly AttributeSource[] }
   | { readonly op: "hold"; readonly action: "open" | "renew" | "end"; readonly extent: OperandRead | null }
   | { readonly op: "redact"; readonly slot: SlotRead }
-  | { readonly op: "capability"; readonly capability: Extract<EffectForm, { capability: unknown }>["capability"] };
+  | { readonly op: "capability"; readonly capability: CapabilityEffectPlan };
 export interface EffectPlan { readonly site: EffectSite; readonly code: EffectCode }
 export interface AttentionPlan { readonly slot: SlotRead; readonly when: "before" | "after"; readonly reason: string }
 
@@ -40,8 +39,8 @@ export function sourceStated(read: OperandRead): boolean {
 }
 export const copySource = (read: OperandRead): CopySource => Object.freeze({ op: "read", read, stated: sourceStated(read) });
 
-/** Keep read, range and binder identities; only opaque capability data needs a deep copy. */
-export function ownEffectPlan(plan: EffectPlan, origins: WeakMap<object, object>): EffectPlan {
+/** Keep admitted read, range and binder identities while owning the instruction containers. */
+export function ownEffectPlan(plan: EffectPlan): EffectPlan {
   const code = plan.code;
   let owned: EffectCode;
   switch (code.op) {
@@ -50,7 +49,7 @@ export function ownEffectPlan(plan: EffectPlan, origins: WeakMap<object, object>
     case "ref": owned = Object.freeze({ ...code, source: Object.freeze({ ...code.source }) }); break;
     case "value": owned = Object.freeze({ ...code, source: Object.freeze({ ...code.source }) }); break;
     case "attribute": owned = Object.freeze({ ...code, with: Object.freeze(code.with.map(source => Object.freeze({ ...source }))) }); break;
-    case "capability": owned = Object.freeze({ ...code, capability: immutable(code.capability, origins) }); break;
+    case "capability": owned = Object.freeze({ ...code, capability: ownCapabilityEffect(code.capability) }); break;
     case "state": case "hold": case "redact": owned = Object.freeze({ ...code }); break;
     default: return exhaustive(code);
   }

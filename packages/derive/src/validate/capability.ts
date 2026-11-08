@@ -21,7 +21,8 @@ import { operand } from "./operands.ts";
 import { at } from "./shape.ts";
 import { nativeLicense } from "./native-capacity.ts";
 import { deviceCommandOpen } from "./device-command.ts";
-import { recordSlot } from "../program/reads.ts";
+import { recordElementBinding, recordSlot } from "../program/reads.ts";
+import type { CapabilityArgument, CapabilityEffectPlan, CapabilityGuardPlan } from "../program/capability-plan.ts";
 
 /**
  * One form of a definition that this package does not derive by itself,
@@ -63,13 +64,14 @@ function listed(d: Defining, name: unknown, path: string): { version: Capability
  * value for each element of a list; or one slot of each item a range covers.
  * `item`: the guard's own subject, whose slot an operand with no `of` reads.
  */
-export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, item: ReadOwner): void {
+export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, item: ReadOwner): CapabilityGuardPlan | null {
   const { bad, rec, entries, str } = d;
   const r = rec(x, p, ["name", "guard", "with"]);
   const cap = r && listed(d, r["name"], at(p, "name"));
-  if (!r || !cap) return;
+  if (!r || !cap) return null;
   const declared = typeof r["guard"] === "string" ? own(cap.declared.guards, r["guard"]) : undefined;
-  if (!declared) { bad("capability", at(p, "guard"), `is not a guard that ${cap.version} declares`); return; }
+  if (!declared) { bad("capability", at(p, "guard"), `is not a guard that ${cap.version} declares`); return null; }
+  const args: [string, CapabilityArgument][] = [];
   for (const [name, arg] of entries(r["with"], at(p, "with"), null)) {
     const ap = at(at(p, "with"), name);
     if (!declared.with.includes(name)) bad("capability", ap, `is not an argument of the guard ${String(r["guard"])} of ${cap.version}`);
@@ -80,17 +82,30 @@ export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, it
       if (!e || !read || !as) continue;
       if (as.includes(".")) bad("shape", at(ap, "as"), "a dot names a member of a record element, so the name has none");
       else if (read.type !== null && read.type.type !== "list") bad("name", at(ap, "each"), "names no list");
-      else operand(d, e["value"], at(ap, "value"), bindElement(ctx, as, read.type?.type === "list" ? read.type.of : null, at(ap, "as")), item);
+      else {
+        const type = read.type?.type === "list" ? read.type.of : null;
+        const inner = bindElement(ctx, as, type, at(ap, "as"));
+        const binding = recordElementBinding(d, inner, as, type, at(ap, "as"));
+        const value = operand(d, e["value"], at(ap, "value"), inner, item);
+        if (value) args.push([name, { op: "each", list: read.node, binding, value: value.node }]);
+      }
     } else if (isObject(arg) && "items" in arg) {
       const e = rec(arg, ap, ["items", "slot"]);
       const items = e && range(d, e["items"], at(ap, "items"), ctx, [], true, `capability:${name}`);
       if (items && !(typeof e["slot"] === "string" && items.type.slots.has(e["slot"]))) bad("name", at(ap, "slot"), `names no slot of ${items.type.name}`);
       const slot = items && e && typeof e["slot"] === "string" ? items.type.slots.get(e["slot"]) : undefined;
-      if (items && slot) recordSlot(d, ctx, at(ap, "slot"), items.type,
-        { kind: "range", path: at(ap, "items"), type: items.type.name }, e!["slot"] as string, slot, "read");
-    } else operand(d, arg, ap, ctx, item);
+      if (items && slot) {
+        const read = recordSlot(d, ctx, at(ap, "slot"), items.type,
+          { kind: "range", path: at(ap, "items"), type: items.type.name }, e!["slot"] as string, slot, "read");
+        args.push([name, { op: "items", range: items.program, slot: read.slot }]);
+      }
+    } else {
+      const read = operand(d, arg, ap, ctx, item);
+      if (read) args.push([name, { op: "read", read: read.node }]);
+    }
   }
   d.underived.push({ path: p, capability: cap.version, form: "guard", name: String(r["guard"]) });
+  return { version: cap.version, guard: String(r["guard"]), arguments: args };
 }
 
 /**
@@ -100,13 +115,13 @@ export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, it
  * records and no item, so it needs no subject: `owner` gives the item whose
  * slot an operand with no `of` reads, when the form has one.
  */
-export function capabilityEffect(d: Defining, x: unknown, p: string, ctx: Ctx, owner: ReadOwner): void {
+export function capabilityEffect(d: Defining, x: unknown, p: string, ctx: Ctx, owner: ReadOwner): CapabilityEffectPlan | null {
   const { bad, rec, entries } = d;
   const r = rec(x, p, ["name", "do", "with"]);
   const cap = r && listed(d, r["name"], at(p, "name"));
-  if (!r || !cap) return;
+  if (!r || !cap) return null;
   const declared = typeof r["do"] === "string" ? own(cap.declared.effects, r["do"]) : undefined;
-  if (!declared) { bad("capability", at(p, "do"), `is not an effect that ${cap.version} declares`); return; }
+  if (!declared) { bad("capability", at(p, "do"), `is not an effect that ${cap.version} declares`); return null; }
   const written = entries(r["with"], at(p, "with"), null);
   if (!declared.with.some((allowed) => written.every(([name]) => allowed.includes(name)))) bad("capability", at(p, "with"), `is no set of arguments that the effect ${String(r["do"])} of ${cap.version} takes`);
   const reads = new Map(written.map(([name, arg]) => [name, operand(d, arg, at(at(p, "with"), name), ctx, owner, false)]));
@@ -115,6 +130,11 @@ export function capabilityEffect(d: Defining, x: unknown, p: string, ctx: Ctx, o
   // Section 6.4: a timed rule's effects are total, and what a capability's effect does is not this package's to show.
   if (ctx.timed) bad("timed-partial", p, "a timed rule has no capability effect");
   d.underived.push({ path: p, capability: cap.version, form: "effect", name: String(r["do"]) });
+  return { version: cap.version, action: String(r["do"]), arguments: [...reads].flatMap(([name, value]) => {
+    if (!value) return [];
+    const read = value.node;
+    return [[name, { read, from: read.op === "slot" && read.projection === null ? read.slot.subject : null }] as const];
+  }) };
 }
 
 /**

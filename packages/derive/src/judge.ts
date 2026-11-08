@@ -11,7 +11,8 @@
  * or `deriveEffects`, and returns a `Draft`.
  */
 
-import type { Effect, Entry, FactRef, FactUse, Grant, GrantMark, Head, Input, MismatchReason, ObservationUse, Prepared, PlatformTimedRule, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import { nativeMark } from "./program/native.ts";
+import type { Effect, Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, PlatformTimedRule, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { intentDigest, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { withinCounts } from "./draws.ts";
@@ -20,7 +21,7 @@ import { isIntent, presentedTypes, readFacts, readFields, type Reading } from ".
 import { covers } from "./grant.ts";
 import type { Judging } from "./guards.ts";
 import { alsoItems, derive, giving } from "./handlers.ts";
-import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, markOf, placeWithoutValue, placesOf, retainedOf, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
+import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, placeWithoutValue, placesOf, retainedOf, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
 import { listedBy, rowsOfAct, settle, type Listed, type Needed, type Observing, type Settled } from "./observes.ts";
 import type { Item, StateView } from "./state.ts";
 import { nextDue, type Due } from "./timed.ts";
@@ -264,7 +265,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   // settled, after check 8. Under any other, the older rule stands as a stand-in: what a rule reads is what the entry retains.
   const beside = definition.observing ? atHandByRows(context.values, places)
     : context.observed === undefined && context.values === undefined && places.length === 0 ? undefined : atHand(context.observed, context.values, places);
-  const g = { ...giving(view, context, scope, scope.head.seq + 1, judged, clocked, fields, facts), beside };
+  const g = { ...giving(view, definition, context, scope, scope.head.seq + 1, judged, clocked, fields, facts), beside };
   // Check 7, with the fields: a place that names a value and has none at hand is refused `bad-field` (section 6.2, "The checks, in
   // the commit"). The value of each place is kept with the entry.
   const unplaced = placeWithoutValue(beside);
@@ -328,8 +329,8 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   // row may be a mark: its rule stands in place of the grant check. A mark may state an action as well, and then check 9 is made
   // as written first: when a current grant of that action is held for the signing key the check holds, the entry records that
   // grant, and the rule is not run.
-  const mark = markOf(act.grant) as GrantMark | null;
-  const action = actionOf(act);
+  const mark = nativeMark(definition, act.grant, "grant");
+  const action = actionOf(act, definition);
   // The first presented grant that qualifies is the one recorded. Section 16.1: a grant's `within` covers this scope when it names
   // it, or when it is a filter whose `membership` is the membership reference that this scope records.
   const presented = action === null ? undefined : context.grants?.find(({ grant, current }) =>

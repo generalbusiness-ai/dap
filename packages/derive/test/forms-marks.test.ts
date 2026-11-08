@@ -11,6 +11,7 @@ type Change = (d: any) => void;
 import { PLACE, markFormCases } from "./definition-corpus/forms-marks-cases.ts";
 import { nativeClockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
 import { clockScene } from "./fixtures-clock-cutover.ts";
+import { observeNativeCalls } from "../src/program/native-trace.ts";
 
 test("M3: a native type hook before the body contributes actual clock use only when it runs", () => {
   const checked = validateDefinition(nativeClockCutoverData(), PROPOSED_BOUNDS, PROFILES, { platform: true });
@@ -22,8 +23,17 @@ test("M3: a native type hook before the body contributes actual clock use only w
     } };
     const scene = clockScene(checked.definition, present ? { note: 2 } : {}, platform);
     const current = scene.judge(false), behind = scene.judge();
-    return [current.result, current.result === "write" && current.draft.judgesTime,
+    const original = [current.result, current.result === "write" && current.draft.judgesTime,
       behind.result === "unavailable" ? behind.reason : behind.result, calls];
+    for (const budget of [0, 1]) {
+      calls = 0;
+      const observed = observeNativeCalls(checked.definition, budget, () => scene.judge());
+      expect(observed.value).toEqual(behind);
+      expect(calls).toBe(present ? 1 : 0);
+      expect(observed.calls).toEqual(present ? { "type/clock-value/run": 1 } : {});
+      expect(observed.truncated).toBe(present && budget === 0);
+    }
+    return original;
   });
   expect(outcomes).toEqual([["write", false, "write", 0], ["write", true, "clock-behind", 2]]);
 });
@@ -77,6 +87,65 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
   };
   const enter = (s: Scope, who: Actor, secret: string, platform = gateRules(), note?: number) =>
     s.act(who, "enter", { on: 0, expected: { on: 1 }, fields: { secret, ...(note === undefined ? {} : { note }) } }, { platform });
+
+  test("M7: gate entry retains admitted Native declarations and whole judgment after their source codes change", () => {
+    let source: any;
+    const s = new Scope(gateWith(data => { source = data; }));
+    s.did(rita, "issue", { fields: { hash: textDigest("one") } });
+    const signed = s.intent(una, "enter", { on: 0, expected: { on: 1 }, fields: { secret: "one", note: 4 } });
+    const first = gateRules(), before = s.judge(signed, { platform: first, grants: null });
+    expect(before.result).toBe("write");
+    expect(first.ran).toEqual({ even: 2, find: 1, "by-ticket": 1, fresh: 1, "key-id": 1, refer: 1 });
+    for (const mark of [source.items.ticket.values.note.of, source.acts.enter.fields.note,
+      source.acts.enter.also.ticket, source.acts.enter.grant, source.acts.enter.guards[1],
+      source.acts.enter.effects[2], source.acts.enter.sends[0]]) mark.code = "unadmitted";
+    const second = gateRules(), after = s.judge(signed, { platform: second, grants: null });
+    expect(after).toEqual(before);
+    expect(second.ran).toEqual(first.ran);
+    const expectedCalls = { "type/even/run": 2, "also/find/run": 1, "grant/by-ticket/run": 1,
+      "guard/fresh/run": 1, "effect/key-id/run": 1, "send/refer/run": 1 };
+    for (const budget of [0, 1, 64, Number.NaN]) {
+      const rules = gateRules();
+      const observed = observeNativeCalls(s.definition, budget, () => s.judge(signed, { platform: rules, grants: null }));
+      expect(observed.value).toEqual(before);
+      expect(rules.ran).toEqual(first.ran);
+      expect(observed.calls).toEqual(expectedCalls);
+      expect(observed.trace).toHaveLength(Number.isNaN(budget) ? 0 : Math.min(budget, 7));
+      expect(observed.truncated).toBe(Number.isNaN(budget) || budget < 7);
+      expect(observed.trace.every(event => event.opaque && event.dependencies === "unknown" && event.result === "returned")).toBe(true);
+      if (budget === 64) expect(observed.trace.filter(event => event.sourcePath !== null).map(event => event.sourcePath))
+        .toEqual(["acts.enter.guards.1", "acts.enter.effects.2", "acts.enter.sends.0"]);
+    }
+    const nestedRules = gateRules();
+    const nested = observeNativeCalls(s.definition, 1, () => {
+      const inner = observeNativeCalls(s.definition, 0, () => s.judge(signed, { platform: nestedRules, grants: null }));
+      return [inner, s.judge(signed, { platform: nestedRules, grants: null })] as const;
+    });
+    expect(nested.value[0].value).toEqual(before); expect(nested.value[1]).toEqual(before);
+    expect(nested.value[0].calls).toEqual(expectedCalls);
+    expect(nested.calls).toEqual(Object.fromEntries(Object.entries(expectedCalls).map(([name, count]) => [name, count * 2])));
+    expect(nestedRules.ran).toEqual(Object.fromEntries(Object.entries(first.ran).map(([name, count]) => [name, count * 2])));
+
+    let faults = 0;
+    const faulty = gateRules({ fresh: { place: "guard", refusals: [], run: () => { faults++; throw new Error("opaque test fault"); } } });
+    const failed = s.judge(signed, { platform: faulty, grants: null });
+    expect(failed).toEqual({ result: "unavailable", reason: "unavailable" });
+    for (const budget of [0, 64]) {
+      faults = 0;
+      const observed = observeNativeCalls(s.definition, budget, () => s.judge(signed, { platform: faulty, grants: null }));
+      expect(observed.value).toEqual(failed); expect(faults).toBe(1);
+      expect(observed.calls["guard/fresh/run"]).toBe(1);
+      if (budget === 64) expect(observed.trace.find(event => event.code === "fresh")?.result).toBe("threw");
+    }
+    const receivers: unknown[] = [];
+    const callback = function (this: unknown) { receivers.push(this); return { holds: true } as const; };
+    Object.defineProperty(callback, "call", { get: () => { throw new Error("the callback's call property is not its invocation"); } });
+    const freshRule: Extract<PlatformRule, { place: "guard" }> = { place: "guard", refusals: [], run: callback };
+    expect(s.judge(signed, { platform: gateRules({ fresh: freshRule }), grants: null })).toEqual(before);
+    const intrinsic = observeNativeCalls(s.definition, 0, () => s.judge(signed, { platform: gateRules({ fresh: freshRule }), grants: null }));
+    expect(intrinsic.value).toEqual(before);
+    expect(receivers).toEqual([freshRule, freshRule]);
+  });
 
   test("a name of `also` at check 8, a field's type at check 7, a guard at its position among the written guards, and an effect at its position among the written effects, with a slot's type checked by its rule", () => {
     const s = gated();
@@ -211,6 +280,46 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
    */
   const OWNER = "platform:task@1" as PlatformDefinition;
   const owned = (over: Partial<Record<string, PlatformRule>>) => ({ ...gateRules(over), named: OWNER });
+
+  test("M7: probe outcome retains its admitted hook, whole judgment and supplied context after its source code changes", () => {
+    let source: any;
+    const s = new Scope(gateWith(data => { markRuntimeChange7(data); source = data; }));
+    s.did(rita, "issue", { fields: { hash: textDigest("one") } });
+    const opens = some(() => [{ effect: "operation", k: 0, owner: OWNER, kind: "probe", attempts: 2 }, { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }]);
+    expect(enter(s, una, "one", owned({ "key-id": opens })).result).toBe("write");
+    const operation = `${s.last.seq}:0` as OperationId, calls: unknown[] = [];
+    const platform = owned({ probe: { place: "outcome", rules: { selects: false, read: false,
+      retries: (result, of, given) => {
+        calls.push({ result, operation: of.id, input: given.input, time: given.time, fields: given.resolved.fields,
+          subjects: [...given.resolved.subjects], signer: given.resolved.signer, self: given.resolved.self,
+          own: given.own(s.head.seq)?.hash, rows: given.rows,
+          state: { scope: given.state.scope(), tickets: given.state.page("ticket", ["open", "used"], null, 100).items } });
+        return false;
+      },
+    } } });
+    const settle = () => settleOutcome(s.state, s.definition, { type: "outcome", operation, attempt: 1, result: "refused", evidence: { basis: "own-answer", body: {} } },
+      { clock: clockOf(s.state, s.now), bounds: PROPOSED_BOUNDS, own: s.own, platform });
+    const before = settle();
+    expect(before.result).toBe("write");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ result: "refused", operation, fields: {}, subjects: [], signer: null, self: s.head.seq + 1, own: s.head.hash });
+    const originalCalls = structuredClone(calls);
+    calls.length = 0;
+    source.outcomes.probe.code = "unadmitted";
+    expect(settle()).toEqual(before);
+    expect(calls).toEqual(originalCalls);
+    for (const budget of [0, 1, Number.NaN]) {
+      calls.length = 0;
+      const observed = observeNativeCalls(s.definition, budget, settle);
+      expect(observed.value).toEqual(before);
+      expect(calls).toEqual(originalCalls);
+      expect(observed.calls).toEqual({ "outcome/probe/retries": 1 });
+      expect(observed.truncated).toBe(Number.isNaN(budget) || budget === 0);
+      expect(observed.trace).toHaveLength(Number.isNaN(budget) ? 0 : budget);
+      if (budget === 1) expect(observed.trace[0]).toMatchObject({ kind: "outcome", code: "probe", hook: "retries",
+        context: "result, operation, RuleGiven", sourcePath: null, opaque: true, dependencies: "unknown", result: "returned" });
+    }
+  });
 
   test("what a rule returns meets what the validator asks of a written effect or send: nothing that only the hold capability sets, no operation without its first attempt, no relationship of an item that the entry does not open; a list change that changes nothing is not recorded, and a hold ends with an item that a rule ends", () => {
     // The gate with a pass: a hold under a ticket, with the forms that a hold type must have. A ticket also has a list of members.

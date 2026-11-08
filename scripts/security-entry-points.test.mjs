@@ -187,7 +187,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "e578408e0a585561db69e4bf15984c311d74bc5baf95c3ac95f4bde6fd8ca51f", // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
+    "packages/scope/src/core.ts:Scope": "21beb2ace9f9eee5889cc06352e603eb8975f1957d76d1ac823de466f680d984", // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
   },
 };
 
@@ -249,8 +249,8 @@ const seals = {
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
   "packages/scope/src/applications/act-admission.ts": "bec337cfdbc35247da587bf794715062537b89a1894c6c0829b7c5fa0c7b1884", // Exact native provenance and current trust; actual maintained parser output.
-  "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
-  "packages/derive/src/judge.ts": "70cfbfe4332813d559ee2b7c63b4a98e21c4ac9bcb286695ea482be3a7c49c84",
+  "packages/derive/src/genesis.ts": "3547884710d4828533e670740169e7f33d470775db12a0f7c02c4a7e2e2b08de",
+  "packages/derive/src/judge.ts": "89d7601ff9b19dc562e183f836e60ed6c804a70fd428cf6e0e17424e353101dd",
   "packages/scope/src/sessions.ts": "ee2afb1a928446d146b81a3adfd4794cbacac9322f9a9a5142658a7036005ebb",
   "packages/scope/src/originals.ts": "c8a5185ad8a57a851ecbe77d87649b0bbfd45bf9c93e685d7dc3a35982ef72cc", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.
@@ -270,15 +270,15 @@ const seals = {
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
   "packages/mcp/src/oauth-resource.ts": "895d3a1b241e5fe0d5228febff46fe6c921899110fef99056dd1b53199d341ae", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-access.ts": "c9125c1cf737025ac1342e3219227b6f882d28a565978d9ca68300f7402ff2d6", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/oauth-http.ts": "f04810c38e299cdf9e25d7e2022f095023b5bae6dfe9797ff6970e4871998836", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/oauth-http.ts": "1c87328b4e9c5d66e07ae8017b22482816bf26c1d71e047fdf8e67b03b87924a", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/index.ts": "e8381ad33242af79c16cb57ddeff579a01d8a981f923e5aed549e6ab60c262fe", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/hosted.ts": "a3db0a94298fdc34f622511152dd86748308fcbe4b344ac10db4bfa555f9229c",
+  "packages/mcp/src/hosted.ts": "2d337cd0bf5263432433cd3f2a41d2e9c43105fd81c34ccaf473b1b7323d1082",
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
   "packages/mcp/src/hosted-tools.ts": "bea3d3cea128bd76102e36d0876992c1b77a5bf2263f376082c1f329d2035a60", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "8d1af74b33b07b063a1dad51477b51d22ac9cb7bb08d79ad366a0a3b717c3e53", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "0c14de294c6005379f9243d7283fc1dcaf2001fd009e0d361c06adf2b46871ea", // Reviewed parallel authority reads and target-only discovery; standing still reads fresh.
-  "packages/mcp/src/http.ts": "5c6fa6500e539648bb5f9d4a97307ebe07609b76a60883511557dd6d79f30adb", // Reviewed Mcp-Name binding for prompts/get.
+  "packages/mcp/src/http.ts": "c1280b58349e7137359b710f7021ce85882e0e9b6a16163f9f043f96bbe5554d", // Reviewed Mcp-Name binding for prompts/get.
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/client/src/application-install.ts": "4046c6792d4671cdb259691dcf2171a2c3144450664c696cb722db161790164b", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/scope/src/applications/resolve.ts": "6338c9357780846b115999454239b68f34c5d6be3c090ca3f18b8f6e8771d0e2", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.

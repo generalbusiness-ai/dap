@@ -21,10 +21,12 @@
  * judge's explanation: no entry records it, and no fold trusts it.
  */
 
+import { nativeMark } from "./program/native.ts";
+import { observeNativeCall } from "./program/native-trace.ts";
 import type { BindingMark, Bound, FieldValue, PlatformReceive, ReceiveType, ScopeRef } from "@generalbusiness/dap-contract";
 import { CanonicalError, canonicalize } from "@generalbusiness/dap-bytes";
 import type { Judging } from "./guards.ts";
-import { RuleFault, markOf, outside, ruleFor, run, type Giving } from "./marks.ts";
+import { RuleFault, outside, ruleFor, run, type Giving } from "./marks.ts";
 import { equal, operand } from "./operand.ts";
 import type { Item, StateView, StateWriter } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -94,10 +96,10 @@ export type Indexed = Pick<Item, "id" | "state" | "parties" | "refs" | "values">
 export type BindingSelect = (items: readonly Indexed[], fields: Readonly<Record<string, FieldValue>>) => number | null;
 
 /** The mark of a handler that is its binding selector: the one that binds the name which `bound.of` names. Null: the handler states no `bound`, or a written rule binds the name. */
-export function selectorOf(handler: ReceiveType): BindingMark | null {
+export function selectorOf(handler: ReceiveType, definition: ValidDefinition): BindingMark | null {
   const stated = (handler as unknown as PlatformReceive).bound;
   const rule = stated && stated.of.startsWith("also.") ? own(handler.also, stated.of.slice(5)) : undefined;
-  return rule ? (markOf(rule) as BindingMark | null) : null;
+  return rule ? (nativeMark(definition, rule, "also") as BindingMark | null) : null;
 }
 
 /**
@@ -114,7 +116,7 @@ export function selectorOf(handler: ReceiveType): BindingMark | null {
  * A fault leaves the delivery not judged: nothing is written, and it is
  * retried (section 6.1, "A fault of a rule is no judgment").
  */
-export function selectedByIndex(g: Pick<Giving, "view" | "scope" | "fields" | "platform">, mark: BindingMark): Item | null {
+export function selectedByIndex(g: Pick<Giving, "definition" | "view" | "scope" | "fields" | "platform">, mark: BindingMark): Item | null {
   const key = bindingKey(own(g.fields, mark.key), g.scope.at);
   if (key === null) return null;
   const ids = g.view.lookup(mark.item, mark.index, key, SELECTED_MOST + 1);
@@ -126,7 +128,10 @@ export function selectedByIndex(g: Pick<Giving, "view" | "scope" | "fields" | "p
   const rule = ruleFor({ platform: g.platform }, mark, "also");
   if (!("bind" in rule) || rule.clock === true) throw new RuleFault(`the rule ${mark.code} is no binding selector: it is given the indexed items and the fields, and no clock`);
   const given = (items as Item[]).map((item): Indexed => ({ id: item.id, state: item.state, parties: item.parties, refs: item.refs, values: item.values }));
-  const id = run(mark, () => rule.bind(given, g.fields));
+  const id = run(mark, () => {
+    const callback = rule.bind, fields = g.fields;
+    return observeNativeCall(g.definition, mark, "also", "bind", callback, () => Reflect.apply(callback, rule, [given, fields]) as ReturnType<typeof callback>);
+  });
   if (id === null) return null;
   const chosen = (items as Item[]).find((item) => item.id === id);
   if (!chosen) throw outside(mark, "an item that it was not given");

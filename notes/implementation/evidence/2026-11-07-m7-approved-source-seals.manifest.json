@@ -1,0 +1,64 @@
+{
+  "qualification": "Hugh approved exact patch SHA40864da31c9dc90e3f725f53d93d5a6e4090eaf958f54cb6a908393255a5e4c8 in this builder session. Three sealed source owners and baseline preconditions match the question. Only three hash literals change. The complete security inventory owner passes 11 Node cases; no full M7 gate has run.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-approved-source-seals",
+  "checkpoint_commit": "b687ec5fd62d8e818d484a53c088babff14c79f3",
+  "checkpoint_tree": "122ea29944da30a759cf0abdf69515397c00628e",
+  "file_count": 11,
+  "files": [
+    {
+      "path": "QUALIFICATION.md",
+      "bytes": 419,
+      "sha256": "43fc05a5e99814b4fac565e9fd00d523e443b48bdaf0f5728b2e540020426eae"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 805,
+      "sha256": "4bdaaadfbea0b18177c08a230b47bb63c61a420ec8679b28ae014a7177e8fb20"
+    },
+    {
+      "path": "after.test.mjs",
+      "bytes": 61110,
+      "sha256": "2aa2ec8b2dc5ac7cd337d90a6342286f9a97aa0b9478001d546d6661cac2db82"
+    },
+    {
+      "path": "approved.patch",
+      "bytes": 2155,
+      "sha256": "40864da31c9dc90e3f725f53d93d5a6e4090eaf958f54cb6a908393255a5e4c8"
+    },
+    {
+      "path": "before.test.mjs",
+      "bytes": 61110,
+      "sha256": "9b10fb198fcf11fedd0febe5d5de04835ed171217029f099cb478d161c8f9d5e"
+    },
+    {
+      "path": "checkpoint.json",
+      "bytes": 275,
+      "sha256": "91c45950b7888b95456ad2097ef43fac229044fffc0a9b5128412965ebf777f2"
+    },
+    {
+      "path": "owner.argv.json",
+      "bytes": 61,
+      "sha256": "8645171afb6bb9f5b1e71a60a2afcf939b16b8611bcde13cbed615114f5aec73"
+    },
+    {
+      "path": "owner.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "owner.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owner.stdout",
+      "bytes": 1429,
+      "sha256": "aff0e256a0c9e8a099aa00d2d265f00f24691ae129b5c20c6b008cab958e8cde"
+    },
+    {
+      "path": "receipt.json",
+      "bytes": 1671,
+      "sha256": "766285991fe07f2fd5259a0de4d508da47571b3bbc9403a4844d5b55c728e033"
+    }
+  ]
+}

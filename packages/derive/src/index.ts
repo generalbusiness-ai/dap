@@ -8,7 +8,7 @@ export * from "./attribution.ts";
 export * from "./guards.ts";
 export { deriveEffects, held, type Derived } from "./effects.ts";
 export { counted, derivable, maximumOf, type Capabilities, type CapabilityForm, type CapabilityGiven, type Maximum, type Recorded } from "./capability.ts";
-export { deriveSends, directoryOf, formOf, membershipOf, type Sends } from "./sends.ts";
+export { deriveSends, directoryOf, membershipOf, type Sends } from "./sends.ts";
 export * from "./timed.ts";
 export * from "./fields.ts";
 export { valuePlaces } from "./validate/fields.ts";

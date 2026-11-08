@@ -16,12 +16,11 @@ import { coveredItems } from "./lists.ts";
 import { judgeCondition } from "./program/condition-value.ts";
 import { readValue } from "./program/read-value.ts";
 import { sendReadType, sendSlotType, type SendFields, type SendPlan, type SendSourcePlan } from "./program/send-plan.ts";
-import { checkedBody, formContext, sendListBody, sendPlan, sendSource, type BodyStructure, type SendNode } from "./program/structure.ts";
+import { checkedBody, formContext, sendPlan, type BodyStructure, type SendNode } from "./program/structure.ts";
 import { givenTo, outside, ruleFor, run } from "./marks.ts";
-import { sendOrigin } from "./program/send-origin.ts";
+import { observeNativeCall } from "./program/native-trace.ts";
 import { sendValue } from "./send-value.ts";
 import type { Item } from "./state.ts";
-import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isLocalId, isObject, isScopeRef, same } from "./values.ts";
 
 /** What the send forms of one input made. */
@@ -88,7 +87,7 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
   const instructions = forms.map((form, ordinal): SendInstruction => {
     const { owner } = formContext(j.definition, body, "send", ordinal, form);
     if (owner.category !== "send") throw new TypeError("send occurrence has another category");
-    if (owner.op === "native") return { op: "native", mark: sendSource(j.definition, body, owner) as SendMark };
+    if (owner.op === "native") return { op: "native", mark: owner.data };
     const plan = sendPlan(j.definition, body, owner);
     if (!plan) throw new TypeError("send has no captured executable instruction");
     return { op: "written", body, node: owner, plan };
@@ -183,7 +182,10 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
     const next = () => first + sends.length;
     const mark = instruction.op === "native" ? instruction.mark : null;
     if (mark) {
-      const given = run(mark, () => ruleFor(j, mark, "send").run(givenTo(j)));
+      const given = run(mark, () => {
+        const rule = ruleFor(j, mark, "send"), callback = rule.run, context = givenTo(j);
+        return observeNativeCall(j.definition, mark, "send", "run", callback, () => Reflect.apply(callback, rule, [context]) as ReturnType<typeof callback>);
+      });
       // Revision 19, "More than one send mark": a rule whose mark states `always` returns exactly one request. None is a fault.
       if (given === null && (mark as SendMark).always === true) throw outside(mark, "no request, where its mark states always");
       if (given === null) continue;
@@ -281,23 +283,6 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
     if (unresolved !== null) return refuse(unresolved);
   }
   return { ok: true, sends };
-}
-
-/**
- * The form that made one recorded send of an entry (section 7.4): a result
- * names its request by ordinal, and a send that was not made took none. The
- * forms and the entry's sends are in one order, so each send is matched to
- * the first form, at or after the last one matched, that makes a message of
- * its type and name. A fan-out may have made the next send too. The
- * validator refuses a list in which that could find different result
- * effects or observation rows. Conditional same-name forms with identical
- * results may match either form (revision 24, amendment 335ef3ea).
- */
-export function formOf(definition: ValidDefinition, forms: readonly SendForm[], entry: { sends: readonly Send[] }, n: number): SendForm | SendMark | null {
-  const body = sendListBody(definition, forms);
-  if (!body) return null;
-  const origin = sendOrigin(definition, body, entry, n);
-  return origin ? sendSource(definition, body, origin.node) : null;
 }
 
 function exhaustive(value: never): never { throw new TypeError(`unknown send instruction: ${String(value)}`); }

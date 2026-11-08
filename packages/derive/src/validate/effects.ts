@@ -61,11 +61,11 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
     // A slot with no `of` belongs to the named subject, or the primary item.
     const named = "of" in o ? subject(d, of, at(path, "of"), ctx, false) : null;
     if ("of" in o && (named === null || named === "scope")) return null;
-    capabilityEffect(d, x, p, ctx, ownerOf(() => (named as Type | null) ?? ctx.on ?? bad("name", p, "there is no primary item whose slot this could be"), { kind: "subject", name: typeof of === "string" ? of : "on" }));
+    const capability = capabilityEffect(d, x, p, ctx, ownerOf(() => (named as Type | null) ?? ctx.on ?? bad("name", p, "there is no primary item whose slot this could be"), { kind: "subject", name: typeof of === "string" ? of : "on" }));
     const target = (named as Type | null) ?? ctx.on;
-    recordEffectPlan(d, { site: { explicitSubject: of !== undefined,
+    if (capability) recordEffectPlan(d, { site: { explicitSubject: of !== undefined,
       target: target ? subjectRead(target, { kind: "subject", name: typeof of === "string" ? of : "on" }) : null },
-      code: { op: "capability", capability: x as Extract<EffectCode, { op: "capability" }>["capability"] } });
+      code: { op: "capability", capability } });
     return { what: `the capability effect at ${p}`, successive: false };
   }
   const s = subject(d, of, at(path, "of"), ctx, false);
