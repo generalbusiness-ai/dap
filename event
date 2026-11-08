@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e8fee8069614d91ae5ee3c6ba1b14f06954722b2","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/program-reads.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e91c6b8380899652ce33799d61755c6618d0eae6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-08-typed-core-m8.md."}
