@@ -151,3 +151,47 @@ test("abrupt disposal of a held OAuth opening rejects the late layer and retains
     }
   });
 });
+
+test("closing a detached OAuth layer again preserves its first disposition and retained session row", async () => {
+  const stub = env.AGENTS.get(env.AGENTS.newUniqueId());
+  await runInDurableObject(stub, async (_instance, state) => {
+    const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
+    const now = Date.parse("2099-01-01T00:00:00Z"), signer = secretSigner(new Uint8Array(32).fill(24));
+    const scopes = new StandIn(signer.key);
+    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+    const access = new OAuthAccess(sql, { now: () => now, agent: () => ({ state: "enrolled", membership, key: signer.key, handle: "@agent" }), charge: () => {},
+      observe: async (_membership, ask) => "key" in ask
+        ? { keyState: "active", memberState: "active", member: "@agent", controller: "@owner" }
+        : { memberState: "active" } });
+    const id = b64url(new Uint8Array(32).fill(5)), secret = b64url(new Uint8Array(32).fill(6));
+    const grant: OAuthAccessGrant = { controller: "@owner" as MemberId, resource: SERVICE + "/mcp", created: now, ends: now + 86_400_000,
+      accessIssued: now, accessExpires: now + 3_600_000, accessDigest: digestBytes(utf8(secret)) };
+    sql.exec(`INSERT INTO oauth_grant (id, row, state, created) VALUES (?, ?, 'active', ?)`, id, canonicalize(grant), now);
+    const candidate = access.inspect(id, secret, grant.resource)!;
+    expect(await access.standing(candidate)).toBe(true);
+    const layers = new OAuthHttpLayers(access, { now: () => now });
+    const service = new McpService({ service: SERVICE, signer, fetch: scopes.fetch, custody: memoryStore(), now: () => now, every: () => () => {},
+      config: { read: async () => scopes.config(), addRoot: async () => {} } });
+    // The real grant checker uses DO SQLite. This map stands in only for the
+    // session store, so the witness observes the generation's removal callback.
+    const row: SessionRow = { id: "TEST-detached-close", version: LEGACY, initialized: true, capabilities: {}, listed: null, created: now };
+    const rows = new Map([[row.id, structuredClone(row)]]);
+    const http = await layers.open(candidate, async layer => {
+      const result = new McpHttp({ wire: new Wire(service), now: () => now, bodyBytes: 1024, authorized: () => true,
+        mintSession: () => "TEST-unused", remove: session => { rows.delete(session); } }, layer.generation);
+      result.restore([row]);
+      return result;
+    });
+    expect(http).not.toBeNull();
+    try {
+      // Both calls start in one turn, before the first close removes the layer.
+      const detached = layers.closeGrant(id, true), closedAgain = layers.closeAll();
+      await Promise.all([detached, closedAgain]);
+      expect(rows.get(row.id)).toEqual(row);
+      const refused = await http!.handle(new Request(SERVICE + "/mcp", { method: "POST", headers: {
+        "mcp-protocol-version": LEGACY, "mcp-session-id": row.id,
+      }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }) }));
+      expect(refused.status).toBe(404);
+    } finally { http?.abrupt(); }
+  });
+});
