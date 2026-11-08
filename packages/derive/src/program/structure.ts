@@ -241,8 +241,8 @@ export function recordNativeForm(d: Defining, kind: MarkKind, path: string, data
 }
 
 /** Called only after the actual final admission and canonical-byte checks. */
-export function finishStructure(d: Defining, definition: ValidDefinition, reads: ResolvedReads): void {
-  bindDeclaration(definition);
+export function finishStructure(d: Defining, definition: ValidDefinition, reads: ResolvedReads, format: ValidDefinition["declared"]["format"]): void {
+  bindDeclaration(definition, format);
   bindRows(d, definition);
   bindNative(d, definition, reads.validation);
   const trace = pending.get(d);

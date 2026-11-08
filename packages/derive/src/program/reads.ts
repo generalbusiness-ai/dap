@@ -54,12 +54,12 @@ export function recordRead(d: Defining, node: OperandRead): void {
 }
 
 /** Attach only after every admission check has succeeded, using the actual returned object. */
-export function bindReads(d: Defining, definition: ValidDefinition): ValidDefinition {
+export function bindReads(d: Defining, definition: ValidDefinition, format: ValidDefinition["declared"]["format"]): ValidDefinition {
   const reads = collection(d);
   const evidence: ResolvedReads = Object.freeze({ validation: validation(d), operands: Object.freeze([...reads.operands]),
     subjects: Object.freeze([...reads.subjects]), slots: Object.freeze([...reads.slots]), fields: Object.freeze([...reads.fields]),
     foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]), bindings: Object.freeze([...reads.bindings]), frames: Object.freeze([...reads.frames]), marks: immutable(d.marks), underived: immutable(d.underived) });
-  finishStructure(d, definition, evidence);
+  finishStructure(d, definition, evidence, format);
   for (const operand of evidence.operands) operandOwners.set(operand, definition);
   admitted.set(definition, evidence);
   return definition;

@@ -10,10 +10,15 @@ interface AdmittedDeclaration {
 const declarations = new WeakMap<ValidDefinition, AdmittedDeclaration>();
 
 /** Capture only after final admission, without freezing the caller's input. */
-export function bindDeclaration(definition: ValidDefinition): void {
+export function bindDeclaration(definition: ValidDefinition, format: ValidDefinition["declared"]["format"]): void {
   if (declarations.has(definition)) throw new TypeError("declaration was already admitted");
   const origins = new WeakMap<object, object>();
-  declarations.set(definition, { data: immutable(definition.declared, origins), origins, owners: new WeakMap() });
+  // The format dispatcher already read this header. Keep its value without
+  // invoking a caller's getter again while owning the declaration data.
+  const data = Object.freeze(Object.fromEntries(Object.keys(definition.declared).map(key =>
+    [key, key === "format" ? format : immutable(Reflect.get(definition.declared, key), origins)]))) as ValidDefinition["declared"];
+  origins.set(data, definition.declared);
+  declarations.set(definition, { data, origins, owners: new WeakMap() });
 }
 
 export function declarationOf(definition: ValidDefinition): ValidDefinition["declared"] {

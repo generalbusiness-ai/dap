@@ -1,6 +1,6 @@
 # Assemble and verify the completed M8 program
 
-Status: maintained assets and their owning checks pass at `976a5a77`. The full M8 gate and exact-source Page workflow have not run. Independent review and landing remain ahead under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
+Status: the first full M8 gate at `136708cd` fails with exit 1 in two plain cases. Native remains unreached. The repair below has not run validation. Maintained assets and their owning checks passed at `976a5a77`; changed runtime requires fresh assembly. The exact-source Page workflow has not run. Independent review and landing remain ahead under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
 
 ## Assemble from the completed runtime
 
@@ -28,7 +28,7 @@ The [maintained-assets manifest](evidence/2026-11-08-m8-maintained-assets.manife
 
 ## Keep the final gate and workflow obligations
 
-The final full gate must cover the assembled runtime and committed generated module. Fetch `origin/main`, run the maintained `npm run gate` once at the frozen candidate, read its actual `gate.exit`, and retain complete terminal reports. No full M8 gate has run at this checkpoint. Earlier focused and control evidence does not replace it. Every historical failed pipeline or gate keeps its actual result.
+The final full gate must cover the repaired runtime and committed generated module. Fetch `origin/main`, run the maintained `npm run gate` once at the frozen candidate, read its actual `gate.exit`, and retain complete terminal reports. The first full M8 gate below remains failed. Earlier focused and control evidence does not replace the due gate.
 
 The exact-source [Page browser workflow](../../.github/workflows/page-browser.yml) must then pass all four maintained commands:
 
@@ -40,3 +40,20 @@ node --import tsx --no-warnings scripts/demo-captures.ts --recorded --label-witn
 ```
 
 Keep its exact source head, job results and complete logs before review. The workflow retains its existing pinned scratch browser setup. This checkpoint claims no browser run, review approval, deployment or live-room acceptance. Independent review must cover the two M8 body seals, the completed program, witness retirement, generated assets and all preserved failures before the audited landing.
+
+## Preserve the first failed gate and repair its causes
+
+The first full gate runs at `136708cd`, tree `521d4e8c`, from 19:51:02 to 19:54:16 UTC on 8 November. I read `gate.exit`: `exit 1`. Source stays unchanged, the checkout stays clean, and no owned process remains. All pre-test steps pass. Node passes 135 cases and Counting passes 56. Plain passes 4,024, fails two, and skips one. Native remains unreached, including the archive-scale owner. This gate supplies no Native or archive retry evidence and closes no archive watch.
+
+The [failed-gate manifest](evidence/2026-11-08-m8-failed-final-gate.manifest.json) hashes to `ab411eee9e16a39fecbb736092dbf1d72a78162a0d177fdd3960190091e47492`. It names 17 public metadata files and inventories 2,302 read-only owner-only originals. The original full failure records, logs and test reports remain under `~/play/artroom-evidence/2026-11-08-m8-final-gate`. Analysis exits 0 without running tests. It finds no report contradiction or unhandled error. The 99 extra observations are three lifecycle events for each of 33 Node file wrappers, not extra cases.
+
+| Check at `136708cd`, tree `521d4e8c` | Command | Exit | Output digest |
+|---|---|---|---|
+| First complete gate, failed in two plain cases | `npm run gate` | 1 | Manifest `files` entries for `result.json`, `test-summary.json`, `stages.json` and `private-retention.json` retain exact SHA-256 values and original-output inventory |
+| Completed-report analysis and wrapper classification | Kept `analysis-driver.mjs` and finalization driver | 0 | Same manifest names `analysis.exit`, `report-classification.json` and their exact SHA-256 values |
+
+Scope `d9e2a399` records the repair before source edits. The unchanged `definition-format.test.ts` case expects three format getter reads for an admitted definition and two for a refused version. M8's declaration copy adds a fourth. The repair passes the already-known format through `bindReads` and `finishStructure` into `bindDeclaration`. The root copy substitutes that value and still owns immutable copies of every other field. It retains the original root and descendant identities without freezing the caller. The original digest and getter-count assertions stay unchanged.
+
+The replay historical-index case creates definition copies with missing keyed metadata. M8 correctly refuses those unadmitted copies. Its repair uses the actual validated definition for every fold. Local state-writer stand-ins omit the second opening's index writes, or all index writes, before `View.putIndexed` records them. Every existing historical index, fixed count, visit order, deadline and future-row assertion stays unchanged. The admission identity guard and replay production source stay unchanged.
+
+Neither repair has run validation at this checkpoint. The two-file failure and production repair require fresh focused checks, maintained assets and a new full gate. The single-file test-only follow-up exception does not apply. Machine release `5c32466f` lets the planner deploy F1 main `8faa38dc`; builder starts no executable validation body during that deployment. Independent review must assess the failed gate and the later repair evidence together. The failed gate remains failed.
