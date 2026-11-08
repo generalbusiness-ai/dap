@@ -1,6 +1,6 @@
 # Complete derivation programs and their retained judge shells
 
-Status: the first declaration-ownership and Native lookup draft awaits focused validation under request `bd1a9429` and promise `689c9fd1`. M7 landed at `01de2ca8`, and S3 has now landed at `c85553da`. No M8 compiler, test or build has run. The planning estimate remains three to five focused engineer-days; it is not a throughput result.
+Status: the first declaration-ownership and Native lookup checkpoint passes both derive compilers and all 73 focused cases. Two isolated controls fail at their intended assertion and restore cleanly. Request `bd1a9429` and promise `689c9fd1` own M8. S3 has landed at `c85553da`. Full body routing, complete interpretations, M7 finding F2, the final gate, independent review and landing remain. The planning estimate remains three to five focused engineer-days; it is not a throughput result.
 
 ## One program must cover every admitted body
 
@@ -56,6 +56,32 @@ No M8 validation result, complete lowering claim, deployment or live acceptance 
 
 `nativeMark` now throws for a definition with no admission record and for a mark with no captured boundary of the requested kind. An ordinary unmarked value still returns null. Existing admitted marks retain their captured declaration and callback identity. This drafts M7 finding F1; F2 and the full body cutover remain ahead.
 
-The existing compiled-data ownership case now checks declaration retention after input mutation, immutable headers, copied-definition refusal and both Native miss boundaries. The existing Native clause/root case checks that the same validation can read its owned header and that another validation cannot borrow it. Every previous assertion and deadline remains. The first focused selection will run both derive compiler contexts and the complete structure, reads, marks and capability owners: 73 existing cases, with the two strengthened cases included in that count.
+The existing compiled-data ownership case now checks declaration retention after input mutation, immutable headers, copied-definition refusal and both Native miss boundaries. The existing Native clause/root case checks that the same validation can read its owned header and that another validation cannot borrow it. Every previous assertion and deadline remains. The first focused selection runs both derive compiler contexts and the complete structure, reads, marks and capability owners: 73 existing cases, with the two strengthened cases included in that count. The results below establish this checkpoint only.
 
 The repository-wide direct call query finds three additional test callers. Scope addendum `0ffb8829` records their exact paths and hashes before any edit: the lane evidence-results test, the platform rules-scope-v13 test and the scope fixed-index test. They retain their complete owning validation obligations when the raw adapters retire. No such caller has changed in this checkpoint.
+
+
+## The first checkpoint passes once and its controls distinguish
+
+The frozen source is `f8422822cfe3f130abdcc382b87c2160c51ea120`, tree `d6007c9651b6a63553c5811e0dcb6c41c1483ea8`. It includes the actual S3 landing. The maintained `scripts/focused-check.mjs` runs the source compiler, test compiler and one complete four-owner body. All three commands exit 0. The actual outer `pipeline.exit` contains `exit 0` and has been read.
+
+The body passes 73 cases exactly once: structure 11, reads 8, marks 49 and capability 5. It reports no skipped, failed, retried, unfinished, missing or unexpected case, collection error or coverage issue. The runner checks every source, tool, dependency and selection guard before and between commands. The source stays clean at its exact head, and no owned process remains. The outer driver measures 4.918 seconds; its duration stays separate from command wall and CPU observations. This is no implementation performance claim.
+
+The static plan pins 2,189 active inputs, the complete 14-workspace namespace, 48 source aliases, the existing lock, Node, Vitest, the actual native TypeScript compiler and the pipeline/config files. Three test owners are byte-identical to the passing M7 gate. The changed structure owner retains its eleven literal test declarations. Its complete earlier report supplies the ledger, so no discovery run or application import prepares the plan. The external config names the reporting project and retains the package's original threads pool.
+
+The initial plan builder exits 1 before any compiler, test or config creation because TypeScript 7 no longer supplies `lib/typescript.js`. Source inspection identifies the installed native compiler, and the corrected builder uses a strict literal-declaration comparison. The original failing builder and a transcription of its observed failure remain separate. No package is installed, and no test reruns to repair that preparation failure.
+
+Two sequential controls use a separate owned worktree and dependency namespace at the same head. Each runs only the existing compiled-data ownership case; ten other cases remain unselected. Returning the caller's mutable declaration instead of its owned copy fails the retained-mutation assertion at line 165. Returning null instead of refusing an unadmitted Native lookup fails the expected-throw assertion at line 170. Both actual owner exits are 1, with one `AssertionError`, zero passes and no other executed case. Each fault restores in `finally` before classification. Every tracked production input stays unchanged, the control worktree returns clean, and no owned process remains. The control driver exits 0 because both faults distinguish. The earlier complete normal body establishes the passing baseline; it does not run again before each control.
+
+| Check | Method | Actual exit |
+|---|---|---:|
+| Source compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.json` | 0 |
+| Test compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.test.json` | 0 |
+| Four complete owners | Maintained focused plan, 73 passed cases | 0 |
+| Mutable-declaration control | One existing case, intended retained-data assertion | 1 |
+| Missing-admission control | One existing case, intended refusal assertion | 1 |
+| Control classification | Both failures identify the intended assertion and restore cleanly | 0 |
+
+The [metadata validation manifest](evidence/2026-11-08-m8-metadata-validation.manifest.json), SHA-256 `5c6961a73618aaf1fc62efd3322b188fbdcfb146017a4039235fde1b82c6d0e3`, binds 23 read-only public files. The [preparation manifest](evidence/2026-11-08-m8-preparation-validation.manifest.json), SHA-256 `4cd3160858919a0bed6a5c75d0bd8ba83c37493bcc3a8650d48a45f204998361`, binds five more. Their inventories retain 98 private originals across the focused run, outer driver, controls and preparation. Exact external inputs, complete reports, source snapshots and failure messages remain durable and read-only. No command reruns during retention.
+
+These 73 cases include the strengthened witnesses, and the two controls execute one of those cases under faults. The counts overlap and are not added. No full M8 gate, generated asset update, workflow, review, deployment or live acceptance follows from this checkpoint.
