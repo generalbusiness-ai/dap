@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "c0e947a5ccf6d7037a95b4f3b7d1a606c01e3a44",
+  "sourceTree": "70734d053ec8aa2e08f2d84e029f2e4f84fc55c3",
+  "qualification": "The initial retention script exits1 on a mistaken workspaces key after validation passes; its unchanged partial artifacts and failed driver remain sealed separately. Corrected retention reruns no validation. Opaque explanation checkpoint only: both derive compiler contexts and 43 cases across four complete program owners pass once. The added scripted case covers top-level Native plus direct and nested capability refusals, literal outcomes, receivers and once counts across trace budgets, and repeated explanation without callback invocation. Two isolated one-case controls catch the old prepared-rule label and omitted captured descendants, then restore cleanly. Named prototype witness rulings and retirement, final assets and seals, the gate, Page workflow, independent review and landing remain.",
+  "fileCount": 21,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-opaque-explanation-validation-complete",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1788,
+          "sha256": "7243db969b2da2015546043509ee90f8dd7a367a270b871c8810ca7822f2f37d"
+        },
+        {
+          "path": "control-source-comparison.json",
+          "bytes": 461,
+          "sha256": "23fdef5b217ca323834ec9abeb7cb718f3eea06060d8b230038026700694b1fe"
+        },
+        {
+          "path": "controls.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 14467,
+          "sha256": "fe8a8cf6d222a1121a8cf98640f2e997c63698546c0aef2e0a04c8a2211b349b"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 1862,
+          "sha256": "6c54940a086a1e68a98c04ccde074c6aa277073d0ab07f42784ccb7c34effdeb"
+        },
+        {
+          "path": "missing-descendants.mutant.ts",
+          "bytes": 4343,
+          "sha256": "dd1c3edb97d36abd164c5c135d05d1d6ad9f1260eae54af31ec0123c302caf1a"
+        },
+        {
+          "path": "missing-descendants.original.ts",
+          "bytes": 4353,
+          "sha256": "dc5e36f071b5de9c917d7773f1edf061f1a16b98a908bf1e796259c4639cd35c"
+        },
+        {
+          "path": "missing-descendants.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "missing-descendants.owner.time",
+          "bytes": 29,
+          "sha256": "5226eeb2e9f82c4a8ccf860f29f1af37a6584855bf869bd1987199c6be4b6aee"
+        },
+        {
+          "path": "missing-descendants.summary.json",
+          "bytes": 920,
+          "sha256": "4e785d4d942496fb80f7e535aa6d3e599671110335fdac0bd4602e4a38cd3dec"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 556,
+          "sha256": "b80c97a1fd50cac8cd7cb1bef7647e2e6e07b5f3c34f68dc5e60a4012619d952"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 3314,
+          "sha256": "807731fba65f4a0086996851478315db7fb998ae7dfacb8694911eb6ccc2095d"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 6605,
+          "sha256": "8eaef4544c534d9cb9f93b975d186860f1ed8b7a09956c0becf15df2c1a985d5"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2331,
+          "sha256": "cec3d105bd48b09b882a5f2c6cb2d5bea38c5ccbb34c6cacd95c02168a1e2c4f"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1261,
+          "sha256": "356029a0a44c43d31a46c0cf6544c14ad372a746a72b93fe1dfa9f6251228f55"
+        },
+        {
+          "path": "wrong-label.mutant.ts",
+          "bytes": 4130,
+          "sha256": "12a7a35ed383895cdfba27bbbf1dcdafa538a5c5f29b5a5a9ea8fb5cd8b029b5"
+        },
+        {
+          "path": "wrong-label.original.ts",
+          "bytes": 4353,
+          "sha256": "dc5e36f071b5de9c917d7773f1edf061f1a16b98a908bf1e796259c4639cd35c"
+        },
+        {
+          "path": "wrong-label.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "wrong-label.owner.time",
+          "bytes": 29,
+          "sha256": "7be22902a87c7c42316491692f17ad16c5e17389bc3e261efed31d085050424a"
+        },
+        {
+          "path": "wrong-label.summary.json",
+          "bytes": 914,
+          "sha256": "64851a6c800f00b0574217161133cc6e151639e1d418c5fe4ab9cb85197d07bc"
+        }
+      ]
+    }
+  ]
+}
