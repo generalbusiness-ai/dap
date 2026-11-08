@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "request": "12f6313981e175eb68603a4f3b77d5e952ddaac3",
+  "promise": "50f7d6d74cbdacfb8aaa6c7b7c0a6babdfda319b",
+  "sourceHead": "f10b1b6393517f28b3ca9ed2fa8efdadd067f48d",
+  "sourceTree": "a4aefee380d217bbf6d0a5506f498dc69d20a86c",
+  "qualification": "S4 focused checkpoint: two compiler contexts and27cases across six complete operation/outside owners pass once, preserving ordered scope and scope-denial runtimes. One existing fairness case distinguishes a missing held-answer precedence check: the head incorrectly advances to16 instead of15. Actual control owner exit1 and driver exit0; allsource restores before classification. No fullgate, archive diagnosis closure, live acceptance, deployment or landing claim.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-s4-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1104,
+          "sha256": "82dd9a19fabcc4b94db9df63bb143536116c9e3fbd2d408678eb81825e70f757"
+        },
+        {
+          "path": "control-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "control-source-comparison.json",
+          "bytes": 481,
+          "sha256": "4a7ca5a3ddaf595075053e8ee65eeb299373b27af59b6784be367179b65ed93b"
+        },
+        {
+          "path": "control-summary.json",
+          "bytes": 1380,
+          "sha256": "5f2e0db0ff9fe7ed2a3a5d20dc38f350523ac54d33df3ea33181b024475c9548"
+        },
+        {
+          "path": "control.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "control.time",
+          "bytes": 29,
+          "sha256": "3c31fdc44dc7eef245818e518cd1823a70ec29266351ef47627d8b9347756223"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 13905,
+          "sha256": "ac4e9818888f3b9e13da9315e941970eb7b5ec7c24aa226e220f08bef060c790"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 2260,
+          "sha256": "d8d27637747325b6420c9cf2d4a4a223ecbfb4a13ee8fbb1658d461f54d31180"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 566,
+          "sha256": "9d5c4a9e707e746deea202d24eca4fdc647822d136b0dbadd033f750a152073c"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 3631,
+          "sha256": "26a9df8273c772adf1c56c6575171f238cf4ab066c97b6678c138f3969d63711"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 8370,
+          "sha256": "faeb3f45be55f5fcbd4cc1a8abbfe5282e46ed2757ab8037c53331f127331f45"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1505,
+          "sha256": "7e64e0b3f5e5383a309a728858fea091ed4f398d89623a7a930b374a44656309"
+        },
+        {
+          "path": "result.json",
+          "bytes": 873,
+          "sha256": "6df57d0d5cf27edf5d74b761bfc274c8c15f0c948ddf62ffef9ed0af4d1d7e48"
+        }
+      ]
+    }
+  ]
+}

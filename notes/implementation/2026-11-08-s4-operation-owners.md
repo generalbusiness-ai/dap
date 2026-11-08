@@ -1,6 +1,6 @@
 # Give parked attempts and replies their own owners
 
-Status: source draft under request `12f63139`, promise `50f7d6d7`. Scope `4c53d3ea` records the extraction before edits. No S4 compiler, test or gate has run. Independent review and landing remain ahead. The planner deploys.
+Status: focused checkpoint under request `12f63139`, promise `50f7d6d7`. Scope `4c53d3ea` records the extraction before edits. Both scope compiler contexts and 27 cases in six complete owners pass at `f10b1b63`. The precedence control distinguishes after restoring clean source. Main integration, the full gate, archive audit, independent review and landing remain ahead. The planner deploys.
 
 ## Change
 
@@ -35,8 +35,18 @@ All witnesses below use the existing real scope and SQLite fixture unless the ro
 
 The competing retained answer strengthens an existing witness for a previously uncovered combination. No new test registration repeats the extraction's private methods.
 
+## Focused evidence
+
+The frozen plan at `f10b1b63`, tree `a4aefee3`, runs scope source and test compilers, then all 27 cases across six complete operation and outside owners. The canonical scope and later scope-denial groups keep separate runtimes and their original setup, limits and deadlines. Both compilers and every case pass. I read the actual `pipeline.exit`: `exit 0`. Each case runs once, with no skips, retries, errors or unexpected cases.
+
+The source guard retains all 2,189 inputs, the lock, 14 owned workspace bindings and 48 exports. The checkout stays clean, and no owned process remains. The outer observation is 12.635 seconds; separate command timings remain in the evidence. The maintained compatibility preparation passes before the body. No package installs.
+
+The isolated control removes only the held-answer check before retained replies. It runs the strengthened fairness case, which fails by `AssertionError` at `operations.test.ts:332`: the head advances to 16 instead of staying at 15. I read actual owner exit 1 and driver exit 0. One case fails, no case passes, and ten cases remain unselected. The driver restores every tracked input before classification, leaving both worktrees clean and no owned process. It runs no baseline again.
+
+The [focused manifest](evidence/2026-11-08-s4-operations-focused.manifest.json) hashes to `81250792ba213c7f0f30eb8e587ea4649994ea32ef8d917f3aca7e189771a853`. It names 14 public files and inventories 528 read-only private originals in four units under `~/play/artroom-evidence/2026-11-08-s4-`. They retain the complete reports, compiler logs, compatibility preparation, exact source comparison, control fault and restoration. Sealing reruns no validation. These results establish the selected boundaries; they do not replace the final gate or archive audit.
+
 ## Evidence still due
 
-Run the changed compiler contexts and complete operation owners after F1 releases the single validation slot. Then show the strengthened precedence witness fails without the held-answer check and restore the source before classification. Run one final maintained gate before review.
+Integrate current main, run one final maintained gate, complete the archive audit and obtain independent review before landing.
 
 Ruling `217e53e9` keeps archive watch `64552d40` open. Before review, record one line naming every retained full gate since M4 landing `8d9080f3` and its archive-retry observation. Keep failed gates and unreached Native stages distinct from passes. A new archive retry stops S4 for planner classification. No S4 change touches archive or fold code.
