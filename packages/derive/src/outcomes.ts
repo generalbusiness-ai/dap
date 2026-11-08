@@ -16,15 +16,15 @@
  * and for every other owner as the given owners do.
  */
 
-import type { Digest, EffectForm, OutcomeMark, PlatformData, Send, SendForm } from "@generalbusiness/dap-contract";
+import type { Digest, OutcomeMark, PlatformData, Send } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
-import { deriveEffects } from "./effects.ts";
+import { joinReturnedEffects } from "./effects.ts";
 import type { Own, Reading } from "./fields.ts";
 import type { Fetched, Judging } from "./guards.ts";
 import { overMax } from "./handlers.ts";
 import type { EvidenceValueDomain, OperationRules, OutcomeDerived, OutcomeInput, Owner, Owners } from "./ledger.ts";
 import { RuleFault, givenTo, outside, ruleAt, run, type AtHand, type OutcomeGives, type PlatformRules, type Rules } from "./marks.ts";
-import { deriveSends } from "./sends.ts";
+import { joinReturnedSends } from "./sends.ts";
 import type { Operation, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isLocalId, isObject, own, same } from "./values.ts";
@@ -194,7 +194,7 @@ function given(mark: OutcomeMark, j: Judging, kinds: Readonly<Record<string, Out
   const effectCode = fresh("effects"), sendCodes = sends.map((_, n) => fresh(`send.${n}`));
   const rules: [string, Rules[string]][] = [[effectCode, { place: "effect", most: effects.length, run: () => effects }], ...sends.map((request, n): [string, Rules[string]] => [sendCodes[n]!, { place: "send", run: () => request }])];
   const joining: Judging = { ...j, platform: { named: j.platform!.named, rules: { ...native, ...Object.fromEntries(rules) } } };
-  const joined = deriveEffects(joining, [{ code: effectCode, row: mark.row } as unknown as EffectForm], [], null);
+  const joined = joinReturnedEffects(joining, { code: effectCode, row: mark.row });
   if (!joined.ok) throw outside(mark, `effects that the entry cannot hold: ${"reason" in joined ? joined.reason : joined.unavailable}`);
   // The synthetic rule joins and validates the callback's effects; its
   // length is no declaration of what the originating outcome may start.
@@ -209,13 +209,13 @@ function given(mark: OutcomeMark, j: Judging, kinds: Readonly<Record<string, Out
   if (joined.opened && Object.hasOwn(own((j.definition.declared as unknown as PlatformData).items, joined.opened.type)!, "holds")) throw outside(mark, "an opening of a holder in an outcome");
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. An act or a handler is refused `type-full`.
   if (joined.opened && overMax(j.view, j.definition, joined.opened.type, joined.opened.state) !== null) throw outside(mark, "effects that the entry cannot hold: type-full");
-  const requests = deriveSends(joining, sends.map((_, n) => ({ code: sendCodes[n]!, row: mark.row }) as unknown as SendForm), joined.working, NO_CAUSE, 0, undefined, joined.opened !== null);
+  const requests = joinReturnedSends(joining, sends.map((_, n) => ({ code: sendCodes[n]!, row: mark.row })), joined.working, NO_CAUSE, 0, undefined, joined.opened !== null);
   if (!requests.ok) throw outside(mark, `requests that the entry cannot hold: ${"reason" in requests ? requests.reason : requests.unavailable}`);
   if (!mark.send) return { effects: joined.effects, sends: requests.sends satisfies Send[], opens };
 
   // The send of the mark: its own rule, of the scope's pinned version, at ordinal 0. It reads the state before the entry, as every rule does.
   const opener = openerOf(j);
-  const made = deriveSends(j, [mark.send as unknown as SendForm], joined.working, opener?.cause ?? NO_CAUSE, 0, undefined, joined.opened !== null);
+  const made = joinReturnedSends(j, [mark.send], joined.working, opener?.cause ?? NO_CAUSE, 0, undefined, joined.opened !== null);
   if (!made.ok) throw outside(mark.send, `a request that the entry cannot hold: ${"reason" in made ? made.reason : made.unavailable}`);
   // Section 17.2, "A request that an outcome sends": where the send states `once`, at most one outcome entry of one operation makes
   // the request, and a second is a fault of the rule. The operation reserved the request once.

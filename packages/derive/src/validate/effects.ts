@@ -12,8 +12,9 @@ import { holdEffect } from "./hold.ts";
 import { copy, isDetached, operand, type Read } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { memberBytes, stated } from "./sizes.ts";
-import { recordSlot } from "../program/reads.ts";
-import { enterForm, leaveForm, recordValueSource, type EffectOp } from "../program/structure.ts";
+import { recordElementBinding, recordSlot, subjectRead, type SlotRead } from "../program/reads.ts";
+import { copySource, type AttributeSource, type EffectCode, type EffectValueSource, type PartySource, type RefSource } from "../program/effect-plan.ts";
+import { enterForm, leaveForm, recordEffectPlan, type EffectOp } from "../program/structure.ts";
 
 const EFFECTS = ["state", "party", "ref", "value", "attribute", "hold", "redact", "capability"] as const satisfies readonly EffectOp[];
 const MEMBER: FieldType = { type: "member" };
@@ -61,17 +62,25 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
     const named = "of" in o ? subject(d, of, at(path, "of"), ctx, false) : null;
     if ("of" in o && (named === null || named === "scope")) return null;
     capabilityEffect(d, x, p, ctx, ownerOf(() => (named as Type | null) ?? ctx.on ?? bad("name", p, "there is no primary item whose slot this could be"), { kind: "subject", name: typeof of === "string" ? of : "on" }));
+    const target = (named as Type | null) ?? ctx.on;
+    recordEffectPlan(d, { site: { explicitSubject: of !== undefined,
+      target: target ? subjectRead(target, { kind: "subject", name: typeof of === "string" ? of : "on" }) : null },
+      code: { op: "capability", capability: x as Extract<EffectCode, { op: "capability" }>["capability"] } });
     return { what: `the capability effect at ${p}`, successive: false };
   }
   const s = subject(d, of, at(path, "of"), ctx, false);
   if (s === null || s === "scope") return null;
   const nascent = ctx.nascent && !later && onSubject(of);
   const sk = (of as string | undefined) ?? "on";
+  const instruction = (code: EffectCode): void => recordEffectPlan(d, {
+    site: { explicitSubject: of !== undefined, target: subjectRead(s, { kind: "subject", name: sk }) }, code,
+  });
+  const targets = new Map<string, SlotRead>();
   const sets = (name: unknown, successive = false): Sets => ({ what: `slot ${String(name)} of ${sk}`, successive });
   const slot = (name: unknown, kind: Slot["kind"]): Slot | null => {
     const matched = typeof name === "string" ? s.slots.get(name) : undefined;
     if (matched?.kind !== kind) return bad("name", p, `names no ${kind} slot of ${s.name}`);
-    recordSlot(d, ctx, at(p, "slot"), s, { kind: "subject", name: sk }, name as string, matched, "write");
+    targets.set(name as string, recordSlot(d, ctx, at(p, "slot"), s, { kind: "subject", name: sk }, name as string, matched, "write").slot);
     if (matched.capability) return bad("capability-slot-owned", p, `${matched.capability} owns ${String(name)}; an ordinary effect cannot write it`);
     // Section 6.3: a fixed slot is set by the act that opens the item and never again.
     return matched.fixed && !nascent ? bad("fixed", p, "a fixed slot is set only by the act that opens its item") : matched;
@@ -107,6 +116,7 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
       // Section 6.3: an item in a final state refuses every transition. A later clause is checked when it runs.
       if (nascent ? s.states.get(s.initial) : !later && !live.has(sk)) bad("final", p, "a state effect needs a `state` guard on its subject that lists no final state, among the guards or in its own `if`");
       d.clause?.push({ subject: sk, type: s.name, state: x });
+      instruction({ op: "state", state: x });
       return { what: `the state of ${sk}`, successive: false };
     case "party": {
       const r = rec(x, p, ["slot", "from"], ["list"]);
@@ -114,18 +124,25 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
       if (!r || !sl) return null;
       const from = r["from"];
       const fp = at(p, "from");
+      let captured: PartySource | null = from === null ? { op: "clear" } : null;
       if ("list" in r) {
         // One member is added to a list, or removed from it.
         if (!sl.list || from === null || (r["list"] !== "add" && r["list"] !== "remove")) bad("shape", at(p, "list"), "is add or remove, of a member, on a list slot");
-        else source(from, fp, MEMBER);
+        else { const read = source(from, fp, MEMBER); if (read) captured = copySource(read.node); }
         if (ctx.timed && r["list"] === "add") bad("timed-partial", p, "a timed rule adds to no party list: a full list would refuse the transition");
       } else if (Array.isArray(from)) {
         // Section 6.6: a list slot may be set whole, from a list of member operands. There are no more than the list can hold.
         if (!sl.list) bad("shape", fp, "a list of members goes in a list slot");
-        else list(from, fp, sl.type.type === "list" ? sl.type.max : 1).forEach((m, i) => source(m, at(fp, i), MEMBER));
-      } else if (from !== null) source(from, fp, sl.type);
+        else {
+          const reads = list(from, fp, sl.type.type === "list" ? sl.type.max : 1).flatMap((m, i) => {
+            const read = source(m, at(fp, i), MEMBER); return read ? [read.node] : [];
+          });
+          captured = { op: "members", reads };
+        }
+      } else if (from !== null) { const read = source(from, fp, sl.type); if (read) captured = copySource(read.node); }
       // A list that is set whole is recorded as one record for each member that leaves or joins, which the static size of a timed entry does not count.
       if (ctx.timed && sl.list && !("list" in r) && from !== null) bad("timed-partial", p, "a timed rule sets no party list whole");
+      if (captured) instruction({ op: "party", slot: targets.get(r["slot"] as string)!, source: captured, change: r["list"] === "add" || r["list"] === "remove" ? r["list"] : null });
       return sets(r["slot"], "list" in r);
     }
     case "ref": {
@@ -133,14 +150,17 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
       const sl = r && slot(r["slot"], "ref");
       if (!r || !sl) return null;
       const from = r["from"];
+      let captured: RefSource | null = from === null ? { op: "clear" } : null;
       if (from === "self") {
+        captured = { op: "self" };
         // Section 6.4: `self` is a local reference to the entry being written, and so to the item it opens.
         const item = ctx.nascent && !later && ctx.on !== null && assignable({ type: "item", of: ctx.on.name }, sl.type);
         // Section 6.2: it may fill a slot of type `fact` when the slot's kinds include the kind of the entry being written, under this
         // definition's name: an act's kind, a handler's message, or `timed:` and a rule's key. The entry of an advisory has no kind.
         const fact = !later && ctx.kind !== null && sl.type.type === "fact" && sl.type.kind.includes(ctx.kind) && sl.type.under === d.name;
         if (!item && !fact) bad("name", at(p, "from"), "self is the item this entry opens, in a slot that refers to an item of that type; or this entry, in a slot for a fact of its kind under this definition");
-      } else if (from !== null) source(from, at(p, "from"), sl.type);
+      } else if (from !== null) { const read = source(from, at(p, "from"), sl.type); if (read) captured = copySource(read.node); }
+      if (captured) instruction({ op: "ref", slot: targets.get(r["slot"] as string)!, source: captured });
       return sets(r["slot"]);
     }
     case "value": {
@@ -148,12 +168,15 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
       const sl = r && slot(r["slot"], "value");
       if (!r || !sl) return null;
       const from = r["from"];
+      let captured: EffectValueSource | null = null;
       if (isObject(from) && "time" in from) {
         const t = rec(from, at(p, "from"), ["time"]) && rec(from["time"], at(p, "from"), ["plusSeconds"]);
         // No offset is longer than the whole span a timestamp can name. So the sum with any reading is a number the runtime can
         // compare with that span, and effect derivation refuses a time past it; nothing throws.
         const plus = t && int(t["plusSeconds"], at(p, "from"));
-        if (typeof plus === "number") recordValueSource(d, { op: "commit-clock", path: at(p, "from"), plusSeconds: plus });
+        if (typeof plus === "number") {
+          captured = { op: "commit-clock", path: at(p, "from"), plusSeconds: plus };
+        }
         if (typeof plus === "number" && plus * 1000 > LAST_MS) bad("bound", at(p, "from"), "is longer than the span a timestamp can name");
         // Section 6.4: a timed rule's effects are total. A time derived from the commit clock can pass the last timestamp, which the
         // commit would refuse; and a timed rule ends its deadline by leaving its states, not by moving it.
@@ -161,8 +184,9 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
         if (sl.type.type !== "time") bad("name", p, "the commit time goes in a slot of type time");
       } else if (from !== null) {
         const read = source(from, at(p, "from"), sl.type);
-        if (read) recordValueSource(d, { op: "read", read: read.node });
-      } else recordValueSource(d, { op: "clear" });
+        if (read) captured = copySource(read.node);
+      } else captured = { op: "clear" };
+      if (captured) instruction({ op: "value", slot: targets.get(r["slot"] as string)!, source: captured });
       d.clause?.push({ subject: sk, type: s.name, slot: String(r["slot"]) });
       // Section 6.4, "`settles` by a mark": a mark is set once, so a written effect on it is a `value` effect of the constant `true`.
       // Which slots are marks is known when every form is read (`setOnce`, in `markers.ts`).
@@ -175,11 +199,13 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
       if (!r || !sl) return null;
       if (!sl.list) bad("name", p, "attribution fills a party list");
       if (ctx.timed) bad("timed-partial", p, "a timed rule takes no attribution: a full list would refuse the transition");
-      subject(d, r["of"], at(p, "of"), ctx, false);
+      const base = subject(d, r["of"], at(p, "of"), ctx, false);
+      const sources: AttributeSource[] = [];
       /** A list of members, or a value whose type only the commit knows. */
       const members = (v: unknown, lp: string, inner: Ctx) => {
         const read = operand(d, v, lp, inner, ownerOf(() => s, { kind: "subject", name: sk }), false);
         if (read?.type && !(read.type.type === "list" && read.type.of.type === "member")) bad("name", lp, "names no list of members");
+        return read;
       };
       // Section 6.7: further sources. The result is the union of the base attribution and every source.
       if ("with" in r) list(r["with"], at(p, "with"), bounds.effects).forEach((w, i) => {
@@ -196,17 +222,31 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
           if (as?.includes(".")) { bad("shape", at(wp, "as"), "a dot names a member of a record element, so the name has none"); return; }
           if (!read || as === null) return;
           if (read.type !== null && read.type.type !== "list") { bad("name", at(wp, "each"), "names no list"); return; }
-          members(wo["list"], at(wp, "list"), bindElement(ctx, as, read.type?.type === "list" ? read.type.of : null, at(wp, "as")));
-        } else if (wk === "list") members(wo["list"], at(wp, "list"), ctx);
+          const type = read.type?.type === "list" ? read.type.of : null;
+          const inner = bindElement(ctx, as, type, at(wp, "as"));
+          const binding = recordElementBinding(d, inner, as, type, at(wp, "as"));
+          const listed = members(wo["list"], at(wp, "list"), inner);
+          if (listed) sources.push({ op: "each", read: read.node, binding, list: listed.node });
+        } else if (wk === "list") {
+          const read = members(wo["list"], at(wp, "list"), ctx);
+          if (read) sources.push({ op: "list", read: read.node });
+        }
         else {
           // A party slot of each local item that a range covers, or of another subject.
-          const from: Type | "scope" | null = wk === "items" ? (range(d, wo["items"], at(wp, "items"), ctx, [], false, `attribute:${i}`)?.type ?? null) : subject(d, wo["subject"], at(wp, "subject"), ctx, false);
+          const ranged = wk === "items" ? range(d, wo["items"], at(wp, "items"), ctx, [], false, `attribute:${i}`) : null;
+          const from: Type | "scope" | null = wk === "items" ? ranged?.type ?? null : subject(d, wo["subject"], at(wp, "subject"), ctx, false);
           const slot = from && from !== "scope" && typeof wo["slot"] === "string" ? from.slots.get(wo["slot"]) : undefined;
           if (from && from !== "scope" && slot?.kind !== "party") bad("name", at(wp, "slot"), `names no party slot of ${from.name}`);
-          if (from && from !== "scope" && slot) recordSlot(d, ctx, at(wp, "slot"), from, wk === "items"
-            ? { kind: "range", path: at(wp, "items"), type: from.name } : { kind: "subject", name: wo["subject"] as string }, wo["slot"] as string, slot, "read");
+          if (from && from !== "scope" && slot) {
+            const captured = recordSlot(d, ctx, at(wp, "slot"), from, wk === "items"
+              ? { kind: "range", path: at(wp, "items"), type: from.name } : { kind: "subject", name: wo["subject"] as string }, wo["slot"] as string, slot, "read").slot;
+            if (wk === "items" && ranged) sources.push({ op: "items", range: ranged.program, slot: captured });
+            else if (wk === "subject") sources.push({ op: "subject", slot: captured });
+          }
         }
       });
+      if (base && base !== "scope") instruction({ op: "attribute", slot: targets.get(r["slot"] as string)!,
+        of: subjectRead(base, { kind: "subject", name: r["of"] as string }), with: sources });
       return sets(r["slot"]);
     }
     case "redact": {
@@ -217,12 +257,13 @@ function effectBody(d: Defining, v: unknown, path: string, ctx: Ctx, later: bool
       if (!r) return null;
       const matched = typeof r["slot"] === "string" ? s.slots.get(r["slot"]) : undefined;
       if (matched?.kind !== "value" || !isDetached(matched.type)) return bad("name", p, `names no value slot of ${s.name} that holds a detached text`);
-      recordSlot(d, ctx, at(p, "slot"), s, { kind: "subject", name: sk }, r["slot"] as string, matched, "redact");
+      const captured = recordSlot(d, ctx, at(p, "slot"), s, { kind: "subject", name: sk }, r["slot"] as string, matched, "redact").slot;
       if (!ctx.signer || later) bad("shape", p, "a redaction is an effect of an act: its entry records who removed the text, and under which grant");
+      instruction({ op: "redact", slot: captured });
       return { what: `the texts of slot ${String(r["slot"])} of ${sk}`, successive: false };
     }
     default: {
-      const what = holdEffect(d, x, p, s, sk, ctx, nascent);
+      const what = holdEffect(d, x, p, s, sk, ctx, nascent, (action, extent) => instruction({ op: "hold", action, extent }));
       return what === null ? null : { what, successive: false };
     }
   }

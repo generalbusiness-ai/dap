@@ -5,6 +5,10 @@ import type { ValidDefinition } from "../validate/index.ts";
 import type { ElementBinding, FieldResolution, ForeignFieldResolution, FrameRead, OperandRead, RangeResolution, ReadValidation, ResolvedReads, SlotResolution, SubjectResolution } from "./reads.ts";
 import { immutable } from "./model.ts";
 import { mapGuardChildren, type GuardPlan, type RangePlan } from "./guard-plan.ts";
+import { conditionSubjects, type ConditionPlan } from "./condition-plan.ts";
+import { ownEffectPlan, type AttentionPlan, type EffectPlan, type EffectValueSource } from "./effect-plan.ts";
+import { ownSendPlan, type PendingSendPlan, type SendPlan } from "./send-plan.ts";
+import { ownSettlementPlan, type SettlementPlan } from "./settlement.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
 export type GuardOp = Exclude<Keys<Guard>, "of" | "reason" | "ifPresent">;
@@ -31,9 +35,7 @@ type NativeData = Mark & { most?: MarkMost; result?: SendMark["result"]; always?
 export interface FutureClause { readonly clause: string; readonly root: RootIdentity }
 type NativeNode<C extends "guard" | "effect" | "send"> = WrittenNode<C, "native", NativeData>
   & (C extends "send" ? { readonly future: readonly FutureClause[] } : object);
-export type ValueSource = { readonly op: "clear" }
-  | { readonly op: "read"; readonly read: OperandRead }
-  | { readonly op: "commit-clock"; readonly path: string; readonly plusSeconds: number };
+export type ValueSource = EffectValueSource;
 export type GuardNode = { [K in GuardOp]: WrittenNode<"guard", K, Extract<Guard, Record<K, unknown>>> }[GuardOp] | NativeNode<"guard">;
 export type EffectNode = { [K in EffectOp]: WrittenNode<"effect", K, Extract<EffectForm, Record<K, unknown>>>
   & (K extends "value" ? { readonly source: ValueSource } : object) }[EffectOp] | NativeNode<"effect">;
@@ -51,6 +53,7 @@ export interface BodyStructure {
   readonly frame: FrameRead;
   readonly reads: ResolutionGroup;
   readonly nodes: readonly StructureNode[];
+  readonly settlement: SettlementPlan | null;
 }
 export interface DefinitionStructure {
   readonly validation: ReadValidation;
@@ -66,14 +69,19 @@ export type RootBinding = { readonly kind: "body"; readonly source: object }
   | { readonly kind: "clause"; readonly owner: object; readonly clause: string };
 interface PendingNode {
   readonly category: Category; readonly op: Opcode; readonly path: string; readonly data: unknown;
-  readonly reads: MutableResolutions; readonly children: PendingNode[]; readonly future: FutureClause[]; source?: ValueSource;
+  readonly reads: MutableResolutions; readonly children: PendingNode[]; readonly future: FutureClause[];
   guard?: GuardPlan<FormTrace>;
+  effect?: EffectPlan;
+  attention?: AttentionPlan;
+  send?: PendingSendPlan;
+  conditions?: Partial<Record<"if" | "unless", PendingGuardList>>;
 }
 export interface BodyTrace {
   readonly id: RootIdentity; readonly binding: RootBinding; readonly origin: BodyTrace | null;
   readonly nodes: PendingNode[]; readonly reads: MutableResolutions; readonly stack: PendingNode[]; frame?: FrameRead;
   readonly guardLists: PendingGuardList[];
   readonly ranges: PendingRange[];
+  settlement?: SettlementPlan;
 }
 export type GuardListPlace = "guards" | "if" | "unless";
 /** The caller supplies the semantic use, independent of diagnostic paths. */
@@ -98,6 +106,11 @@ const compiled = new WeakMap<ValidDefinition, Compiled>(), checkedRoots = new We
 const rootOwners = new WeakMap<BodyStructure, ValidDefinition>();
 const nodeRoots = new WeakMap<StructureNode, BodyStructure>(), guardPlans = new WeakMap<GuardNode, GuardPlan<GuardNode>>();
 const guardSources = new WeakMap<GuardNode, object>();
+const conditionPlans = new WeakMap<StructureNode, ConditionPlan<GuardNode>>();
+const effectPlans = new WeakMap<EffectNode, EffectPlan>(), attentionPlans = new WeakMap<AttentionNode, AttentionPlan>();
+const sendPlans = new WeakMap<SendNode, SendPlan>();
+const sendSources = new WeakMap<SendNode, SendForm | SendMark>();
+const effectSources = new WeakMap<EffectNode, EffectForm>();
 function traceOf(d: Defining): Trace {
   let trace = pending.get(d);
   if (!trace) { trace = { roots: [], active: null }; pending.set(d, trace); }
@@ -135,7 +148,13 @@ export function endGuardList(d: Defining, list: GuardListTrace | null): void {
   if (pending.get(d)?.active !== list.body || (list.body.stack.at(-1) ?? null) !== list.owner) throw new TypeError("unclosed guard list scope");
   const nodes = list.nodes.slice(list.start);
   if (nodes.some(node => node.category !== "guard")) throw new TypeError("guard list captured a non-guard form");
-  list.body.guardLists.push({ source: list.source, owner: list.owner, place: list.place, nodes });
+  const captured: PendingGuardList = { source: list.source, owner: list.owner, place: list.place, nodes };
+  list.body.guardLists.push(captured);
+  if (list.owner && list.place !== "guards") {
+    list.owner.conditions ??= {};
+    if (list.owner.conditions[list.place]) throw new TypeError("condition has two groups in the same semantic place");
+    list.owner.conditions[list.place] = captured;
+  }
 }
 export function recordRangePlan(d: Defining, source: object, use: RangeUse, plan: RangePlan): void {
   const body = pending.get(d)?.active;
@@ -163,9 +182,29 @@ export function recordResolution<K extends keyof ResolutionGroup>(d: Defining, k
   const target = (body.stack.at(-1)?.reads ?? body.reads)[kind] as ResolutionGroup[K][number][];
   target.push(value);
 }
-export function recordValueSource(d: Defining, source: ValueSource): void {
+export function recordEffectPlan(d: Defining, plan: EffectPlan): void {
   const node = pending.get(d)?.active?.stack.at(-1);
-  if (node?.category === "effect" && node.op === "value") node.source = Object.freeze(source);
+  if (!node) return;
+  if (node.category !== "effect" || node.op !== plan.code.op) throw new TypeError("effect instruction has no matching admitted form scope");
+  node.effect = plan;
+}
+export function recordSendPlan(d: Defining, plan: PendingSendPlan): void {
+  const node = pending.get(d)?.active?.stack.at(-1);
+  if (!node) return;
+  if (node.category !== "send" || node.op !== plan.code.op) throw new TypeError("send instruction has no matching admitted form scope");
+  node.send = plan;
+}
+export function recordAttentionPlan(d: Defining, plan: AttentionPlan): void {
+  const node = pending.get(d)?.active?.stack.at(-1);
+  if (!node) return;
+  if (node.category !== "attention") throw new TypeError("attention instruction has no matching admitted form scope");
+  node.attention = plan;
+}
+export function recordSettlementPlan(d: Defining, plan: SettlementPlan): void {
+  const body = pending.get(d)?.active;
+  if (!body) return;
+  if (body.stack.length || body.settlement) throw new TypeError("settlement has no unique admitted body scope");
+  body.settlement = plan;
 }
 export function recordNativeForm(d: Defining, kind: string, path: string, data: unknown): void {
   if (kind !== "guard" && kind !== "effect" && kind !== "send") return;
@@ -184,14 +223,35 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     const existing = ownedNodes.get(node);
     if (existing) return existing;
     const data = immutable(node.data, origins), children = Object.freeze(node.children.map(nodeOf));
-    if (node.category === "effect" && node.op === "value" && !node.source) throw new TypeError("value form has no captured source");
+    if (node.category === "effect" && node.op !== "native" && !node.effect) throw new TypeError("effect form has no captured instruction");
+    if (node.category === "send" && node.op !== "native" && !node.send) throw new TypeError("send form has no captured instruction");
+    if (node.category === "attention" && !node.attention) throw new TypeError("attention form has no captured instruction");
+    const effect = node.effect ? ownEffectPlan(node.effect, origins) : null;
+    const valueSource = effect?.code.op === "value" ? effect.code.source : null;
     // Each discriminant came from the existing validator's admitted form branch.
     const owned = Object.freeze({ category: node.category, op: node.op, path: node.path, data, children,
       reads: ownResolutions(node.reads), ...(node.category === "send" ? { future: Object.freeze(node.future.map(link => Object.freeze({ ...link }))) } : {}),
-      ...(node.source ? { source: node.source } : {}) }) as StructureNode;
+      ...(valueSource ? { source: valueSource } : {}) }) as StructureNode;
     if (typeof node.data !== "object" || node.data === null) throw new TypeError("structural form has no source object");
     bindings.push({ source: node.data, node: owned });
     ownedNodes.set(node, owned);
+    if (owned.category === "effect" && effect) effectPlans.set(owned, effect);
+    if (owned.category === "send" && node.send) sendPlans.set(owned, ownSendPlan(node.send));
+    if (owned.category === "attention" && node.attention) attentionPlans.set(owned, Object.freeze({ ...node.attention }));
+    const conditionGuards = (place: "if" | "unless"): readonly GuardNode[] | null => {
+      const group = node.conditions?.[place];
+      return group ? Object.freeze(group.nodes.map(pending => {
+        const child = nodeOf(pending);
+        if (child.category !== "guard") throw new TypeError("condition has a non-guard instruction");
+        return child;
+      })) : null;
+    };
+    if (owned.category === "effect" || owned.category === "attention" || owned.category === "send") conditionPlans.set(owned, Object.freeze({
+      if: conditionGuards("if"), unless: conditionGuards("unless"),
+      // Only final admission permits traversing a whole condition. A refused
+      // argument can hold a cyclic ignored value without canonical bytes.
+      absentSubjects: Object.freeze(node.conditions?.if ? [...conditionSubjects(node.conditions.if.source)] : []),
+    }));
     if (owned.category === "guard" && node.guard) guardPlans.set(owned, mapGuardChildren(node.guard, trace => {
       const child = nodeOf(trace.node);
       if (child.category !== "guard") throw new TypeError("guard instruction has a non-guard child");
@@ -206,12 +266,15 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
   const roots = trace.roots.map((root): BodyStructure => {
     if (!root.frame) throw new TypeError("structural body has no validator frame");
     bindings.length = 0;
-    const body = Object.freeze({ id: root.id, origin: root.origin?.id ?? null, frame: root.frame, nodes: Object.freeze(root.nodes.map(nodeOf)), reads: ownResolutions(root.reads) });
+    const body = Object.freeze({ id: root.id, origin: root.origin?.id ?? null, frame: root.frame, nodes: Object.freeze(root.nodes.map(nodeOf)), reads: ownResolutions(root.reads),
+      settlement: root.settlement ? ownSettlementPlan(root.settlement) : null });
     checkedRoots.add(body);
     rootOwners.set(body, definition);
     for (const { source, node } of bindings) {
       nodeRoots.set(node, body);
       if (node.category === "guard") guardSources.set(node, source);
+      if (node.category === "effect") effectSources.set(node, source as EffectForm);
+      if (node.category === "send") sendSources.set(node, source as SendForm | SendMark);
       forms.set(source, Object.freeze([...(forms.get(source) ?? []), Object.freeze({ body, node })]));
     }
     for (const list of root.guardLists) {
@@ -269,6 +332,29 @@ export function clauseStructure(definition: ValidDefinition, owner: object, clau
   return found?.length === 1 ? found[0]! : null;
 }
 
+/** Select a future root by the actual admitted send occurrence. */
+export function sendClauseStructure(definition: ValidDefinition, body: BodyStructure, node: SendNode, clause: string): BodyStructure | null {
+  checkedOwner(definition, body, node);
+  const link = node.future.find(future => future.clause === clause);
+  if (!link) return null;
+  const root = compiled.get(definition)!.structure.roots.find(root => root.id === link.root);
+  if (!root || root.origin !== body.id) throw new TypeError("send result root belongs to another admitted body");
+  return root;
+}
+/** The M5 effect adapter still verifies each original occurrence before execution. */
+export function bodyEffectForms(definition: ValidDefinition, body: BodyStructure): readonly EffectForm[] {
+  checkedBody(definition, body);
+  return body.nodes.filter(node => node.category === "effect").map(node => effectSource(definition, body, node));
+}
+/** Compatibility with a raw send list requires one unique actual admitted body. */
+export function sendListBody(definition: ValidDefinition, forms: readonly SendForm[]): BodyStructure | null {
+  const candidates = compiled.get(definition)?.structure.roots.filter(body => {
+    const nodes = body.nodes.filter(node => node.category === "send");
+    return nodes.length === forms.length && nodes.every((node, ordinal) => sendSources.get(node) === forms[ordinal]);
+  });
+  return candidates?.length === 1 ? candidates[0]! : null;
+}
+
 /** Resolve occurrences by their source object and admitted body, including lexical aliases. */
 export function formStructures(definition: ValidDefinition, body: BodyStructure, source: object): readonly StructureNode[] {
   checkedBody(definition, body);
@@ -317,6 +403,41 @@ export function guardSource(definition: ValidDefinition, body: BodyStructure, no
   const source = guardSources.get(node);
   if (!source) throw new TypeError("guard instruction has no source identity");
   return source as Guard;
+}
+
+/** Select conditions by the admitted occurrence, never by a declaration path. */
+export function conditionPlan(definition: ValidDefinition, body: BodyStructure, node: EffectNode | AttentionNode | SendNode): ConditionPlan<GuardNode> {
+  checkedOwner(definition, body, node);
+  const plan = conditionPlans.get(node);
+  if (!plan) throw new TypeError("form has no admitted condition instruction");
+  return plan;
+}
+export function effectPlan(definition: ValidDefinition, body: BodyStructure, node: EffectNode): EffectPlan | null {
+  checkedOwner(definition, body, node);
+  return effectPlans.get(node) ?? null;
+}
+/** Native rules retain their original declared mark and fault identity through M7. */
+export function effectSource(definition: ValidDefinition, body: BodyStructure, node: EffectNode): EffectForm {
+  checkedOwner(definition, body, node);
+  const source = effectSources.get(node);
+  if (!source) throw new TypeError("effect instruction has no source identity");
+  return source;
+}
+export function sendPlan(definition: ValidDefinition, body: BodyStructure, node: SendNode): SendPlan | null {
+  checkedOwner(definition, body, node);
+  return sendPlans.get(node) ?? null;
+}
+export function sendSource(definition: ValidDefinition, body: BodyStructure, node: SendNode): SendForm | SendMark {
+  checkedOwner(definition, body, node);
+  const source = sendSources.get(node);
+  if (!source) throw new TypeError("send instruction has no source identity");
+  return source;
+}
+export function attentionPlan(definition: ValidDefinition, body: BodyStructure, node: AttentionNode): AttentionPlan {
+  checkedOwner(definition, body, node);
+  const plan = attentionPlans.get(node);
+  if (!plan) throw new TypeError("attention has no admitted executable instruction");
+  return plan;
 }
 
 /** Timed judges pass their exact effect and attention arrays rather than a body object. */

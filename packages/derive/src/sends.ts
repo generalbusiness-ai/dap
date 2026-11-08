@@ -6,21 +6,23 @@
  * the state before them.
  */
 
-import type { Digest, FieldType, Guard, Input, Operand, Range, Seed, Send, SendForm, SendMark, SendSource, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Digest, FieldType, Input, Seed, Send, SendForm, SendMark, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isSend } from "@generalbusiness/dap-bytes";
 import { creationContextOf, type CreationContext } from "./creation-context.ts";
 import type { Derived } from "./effects.ts";
 import { isLocalFact } from "./fields.ts";
-import { readsUnbound, slotOf, type Judging } from "./guards.ts";
-import { covered } from "./lists.ts";
-import { judgeGuardNodes } from "./program/guard-value.ts";
-import { formContext, guardList, type BodyStructure, type FormContext, type RangeUse } from "./program/structure.ts";
-import { givenTo, markOf, outside, ruleFor, run } from "./marks.ts";
-import { operand } from "./operand.ts";
+import { slotOf, type Judging } from "./guards.ts";
+import { coveredItems } from "./lists.ts";
+import { judgeCondition } from "./program/condition-value.ts";
+import { readValue } from "./program/read-value.ts";
+import { sendReadType, sendSlotType, type SendFields, type SendPlan, type SendSourcePlan } from "./program/send-plan.ts";
+import { checkedBody, formContext, sendListBody, sendPlan, sendSource, type BodyStructure, type SendNode } from "./program/structure.ts";
+import { givenTo, outside, ruleFor, run } from "./marks.ts";
+import { sendOrigin } from "./program/send-origin.ts";
 import { sendValue } from "./send-value.ts";
 import type { Item } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
-import { isFactRef, isLocalId, isObject, isScopeRef, own, same } from "./values.ts";
+import { isFactRef, isLocalId, isObject, isScopeRef, same } from "./values.ts";
 
 /** What the send forms of one input made. */
 export type Sends = Derived<{ sends: Send[] }>;
@@ -57,22 +59,6 @@ export function membershipOf(genesis: Pick<Extract<Input, { type: "genesis" }>, 
 }
 
 /**
- * Section 6.6: a send with `if` is made only when every guard holds, on the
- * state before the entry's effects. One whose `if` reads an unbound subject
- * is not made. The guards are one list with three results: when none is
- * false and one is not completed, the input is not judged. Effect derivation
- * judges the `if` of a notice by the same rule.
- */
-function holds(j: Judging, guards: readonly Guard[] | undefined, context: () => FormContext): boolean | UnavailableReason {
-  if (readsUnbound(j, guards ?? [])) return false;
-  if (!guards) return true;
-  const { body, owner } = context(), nodes = guardList(j.definition, body, owner, guards, "if");
-  if (!nodes) throw new TypeError("send condition has no admitted form context");
-  const { result } = judgeGuardNodes(j, body, nodes);
-  return result === "pass" ? true : result === "fail" ? false : result;
-}
-
-/**
  * `cause` is the seed cause of any scope this input creates (section 7.2):
  * an act's intent digest, a delivery's delivery cause digest, or a genesis's
  * own seed digest. `first` is the ordinal of the first written send: 1 in a
@@ -88,8 +74,34 @@ function holds(j: Judging, guards: readonly Guard[] | undefined, context: () => 
  * A relationship is of an item, so only such an entry may name `self` as
  * the item of a `relate`, as the validator has it for a written send.
  */
+interface WrittenSend { readonly op: "written"; readonly body: BodyStructure; readonly node: SendNode; readonly plan: SendPlan }
+type NativeSendMark = Pick<SendMark, "code" | "row" | "always">;
+interface NativeSend { readonly op: "native"; readonly mark: NativeSendMark }
+type SendInstruction = WrittenSend | NativeSend;
+
+/** The compatibility caller supplies the actual admitted body and occurrence. */
 export function deriveSends(j: Judging, forms: readonly SendForm[], working: ReadonlyMap<string, Item>, cause: Digest, first = 0, recorded?: ScopeRef | null, opening = false, body: BodyStructure | null = null): Sends {
-  const items = j.definition.declared.items;
+  if (!body) throw new TypeError("sends have no admitted body context");
+  checkedBody(j.definition, body);
+  const nodes = body.nodes.filter(node => node.category === "send");
+  if (nodes.length !== forms.length) throw new TypeError("send list does not match its admitted body");
+  const instructions = forms.map((form, ordinal): SendInstruction => {
+    const { owner } = formContext(j.definition, body, "send", ordinal, form);
+    if (owner.category !== "send") throw new TypeError("send occurrence has another category");
+    if (owner.op === "native") return { op: "native", mark: sendSource(j.definition, body, owner) as SendMark };
+    const plan = sendPlan(j.definition, body, owner);
+    if (!plan) throw new TypeError("send has no captured executable instruction");
+    return { op: "written", body, node: owner, plan };
+  });
+  return executeSends(j, instructions, working, cause, first, recorded, opening);
+}
+
+/** Native outcomes join returned requests through the same checked Native leaf. */
+export function joinReturnedSends(j: Judging, marks: readonly NativeSendMark[], working: ReadonlyMap<string, Item>, cause: Digest, first = 0, recorded?: ScopeRef | null, opening = false): Sends {
+  return executeSends(j, marks.map(mark => ({ op: "native", mark })), working, cause, first, recorded, opening);
+}
+
+function executeSends(j: Judging, instructions: readonly SendInstruction[], working: ReadonlyMap<string, Item>, cause: Digest, first: number, recorded: ScopeRef | null | undefined, opening: boolean): Sends {
   const on = working.get("on") ?? null;
   let unresolved: string | null = null;
   /** A send reads each subject as the effects left it. `each`: the item of a fan-out send. */
@@ -134,24 +146,7 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
     return genesis?.type === "genesis" ? membershipOf(genesis, j.scope.at) : undefined;
   };
 
-  const slotType = (item: Item | null | undefined, slot: string): FieldType | null => {
-    const type = item ? own(items, item.type) : undefined;
-    return own(type?.refs, slot)?.to ?? own(type?.values, slot)?.of ?? null;
-  };
-  /**
-   * The type of an operand's value, when the definition states it: what tells a
-   * local reference, which is not sent as a number, from a number. A part
-   * reads inside an entry of some scope, and what it finds there is sent as it
-   * is; the part `ref` is the reference itself. A presented fact is a fact,
-   * and one of this scope is held as its `seq`, like a fact field.
-   */
-  const typeOf = (o: Operand, each: Item | null): FieldType | null => {
-    if ("item" in o) return { type: "item", of: "" };
-    if (!("field" in o || "slot" in o || "presented" in o) || (o.part !== undefined && o.part !== "ref")) return null;
-    if ("presented" in o) return { type: "fact", kind: [], under: "" };
-    return "field" in o ? (own(j.fieldTypes, o.field) ?? null) : slotType(o.of === undefined ? on : o.of === "each" ? each : working.get(o.of), o.slot);
-  };
-  /** Shared reference encoding keeps native and experimental sends on one leaf. */
+  /** Shared reference encoding keeps production and prototype sends on one leaf. */
   const wire = (value: unknown, type: FieldType | null): unknown => {
     const sent = sendValue(j, value, type);
     if (sent.unresolved !== null) unresolved = sent.unresolved;
@@ -159,43 +154,34 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
   };
   const local = (id: unknown) => wire(id, { type: "item", of: "" });
 
-  /**
-   * The items a range covers, in ascending order of item ID, as the index
-   * holds them: the items of the state before this entry. It is the range
-   * reading of a guard (section 6.5): every page is read, up to the work
-   * limit, and a `where` reads each subject as the effects left it. Null: the
-   * scan did not finish, so the range has no complete evidence.
-   */
-  let current: FormContext | null = null;
-  const context = (): FormContext => {
-    if (!current) throw new TypeError("send has no admitted form context");
-    return current;
-  };
-  const ranged = (range: Range, each: Item | null, use: RangeUse): readonly Item[] | null => covered(reading(each), range, context(), use);
-
   let incomplete = false;
-  /** A source's value as it is sent. `each`: the item of a fan-out send. */
-  const sent = (s: SendSource, each: Item | null, field?: string): unknown => {
-    if (s === "self") return wire(j.self, { type: "item", of: "" });
-    if (!("collect" in s)) return wire(operand(reading(each), s, on), typeOf(s, each));
-    // Section 6.6: one record for each item the range covers, with the named members. A member whose slot is empty is left out.
-    const all = ranged(s.collect.items, each, `collect:${field}`);
-    if (!all) incomplete = true;
-    return (all ?? []).map((item) => Object.fromEntries(Object.entries(s.collect.fields)
-      .map(([name, member]) => [name, member === "item" ? local(item.id) : member === "state" ? item.state : wire(slotOf(item, member), slotType(item, member))] as const)
-      .filter(([, v]) => v !== null)));
+  /** Every payload source reads the working state through its admitted descriptor. */
+  const sent = (source: SendSourcePlan, each: Item | null): unknown => {
+    switch (source.op) {
+      case "self": return local(j.self);
+      case "read": return wire(readValue(reading(each), source.read, on), sendReadType(source.read));
+      case "collect": {
+        const all = coveredItems(reading(each), source.range);
+        if (!all) incomplete = true;
+        return (all ?? []).map(item => Object.fromEntries(source.fields.map(([name, member]) => [name,
+          member.op === "item" ? local(item.id) : member.op === "state" ? item.state : wire(slotOf(item, member.slot.name), sendSlotType(member.slot))
+        ] as const).filter(([, value]) => value !== null)));
+      }
+      default: return exhaustive(source);
+    }
   };
-  /** An absent value is left out of a message, as an absent field is left out of an intent. */
-  const fields = (sources: Record<string, SendSource>, each: Item | null = null) => Object.fromEntries(Object.entries(sources).map(([name, s]) => [name, sent(s, each, name)] as const).filter(([, v]) => v !== null));
+  const fields = (sources: SendFields, each: Item | null = null) => Object.fromEntries(sources.map(([name, source]) => [name, sent(source, each)] as const).filter(([, value]) => value !== null));
+  // Addresses of a relate are read without wire conversion, as before.
+  const address = (source: SendSourcePlan, each: Item | null): unknown => source.op === "self" ? j.self
+    : source.op === "read" ? readValue(reading(each), source.read, on) : null;
 
   const sends: Send[] = [];
   const relations = new Set<string>();
   let creations = 0;
-  for (const [i, form] of forms.entries()) {
-    current = body ? formContext(j.definition, body, "send", i, form) : null;
+  for (const [i, instruction] of instructions.entries()) {
     const refuse = (what: string) => ({ ok: false, reason: "send-unresolved", detail: `sends.${i}: ${what}` }) as const;
     const next = () => first + sends.length;
-    const mark = markOf(form);
+    const mark = instruction.op === "native" ? instruction.mark : null;
     if (mark) {
       const given = run(mark, () => ruleFor(j, mark, "send").run(givenTo(j)));
       // Revision 19, "More than one send mark": a rule whose mark states `always` returns exactly one request. None is a fault.
@@ -227,68 +213,70 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
       sends.push(request);
       continue;
     }
-    if ("create" in form) {
+    if (instruction.op !== "written") throw new TypeError("Native send did not reach its execution leaf");
+    const form = instruction.plan.code;
+    if (form.op === "create") {
       // Section 7.2: the seed names this scope as creator, the input's cause, and which creation of that input this is.
       // Section 6.6: `self` is this scope's own pinned definition, which a definition cannot name by digest.
-      const definition = form.create.definition === "self" ? j.definition.digest : form.create.definition;
-      const seed: Seed = { v: 1, kind: form.create.kind, definition, creator: j.scope.at, cause, ordinal: creations++ };
+      const definition = form.definition === "self" ? j.definition.digest : form.definition;
+      const seed: Seed = { v: 1, kind: form.kind, definition, creator: j.scope.at, cause, ordinal: creations++ };
       // Section 6.6: the platform puts the directory in every `create` of a lane: this scope, when it is one, or the one it records.
-      const lanes = form.create.kind !== "lane" ? null : j.scope.at.kind === "directory" ? j.scope.at : recordedDirectory();
+      const lanes = form.kind !== "lane" ? null : j.scope.at.kind === "directory" ? j.scope.at : recordedDirectory();
       if (lanes === undefined) return { ok: false, unavailable: "unavailable" };
       // Section 6.6: the body of a `create` is `{ fields, directory, membership }`. The membership scope is the one that the creating
       // scope records. A scope that records none creates without the member, so a creation of a scope that knows no membership
       // scope has the bytes it had. A membership scope itself is created without it.
-      const membership = form.create.kind === "membership" ? null : recordedMembership(isDigest(definition));
+      const membership = form.kind === "membership" ? null : recordedMembership(isDigest(definition));
       if (membership === undefined) return { ok: false, unavailable: "unavailable" };
       const context = recordedContext();
       if (context.kind === "invalid") return { ok: false, reason: "send-unresolved", detail: "invalid retained creationContext" };
       // A marked declared provenance propagates through declared creations,
       // never into a platform sibling or a membership creation. Ordinary
       // legacy bodies remain byte-for-byte unchanged when the marker is absent.
-      const forward = membership && context.kind === "marked" && isDigest(definition) && form.create.kind !== "membership";
+      const forward = membership && context.kind === "marked" && isDigest(definition) && form.kind !== "membership";
       // Native installation grants one bounded Root-to-child delegation.
       // Domain fields cannot choose it, and a child cannot delegate it again.
       const grant = context.kind === "marked" ? context.deviceCommand : undefined;
       const delegated = forward && grant && context.kind === "marked" && context.delegate === true
         && j.definition.digest === grant.root && isDigest(definition) && grant.definitions.includes(definition);
       const marker = delegated ? { v: 2, deviceCommand: grant, delegate: false } : { v: 1 };
-      sends.push({ n: next(), to: seed, message: { class: "request", type: "create", body: { fields: fields(form.create.fields), ...(lanes ? { directory: lanes } : {}), ...(membership ? { membership } : {}), ...(forward ? { creationContext: marker } : {}) } } });
-    } else if ("tell" in form) {
+      sends.push({ n: next(), to: seed, message: { class: "request", type: "create", body: { fields: fields(form.fields), ...(lanes ? { directory: lanes } : {}), ...(membership ? { membership } : {}), ...(forward ? { creationContext: marker } : {}) } } });
+    } else if (form.op === "tell") {
       // Section 6.4: a send whose subject is unbound is not made.
-      if (readsUnbound(reading(null), form.tell.to)) continue;
-      const made = holds(j, form.tell.if, context);
+      if (instruction.plan.absentSubjects.some(subject => !working.has(subject))) continue;
+      const made = judgeCondition(j, instruction.body, instruction.node);
       if (typeof made === "string") return { ok: false, unavailable: made };
       if (!made) continue;
       // Section 6.6: a `tell` is addressed by a reference slot, read after the entry's effects.
-      const to = sent(form.tell.to, null);
-      if (!isScopeRef(to)) return refuse(`the slot ${form.tell.to.slot} holds no scope`);
-      sends.push({ n: next(), to, message: { class: "request", type: "tell", body: { message: form.tell.message, fields: fields(form.tell.fields) } } });
-    } else if ("relate" in form) {
-      const { relate } = form;
-      if (readsUnbound(reading(null), [relate.to, relate.item])) continue;
+      const to = sent(form.to, null);
+      if (!isScopeRef(to)) return refuse(`the slot ${form.targetSlot} holds no scope`);
+      sends.push({ n: next(), to, message: { class: "request", type: "tell", body: { message: form.message, fields: fields(form.fields) } } });
+    } else if (form.op === "relate") {
+      const relate = form;
+      if (instruction.plan.absentSubjects.some(subject => !working.has(subject))) continue;
       // Section 6.6: a fan-out makes one send for each item that its range covers, in ascending order of item ID.
-      const all = relate.each ? ranged(relate.each, null, "fanout") : [null];
+      const all = relate.each ? coveredItems(reading(null), relate.each) : [null];
       if (!all) return { ok: false, unavailable: "guard-incomplete" };
       for (const each of all) {
-        const made = holds(each ? { ...j, each } : j, relate.if, context);
+        const made = judgeCondition(each ? { ...j, each } : j, instruction.body, instruction.node);
         if (typeof made === "string") return { ok: false, unavailable: made };
         if (!made) continue;
-        const to = relate.to === "self" || "collect" in relate.to ? null : operand(reading(each), relate.to, on);
-        const item = relate.item === "self" ? j.self : "collect" in relate.item ? null : operand(reading(each), relate.item, on);
+        const to = relate.to.op === "self" ? null : address(relate.to, each);
+        const item = address(relate.item, each);
         if (!isScopeRef(to)) return refuse("the target is not a scope");
         if (!isLocalId(item)) return refuse("the item is not a local item");
         // Section 6.4: the key is the target by its scope ID, the item by its local ID, and the name as written.
         const key = JSON.stringify([to.scope, item, relate.name]);
         if (relations.has(key)) return { ok: false, reason: "duplicate-relation", detail: `sends.${i}` };
         relations.add(key);
-        sends.push({ n: next(), to, message: { class: "request", type: "relate", body: { name: relate.name, item: local(item), state: relate.state, detail: fields(relate.detail, each) } } });
+        sends.push({ n: next(), to, message: { class: "request", type: "relate", body: { name: relate.name, item: local(item), state: relate.state, detail: fields(relate.fields, each) } } });
       }
-    } else {
+    } else if (form.op === "index") {
       // Section 6.6: a projection row goes to the scope's directory. A scope with no directory has no `index` send.
       const to = recordedDirectory();
       if (to === undefined) return { ok: false, unavailable: "unavailable" };
-      if (to !== null) sends.push({ n: next(), to, message: { class: "advisory", type: "index", body: { fields: fields(form.index.fields) } } });
-    }
+      if (to !== null) sends.push({ n: next(), to, message: { class: "advisory", type: "index", body: { fields: fields(form.fields) } } });
+    } else exhaustive(form);
     if (incomplete) return { ok: false, unavailable: "guard-incomplete" };
     if (unresolved !== null) return refuse(unresolved);
   }
@@ -306,33 +294,10 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
  * results may match either form (revision 24, amendment 335ef3ea).
  */
 export function formOf(definition: ValidDefinition, forms: readonly SendForm[], entry: { sends: readonly Send[] }, n: number): SendForm | SendMark | null {
-  const sent = entry.sends.filter((s) => s.message.class === "request" || s.message.class === "advisory").sort((a, b) => a.n - b.n);
-  // Platform data, section 6.1, place 6: a rule's request states no type or name in the data. In a list with a mark the validator
-  // lets at most one mark not state `always`, and each written send of the list is always made exactly once. So for a list of k
-  // forms the entry records k sends of the list, or k less 1. With k, each form made its send at its own position. With k less 1,
-  // the one mark that does not state `always` made none, and the send of each later form is one position earlier.
-  if (forms.some((form) => markOf(form) !== null)) {
-    const unsure = forms.map((form, i) => (markOf(form) !== null && (form as unknown as SendMark).always !== true ? i : -1)).filter((i) => i !== -1);
-    const at = sent.findIndex((s) => s.n === n);
-    if (at === -1 || unsure.length > 1) return null;
-    if (sent.length === forms.length) return forms[at] ?? null;
-    if (sent.length !== forms.length - 1 || unsure.length !== 1) return null;
-    return forms[at < unsure[0]! ? at : at + 1] ?? null;
-  }
-  const made = (form: SendForm, { to, message }: Send): boolean => {
-    if (message.class === "advisory") return "index" in form && message.type === "index";
-    if (message.class !== "request" || !isObject(message.body)) return false;
-    if ("create" in form) return message.type === "create" && !isScopeRef(to) && to.kind === form.create.kind && to.definition === (form.create.definition === "self" ? definition.digest : form.create.definition);
-    if ("tell" in form) return message.type === "tell" && message.body["message"] === form.tell.message;
-    return "relate" in form && message.type === "relate" && message.body["name"] === form.relate.name && message.body["state"] === form.relate.state;
-  };
-  let at = 0;
-  for (const send of sent) {
-    while (at < forms.length && !made(forms[at]!, send)) at++;
-    const form = forms[at];
-    if (!form) return null;
-    if (send.n === n) return form;
-    if (!("relate" in form && form.relate.each)) at++;
-  }
-  return null;
+  const body = sendListBody(definition, forms);
+  if (!body) return null;
+  const origin = sendOrigin(definition, body, entry, n);
+  return origin ? sendSource(definition, body, origin.node) : null;
 }
+
+function exhaustive(value: never): never { throw new TypeError(`unknown send instruction: ${String(value)}`); }

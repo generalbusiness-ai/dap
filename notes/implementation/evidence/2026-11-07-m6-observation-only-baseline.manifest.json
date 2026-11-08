@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "request": "0b0d278680c4dde3a9b278d4a76a547ef83223cc",
+  "promise": "c8c8569367016a10087a26e1b0801e5ea21e8c93",
+  "sourceHead": "449979c2b64df66f6040a847602d61d9b836fa92",
+  "sourceTree": "2d82af1308e14e54e6f5c62e8545f479177391c3",
+  "qualification": "Baseline characterization only. This is no M6 repair, gate pass, live room, installed-host outcome or acceptance claim. Original failed test and source hashes remain intact.",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m6-observation-only-baseline",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1364,
+          "sha256": "3fa5cbae3a46d6a011a94d5b02f99df02b9e81f7ed483b04980ab35e98218097"
+        },
+        {
+          "path": "after.json",
+          "bytes": 543,
+          "sha256": "a81c7e6d68951c80cc2dc20ffbb3915d3787b4d1fe32bb701e22ba3d8e78f8e6"
+        },
+        {
+          "path": "approval.commit.txt",
+          "bytes": 7998,
+          "sha256": "4ed634ca819505a470563cc62cbb00070468e642b00ee814dd28e42f05644d0c"
+        },
+        {
+          "path": "approval.event.json",
+          "bytes": 8793,
+          "sha256": "a0cb403b34e4777005b558ca9115c44daadf9380815d8b0023449ba06ce97110"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 326,
+          "sha256": "127b8b34afc3af59d04174777e73ff2df688560c55eac0adcc2f2b9547d2d48f"
+        },
+        {
+          "path": "before.json",
+          "bytes": 748,
+          "sha256": "3e1be85ceabf53b2ad930c18b2e88e6d8ce05a22df0d22d547317382ceb7334b"
+        },
+        {
+          "path": "characterization-driver.py",
+          "bytes": 4876,
+          "sha256": "13dbdb873573d075c6c80cbba5aa3b6e9b2e49e1fa0514e198976049535908bd"
+        },
+        {
+          "path": "original.test.ts",
+          "bytes": 4397,
+          "sha256": "f9cf397c69950e168ee18b482bfcff9cfc6bfecd13bfc328b1db5d45a62ab635"
+        },
+        {
+          "path": "report.json",
+          "bytes": 6872,
+          "sha256": "c6600d3239d4b6941268d3c749d1e78b189de815246cc4f55c19e53249827e90"
+        },
+        {
+          "path": "restoration.json",
+          "bytes": 321,
+          "sha256": "d5a845a760545b832d6cd2d9e208ef091d093e9de5015b39dcc07f770eb17218"
+        },
+        {
+          "path": "result.json",
+          "bytes": 4202,
+          "sha256": "b51499990a80c9f0596ed7f1ebb94bd723fbbc5affca209cba27d85715642b09"
+        },
+        {
+          "path": "run.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 3425,
+          "sha256": "27af2f5f050e33b69d5d09b0818598e21f8b1df112bf4da94d29b1c2315f05ad"
+        },
+        {
+          "path": "stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "stdout",
+          "bytes": 92,
+          "sha256": "86d0086a6c9dc476484a898221cd5c5cf09aa494721a40e343534c85ce90867d"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 1044,
+          "sha256": "45dcdb471eec3aa7350f1e6c600cff26cd85c2911e5726e8672336bc616c4b66"
+        },
+        {
+          "path": "witness.patch",
+          "bytes": 2396,
+          "sha256": "e6fc2b43f1903168f695c38cfe3044f35c3cef6976c0fb3098b455face43a794"
+        },
+        {
+          "path": "witness.test.ts",
+          "bytes": 6402,
+          "sha256": "db687d832e51bae4b4b9c6d301e43e3d1eb9c53c9e148e73c5654eb00a104003"
+        }
+      ]
+    }
+  ]
+}

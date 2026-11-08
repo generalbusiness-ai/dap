@@ -104,3 +104,44 @@ stress: composition around native code without pretending to inspect that code.
 The historical design verification accompanies plan 035. The M1–M2
 implementation note records the later compiler and interpreter checks.
 Neither record claims a measured implementation speedup or general dependency soundness.
+
+## M5 effect and settlement evidence
+
+The [M5 record](../implementation/2026-11-07-typed-core-m5.md) links actual
+checkpoint reports, failures, controls, and the final source snapshot.
+
+| Obligation | M5 witness |
+|---|---|
+| Complete ordered effects, working subjects and opened item | The existing source/condition case in `forms-effects.test.ts` now asserts the entire opening result and retains its recorded-effect assertion. |
+| Input ownership | The added admitted-instruction case compares literal full `Ran` output after effect and notice payload mutation. The previous execution fails; typed execution passes. |
+| Recursive skip boundary | The added nested-constant case compares full `Ran` output with an optional subject unbound and bound. Original and typed skip controls fail its assertion. |
+| Lexical attribution identity | The existing attribution union case reuses one `each` source object at two occurrences and retains exact member order and bound results. |
+| Unknown-source normalization | The existing copy results fail when the typed path bypasses `held`. The admitted probe uses a hashed fetched-entry stand-in for the unknown value. |
+| Once-mark judgment | The existing cases 6–8 assert `new work` for an already true mark with free room, then retain the full-scope refusal. Omitting the prior false-value check fails that assertion. |
+| Refusal before capture | The existing ignored-capability-argument case now includes an effect condition. The earlier draft overflows on its rejected cyclic value; capture after final admission preserves the exact refusal. |
+
+The broader source checkpoints pass 366 distinct cases across 26 complete
+owners. The final capture-order repair passes both derive compilers and the
+40 cases in its three affected complete owners. These overlapping counts
+remain separate. Page validation, one final full gate, independent review,
+and audited landing still follow.
+
+## M6 send and result evidence
+
+The [M6 record](../implementation/2026-11-07-typed-core-m6.md) distinguishes
+its earlier diagnostic and F1 checkpoints from the later send migration.
+
+| Obligation | M6 witness |
+|---|---|
+| Owned target, message, and payload | A full literal `Ran` case fails on the legacy executor after declaration mutation and passes with captured send instructions. The first invalid comment-act fixture remains inconclusive. |
+| Actual result occurrence | Both capacity cohorts retain exact effects, observations, and reservations after message/result/observation declaration mutation and with one send object at two occurrences. All four cases fail by assertion on exact M5 source and pass in M6. |
+| Ordinals, fanout, collect, and normalization | The complete send owner retains its existing full output assertions, including skipped later sends and bounded scans. |
+| Creation and current-state reconstruction | Complete compose, creation-context, late, and reservation owners preserve their original assertions and deadlines. |
+| Native returned requests and faults | The Native send validation block remains byte-identical. Complete marks, ledger, observations, operand, and source-order owners pass after the explicit outcome bridge. |
+
+The two broader local checkpoints pass 161 distinct cases across 14 complete
+owners. The initial 10-case send run overlaps that count. These focused checks
+establish no live-room, deployment, full explanation, or general dependency
+claim. Exact-source Page CI and the single M6 gate pass at `71863e06`, with
+5318 passes and three skips in complete terminal case reports. Independent
+review and landing remain pending.

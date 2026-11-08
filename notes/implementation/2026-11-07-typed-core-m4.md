@@ -354,3 +354,18 @@ It changes no production source, test, dependency, or generated asset.
 The review request records both the gated tree and the final documented
 tree. This head still owes independent review and landing. M5 through M8,
 live cohort acceptance, and deployment remain outside this result.
+
+## Earlier checkpoint evidence
+
+Checker approval `3371681b` found six committed manifests missing from this note.
+These manifests describe intermediate M4 checkpoints. Their source hashes and
+results apply to those checkpoints, before the final caller cutover and gate.
+
+| Manifest and SHA-256 | Scope |
+|---|---|
+| [2026-11-06-m4-context](evidence/2026-11-06-m4-context.manifest.json), `c432ce560ec0b323991f6f4167c0a0ce6ba08868ec2b1379bb62c90b3cab733a` | Body and form ownership capture, before the production caller cutover. |
+| [2026-11-06-m4-bindings](evidence/2026-11-06-m4-bindings.manifest.json), `55d8a708c51809da1ce05886a50f2e286d6d67a94f14099ed8fc0c1101477a6c` | Lexical binder identities and admitted read metadata. |
+| [2026-11-06-m4-read-value](evidence/2026-11-06-m4-read-value.manifest.json), `0b8aca8ecc8562f592e09bee4c71db70cad84e8d75bff3ad08b0a92dac981aef` | Typed operand execution over the shared history leaves, including retained failed attempts and controls. |
+| [2026-11-06-m4-guard-capture](evidence/2026-11-06-m4-guard-capture.manifest.json), `8a12014916752135a33dd9abf433d7cd55d5eb690a2c5c9b0acebde3df9e10fd` | Validator capture of declared guard instructions, ranges, and lexical child groups. |
+| [2026-11-06-m4-guard-value](evidence/2026-11-06-m4-guard-value.manifest.json), `810544a803ff50fb5de8332df88dd1bbe389854489a683329dcabe5480f3e5cb` | Concrete guard execution before the production caller cutover, including retained compiler and owner failures. |
+| [2026-11-07-m4-caller-bindings](evidence/2026-11-07-m4-caller-bindings.manifest.json), `46b50164fcd93ffb6103d5449ca759537f1b529c1ab2db608265ba8ee1c35641` | Exact condition-list and range ownership before the production caller cutover. |

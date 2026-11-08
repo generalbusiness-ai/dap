@@ -14,6 +14,7 @@ import { onSubject, ownerOf, type Ctx, type Defining, type Type } from "./contex
 import { operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { RECORD_BYTES } from "./sizes.ts";
+import type { OperandRead } from "../program/reads.ts";
 
 /** The slots of a hold type that the capability names. */
 const HOLDER = "holder";
@@ -53,7 +54,7 @@ export function holdTypes(d: Defining, acts: Readonly<Record<string, unknown>>):
 }
 
 /** A `hold` effect on the subject `s`, named `sk`. Returns what it sets, for the conflict check. */
-export function holdEffect(d: Defining, x: unknown, p: string, s: Type, sk: string, ctx: Ctx, nascent: boolean): string | null {
+export function holdEffect(d: Defining, x: unknown, p: string, s: Type, sk: string, ctx: Ctx, nascent: boolean, capture?: (action: "open" | "renew" | "end", extent: OperandRead | null) => void): string | null {
   const { bad, rec } = d;
   const r = rec(x, p, ["do"], ["extent"]);
   if (!r) return null;
@@ -69,7 +70,8 @@ export function holdEffect(d: Defining, x: unknown, p: string, s: Type, sk: stri
   // It counts as a `state` effect (section 6.8), so in an act or a handler it needs what one needs: a subject that a guard shows is live.
   else if (what === "end" && !ctx.clause && !ctx.live.has(sk)) bad("final", p, "hold: end needs a `state` guard on its subject that lists no final state");
   // Section 6.8: `extent` is an operand that the validator checks. It is recorded only by an ordinary `value` effect.
-  if ("extent" in r) operand(d, r["extent"], at(p, "extent"), ctx, ownerOf(() => s, { kind: "subject", name: sk }), false);
+  const extent = "extent" in r ? operand(d, r["extent"], at(p, "extent"), ctx, ownerOf(() => s, { kind: "subject", name: sk }), false) : null;
+  if (what === "open" || what === "renew" || what === "end") capture?.(what, extent?.node ?? null);
   return what === "end" ? `the state of ${sk}` : `the hold of ${sk}`;
 }
 

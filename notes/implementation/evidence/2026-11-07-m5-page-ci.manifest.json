@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "qualification": "Actual branch workflow after push; no dispatch, rerun or local browser substitute. The later uncommitted isolated platform test fixture repair changes no Page workflow input.",
+  "sourceHead": "a14c41505fe15151ed12794706125e9a89f0625c",
+  "sourceTree": "79e5555e75e6fe5de8d8039112100cdc6211668a",
+  "fileCount": 6,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m5-page-ci",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 391,
+          "sha256": "a36a9b2331dbbaea4122827ed5d25dd250cda218f3cce3aa7e6a1d7d2e2ad261"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2447,
+          "sha256": "52034977425dd408b5308661d3c982d77ff51240f1679122f77e060a8fb5e455"
+        },
+        {
+          "path": "result.json",
+          "bytes": 618,
+          "sha256": "1c1c8cd3f81f3ba912216e9364c896a3b435f61694fff819444eda2a603ef8e2"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2704,
+          "sha256": "7a4c07629a93b02276d37b4bae33e81cf0dbd89166dbd5e1eb14d9e5d94b99d5"
+        },
+        {
+          "path": "tracked-tree.txt",
+          "bytes": 443058,
+          "sha256": "6f584436c8dbd95e32a59f95d8ba4d5b8dde5310314967f51e8fb84b39f300a5"
+        },
+        {
+          "path": "workflow.yml",
+          "bytes": 2855,
+          "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+        }
+      ]
+    }
+  ]
+}

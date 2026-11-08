@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "qualification": "This unit records a failed full gate. It does not claim a gate pass. Public reports contain test identity/counts and metadata; original potentially sensitive outputs remain private.",
+  "sourceHead": "a14c41505fe15151ed12794706125e9a89f0625c",
+  "sourceTree": "79e5555e75e6fe5de8d8039112100cdc6211668a",
+  "fileCount": 15,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m5-gate-validation",
+      "fileCount": 15,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1131,
+          "sha256": "dcc62e44dd0bca7e3313482bb15e8a730d9953a4de4e77eca70eefcf64b6add1"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1839,
+          "sha256": "6886d222025312a18a07f806401939bd3f662ade00f37dabfa210d88f0a782c1"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1882,
+          "sha256": "6ef0df4861f19a52f3faacfc3e5ed3abcf839c29ea464b26e16a8564ec5e5ce3"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1839,
+          "sha256": "6886d222025312a18a07f806401939bd3f662ade00f37dabfa210d88f0a782c1"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 34,
+          "sha256": "804df6c80cbec9295962290d996e1f55bbbd54997789feba6b4f95da6e9188e5"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 7390,
+          "sha256": "35f00e5637963097aa26510eec1aad3c46b37d511558b967a5a1a6fa977e1731"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "508ff042b4d2ecbea5a7a1b4ea764dd80e2669468e1d6ce3e2a1e8cf645f5e6b"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1537,
+          "sha256": "d28233bb0b8ec4c1819c80bd2b003c05b29aa504b417f05448f104b397e5ef9a"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 978,
+          "sha256": "8477ef7f9b331a93962686c5314f012dac1c28ce959a06f0dab35653dfda48e1"
+        },
+        {
+          "path": "started.json",
+          "bytes": 637,
+          "sha256": "8d8f9a71a2cba8cfbe724e93c0a06f78ca6c6e7ba0ad1ccb6b537a51e13d8374"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 558,
+          "sha256": "7bdfad2a394abb4af13ebc5c4a9f9869d85eae90b608cd7566476b916a7d58b3"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5541,
+          "sha256": "47332de5c2ee3fdcded7ceb9ebfe6a00c211e8c6c73306e3b3a49de10f44c2b4"
+        }
+      ]
+    }
+  ]
+}
