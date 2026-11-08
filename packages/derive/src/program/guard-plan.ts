@@ -7,6 +7,7 @@ import { immutable } from "./data.ts";
 export interface MissingRead { readonly kind: "field" | "presented"; readonly name: string }
 export interface GuardSite {
   readonly path: string;
+  readonly phase: "before";
   readonly subject: string;
   readonly ifPresent: boolean;
   readonly absent: readonly MissingRead[];

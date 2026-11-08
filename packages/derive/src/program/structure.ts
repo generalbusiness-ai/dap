@@ -255,12 +255,13 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     const existing = ownedNodes.get(node);
     if (existing) return existing;
     const native = node.native ? nativeBoundary(definition, node.native) : null;
-    if (node.op === "native" && (!native || native.kind !== node.category)) throw new TypeError("Native instruction has no captured boundary");
+    if (node.op === "native" && (!native || native.kind !== node.category)) throw new TypeError(`Native instruction has no captured boundary at ${node.path}`);
     const data = native ? native.mark : immutable(node.data, origins), children = Object.freeze(node.children.map(nodeOf));
     if (native) origins.set(native.mark, node.data as object);
-    if (node.category === "effect" && node.op !== "native" && !node.effect) throw new TypeError("effect form has no captured instruction");
-    if (node.category === "send" && node.op !== "native" && !node.send) throw new TypeError("send form has no captured instruction");
-    if (node.category === "attention" && !node.attention) throw new TypeError("attention form has no captured instruction");
+    if (node.category === "guard" && node.op !== "native" && !node.guard) throw new TypeError(`guard form has no captured instruction at ${node.path}`);
+    if (node.category === "effect" && node.op !== "native" && !node.effect) throw new TypeError(`effect form has no captured instruction at ${node.path}`);
+    if (node.category === "send" && node.op !== "native" && !node.send) throw new TypeError(`send form has no captured instruction at ${node.path}`);
+    if (node.category === "attention" && !node.attention) throw new TypeError(`attention form has no captured instruction at ${node.path}`);
     const effect = node.effect ? ownEffectPlan(node.effect) : null;
     const valueSource = effect?.code.op === "value" ? effect.code.source : null;
     // Each discriminant came from the existing validator's admitted form branch.
@@ -405,7 +406,7 @@ export function formStructures(definition: ValidDefinition, body: BodyStructure,
   return Object.freeze((found?.forms.get(original) ?? []).filter(binding => binding.body === body).map(binding => binding.node));
 }
 export function checkedBody(definition: ValidDefinition, body: BodyStructure): void {
-  if (rootOwners.get(body) !== definition) throw new TypeError("body structure belongs to another validation");
+  if (rootOwners.get(body) !== definition) throw new TypeError(`body structure belongs to another validation at ${body?.frame?.path ?? "program"}`);
 }
 function checkedOwner(definition: ValidDefinition, body: BodyStructure, owner: StructureNode | null): Compiled {
   checkedBody(definition, body);
@@ -425,12 +426,12 @@ export function rangePlan(definition: ValidDefinition, body: BodyStructure, owne
 }
 /** Each declared guard reads its actual admitted executable instruction. Native stays opaque. */
 export function guardPlan(definition: ValidDefinition, body: BodyStructure, node: GuardNode): GuardPlan<GuardNode> | null {
-  if (rootOwners.get(body) !== definition || nodeRoots.get(node) !== body) throw new TypeError("guard instruction belongs to another admitted body");
+  if (rootOwners.get(body) !== definition || nodeRoots.get(node) !== body) throw new TypeError(`guard instruction belongs to another admitted body at ${node.path}`);
   return guardPlans.get(node) ?? null;
 }
 /** Native and capability refusal maps keep the original declared object's identity. */
 export function guardSource(definition: ValidDefinition, body: BodyStructure, node: GuardNode): Guard {
-  if (rootOwners.get(body) !== definition || nodeRoots.get(node) !== body) throw new TypeError("guard source belongs to another admitted body");
+  if (rootOwners.get(body) !== definition || nodeRoots.get(node) !== body) throw new TypeError(`guard source belongs to another admitted body at ${node.path}`);
   const source = guardSources.get(node);
   if (!source) throw new TypeError("guard instruction has no source identity");
   return source as Guard;
@@ -456,14 +457,6 @@ export function attentionPlan(definition: ValidDefinition, body: BodyStructure, 
   const plan = attentionPlans.get(node);
   if (!plan) throw new TypeError("attention has no admitted executable instruction");
   return plan;
-}
-
-/** Timed judges pass their exact effect and attention arrays rather than a body object. */
-export function timedStructure(definition: ValidDefinition, kind: string, effects: readonly unknown[], attention: readonly unknown[]): BodyStructure | null {
-  const source = Object.hasOwn(definition.declared.timed, kind) ? definition.declared.timed[kind] : undefined;
-  if (!source || source.effects !== effects || source.attention !== attention) return null;
-  const body = bodyStructure(definition, source, `timed:${kind}`);
-  return body?.frame.kind === "timed" ? body : null;
 }
 
 export interface ClockRead { readonly path: string; readonly kind: "before" | "after" | "value-time" }

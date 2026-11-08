@@ -2,10 +2,9 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { validateDefinition, type ValidDefinition } from "../src/validate/index.ts";
-import { bodyJudgesClock, bodyStructure, clauseStructure, declaredClockReads, formStructures, guardList, guardPlan, rangePlan, structureOf, timedStructure, type BodyStructure, type StructureNode } from "../src/program/structure.ts";
+import { attentionPlan, bodyJudgesClock, bodyStructure, checkedBody, clauseStructure, conditionPlan, declaredClockReads, effectPlan, formStructures, guardList, guardPlan, namedBody, rangePlan, sendPlan, structureOf, type BodyStructure, type StructureNode } from "../src/program/structure.ts";
 import { resolvedReads } from "../src/program/reads.ts";
 import { handlerBranch } from "../src/handler-branch.ts";
-import { lower } from "../src/program/lower.ts";
 import { lane, small } from "./definition-corpus/fixture-data.ts";
 import { asks } from "./definition-corpus/forms-operand-data.ts";
 import { gate } from "./definition-corpus/marks-data.ts";
@@ -48,12 +47,26 @@ test("the admitted corpus supplies every structural opcode and binds every root 
       expect(node.native.mark).toBe(node.data);
       expect(structureOf(definition)!.native).toContain(node.native);
     }
-    // This checks complete capture, not concrete execution or caller integration.
-    if (node.category === "guard" && node.op !== "native") expect(guardPlan(definition, body, node)?.code.op).toBe(node.op);
+    // Every ordinary node has its actual executable plan. Opaque Native leaves
+    // keep their captured boundary; this does not invoke a callback or judge.
+    if (node.op !== "native") {
+      if (node.category === "guard") {
+        expect(guardPlan(definition, body, node)?.code.op).toBe(node.op);
+        expect(guardPlan(definition, body, node)?.site.phase).toBe("before");
+      } else {
+        expect(() => conditionPlan(definition, body, node)).not.toThrow();
+        if (node.category === "effect") expect(effectPlan(definition, body, node)?.code.op).toBe(node.op);
+        else if (node.category === "send") expect(sendPlan(definition, body, node)?.code.op).toBe(node.op);
+        else expect(() => attentionPlan(definition, body, node)).not.toThrow();
+      }
+    }
     node.children.forEach(child => visit(definition, body, child));
   };
   for (const row of definitionCorpus) {
-    const checked = validateDefinition(await row.declaration(), row.bounds, row.profiles, row.options);
+    const input = await row.declaration();
+    let checked: ReturnType<typeof validateDefinition>;
+    try { checked = validateDefinition(input, row.bounds, row.profiles, row.options); }
+    catch (error) { return expect.fail(`${row.name}: an admitted corpus declaration must build a complete program: ${String(error)}`); }
     if (!checked.ok) return expect.fail(`${row.name}: ${JSON.stringify(checked.problems)}`);
     const graph = structureOf(checked.definition), reads = resolvedReads(checked.definition)!;
     expect(graph, row.name).not.toBeNull();
@@ -67,6 +80,7 @@ test("the admitted corpus supplies every structural opcode and binds every root 
     }
     expect(graph!.roots.length, row.name).toBe(reads.frames.length);
     for (const root of graph!.roots) {
+      expect(() => checkedBody(checked.definition, root), row.name).not.toThrow();
       expect(reads.frames.includes(root.frame), row.name).toBe(true);
       expect(root.frame.context.validation, row.name).toBe(graph!.validation);
       expect(root.frame.context.row, row.name).toBe(root.row.id);
@@ -105,8 +119,7 @@ test("every declared clock branch contributes while future clauses keep separate
   expect(sent?.category === "send" && sent.future).toEqual([{ clause: "applied", root: clause.id }]);
   expect(clause.origin).toBe(body.id);
   expect(bodyJudgesClock(body)).toBe(true);
-  // Static coverage does not claim that this body has a concrete evaluator.
-  expect(lower(checked, "edit", PROPOSED_BOUNDS).supported).toBe(false);
+  expect(() => checkedBody(checked, body)).not.toThrow();
 });
 
 test("historical entry time stays a resolved read and does not become a commit-clock source", () => {
@@ -231,16 +244,20 @@ test("compiled data owns its inputs and cannot be borrowed through a copied vali
   expect([Object.isFrozen(body), Object.isFrozen(body.nodes), Object.isFrozen(body.nodes[0]?.data), Object.isFrozen(structureOf(first)?.rules)]).toEqual([true, true, true, true]);
 });
 
-test("timed execution binds only its admitted rule and original form arrays", () => {
+test("timed execution binds only its admitted rule and refuses copied or separately admitted bodies", () => {
   const input = structuredClone(lane), checked = admitted(input), rule = input.timed["hold-end"]!;
-  const body = timedStructure(checked, "hold-end", rule.effects, rule.attention);
+  const body = namedBody(checked, "timed", "hold-end", "timed");
   expect(body).toBe(bodyStructure(checked, rule, "timed:hold-end"));
   expect(body?.frame.kind).toBe("timed");
   expect(formStructures(checked, body!, rule.effects[0]!)).toEqual([body!.nodes[0]]);
-  expect(timedStructure(checked, "hold-end", [...rule.effects], rule.attention)).toBeNull();
-  expect(timedStructure(checked, "hold-end", rule.effects, [...rule.attention])).toBeNull();
-  expect(timedStructure(checked, "unknown", rule.effects, rule.attention)).toBeNull();
-  expect(timedStructure({ ...checked }, "hold-end", rule.effects, rule.attention)).toBeNull();
+  expect(() => checkedBody(checked, { ...body! })).toThrow("another validation at timed.hold-end");
+  const separate = admitted(input), other = namedBody(separate, "timed", "hold-end", "timed")!;
+  expect(() => checkedBody(checked, other)).toThrow("another validation at timed.hold-end");
+  expect(formStructures(checked, body!, { ...rule.effects[0]! })).toEqual([]);
+  expect(namedBody(checked, "timed", "unknown", "timed")).toBeNull();
+  expect(namedBody(checked, "timed", "hold-end", "act")).toBeNull();
+  expect(namedBody(checked, "act", "hold-end", "timed")).toBeNull();
+  expect(namedBody({ ...checked }, "timed", "hold-end", "timed")).toBeNull();
 });
 
 test("aliased guards retain the binder they read when a nested list shadows its name", () => {

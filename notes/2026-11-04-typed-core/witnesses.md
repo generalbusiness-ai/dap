@@ -1,6 +1,6 @@
 # Typed core witnesses
 
-Status: acceptance map for the scheduled migration. M1–M2 implements the bounded first slice in `program/*`; later migrations retain the obligations below.
+Status: acceptance map for M8 after M1–M7 landed. Planner ruling `24e2a8d` accepts the move from prototype construction to the actual admitted program. The current retirement draft keeps the obligations below; its focused validation and final gate remain ahead.
 
 All paths below are relative to the repository root. Test files belong to
 `packages/derive/test/` unless another path appears. Existing tests establish
@@ -25,7 +25,7 @@ literal expected results, so shared bugs cannot pass through agreement alone.
 | Native hooks | `forms-marks.test.ts` | Placement, fallback grant, retained observations/values, invalid outputs, throws, conflicts, whole-effect joining, send ordinals, outcome sends and max opens retain behavior. |
 | Late and bound delivery | `late.test.ts`, `forms-binding.test.ts` | Late replacement skips normal guards; source reconstruction and consumption stay exact; binding selectors see only admitted candidates. |
 | Timed rows | `timed.test.ts` | Deadlines and total transitions preserve existing clock and finality behavior. |
-| Vocabulary admission | `definition-corpus.test.ts` and `definition-corpus/index.ts` | Accepted and refused definitions keep their pins and decisions. Add lowering coverage for admitted rows at M8. |
+| Vocabulary admission | `definition-corpus.test.ts`, `definition-corpus/index.ts`, and `program-structure.test.ts` | Accepted and refused definitions keep their pins and decisions. Every admitted corpus root must have complete owned instructions and no admission exception. |
 | Full entry integration | `compose.test.ts`, existing replay and scope tests | Cause, opening, ordinal, recorded effects, and runtime/replay agreement remain intact. |
 
 Run the focused design baseline with the installed dependencies:
@@ -35,26 +35,30 @@ npm exec -- vitest run --project derive rule forms-fields forms-guards forms-eff
 npm exec -- vitest run --project grow watering
 ```
 
-These commands test existing semantics. They do not test the proposed lowering.
+These commands test the existing semantic owners. The admitted-program owners below also check complete construction and retained interpretations.
 Run the complete `npm run gate` once before review, as `docs/testing.md` requires.
 Retain failures and unreached stages in the evidence instead of claiming a pass.
 
-## New prototype evidence
+## Admitted-program evidence at M8
 
-`packages/derive/test/program.test.ts` owns these M1–M2 witnesses. The
-implementation note records their actual outcomes and controls.
+`packages/derive/test/program.test.ts` retains the first slice's literal
+results, independent collectors and compile-only negative owner. It now uses
+the actual admitted runner. `program-structure.test.ts` owns complete corpus
+capture and timed selection. Neither file requires the retired prototype.
+The [M8 retirement ledger](../implementation/2026-11-08-typed-core-m8-retirement.md#witness-ledger)
+maps every old file and case to its current owner and the preserving assertion.
 
-| Witness | Explicit expected result |
+| Witness and current owner | Explicit expected result |
 |---|---|
-| Grow `water` dual execution | Equal full `Ran` values with separate collectors; accepted and refused boundary cases match the existing literals. |
-| Rule-free send fixture | A state-changing effect affects the payload but not its before-state condition. The first emitted send gets the starting ordinal after an earlier omitted send. |
-| Rule-free unused optional field | Changing only that field, including absent to present, leaves full `Ran` unchanged and the static summary excludes it. Hold all other inputs fixed. |
-| Non-final opening at live limit | Refuse with `type-full` and the existing detail. Grow's final `done` opening cannot witness this. |
-| Wrong phase and type | Compile-time negative cases reject a working-state guard read and an incompatible slot assignment. Runtime descriptor checks reject forged dynamic evidence. |
-| Trace exhaustion | Full `Ran` equals untraced execution; trace reports truncation; shared primitive evaluation counts stay equal with tracing enabled. Native hook invocation counts join this check at M7. |
-| Static versus actual reads | A skipped branch contributes dependencies and declared clock use but no evaluated trace event. |
-| Prepared rule opacity | Trace names rule/digest/result and marks the body opaque; dependencies include the whole prescribed input. |
-| Lowering coverage failure | Unsupported forms return their declaration paths before any primitive runs. Admission and the existing route retain their results. |
+| Grow `water`: the existing complete-literal, boundary, amount, stale-preparation and display cases in `program.test.ts` | Full `Ran`, prepared evidence, selected refusals, unavailable results and exact useful refusal text retain their literals. Separate collectors and all trace budgets agree. Public policy and replay remain in `examples/grow/watering.test.ts`. |
+| Rule-free send and unused field: the existing tell and structural-visitor cases in `program.test.ts` | Conditions read before effects, payloads read working state, omitted sends allocate no ordinal, and changing only the unused field leaves the complete literal unchanged. Static requirements exclude that field. |
+| Live-item finalization: “a non-final opening checks the live limit after sends” in `program.test.ts` | Keep the exact `send-unresolved` refusal before the exact `type-full` refusal and detail. |
+| Construction: “admission and owned instructions reject forged reads, incompatible assignment, invalid literals and working-phase guards”, the two nominal-self cases and `typeObligations` in `program.test.ts` | Reject copied evidence before any field read. Keep literal admission problems for incompatible assignment, invalid literals and both nominal mismatches. Guard sites have the immutable before phase. Compile-only checks reject Boolean-to-time assignment and a working-phase guard site. |
+| Owned data: “an admitted program owns its frozen guard and keeps the same literal result after caller mutation” in `program.test.ts`; the unchanged M6 send-mutation case in `forms-sends.test.ts` | Freeze owned data, leave the caller's declaration mutable, refuse owned-data mutation and retain the same complete literal after caller mutation and a second evaluation. Keep M6's complete retained target/message/payload result. |
+| Trace exhaustion: `program.test.ts`, the interpretation and Native callback cases in `program-interpretations.test.ts`, and the existing M7 Native owners | Full `Ran` equals untraced execution, canonical bytes agree where applicable, exhausted traces report truncation, and primitive and actual callback counts remain equal across budgets. Explain never invokes a callback again. |
+| Static versus actual reads and prepared opacity: the existing structural-visitor and Grow display cases in `program.test.ts`, plus `program-interpretations.test.ts` | Skipped branches contribute conservative requirements and structural clock use without concrete trace events. Preserve the complete prescribed prepared input and digest behavior. Label prepared, Native and capability interiors opaque. |
+| Complete capture and refusal: the complete-set/unadmitted-program case in `program.test.ts` and the admitted-corpus case in `program-structure.test.ts` | An admitted set guard executes fully. Every admitted corpus program has every instruction. Unadmitted or incomplete programs refuse at their declaration paths with zero primitive, Native and capability counts. That refusal cannot serve an admitted body as a fallback. |
+| Timed ownership: “timed execution binds only its admitted rule and refuses copied or separately admitted bodies” in `program-structure.test.ts` | Keep actual rule/body identity, timed frame and effect occurrence. Refuse copied and separately admitted bodies; preserve missing name, wrong family/frame, copied effect and copied-validation misses. |
 
 ## Clock cutover evidence at M3
 

@@ -222,7 +222,7 @@ export const isDetached = (type: FieldType | null | undefined): boolean => type?
 export const fieldOf = (v: unknown, ctx: Ctx): FieldType | null => (isObject(v) && typeof v["field"] === "string" ? (ctx.fields?.get(v["field"]) ?? null) : null);
 
 /** Section 6.6: a slot never holds a value outside its type, so a copy needs a source whose every value the slot can hold. */
-export function copy(d: Defining, from: FieldType | null | undefined, to: FieldType, path: string, what: string): void {
+export function copy<T extends FieldType>(d: Defining, from: NoInfer<T> | null | undefined, to: T, path: string, what: string): void {
   if (from?.type !== to.type) d.bad("name", path, `names no ${what} of the slot's type`);
   else if (!assignable(from, to)) d.bad("bound", path, `the ${what} admits a value outside the slot's type`);
 }
