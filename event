@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1c882965b74679f1cdb8cbe48f0c79b58f69e884","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-retirement.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2039f467cac475ac6b819b1d88af3fbe16c6203f","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/guards.ts."}
