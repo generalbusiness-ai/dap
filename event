@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc2b968f27fb40e446440c7e784c057090fd7ff5","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/lists.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dd0f4205e199459567eb345e23ec7c6889a111f8","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-isolated-gate.manifest.json."}
