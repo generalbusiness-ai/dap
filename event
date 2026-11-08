@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"01de2ca8ac50ebd7349514f63d1abacdbae3def7","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:024be0dc12abadfc70e8c90c66800ae2b4a0f100","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/capability.ts."}
