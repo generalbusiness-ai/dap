@@ -9,7 +9,7 @@ import { conditionSubjects, type ConditionPlan } from "./condition-plan.ts";
 import { ownEffectPlan, type AttentionPlan, type EffectPlan, type EffectValueSource } from "./effect-plan.ts";
 import { ownSendPlan, type PendingSendPlan, type SendPlan } from "./send-plan.ts";
 import { ownSettlementPlan, type SettlementPlan } from "./settlement.ts";
-import { bindNative, nativeBoundaries, nativeSource, recordNative, type NativeBoundary } from "./native.ts";
+import { bindNative, nativeBoundaries, nativeBoundary, nativeSource, recordNative, type NativeBoundary } from "./native.ts";
 import type { MarkKind } from "../validate/context.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
@@ -36,6 +36,7 @@ type WrittenNode<C extends string, K extends PropertyKey, D> = NodeBase & { read
 type NativeData = Mark & { most?: MarkMost; result?: SendMark["result"]; always?: true };
 export interface FutureClause { readonly clause: string; readonly root: RootIdentity }
 type NativeNode<C extends "guard" | "effect" | "send"> = WrittenNode<C, "native", NativeData>
+  & { readonly native: NativeBoundary<C> }
   & (C extends "send" ? { readonly future: readonly FutureClause[] } : object);
 export type ValueSource = EffectValueSource;
 export type GuardNode = { [K in GuardOp]: WrittenNode<"guard", K, Extract<Guard, Record<K, unknown>>> }[GuardOp] | NativeNode<"guard">;
@@ -77,6 +78,7 @@ interface PendingNode {
   effect?: EffectPlan;
   attention?: AttentionPlan;
   send?: PendingSendPlan;
+  native?: RootIdentity;
   conditions?: Partial<Record<"if" | "unless", PendingGuardList>>;
 }
 export interface BodyTrace {
@@ -210,9 +212,11 @@ export function recordSettlementPlan(d: Defining, plan: SettlementPlan): void {
   body.settlement = plan;
 }
 export function recordNativeForm(d: Defining, kind: MarkKind, path: string, data: object): void {
-  recordNative(d, kind, path, data, pending.get(d)?.active?.id ?? null);
+  const id = recordNative(d, kind, path, data, pending.get(d)?.active?.id ?? null);
   if (kind !== "guard" && kind !== "effect" && kind !== "send") return;
-  const scope = enterForm(d, kind, "native", path, data); leaveForm(d, scope);
+  const scope = enterForm(d, kind, "native", path, data);
+  if (scope) scope.node.native = id;
+  leaveForm(d, scope);
 }
 
 /** Called only after the actual final admission and canonical-byte checks. */
@@ -227,7 +231,10 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
   const nodeOf = (node: PendingNode): StructureNode => {
     const existing = ownedNodes.get(node);
     if (existing) return existing;
-    const data = immutable(node.data, origins), children = Object.freeze(node.children.map(nodeOf));
+    const native = node.native ? nativeBoundary(definition, node.native) : null;
+    if (node.op === "native" && (!native || native.kind !== node.category)) throw new TypeError("Native instruction has no captured boundary");
+    const data = native ? native.mark : immutable(node.data, origins), children = Object.freeze(node.children.map(nodeOf));
+    if (native) origins.set(native.mark, node.data as object);
     if (node.category === "effect" && node.op !== "native" && !node.effect) throw new TypeError("effect form has no captured instruction");
     if (node.category === "send" && node.op !== "native" && !node.send) throw new TypeError("send form has no captured instruction");
     if (node.category === "attention" && !node.attention) throw new TypeError("attention form has no captured instruction");
@@ -235,6 +242,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     const valueSource = effect?.code.op === "value" ? effect.code.source : null;
     // Each discriminant came from the existing validator's admitted form branch.
     const owned = Object.freeze({ category: node.category, op: node.op, path: node.path, data, children,
+      ...(native ? { native } : {}),
       reads: ownResolutions(node.reads), ...(node.category === "send" ? { future: Object.freeze(node.future.map(link => Object.freeze({ ...link }))) } : {}),
       ...(valueSource ? { source: valueSource } : {}) }) as StructureNode;
     if (typeof node.data !== "object" || node.data === null) throw new TypeError("structural form has no source object");

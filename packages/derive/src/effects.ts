@@ -20,6 +20,7 @@ import { EPOCH, HOLDER, deriveHold, endsUnder, type HoldEffect } from "./hold.ts
 import { judgeCondition } from "./program/condition-value.ts";
 import { attentionPlan, checkedBody, effectPlan, formContext, timedStructure, type AttentionNode, type BodyStructure, type EffectNode } from "./program/structure.ts";
 import { nativeOutcomes } from "./program/native.ts";
+import { observeNativeCall } from "./program/native-trace.ts";
 import type { AttentionPlan, EffectPlan } from "./program/effect-plan.ts";
 import { readValue } from "./program/read-value.ts";
 import { coveredItems } from "./lists.ts";
@@ -196,7 +197,10 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
    */
   const join = (mark: Mark, at: number): Derived<object> | null => {
     const rule = ruleFor(j, mark, "effect");
-    const given = run(mark, () => rule.run(givenTo(j)));
+    const given = run(mark, () => {
+      const callback = rule.run, context = givenTo(j);
+      return observeNativeCall(j.definition, mark, "effect", "run", callback, () => Reflect.apply(callback, rule, [context]) as ReturnType<typeof callback>);
+    });
     if (!Array.isArray(given) || given.length > rule.most) throw outside(mark, `no list of at most ${rule.most} effects`);
     const bad = (what: string) => refuse("bad-field", `effects.${at}: the rule ${mark.code} ${what}`);
     for (const effect of given as readonly RuleEffect[]) {

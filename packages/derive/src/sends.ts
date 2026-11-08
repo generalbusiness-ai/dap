@@ -18,6 +18,7 @@ import { readValue } from "./program/read-value.ts";
 import { sendReadType, sendSlotType, type SendFields, type SendPlan, type SendSourcePlan } from "./program/send-plan.ts";
 import { checkedBody, formContext, sendPlan, type BodyStructure, type SendNode } from "./program/structure.ts";
 import { givenTo, outside, ruleFor, run } from "./marks.ts";
+import { observeNativeCall } from "./program/native-trace.ts";
 import { sendValue } from "./send-value.ts";
 import type { Item } from "./state.ts";
 import { isFactRef, isLocalId, isObject, isScopeRef, same } from "./values.ts";
@@ -181,7 +182,10 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
     const next = () => first + sends.length;
     const mark = instruction.op === "native" ? instruction.mark : null;
     if (mark) {
-      const given = run(mark, () => ruleFor(j, mark, "send").run(givenTo(j)));
+      const given = run(mark, () => {
+        const rule = ruleFor(j, mark, "send"), callback = rule.run, context = givenTo(j);
+        return observeNativeCall(j.definition, mark, "send", "run", callback, () => Reflect.apply(callback, rule, [context]) as ReturnType<typeof callback>);
+      });
       // Revision 19, "More than one send mark": a rule whose mark states `always` returns exactly one request. None is a fault.
       if (given === null && (mark as SendMark).always === true) throw outside(mark, "no request, where its mark states always");
       if (given === null) continue;

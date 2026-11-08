@@ -36,6 +36,11 @@ test("the admitted corpus supplies every structural opcode and binds every root 
   const seen = new Set<string>();
   const visit = (definition: ValidDefinition, body: BodyStructure, node: StructureNode) => {
     seen.add(`${node.category}:${node.op}`);
+    if (node.op === "native") {
+      expect(node.native.body).toBe(body.id);
+      expect(node.native.mark).toBe(node.data);
+      expect(structureOf(definition)!.native).toContain(node.native);
+    }
     // This checks complete capture, not concrete execution or caller integration.
     if (node.category === "guard" && node.op !== "native") expect(guardPlan(definition, body, node)?.code.op).toBe(node.op);
     node.children.forEach(child => visit(definition, body, child));
