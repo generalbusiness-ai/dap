@@ -157,3 +157,15 @@ Production instruction coverage does not extend the first-slice prototype's
 `lower`, `explain`, or `dependencies` grammar. Unsupported forms still reject
 the whole prototype body. No precise dependency or explanation claim follows
 for an opaque rule, capability interior, attribution, or settlement.
+
+## M6 source checkpoint
+
+The [M6 implementation record](../implementation/2026-11-07-typed-core-m6.md)
+records closed ordinary send plans, actual send occurrences and future result
+roots, the explicit Native join boundary, and reservation attribution. Production
+send and clause execution now uses those admitted instructions in the local
+candidate. This extends execution coverage without extending the prototype
+explanation or dependency visitors. Their whole-body unsupported result remains
+conservative. Native interiors remain M7 work, and final orchestration remains
+M8 work. Focused owners, exact-source Page CI, and the single M6 gate pass. Independent
+review and landing remain pending.

@@ -1,6 +1,6 @@
 /** Send and attention forms, and the result clauses of a request (scope contract, sections 6.4 and 6.6). */
 
-import type { Notify } from "@generalbusiness/dap-contract";
+import type { Notify, Seed } from "@generalbusiness/dap-contract";
 import type { FieldType } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isPlatformDefinition, isScopeKind } from "@generalbusiness/dap-bytes";
 import { isObject, own } from "../values.ts";
@@ -12,7 +12,11 @@ import { isDetached, operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { RECORD_BYTES, stated } from "./sizes.ts";
 import { recordFrame, recordSlot, type SlotRead } from "../program/reads.ts";
-import { beginBody, endBody, enterForm, leaveForm, recordAttentionPlan, type SendOp, type RangeUse } from "../program/structure.ts";
+import { beginBody, endBody, enterForm, leaveForm, recordAttentionPlan, recordSendPlan, type SendOp, type RangeUse } from "../program/structure.ts";
+
+import { conditionSubjects } from "../program/condition-plan.ts";
+import type { RangePlan } from "../program/guard-plan.ts";
+import type { CollectMember, SendCode, SendFields, SendSourcePlan } from "../program/send-plan.ts";
 
 /**
  * A range that a send reads whole: the items of a fan-out, and of a
@@ -20,11 +24,11 @@ import { beginBody, endBody, enterForm, leaveForm, recordAttentionPlan, type Sen
  * and `except`. `live`: it lists no final state, so the type's `max` bounds
  * the items it covers.
  */
-function ranged(d: Defining, v: unknown, path: string, ctx: Ctx, use: RangeUse): { type: Type; live: boolean } | null {
+function ranged(d: Defining, v: unknown, path: string, ctx: Ctx, use: RangeUse): { type: Type; live: boolean; program: RangePlan } | null {
   const r = range(d, v, path, ctx, [], false, use);
   if (!r) return null;
   const states = Array.isArray(r.read["states"]) ? r.read["states"] : [];
-  return { type: r.type, live: states.every((s) => typeof s !== "string" || r.type.states.get(s) !== true) };
+  return { type: r.type, program: r.program, live: states.every((s) => typeof s !== "string" || r.type.states.get(s) !== true) };
 }
 
 /**
@@ -37,32 +41,44 @@ function ranged(d: Defining, v: unknown, path: string, ctx: Ctx, use: RangeUse):
  * another kind, and an `index` send, read no detached text. A message to a
  * lane carries the digest, and the receiver reads the bytes from the sender.
  */
-function source(d: Defining, v: unknown, path: string, ctx: Ctx, field: string | false, lane = false): { type: FieldType | null } | null {
+function source(d: Defining, v: unknown, path: string, ctx: Ctx, field: string | false, lane = false): { type: FieldType | null; program: SendSourcePlan | null } | null {
   const { bounds, bad, rec, entries } = d;
   const redactable = () => bad("redactable-read", path, "reads a detached text, which only a message to a lane carries");
-  if (v === "self") return { type: null };
+  if (v === "self") return { type: null, program: { op: "self" } };
   if (isObject(v) && "collect" in v) {
-    const c = field ? rec(v, path, ["collect"]) : bad("shape", path, "a collect is a field of a send");
+    const c = field !== false ? rec(v, path, ["collect"]) : bad("shape", path, "a collect is a field of a send");
     const r = c && rec(c["collect"], at(path, "collect"), ["items", "fields"]);
     if (!r) return null;
     const items = ranged(d, r["items"], at(at(path, "collect"), "items"), ctx, `collect:${field}`);
     // Section 6.6: a `collect` needs complete evidence, and holds at most the type's `max` records.
     if (items && !items.live) bad("bound", at(at(path, "collect"), "items"), "a collect reads live items only: its range lists no final state");
+    const members: (readonly [string, CollectMember])[] = [];
     for (const [name, member] of entries(r["fields"], at(at(path, "collect"), "fields"), bounds.sendFields)) {
       if (items && !(member === "item" || member === "state" || (typeof member === "string" && items.type.slots.has(member)))) bad("name", at(at(at(path, "collect"), "fields"), name), `is item, state or a slot of ${items.type.name}`);
       if (!lane && items && typeof member === "string" && isDetached(items.type.slots.get(member)?.type)) redactable();
       const slot = items && typeof member === "string" ? items.type.slots.get(member) : undefined;
-      if (items && slot && member !== "item" && member !== "state") recordSlot(d, ctx, at(at(at(path, "collect"), "fields"), name), items.type,
-        { kind: "range", path: at(at(path, "collect"), "items"), type: items.type.name }, member as string, slot, "read");
+      if (member === "item" || member === "state") members.push([name, { op: member }]);
+      if (items && slot && member !== "item" && member !== "state") {
+        const resolved = recordSlot(d, ctx, at(at(at(path, "collect"), "fields"), name), items.type,
+          { kind: "range", path: at(at(path, "collect"), "items"), type: items.type.name }, member as string, slot, "read");
+        members.push([name, { op: "slot", slot: resolved.slot }]);
+      }
     }
-    return { type: null };
+    return { type: null, program: items ? { op: "collect", range: items.program, fields: members } : null };
   }
   const read = operand(d, v, path, ctx, ownerOf(() => ctx.on ?? bad("name", path, "there is no primary item whose slot this could be"), { kind: "subject", name: "on" }), false, true);
   if (read && isDetached(read.type) && !lane) return redactable();
-  return read && { type: read.type };
+  return read && { type: read.type, program: { op: "read", read: read.node } };
 }
 /** The fields of one message. `lane`: the message goes to a lane, so a field may carry a detached text. */
-const sources = (d: Defining, v: unknown, path: string, ctx: Ctx, lane: boolean) => { for (const [name, s] of d.entries(v, path, d.bounds.sendFields)) source(d, s, at(path, name), ctx, name, lane); };
+function sources(d: Defining, v: unknown, path: string, ctx: Ctx, lane: boolean): SendFields {
+  const fields: (readonly [string, SendSourcePlan])[] = [];
+  for (const [name, s] of d.entries(v, path, d.bounds.sendFields)) {
+    const read = source(d, s, at(path, name), ctx, name, lane);
+    if (read?.program) fields.push([name, read.program]);
+  }
+  return fields;
+}
 
 /** Section 16.1, check 1: in platform data a `create`, a `tell` and a `relate` may state rows of `observes`, by clause, beside `result`. */
 const ROWS = (d: Defining): string[] => (d.platform ? ["observes"] : []);
@@ -88,20 +104,29 @@ function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, owner: object,
   const rows = isObject(observed) ? observed : {};
   const names = new Set(Object.keys(r ?? {}));
   if (d.wholeCapacity) for (const name of Object.keys(rows)) names.add(name);
+  // A clause keeps the origin's stable subjects, including when only its rows run.
+  const withinClause = (): Ctx => ({ ...ctx, clause: true, senderKind,
+    also: new Map([...ctx.also].filter(([also]) => !ctx.unsettled?.has(also))) });
   for (const name of names) {
     const e = r && Object.hasOwn(r, name) ? r[name] : [];
     // Section 17.2: a `conflict` is not reserved. Its entry is new work, and what its clause starts is counted when it is admitted.
     d.clause = name === "conflict" ? null : [];
     // Section 6.6: a clause's subjects are those of the entry that made the send, as that entry resolved them. A name that was
     // selected through a slot that is not fixed cannot be selected again when the clause runs, so a clause names none.
-    const settled = new Map([...ctx.also].filter(([also]) => !ctx.unsettled?.has(also)));
-    const within: Ctx = { ...ctx, also: settled, clause: true, senderKind };
+    const within = withinClause();
     const traced = beginBody(d, { kind: "clause", owner, clause: name });
     effects(d, e, at(path, name), within, true);
     recordFrame(d, within, at(path, name), "clause");
     endBody(d, traced);
     if (d.clause) { d.clauseSets.push(d.clause); d.clauseRetains.set(d.clause, own(rows, name)); d.clausePaths.set(d.clause, at(path, name)); reserved.push(d.clause); }
     d.clause = null;
+  }
+  // Legacy accounting does not reserve an omitted clause. Capture its empty
+  // executable body without adding a reservation or validating new syntax.
+  for (const name of Object.keys(rows)) if (!names.has(name)) {
+    const traced = beginBody(d, { kind: "clause", owner, clause: name });
+    recordFrame(d, withinClause(), at(path, name), "clause");
+    endBody(d, traced);
   }
   return reserved;
 }
@@ -113,11 +138,7 @@ function condition(d: Defining, r: Rec, path: string, ctx: Ctx): void {
 }
 
 /** The `also` names that a written form reads as a subject: every `of`, and every `item` of an operand, that names one. */
-function alsoRead(v: unknown): string[] {
-  if (Array.isArray(v)) return v.flatMap(alsoRead);
-  if (!isObject(v)) return [];
-  return Object.entries(v).flatMap(([k, x]) => ((k === "of" || k === "item") && typeof x === "string" && x.startsWith("also.") ? [x] : alsoRead(x)));
-}
+const alsoRead = (value: unknown): string[] => [...conditionSubjects(value)];
 
 /**
  * The send forms of one act or handler, in the order written. Returns the
@@ -164,6 +185,8 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
       let always = true;
       let made = 1;
       let result: unknown = null;
+      let code: SendCode | null = null;
+      let skip: unknown = null;
       if (k === "create") {
         const r = rec(x, p, ["kind", "definition", "fields", "result"], ROWS(d));
         if (!r) return;
@@ -171,7 +194,8 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
         if (!isScopeKind(r["kind"])) bad("shape", at(p, "kind"), "is not a scope kind");
         // Section 6.6: a definition cannot hold its own digest, so `self` names the creating scope's own pinned definition.
         if (r["definition"] !== "self" && !isDigest(r["definition"]) && !isPlatformDefinition(r["definition"])) bad("shape", at(p, "definition"), "is a definition digest, a platform definition, or self");
-        sources(d, r["fields"], at(p, "fields"), ctx, r["kind"] === "lane");
+        const fields = sources(d, r["fields"], at(p, "fields"), ctx, r["kind"] === "lane");
+        code = { op: "create", kind: r["kind"] as Seed["kind"], definition: r["definition"] as Seed["definition"] | "self", fields };
         requests.push({ send: i, most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, s as object, true, r["observes"], typeof r["kind"] === "string" ? r["kind"] : undefined) });
         [kind, result] = [[k, r["kind"], r["definition"]], r["result"]];
       } else if (k === "tell") {
@@ -183,7 +207,9 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
         if (to && to.type?.type !== "scope") bad("name", at(p, "to"), "names no slot that holds a scope");
         str(r["message"], at(p, "message"));
         condition(d, r, p, ctx);
-        sources(d, r["fields"], at(p, "fields"), ctx, to?.type?.type === "scope" && to.type.kind === "lane");
+        const fields = sources(d, r["fields"], at(p, "fields"), ctx, to?.type?.type === "scope" && to.type.kind === "lane");
+        if (to?.program) code = { op: "tell", to: to.program, targetSlot: (r["to"] as Rec)["slot"] as string, message: r["message"] as string, fields };
+        skip = r["to"];
         requests.push({ send: i, most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, s as object, false, r["observes"], to?.type?.type === "scope" ? to.type.kind : undefined) });
         [kind, result, always] = [[k, r["message"]], r["result"], !("if" in r) && alsoRead(r["to"]).length === 0];
       } else if (k === "relate") {
@@ -204,7 +230,9 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
         str(r["name"], at(p, "name"));
         str(r["state"], at(p, "state"));
         condition(d, r, p, within);
-        sources(d, r["detail"], at(p, "detail"), within, to?.type?.type === "scope" && to.type.kind === "lane");
+        const fields = sources(d, r["detail"], at(p, "detail"), within, to?.type?.type === "scope" && to.type.kind === "lane");
+        if (to?.program && item?.program) code = { op: "relate", to: to.program, item: item.program, name: r["name"] as string, state: r["state"] as string, each: each?.program ?? null, fields };
+        skip = [r["to"], r["item"]];
         // Section 6.6: a clause of a fan-out send may read `each`, the item of that send. The entry records the item of each update and
         // nothing else of the range. So `each` is found again, when the result is recorded, only where the update's `item` is `each`.
         const clauseCtx = each && canonicalize(r["item"]) === canonicalize({ item: "each" }) ? within : ctx;
@@ -219,7 +247,7 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
         }
       } else {
         const r = rec(x, p, ["fields"]);
-        if (r) sources(d, r["fields"], at(p, "fields"), ctx, false);
+        if (r) code = { op: "index", fields: sources(d, r["fields"], at(p, "fields"), ctx, false) };
         // An `index` send is made only by a scope that records a directory.
         always = false;
       }
@@ -237,6 +265,7 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
       const identity = resultIdentity(result, observes);
       if (others.some((o) => (o.clause || clause) && !(o.always && always) && o.identity !== identity)) bad("ambiguous-send", p, "another send of this list makes a message of the same type and name, one of the two is not always made, and their result effects or observation rows differ: the clause of a result could not be found again");
       kinds.set(said, [...others, { always, clause, identity }]);
+      if (code) recordSendPlan(d, { code, skip });
     } finally { leaveForm(d, traced); }
   });
   // A result names its request by ordinal, and a rule's request states no type or name in the data. So the form that made a

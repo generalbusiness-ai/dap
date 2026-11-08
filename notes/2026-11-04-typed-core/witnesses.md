@@ -125,3 +125,23 @@ owners. The final capture-order repair passes both derive compilers and the
 40 cases in its three affected complete owners. These overlapping counts
 remain separate. Page validation, one final full gate, independent review,
 and audited landing still follow.
+
+## M6 send and result evidence
+
+The [M6 record](../implementation/2026-11-07-typed-core-m6.md) distinguishes
+its earlier diagnostic and F1 checkpoints from the later send migration.
+
+| Obligation | M6 witness |
+|---|---|
+| Owned target, message, and payload | A full literal `Ran` case fails on the legacy executor after declaration mutation and passes with captured send instructions. The first invalid comment-act fixture remains inconclusive. |
+| Actual result occurrence | Both capacity cohorts retain exact effects, observations, and reservations after message/result/observation declaration mutation and with one send object at two occurrences. All four cases fail by assertion on exact M5 source and pass in M6. |
+| Ordinals, fanout, collect, and normalization | The complete send owner retains its existing full output assertions, including skipped later sends and bounded scans. |
+| Creation and current-state reconstruction | Complete compose, creation-context, late, and reservation owners preserve their original assertions and deadlines. |
+| Native returned requests and faults | The Native send validation block remains byte-identical. Complete marks, ledger, observations, operand, and source-order owners pass after the explicit outcome bridge. |
+
+The two broader local checkpoints pass 161 distinct cases across 14 complete
+owners. The initial 10-case send run overlaps that count. These focused checks
+establish no live-room, deployment, full explanation, or general dependency
+claim. Exact-source Page CI and the single M6 gate pass at `71863e06`, with
+5318 passes and three skips in complete terminal case reports. Independent
+review and landing remain pending.

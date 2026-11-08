@@ -2,9 +2,9 @@
 import type { UnavailableReason } from "@generalbusiness/dap-contract";
 import type { Judging } from "../guards.ts";
 import { judgeGuardNodes } from "./guard-value.ts";
-import { conditionPlan, type AttentionNode, type BodyStructure, type EffectNode } from "./structure.ts";
+import { conditionPlan, type AttentionNode, type BodyStructure, type EffectNode, type SendNode } from "./structure.ts";
 
-export function judgeCondition(j: Judging, body: BodyStructure, node: EffectNode | AttentionNode): boolean | UnavailableReason {
+export function judgeCondition(j: Judging, body: BodyStructure, node: EffectNode | AttentionNode | SendNode): boolean | UnavailableReason {
   const plan = conditionPlan(j.definition, body, node);
   if (plan.absentSubjects.some(subject => !j.subjects.has(subject))) return false;
   const holds = plan.if ? judgeGuardNodes(j, body, plan.if).result : "pass";

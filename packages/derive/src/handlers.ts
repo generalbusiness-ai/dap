@@ -17,9 +17,10 @@ import { signerOf } from "./fold.ts";
 import { slotOf, type Fetched, type Judging } from "./guards.ts";
 import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, markOf, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
-import { deriveSends, formOf } from "./sends.ts";
+import { sendOrigin } from "./program/send-origin.ts";
+import { deriveSends } from "./sends.ts";
 import { judgeGuardNodes } from "./program/guard-value.ts";
-import { bodyJudgesClock, bodyStructure, clauseStructure } from "./program/structure.ts";
+import { bodyEffectForms, bodyJudgesClock, bodyStructure, clauseStructure, sendClauseStructure } from "./program/structure.ts";
 import { settlementForm, settlementMatches, settlementSubject } from "./program/settlement.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -587,18 +588,19 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     frame = { kind: input.kind, body: null, fields: {}, fieldTypes: {}, also: {}, on: null, signer: null, sends: [], sent: marked as unknown as SendMark };
   } else throw new Error(`entry ${origin.seq} is not one that sends a request`);
 
-  // A send that was not made took no ordinal, and a fan-out made several: the form is found from the send the entry recorded.
-  const form = frame.sent ?? formOf(definition, frame.sends, origin, request.n);
+  // Match the recorded message against the captured occurrence, then follow its future root.
+  const originBody = frame.body ? bodyStructure(definition, frame.body, frame.kind) : null;
+  if (frame.body && !originBody) throw new TypeError("origin body was not captured by its validation");
+  const selected = originBody ? sendOrigin(definition, originBody, origin, request.n) : null;
+  const form = frame.sent ?? selected?.declaration;
   if (!form || "index" in form) throw new Error(`entry ${origin.seq} declares no request at ordinal ${request.n}`);
-  // The clauses of a request that a rule gave are its mark's own, as data (section 6.1, place 6).
   const marked = markOf(form) as SendMark | null;
   const written = marked ? null : (form as Exclude<SendForm, { index: unknown }>);
   const clauses = (marked ? marked.result : "create" in written! ? written.create.result : "tell" in written! ? written.tell.result : written!.relate.result) as ResultClauses & { conflict?: readonly EffectForm[] };
-  const forms = clauses[clause] ?? [];
-  const originBody = frame.body ? bodyStructure(definition, frame.body, frame.kind) : null;
-  if (frame.body && !originBody) throw new TypeError("origin body was not captured by its validation");
-  const structure = forms.length > 0 ? clauseStructure(definition, form, clause, originBody, frame.kind) : null;
-  if (forms.length > 0 && !structure) throw new TypeError("result clause was not captured by its validation");
+  const structure = selected && originBody ? sendClauseStructure(definition, originBody, selected.node, clause)
+    : clauseStructure(definition, form, clause, null, frame.kind);
+  if ((clauses[clause]?.length ?? 0) > 0 && !structure) throw new TypeError("result clause was not captured by its validation");
+  const forms = structure ? bodyEffectForms(definition, structure) : [];
   // Revision 20, section 16.1: the rows of this clause, for the delivery of a result that runs it, under a definition whose data
   // states rows. A request that a rule gave states none: its mark holds its clauses, and no text gives a mark rows (I3 deltas,
   // entry GA5). A diagnosis holds no observation, so `undelivered` has none.
