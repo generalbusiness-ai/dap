@@ -130,3 +130,12 @@ Repair `af6c48b1473074e6ef74bb8dc9bee222f809a8b2`, tree `871f31767b401ed6556b55e
 Both actual `pipeline.exit` files have been read: the initial source compiler pipeline contains `exit 1`; the separate repaired follow-up contains `exit 0`. The earlier failure stays failed. Every frozen source, tool and dependency guard matches, both checkouts stay clean during their runs, and no owned process remains. The outer observations measure 0.590 and 13.122 seconds separately from command wall and CPU observations.
 
 The [history validation manifest](evidence/2026-11-08-m8-history-validation.manifest.json), SHA-256 `70b98918d1eee236b0518f60997527cd0bd83081fd4ac76c572c164f8caf691a`, binds twelve public files and 298 private originals across five read-only units. The original failure, exact two-line variable repair, full follow-up and preparation remain durable. Retention reruns nothing. The prototype rulings, remaining metadata reconciliation, final assets and seals, gate, workflow and independent review remain ahead.
+
+
+## Returned-effect checks read admitted item and deadline metadata
+
+Before-edit addendum `57df6ae3` records the exact capability, marker and ownership-test source hashes at `fd623cf8`. `capabilityItemEffects` now reads the admitted item type and capability-owned slot metadata. `ruleMayNot` reads admitted timed deadlines and requires the full validation result that its sole runtime caller already supplies. The existing capability/marker checks, returned effects, faults, order and callback arguments remain unchanged.
+
+The existing compiled-input ownership case mutates the caller's timed rows after admission. That mutation must not create a new deadline restriction for the admitted program: the returned-effect check still permits the same clear of the optional `due` slot. Every earlier assertion, case and deadline remains. The planned narrow control restores the raw timed-row lookup and must fail that decision.
+
+This change leaves static capability declarations, opaque capability implementations and retained admission/counting shells in their existing homes. Their remaining `declared` reads neither reconstruct nor select a derivation body. It changes no source in scope, replay or shared fixture infrastructure, and no accepted definition, profile, pin, authority policy or wire format. This draft has no validation result yet.

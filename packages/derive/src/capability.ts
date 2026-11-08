@@ -28,6 +28,7 @@ import type { Most } from "./ledger.ts";
 import type { Item, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isValue, own } from "./values.ts";
+import { declarationOf } from "./program/declaration.ts";
 
 /** One change of one record, as a capability's effect derives it. The entry records it as a `record` effect of that capability. */
 export interface Recorded { kind: string; key: readonly FieldValue[]; state: string; values: Readonly<Record<string, unknown>> }
@@ -281,7 +282,7 @@ export function capabilityItemEffects(view: StateView, definition: ValidDefiniti
   effects: readonly CapabilityItemEffect[], self: number, kind: string | null, bounds: Bounds): readonly CapabilityItemEffect[] {
   const declared = declaredBy(capability), seen = new Set<string>();
   for (const effect of effects) {
-    const item = view.item(effect.item), type = item && own(definition.declared.items, item.type);
+    const item = view.item(effect.item), type = item && own(declarationOf(definition).items, item.type);
     const slot = effect.effect === "value" ? own(type?.values, effect.slot) : own(type?.refs, effect.slot);
     const key = `${effect.item}:${effect.slot}`;
     if (!item || !type || !slot || slot.capability !== capability || declared?.itemSlots?.[effect.slot] !== effect.effect
