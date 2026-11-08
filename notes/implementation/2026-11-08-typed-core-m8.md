@@ -1,18 +1,18 @@
 # Complete derivation programs and their retained judge shells
 
-Status: the first declaration-ownership and Native lookup checkpoint passes both derive compilers and all 73 focused cases. Two isolated controls fail at their intended assertion and restore cleanly. Request `bd1a9429` and promise `689c9fd1` own M8. S3 has landed at `c85553da`. Full body routing, complete interpretations, M7 finding F2, the final gate, independent review and landing remain. The planning estimate remains three to five focused engineer-days; it is not a throughput result.
+Status: production routes every admitted body family through one owned runner. Actual evaluation, captured explanation and conservative requirements have focused evidence, including the complete admitted corpus and real scope/replay owners. The [program continuation](2026-11-08-typed-core-m8-program.md) records the latest checkpoints and preserved failures. The old first-slice prototype and dead timed-array adapter remain while planner rulings f0d2a338 and 2e92636a resolve their named witness mappings. Remaining work includes that retirement, final assets and source seals, the frozen gate, exact-source Page workflow, independent review and landing. Request bd1a9429 and promise 689c9fd1 own M8. Main remains c85553da. The three-to-five-day planning estimate is not a throughput result.
 
 ## One program must cover every admitted body
 
-M3–M7 record operands, guards, effects, sends, settlement and Native boundaries during the existing validator's successful branches. Production still enters those instructions through raw body adapters. `handlers.derive` selects a body, runs guards, reconstructs raw effect and send lists, then checks live counts, clock use and settlement. The isolated prototype has a separate first-slice evaluator and rejects other forms before execution. Its digest-and-kind ownership check cannot establish ownership by the actual validation.
+At the M7 baseline, the validator recorded operands, guards, effects, sends, settlement and Native boundaries during its successful branches. Production entered those instructions through raw body adapters. `handlers.derive` selected a body, ran guards, reconstructed raw effect and send lists, then checked live counts, clock use and settlement. The isolated prototype used a separate first-slice evaluator and rejected other forms before execution. Its digest-and-kind ownership check could not establish ownership by the actual validation.
 
 M8 must replace both limits with one completed program and one concrete interpreter. The program must retain the actual definition, body, frame and occurrence identities. Execute, Explain and Dependencies must use that representation. Explain observes the existing execution and never runs a primitive again. Dependencies visits possible branches, includes implicit reads and labels opaque requirements unknown. Neither diagnostic changes canonical entries or narrows prepared-input identity.
 
 The surrounding judges retain authority, signatures, admission, observation freshness, source order, persistence and journal sealing. Native callbacks, capability implementations, scans, item mutation, normalization and trusted returned joins retain one implementation each. Moving or renaming the old body orchestration alone would not complete this migration.
 
-## The current body routes have different shells
+## The M7 body routes have different shells
 
-| Route | Current caller and retained behavior | M8 obligation |
+| Route | M7 caller and retained behavior | M8 obligation |
 |---|---|---|
 | Act | `judge.ts` calls `derive` after field, subject and grant checks. | Select the exact admitted act body; preserve the full `Ran` and public judgment. |
 | Genesis | `genesis.ts` supplies the seed cause, optional child ordinal and directory while the scope is incomplete. | Pass those values explicitly without replacing them with ordinary act defaults. |
@@ -47,7 +47,7 @@ Reuse the witness map's complete owning tests for each changed boundary. Add onl
 
 After the source is complete, run one frozen gate and retain its actual exit and complete structured reports. If runtime changes affect Page bytes, first file a concrete scope addendum, then use the maintained generator, asset owner and exact-source Page workflow. Any scope, replay or fixture infrastructure edit also needs a concrete addendum before editing. Hugh's standing approval covers patch application; independent review still covers changed source seals.
 
-No M8 validation result, complete lowering claim, deployment or live acceptance follows from this note. The planner deploys.
+The completed head still requires the final gate and independent review. The planner deploys.
 
 
 ## The first draft captures metadata and closes the Native miss

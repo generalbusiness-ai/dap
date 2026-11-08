@@ -142,3 +142,14 @@ This change leaves static capability declarations, opaque capability implementat
 
 
 The first returned-metadata pipeline at `78f9319282bf1e573a9dbef79fffdb02748168c2` passes the derive source compiler, then exits 1 in the test compiler. The new post-admission mutation fixture uses `in` where `TimedRule` names `states`. No other compiler or test body runs. The isolated setup repair changes only that key and this note. Every production byte, assertion, case and deadline remains unchanged. The actual failed `pipeline.exit` has been read, frozen guards match, and no owned process remains. The follow-up carries the unchanged source compiler and runs the failed test compiler, four unreached compiler contexts and the complete 150-case body. The original failure remains failed.
+
+
+## Returned-effect ownership passes its complete selected owners
+
+Setup-only repair f56ed5c59a0c1c066f40e8d5cf36e926bc5c15b2, tree d58a05fc0d033b62db8fdbcfea0e872523b0e6ec, preserves the production bytes of 78f93192. The earlier successful production compile carries separately. The follow-up passes all five failed or unreached compiler contexts, then all 150 cases across ten complete owners once. Native returned effects, marker settlement, capability preparation and hold behavior, real-scope holds and settlement, and replay all retain their existing results. No case is missing, unexpected, skipped, retried or unfinished; no collection error or coverage issue remains.
+
+Both actual pipeline.exit files have been read: the first contains exit 1, and the separate follow-up contains exit 0. The initial test-compiler failure remains failed. All frozen source, tool and dependency guards match. Both checkouts remain clean during their runs, and no owned process remains. The outer observations measure 1.188 and 11.872 seconds separately from command wall and CPU observations.
+
+One raw-deadline control runs the existing compiled-input ownership case. It wrongly invents a deadline restriction from the caller's new timed row and fails the literal null decision at line 212. The actual owner exits 1 with one AssertionError, zero passes and ten unselected cases. The source restores in finally before classification. Both full source snapshots match, and no owned process remains. The classifier exits 0. The complete normal 150-case baseline does not rerun.
+
+The [returned-metadata validation manifest](evidence/2026-11-08-m8-returned-metadata-validation.manifest.json), SHA-256 734ebe5d46f65fa9d38611b46d1a937252f4ea03cb31e2b7093a821927071a3b, binds twenty public files and 328 private originals across six read-only units. The initial failure, unchanged production context, exact setup repair, full follow-up, distinguishing failure and complete source/process snapshots remain durable. Retention reruns nothing. Prototype retirement and its named witness rulings, final assets and seals, the gate, exact-source Page workflow and independent review remain ahead.
