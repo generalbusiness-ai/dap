@@ -5,7 +5,6 @@ import type { GuardResult, Judging } from "./guards.ts";
 import type { Item } from "./state.ts";
 import { whereMatches, type ElementValues } from "./program/read-value.ts";
 import type { RangePlan } from "./program/guard-plan.ts";
-import { rangePlan, type FormContext, type RangeUse } from "./program/structure.ts";
 
 // ---------------------------------------------------------------- three results
 
@@ -75,12 +74,6 @@ export function scanItems(j: Judging, r: Pick<Range, "type" | "states" | "except
   }
 }
 
-/** Every item a range covers, from complete evidence. Null: the scan did not finish, so the set is not known. */
-export function covered(j: Judging, r: Range, context: FormContext, use: RangeUse, elements?: ElementValues): Item[] | null {
-  const plan = rangePlan(j.definition, context.body, context.owner, r, use);
-  if (!plan) throw new TypeError("range has no admitted caller context");
-  return coveredItems(j, plan, elements);
-}
 /** Shared complete-range strategy after the caller selects its admitted plan. */
 export function coveredItems(j: Judging, plan: RangePlan, elements?: ElementValues): Item[] | null {
   const items: Item[] = [];

@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/dap-bytes";
-import { clockOf, deriveEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Item, type Judging } from "../src/index.ts";
+import { clockOf, evaluateEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Item, type Judging } from "../src/index.ts";
 import { Scope, arriving, deliver, fields, forged, created, keys, member, on, ticketDefinition, valid, type Actor, type Over } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
@@ -83,7 +83,7 @@ describe("effects: sources, conditions and what is not applied (section 6.6)", (
       parties: { owner: rita.member, helper: una.member, team: [una.member] }, refs: { parent: p },
       values: { text: "p", size: null, tags: null, near: null }, attributed: [rita.member] };
     const act = definition.declared.acts["child"]!;
-    expect(deriveEffects(judging(s, "child", { "also.parent": p }, { given: { parent: p } }), act.effects, act.attention, "card", bodyStructure(definition, act, "child"))).toEqual({
+    expect(evaluateEffects(judging(s, "child", { "also.parent": p }, { given: { parent: p } }), bodyStructure(definition, act, "child"), "card")).toEqual({
       ok: true, effects: expectedEffects, working: new Map([["also.parent", s.item(p)], ["on", expectedOpened]]), opened: expectedOpened,
     });
     const child = s.did(rita, "child", under(s, p));
@@ -148,7 +148,7 @@ const judging = (s: Scope, kind: string, bound: Record<string, number>, more: Gi
 /** What those effects derive there. Nothing is written. */
 const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}) => {
   const act = s.definition.declared.acts[kind]!, attention = more.attention ?? [];
-  if (act.effects === forms && attention.length === 0) return deriveEffects(judging(s, kind, bound, more), forms, attention, more.opens ?? null, bodyStructure(s.definition, act, kind));
+  if (act.effects === forms && attention.length === 0) return evaluateEffects(judging(s, kind, bound, more), bodyStructure(s.definition, act, kind), more.opens ?? null);
   const checked = valid(validateDefinition(effectProbeData(kind, forms, attention, more.opens ?? null), PROPOSED_BOUNDS));
   const probe = checked.declared.acts["probe"]!;
   if (s.last.input.type !== "act") return expect.fail("the effect probe requires an act entry template");
@@ -157,7 +157,7 @@ const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Re
   const fact = factRefOf(entry);
   const j: Judging = { ...judging(s, kind, bound, more), definition: checked, kind: "probe", fieldTypes: probe.fields,
     fields: { ...more.given, "test-proof": fact }, facts: new Map([[fact.hash, { fact, entry, under: "test-effects-source" }]]) };
-  return deriveEffects(j, probe.effects, probe.attention, more.opens ?? null, bodyStructure(checked, probe, "probe"));
+  return evaluateEffects(j, bodyStructure(checked, probe, "probe"), more.opens ?? null);
 };
 
 test("M5: a nested constant subject in if skips effects and attention while unbound and applies both when bound", () => {
@@ -252,7 +252,7 @@ describe("attribution: its sources and its order (section 6.7)", () => {
     };
     const conditional = (forms: readonly EffectForm[], bound: Record<string, number>, more: Given = {}) => {
       const { j, act, body } = transition(forms, bound, more);
-      return deriveEffects(j, act.effects, act.attention, null, body);
+      return evaluateEffects(j, body, null);
     };
     expect([
       // The range of the first source is not read whole. It is an exact set, so the input is not judged.

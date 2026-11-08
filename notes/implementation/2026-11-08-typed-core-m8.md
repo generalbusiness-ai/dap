@@ -129,3 +129,13 @@ One control removes exact metadata registration while retaining row ownership. T
 The [header validation manifest](evidence/2026-11-08-m8-headers-validation.manifest.json), SHA-256 `db72707de61c79c0b1a1fb624175af62bb845864d4a4a2b3a6a34fe647fa14fb`, binds nineteen read-only public files. Its inventories retain 295 private originals across the focused pipeline, launch, control and preparation. Exact external inputs, complete reports, failure stack and restored-source comparisons remain durable. The earlier task checklist still reserves M7 F2 for independent review; this checkpoint restores its source assertion without claiming reviewer acceptance. No command reruns during retention.
 
 These results cover the header draft and existing clause/history behavior. They establish no complete M8 cutover, final gate, generated asset, workflow, deployment or live acceptance.
+
+## The fourth draft removes raw effect and send adapters
+
+`evaluateEffects` and `evaluateSends` now take an admitted body and read its captured effect, attention and send instructions directly. Their public exports replace `deriveEffects` and `deriveSends`. The evaluators retain the existing checked Native joins and execution primitives. They accept no parallel raw form arrays whose shape or identity could select different instructions.
+
+The owning production callers now pass their actual captured body. Timed execution selects the admitted timed row by its semantic name and reads that validation's immutable rule header. This preserves the distinction between the bare timed judgment kind and its `timed:` frame context. Result clauses detect effect instructions directly instead of reconstructing an original effect list.
+
+The unused `bodyEffectForms`, `effectSource`, `formContext` and `covered` adapters and their private effect-source map are gone. Original-source lookup remains for other callers that the complete body cutover must retire. This draft does not claim the higher-level `handlers.derive` route has retired.
+
+The existing derive effect owner and the lane evidence-results and platform rules-scope-v13 owners change only their imported API names and arguments. Scope addendum `0ffb8829` already names the two cross-package owners. All cases, expected results, behavioral assertions and deadlines remain. No fixture infrastructure or production scope/replay source changes. The next frozen plan must compile the affected owning contexts and run their complete owners before any pass claim.

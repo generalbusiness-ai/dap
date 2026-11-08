@@ -8,7 +8,7 @@
  * This file holds the judges of an act and of a timed transition, and what
  * every judge returns. `genesis.ts`, `delivery.ts` and `settle.ts` hold the
  * others. Each builds a `Judging`, derives the written forms with `derive`
- * or `deriveEffects`, and returns a `Draft`.
+ * or `evaluateEffects`, and returns a `Draft`.
  */
 
 import { nativeMark } from "./program/native.ts";
@@ -16,7 +16,9 @@ import type { Effect, Entry, FactRef, FactUse, Grant, Head, Input, MismatchReaso
 import { intentDigest, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { withinCounts } from "./draws.ts";
-import { deriveEffects } from "./effects.ts";
+import { evaluateEffects } from "./effects.ts";
+import { namedBody } from "./program/structure.ts";
+import { declarationOf } from "./program/declaration.ts";
 import { isIntent, presentedTypes, readFacts, readFields, type Reading } from "./fields.ts";
 import { covers } from "./grant.ts";
 import type { Judging } from "./guards.ts";
@@ -408,7 +410,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
 export function judgeTimed(view: StateView, definition: ValidDefinition, selected: Due, context: Pick<JudgeContext, "clock" | "bounds" | "capabilities" | "platform">): TimedJudgment {
   const { clock, bounds } = context;
   const scope = view.scope();
-  const rule = own(definition.declared.timed, selected.rule);
+  const rule = own(declarationOf(definition).timed, selected.rule);
   const item = view.item(selected.item);
   if (!scope || !rule || !item || item.type !== rule.on || !rule.states.includes(item.state) || own(item.values, rule.deadline) !== selected.due) return { result: "dropped", failed: "held" };
   if (clock.behind) return { result: "unavailable", reason: "clock-behind" };
@@ -417,7 +419,7 @@ export function judgeTimed(view: StateView, definition: ValidDefinition, selecte
   if (next?.item !== selected.item || next.rule !== selected.rule) return { result: "dropped", failed: "next" };
 
   const j: Judging = { view, definition, bounds, clock, scope, self: scope.head.seq + 1, kind: selected.rule, fields: {}, fieldTypes: {}, subjects: new Map([["on", item]]), signer: null, facts: new Map(), prepared: [], used: [], capabilities: context.capabilities };
-  const effects = deriveEffects(j, rule.effects, rule.attention, null);
+  const effects = evaluateEffects(j, namedBody(definition, "timed", selected.rule, "timed"), null);
   // Section 6.4: a timed rule's effects are total. The validator refuses, as `timed-partial`, a rule with an effect that could be
   // refused here, and requires one that takes the item out of the rule's states. So a selection that passes its three checks is
   // written, and its item is not due again under this rule: the drain makes progress. A refusal here is a fault of the validator,

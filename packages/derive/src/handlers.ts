@@ -12,16 +12,16 @@ import { entryHash } from "@generalbusiness/dap-bytes";
 import { handlerBranch } from "./handler-branch.ts";
 import type { Signer } from "./attribution.ts";
 import { boundTo, decisionCounts, selectedByIndex, selectorOf } from "./binding.ts";
-import { deriveEffects } from "./effects.ts";
+import { evaluateEffects } from "./effects.ts";
 import { creationFields, factsNamed, isEntryOf, isLocalFact, messageFields, presentedTypes, readFacts, readFields, textsNamed, updateOf, type Reading, type Update } from "./fields.ts";
 import { signerOf } from "./fold.ts";
 import { slotOf, type Fetched, type Judging } from "./guards.ts";
 import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
 import { sendOrigin } from "./program/send-origin.ts";
-import { deriveSends } from "./sends.ts";
+import { evaluateSends } from "./sends.ts";
 import { judgeGuardNodes } from "./program/guard-value.ts";
-import { bodyEffectForms, bodyJudgesClock, bodyStructure, clauseStructure, guardSource, sendClauseStructure } from "./program/structure.ts";
+import { bodyJudgesClock, bodyStructure, clauseStructure, guardSource, sendClauseStructure } from "./program/structure.ts";
 import { settlementForm, settlementMatches, settlementSubject } from "./program/settlement.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -409,9 +409,9 @@ export function derive(j: Judging, forms: Forms, opens: string | null, cause: Di
   }
   if (guards.result !== "pass") return { result: "unavailable", reason: guards.result };
   // Sections 6.6 and 6.7: a condition, or a range that a source or a send reads, that is not completed leaves the input not judged.
-  const effects = deriveEffects(j, forms.effects, forms.attention, opens, structure);
+  const effects = evaluateEffects(j, structure, opens);
   if (!effects.ok) return "unavailable" in effects ? { result: "unavailable", reason: effects.unavailable } : { result: "refused", reason: effects.reason, detail: effects.detail, prepared: j.used };
-  const sends = deriveSends(j, forms.sends, effects.working, cause, first, directory, effects.opened !== null, structure);
+  const sends = evaluateSends(j, structure, effects.working, cause, first, directory, effects.opened !== null);
   if (!sends.ok) return "unavailable" in sends ? { result: "unavailable", reason: sends.unavailable } : { result: "refused", reason: sends.reason, detail: sends.detail, prepared: j.used };
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item: the row, or in platform data a rule.
   const full = effects.opened === null ? null : overMax(j.view, j.definition, effects.opened.type, effects.opened.state);
@@ -602,13 +602,13 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   const structure = selected && originBody ? sendClauseStructure(definition, originBody, selected.node, clause)
     : clauseStructure(definition, form, clause, null, frame.kind);
   if ((clauses[clause]?.length ?? 0) > 0 && !structure) throw new TypeError("result clause was not captured by its validation");
-  const forms = structure ? bodyEffectForms(definition, structure) : [];
+  const effectful = structure?.nodes.some(node => node.category === "effect") ?? false;
   // Revision 20, section 16.1: the rows of this clause, for the delivery of a result that runs it, under a definition whose data
   // states rows. A request that a rule gave states none: its mark holds its clauses, and no text gives a mark rows (I3 deltas,
   // entry GA5). A diagnosis holds no observation, so `undelivered` has none.
   const rows = definition.observing && written && beside && given && clause !== "undelivered" ? rowsOfClause(written, clause) : [];
   if (beside && definition.observing) beside.rows = { status: [], listed: new Set(), retained: [], values: [] };
-  if (forms.length === 0 && rows.length === 0) return { result: "ran", effects: [], uses: [], judgesTime: false };
+  if (!effectful && rows.length === 0) return { result: "ran", effects: [], uses: [], judgesTime: false };
 
   // The uses of the origin are the facts its fields name; a clause may read one (section 6.6, a party from a fetched fact).
   // A local fact that the origin's fields name was checked when the origin was judged. It is put in normal form again here.
@@ -651,7 +651,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     const { status } = settled;
     beside.rows = { status: rows.map((_, n) => status.get(n) ?? null), listed: settled.listed, retained: settled.retained, values: settled.values };
   }
-  const effects = deriveEffects(j, forms, [], null, structure);
+  const effects = evaluateEffects(j, structure, null);
   // Section 6.6: a clause's condition that is not completed leaves the result not recorded now. It is offered again.
   if (!effects.ok && "unavailable" in effects) return { result: "unavailable", reason: effects.unavailable };
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. In platform data a rule of the clause may open

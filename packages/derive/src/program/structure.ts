@@ -2,7 +2,7 @@
 import type { ActType, Digest, EffectForm, Guard, Mark, MarkMost, Notify, ReceiveType, SendForm, SendMark, TimedRule } from "@generalbusiness/dap-contract";
 import type { Defining } from "../validate/context.ts";
 import type { ValidDefinition } from "../validate/index.ts";
-import type { ElementBinding, FieldResolution, ForeignFieldResolution, FrameRead, OperandRead, RangeResolution, ReadValidation, ResolvedReads, SlotResolution, SubjectResolution } from "./reads.ts";
+import type { ElementBinding, FieldResolution, ForeignFieldResolution, FrameKind, FrameRead, OperandRead, RangeResolution, ReadValidation, ResolvedReads, SlotResolution, SubjectResolution } from "./reads.ts";
 import { immutable } from "./model.ts";
 import { mapGuardChildren, type GuardPlan, type RangePlan } from "./guard-plan.ts";
 import { conditionSubjects, type ConditionPlan } from "./condition-plan.ts";
@@ -12,7 +12,7 @@ import { ownSettlementPlan, type SettlementPlan } from "./settlement.ts";
 import { bindNative, nativeBoundaries, nativeBoundary, nativeSource, recordNative, type NativeBoundary } from "./native.ts";
 import type { MarkKind } from "../validate/context.ts";
 import { bindDeclaration, declarationSource } from "./declaration.ts";
-import { bindRows, currentRow, rowOf, rowsOf, type RowIdentity, type RowRead } from "./rows.ts";
+import { bindRows, currentRow, namedRow, rowOf, rowsOf, type RowIdentity, type RowKind, type RowRead } from "./rows.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
 export type GuardOp = Exclude<Keys<Guard>, "of" | "reason" | "ifPresent">;
@@ -121,7 +121,6 @@ const conditionPlans = new WeakMap<StructureNode, ConditionPlan<GuardNode>>();
 const effectPlans = new WeakMap<EffectNode, EffectPlan>(), attentionPlans = new WeakMap<AttentionNode, AttentionPlan>();
 const sendPlans = new WeakMap<SendNode, SendPlan>();
 const sendSources = new WeakMap<SendNode, SendForm | SendMark>();
-const effectSources = new WeakMap<EffectNode, EffectForm>();
 
 /** Replacement headers reuse only their admitted row's immutable common data. */
 function headerOf(frame: FrameRead, row: RowRead): ActType | ReceiveType | TimedRule | null {
@@ -317,7 +316,6 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     for (const { source, node } of bindings) {
       nodeRoots.set(node, body);
       if (node.category === "guard") guardSources.set(node, source);
-      if (node.category === "effect") effectSources.set(node, source as EffectForm);
       if (node.category === "send") sendSources.set(node, source as SendForm | SendMark);
       forms.set(source, Object.freeze([...(forms.get(source) ?? []), Object.freeze({ body, node })]));
     }
@@ -352,6 +350,13 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
   pending.delete(d);
 }
 export const structureOf = (definition: ValidDefinition): DefinitionStructure | null => compiled.get(definition)?.structure ?? null;
+
+/** A declaration's semantic name selects its actual admitted row and frame. */
+export function namedBody(definition: ValidDefinition, kind: RowKind, name: string, frame: FrameKind): BodyStructure | null {
+  const row = namedRow(definition, kind, name);
+  const bodies = row && compiled.get(definition)?.rowBodies.get(row.id)?.filter(body => body.frame.kind === frame);
+  return bodies?.length === 1 ? bodies[0]! : null;
+}
 
 export function bodyStructure(definition: ValidDefinition, source: object, kind?: string): BodyStructure | null {
   const found = compiled.get(definition);
@@ -392,11 +397,6 @@ export function sendClauseStructure(definition: ValidDefinition, body: BodyStruc
   const root = compiled.get(definition)!.structure.roots.find(root => root.id === link.root);
   if (!root || root.origin !== body.id) throw new TypeError("send result root belongs to another admitted body");
   return root;
-}
-/** The M5 effect adapter still verifies each original occurrence before execution. */
-export function bodyEffectForms(definition: ValidDefinition, body: BodyStructure): readonly EffectForm[] {
-  checkedBody(definition, body);
-  return body.nodes.filter(node => node.category === "effect").map(node => effectSource(definition, body, node));
 }
 /** Compatibility with a raw send list requires one unique actual admitted body. */
 export function sendListBody(definition: ValidDefinition, forms: readonly SendForm[]): BodyStructure | null {
@@ -470,13 +470,6 @@ export function effectPlan(definition: ValidDefinition, body: BodyStructure, nod
   checkedOwner(definition, body, node);
   return effectPlans.get(node) ?? null;
 }
-/** Native rules retain their original declared mark and fault identity through M7. */
-export function effectSource(definition: ValidDefinition, body: BodyStructure, node: EffectNode): EffectForm {
-  checkedOwner(definition, body, node);
-  const source = effectSources.get(node);
-  if (!source) throw new TypeError("effect instruction has no source identity");
-  return source;
-}
 export function sendPlan(definition: ValidDefinition, body: BodyStructure, node: SendNode): SendPlan | null {
   checkedOwner(definition, body, node);
   return sendPlans.get(node) ?? null;
@@ -500,16 +493,6 @@ export function timedStructure(definition: ValidDefinition, kind: string, effect
   if (!source || source.effects !== effects || source.attention !== attention) return null;
   const body = bodyStructure(definition, source, `timed:${kind}`);
   return body?.frame.kind === "timed" ? body : null;
-}
-
-export interface FormContext { readonly body: BodyStructure; readonly owner: StructureNode }
-/** Select the actual written occurrence, even when two forms share one object. */
-export function formContext(definition: ValidDefinition, body: BodyStructure | null, category: Category, ordinal: number, source: object): FormContext {
-  if (!body) throw new TypeError("form has no admitted body context");
-  checkedBody(definition, body);
-  const owner = body.nodes.filter(node => node.category === category)[ordinal];
-  if (!owner || !formStructures(definition, body, source).includes(owner)) throw new TypeError("form does not match its admitted occurrence");
-  return { body, owner };
 }
 
 export interface ClockRead { readonly path: string; readonly kind: "before" | "after" | "value-time" }

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FieldValue } from "@generalbusiness/dap-contract";
 import { definitionDigest, entryHash, factRefOf, signIntent } from "@generalbusiness/dap-bytes";
-import { clockOf, deriveEffects, judgeGuards, MemoryState, newItem, validateDefinition, type Item, type Judging } from "@generalbusiness/dap-derive";
+import { clockOf, evaluateEffects, judgeGuards, MemoryState, newItem, validateDefinition, type Item, type Judging } from "@generalbusiness/dap-derive";
 import { d, directory, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { issueEvidence4 } from "../src/issue4.ts";
 import { changeEvidence4 } from "../src/change4.ts";
@@ -35,7 +35,7 @@ test("signed successor results stay provisional; only the exact Native counted r
         subjects: new Map([["also.job", held]]), signer: { member: keys.una.member, principal: null }, facts: new Map(), prepared: [], used: [], own };
       expect(judgeGuards(judging, act.guards).result).toBe("pass");
       const actBody = bodyStructure(definition, act, kind)!;
-      const provisional = deriveEffects(judging, act.effects, act.attention, "result", actBody);
+      const provisional = evaluateEffects(judging, actBody, "result");
       if (!provisional.ok) throw Error(JSON.stringify(provisional));
       expect(provisional.effects.some(effect => "item" in effect && effect.item === 10)).toBe(false);
       const result: Entry = { ...birth, seq: 20, prev: job.hash, time: t(1), input: { type: "act",
@@ -52,16 +52,16 @@ test("signed successor results stay provisional; only the exact Native counted r
       const notified: Judging = { ...judging, kind: "check-decision", self: 31, signer: null, sender: destination, source, fields: noticeFields, fieldTypes: notice.fields };
       const guards = judgeGuards(notified, notice.guards);
       expect(guards.result, JSON.stringify({ lane: declared.name, initial, outcome, guard: guards.at, form: notice.guards[guards.at] })).toBe("pass");
-      const counted = deriveEffects(notified, notice.effects, [], null, noticeBody);
+      const counted = evaluateEffects(notified, noticeBody, null);
       if (!counted.ok) throw Error(JSON.stringify(counted));
       expect(counted.working.get("also.job")).toMatchObject({ state: outcome === "error" ? "errored" : outcome, refs: { decidedBy: 20 } });
       for (const reason of ["wrong-source", "not-this-check"]) {
-        const rejected = deriveEffects({ ...notified, fields: { ...noticeFields, reason } }, notice.effects, [], null, noticeBody);
+        const rejected = evaluateEffects({ ...notified, fields: { ...noticeFields, reason } }, noticeBody, null);
         if (!rejected.ok) throw Error(JSON.stringify(rejected));
         expect(rejected.working.get("also.job")).toMatchObject({ state: initial, refs: { decidedBy: initial === "timed-out" ? 19 : null } });
       }
       const settled = counted.working.get("also.job")!;
-      const late = deriveEffects({ ...notified, subjects: new Map([["also.job", settled]]), fields: { ...noticeFields, reason: "wrong-source" } }, notice.effects, [], null, noticeBody);
+      const late = evaluateEffects({ ...notified, subjects: new Map([["also.job", settled]]), fields: { ...noticeFields, reason: "wrong-source" } }, noticeBody, null);
       if (!late.ok) throw Error(JSON.stringify(late));
       expect(late.working.get("also.job")).toMatchObject({ state: settled.state, refs: { decidedBy: 20 } });
       const wrongSource = { ...native, input: { ...native.input, kind: "evidence-admit" } } as Entry;

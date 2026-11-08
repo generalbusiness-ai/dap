@@ -10,7 +10,7 @@
  * nothing and is judged by no rule.
  */
 
-import type { Effect, EffectForm, FieldType, FieldValue, Mark, MarkMost, MemberRef, Notify, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Effect, FieldType, FieldValue, Mark, MarkMost, MemberRef, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { attribution, byMember, historyOf } from "./attribution.ts";
 import { capabilityEffect } from "./capability.ts";
 import { isEntryOf, isLocalFact } from "./fields.ts";
@@ -18,7 +18,7 @@ import { changeItem, newItem, type ItemEffect } from "./fold.ts";
 import { members, slotOf, type Judging } from "./guards.ts";
 import { EPOCH, HOLDER, deriveHold, endsUnder, type HoldEffect } from "./hold.ts";
 import { judgeCondition } from "./program/condition-value.ts";
-import { attentionPlan, checkedBody, effectPlan, formContext, timedStructure, type AttentionNode, type BodyStructure, type EffectNode } from "./program/structure.ts";
+import { attentionPlan, checkedBody, effectPlan, type AttentionNode, type BodyStructure, type EffectNode } from "./program/structure.ts";
 import { nativeOutcomes } from "./program/native.ts";
 import { observeNativeCall } from "./program/native-trace.ts";
 import type { AttentionPlan, EffectPlan } from "./program/effect-plan.ts";
@@ -116,15 +116,11 @@ type EffectInstruction = { readonly kind: "native"; readonly mark: Mark }
   | { readonly kind: "written"; readonly body: BodyStructure; readonly node: EffectNode; readonly plan: EffectPlan };
 interface AttentionInstruction { readonly body: BodyStructure; readonly node: AttentionNode; readonly plan: AttentionPlan }
 
-/** Raw callers must identify every occurrence in one actual admitted body. */
-export function deriveEffects(j: Judging, forms: readonly EffectForm[], attention: readonly Notify[], opens: string | null, body: BodyStructure | null = timedStructure(j.definition, j.kind, forms, attention)): EffectResult {
+/** Execute only the effect and attention instructions of this admitted body. */
+export function evaluateEffects(j: Judging, body: BodyStructure | null, opens: string | null): EffectResult {
   if (!body) throw new TypeError("effects have no admitted body context");
   checkedBody(j.definition, body);
-  if (body.nodes.filter(node => node.category === "effect").length !== forms.length
-    || body.nodes.filter(node => node.category === "attention").length !== attention.length) throw new TypeError("effect lists do not match their admitted body");
-  const instructions = forms.map((form, i): EffectInstruction => {
-    const { owner } = formContext(j.definition, body, "effect", i, form);
-    if (owner.category !== "effect") throw new TypeError("effect has another admitted category");
+  const instructions = body.nodes.filter(node => node.category === "effect").map((owner): EffectInstruction => {
     if (owner.op === "native") {
       const mark = owner.data;
       return { kind: "native", mark };
@@ -133,9 +129,7 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
     if (!plan) throw new TypeError("effect has no admitted executable instruction");
     return { kind: "written", body, node: owner, plan };
   });
-  const notices = attention.map((form, i): AttentionInstruction => {
-    const { owner } = formContext(j.definition, body, "attention", i, form);
-    if (owner.category !== "attention") throw new TypeError("attention has another admitted category");
+  const notices = body.nodes.filter(node => node.category === "attention").map((owner): AttentionInstruction => {
     return { body, node: owner, plan: attentionPlan(j.definition, body, owner) };
   });
   return executeEffects(j, instructions, notices, opens);
