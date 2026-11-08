@@ -6,6 +6,8 @@ import { structureOf, type BodyStructure, type StructureNode } from "./structure
 export type Primitive = "expressions" | "guards" | "effects" | "sends" | "prepared" | "scans" | "native";
 export interface ProgramEvent {
   readonly ordinal: number;
+  readonly parent: number | null;
+  readonly primitive: Primitive;
   readonly body: BodyStructure | null;
   readonly node: StructureNode | null;
   readonly path: string;
@@ -21,6 +23,9 @@ export interface ProgramObservation<T> {
 }
 interface Pending {
   readonly ordinal: number;
+  readonly parent: number | null;
+  readonly primitive: Primitive;
+  readonly retained: boolean;
   readonly body: BodyStructure | null;
   readonly node: StructureNode | null;
   readonly path: string;
@@ -49,7 +54,7 @@ export function observeProgram<T>(definition: ValidDefinition, budget: number | 
   try {
     const value = call();
     if (observer.stack.length) throw new TypeError("unfinished synchronous program observation");
-    return Object.freeze({ value, trace: Object.freeze(observer.events.map(event => Object.freeze({ ...event, ...(event.reads ? { reads: Object.freeze(event.reads) } : {}) }))),
+    return Object.freeze({ value, trace: Object.freeze(observer.events.map(({ retained: _retained, ...event }) => Object.freeze({ ...event, ...(event.reads ? { reads: Object.freeze(event.reads) } : {}) }))),
       truncated: observer.truncated, primitives: Object.freeze(observer.primitives) });
   } finally {
     if (previous.length) active.set(definition, previous); else active.delete(definition);
@@ -62,9 +67,10 @@ function copy(observer: Observer, value: unknown): unknown {
 }
 function begin(observer: Observer, primitive: Primitive, body: BodyStructure | null, node: StructureNode | null, path: string, op: string): Pending {
   observer.primitives[primitive]++;
-  const event: Pending = { ordinal: observer.ordinal++, body, node, path, op, result: "entered" };
+  const retained = observer.budget !== undefined && observer.events.length < observer.budget;
+  const event: Pending = { ordinal: observer.ordinal++, parent: observer.stack.at(-1)?.ordinal ?? null, primitive, retained, body, node, path, op, result: "entered" };
   if (observer.budget !== undefined) {
-    if (observer.events.length < observer.budget) observer.events.push(event);
+    if (retained) observer.events.push(event);
     else observer.truncated = true;
   }
   return event;
@@ -76,7 +82,7 @@ export function observeInstruction<T>(definition: ValidDefinition, primitive: Pr
   if (!observers?.length) return call();
   const events = observers.map(observer => {
     const parent = observer.stack.at(-1);
-    const event = begin(observer, primitive, body ?? parent?.body ?? null, node, path, op); observer.stack.push(event); return event;
+    const event = begin(observer, primitive, body ?? parent?.body ?? null, node ?? parent?.node ?? null, path, op); observer.stack.push(event); return event;
   });
   let returned = false;
   try {
@@ -84,7 +90,7 @@ export function observeInstruction<T>(definition: ValidDefinition, primitive: Pr
     observers.forEach((observer, index) => {
       const event = events[index]!;
       // No value capture or opaque-object walk when events are disabled or exhausted.
-      event.result = observer.events.includes(event) ? copy(observer, value) : "returned";
+      event.result = event.retained ? copy(observer, value) : "returned";
     });
     return value;
   } finally {
@@ -112,7 +118,7 @@ export function enterProgramInstruction(definition: ValidDefinition, primitive: 
 export function captureProgramReads(definition: ValidDefinition, reads: Readonly<Record<string, unknown>>): void {
   for (const observer of active.get(definition) ?? []) {
     const event = observer.stack.at(-1);
-    if (event && observer.events.includes(event)) event.reads = { ...event.reads, ...copy(observer, reads) as Record<string, unknown> };
+    if (event?.retained) event.reads = { ...event.reads, ...copy(observer, reads) as Record<string, unknown> };
   }
 }
 
@@ -120,7 +126,7 @@ export function captureProgramReads(definition: ValidDefinition, reads: Readonly
 export function recordProgramLeaf(definition: ValidDefinition, primitive: Primitive, path: string, op: string, result: unknown, reads?: Readonly<Record<string, unknown>>): void {
   for (const observer of active.get(definition) ?? []) {
     const parent = observer.stack.at(-1), event = begin(observer, primitive, parent?.body ?? null, parent?.node ?? null, path, op);
-    if (observer.events.includes(event)) {
+    if (event.retained) {
       event.result = copy(observer, result);
       if (reads) event.reads = copy(observer, reads) as Record<string, unknown>;
     }

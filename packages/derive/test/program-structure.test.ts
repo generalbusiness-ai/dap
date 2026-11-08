@@ -16,6 +16,7 @@ import { declarationOf } from "../src/program/declaration.ts";
 import { nativeBoundaryOfMark, nativeMark, nativeOutcomes } from "../src/program/native.ts";
 import { checkedRow, namedRow, rowOf } from "../src/program/rows.ts";
 import { windowOf } from "../src/grant.ts";
+import { requirements } from "../src/program/requirements.ts";
 
 function admitted(input: DeclaredDefinition): ValidDefinition {
   const result = validateDefinition(input, PROPOSED_BOUNDS);
@@ -70,6 +71,10 @@ test("the admitted corpus supplies every structural opcode and binds every root 
       expect(root.frame.context.row, row.name).toBe(root.row.id);
       expect(rowOf(checked.definition, root.row.id), row.name).toBe(root.row);
       root.nodes.forEach(node => visit(checked.definition, root, node));
+      const required = requirements(checked.definition, root);
+      expect(required.body, row.name).toBe(root);
+      expect(required.reads, row.name).toContainEqual({ kind: "definition" });
+      expect(required.future.every(future => future.requirements.body.origin === root.id), row.name).toBe(true);
     }
   }
   expect([...seen].sort()).toEqual([

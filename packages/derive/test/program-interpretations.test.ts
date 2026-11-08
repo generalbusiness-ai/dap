@@ -92,6 +92,17 @@ test("explanation retains the actual deadline and opaque prepared input without 
   expect(explainAdmitted(body, opaque)).toMatchObject({ sourcePath: "acts.edit.guards.2", opaque: true, values: { rule: "ready", input } });
   expect(requirements(definition, body).reads).toContainEqual({ kind: "prepared-input", rule: "ready", parts: ["kind", "fields", "signer", "subjects", "facts"] });
   expect(j.used).toEqual([]);
+  const comparison = fixture(act => {
+    act.fields = { wanted: { type: "text", max: 200, required: true } };
+    act.guards = [{ state: ["draft"] }, { equals: { a: { slot: "text" }, b: { field: "wanted" } } }];
+  });
+  const comparing = context(comparison.definition); comparing.fields = { wanted: "wanted" };
+  const compared = evaluateAdmitted(comparison.body, comparing, d("a"), {}, 100);
+  expect(compared.ran).toEqual({ result: "refused", reason: "guard-failed", detail: "guards.1", prepared: [] });
+  expect(explainAdmitted(comparison.body, compared)).toMatchObject({ sourcePath: "acts.edit.guards.1", opaque: false, incomplete: false, values: {
+    "acts.edit.guards.1.equals.a": "before", "acts.edit.guards.1.equals.b": "wanted",
+  } });
+  expect(compared.primitives).toMatchObject({ guards: 2, expressions: 2 });
 });
 
 test("public Native header observation preserves callback receiver, once count and actual clock outcome with an exhausted trace", () => {

@@ -89,3 +89,12 @@ At clean evidence head `c9f65d8f0418f5a86cac0bb3732fa826bab02846`, the maintaine
 The maintained parser identifies two changed direct seal owners: `genesis.ts` and `judge.ts`. Their current AST hashes are `15a4adb0e86d62a5be70249c176a2677717a0616119eedcb7b7427a5291fbc2c` and `7bafa496e7f0d647ffb84a7fa1131fe682335bb293b1ceeb7bee5c9b50693560`. No inventory literal or assertion changes. Final source must supply exact reviewed seal evidence before adoption.
 
 The actual probe exit is 0. Complete tracked-source fingerprints match before and after, and no owned process remains. The [read-only asset manifest](evidence/2026-11-08-m8-readonly-assets.manifest.json), SHA-256 `f39695385af30f8e59ea652e8905792f3ec62430675a66b01e5c92c420dfe446`, binds seven public files and a read-only inventory of seventeen private originals. No build reruns during retention. A concrete before-edit addendum must precede the eventual maintained generator and seal updates. The final asset owner, exact-source Page workflow, gate and independent review remain ahead.
+
+
+## The existing corpus witness also checks visitor totality
+
+The next draft extends the existing all-opcode corpus case to visit requirements for every admitted root and verify that future reports retain that root as their origin. All previous assertions, registrations and deadlines remain. This checks totality across the actual current declaration vocabulary, while the separate paired witness checks meaningful possible-versus-actual reads.
+
+Captured events now retain their actual parent ordinal and primitive category. Resolved read events inherit their admitted instruction owner. Explain can display an equality guard's two captured operand values and can locate an effect or send refusal by its retained admitted occurrence. It executes no read or callback. Existing deadline and prepared-input display values remain unchanged. Retention membership uses a per-event flag instead of scanning the retained event list.
+
+The existing explanation case adds a literal comparison refusal and both actual values, with exactly two guards and two resolved reads. A planned single parent-link omission control must lose those captured comparison values and fail that assertion. This draft has no validation result yet. The prototype ruling, final assets, gate, workflow and independent review remain ahead.
