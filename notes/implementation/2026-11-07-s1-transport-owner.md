@@ -131,4 +131,4 @@ Commit `42fabdd3` changes only the three parser-seal literals in `scripts/securi
 
 The [seal manifest](evidence/2026-11-07-s1-approved-source-seals.manifest.json), SHA-256 `b5dcf9f9c3b27ce659f04f101fba420a7a33a330436e325893346c9296360ba1`, binds the exact patch, source, approval and integration checkpoint. It records no test pass.
 
-The branch now includes published M6 main `5a0e5660`. That integration leaves all three S1 source owners byte-for-byte equal to the focused checkpoint. The single full gate will validate the integrated candidate. Planner act `7e3f7743` assigns S1 the first gate slot and M7 the next slot. Independent review and audited landing remain required. The planner deploys.
+The branch now includes published main `903ed961`, which contains M6 `5a0e5660` and the three-path Register 26 record. That integration leaves all three S1 source owners byte-for-byte equal to the focused checkpoint. The single full gate will validate the integrated candidate. Planner act `7e3f7743` assigns S1 the first gate slot and M7 the next slot. Independent review and audited landing remain required. The planner deploys.
