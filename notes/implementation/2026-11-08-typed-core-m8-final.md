@@ -189,7 +189,63 @@ Only four documents separate the passing gate head `d54c8842` from the
 workflow head `8bfe700f`. The public source comparison records both tree
 hashes and confirms that every non-document Git object stays unchanged.
 This citation and manifest add only documents. The full gate and browser
-workflow therefore describe the final candidate's production source, tests,
-configuration and generated assets. Independent review must still assess
-the exact final head, including both body source seals and the retired paths.
+workflow therefore describe candidate `471399ba`'s production source, tests,
+configuration and generated assets. The review below assesses that head,
+including both body source seals and the retired paths.
 No local browser substitute or live-room acceptance claim follows from CI.
+
+
+## Check complete results against main after review
+
+Checker report `b54447eb` requests one test-only repair at `471399ba`.
+The report finds the production routes sound, verifies both body seals,
+and confirms the passing gate and Page workflow. Six partial result checks
+no longer have an independent production comparison after the old prototype
+retires. The same clear-result case contains a seventh partial check with
+the same gap. The report requires complete main-derived literals and a
+bounded follow-up, with no new gate, workflow or seal review.
+
+Scope and booking `38d9d7ae` records the seven-assertion repair. A dedicated
+worktree at main `cdd5508c` calls production `derive` on the same fixture
+inputs. The driver copies the fixture and context blocks unchanged and
+checks their byte equality with the candidate. Seven calls retain full
+outputs and exact input records. The capture's actual `capture.exit` is
+`exit 0`; every tracked source hash remains unchanged. This capture runs
+neither the prototype nor M8's runner.
+
+Commit `707c8d85504c0995e489ebd1dc0e776db26a4712`, tree
+`d3ee7012e1915b95fda6c3d76bfffa70d1cf38c2`, replaces the seven partial
+checks with complete literals. Each literal equals its captured main result.
+The checks now name every effect, send ordinal, message, preparation,
+time flag and settlement flag. Reversing those seven replacements exactly
+reproduces the prior test file. Inputs, registrations, deadlines, other
+assertions, production, shared helpers, configuration and dependencies stay
+unchanged. The retirement ledger now states what the literal and observation
+comparisons each prove.
+
+One derive test compiler context and the complete 18-case `program.test.ts`
+owner pass once. I read the actual `pipeline.exit`: `exit 0`. The reports
+contain no errors, retries, repeats, skipped or unexpected cases. The source
+stays clean and unchanged, and no owned process remains. The outer observation
+takes 1.632 seconds; command timings remain separate.
+
+The [full-result manifest](evidence/2026-11-08-m8-full-ran.manifest.json)
+hashes to `c40855d6b421d5b40055393f044d6b7db8f811e406f7f104a6b28c00a4ca02b1`.
+It names eight public files and inventories 39 read-only private files.
+The evidence retains the unchanged main source, capture driver, full outputs,
+assertion comparison, literal equality check, frozen plan and complete reports.
+The initial data-only literal parser rejected a TypeScript trailing comma.
+The corrected parser accepts that syntax without changing the literals or
+rerunning the capture.
+
+| Check | Retained output | Result |
+|---|---|---|
+| Main production capture | Main-capture inventory: `capture.exit`, `results.json`, `before.json`, `after.json` | Seven full outputs, exit 0, unchanged source |
+| Literal comparison | Preparation inventory: `artroom-m8-full-ran-literal-equality-20261108.json` | All seven committed literals equal main |
+| Derive test compiler and complete owner | `result.json`, `pipeline.exit`, focused inventory | One compiler and 18 cases pass once |
+
+The full gate remains a pass at `d54c8842`, and the Page workflow remains a
+pass at `8bfe700f`. This test-only follow-up supplies the new assertions'
+evidence under the checker's explicit ruling. No whole suite or browser
+workflow repeats. The earlier failed gates and changes-requested report stay
+recorded. Renewed exact-head review and landing remain due.
