@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9fc3f669bf607f7a3d6ab73ae8504571d89150d6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-raw-adapters-validation.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a385d6abd68d8a997f30a158b1c9b2aaad62f3ff","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/forms-binding.test.ts."}
