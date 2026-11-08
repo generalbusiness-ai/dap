@@ -6,17 +6,18 @@ import { held, indexes } from "./binding.ts";
 import type { Defining, Slot } from "./context.ts";
 import { codeOf, fieldType } from "./fields.ts";
 import { at } from "./shape.ts";
+import { withHeader, withRow } from "../program/rows.ts";
 
 /** Reads every item type into `d.types`. One with a problem is reported and left out. */
 export function itemTypes(d: Defining, v: unknown): void {
   const { bounds, problems, bad, rec, entries, int, bool } = d;
-  for (const [name, tv] of entries(v, "items", bounds.items)) {
+  for (const [name, tv] of entries(v, "items", bounds.items)) withRow(d, "item", name, at("items", name), () => {
     const path = at("items", name);
     const before = problems.length;
     // Section 17.2a: in platform data an item type may state `indexes` (revision 23) and `holds` (revision 20). A declared definition
     // states neither: each is refused there as any member that the contract does not define.
     const o = rec(tv, path, ["many", "max", "states", "initial", "parties", "refs", "values"], d.platform ? ["indexes", "holds"] : []);
-    if (!o) continue;
+    if (!o) return;
     const many = bool(o["many"], at(path, "many"));
     const max = int(o["max"], at(path, "max"), 1);
     if (many === false && max !== null && max !== 1) bad("shape", at(path, "max"), "a type that is not `many` has max 1");
@@ -39,7 +40,7 @@ export function itemTypes(d: Defining, v: unknown): void {
           // Section 6.3: a party list holds at most 64 members. One that declares no `max` holds the bound itself.
           if ("max" in so && (!so["list"] || (int(so["max"], at(p, "max"), 1) ?? 0) > bounds.partyMembers)) bad("bound", at(p, "max"), `only a list has a max, of at most ${bounds.partyMembers}`);
           type = so["list"] ? { type: "list", of: { type: "member" }, max: (so["max"] as number | undefined) ?? bounds.partyMembers } : { type: "member" };
-        } else type = fieldType(d, so[kind === "ref" ? "to" : "of"], at(p, kind === "ref" ? "to" : "of"), [], false, kind === "value", true);
+        } else type = withHeader(d, { kind: "slot", slot: kind, name: s }, () => fieldType(d, so[kind === "ref" ? "to" : "of"], at(p, kind === "ref" ? "to" : "of"), [], false, kind === "value", true));
         if (!type) continue;
         const capability = so["capability"];
         if (capability !== undefined) {
@@ -66,5 +67,5 @@ export function itemTypes(d: Defining, v: unknown): void {
     const keyed = "indexes" in o ? indexes(d, o["indexes"], at(path, "indexes"), slots) : null;
     const counts = "holds" in o ? held(d, o["holds"], at(path, "holds")) : null;
     if (problems.length === before) d.types.set(name, { name, states, initial: o["initial"] as string, slots, ...(keyed ? { indexes: keyed } : {}), ...(counts && counts.size > 0 ? { decisions: counts } : {}) });
-  }
+  });
 }

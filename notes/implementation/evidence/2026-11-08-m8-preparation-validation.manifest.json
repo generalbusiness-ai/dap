@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "sourceHead": "f8422822cfe3f130abdcc382b87c2160c51ea120",
+  "sourceTree": "d6007c9651b6a63553c5811e0dcb6c41c1483ea8",
+  "qualification": "M8 source reconciliation and exact external input retention; no validation rerun. The failed plan import remains a failed preparation attempt, separate from the actual passing pipeline.",
+  "fileCount": 5,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-preparation-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 346,
+          "sha256": "bc5b2d2e198c56d2d87ff818f6f2b20837fefa9e8ca6147fcfabcc7450128ffc"
+        },
+        {
+          "path": "frozen-input-files.json",
+          "bytes": 2289,
+          "sha256": "20e92b599568e6e68024bd8ca4241fcf224fd1ee8f04c73e918a7ed3082b9713"
+        },
+        {
+          "path": "preparation-summary.json",
+          "bytes": 1037,
+          "sha256": "2a3448474b473f3a21e7ae1f8e138bc54d11e9ead2ed9599cfe1a08252675380"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 536,
+          "sha256": "78524a803f7e4e71649d6406050c2d2ec49ac0e6f388bff2cae1455c6fd0eb7c"
+        },
+        {
+          "path": "task.json",
+          "bytes": 342,
+          "sha256": "f8e669b0f49521d7e3f4a5a9e8a602484271b836de75cecfd45487f0129f657e"
+        }
+      ]
+    }
+  ]
+}

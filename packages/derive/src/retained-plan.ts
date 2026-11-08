@@ -16,6 +16,7 @@ import { own } from "./values.ts";
 import { namedBy, retainsOf } from "./observes.ts";
 import { inputTexts } from "./handlers.ts";
 import { evidenceValues } from "./evidence-values.ts";
+import { declarationOf } from "./program/declaration.ts";
 
 export type RetainedKey =
   | { readonly kind: "definition" | "entry" | "rule" | "snapshot"; readonly digest: Digest }
@@ -97,14 +98,14 @@ export function textDependency(origin: DependencyOrigin, digest: Digest): TextDe
  * grammar. Replay and inventory use the same selectors; neither discovers
  * dependencies by searching strings or retained-store contents. */
 export function actValueDependencies(definition: ValidDefinition, origin: DependencyOrigin, kind: string, fields: Readonly<Record<string, FieldValue>>) {
-  return placesOf(own(definition.declared.acts, kind)?.fields, fields).map(place => ({
+  return placesOf(own(declarationOf(definition).acts, kind)?.fields, fields).map(place => ({
     place, dependency: requiredDependency(origin, "act-value", retainedValueKey(place.domain, place.digest)),
   }));
 }
 
 export function preparedRuleDependencies(definition: ValidDefinition, origin: DependencyOrigin, prepared: readonly Pick<Prepared, "rule" | "input">[]): readonly PlannedRetainedDependency[] {
   return prepared.map(record => {
-    if (!Object.hasOwn(definition.declared.rules, record.rule)) return unsupported();
+    if (!Object.hasOwn(declarationOf(definition).rules, record.rule)) return unsupported();
     return { dependency: requiredDependency(origin, "rule-input", { kind: "rule", digest: record.input }), max: RETAINED_INPUT_BYTES };
   });
 }
@@ -145,7 +146,7 @@ export function outcomeSnapshotDependencies(origin: DependencyOrigin, input: Pic
 /** Domain declarations use the native value-place and observation grammar,
  * independently of whether an entry happened to supply a matching value. */
 export function declarationValueDomains(definition: ValidDefinition): readonly string[] {
-  return [...new Set([...Object.values(definition.declared.acts).flatMap(act => valuePlaces(act.fields).map(place => place.domain)), ...retainsOf(definition)])];
+  return [...new Set([...Object.values(declarationOf(definition).acts).flatMap(act => valuePlaces(act.fields).map(place => place.domain)), ...retainsOf(definition)])];
 }
 
 export interface PlannedRetainedDependency { readonly dependency: RetainedDependency; readonly max: number }

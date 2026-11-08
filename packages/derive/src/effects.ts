@@ -10,7 +10,8 @@
  * nothing and is judged by no rule.
  */
 
-import type { Effect, EffectForm, FieldType, FieldValue, Mark, MarkMost, MemberRef, Notify, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
+import { declarationOf } from "./program/declaration.ts";
+import type { Effect, FieldType, FieldValue, Mark, MarkMost, MemberRef, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { attribution, byMember, historyOf } from "./attribution.ts";
 import { capabilityEffect } from "./capability.ts";
 import { isEntryOf, isLocalFact } from "./fields.ts";
@@ -18,7 +19,7 @@ import { changeItem, newItem, type ItemEffect } from "./fold.ts";
 import { members, slotOf, type Judging } from "./guards.ts";
 import { EPOCH, HOLDER, deriveHold, endsUnder, type HoldEffect } from "./hold.ts";
 import { judgeCondition } from "./program/condition-value.ts";
-import { attentionPlan, checkedBody, effectPlan, formContext, timedStructure, type AttentionNode, type BodyStructure, type EffectNode } from "./program/structure.ts";
+import { attentionPlan, checkedBody, effectPlan, type AttentionNode, type BodyStructure, type EffectNode } from "./program/structure.ts";
 import { nativeOutcomes } from "./program/native.ts";
 import { observeNativeCall } from "./program/native-trace.ts";
 import type { AttentionPlan, EffectPlan } from "./program/effect-plan.ts";
@@ -32,6 +33,7 @@ import type { ValidDefinition } from "./validate/index.ts";
 import { LAST_MS, timeMs, timeOf } from "./time.ts";
 import { isFactRef, isLocalId, isMemberRef, isObject, isValue, memberFits, own, same } from "./values.ts";
 import { isDigest, isEffect } from "@generalbusiness/dap-bytes";
+import { captureProgramReads, enterProgramInstruction, observeCapabilityCall, recordProgramLeaf } from "./program/observe.ts";
 
 /**
  * What a derivation gives: its result, a refusal, or `unavailable`. The last
@@ -84,7 +86,7 @@ export function held(j: Judging, type: FieldType, value: unknown): FieldValue | 
     const fetched = local ? undefined : j.source && same(j.source.fact, value) ? j.source : j.facts.get(value.hash);
     const entry = kept?.hash === value.hash ? kept.entry : fetched && isEntryOf(fetched.entry, value) ? fetched.entry : null;
     const kind = entry && kindOf(entry);
-    const under = fetched ? fetched.under : j.definition.declared.name;
+    const under = fetched ? fetched.under : declarationOf(j.definition).name;
     return kind && type.kind.includes(kind) && under === type.under ? (local ? value.seq : value) : undefined;
   }
   return isValue(type, value, j.bounds) ? (value as FieldValue) : undefined;
@@ -92,7 +94,7 @@ export function held(j: Judging, type: FieldType, value: unknown): FieldValue | 
 
 /** The slot that holds the end of a hold of that type: the deadline of the timed rule that ends it, of which a hold type has one (section 6.8). */
 const endOf = (definition: ValidDefinition, type: string): string | undefined =>
-  Object.values(definition.declared.timed).find((rule) => rule.on === type && rule.effects.some((e) => "hold" in e && e.hold.do === "end"))?.deadline;
+  Object.values(declarationOf(definition).timed).find((rule) => rule.on === type && rule.effects.some((e) => "hold" in e && e.hold.do === "end"))?.deadline;
 
 /** The members of `Effect` that a rule returns (section 6.1). Every other member is a fault of the rule. */
 const BY_RULE: readonly string[] = ["open", "state", "party", "list", "ref", "value", "operation", "attempt"];
@@ -112,30 +114,24 @@ const BY_RULE: readonly string[] = ["open", "state", "party", "list", "ref", "va
  * sets it.
  */
 type EffectResult = Derived<{ effects: Effect[]; working: Map<string, Item>; opened: Item | null }>;
-type EffectInstruction = { readonly kind: "native"; readonly mark: Mark }
+type EffectInstruction = { readonly kind: "native"; readonly mark: Mark; readonly body?: BodyStructure; readonly node?: EffectNode }
   | { readonly kind: "written"; readonly body: BodyStructure; readonly node: EffectNode; readonly plan: EffectPlan };
 interface AttentionInstruction { readonly body: BodyStructure; readonly node: AttentionNode; readonly plan: AttentionPlan }
 
-/** Raw callers must identify every occurrence in one actual admitted body. */
-export function deriveEffects(j: Judging, forms: readonly EffectForm[], attention: readonly Notify[], opens: string | null, body: BodyStructure | null = timedStructure(j.definition, j.kind, forms, attention)): EffectResult {
+/** Execute only the effect and attention instructions of this admitted body. */
+export function evaluateEffects(j: Judging, body: BodyStructure | null, opens: string | null): EffectResult {
   if (!body) throw new TypeError("effects have no admitted body context");
   checkedBody(j.definition, body);
-  if (body.nodes.filter(node => node.category === "effect").length !== forms.length
-    || body.nodes.filter(node => node.category === "attention").length !== attention.length) throw new TypeError("effect lists do not match their admitted body");
-  const instructions = forms.map((form, i): EffectInstruction => {
-    const { owner } = formContext(j.definition, body, "effect", i, form);
-    if (owner.category !== "effect") throw new TypeError("effect has another admitted category");
+  const instructions = body.nodes.filter(node => node.category === "effect").map((owner): EffectInstruction => {
     if (owner.op === "native") {
       const mark = owner.data;
-      return { kind: "native", mark };
+      return { kind: "native", mark, body, node: owner };
     }
     const plan = effectPlan(j.definition, body, owner);
     if (!plan) throw new TypeError("effect has no admitted executable instruction");
     return { kind: "written", body, node: owner, plan };
   });
-  const notices = attention.map((form, i): AttentionInstruction => {
-    const { owner } = formContext(j.definition, body, "attention", i, form);
-    if (owner.category !== "attention") throw new TypeError("attention has another admitted category");
+  const notices = body.nodes.filter(node => node.category === "attention").map((owner): AttentionInstruction => {
     return { body, node: owner, plan: attentionPlan(j.definition, body, owner) };
   });
   return executeEffects(j, instructions, notices, opens);
@@ -147,7 +143,7 @@ export function joinReturnedEffects(j: Judging, mark: Mark): EffectResult {
 }
 
 function executeEffects(j: Judging, instructions: readonly EffectInstruction[], attention: readonly AttentionInstruction[], opens: string | null): EffectResult {
-  const items = j.definition.declared.items;
+  const items = declarationOf(j.definition).items;
   const working = new Map(j.subjects);
   const effects: Effect[] = [];
   /** The items that a rule's effects change and that are no subject of the row, by ID, as the effects left them. The item that a rule opens is one. */
@@ -321,9 +317,13 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const open = { effect: "open", item: j.self, type: opens, state: own(items, opens)!.initial } as const;
     effects.push(open);
     working.set("on", newItem(open, own(items, opens)!, null));
+    recordProgramLeaf(j.definition, "effects", `items.${opens}`, "open", open);
   }
 
   for (const [i, instruction] of instructions.entries()) {
+    const finish = enterProgramInstruction(j.definition, "effects", instruction.body ?? null, instruction.node ?? null,
+      instruction.node?.path ?? `effects.${i}`, instruction.kind === "native" ? "native" : instruction.plan.code.op);
+    try {
     if (instruction.kind === "native") {
       const stopped = join(instruction.mark, i);
       if (stopped) return stopped as Derived<never>;
@@ -332,6 +332,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const { site, code } = instruction.plan;
     const subject = site.target ? subjectName(site.target) : "on";
     if (code.op === "capability") {
+      captureProgramReads(j.definition, { opaque: true, capability: code.capability.version, action: code.capability.action });
       // Opaque capability records follow ordinary effects and read the working view.
       if (site.explicitSubject && !working.has(subject)) continue;
       const through = judgeCondition(j, instruction.body, instruction.node);
@@ -352,6 +353,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     const bad = (what: string) => refuse("bad-field", `effects.${i}: ${what}`);
     const copied = (code.op === "party" || code.op === "ref" || code.op === "value") && code.source.op === "read" ? code.source : null;
     const source = copied ? readValue(after, copied.read, item) : null;
+    if (copied) captureProgramReads(j.definition, { source });
     // An absent read skips; the distinct clear instruction empties a slot.
     if (copied && source === null) continue;
     if (code.op === "attribute" && !working.has(subjectName(code.of))) continue;
@@ -409,6 +411,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
       case "value": {
         const slot = code.slot.name;
         const derived = code.source.op === "commit-clock" ? timeMs(j.clock.reading)! + code.source.plusSeconds * 1000 : null;
+        if (code.source.op === "commit-clock") recordProgramLeaf(j.definition, "expressions", code.source.path, "time", derived, { plusSeconds: code.source.plusSeconds });
         if (derived !== null && derived > LAST_MS) return bad("the derived time is past the last timestamp");
         const value = derived !== null ? timeOf(derived) : code.source.op === "clear" ? null : fits(own(type.values, slot)!.of, slot);
         if (value === undefined) return bad("the source is not a value of the slot's type");
@@ -469,6 +472,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
       }
       default: return exhaustive(code);
     }
+    } finally { finish(); }
   }
   // The whole-entry boundary for what the rules gave: every form of the list is derived, so every mark has joined. Section 4.3,
   // item 1: a genesis may seal an operation as a held task, with no attempt. Which genesis does is not built yet (I3 deltas, entry
@@ -497,9 +501,9 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
   const holds = effects.filter((effect): effect is HoldEffect => effect.effect === "hold");
   if (holds.length > 0 && j.capabilities?.workspace) {
     const k = effects.filter((effect) => effect.effect === "operation").length;
-    const derived = j.capabilities.workspace(j.view, j.definition, j.self, k, holds, (id) => [...working.values()].find((held) => held.id === id) ?? null);
+    const derived = observeCapabilityCall(j.definition, "workspace", null, "hold effects", () => j.capabilities!.workspace!(j.view, j.definition, j.self, k, holds, (id) => [...working.values()].find((held) => held.id === id) ?? null));
     // Section 6.1, "In the commit": code that returns more than it declared has a fault, and the input is not judged.
-    const listed = new Set(j.definition.declared.capabilities.map(c => `${c.name}@${c.version}`));
+    const listed = new Set(declarationOf(j.definition).capabilities.map(c => `${c.name}@${c.version}`));
     const most = j.capabilities.maxima?.filter((m) => m.form === "workspace" && listed.has(m.capability)).reduce((n, m) => n + m.effects, 0);
     if (most !== undefined && derived.length > holds.length * most) throw new Error(`the workspace of ${holds.length} holds declares at most ${holds.length * most} effects, and it returned ${derived.length}`);
     effects.push(...derived);

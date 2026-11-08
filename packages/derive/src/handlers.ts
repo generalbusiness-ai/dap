@@ -7,22 +7,23 @@
  */
 
 import { nativeMark, nativeOutcomes } from "./program/native.ts";
-import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, EffectForm, Entry, FactRef, FactUse, FieldType, FieldValue, Guard, Input, Notify, PlatformReceive, Prepared, Reason, ReceiveType, RefusalReason, Request, ResultClauses, ScopeRef, Send, SendForm, SendMark, Settles, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, EffectForm, Entry, FactRef, FactUse, FieldType, FieldValue, Input, PlatformReceive, Reason, ReceiveType, RefusalReason, Request, ResultClauses, ScopeRef, SendForm, SendMark, Settles, UnavailableReason } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/dap-bytes";
 import { handlerBranch } from "./handler-branch.ts";
+import { executeBody, type Ran } from "./program/body.ts";
+import { declarationOf } from "./program/declaration.ts";
+export type { Ran } from "./program/body.ts";
+export { overMax } from "./program/finalize.ts";
 import type { Signer } from "./attribution.ts";
 import { boundTo, decisionCounts, selectedByIndex, selectorOf } from "./binding.ts";
-import { deriveEffects } from "./effects.ts";
 import { creationFields, factsNamed, isEntryOf, isLocalFact, messageFields, presentedTypes, readFacts, readFields, textsNamed, updateOf, type Reading, type Update } from "./fields.ts";
 import { signerOf } from "./fold.ts";
 import { slotOf, type Fetched, type Judging } from "./guards.ts";
 import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
 import { sendOrigin } from "./program/send-origin.ts";
-import { deriveSends } from "./sends.ts";
-import { judgeGuardNodes } from "./program/guard-value.ts";
-import { bodyEffectForms, bodyJudgesClock, bodyStructure, clauseStructure, sendClauseStructure } from "./program/structure.ts";
-import { settlementForm, settlementMatches, settlementSubject } from "./program/settlement.ts";
+import { bodyJudgesClock, clauseStructure, handlerBody, handlerHeader, namedBody, sendClauseStructure, type BodyStructure } from "./program/structure.ts";
+import { settlementForm, settlementMatches } from "./program/settlement.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isLocalId, isObject, own, same } from "./values.ts";
@@ -56,7 +57,7 @@ export function bound(definition: ValidDefinition, message: Request | Advisory, 
     kind = named;
   } else return null;
   const cls = message.class === "advisory" ? "advisory" : message.type;
-  const matched = Object.values(definition.declared.receives).find((h) => h.class === cls && h.message === kind && h.from.kind === from.at.kind) ?? null;
+  const matched = Object.values(declarationOf(definition).receives).find((h) => h.class === cls && h.message === kind && h.from.kind === from.at.kind) ?? null;
   const handler = matched && (under === undefined || matched.from.under === undefined || matched.from.under === under) ? matched : null;
   // The mark `self` is read by the type that the handler declares for the field.
   const types = handler?.fields ?? {};
@@ -112,9 +113,9 @@ function detachedBounds(types: Readonly<Record<string, FieldType & { default?: F
 /** Bounds established by one successful field check. These are upper
  * bounds from a verified phase, never retained sizes. */
 export function checkedTextBounds(definition: ValidDefinition, input: Entry["input"]): ReadonlyMap<Digest, number> {
-  if (input.type === "act") return detachedBounds(own(definition.declared.acts, input.signed.intent.kind)?.fields ?? {}, input.signed.intent.fields);
+  if (input.type === "act") return detachedBounds(own(declarationOf(definition).acts, input.signed.intent.kind)?.fields ?? {}, input.signed.intent.fields);
   if (input.type === "genesis" && input.decision === "applied") {
-    const fields = own(definition.declared.acts, definition.declared.genesis)!.fields;
+    const fields = own(declarationOf(definition).acts, declarationOf(definition).genesis)!.fields;
     const given = input.founding ? input.founding.intent.fields : input.source ? creationFields(input.message, input.source, fields) : null;
     return given ? detachedBounds(fields, given) : new Map();
   }
@@ -206,7 +207,7 @@ export function messageFacts(view: StateView, definition: ValidDefinition, messa
  * sender pins, as the receiver read it with the source entry.
  */
 export function inputTexts(definition: ValidDefinition, input: Input, under?: string): Digest[] {
-  const { acts, genesis } = definition.declared;
+  const { acts, genesis } = declarationOf(definition);
   if (input.type === "act") return textsNamed(own(acts, input.signed.intent.kind)?.fields ?? {}, input.signed.intent.fields);
   if (input.type === "genesis") return textsNamed(own(acts, genesis)!.fields, input["founding"] ? input["founding"].intent.fields : input.source ? creationFields(input.message, input.source, own(acts, genesis)!.fields) : null);
   return input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory") ? messageTexts(definition, input.message, input.from, under) : [];
@@ -226,7 +227,7 @@ export function messageTexts(definition: ValidDefinition, message: Request | Adv
  * the items that existed before the entry at that position.
  */
 function ones(view: StateView, definition: ValidDefinition, type: string, before?: number): Item[] {
-  const matched = view.page(type, Object.keys(own(definition.declared.items, type)!.states), null, 2).items;
+  const matched = view.page(type, Object.keys(own(declarationOf(definition).items, type)!.states), null, 2).items;
   return before === undefined ? [...matched] : matched.filter((i) => i.id < before);
 }
 
@@ -297,17 +298,9 @@ export function alsoItems(view: StateView, definition: ValidDefinition, also: Re
   return refusal === null ? { ok: true, items, marked } : { ok: false, detail: refusal };
 }
 
-/** Section 6.3: `max` bounds the live items of a type. What an opening of one more, into that state, would pass; or null. */
-export function overMax(view: StateView, definition: ValidDefinition, type: string, state: string): string | null {
-  const declared = own(definition.declared.items, type)!;
-  const live = Object.entries(declared.states).reduce((n, [s, { final }]) => (final ? n : n + view.count(type, s)), 0);
-  return !own(declared.states, state)?.final && live + 1 > declared.max ? `${type} has ${live} live items` : null;
-}
-
-// ---------------------------------------------------------------- deriving the written forms
-
-/** The guards, effects, sends and attention of one act or handler, and what it declares that it settles. */
-export interface Forms { guards: readonly Guard[]; effects: readonly EffectForm[]; sends: readonly SendForm[]; attention: readonly Notify[]; settles?: Settles | undefined }
+/** The judge's rule input before body execution: no subjects at check 7, then the subjects bound at check 8. */
+export const giving = (view: StateView, definition: ValidDefinition, context: Reading, scope: Pick<ScopeState, "at" | "creator">, self: number, judged: JudgedInput, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, Fetched>, source?: Fetched): Giving =>
+  ({ view, definition, clock: context.clock, bounds: context.bounds, scope, self, fields, subjects: new Map(), signer: null, facts, own: context.own, source, platform: context.platform, judged, ran });
 
 export interface ItemSettlement { item: number; form: Extract<Settles, { of: unknown }> }
 
@@ -324,8 +317,8 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
   // no item effect. It must not reconstruct failed fields as a settlement.
   if (!scope || !entry.effects.some(effect => effect.effect === "state" || effect.effect === "value" || effect.effect === "hold")) return null;
   if (input.type === "act") {
-    const act = own(definition.declared.acts, input.signed.intent.kind);
-    const plan = act ? bodyStructure(definition, act, input.signed.intent.kind)?.settlement : null;
+    const act = own(declarationOf(definition).acts, input.signed.intent.kind);
+    const plan = act ? namedBody(definition, "act", input.signed.intent.kind, "act")?.settlement : null;
     if (!act || !plan || plan.op === "copy") return null;
     const form = settlementForm(plan);
     if (form.of === "on") return input.signed.intent.on === null ? null : { item: input.signed.intent.on, form };
@@ -350,7 +343,7 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
   if ("decision" in input && input.decision !== "applied") return null;
   const source = context.facts.find(fact => same(fact.fact, input.from));
   const matched = bound(definition, input.message, input.from, source?.under);
-  const plan = matched?.handler ? bodyStructure(definition, matched.handler, matched.kind)?.settlement : null;
+  const plan = matched?.handler ? handlerBody(definition, matched.handler)?.settlement : null;
   if (!matched?.handler || !matched.fields || !plan || plan.op === "copy") return null;
   const form = settlementForm(plan);
   if (!source || !isEntryOf(source.entry, input.from)) throw new RuleFault("an item settlement has no retained source entry");
@@ -362,71 +355,6 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
   return item ? { item: item.id, form } : null;
 }
 
-export type Ran =
-  /**
-   * `settles`: the form declares that it settles an item, the item was in a listed state, and these effects take it out of them
-   * (section 17.3); or, by a mark, the item awaited the mark and these effects set it (section 6.4, revision 21). `bound`: the
-   * delivery is bound to that item (section 17.2a), whatever is decided.
-   */
-  | { result: "ran"; effects: Effect[]; sends: Send[]; prepared: Prepared[]; judgesTime: boolean; settles: boolean; bound?: number }
-  /** `name`: the reason the failed guard declares. `prepared`: the rule results the guards read before the refusal. An entry that records the refusal records them (section 9.2). */
-  | { result: "refused"; reason: RefusalReason; name?: string; detail: string; prepared: Prepared[]; bound?: number }
-  | { result: "unavailable"; reason: UnavailableReason };
-
-/** Section 4.2: when a failed guard declares a `reason`, that is the refusal's name. */
-export const refusalName = (guard: Guard): { name?: string } => (guard.reason === undefined ? {} : { name: guard.reason });
-
-/** What a judge gives a rule before the forms of a row are derived: at check 7 no subject is bound, and at check 8 those bound so far. A handler has no signer. */
-export const giving = (view: StateView, definition: ValidDefinition, context: Reading, scope: Pick<ScopeState, "at" | "creator">, self: number, judged: JudgedInput, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, Fetched>, source?: Fetched): Giving =>
-  ({ view, definition, clock: context.clock, bounds: context.bounds, scope, self, fields, subjects: new Map(), signer: null, facts, own: context.own, source, platform: context.platform, judged, ran });
-
-/**
- * Guards, then effects, then sends, for one input whose subjects are
- * resolved (section 5.2, step 6.4). `judgesTime`: a guard or a condition of
- * the forms reads the clock, at any depth, or an effect derives a time from
- * it, so the entry is not written while the clock is behind (section 5.3). `directory`: the directory the scope
- * records, when the entry is its genesis.
- */
-export function derive(j: Judging, forms: Forms, opens: string | null, cause: Digest, first = 0, directory?: ScopeRef | null): Ran {
-  const structure = bodyStructure(j.definition, forms, j.kind);
-  if (!structure) throw new TypeError("body was not captured by its validation");
-  // Section 6.4, "A rule of a form that declares `settles` sets no state": the effects of a rule are checked against it.
-  if (structure.settlement !== null) j.settling = true;
-  // Section 6.5: the guards are one list with three results. A guard that is false refuses, also after one that is not completed.
-  // Section 6.4: a guard whose subject is unbound is not evaluated, and an effect whose subject is unbound is not applied.
-  const guards = judgeGuardNodes(j, structure, structure.nodes.filter(node => node.category === "guard"));
-  if (guards.result === "fail") {
-    const failed = forms.guards[guards.at]!;
-    // Section 4.2: a capability guard that does not hold is `capability-refused`, with the name its capability declares.
-    const declined = j.declined?.get(failed);
-    if (declined !== undefined) return { result: "refused", reason: "capability-refused", name: declined, detail: `guards.${guards.at}`, prepared: j.used };
-    // Section 4.2: a mark in the written list is a guard of the list. Its path is its position, and its name is the refusal that
-    // its rule states. The code is `guard-failed`, or the one that the rule's specification states.
-    const coded = j.coded?.get(failed);
-    if (coded) return { result: "refused", reason: coded.code ?? "guard-failed", name: coded.name, detail: `guards.${guards.at}`, prepared: j.used };
-    return { result: "refused", reason: "guard-failed", ...refusalName(failed), detail: `guards.${guards.at}`, prepared: j.used };
-  }
-  if (guards.result !== "pass") return { result: "unavailable", reason: guards.result };
-  // Sections 6.6 and 6.7: a condition, or a range that a source or a send reads, that is not completed leaves the input not judged.
-  const effects = deriveEffects(j, forms.effects, forms.attention, opens, structure);
-  if (!effects.ok) return "unavailable" in effects ? { result: "unavailable", reason: effects.unavailable } : { result: "refused", reason: effects.reason, detail: effects.detail, prepared: j.used };
-  const sends = deriveSends(j, forms.sends, effects.working, cause, first, directory, effects.opened !== null, structure);
-  if (!sends.ok) return "unavailable" in sends ? { result: "unavailable", reason: sends.unavailable } : { result: "refused", reason: sends.reason, detail: sends.detail, prepared: j.used };
-  // Section 6.3: `max` bounds the live items of a type, whatever opens the item: the row, or in platform data a rule.
-  const full = effects.opened === null ? null : overMax(j.view, j.definition, effects.opened.type, effects.opened.state);
-  if (full !== null) return { result: "refused", reason: "type-full", detail: full, prepared: j.used };
-  // Section 6.1, "A rule that reads the clock": an entry for which such a rule was run judges time.
-  const judgesTime = bodyJudgesClock(structure) || j.ran?.clock === true;
-  // Section 17.3: a form that declares `settles` is judged in full. It settles when its subject is in a listed state at the
-  // commit and the entry takes it out of the listed states. Any other entry of the form is new work.
-  // By a mark (revision 21): before the entry the subject's state was one of `in` and its mark was `false`, and after the entry's
-  // effects the mark is `true`. An entry of the form that finds the mark `true` already, or the state outside `in`, is new work.
-  const settled = structure.settlement;
-  const subject = settled && settled.op !== "copy" ? settlementSubject(settled) : null;
-  const [was, is] = subject !== null ? [j.subjects.get(subject), effects.working.get(subject)] : [];
-  const settles = settled !== null && settled.op !== "copy" && settlementMatches(settled.states, settled.op === "mark" ? settled.slot.name : null, was, is);
-  return { result: "ran", effects: effects.effects, sends: sends.sends, prepared: j.used, judgesTime, settles };
-}
 
 /**
  * What a handler reads of its delivery beside the message's fields (section
@@ -447,11 +375,15 @@ export type Handled = (Exclude<Ran, { result: "unavailable" }> & { uses: FactUse
  * otherwise `on` is the one that exists. No two names may select one item.
  */
 type HandlerPreparation =
-  | { result: "ready"; j: Judging; opens: string | null; uses: FactUse[]; bound?: number }
+  | { result: "ready"; j: Judging; body: BodyStructure; uses: FactUse[]; bound?: number }
   | Exclude<Handled, { result: "ran" }>;
 
 /** Checks 7 and 8 only. Both the judge and the fold reconstruct this stage. */
 function prepareHandler(view: StateView, definition: ValidDefinition, context: Reading, scope: ScopeState, handler: ReceiveType, kind: string, given: Readonly<Record<string, FieldValue>>, sent?: Sent, judged?: JudgedInput): HandlerPreparation {
+  const body = handlerBody(definition, handler);
+  if (!body) throw new TypeError("handler body was not captured by its validation");
+  handler = handlerHeader(definition, body);
+  if (handler.message !== kind) throw new TypeError("program belongs to another body");
   const clocked = { clock: false };
   const refused = (reason: RefusalReason, detail: string, uses: FactUse[] = []): Exclude<Handled, { result: "ran" }> =>
     (clocked.clock && context.clock.behind ? { result: "unavailable", reason: "clock-behind" } : { result: "refused", reason, detail, prepared: [], uses });
@@ -472,12 +404,10 @@ function prepareHandler(view: StateView, definition: ValidDefinition, context: R
   if (outside) return refused("bad-field", `${outside} is not a value of its type`, uses);
 
   const subjects = new Map<string, Item>();
-  let opens: string | null = null;
   if (handler.opens !== null) {
-    const held = own(definition.declared.items, handler.opens)!.many ? [] : ones(view, definition, handler.opens);
+    const held = own(declarationOf(definition).items, handler.opens)!.many ? [] : ones(view, definition, handler.opens);
     if (held.length > 1) return refused("no-item", `there is more than one ${handler.opens}`, uses);
     if (held.length === 1) subjects.set("on", held[0]!);
-    else opens = handler.opens;
   }
   // The item this entry opens does not exist yet, and the validator lets no `via` of a handler read `on`.
   // Section 4.2, check 8: a name of `also` that a mark selects is resolved by the mark's rule.
@@ -499,13 +429,13 @@ function prepareHandler(view: StateView, definition: ValidDefinition, context: R
   const item = boundTo(j, handler, kind, context.counts ?? decisionCounts(view));
   if (item) j.bound = true;
   if (clocked.clock && context.clock.behind) return { result: "unavailable", reason: "clock-behind" };
-  return { result: "ready", j, opens, uses, ...(item ? { bound: item.id } : {}) };
+  return { result: "ready", j, body, uses, ...(item ? { bound: item.id } : {}) };
 }
 
 export function runHandler(view: StateView, definition: ValidDefinition, context: Reading, scope: ScopeState, handler: ReceiveType, kind: string, given: Readonly<Record<string, FieldValue>>, cause: Digest, sent?: Sent, judged?: JudgedInput): Handled {
   const ready = prepareHandler(view, definition, context, scope, handler, kind, given, sent, judged);
   if (ready.result !== "ready") return ready;
-  const ran = derive(ready.j, handler, ready.opens, cause);
+  const ran = executeBody(ready.j, ready.body, cause);
   // A clock-declaring rule that refused still judged time (§5.3). Its
   // original reading cannot be recovered from a clamped recorded time.
   if (ready.j.ran?.clock && context.clock.behind) return { result: "unavailable", reason: "clock-behind" };
@@ -546,10 +476,10 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   { result: "ran"; effects: Effect[]; uses: FactUse[]; judgesTime: boolean; rows?: Settled } | { result: "unavailable"; reason: UnavailableReason; missing?: readonly Needed[]; rows?: Settled } {
   const origin = context.origin;
   if (!origin || origin.seq !== request.seq || entryHash(origin) !== request.hash) return { result: "unavailable", reason: "unavailable" };
-  const { declared } = definition;
+  const declared = declarationOf(definition);
   const input = origin.input;
   /** What the origin gives its clauses: its fields, how it selects its items, its primary item by ID, and its signer. */
-  let frame: { kind: string; body: Forms | null; fields: Record<string, FieldValue>; fieldTypes: ActType["fields"]; also: Readonly<Record<string, AlsoRule>>; on: number | null; signer: Signer | null; sends: readonly SendForm[];
+  let frame: { kind: string; body: BodyStructure | null; fields: Record<string, FieldValue>; fieldTypes: ActType["fields"]; also: Readonly<Record<string, AlsoRule>>; on: number | null; signer: Signer | null;
                presents?: ActType["presents"]; presented?: Readonly<Record<string, FieldValue>>;
                /** The send of an outcome's mark, which made the request: an outcome entry has no written list to find it in. */
                sent?: SendMark };
@@ -565,19 +495,23 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     // the fold adds no principal for it; a principal here would put a member in an `attribute` effect whom the fold then leaves
     // out of the item's history. A grant is judged for the entry it is presented with, and for no later entry.
     const signed = signerOf(origin);
-    frame = { kind, body: act, fields: read.fields, fieldTypes: act.fields, also: act.also, on: typeof on === "number" ? on : null, signer: signed && { member: signed.member, principal: null }, sends: act.sends };
+    const program = namedBody(definition, "act", kind, "act");
+    if (!program) throw new TypeError("origin body was not captured by its validation");
+    frame = { kind, body: program, fields: read.fields, fieldTypes: act.fields, also: act.also, on: typeof on === "number" ? on : null, signer: signed && { member: signed.member, principal: null } };
     // The facts that were presented beside the origin's intent, which a clause may read as the act's guards did.
     if (input.type === "act") [frame.presents, frame.presented] = [act.presents, input.presented];
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
     const b = bound(definition, input.message, input.from);
     if (!b?.handler || !b.fields) throw new Error(`entry ${origin.seq} sent a request and ran no handler`);
-    const handler = handlerBranch(b.handler, "decision" in input ? input.late : undefined);
+    const handler = handlerBranch(definition, b.handler, "decision" in input ? input.late : undefined);
     if (!handler) throw new RuleFault(`entry ${origin.seq} names no declared late branch`);
     const read = messageRead(view, scope.at, handler, b.fields, context.bounds);
     if (!read.ok) throw new Error(`entry ${origin.seq} was sealed with fields its handler does not take`);
     // The handler's primary item: the one the origin opened, or the one item of the type that it found.
     const on = handler.opens === null ? null : origin.effects.some((e) => e.effect === "open") ? origin.seq : (ones(view, definition, handler.opens, origin.seq)[0]?.id ?? null);
-    frame = { kind: b.kind, body: handler, fields: read.fields, fieldTypes: handler.fields, also: handler.also, on, signer: null, sends: handler.sends };
+    const program = handlerBody(definition, handler);
+    if (!program) throw new TypeError("origin body was not captured by its validation");
+    frame = { kind: b.kind, body: program, fields: read.fields, fieldTypes: handler.fields, also: handler.also, on, signer: null };
   } else if (input.type === "outcome") {
     // Platform data, section 6.1, place 7: an outcome entry has no row in the data. The mark of its kind may hold one `send`, whose
     // clauses are the mark's own (revision 17, "A request of an outcome's rule, and its clauses"). Such an entry sends that one
@@ -586,26 +520,27 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     const marked = input.owner === context.platform?.named ? own(nativeOutcomes(definition), input.kind)?.send : undefined;
     if (!marked || request.n !== 0) return { result: "ran", effects: [], uses: [], judgesTime: false };
     // An outcome has no field, no subject and no signer: each effect of the clause is an effect mark, whose rule finds its items.
-    frame = { kind: input.kind, body: null, fields: {}, fieldTypes: {}, also: {}, on: null, signer: null, sends: [], sent: marked as unknown as SendMark };
+    frame = { kind: input.kind, body: null, fields: {}, fieldTypes: {}, also: {}, on: null, signer: null, sent: marked as unknown as SendMark };
   } else throw new Error(`entry ${origin.seq} is not one that sends a request`);
 
   // Match the recorded message against the captured occurrence, then follow its future root.
-  const originBody = frame.body ? bodyStructure(definition, frame.body, frame.kind) : null;
-  if (frame.body && !originBody) throw new TypeError("origin body was not captured by its validation");
+  const originBody = frame.body;
   const selected = originBody ? sendOrigin(definition, originBody, origin, request.n) : null;
   const form = frame.sent ?? selected?.declaration;
   if (!form || "index" in form) throw new Error(`entry ${origin.seq} declares no request at ordinal ${request.n}`);
   const marked = selected?.node.op === "native" ? selected.node.data : nativeMark(definition, form, "send");
   const written = marked ? null : (form as Exclude<SendForm, { index: unknown }>);
+  const clauses = (marked ? marked.result : "create" in written! ? written.create.result : "tell" in written! ? written.tell.result : written!.relate.result) as ResultClauses & { conflict?: readonly EffectForm[] };
   const structure = selected && originBody ? sendClauseStructure(definition, originBody, selected.node, clause)
     : clauseStructure(definition, form, clause, null, frame.kind);
-  const forms = structure ? bodyEffectForms(definition, structure) : [];
+  if ((clauses[clause]?.length ?? 0) > 0 && !structure) throw new TypeError("result clause was not captured by its validation");
+  const effectful = structure?.nodes.some(node => node.category === "effect") ?? false;
   // Revision 20, section 16.1: the rows of this clause, for the delivery of a result that runs it, under a definition whose data
   // states rows. A request that a rule gave states none: its mark holds its clauses, and no text gives a mark rows (I3 deltas,
   // entry GA5). A diagnosis holds no observation, so `undelivered` has none.
   const rows = definition.observing && written && beside && given && clause !== "undelivered" ? rowsOfClause(written, clause) : [];
   if (beside && definition.observing) beside.rows = { status: [], listed: new Set(), retained: [], values: [] };
-  if (forms.length === 0 && rows.length === 0) return { result: "ran", effects: [], uses: [], judgesTime: false };
+  if (!effectful && rows.length === 0) return { result: "ran", effects: [], uses: [], judgesTime: false };
 
   // The uses of the origin are the facts its fields name; a clause may read one (section 6.6, a party from a fetched fact).
   // A local fact that the origin's fields name was checked when the origin was judged. It is put in normal form again here.
@@ -648,11 +583,10 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     const { status } = settled;
     beside.rows = { status: rows.map((_, n) => status.get(n) ?? null), listed: settled.listed, retained: settled.retained, values: settled.values };
   }
-  const effects = deriveEffects(j, forms, [], null, structure);
+  const ran = executeBody(j, structure, request.hash);
   // Section 6.6: a clause's condition that is not completed leaves the result not recorded now. It is offered again.
-  if (!effects.ok && "unavailable" in effects) return { result: "unavailable", reason: effects.unavailable };
+  if (ran.result === "unavailable") return ran;
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. In platform data a rule of the clause may open
   // one. Past the bound the clause's effects cannot apply now, and it changes nothing, as above.
-  const applies = effects.ok && (effects.opened === null || overMax(view, definition, effects.opened.type, effects.opened.state) === null);
-  return { result: "ran", effects: applies ? effects.effects : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: (structure !== null && bodyJudgesClock(structure)) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
+  return { result: "ran", effects: ran.result === "ran" ? ran.effects : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: ran.result === "ran" ? ran.judgesTime : (structure !== null && bodyJudgesClock(structure)) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
 }

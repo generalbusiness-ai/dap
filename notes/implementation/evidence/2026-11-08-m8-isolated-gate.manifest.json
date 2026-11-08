@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "qualification": "The unchanged M8 gate at 0c416f8b ends with actual exit 1. Node 135 and Counting 56 pass; Plain passes 4026 and skips one; Native passes 1113, fails four and skips two. The same four failures reproduce after the planner ordered this run with a reserved validation slot. Process inspections before and during the run found no other validation body. Prior overlap does not explain these failures by itself. The two text cases throw archive-mismatch. The installed Grow producer returns retry/mismatch; its dependent clone case lacks its producer session. The archive-scale owner passes. All original failures and reports remain retained. No report contradiction or unhandled error appears. Sealing runs no tests. This evidence makes no live acceptance or deployment claim.",
+  "sourceHead": "0c416f8b3fa9e2c4ab6aff82c837bb968288a25e",
+  "sourceTree": "0cc70a8ca4b924c84ba6287bcaa730fbc85cecec",
+  "fileCount": 19,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-isolated-gate-validation",
+      "fileCount": 19,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1473,
+          "sha256": "d0c267829ceeed1ee649cd48117958c9c649fb7200cb76071501ae5b195910fd"
+        },
+        {
+          "path": "after.json",
+          "bytes": 548611,
+          "sha256": "e5979832ac19c892ccb09a18c9403f07dec7027df0118868411c7acff0c3eaba"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1890,
+          "sha256": "68b7a9cd80a42af700744fc685326fab3f56bcdd6ad9900ed09ab4dbaf4e4317"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 548611,
+          "sha256": "e5979832ac19c892ccb09a18c9403f07dec7027df0118868411c7acff0c3eaba"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "9883545ea677f13f27cd3c1acaa9780c1dff151ca5b73670b723ad23e693ad97"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8387,
+          "sha256": "2c67cc530df2690fbf123ff35b267d67c23a4925a7714454aedd90b83ea06756"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "f88db0bde6121019e24085ec512b45e352fb808bcf4c7d90304787a2797f6932"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 179,
+          "sha256": "656c430a109c7846872cc644ae74eca542a4832b442bec3c515c67e59f485cac"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2287,
+          "sha256": "1aafedf85167843398a74564de38aebf706db2396c96ecee4cad1ea813febee8"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 149,
+          "sha256": "4586a69403a1467e86d94a182c094dcf902bba683828e97cabeb41ffdb965dcd"
+        },
+        {
+          "path": "slot-observations.jsonl",
+          "bytes": 972,
+          "sha256": "7a8cab81e1245384c13093309436ab73afd5b2c5eebc38ed04e884a6d6a9a7a5"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 974,
+          "sha256": "e955dbb5141c6e9e9e7e4807b9ef170d6cc8e4319c4968be517b4252a1c37bae"
+        },
+        {
+          "path": "started.json",
+          "bytes": 652,
+          "sha256": "8031a77faf6105add1e0997994b825852d1699c593c71c435b67dfa711d68dcc"
+        },
+        {
+          "path": "task.json",
+          "bytes": 1266,
+          "sha256": "e38750ba72439537fbeef9d7bfa8e1e709e4e06398d85448a70ebbea715a90c6"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 588,
+          "sha256": "d03df46a0883eeb4676497173356350fdca5b40c0a9422e032d4936194378d91"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 8556,
+          "sha256": "f653f08886cd73ec1a8c95042a9af8faa86b9a01ed288634d8da30f0b1930f29"
+        }
+      ]
+    }
+  ]
+}

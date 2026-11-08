@@ -42,6 +42,7 @@ import type { Item, StateView } from "./state.ts";
 import { timeMs, type Clock } from "./time.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { observationBytes } from "./validate/observes.ts";
+import { declarationOf } from "./program/declaration.ts";
 import { byteOrder, isObject, own, same } from "./values.ts";
 
 export { OBSERVES_ROWS, observationBytes } from "./validate/observes.ts";
@@ -504,8 +505,8 @@ export const retainableByRequest = (form: SendForm | null | undefined): number =
  * that an observation names in each of them (section 9.2: a read of one
  * value asks by the kind, the domain and the digest).
  */
-export function retainsOf(definition: Pick<ValidDefinition, "declared">): string[] {
-  const data = definition.declared as unknown as PlatformData;
+export function retainsOf(definition: ValidDefinition): string[] {
+  const data = declarationOf(definition) as unknown as PlatformData;
   const forms = [...Object.values(data.acts), ...Object.values(data.receives)];
   const rows: Observe[] = [
     ...Object.values(data.acts).flatMap((act) => rowsOfAct(act)), ...Object.keys(data.outcomes ?? {}).flatMap((kind) => rowsOfKind(data, kind)),

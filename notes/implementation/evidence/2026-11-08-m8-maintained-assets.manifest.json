@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "976a5a7797cc4dfd3cf7211b710a759ba1310bb8",
+  "sourceTree": "bbdd453e61e79347ca5eb424046e17b99ed77354",
+  "qualification": "M8 final maintained asset assembly: one unchanged generator command writes only assets.ts and its normal ignored dist outputs. At generated source976a5a77, three Page compiler contexts and the complete unchanged one-case asset owner pass once, with no skips, retries or errors. Source and lock stay unchanged during checks; no owned process remains. No full gate, workflow, review approval, live acceptance or deployment is claimed.",
+  "fileCount": 11,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-maintained-assets-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 844,
+          "sha256": "8675ba013de97b946912a4f948cdcade9871977f79912eae74f7f6b87f533456"
+        },
+        {
+          "path": "compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 660,
+          "sha256": "96bb443d236614dcf47a75bbddb24fcc508677f75db2e5a2e7a15d1af9aa1b47"
+        },
+        {
+          "path": "generator-result.json",
+          "bytes": 1640,
+          "sha256": "1147206cf508ea465d414ebd84d5de0e90c51e97c4a833670b4a0cbee839c430"
+        },
+        {
+          "path": "generator.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 565,
+          "sha256": "e5bb948712a8b73fba942da7ea1e90d859160306358c010aea18b1065e52eeb6"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 3675,
+          "sha256": "6249579d268be74309eab1b72e3d53039e5633eeae74e714417f79d505707b1a"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 1001,
+          "sha256": "8df94aec510ad5c4cf9bf6d29dadbeb070a147d300a9dbea02c422746281a550"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1612,
+          "sha256": "7b1074523319a5939e37aaf392899d4e19badd590509528b506b4bb049607ab2"
+        },
+        {
+          "path": "result.json",
+          "bytes": 797,
+          "sha256": "0653361f2501469acb6311537d4194412b275d94aca6e41e636b2ab1ed12dc88"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "aa248bd13e2bef66c85d27fafe9301ebdba8b565",
+  "sourceTree": "b89d691769c74f1a763320c377c350c660de7efb",
+  "qualification": "Native header checkpoint only. The control fails at their intended existing assertion. Full M8 body routing, complete interpretations, final gate, review and main landing remain.",
+  "fileCount": 19,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-headers-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1573,
+          "sha256": "f4bb11b31624d9dbef2782179ca68712f679c542bc1d0f0aa16458f7e70c2b25"
+        },
+        {
+          "path": "controls-summary.json",
+          "bytes": 1369,
+          "sha256": "229ff14605ab2f34d293c66a5f5e92665bfe1fb84a7155e384fd7a0549e86f52"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 63586,
+          "sha256": "32f3c944f2cd7ba803a606a5d4bffe17765fd5fe08672cec83d65762d3bbe794"
+        },
+        {
+          "path": "header-occurrence.argv.json",
+          "bytes": 647,
+          "sha256": "c851ce35983e8feb7fde4861633c8de0bd271984b8dcde6098a6073aced2f753"
+        },
+        {
+          "path": "header-occurrence.mutant.ts",
+          "bytes": 8493,
+          "sha256": "fda8c2e67d4fe290e278ec257f13b94f8e204da947b4d01a301095fc942fe5b3"
+        },
+        {
+          "path": "header-occurrence.original.ts",
+          "bytes": 8509,
+          "sha256": "b90ec380ac8f58086f951a676fa8c23eca5277e1c8efc88fdde4931f426705cf"
+        },
+        {
+          "path": "header-occurrence.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "header-occurrence.owner.time",
+          "bytes": 29,
+          "sha256": "d6e5fd9236fbb507e2e7209ed6c280f1864185e89eb92024acc7305eaef9eff1"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 1188,
+          "sha256": "54440859c2e548a3eb9838d7a25b390602a47eaa6dda2f22bb147c1acf6176a7"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 567,
+          "sha256": "5db811e4524ee3017a7bd3f95435674fc94bdc7787a8a31df50f3f5dbb61a515"
+        },
+        {
+          "path": "outer.time",
+          "bytes": 31,
+          "sha256": "6526da1090a9c1d8ecd360c17746850ef50ba773967a4cce702c33ec9d1d096d"
+        },
+        {
+          "path": "pipeline-result.json",
+          "bytes": 13550,
+          "sha256": "809dfdefac65a3b4446c207cf43c9b084197b39e64be6ea8c45e761b6d02cb6d"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 30270,
+          "sha256": "1bc7d82395ffe640248f49f848cdcbd7319e8be9496284079767395994fd29b2"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1860,
+          "sha256": "330214b4a3115124ae061876085cf02ee340ffd7b3834e58a7d80157a2ebfc28"
+        },
+        {
+          "path": "result.json",
+          "bytes": 607,
+          "sha256": "466df3ae1fb895570b87ea19a842d737616c8b3064040fcf61b3b4b66052176d"
+        },
+        {
+          "path": "source-comparison.json",
+          "bytes": 496,
+          "sha256": "ceaa3cb58f479828d8ce2d0533515a08546cbe56970e20ab243eda6e0066941e"
+        },
+        {
+          "path": "static-ledger-proof.json",
+          "bytes": 2276,
+          "sha256": "cc3e86de9567d50e45e99d380ca021f7530845b890a6702d26f0c939a17cccf6"
+        },
+        {
+          "path": "task.json",
+          "bytes": 464,
+          "sha256": "0a2755236b4d0a945eebf9db489eed5f2c45c65dd291492a055b7c1964240663"
+        }
+      ]
+    }
+  ]
+}

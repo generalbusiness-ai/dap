@@ -2,16 +2,21 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { validateDefinition, type ValidDefinition } from "../src/validate/index.ts";
-import { bodyJudgesClock, bodyStructure, clauseStructure, declaredClockReads, formStructures, guardList, guardPlan, rangePlan, structureOf, timedStructure, type BodyStructure, type StructureNode } from "../src/program/structure.ts";
+import { attentionPlan, bodyJudgesClock, bodyStructure, checkedBody, clauseStructure, conditionPlan, declaredClockReads, effectPlan, formStructures, guardList, guardPlan, namedBody, rangePlan, sendPlan, structureOf, type BodyStructure, type StructureNode } from "../src/program/structure.ts";
 import { resolvedReads } from "../src/program/reads.ts";
 import { handlerBranch } from "../src/handler-branch.ts";
-import { lower } from "../src/program/lower.ts";
 import { lane, small } from "./definition-corpus/fixture-data.ts";
 import { asks } from "./definition-corpus/forms-operand-data.ts";
 import { gate } from "./definition-corpus/marks-data.ts";
 import { lateDefinition } from "./definition-corpus/source-order-data.ts";
 import { definitionCorpus } from "./definition-corpus/index.ts";
 import { capabilityStagingData } from "./definition-corpus/capability-staging-data.ts";
+import { declarationOf } from "../src/program/declaration.ts";
+import { nativeBoundaryOfMark, nativeMark, nativeOutcomes } from "../src/program/native.ts";
+import { checkedRow, namedRow, rowOf } from "../src/program/rows.ts";
+import { windowOf } from "../src/grant.ts";
+import { requirements } from "../src/program/requirements.ts";
+import { ruleMayNot } from "../src/markers.ts";
 
 function admitted(input: DeclaredDefinition): ValidDefinition {
   const result = validateDefinition(input, PROPOSED_BOUNDS);
@@ -38,15 +43,30 @@ test("the admitted corpus supplies every structural opcode and binds every root 
     seen.add(`${node.category}:${node.op}`);
     if (node.op === "native") {
       expect(node.native.body).toBe(body.id);
+      expect(node.native.owner).toBe(body.row.id);
       expect(node.native.mark).toBe(node.data);
       expect(structureOf(definition)!.native).toContain(node.native);
     }
-    // This checks complete capture, not concrete execution or caller integration.
-    if (node.category === "guard" && node.op !== "native") expect(guardPlan(definition, body, node)?.code.op).toBe(node.op);
+    // Every ordinary node has its actual executable plan. Opaque Native leaves
+    // keep their captured boundary; this does not invoke a callback or judge.
+    if (node.op !== "native") {
+      if (node.category === "guard") {
+        expect(guardPlan(definition, body, node)?.code.op).toBe(node.op);
+        expect(guardPlan(definition, body, node)?.site.phase).toBe("before");
+      } else {
+        expect(() => conditionPlan(definition, body, node)).not.toThrow();
+        if (node.category === "effect") expect(effectPlan(definition, body, node)?.code.op).toBe(node.op);
+        else if (node.category === "send") expect(sendPlan(definition, body, node)?.code.op).toBe(node.op);
+        else expect(() => attentionPlan(definition, body, node)).not.toThrow();
+      }
+    }
     node.children.forEach(child => visit(definition, body, child));
   };
   for (const row of definitionCorpus) {
-    const checked = validateDefinition(await row.declaration(), row.bounds, row.profiles, row.options);
+    const input = await row.declaration();
+    let checked: ReturnType<typeof validateDefinition>;
+    try { checked = validateDefinition(input, row.bounds, row.profiles, row.options); }
+    catch (error) { return expect.fail(`${row.name}: an admitted corpus declaration must build a complete program: ${String(error)}`); }
     if (!checked.ok) return expect.fail(`${row.name}: ${JSON.stringify(checked.problems)}`);
     const graph = structureOf(checked.definition), reads = resolvedReads(checked.definition)!;
     expect(graph, row.name).not.toBeNull();
@@ -54,12 +74,22 @@ test("the admitted corpus supplies every structural opcode and binds every root 
     expect(graph!.native.map(hook => [hook.kind, hook.path, hook.mark.code, hook.mark.row, hook.dependencies]), row.name)
       .toEqual(reads.marks.map(mark => [mark.kind, mark.path, mark.code, mark.row, "unknown"]));
     expect(new Set(graph!.native.map(hook => hook.id)).size, row.name).toBe(graph!.native.length);
-    for (const hook of graph!.native) expect(hook.validation, row.name).toBe(reads.validation);
+    for (const hook of graph!.native) {
+      expect(hook.validation, row.name).toBe(reads.validation);
+      expect(hook.owner !== null && rowOf(checked.definition, hook.owner) !== null, row.name).toBe(true);
+    }
     expect(graph!.roots.length, row.name).toBe(reads.frames.length);
     for (const root of graph!.roots) {
+      expect(() => checkedBody(checked.definition, root), row.name).not.toThrow();
       expect(reads.frames.includes(root.frame), row.name).toBe(true);
       expect(root.frame.context.validation, row.name).toBe(graph!.validation);
+      expect(root.frame.context.row, row.name).toBe(root.row.id);
+      expect(rowOf(checked.definition, root.row.id), row.name).toBe(root.row);
       root.nodes.forEach(node => visit(checked.definition, root, node));
+      const required = requirements(checked.definition, root);
+      expect(required.body, row.name).toBe(root);
+      expect(required.reads, row.name).toContainEqual({ kind: "definition" });
+      expect(required.future.every(future => future.requirements.body.origin === root.id), row.name).toBe(true);
     }
   }
   expect([...seen].sort()).toEqual([
@@ -89,8 +119,7 @@ test("every declared clock branch contributes while future clauses keep separate
   expect(sent?.category === "send" && sent.future).toEqual([{ clause: "applied", root: clause.id }]);
   expect(clause.origin).toBe(body.id);
   expect(bodyJudgesClock(body)).toBe(true);
-  // Static coverage does not claim that this body has a concrete evaluator.
-  expect(lower(checked, "edit", PROPOSED_BOUNDS).supported).toBe(false);
+  expect(() => checkedBody(checked, body)).not.toThrow();
 });
 
 test("historical entry time stays a resolved read and does not become a commit-clock source", () => {
@@ -112,6 +141,10 @@ test("aliased act and send objects keep distinct body and clause contexts", () =
   const checked = admitted(input), original = bodyStructure(checked, act, "edit")!, alias = bodyStructure(checked, act, "alias")!;
   expect(bodyStructure(checked, act)).toBeNull();
   expect(original.id).not.toBe(alias.id);
+  expect(original.row.id).not.toBe(alias.row.id);
+  expect([original.row.name, alias.row.name]).toEqual(["edit", "alias"]);
+  expect(namedRow(checked, "act", "edit")).toBe(original.row);
+  expect(namedRow(checked, "act", "alias")).toBe(alias.row);
   const guard = act.guards[0]!;
   expect(formStructures(checked, original, guard)).toEqual([original.nodes[0]]);
   expect(formStructures(checked, alias, guard)).toEqual([alias.nodes[0]]);
@@ -125,13 +158,24 @@ test("aliased act and send objects keep distinct body and clause contexts", () =
 
 test("replacement bodies and native result clauses resolve without merging their roots", () => {
   const input = lateDefinition(true), checked = admitted(input), handler = input.receives["sample"]!;
-  const normal = bodyStructure(checked, handler, "sample")!, replacement = bodyStructure(checked, handlerBranch(handler, { reason: "old-sample" })!, "sample")!;
+  const normal = bodyStructure(checked, handler, "sample")!, replacement = bodyStructure(checked, handlerBranch(checked, handler, { reason: "old-sample" })!, "sample")!;
   expect([normal.frame.kind, replacement.frame.kind]).toEqual(["handler", "replacement"]);
   expect(normal.id).not.toBe(replacement.id);
+  expect(normal.row).toBe(replacement.row);
+  const branch = handlerBranch(checked, handler, { reason: "old-sample" })!;
+  expect(branch).toBe(handlerBranch(checked, handler, { reason: "old-sample" }));
+  expect(bodyStructure(checked, { ...branch }, "sample")).toBeNull();
+  expect(handlerBranch(checked, { ...handler }, { reason: "old-sample" })).toBeNull();
+  expect(handlerBranch(checked, handler, { reason: "another-reason" })).toBeNull();
   const nativeInput = structuredClone(gate), mark = nativeInput.acts["enter"]!.sends[0]!;
   if (!("code" in mark)) return expect.fail("expected send mark");
   mark.result.applied = [{ code: "clause", row: "P18" }];
   nativeInput.outcomes["probe"]!.send = { code: "probe-send", row: "P18", result: { applied: [{ code: "clause", row: "P18" }] } };
+  nativeInput.acts["enter"]!.also["other"] = nativeInput.acts["enter"]!.also["ticket"]!;
+  nativeInput.acts["enter"]!.fields["otherNote"] = nativeInput.acts["enter"]!.fields["note"]!;
+  nativeInput.items["ticket"]!.values["otherNote"] = { ...nativeInput.items["ticket"]!.values["note"]! };
+  nativeInput.acts["enter-alias"] = nativeInput.acts["enter"]!;
+  nativeInput.outcomes["probe-alias"] = nativeInput.outcomes["probe"]!;
   const native = validateDefinition(nativeInput, PROPOSED_BOUNDS, undefined, { platform: true });
   if (!native.ok) return expect.fail(JSON.stringify(native.problems));
   const body = bodyStructure(native.definition, nativeInput.acts["enter"]!, "enter")!;
@@ -143,17 +187,53 @@ test("replacement bodies and native result clauses resolve without merging their
   const sent = body.nodes.find(node => node.category === "send" && node.op === "native");
   expect(sent?.category === "send" && sent.future).toContainEqual({ clause: "applied", root: clause.id });
   expect(sent?.category === "send" && sent.future.map(link => link.clause)).toEqual(["applied", "refused"]);
+  const capturedGrant = declarationOf(native.definition).acts["enter"]!.grant;
+  expect(nativeMark(native.definition, capturedGrant, "grant")).toEqual(nativeMark(native.definition, nativeInput.acts["enter"]!.grant, "grant"));
+  const aliasGrant = nativeMark(native.definition, declarationOf(native.definition).acts["enter-alias"]!.grant, "grant")!;
+  expect(nativeBoundaryOfMark(native.definition, aliasGrant, "grant")?.owner).toBe(namedRow(native.definition, "act", "enter-alias")?.id);
+  expect(nativeBoundaryOfMark(native.definition, aliasGrant, "grant")?.path).toBe("acts.enter-alias.grant");
+  const metadata = declarationOf(native.definition), header = metadata.acts["enter"]!;
+  const selector = nativeMark(native.definition, header.also["other"], "also")!;
+  const field = nativeMark(native.definition, header.fields["otherNote"], "type")!;
+  const slot = nativeMark(native.definition, metadata.items["ticket"]!.values["otherNote"]!.of, "type")!;
+  expect(nativeBoundaryOfMark(native.definition, selector, "also")).toMatchObject({ path: "acts.enter.also.other", header: { kind: "also", name: "other" } });
+  expect(nativeBoundaryOfMark(native.definition, field, "type")).toMatchObject({ path: "acts.enter.fields.otherNote", header: { kind: "field", name: "otherNote" } });
+  expect(nativeBoundaryOfMark(native.definition, slot, "type")).toMatchObject({ path: "items.ticket.values.otherNote.of", header: { kind: "slot", slot: "value", name: "otherNote" } });
+  expect(selector).not.toBe(nativeMark(native.definition, header.also["ticket"], "also"));
+  expect(field).not.toBe(nativeMark(native.definition, header.fields["note"], "type"));
+  expect(slot).not.toBe(nativeMark(native.definition, metadata.items["ticket"]!.values["note"]!.of, "type"));
+  const aliasOutcome = nativeOutcomes(native.definition)["probe-alias"]!;
+  expect(nativeBoundaryOfMark(native.definition, aliasOutcome, "outcome")?.owner).toBe(namedRow(native.definition, "outcome", "probe-alias")?.id);
+  expect(nativeBoundaryOfMark(native.definition, aliasOutcome.send!, "send")?.owner).toBe(namedRow(native.definition, "outcome", "probe-alias")?.id);
+  expect(nativeBoundaryOfMark(native.definition, aliasOutcome.send!, "send")?.path).toBe("outcomes.probe-alias.send");
+  const separate = validateDefinition(nativeInput, PROPOSED_BOUNDS, undefined, { platform: true });
+  if (!separate.ok) return expect.fail(JSON.stringify(separate.problems));
+  expect(() => nativeMark(separate.definition, capturedGrant, "grant")).toThrow("not captured");
 });
 
 test("compiled data owns its inputs and cannot be borrowed through a copied validation result", () => {
   const input = clockData(), first = admitted(input), second = admitted(input), act = input.acts["edit"]!;
   const body = bodyStructure(first, act, "edit")!, other = bodyStructure(second, act, "edit")!, before = JSON.stringify(structureOf(first));
+  const declaration = declarationOf(first), written = JSON.stringify(declaration);
   expect(first.digest).toBe(second.digest); expect(body.id).not.toBe(other.id);
   expect(body.frame.context.validation).not.toBe(other.frame.context.validation);
   const effect = act.effects[0]!;
   if (!("value" in effect) || effect.value.from === null || !("time" in effect.value.from)) return expect.fail("expected commit time");
-  effect.value.from.time.plusSeconds = 999; act.guards = [];
+  effect.value.from.time.plusSeconds = 999; act.guards = []; act.grant = "work.export";
+  expect(windowOf(first, "lane", "edit")).toEqual({ seconds: 300, once: false });
+  input.timed["after-admission"] = { on: "note", states: ["draft"], deadline: "due", effects: [], attention: [] };
+  expect(ruleMayNot(first, true, "note", { effect: "value", slot: "due", value: null })).toBeNull();
   expect(JSON.stringify(structureOf(first))).toBe(before);
+  expect(JSON.stringify(declarationOf(first))).toBe(written);
+  expect(declaration.acts["edit"]).not.toBe(act);
+  expect(Object.isFrozen(declaration.acts["edit"]!.fields)).toBe(true);
+  expect(() => declarationOf({ ...first })).toThrow("not admitted");
+  expect(rowOf(second, body.row.id)).toBeNull();
+  expect(() => checkedRow(second, body.row)).toThrow("another validation");
+  expect(() => checkedRow(first, { ...body.row })).toThrow("another validation");
+  expect(nativeMark(first, {}, "grant")).toBeNull();
+  expect(() => nativeMark({ ...first }, "ordinary-action", "grant")).toThrow("no admitted definition");
+  expect(() => nativeMark(first, { code: "uncaptured", row: "missing" }, "grant")).toThrow("not captured");
   expect(structureOf({ ...first })).toBeNull();
   expect(() => formStructures(second, body, act.effects[0]!)).toThrow("another validation");
   expect(() => formStructures(first, { ...body }, act.effects[0]!)).toThrow("another validation");
@@ -164,16 +244,20 @@ test("compiled data owns its inputs and cannot be borrowed through a copied vali
   expect([Object.isFrozen(body), Object.isFrozen(body.nodes), Object.isFrozen(body.nodes[0]?.data), Object.isFrozen(structureOf(first)?.rules)]).toEqual([true, true, true, true]);
 });
 
-test("timed execution binds only its admitted rule and original form arrays", () => {
+test("timed execution binds only its admitted rule and refuses copied or separately admitted bodies", () => {
   const input = structuredClone(lane), checked = admitted(input), rule = input.timed["hold-end"]!;
-  const body = timedStructure(checked, "hold-end", rule.effects, rule.attention);
+  const body = namedBody(checked, "timed", "hold-end", "timed");
   expect(body).toBe(bodyStructure(checked, rule, "timed:hold-end"));
   expect(body?.frame.kind).toBe("timed");
   expect(formStructures(checked, body!, rule.effects[0]!)).toEqual([body!.nodes[0]]);
-  expect(timedStructure(checked, "hold-end", [...rule.effects], rule.attention)).toBeNull();
-  expect(timedStructure(checked, "hold-end", rule.effects, [...rule.attention])).toBeNull();
-  expect(timedStructure(checked, "unknown", rule.effects, rule.attention)).toBeNull();
-  expect(timedStructure({ ...checked }, "hold-end", rule.effects, rule.attention)).toBeNull();
+  expect(() => checkedBody(checked, { ...body! })).toThrow("another validation at timed.hold-end");
+  const separate = admitted(input), other = namedBody(separate, "timed", "hold-end", "timed")!;
+  expect(() => checkedBody(checked, other)).toThrow("another validation at timed.hold-end");
+  expect(formStructures(checked, body!, { ...rule.effects[0]! })).toEqual([]);
+  expect(namedBody(checked, "timed", "unknown", "timed")).toBeNull();
+  expect(namedBody(checked, "timed", "hold-end", "act")).toBeNull();
+  expect(namedBody(checked, "act", "hold-end", "timed")).toBeNull();
+  expect(namedBody({ ...checked }, "timed", "hold-end", "timed")).toBeNull();
 });
 
 test("aliased guards retain the binder they read when a nested list shadows its name", () => {

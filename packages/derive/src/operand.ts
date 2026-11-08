@@ -11,6 +11,7 @@ import type { Entry, EntryPart, FactRef, FieldValue, Operand, Part, ScopeRef } f
 import { intentDigest } from "@generalbusiness/dap-bytes";
 import { creationFields, isEntryOf, isLocalFact } from "./fields.ts";
 import { bound } from "./handlers.ts";
+import { declarationOf } from "./program/declaration.ts";
 import type { Judging } from "./guards.ts";
 import type { Item } from "./state.ts";
 import { isFactRef, isLocalId, isObject, memberOf, own, same } from "./values.ts";
@@ -164,7 +165,10 @@ function fieldOf(j: Judging, entry: Entry, local: boolean, name: string): unknow
     const sent = message.type === "relate" ? body["detail"] : body["fields"];
     return isObject(sent) ? (own(sent, name) ?? null) : null;
   }
-  if (input.type === "genesis") return own(input.source ? creationFields(message, input.source, own(j.definition.declared.acts, j.definition.declared.genesis)!.fields) : null, name) ?? null;
+  if (input.type === "genesis") {
+    const declared = declarationOf(j.definition);
+    return own(input.source ? creationFields(message, input.source, own(declared.acts, declared.genesis)!.fields) : null, name) ?? null;
+  }
   return input.type === "delivery" ? (own(bound(j.definition, message, input.from)?.fields ?? null, name) ?? null) : null;
 }
 

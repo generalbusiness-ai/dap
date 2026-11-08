@@ -21,6 +21,7 @@
 import type { Grant, Head, KeyId, Observation, ObservationUse, ScopeFilter, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { isHead, isKeyId, isMemberId, isPlatformDefinition, isRecord, platformName } from "@generalbusiness/dap-bytes";
 import { actionOf } from "./marks.ts";
+import { declarationOf } from "./program/declaration.ts";
 import type { StateView } from "./state.ts";
 import { timeMs, type Clock } from "./time.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -49,7 +50,7 @@ export const WINDOWS = { ordinary: { seconds: 300, once: false }, once: { second
  *   on its own head (section 3.1). An act of the register: none.
  */
 export function windowOf(definition: ValidDefinition, kind: ScopeKind, act: string): Window | null {
-  const row = own(definition.declared.acts, act);
+  const row = own(declarationOf(definition).acts, act);
   if (!row || kind === "membership" || kind === "register") return null;
   const action = actionOf(row, definition);
   if (row.effects.some((effect) => "hold" in effect && effect.hold.do !== "end") || action === "work.export" || action === "change.check") return WINDOWS.once;

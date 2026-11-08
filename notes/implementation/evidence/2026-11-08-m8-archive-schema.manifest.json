@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "8775043a97fe00b040e7302c5a6a800f8f819e96",
+  "sourceTree": "34bfbc21fb234555c41305f897ccec7157d900b9",
+  "qualification": "At M8 source 8775043a97, two Scope compiler contexts and 14 cases in two complete unchanged Native owners pass once. The archive schema cache uses the validator-unique class/message/sender-kind tuple instead of caller object identity. Existing assertions, deadlines, SQL predicates and budgets remain unchanged. The isolated gate at 0c416f8b remains failed with four Native failures, as do the earlier retained failed gates. This focused pass does not replace the final full gate, Page workflow or independent review. It makes no deployment or live acceptance claim.",
+  "fileCount": 7,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-archive-schema-validation",
+      "files": [
+        {
+          "path": "2026-11-08-m8-archive-schema-focused-launch.inventory.json",
+          "bytes": 47696,
+          "sha256": "40cb37ee63a9c8ce905dd791a526585b95da966879b249be2af448ee41ff125c"
+        },
+        {
+          "path": "2026-11-08-m8-archive-schema-focused.inventory.json",
+          "bytes": 1467,
+          "sha256": "ef249ddf8c640d5250475acc4edee746cec1fbc03e578a6a2512618728c62e2a"
+        },
+        {
+          "path": "2026-11-08-m8-archive-schema-preparation.inventory.json",
+          "bytes": 1338,
+          "sha256": "5c585a0087c839727105c5cc94011e5596f1bb263c5cc31312e395d3821d9c69"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 607,
+          "sha256": "169c5a3d2a73e5a61abeb9c92b7dd6f6b227838bf34bd8e1a76d47d93b225230"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 2714,
+          "sha256": "e25f8ed791fb97aa724cb7eb6d2cea58f8b46d08ec20422bcaf618dac0e2b188"
+        },
+        {
+          "path": "result.json",
+          "bytes": 4987,
+          "sha256": "674afa78265cc72dbc1eb6a1deadd2d0226e8f3f5b5ad5ac9ed27c5a3ba959dc"
+        }
+      ]
+    }
+  ]
+}

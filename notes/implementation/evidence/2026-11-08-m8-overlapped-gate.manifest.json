@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "qualification": "The repaired M8 gate at0c416f8b fails with actual exit1: Node135 and Counting56 pass; plain4026pass1skip; Native1113pass4fail2skip. Four Native failures in archive-installed and texts remain in their original reports. Planner ruling be8d9d81 records overlapping formal-lane Native work beginning around20:29UTC and requires an unchanged-source fullgate with no overlap before any repair for these cases. Overlap is a candidate cause, not an established explanation. The archive-scale owner passes; the installed Grow owner reports retry/mismatch and its following clone case lacks its producer session; two texts cases throw archive-mismatch. No report contradiction or unhandled error. No tests run during sealing. The original first gate136 remains separately failed. No live acceptance or deployment claim.",
+  "sourceHead": "0c416f8b3fa9e2c4ab6aff82c837bb968288a25e",
+  "sourceTree": "0cc70a8ca4b924c84ba6287bcaa730fbc85cecec",
+  "fileCount": 17,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-overlapped-gate-validation",
+      "fileCount": 17,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1300,
+          "sha256": "f3d92fcac36c3761c2a85ed001e44d06eaf1a5c4dda94ba18a4b3d2aa5df3c65"
+        },
+        {
+          "path": "after.json",
+          "bytes": 548611,
+          "sha256": "e5979832ac19c892ccb09a18c9403f07dec7027df0118868411c7acff0c3eaba"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1890,
+          "sha256": "68b7a9cd80a42af700744fc685326fab3f56bcdd6ad9900ed09ab4dbaf4e4317"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 548611,
+          "sha256": "e5979832ac19c892ccb09a18c9403f07dec7027df0118868411c7acff0c3eaba"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "58348ac1debbb602b706597ee8a4af02445e8724a7829c2ebf4b43c41dc45a38"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8080,
+          "sha256": "c7aa80ce9d21a535e5404273d89807f1b9cafe57b501c550fbeeaca424cacc3b"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "9b3359f658d6329c37226a0bf7f7f19b9c2d92bcbda98bce9cf68b3db3f5427b"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 179,
+          "sha256": "656c430a109c7846872cc644ae74eca542a4832b442bec3c515c67e59f485cac"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2326,
+          "sha256": "0c68bc7e27a1c249f7e13eb328b77d175497eccf9015789cef03038b66ef729d"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 973,
+          "sha256": "f475e6266b8507468b9235a2c8c36bf003cf900cbe8f3467738c9264cb629c51"
+        },
+        {
+          "path": "started.json",
+          "bytes": 652,
+          "sha256": "beb443d3cf6b7c20dabb0e1c30cfa4802f32188f2e4a0708053561947ba169c3"
+        },
+        {
+          "path": "task.json",
+          "bytes": 1190,
+          "sha256": "f2eeba1c3209f7459e8e6378716a0e7bbc2f32e173e505b2b235241c78434cbd"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 588,
+          "sha256": "fc5dc408ee4d1d5a677caff47790c19b5379f28b880fb593975fda6d67465be5"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 8563,
+          "sha256": "a475fc857c1d1ddb2013fefc7ff4028c930a8a575f0c8338ab218c84f4ea0351"
+        }
+      ]
+    }
+  ]
+}

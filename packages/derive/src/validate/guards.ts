@@ -344,7 +344,7 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
   // Section 6.5: `reason` names the refusal. It changes no judgment.
   if ("reason" in o) str(o["reason"], at(path, "reason"));
   if ("ifPresent" in o && (bool(o["ifPresent"], at(path, "ifPresent")) === null || !namesField)) bad("shape", at(path, "ifPresent"), "is for a guard that names a field or a presented fact");
-  return code ? Object.freeze({ code: Object.freeze(code), site: Object.freeze({ path, subject: typeof of === "string" ? of : "on",
+  return code ? Object.freeze({ code: Object.freeze(code), site: Object.freeze({ path, phase: "before", subject: typeof of === "string" ? of : "on",
     ifPresent: o["ifPresent"] === true, absent: Object.freeze(absent), reason: typeof o["reason"] === "string" ? o["reason"] : null }) }) : null;
 }
 

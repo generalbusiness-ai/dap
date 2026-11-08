@@ -2,7 +2,8 @@
 import type { Send, SendForm, SendMark } from "@generalbusiness/dap-contract";
 import type { ValidDefinition } from "../validate/index.ts";
 import { isObject, isScopeRef } from "../values.ts";
-import { checkedBody, sendPlan, sendSource, type BodyStructure, type SendNode } from "./structure.ts";
+import { checkedBody, sendPlan, type BodyStructure, type SendNode } from "./structure.ts";
+import type { SendCode } from "./send-plan.ts";
 
 export interface SendOrigin { readonly ordinal: number; readonly node: SendNode; readonly declaration: SendForm | SendMark }
 export function sendOrigin(definition: ValidDefinition, body: BodyStructure, entry: { sends: readonly Send[] }, n: number): SendOrigin | null {
@@ -11,7 +12,7 @@ export function sendOrigin(definition: ValidDefinition, body: BodyStructure, ent
   const sent = entry.sends.filter(send => send.message.class === "request" || send.message.class === "advisory").sort((a, b) => a.n - b.n);
   const result = (ordinal: number): SendOrigin | null => {
     const node = nodes[ordinal];
-    return node ? { ordinal, node, declaration: node.op === "native" ? sendSource(definition, body, node) : node.data } : null;
+    return node ? { ordinal, node, declaration: node.op === "native" ? node.native.mark : node.data } : null;
   };
   if (nodes.some(node => node.op === "native")) {
     const unsure = nodes.flatMap((node, ordinal) => node.op === "native" && node.data.always !== true ? [ordinal] : []);
@@ -21,10 +22,7 @@ export function sendOrigin(definition: ValidDefinition, body: BodyStructure, ent
     if (sent.length !== nodes.length - 1 || unsure.length !== 1) return null;
     return result(at < unsure[0]! ? at : at + 1);
   }
-  const made = (node: SendNode, { to, message }: Send): boolean => {
-    const plan = sendPlan(definition, body, node);
-    if (!plan) throw new TypeError("retained send has no admitted instruction");
-    const code = plan.code;
+  const made = (code: SendCode, { to, message }: Send): boolean => {
     if (message.class === "advisory") return code.op === "index" && message.type === "index";
     if (message.class !== "request" || !isObject(message.body)) return false;
     switch (code.op) {
@@ -37,11 +35,17 @@ export function sendOrigin(definition: ValidDefinition, body: BodyStructure, ent
   };
   let at = 0;
   for (const send of sent) {
-    while (at < nodes.length && !made(nodes[at]!, send)) at++;
+    let code: SendCode | null = null;
+    while (at < nodes.length) {
+      const plan = sendPlan(definition, body, nodes[at]!);
+      if (!plan) throw new TypeError("retained send has no admitted instruction");
+      code = plan.code;
+      if (made(code, send)) break;
+      at++;
+    }
     const node = nodes[at];
-    if (!node) return null;
+    if (!node || !code) return null;
     if (send.n === n) return result(at);
-    const code = sendPlan(definition, body, node)!.code;
     if (!(code.op === "relate" && code.each)) at++;
   }
   return null;
