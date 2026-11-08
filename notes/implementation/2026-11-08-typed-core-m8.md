@@ -183,3 +183,13 @@ One control removes the runner's judgment-kind check and runs only the existing 
 The [ordinary-body validation manifest](evidence/2026-11-08-m8-ordinary-validation.manifest.json), SHA-256 `4a81a6d35ffd45d1b34adc545db64eec570b44ab52340f376a11491cc87ebc85`, binds twenty read-only public files. Its inventories retain 590 private originals across all three pipelines, their launches, preparation and the control. The exact repaired fixture, complete reports, both original failures, frozen inputs, initial static-plan refusal and restored-source comparisons remain durable. No validation reruns during sealing.
 
 This checkpoint establishes the ordinary-body route and its existing witnesses. Timed/result-clause integration, raw guard adapter retirement and complete interpretations remain ahead. No full M8 gate, generated asset, workflow, independent review, deployment or live acceptance follows from the combined coverage.
+
+## The sixth draft removes raw guard and send-source adapters
+
+The remaining raw `judgeGuard` and `judgeGuards` entry points and their source-lookup contexts are gone. The existing lane, effect and fixed-index witnesses select their admitted body and actual guard instructions directly. Scope addendum `0ffb8829` already names the fixed-index call. Every behavioral assertion, case and deadline remains, including the fixed-index owner's first count assertion after restart.
+
+Retained Native sends now expose their actual captured boundary mark through `sendOrigin`. The unused `sendSource`, `sendListBody` and original send-source map are gone. Future clause selection still follows the actual send instruction's root links. Native callback implementations, calls, payloads and ordering stay in their existing homes.
+
+Planner question `f0d2a338` proposes the exact witness mapping for retiring the first-slice executable constructors without losing literal outputs, type/phase and nominal negatives, owned data, prefix refusal, explanation or dependency/trace guarantees. No first-slice assertion changes while that mapping waits. The initial question command lacked the required request conditions and filed no act; the corrected request names the enrolled planner and its conditions. This question does not block adapter retirement or timed/clause integration.
+
+The next focused plan covers the complete affected owners, including all seventeen fixed-index cases. This draft has no compiler, test, full gate or acceptance result yet.

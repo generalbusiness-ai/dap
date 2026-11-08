@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/dap-bytes";
-import { clockOf, evaluateEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Item, type Judging } from "../src/index.ts";
+import { clockOf, evaluateEffects, judgeDelivery, validateDefinition, type ActJudgment, type Item, type Judging } from "../src/index.ts";
 import { Scope, arriving, deliver, fields, forged, created, keys, member, on, ticketDefinition, valid, type Actor, type Over } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
@@ -20,6 +20,7 @@ import { clockScene } from "./fixtures-clock-cutover.ts";
 import { runClause } from "../src/handlers.ts";
 import { bodyStructure, namedBody } from "../src/program/structure.ts";
 import { executeBody } from "../src/program/body.ts";
+import { judgeGuardNodes } from "../src/program/guard-value.ts";
 import { otherLane, t } from "./fixtures-entry.ts";
 
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
@@ -301,7 +302,7 @@ describe("attribution: its sources and its order (section 6.7)", () => {
 
     // The guards of one written list: the first is not completed and the second is false, so the list is false, by its second guard.
     const ordered = transition([], { on: p, "also.parent": p }, { bounds: stopped }, [some, { unset: "owner" }]);
-    expect(judgeGuards(ordered.j, ordered.act.guards)).toEqual({ result: "fail", at: 1 });
+    expect(judgeGuardNodes(ordered.j, ordered.body, ordered.body.nodes.filter(node => node.category === "guard"))).toEqual({ result: "fail", at: 1 });
   });
 });
 

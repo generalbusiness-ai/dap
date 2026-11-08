@@ -1,11 +1,12 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FieldValue } from "@generalbusiness/dap-contract";
 import { definitionDigest, entryHash, factRefOf, signIntent } from "@generalbusiness/dap-bytes";
-import { clockOf, evaluateEffects, judgeGuards, MemoryState, newItem, validateDefinition, type Item, type Judging } from "@generalbusiness/dap-derive";
+import { clockOf, evaluateEffects, MemoryState, newItem, validateDefinition, type Item, type Judging } from "@generalbusiness/dap-derive";
 import { d, directory, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { issueEvidence4 } from "../src/issue4.ts";
 import { changeEvidence4 } from "../src/change4.ts";
-import { bodyStructure } from "../../../../packages/derive/src/program/structure.ts";
+import { namedBody } from "../../../../packages/derive/src/program/structure.ts";
+import { judgeGuardNodes } from "../../../../packages/derive/src/program/guard-value.ts";
 
 // Real successor declarations/guard/effect derivation over SCRIPTED admission
 // state and Native notices. Real Native source authority is tested separately.
@@ -33,8 +34,8 @@ test("signed successor results stay provisional; only the exact Native counted r
       const judging: Judging = { view: state, definition, bounds: PROPOSED_BOUNDS, clock: clockOf(state, t(1)),
         scope: { at: otherLane, creator: null }, self: 20, kind, fields, fieldTypes: act.fields,
         subjects: new Map([["also.job", held]]), signer: { member: keys.una.member, principal: null }, facts: new Map(), prepared: [], used: [], own };
-      expect(judgeGuards(judging, act.guards).result).toBe("pass");
-      const actBody = bodyStructure(definition, act, kind)!;
+      const actBody = namedBody(definition, "act", kind, "act")!;
+      expect(judgeGuardNodes(judging, actBody, actBody.nodes.filter(node => node.category === "guard")).result).toBe("pass");
       const provisional = evaluateEffects(judging, actBody, "result");
       if (!provisional.ok) throw Error(JSON.stringify(provisional));
       expect(provisional.effects.some(effect => "item" in effect && effect.item === 10)).toBe(false);
@@ -43,14 +44,14 @@ test("signed successor results stay provisional; only the exact Native counted r
           fields: { ...fields, jobFact: job }, idempotencyKey: "SCRIPTED-provisional-result", notAfter: t(60) }, keys.una.secret), authority: [], presented: {} },
         effects: provisional.effects, sends: [] };
       const notice = declared.receives["check-decision"]!;
-      const noticeBody = bodyStructure(definition, notice, "check-decision")!;
+      const noticeBody = namedBody(definition, "receive", "check-decision", "handler")!;
       const native: Entry = { ...birth, at: destination, seq: 30, input: { type: "outcome", owner: "platform:destination@17", kind: "evidence-result",
         operation: "25:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { job } } }, effects: [], sends: [] };
       const source = { fact: factRefOf(native), entry: native, under: "platform:destination" };
       const noticeFields: Record<string, FieldValue> = { status: "decided", job: 10, result: 20, decision: source.fact,
         reason: "counted", frozenGeneration: "null", observedGeneration: "null" };
       const notified: Judging = { ...judging, kind: "check-decision", self: 31, signer: null, sender: destination, source, fields: noticeFields, fieldTypes: notice.fields };
-      const guards = judgeGuards(notified, notice.guards);
+      const guards = judgeGuardNodes(notified, noticeBody, noticeBody.nodes.filter(node => node.category === "guard"));
       expect(guards.result, JSON.stringify({ lane: declared.name, initial, outcome, guard: guards.at, form: notice.guards[guards.at] })).toBe("pass");
       const counted = evaluateEffects(notified, noticeBody, null);
       if (!counted.ok) throw Error(JSON.stringify(counted));
@@ -65,7 +66,7 @@ test("signed successor results stay provisional; only the exact Native counted r
       if (!late.ok) throw Error(JSON.stringify(late));
       expect(late.working.get("also.job")).toMatchObject({ state: settled.state, refs: { decidedBy: 20 } });
       const wrongSource = { ...native, input: { ...native.input, kind: "evidence-admit" } } as Entry;
-      expect(judgeGuards({ ...notified, source: { ...source, entry: wrongSource, fact: factRefOf(wrongSource) }, fields: { ...noticeFields, decision: factRefOf(wrongSource) } }, notice.guards).result).toBe("fail");
+      expect(judgeGuardNodes({ ...notified, source: { ...source, entry: wrongSource, fact: factRefOf(wrongSource) }, fields: { ...noticeFields, decision: factRefOf(wrongSource) } }, noticeBody, noticeBody.nodes.filter(node => node.category === "guard")).result).toBe("fail");
     }
   }
 });

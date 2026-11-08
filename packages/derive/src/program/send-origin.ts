@@ -2,7 +2,7 @@
 import type { Send, SendForm, SendMark } from "@generalbusiness/dap-contract";
 import type { ValidDefinition } from "../validate/index.ts";
 import { isObject, isScopeRef } from "../values.ts";
-import { checkedBody, sendPlan, sendSource, type BodyStructure, type SendNode } from "./structure.ts";
+import { checkedBody, sendPlan, type BodyStructure, type SendNode } from "./structure.ts";
 import type { SendCode } from "./send-plan.ts";
 
 export interface SendOrigin { readonly ordinal: number; readonly node: SendNode; readonly declaration: SendForm | SendMark }
@@ -12,7 +12,7 @@ export function sendOrigin(definition: ValidDefinition, body: BodyStructure, ent
   const sent = entry.sends.filter(send => send.message.class === "request" || send.message.class === "advisory").sort((a, b) => a.n - b.n);
   const result = (ordinal: number): SendOrigin | null => {
     const node = nodes[ordinal];
-    return node ? { ordinal, node, declaration: node.op === "native" ? sendSource(definition, body, node) : node.data } : null;
+    return node ? { ordinal, node, declaration: node.op === "native" ? node.native.mark : node.data } : null;
   };
   if (nodes.some(node => node.op === "native")) {
     const unsure = nodes.flatMap((node, ordinal) => node.op === "native" && node.data.always !== true ? [ordinal] : []);

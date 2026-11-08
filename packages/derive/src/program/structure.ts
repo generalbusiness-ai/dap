@@ -120,7 +120,6 @@ const guardSources = new WeakMap<GuardNode, object>();
 const conditionPlans = new WeakMap<StructureNode, ConditionPlan<GuardNode>>();
 const effectPlans = new WeakMap<EffectNode, EffectPlan>(), attentionPlans = new WeakMap<AttentionNode, AttentionPlan>();
 const sendPlans = new WeakMap<SendNode, SendPlan>();
-const sendSources = new WeakMap<SendNode, SendForm | SendMark>();
 
 /** Replacement headers reuse only their admitted row's immutable common data. */
 function headerOf(frame: FrameRead, row: RowRead): ActType | ReceiveType | TimedRule | null {
@@ -316,7 +315,6 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     for (const { source, node } of bindings) {
       nodeRoots.set(node, body);
       if (node.category === "guard") guardSources.set(node, source);
-      if (node.category === "send") sendSources.set(node, source as SendForm | SendMark);
       forms.set(source, Object.freeze([...(forms.get(source) ?? []), Object.freeze({ body, node })]));
     }
     for (const list of root.guardLists) {
@@ -398,14 +396,6 @@ export function sendClauseStructure(definition: ValidDefinition, body: BodyStruc
   if (!root || root.origin !== body.id) throw new TypeError("send result root belongs to another admitted body");
   return root;
 }
-/** Compatibility with a raw send list requires one unique actual admitted body. */
-export function sendListBody(definition: ValidDefinition, forms: readonly SendForm[]): BodyStructure | null {
-  const candidates = compiled.get(definition)?.structure.roots.filter(body => {
-    const nodes = body.nodes.filter(node => node.category === "send");
-    return nodes.length === forms.length && nodes.every((node, ordinal) => sendSources.get(node) === forms[ordinal]);
-  });
-  return candidates?.length === 1 ? candidates[0]! : null;
-}
 
 /** Resolve occurrences by their source object and admitted body, including lexical aliases. */
 export function formStructures(definition: ValidDefinition, body: BodyStructure, source: object): readonly StructureNode[] {
@@ -431,20 +421,6 @@ export function rangePlan(definition: ValidDefinition, body: BodyStructure, owne
   const found = checkedOwner(definition, body, owner), original = found.origins.get(source) ?? declarationSource(definition, source);
   const matches = found.ranges.get(original)?.filter(range => range.body === body && range.owner === owner && range.use === use);
   return matches?.length === 1 ? matches[0]!.plan : null;
-}
-/** An existing raw-list caller must name one actual admitted group. */
-export function guardListContext(definition: ValidDefinition, source: object, kind: string): { readonly body: BodyStructure; readonly nodes: readonly GuardNode[] } | null {
-  const found = compiled.get(definition), original = found?.origins.get(source) ?? declarationSource(definition, source);
-  const matches = found?.guardLists.get(original)?.filter(list => list.body.frame.context.kind === kind || list.body.frame.context.kind === null);
-  return matches?.length === 1 ? { body: matches[0]!.body, nodes: matches[0]!.nodes } : null;
-}
-/** Compatibility with a single raw guard requires its unique actual occurrence. */
-export function guardContext(definition: ValidDefinition, source: Guard, kind: string, inherited: string): { readonly body: BodyStructure; readonly node: GuardNode } | null {
-  const found = compiled.get(definition), original = found?.origins.get(source) ?? declarationSource(definition, source);
-  const matches = found?.forms.get(original)?.filter((binding): binding is { body: BodyStructure; node: GuardNode } =>
-    binding.node.category === "guard" && (binding.body.frame.context.kind === kind || binding.body.frame.context.kind === null)
-    && (binding.node.op === "native" || guardPlans.get(binding.node)?.site.subject === (source.of ?? inherited)));
-  return matches?.length === 1 ? matches[0]! : null;
 }
 /** Each declared guard reads its actual admitted executable instruction. Native stays opaque. */
 export function guardPlan(definition: ValidDefinition, body: BodyStructure, node: GuardNode): GuardPlan<GuardNode> | null {
@@ -473,12 +449,6 @@ export function effectPlan(definition: ValidDefinition, body: BodyStructure, nod
 export function sendPlan(definition: ValidDefinition, body: BodyStructure, node: SendNode): SendPlan | null {
   checkedOwner(definition, body, node);
   return sendPlans.get(node) ?? null;
-}
-export function sendSource(definition: ValidDefinition, body: BodyStructure, node: SendNode): SendForm | SendMark {
-  checkedOwner(definition, body, node);
-  const source = sendSources.get(node);
-  if (!source) throw new TypeError("send instruction has no source identity");
-  return source;
 }
 export function attentionPlan(definition: ValidDefinition, body: BodyStructure, node: AttentionNode): AttentionPlan {
   checkedOwner(definition, body, node);
