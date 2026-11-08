@@ -4,7 +4,7 @@ M7 captures all seven Native mark places and versioned capability arguments from
 
 The current runtime checkpoint is `803e4bb2c63a5a7bba44e27a62df4f5d2caa6efb`, tree `e7ea6ecba1b989881262365ac38d664d97b81ffd`. The Page follow-up is `7f28e18aa46ef7a9f0ed3a0b7667727343640496`, tree `6abf0109888205a8d23a274675413f52b6326d4d`. The indexed-binding test-only follow-up is `09d9d35a`; the approved seal-only follow-up is `b687ec5f`. Neither changes production source. Request `11fbfe04` and promise `8232842a` own the work; addenda `aff86345` and `474dc610` cover the outcome adapter and Page module.
 
-Page workflow [42438618696](https://github.com/generalbusiness-ai/dap/actions/runs/42438618696) succeeds at the current Page checkpoint. All four browser commands and every job step succeed. Hugh approved the exact three-seal patch in this builder session; the patch is applied, and its complete inventory owner passes 11 Node cases. The full gate, main integration, independent review and landing remain pending.
+Page workflow [42438618696](https://github.com/generalbusiness-ai/dap/actions/runs/42438618696) succeeds at the current Page checkpoint. All four browser commands and every job step succeed. Hugh approved the exact three-seal patch in this builder session; the patch is applied, and its complete inventory owner passes 11 Node cases. The branch includes published M6 and the later documentation records. The full gate, independent review and landing remain pending.
 
 ## What changed
 
@@ -34,7 +34,7 @@ The first M7 stage compared whole outputs and calls without tracing. Read-only r
 
 The raw `readFields` shape adapter and one-argument `actionOf` metadata helper remain available without invoking a Native callback. Production action callers supply their actual definition. The pre-validation outcome-domain helper still reads bootstrap metadata. The prototype `lower`, `evaluate`, `explain` and `dependencies` remain the first slice. The admitted structure and Native observation expose opaque boundaries separately. They do not imply that the prototype executes or inspects every body. M8 owns complete body interpretation, header/frame links and the final judge orchestration.
 
-Before planner ruling `7e3f7743` retired the prompt requirement, Hugh approved exact patch SHA-256 `40864da31c9dc90e3f725f53d93d5a6e4090eaf958f54cb6a908393255a5e4c8` under ruling `1311f76e`. Its three source owners retain the question's exact bytes. The patch changes only the three literals for `judge.ts`, `genesis.ts` and `core.ts:Scope`; every route and gate assertion remains. The inventory's raw SHA-256 changes from `9b10fb198fcf11fedd0febe5d5de04835ed171217029f099cb478d161c8f9d5e` to `2aa2ec8b2dc5ac7cd337d90a6342286f9a97aa0b9478001d546d6661cac2db82`.
+Hugh approved exact patch SHA-256 `40864da31c9dc90e3f725f53d93d5a6e4090eaf958f54cb6a908393255a5e4c8` in this builder session. Live planner ruling `3655896d` refiles the standing instruction to continue seal changes through checker review without permission prompts. Its three source owners retain the question's exact bytes. The patch changes only the three literals for `judge.ts`, `genesis.ts` and `core.ts:Scope`; every route and gate assertion remains. The inventory's raw SHA-256 changes from `9b10fb198fcf11fedd0febe5d5de04835ed171217029f099cb478d161c8f9d5e` to `2aa2ec8b2dc5ac7cd337d90a6342286f9a97aa0b9478001d546d6661cac2db82`.
 
 The patch replaces these parser seals in `scripts/security-entry-points.test.mjs`:
 
@@ -103,7 +103,7 @@ The table hashes each retained output, report or exit file. Earlier records rema
 
 ## Open limits
 
-- Source request `11fbfe04` still needs the single full gate, independent review and an audited landing. Planner ruling `7e3f7743` assigns S1 the first gate slot. M7 integrates published M6 before its gate. M6's approved source parent and published merge have the same tree.
+- Source request `11fbfe04` still needs the single full gate, independent review and an audited landing. Live planner ruling `3655896d` assigns S1 the first gate slot. M7 has integrated published M6 before its gate. M6's approved source parent and published merge have the same tree.
 - M6's exact merge `5a0e5660` and receipt `584b7437` are published under the one-time metadata exception `d038d93b`. Its failed commit-message record stays failed. M7 grants no further exception.
 - Parent request `e99550e9` and plan 035 remain open through M8. Whole-body lowering, explanation/dependencies, final judge orchestration and the remaining repeated lookup in `sendOrigin` belong to that follow-up. Native callback interiors remain opaque.
 - Next-cohort acceptance stays open. This evidence proves no deployment, live room or custody outcome. The planner deploys.
