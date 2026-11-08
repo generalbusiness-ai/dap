@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:11f260dc6c452760d0ea92c731ba3bc285d6d7cd","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-full-ran.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:12c083cfb2fc59f6f21fc9131b9ff0b4b4984b80","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/native.ts."}
