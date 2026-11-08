@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will separate parked scheduling and reply custody from dispatch, preserve the named operation guarantees and diagnoses, leave archive and fold code unchanged, stop on an archive retry, and file one gated head for independent review.","body":{"branch":"builder/state-s4-operations-20261108"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dece99c7d1cdc31a2bb9da1da60241ee3fc1343d"}
