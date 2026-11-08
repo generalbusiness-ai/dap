@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/derive/test/forms-sends.test.ts","body":{"commit":"5a0e5660468884a04259e8560e5e169f99258b88","path":"packages/derive/test/forms-sends.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05959fa2ddb25234aa9719f6c4a8308fd4c912fb","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m6-page-assets.manifest.json."}
