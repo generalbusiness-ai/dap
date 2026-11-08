@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8a77733410107007e19fb96fb27667855b3dd507","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-s3-preparation.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9305a38014a5b49e3fcfdb0b93571166d843b42a","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/retained-editor-data.ts."}
