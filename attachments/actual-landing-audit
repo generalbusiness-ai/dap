@@ -1,0 +1,35 @@
+{
+  "checkedUtc": "2026-11-08T00:47:40.102892+00:00",
+  "merge": "5a0e5660468884a04259e8560e5e169f99258b88",
+  "tree": "57648c38ddcdae4edbd6694c7146675b52a46cc7",
+  "parents": [
+    "f04ff0f29edfb8cb831a1dd4ab4f3c3a84d32fdb",
+    "e5038a17d2ea85424ef33ccd65d490151eedd7bd"
+  ],
+  "receipt": "584b7437b511f3ef0a8da8870f49f7b9e223c15a",
+  "sourceChild": "0b0d278680c4dde3a9b278d4a76a547ef83223cc",
+  "suffixEvents": 77,
+  "allSuffixAuthorsBuilder": true,
+  "actualSuccessors": 26,
+  "actualRetirements": 50,
+  "actualLeftLive": 34,
+  "allReceiptFieldsMatchAuditedPlan": true,
+  "allActualSuccessorAndRetirementTargetsMatchPlan": true,
+  "allCarriedAndProtectedSiblingClaimsPreserved": true,
+  "sameAuthorPackagesDirectoryRestatement": "Ten own predecessor directory claims consolidated at packages; unchanged package blobs outside fourteen approved changes. Exact qualification in plan-audit.json.",
+  "mergeToolQualification": "The tool warns that no separate structured merge authorization exists and phase-one compatibility permits this assigned ratified-approval merge. The explicit user authorization for routine landings, effective exact-head approval/ratification, complete allowed plan and exact actual audit govern this landing. No override flag is used.",
+  "sharedCheckoutClean": true,
+  "readyForAtomicPush": false,
+  "publicationStatus": "Unpublished: await narrow planner ruling on merge-message format or a supported receipt-preserving repair.",
+  "postMergeCommitMessageCheck": {
+    "exit": 1,
+    "checked": 9,
+    "flagged": 1,
+    "issues": [
+      "subject-length:625characters",
+      "glued-hash:archive64552d40"
+    ],
+    "source": "commit-messages.stdout"
+  },
+  "qualification": "Source/tree, 77 signed events and all successor/retirement/left-live checks pass. Only the new merge subject fails the post-merge message check. Preserve the bound merge and receipt; do not amend, reset, replay or rerun the merge."
+}
