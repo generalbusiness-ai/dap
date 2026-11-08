@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cd02c0954e2685a7820bc0e3fe4cbc3fff150829","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-07-s1-transport-owner.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d531437e3a84b0b80c5f16cb0de6e2752572b99d","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
