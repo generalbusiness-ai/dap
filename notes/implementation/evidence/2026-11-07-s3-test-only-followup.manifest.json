@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "request": "8ae873463deaf28de9106f82ac6eafbc05aa6b99",
+  "promise": "a20e0cf1495712a6bcb7140ae2bbf92720580a5e",
+  "sourceHead": "dc073c3b73b0f14416edf49d0eee051672cd6524",
+  "sourceTree": "b7c13f2e81837810a0545dc44ca408d5c5babdb5",
+  "qualification": "The only S3 gate remains failed (exit1) at4f4944ae on one missed lane test caller. Repairdc073c3b changes only that test and its note, preserving15assertions and60second deadline. The affected compiler and complete owner pass once; all previously unreached main test phases pass once, with complete reports and unchanged inputs. This evidence does not turn the original gate into a pass. Independent review must assess docs/testing.md\u2019s isolated-test exception. No stage, owner, asset generation or gate reruns during sealing.",
+  "fileCount": 29,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-partition-followup-validation",
+      "fileCount": 8,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 564,
+          "sha256": "d7369dda6ee6985c633acbaf1edc636567c8f32fa7c9af21389f2bccc554506c"
+        },
+        {
+          "path": "after.json",
+          "bytes": 540919,
+          "sha256": "209de0eee43238441b8e5c89a706311abece282d81d8fc67b2363eb3216edc97"
+        },
+        {
+          "path": "before.json",
+          "bytes": 540919,
+          "sha256": "209de0eee43238441b8e5c89a706311abece282d81d8fc67b2363eb3216edc97"
+        },
+        {
+          "path": "compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 514,
+          "sha256": "3322dd55252ddb605680f4f99322aa123a5d786b8cd6664b25296121116d7f20"
+        },
+        {
+          "path": "result.json",
+          "bytes": 964,
+          "sha256": "1fb5551af12f1c4dd32c23e7a9f59e9529456bb559b688110740720ff5f96754"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-unreached-tests-validation",
+      "fileCount": 21,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1622,
+          "sha256": "8e3cc4150b87510da8496c22307b639991588711a4a872b6eb446b0b581bce38"
+        },
+        {
+          "path": "after.json",
+          "bytes": 542659,
+          "sha256": "d93e7d890926d910b402ee77aca4263d3cda264fa9e8a627f3d2cecb4d12b582"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1923,
+          "sha256": "356bb9767ae54f1a03c3e9cb5ec7937830182a69c9478d76ac3cba52c4df3ae3"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 542659,
+          "sha256": "d93e7d890926d910b402ee77aca4263d3cda264fa9e8a627f3d2cecb4d12b582"
+        },
+        {
+          "path": "followup.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 513,
+          "sha256": "598535f80690cfcc391c13114430d4fdb3690ed14aaed44d7657da73daadda1f"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 777,
+          "sha256": "b0c7aa5581df2ce3a9bd2d30b39f6d4e97ee53573d63ce336bf782c8ee80ac9a"
+        },
+        {
+          "path": "repair-proof.json",
+          "bytes": 984,
+          "sha256": "66b628530295f89e36e0837e30d7169956dd22ac9c373911a1b3c4efc4d5de8e"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 1665,
+          "sha256": "c5a587ce6a86e6386b96fdd7a463b46d2705d90679cf7e6130d656adf911b525"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1095,
+          "sha256": "1683224efb26ca2410413c01b11b0a8c1c09aa454069793196483bccc26f56d4"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 974,
+          "sha256": "11a2816c5b691a12538621c355dc035271a0819e1f1faea97575b275bbc24c7c"
+        },
+        {
+          "path": "started.json",
+          "bytes": 550,
+          "sha256": "9ddb6c1f36222fb34463bdde2424dfce840b56eae2b11a2c334f37cbef2f2a8f"
+        },
+        {
+          "path": "summary.argv.json",
+          "bytes": 130,
+          "sha256": "d3fde7677e71277a4f5bb499359967d43077154ef497b0d758f291188591107a"
+        },
+        {
+          "path": "summary.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "summary.time",
+          "bytes": 29,
+          "sha256": "5f673246d2f81666b653baafeead188d529252e0ab59475d381df2690b0cd7ee"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5893,
+          "sha256": "486782e83a8051fe38a66bd8f0d62d5309a57bd4d1eac9a5dd2435b89d9019be"
+        },
+        {
+          "path": "test.argv.json",
+          "bytes": 154,
+          "sha256": "48d2a07a25b8b7c73ba28952a43986b16b165245858a27ffca75ae16bced93d7"
+        },
+        {
+          "path": "test.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "test.time",
+          "bytes": 37,
+          "sha256": "e2b45548a8254c0cba071675e2c509b4fc77cef6ea4fb2de05e549c47e4e52b7"
+        }
+      ]
+    }
+  ]
+}

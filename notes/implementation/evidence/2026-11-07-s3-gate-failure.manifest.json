@@ -1,0 +1,93 @@
+{
+  "qualification": "One single gate failed at a missed cross-package test caller. The isolated repair changes only that test and explanatory documentation; the affected compiler, whole test file and previously unreached test stages are separate follow-ups. No follow-up can turn this gate into a pass.",
+  "sourceHead": "4f4944ae977aec52f375809db8a6ba755afdf579",
+  "sourceTree": "9020c9827abaad123ec63710d771a20b5ab4e6ce",
+  "fileCount": 16,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-gate-failure",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1195,
+          "sha256": "9fde563b99cf6c26cc2025c99af1fc44aad61f5d88cef060ed43572798ba08f7"
+        },
+        {
+          "path": "after.json",
+          "bytes": 542659,
+          "sha256": "ebd8727ef79b52333605a6584f1f1fb88992c0576cef6cddcd154cee1c416b8c"
+        },
+        {
+          "path": "before.json",
+          "bytes": 542659,
+          "sha256": "ebd8727ef79b52333605a6584f1f1fb88992c0576cef6cddcd154cee1c416b8c"
+        },
+        {
+          "path": "commit-messages.log",
+          "bytes": 39,
+          "sha256": "bba905aa77704f3121d52e86e97bdf97e0e5b7f590b37493fe87e45c50bd17b4"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate.log",
+          "bytes": 5628,
+          "sha256": "6e9523f60836ca1ba830934e373b5f2af7b5399a168610ee96e50b2e4c37cdce"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 31,
+          "sha256": "c0228ba5985dc80c1b36fbd0dc1c22c774e2eb8fb8f95ab4496dd6d345b6e030"
+        },
+        {
+          "path": "notes.log",
+          "bytes": 18,
+          "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 336,
+          "sha256": "db5491fb7bb24eedc05699c8d777c2728e96bf52c896988e64eaacfdef613fff"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 537,
+          "sha256": "49dad9268ff7a839abc4c3c2aa90d56f78811d2d158292478a7def49411e7374"
+        },
+        {
+          "path": "result.json",
+          "bytes": 757,
+          "sha256": "946506fe1830ebbd8b67437b041eeb149c03bd44b656b229cf2b500c0858be8a"
+        },
+        {
+          "path": "started.json",
+          "bytes": 637,
+          "sha256": "a9d6200867827dfd668b21a9d42f5f69f3148c45851f5e0db9a245bdeb0450a8"
+        },
+        {
+          "path": "task.json",
+          "bytes": 502,
+          "sha256": "161aaff37d031b58f229ad860afdbbd4b1a758efe75f6bc55bc495175c5e35c7"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 558,
+          "sha256": "a0d3c5f1062359a079067551a5bd43945951e2c8b5677adc0978185a702784c3"
+        },
+        {
+          "path": "typecheck.log",
+          "bytes": 3728,
+          "sha256": "7d50d66d881762bb0f442fda1f3e7df29cf8f31f0bec5b94480cbd8eefe669a0"
+        },
+        {
+          "path": "typecheck.time",
+          "bytes": 31,
+          "sha256": "6927a3015f80e6f4c53927fc3bdafb8f8966f0cdba7ef07950ac8a9e1ed54354"
+        }
+      ]
+    }
+  ]
+}
