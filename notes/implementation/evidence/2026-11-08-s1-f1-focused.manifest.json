@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "request": "089ed1a1cc812629d34baa346cc21d495b0c2ed2",
+  "promise": "4c2c799b5af3882c74f8705d20a5a28741a0e8ee",
+  "sourceHead": "3a6d7105a60e34462dc36eb80ea554c830928304",
+  "sourceTree": "c2c68a2a0add3c91c0f693b91a5b2fcbbaab8871",
+  "qualification": "S1 F1 focused checkpoint: two compiler contexts and six cases across both complete OAuth component owners pass once. One isolated one-case control removes the closed-owner check and fails by assertion at the retained-row observation, then restores cleanly. The exact OAuth source seal has its own commit and awaits checker review. No full gate, live acceptance, deployment or landing claim.",
+  "fileCount": 15,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-s1-f1-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1187,
+          "sha256": "6cdf0e33a7e7c9cf0e50847113beda0d537eb4eb4fbe9a604aefde81281f7c3b"
+        },
+        {
+          "path": "control-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "control-source-comparison.json",
+          "bytes": 481,
+          "sha256": "3b29b11d766727e6b8b9cdda977c2ca9a6e2ff4d9bfbbedb05b1db75c1450218"
+        },
+        {
+          "path": "control-summary.json",
+          "bytes": 1049,
+          "sha256": "ea5d6a4fdd362b9dcde91273942bb41d397eb8f672b467b53a1fa8110df644b9"
+        },
+        {
+          "path": "control.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "control.time",
+          "bytes": 29,
+          "sha256": "192631660f1b74705e1f7045a3b1c825874e6112d36f58769bb5236167fce317"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 2427,
+          "sha256": "35b67f0586ab3f3605c4827768d7b07ac0b2da89e2a827d561d82fe1372c096f"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 2284,
+          "sha256": "5a8a50c488a28fd6c15aecdfc31ccac2ad16f67c1c0a20247437a6f94c01cc44"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 564,
+          "sha256": "b7c3cf0cc3b4abc8961d08f5e16237a51d18f181e21fcf1c2d72c5b25a39cb93"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 3027,
+          "sha256": "a5a7aaa63b9714770027fccab90ba57c5bbfd630204f2ec2c1475496e858b007"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 1579,
+          "sha256": "15ee0f8f3dc94c2af359257b6a0dc3c90353ba863ae7085a4f61b713121be40b"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1523,
+          "sha256": "1f64cfe638ca3dd15b6e251007d8c0ec61674b3d51d92ae7165839aeb72e8b74"
+        },
+        {
+          "path": "result.json",
+          "bytes": 796,
+          "sha256": "8597daa9f722ac15fbf0ab3a83cdb888378f21ce8a2ffd845f8ad222101cfdd7"
+        },
+        {
+          "path": "source-seal.json",
+          "bytes": 1950,
+          "sha256": "b1f76ba9cf06ad333639abb7f7282c8df843ba247013e0adc3b67c7067515d5e"
+        }
+      ]
+    }
+  ]
+}
