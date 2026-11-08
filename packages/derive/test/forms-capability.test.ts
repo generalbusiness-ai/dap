@@ -33,6 +33,31 @@ function standIn(answers: Record<string, string> = {}): Capabilities & { asked: 
 }
 
 describe("capability forms (section 6.11), with a stand-in for the capability's code", () => {
+  for (const place of ["guard", "effect"] as const) test(`M7: an admitted capability ${place} retains its validated version after the declaration changes`, () => {
+    const input = capabilityStagingData();
+    if (place === "effect") input.acts["stage"]!.guards = [{ state: ["draft"] }];
+    const s = new Scope(valid(validateDefinition(input, PROPOSED_BOUNDS)));
+    const signed = s.intent(rita, "stage", { ...on(s, 0), fields: { commit: C1, earlier: [C2] } });
+    const calls: unknown[] = [];
+    const rules: Capabilities = {
+      ...standIn(),
+      guard: (version, name, args) => { calls.push([version, name, args]); return true; },
+      effect: (version, name, args) => {
+        calls.push([version, name, args]);
+        return [{ kind: "pin", key: [args["commit"] as string], state: "held", values: { commit: args["commit"] } }];
+      },
+    };
+    const before = s.judge(signed, { capabilities: rules });
+    expect(before.result).toBe("write");
+    const originalCalls = structuredClone(calls);
+    expect(originalCalls.at(-1)).toEqual(["hold@1", "pin-hold", { commit: C1 }]);
+    calls.length = 0;
+    input.capabilities[0]!.version = 2;
+    const after = s.judge(signed, { capabilities: rules });
+    expect(after).toEqual(before);
+    expect(calls).toEqual(originalCalls);
+  });
+
   test("a capability guard is asked with the arguments the definition writes, its refusal carries the capability's name, an effect's records follow the written effects, and a part reads a record that an entry carries", () => {
     const s = new Scope(staging);                              // entries 0 and 1; note 0 is rita's, a draft
     const stage = { ...on(s, 0), fields: { commit: C1, earlier: [C2] } };

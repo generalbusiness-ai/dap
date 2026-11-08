@@ -1,5 +1,6 @@
 /** Closed guard instructions captured by admission; child references stay local to the owning graph. */
-import type { FieldType, Guard, Subject } from "@generalbusiness/dap-contract";
+import type { FieldType, Subject } from "@generalbusiness/dap-contract";
+import { ownCapabilityGuard, type CapabilityGuardPlan } from "./capability-plan.ts";
 import type { ElementBinding, FieldResolution, OperandRead, SlotRead } from "./reads.ts";
 import { immutable } from "./model.ts";
 
@@ -34,7 +35,7 @@ export type GuardCode<N> =
   | { readonly op: "fact"; readonly source: FactSource; readonly type: Extract<FieldType, { type: "fact" }>; readonly where: readonly FactMatch[] }
   | { readonly op: "before" | "after"; readonly slot: SlotRead }
   | { readonly op: "rule"; readonly rule: string }
-  | { readonly op: "capability"; readonly capability: Extract<Guard, { capability: unknown }>["capability"] }
+  | { readonly op: "capability"; readonly capability: CapabilityGuardPlan }
   | { readonly op: "anyOf"; readonly alternatives: readonly (readonly N[])[] }
   | { [K in "each" | "has"]: BoundList & { readonly op: K; readonly where: readonly WherePlan[]; readonly guards: readonly N[] } }["each" | "has"]
   | (BoundList & { readonly op: "distinct"; readonly key: OperandRead })
@@ -48,7 +49,7 @@ export function mapGuardChildren<A, B>(plan: GuardPlan<A>, child: (value: A) => 
     case "anyOf": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, alternatives: Object.freeze(code.alternatives.map(group => Object.freeze(group.map(child)))) }) });
     case "each": case "has": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, guards: Object.freeze(code.guards.map(child)) }) });
     case "fact": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, type: immutable(code.type, origins) }) });
-    case "capability": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, capability: immutable(code.capability, origins) }) });
+    case "capability": return Object.freeze({ site: plan.site, code: Object.freeze({ ...code, capability: ownCapabilityGuard(code.capability) }) });
     case "state": case "signer": case "notIn": case "set": case "unset": case "equals": case "differs": case "some": case "none": case "count": case "every": case "before": case "after": case "rule": case "distinct": case "sameSet":
       return Object.freeze({ site: plan.site, code });
     default: return exhaustive(code);

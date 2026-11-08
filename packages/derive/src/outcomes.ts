@@ -16,6 +16,8 @@
  * and for every other owner as the given owners do.
  */
 
+import { nativeOutcomes } from "./program/native.ts";
+import { observeNativeCall, type OutcomeHook } from "./program/native-trace.ts";
 import type { Digest, OutcomeMark, PlatformData, Send } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
 import { joinReturnedEffects } from "./effects.ts";
@@ -23,7 +25,7 @@ import type { Own, Reading } from "./fields.ts";
 import type { Fetched, Judging } from "./guards.ts";
 import { overMax } from "./handlers.ts";
 import type { EvidenceValueDomain, OperationRules, OutcomeDerived, OutcomeInput, Owner, Owners } from "./ledger.ts";
-import { RuleFault, givenTo, outside, ruleAt, run, type AtHand, type OutcomeGives, type PlatformRules, type Rules } from "./marks.ts";
+import { RuleFault, givenTo, outside, ruleAt, run, type AtHand, type OutcomeGives, type OutcomeRule, type PlatformRules, type Rules } from "./marks.ts";
 import { joinReturnedSends } from "./sends.ts";
 import type { Operation, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -57,7 +59,7 @@ export function operationValueSelector(rules: Pick<OperationRules, "values">): V
  */
 export function ownersOf(definition: ValidDefinition, platform: PlatformRules | null | undefined, owners: Owners | null | undefined, reading?: OutcomeReading): Owners | undefined {
   if (!platform) return owners ?? undefined;
-  const kinds: Readonly<Record<string, OutcomeMark>> = (definition.declared as unknown as PlatformData).outcomes ?? {};
+  const kinds: Readonly<Record<string, OutcomeMark>> = nativeOutcomes(definition);
   return {
     rules(owner: Owner, kind: string): OperationRules | null {
       if (owner !== platform.named) return owners?.rules(owner, kind) ?? null;
@@ -65,6 +67,11 @@ export function ownersOf(definition: ValidDefinition, platform: PlatformRules | 
       const rule = mark ? ruleAt(platform.rules, mark.code, "outcome") : null;
       if (!mark || !rule) return null;
       const r = rule.rules;
+      const invoke = <K extends OutcomeHook>(hook: K, args: () => Parameters<NonNullable<OutcomeRule[K]>>): ReturnType<NonNullable<OutcomeRule[K]>> => {
+        const callback = r[hook] as NonNullable<OutcomeRule[K]>, supplied = args();
+        return observeNativeCall(definition, mark, "outcome", hook, callback,
+          () => Reflect.apply(callback, r, supplied) as ReturnType<NonNullable<OutcomeRule[K]>>);
+      };
       /** What a rule of this outcome entry is given: no field, no subject and no signer. */
       const judging = (view: StateView, outcome: OutcomeInput, resolved?: { selected: boolean | null; further: boolean }): Judging => {
         const scope = view.scope();
@@ -86,30 +93,34 @@ export function ownersOf(definition: ValidDefinition, platform: PlatformRules | 
         return given;
       };
       const sourceValues = r.values;
-      const values: ValueSelector | undefined = sourceValues ? evidence => run(mark, () => sourceValues.call(r, evidence)) : undefined;
+      const values: ValueSelector | undefined = sourceValues ? evidence => run(mark, () => {
+        const callback = sourceValues.call;
+        return observeNativeCall(definition, mark, "outcome", "values", callback,
+          () => Reflect.apply(callback, sourceValues, [r, evidence]) as ReturnType<ValueSelector>);
+      }) : undefined;
       if (values && sourceValues) valueSources.set(values, valueSources.get(sourceValues) ?? sourceValues);
       return {
-        ...(r.reservation ? { reservation: (pinned: ValidDefinition) => r.reservation!(pinned) } : {}),
+        ...(r.reservation ? { reservation: (pinned: ValidDefinition) => invoke("reservation", () => [pinned]) } : {}),
         ...(r.valueDomains ? { valueDomains: r.valueDomains } : {}),
         ...(values ? { values } : {}),
         selects: r.selects === true, read: r.read === true, ...(r.closure === undefined ? {} : { closure: r.closure }), ...(r.most === undefined ? {} : { most: r.most }),
         // The driver asks this outside a commit, as it asks `unknown`: the rule reads the state only.
-        ...(r.ready ? { ready: (view: StateView, operation: Operation, attempt: number) => answer(run(mark, () => r.ready!(view, operation, attempt))) } : {}),
-        ...(r.beforeSend ? { beforeSend: (view: StateView, operation: Operation, attempt: number, own: Own) => run(mark, () => r.beforeSend!(view, operation, attempt, own)) } : {}),
-        ...(r.publicationOrigin ? { publicationOrigin: (view: StateView, operation: Operation, own: Own) => run(mark, () => r.publicationOrigin!(view, operation, own)) } : {}),
+        ...(r.ready ? { ready: (view: StateView, operation: Operation, attempt: number) => answer(run(mark, () => invoke("ready", () => [view, operation, attempt]))) } : {}),
+        ...(r.beforeSend ? { beforeSend: (view: StateView, operation: Operation, attempt: number, own: Own) => run(mark, () => invoke("beforeSend", () => [view, operation, attempt, own])) } : {}),
+        ...(r.publicationOrigin ? { publicationOrigin: (view: StateView, operation: Operation, own: Own) => run(mark, () => invoke("publicationOrigin", () => [view, operation, own])) } : {}),
         // Revision 19, section 6.1 (row I3-35): the rule that decides a further attempt is given what every rule is given.
-        retries: (result, operation, view, outcome) => answer(run(mark, () => r.retries(result, operation, givenTo(judging(view, outcome))))),
-        ...(r.holds ? { holds: (view: StateView, operation: Operation, outcome: OutcomeInput) => answer(run(mark, () => r.holds!(givenTo(judging(view, outcome)), operation))) } : {}),
-        ...(r.wellFormed ? { wellFormed: (result, evidence, view: StateView, outcome: OutcomeInput) => answer(run(mark, () => r.wellFormed!(result, evidence, givenTo(judging(view, outcome))))) } : {}),
+        retries: (result, operation, view, outcome) => answer(run(mark, () => invoke("retries", () => [result, operation, givenTo(judging(view, outcome))]))),
+        ...(r.holds ? { holds: (view: StateView, operation: Operation, outcome: OutcomeInput) => answer(run(mark, () => invoke("holds", () => [givenTo(judging(view, outcome)), operation]))) } : {}),
+        ...(r.wellFormed ? { wellFormed: (result, evidence, view: StateView, outcome: OutcomeInput) => answer(run(mark, () => invoke("wellFormed", () => [result, evidence, givenTo(judging(view, outcome))]))) } : {}),
         // The driver asks this outside a commit, so no judge is deriving: the rule reads the state and the scope's own entries only.
-        ...(r.unknown ? { unknown: (view: StateView, operation: Operation, attempt: number, own) => run(mark, () => r.unknown!(view, operation, attempt, own)) } : {}),
+        ...(r.unknown ? { unknown: (view: StateView, operation: Operation, attempt: number, own) => run(mark, () => invoke("unknown", () => [view, operation, attempt, own])) } : {}),
         // The send of the mark is derived with the entry, whether the rule of the kind derives anything beside it or not.
         // Revision 20: the two functions that say what is to be read. Each is given the state, the outcome as it is offered and the
         // scope's own entries; the second also each entry in the outcome's `uses`. Neither is given an observation: before the rows of
         // the entry are settled nothing is at hand.
-        ...(r.origin ? { origin: (view: StateView, operation: Operation, outcome: OutcomeInput) => run(mark, () => r.origin!(givenTo(judging(view, outcome)), operation)) } : {}),
-        ...(r.subjects ? { subjects: (view: StateView, operation: Operation, outcome: OutcomeInput, row: number, first) => run(mark, () => r.subjects!(givenTo(judging(view, outcome)), operation, row, first)) } : {}),
-        ...(r.derives || mark.send ? { derives: (view: StateView, operation: Operation, outcome: OutcomeInput, selected: boolean | null, at) => { const j = judging(view, outcome, { selected, further: at.opens !== null }); return given(mark, j, kinds, r.derives ? run(mark, () => r.derives!(givenTo(j), operation, selected)) : { effects: [], sends: [], opens: [] }); } } : {}),
+        ...(r.origin ? { origin: (view: StateView, operation: Operation, outcome: OutcomeInput) => run(mark, () => invoke("origin", () => [givenTo(judging(view, outcome)), operation])) } : {}),
+        ...(r.subjects ? { subjects: (view: StateView, operation: Operation, outcome: OutcomeInput, row: number, first) => run(mark, () => invoke("subjects", () => [givenTo(judging(view, outcome)), operation, row, first])) } : {}),
+        ...(r.derives || mark.send ? { derives: (view: StateView, operation: Operation, outcome: OutcomeInput, selected: boolean | null, at) => { const j = judging(view, outcome, { selected, further: at.opens !== null }); return given(mark, j, kinds, r.derives ? run(mark, () => invoke("derives", () => [givenTo(j), operation, selected])) : { effects: [], sends: [], opens: [] }); } } : {}),
       };
     },
     ...(owners?.reserves ? { reserves: (view: StateView, pinned: ValidDefinition) => owners.reserves!(view, pinned) } : {}),

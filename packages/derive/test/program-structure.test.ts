@@ -36,6 +36,11 @@ test("the admitted corpus supplies every structural opcode and binds every root 
   const seen = new Set<string>();
   const visit = (definition: ValidDefinition, body: BodyStructure, node: StructureNode) => {
     seen.add(`${node.category}:${node.op}`);
+    if (node.op === "native") {
+      expect(node.native.body).toBe(body.id);
+      expect(node.native.mark).toBe(node.data);
+      expect(structureOf(definition)!.native).toContain(node.native);
+    }
     // This checks complete capture, not concrete execution or caller integration.
     if (node.category === "guard" && node.op !== "native") expect(guardPlan(definition, body, node)?.code.op).toBe(node.op);
     node.children.forEach(child => visit(definition, body, child));
@@ -46,6 +51,10 @@ test("the admitted corpus supplies every structural opcode and binds every root 
     const graph = structureOf(checked.definition), reads = resolvedReads(checked.definition)!;
     expect(graph, row.name).not.toBeNull();
     expect(graph!.validation, row.name).toBe(reads.validation);
+    expect(graph!.native.map(hook => [hook.kind, hook.path, hook.mark.code, hook.mark.row, hook.dependencies]), row.name)
+      .toEqual(reads.marks.map(mark => [mark.kind, mark.path, mark.code, mark.row, "unknown"]));
+    expect(new Set(graph!.native.map(hook => hook.id)).size, row.name).toBe(graph!.native.length);
+    for (const hook of graph!.native) expect(hook.validation, row.name).toBe(reads.validation);
     expect(graph!.roots.length, row.name).toBe(reads.frames.length);
     for (const root of graph!.roots) {
       expect(reads.frames.includes(root.frame), row.name).toBe(true);
@@ -232,16 +241,20 @@ test("aliased capability ranges retain their semantic argument and admitted owne
   if (!argument || !("items" in argument)) return expect.fail("expected range argument");
   source.capability.with["selected"] = { items: argument.items, slot: argument.slot };
   const checked = admitted(input), body = bodyStructure(checked, act, "stage")!, owner = formStructures(checked, body, source)[0]!;
-  if (owner.category !== "guard") return expect.fail("expected guard instruction");
+  if (owner.category !== "guard" || owner.op !== "capability") return expect.fail("expected capability guard instruction");
   const code = guardPlan(checked, body, owner)?.code;
   if (code?.op !== "capability") return expect.fail("expected capability instruction");
-  const ownedArgument = code.capability.with["earlier"];
+  const ownedArgument = owner.data.capability.with["earlier"];
   if (!ownedArgument || !("items" in ownedArgument)) return expect.fail("expected owned range argument");
   const plan = rangePlan(checked, body, owner, argument.items, "capability:earlier")!;
   expect(plan).toMatchObject({ type: "note", states: ["draft"], where: [], except: [] });
   expect(ownedArgument.items).not.toBe(argument.items);
   const selected = rangePlan(checked, body, owner, argument.items, "capability:selected");
   expect(selected).not.toBeNull(); expect(selected).not.toBe(plan);
+  const typedArgument = code.capability.arguments.find(([name]) => name === "earlier")?.[1];
+  const typedSelected = code.capability.arguments.find(([name]) => name === "selected")?.[1];
+  if (typedArgument?.op !== "items" || typedSelected?.op !== "items") return expect.fail("expected typed range arguments");
+  expect(typedArgument.range).toBe(plan); expect(typedSelected.range).toBe(selected);
   expect(rangePlan(checked, body, owner, argument.items, "capability:unknown")).toBeNull();
   expect(rangePlan(checked, body, owner, ownedArgument.items, "capability:earlier")).toBe(plan);
   expect(rangePlan(checked, body, body.nodes[0]!, argument.items, "capability:earlier")).toBeNull();

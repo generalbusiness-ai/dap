@@ -6,6 +6,7 @@ import { canonicalBytes, entryHash, factRefOf, newIncarnation, parseStrictBytes,
 import { MemoryState, PROFILES, applyEntry, clockOf, decisionCounts, entryOf, fits, indexItems, itemAwaits, judgeDelivery, keyOf, owed, validateDefinition } from "../src/index.ts";
 import type { Counts, Draft, Fetched, Indexed, Judgment, PlatformRule, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
 import { Scope, arriving, d, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";
+import { observeNativeCalls } from "../src/program/native-trace.ts";
 
 /**
  * A request that is bound to the pending item that it settles, and the
@@ -381,6 +382,19 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
     const { G, t, b, counts, states } = three();
     const [used, reserved] = G.row();
     const first = G.stop(Q, t.b);
+    const untraced = G.judged(first), supplied = structuredClone(G.using.given);
+    expect(untraced.result).toBe("write");
+    for (const budget of [0, 64]) {
+      G.using.given.length = 0;
+      const observed = observeNativeCalls(G.definition, budget, () => G.judged(first));
+      expect(observed.value).toEqual(untraced);
+      expect(G.using.given).toEqual(supplied);
+      expect(observed.calls).toEqual({ "also/job-of/bind": 1, "effect/open-stopped/run": 1 });
+      expect(observed.truncated).toBe(budget === 0);
+      if (budget === 64) expect(observed.trace.find(event => event.hook === "bind"))
+        .toMatchObject({ context: "indexed items, fields", sourcePath: null, opaque: true, dependencies: "unknown", result: "returned" });
+    }
+    G.using.given.length = 0;
     expect([G.deliver(first), G.last3(), states(), counts()]).toEqual(["settles", ["applied", null, 1], ["queued", "gone", "taken"], [1, 0, 1]]);
     // Case 4. The index returned B for that ticket, and no other job: the rule was given B and the fields, and nothing else.
     expect(G.using.given).toEqual([{ items: [{ id: b, state: "queued", parties: {}, refs: { ticket: t.b.fact, owner: Q }, values: {} }], fields: { ticket: t.b.fact } }]);

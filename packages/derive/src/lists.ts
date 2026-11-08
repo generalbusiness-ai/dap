@@ -1,10 +1,8 @@
-/** Ranges, shared three-outcome strategies, and opaque capability argument bindings. */
+/** Complete ranges and shared three-outcome strategies. */
 
-import type { FieldType, Operand, Range } from "@generalbusiness/dap-contract";
+import type { Range } from "@generalbusiness/dap-contract";
 import type { GuardResult, Judging } from "./guards.ts";
-import { operand } from "./operand.ts";
 import type { Item } from "./state.ts";
-import { own } from "./values.ts";
 import { whereMatches, type ElementValues } from "./program/read-value.ts";
 import type { RangePlan } from "./program/guard-plan.ts";
 import { rangePlan, type FormContext, type RangeUse } from "./program/structure.ts";
@@ -88,41 +86,4 @@ export function coveredItems(j: Judging, plan: RangePlan, elements?: ElementValu
   const items: Item[] = [];
   return scanItems(j, plan, item => whereMatches(j, plan.where, item, elements),
     item => { items.push(item); return false; }) === "all" ? items : null;
-}
-
-// ---------------------------------------------------------------- elements
-
-/** The type of the element a list form binds under that name, or of a member of it, when the definition states it. */
-export function typeOfElement(j: Judging, name: string): FieldType | null {
-  const [as, ...members] = name.split(".");
-  let type: FieldType | null = j.elementTypes?.get(as!) ?? null;
-  for (const m of members) type = type?.type === "record" ? (own(type.of, m) ?? null) : null;
-  return type;
-}
-
-/** The type of the elements of the list an operand reads, when the definition states it, as the validator derived it. */
-function elementType(j: Judging, list: Operand, item: Item | null): FieldType | null {
-  let type: FieldType | null | undefined = null;
-  if ("part" in list && list.part !== undefined) return null;
-  if ("field" in list) type = own(j.fieldTypes, list.field);
-  else if ("element" in list) type = typeOfElement(j, list.element);
-  else if ("slot" in list) {
-    const of = list.of === undefined ? item : list.of === "each" ? j.each : j.subjects.get(list.of);
-    const declared = of ? own(j.definition.declared.items, of.type) : undefined;
-    type = own(declared?.refs, list.slot)?.to ?? own(declared?.values, list.slot)?.of;
-  }
-  return type?.type === "list" ? type.of : null;
-}
-
-/**
- * One judging for each element of the list an operand reads, with the
- * element bound to `as`. An absent field, an empty slot and an unbound
- * subject are the empty list. Null: the value is not a list, which only a
- * value the definition gives no type can be.
- */
-export function bindEach(j: Judging, list: Operand, as: string, item: Item | null): Judging[] | null {
-  const value = operand(j, list, item);
-  if (value !== null && !Array.isArray(value)) return null;
-  const type = elementType(j, list, item);
-  return ((value ?? []) as readonly unknown[]).map((element) => ({ ...j, elements: new Map(j.elements).set(as, element), elementTypes: new Map(j.elementTypes).set(as, type) }));
 }

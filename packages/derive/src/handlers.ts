@@ -6,7 +6,8 @@
  * send is run again from the entry that sent it.
  */
 
-import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, EffectForm, Entry, FactRef, FactUse, FieldType, FieldValue, Guard, Input, Notify, PlatformData, PlatformReceive, Prepared, Reason, ReceiveType, RefusalReason, Request, ResultClauses, ScopeRef, Send, SendForm, SendMark, Settles, UnavailableReason } from "@generalbusiness/dap-contract";
+import { nativeMark, nativeOutcomes } from "./program/native.ts";
+import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, EffectForm, Entry, FactRef, FactUse, FieldType, FieldValue, Guard, Input, Notify, PlatformReceive, Prepared, Reason, ReceiveType, RefusalReason, Request, ResultClauses, ScopeRef, Send, SendForm, SendMark, Settles, UnavailableReason } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/dap-bytes";
 import { handlerBranch } from "./handler-branch.ts";
 import type { Signer } from "./attribution.ts";
@@ -15,7 +16,7 @@ import { deriveEffects } from "./effects.ts";
 import { creationFields, factsNamed, isEntryOf, isLocalFact, messageFields, presentedTypes, readFacts, readFields, textsNamed, updateOf, type Reading, type Update } from "./fields.ts";
 import { signerOf } from "./fold.ts";
 import { slotOf, type Fetched, type Judging } from "./guards.ts";
-import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, markOf, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
+import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
 import { sendOrigin } from "./program/send-origin.ts";
 import { deriveSends } from "./sends.ts";
@@ -273,7 +274,7 @@ export function alsoItems(view: StateView, definition: ValidDefinition, also: Re
     matched.set(name, null);
     let item: Item | null = null;
     if (!rule) return null;
-    const mark = markOf(rule) as AlsoMark | null;
+    const mark = nativeMark(definition, rule, "also");
     if (mark) {
       marked.add(name);
       item = select ? select(mark, bound()) : null;
@@ -338,7 +339,7 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
     const facts = new Map([...named.facts, ...extra.facts]);
     const fields = named.fields, places = placesOf(act.fields, fields);
     const beside = definition.observing ? atHandByRows(values, places) : atHand(input.observed, values, places);
-    const g = { ...giving(view, context, scope, entry.seq, { type: "act", signed: input.signed, grant: null, presented: input.presented }, { clock: false }, fields, facts), beside };
+    const g = { ...giving(view, definition, context, scope, entry.seq, { type: "act", signed: input.signed, grant: null, presented: input.presented }, { clock: false }, fields, facts), beside };
     const primary = act.step === "transition" && input.signed.intent.on !== null ? view.item(input.signed.intent.on) : null;
     const subjects = alsoItems(view, definition, act.also, fields, primary, undefined, (mark, bound) => selectedBy({ ...g, subjects: bound }, mark));
     if (!subjects.ok) throw new RuleFault("an item settlement cannot reconstruct its act subjects");
@@ -376,8 +377,8 @@ export type Ran =
 export const refusalName = (guard: Guard): { name?: string } => (guard.reason === undefined ? {} : { name: guard.reason });
 
 /** What a judge gives a rule before the forms of a row are derived: at check 7 no subject is bound, and at check 8 those bound so far. A handler has no signer. */
-export const giving = (view: StateView, context: Reading, scope: Pick<ScopeState, "at" | "creator">, self: number, judged: JudgedInput, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, Fetched>, source?: Fetched): Giving =>
-  ({ view, clock: context.clock, bounds: context.bounds, scope, self, fields, subjects: new Map(), signer: null, facts, own: context.own, source, platform: context.platform, judged, ran });
+export const giving = (view: StateView, definition: ValidDefinition, context: Reading, scope: Pick<ScopeState, "at" | "creator">, self: number, judged: JudgedInput, ran: { clock: boolean }, fields: Readonly<Record<string, FieldValue>>, facts: ReadonlyMap<Digest, Fetched>, source?: Fetched): Giving =>
+  ({ view, definition, clock: context.clock, bounds: context.bounds, scope, self, fields, subjects: new Map(), signer: null, facts, own: context.own, source, platform: context.platform, judged, ran });
 
 /**
  * Guards, then effects, then sends, for one input whose subjects are
@@ -465,7 +466,7 @@ function prepareHandler(view: StateView, definition: ValidDefinition, context: R
   if (named.result !== "read") return refused(named.result, named.detail, named.uses);
   const { fields, facts, uses } = named;
   // Platform data: what a rule of this row is given before the row's forms are derived (section 6.1). A handler has no check 9.
-  const g = judged ? giving(view, context, scope, scope.head.seq + 1, judged, clocked, fields, facts, sent?.source) : null;
+  const g = judged ? giving(view, definition, context, scope, scope.head.seq + 1, judged, clocked, fields, facts, sent?.source) : null;
   // Section 4.2, check 7: a field whose type is a mark is checked by the mark's rule.
   const outside = g && fieldOutsideType(g, handler.fields);
   if (outside) return refused("bad-field", `${outside} is not a value of its type`, uses);
@@ -482,7 +483,7 @@ function prepareHandler(view: StateView, definition: ValidDefinition, context: R
   // Section 4.2, check 8: a name of `also` that a mark selects is resolved by the mark's rule.
   // Section 17.2a, revision 23: the mark that binds the name which `bound.of` names is a binding selector. The judge makes the one
   // lookup of the declared index, and runs the rule on what it returns and on the fields, and on nothing else.
-  const selector = selectorOf(handler);
+  const selector = selectorOf(handler, definition);
   const also = alsoItems(view, definition, handler.also, fields, null, undefined, g ? (mark, bound) => (mark === selector ? selectedByIndex(g, selector) : selectedBy({ ...g, subjects: bound }, mark)) : undefined);
   if (!also.ok) return refused("no-item", also.detail, uses);
   for (const [name, item] of also.items) subjects.set(`also.${name}`, item);
@@ -582,7 +583,7 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     // clauses are the mark's own (revision 17, "A request of an outcome's rule, and its clauses"). Such an entry sends that one
     // request and no other, at ordinal 0. A request of a kind whose mark holds no send has no clause written anywhere: its result
     // is recorded, and changes nothing. The clause is found by the kind of the outcome, which its input holds, and by nothing else.
-    const marked = input.owner === context.platform?.named ? own((declared as unknown as PlatformData).outcomes, input.kind)?.send : undefined;
+    const marked = input.owner === context.platform?.named ? own(nativeOutcomes(definition), input.kind)?.send : undefined;
     if (!marked || request.n !== 0) return { result: "ran", effects: [], uses: [], judgesTime: false };
     // An outcome has no field, no subject and no signer: each effect of the clause is an effect mark, whose rule finds its items.
     frame = { kind: input.kind, body: null, fields: {}, fieldTypes: {}, also: {}, on: null, signer: null, sends: [], sent: marked as unknown as SendMark };
@@ -594,12 +595,10 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   const selected = originBody ? sendOrigin(definition, originBody, origin, request.n) : null;
   const form = frame.sent ?? selected?.declaration;
   if (!form || "index" in form) throw new Error(`entry ${origin.seq} declares no request at ordinal ${request.n}`);
-  const marked = markOf(form) as SendMark | null;
+  const marked = selected?.node.op === "native" ? selected.node.data : nativeMark(definition, form, "send");
   const written = marked ? null : (form as Exclude<SendForm, { index: unknown }>);
-  const clauses = (marked ? marked.result : "create" in written! ? written.create.result : "tell" in written! ? written.tell.result : written!.relate.result) as ResultClauses & { conflict?: readonly EffectForm[] };
   const structure = selected && originBody ? sendClauseStructure(definition, originBody, selected.node, clause)
     : clauseStructure(definition, form, clause, null, frame.kind);
-  if ((clauses[clause]?.length ?? 0) > 0 && !structure) throw new TypeError("result clause was not captured by its validation");
   const forms = structure ? bodyEffectForms(definition, structure) : [];
   // Revision 20, section 16.1: the rows of this clause, for the delivery of a result that runs it, under a definition whose data
   // states rows. A request that a rule gave states none: its mark holds its clauses, and no text gives a mark rows (I3 deltas,

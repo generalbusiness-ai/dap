@@ -51,7 +51,7 @@ export const WINDOWS = { ordinary: { seconds: 300, once: false }, once: { second
 export function windowOf(definition: ValidDefinition, kind: ScopeKind, act: string): Window | null {
   const row = own(definition.declared.acts, act);
   if (!row || kind === "membership" || kind === "register") return null;
-  const action = actionOf(row);
+  const action = actionOf(row, definition);
   if (row.effects.some((effect) => "hold" in effect && effect.hold.do !== "end") || action === "work.export" || action === "change.check") return WINDOWS.once;
   // I3 merge: the windows of a task scope are IA's, with its definition: 60 seconds for a control, and 10 for the acts that the table
   // names. None is stated here, so nothing is read for an act of a task scope.

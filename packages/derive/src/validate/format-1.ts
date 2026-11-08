@@ -27,6 +27,7 @@ import { AmountError } from "../held.ts";
 import type { Profile, ValidateOptions, Validation } from "./index.ts";
 import { bindReads, recordFrame } from "../program/reads.ts";
 import { beginBody, endBody } from "../program/structure.ts";
+import { recordNativeOutcome } from "../program/native.ts";
 
 /** The sole currently supported definition-format binding; not a new format. */
 export const FORMAT_1 = "artroom-definition-1";
@@ -129,6 +130,7 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
     for (const [kind, m] of entries(top["outcomes"], "outcomes", null)) {
       // Revision 21, section 17.2: the mark may state `attempts` and `most`, and its send `once`. `holds.ts` reads the three.
       const o = mark(d, m, at("outcomes", kind), "outcome", [], ["send", "attempts", "most", "origin", "observes"]);
+      if (o) recordNativeOutcome(d, kind, o);
       // Revision 20, section 6.1, "The origin of an outcome": one of the two words. With `opening`, nothing more is checked.
       if (o && "origin" in o) {
         d.observing = true;

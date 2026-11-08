@@ -187,7 +187,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "e578408e0a585561db69e4bf15984c311d74bc5baf95c3ac95f4bde6fd8ca51f", // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
+    "packages/scope/src/core.ts:Scope": "21beb2ace9f9eee5889cc06352e603eb8975f1957d76d1ac823de466f680d984", // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
   },
 };
 
@@ -249,8 +249,8 @@ const seals = {
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
   "packages/scope/src/applications/act-admission.ts": "bec337cfdbc35247da587bf794715062537b89a1894c6c0829b7c5fa0c7b1884", // Exact native provenance and current trust; actual maintained parser output.
-  "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
-  "packages/derive/src/judge.ts": "70cfbfe4332813d559ee2b7c63b4a98e21c4ac9bcb286695ea482be3a7c49c84",
+  "packages/derive/src/genesis.ts": "3547884710d4828533e670740169e7f33d470775db12a0f7c02c4a7e2e2b08de",
+  "packages/derive/src/judge.ts": "89d7601ff9b19dc562e183f836e60ed6c804a70fd428cf6e0e17424e353101dd",
   "packages/scope/src/sessions.ts": "ee2afb1a928446d146b81a3adfd4794cbacac9322f9a9a5142658a7036005ebb",
   "packages/scope/src/originals.ts": "c8a5185ad8a57a851ecbe77d87649b0bbfd45bf9c93e685d7dc3a35982ef72cc", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.

@@ -1,0 +1,79 @@
+{
+  "qualification": "The complete existing indexed-binding owner passes with whole delivery/context/count comparisons under exhausted and full Native tracing. The owner ran before the test-only checkpoint that retains its exact bytes; production source is unchanged from Page CI at 7f28e18a.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-indexed-native-trace",
+  "checkpoint_commit": "09d9d35a7c3419746ea299dec48be1b89f18dbaa",
+  "checkpoint_tree": "2ae67392d0ada18f3a60615c2434f522ebe62236",
+  "file_count": 14,
+  "files": [
+    {
+      "path": "QUALIFICATION.md",
+      "bytes": 379,
+      "sha256": "c9f9ccf4fc987f41516fbc418d3bc83c9b10030dce95e05676ea8fbaf35bb60b"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1067,
+      "sha256": "a407a7f9e46f00e2e7a4a0384351886ecdca835639de9ccdc712bc3fc277c010"
+    },
+    {
+      "path": "checkpoint.json",
+      "bytes": 290,
+      "sha256": "ec74e6f43b2ad30440f4408cda4b25c3c13eb151adb3ca93db721f0c826cbb9b"
+    },
+    {
+      "path": "compile-tests.argv.json",
+      "bytes": 88,
+      "sha256": "7ed74c93fb1eee7bd1487cde81a43032d236b39635e363486ce069e9cf53b6a4"
+    },
+    {
+      "path": "compile-tests.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "compile-tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compile-tests.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 911,
+      "sha256": "f07cc11a43602c5f878d136a58b3a0723aea416bef90713b6862973bf34576dc"
+    },
+    {
+      "path": "owner.argv.json",
+      "bytes": 239,
+      "sha256": "874ffaa50c69dd0af9894ba3569ae34f4416c1eaf283719d53ea11d71032e186"
+    },
+    {
+      "path": "owner.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "owner.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "owner.stdout",
+      "bytes": 108,
+      "sha256": "48a5789eaab740e302551a548900c92805f1b32315595838eb7f2a51c1d712db"
+    },
+    {
+      "path": "report.json",
+      "bytes": 14803,
+      "sha256": "fb79b943df1985eadc99d2c74df218ea01363b663dd735e23028667e4092a7c0"
+    },
+    {
+      "path": "witness.test.ts",
+      "bytes": 45938,
+      "sha256": "52f5a3ebe66829d6537e54f3d26bca24ffa03f3c01a7c76946b5afaffa580f26"
+    }
+  ]
+}

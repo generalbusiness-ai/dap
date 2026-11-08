@@ -1,0 +1,54 @@
+{
+  "qualification": "One read-only Page probe after stacking S1 candidate0abdac41 on M7. Exact predicted bytes equal committed assets; no generator mutation or tracked change. Earlier CI remains qualified at7f28; combined-source CI and M7 gate are pending.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-s1-page-probe",
+  "sourceHead": "2bc297662282962f53922d07a351ec649a980a83",
+  "sourceTree": "69d08ca8e70ebaed1a2984c5929b031e2f985088",
+  "file_count": 9,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 619,
+      "sha256": "321bd93a30bafe71bcda4432250e04cc6212f445eb942988ecde87bb9833d0b0"
+    },
+    {
+      "path": "after.json",
+      "bytes": 531047,
+      "sha256": "70ad6dd93e0e6c028f69174df11aca463117693664c781fd35d789df275bf13f"
+    },
+    {
+      "path": "argv.json",
+      "bytes": 191,
+      "sha256": "9d90dd4ac4f39f5dfb4ba0b471ef1134d374e695b59bfe05c307a356d3b3f384"
+    },
+    {
+      "path": "before.json",
+      "bytes": 531047,
+      "sha256": "70ad6dd93e0e6c028f69174df11aca463117693664c781fd35d789df275bf13f"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 2023,
+      "sha256": "de1777a9639a111003dc756702c78a92f3ca02b454c5c721d0a9a2c59e566334"
+    },
+    {
+      "path": "predicted-assets.ts",
+      "bytes": 2360136,
+      "sha256": "1b2df352b600a31ca486da98b4797d42c046326323b95af65ee7ff194ed10492"
+    },
+    {
+      "path": "result.json",
+      "bytes": 446,
+      "sha256": "d0f422c5c19db30a635e982a53f7c1bc468307b8a9675d50c63031518729dfb4"
+    },
+    {
+      "path": "run.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

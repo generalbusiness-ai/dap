@@ -16,6 +16,8 @@
  * and nothing in an entry says that a rule ran.
  */
 
+import { nativeMark } from "./program/native.ts";
+import { observeNativeCall } from "./program/native-trace.ts";
 import type { ActType, AlsoMark, Attempt, Bounds, CapabilityName, Digest, DomainTag, Effect, Evidence, FactRef, FieldType, FieldValue, Grant, GrantMark, Guard, KeyId, Mark, MemberId, MemberRef, Message, ObservationUse, OperationId, PlatformDefinition, Request, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, domainBytes, isDigest, isFieldValue, isMemberRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
@@ -471,7 +473,7 @@ export function unjudged<T>(judge: () => T): T | { result: "unavailable"; reason
 export const markOf = (v: unknown): Mark | null => (isObject(v) && typeof v["code"] === "string" && typeof v["row"] === "string" ? (v as unknown as Mark) : null);
 
 /** What a judge holds when it gives a rule its six things: the parts of a `Judging` that a rule is given. */
-export type Giving = Pick<Judging, "view" | "clock" | "bounds" | "scope" | "self" | "fields" | "subjects" | "signer" | "facts" | "own" | "source" | "platform" | "judged" | "ran" | "beside" | "outcome">;
+export type Giving = Pick<Judging, "definition" | "view" | "clock" | "bounds" | "scope" | "self" | "fields" | "subjects" | "signer" | "facts" | "own" | "source" | "platform" | "judged" | "ran" | "beside" | "outcome">;
 
 /** The six things, and no other (section 6.1). The entries in `uses` are those that the input's fields name, and for a delivery its source entry. */
 export function givenTo(g: Giving): RuleGiven {
@@ -540,10 +542,13 @@ export const outside = (mark: Mark, what: string): RuleFault => new RuleFault(`t
  * is one that the forms write, and the judge checks it as data.
  */
 export function ofCodedType(g: Giving, type: FieldType | undefined, value: unknown, of: { field: string } | { item: number; slot: string }): boolean | null {
-  const mark = markOf(type);
+  const mark = nativeMark(g.definition, type, "type");
   if (!mark) return null;
   if (!isFieldValue(value)) return false;
-  const answer = run(mark, () => ruleFor(g, mark, "type").run(givenTo(g), value, of));
+  const answer = run(mark, () => {
+    const rule = ruleFor(g, mark, "type"), callback = rule.run, given = givenTo(g);
+    return observeNativeCall(g.definition, mark, "type", "run", callback, () => Reflect.apply(callback, rule, [given, value, of]) as ReturnType<typeof callback>);
+  });
   if (typeof answer !== "boolean") throw outside(mark, "no answer on a type");
   return answer;
 }
@@ -563,7 +568,10 @@ export function selectedBy(g: Giving, mark: AlsoMark): Item | null {
   const rule = ruleFor(g, mark, "also");
   // A rule that is written as a binding selector is given two things only, and stands only where `bound.of` names its name.
   if (!("run" in rule)) throw new RuleFault(`the rule ${mark.code} is a binding selector, and its mark binds no name that a bound names`);
-  const id = run(mark, () => rule.run(givenTo(g), mark.item));
+  const id = run(mark, () => {
+    const callback = rule.run, given = givenTo(g), item = mark.item;
+    return observeNativeCall(g.definition, mark, "also", "run", callback, () => Reflect.apply(callback, rule, [given, item]) as ReturnType<typeof callback>);
+  });
   if (id === null) return null;
   const item = typeof id === "number" && Number.isSafeInteger(id) && id >= 0 ? g.view.item(id) : null;
   if (item?.type !== mark.item) throw outside(mark, `no item of the type ${mark.item}`);
@@ -576,8 +584,8 @@ export function selectedBy(g: Giving, mark: AlsoMark): Item | null {
  * states none. Such a row reads no observation for the signer, whose key
  * membership may not know (section 4.2).
  */
-export const actionOf = (act: Pick<ActType, "grant">): string | null => {
-  const mark = markOf(act.grant) as GrantMark | null;
+export const actionOf = (act: Pick<ActType, "grant">, definition?: ValidDefinition): string | null => {
+  const mark = definition ? nativeMark(definition, act.grant, "grant") : markOf(act.grant) as GrantMark | null;
   return mark ? (mark.grant ?? null) : act.grant;
 };
 
@@ -590,7 +598,10 @@ export const actionOf = (act: Pick<ActType, "grant">): string | null => {
  */
 export function grantByRule(g: Giving, mark: GrantMark): { pass: true; member: MemberRef | null } | { pass: false; name?: string } {
   const rule = ruleFor(g, mark, "grant");
-  const answer = run(mark, () => rule.run(givenTo(g)));
+  const answer = run(mark, () => {
+    const callback = rule.run, given = givenTo(g);
+    return observeNativeCall(g.definition, mark, "grant", "run", callback, () => Reflect.apply(callback, rule, [given]) as ReturnType<typeof callback>);
+  });
   if (isObject(answer) && answer.pass === true && (answer.member === null || (isMemberRef(answer.member) && new TextEncoder().encode(answer.member.member).length <= g.bounds.memberBytes))) return { pass: true, member: answer.member };
   if (!isObject(answer) || answer.pass !== false || (answer.name !== undefined && (typeof answer.name !== "string" || !rule.refusals.includes(answer.name)))) throw outside(mark, "no answer on authority, or a refusal that its specification does not state");
   return answer.name === undefined ? { pass: false } : { pass: false, name: answer.name };
@@ -606,7 +617,10 @@ export interface Declined { name: string; code?: "bad-field" | "unsupported-defi
  */
 export function guardByRule(j: Judging, guard: Guard, mark: Mark): GuardResult {
   const rule = ruleFor(j, mark, "guard");
-  const answer = run(mark, () => rule.run(givenTo(j)));
+  const answer = run(mark, () => {
+    const callback = rule.run, given = givenTo(j);
+    return observeNativeCall(j.definition, mark, "guard", "run", callback, () => Reflect.apply(callback, rule, [given]) as ReturnType<typeof callback>);
+  });
   if (isObject(answer) && answer.holds === true) return "pass";
   if (isObject(answer) && answer.holds === null && (answer.reason === "guard-incomplete" || answer.reason === "dependency-unavailable")) return answer.reason;
   if (!isObject(answer) || answer.holds !== false || typeof answer.name !== "string" || !rule.refusals.includes(answer.name)) throw outside(mark, "no answer of a guard, or a refusal that its specification does not state");

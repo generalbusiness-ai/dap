@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "request": "11fbfe048950032689e959830fe9e8a5efbf58ab",
+  "promise": "8232842a1848bcce462a573462e99ca5903265e0",
+  "qualification": "One complete M7 gate at frozen source6da48104, stacked on frozen M7 source and S1 candidate0abdac41, with captured base7244d884. Exact-source Page workflow42442926609 separately passes all four commands. No gate, stage or owner rerun occurs during sealing. Public reports retain test identity/counts and source metadata. Potentially sensitive original test outputs remain private. This proves no live-room acceptance, deployment, archive incident closure or unrelated migration acceptance.",
+  "sourceHead": "6da48104c21d315c9be1b8d4573087e73d2eb0a1",
+  "sourceTree": "bd57406247f06ac71b441cbd46f5e977fa5f252f",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-gate-validation",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1398,
+          "sha256": "13e04962914d59c586e356bb0c55e11db4beb36c1070ca47bb43a8b6a794e48c"
+        },
+        {
+          "path": "after.json",
+          "bytes": 541481,
+          "sha256": "bb7178032fe915b5176afc18371459bb02c5a3394e1cf3a318148401d62f9c70"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1890,
+          "sha256": "8e03eb7c4bf1111ee63595e4bb7e8756efe8427f8a49cabcae51b724caf46b01"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 541481,
+          "sha256": "bb7178032fe915b5176afc18371459bb02c5a3394e1cf3a318148401d62f9c70"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "319830bc51f640475d7e2f364f53e6a0b43e2d1416f0c68804ec101843a1b5fc"
+        },
+        {
+          "path": "live-planner-order.inspect.json",
+          "bytes": 2542,
+          "sha256": "1978ee4d9804c9cf3188bf524066f142dcc6b1e952b44b0cba0ef9d63f47dfbc"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8063,
+          "sha256": "2d65285fa80c498da8443662d1024dee2ee1046299ba7bc37714d97b75821cb2"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "8221b82bda1fb686f1f8aa4d888207b67257d8712026fbc8521584c0b7e8ea0d"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 695,
+          "sha256": "3cadd103ad0bed1508e95cf1eed36d88d45e2c440b9bdaf5400ce3ecebd3f0a3"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2534,
+          "sha256": "b48ede68fe4947a6c6e3006180746283a1c2c3d733198927ba73c59c56be2446"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 969,
+          "sha256": "73fabc41b94b5c3641f6982f544bf73ad044fae19f5e768115397db8f0ae8362"
+        },
+        {
+          "path": "started.json",
+          "bytes": 637,
+          "sha256": "d993e2efa8444273872e13c1eb239abc30d88433405415085a0303383728ef13"
+        },
+        {
+          "path": "task.json",
+          "bytes": 548,
+          "sha256": "631176e631d78fde9a1452fc84566a26a7fce84e9256ff83c5c1e5c53f431c95"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 558,
+          "sha256": "543c7bd0e41cd6fb57e206a75b6ecb89d70c80001598c1df581b6e4655bd1bb8"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5866,
+          "sha256": "b72cb04b9af91d7b1fd47b52bfc637a4cd28891f30ca6dfff70d1b2006625ab0"
+        }
+      ]
+    }
+  ]
+}
