@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:50430f3bc0f5fa6c7cff9b8fd514743ffecf796b","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/hold.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:50bd0f8e23dae0edad90b0b367cf92769c6d6f14","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-returned-metadata-validation.manifest.json."}
