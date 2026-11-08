@@ -15,6 +15,7 @@ import { capabilityStagingData } from "./definition-corpus/capability-staging-da
 import { declarationOf } from "../src/program/declaration.ts";
 import { nativeBoundaryOfMark, nativeMark, nativeOutcomes } from "../src/program/native.ts";
 import { checkedRow, namedRow, rowOf } from "../src/program/rows.ts";
+import { windowOf } from "../src/grant.ts";
 
 function admitted(input: DeclaredDefinition): ValidDefinition {
   const result = validateDefinition(input, PROPOSED_BOUNDS);
@@ -199,7 +200,8 @@ test("compiled data owns its inputs and cannot be borrowed through a copied vali
   expect(body.frame.context.validation).not.toBe(other.frame.context.validation);
   const effect = act.effects[0]!;
   if (!("value" in effect) || effect.value.from === null || !("time" in effect.value.from)) return expect.fail("expected commit time");
-  effect.value.from.time.plusSeconds = 999; act.guards = [];
+  effect.value.from.time.plusSeconds = 999; act.guards = []; act.grant = "work.export";
+  expect(windowOf(first, "lane", "edit")).toEqual({ seconds: 300, once: false });
   expect(JSON.stringify(structureOf(first))).toBe(before);
   expect(JSON.stringify(declarationOf(first))).toBe(written);
   expect(declaration.acts["edit"]).not.toBe(act);

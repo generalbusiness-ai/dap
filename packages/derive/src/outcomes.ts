@@ -17,6 +17,7 @@
  */
 
 import { nativeOutcomes } from "./program/native.ts";
+import { declarationOf } from "./program/declaration.ts";
 import { observeNativeCall, type OutcomeHook } from "./program/native-trace.ts";
 import type { Digest, OutcomeMark, PlatformData, Send } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
@@ -217,7 +218,7 @@ function given(mark: OutcomeMark, j: Judging, kinds: Readonly<Record<string, Out
   if (joined.opened && mark.attempts !== undefined && joined.opened.type !== mark.most?.opens) throw outside(mark, "an item opening that its data does not state");
   // Section 17.2a, check 2: taking a holder is new work. No outcome,
   // including a legacy kind counted by its owner's code, opens one.
-  if (joined.opened && Object.hasOwn(own((j.definition.declared as unknown as PlatformData).items, joined.opened.type)!, "holds")) throw outside(mark, "an opening of a holder in an outcome");
+  if (joined.opened && Object.hasOwn(own(declarationOf(j.definition).items, joined.opened.type)!, "holds")) throw outside(mark, "an opening of a holder in an outcome");
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. An act or a handler is refused `type-full`.
   if (joined.opened && overMax(j.view, j.definition, joined.opened.type, joined.opened.state) !== null) throw outside(mark, "effects that the entry cannot hold: type-full");
   const requests = joinReturnedSends(joining, sends.map((_, n) => ({ code: sendCodes[n]!, row: mark.row })), joined.working, NO_CAUSE, 0, undefined, joined.opened !== null);

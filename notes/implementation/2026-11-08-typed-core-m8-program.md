@@ -33,3 +33,14 @@ Both actual `pipeline.exit` files have been read: the source failure contains `e
 The [timed/clause validation manifest](evidence/2026-11-08-m8-timed-clauses-validation.manifest.json), SHA-256 `77ebe13b34f811bae27dd7d57ad1047ff28fa0ecdd1230efea4595c7fa432b13`, binds twelve read-only public files. Its inventories retain 302 private originals from both pipelines, launches and exact preparation. The failed compiler log, unchanged complete case ledger, one-line repair, scope addendum and complete follow-up reports remain durable. No validation reruns during retention.
 
 This change routes the existing semantics through admitted frames and preserves the same policy checks and primitive implementations. It adds no independent semantic guard that needs another fault control. Complete interpretations, remaining header reconciliation, final gate, generated assets, workflow and independent review remain ahead. These results establish no complete M8 or live acceptance.
+
+
+## Body metadata comes from the actual admission
+
+Before-edit addenda `e35d5c6d` and `11ed82c1` record eleven exact source owners and their hashes. Freshness windows, delivered capability lists, outcome opening checks, observation retention domains and retained-value planning now read `declarationOf`. Outcome settlement selects the actual captured Native outcome, then reads its admitted observation rows. Every retention-domain caller already supplies the full validation result, so the narrower helper requires that admission. Scope and replay sources remain unchanged.
+
+The shared item, hold, fixed-index and local historical genesis-field primitives also read admitted item and field metadata. They retain their existing implementations, order, indexes, mutation, normalization and public values. Bound-header comparisons and observation subject expansion keep the shared `operand` leaf over their owned header and row data. That leaf does not orchestrate a body.
+
+The compiled-input ownership case now checks one real metadata consumer. Mutating the caller's grant to `work.export` after admission must leave the admitted act's freshness window at `{ seconds: 300, once: false }`. All earlier assertions and deadlines remain. The planned narrow control restores the raw declaration read and must fail at that result, then restore the source.
+
+This checkpoint has no validation result yet. The full first-slice witness mapping still waits for the planner. No first-slice assertion changes, complete interpreter claim, gate, asset generation, workflow, review, deployment or live acceptance follows from these edits.

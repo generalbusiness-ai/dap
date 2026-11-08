@@ -10,6 +10,7 @@ import { declaredBy, type Recorded } from "./capability.ts";
 import { isEntryOf, updateOf, useOf, type Reading } from "./fields.ts";
 import { bound, runClause, runHandler, type Clause, type Handled, type Sent } from "./handlers.ts";
 import { handlerBranch } from "./handler-branch.ts";
+import { declarationOf } from "./program/declaration.ts";
 import { timeMs } from "./time.ts";
 import type { Judgment } from "./judge.ts";
 import { heldOpenings } from "./ledger.ts";
@@ -257,7 +258,7 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
 function reservedFor(view: StateView, definition: ValidDefinition, context: DeliveryContext, at: ScopeRef, from: ScopeRef, message: string, body: unknown): { capability: CapabilityName; refused: Recorded } | null {
   const rules = context.capabilities;
   if (!rules?.bound || !isObject(body)) return null;
-  for (const listed of definition.declared.capabilities) {
+  for (const listed of declarationOf(definition).capabilities) {
     const capability: CapabilityName = `${listed.name}@${listed.version}`;
     if (!declaredBy(capability)?.reserved.some((r) => r.request.class === "tell" && r.request.message === message)) continue;
     const refused = rules.bound(capability, view, at, from, body["fields"]);

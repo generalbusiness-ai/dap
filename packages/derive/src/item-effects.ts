@@ -5,6 +5,7 @@ import { HOLDER, changeHold } from "./hold.ts";
 import type { Item, Party } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own, same } from "./values.ts";
+import { declarationOf } from "./program/declaration.ts";
 
 /** The effects that change one item. */
 export type ItemEffect = Extract<Effect, { effect: "state" | "party" | "ref" | "value" | "list" | "hold" }>;
@@ -44,7 +45,7 @@ export function changeItem(item: Item, effect: ItemEffect, definition: ValidDefi
 
 // A slot is set by a spread with a computed key, which defines an own property whatever the slot is named (`own`, in values.ts).
 function changeSlots(item: Item, effect: ItemEffect, definition: ValidDefinition, signer: Signer | null): Item {
-  const type = own(definition.declared.items, item.type)!;
+  const type = own(declarationOf(definition).items, item.type)!;
   const attributes = (slot: string) => own(type.parties, slot)?.author === true || (slot === HOLDER && definition.holdTypes.includes(item.type));
   const noted = (slot: string, member: MemberRef) => (attributes(slot) ? withMembers(item.attributed, withPrincipal(member, signer)) : item.attributed);
   switch (effect.effect) {
