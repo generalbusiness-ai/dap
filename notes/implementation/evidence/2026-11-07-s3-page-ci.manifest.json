@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "sourceHead": "4f4944ae977aec52f375809db8a6ba755afdf579",
+  "qualification": "The one automatic Page push workflow succeeds at the exact S3 gate source. The later repair changes only one lane test and its note; production, generated Page module and browser inputs remain unchanged. All steps in fresh job and attempt records succeed, including the four browser commands. The original local gate remains exit1; this CI result does not replace it.",
+  "fileCount": 17,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-page-ci",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1358,
+          "sha256": "f254d70d8a4b45cfea78ce298910ffcd0f8f93398eaf0b563bd295adbf38b5fe"
+        },
+        {
+          "path": "attempt-jobs.api.argv.json",
+          "bytes": 145,
+          "sha256": "e5fc8b2438028ae23878c46923a6e8bc2208450445c4b048f8e17be023f774d6"
+        },
+        {
+          "path": "attempt-jobs.api.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "attempt-jobs.api.json",
+          "bytes": 3117,
+          "sha256": "48dddd6aa11799f8b51802bd3c0b0e601bbba4d155d1331e941d5287f5fd89cb"
+        },
+        {
+          "path": "attempt-jobs.api.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "collector.py",
+          "bytes": 3916,
+          "sha256": "58787616b094c8bf91831273a90e8bef71b5b47042abb6e0e1b1aae80692d44c"
+        },
+        {
+          "path": "job-detail.api.argv.json",
+          "bytes": 117,
+          "sha256": "bb68b5dac6e769f2be835d4c86706337d07aa9dc43e13e5a87de032d18759bae"
+        },
+        {
+          "path": "job-detail.api.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "job-detail.api.json",
+          "bytes": 3090,
+          "sha256": "7e50ebf48717c74b5f8cb29a6f1cc4efbbd20ad9ecefc11982bfdb86240440ff"
+        },
+        {
+          "path": "job-detail.api.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "result.json",
+          "bytes": 918,
+          "sha256": "7565ed3e867dc7fb7e2e1c97f4b1d7d55081c3fb12a9c14e28a71fa12eae6dc4"
+        },
+        {
+          "path": "run.api.argv.json",
+          "bytes": 116,
+          "sha256": "cc867fd8e380390aafb0d5ae0b3c1df78cb52c16563cb9b2174e7556b5e62c09"
+        },
+        {
+          "path": "run.api.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "run.api.json",
+          "bytes": 12598,
+          "sha256": "5ee68092633c073b399d45e106ce6a3a020616cfb299eb523fa3e3585786b7bc"
+        },
+        {
+          "path": "run.api.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source-comparison.json",
+          "bytes": 321,
+          "sha256": "eadef3dbb7ef9342c18f55d00e90a8e762978a802ff5e8f286b243a8db3dd860"
+        },
+        {
+          "path": "workflow.yml",
+          "bytes": 2855,
+          "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "qualification": "The original driver completed compiler, compatibility and owner successfully, then failed its metadata assertion. It filtered only pending while Vitest marks unselected cases skipped, and expected parameter labels without Vitest quotes. This read-only follow-up verifies exactly two actual passed titles, four unselected skips, owner exit0 and unchanged inputs. No command or test reran; the original driver remains failed.",
+  "sourceHead": "ff34db1adc237fd344ae8b5383bc70c0e2775a0f",
+  "sourceTree": "a6f0ae10ffdd39d7664b1055842dfdda0858230f",
+  "fileCount": 11,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-characterization-validation",
+      "files": [
+        {
+          "path": "QUALIFICATION.md",
+          "bytes": 708,
+          "sha256": "bd2867ac6cc0d877c980d4ddf7b842f229a55058ba517d6ea485144b7d235510"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 839,
+          "sha256": "738ea1171f5dea32aa5d13e800834b05960c22a7bdab1a1e48ee761b4faceda6"
+        },
+        {
+          "path": "after.json",
+          "bytes": 539434,
+          "sha256": "32592a0294ef92d75b42d8d2816ccc3af90ed1da5d176f13569f4667bde9dc67"
+        },
+        {
+          "path": "before.json",
+          "bytes": 539434,
+          "sha256": "32592a0294ef92d75b42d8d2816ccc3af90ed1da5d176f13569f4667bde9dc67"
+        },
+        {
+          "path": "compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver-failure.transcribed.json",
+          "bytes": 228,
+          "sha256": "63d6ba3ec0cef8738fd87ace0e0df972beba2511722ff1ffb32ec2333295fbb8"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "postclassification.json",
+          "bytes": 2458,
+          "sha256": "474b7c192076a9eda66b300c5c6f29d3a1a0b7ac2bef060d89e2b8d9168a1f55"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 471,
+          "sha256": "6388a7f4ca0d3e2ad94633d66063ef724391374daaf96a2968556224b00d8d7a"
+        },
+        {
+          "path": "scope-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "task.json",
+          "bytes": 694,
+          "sha256": "934ac8642a8e7d5a1b3e915027d653ab3e181a5d18c728caaf6366eba906ba4a"
+        }
+      ]
+    }
+  ]
+}
