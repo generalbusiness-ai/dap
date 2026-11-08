@@ -33,7 +33,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, isKeyId, isScopeRef, keyIdOfSecret, parseStrict, scopeIdOf, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
 import { TransportError, agentKeyInvitationOf, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { CustodyError, Lost, meaningOf, type Envelope, type Identity } from "./custody.ts";
-import { McpHttp, SESSIONS_MOST, SessionFull, type SessionRow } from "./http.ts";
+import { HttpGeneration, McpHttp, SESSIONS_MOST, SessionFull, type SessionRow } from "./http.ts";
 import type { McpConfig, Root } from "./inventory.ts";
 import { McpService, type ServerPort } from "./service.ts";
 import { McpMetrics, mcpRead, type McpMetricOptions } from "./metrics.ts";
@@ -489,8 +489,7 @@ export class HostedAgent {
   readonly #control: ControlPlane;
   readonly #metrics: McpMetrics;
   #service: McpService | null = null;
-  #http: McpHttp | null = null;
-  #opening: Promise<McpHttp> | null = null;
+  #transport: HttpGeneration | null = null;
   #httpEpoch = 0;
   #oauthEpoch = 0;
   readonly #oauth: OAuthAccess;
@@ -691,15 +690,15 @@ export class HostedAgent {
   }
 
   async #httpOf(row: AgentRow): Promise<McpHttp> {
-    if (this.#http) return this.#http;
-    if (this.#opening) return this.#opening;
-    const opening = this.#openHttp(row, this.#httpEpoch);
-    this.#opening = opening;
-    try { return await opening; }
-    finally { if (this.#opening === opening) this.#opening = null; }
+    const owner = this.#transport ?? (this.#transport = new HttpGeneration());
+    try { return await owner.open(() => this.#openHttp(row, this.#httpEpoch, owner)); }
+    catch (error) {
+      if (this.#transport === owner) this.#transport = null;
+      throw error;
+    }
   }
 
-  async #openHttp(row: AgentRow, epoch: number, oauth?: OAuthHttpLayer): Promise<McpHttp> {
+  async #openHttp(row: AgentRow, epoch: number, generation: HttpGeneration, oauth?: OAuthHttpLayer): Promise<McpHttp> {
     const service = this.ports.applicationContent
       ? await McpService.fromInstalledApplication(this.#servicePort(row), this.ports.applicationContent)
       : this.#serviceOf(row);
@@ -711,7 +710,7 @@ export class HostedAgent {
         return remoteCardDomain(this.ports.cardOrigins ?? [], publicRequestUrl(row.config.service, request.url));
       },
       lifetime: { get expires() { return oauth ? oauth.deadline : timeMs(row.bearerExpires!)!; }, ...(this.ports.scheduleExpiry ? { schedule: this.ports.scheduleExpiry } : {}) },
-      streamCount: () => (this.#http?.streams ?? 0) + this.#oauthHttp.streams,
+      streamCount: () => (this.#transport?.streams ?? 0) + this.#oauthHttp.streams,
       ...(oauth ? { streamsChanged: () => this.#oauthHttp.watch(oauth.candidate) } : {}),
       mintSession: () => b64url(this.ports.random(16)),
       authorized: () => true,   // the bearer was checked before the request reached the layer
@@ -742,15 +741,14 @@ export class HostedAgent {
           this.sql.exec(`DELETE FROM ${table} WHERE id = ?`, id);
         });
       },
-    });
+    }, generation);
     // The sessions as persisted survive eviction; their streams do not, and the next GET reconciles.
-    if (epoch !== (oauth ? this.#oauthEpoch : this.#httpEpoch) || oauth && !this.#oauth.current(oauth.candidate)) { http.abrupt(); return http; }
+    if (generation.closed || epoch !== (oauth ? this.#oauthEpoch : this.#httpEpoch) || oauth && !this.#oauth.current(oauth.candidate)) { http.abrupt(); return http; }
     const sessions = oauth
       ? this.sql.exec(`SELECT row FROM oauth_session WHERE grant_id = ? ORDER BY created`, oauth.candidate.id)
       : this.sql.exec(`SELECT row FROM session ORDER BY created`);
     http.restore(sessions.toArray().map((r) => JSON.parse(String(r["row"])) as SessionRow));
     this.#service = service;
-    if (!oauth) this.#http = http;
     return http;
   }
 
@@ -859,7 +857,8 @@ export class HostedAgent {
       return result;
     });
     this.#service = null;   // derived again with the configuration that names the inbox
-    this.#http = null;
+    this.#transport?.abrupt();
+    this.#transport = null;
     return decided;
   }
 
@@ -918,10 +917,9 @@ export class HostedAgent {
       // Graceful: every open stream closes with a final event, every listen with its result; the sessions are already gone.
       // A package load that started under the old bearer cannot adopt a layer.
       this.#httpEpoch++;
-      this.#opening = null;
-      const http = this.#http;
-      this.#http = null;
-      await http?.closeAll();
+      const owner = this.#transport;
+      this.#transport = null;
+      await owner?.graceful();
       if (action === "retire") { this.#oauthEpoch++; await this.#issuer.revokeAll(); await this.#oauthHttp.closeAll(); }
     }
     return result;
@@ -965,7 +963,7 @@ export class HostedAgent {
     if (checked === "limited") return new Response(JSON.stringify({ error: "rate-limited" }), { status: 429, headers: { "content-type": "application/json" } });
     if (checked === "unauthorized") return mcpUnauthorized(request);
     const http = checked.oauth
-      ? await this.#oauthHttp.open(checked.oauth, layer => this.#openHttp(this.#row()!, this.#oauthEpoch, layer))
+      ? await this.#oauthHttp.open(checked.oauth, layer => this.#openHttp(this.#row()!, this.#oauthEpoch, layer.generation, layer))
       : await this.#httpOf(this.#row()!);
     if (http === null) return mcpUnauthorized(request);
     // Discovery may await native reads and package storage. Retirement or a
@@ -981,10 +979,10 @@ export class HostedAgent {
   }
 
   /** For a test: the service and the layer as this object holds them now. */
-  inside(): { service: McpService | null; http: McpHttp | null } { return { service: this.#service, http: this.#http }; }
+  inside(): { service: McpService | null; http: McpHttp | null } { return { service: this.#service, http: this.#transport?.phase === "open" ? this.#transport.http : null }; }
 
   /** What an eviction does to this instance's memory: every stream ends abruptly, with no event; nothing durable changes. */
-  abrupt(): void { this.#httpEpoch++; this.#oauthEpoch++; this.#opening = null; this.#http?.abrupt(); this.#oauthHttp.abrupt(); this.#http = null; this.#service = null; }
+  abrupt(): void { this.#httpEpoch++; this.#oauthEpoch++; this.#transport?.abrupt(); this.#oauthHttp.abrupt(); this.#transport = null; this.#service = null; }
 
   /** The durable facts of this agent a witness compares across a reset: its key, its state, and the digest of its kept enrol intent. */
   durable(): { key: string | null; state: string | null; enrol: string | null; bearer: boolean } {

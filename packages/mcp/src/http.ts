@@ -107,105 +107,154 @@ export const rowOf = (session: LegacySession): SessionRow =>
 
 type Body = { status: "ok"; value: unknown } | { status: "too-large" } | { status: "parse" };
 
-/** The server's HTTP layer over one `Wire`. One instance per server: the loopback process, or one hosted agent. */
-export class McpHttp {
-  /** The 2025-11-25 sessions, oldest first. */
-  readonly sessions = new Map<string, LegacySession>();
-  /**
-   * Every holder of a stream slot: each listen stream by its owner, and each 2025-11-25 session that has a live stream or an
-   * opening pending. A session holds one slot however many replacements of its stream are being opened at once, so live
-   * capacity has one owner across generations; the count is taken before any await.
-   */
+type Disposal = "graceful" | "detach" | "abrupt";
+type GenerationState = { phase: "opening" | "open" }
+  | { phase: "closing" | "closed"; disposition: Disposal; done: Promise<void> };
+type Scheduled = { cancel: () => void };
+
+/** One transport generation, from its held factory through its last resource.
+ * Protocol parsing never mutates this owner's lifecycle or resource tables. */
+export class HttpGeneration {
+  #state: GenerationState = { phase: "opening" };
+  #http: McpHttp | null = null;
+  #port: HttpPort | null = null;
+  #opening: Promise<McpHttp> | null = null;
+  readonly #sessions = new Map<string, LegacySession>();
   readonly #open = new Set<object>();
-  /** The listen streams by their owner, so a graceful ending can complete each one. */
   readonly #listens = new Map<object, { end: (final: boolean) => void }>();
-  /** How many openings of a session's stream are pending: the session keeps its slot until the last of them exits with no stream. */
   readonly #pending = new Map<LegacySession, number>();
-  // Prospective Wire markers and activity updates share the last committed row, not the possibly older live markers.
   readonly #rows = new WeakMap<LegacySession, SessionRow>();
-  // Removal follows in-flight writes; once ended, queued updates skip the write. Weak keys retain no ended-session registry.
   readonly #writes = new WeakMap<LegacySession, Promise<void>>();
   readonly #issuing = new Set<LegacySession>();
-  #closed = false;
-  #discarded = false;
-  #closing: Promise<void> | null = null;
-  #stopLifetime: (() => void) | null = null;
-  #lifetimeGeneration = 0;
-  constructor(readonly port: HttpPort) {
-    // Issuance persists a new session; an update persists only a session that is still live. One that ended while its request
-    // was pending (deleted, evicted, retired, or discarded with its layer) is never written again: an ended session's row stays
-    // gone, and a restart restores nothing of it.
+  #lifetime: Scheduled | null = null;
+  #standing: Scheduled | null = null;
+  #deadline: number;
+
+  constructor(deadline = Infinity) { this.#deadline = deadline; }
+  get phase(): GenerationState["phase"] { return this.#state.phase; }
+  get closed(): boolean { return this.#state.phase === "closing" || this.#state.phase === "closed"; }
+  get retained(): boolean { return "disposition" in this.#state && this.#state.disposition !== "graceful"; }
+  get http(): McpHttp | null { return this.#http; }
+  get sessions(): Map<string, LegacySession> { return this.#sessions; }
+  get streams(): number { return this.#open.size; }
+  get deadline(): number { return this.#deadline; }
+  extendDeadline(deadline: number): void { if (!this.closed) this.#deadline = Math.max(this.#deadline, deadline); }
+  replaceDeadline(deadline: number): void { if (!this.closed) this.#deadline = deadline; }
+  get standingScheduled(): boolean { return this.#standing !== null; }
+  private get port(): HttpPort { if (!this.#port) throw new Error("Transport resources are not attached."); return this.#port; }
+  due(): boolean { return this.#port?.lifetime !== undefined && (this.port.now?.() ?? Date.now()) >= this.port.lifetime!.expires; }
+
+  attach(http: McpHttp, port: HttpPort, ready: boolean): void {
+    if (this.#http) throw new Error("A generation owns one HTTP layer.");
+    this.#http = http;
+    this.#port = port;
     port.wire.hooks.changed = (session, next) => this.#persist(session, next);
+    if (ready && !this.closed) this.#state = { phase: "open" };
   }
 
-  #due(): boolean { return this.port.lifetime !== undefined && (this.port.now?.() ?? Date.now()) >= this.port.lifetime.expires; }
-  #cancelLifetime(): void {
-    this.#lifetimeGeneration++;
-    this.#stopLifetime?.();
-    this.#stopLifetime = null;
+  /** Start synchronously, then retain the exact pending result across retirement. */
+  open(create: () => Promise<McpHttp>): Promise<McpHttp> {
+    if (this.#opening) return this.#opening;
+    if (this.#http) return Promise.resolve(this.#http);
+    if (this.closed) return Promise.reject(new Error("A retired opening cannot restart."));
+    let resolve!: (http: McpHttp) => void, reject!: (error: unknown) => void;
+    const pending = new Promise<McpHttp>((yes, no) => { resolve = yes; reject = no; });
+    this.#opening = pending;
+    const clear = () => { if (this.#opening === pending) this.#opening = null; };
+    void pending.then(clear, clear);
+    const failed = (error: unknown) => { this.abrupt(); reject(error); };
+    try {
+      void create().then(async http => {
+        if (http.generation !== this) { http.abrupt(); throw new Error("The opening returned another generation's HTTP layer."); }
+        if (!this.closed) this.#state = { phase: "open" };
+        else if (!this.retained) await this.graceful();
+        resolve(http);
+      }, failed).catch(failed);
+    } catch (error) { failed(error); }
+    return pending;
   }
-  #lifetime(): void {
-    this.port.streamsChanged?.();
-    if (this.#closed || this.#open.size === 0) { this.#cancelLifetime(); return; }
+
+  disposed(): Promise<void> { return "done" in this.#state ? this.#state.done : this.graceful(); }
+
+  clearStanding(expected?: Scheduled): void {
+    if (expected && this.#standing !== expected) return;
+    const held = this.#standing;
+    this.#standing = null;
+    held?.cancel();
+  }
+  scheduleStanding(schedule: (delay: number, run: () => Promise<void>) => () => void, delay: number, run: () => Promise<void>): Scheduled | null {
+    if (this.closed) return null;
+    this.clearStanding();
+    const held: Scheduled = { cancel: () => {} };
+    this.#standing = held;
+    held.cancel = schedule(delay, async () => {
+      if (this.#standing !== held || this.closed) return;
+      this.#standing = null;
+      await run();
+    });
+    if (this.#standing !== held) held.cancel();
+    return held;
+  }
+  #cancelLifetime(): void {
+    const held = this.#lifetime;
+    this.#lifetime = null;
+    held?.cancel();
+  }
+  #changed(): void {
+    this.#port?.streamsChanged?.();
+    if (this.closed || this.#open.size === 0) { this.#cancelLifetime(); return; }
     const lifetime = this.port.lifetime;
-    if (!lifetime || this.#stopLifetime) return;
+    if (!lifetime || this.#lifetime) return;
     const remaining = lifetime.expires - (this.port.now?.() ?? Date.now());
-    if (remaining <= 0) { void this.closeAll().catch(() => {}); return; }
-    const generation = ++this.#lifetimeGeneration;
+    if (remaining <= 0) { void this.graceful().catch(() => {}); return; }
     const schedule = lifetime.schedule ?? ((delay: number, run: () => Promise<void>) => {
       const timer = setTimeout(() => { void run().catch(() => {}); }, delay);
       return () => clearTimeout(timer);
     });
-    this.#stopLifetime = schedule(Math.min(LIFETIME_RECHECK_MS, remaining), async () => {
-      if (generation !== this.#lifetimeGeneration || this.#closed) return;
-      this.#stopLifetime = null;
-      if (this.#due()) await this.closeAll(); else this.#lifetime();
+    const held: Scheduled = { cancel: () => {} };
+    this.#lifetime = held;
+    held.cancel = schedule(Math.min(LIFETIME_RECHECK_MS, remaining), async () => {
+      if (this.#lifetime !== held || this.closed) return;
+      this.#lifetime = null;
+      if (this.due()) await this.graceful(); else this.#changed();
     });
+    if (this.#lifetime !== held) held.cancel();
   }
+  #stopTimers(): void { this.clearStanding(); this.#cancelLifetime(); }
+  expireIfDue(): void { if (this.due() && !this.retained) void this.graceful().catch(() => {}); }
 
   #queue(session: LegacySession, work: () => void | Promise<void>): Promise<void> {
     const pending = (this.#writes.get(session) ?? Promise.resolve()).then(work);
     this.#writes.set(session, pending.catch(() => {}));
     return pending;
   }
-
   #persist(session: LegacySession, next: Partial<SessionRow> = {}): Promise<void> {
-    if (this.#due() && !this.#discarded) void this.closeAll().catch(() => {});
-    if (session.id === null || session.ended || this.#closed || this.#due()) return Promise.resolve();
+    this.expireIfDue();
+    if (session.id === null || session.ended || this.closed || this.due()) return Promise.resolve();
     return this.#queue(session, async () => {
-      if (this.#due() && !this.#discarded) void this.closeAll().catch(() => {});
-      if (session.ended || this.#closed || this.#due()) return;
+      this.expireIfDue();
+      if (session.ended || this.closed || this.due()) return;
       const previous = this.#rows.get(session) ?? rowOf(session);
       const row = { ...previous, ...next };
       row.lastActive = Math.max(previous.lastActive ?? previous.created, row.lastActive ?? row.created);
       await this.port.persist?.(row);
-      // Graceful removal is queued behind this write. Abrupt eviction keeps
-      // the durable row, so its late write must not delete it here.
-      if (this.#due() && !this.#discarded) void this.closeAll().catch(() => {});
+      this.expireIfDue();
       this.#rows.set(session, row);
     });
   }
-
-  async #touch(session: LegacySession): Promise<boolean> {
+  async touch(session: LegacySession): Promise<boolean> {
     const lastActive = Math.max(session.lastActive, this.port.now?.() ?? Date.now());
     if (lastActive !== session.lastActive) await this.#persist(session, { lastActive });
     if (session.ended) return false;
     session.lastActive = Math.max(session.lastActive, lastActive);
     return true;
   }
-
-  async #expire(): Promise<void> {
+  async expireIdle(): Promise<void> {
     const now = this.port.now?.() ?? Date.now();
-    for (const session of [...this.sessions.values()]) {
-      if (now - session.lastActive >= SESSION_IDLE_MS) await this.#end(session, true);
-    }
+    for (const session of [...this.#sessions.values()]) if (now - session.lastActive >= SESSION_IDLE_MS) await this.endSession(session, true);
   }
-
-  /** How many streams are open: legacy streams and modern listens together. */
-  get streams(): number { return this.#open.size; }
-
-  /** The sessions as persisted, at the object's start. Their streams are gone: the next `GET` reconciles. */
   restore(rows: readonly SessionRow[]): void {
+    const removals: Promise<void>[] = [];
     for (const row of [...rows].sort((a, b) => a.created - b.created)) {
       const session = newSession(row.id);
       session.version = row.version;
@@ -215,15 +264,151 @@ export class McpHttp {
       session.created = row.created;
       session.lastActive = row.lastActive ?? row.created;
       this.#rows.set(session, { ...row, lastActive: session.lastActive });
-      this.sessions.set(row.id, session);
-      if (session.initialized) this.port.wire.watchLegacy(session);
+      this.#sessions.set(row.id, session);
+      if (this.closed) {
+        session.ended = true;
+        if (!this.retained) removals.push(this.endSession(session, true));
+      } else if (session.initialized) this.port.wire.watchLegacy(session);
+    }
+    if (removals.length && "done" in this.#state) {
+      const done = Promise.all([this.#state.done, ...removals]).then(() => {});
+      this.#state = { phase: "closed", disposition: "graceful", done };
+      void done.catch(() => {});
     }
   }
+  beginIssue(id: string): LegacySession {
+    const session = newSession(id);
+    this.#issuing.add(session);
+    session.created = this.port.now?.() ?? Date.now();
+    session.lastActive = session.created;
+    return session;
+  }
+  finishedIssuing(session: LegacySession): void { this.#issuing.delete(session); }
+  async acceptIssue(session: LegacySession, response: Message | null): Promise<"closed" | "refused" | "issued"> {
+    if (this.closed || this.due() || session.ended) {
+      session.ended = true;
+      this.port.wire.endLegacy(session);
+      if (!this.retained) await this.#queue(session, () => this.port.remove?.(session.id!));
+      return "closed";
+    }
+    if (response?.error) {
+      session.ended = true;
+      this.port.wire.endLegacy(session);
+      await this.port.remove?.(session.id!);
+      return "refused";
+    }
+    this.#sessions.set(session.id!, session);
+    while (this.#sessions.size > SESSIONS_MOST) {
+      const oldest = this.#sessions.keys().next().value!;
+      if (oldest === session.id) break;
+      await this.endSession(this.#sessions.get(oldest)!, true);
+    }
+    return "issued";
+  }
+  canOpenLegacy(session: LegacySession): boolean {
+    return session.stream !== null || this.#pending.has(session) || (this.port.streamCount?.() ?? this.streams) < STREAMS_MOST;
+  }
+  beginLegacyStream(session: LegacySession): () => void {
+    this.#open.add(session);
+    this.#changed();
+    this.#pending.set(session, (this.#pending.get(session) ?? 0) + 1);
+    let pending = true;
+    return () => {
+      if (!pending) return;
+      pending = false;
+      const left = (this.#pending.get(session) ?? 1) - 1;
+      if (left > 0) this.#pending.set(session, left); else this.#pending.delete(session);
+      if (left === 0 && session.stream === null) this.#open.delete(session);
+      this.#changed();
+    };
+  }
+  cancelLegacyStream(session: LegacySession, stream: Stream): void {
+    if (session.stream !== stream) return;
+    this.port.wire.endLegacy(session);
+    if (!this.#pending.has(session)) this.#open.delete(session);
+    this.#changed();
+  }
+  replaceLegacyStream(session: LegacySession, stream: Stream): void {
+    const old = session.stream;
+    session.stream = stream;
+    if (old) old.close(false);
+  }
+  registerListen(owner: object, close: () => void): void {
+    this.#open.add(owner);
+    this.#listens.set(owner, { end: final => {
+      if (final) this.port.wire.endStream(owner); else this.port.wire.dropStream(owner);
+      close();
+      this.completeListen(owner);
+    } });
+    this.#changed();
+  }
+  completeListen(owner: object): void { this.#open.delete(owner); this.#listens.delete(owner); this.#changed(); }
+  cancelListen(owner: object): void { this.#open.delete(owner); this.#listens.delete(owner); this.port.wire.dropStream(owner); this.#changed(); }
+  async endSession(session: LegacySession, final: boolean): Promise<void> {
+    const stream = session.stream;
+    session.ended = true;
+    this.port.wire.endLegacy(session);
+    if (stream) stream.close(final);
+    if (!this.#pending.has(session)) this.#open.delete(session);
+    this.#changed();
+    if (session.id !== null) { this.#sessions.delete(session.id); await this.#queue(session, () => this.port.remove?.(session.id!)); }
+  }
+
+  abrupt(): void { this.#discard("abrupt"); }
+  detach(): void { this.#discard("detach"); }
+  #discard(disposition: "detach" | "abrupt"): void {
+    if (this.closed) return;
+    this.#state = { phase: "closed", disposition, done: Promise.resolve() };
+    this.#stopTimers();
+    if (!this.#port) return;
+    for (const session of new Set([...this.#sessions.values(), ...this.#issuing])) {
+      const stream = session.stream;
+      session.ended = true;
+      this.port.wire.endLegacy(session);
+      if (stream) stream.close(disposition === "detach");
+    }
+    this.#pending.clear();
+    for (const listen of [...this.#listens.values()]) listen.end(disposition === "detach");
+    this.#open.clear();
+  }
+  /** Explicit graceful retirement may follow an earlier retaining discard. */
+  graceful(): Promise<void> {
+    if ("disposition" in this.#state && this.#state.disposition === "graceful") return this.#state.done;
+    let resolve!: () => void, reject!: (error: unknown) => void;
+    const done = new Promise<void>((yes, no) => { resolve = yes; reject = no; });
+    const closing: GenerationState = { phase: "closing", disposition: "graceful", done };
+    this.#state = closing;
+    this.#stopTimers();
+    const removed = this.#port ? [...new Set([...this.#sessions.values(), ...this.#issuing])].map(session => this.endSession(session, true)) : [];
+    for (const listen of [...this.#listens.values()]) listen.end(true);
+    this.#port?.wire.closeAll();
+    this.#open.clear();
+    void Promise.all(removed).then(() => {
+      if (this.#state === closing) this.#state = { phase: "closed", disposition: "graceful", done };
+      resolve();
+    }, error => {
+      if (this.#state === closing) this.#state = { phase: "closed", disposition: "graceful", done };
+      reject(error);
+    });
+    return done;
+  }
+}
+
+/** The protocol layer delegates all generation state and resources to its owner. */
+export class McpHttp {
+  readonly generation: HttpGeneration;
+  constructor(readonly port: HttpPort, generation?: HttpGeneration) {
+    this.generation = generation ?? new HttpGeneration();
+    this.generation.attach(this, port, generation === undefined);
+  }
+  get sessions(): Map<string, LegacySession> { return this.generation.sessions; }
+  get streams(): number { return this.generation.streams; }
+  restore(rows: readonly SessionRow[]): void { this.generation.restore(rows); }
 
   async handle(request: Request): Promise<Response> {
     if (request.headers.get("origin") !== null) return bare(403);
     if (!(await this.port.authorized(request.headers.get("authorization")))) return bare(401);
-    if (this.#closed || this.#due()) { if (!this.#discarded) await this.closeAll(); return bare(this.#due() ? 401 : 404); }
+    if (this.generation.closed || this.generation.due()) { if (!this.generation.retained) await this.closeAll(); return bare(this.generation.due() ? 401 : 404); }
     const method = request.method;
     const header = request.headers.get("mcp-protocol-version");
     const sessionId = request.headers.get("mcp-session-id");
@@ -232,11 +417,11 @@ export class McpHttp {
       if (header !== null && !SERVED.includes(header)) return rpcJsonReply(400, rpcError(null, -32600, "MCP-Protocol-Version is not a served revision."));
       if (header === MODERN) return notAllowed();
       if (sessionId === null) return header === LEGACY ? rpcJsonReply(400, rpcError(null, -32600, "Mcp-Session-Id is required.")) : notAllowed();
-      await this.#expire();
+      await this.generation.expireIdle();
       const session = this.sessions.get(sessionId);
       if (!session) return bare(404);
-      if (method === "GET" && !(await this.#touch(session))) return bare(404);
-      return method === "GET" ? this.#stream(session, request) : this.#end(session, true);
+      if (method === "GET" && !(await this.generation.touch(session))) return bare(404);
+      return method === "GET" ? this.#stream(session, request) : this.generation.endSession(session, true).then(() => bare(200));
     }
     if (method !== "POST") return notAllowed();
     const body = await this.#body(request);
@@ -297,7 +482,7 @@ export class McpHttp {
       if (decoded === null || decoded !== params["name"]) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, `Mcp-Name must name the ${m.method === "prompts/get" ? "prompt" : "tool"}.`));
     }
     if (m.method === "subscriptions/listen" && !notification) {
-      if ((this.port.streamCount?.() ?? this.#open.size) >= STREAMS_MOST) return rpcJsonReply(409, rpcError(id, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
+      if ((this.port.streamCount?.() ?? this.generation.streams) >= STREAMS_MOST) return rpcJsonReply(409, rpcError(id, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
       return this.#listen(m);
     }
     const response = await this.port.wire.handle(m, null, () => {}, undefined, this.port.resourceDomain?.(request));
@@ -307,43 +492,28 @@ export class McpHttp {
 
   async #legacy(m: Message, notification: boolean, sessionId: string | null, request: Request): Promise<Response> {
     const id = m.id ?? null;
-    await this.#expire();
+    await this.generation.expireIdle();
     let session: LegacySession;
     let issued: string | null = null;
     if (m.method === "initialize" && !notification) {
       // The new session is admitted first (its capabilities validated and its row kept) and only then does a 17th end the
       // oldest: a refused initialize destroys nothing, and the limit holds once the newcomer is in.
       issued = this.port.mintSession();
-      session = newSession(issued);
-      this.#issuing.add(session);
-      session.created = this.port.now?.() ?? Date.now();
-      session.lastActive = session.created;
+      session = this.generation.beginIssue(issued);
     } else {
       if (sessionId === null) return rpcJsonReply(400, rpcError(id, -32600, "Mcp-Session-Id is required."));
       const matched = this.sessions.get(sessionId);
       if (!matched) return bare(404);
       session = matched;
-      if (!(await this.#touch(session))) return bare(404);
+      if (!(await this.generation.touch(session))) return bare(404);
     }
     let response: Message | null;
     try { response = await this.port.wire.handle(m, session, (out) => session.stream?.send(out), undefined, this.port.resourceDomain?.(request)); }
-    finally { this.#issuing.delete(session); }
+    finally { this.generation.finishedIssuing(session); }
     if (issued) {
-      if (this.#closed || this.#due() || session.ended) {
-        session.ended = true;
-        this.port.wire.endLegacy(session);
-        if (!this.#discarded) await this.#queue(session, () => this.port.remove?.(issued!));
-        return bare(this.#due() ? 401 : 404);
-      }
-      // Refused: no session was issued, nothing of it stays, and a row the hook may have kept is removed. A store that could
-      // not keep it answers 507.
-      if (response?.error) { session.ended = true; this.port.wire.endLegacy(session); await this.port.remove?.(issued); return rpcJsonReply(response.error.code === SESSION_FULL ? 507 : 200, response); }
-      this.sessions.set(issued, session);
-      while (this.sessions.size > SESSIONS_MOST) {
-        const oldest = this.sessions.keys().next().value!;
-        if (oldest === issued) break;
-        await this.#end(this.sessions.get(oldest)!, true);
-      }
+      const admitted = await this.generation.acceptIssue(session, response);
+      if (admitted === "closed") return bare(this.generation.due() ? 401 : 404);
+      if (admitted === "refused") return rpcJsonReply(response!.error!.code === SESSION_FULL ? 507 : 200, response!);
     }
     if (!response) return bare(202);
     return rpcJsonReply(200, response, issued ? { "mcp-session-id": issued } : {});
@@ -372,36 +542,24 @@ export class McpHttp {
    * miss a client's going away.
    */
   async #stream(session: LegacySession, request: Request): Promise<Response> {
-    if (this.#closed || this.#due()) { if (!this.#discarded) await this.closeAll(); return bare(this.#due() ? 401 : 404); }
-    const fresh = session.stream === null && !this.#pending.has(session);
-    if (fresh && (this.port.streamCount?.() ?? this.#open.size) >= STREAMS_MOST) return rpcJsonReply(409, rpcError(null, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
-    this.#open.add(session);
-    this.#lifetime();
-    this.#pending.set(session, (this.#pending.get(session) ?? 0) + 1);
-    // Every exit of this opening: the session keeps its slot while it has a live stream or another opening pending.
-    const exit = () => {
-      const left = (this.#pending.get(session) ?? 1) - 1;
-      if (left > 0) this.#pending.set(session, left); else this.#pending.delete(session);
-      if (left === 0 && session.stream === null) this.#open.delete(session);
-      this.#lifetime();
-    };
+    if (this.generation.closed || this.generation.due()) { if (!this.generation.retained) await this.closeAll(); return bare(this.generation.due() ? 401 : 404); }
+    if (!this.generation.canOpenLegacy(session)) return rpcJsonReply(409, rpcError(null, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
+    const exit = this.generation.beginLegacyStream(session);
     // Reconciliation before the stream is attached: a change made while no stream was open, or while the object was evicted, is
     // told once now, unless the client has listed since.
     let generation: Digest | null = null;
     try { generation = (await this.port.wire.service.snapshot()).generation; } catch { generation = null; }
     // The session may have ended, the layer been discarded, or the client gone, while the snapshot was read: then no stream opens.
-    if (this.#closed || this.#due()) { exit(); if (!this.#discarded) await this.closeAll(); return bare(this.#due() ? 401 : 404); }
+    if (this.generation.closed || this.generation.due()) { exit(); if (!this.generation.retained) await this.closeAll(); return bare(this.generation.due() ? 401 : 404); }
     if (session.ended || (session.id !== null && !this.sessions.has(session.id))) { exit(); return bare(404); }
     if (request.signal.aborted) { exit(); return bare(204); }
-    const old = session.stream;
-    const sse = this.#sse(() => { if (session.stream === stream) { this.port.wire.endLegacy(session); if (!this.#pending.has(session)) this.#open.delete(session); this.#lifetime(); } });
+    const sse = this.#sse(() => this.generation.cancelLegacyStream(session, stream));
     const stream: Stream = {
       notified: null,
       send: (message) => sse.send(`event: message\ndata: ${JSON.stringify(message)}\n\n`),
       close: (final) => { if (final) sse.send("event: end\ndata: {}\n\n"); sse.close(); },
     };
-    session.stream = stream;
-    if (old) old.close(false);   // its cancellation finds another stream on the session, and releases nothing
+    this.generation.replaceLegacyStream(session, stream);
     exit();
     sse.send(": stream\n\n");
     // A session that has listed is told once of a generation it has not listed; one that never listed has nothing to reconcile.
@@ -418,81 +576,21 @@ export class McpHttp {
    * completes the subscription (its result, as the revision defines) and closes the body; an abrupt one sends nothing.
    */
   #listen(m: Message): Response {
-    if (this.#closed || this.#due()) { if (!this.#discarded) void this.closeAll().catch(() => {}); return bare(this.#due() ? 401 : 404); }
+    if (this.generation.closed || this.generation.due()) { if (!this.generation.retained) void this.closeAll().catch(() => {}); return bare(this.generation.due() ? 401 : 404); }
     const owner = {};
-    const sse = this.#sse(() => { this.#open.delete(owner); this.#listens.delete(owner); this.port.wire.dropStream(owner); this.#lifetime(); });
-    this.#open.add(owner);
+    const sse = this.#sse(() => this.generation.cancelListen(owner));
     const send = (out: Message) => {
       sse.send(`event: message\ndata: ${JSON.stringify(out)}\n\n`);
-      if (out.id !== undefined && (out.result !== undefined || out.error !== undefined)) { sse.close(); this.#open.delete(owner); this.#listens.delete(owner); this.#lifetime(); }
+      if (out.id !== undefined && (out.result !== undefined || out.error !== undefined)) { sse.close(); this.generation.completeListen(owner); }
     };
-    this.#listens.set(owner, {
-      end: (final) => {
-        if (final) this.port.wire.endStream(owner);   // each listen completes with its result, written to this stream
-        else this.port.wire.dropStream(owner);
-        sse.close();
-        this.#open.delete(owner);
-        this.#listens.delete(owner);
-        this.#lifetime();
-      },
-    });
-    // A deadline can pass while this opening is being assembled. Register
-    // its teardown before scheduling can close the layer, then fence dispatch.
-    this.#lifetime();
-    if (this.#closed || this.#due()) { if (!this.#discarded) void this.closeAll().catch(() => {}); return bare(this.#due() ? 401 : 404); }
+    // Register teardown before a deadline callback can close this layer.
+    this.generation.registerListen(owner, sse.close);
+    if (this.generation.closed || this.generation.due()) { if (!this.generation.retained) void this.closeAll().catch(() => {}); return bare(this.generation.due() ? 401 : 404); }
     this.port.wire.handle(m, null, send, owner).then((response) => { if (response) send(response); }, () => send(rpcError(m.id ?? null, -32603, "Internal error")));
     return new Response(sse.body, { status: 200, headers: SSE });
   }
 
-  /** End a session gracefully: its stream closes with a final event, and its row is removed. */
-  async #end(session: LegacySession, final: boolean): Promise<Response> {
-    const stream = session.stream;
-    session.ended = true;
-    this.port.wire.endLegacy(session);
-    if (stream) stream.close(final);
-    if (!this.#pending.has(session)) this.#open.delete(session);   // a pending opening of it exits 404 and releases the slot then
-    this.#lifetime();
-    if (session.id !== null) { this.sessions.delete(session.id); await this.#queue(session, () => this.port.remove?.(session.id!)); }
-    return bare(200);
-  }
-
-  /**
-   * End every stream abruptly, as an eviction or an exception does: the bodies end with no event, and the session rows stay.
-   * The layer is discarded with its sessions: a request of it still pending persists nothing more, and the rows as they are
-   * restore into the next layer.
-   */
-  abrupt(): void {
-    this.#discard(false);
-  }
-  /** End the old credential's streams, retaining sessions for its new token. */
-  detach(): void { this.#discard(true); }
-  #discard(final: boolean): void {
-    this.#closed = true;
-    this.#discarded = true;
-    this.#cancelLifetime();
-    for (const session of new Set([...this.sessions.values(), ...this.#issuing])) {
-      const stream = session.stream;
-      session.ended = true;
-      this.port.wire.endLegacy(session);
-      if (stream) stream.close(final);
-    }
-    this.#pending.clear();
-    for (const listen of [...this.#listens.values()]) listen.end(final);
-    this.#open.clear();
-  }
-
-  /** End every session and stream gracefully: `retire`, `bearer`, a server's close. Legacy streams get a final event; listens their result. */
-  closeAll(): Promise<void> {
-    if (this.#closing) return this.#closing;
-    this.#closed = true;
-    this.#cancelLifetime();
-    // End all owners before the first await: a delayed opening or row write
-    // cannot attach to this layer while another owner's removal is pending.
-    const removed = [...new Set([...this.sessions.values(), ...this.#issuing])].map(session => this.#end(session, true));
-    for (const listen of [...this.#listens.values()]) listen.end(true);
-    this.port.wire.closeAll();
-    this.#open.clear();
-    this.#closing = Promise.all(removed).then(() => {});
-    return this.#closing;
-  }
+  abrupt(): void { this.generation.abrupt(); }
+  detach(): void { this.generation.detach(); }
+  closeAll(): Promise<void> { return this.generation.graceful(); }
 }
