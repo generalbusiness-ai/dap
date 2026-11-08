@@ -1,6 +1,6 @@
 # Retained-editor stages and their evidence
 
-Status: focused checks and Page assets pass; workflow, gate and review pending. Request `8ae87346` and promise `a20e0cf1` own this branch. S1 and M7 have finished their gates; S3 takes the next slot. Both reply-fault characterizations pass before the refactor and in the complete changed owners afterward. All three Page compiler contexts pass. The current runtime selection passes 14 cases, with the existing recorder case conditionally skipped.
+Status: focused checks and Page assets pass; the gate stopped at a missed test caller, and its scoped follow-up is pending. Request `8ae87346` and promise `a20e0cf1` own this branch. S1 and M7 have finished their gates; S3 takes the next slot. Both reply-fault characterizations pass before the refactor and in the complete changed owners afterward. All three Page compiler contexts pass. The current runtime selection passes 14 cases, with the existing recorder case conditionally skipped.
 
 ## Stages carry the facts their next step needs
 
@@ -28,7 +28,7 @@ The [preparation manifest](evidence/2026-11-07-s3-preparation.manifest.json), SH
 |---|---|---|---|
 | Current guarantees and callers | Inspect the six source snapshots and resolve existing witness titles | Eight witness families found; no execution | `efc6887353e803d2b0a55259ee0cc27ec6976e3f20823ebdea0bd399e28595be` |
 
-The exact-source Page workflow, one gate, independent review and audited landing remain. Builder only; the planner deploys.
+The exact-source Page workflow, complete gate follow-up, independent review and audited landing remain. Builder only; the planner deploys.
 
 ## The two characterization cases pass on unchanged runtime
 
@@ -84,3 +84,11 @@ The [asset manifest](evidence/2026-11-07-s3-page-assets.manifest.json), SHA-256 
 | Generated output and unchanged-input comparison | Compare all tracked hashes before generation and after the owner | 0 | `b96ae1d49124cf9db40b784244e7aa6ed51b2c80d97213af8b3561d52a4a9fd0` |
 
 Four S3 manifests now bind 73 read-only public paths. The implementation has 15 distinct passing current cases including the asset owner, plus the one conditional recorder skip. CI, the single full gate, independent review and an audited landing remain. This head grants no deployment or live acceptance; the planner deploys.
+
+## The gate stopped at one test caller
+
+The single gate at `4f4944ae977aec52f375809db8a6ba755afdf579`, tree `9020c9827abaad123ec63710d771a20b5ab4e6ce`, exits 1 during typechecking. The Page compiler contexts pass, but the lanes scope context reports nine diagnostics in `apps/room/lanes/test/directory-partition-editor.scope.test.ts`. That test still reads the old flat task API. I missed this cross-package caller when searching the Page files. No main test stage ran; all five main test phases remain unreached. The preliminary commit-message and citation checker self-tests had passed. The failed run, unchanged-input snapshots and closed-process receipt stay retained.
+
+The repair changes only that failing test file and this note. It reads the stage and presentation evidence, retaining every assertion, case and the 60-second deadline. No production source, shared helper, dependency, configuration or generated asset changes. A repository-wide TypeScript caller search found this as the only missing caller, and no source file imports the failing test.
+
+Under the test-only follow-up rule in `docs/testing.md`, run the affected lanes scope compiler and the whole owning test, then the test stages that the gate never reached. Keep those outcomes beside the failed gate. A successful follow-up does not turn the original gate into a pass; the independent reviewer must assess the exact repair and evidence.

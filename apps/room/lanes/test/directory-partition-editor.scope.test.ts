@@ -1,3 +1,4 @@
+import { editEvidence } from "../../page/src/retained-editor-state.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type ScopeId, type Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, intentDigest, scopeIdOf, timeMs } from "@generalbusiness/dap-bytes";
@@ -60,9 +61,9 @@ test("native retained editor keeps its accepted unknown opening on the original 
     const task = await prepareEdit(watched, source, frozen.answer.receipt.fact.seq, { title: "Retained edit after handoff", path: "docs/next.md", content: "\ufeff# café\r\n" }, options);
     expect([task.directory, task.context.directory]).toEqual([await P.at(), root]);
     await continueEdit(watched, task, options);
-    expect(task.state).toBe("unknown");
+    expect(task.stage.state).toBe("unknown");
     expect(openings).toBe(1);
-    const original = canonicalize(task.steps[0]!.signed);
+    const original = canonicalize(task.stage.steps[0]!.signed);
     // Only an explicit native seal moves the active target. The already
     // accepted request remains the same old-partition opening.
     for (let n = 0; n < 80 && (await P.summary()).at.seq + 1 < 16; n++) {
@@ -77,13 +78,13 @@ test("native retained editor keeps its accepted unknown opening on the original 
     const Q = await r.root.created(successor.id); nodes.push(Q); await options.pause([]);
     expect((await Q.summary()).value.status).toBe("active");
     await continueEdit(watched, task, options);
-    expect([task.state, openings, canonicalize(task.steps[0]!.signed)]).toEqual(["unknown", 1, original]);
+    expect([task.stage.state, openings, canonicalize(task.stage.steps[0]!.signed)]).toEqual(["unknown", 1, original]);
     await checkEditRequest(page, task, options);
     await continueEdit(page, task, options);
-    expect(task.state, task.message).toBe("recorded");
-    expect(task.steps.map(step => [step.kind, step.receiptVerified])).toEqual([["open-pr", true], ["ask-rules", true], ["propose-file", true], ["propose-manifest", true]]);
-    expect(canonicalize(task.steps[0]!.signed)).toBe(original);
-    expect((await new Platform(task.lane!).entries())[0]!.input).toMatchObject({ type: "genesis", seed: { creator: await P.at() } });
+    expect(task.stage.state, task.message).toBe("recorded");
+    expect(task.stage.steps.map(step => [step.kind, step.receiptVerified])).toEqual([["open-pr", true], ["ask-rules", true], ["propose-file", true], ["propose-manifest", true]]);
+    expect(canonicalize(task.stage.steps[0]!.signed)).toBe(original);
+    expect((await new Platform(editEvidence(task.stage).lane!).entries())[0]!.input).toMatchObject({ type: "genesis", seed: { creator: await P.at() } });
     expect((await Q.summary()).value.items.filter(item => item.type === "lane")).toEqual([]);
     expect((await r.G.item(0)).values["head"]).toBe(r.firstHead);
   } finally { if (partName) net.sized.delete(partName); owner.close(); }
