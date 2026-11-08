@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "f56ed5c59a0c1c066f40e8d5cf36e926bc5c15b2",
+  "sourceTree": "d58a05fc0d033b62db8fdbcfea0e872523b0e6ec",
+  "qualification": "Returned-effect metadata checkpoint: the initial test-compiler failure remains failed. An exact setup-only repair carries the unchanged production compiler and passes five failed or unreached compiler contexts and 150 cases across ten complete owners once. One restored raw-deadline control fails the intended ownership assertion. Prototype rulings, final assets and seals, gate, exact-source workflow, independent review and landing remain.",
+  "fileCount": 20,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-returned-metadata-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1671,
+          "sha256": "971f2d160bec2d96ebe17a59553ab6c153f089ff26f921547d387ec4ed939585"
+        },
+        {
+          "path": "control-source-comparison.json",
+          "bytes": 461,
+          "sha256": "95a3808a6b4d16c4642c9f33fd48090dbb11144f8354ae39dd6fd59822245dfd"
+        },
+        {
+          "path": "control-summary.json",
+          "bytes": 1277,
+          "sha256": "1921631efefeab904e7de1029e3dfe5ca96d130a0975baf69c79c8deb100b8a3"
+        },
+        {
+          "path": "controls.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 61120,
+          "sha256": "7c189bf4fe55de197d30caf4d7b1681fe715809c5f86b33b78303ffee03c4366"
+        },
+        {
+          "path": "failed-outer-receipt.json",
+          "bytes": 567,
+          "sha256": "d2b9acd17b13535f18786e72a62376ebbc16e45d2c0c0fc085deba6ad1aa0b66"
+        },
+        {
+          "path": "failed-pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "followup-outer-receipt.json",
+          "bytes": 565,
+          "sha256": "266942ebd8cf9cd17c382b5c87cfecacd22791abcff9ae4ad8d7ff10576657f9"
+        },
+        {
+          "path": "followup-pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 3777,
+          "sha256": "c5ada0bbd0b3ae809ce02e5ec3af78a8fca9b2ea51c2fb3b611bb0ecf335b545"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 9274,
+          "sha256": "02dd70d9bf5d724728dca53d91e15064a24415111dd7ef5c9aa8d4c70655d388"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 32046,
+          "sha256": "c729e71653a46208bfa4e0e5f975b6cee2ed260361bfc895ce33760f221e161b"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2545,
+          "sha256": "a5f3286e7d66f03f8b88edcd014175ae3df74d10ee83f461c8e5c058b80804c2"
+        },
+        {
+          "path": "raw-deadline.argv.json",
+          "bytes": 669,
+          "sha256": "a3e17abac05a59945357b7c35c48581ca8fb6b8f87485328349d9e44bcbabaa2"
+        },
+        {
+          "path": "raw-deadline.mutant.ts",
+          "bytes": 12168,
+          "sha256": "05c5f5fcd0b49a7b0860e9ea79b034849066fb16cb1f669216fe789e2546dd66"
+        },
+        {
+          "path": "raw-deadline.original.ts",
+          "bytes": 12174,
+          "sha256": "16e5870a547fd40a25fa48b44f4130afbc8bb3a07be7f7f98a3089249a8208d2"
+        },
+        {
+          "path": "raw-deadline.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "raw-deadline.owner.time",
+          "bytes": 29,
+          "sha256": "c438b58b5cebb76dd933c3e80d151a03924804cbb1afa10745866048f60048c8"
+        },
+        {
+          "path": "repair-proof.json",
+          "bytes": 649,
+          "sha256": "ea8220d6cf552ac88ca3047fd16b54b55eb7a0f0477d373ec8aadf2a52aed7c1"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1052,
+          "sha256": "c5a71c5978764a6e6e0539c6b3bc17a979a1e919a132c2a30eea118c37962e02"
+        }
+      ]
+    }
+  ]
+}

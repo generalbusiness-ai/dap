@@ -5,7 +5,8 @@
  * evidence that the rest of an enumeration could overturn.
  */
 
-import type { Bounds, Entry, FactRef, FieldType, FieldValue, Guard, MemberRef, Prepared, Reason, ScopeRef, Subject, UnavailableReason, Digest } from "@generalbusiness/dap-contract";
+import { declarationOf } from "./program/declaration.ts";
+import type { Bounds, Entry, FactRef, FieldType, FieldValue, Guard, MemberRef, Prepared, Reason, ScopeRef, UnavailableReason, Digest } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { type Capabilities } from "./capability.ts";
@@ -17,9 +18,8 @@ import { type Clock } from "./time.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
 
-import { judgeGuardNode, judgeGuardNodes } from "./program/guard-value.ts";
-import { guardContext, guardListContext } from "./program/structure.ts";
 import { conditionSubjects } from "./program/condition-plan.ts";
+import { captureProgramReads, recordProgramLeaf } from "./program/observe.ts";
 
 export { operand, slotOf };
 
@@ -103,46 +103,24 @@ export function readsUnbound(j: Pick<Judging, "subjects">, v: unknown): boolean 
   return false;
 }
 
-/**
- * The guards of one written list, by the three results of section 6.5: false
- * when one is false on a completed evaluation; otherwise not completed when
- * one is not; otherwise true. So a guard that is not completed does not end
- * the list: a later guard that is false still refuses. The guards of an act,
- * of a handler and of a condition are each such a list. `at`: the failed
- * guard, whose `reason` names a refusal; -1 when no guard is false.
- *
- * Section 4.2, check 10: in the written list of an act or a handler of
- * platform data, a mark is one guard of the list. Its rule is run at its
- * position: the guards before it were judged first, and it is not run after
- * one that is false. The validator lets a mark stand in no other list.
- */
-export function judgeGuards(j: Judging, guards: readonly Guard[], of: Subject = "on"): { result: GuardResult; at: number } {
-  if (guards.length === 0) return { result: "pass", at: -1 };
-  if (of !== "on") throw new TypeError("guard inheritance belongs to its admitted instruction");
-  const context = guardListContext(j.definition, guards, j.kind);
-  if (!context) throw new TypeError("guard list has no unique admitted context");
-  return judgeGuardNodes(j, context.body, context.nodes);
-}
-
-/** Execute one uniquely admitted guard occurrence through the same typed executor. */
-export function judgeGuard(j: Judging, guard: Guard, of: Subject = "on"): GuardResult {
-  const context = guardContext(j.definition, guard, j.kind, of);
-  if (!context) throw new TypeError("guard has no unique admitted context");
-  return judgeGuardNode(j, context.body, context.node);
-}
-
 /** Match one prepared Boolean against the complete prescribed input, or collect it. */
 export function preparedRule(j: Judging, rule: string): { result: GuardResult; input: unknown; digest: Digest } {
   const input = ruleInput(j);
   const digest = digestBytes(canonicalBytes(input));
+  const reported = (result: GuardResult) => {
+    const reads = { rule, digest, input, opaque: true };
+    captureProgramReads(j.definition, reads);
+    recordProgramLeaf(j.definition, "prepared", `rules.${rule}`, "prepared", result, reads);
+    return { result, input, digest };
+  };
   if (j.asked) {
     // Preparation: the result is not known yet, so the guard is passed over and the guards after it are met.
-    if (!j.asked.some((a) => a.rule === rule && a.digest === digest)) j.asked.push({ rule, source: own(j.definition.declared.rules, rule)!, input, digest });
-    return { result: "pass", input, digest };
+    if (!j.asked.some((a) => a.rule === rule && a.digest === digest)) j.asked.push({ rule, source: own(declarationOf(j.definition).rules, rule)!, input, digest });
+    return reported("pass");
   }
   // Section 5.2, step 6.4: a rule's result from preparation is reused only when it was prepared over these inputs.
   const prepared = j.prepared.find((p) => p.rule === rule && p.input === digest);
-  if (!prepared) return { result: "unavailable", input, digest };
+  if (!prepared) return reported("unavailable");
   if (!j.used.includes(prepared)) j.used.push(prepared);
-  return { result: ok(prepared.result), input, digest };
+  return reported(ok(prepared.result));
 }

@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "d4816f9a6f746205d8b02f57c2127d410c961ede",
+  "sourceTree": "a02462df2fb862497852d957b0ecee96de490862",
+  "qualification": "Ordinary admitted-body checkpoint only. Two failed pipelines plus exact test-only remainder and one conclusive kind control. Combined coverage247cases under unchanged production inputs. Timed/clause integration, raw guard retirement, complete interpretations, final gate, independent review and landing remain.",
+  "fileCount": 20,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-ordinary-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1710,
+          "sha256": "eebeb25a5a5f588a50bd24355da472963ab9717a9fdc07b91beec6be46fe7ba3"
+        },
+        {
+          "path": "body-failure.outer-receipt.json",
+          "bytes": 566,
+          "sha256": "ec75a9139c6beac54ef93811e8589ec28ed449f62f26875d5ab262e1a0b26ded"
+        },
+        {
+          "path": "body-failure.pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "body-kind.argv.json",
+          "bytes": 661,
+          "sha256": "c081ce777416befcbf49792a496c88099adeb404e257bb63e57875a33ce18fb3"
+        },
+        {
+          "path": "body-kind.mutant.ts",
+          "bytes": 6221,
+          "sha256": "17f22c87f325a76b95c420b68a137c65abb8e2575437c4b89ad277213fa90a2f"
+        },
+        {
+          "path": "body-kind.original.ts",
+          "bytes": 6287,
+          "sha256": "c84c1b6bb702c1d1d3df3cac307294c43acc6a17505e0dd7697b4b350a6fc927"
+        },
+        {
+          "path": "body-kind.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "body-kind.owner.time",
+          "bytes": 29,
+          "sha256": "d8c013feb0129299e8cf9c47bfbcd3e7258b95c5781ad4830e6eaa2d7c9ac446"
+        },
+        {
+          "path": "control-source-comparison.json",
+          "bytes": 461,
+          "sha256": "082c1c863c46f4b7e887ba87269e9cd1c98ce575027e6485684f5e98d28c6982"
+        },
+        {
+          "path": "control-summary.json",
+          "bytes": 895,
+          "sha256": "09e11c8b5f26f37ceb15ae3b3987b62959efc6d1bbc44f278933f004c6f41624"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 98282,
+          "sha256": "1b9050a103f4a0b5734d8b65a455885cd51f4be3e83b738744c05ae6ca381f77"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 3946,
+          "sha256": "5691fe70c178b4c3bb44084a9bc7bf49400472616cd3f0df1fd5596c9f1b704a"
+        },
+        {
+          "path": "isolated-repair-proof.json",
+          "bytes": 1943,
+          "sha256": "5e2d1f556d23278ca765be29fe18f8b177cc52f5b8a26b73f9f82ccb305fc4e5"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 18349,
+          "sha256": "2c7a1663d6fbcccf4dbf185adf8b21fd0f19fb60f00cc0d85df999baaaf42de1"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 3210,
+          "sha256": "d319d6b19f2effea2e40a55e46b405d3c98e5939c530de4de2a891972ade4041"
+        },
+        {
+          "path": "remainder.outer-receipt.json",
+          "bytes": 566,
+          "sha256": "0cf3c1311589c22309d71264a1f7304bf4d1fa7f152d0dd4c01bfa51254d4902"
+        },
+        {
+          "path": "remainder.pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "result.json",
+          "bytes": 894,
+          "sha256": "b4de8a9c8b3a67127f07438b49a2d2b57e4225ede9d641fb7b6c3740149d52d6"
+        },
+        {
+          "path": "source-failure.outer-receipt.json",
+          "bytes": 566,
+          "sha256": "f07714cb4c3f2d73bf3d6704128eb0544b572d848302d85799c1812a7310e7fd"
+        },
+        {
+          "path": "source-failure.pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Plan 035: Give Dap derivations a typed, inspectable program
 
-Status: implementation scheduled through M8 by gitseq request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`. M1–M2 landed; M3 implements the first production clock cutover, passes its complete source gate, and awaits independent review. The [M3 record](../implementation/2026-11-05-typed-core-m3.md) re-estimates M4–M8 at 21–32 working days. Hugh overrides only the deletion-size gate. The semantic contract, witness map, file boundaries, and other stop criteria still apply. The [stop record](../implementation/2026-11-04-typed-core-stop.md) preserves the earlier estimate as history.
+Status: M1–M7 have landed. M8 reconciles the complete body routes and interpretations under request `bd1a9429`, following main `01de2ca8`. The [M8 record](../implementation/2026-11-08-typed-core-m8.md) tracks that work. Parent request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a` remains open. Hugh overrides only the deletion-size gate; the semantic contract, witness map, file boundaries and other stop criteria still apply. The [stop record](../implementation/2026-11-04-typed-core-stop.md) retains the earlier estimate as history.
 
 Planned against `7135dc3985694760ff8c80ad07f200ba8f6e767d` on 2026-11-04.
 Category: architecture and direction. Effort: large overall, split into small reviewed deliveries.

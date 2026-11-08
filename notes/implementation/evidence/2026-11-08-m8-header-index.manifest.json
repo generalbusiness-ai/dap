@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "329ea607b53d5004abffb898454af6ad769a32a2",
+  "sourceTree": "7f32a2a2def61515e8debdd7381d18b38b915fd8",
+  "qualification": "At repaired M8 source329ea607, four compiler contexts and38 cases in five complete owners pass once. All existing assertions and deadlines remain. Header reuse and replay historical indexes now pass. First fullgate136708cd remains failed1 with Native unreached. No fullgate, asset generation, browser workflow, deployment or live acceptance occurs in this focused pipeline.",
+  "fileCount": 7,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-header-index-validation",
+      "files": [
+        {
+          "path": "2026-11-08-m8-header-index-focused-launch.inventory.json",
+          "bytes": 1899,
+          "sha256": "9a6bb2c031b8283239f282395bf94b4f239614b9972cfe2feb8a0e813f51eec1"
+        },
+        {
+          "path": "2026-11-08-m8-header-index-focused.inventory.json",
+          "bytes": 1764,
+          "sha256": "2daf42a3f9ababe5a83b829b29b04692a62b2f77233498c8c912ee0d551e136e"
+        },
+        {
+          "path": "2026-11-08-m8-header-index-preparation.inventory.json",
+          "bytes": 1327,
+          "sha256": "4b6c6fb5e31e9fb781542b3f47bf88343b708060ee8d1cd750dd56048daabf49"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 601,
+          "sha256": "b7fd3013a7a035cdb0d4d34a3b1e0d24bada61f91e26733767812032cba3791d"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 5290,
+          "sha256": "0ddd7cf5d5332b0e98fdd6e3550e4e5cbab7d0be6be3a6c9f64c8d10e4802b48"
+        },
+        {
+          "path": "result.json",
+          "bytes": 6749,
+          "sha256": "fea45a09b2bc22de27d357761c98107b043869f97af9f6f3401cf6f36fd524e4"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "8e79c478be2645867b8a6c8b025ea82ea6cc60f7",
+  "sourceTree": "78fc0ae90733c0ea440165e20ead4049656120fa",
+  "qualification": "Admitted interpretation checkpoint only: one test-compiler failure, isolated setup-only repair, carried unchanged source compiler, eleven passing failed/unreached compiler contexts and379cases39completeowners once, plus two conclusive restored controls. First-slice prototype retirement, complete reconciliation, finalgate, generated assets, workflow, independent review and landing remain.",
+  "fileCount": 25,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-interpretations-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2150,
+          "sha256": "173e76864007e0a1f01291aa341d01328ee3864ebbf9b28a305a076d1706e111"
+        },
+        {
+          "path": "callback-repeat.argv.json",
+          "bytes": 708,
+          "sha256": "53659a4742f77340023c238ab853013f6d2eaa07f05c043eb3786a1e9c788819"
+        },
+        {
+          "path": "callback-repeat.mutant.ts",
+          "bytes": 5318,
+          "sha256": "44dd7c9ed7b87f8b8c4f8980eb18a9eacbcdda9d00288a4699d13179070351a4"
+        },
+        {
+          "path": "callback-repeat.original.ts",
+          "bytes": 5310,
+          "sha256": "4d3c9c9aade849020c7d0d46eca94cbe26cbbf047e52f4a96edb0da044e0e938"
+        },
+        {
+          "path": "callback-repeat.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "callback-repeat.owner.time",
+          "bytes": 29,
+          "sha256": "5226eeb2e9f82c4a8ccf860f29f1af37a6584855bf869bd1987199c6be4b6aee"
+        },
+        {
+          "path": "control-source-comparison.json",
+          "bytes": 461,
+          "sha256": "8cfc6a2bb8eebcd26211d71dfee5550418ef9cfa02b5ca1e5a7a48a17b6d6dd4"
+        },
+        {
+          "path": "control-summary.json",
+          "bytes": 2273,
+          "sha256": "49802eca5fa3c32d45751c98b2adc54563199e5ccc6cff5c9ffe2a62d1a8231f"
+        },
+        {
+          "path": "controls.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 149764,
+          "sha256": "97e345f4788d5ff9402d116218cbf9b9d43dcdfe2dce5e79de3eda61d2a2cbd8"
+        },
+        {
+          "path": "failed-outer-receipt.json",
+          "bytes": 566,
+          "sha256": "ff84b16d8366753ff109230fcda4b2663ef3384c943e19ac653731945ee12603"
+        },
+        {
+          "path": "failed-pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "followup-outer-receipt.json",
+          "bytes": 567,
+          "sha256": "ae1f32b46390bb89a81590437c31934ff761a3a426660fce5dc0050eb44d0f8a"
+        },
+        {
+          "path": "followup-pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "future-omission.argv.json",
+          "bytes": 699,
+          "sha256": "ecb920bc0e44625904b334f910e30f1a810de48c33eaa48cd1114b3f7ca24880"
+        },
+        {
+          "path": "future-omission.mutant.ts",
+          "bytes": 19376,
+          "sha256": "c374583b65c794313642f638f1eeefe9b27d05ae9f28e8497ec2fab2ea6c87ee"
+        },
+        {
+          "path": "future-omission.original.ts",
+          "bytes": 19464,
+          "sha256": "8be72141689e77d0a98fc1122e6325cc2c028c23a61d2128831dd7658ff2d8cc"
+        },
+        {
+          "path": "future-omission.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "future-omission.owner.time",
+          "bytes": 29,
+          "sha256": "be0ad10a68f8c8b097850306071f5a695ac63efb6740ac8adc884999de07b052"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 3350,
+          "sha256": "5719411f07b5fdf352ccf373284911712d7e867487cfb6f5cbcb274d2b65953d"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 17514,
+          "sha256": "e33c29288149ece07e7ec97ca8b29068a8ca5d534fe9a8356562ceb3da662b21"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 73695,
+          "sha256": "c0741278aecd603f0b5aaf777fef79fa476ab3781381792a6c7f9611162ef2be"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2525,
+          "sha256": "e0f4025b3819ab035bf0b222cfa479b8447ade196645f172d2a122fb1e315273"
+        },
+        {
+          "path": "repair-proof.json",
+          "bytes": 1000,
+          "sha256": "d940ea506b4837218d0b6272cc706792b602d783350d008746596b9507e846d5"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1009,
+          "sha256": "668ba5e29c7b6a6933c0c31488e44cd2ee8328488f983d1f6c28147fc32bbfae"
+        }
+      ]
+    }
+  ]
+}

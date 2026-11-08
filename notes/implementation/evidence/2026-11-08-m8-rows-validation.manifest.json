@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "fb37bd0547007293da726a7142df2d549417b504",
+  "sourceTree": "02d53e9abc55fa3fe0d4ec6cdb8e7c7a68e75623",
+  "qualification": "Second M8 checkpoint only. Both controls fail at their intended existing assertion. Full M8 body routing, complete interpretations, final gate, review and main landing remain.",
+  "fileCount": 27,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-rows-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2306,
+          "sha256": "fed2f43b77866505f65d78947f648af70b563900d45f12d7a355411f0937d980"
+        },
+        {
+          "path": "controls-summary.json",
+          "bytes": 2336,
+          "sha256": "0597bb00c7b52c1a7b6a0b4e8210a8697095edb3a51e3a4fe11a9341f7b6e419"
+        },
+        {
+          "path": "corpus-driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "corpus-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "corpus-result.json",
+          "bytes": 845,
+          "sha256": "5e76c4e573976067bd438d74b721179ec0d2ede0ece816297d9f3cef72d1a5e5"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 80578,
+          "sha256": "e161a2f9c5f20e1814277b8effa0e8c086cbe364842bf9e1577792867b5107de"
+        },
+        {
+          "path": "guessed-replacement.argv.json",
+          "bytes": 643,
+          "sha256": "86d807659b4aa94e8fa994a79585a87034840145d5ddb77626a6971a6adaab83"
+        },
+        {
+          "path": "guessed-replacement.mutant.ts",
+          "bytes": 35902,
+          "sha256": "ef15a25e232634d97c0c284f41cf38081444b5fe92a1acfab45cc6fec3234949"
+        },
+        {
+          "path": "guessed-replacement.original.ts",
+          "bytes": 35768,
+          "sha256": "b70f906a2e6f5687bfcb296ef55601cfaf2ba0384fdbc441cf7d8f66c0a9df3e"
+        },
+        {
+          "path": "guessed-replacement.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "guessed-replacement.owner.time",
+          "bytes": 29,
+          "sha256": "fc42d418d4fee752ea2f41a6cde63fa0ae4eca5ea5d37b803dee92399603aa30"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 1965,
+          "sha256": "d79289fbd9d629143dd50b68419552576da1421ceffced19d94f7c63d6363809"
+        },
+        {
+          "path": "native-row-owner.argv.json",
+          "bytes": 640,
+          "sha256": "2a1dbe5c323fb48aae1eeb8d6d9927e80df77da6cc3243b6062c2d09484d0cf9"
+        },
+        {
+          "path": "native-row-owner.mutant.ts",
+          "bytes": 7188,
+          "sha256": "1143e533edf558f4f7b1b4eebde95c289889d4c2329a1e14fed7542ef83c931f"
+        },
+        {
+          "path": "native-row-owner.original.ts",
+          "bytes": 7233,
+          "sha256": "1194983eba37bfd2b21fe623d032db51713c8dbdd689dd0972916c74af11a39d"
+        },
+        {
+          "path": "native-row-owner.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "native-row-owner.owner.time",
+          "bytes": 29,
+          "sha256": "5736194233be7a18c76d7393aa854750017dc470c4aec8e750641f1b769ddd97"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 567,
+          "sha256": "95f07029a0f5ac9491839177d43cacdffc12254df32302afca1c8fce1fc3690a"
+        },
+        {
+          "path": "outer.time",
+          "bytes": 31,
+          "sha256": "7761f48556a52388d4c90229b4e7d8fd39b085dc8eb864757c0de9d056aa5b76"
+        },
+        {
+          "path": "pipeline-result.json",
+          "bytes": 14549,
+          "sha256": "7b22f4da1317b3553768256062650263ef4df08ff05df694abae3b79456e4b94"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 37537,
+          "sha256": "7cee92c03e3efc1c339d41926603b727aefafbc764f40b72925299fd53f11a2d"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2231,
+          "sha256": "48546e823f6487ec989a9bf220f1dbf2b1765157efa3e473d6f12ae4a0709a8b"
+        },
+        {
+          "path": "result.json",
+          "bytes": 659,
+          "sha256": "5ed4989d5afff5dbd6acad875e3c89910d1657f2f61fb2ef706a86b22fd92863"
+        },
+        {
+          "path": "source-comparison.json",
+          "bytes": 496,
+          "sha256": "96384df70d496f2a580ba90e2ac4781cde853b6de05b56d5c0dfa1ad9d1dd563"
+        },
+        {
+          "path": "static-ledger-proof.json",
+          "bytes": 2845,
+          "sha256": "30bb47831006333b7e6dc9f1810cb35c4d76d0e7a9e8ef43fbf04d75243359c8"
+        },
+        {
+          "path": "task.json",
+          "bytes": 474,
+          "sha256": "4faa290a851b3f26c5f4ab1b2b07c52148037dd218bb035ba94b01ae792b622d"
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import { isObject, isValue, own } from "../values.ts";
 import { stepKind } from "./capability.ts";
 import { mark, marked, type Defining } from "./context.ts";
 import { at, type Rec } from "./shape.ts";
+import { withHeader } from "../program/rows.ts";
 
 const FIELD_SHAPES: Readonly<Record<string, readonly string[]>> = {
   text: ["max"], int: ["min", "max"], bool: [], time: [], enum: ["of"], member: [], item: ["of"], fact: ["kind", "under"], scope: ["kind"], reference: ["fragment"], digest: [], commit: [], tree: [], record: ["of"], list: ["of", "max"],
@@ -155,7 +156,7 @@ export function declaredFields(d: Defining, v: unknown, path: string, places = f
   for (const [f, fv] of entries(v, path, null)) {
     const p = at(path, f);
     const placed = d.platform && places && isObject(fv) && fv["type"] === "digest" && "value" in fv;
-    const type = fieldType(d, fv, p, ["required", "default", ...(placed ? ["value"] : [])], false, true, true);
+    const type = withHeader(d, { kind: "field", name: f }, () => fieldType(d, fv, p, ["required", "default", ...(placed ? ["value"] : [])], false, true, true));
     if (!type) continue;
     if (placed) {
       // `domain` is the byte domain of the place, and `max` the bound on one value of that domain, in canonical bytes. Two fields

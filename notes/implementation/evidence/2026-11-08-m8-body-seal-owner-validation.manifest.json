@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "5b47520c1d73b73ac41eb9dc6fee2dc464a7998b",
+  "sourceTree": "63ff25cd82a17a3a9bbbc9f92b4db21bda609f04",
+  "qualification": "Exact two-literal body-seal adoption and complete eleven-case Node inventory owner only. All other test bytes remain. No compiler, full gate, asset generation, authority change or deployment. Named witness rulings, prototype retirement, final assembly and independent seal review remain.",
+  "fileCount": 10,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-body-seal-owner-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 750,
+          "sha256": "443ab484ef1850b9165c980e114f6411280e690b5ec125ed98ae6c384694ba3e"
+        },
+        {
+          "path": "application-proof.json",
+          "bytes": 1488,
+          "sha256": "c825f35840df1ccb7ca2951dd6e77c099337f663e9eeea089fac68a9aed6c5de"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 164,
+          "sha256": "175429bab6883d6279c7a01364c2965fc92300f8edea1e77d36811b9dbd8d1cd"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 29,
+          "sha256": "fee53a37186be6dbd6e8e7c67c4dceed26fe2512a30ec23b9a8efd050a8fb245"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 1677,
+          "sha256": "0bf1cbe95c1738b1a8b3b07bfe96003d72ec311b7e6beaf7cfb4a427967a9e40"
+        },
+        {
+          "path": "preparation-summary.json",
+          "bytes": 458,
+          "sha256": "3b456ba4c5596bd9ce6e145846681497a8fd1c6cccbd9a1f49873a58306d13ef"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 927,
+          "sha256": "27a5ee8470e5192bea2b395231eb1ffbd7588db5aa8da0a70eb3b1df6166b935"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1917,
+          "sha256": "58b181059ffa7b6f5dedf9af73bc5e472175e763528c948d7df3fce6a5681535"
+        }
+      ]
+    }
+  ]
+}

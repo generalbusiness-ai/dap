@@ -97,15 +97,23 @@ test("historical declared indexes and fixed-slot counts retain their own head's 
   const third = add(y);
   history.did(keys.rita, "finish", on(history, second));
   const view = new View();
-  const incomplete = new View();
-  const absent = new View();
+  // State-writer stand-ins lose declared index writes while each fold uses
+  // the actual admitted definition. Fixed rows and historical writes stay real.
+  const incomplete = new class extends View {
+    override putIndexed(...given: Parameters<View["putIndexed"]>) {
+      if (given[3] !== second) super.putIndexed(...given);
+    }
+  }();
+  const absent = new class extends View {
+    override putIndexed(..._given: Parameters<View["putIndexed"]>) {}
+  }();
   expect([view.at(-1).state.scope(), view.at(-1).built]).toEqual([null, false]);
   for (const { entry, hash } of history.entries) {
     view.fold(definition, entry, hash);
     // Lose one opening's rows: the type still has two declared indexes,
     // but neither may answer even for the key of a row that is present.
-    incomplete.fold(entry.seq === second ? { ...definition, keyed: {} } : definition, entry, hash);
-    absent.fold({ ...definition, keyed: {} }, entry, hash);
+    incomplete.fold(definition, entry, hash);
+    absent.fold(definition, entry, hash);
     if (entry.seq === second) expect(view.at(first).state.lookup("row", "key", canonicalize(x), 9)).toEqual([first]);
   }
   const contents = (state: StateView) => [

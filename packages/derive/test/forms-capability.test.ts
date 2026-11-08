@@ -8,6 +8,7 @@ const { rita } = keys;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Change = (d: any) => void;
 import { C1, C2, capabilityStagingData, capabilityStepFactChange } from "./definition-corpus/capability-staging-data.ts";
+import { observeProgram } from "../src/program/observe.ts";
 
 /**
  * The small definition, with the two capabilities listed and each
@@ -56,6 +57,15 @@ describe("capability forms (section 6.11), with a stand-in for the capability's 
     const after = s.judge(signed, { capabilities: rules });
     expect(after).toEqual(before);
     expect(calls).toEqual(originalCalls);
+    for (const budget of [undefined, 0, 100]) {
+      calls.length = 0;
+      const observed = observeProgram(s.definition, budget, () => s.judge(signed, { capabilities: rules }));
+      expect(observed.value).toEqual(before);
+      expect(calls).toEqual(originalCalls);
+      expect(observed.primitives.capabilities).toBe(place === "effect" ? 1 : 3);
+      expect(observed.primitives.bodies).toBe(1);
+      expect(observed.truncated).toBe(budget === 0);
+    }
   });
 
   test("a capability guard is asked with the arguments the definition writes, its refusal carries the capability's name, an effect's records follow the written effects, and a part reads a record that an entry carries", () => {

@@ -3,8 +3,9 @@ import type { Bounds, FieldType, FieldValue, TypeMark } from "@generalbusiness/d
 import type { Ctx, Defining, ElementIdentity, MarkPlace, OwnerIdentity, Slot, Type } from "../validate/context.ts";
 import type { Underived } from "../validate/capability.ts";
 import type { ValidDefinition } from "../validate/index.ts";
-import { immutable, type Phase } from "./model.ts";
+import { immutable, type Phase } from "./data.ts";
 import { finishStructure, noteFrame, recordResolution } from "./structure.ts";
+import { currentRow, type RowIdentity } from "./rows.ts";
 
 export type ReadType = { readonly kind: "declared"; readonly type: FieldType }
   | { readonly kind: "native"; readonly mark: TypeMark } | { readonly kind: "unknown" };
@@ -53,12 +54,12 @@ export function recordRead(d: Defining, node: OperandRead): void {
 }
 
 /** Attach only after every admission check has succeeded, using the actual returned object. */
-export function bindReads(d: Defining, definition: ValidDefinition): ValidDefinition {
+export function bindReads(d: Defining, definition: ValidDefinition, format: ValidDefinition["declared"]["format"]): ValidDefinition {
   const reads = collection(d);
   const evidence: ResolvedReads = Object.freeze({ validation: validation(d), operands: Object.freeze([...reads.operands]),
     subjects: Object.freeze([...reads.subjects]), slots: Object.freeze([...reads.slots]), fields: Object.freeze([...reads.fields]),
     foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]), bindings: Object.freeze([...reads.bindings]), frames: Object.freeze([...reads.frames]), marks: immutable(d.marks), underived: immutable(d.underived) });
-  finishStructure(d, definition, evidence);
+  finishStructure(d, definition, evidence, format);
   for (const operand of evidence.operands) operandOwners.set(operand, definition);
   admitted.set(definition, evidence);
   return definition;
@@ -81,12 +82,13 @@ function validation(d: Defining): ReadValidation {
 export interface ReadContext {
   readonly validation: ReadValidation;
   readonly kind: string | null;
+  readonly row: RowIdentity | null;
   readonly clause: boolean;
   readonly handler: Readonly<{ update: boolean; under: string | null }> | null;
   readonly senderKind: string | null;
 }
 function contextOf(d: Defining, ctx: Ctx): ReadContext {
-  return Object.freeze({ validation: validation(d), kind: ctx.kind, clause: ctx.clause,
+  return Object.freeze({ validation: validation(d), kind: ctx.kind, row: currentRow(d), clause: ctx.clause,
     handler: ctx.handler ? Object.freeze({ ...ctx.handler }) : null, senderKind: ctx.senderKind ?? null });
 }
 export interface ReadSite { readonly path: string; readonly phase: Phase; readonly context: ReadContext; readonly type: ReadType }

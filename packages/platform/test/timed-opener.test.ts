@@ -27,7 +27,7 @@ test("timed cleanup is platform-only and refuses different kinds, oversized atte
     if (!checked.ok) return expect.fail(JSON.stringify(checked.problems));
     return judgeTimed(state, checked.definition, selected, { clock: clockOf(state, due), bounds: PROPOSED_BOUNDS, platform: { named: pin, rules: native.rules } });
   };
-  for (const pin of ["platform:destination@3", "platform:destination@13", "platform:destination@19"] as const) {
+  for (const pin of ["platform:destination@3", "platform:destination@13", "platform:destination@14", "platform:destination@15", "platform:destination@19"] as const) {
     const result = judge(pin);
     expect(result.result, pin).toBe("write");
     if (result.result !== "write") return expect.fail("The exact supported native timer must write.");

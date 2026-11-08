@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "scopeAddendum": "508fd6ed6cc492a15eaee5b4864294b49d3c4182",
+  "sourceHead": "8f7e8778e9738dc80e6240d25e14abb1febcde18",
+  "sourceTree": "94a937c95293596a7c77702fea5944a287113c7e",
+  "qualification": "Concrete prepared two-seal patch and maintained Page generation scope only. No patch applied, asset generated, test run, gate or acceptance claim. Recheck exact source at eventual application; independent seal review remains.",
+  "fileCount": 6,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-final-assembly-preparation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 506,
+          "sha256": "3911c442460427b131c0a441fbe4dd7ad89647c962dd90b4b5828f9c6bc58dca"
+        },
+        {
+          "path": "artroom-m8-assets-seals-addendum-20261108.txt",
+          "bytes": 3241,
+          "sha256": "586ed7a4621eb09a7696076bb9559f07869ec39101429d6bb594f0d3c1536479"
+        },
+        {
+          "path": "artroom-m8-body-source-seals-20261108.patch",
+          "bytes": 1379,
+          "sha256": "c5620ba635cacdd8fcc8344a939b8c658c7c7b995c0abbe4e0f58f88089cde9f"
+        },
+        {
+          "path": "artroom-m8-body-source-seals-20261108.proof.json",
+          "bytes": 1660,
+          "sha256": "855d786cdaad2e838b95066b8708834cced9e9cfb0c19aeacb467ea6a83cb038"
+        },
+        {
+          "path": "current-source.json",
+          "bytes": 1771,
+          "sha256": "d17c62a7ec096151d8d8a10b0fdd89756dece2c19523198d4acc82f158f5dd65"
+        },
+        {
+          "path": "scope-event.json",
+          "bytes": 3366,
+          "sha256": "a793eb496b619e9f43af133b36298abe026392c89522cc0914dcd66686c3c2af"
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Digest, type Item, type MemberRef, type PlatformData, type ScopeRef } from "@generalbusiness/dap-contract";
 import type { Judging, RuleGiven, StateView } from "@generalbusiness/dap-derive";
-import { contentChecked, contentStates, deriveEffects, valueDigest } from "@generalbusiness/dap-derive";
+import { contentChecked, contentStates, evaluateEffects, valueDigest } from "@generalbusiness/dap-derive";
 import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { rulesScopeV12 } from "../src/rules-scope-v12.ts";
 import { rulesAnswerV13, rulesObservedValuesV13, rulesScopeRulesV13, rulesScopeV13 } from "../src/rules-scope-v13.ts";
@@ -22,7 +22,7 @@ test("a native service-generation effect holds its real local position, without 
   // Explicit boundary stand-in: it emits the same native self reference as
   // q13-publish-policy, without claiming a certificate or publication was judged.
   // The real cohort test separately proves mark changes and unchanged generations.
-  const at = (self: number, data: PlatformData = rulesScopeV13): ReturnType<typeof deriveEffects> => {
+  const at = (self: number, data: PlatformData = rulesScopeV13): ReturnType<typeof evaluateEffects> => {
     // Admit this one-effect boundary probe before asking the typed executor to run it.
     const probe: PlatformData = { ...data, acts: { ...data.acts, publish: { ...data.acts["publish"]!, effects: data.acts["publish"]!.effects.slice(0, 1) } } };
     const definition = checkedPlatformData(probe), act = definition.declared.acts["publish"]!;
@@ -35,7 +35,7 @@ test("a native service-generation effect holds its real local position, without 
       platform: { named: "platform:rules@13", rules: { "q13-publish-policy": { place: "effect", most: 1,
         run: given => [{ effect: "ref", item: row.id, slot: "roomServiceChanged", to: given.resolved.self }] } } },
     };
-    return deriveEffects(judging, act.effects, act.attention, null, bodyStructure(definition, act, "publish"));
+    return evaluateEffects(judging, bodyStructure(definition, act, "publish"), null);
   };
   for (const self of [1, 7, 1_000_000_000]) {
     const result = at(self);
