@@ -4,7 +4,7 @@ Status: the shared generation owner is drafted. The HTTP and idle owners pass
 14 cases. The two-case OAuth transport owner passes, and the added held-loader
 case passes on both the previous source and the draft. Both deliberate controls
 fail at the intended assertions. The complete hosted and OAuth selection passes 50 cases in nine files. Together
-with the HTTP and idle owners, 64 distinct focused cases pass. The exact source-seal patch is applied. The gate, independent review, and landing remain pending. The planner owns deployment.
+with the HTTP and idle owners, 64 distinct focused cases pass. The exact source-seal patch is applied. The single full gate passes. Independent review and landing remain pending. The planner owns deployment.
 
 Request `e39e7cef7b8ed71c445ae1285de6dec9b2fbe1ae` and promise `54aa90b3`
 own this branch. Parallel order `0d6d0fba` permits its start. The branch includes
@@ -109,7 +109,7 @@ the exact draft bytes before the next run.
 The existing assertions and deadlines stay in place. The generation constructor
 and the cleanup spy in the OAuth transport fixture now target the shared owner.
 Production source, scope-test, Node-test, and browser compiler checks pass at
-their recorded checkpoints. The final gate still remains.
+their recorded checkpoints. The final gate below validates the integrated candidate.
 
 The [focused manifest](evidence/2026-11-07-s1-focused.manifest.json), SHA-256
 `ee9c53780b49b14f622d80cd9108111f9416f04f0ee43bf3a0f17a8ba88186f8`,
@@ -119,7 +119,7 @@ draft, and the 17-entry witness map.
 
 ## The exact source seals follow the standing instruction
 
-Planner acts `c858a1d1` and `7e3f7743` retire the earlier prompt requirement and assign seal review to the checker. Hugh also directly approved S1's exact patch in this builder session and instructed future patch work to continue without permission prompts. Questions go to the planner.
+Planner act `c858a1d1` and its live refile `3655896d` retire the earlier prompt requirement and assign seal review to the checker. Hugh also directly approved S1's exact patch in this builder session and instructed future patch work to continue without permission prompts. Questions go to the planner.
 
 Commit `42fabdd3` changes only the three parser-seal literals in `scripts/security-entry-points.test.mjs`. Every route and gate assertion remains. Patch SHA-256 is `787934346a8752c8bbbd472391ee700221904eccb3b2e1e9bd03c7023ec5208d`.
 
@@ -131,4 +131,20 @@ Commit `42fabdd3` changes only the three parser-seal literals in `scripts/securi
 
 The [seal manifest](evidence/2026-11-07-s1-approved-source-seals.manifest.json), SHA-256 `b5dcf9f9c3b27ce659f04f101fba420a7a33a330436e325893346c9296360ba1`, binds the exact patch, source, approval and integration checkpoint. It records no test pass.
 
-The branch now includes published main `903ed961`, which contains M6 `5a0e5660` and the three-path Register 26 record. That integration leaves all three S1 source owners byte-for-byte equal to the focused checkpoint. The single full gate will validate the integrated candidate. Planner act `7e3f7743` assigns S1 the first gate slot and M7 the next slot. Independent review and audited landing remain required. The planner deploys.
+The branch now includes published main `903ed961`, which contains M6 `5a0e5660` and the three-path Register 26 record. That integration leaves all three S1 source owners byte-for-byte equal to the focused checkpoint. The single full gate validates that integrated candidate. Live planner act `3655896d` assigns S1 the first gate slot and M7 the next slot. Independent review and audited landing remain required. The planner deploys.
+
+## One full gate validates the integrated source
+
+The gate at `446e50d4b9fdebafeee019d829ea427981acac66`, tree `c179e22f37a978f753ab9eb36664e3bb5e32033e`, exits 0. The driver read `gate.exit`, compared every tracked input before and after, and found no source change or remaining owned process. The gate captured main base `903ed961`; its message check excludes M6's historical merge exception and passes every S1 message.
+
+All pre-test stages and typechecking pass. Reports record 5,320 passed cases: 135 Node, 56 counting, 4,016 plain and 1,113 native cases. Three cases skip: one plain and two native. All four phase reports are terminal and complete, with no failed cases, report issues, contradictions or unhandled errors. The 99 additional observations are the enqueue, dequeue and completion wrappers of 33 successful Node files. Only a skipped module lacks its final duration.
+
+The [gate manifest](evidence/2026-11-07-s1-gate-validation.manifest.json), SHA-256 `3b908ced33cb75c07c5453b81ac1342b0bbf2fb6cf70ba2785241070ea09bd4b`, binds 18 read-only public files and the hash inventory of 2,315 private retained files. The private originals keep TEST request bodies and custody out of the public packet. No gate, phase or owner ran again during analysis or sealing.
+
+| Check | Command | Exit | Retained output SHA-256 |
+|---|---|---:|---|
+| Full integrated gate | `npm run gate` | 0 | `28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320` |
+| Structured phase and case analysis | `node analysis-driver.mjs <test-evidence> <private-analysis> 0` | 0 | `ae580381eb518836db467a51bc66051b26f1fcad9e41b6930ac5da820023f36d` |
+| Unchanged inputs and closed processes | Compare the driver's before/after snapshots and terminal process group | 0 | `689ed9dca78bfae74bc8b1539ab9d181bad913ad84df86034bfef9cbc37e185a` |
+
+The following main advance adds only the sprint report. The final review head also adds this note update and the gate manifest. The final input comparison records their exact trees; runtime source, tests, dependencies, configuration and test scripts must match the gated head. Independent review and audited landing remain required. This head proves no live-room outcome or deployment. The planner deploys.
