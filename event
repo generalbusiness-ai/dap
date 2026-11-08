@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:13ad539420b35c924d57b3d10d75b1f3093a03cd","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-07-typed-core-m6.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:17ecdba4b4e8e1e8a13002ca5fe8f8953001137b","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/request-duties.ts."}
