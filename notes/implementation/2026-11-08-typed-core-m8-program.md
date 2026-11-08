@@ -98,3 +98,14 @@ The next draft extends the existing all-opcode corpus case to visit requirements
 Captured events now retain their actual parent ordinal and primitive category. Resolved read events inherit their admitted instruction owner. Explain can display an equality guard's two captured operand values and can locate an effect or send refusal by its retained admitted occurrence. It executes no read or callback. Existing deadline and prepared-input display values remain unchanged. Retention membership uses a per-event flag instead of scanning the retained event list.
 
 The existing explanation case adds a literal comparison refusal and both actual values, with exactly two guards and two resolved reads. A planned single parent-link omission control must lose those captured comparison values and fail that assertion. This draft has no validation result yet. The prototype ruling, final assets, gate, workflow and independent review remain ahead.
+
+
+## Every admitted corpus root passes the requirements visitor
+
+Provenance source `d7d540f18672bac80675b9902e474a0334495a3c`, tree `8152960e0d706acc6b547575aa8e2725b90e64b2`, passes both derive compiler contexts and all 82 cases across four complete owners once. The existing corpus case visits requirements for every root of every registered admitted declaration. Existing first-slice and Native owners retain their bytes. The changed owners add assertions and retain every earlier line, registration and deadline. No case is missing, unexpected, skipped, retried or unfinished; no collection error or coverage issue remains.
+
+The actual `pipeline.exit` contains `exit 0` and has been read. Source, tool and dependency guards match, the checkout remains clean at its frozen head, and no owned process remains. The outer observation measures 4.620 seconds, separate from command wall and CPU observations. No earlier successful body repeats without a source change.
+
+One parent-link omission control runs only the existing explanation case. It fails the literal captured comparison-values assertion at line 102, with one `AssertionError`, zero passes and three unselected cases. Its actual owner exits 1. The source restores in `finally` before classification; both full source snapshots match, and no owned process remains. The classifier exits 0. The normal 82-case baseline does not rerun for the control.
+
+The [provenance validation manifest](evidence/2026-11-08-m8-provenance-validation.manifest.json), SHA-256 `46dbad00c7da7df8ea5f60e3200cb783e749ba1d5577da86f3c18cd186659149`, binds sixteen public files and 59 private originals across four read-only units. Exact owner-addition proofs, complete reports, captured failure and source/process receipts remain durable. Retention reruns nothing. Prototype retirement, the remaining witness reconciliation, final assets, gate, workflow and independent review remain ahead.

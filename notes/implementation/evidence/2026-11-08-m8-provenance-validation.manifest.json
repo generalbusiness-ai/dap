@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "d7d540f18672bac80675b9902e474a0334495a3c",
+  "sourceTree": "8152960e0d706acc6b547575aa8e2725b90e64b2",
+  "qualification": "Trace provenance and visitor-totality checkpoint only: two derive compiler contexts and82cases4completeowners pass once, including every current admitted corpus root in its existing owner; one isolated parent-omission control fails the captured comparison display and restores cleanly. Complete interpretations/prototype retirement, finalgate, generated assets, workflow, independent review and landing remain.",
+  "fileCount": 16,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-provenance-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1281,
+          "sha256": "8c6af184c718169ae10e7570e6c465598ab535091dd2690baa4ea2c72e64380e"
+        },
+        {
+          "path": "control-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "control-owner.time",
+          "bytes": 29,
+          "sha256": "5226eeb2e9f82c4a8ccf860f29f1af37a6584855bf869bd1987199c6be4b6aee"
+        },
+        {
+          "path": "control-source-comparison.json",
+          "bytes": 461,
+          "sha256": "34b79bf8fa6c7e15caf7029c5b61f57f33f3448f9e8d3347296ff2de399a05fe"
+        },
+        {
+          "path": "control-summary.json",
+          "bytes": 882,
+          "sha256": "619e9d88fba718c49466a601bab6976d2e73a4bb96506a5ac48a2d6cf21454d9"
+        },
+        {
+          "path": "controls.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 29167,
+          "sha256": "58ad43631dc3c40fbe0f26185b299488bb96b7e3654894d3a7424a3245141e07"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 1861,
+          "sha256": "e18d253e46d8b6399dd4e180e247bd96460f8da2b2432723d2759d2e0afeac15"
+        },
+        {
+          "path": "mutant-observe.ts",
+          "bytes": 6715,
+          "sha256": "edbebd22055055c3a69694ca05c5510dd6363ff514da291ddd2ca24ccd9a6d6b"
+        },
+        {
+          "path": "original-observe.ts",
+          "bytes": 6749,
+          "sha256": "b6646ef2a1b2914bcaa95f02805e7ee000353da30c172d4d0c5d0dfb02ca0a9a"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 565,
+          "sha256": "b01ccaca7692c85ec8442acb51db89170c922a7de45ff4f453b80511c1e75826"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 3295,
+          "sha256": "a9e1af5a5fd1db93fcf9fbc3665bd201d838251345a4003ac970bbe5a2a140c3"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 13419,
+          "sha256": "75312cc8aa28ff6c04a2a23175db4f67fafff19dd8c25d946fc3b5f64975c0ce"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1633,
+          "sha256": "59f7c3a88cb04859800e9193f9ddbba2636c9ebf50300f31111fd6811fa3afa2"
+        },
+        {
+          "path": "result.json",
+          "bytes": 855,
+          "sha256": "7a473a5af6231668fdc3793e18868e597bfba11d69a361856fa862aa3d649e2c"
+        }
+      ]
+    }
+  ]
+}
