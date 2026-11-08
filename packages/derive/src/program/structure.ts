@@ -11,6 +11,7 @@ import { ownSendPlan, type PendingSendPlan, type SendPlan } from "./send-plan.ts
 import { ownSettlementPlan, type SettlementPlan } from "./settlement.ts";
 import { bindNative, nativeBoundaries, nativeBoundary, nativeSource, recordNative, type NativeBoundary } from "./native.ts";
 import type { MarkKind } from "../validate/context.ts";
+import { bindDeclaration } from "./declaration.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
 export type GuardOp = Exclude<Keys<Guard>, "of" | "reason" | "ifPresent">;
@@ -221,6 +222,7 @@ export function recordNativeForm(d: Defining, kind: MarkKind, path: string, data
 
 /** Called only after the actual final admission and canonical-byte checks. */
 export function finishStructure(d: Defining, definition: ValidDefinition, reads: ResolvedReads): void {
+  bindDeclaration(definition);
   bindNative(d, definition, reads.validation);
   const trace = pending.get(d);
   if (!trace) return;

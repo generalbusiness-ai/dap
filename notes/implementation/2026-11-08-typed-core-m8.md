@@ -1,6 +1,6 @@
 # Complete derivation programs and their retained judge shells
 
-Status: reconciliation in progress under request `bd1a9429` and promise `689c9fd1`, following M7 main `01de2ca8`. No M8 runtime source, compiler, test or build has run. S3's validation body has finished and its independent review remains open. The planning estimate stays three to five focused engineer-days until this reconciliation is complete.
+Status: the first declaration-ownership and Native lookup draft awaits focused validation under request `bd1a9429` and promise `689c9fd1`. M7 landed at `01de2ca8`, and S3 has now landed at `c85553da`. No M8 compiler, test or build has run. The planning estimate remains three to five focused engineer-days; it is not a throughput result.
 
 ## One program must cover every admitted body
 
@@ -48,3 +48,14 @@ Reuse the witness map's complete owning tests for each changed boundary. Add onl
 After the source is complete, run one frozen gate and retain its actual exit and complete structured reports. If runtime changes affect Page bytes, first file a concrete scope addendum, then use the maintained generator, asset owner and exact-source Page workflow. Any scope, replay or fixture infrastructure edit also needs a concrete addendum before editing. Hugh's standing approval covers patch application; independent review still covers changed source seals.
 
 No M8 validation result, complete lowering claim, deployment or live acceptance follows from this note. The planner deploys.
+
+
+## The first draft captures metadata and closes the Native miss
+
+`program/declaration.ts` captures declaration metadata only after the existing final admission checks. Its registry keys the actual returned definition, and its immutable copy keeps an origin map local to that validation. The caller's original declaration remains mutable. A copied definition cannot retrieve the record, and metadata copied by another validation cannot supply a Native source in this one.
+
+`nativeMark` now throws for a definition with no admission record and for a mark with no captured boundary of the requested kind. An ordinary unmarked value still returns null. Existing admitted marks retain their captured declaration and callback identity. This drafts M7 finding F1; F2 and the full body cutover remain ahead.
+
+The existing compiled-data ownership case now checks declaration retention after input mutation, immutable headers, copied-definition refusal and both Native miss boundaries. The existing Native clause/root case checks that the same validation can read its owned header and that another validation cannot borrow it. Every previous assertion and deadline remains. The first focused selection will run both derive compiler contexts and the complete structure, reads, marks and capability owners: 73 existing cases, with the two strengthened cases included in that count.
+
+The repository-wide direct call query finds three additional test callers. Scope addendum `0ffb8829` records their exact paths and hashes before any edit: the lane evidence-results test, the platform rules-scope-v13 test and the scope fixed-index test. They retain their complete owning validation obligations when the raw adapters retire. No such caller has changed in this checkpoint.

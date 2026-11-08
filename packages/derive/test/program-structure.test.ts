@@ -12,6 +12,8 @@ import { gate } from "./definition-corpus/marks-data.ts";
 import { lateDefinition } from "./definition-corpus/source-order-data.ts";
 import { definitionCorpus } from "./definition-corpus/index.ts";
 import { capabilityStagingData } from "./definition-corpus/capability-staging-data.ts";
+import { declarationOf } from "../src/program/declaration.ts";
+import { nativeMark } from "../src/program/native.ts";
 
 function admitted(input: DeclaredDefinition): ValidDefinition {
   const result = validateDefinition(input, PROPOSED_BOUNDS);
@@ -143,17 +145,30 @@ test("replacement bodies and native result clauses resolve without merging their
   const sent = body.nodes.find(node => node.category === "send" && node.op === "native");
   expect(sent?.category === "send" && sent.future).toContainEqual({ clause: "applied", root: clause.id });
   expect(sent?.category === "send" && sent.future.map(link => link.clause)).toEqual(["applied", "refused"]);
+  const capturedGrant = declarationOf(native.definition).acts["enter"]!.grant;
+  expect(nativeMark(native.definition, capturedGrant, "grant")).toEqual(nativeMark(native.definition, nativeInput.acts["enter"]!.grant, "grant"));
+  const separate = validateDefinition(nativeInput, PROPOSED_BOUNDS, undefined, { platform: true });
+  if (!separate.ok) return expect.fail(JSON.stringify(separate.problems));
+  expect(() => nativeMark(separate.definition, capturedGrant, "grant")).toThrow("not captured");
 });
 
 test("compiled data owns its inputs and cannot be borrowed through a copied validation result", () => {
   const input = clockData(), first = admitted(input), second = admitted(input), act = input.acts["edit"]!;
   const body = bodyStructure(first, act, "edit")!, other = bodyStructure(second, act, "edit")!, before = JSON.stringify(structureOf(first));
+  const declaration = declarationOf(first), written = JSON.stringify(declaration);
   expect(first.digest).toBe(second.digest); expect(body.id).not.toBe(other.id);
   expect(body.frame.context.validation).not.toBe(other.frame.context.validation);
   const effect = act.effects[0]!;
   if (!("value" in effect) || effect.value.from === null || !("time" in effect.value.from)) return expect.fail("expected commit time");
   effect.value.from.time.plusSeconds = 999; act.guards = [];
   expect(JSON.stringify(structureOf(first))).toBe(before);
+  expect(JSON.stringify(declarationOf(first))).toBe(written);
+  expect(declaration.acts["edit"]).not.toBe(act);
+  expect(Object.isFrozen(declaration.acts["edit"]!.fields)).toBe(true);
+  expect(() => declarationOf({ ...first })).toThrow("not admitted");
+  expect(nativeMark(first, {}, "grant")).toBeNull();
+  expect(() => nativeMark({ ...first }, "ordinary-action", "grant")).toThrow("no admitted definition");
+  expect(() => nativeMark(first, { code: "uncaptured", row: "missing" }, "grant")).toThrow("not captured");
   expect(structureOf({ ...first })).toBeNull();
   expect(() => formStructures(second, body, act.effects[0]!)).toThrow("another validation");
   expect(() => formStructures(first, { ...body }, act.effects[0]!)).toThrow("another validation");

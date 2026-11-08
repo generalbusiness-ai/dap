@@ -4,6 +4,7 @@ import type { Defining, MarkKind } from "../validate/context.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { immutable } from "./model.ts";
 import type { ReadValidation } from "./reads.ts";
+import { declarationSource } from "./declaration.ts";
 
 interface NativeMarks {
   readonly grant: GrantMark;
@@ -74,11 +75,17 @@ export const nativeValidation = (definition: ValidDefinition): ReadValidation | 
 
 /** Source identity is checked within the actual validation, never by a digest or path. */
 export function nativeMark<K extends MarkKind>(definition: ValidDefinition, source: unknown, kind: K): NativeMarks[K] | null {
-  if (typeof source !== "object" || source === null) return null;
   const found = admitted.get(definition);
-  const boundary = found?.sources.get(found.origins.get(source) ?? source)?.find(value => value.kind === kind);
+  if (!found) throw new TypeError("Native lookup has no admitted definition");
+  if (typeof source !== "object" || source === null) return null;
+  const original = found.origins.get(source) ?? declarationSource(definition, source);
+  const boundary = found.sources.get(original)?.find(value => value.kind === kind);
   // Aliased sources have distinct occurrence records and the same admitted declaration.
-  return boundary ? boundary.mark as NativeMarks[K] : null;
+  if (boundary) return boundary.mark as NativeMarks[K];
+  if ("code" in source && typeof source.code === "string" && "row" in source && typeof source.row === "string") {
+    throw new TypeError("Native mark was not captured by this validation");
+  }
+  return null;
 }
 export function recordNativeOutcome(d: Defining, name: string, source: object): void {
   const named = outcomeNames.get(d) ?? new Map<string, object>();
