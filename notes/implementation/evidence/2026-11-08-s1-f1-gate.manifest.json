@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "request": "089ed1a1cc812629d34baa346cc21d495b0c2ed2",
+  "promise": "4c2c799b5af3882c74f8705d20a5a28741a0e8ee",
+  "qualification": "One complete S1 F1 gate at frozen head 821f4ec3, tree 989fd3e4, based on main c85553da. Both compilers and six focused component cases already passed at unchanged executable source 3a6d7105; one isolated control distinguished and restored. This gate passes 5327 cases with three skips, complete terminal evidence and no report or unhandled errors. The archive-scale owner passes; the archive watch stays open. No gate, stage or owner rerun occurs during sealing. Original test outputs remain private. This proves no live-room acceptance, deployment or unrelated migration acceptance.",
+  "sourceHead": "821f4ec3a84e98b5a681421fadfc3dc74d3eed45",
+  "sourceTree": "989fd3e4581dbb8d2d2c2a8abd9661bebaf3aabb",
+  "fileCount": 17,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-s1-f1-gate-validation",
+      "fileCount": 17,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1300,
+          "sha256": "e5bf2cc21fbb49cfd6808b7f3d021b3a6ecc8dc5e797911216157b5d2e1107f2"
+        },
+        {
+          "path": "after.json",
+          "bytes": 543314,
+          "sha256": "90a68f6da7fe572c3cc8bd754f5efd63738328d9034613c3db17e2a5e1389463"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1888,
+          "sha256": "bef4be40a949463a6faef4feb27b5f97a51023d912a7c8532ce09c76d3297da4"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 543314,
+          "sha256": "90a68f6da7fe572c3cc8bd754f5efd63738328d9034613c3db17e2a5e1389463"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "c5ca9d77d974173df6f9473253a6935faf9d4a77cf15e270b5db4a9e94297c47"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8065,
+          "sha256": "06969bdedbbfbe7ec16345338734b802396fe01d860dd3a43431199ee524c536"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "e596d3986445aaf3e6df9e7bcbdf09b7fff7c9cc3c966108a2b7ad93b821090a"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 807,
+          "sha256": "0839c94c4c3721f6f134af3c05d9d1cbea97ac7f7ac6175a1773ca417ab52216"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2734,
+          "sha256": "8d764f17ce16ac13648aae43456e887c89158cab6c58ef56d035629b28745a35"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 978,
+          "sha256": "0dd3709fa055f5ad45fb295cda0b2eb2f506526089cd88454cd6be782d3e6f36"
+        },
+        {
+          "path": "started.json",
+          "bytes": 638,
+          "sha256": "ed137ec1453082b2398ceed766b5e26e07963f2642593a34855c427cfc7f2ef1"
+        },
+        {
+          "path": "task.json",
+          "bytes": 809,
+          "sha256": "b0a9ebf8928bbce6a14f1ab216883e35e7b462b207edae4a1edfc782e324bead"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 564,
+          "sha256": "7a1c2f8a51752e539fcb56e2ea6dabce9d6de0e3f7e01b2a26b9d8933af2f396"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5860,
+          "sha256": "30c9ed791ebd049fe60fdc32ef9b37b399ecd4161af9d7eae49b1e383bc02368"
+        }
+      ]
+    }
+  ]
+}

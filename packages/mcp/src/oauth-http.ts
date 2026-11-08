@@ -19,7 +19,7 @@ export class OAuthHttpLayers {
   async open(candidate: OAuthAccessCandidate, create: (layer: OAuthHttpLayer) => Promise<McpHttp>): Promise<McpHttp | null> {
     let held = this.#layers.get(candidate.id);
     if (held && (held.candidate.row !== candidate.row || held.generation.closed || this.ports.now() >= held.deadline)) {
-      await this.#close(held, held.generation.closed ? "existing" : "graceful");
+      await this.#close(held);
       held = undefined;
     }
     const deadline = this.access.standingDeadline(candidate);
@@ -84,10 +84,11 @@ export class OAuthHttpLayers {
     const timer = setTimeout(() => { void run().catch(() => {}); }, delay);
     return () => clearTimeout(timer);
   }
-  #close(layer: OAuthHttpLayer, disposition: "graceful" | "detach" | "existing" = "graceful"): Promise<void> {
+  #close(layer: OAuthHttpLayer, disposition: "graceful" | "detach" = "graceful"): Promise<void> {
     const owner = layer.generation;
-    const done = disposition === "detach" ? (owner.detach(), Promise.resolve())
-      : disposition === "existing" ? owner.disposed() : owner.graceful();
+    const done = owner.closed ? owner.disposed()
+      : disposition === "detach" ? (owner.detach(), Promise.resolve())
+      : owner.graceful();
     return done.finally(() => { if (this.#layers.get(layer.candidate.id) === layer) this.#layers.delete(layer.candidate.id); });
   }
   async closeGrant(id: string, retainSessions = false): Promise<void> {
