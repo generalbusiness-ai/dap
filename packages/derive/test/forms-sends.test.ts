@@ -5,7 +5,8 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Input, Request, Result, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
 import { clockOf, validateDefinition, type Judging, type ProblemCode } from "../src/index.ts";
-import { derive } from "../src/handlers.ts";
+import { executeBody } from "../src/program/body.ts";
+import { namedBody } from "../src/program/structure.ts";
 import { Scope, arrive, born, decided, deliver, desk, directory, fields, created, keys, on, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
 
 const { rita, una } = keys;
@@ -100,7 +101,7 @@ describe("sends (section 6.6)", () => {
       scope: s.state.scope()!, self: s.head.seq + 1, kind: "probe", fields: {}, fieldTypes: act.fields,
       subjects: new Map([["on", s.item(0)]]), signer: { member: rita.member, principal: null },
       facts: new Map(), prepared: [], used: [], own: s.own, ran: { clock: false } };
-    const actual = derive(judging, act, null, s.head.hash, 7);
+    const actual = executeBody(judging, namedBody(checked, "act", "probe", "act"), s.head.hash, { first: 7 });
     expect(actual, JSON.stringify(actual)).toEqual({ result: "ran", effects: [], sends: [
       { n: 7, to: main, message: { class: "request", type: "tell", body: { message: "kept", fields: { text: "captured" } } } },
     ], prepared: [], judgesTime: false, settles: false });

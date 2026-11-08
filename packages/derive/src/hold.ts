@@ -17,6 +17,7 @@ import type { Judging } from "./guards.ts";
 import type { Item } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own, same } from "./values.ts";
+import { declarationOf } from "./program/declaration.ts";
 
 /** The slots of a hold type that the capability names: the member who holds, and the count that fences that member's writes. */
 export const HOLDER = "holder";
@@ -41,7 +42,7 @@ const epochOf = (hold: Item): number => (own(hold.values, EPOCH) as number | nul
  * renews a hold.
  */
 export function changeHold(hold: Item, effect: HoldEffect, definition: ValidDefinition, signer: Signer | null): Item {
-  const type = own(definition.declared.items, hold.type);
+  const type = own(declarationOf(definition).items, hold.type);
   if (!type || !definition.holdTypes.includes(hold.type)) throw new Error(`item ${hold.id} is no hold, and a hold effect changes a hold`);
   const values = { ...hold.values, [EPOCH]: effect.epoch };
   if (effect.change === "end") return { ...hold, state: holdStates(type).ended, values };
@@ -68,7 +69,7 @@ export function deriveHold(j: Judging, hold: Item, what: "open" | "renew" | "end
   if (what === "open") return { ok: true, effect: { effect: "hold", item: hold.id, change: "open", epoch: 1 } };
   if (what === "end") return { ok: true, effect: { effect: "hold", item: hold.id, change: "end", epoch: epoch + 1 } };
   const other = !same(own(hold.parties, HOLDER) ?? null, j.signer?.member ?? null);
-  const of = own(own(j.definition.declared.items, hold.type)!.values, EPOCH)!.of;
+  const of = own(own(declarationOf(j.definition).items, hold.type)!.values, EPOCH)!.of;
   if (other && of.type === "int" && epoch + 2 > of.max) return { ok: false, reason: "bad-field", detail: "the hold's epoch could not rise again when the hold ends" };
   return { ok: true, effect: { effect: "hold", item: hold.id, change: "renew", epoch: epoch + (other ? 1 : 0) } };
 }
@@ -90,7 +91,7 @@ export function deriveHold(j: Judging, hold: Item, what: "open" | "renew" | "end
  * item, and no hold is passed over.
  */
 export function endsUnder(j: Judging, working: ReadonlyMap<string, Item>): { subject: string | null; effect: HoldEffect }[] {
-  const { declared, holdTypes } = j.definition;
+  const declared = declarationOf(j.definition), { holdTypes } = j.definition;
   const final = (item: Item) => own(own(declared.items, item.type)?.states, item.state)?.final === true;
   const ended = new Set<number>();
   for (const [subject, item] of working) {

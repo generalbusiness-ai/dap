@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "9b11b91172d450f962c6f47c3a29b379bcb60bc5",
+  "sourceTree": "6bed6087308af1ad45bb4e41a3f0f4380fb15cb8",
+  "qualification": "M8 retirement checkpoint: source compiler passes at3de1 and carries by exact production/configuration/tool equality to9b11; repaired test compiler, Grow and all55cases pass once. Two one-case faults distinguish. Original compiler pipeline and the first control classifier batch retain exit1; independent classification uses saved evidence without reruns. No fullgate, generated assets, workflow, live acceptance, review approval or deployment is claimed.",
+  "fileCount": 16,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-retirement-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1307,
+          "sha256": "512e89e90c3f0bf8b43e32dc498f3c8e4866b364a517808717d779118fdeef2b"
+        },
+        {
+          "path": "carry-proof.json",
+          "bytes": 1772,
+          "sha256": "32cedb77eb92b76b0e157e8035c089c23d5bbc87247a1e5d6afaca8eff3a6970"
+        },
+        {
+          "path": "classification.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "controls-summary.json",
+          "bytes": 2135,
+          "sha256": "af7bf82572514b2a6241d134e7328e3d44d58e1a5c5df61ca34ec560c78893f0"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 19052,
+          "sha256": "abf0a96fe844e8ceacd0a29af1374fccb40881cef71a5801789abcdabede6d5a"
+        },
+        {
+          "path": "failed-pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "first-control-batch.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "first-control-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "followup-pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "outer-receipts.json",
+          "bytes": 2099,
+          "sha256": "1ec40f237bd3d6555498c7418b30d03846537d7f3b391622a2756f341d482840"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 5771,
+          "sha256": "343649cf2b65a04b7ec2c03e7709dcabe164a27d4de6c7a257e7e40cc1cdd893"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 3029,
+          "sha256": "31c74c9d2511059fa5d5a538ea53f0f99e98b352744becf7c43c0f74c22263d4"
+        },
+        {
+          "path": "remaining-control.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "result.json",
+          "bytes": 846,
+          "sha256": "94e6b63cdeb1b15666767e83f9613a85c88a0e3f52431ca3c6bab62f04cde051"
+        },
+        {
+          "path": "second-control-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "source-state.json",
+          "bytes": 333,
+          "sha256": "68a87e0c08d30cf8f58aa87823aa15c41ad2386653a5f3296c34e246400aedfc"
+        }
+      ]
+    }
+  ]
+}

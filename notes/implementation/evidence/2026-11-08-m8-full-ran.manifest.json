@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "707c8d85504c0995e489ebd1dc0e776db26a4712",
+  "sourceTree": "d3ee7012e1915b95fda6c3d76bfffa70d1cf38c2",
+  "qualification": "M8 checker F1 test-only follow-up at 707c8d8550: seven full Ran literals equal the independently retained main cdd5508c production derive outputs. The unchanged fixture blocks supply the same inputs. One derive test compiler and all18 existing program.test.ts cases pass once. Reversing only the seven assertion replacements reproduces the prior owner bytes. Production, configuration, dependencies, helpers, registrations, inputs and deadlines stay unchanged. The passing fullgate at d54c8842 and Page workflow42528596255 remain separate evidence; neither reruns. Earlier failed gates and changes-requested review b54447eb remain recorded. No landing or live acceptance claim.",
+  "fileCount": 8,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-full-ran-validation",
+      "files": [
+        {
+          "path": "2026-11-08-m8-full-ran-focused-launch.inventory.json",
+          "bytes": 1895,
+          "sha256": "e99fd731aac4b9382bbe9f7954c66a1b783aa8e56590aa4fdc782a26a726f45d"
+        },
+        {
+          "path": "2026-11-08-m8-full-ran-focused.inventory.json",
+          "bytes": 1308,
+          "sha256": "70432e6982493cf5eea6d0447ebfa95ae4faff1edab5cb03f695d043a1ef1b2a"
+        },
+        {
+          "path": "2026-11-08-m8-full-ran-preparation.inventory.json",
+          "bytes": 1701,
+          "sha256": "0ca7ce31cb97967aeed82b8ae8c394e609b2198187bfab45b78c019209f34858"
+        },
+        {
+          "path": "2026-11-08-m8-main-ran-capture.inventory.json",
+          "bytes": 1594,
+          "sha256": "44c2cc53dc14b9cc324ddb32b0d42ba47f887d3a57279baf5e6b35946691b8af"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 701,
+          "sha256": "cbd083b25207d5531680befd2beeed7ffa7a673f864befa81d9f4bcdb5e33742"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 2819,
+          "sha256": "f0899e8bb69fdd0d1b766cfd863eff596e8922f08df65869c6f57cfb2cfe3900"
+        },
+        {
+          "path": "result.json",
+          "bytes": 4351,
+          "sha256": "59fa315f6d0bbb2c0144e1d9ef9af8ff7d4ad95f479e65544724d7c4a8122270"
+        }
+      ]
+    }
+  ]
+}

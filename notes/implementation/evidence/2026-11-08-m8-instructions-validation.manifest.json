@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "f92c363fa54b29de5d91eb83305343e8b0e66729",
+  "sourceTree": "368e13d13bdbca5ce41461352d7a4047854943cf",
+  "qualification": "Effect/send adapter checkpoint only: one failed focused pipeline plus its isolated passing follow-up. All selected owners pass once. Full body orchestration, complete interpretations, final gate, independent review and landing remain.",
+  "fileCount": 12,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-instructions-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 958,
+          "sha256": "2416daf63f0391b5279f13963b08fee3a7cf022467b1450f065328a42c54e9a7"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 75124,
+          "sha256": "b75125d8696a28e3229ff5bfc0872bed26356a1d54c93f8110fe8134e1e8797c"
+        },
+        {
+          "path": "failed-outer-receipt.json",
+          "bytes": 567,
+          "sha256": "3fde2bbc07254f571db4841b81da46b83e78097630cbaccccfcc30ff6393a33e"
+        },
+        {
+          "path": "failed-pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "followup-outer-receipt.json",
+          "bytes": 567,
+          "sha256": "73a0dd7f99438cf611ddbbf5489e5cefb301bb35a0a74a153182f3e548935d53"
+        },
+        {
+          "path": "followup-pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 2245,
+          "sha256": "1eed96c4310b31ca726e7c947917a87f4adfebdbababdd4e1a7db55102a610bc"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 11789,
+          "sha256": "a4497f5114f2fc491c058a3547fdb739f2351127e6b47c4677940d679baec47b"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 35932,
+          "sha256": "f5a0026a1cfee88997d13c46bfaa23a2d1c414513c8c7ea6a814992e184eeffe"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2161,
+          "sha256": "a6a0a87bec86f80c745782eeef77acfe91180394ec7db9c57812f39b52ebdcdb"
+        },
+        {
+          "path": "repair-proof.json",
+          "bytes": 574,
+          "sha256": "70d242b685a08c534b2be2359df0816ed043f647b59401a67822f26a16f4e5ef"
+        },
+        {
+          "path": "result.json",
+          "bytes": 687,
+          "sha256": "24bce33463fb876e5618dc29f7384aff2938f2ddcbc2497f3e5ad4d7df79885f"
+        }
+      ]
+    }
+  ]
+}

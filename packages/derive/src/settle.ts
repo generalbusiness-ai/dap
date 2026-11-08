@@ -6,7 +6,9 @@
  * is offered again, or is not an input the scope can write.
  */
 
-import type { Attempt, Digest, Entry, FactUse, ObservationUse, PlatformData } from "@generalbusiness/dap-contract";
+import type { Attempt, Digest, Entry, FactUse, ObservationUse } from "@generalbusiness/dap-contract";
+import { declarationOf } from "./program/declaration.ts";
+import { nativeOutcomes } from "./program/native.ts";
 import { evidenceValues } from "./evidence-values.ts";
 import { useOf, type Reading } from "./fields.ts";
 import type { Fetched } from "./guards.ts";
@@ -214,11 +216,11 @@ function byRows(view: StateView, definition: ValidDefinition, outcome: OutcomeOf
   const beside = atHandByRows(context.values);
   const reading: OutcomeReading = { clock: context.clock, bounds: context.bounds, own: context.own, ran, facts: [], beside };
   const owners = ownersOf(definition, context.platform, context.owners, reading);
-  const kind = operation && operation.owner === context.platform?.named ? own((definition.declared as unknown as PlatformData).outcomes ?? {}, operation.kind) : undefined;
+  const kind = operation && operation.owner === context.platform?.named ? own(nativeOutcomes(definition), operation.kind) : undefined;
   const rules = operation && kind ? owners?.rules(operation.owner, operation.kind) : null;
   let uses: readonly FactUse[] = [];
   let settled: ReturnType<typeof settle> | null = null;
-  const rows = operation && kind ? rowsOfKind(definition.declared, operation.kind) : [];
+  const rows = operation && kind ? rowsOfKind(declarationOf(definition), operation.kind) : [];
   if (operation && kind && rules) {
     const offered: OutcomeInput = { type: "outcome", operation: operation.id, attempt: outcome.attempt, owner: operation.owner, kind: operation.kind, result: outcome.result, evidence: outcome.evidence };
     // 1. The origin, and the entries that it retained.

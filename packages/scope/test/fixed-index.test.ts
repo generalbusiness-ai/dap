@@ -3,10 +3,12 @@
  * rows. The scope-full case uses actual sealed turns with the existing lane
  * data, scripted clock and test membership authority. */
 import { expect, test } from "vitest";
+import { judgeGuardNode } from "../../derive/src/program/guard-value.ts";
+import { namedBody } from "../../derive/src/program/structure.ts";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS, type Entry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, utf8 } from "@generalbusiness/dap-bytes";
-import { applyEntry, clockOf, fixedRowsOf, judgeGuard, stateDigest, type Item } from "@generalbusiness/dap-derive";
+import { applyEntry, clockOf, fixedRowsOf, stateDigest, type Item } from "@generalbusiness/dap-derive";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { structuralFloorHistory } from "../../derive/test/fixed-slot-fixture.ts";
 import { ownOf } from "../src/core.ts";
@@ -148,9 +150,10 @@ test("rollforward rebuilds a formerly ready index after a base writer advances t
     // Keep this behavioral assertion first: skipping the marker's head
     // comparison must fail here, rather than at a marker-shape assertion.
     const probe = indexed.declared.acts["probe-uniqueness"]!;
-    const duplicate = judgeGuard({ view: store, definition: indexed, bounds: { ...PROPOSED_BOUNDS, guardScan: 1 }, clock: clockOf(store, scope.time),
+    const body = namedBody(indexed, "act", "probe-uniqueness", "act")!;
+    const duplicate = judgeGuardNode({ view: store, definition: indexed, bounds: { ...PROPOSED_BOUNDS, guardScan: 1 }, clock: clockOf(store, scope.time),
       scope, self: scope.head.seq + 1, kind: "probe-uniqueness", fields: { needle: "base-two" }, fieldTypes: probe.fields,
-      subjects: new Map(), signer: null, facts: new Map(), prepared: [], used: [] }, probe.guards[0]!);
+      subjects: new Map(), signer: null, facts: new Map(), prepared: [], used: [] }, body, body.nodes.filter(node => node.category === "guard")[0]!);
     expect(store.fixedCount("job", "name", '"base-two"', ["live"], "normalized")).toBe(1);
     expect(duplicate).toBe("fail");
     expect(store.fixedReady(indexed.digest, scope.at, scope.head)).toBe(true);

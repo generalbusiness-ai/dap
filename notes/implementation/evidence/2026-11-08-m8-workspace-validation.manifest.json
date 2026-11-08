@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "441f90ea1f9e4a278363ed5eb7b4a1ad89bcd7c2",
+  "sourceTree": "f32bf6f4051e5b914ab89f8d29ee3bb0bbcc0516",
+  "qualification": "Implicit workspace observation checkpoint only: twelve compiler contexts and 397 cases across 43 complete owners pass once. Two isolated one-case controls catch a missing opaque workspace dependency and a duplicated callback, then restore cleanly. Prototype retirement and named witness rulings, final assets and seals, one final gate, exact-source Page workflow, independent review and landing remain.",
+  "fileCount": 21,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-workspace-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1813,
+          "sha256": "225b0d5deaf5d007fcfdae7b15700f337af1162425c768b2d420c6480b22ebfa"
+        },
+        {
+          "path": "control-source-comparison.json",
+          "bytes": 461,
+          "sha256": "74b630e829456cd07ff2581a295b3d29aa915073fea5d34134c5c5f46063f38a"
+        },
+        {
+          "path": "controls.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 158047,
+          "sha256": "39ebe205f0843d54a0f08e0f5c52525e3513a4dc9e036a23739ed09ac5104d2b"
+        },
+        {
+          "path": "duplicate-callback.mutant.ts",
+          "bytes": 7563,
+          "sha256": "240368854a84bc374eca96b714419f2ea374c69fbed854be4c772cf81906a4f4"
+        },
+        {
+          "path": "duplicate-callback.original.ts",
+          "bytes": 7555,
+          "sha256": "6fbfe82b2d2d6d86c765a26029ba6c80332da3d70bb1efa497c2bb4433d79d59"
+        },
+        {
+          "path": "duplicate-callback.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "duplicate-callback.owner.time",
+          "bytes": 29,
+          "sha256": "0de567b83ed11a2fada1f4a6ad79fb933ba57cf2388d7d944103257c4838d0b2"
+        },
+        {
+          "path": "duplicate-callback.summary.json",
+          "bytes": 920,
+          "sha256": "ffda379b4d36d9bab96058affc1f05eec36775a358362fba5bdc14dd3a72461c"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 2573,
+          "sha256": "474d2606ce9f752cfbf17eed489ada1a673c13f88886efe84a61f25e94016871"
+        },
+        {
+          "path": "missing-workspace.mutant.ts",
+          "bytes": 19986,
+          "sha256": "7090a51d340626ae7542a5c0b2e827bef3fe601053271afda68c60a5704bbec5"
+        },
+        {
+          "path": "missing-workspace.original.ts",
+          "bytes": 20032,
+          "sha256": "dff7ed08d5c9620670ed9b6208693c3e837cd4135e912efe45bb775438d75e15"
+        },
+        {
+          "path": "missing-workspace.owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "missing-workspace.owner.time",
+          "bytes": 29,
+          "sha256": "cdb5898c61838899d848bf7c0f78753e8a0f9c3f75ca2d197831de0f2add0d7d"
+        },
+        {
+          "path": "missing-workspace.summary.json",
+          "bytes": 919,
+          "sha256": "6cd2a894b7b468c7e1eb3277ea674573b45b16dbc859b84c4d24bced1230f2d7"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 561,
+          "sha256": "5ab22ec08d27fdd2faac10dece8a8ad79d8c1b38b838e7b297e8db76e89ea5a9"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 15917,
+          "sha256": "5ddf71f0807d6088f1244f84bc6bc4763d6adc17712c193436c01e6e9821aaa2"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 78204,
+          "sha256": "6139854967458e9a6a3e3e16c46790eb60817c63de65e95284d89ffaf0b30ff2"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1629,
+          "sha256": "3a659049415630c0afdb921105ebf27c0e395ee6e80926ac0aa60067118570c0"
+        },
+        {
+          "path": "result.json",
+          "bytes": 864,
+          "sha256": "50d7d4b11b98fea3ff36fada35bcad787e403c015432978ff024b4d8ecf2a0ab"
+        }
+      ]
+    }
+  ]
+}

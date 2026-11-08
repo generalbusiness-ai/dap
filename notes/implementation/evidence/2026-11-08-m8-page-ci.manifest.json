@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "8bfe700fdaa2a3f5092f110ff177425d99001d1e",
+  "sourceTree": "05aa12dbd33004f9a4195c0e324d989a4ab4508c",
+  "qualification": "One automatic Page push workflow at the exact source head. Complete attempt-specific and individual job records plus full raw log retained. No dispatch, rerun or local browser substitute. This result supplies no live-room acceptance or deployment evidence.",
+  "fileCount": 4,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-page-ci-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 257,
+          "sha256": "43efe27772ffe87b0e21cd73716840e5a0acddf5736c84975aaec5d7c0cec11c"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 3769,
+          "sha256": "61e211d4db6b36252e01d763fe919c90e3157855125ffd476944bf7a6a89fe13"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2342,
+          "sha256": "a1a7b82df168e236693b0e27ed2e06d4973be61aa7c522b3f164bd3bd1224d33"
+        },
+        {
+          "path": "source-equivalence.json",
+          "bytes": 547,
+          "sha256": "23f97d793dd89f7adfbcbbb56391fe086fa619ce99c0fcb9dc38bf1118faf169"
+        }
+      ]
+    }
+  ]
+}

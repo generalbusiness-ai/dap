@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "qualification": "The first full M8 gate at frozen head 136708cd, tree 521d4e8c, fails with actual exit 1. Node passes135 and Counting56. Plain passes4024, fails2 and skips1. The two retained failures concern header getter reuse and historical replay index fixtures. Native and its archive-scale owner are unreached. Report analysis finds no reporting contradiction or unhandled error. The 99 wrapper observations represent33 Node files, not extra cases. Sealing runs no gate or test and does not turn this failed gate into a pass. The archive watch remains open. Owner-only originals may contain TEST custody and stay private; the public validation unit exposes metadata only. No live-room acceptance or deployment claim.",
+  "sourceHead": "136708cd4b292d5425115ce26dbcde55da12350c",
+  "sourceTree": "521d4e8cf775840f9ee9f009fbfce9b9e30ae3b5",
+  "fileCount": 17,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-failed-final-gate-validation",
+      "fileCount": 17,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1300,
+          "sha256": "d671e47fd2f8a87aa6a2eccf528533add7acd48047d40aba1ec4db8d5a4ec377"
+        },
+        {
+          "path": "after.json",
+          "bytes": 548156,
+          "sha256": "3d46cbafa8f0fe5f431e17fb22d50fd8d69c62868f04d74bb0503dada90c68f3"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1890,
+          "sha256": "68b7a9cd80a42af700744fc685326fab3f56bcdd6ad9900ed09ab4dbaf4e4317"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 548156,
+          "sha256": "3d46cbafa8f0fe5f431e17fb22d50fd8d69c62868f04d74bb0503dada90c68f3"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 34,
+          "sha256": "019db55531cfd0d4c9a2de426a34b1acd1df93434d6869f8666d67e27a990b14"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 7725,
+          "sha256": "3176143ff249b24cfaf16fadcebdad2d1864cfe8b48f6f2588d08a3155abe59d"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "dacb67b9d1c953d1b8229797a0879e2cb65b63e77d3281bcb39766be070f81f8"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 179,
+          "sha256": "656c430a109c7846872cc644ae74eca542a4832b442bec3c515c67e59f485cac"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2110,
+          "sha256": "85ed45911b5169344c432c9c78b267c02b3625f818836d0f9887b721ccfc1b62"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 963,
+          "sha256": "7fc1bfc6604ff3921fa415879265fe21de17c1570121108190c8e941fa9f8133"
+        },
+        {
+          "path": "started.json",
+          "bytes": 643,
+          "sha256": "1299ac3df1207d78e47cac36b4212ebdd528d2246d4aa17acbeedb64451a6877"
+        },
+        {
+          "path": "task.json",
+          "bytes": 1080,
+          "sha256": "8aa774f104b650b2a2ff2e470d5decb8ecd00698b07dc2f6fd2d51415405252f"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 570,
+          "sha256": "df9914db27b999a1830048c8fbdd80bd2d6168c042048a2ab704b25588b68bc5"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 6133,
+          "sha256": "568ac5ea88b595ba9e0d0da0290ff72fc4f5aaae28c97dea0d38fd5a3b5224e3"
+        }
+      ]
+    }
+  ]
+}

@@ -11,13 +11,16 @@ import type { Sql } from "./sqlite.ts";
 import { reserveArchiveNames } from "./archive-schema-cost.ts";
 
 type Handler = ValidDefinition["declared"]["receives"][string];
+// Validation permits one handler per class, message and sender kind. Its
+// owned metadata need not share object identity with the caller's declaration.
+const handlerKey = (handler: Handler): string => canonicalize([handler.class, handler.message, handler.from.kind]);
 /** Reusable schema state holds no SQL port. Each call uses the owning
  * synchronous native frame's supplied port and the same original budget. */
 export class ArchiveDeliveryFields {
   readonly needsUnder: boolean;
   readonly #names: string;
   readonly #count: number;
-  readonly #schemas = new Map<Handler, readonly string[]>();
+  readonly #schemas = new Map<string, readonly string[]>();
   constructor(readonly definition: ValidDefinition, readonly budget: ArchiveBudget, bounds: Pick<Bounds, "definitionBytes">) {
     budget.spend({ metadata: bounds.definitionBytes, inputWork: bounds.definitionBytes * 16 });
     const handlers = Object.values(definition.declared.receives);
@@ -29,7 +32,7 @@ export class ArchiveDeliveryFields {
     for (const handler of handlers) {
       const fields = Object.keys(handler.fields);
       reserveArchiveNames(fields, budget);
-      this.#schemas.set(handler, fields.filter(name => isDetachedTextField(handler.fields[name])));
+      this.#schemas.set(handlerKey(handler), fields.filter(name => isDetachedTextField(handler.fields[name])));
     }
   }
   project(sql: Pick<Sql, "exec">, at: ScopeRef, position: ArchivePosition, from: FactRef, under?: string): readonly PlannedRetainedDependency[] {
@@ -96,7 +99,7 @@ export class ArchiveDeliveryFields {
     const matched = bound(this.definition, shape, from, under);
     if (!matched?.handler || !matched.fields) return [];
     if (matched.handler.from.under !== undefined && under === undefined) return stop("unsupported-foreign-copy");
-    const names = this.#schemas.get(matched.handler); if (!names) return stop("mismatch");
+    const names = this.#schemas.get(handlerKey(matched.handler)); if (!names) return stop("mismatch");
     this.budget.spend({ metadata: names.length * 256, inputWork: names.length * 512 });
     reserveArchiveNames(names, this.budget, 40);
     const base = type === "relate" ? "$.input.message.body.detail" : "$.input.message.body.fields", cells: (Digest | null)[] = [];

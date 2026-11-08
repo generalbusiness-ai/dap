@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "3b898981091e745a966dff370a218463f59097e5",
+  "sourceTree": "82d6061a0b5c1cd0e2e66cb76246c6d575fddcb0",
+  "qualification": "Prototype import cleanup only: both derive compiler contexts and 42 cases across four complete unchanged owners pass once. The validator selects the identical helper directly; report type declarations retain exact text. No semantic guard changes and no new fault control is warranted. Named witness rulings, prototype retirement, final assets and seals, the gate, exact-source Page workflow and independent review remain.",
+  "fileCount": 9,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-prototype-imports-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 677,
+          "sha256": "5b77965c2de12a32bcdffa300b245a4eab166b24c161ff3c6e9f87ee75872749"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 14116,
+          "sha256": "6e53ac487d482c041955f344f2b2d2294a413587bb9eecab167c5090fe6c5f59"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 1656,
+          "sha256": "a77989adda57029bdc1b318c5d8a6a3a31125703ad9c3b6a7e1b8d319516978a"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 559,
+          "sha256": "5249c1fe297ff3c53caead09cebfc0ec9c2a5195ff0368fb7f3edd783d83d0c0"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 3326,
+          "sha256": "3f20168eaf85dd4fcb9caa61388843d14de9ffc5f2f45da9c548d08d64bed42a"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 6443,
+          "sha256": "0c160f643ac28408e2518c190c4573c9dac847cabea640a64769898c133ba18b"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1362,
+          "sha256": "a00742e7112058bd7273e2eb505336325480558977d02ce8259fae086956050d"
+        },
+        {
+          "path": "result.json",
+          "bytes": 816,
+          "sha256": "9152e154d2df12bcdb125da799c38edb08afda4b03285ce30d5f0467ff3446b2"
+        }
+      ]
+    }
+  ]
+}

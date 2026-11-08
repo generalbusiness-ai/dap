@@ -1,6 +1,6 @@
 # Typed derivation contract
 
-Status: M1–M2 implements the first slice on the branch scheduled by gitseq request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`. Focused witnesses cover bounded equivalence; the complete M1–M2 gate passes, and independent review remains pending. Production routing remains unchanged.
+Status: M1–M7 have landed under request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`. M8 reconciles complete body execution and interpretations under child `bd1a9429`; the [M8 record](../implementation/2026-11-08-typed-core-m8.md) tracks its remaining acceptance. The first-slice sections below retain the original construction and semantic obligations. They do not claim that the current prototype covers the complete vocabulary.
 
 Source baseline: `7135dc3985694760ff8c80ad07f200ba8f6e767d`, 2026-11-04.
 This packet supplies delivery 1 of [plan 035](../plans/035-2026-11-04-typed-derivation-core.md).

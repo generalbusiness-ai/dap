@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "bbd7201787540e541a560fedcdccb73f8c43f324",
+  "sourceTree": "cca560e0e323d43494d1c3efe776a84e7cc29554",
+  "qualification": "Timed/result-clause routing checkpoint only: one failed source compiler pipeline and its repaired passing follow-up. All selected owners pass once, including the exact five-pin timer policy. Complete interpretations, remaining header reconciliation, final gate, assets, independent review and landing remain.",
+  "fileCount": 12,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-timed-clauses-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 958,
+          "sha256": "74aa4475fd978dbb744c07d6b5366bb20ac83d547faea7b02fc22a8ed295fe53"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 109527,
+          "sha256": "29ec26519b722a512fb1f66f15615fc23fadb703f924aa466db22fee27f80a94"
+        },
+        {
+          "path": "failed-outer-receipt.json",
+          "bytes": 567,
+          "sha256": "080f11de9aa58de16352ca4031796ce4d0ba6bf44c950850cc8dadee2cf7e3a5"
+        },
+        {
+          "path": "failed-pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "followup-outer-receipt.json",
+          "bytes": 566,
+          "sha256": "ebd89cd89c3fbc8bf7af0d91f9de47bb88e21378311db3209fd389f0c0f2c7e5"
+        },
+        {
+          "path": "followup-pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 2624,
+          "sha256": "d334a5716641abd81593cc1301537181fc290215f692ace21d0863db5b81af3d"
+        },
+        {
+          "path": "phase-outcomes.json",
+          "bytes": 13006,
+          "sha256": "c82b65ee453ba254efb18c5ae793b750725d5baae38d0b34ad08af0bf72be29c"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 52771,
+          "sha256": "3538b79a6e6d73f4c421d2da0990369a212e39e67d34b64f11d7e85c40eedebf"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2170,
+          "sha256": "b32afe11a3f399894206df332fc6a77b8008cbdd9dc614222474d2c08419c172"
+        },
+        {
+          "path": "repair-proof.json",
+          "bytes": 587,
+          "sha256": "ac447fc87d7db23306b215127e4b2a5f030ce87f5fe63586020ca61cd646227a"
+        },
+        {
+          "path": "result.json",
+          "bytes": 774,
+          "sha256": "619951549828a809e73db126e36be614081d818b200f50e16da8b0120484aa52"
+        }
+      ]
+    }
+  ]
+}

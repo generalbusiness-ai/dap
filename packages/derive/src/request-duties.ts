@@ -1,11 +1,11 @@
 /** Transfer a send form's existing Amount to the request it actually made. */
-import type { Entry, ReceiveType } from "@generalbusiness/dap-contract";
+import { declarationOf } from "./program/declaration.ts";
+import type { Entry } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { bound } from "./handlers.ts";
-import { handlerBranch } from "./handler-branch.ts";
 import { AmountError, NOTHING, requestEntries, subtract, type Amount } from "./held.ts";
 import { sendOrigin } from "./program/send-origin.ts";
-import { bodyStructure, type BodyStructure } from "./program/structure.ts";
+import { handlerBody, namedBody, type BodyStructure } from "./program/structure.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
 
@@ -15,13 +15,11 @@ export function requestReservation(definition: ValidDefinition, entry: Entry, n:
   const input = entry.input;
   let body: BodyStructure | null = null;
   if (input.type === "act" || input.type === "genesis") {
-    const kind = input.type === "act" ? input.signed.intent.kind : definition.declared.genesis;
-    const act = own(definition.declared.acts, kind);
-    body = act ? bodyStructure(definition, act, kind) : null;
+    const kind = input.type === "act" ? input.signed.intent.kind : declarationOf(definition).genesis;
+    body = namedBody(definition, "act", kind, "act");
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
     const binding = bound(definition, input.message, input.from);
-    const handler: ReceiveType | null = binding?.handler ? handlerBranch(binding.handler, "decision" in input ? input.late : undefined) : null;
-    body = handler && binding ? bodyStructure(definition, handler, binding.kind) : null;
+    body = binding?.handler ? handlerBody(definition, binding.handler, "decision" in input ? input.late : undefined) : null;
   } else if (input.type === "outcome") {
     // A native outcome without a data send mark has no result clause,
     // exactly as runClause interprets it. Its owner funds this request.

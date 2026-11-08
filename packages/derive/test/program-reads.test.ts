@@ -215,9 +215,11 @@ test("validated frames separate normal, replacement, timed and future result bod
   expect(clause).toMatchObject({ kind: "clause", on: { type: "board" }, context: { kind: "emit", clause: true, senderKind: "directory" } });
   expect(frames.find(frame => frame.path === "acts.emit")).toMatchObject({ kind: "act", context: { clause: false } });
   expect(frames.every(frame => frame.context.validation === reads.validation)).toBe(true);
-  const handler = input.receives["sample"]!, first = handlerBranch(handler, { reason: "old-sample" }), second = handlerBranch(handler, { reason: "old-sample" });
-  expect(first).not.toBe(second);
-  expect(first?.effects).toBe(handler.late!.then!.effects);
+  const handler = input.receives["sample"]!, first = handlerBranch(checked.definition, handler, { reason: "old-sample" }), second = handlerBranch(checked.definition, handler, { reason: "old-sample" });
+  // Reconstruction now returns the same admitted header and immutable effects.
+  expect(first).toBe(second);
+  expect(first?.effects).toEqual(handler.late!.then!.effects);
+  expect(first?.effects).not.toBe(handler.late!.then!.effects);
   const timed = validateDefinition(board, PROPOSED_BOUNDS);
   if (!timed.ok) return expect.fail(JSON.stringify(timed.problems));
   expect(resolvedReads(timed.definition)!.frames.find(frame => frame.path === "timed.job-deadline")).toMatchObject({ kind: "timed", timed: true, fields: [], on: { type: "job" }, context: { kind: "timed:job-deadline" } });

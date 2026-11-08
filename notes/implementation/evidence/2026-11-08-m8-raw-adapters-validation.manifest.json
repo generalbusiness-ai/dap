@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "request": "bd1a9429af937432fb3dd9af787724adbe4e862f",
+  "promise": "689c9fd1c37b67c0babca148485b7c3bbfdcafbd",
+  "sourceHead": "6fea8a679427a4b1221a663b0c61a43a1636bd51",
+  "sourceTree": "99052cbcfae34c39731d8dcc3585045cdb9a17cc",
+  "qualification": "Raw guard/send-source adapter checkpoint only. Nine compiler contexts and all155selectedcases pass once. No new independent guard requires a fault control. Timed/clause integration, complete interpretations, final gate, assets, workflow, independent review and landing remain.",
+  "fileCount": 11,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m8-raw-adapters-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 846,
+          "sha256": "37098d3c726b1f96ce99a53ef060c969391d2adb37002c83d8ce468082642560"
+        },
+        {
+          "path": "coverage-summary.json",
+          "bytes": 61412,
+          "sha256": "c605d03f0f6331a5a615551cbb84dd5cf756cb4e2dae8461ecadb2fee7ece301"
+        },
+        {
+          "path": "input-retention.json",
+          "bytes": 1353,
+          "sha256": "0c9a89f0e4e92217c0935c45921745fecd123861c9efc3a3b704dbeff364e370"
+        },
+        {
+          "path": "outer-receipt.json",
+          "bytes": 566,
+          "sha256": "2c249467e53b8a8778d3c71af7741d5a25afe84abda5b8bf32bd7556f8c7d3c3"
+        },
+        {
+          "path": "outer.time",
+          "bytes": 31,
+          "sha256": "266d112dedd4e50668ae90b8c0155ed364d8a8aa74e69b6ca2b7fb058cc293bf"
+        },
+        {
+          "path": "pipeline-result.json",
+          "bytes": 23898,
+          "sha256": "e67967cd94f4a003b683746dbc818f92603036597c122c8aa054a77d517f1fcd"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 27197,
+          "sha256": "32b5ca3ea196f564c934a5eb9fe04d30da1731aa6a9279e342c86bcc1d1e6988"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1286,
+          "sha256": "d132e1a17b4de22815a814bd14e810b16e52152cae68b526b487d76790c4c9ba"
+        },
+        {
+          "path": "result.json",
+          "bytes": 640,
+          "sha256": "50406880a8fcdc6b08ba0ac2d6503b2f826ed98e530a08ce36b461e59684e253"
+        },
+        {
+          "path": "static-ledger-proof.json",
+          "bytes": 2687,
+          "sha256": "ad3129b06fb5772898aedf94c7e9853bb1344776bbf08e58d460f158ebc9cf80"
+        }
+      ]
+    }
+  ]
+}

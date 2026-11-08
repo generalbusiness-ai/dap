@@ -21,6 +21,7 @@
  * judge's explanation: no entry records it, and no fold trusts it.
  */
 
+import { declarationOf } from "./program/declaration.ts";
 import { nativeMark } from "./program/native.ts";
 import { observeNativeCall } from "./program/native-trace.ts";
 import type { BindingMark, Bound, FieldValue, PlatformReceive, ReceiveType, ScopeRef } from "@generalbusiness/dap-contract";
@@ -169,15 +170,9 @@ export function boundTo(j: Judging, handler: ReceiveType, message: string, count
   const stated: Bound | undefined = (handler as unknown as PlatformReceive).bound;
   const item = stated ? j.subjects.get(stated.of) : undefined;
   if (!stated || !item || !counts) return null;
-  if (own(own(j.definition.declared.items, item.type)?.states, item.state)?.final !== false) return null;
+  if (own(own(declarationOf(j.definition).items, item.type)?.states, item.state)?.final !== false) return null;
   const holds = stated.where.every((w) => ("equals" in w ? equal(j, operand(j, w.equals.a, item), operand(j, w.equals.b, item)) : !equal(j, operand(j, w.differs.a, item), operand(j, w.differs.b, item))));
   return holds && counts(item, message) > 0 ? item : null;
-}
-
-/** The `decisions` that the `holds` of an item type states for one message: the count that the entry which opens such an item sets. Zero: the type states none. */
-export function decisionsOf(definition: Pick<ValidDefinition, "declared">, type: string, message: string): number {
-  const stated = (own(definition.declared.items, type) as { holds?: { decisions?: Record<string, number> } } | undefined)?.holds?.decisions;
-  return own(stated, message) ?? 0;
 }
 
 export { bindingKey as keyOf };
