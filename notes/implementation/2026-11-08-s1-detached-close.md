@@ -1,6 +1,6 @@
 # Keep the first OAuth layer close disposition
 
-Status: source, six focused cases and the one-case control complete for request `089ed1a1`, promise `4c2c799b`. The full gate, independent review and landing remain ahead. The planner deploys.
+Status: source, six focused cases, the one-case control and the full gate complete for request `089ed1a1`, promise `4c2c799b`. Independent review and landing remain ahead. The planner deploys.
 
 ## Change
 
@@ -12,7 +12,7 @@ The new case in `packages/mcp/test/oauth-http.scope.test.ts` opens a real HTTP g
 
 ## Source seal
 
-Request `089ed1a1` assigns this seal to the checker under ruling `7e3f7743`. The maintained parser reproduces the old value from main `c85553da`. It computes the new value from the changed source. The prepared patch changes one literal and keeps every other inventory byte and assertion.
+Request `089ed1a1` assigns this seal to the checker under ruling `7e3f7743`. The maintained parser reproduces the old value from main `c85553da`. It computes the new value from the changed source. The seal-only commit changes one literal and keeps every other inventory byte and assertion.
 
 | Owner | Old literal | New literal |
 |---|---|---|
@@ -28,4 +28,12 @@ The control removed only `if (owner.closed) return owner.disposed();` in a separ
 
 The [focused manifest](evidence/2026-11-08-s1-f1-focused.manifest.json) hashes to `11062dbb45d6b47091becae84070852014f627110fcf8941ecf19ccbfc755fa7`. It names 15 public files and inventories 522 read-only private files in four units, including the complete reports, compiler logs, one-case failure, source comparisons and exact seal proof. The retained evidence directories start with `~/play/artroom-evidence/2026-11-08-s1-f1-`. No full gate, live-room or deployment claim follows from these checks.
 
-Run the final full gate once before review, including its complete security owner. Read the actual `gate.exit` before claiming a pass.
+## Full gate
+
+The one full gate at `821f4ec3`, tree `989fd3e4`, passed. I read the actual `gate.exit`: `exit 0`. Kernel, Node, Counting, plain and native stages passed with complete terminal case evidence: 135 Node, 56 Counting, 4,020 plain and 1,116 native passes, with three skips. No case failed, and no report or unhandled error occurred. The 99 extra observations are exactly 33 enqueue, dequeue and complete Node file lifecycle events, not unidentified cases. One skipped scope module has no duration; the timing record states that limit.
+
+The gate's before and after records match byte for byte. The source stayed clean at the stated head, and no owned process remained. The outer monotonic observation is 1,237.414 seconds; the retained gate and runner timings remain separate. The complete security owner accepted the exact one-literal seal update. This structural result does not establish authority or live-room acceptance.
+
+The archive-scale owner, “the Native driver confirms 10,001 one-entry passes and preserves retained rule inputs from pass 3700”, passed. This gate shows no archive retry. It closes no archive watch.
+
+The [gate manifest](evidence/2026-11-08-s1-f1-gate.manifest.json) hashes to `0bc35cd967c97581ca74f7e3a7a7bf4c37bd7762350f86e3d34282da294d1737`. It names 17 public files and inventories 2,321 read-only private originals under `~/play/artroom-evidence/2026-11-08-s1-f1-gate`. Sealing ran no test again. Only this note and the gate manifest follow the gated head; executable source and tests remain unchanged.
