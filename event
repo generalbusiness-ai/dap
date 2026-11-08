@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:87bf3260e04ec8acb37bc7da186c6b11ea44080d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-header-index.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8bace16374cf6ef5d03ce6ac85b16818b7dd6acb","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/guard-plan.ts."}
