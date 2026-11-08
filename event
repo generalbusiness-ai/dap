@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e1df38dd8a3b3f48b415fde2785f03add0e1fde1","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-maintained-assets.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e452d72b675d02e9b2d83a0440ef7f778f67fe65","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/fixed-index.ts."}
