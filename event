@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ea296f733f5e7e8085359098f233ddc65297f74f","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/send-origin.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ecdadb3ef03746d66807c2e1c2fd8836a9248faa","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-owned-metadata-validation.manifest.json."}
