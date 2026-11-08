@@ -11,13 +11,11 @@ import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, Eff
 import { entryHash } from "@generalbusiness/dap-bytes";
 import { handlerBranch } from "./handler-branch.ts";
 import { executeBody, type Ran } from "./program/body.ts";
-import { overMax } from "./program/finalize.ts";
 import { declarationOf } from "./program/declaration.ts";
 export type { Ran } from "./program/body.ts";
 export { overMax } from "./program/finalize.ts";
 import type { Signer } from "./attribution.ts";
 import { boundTo, decisionCounts, selectedByIndex, selectorOf } from "./binding.ts";
-import { evaluateEffects } from "./effects.ts";
 import { creationFields, factsNamed, isEntryOf, isLocalFact, messageFields, presentedTypes, readFacts, readFields, textsNamed, updateOf, type Reading, type Update } from "./fields.ts";
 import { signerOf } from "./fold.ts";
 import { slotOf, type Fetched, type Judging } from "./guards.ts";
@@ -585,11 +583,10 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
     const { status } = settled;
     beside.rows = { status: rows.map((_, n) => status.get(n) ?? null), listed: settled.listed, retained: settled.retained, values: settled.values };
   }
-  const effects = evaluateEffects(j, structure, null);
+  const ran = executeBody(j, structure, request.hash);
   // Section 6.6: a clause's condition that is not completed leaves the result not recorded now. It is offered again.
-  if (!effects.ok && "unavailable" in effects) return { result: "unavailable", reason: effects.unavailable };
+  if (ran.result === "unavailable") return ran;
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. In platform data a rule of the clause may open
   // one. Past the bound the clause's effects cannot apply now, and it changes nothing, as above.
-  const applies = effects.ok && (effects.opened === null || overMax(view, definition, effects.opened.type, effects.opened.state) === null);
-  return { result: "ran", effects: applies ? effects.effects : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: (structure !== null && bodyJudgesClock(structure)) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
+  return { result: "ran", effects: ran.result === "ran" ? ran.effects : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: ran.result === "ran" ? ran.judgesTime : (structure !== null && bodyJudgesClock(structure)) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
 }

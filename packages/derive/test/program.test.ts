@@ -60,7 +60,7 @@ async function water(amount = 400, time = 101, policyPresent = true): Promise<Ju
 }
 function agree(j: Judging, body = program(j.definition, j.kind), first = 0): Ran {
   const runtime = { ...j, used: [], ...(j.asked === undefined ? {} : { asked: [] }), ran: { clock: j.ran?.clock === true } };
-  const expected = executeBody(runtime, namedBody(j.definition, "act", j.kind, "act"), cause, first);
+  const expected = executeBody(runtime, namedBody(j.definition, "act", j.kind, "act"), cause, { first });
   const plain = evaluate(body, j, first), traced = evaluate(body, j, first, 10000), exhausted = evaluate(body, j, first, 0);
   expect(plain.ran).toEqual(expected); expect(traced.ran).toEqual(expected); expect(exhausted.ran).toEqual(expected);
   expect(canonicalBytes(exhausted.ran)).toEqual(canonicalBytes(plain.ran));

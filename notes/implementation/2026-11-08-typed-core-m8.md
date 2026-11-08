@@ -203,3 +203,7 @@ The actual `pipeline.exit` contains `exit 0` and has been read. Every source, to
 The [raw-adapter validation manifest](evidence/2026-11-08-m8-raw-adapters-validation.manifest.json), SHA-256 `43e0a9bd97f6c9065a562d21f69b11ead03b7402d7a9489a6a972a3feea8ade6`, binds eleven read-only public files. Its inventories retain 277 private originals from the focused pipeline, launch and preparation. Complete reports, frozen config, tools, source guards and exact registration proofs remain durable. No validation reruns during retention.
 
 Removing these adapters adds no independent guard that needs another fault control. The semantic leaves keep their existing witnesses and earlier controls. Timed/result-clause integration, the prototype mapping and complete interpretations remain ahead. This pass supplies no full M8 gate, generated asset, workflow, independent review, deployment or live acceptance result.
+
+## Continue with timed bodies, clauses and interpretations
+
+The [program continuation record](2026-11-08-typed-core-m8-program.md) tracks the remaining timed/clause integration and complete interpretations. The earlier checkpoints and failures above retain their exact results. No complete M8 gate or acceptance follows from them.

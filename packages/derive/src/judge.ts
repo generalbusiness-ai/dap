@@ -12,11 +12,10 @@
  */
 
 import { nativeMark } from "./program/native.ts";
-import type { Effect, Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, PlatformTimedRule, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Effect, Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { intentDigest, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { withinCounts } from "./draws.ts";
-import { evaluateEffects } from "./effects.ts";
 import { namedBody } from "./program/structure.ts";
 import { executeBody } from "./program/body.ts";
 import { declarationOf } from "./program/declaration.ts";
@@ -420,20 +419,15 @@ export function judgeTimed(view: StateView, definition: ValidDefinition, selecte
   if (next?.item !== selected.item || next.rule !== selected.rule) return { result: "dropped", failed: "next" };
 
   const j: Judging = { view, definition, bounds, clock, scope, self: scope.head.seq + 1, kind: selected.rule, fields: {}, fieldTypes: {}, subjects: new Map([["on", item]]), signer: null, facts: new Map(), prepared: [], used: [], capabilities: context.capabilities };
-  const effects = evaluateEffects(j, namedBody(definition, "timed", selected.rule, "timed"), null);
+  const ran = executeBody(j, namedBody(definition, "timed", selected.rule, "timed"), scope.head.hash, { timed: context });
   // Section 6.4: a timed rule's effects are total. The validator refuses, as `timed-partial`, a rule with an effect that could be
   // refused here, and requires one that takes the item out of the rule's states. So a selection that passes its three checks is
   // written, and its item is not due again under this rule: the drain makes progress. A refusal here is a fault of the validator,
   // and is never answered by passing over the due item.
-  if (!effects.ok) throw new Error(`timed rule ${selected.rule} cannot apply: ${"unavailable" in effects ? effects.unavailable : effects.reason}`);
-  const opened: Effect[] = [];
-  const opens = (rule as PlatformTimedRule).opens ?? [];
-  if (opens.length && ((context.platform?.named !== "platform:destination@3" && context.platform?.named !== "platform:destination@13" && context.platform?.named !== "platform:destination@14" && context.platform?.named !== "platform:destination@15" && context.platform?.named !== "platform:destination@19") || scope.at.kind !== "destination")) return { result: "unavailable", reason: "unavailable" };
-  for (const [k, open] of opens.entries()) opened.push(
-    { effect: "operation", k, owner: context.platform?.named === "platform:destination@19" ? "platform:destination@19" : context.platform?.named === "platform:destination@15" ? "platform:destination@15" : context.platform?.named === "platform:destination@14" ? "platform:destination@14" : context.platform?.named === "platform:destination@13" ? "platform:destination@13" : "platform:destination@3", kind: open.kind, attempts: open.attempts, for: selected.item },
-    { effect: "attempt", operation: { k }, attempt: 1, result: "opened", selected: null },
-  );
-  return withinCounts(view, definition, { result: "write", draft: { input: { type: "timed", item: selected.item, rule: selected.rule, due: selected.due }, uses: [], prepared: [], effects: [...effects.effects, ...opened], sends: [], judgesTime: true } } as TimedJudgment);
+  // The runner throws for non-total effects; its unavailable result here is the fixed operation-owner policy.
+  if (ran.result === "unavailable") return ran;
+  if (ran.result !== "ran") throw new Error(`timed rule ${selected.rule} cannot apply: ${ran.reason}`);
+  return withinCounts(view, definition, { result: "write", draft: { input: { type: "timed", item: selected.item, rule: selected.rule, due: selected.due }, uses: [], prepared: [], effects: ran.effects, sends: [], judgesTime: true } } as TimedJudgment);
 }
 
 /**

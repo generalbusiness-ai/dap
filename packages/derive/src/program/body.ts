@@ -1,5 +1,5 @@
 /** Execute the instructions of one actual admitted body, including its finalization. */
-import type { Digest, Effect, Prepared, RefusalReason, ScopeRef, Send, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Digest, Effect, PlatformTimedRule, Prepared, RefusalReason, ScopeRef, Send, UnavailableReason } from "@generalbusiness/dap-contract";
 import { evaluateEffects } from "../effects.ts";
 import { evaluateSends } from "../sends.ts";
 import type { Judging } from "../guards.ts";
@@ -19,13 +19,21 @@ export type Ran =
   | { result: "refused"; reason: RefusalReason; name?: string; detail: string; prepared: Prepared[]; bound?: number }
   | { result: "unavailable"; reason: UnavailableReason };
 
+export interface BodyOptions {
+  readonly first?: number;
+  readonly directory?: ScopeRef | null;
+  readonly timed?: Pick<Judging, "platform">;
+}
+
 /** Guards, effects, sends, live-item bounds and settlement preserve their admitted order. */
-export function executeBody(j: Judging, structure: BodyStructure | null, cause: Digest, first = 0, directory?: ScopeRef | null): Ran {
+export function executeBody(j: Judging, structure: BodyStructure | null, cause: Digest, options: BodyOptions = {}): Ran {
   if (!structure) throw new TypeError("body was not captured by its validation");
   checkedBody(j.definition, structure);
   const row = structure.row;
   const kind = row.kind === "receive" ? row.declaration.message : row.name;
   if (kind !== j.kind) throw new TypeError("program belongs to another body");
+  const { first = 0, directory, timed } = options;
+  const timedItem = structure.frame.kind === "timed" ? j.subjects.get("on")!.id : null;
   const opens = structure.frame.kind === "act" && row.kind === "act" && row.declaration.step === "open" ? row.declaration.on
     : (structure.frame.kind === "handler" || structure.frame.kind === "replacement") && row.kind === "receive" && !j.subjects.has("on") ? row.declaration.opens : null;
   const guardNodes = structure.nodes.filter(node => node.category === "guard");
@@ -49,9 +57,27 @@ export function executeBody(j: Judging, structure: BodyStructure | null, cause: 
   if (guards.result !== "pass") return { result: "unavailable", reason: guards.result };
   // Sections 6.6 and 6.7: a condition, or a range that a source or a send reads, that is not completed leaves the input not judged.
   const effects = evaluateEffects(j, structure, opens);
-  if (!effects.ok) return "unavailable" in effects ? { result: "unavailable", reason: effects.unavailable } : { result: "refused", reason: effects.reason, detail: effects.detail, prepared: j.used };
-  const sends = evaluateSends(j, structure, effects.working, cause, first, directory, effects.opened !== null);
-  if (!sends.ok) return "unavailable" in sends ? { result: "unavailable", reason: sends.unavailable } : { result: "refused", reason: sends.reason, detail: sends.detail, prepared: j.used };
+  if (!effects.ok) {
+    if (structure.frame.kind === "timed") throw new Error(`timed rule ${row.name} cannot apply: ${"unavailable" in effects ? effects.unavailable : effects.reason}`);
+    return "unavailable" in effects ? { result: "unavailable", reason: effects.unavailable } : { result: "refused", reason: effects.reason, detail: effects.detail, prepared: j.used };
+  }
+  if (structure.frame.kind === "timed") {
+    // Final admission ties this frame to its immutable timed declaration.
+    const opens = (row.declaration as PlatformTimedRule).opens ?? [], opened: Effect[] = [];
+    if (opens.length && ((timed?.platform?.named !== "platform:destination@3" && timed?.platform?.named !== "platform:destination@13" && timed?.platform?.named !== "platform:destination@14" && timed?.platform?.named !== "platform:destination@15" && timed?.platform?.named !== "platform:destination@19") || j.scope.at.kind !== "destination")) return { result: "unavailable", reason: "unavailable" };
+    for (const [k, open] of opens.entries()) opened.push(
+      { effect: "operation", k, owner: timed?.platform?.named === "platform:destination@19" ? "platform:destination@19" : timed?.platform?.named === "platform:destination@15" ? "platform:destination@15" : timed?.platform?.named === "platform:destination@14" ? "platform:destination@14" : timed?.platform?.named === "platform:destination@13" ? "platform:destination@13" : "platform:destination@3", kind: open.kind, attempts: open.attempts, for: timedItem! },
+      { effect: "attempt", operation: { k }, attempt: 1, result: "opened", selected: null },
+    );
+    return { result: "ran", effects: [...effects.effects, ...opened], sends: [], prepared: j.used, judgesTime: true, settles: false };
+  }
+  // Clauses have no send phase; their shell suppresses refusals after current-state reconstruction.
+  let sends: Send[] = [];
+  if (structure.frame.kind !== "clause" && structure.frame.kind !== "outcome-clause") {
+    const outgoing = evaluateSends(j, structure, effects.working, cause, first, directory, effects.opened !== null);
+    if (!outgoing.ok) return "unavailable" in outgoing ? { result: "unavailable", reason: outgoing.unavailable } : { result: "refused", reason: outgoing.reason, detail: outgoing.detail, prepared: j.used };
+    sends = outgoing.sends;
+  }
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item: the row, or in platform data a rule.
   const full = effects.opened === null ? null : overMax(j.view, j.definition, effects.opened.type, effects.opened.state);
   if (full !== null) return { result: "refused", reason: "type-full", detail: full, prepared: j.used };
@@ -65,6 +91,6 @@ export function executeBody(j: Judging, structure: BodyStructure | null, cause: 
   const subject = settled && settled.op !== "copy" ? settlementSubject(settled) : null;
   const [was, is] = subject !== null ? [j.subjects.get(subject), effects.working.get(subject)] : [];
   const settles = settled !== null && settled.op !== "copy" && settlementMatches(settled.states, settled.op === "mark" ? settled.slot.name : null, was, is);
-  return { result: "ran", effects: effects.effects, sends: sends.sends, prepared: j.used, judgesTime, settles };
+  return { result: "ran", effects: effects.effects, sends, prepared: j.used, judgesTime, settles };
 }
 
