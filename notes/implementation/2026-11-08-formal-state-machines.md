@@ -16,24 +16,24 @@ The Transport control's initial syntax error also overlapped the gate's source-r
 
 ## Evidence
 
-The source checkpoint is commit `8faa38dcf31855a0a6264e5912b58061b5eda223`, tree `44cec6488a2060da51d823eda2bf2a5587993574`. The delivery commit adds only verification skills, model artifacts and this evidence note. The [manifest](evidence/2026-11-08-formal-state-machines.manifest.json) records the exact delivered model and skill bytes and retained raw output. The external evidence directory contains a SHA256SUMS file and stays read-only for at least 30 days. Counts come from TLC and the test runners, not timing estimates. The table names retained copies of the temporary drivers. Those paths identify preserved bytes; they do not claim that the original commands executed from those paths. Driver paths are relative to the manifest directory.
+The source checkpoint is commit `8faa38dcf31855a0a6264e5912b58061b5eda223`, tree `44cec6488a2060da51d823eda2bf2a5587993574`. The delivery commit adds only verification skills, model artifacts and this evidence note. The [manifest](evidence/2026-11-08-formal-state-machines.manifest.json) records the exact delivered model and skill bytes and retained raw output. The external evidence directory contains a SHA256SUMS file and stays read-only for at least 30 days. Counts come from TLC and the test runners, not timing estimates. The table names retained copies of the temporary drivers. Those paths identify preserved bytes; they do not claim that the original commands executed from those paths. Driver and report paths are relative to the manifest's external evidence directory. The statechart rows name the retained reports because the original invocation has no retained driver.
 
-| Check | Command or retained driver | Exit or result | SHA-256 and retained output |
+| Check | Command or retained record | Exit or result | SHA-256 and retained output |
 |---|---|---|---|
 | Transport final model and source | `node verification/state-machines/check.mjs Transport` | 0 | `0115fb46e72678165305ec7766a365aa3446e3824ffacaa25fa5ec1b517f2440` (`Delivery-Transport-check.log`) |
-| Transport final model | `/statechart with the retained model and view` | 0 | `f7a778d1851b32eb14291f58a95fe71282507c4a0412878631076fa526b78b14` (`delivery-Transport/tlc.out`) |
+| Transport final model | `delivery-Transport/report.md` | 0 | `f7a778d1851b32eb14291f58a95fe71282507c4a0412878631076fa526b78b14` (`delivery-Transport/tlc.out`) |
 | Transport source fault | `node verification/state-machines/control.mjs Transport /Users/hughpyle/play/artroom-evidence/2026-11-08-formal-five/transport-final-control` | 1 expected for broken source; baseline and restored 0 | `08603b10f0969e7f23cadffae84cc9533b4f1fe1cab4c5b2449f2bb0089abf8b` (`transport-final-control/broken.log`) |
 | Observation final model and source | `node verification/state-machines/check.mjs Observation` | 0 | `53d97253a0f6f2160b14a1c20e373106fcd84e5d30206c04db42626050ec3839` (`Delivery-Observation-check.log`) |
-| Observation final model | `/statechart with the retained model and view` | 0 | `43c4f874d84c4e9df0bd73d181e4b6bd31ecfc5f32e337506b359e3e5e95fa80` (`delivery-Observation/tlc.out`) |
+| Observation final model | `delivery-Observation/report.md` | 0 | `43c4f874d84c4e9df0bd73d181e4b6bd31ecfc5f32e337506b359e3e5e95fa80` (`delivery-Observation/tlc.out`) |
 | Observation source fault | `source-controls-used.py Observation` | 1 expected for broken source; baseline and restored 0 | `792e1137842983647b2db9106c0739856d127728944a80a6790db1706bb9b0e3` (`Observation-broken.log`) |
 | Editor final model and source | `node verification/state-machines/check.mjs Editor` | 0 | `9077a2e381ddb3e657d83df92731c9d5b232f4cd1c47876c69cd93c92ae7f96c` (`Delivery-Editor-check.log`) |
-| Editor final model | `/statechart with the retained model and view` | 0 | `702233c9ad67c503b35469715f512f758f3714416e5d2540d83825d0d2996aaf` (`delivery-Editor/tlc.out`) |
+| Editor final model | `delivery-Editor/report.md` | 0 | `702233c9ad67c503b35469715f512f758f3714416e5d2540d83825d0d2996aaf` (`delivery-Editor/tlc.out`) |
 | Editor source fault | `source-controls-used.py Editor` | 1 expected for broken source; baseline and restored 0 | `5e681724495bfa363abc0a89f1cb33c3d0b2c22e640fb542a0e35ed5d2484929` (`Editor-broken.log`) |
 | Effects final model and source | `node verification/state-machines/check.mjs Effects` | 0 | `1e5984b818bc54f2bbb89ed81497e7d9734a0ca0d401f525f189d7e634188a49` (`Delivery-Effects-check.log`) |
-| Effects final model | `/statechart with the retained model and view` | 0 | `613b5e0a8809b815f6463d08525aee648d62ea0f5bf1d34530a47bd35f0824b7` (`delivery-Effects/tlc.out`) |
+| Effects final model | `delivery-Effects/report.md` | 0 | `613b5e0a8809b815f6463d08525aee648d62ea0f5bf1d34530a47bd35f0824b7` (`delivery-Effects/tlc.out`) |
 | Effects source fault | `source-controls-used.py Effects` | 1 expected for broken source; baseline and restored 0 | `76ebf42e89a5c6298705f12c9f6053b515aa95585745eaf792a08fce2e46b4be` (`Effects-broken.log`) |
 | Voice final model and source | `node verification/state-machines/check.mjs Voice` | 0 | `4cbed0750dd9abe219d00740abb1cb471feb6d39e8655450a3b2ac55bc3169ed` (`Delivery-Voice-check.log`) |
-| Voice final model | `/statechart with the retained model and view` | 0 | `c3633711c93e06ed28628625a766fc827514b9ab89d4062e8e4f294be5dc9a37` (`delivery-Voice/tlc.out`) |
+| Voice final model | `delivery-Voice/report.md` | 0 | `c3633711c93e06ed28628625a766fc827514b9ab89d4062e8e4f294be5dc9a37` (`delivery-Voice/tlc.out`) |
 | Voice source fault | `source-controls-used.py Voice` | 1 expected for broken source; baseline and restored 0 | `311aee8421e264c957870f4d82b7efc34f25a55ffc3abf7b3254d702f2ab219e` (`Voice-broken.log`) |
 | NoRevival model fault | `model-controls-delivery-used.py` | counterexample found | `a550fbe1a54bc4c079e2b8d3c506ddc8f6b796116006d5f1a15cf3209364a26c` (`delivery-model-controls/NoRevival/command.log`) |
 | NoObsoletePaint model fault | `model-controls-delivery-used.py` | counterexample found | `9bd6a45995b3eef48f19b1905aadba6556a77fd72dc106739ce909c14bdbfd10` (`delivery-model-controls/NoObsoletePaint/command.log`) |

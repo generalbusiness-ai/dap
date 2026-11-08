@@ -6,7 +6,9 @@ The 7 November survey lives in gitseq request `a99e32d9` at `attachments/full-re
 
 The models describe source at `8faa38dcf31855a0a6264e5912b58061b5eda223`. MCP, observation and editor refactors already landed after the survey. Each model checks a narrow safety obligation in the current implementation. None proves its entire subsystem.
 
-TLC 1.7.4 exhaustively explored each finite model. All eight safety invariants passed. Deliberately broken transitions failed every invariant. Five deliberate source faults failed the corresponding source assertions, and the restored source passed. These controls establish that the checks can fail; they do not establish refinement of TypeScript by TLA+.
+In the original submission, TLC 1.7.4 exhaustively explored each finite model. All eight safety invariants passed. Deliberately broken transitions failed every invariant. Five deliberate source faults failed the corresponding source assertions, and the restored source passed. These controls establish that the checks can fail; they do not establish refinement of TypeScript by TLA+.
+
+The finite-model invariants mostly restate the guards in those models. They provide review checklists and diagrams; the real-source witnesses provide regression protection. Neither establishes refinement of the implementation.
 
 | Subsystem | Model states | Safety obligation | Project skill |
 |---|---:|---|---|
@@ -45,8 +47,6 @@ node verification/state-machines/control.mjs Editor "$HOME/play/artroom-evidence
 | Voice `SaveStart`, `Speak`, `Interrupt`, `Complete`, `VerifyReport`, `Clear` | `start`, `stopAudio`, restoration in `ready`, and `settle` | `SaveStart` represents successful durable write and exact readback. Interruption after persistence but before playback keeps uncertainty. Verified reporting abstracts the reporter's proof checks. |
 
 ## Scope and evidence
-
-The finite-model invariants mostly restate the guards in those models. They provide review checklists and diagrams; the real-source witnesses provide regression protection. Neither establishes refinement of the implementation.
 
 The source hashes detect drift. They do not prove that a handwritten model matches the implementation. Each skill names the functions that require review when source changes. Move its sync commit and hashes only after that review and the affected checks pass.
 
