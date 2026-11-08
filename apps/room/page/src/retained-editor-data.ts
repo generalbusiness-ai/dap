@@ -1,22 +1,21 @@
 /** One loaded-Page text proposal task. No automatic merge, durable outbox or replacement signature. */
 import { freeze } from "@generalbusiness/dap-bytes";
-import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldValue, Grant, Head, KeyId, ScopeId, ScopeRef, Seed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldValue, Head, KeyId, ScopeId, ScopeRef, Seed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, entryHash, intentDigest, isFactRef, scopeIdOf, utf8, verifySignedIntent, wellFormed } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, declaredHandle, httpTransport, shapeDeclaredAct, signedIntent, signedReads } from "@generalbusiness/dap-client";
 import { expectedOf, heldActs, type DefinitionShape } from "@generalbusiness/dap-cli/browser";
 import { FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, editPath, fileSound, platform } from "@generalbusiness/dap-platform";
 import { knownLIST1 } from "./source-support.ts";
+import { editProgress, preparedEditStage, transitionEdit, type EditKind, type EditRequest, type EditResult, type EditStage, type UnsentEditStep, type VerifiedEditStep } from "./retained-editor-state.ts";
 import { actAssociation, CopyNotKept, endOriginal, keepToSend, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";
 
 export interface EditSource { definition: string; manifestFact: FactRef; sourceFact: FactRef; scope: ScopeRef; manifest: number; opened: Digest; base: string; path: string; digest: Digest; size: number; content: string }
 export interface EditDraft { title: string; path: string; content: string }
-export interface EditStep { kind: "open-pr" | "ask-rules" | "propose-file" | "propose-manifest"; target: ScopeRef; signed: SignedIntent; grants: readonly Grant[]; beside: Beside; attempted: boolean; answer?: Answer; receiptVerified?: boolean }
+export type { EditStep } from "./retained-editor-state.ts";
 export interface EditTask {
   association: string; source: EditSource; draft: Readonly<EditDraft>; base: string; definition: Digest; definitionBytes: string; declared: DeclaredDefinition;
   context: { service: string; directory: ScopeRef; membership: ScopeRef; key: KeyId; rules: ScopeId; destination: ScopeId };
-  workflow: "legacy" | "list1"; collectedSource?: FactRef;
-  steps: EditStep[]; lane?: ScopeId; proposal?: number; version?: FactRef; directory: ScopeRef;
-  state: "prepared" | "waiting-lane" | "waiting-rules" | "source-recorded" | "unknown" | "refused" | "recorded" | "stopped";
+  workflow: "legacy" | "list1"; directory: ScopeRef; stage: EditStage;
   message: string; busy: boolean;
 }
 export interface EditOptions { current(): boolean; changed?(): void; pause?(scopes: readonly string[]): Promise<void> }
@@ -100,7 +99,7 @@ export async function prepareEdit(room: Room, change: ChangeView, manifest: numb
   const directoryShape = platform(D.value.definition)?.data as unknown as DefinitionShape | undefined;
   if (!directoryShape || !heldActs(directoryShape, fresh.me).acts.some(([kind]) => kind === "open-pr")) throw new Unreadable("The directory does not offer the supported native change opening.");
   shapeDeclaredAct(platform(D.value.definition)!.data as unknown as DeclaredDefinition, "open-pr", { on: null, fields: { definition: digest, title: captured.title, draft: false, body: "Source reference" } } as never);
-  return { association: actAssociation(room, change.scope), source, draft: captured, base, definition: digest as Digest, definitionBytes: kept.value.bytes, declared, workflow, context: freeze({ service: fresh.session.service.replace(/\/+$/, ""), directory: root.value.scope, membership: fresh.membership, key: fresh.key, rules: fresh.rules, destination: fresh.destination }), directory: D.value.scope, steps: [], state: "prepared", message: "Current file comparison is unavailable. This proposal writes the target on the named published base; it may overwrite existing content and leaves the old path unchanged.", busy: false };
+  return { association: actAssociation(room, change.scope), source, draft: captured, base, definition: digest as Digest, definitionBytes: kept.value.bytes, declared, workflow, context: freeze({ service: fresh.session.service.replace(/\/+$/, ""), directory: root.value.scope, membership: fresh.membership, key: fresh.key, rules: fresh.rules, destination: fresh.destination }), directory: D.value.scope, stage: preparedEditStage(), message: "Current file comparison is unavailable. This proposal writes the target on the named published base; it may overwrite existing content and leaves the old path unchanged.", busy: false };
 }
 
 async function taskRoom(room: Room, task: EditTask, options: EditOptions): Promise<Room> {
@@ -122,9 +121,10 @@ async function taskRoom(room: Room, task: EditTask, options: EditOptions): Promi
 
 /** Only the one accepted source of this task may enter its manifest. */
 async function verifiedCollectedSource(room: Room, task: EditTask): Promise<FactRef> {
-  const fact = task.collectedSource;
-  if (!task.lane || !fact || !knownLIST1(task.declared, task.definition)) throw new Unreadable("The confirmed one-file source is unavailable.");
-  const h = handle(room, task.lane), state = await summary(h);
+  const progress = editProgress(task.stage);
+  if (progress.state !== "source-recorded" || !knownLIST1(task.declared, task.definition)) throw new Unreadable("The confirmed one-file source is unavailable.");
+  const { collectedSource: fact, lane, source: original } = progress;
+  const h = handle(room, lane), state = await summary(h);
   if (state.value.definition !== task.definition || canonicalize(state.value.scope) !== canonicalize(fact.at)) throw new Unreadable("The source lane identity changed.");
   const collected = state.value.items.filter(item => item.type === "source" && item.state === "collected");
   if (collected.length !== 1 || collected[0]!.id !== fact.seq) throw new Unreadable("Another collected source conflicts with this one-file task. Nothing was frozen.");
@@ -132,14 +132,13 @@ async function verifiedCollectedSource(room: Room, task: EditTask): Promise<Fact
   const item = collected[0]!, read = await h.entry(fact.seq);
   if (!read.ok || !read.complete || read.next !== undefined) throw new Unreadable("The accepted source entry could not be verified.");
   const { entry, hash } = read.value, input = entry.input;
-  const original = task.steps.find(step => step.kind === "propose-file");
-  if (entry.seq !== fact.seq || hash !== fact.hash || entryHash(entry) !== hash || item.opened !== hash || canonicalize(entry.at) !== canonicalize(fact.at) || input.type !== "act" || input.signed.intent.kind !== "propose-file" || !verifySignedIntent(input.signed) || !original || canonicalize(input.signed) !== canonicalize(original.signed) || !entry.effects.some(effect => effect.effect === "open" && effect.type === "source" && effect.item === fact.seq)) throw new Unreadable("The accepted source identity does not match the original request.");
+  if (entry.seq !== fact.seq || hash !== fact.hash || entryHash(entry) !== hash || item.opened !== hash || canonicalize(entry.at) !== canonicalize(fact.at) || input.type !== "act" || input.signed.intent.kind !== "propose-file" || !verifySignedIntent(input.signed) || canonicalize(input.signed) !== canonicalize(original.signed) || !entry.effects.some(effect => effect.effect === "open" && effect.type === "source" && effect.item === fact.seq)) throw new Unreadable("The accepted source identity does not match the original request.");
   const fields = editFields(task.draft, task.base), grant = input.authority.length === 1 ? input.authority[0] : null;
   if (!grant || grant.key !== input.signed.intent.actor || canonicalize(grant.subject) !== canonicalize(item.parties["integrator"]) || !Array.isArray(item.parties["authors"]) || !item.parties["authors"].some(author => canonicalize(author) === canonicalize(grant.subject)) || ["base", "path", "digest", "size", "content"].some(name => input.signed.intent.fields[name] !== fields[name]) || ["base", "path", "digest", "size"].some(name => item.values[name] !== fields[name])) throw new Unreadable("The source author or exact file bytes changed. Nothing was frozen.");
   return fact;
 }
 
-async function sendStep(room: Room, task: EditTask, kind: EditStep["kind"], target: ScopeId, on: number | null, fields: Record<string, FieldValue>, options: EditOptions): Promise<boolean> {
+async function prepareStep(room: Room, task: EditTask, kind: EditKind, target: ScopeId, on: number | null, fields: Record<string, FieldValue>, options: EditOptions): Promise<{ step: UnsentEditStep; transport: ScopeHandle }> {
   const fresh = await taskRoom(room, task, options);
   if (await head(fresh, task.workflow === "list1") !== task.base) throw new Unreadable("The published base moved. Keep this task and compare/reconfirm before a new proposal; nothing new was sent.");
   check(options); const h = handle(fresh, target); const s = await summary(h); check(options);
@@ -160,100 +159,128 @@ async function sendStep(room: Room, task: EditTask, kind: EditStep["kind"], targ
     const built = await typed.handle.intent(signer, kind, { on, fields, expected } as never, signing); signed = built.signed; beside = built.beside;
   }
   // The exact serializable envelope belongs to this task before any mutation crosses the transport boundary.
-  const step: EditStep = { kind, target: s.value.scope, signed: freeze(JSON.parse(JSON.stringify(signed)) as SignedIntent), grants: freeze([]), beside: freeze(JSON.parse(JSON.stringify(beside)) as Beside), attempted: false };
-  task.steps.push(step); options.changed?.();
+  const step: UnsentEditStep = { kind, target: s.value.scope, signed: freeze(JSON.parse(JSON.stringify(signed)) as SignedIntent), grants: freeze([]), beside: freeze(JSON.parse(JSON.stringify(beside)) as Beside), status: "unsent", attempted: false };
+  return { step, transport: h };
+}
+
+/** Stage writes stay in the controller; every network helper returns its result. */
+const applyEdit = (task: EditTask, result: EditResult): void => { task.stage = transitionEdit(task.stage, result); };
+async function keepStep(room: Room, task: EditTask, step: UnsentEditStep, options: EditOptions): Promise<Room> {
   const current = await taskRoom(room, task, options);
   if (await head(current, task.workflow === "list1") !== task.base) throw new Unreadable("The published base moved before submission. Nothing new was sent.");
-  if (kind === "propose-manifest") await verifiedCollectedSource(current, task);
-  try { await keepToSend(current, step.signed, step.beside, () => check(options), () => check(options)); }
+  if (step.kind === "propose-manifest") await verifiedCollectedSource(current, task);
+  await keepToSend(current, step.signed, step.beside, () => check(options), () => check(options));
+  return current;
+}
+const submitStep = (transport: ScopeHandle, step: EditRequest): Promise<Answer> => transport.submit(step.signed, step.grants, step.beside);
+const settleStep = (transport: ScopeHandle, step: EditRequest): ReturnType<ScopeHandle["settle"]> => transport.settle(step.signed);
+async function verifyStep(transport: ScopeHandle, step: EditRequest, answer: Extract<Answer, { answer: "accepted" }>): Promise<boolean> {
+  const followed = await transport.followReceipt(answer.receipt);
+  return followed.ok && followed.entry.input.type === "act" && canonicalize(followed.entry.input.signed) === canonicalize(step.signed);
+}
+async function runStep(room: Room, task: EditTask, kind: EditKind, target: ScopeId, on: number | null, fields: Record<string, FieldValue>, options: EditOptions): Promise<boolean> {
+  const { step, transport } = await prepareStep(room, task, kind, target, on, fields, options);
+  applyEdit(task, { type: "prepared-step", step }); options.changed?.();
+  let current: Room;
+  try { current = await keepStep(room, task, step, options); }
   catch (error) {
     if (!(error instanceof CopyNotKept)) throw error;
-    // The step never went, so the next press signs it again. The task stays where it was, and the button stays.
-    task.steps.pop(); task.message = error.message; options.changed?.();
+    applyEdit(task, { type: "copy-not-kept" }); task.message = error.message; options.changed?.();
     return false;
   }
-  step.attempted = true; options.changed?.();
-  try { step.answer = await h.submit(step.signed, step.grants, step.beside); }
-  catch { task.state = "unknown"; task.message = `${kind}: outcome unknown. The original request is kept in this loaded Page. No next step was sent.`; options.changed?.(); return false; }
-  options.changed?.(); // Preserve known answer before receipt or other awaited reads.
+  applyEdit(task, { type: "attempted" }); options.changed?.();
+  let answer: Answer;
+  try { answer = await submitStep(transport, step); }
+  catch { task.message = `${kind}: outcome unknown. The original request is kept in this loaded Page. No next step was sent.`; options.changed?.(); return false; }
+  applyEdit(task, { type: "answer", answer }); options.changed?.();
   const digest = intentDigest(step.signed.intent);
-  if (step.answer.answer === "refused" || step.answer.answer === "archived" || step.answer.answer === "mismatch") await endOriginal(current, digest);
-  if (step.answer.answer === "refused") { task.state = "refused"; task.message = `${kind} refused: ${step.answer.reason}${step.answer.name ? ` (${step.answer.name})` : ""}. Earlier accepted steps remain recorded.`; return false; }
-  if (step.answer.answer !== "accepted") { task.state = "unknown"; task.message = `${kind}: ${step.answer.answer}; outcome unknown. Check the original request before another action.`; return false; }
-  const followed = await h.followReceipt(step.answer.receipt);
-  if (!followed.ok || followed.entry.input.type !== "act" || canonicalize(followed.entry.input.signed) !== canonicalize(step.signed)) { task.state = "unknown"; task.message = `${kind} returned acceptance; its recorded entry could not be verified. The answer and request are retained.`; return false; }
-  step.receiptVerified = true;
+  if (answer.answer === "refused" || answer.answer === "archived" || answer.answer === "mismatch") await endOriginal(current, digest);
+  if (answer.answer === "refused") { task.message = `${kind} refused: ${answer.reason}${answer.name ? ` (${answer.name})` : ""}. Earlier accepted steps remain recorded.`; return false; }
+  if (answer.answer !== "accepted") { task.message = `${kind}: ${answer.answer}; outcome unknown. Check the original request before another action.`; return false; }
+  if (!await verifyStep(transport, step, answer)) { task.message = `${kind} returned acceptance; its recorded entry could not be verified. The answer and request are retained.`; return false; }
+  applyEdit(task, { type: "receipt-verified" });
   await endOriginal(current, digest);
+  applyEdit(task, { type: "step-recorded", workflow: task.workflow });
   return true;
 }
 
-/** Continue only the task's next unsent step. Accepted steps are never rebuilt or resent. */
+type OpenedLaneRead = { state: "waiting" } | { state: "ready"; scope: ScopeId; proposal: number; transport: ScopeHandle };
+async function readOpenedLane(room: Room, task: EditTask, opening: VerifiedEditStep<"open-pr">, options: EditOptions): Promise<OpenedLaneRead> {
+  const fresh = await taskRoom(room, task, options), D = handle(fresh, task.directory.scope);
+  const original = await D.followReceipt(opening.answer.receipt); if (!original.ok) throw new Unreadable("Change opened; its creation entry is currently unreadable.");
+  const children = original.entry.sends.filter(send => "creator" in send.to && send.to.kind === "lane").map(send => scopeIdOf(send.to as Seed));
+  if (children.length !== 1) throw new Unreadable("The original opening does not name exactly one change lane.");
+  const scope = children[0]!;
+  await options.pause?.([task.directory.scope, scope]); check(options);
+  const transport = handle(fresh, scope), lane = await summary(transport);
+  if (lane.value.status === "refused") throw new Unreadable("The opened change refused its creation. The directory opening remains recorded.");
+  if (lane.value.status !== "active") return { state: "waiting" };
+  const proposal = lane.value.items.find(item => item.type === "proposal"); if (!proposal) throw new Unreadable("The active change has no proposal item.");
+  return { state: "ready", scope, proposal: proposal.id, transport };
+}
+async function rulesReady(room: Room, lane: ScopeId, transport: ScopeHandle, options: EditOptions): Promise<boolean> {
+  await options.pause?.([lane, room.rules]); check(options);
+  const ready = await summary(transport);
+  return ready.value.items.some(item => item.type === "rules" && typeof item.values["revision"] === "number");
+}
+
+/** Continue only the stage's next unsent step. Accepted requests are never rebuilt or resent. */
 export async function continueEdit(room: Room, task: EditTask, options: EditOptions): Promise<void> {
-  if (task.busy || ["unknown", "refused", "recorded", "stopped"].includes(task.state)) return;
+  if (task.busy || ["unknown", "refused", "recorded", "stopped"].includes(task.stage.state)) return;
   task.busy = true; options.changed?.();
   try {
     check(options);
-    if (task.steps.length === 0) {
+    if (task.stage.state === "prepared") {
       const body = `Based on retained source ${task.source.scope.scope}, version ${task.source.manifest}, opening ${task.source.opened}. Original path: ${task.source.path}. This is a new proposal; it does not replace the source version.`;
-      if (!await sendStep(room, task, "open-pr", task.directory.scope, null, { definition: task.definition, title: task.draft.title, body, draft: false }, options)) return;
-      task.state = "waiting-lane";
+      if (!await runStep(room, task, "open-pr", task.directory.scope, null, { definition: task.definition, title: task.draft.title, body, draft: false }, options)) return;
     }
-    const opened = task.steps.find(s => s.kind === "open-pr");
-    if (!opened || opened.answer?.answer !== "accepted" || !opened.receiptVerified) return;
-    const fresh = await taskRoom(room, task, options); const D = handle(fresh, task.directory.scope);
-    const original = await D.followReceipt(opened.answer.receipt); if (!original.ok) throw new Unreadable("Change opened; its creation entry is currently unreadable.");
-    const children = original.entry.sends.filter(s => "creator" in s.to && s.to.kind === "lane").map(s => scopeIdOf(s.to as Seed));
-    if (children.length !== 1) throw new Unreadable("The original opening does not name exactly one change lane.");
-    task.lane = children[0]!;
-    await options.pause?.([task.directory.scope, task.lane]); check(options);
-    const L = handle(fresh, task.lane); const lane = await summary(L);
-    if (lane.value.status === "refused") throw new Unreadable("The opened change refused its creation. The directory opening remains recorded.");
-    if (lane.value.status !== "active") { task.message = "Change opened; waiting for its native lane. Continue checks progress without reopening it."; return; }
-    const proposal = lane.value.items.find(i => i.type === "proposal"); if (!proposal) throw new Unreadable("The active change has no proposal item."); task.proposal = proposal.id;
-    if (!task.steps.some(s => s.kind === "ask-rules")) {
-      if (!await sendStep(room, task, "ask-rules", task.lane, proposal.id, {}, options)) return;
-      task.state = "waiting-rules";
+    let progress = editProgress(task.stage);
+    if (!("opening" in progress)) return;
+    const lane = await readOpenedLane(room, task, progress.opening, options);
+    if (lane.state === "waiting") { task.message = "Change opened; waiting for its native lane. Continue checks progress without reopening it."; return; }
+    if (progress.state === "waiting-lane") applyEdit(task, { type: "lane-ready", lane: lane.scope, proposal: lane.proposal });
+    progress = editProgress(task.stage);
+    if (progress.state === "lane-ready") {
+      if (!await runStep(room, task, "ask-rules", progress.lane, progress.proposal, {}, options)) return;
     }
-    const asked = task.steps.find(s => s.kind === "ask-rules");
-    if (!asked?.receiptVerified || asked.answer?.answer !== "accepted") return;
-    await options.pause?.([task.lane, room.rules]); check(options);
-    const ready = await summary(L);
-    if (!ready.value.items.some(i => i.type === "rules" && typeof i.values["revision"] === "number")) { task.message = "Change opened; waiting for its native rules. Continue checks progress without asking again."; return; }
-    if (!task.steps.some(s => s.kind === "propose-file")) {
-      if (!await sendStep(room, task, "propose-file", task.lane, null, editFields(task.draft, task.base), options)) return;
+    progress = editProgress(task.stage);
+    if (progress.state !== "waiting-rules" && progress.state !== "source-recorded") return;
+    if (!await rulesReady(room, progress.lane, lane.transport, options)) { task.message = "Change opened; waiting for its native rules. Continue checks progress without asking again."; return; }
+    if (progress.state === "waiting-rules") {
+      if (!await runStep(room, task, "propose-file", progress.lane, null, editFields(task.draft, task.base), options)) return;
+      const recorded = editProgress(task.stage);
+      if (recorded.state === "recorded") { task.message = `Proposal recorded in ${recorded.lane}, version ${recorded.version.seq}. Not published. The original source/history is unchanged.`; return; }
     }
-    const proposed = task.steps.find(s => s.kind === "propose-file")!;
-    if (proposed.answer?.answer !== "accepted" || !proposed.receiptVerified) return;
-    if (task.workflow === "legacy") { task.version = proposed.answer.receipt.fact; task.state = "recorded"; task.message = `Proposal recorded in ${task.lane}, version ${task.version.seq}. Not published. The original source/history is unchanged.`; return; }
-    task.collectedSource = proposed.answer.receipt.fact; task.state = "source-recorded";
+    progress = editProgress(task.stage);
+    if (progress.state !== "source-recorded") return;
     task.message = "Source recorded. It is not a version until its one-file manifest is confirmed."; options.changed?.();
     const source = await verifiedCollectedSource(room, task);
-    if (!task.steps.some(step => step.kind === "propose-manifest")) {
-      if (!await sendStep(room, task, "propose-manifest", task.lane, null, { base: task.base, files: [{ path: task.draft.path, entry: source, digest: editFields(task.draft, task.base)["digest"]! }] }, options)) return;
-    }
-    const frozen = task.steps.find(step => step.kind === "propose-manifest")!;
-    if (frozen.answer?.answer === "accepted" && frozen.receiptVerified) { task.version = frozen.answer.receipt.fact; task.state = "recorded"; task.message = `One-file manifest recorded in ${task.lane}, version ${task.version.seq}. Not published. The original source/history is unchanged.`; }
-  } catch (error) { task.state = task.steps.some(s => s.attempted && (!s.answer || s.answer.answer === "unavailable" || s.answer.answer === "mismatch" || s.answer.answer === "accepted" && !s.receiptVerified)) ? "unknown" : "stopped"; task.message = `${error instanceof Error ? error.message : "The task could not continue."} Earlier accepted steps and the draft are retained.`; }
+    if (!await runStep(room, task, "propose-manifest", progress.lane, null, { base: task.base, files: [{ path: task.draft.path, entry: source, digest: editFields(task.draft, task.base)["digest"]! }] }, options)) return;
+    const recorded = editProgress(task.stage);
+    if (recorded.state === "recorded") task.message = `One-file manifest recorded in ${recorded.lane}, version ${recorded.version.seq}. Not published. The original source/history is unchanged.`;
+  } catch (error) { applyEdit(task, { type: "stopped" }); task.message = `${error instanceof Error ? error.message : "The task could not continue."} Earlier accepted steps and the draft are retained.`; }
   finally { task.busy = false; options.changed?.(); }
 }
 
-/** Read-only reconciliation; absence never releases an unknown task or creates a fresh signature. */
+/** Read-only reconciliation under the original association; only the retained attempted request can settle. */
 export async function checkEditRequest(room: Room, task: EditTask, options: EditOptions): Promise<void> {
-  if (task.busy || task.state !== "unknown") return;
+  if (task.busy || task.stage.state !== "unknown") return;
   if (task.association !== actAssociation(room, task.source.scope.scope)) { task.message = "Check this task using its original room/key context."; return; }
-  const step = task.steps.at(-1); if (!step?.attempted) return;
+  const step = task.stage.step;
   task.busy = true;
   try {
-    const result = await handle(room, step.target.scope).settle(step.signed);
+    const transport = handle(room, step.target.scope);
+    const result = await settleStep(transport, step);
     if (!result.ok) { task.message = `Original ${step.kind} request remains unresolved: ${result.reason}. No replacement was signed.`; return; }
-    step.answer = { answer: "accepted", receipt: result.value }; options.changed?.();
-    const verified = await handle(room, step.target.scope).followReceipt(result.value);
-    if (!verified.ok || verified.entry.input.type !== "act" || canonicalize(verified.entry.input.signed) !== canonicalize(step.signed)) { task.message = "The acceptance could not be verified; the task stays unknown."; return; }
-    step.receiptVerified = true;
-    await endOriginal(room, intentDigest(step.signed.intent)); // A verified answer ends the copy, or the row would stop the task's next step.
-    if (step.kind === "propose-manifest" || step.kind === "propose-file" && task.workflow === "legacy") { task.version = result.value.fact; task.state = "recorded"; task.message = "Proposal recorded. Not published; the original source remains unchanged."; }
-    else if (step.kind === "propose-file") { task.collectedSource = result.value.fact; task.state = "source-recorded"; task.message = "Original source recorded. Continue verifies it before freezing the one-file manifest."; }
-    else { task.state = step.kind === "open-pr" ? "waiting-lane" : "waiting-rules"; task.message = "Original request recorded. Continue reads its progress before the next unsent step."; }
+    const answer: Extract<Answer, { answer: "accepted" }> = { answer: "accepted", receipt: result.value };
+    applyEdit(task, { type: "answer", answer }); options.changed?.();
+    if (!await verifyStep(transport, step, answer)) { task.message = "The acceptance could not be verified; the task stays unknown."; return; }
+    applyEdit(task, { type: "receipt-verified" });
+    await endOriginal(room, intentDigest(step.signed.intent));
+    applyEdit(task, { type: "step-recorded", workflow: task.workflow });
+    if (step.kind === "propose-manifest" || step.kind === "propose-file" && task.workflow === "legacy") task.message = "Proposal recorded. Not published; the original source remains unchanged.";
+    else if (step.kind === "propose-file") task.message = "Original source recorded. Continue verifies it before freezing the one-file manifest.";
+    else task.message = "Original request recorded. Continue reads its progress before the next unsent step.";
   } catch { task.message = "The original request could not be checked. It stays unresolved; no replacement was signed."; }
   finally { task.busy = false; options.changed?.(); }
 }

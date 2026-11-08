@@ -1,0 +1,133 @@
+{
+  "qualification": "One maintained Page generation after three compiler contexts,14focused passes and the isolated control. Only assets.ts changes. The complete asset owner passes once. No install, Page workflow, full gate or live acceptance is claimed.",
+  "sourceHead": "69f32d97eb8716ba8379b55ace1285cc7e9b06ab",
+  "sourceTree": "f03f094a330aaee6b14ae2d2088dce0eb1f17994",
+  "fileCount": 24,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-page-assets",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1870,
+          "sha256": "6300f1b55ee9fe8d2842b7a92a136eb0a584b2f3c93ac8405a82c10d942fa948"
+        },
+        {
+          "path": "after.json",
+          "bytes": 540349,
+          "sha256": "0701e117bc6f2a9de8c411866b3510ae2902534402d4962a5739e5e3c70c7bbe"
+        },
+        {
+          "path": "before.json",
+          "bytes": 540323,
+          "sha256": "23f33d690b141d862940d41c3c99a901d93ac783c26462859d0f02379984209c"
+        },
+        {
+          "path": "compatibility.argv.json",
+          "bytes": 158,
+          "sha256": "e83a672ff77d9e0a58af8cc36a68b31755f391b02d392fa18eae9d43392f8106"
+        },
+        {
+          "path": "compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compatibility.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compatibility.stdout",
+          "bytes": 365,
+          "sha256": "f399af99b47b8f218929ec8ece931da9d4198913953faafe269882e38296efa5"
+        },
+        {
+          "path": "compatibility.time",
+          "bytes": 29,
+          "sha256": "3eb9a1bab01aa2a9bee7f1db0fd23e9b6dfb3bcbf95a3f21a6c704555cbe0ee7"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 3393,
+          "sha256": "e7b31517e935e9c03077105691b44ff546e8481a640501b9b3f0df374883aee7"
+        },
+        {
+          "path": "generated.json",
+          "bytes": 540349,
+          "sha256": "0701e117bc6f2a9de8c411866b3510ae2902534402d4962a5739e5e3c70c7bbe"
+        },
+        {
+          "path": "generator.argv.json",
+          "bytes": 157,
+          "sha256": "f4f4ceeda4313d6ae2e47fc94cede031469257b02a276eb9ce7d25738f1a5128"
+        },
+        {
+          "path": "generator.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "generator.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "generator.stdout",
+          "bytes": 137,
+          "sha256": "25b17c611b6c45b96e4c9e801136e1dfedc4723e52315bb5affbcfa623651cf2"
+        },
+        {
+          "path": "generator.time",
+          "bytes": 29,
+          "sha256": "e1e9ab73e6a44fdc614d43f0585a9aaa99083d7640df1a49a2d3ce42d60b0a5f"
+        },
+        {
+          "path": "new-assets.ts",
+          "bytes": 2362642,
+          "sha256": "2e3c254998a402b1df43cfbe5a0a3b5efe083dda9dffafe811d2ac18fc6203f6"
+        },
+        {
+          "path": "old-assets.ts",
+          "bytes": 2360136,
+          "sha256": "1b2df352b600a31ca486da98b4797d42c046326323b95af65ee7ff194ed10492"
+        },
+        {
+          "path": "owner.argv.json",
+          "bytes": 355,
+          "sha256": "39f138cb2eb1a5ca3632cf86bb44eb7eb007989925bdb2c0508e454bc446cf81"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "owner.stdout",
+          "bytes": 99,
+          "sha256": "94c82062bfe3f9bbdf58ec75664be5165ef59a25e4c682890385e2f85db50e19"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 29,
+          "sha256": "1a4d4ae3652cf7d03bf77b71d993e0dea050fbef6031ae841933c6bb9d940483"
+        },
+        {
+          "path": "report.json",
+          "bytes": 1118,
+          "sha256": "514521098a2540594c14d2c234c065ded4620d153bdb523cee04f3f53264821c"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1053,
+          "sha256": "b96ae1d49124cf9db40b784244e7aa6ed51b2c80d97213af8b3561d52a4a9fd0"
+        }
+      ]
+    }
+  ]
+}

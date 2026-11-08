@@ -1,0 +1,64 @@
+{
+  "qualification": "Read-only S3 source and witness inspection; no test execution or acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-s3-preparation",
+  "sourceHead": "7244d8847f48cdb91b8b735bd9af0c34be4da85c",
+  "sourceTree": "607f963ef13ea80afe8c5c0c93d8267df996e49d",
+  "file_count": 11,
+  "files": [
+    {
+      "path": "QUALIFICATION.md",
+      "bytes": 365,
+      "sha256": "5ef345841b92f2d55dc4391b81b641af8de22cbd9d9fce0320516fa522583438"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1041,
+      "sha256": "6b6792f479383dacf8c14fc0efaf06a2d589afabde5bac10ded351553f7daa4b"
+    },
+    {
+      "path": "promise.inspect.json",
+      "bytes": 2746,
+      "sha256": "b1bf0f97633bd6eb2a66901f57f878fe80887898ca1b0b7e4f52e32aca86aeab"
+    },
+    {
+      "path": "request.inspect.json",
+      "bytes": 5316,
+      "sha256": "3f2996e2041176f9910c7f009a30e71404839d481c13117c5b8bf75554c270fb"
+    },
+    {
+      "path": "source/apps/room/page/src/retained-editor-data.ts",
+      "bytes": 32350,
+      "sha256": "4d09aaacc5cac02ba42501cfbe3a14a7c4f1862074732bf29d3fd66f06c333c2"
+    },
+    {
+      "path": "source/apps/room/page/src/retained-editor.ts",
+      "bytes": 8205,
+      "sha256": "b6b29428db59c3fcc9b16c525c9521dccaa8cedc53009da0ce5932b2e1aa1946"
+    },
+    {
+      "path": "source/apps/room/page/test/editor-list1.scope.test.ts",
+      "bytes": 8107,
+      "sha256": "0d7e11e12996d87e25f369847eb03b9ea5bcd4d979cb13c17610034b2e10203c"
+    },
+    {
+      "path": "source/apps/room/page/test/record.scope.test.ts",
+      "bytes": 8285,
+      "sha256": "80689410d070074083fd5666fb882cdbc10a3f2605db5c1125094de738e13d34"
+    },
+    {
+      "path": "source/apps/room/page/test/retained-editor.scope.test.ts",
+      "bytes": 14039,
+      "sha256": "a966b404604d066b0f96040f1334d8cbb992fcbd1d9bfd8d1bb518178d3ff395"
+    },
+    {
+      "path": "source/apps/room/page/test/retained-editor.test.ts",
+      "bytes": 19885,
+      "sha256": "7168766885b30b1e72f8725394a73ae2b445860a484826d23cf3b80623da9675"
+    },
+    {
+      "path": "witness-map.json",
+      "bytes": 4908,
+      "sha256": "efc6887353e803d2b0a55259ee0cc27ec6976e3f20823ebdea0bd399e28595be"
+    }
+  ]
+}

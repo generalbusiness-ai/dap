@@ -5,6 +5,7 @@ import { editPath } from "@generalbusiness/dap-platform";
 import { actAssociation, type ChangeView, type Room } from "./data.ts";
 import { h } from "./view.ts";
 import { checkEditRequest, continueEdit, editFields, prepareEdit, type EditDraft, type EditTask } from "./retained-editor-data.ts";
+import { editEvidence } from "./retained-editor-state.ts";
 
 interface DraftRecord { draft: EditDraft; task?: EditTask; preparing: boolean; opened: boolean; message: string }
 const drafts = new Map<string, DraftRecord>();
@@ -19,16 +20,19 @@ export function retainedEditor(room: Room, change: ChangeView, options: Retained
   const record = kept;
   // Release only a definitely-unsent task in its original mounted context.
   // A stopped task may already contain accepted work or an uncertain receipt.
-  const canReturnToDraft = (task: EditTask): boolean => record.task === task && !record.preparing && !task.busy
-    && (task.state === "prepared" || task.state === "stopped") && options.current()
+  const canReturnToDraft = (task: EditTask): boolean => {
+    const evidence = editEvidence(task.stage);
+    return record.task === task && !record.preparing && !task.busy
+    && (task.stage.state === "prepared" || task.stage.state === "stopped") && options.current()
     && task.association === actAssociation(room, change.scope)
     && task.context.service === room.session.service.replace(/\/+$/, "") && task.context.key === room.key
     && canonicalize(task.context.membership) === canonicalize(room.membership)
     && task.context.directory.scope === room.directory && canonicalize(task.context.directory) === canonicalize(task.directory)
     && task.context.rules === room.rules && task.context.destination === room.destination
     && task.source.scope.scope === change.scope && task.source.manifest === selected.id && task.source.digest === selected.file!.digest
-    && task.lane === undefined && task.proposal === undefined && task.version === undefined && task.collectedSource === undefined
-    && task.steps.every(step => step.attempted === false && step.answer === undefined && (step.receiptVerified === undefined || step.receiptVerified === false));
+    && evidence.lane === undefined && evidence.proposal === undefined && evidence.version === undefined && evidence.collectedSource === undefined
+    && task.stage.steps.every(step => step.attempted === false && step.answer === undefined && (step.receiptVerified === undefined || step.receiptVerified === false));
+  };
   const host = h("section", { class: "panel retained-editor", "aria-label": "Propose a text edit" });
   const draw = () => {
     if (!record.opened) {
@@ -54,14 +58,14 @@ export function retainedEditor(room: Room, change: ChangeView, options: Retained
       controls.append(prepare);
     } else {
       controls.append(h("p", { class: "record-meta" }, `Published base: ${task.base}. Target: ${task.draft.path}. ${editFields(task.draft, task.base)["size"]} UTF-8 bytes.`));
-      const label = task.state === "prepared" ? "Confirm new proposal" : task.state === "unknown" ? "Check original request" : "Continue checking progress";
+      const label = task.stage.state === "prepared" ? "Confirm new proposal" : task.stage.state === "unknown" ? "Check original request" : "Continue checking progress";
       const go = h("button", { type: "button", class: "primary" }, task.busy ? "Waiting…" : label) as HTMLButtonElement;
-      go.disabled = task.busy || ["recorded","refused","stopped"].includes(task.state);
+      go.disabled = task.busy || ["recorded","refused","stopped"].includes(task.stage.state);
       go.addEventListener("click", () => {
         if (record.task !== task || record.preparing || task.busy || !options.current()) return;
         void (async () => {
           const opts = { current: options.current, changed: draw };
-          if (task.state === "unknown") await checkEditRequest(room, task, opts); else await continueEdit(room, task, opts);
+          if (task.stage.state === "unknown") await checkEditRequest(room, task, opts); else await continueEdit(room, task, opts);
           draw();
         })();
       });
@@ -76,13 +80,13 @@ export function retainedEditor(room: Room, change: ChangeView, options: Retained
         });
         controls.append(cancel);
       }
-      if (task.state === "recorded" && task.lane) {
-        const link = h("a", { href: `#/change/${task.lane}`, class: "button" }, "Open new proposal"); link.addEventListener("click", () => options.recorded?.(task.lane!)); controls.append(link);
+      if (task.stage.state === "recorded" && editEvidence(task.stage).lane) {
+        const link = h("a", { href: `#/change/${editEvidence(task.stage).lane}`, class: "button" }, "Open new proposal"); link.addEventListener("click", () => options.recorded?.(editEvidence(task.stage).lane!)); controls.append(link);
       }
-      if (task.steps.length) controls.append(h("details", {}, h("summary", {}, "Inspect task results"), ...task.steps.map(step => h("p", {}, `${step.kind}: ${step.answer?.answer ?? (step.attempted ? "unknown" : "not sent")}${step.answer?.answer === "accepted" ? ` · recorded entry ${step.answer.receipt.fact.seq}` : ""}`))));
+      if (task.stage.steps.length) controls.append(h("details", {}, h("summary", {}, "Inspect task results"), ...task.stage.steps.map(step => h("p", {}, `${step.kind}: ${step.answer?.answer ?? (step.attempted ? "unknown" : "not sent")}${step.answer?.answer === "accepted" ? ` · recorded entry ${step.answer.receipt.fact.seq}` : ""}`))));
     }
     const form = h("form", {}, h("label", {}, "Proposal title", title), h("label", {}, "Target file path", path), h("label", {}, "Text", content),
-      task?.state === "prepared" ? null : h("p", { class: "muted" }, "Current file comparison is unavailable. This writes the target on the named published base and may overwrite existing content. Changing the path leaves the old file; it is not a rename."), message, controls);
+      task?.stage.state === "prepared" ? null : h("p", { class: "muted" }, "Current file comparison is unavailable. This writes the target on the named published base and may overwrite existing content. Changing the path leaves the old file; it is not a rename."), message, controls);
     form.addEventListener("submit", event => { event.preventDefault(); if (record.preparing || record.task) return; record.preparing = true; record.message = "Reading the original source, authority and published base…"; draw(); void (async () => {
       try { record.task = await prepareEdit(room, change, selected.id, record.draft, { current: options.current }); }
       catch (error) { record.message = error instanceof Error ? error.message : "Preparation failed. Nothing was sent."; }
