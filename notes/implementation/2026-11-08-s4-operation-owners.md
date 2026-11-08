@@ -45,12 +45,6 @@ The isolated control removes only the held-answer check before retained replies.
 
 The [focused manifest](evidence/2026-11-08-s4-operations-focused.manifest.json) hashes to `81250792ba213c7f0f30eb8e587ea4649994ea32ef8d917f3aca7e189771a853`. It names 14 public files and inventories 528 read-only private originals in four units under `~/play/artroom-evidence/2026-11-08-s4-`. They retain the complete reports, compiler logs, compatibility preparation, exact source comparison, control fault and restoration. Sealing reruns no validation. These results establish the selected boundaries; they do not replace the final gate or archive audit.
 
-## Evidence still due
-
-Obtain independent exact-head review and audit the merge plan before landing. The final gate and archive audit below complete their earlier obligations.
-
-Ruling `217e53e9` keeps archive watch `64552d40` open. The audit below names every retained full gate since M4 landing `8d9080f3` and its archive-retry observation. Failed gates and unreached Native stages remain distinct from passes. A new archive retry stops S4 for planner classification. No S4 change touches archive or fold code.
-
 ## Integrate M8 and complete the final gate
 
 S4 integrates published main `0914c89e` at `d9927a103a9c1678cef33467f04210e83c0458aa`, tree `c7b7bf7d81dcf59e8a664b9ff19deb59f89618e2`. Only the four S4 paths differ from that main. Both changed operation files retain the focused checkpoint bytes. No focused test or control repeats.
@@ -62,3 +56,20 @@ The [gate manifest](evidence/2026-11-08-s4-gate.manifest.json) hashes to `565bc5
 Archive watch audit since M4: `2026-11-07-m5-gate` (a14c4150): Native unreached, no archive observation; `2026-11-07-m6-gate` (71863e06): archive scale passed, no retry observed; `2026-11-07-m7-gate` (6da48104): archive scale passed, no retry observed; `2026-11-07-s1-gate` (446e50d4): archive scale passed, no retry observed; `2026-11-07-s2-gate` (39b996b9): archive scale passed, no retry observed; `2026-11-07-s3-gate` (4f4944ae): Native unreached, no archive observation; `2026-11-08-s1-f1-cleanup-gate` (2f8b80af): archive scale passed, no retry observed; `2026-11-08-s1-f1-gate` (821f4ec3): archive scale passed, no retry observed; `2026-11-08-m8-final-gate` (136708cd): Native unreached, no archive observation; `2026-11-08-m8-repaired-final-gate` (0c416f8b): archive scale passed, no retry observed; `2026-11-08-m8-isolated-final-gate` (0c416f8b): archive scale passed, no retry observed; `2026-11-08-m8-cache-final-gate` (d54c8842): archive scale passed, no retry observed; `2026-11-08-s4-final-gate` (d9927a10): archive scale passed, no retry observed.
 
 The thirteen held full gates contain ten archive-scale passes and three Native-unreached failures. Other Native failures remain failures, including the two M8 archive-scale passes inside failed gates. This audit closes no archive watch. No S4 source changes archive or fold code. Independent review and landing remain due. The planner deploys.
+
+## Final evidence
+
+The focused pipeline and control use source `f10b1b6393517f28b3ca9ed2fa8efdadd067f48d`, tree `a4aefee380d217bbf6d0a5506f498dc69d20a86c`. The gate uses `d9927a10` and its full tree recorded above. The table names retained driver copies where the original invocation used a temporary path. Those copies identify preserved command bytes, not a new invocation. Output paths are relative to the corresponding public manifest directory. Complete command arguments remain in the retained originals.
+
+| Check | Command or retained driver | Actual exit | Output and SHA-256 |
+|---|---|---|---|
+| Scope source compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.json` | 0 | `phase-outcomes.json`: `26a9df8273c772adf1c56c6575171f238cf4ab066c97b6678c138f3969d63711` |
+| Scope test compiler | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` | 0 | `phase-outcomes.json`: `26a9df8273c772adf1c56c6575171f238cf4ab066c97b6678c138f3969d63711` |
+| Complete 27-case body | Recorded body command in `phase-outcomes.json` | 0 | `coverage-summary.json`: `ac4e9818888f3b9e13da9315e941970eb7b5ec7c24aa226e220f08bef060c790` |
+| Held-answer precedence control | Retained `2026-11-08-s4-control/driver.py` | Owner 1 at the intended assertion; driver 0 | `control-summary.json`: `5f2e0db0ff9fe7ed2a3a5d20dc38f350523ac54d33df3ea33181b024475c9548` |
+| Final maintained gate | `npm run gate` | 0 | `test-summary.json`: `684f12fd7f5ea96eb879640d815dd79038ee6c8fa981569d6b6326fd31a9f17d` |
+| Thirteen-gate archive audit | Retained gate audit in `archive-watch-audit.json` | 0 | `archive-watch-audit.json`: `27931e72c40e4877aad517f9f928f6340a7ea4efe434dcb745bc969e60682ecd` |
+
+## Open limits
+
+Request `12f63139` still requires independent exact-head review and a merge-plan retirement audit before landing. Ruling `217e53e9` keeps archive watch `64552d40` open. The audit above meets its retained-gate reporting requirement and does not close the watch. A new archive retry stops S4 for planner classification. The planner owns deployment.
