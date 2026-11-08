@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "request": "7542970fb47e57ae9360f297bdfe8c49e3752c24",
+  "promise": "9a8c22e6f27ecdbfc7328ac6fc5f48bf4b3fc1ff",
+  "sourceHead": "63bb22a39ec0607790710537c87d55cbb6a6bc6c",
+  "sourceTree": "0f002ad8083300aeae33c1d25c21f5d6b9b29218",
+  "qualification": "At M0 source 63bb22a39e, both Scope compiler contexts and the one complete native cross-room witness pass once. Separate native v1 installations admit the genesis-named sender, refuse a different verified sender with one deciding entry and one result but zero handler effects, and restrict the receiving session to its own entries and retained source copies. The first fixture-cohort mismatch run remains failed and retained. Canonical setup, pool, deadlines and limits remain. This pass does not replace the guard control, final full gate or independent review. It makes no v2 composition, live-room or deployment claim.",
+  "fileCount": 7,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m0-cohort-validation",
+      "files": [
+        {
+          "path": "2026-11-08-m0-cohort-focused-launch.inventory.json",
+          "bytes": 46725,
+          "sha256": "f7ab0eb84529da15faf5652eb4f4cb26fef820b183ceed9f0190b865de430c9e"
+        },
+        {
+          "path": "2026-11-08-m0-cohort-focused.inventory.json",
+          "bytes": 1453,
+          "sha256": "da089f3d1f19e9f71a22151468df2007776f565dd666b2183e91127e6a94d74e"
+        },
+        {
+          "path": "2026-11-08-m0-cohort-preparation.inventory.json",
+          "bytes": 972,
+          "sha256": "b804ff7ea22dbf8f768815784f7fb9aedfcc6a2103a23138690cbcd0664c5b77"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 583,
+          "sha256": "457a4dbace08b6bc5d0a978e8d6a01bf3b64f1a670437ddff41b759c80898c7f"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "plan-summary.json",
+          "bytes": 779,
+          "sha256": "d3a0a6059b775e2a4152efe97e2f99a47fee9270a88cb10336eac07d560ee068"
+        },
+        {
+          "path": "result.json",
+          "bytes": 4872,
+          "sha256": "a2d2fbc372449b9cac0c19a5b58c6b386b4dc0f6801468875d59e873429ee40f"
+        }
+      ]
+    }
+  ]
+}

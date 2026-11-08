@@ -1,8 +1,9 @@
 # M0: a declared send between two rooms
 
-Status: both compiler contexts pass at `6824e907`, but the first native run
-fails before installation. The fixture correction below awaits validation.
-The control, final gate and review remain due. M8 owns the validation slot.
+Status: the corrected v1 fixture passes both Scope compiler contexts and its
+complete native case at `63bb22a3`. The sender-guard control distinguishes.
+The first fixture failure and the control's parser failure remain retained.
+Final integration, the full gate, independent review and landing remain due.
 
 Request `7542970fb47e57ae9360f297bdfe8c49e3752c24` asks whether a declared
 application can send between rooms with different members. This head starts
@@ -68,11 +69,10 @@ preserves the existing entry and result guarantee.
 
 ## Validation remains due
 
-The one native owner covers the four requested cross-room facts. Its
-validation, a control that removes the sender guard, and the final full gate
-remain due. The roadmap will state the observed v1 behavior and the v2
-limitation only after the witness passes. No acceptance claim follows from
-this draft.
+The one native owner covers the four requested cross-room facts. The
+focused witness and sender-guard control now have evidence below. The
+roadmap states the observed v1 behavior and the v2 limitation. The final
+full gate and independent review still remain due.
 
 ## The first run finds a cohort mismatch in the fixture
 
@@ -94,3 +94,44 @@ to `e0e5586f3efb2a330ac14d555c9c1aa29affd9ebe569299f712724fb35cfc9d8`.
 It retains five public files and inventories 252 private originals under
 `~/play/artroom-evidence/2026-11-08-m0-initial-*`. The original failed run
 remains failed. M0 will validate the correction after M8's active gate ends.
+
+## The corrected native witness passes
+
+At `63bb22a39ec0607790710537c87d55cbb6a6bc6c`, tree
+`0f002ad8083300aeae33c1d25c21f5d6b9b29218`, both Scope compiler contexts and
+the complete native case pass once. I read the actual `pipeline.exit`:
+`exit 0`. The reports have no unexpected cases, skips, retries, repeats or
+unhandled errors. Source remains clean and unchanged, and no owned process
+remains. The outer observation takes 9.335 seconds.
+
+This run requires no production change. The existing v1 native cohort,
+declared send, sender guard, retained inputs and membership read checks
+supply the behavior. The [cohort manifest](evidence/2026-11-08-m0-cohort.manifest.json)
+hashes to `446a796da9c6028395fe7e852dbee07a2f4fea9e4e666b7045a253a785316fba`.
+It names seven public files and inventories 258 read-only private originals
+and inventory files under `~/play/artroom-evidence/2026-11-08-m0-cohort-*`.
+The first installation failure remains failed.
+
+## The sender guard changes the witnessed outcome
+
+The control removes only the receiver's sender guard in the TEST declaration.
+It runs the unchanged one-case native owner. I read its actual `owner.exit`:
+`exit 1`. The wrong sender now applies, and the assertion at
+`application-cross-room.test.ts:106` fails. That assertion requires decision
+`refused` with `guard-failed` and reason `not-the-sender`.
+
+The driver restores the fixture and compares every tracked input before
+classification. Its classifier then fails because it requires the word
+`refused` in Vitest's error text, which abbreviates the expected object.
+The original `control.exit` remains `exit 1`. A separate read-only classifier
+checks the saved stack location against the unchanged assertion, verifies
+the single guard fault and one failed case, and confirms restored source
+and closed processes. I read its `classification.exit`: `exit 0`.
+No baseline, compiler or test runs again.
+
+The [sender-control manifest](evidence/2026-11-08-m0-sender-control.manifest.json)
+hashes to `d6cc26435159d54d946806666a9aefee3ce93307043bb56c323f95860ee3c648`.
+It names seven public files and inventories 252 read-only private originals
+and inventory files under `~/play/artroom-evidence/2026-11-08-m0-sender-*`.
+The intended test failure, parser failure and independent classification
+remain separate. The final gate and independent review remain due.
