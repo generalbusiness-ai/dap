@@ -6,6 +6,7 @@ import { newItem } from "../src/item-effects.ts";
 import type { Judging } from "../src/guards.ts";
 import { ruleInput } from "../src/guards.ts";
 import { MemoryState } from "../src/state.ts";
+import type { Capabilities } from "../src/capability.ts";
 import { validateDefinition, type ValidDefinition } from "../src/validate/index.ts";
 import { evaluateRules } from "../src/rule/index.ts";
 import { evaluateAdmitted, explainAdmitted } from "../src/program/interpret.ts";
@@ -15,7 +16,7 @@ import { namedBody } from "../src/program/structure.ts";
 import { declarationOf } from "../src/program/declaration.ts";
 import { nativeClockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
 import { clockScene } from "./fixtures-clock-cutover.ts";
-import { d, keys, otherLane, small, t, valid } from "./fixtures.ts";
+import { d, keys, lane, otherLane, small, t, valid } from "./fixtures.ts";
 
 function fixture(change: (act: ActType) => void) {
   const input = structuredClone(small), act = input.acts["edit"]!;
@@ -118,4 +119,61 @@ test("public Native header observation preserves callback receiver, once count a
     expect(observed.truncated).toBe(budget === 0);
     expect(observed.trace).toHaveLength(budget === 1 ? 1 : 0);
   }
+});
+
+test("scripted implicit hold endings retain unknown workspace requirements and one actual callback and scan across budgets and faults", () => {
+  const input = structuredClone(lane);
+  input.acts["finish"] = { step: "transition", on: "commitment", grant: "finish", also: {}, fields: {}, guards: [{ state: ["accepted"] }],
+    effects: [{ state: "done" }], sends: [], attention: [] };
+  const definition = valid(validateDefinition(input, PROPOSED_BOUNDS)), declared = declarationOf(definition);
+  const body = namedBody(definition, "act", "finish", "act")!, view = new MemoryState();
+  const intent = { ...newItem({ effect: "open", item: 0, type: "intent", state: "open" }, declared.items["intent"]!, d("b")), parties: { requester: keys.rita.member } };
+  const commitment = { ...newItem({ effect: "open", item: 1, type: "commitment", state: "accepted" }, declared.items["commitment"]!, d("c")),
+    parties: { requester: keys.rita.member, performer: keys.rita.member }, refs: { intent: 0 } };
+  const hold = { ...newItem({ effect: "open", item: 2, type: "hold", state: "held" }, declared.items["hold"]!, d("d")),
+    parties: { holder: keys.rita.member }, refs: { under: 1 }, values: { until: t(200), epoch: 1 } };
+  view.putItem(intent); view.putItem(commitment); view.putItem(hold);
+  let calls = 0, receiver: unknown, pages = 0;
+  const seen: unknown[] = [], originalPage = view.page.bind(view);
+  view.page = (...args) => { pages++; return originalPage(...args); };
+  // This dispatcher stands in for the workspace interface, not a real provider or its records.
+  const code: Capabilities = {
+    implements: () => true,
+    guard: () => { throw new Error("unexpected capability guard"); },
+    effect: () => { throw new Error("unexpected capability effect"); },
+    workspace(givenView, givenDefinition, self, k, holds, working) {
+      calls++; receiver = this;
+      seen.push([givenView === view, givenDefinition === definition, self, k, holds, working(1)?.state, working(2)]);
+      return [];
+    },
+  };
+  const j: Judging = { view, definition, bounds: PROPOSED_BOUNDS, clock: { reading: t(101), asOf: t(101), behind: false },
+    scope: { at: otherLane, creator: null }, self: 20, kind: "finish", fields: {}, fieldTypes: {}, subjects: new Map([["on", commitment]]),
+    signer: { member: keys.rita.member, principal: null }, facts: new Map(), prepared: [], used: [], ran: { clock: false }, capabilities: code };
+  const expected = { result: "ran", effects: [{ effect: "state", item: 1, state: "done" }, { effect: "hold", item: 2, change: "end", epoch: 2 }],
+    sends: [], prepared: [], judgesTime: false, settles: false };
+  const required = requirements(definition, body);
+  expect(required.reads).toContainEqual({ kind: "opaque", reason: "capability workspace: unknown interior requirements" });
+  expect(required.reads).toContainEqual({ kind: "scan", type: "hold", states: ["held"] });
+  expect(required.reads).toContainEqual({ kind: "bounds" });
+  for (const budget of [undefined, 0, 100]) {
+    calls = 0; pages = 0; receiver = null; seen.length = 0;
+    const observed = evaluateAdmitted(body, j, d("a"), {}, budget);
+    expect(observed.ran).toEqual(expected);
+    expect(calls).toBe(1); expect(receiver).toBe(code); expect(pages).toBe(1);
+    expect(seen).toEqual([[true, true, 20, 0, [{ effect: "hold", item: 2, change: "end", epoch: 2 }], "done", null]]);
+    expect(observed.primitives).toMatchObject({ bodies: 1, guards: 1, effects: 1, capabilities: 1, native: 0 });
+    expect(observed.truncated).toBe(budget === 0);
+    if (budget === 100) expect(observed.trace.find(event => event.primitive === "capabilities" && event.op === "workspace"))
+      .toMatchObject({ body, result: "returned", reads: { opaque: true, dependencies: "unknown", hook: "workspace" } });
+    expect(view.item(1)?.state).toBe("accepted"); expect(view.item(2)?.values["epoch"]).toBe(1);
+  }
+  const hook = code.workspace!;
+  code.workspace = function () { calls++; throw new Error("workspace fault"); };
+  calls = 0;
+  expect(() => evaluateAdmitted(body, j, d("a"), {}, 1)).toThrow("workspace fault");
+  expect(calls).toBe(1);
+  code.workspace = hook; calls = 0; seen.length = 0;
+  expect(evaluateAdmitted(body, j, d("a"), {}, 0).ran).toEqual(expected);
+  expect(calls).toBe(1);
 });

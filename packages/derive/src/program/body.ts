@@ -7,6 +7,7 @@ import { judgeGuardNodes } from "./guard-value.ts";
 import { overMax } from "./finalize.ts";
 import { bodyJudgesClock, checkedBody, guardSource, type BodyStructure } from "./structure.ts";
 import { settlementMatches, settlementSubject } from "./settlement.ts";
+import { enterProgramInstruction } from "./observe.ts";
 
 export type Ran =
   /**
@@ -32,6 +33,8 @@ export function executeBody(j: Judging, structure: BodyStructure | null, cause: 
   const row = structure.row;
   const kind = row.kind === "receive" ? row.declaration.message : row.name;
   if (kind !== j.kind) throw new TypeError("program belongs to another body");
+  const endObservation = enterProgramInstruction(j.definition, "bodies", structure, null, structure.frame.path, "body");
+  try {
   const { first = 0, directory, timed } = options;
   const timedItem = structure.frame.kind === "timed" ? j.subjects.get("on")!.id : null;
   const opens = structure.frame.kind === "act" && row.kind === "act" && row.declaration.step === "open" ? row.declaration.on
@@ -92,5 +95,6 @@ export function executeBody(j: Judging, structure: BodyStructure | null, cause: 
   const [was, is] = subject !== null ? [j.subjects.get(subject), effects.working.get(subject)] : [];
   const settles = settled !== null && settled.op !== "copy" && settlementMatches(settled.states, settled.op === "mark" ? settled.slot.name : null, was, is);
   return { result: "ran", effects: effects.effects, sends, prepared: j.used, judgesTime, settles };
+  } finally { endObservation(); }
 }
 

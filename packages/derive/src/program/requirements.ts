@@ -234,9 +234,19 @@ export function requirements(definition: ValidDefinition, body: BodyStructure): 
       future.push(Object.freeze({ clause: edge.clause, requirements: requirements(definition, root) }));
     }
   };
-  add({ kind: "definition" }); add({ kind: "input", part: "runtime-clock-use" });
+  add({ kind: "definition" }); add({ kind: "bounds" }); add({ kind: "self" }); add({ kind: "input", part: "runtime-clock-use" });
   group(body.reads, "before");
   body.nodes.forEach(visit);
+  if (definition.holdTypes.length > 0) {
+    add({ kind: "history", reason: "holds ending under newly final subjects" });
+    for (const name of definition.holdTypes) {
+      const item = declared.items[name]!;
+      add({ kind: "scan", type: name, states: [item.initial] });
+      subject(`range:${name}`, "before", "whole item for implicit hold endings");
+    }
+    opaque("capability workspace: unknown interior requirements");
+    add({ kind: "metadata", part: "capability workspace availability and maxima" });
+  }
   const row = body.row;
   if (row.kind === "act" || row.kind === "receive") {
     for (const selector of Object.values(row.declaration.also)) {

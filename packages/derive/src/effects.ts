@@ -33,7 +33,7 @@ import type { ValidDefinition } from "./validate/index.ts";
 import { LAST_MS, timeMs, timeOf } from "./time.ts";
 import { isFactRef, isLocalId, isMemberRef, isObject, isValue, memberFits, own, same } from "./values.ts";
 import { isDigest, isEffect } from "@generalbusiness/dap-bytes";
-import { captureProgramReads, enterProgramInstruction, recordProgramLeaf } from "./program/observe.ts";
+import { captureProgramReads, enterProgramInstruction, observeCapabilityCall, recordProgramLeaf } from "./program/observe.ts";
 
 /**
  * What a derivation gives: its result, a refusal, or `unavailable`. The last
@@ -501,7 +501,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
   const holds = effects.filter((effect): effect is HoldEffect => effect.effect === "hold");
   if (holds.length > 0 && j.capabilities?.workspace) {
     const k = effects.filter((effect) => effect.effect === "operation").length;
-    const derived = j.capabilities.workspace(j.view, j.definition, j.self, k, holds, (id) => [...working.values()].find((held) => held.id === id) ?? null);
+    const derived = observeCapabilityCall(j.definition, "workspace", null, "hold effects", () => j.capabilities!.workspace!(j.view, j.definition, j.self, k, holds, (id) => [...working.values()].find((held) => held.id === id) ?? null));
     // Section 6.1, "In the commit": code that returns more than it declared has a fault, and the input is not judged.
     const listed = new Set(declarationOf(j.definition).capabilities.map(c => `${c.name}@${c.version}`));
     const most = j.capabilities.maxima?.filter((m) => m.form === "workspace" && listed.has(m.capability)).reduce((n, m) => n + m.effects, 0);

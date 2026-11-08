@@ -29,6 +29,7 @@ import type { Item, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isValue, own } from "./values.ts";
 import { declarationOf } from "./program/declaration.ts";
+import { observeCapabilityCall } from "./program/observe.ts";
 
 /** One change of one record, as a capability's effect derives it. The entry records it as a `record` effect of that capability. */
 export interface Recorded { kind: string; key: readonly FieldValue[]; state: string; values: Readonly<Record<string, unknown>> }
@@ -232,7 +233,7 @@ export function capabilityGuard(j: Judging, plan: CapabilityGuardPlan, item: Ite
       args.push([arg, range.map((i) => slotOf(i, from.slot.name))]);
     } else args.push([arg, readValue(j, from.read, item, elements)]);
   }
-  const answer = matched.rules.guard(matched.version, guard, Object.fromEntries(args), given(j));
+  const answer = observeCapabilityCall(j.definition, "guard", matched.version, guard, () => matched.rules.guard(matched.version, guard, Object.fromEntries(args), given(j)));
   if (answer === true) return "pass";
   if (typeof answer !== "string") return "unavailable";
   if (!own(matched.declared.guards, guard)?.refusals.includes(answer)) throw new Error(`${matched.version} declares no refusal ${answer} for its guard ${guard}`);
@@ -261,8 +262,8 @@ export function capabilityEffect(j: Judging, plan: CapabilityEffectPlan, item: I
     return read ? [[arg, read]] : [];
   }));
   const reading = { ...given(j), from, fromItems };
-  const made = matched.rules.deriveEffect ? matched.rules.deriveEffect(matched.version, plan.action, args, reading)
-    : matched.rules.effect(matched.version, plan.action, args, reading);
+  const made = matched.rules.deriveEffect ? observeCapabilityCall(j.definition, "deriveEffect", matched.version, plan.action, () => matched.rules.deriveEffect!(matched.version, plan.action, args, reading))
+    : observeCapabilityCall(j.definition, "effect", matched.version, plan.action, () => matched.rules.effect(matched.version, plan.action, args, reading));
   if ("unavailable" in made) return "unavailable";
   const records = "records" in made ? made.records : made;
   const items = "records" in made ? (made.itemEffects ?? []) : [];

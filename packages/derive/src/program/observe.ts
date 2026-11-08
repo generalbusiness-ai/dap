@@ -3,7 +3,7 @@ import type { ValidDefinition } from "../validate/index.ts";
 import { immutable } from "./data.ts";
 import { structureOf, type BodyStructure, type StructureNode } from "./structure.ts";
 
-export type Primitive = "expressions" | "guards" | "effects" | "sends" | "prepared" | "scans" | "native";
+export type Primitive = "bodies" | "expressions" | "guards" | "effects" | "sends" | "prepared" | "scans" | "native" | "capabilities";
 export interface ProgramEvent {
   readonly ordinal: number;
   readonly parent: number | null;
@@ -48,7 +48,7 @@ export const programObserved = (definition: ValidDefinition): boolean => (active
 export function observeProgram<T>(definition: ValidDefinition, budget: number | undefined, call: () => T): ProgramObservation<T> {
   if (!structureOf(definition)) throw new TypeError("program observation has no admitted definition");
   const observer: Observer = { budget: budget === undefined ? undefined : Number.isFinite(budget) ? Math.max(0, Math.floor(budget)) : 0,
-    events: [], stack: [], primitives: { expressions: 0, guards: 0, effects: 0, sends: 0, prepared: 0, scans: 0, native: 0 }, ordinal: 0, truncated: false };
+    events: [], stack: [], primitives: { bodies: 0, expressions: 0, guards: 0, effects: 0, sends: 0, prepared: 0, scans: 0, native: 0, capabilities: 0 }, ordinal: 0, truncated: false };
   const previous = active.get(definition) ?? [];
   active.set(definition, [...previous, observer]);
   try {
@@ -130,5 +130,17 @@ export function recordProgramLeaf(definition: ValidDefinition, primitive: Primit
       event.result = copy(observer, result);
       if (reads) event.reads = copy(observer, reads) as Record<string, unknown>;
     }
+  }
+}
+
+/** Opaque interpreter hooks retain receiver and arguments at their existing call sites. */
+export function observeCapabilityCall<T>(definition: ValidDefinition, hook: "guard" | "effect" | "deriveEffect" | "workspace", capability: string | null, name: string, call: () => T): T {
+  if (!programObserved(definition)) return call();
+  let returned = false;
+  try { const value = call(); returned = true; return value; }
+  finally {
+    const reads = { opaque: true, dependencies: "unknown", capability, hook, name };
+    captureProgramReads(definition, reads);
+    recordProgramLeaf(definition, "capabilities", capability === null ? "capabilities.workspace" : `capabilities.${capability}.${name}`, hook, returned ? "returned" : "threw", reads);
   }
 }
