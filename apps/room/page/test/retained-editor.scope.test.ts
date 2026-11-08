@@ -194,7 +194,7 @@ test("a room change after the editor's keep ends the copy and sends nothing (STA
 
 // Native editor setup and opening. STAND-INS: Git/scheduler from demo, then one explicit reply fault.
 // Invariant: a later refusal preserves earlier work; acceptance without a verified receipt stays unknown under its original association.
-test.each(["refused", "unverified"] as const)("a %s later editor step retains the earlier receipt and original request without another send (reply fault; Git/scheduler stand-ins)", async (mode) => {
+test.each([{ article: "a", mode: "refused" }, { article: "an", mode: "unverified" }] as const)("$article $mode later editor step retains the earlier receipt and original request without another send (reply fault; Git/scheduler stand-ins)", async ({ mode }) => {
   const d = await demo();
   let restoreSubmit: (() => void) | undefined, restoreFollow: (() => void) | undefined;
   try {
