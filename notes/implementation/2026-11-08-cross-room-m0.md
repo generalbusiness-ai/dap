@@ -3,12 +3,21 @@
 Status: the corrected v1 fixture passes both Scope compiler contexts and its
 complete native case at `63bb22a3`. The sender-guard control distinguishes.
 The first fixture failure and the control's parser failure remain retained.
-Final integration, the full gate, independent review and landing remain due.
+Main integration is complete. The full gate, independent review and landing remain due after S4.
 
-Request `7542970fb47e57ae9360f297bdfe8c49e3752c24` asks whether a declared
-application can send between rooms with different members. This head starts
-from main `8faa38dcf31855a0a6264e5912b58061b5eda223`. It changes test fixtures
-and documentation only. It changes no production package or derive source.
+Live request `f131d4e8c96a5821a5859d537b2223f7d0ff518a` and promise
+`2b9edaa678afae9b7439456250b960d124d2a8f8` carry this work forward from
+request `7542970fb47e57ae9360f297bdfe8c49e3752c24`. The planner refiled it
+after M8 made the earlier request stale. The question remains whether a
+declared application can send between rooms with different members.
+
+The original evidence starts from main `8faa38dcf31855a0a6264e5912b58061b5eda223`.
+This branch now integrates landed M8 main `0914c89ee94dc61e4df5e9b495a2953eeaad489b`.
+The test and helper retain their checked bytes. The existing note and roadmap
+already state the v1 behavior and v2 limit. No witness or control repeats.
+Historical manifests retain their original request and promise identities.
+This work changes test fixtures and documentation only, with no production
+package or derive source change.
 
 ## The witness follows native installation and delivery
 
