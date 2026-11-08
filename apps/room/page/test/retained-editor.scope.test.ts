@@ -1,5 +1,6 @@
-import { expect, test } from "vitest";
-import { takeBytes, utf8 } from "@generalbusiness/dap-bytes";
+import { expect, test, vi } from "vitest";
+import { ScopeHandle } from "@generalbusiness/dap-client";
+import { canonicalize, intentDigest, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { FAILED_CLAIM_COHORT } from "@generalbusiness/dap-platform";
 import { act, copiesOf, joinRoom, listLanes, loadChange, openRoom, placeOf } from "../src/data.ts";
 import { checkEditRequest, continueEdit, prepareEdit } from "../src/retained-editor-data.ts";
@@ -190,3 +191,69 @@ test("a room change after the editor's keep ends the copy and sends nothing (STA
     expect(listed).toEqual({ ok: true, rows: [] });
   } finally { d.done(); }
 });
+
+// Native editor setup and opening. STAND-INS: Git/scheduler from demo, then one explicit reply fault.
+// Invariant: a later refusal preserves earlier work; acceptance without a verified receipt stays unknown under its original association.
+test.each(["refused", "unverified"] as const)("a %s later editor step retains the earlier receipt and original request without another send (reply fault; Git/scheduler stand-ins)", async (mode) => {
+  const d = await demo();
+  let restoreSubmit: (() => void) | undefined, restoreFollow: (() => void) | undefined;
+  try {
+    expect((await d.run(d.rita, "edit", "README.md", "--file", "readme.md", "--title", "Later step source")).code).toBe(0);
+    const room = await openRoom(d.as(await d.secretOf(d.paul)), placeOf(JSON.stringify(d.config))!);
+    const row = (await listLanes(room)).changes.find(value => value.title === "Later step source")!;
+    const source = await loadChange(room, row.scope), original = source.manifests[0]!;
+    const options = { current: () => true, pause: d.pause };
+    const task = await prepareEdit(room, source, original.id, { title: "Later step outcome", path: "later.md", content: "kept draft\n" }, options);
+    const submit = ScopeHandle.prototype.submit, follow = ScopeHandle.prototype.followReceipt;
+    let sent = 0, blockReceipt = true;
+    let affectedIntent: ReturnType<typeof intentDigest> | undefined;
+    const submitted = vi.spyOn(ScopeHandle.prototype, "submit").mockImplementation(async function (this: ScopeHandle, signed, grants, beside) {
+      sent++;
+      if (signed.intent.kind === "ask-rules") {
+        affectedIntent = intentDigest(signed.intent);
+        if (mode === "refused") {
+          const opened = task.steps[0]!.answer;
+          expect(opened?.answer).toBe("accepted");
+          if (opened?.answer !== "accepted") return expect.fail("The fault follows a real accepted opening");
+          return { answer: "refused", reason: "guard-failed", name: "TEST-later-refusal", judgedAt: { seq: opened.receipt.fact.seq, hash: opened.receipt.fact.hash } };
+        }
+      }
+      return submit.call(this, signed, grants, beside);
+    });
+    restoreSubmit = () => submitted.mockRestore();
+    const followed = vi.spyOn(ScopeHandle.prototype, "followReceipt").mockImplementation(async function (this: ScopeHandle, receipt) {
+      if (mode === "unverified" && blockReceipt && receipt.intent === affectedIntent) return { ok: false, reason: "hash-mismatch" };
+      return follow.call(this, receipt);
+    });
+    restoreFollow = () => followed.mockRestore();
+    await continueEdit(room, task, options);
+    expect(task.state, task.message).toBe(mode === "refused" ? "refused" : "unknown");
+    expect(task.steps.map(step => step.kind)).toEqual(["open-pr", "ask-rules"]);
+    expect(task.steps[0]).toMatchObject({ attempted: true, answer: { answer: "accepted" }, receiptVerified: true });
+    expect(task.steps[1]!.attempted).toBe(true);
+    expect(task.steps[1]!.answer?.answer).toBe(mode === "refused" ? "refused" : "accepted");
+    expect(task.steps[1]!.receiptVerified).not.toBe(true);
+    const envelopes = task.steps.map(step => canonicalize(step.signed)), before = sent;
+    await continueEdit(room, task, options);
+    expect(sent).toBe(before);
+    expect(task.steps.map(step => canonicalize(step.signed))).toEqual(envelopes);
+    if (mode === "refused") {
+      expect(task.message).toContain("Earlier accepted steps remain recorded");
+      expect(task.version).toBeUndefined();
+      return;
+    }
+    await checkEditRequest({ ...room, directory: source.scope }, task, options);
+    expect(task.state).toBe("unknown");
+    expect(task.message).toBe("Check this task using its original room/key context.");
+    expect(sent).toBe(before);
+    blockReceipt = false;
+    await checkEditRequest(room, task, options);
+    expect(task.state, task.message).toBe("waiting-rules");
+    expect(sent).toBe(before);
+    expect(task.steps[1]!.receiptVerified).toBe(true);
+    await continueEdit(room, task, options);
+    expect(task.state, task.message).toBe("recorded");
+    expect(task.steps.slice(0, 2).map(step => canonicalize(step.signed))).toEqual(envelopes);
+    expect(task.steps.map(step => step.kind)).toEqual(["open-pr", "ask-rules", "propose-file"]);
+  } finally { restoreFollow?.(); restoreSubmit?.(); d.done(); }
+}, 180_000);

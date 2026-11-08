@@ -1,6 +1,6 @@
 # Retained-editor stages and their evidence
 
-Status: preparation only. Request `8ae87346` and promise `a20e0cf1` own this branch. S1 owns the active gate slot. M7 follows, then S3. No S3 source edit or test has run.
+Status: preparation only. Request `8ae87346` and promise `a20e0cf1` own this branch. S1 owns the active gate slot. M7 follows, then S3. Runtime source remains unchanged. Two reply-fault characterization cases are drafted and have not run.
 
 ## Current state and the intended change
 
@@ -18,7 +18,7 @@ The preparation map names eight existing witness families in the retained-editor
 
 `retained-editor.ts` reads task progress to label controls, fence unsent recovery, show step results and link a recorded proposal. Its caller adaptation must use the stage's evidence. Test fixtures that manually construct or corrupt the old task representation will need explicit stage fixtures while retaining their behavioral guarantees. `record.scope.test.ts` calls only read-only preparation. `editor-list1.scope.test.ts` must remain in the focused plan alongside the two requested retained-editor owners.
 
-Two potential characterization gaps remain: refusal after an earlier verified step, and acceptance whose receipt cannot be verified. Confirm the wider witness set before adding either case. No per-field or per-tag test inventory is planned.
+The wider Page witness search found no retained-editor case for refusal after an earlier verified step or acceptance whose receipt cannot be verified. Two drafted cases use the native editor fixture, then one explicit reply fault at the client boundary. They retain the earlier receipt and exact signed envelopes, require a stop before another send, and check original-association settlement for an unverifiable receipt. They have not run yet. The fixtures claim no native refusal policy outcome.
 
 ## Preparation evidence
 
