@@ -425,7 +425,7 @@ export function judgeTimed(view: StateView, definition: ValidDefinition, selecte
   // written, and its item is not due again under this rule: the drain makes progress. A refusal here is a fault of the validator,
   // and is never answered by passing over the due item.
   // The runner throws for non-total effects; its unavailable result here is the fixed operation-owner policy.
-  if (ran.result === "unavailable") return ran;
+  if (ran.result === "unavailable" && ran.reason === "unavailable") return { result: "unavailable", reason: ran.reason };
   if (ran.result !== "ran") throw new Error(`timed rule ${selected.rule} cannot apply: ${ran.reason}`);
   return withinCounts(view, definition, { result: "write", draft: { input: { type: "timed", item: selected.item, rule: selected.rule, due: selected.due }, uses: [], prepared: [], effects: ran.effects, sends: [], judgesTime: true } } as TimedJudgment);
 }

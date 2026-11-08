@@ -21,3 +21,5 @@ The draft changes no platform production source, definition, published pin, prof
 Request `f0d2a338` proposes preserving full literal results, type/phase and nominal negatives, owned data, prefix refusal, useful explanation, conservative dependencies and trace/callback counts while retiring the second executable model. Its existing assertions remain unchanged while the ruling waits. Independent body-route work continues.
 
 This draft has no validation, full gate, generated asset, workflow, independent review, deployment or complete M8 acceptance result yet.
+
+The first timed/clause focused pipeline at `a65bb4502e6602f2a61932bd128e89f49c644b52` exits 1 in its source compiler. The generic body result permits more unavailable reasons than the narrower timed public contract. No other compiler or test body runs. The repair returns only the existing fixed policy's literal `unavailable` result and keeps other non-total outcomes as the original fault. Ordinary act unavailability stays unchanged. The next frozen plan runs the failed compiler and every unreached phase; the original failure stays separate.
