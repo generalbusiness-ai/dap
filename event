@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4bfb34fad0c208ec505d609488d67351bcb97d4d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-timed-clauses-validation.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4d84fd4ef03dc3213bbbf30a027d97e14db08ecd","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/retained-plan.ts."}
