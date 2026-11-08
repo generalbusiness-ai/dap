@@ -36,7 +36,7 @@ function context(definition: ValidDefinition): Judging {
 }
 
 test("complete admitted guards keep literal results, actual ownership and primitive counts at every trace budget", () => {
-  const { definition, body } = fixture(act => { act.guards.push({ set: "text" }); act.effects = [{ state: "kept" }]; });
+  const { definition, body } = fixture(act => { act.guards = [...act.guards, { set: "text" }]; act.effects = [{ state: "kept" }]; });
   const j = context(definition), plain = evaluateAdmitted(body, j, d("a")), traced = evaluateAdmitted(body, j, d("a"), {}, 100), exhausted = evaluateAdmitted(body, j, d("a"), {}, 0);
   const expected = { result: "ran", effects: [{ effect: "state", item: 1, state: "kept" }], sends: [], prepared: [], judgesTime: false, settles: false };
   expect(plain.ran).toEqual(expected); expect(traced.ran).toEqual(expected); expect(exhausted.ran).toEqual(expected);
@@ -76,7 +76,7 @@ test("static reads include skipped conditions and distinct future state without 
 });
 
 test("explanation retains the actual deadline and opaque prepared input without another guard evaluation", async () => {
-  const { definition, body } = fixture(act => { act.guards.push({ after: { slot: "due" } }, { rule: "ready" }); });
+  const { definition, body } = fixture(act => { act.guards = [...act.guards, { after: { slot: "due" } }, { rule: "ready" }]; });
   const j = context(definition); j.clock = { reading: t(100), asOf: t(100), behind: false };
   const refused = evaluateAdmitted(body, j, d("a"), {}, 100);
   expect(refused.ran).toEqual({ result: "refused", reason: "guard-failed", detail: "guards.1", prepared: [] });
