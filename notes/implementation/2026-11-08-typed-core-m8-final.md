@@ -1,6 +1,6 @@
 # Assemble and verify the completed M8 program
 
-Status: the first full M8 gate at `136708cd` fails with exit 1 in two plain cases. Native remains unreached. The repair below has not run validation. Maintained assets and their owning checks passed at `976a5a77`; changed runtime requires fresh assembly. The exact-source Page workflow has not run. Independent review and landing remain ahead under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
+Status: the first full M8 gate at `136708cd` fails with exit 1 in two plain cases. Native remains unreached. The repair passes 38 focused cases and four compiler contexts at `329ea607`. Fresh maintained assets and their owning checks pass at `5ba2d220`. Maintained assets and their owning checks passed at `976a5a77`; the repaired runtime now has its own assembly below. The exact-source Page workflow has not run. Independent review and landing remain ahead under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
 
 ## Assemble from the completed runtime
 
@@ -56,4 +56,26 @@ Scope `d9e2a399` records the repair before source edits. The unchanged `definiti
 
 The replay historical-index case creates definition copies with missing keyed metadata. M8 correctly refuses those unadmitted copies. Its repair uses the actual validated definition for every fold. Local state-writer stand-ins omit the second opening's index writes, or all index writes, before `View.putIndexed` records them. Every existing historical index, fixed count, visit order, deadline and future-row assertion stays unchanged. The admission identity guard and replay production source stay unchanged.
 
-Neither repair has run validation at this checkpoint. The two-file failure and production repair require fresh focused checks, maintained assets and a new full gate. The single-file test-only follow-up exception does not apply. Machine release `5c32466f` lets the planner deploy F1 main `8faa38dc`; builder starts no executable validation body during that deployment. Independent review must assess the failed gate and the later repair evidence together. The failed gate remains failed.
+Both repairs now pass the focused checks below. Fresh maintained assets also pass their owning checks. The production repair still requires a new full gate. The single-file test-only follow-up exception does not apply. Machine release `5c32466f` lets the planner deploy F1 main `8faa38dc`; builder starts no executable validation body during that deployment. Independent review must assess the failed gate and the later repair evidence together. The failed gate remains failed.
+
+## Verify the repair and rebuild the Page
+
+Booking `1b534be3` corrects an unnecessary builder-imposed wait for routine focused checks. Ruling `0d6d0fba` prohibits tests and builds during a running timing-sensitive gate. Process inspection found no gate, focused body or deployment, so the already-authorized checks proceeded. The planner still owns deployment.
+
+Frozen source `329ea607`, tree `7f32a2a2`, passes all four derive and replay compiler contexts and all 38 cases in five complete owners. Plan `f126b490` checks the two failed owners, program structure, resolved reads and interpretations. Every existing assertion and deadline remains. The unchanged header case now observes three reads for the admitted format and two for a refused format. The repaired replay fixture passes every historical index and fixed-count assertion using actual admitted definitions.
+
+I read `pipeline.exit`: `exit 0`. Every case runs once, without errors, skips, retries or unexpected cases. Source stays unchanged, the checkout stays clean and no owned process remains. The [repair manifest](evidence/2026-11-08-m8-header-index.manifest.json), SHA-256 `5c42efd3712bb958ccbf0d05d242d9d827b626bcfa53977debfc790741f417c2`, names seven public files and inventories 30 private files in three read-only units. The separate outer observation is 6.990 seconds; it establishes no performance result.
+
+Booking `875b3dfb` then runs the unchanged maintained Page generator once at `329ea607`. I read `generator.exit`: `exit 0`. Only `apps/room/page/assets.ts` changes tracked bytes. The generated checkpoint is `5ba2d220`, tree `f33dc289`. Its 2,371,824-byte module hashes to `71497260d18bdf331d6ed3e2a4c31561c5abc6957639269bdead0123d5429050`. The four normal ignored outputs remain. No owned process remains.
+
+Plan `408f37f4` runs the three Page compiler contexts and the complete unchanged one-case asset owner at that checkpoint. All pass once. I read its `pipeline.exit`: `exit 0`. It retains the original 60-second deadline, setup, pool and limits. The source and lock stay unchanged; no error, retry, skip or owned process remains. The [repaired-assets manifest](evidence/2026-11-08-m8-repair-maintained-assets.manifest.json), SHA-256 `e1543cf4c933342a1ca1345c86b2ab08fba5c0e99374ae8ae0f9789354d214f0`, names 11 public files and inventories 51 private files in four read-only units. The separate outer build and focused observations are 0.537 and 2.529 seconds.
+
+The first full gate remains failed. These passing focused checks and maintained assets do not replace the new due full gate or exact-source Page workflow. No deployment, independent approval or live acceptance follows from these local checks.
+
+| Check | Command | Exit | `result.json` SHA-256 |
+|---|---|---|---|
+| Repair: four compiler contexts and 38 cases | `node scripts/focused-check.mjs <frozen plan> <evidence>` | 0 | `fea45a09b2bc22de27d357761c98107b043869f97af9f6f3401cf6f36fd524e4` |
+
+| Check | Command | Exit | `result.json` SHA-256 |
+|---|---|---|---|
+| Repaired Page build, three compiler contexts and asset owner | `npm run build --workspace @generalbusiness/dap-page; node scripts/focused-check.mjs <frozen plan> <evidence>` | 0 | `1d359f4bda5b15fe94476cfab764a7f74cd8774c66775b8077d3ac11a0667add` |
