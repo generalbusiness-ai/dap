@@ -1,8 +1,8 @@
 # Retire the prototype and retain its witnesses
 
-Status: draft under planner ruling `24e2a8d` and before-edit scope `6690335d`. This draft removes the five prototype modules and the dead timed-array adapter. The first retirement pipeline at `3de1f230` passes the source compiler, then fails the test compiler on two callback fixture declarations. Grow and the test body remain unrun. The repair below changes only those declarations. The earlier M8 checkpoints retain their own results and failures.
+Status: focused checkpoint under planner ruling `24e2a8d` and before-edit scope `6690335d`. The five prototype modules and dead timed-array adapter are removed. The first pipeline's source compiler passes, and its test compiler fails on two callback fixture declarations. The isolated repair at `9b11b911` passes the failed and unreached stages, including all 55 cases. Both one-case controls distinguish after restoring clean source. Maintained assets, the final M8 gate, exact-source Page workflow, review and landing remain ahead.
 
-The Native fixture now supplies its required empty `refusals` list. The capability fixture returns its valid `true` result. Their callbacks must still remain uncalled at the refused boundary; all zero-count assertions remain. The original pipeline keeps actual exit 1. A follow-up must check exact production/configuration/tool equality before carrying its passed source compiler, then run the failed test compiler and both unreached stages. No complete retirement test result exists yet.
+The Native fixture now supplies its required empty `refusals` list. The capability fixture returns its valid `true` result. Their callbacks must still remain uncalled at the refused boundary; all zero-count assertions remain. The original pipeline keeps actual exit 1. The follow-up carries its passed source compiler only after comparing production, configuration, tools and lock inputs. It runs the failed test compiler, then the unreached Grow compiler and body once.
 
 ## One admitted program
 
@@ -42,6 +42,18 @@ Paths below are relative to `packages/derive/test/`, except the Grow integration
 
 The [current acceptance map](../2026-11-04-typed-core/witnesses.md) names these current owners. The existing Grow integration test still owns public policy, authority and replay behavior. The scripted body cases above establish their resolved-state boundary only.
 
+## Focused evidence
+
+The original pipeline at `3de1f230`, tree `8c644cd5`, has actual `pipeline.exit` 1. Its source compiler passes; its test compiler reports the two callback declarations above. Grow and the body do not run. The repair changes only those declarations and this record. Reversing the two declaration changes reproduces the earlier test bytes exactly. Of 2,194 tracked source inputs, only `program.test.ts` differs. Every production and configuration input, pinned tool and lock stays unchanged. The source compiler includes `src`, not that test file.
+
+The follow-up at `9b11b911`, tree `6bed6087`, has actual `pipeline.exit` 0. The test and Grow compilers pass, then all 55 cases across six complete owners pass exactly once. No case skips or retries, and no report or case error occurs. All guards retain the clean source, 14 owned workspace bindings and 48 exports. No owned process remains. The outer observation is 5.944 seconds; child timings stay separate. The passed source compiler does not run again.
+
+The first control omits the guard-list preflight and runs only the refused-prefix case. Its actual owner exit is 1, with one `AssertionError` at `program.test.ts:170`, no passes and 17 unselected cases. The source restores before classification. The original batch classifier then checks the unrelated `program-interpretations.test.ts` filename and exits 1. That batch remains failed. A separate classification compares every restored input and reads the saved failure at the correct file and line; its actual exit is 0. It reruns no owner or baseline.
+
+The second control omits the retained guard-plan binding and runs only the complete admitted-corpus case. It fails by `AssertionError` at `program-structure.test.ts:54`: the state instruction is missing. The actual owner exit is 1, with one failure, no passes and ten unselected cases. Its driver restores every source input before classifying, then exits 0. The earlier compatibility preparation carries unchanged. Both worktrees finish clean, with no owned process left.
+
+The [retirement manifest](evidence/2026-11-08-m8-retirement.manifest.json) hashes to `f296147fbaed7fd8a05a6fc5f20623f68fca848fdd812945a91bf2d346865742`. It names 16 public files and inventories 109 read-only private originals in eight units. The directories start with `~/play/artroom-evidence/2026-11-08-m8-retirement-`. They retain both pipelines, the repair proof, full reports, both control faults, the failed classifier batch and independent classification. Sealing runs no validation again. These results establish the selected boundaries, not a full gate or live acceptance.
+
 ## Remaining work
 
-Freeze this source and the complete static owner ledger. Run the owning compiler closure and one focused body after the machine's validation slot becomes free. Use isolated one-case controls for preflight and complete capture, restore source before classification, and retain failures or unreached stages. Then assemble the maintained Page assets, one full M8 gate, exact-source Page workflow, independent seal review and audited landing. The planner deploys.
+Integrate the approved F1 landing, assemble the maintained Page assets, run the owning asset checks and one full M8 gate, then complete the exact-source Page workflow, independent seal review and audited landing. Keep every earlier failure and its bounded follow-up distinct. The planner deploys.

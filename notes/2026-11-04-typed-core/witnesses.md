@@ -1,6 +1,6 @@
 # Typed core witnesses
 
-Status: acceptance map for M8 after M1–M7 landed. Planner ruling `24e2a8d` accepts the move from prototype construction to the actual admitted program. The current retirement draft keeps the obligations below; its focused validation and final gate remain ahead.
+Status: acceptance map for M8 after M1–M7 landed. Planner ruling `24e2a8d` accepts the move from prototype construction to the actual admitted program. The retirement checkpoint passes its 55 focused cases and two controls through the bounded follow-up recorded in the implementation note. Maintained assets, the final gate, Page workflow, review and landing remain ahead.
 
 All paths below are relative to the repository root. Test files belong to
 `packages/derive/test/` unless another path appears. Existing tests establish
