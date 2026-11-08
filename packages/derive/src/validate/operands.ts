@@ -11,7 +11,7 @@
 
 import type { FieldType, FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { immutable } from "../program/model.ts";
+import { immutable } from "../program/data.ts";
 import { readSite, readType, recordRead, slotRead, subjectRead, type EntryData, type EntryRead, type EntryWord, type OperandData, type OperandKind, type OperandRead, type PartRead } from "../program/reads.ts";
 import { isObject } from "../values.ts";
 import { onSubject, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";

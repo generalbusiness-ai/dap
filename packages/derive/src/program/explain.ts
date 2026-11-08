@@ -2,7 +2,8 @@
 import type { Evaluation } from "./evaluate.ts";
 import type { Program } from "./model.ts";
 
-export interface Explanation { text: string; sourcePath: string | null; values: Readonly<Record<string, unknown>>; opaque: boolean; incomplete: boolean }
+import type { Explanation } from "./reports.ts";
+export type { Explanation } from "./reports.ts";
 export function explain(program: Program, evaluation: Evaluation): Explanation {
   const { ran } = evaluation;
   if (ran.result !== "refused") return { text: ran.result === "ran" ? "The body ran." : `The body is unavailable: ${ran.reason}.`, sourcePath: null, values: {}, opaque: false, incomplete: evaluation.truncated };

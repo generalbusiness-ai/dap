@@ -1,7 +1,7 @@
 /** Conservative requirements of the actual admitted program, never an execution trace. */
 import type { FieldType, PlatformReceive } from "@generalbusiness/dap-contract";
 import type { ValidDefinition } from "../validate/index.ts";
-import type { Dependency } from "./dependencies.ts";
+import type { Dependency } from "./reports.ts";
 import { immutable, type Phase } from "./data.ts";
 import { declarationOf } from "./declaration.ts";
 import type { RangePlan } from "./guard-plan.ts";

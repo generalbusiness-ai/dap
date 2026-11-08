@@ -2,7 +2,7 @@
 import type { Digest } from "@generalbusiness/dap-contract";
 import type { Judging, RuleInput } from "../guards.ts";
 import { executeBody, type BodyOptions, type Ran } from "./body.ts";
-import type { Explanation } from "./explain.ts";
+import type { Explanation } from "./reports.ts";
 import { observeProgram, type Primitive, type ProgramEvent } from "./observe.ts";
 import { checkedBody, type BodyStructure } from "./structure.ts";
 
