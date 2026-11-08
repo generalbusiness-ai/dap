@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:63acda6f6fdd6dc7addd95a6ae9f72ae160c4c7f","text":"Replaced by the review request for exact head de9cedbae774d9a6bbd766207a7702ed0914e3dc; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"I review exact M8 head de9cedba for request bd1a9429: the F1 test-only repair to program.test.ts, its main-derived literals and follow-up evidence, and that every other byte equals reviewed head 471399ba."}
