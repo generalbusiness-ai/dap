@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b8f7d99d1d7ea8a5d361150300c29646cf0ebffb","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m6-observation-only-baseline.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:be3d0cdd97bedc11e90ea90f3e06851f895e927c","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/handlers.ts."}
