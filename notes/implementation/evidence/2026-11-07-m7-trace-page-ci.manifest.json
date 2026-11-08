@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "qualification": "Actual branch workflow at the exact production source and generated module. No dispatch, rerun or browser substitute. The current clean follow-up changes only the plain derive indexed-binding test, outside the four browser commands; production and recorder inputs stay unchanged.",
+  "sourceHead": "7f28e18aa46ef7a9f0ed3a0b7667727343640496",
+  "sourceTree": "6abf0109888205a8d23a274675413f52b6326d4d",
+  "fileCount": 7,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-trace-page-ci",
+      "fileCount": 7,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 471,
+          "sha256": "435c4a8030fad3af77ef8faf9b0dc836d4b44b44fa3285a59284b1a3266697a8"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2965,
+          "sha256": "14530ec85a2ad9cdbb02307e9dca988f27f0e400379e180451d64f98371c0605"
+        },
+        {
+          "path": "followup.json",
+          "bytes": 256,
+          "sha256": "8bb3a3f9797c16d1be798193e1f22603e3c4f7f27226b147b793832e0c3ef6ec"
+        },
+        {
+          "path": "result.json",
+          "bytes": 779,
+          "sha256": "cb1a51b287fb945623b755585dd500a7393425155bbdba1fdb6a9ea180cf1b73"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2704,
+          "sha256": "1277996c65fa4245954773f10ce79a3da6765d74ded36d4c41e95ac487bc143b"
+        },
+        {
+          "path": "tracked-tree.txt",
+          "bytes": 445289,
+          "sha256": "501290ba0abe8665291c4eb87e97acc011ac29901cf24150d3ea2d985cdcb3d2"
+        },
+        {
+          "path": "workflow.yml",
+          "bytes": 2855,
+          "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+        }
+      ]
+    }
+  ]
+}
