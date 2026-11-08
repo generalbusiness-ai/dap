@@ -117,7 +117,8 @@ does not govern this path or revive the retired demo-offer route. Keep the
 existing `dap-demo`, `dap-grow` and `dap-lending` registers, and leave
 `ALLOW_OPEN_CREATION` unset. Commons rooms use this Worker until the
 [register succession design](../notes/2026-10-22-definition-succession.md)
-lands. Rooms on `dap-demo` stay on its Register 17.
+lands. Existing rooms on `dap-demo` stay on Register 17, and new rooms there
+use Register 26.
 
 ## Roll out new creation versions
 
