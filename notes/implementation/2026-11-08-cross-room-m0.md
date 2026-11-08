@@ -1,7 +1,8 @@
 # M0: a declared send between two rooms
 
-Status: the witness is drafted. No compiler, test, control, gate or review
-has run for this head. M8 currently owns the validation slot.
+Status: both compiler contexts pass at `6824e907`, but the first native run
+fails before installation. The fixture correction below awaits validation.
+The control, final gate and review remain due. M8 owns the validation slot.
 
 Request `7542970fb47e57ae9360f297bdfe8c49e3752c24` asks whether a declared
 application can send between rooms with different members. This head starts
@@ -72,3 +73,24 @@ validation, a control that removes the sender guard, and the final full gate
 remain due. The roadmap will state the observed v1 behavior and the v2
 limitation only after the witness passes. No acceptance claim follows from
 this draft.
+
+## The first run finds a cohort mismatch in the fixture
+
+At `6824e90725806343cfb9224a4b8cdf5ca31bf402`, both Scope compiler contexts
+pass. The one native case fails its first installation assertion because the
+package resolver refuses the package bytes or install bounds. I read the
+actual `pipeline.exit`: `exit 1`. Source stays clean and unchanged, and no
+owned process remains. This run reaches no cross-room acceptance.
+
+The fixture paired its v1 package with `DECLARED_APPLICATION_COHORT`.
+`McpService` selects `signedApplicationInstall2` for that cohort's Rules pin,
+which requires a v2 package. The correction selects
+`TRUSTED_APPLICATION_COHORT`, the existing v1 native installation cohort.
+It changes no package codec, graph rule or production admission behavior.
+The corrected witness still needs its own result.
+
+The [first-run manifest](evidence/2026-11-08-m0-initial.manifest.json) hashes
+to `e0e5586f3efb2a330ac14d555c9c1aa29affd9ebe569299f712724fb35cfc9d8`.
+It retains five public files and inventories 252 private originals under
+`~/play/artroom-evidence/2026-11-08-m0-initial-*`. The original failed run
+remains failed. M0 will validate the correction after M8's active gate ends.

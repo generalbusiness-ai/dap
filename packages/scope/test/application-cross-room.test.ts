@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import { env } from "cloudflare:test";
 import type { Intent, OperationId, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, intentDigest, isSeed, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
-import { DECLARED_APPLICATION_COHORT as C, repositoryName } from "@generalbusiness/dap-platform";
+import { TRUSTED_APPLICATION_COHORT as C, repositoryName } from "@generalbusiness/dap-platform";
 import { requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
