@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:53288a688df7b1f634d764932bd0c4ead55ce20a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-08-typed-core-m8-retirement.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5339d699bf3d36c3d6070608dc2a6c50ad1afcd9","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/forms-sends.test.ts."}
