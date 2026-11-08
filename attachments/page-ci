@@ -1,0 +1,15 @@
+{
+  "sourceHead": "6e68b26f3053b7a1ae0a09a962f1f11290311c91",
+  "sourceTree": "eb9cd73114093a25bf72d6ae2b3cf3d305af93ff",
+  "workflowRun": 42433985036,
+  "url": "https://github.com/generalbusiness-ai/dap/actions/runs/42433985036",
+  "conclusion": "success",
+  "allJobStepsSuccessful": true,
+  "fourBrowserCommandsSuccessful": true,
+  "qualification": "Actual branch workflow after push; no dispatch, rerun or local browser substitute. The exact source head and tree match the successful workflow; only the explicitly listed untracked implementation note and focused-evidence manifest are pending in the checkout. No runtime source changed.",
+  "pendingOnlyChangedPath": [],
+  "untrackedMetadata": [
+    "notes/implementation/2026-11-07-typed-core-m7.md",
+    "notes/implementation/evidence/2026-11-07-m7-source-evidence.manifest.json"
+  ]
+}
