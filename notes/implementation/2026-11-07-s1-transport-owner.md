@@ -4,8 +4,7 @@ Status: the shared generation owner is drafted. The HTTP and idle owners pass
 14 cases. The two-case OAuth transport owner passes, and the added held-loader
 case passes on both the previous source and the draft. Both deliberate controls
 fail at the intended assertions. The complete hosted and OAuth selection passes 50 cases in nine files. Together
-with the HTTP and idle owners, 64 distinct focused cases pass. Source-seal
-approval, the gate, independent review, and landing remain pending. The planner owns deployment.
+with the HTTP and idle owners, 64 distinct focused cases pass. The exact source-seal patch is applied. The gate, independent review, and landing remain pending. The planner owns deployment.
 
 Request `e39e7cef7b8ed71c445ae1285de6dec9b2fbe1ae` and promise `54aa90b3`
 own this branch. Parallel order `0d6d0fba` permits its start. The branch includes
@@ -118,16 +117,18 @@ seals 111 read-only files. It includes both controls, the localhost refusal,
 compiler checkpoints, the previous-source epoch characterization, the final
 draft, and the 17-entry witness map.
 
-## Source seals need the exact standing approval
+## The exact source seals follow the standing instruction
 
-The draft changes the three sealed owners `http.ts`, `oauth-http.ts`, and
-`hosted.ts`. Their parser seals differ from whole-file SHA-256 hashes.
-The proposed patch changes exactly their three literals in
-`scripts/security-entry-points.test.mjs`. It keeps every route and gate
-assertion. Ruling `1311f76e` requires Hugh's approval in this session before
-refreshing a sealed owner's baseline. No seal has changed at this checkpoint.
+Planner acts `c858a1d1` and `7e3f7743` retire the earlier prompt requirement and assign seal review to the checker. Hugh also directly approved S1's exact patch in this builder session and instructed future patch work to continue without permission prompts. Questions go to the planner.
 
-The unapplied patch is `/private/tmp/artroom-s1-transport-source-seals-20261107.patch`,
-SHA-256 `787934346a8752c8bbbd472391ee700221904eccb3b2e1e9bd03c7023ec5208d`.
-Accepting it records the changed source as the reviewed structural baseline.
-The subsequent full gate and independent source review remain required.
+Commit `42fabdd3` changes only the three parser-seal literals in `scripts/security-entry-points.test.mjs`. Every route and gate assertion remains. Patch SHA-256 is `787934346a8752c8bbbd472391ee700221904eccb3b2e1e9bd03c7023ec5208d`.
+
+| Source owner | Old literal | New literal |
+|---|---|---|
+| `packages/mcp/src/http.ts` | `5c6fa6500e539648bb5f9d4a97307ebe07609b76a60883511557dd6d79f30adb` | `c1280b58349e7137359b710f7021ce85882e0e9b6a16163f9f043f96bbe5554d` |
+| `packages/mcp/src/oauth-http.ts` | `f04810c38e299cdf9e25d7e2022f095023b5bae6dfe9797ff6970e4871998836` | `1c87328b4e9c5d66e07ae8017b22482816bf26c1d71e047fdf8e67b03b87924a` |
+| `packages/mcp/src/hosted.ts` | `a3db0a94298fdc34f622511152dd86748308fcbe4b344ac10db4bfa555f9229c` | `2d337cd0bf5263432433cd3f2a41d2e9c43105fd81c34ccaf473b1b7323d1082` |
+
+The [seal manifest](evidence/2026-11-07-s1-approved-source-seals.manifest.json), SHA-256 `b5dcf9f9c3b27ce659f04f101fba420a7a33a330436e325893346c9296360ba1`, binds the exact patch, source, approval and integration checkpoint. It records no test pass.
+
+The branch now includes published M6 main `5a0e5660`. That integration leaves all three S1 source owners byte-for-byte equal to the focused checkpoint. The single full gate will validate the integrated candidate. Planner act `7e3f7743` assigns S1 the first gate slot and M7 the next slot. Independent review and audited landing remain required. The planner deploys.
