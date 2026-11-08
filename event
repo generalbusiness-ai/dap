@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5a66e42e3ff21e4cc2aff4ab5c7c23c21630403a","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/fixed-index.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5bcdbd36c8b2ab4488ebdbbf971362070b06f8c0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-rows-validation.manifest.json."}
