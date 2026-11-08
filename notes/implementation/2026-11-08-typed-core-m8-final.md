@@ -1,6 +1,6 @@
 # Assemble and verify the completed M8 program
 
-Status: three full M8 gates remain failed. The first fails two Plain cases. The second and third fail the same four Native cases at unchanged source `0c416f8b`; the third runs after the earlier validation overlap ends. Repair `8775043a` changes the archive schema cache key and passes both Scope compiler contexts and all 14 cases in its two unchanged owners. A fresh full gate, exact-source Page workflow, source seal review, independent review and landing remain due under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
+Status: the fresh full M8 gate passes at `d54c8842` with actual exit 0. All maintained stages pass, including 1,117 Native cases with two explicit skips. Three earlier full gates remain failed and retained. The archive cache repair has separate passing focused evidence. The exact-source Page workflow, independent source seal review, final review and landing remain due under request `bd1a9429`, promise `689c9fd1`. The planner deploys.
 
 ## Assemble from the completed runtime
 
@@ -135,3 +135,37 @@ It retains seven public files and inventories 265 private originals and
 inventory files under `~/play/artroom-evidence/2026-11-08-m8-archive-schema-*`.
 The original failed gates remain failed. This focused result does not replace
 the fresh full gate, Page workflow or independent review.
+
+## The repaired full gate passes
+
+Booking `12f020e2f27b51d583de436cb6e1203dab631df7` runs the maintained gate
+at `d54c8842faa2a2159d8bd27595223c58a4570053`, tree
+`2f9b4f2be631c7b6543b48c58ffd5c0c63fea541`. I read the actual `gate.exit`:
+`exit 0`. Every maintained stage passes. Node passes 135 cases, counting
+passes 56, Plain passes 4,026 with one skip, and Native passes 1,117 with
+two skips. All 14 archive-repair owner cases pass, and the archive-scale
+owner passes. The reports have no contradiction or unhandled error.
+
+Source and tracked inputs stay unchanged. No owned process remains.
+Process inspections before and during the run find no other validation body.
+The 99 non-case observations are the 33 Node file wrappers' enqueue,
+dequeue and complete records. The skipped Page recorder has no final module
+duration. The outer monotonic observation is 1,292.649 seconds, separate
+from the runner and command timings.
+
+The [passing-gate manifest](evidence/2026-11-08-m8-cache-gate.manifest.json)
+hashes to `d459924cf15ae46812e0b6b03996dbe085a1e0253d18a3b0eac38b65350974aa`.
+It retains 19 public files and inventories 2,333 private originals and
+inventory files. Full raw stage output remains read-only under
+`~/play/artroom-evidence/2026-11-08-m8-cache-final-gate`. The three earlier
+failed gates remain distinct. No validation runs during sealing.
+
+Main then contributes only `notes/reports/2026-11-08-sprint-report.md` at
+`cdd5508c8fcadfce8dbb2ea0d67ed4233d4a38ca`. Integration commit
+`81140b1a401734eeebaa30d2df486f480b546c00` has tree
+`a3cbad2ba04c2552d7643a5241a93246db9abcb8`. Its production source, tests,
+configuration and generated assets equal the gate head's bytes. The
+[document-only follow-up rule](../../docs/testing.md#follow-up-after-a-gate)
+carries the gate result through that integration. This evidence note and
+manifest also change only documents. The exact-source Page workflow and
+independent review still remain due.
