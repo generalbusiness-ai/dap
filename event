@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5d100601fc534489a8062576908fc3f18a2ba19b","text":"Merge retired a covered predecessor with no successor at its old path."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:60b63ba1a38322361c373d730bf3313b99b79315","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-07-m6-gate-validation.manifest.json."}
