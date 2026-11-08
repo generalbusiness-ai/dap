@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6634644406cb958731f9df76eea8984beb0d832b","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/handler-branch.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:69159758b94c7167445363545df7802a9debab65","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-m8-workspace-validation.manifest.json."}
