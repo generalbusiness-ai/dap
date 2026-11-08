@@ -22,7 +22,7 @@ import { slotOf, type Fetched, type Judging } from "./guards.ts";
 import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
 import { sendOrigin } from "./program/send-origin.ts";
-import { bodyJudgesClock, bodyStructure, clauseStructure, handlerBody, handlerHeader, namedBody, sendClauseStructure, type BodyStructure } from "./program/structure.ts";
+import { bodyJudgesClock, clauseStructure, handlerBody, handlerHeader, namedBody, sendClauseStructure, type BodyStructure } from "./program/structure.ts";
 import { settlementForm, settlementMatches } from "./program/settlement.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -318,7 +318,7 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
   if (!scope || !entry.effects.some(effect => effect.effect === "state" || effect.effect === "value" || effect.effect === "hold")) return null;
   if (input.type === "act") {
     const act = own(declarationOf(definition).acts, input.signed.intent.kind);
-    const plan = act ? bodyStructure(definition, act, input.signed.intent.kind)?.settlement : null;
+    const plan = act ? namedBody(definition, "act", input.signed.intent.kind, "act")?.settlement : null;
     if (!act || !plan || plan.op === "copy") return null;
     const form = settlementForm(plan);
     if (form.of === "on") return input.signed.intent.on === null ? null : { item: input.signed.intent.on, form };
@@ -343,7 +343,7 @@ export function itemSettlementBinding(view: StateView, definition: ValidDefiniti
   if ("decision" in input && input.decision !== "applied") return null;
   const source = context.facts.find(fact => same(fact.fact, input.from));
   const matched = bound(definition, input.message, input.from, source?.under);
-  const plan = matched?.handler ? bodyStructure(definition, matched.handler, matched.kind)?.settlement : null;
+  const plan = matched?.handler ? handlerBody(definition, matched.handler)?.settlement : null;
   if (!matched?.handler || !matched.fields || !plan || plan.op === "copy") return null;
   const form = settlementForm(plan);
   if (!source || !isEntryOf(source.entry, input.from)) throw new RuleFault("an item settlement has no retained source entry");

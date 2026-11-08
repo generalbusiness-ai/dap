@@ -109,3 +109,12 @@ The actual `pipeline.exit` contains `exit 0` and has been read. Source, tool and
 One parent-link omission control runs only the existing explanation case. It fails the literal captured comparison-values assertion at line 102, with one `AssertionError`, zero passes and three unselected cases. Its actual owner exits 1. The source restores in `finally` before classification; both full source snapshots match, and no owned process remains. The classifier exits 0. The normal 82-case baseline does not rerun for the control.
 
 The [provenance validation manifest](evidence/2026-11-08-m8-provenance-validation.manifest.json), SHA-256 `46dbad00c7da7df8ea5f60e3200cb783e749ba1d5577da86f3c18cd186659149`, binds sixteen public files and 59 private originals across four read-only units. Exact owner-addition proofs, complete reports, captured failure and source/process receipts remain durable. Retention reruns nothing. Prototype retirement, the remaining witness reconciliation, final assets, gate, workflow and independent review remain ahead.
+
+
+## History and reservation paths select the same admitted identities
+
+The caller audit finds no remaining raw body reconstruction. A few historical settlement and request-reservation paths still called the source-object `bodyStructure` metadata lookup. The next draft selects an act through its actual semantic row and frame, and a normal or late handler through its registered identity. Request reservation no longer builds a header merely to look up its body. Settlement reconstruction keeps its existing normal-handler selection and reads the same admitted settlement plan. No callback, field reading, source order, late rule, stored Amount, count or refusal changes.
+
+`handlerBody` reads its existing registered identity map directly and preserves the same unique-source and receive-frame checks. `bodyStructure` remains a source-introspection helper for structural witnesses; its only source reference outside its own declaration is the dead `timedStructure` adapter. Ruling request `2e92636a` supplements `f0d2a338` with that timed witness's concrete migration. Neither named mechanism-specific witness changes while the rulings wait.
+
+The next focused plan covers complete settlement, clause, late/reservation, binding, handler and Native owners, real-scope composition and late delivery, and replay. This lookup cleanup adds no semantic guard and needs no additional fault control. Its validation result remains ahead.

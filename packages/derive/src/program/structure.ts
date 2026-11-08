@@ -367,7 +367,8 @@ export function bodyStructure(definition: ValidDefinition, source: object, kind?
 
 /** Late selection follows the actual admitted row, never a reconstructed shape. */
 export function handlerBody(definition: ValidDefinition, source: ReceiveType, late?: { readonly reason: string }): BodyStructure | null {
-  const body = bodyStructure(definition, source);
+  const candidates = compiled.get(definition)?.bodies.get(source);
+  const body = candidates?.length === 1 ? candidates[0]! : null;
   if (!body || body.row.kind !== "receive" || (body.frame.kind !== "handler" && body.frame.kind !== "replacement")) return null;
   if (!late) return body;
   if (body.row.declaration.late?.reason !== late.reason) return null;
