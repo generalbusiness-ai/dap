@@ -206,3 +206,15 @@ Two one-case controls distinguish. Forcing the old prepared-rule label fails the
 The first retention script exits 1 after those successful runs because its copied formatter uses `opaque-explanations` as a JSON property instead of `workspaces`. Its original driver, exact error receipt and partial artifacts remain intact. The corrected retention script exits 0 and seals those partial units with the complete evidence. It reruns no compiler, test or control. This artifact failure changes no validation result or source.
 
 The [opaque-explanation validation manifest](evidence/2026-11-08-m8-opaque-explanation-validation.manifest.json), SHA-256 `dab0552fdec82d558ef1737a06f3e01e00625342ed372e97ff311136217603a8`, binds 21 public files and 93 private originals across six read-only units. Exact additive-owner proof, complete reports, distinguishing failures, restored snapshots and the initial retention failure remain durable. The two named witness rulings and prototype retirement, final assets and seals, the gate, exact-source Page workflow and independent review remain ahead.
+
+
+## Final assembly retains a concrete patch and maintained generator
+
+Before-edit scope `508fd6ed` names the maintained Page generator, complete asset owner and exactly two source-seal literals. The [assembly preparation manifest](evidence/2026-11-08-m8-final-assembly-preparation.manifest.json), SHA-256 `64fc5113d7517fe675776a2f3238b040b6398d5d702192d28170631c651ed96c`, binds six read-only preparation files at `8f7e8778`. It retains the exact patch, proof, scope act and current input hashes. Both source owners, parser and inventory still match the sealed probe. The patch has SHA-256 `c5620ba635cacdd8fcc8344a939b8c658c7c7b995c0abbe4e0f58f88089cde9f` and remains unapplied.
+
+| Sealed source | Old literal | Prepared new literal |
+|---|---|---|
+| `packages/derive/src/genesis.ts` | `3547884710d4828533e670740169e7f33d470775db12a0f7c02c4a7e2e2b08de` | `15a4adb0e86d62a5be70249c176a2677717a0616119eedcb7b7427a5291fbc2c` |
+| `packages/derive/src/judge.ts` | `89d7601ff9b19dc562e183f836e60ed6c804a70fd428cf6e0e17424e353101dd` | `7bafa496e7f0d647ffb84a7fa1131fe682335bb293b1ceeb7bee5c9b50693560` |
+
+No asset has regenerated. Settled source must precede the maintained build, complete asset owner, final gate and exact-source Page workflow. Patch application must recheck the exact owner and inventory inputs and use its own commit. Hugh's standing patch approval applies, and the checker reviews the seals with the head. This preparation claims no final bytes, gate pass or acceptance.
