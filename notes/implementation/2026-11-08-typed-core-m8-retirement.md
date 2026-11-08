@@ -1,6 +1,6 @@
 # Retire the prototype and retain its witnesses
 
-Status: focused checkpoint under planner ruling `24e2a8d` and before-edit scope `6690335d`. The five prototype modules and dead timed-array adapter are removed. The first pipeline's source compiler passes, and its test compiler fails on two callback fixture declarations. The isolated repair at `9b11b911` passes the failed and unreached stages, including all 55 cases. Both one-case controls distinguish after restoring clean source. Maintained assets, the final M8 gate, exact-source Page workflow, review and landing remain ahead.
+Status: focused checkpoint under planner ruling `24e2a8d` and before-edit scope `6690335d`. The five prototype modules and dead timed-array adapter are removed. The first pipeline's source compiler passes, and its test compiler fails on two callback fixture declarations. The isolated repair at `9b11b911` passes the failed and unreached stages, including all 55 cases. Both one-case controls distinguish after restoring clean source. The [final assembly record](2026-11-08-typed-core-m8-final.md) adds maintained assets and their passing checks. The final M8 gate, exact-source Page workflow, review and landing remain ahead.
 
 The Native fixture now supplies its required empty `refusals` list. The capability fixture returns its valid `true` result. Their callbacks must still remain uncalled at the refused boundary; all zero-count assertions remain. The original pipeline keeps actual exit 1. The follow-up carries its passed source compiler only after comparing production, configuration, tools and lock inputs. It runs the failed test compiler, then the unreached Grow compiler and body once.
 
@@ -56,4 +56,4 @@ The [retirement manifest](evidence/2026-11-08-m8-retirement.manifest.json) hashe
 
 ## Remaining work
 
-Integrate the approved F1 landing, assemble the maintained Page assets, run the owning asset checks and one full M8 gate, then complete the exact-source Page workflow, independent seal review and audited landing. Keep every earlier failure and its bounded follow-up distinct. The planner deploys.
+F1 integration and maintained asset checks now pass as the final assembly record states. Run one full M8 gate, then complete the exact-source Page workflow, independent seal review and audited landing. Keep every earlier failure and its bounded follow-up distinct. The planner deploys.
