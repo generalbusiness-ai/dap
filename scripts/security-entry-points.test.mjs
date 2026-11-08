@@ -270,7 +270,7 @@ const seals = {
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
   "packages/mcp/src/oauth-resource.ts": "895d3a1b241e5fe0d5228febff46fe6c921899110fef99056dd1b53199d341ae", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-access.ts": "c9125c1cf737025ac1342e3219227b6f882d28a565978d9ca68300f7402ff2d6", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/oauth-http.ts": "1c87328b4e9c5d66e07ae8017b22482816bf26c1d71e047fdf8e67b03b87924a", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/oauth-http.ts": "dc4b7c1113dd4cd7e4fb795d22b5e89793a292e0a470e91d7f90c0d73c450caa", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/index.ts": "e8381ad33242af79c16cb57ddeff579a01d8a981f923e5aed549e6ab60c262fe", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/hosted.ts": "2d337cd0bf5263432433cd3f2a41d2e9c43105fd81c34ccaf473b1b7323d1082",
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
