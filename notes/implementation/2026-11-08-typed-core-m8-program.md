@@ -121,3 +121,12 @@ The next focused plan covers complete settlement, clause, late/reservation, bind
 
 
 The first historical-frame pipeline at `5943829971a65c745f5e252a422c519d391edd90` exits 1 in its first source compiler. The new direct lookup reused the existing late-branch local name `candidates`. No other compiler or body runs. The repair names the new lookup `registered` and leaves the late-branch variable and all behavior unchanged. No test, assertion, case or deadline changes. The actual failed `pipeline.exit` has been read. Source guards match, the checkout stays clean during that run, and no owned process remains. The follow-up runs the failed compiler and every unreached phase; the original failure remains failed.
+
+
+## Historical identity selection passes every selected owner
+
+Repair `af6c48b1473074e6ef74bb8dc9bee222f809a8b2`, tree `871f31767b401ed6556b55e56342954e3ec2f7cf`, passes all six failed or unreached compiler contexts and 227 cases across thirteen complete owners once. The selection covers settlement, clauses, late reservation identity, binding, handlers and Native behavior, actual scope composition and late delivery, and replay. No case is missing, unexpected, skipped, retried or unfinished; no collection error or coverage issue remains. This cleanup adds no semantic guard and needs no new fault control.
+
+Both actual `pipeline.exit` files have been read: the initial source compiler pipeline contains `exit 1`; the separate repaired follow-up contains `exit 0`. The earlier failure stays failed. Every frozen source, tool and dependency guard matches, both checkouts stay clean during their runs, and no owned process remains. The outer observations measure 0.590 and 13.122 seconds separately from command wall and CPU observations.
+
+The [history validation manifest](evidence/2026-11-08-m8-history-validation.manifest.json), SHA-256 `70b98918d1eee236b0518f60997527cd0bd83081fd4ac76c572c164f8caf691a`, binds twelve public files and 298 private originals across five read-only units. The original failure, exact two-line variable repair, full follow-up and preparation remain durable. Retention reruns nothing. The prototype rulings, remaining metadata reconciliation, final assets and seals, gate, workflow and independent review remain ahead.
