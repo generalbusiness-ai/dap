@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "qualification": "One explicit Page workflow dispatch at the exact frozen combined S1/M7 source. MCP-only paths miss its automatic push filter. The first collector exited1 before sealing because job details were incomplete despite run-level success. Later uncached job-specific and attempt-specific records both show every step completed successfully, including all four browser commands. The first refusal remains retained. No workflow, local test or build reran during collection; the full local gate remains pending.",
+  "sourceHead": "6da48104c21d315c9be1b8d4573087e73d2eb0a1",
+  "sourceTree": "bd57406247f06ac71b441cbd46f5e977fa5f252f",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-07-m7-combined-page-ci",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1435,
+          "sha256": "f0c304c9e27abec47fedb7cf7e05641d438730c99975e2a48b68d6445f4bb8b0"
+        },
+        {
+          "path": "attempt-jobs.api.json",
+          "bytes": 3115,
+          "sha256": "de4281e30e5d14a72e479c72ba389d55601651e417528929e0e45246a8c70ac7"
+        },
+        {
+          "path": "collector-failure.transcribed.json",
+          "bytes": 377,
+          "sha256": "2bb4a4ca293b8d1804d76fb5724758caf8fb2f0a72f6df9dc71ee42c3c37bfe1"
+        },
+        {
+          "path": "dispatch.argv.json",
+          "bytes": 103,
+          "sha256": "897488f1bbc37f12f7645e585967fbe6a33863a074a1bb6900cde2c051dc96e3"
+        },
+        {
+          "path": "dispatch.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "dispatch.started.json",
+          "bytes": 355,
+          "sha256": "17f193d68c3705cd41ec846c44f0bb557ef3cd8d5fe0c69b90a42397aed9242b"
+        },
+        {
+          "path": "dispatch.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "dispatch.stdout",
+          "bytes": 67,
+          "sha256": "aa99a69b8899ded0598c61196ea6e5a22f6616d712e50926c167ea2fd8d847d2"
+        },
+        {
+          "path": "final-collector.py",
+          "bytes": 3492,
+          "sha256": "7ecc122e9ee1a38de9cec8979a4232801caaa70804d25949558598ced5de1587"
+        },
+        {
+          "path": "first-collector.py",
+          "bytes": 3061,
+          "sha256": "853ddad36d0e25044ba9f3d965ceb5ba37f240901425d8983f6d7ac1e27485e2"
+        },
+        {
+          "path": "first-observed-status.json",
+          "bytes": 2388,
+          "sha256": "cbb2bc39ae5eda6299bf2125106cbecf38f659ca7b88996d43ecd4f3d28e8e4d"
+        },
+        {
+          "path": "job-detail.api.json",
+          "bytes": 3088,
+          "sha256": "489c1aaa5b1814a8f54879bb7d3078a994ebe43a3a5f7fea43026452ae2b353c"
+        },
+        {
+          "path": "jobs.api.json",
+          "bytes": 2768,
+          "sha256": "ed8054d4f7b2b990ec57475b92a420389693f9bf719c403e29d1f8f96c8ae987"
+        },
+        {
+          "path": "remote-ref.txt",
+          "bytes": 83,
+          "sha256": "70365d27e4a32b0d9c537575d576b8fd495ee178c02741853628d8b87b61187c"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1109,
+          "sha256": "0fbe16bbb1f70ff22fb0beae462aa89c5ce97138907497061f574c8c9dee5434"
+        },
+        {
+          "path": "run.api.json",
+          "bytes": 12577,
+          "sha256": "316cb32e29d56cfda4a11f62368fc43a1c687318349c00ec8ca69bcdf582c9f7"
+        },
+        {
+          "path": "tracked-tree.txt",
+          "bytes": 446909,
+          "sha256": "601f15c889d4e17f4636f949b5d7ebec3c3317eed909cf6f064d8d9779cb23d9"
+        },
+        {
+          "path": "workflow.yml",
+          "bytes": 2855,
+          "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+        }
+      ]
+    }
+  ]
+}
