@@ -1,7 +1,7 @@
 /** Scripted resolved state exposes the pure admitted body and its diagnostic traversal. */
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type ActType, type PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type ActType, type Guard, type PlatformData, type PlatformDefinition } from "@generalbusiness/dap-contract";
+import { canonicalBytes, digestBytes, signIntent } from "@generalbusiness/dap-bytes";
 import { newItem } from "../src/item-effects.ts";
 import type { Judging } from "../src/guards.ts";
 import { ruleInput } from "../src/guards.ts";
@@ -15,6 +15,7 @@ import { requirements } from "../src/program/requirements.ts";
 import { namedBody } from "../src/program/structure.ts";
 import { declarationOf } from "../src/program/declaration.ts";
 import { nativeClockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
+import { C1, capabilityStagingData } from "./definition-corpus/capability-staging-data.ts";
 import { clockScene } from "./fixtures-clock-cutover.ts";
 import { d, keys, lane, otherLane, small, t, valid } from "./fixtures.ts";
 
@@ -176,4 +177,39 @@ test("scripted implicit hold endings retain unknown workspace requirements and o
   code.workspace = hook; calls = 0; seen.length = 0;
   expect(evaluateAdmitted(body, j, d("a"), {}, 0).ran).toEqual(expected);
   expect(calls).toBe(1);
+});
+
+test("scripted opaque refusals name the actual Native or capability boundary and explaining a nested guard never repeats its callback", () => {
+  // These local dispatchers prove captured diagnostics, not a provider, authority check or journal.
+  for (const [kind, nested] of [["capability", false], ["capability", true], ["Native", false]] as const) {
+    const native = kind === "Native", input = structuredClone(native ? small : capabilityStagingData()) as PlatformData;
+    if (native) { input.name = "platform:opaque-diagnostics"; input.outcomes = {}; }
+    const act = input.acts["edit"]!, capability: Guard = { capability: { name: "hold", guard: "staged", with: { commit: { const: C1 }, under: { item: "on" } } } };
+    // Native marks belong only in the written top-level list. The admitted capability guard also nests.
+    act.guards = native ? [{ code: "opaque", row: "diagnostic" }] : nested ? [{ anyOf: [[capability]] }] : [capability];
+    act.effects = []; act.sends = []; act.attention = [];
+    const definition = valid(validateDefinition(input, PROPOSED_BOUNDS, undefined, { platform: native })), body = namedBody(definition, "act", "edit", "act")!, j = context(definition);
+    let calls = 0, receiver: unknown;
+    const nativeRule = { place: "guard" as const, refusals: ["blocked"], run() { calls++; receiver = this; return { holds: false as const, name: "blocked" }; } };
+    const capabilities: Capabilities = { implements: () => true,
+      guard() { calls++; receiver = this; return "not-staged"; },
+      effect() { throw new Error("a refused guard must not reach effects"); } };
+    j.judged = { type: "act", signed: signIntent({ v: 1, to: otherLane, actor: keys.rita.key, kind: "edit", on: 1, expected: {}, fields: {}, idempotencyKey: "opaque", notAfter: t(200) }, keys.rita.secret), grant: null, presented: {} };
+    if (native) j.platform = { named: "platform:opaque-diagnostics@1" as PlatformDefinition, rules: { opaque: nativeRule } };
+    else j.capabilities = capabilities;
+    const expected = nested ? { result: "refused", reason: "guard-failed", detail: "guards.0", prepared: [] }
+      : { result: "refused", reason: native ? "guard-failed" : "capability-refused", name: native ? "blocked" : "not-staged", detail: "guards.0", prepared: [] };
+    for (const budget of [0, 100]) {
+      calls = 0; receiver = null;
+      const evaluated = evaluateAdmitted(body, j, d("a"), {}, budget);
+      expect(evaluated.ran).toEqual(expected); expect(calls).toBe(1); expect(receiver).toBe(native ? nativeRule : capabilities);
+      const explained = explainAdmitted(body, evaluated);
+      expect(explainAdmitted(body, evaluated)).toEqual(explained); expect(calls).toBe(1);
+      expect(explained.sourcePath).toBe("acts.edit.guards.0"); expect(explained.incomplete).toBe(budget === 0);
+      if (budget === 100) {
+        expect(explained.opaque).toBe(true);
+        expect(explained.text).toContain(native ? "The Native rule body is opaque." : "The capability body is opaque.");
+      }
+    }
+  }
 });

@@ -41,7 +41,19 @@ export function explainAdmitted(body: BodyStructure, evaluation: AdmittedEvaluat
     && (guard ? event.primitive === "guards" && event.result === "fail" : event.primitive === "effects" || event.primitive === "sends")) : undefined;
   if (!event) return { text: `${ran.reason}: ${ran.detail}. Captured values are unavailable.`, sourcePath: path, values: {}, opaque: false, incomplete: true };
   const values = event.reads ?? Object.fromEntries(evaluation.trace.filter(child => child.parent === event.ordinal && child.primitive === "expressions").map(child => [child.path, child.result]));
-  const opaque = values["opaque"] === true;
+  const descendants = new Set([event.ordinal]), captured = [event];
+  for (const child of evaluation.trace) if (child.parent !== null && descendants.has(child.parent)) {
+    descendants.add(child.ordinal); captured.push(child);
+  }
+  const opaqueMessages = new Set<string>();
+  for (const capturedEvent of captured) {
+    const reads = capturedEvent.reads;
+    if (reads?.["opaque"] !== true) continue;
+    opaqueMessages.add(reads["capability"] !== undefined ? " The capability body is opaque."
+      : typeof reads["code"] === "string" ? " The Native rule body is opaque."
+      : typeof reads["rule"] === "string" ? " The prepared rule body is opaque." : " The code body is opaque.");
+  }
+  const opaque = opaqueMessages.size > 0;
   const details = Object.entries(values).filter(([name]) => name !== "input" && name !== "opaque").map(([name, value]) => `${name}=${JSON.stringify(value)}`).join(", ");
-  return { text: `${path}: ${event.op} ${guard ? "failed" : `refused (${ran.reason})`} (${details}).${opaque ? " The prepared rule body is opaque." : ""}`, sourcePath: path, values, opaque, incomplete: evaluation.truncated };
+  return { text: `${path}: ${event.op} ${guard ? "failed" : `refused (${ran.reason})`} (${details}).${[...opaqueMessages].join("")}`, sourcePath: path, values, opaque, incomplete: evaluation.truncated };
 }
