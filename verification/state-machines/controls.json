@@ -1,0 +1,32 @@
+{
+  "Transport": {
+    "source": "packages/mcp/src/http.ts",
+    "old": "if (!this.closed) this.#state = { phase: \"open\" };",
+    "new": "if (true) this.#state = { phase: \"open\" };",
+    "assertion": "a late factory must not revive a retired generation"
+  },
+  "Observation": {
+    "source": "packages/client/src/observe.ts",
+    "old": "if (this.options.current()) this.options.emit({ status: \"cancelled\" });",
+    "new": "this.options.emit({ status: \"cancelled\" });",
+    "assertion": "expected 'cancelled' to be 'new-context-view'"
+  },
+  "Editor": {
+    "source": "apps/room/page/src/retained-editor-state.ts",
+    "old": "if (stage.state !== \"unknown\" || stage.step.status !== \"verified\") return invalid();",
+    "new": "if (stage.state !== \"unknown\") return invalid();",
+    "assertion": "acceptance alone must not advance an edit"
+  },
+  "Effects": {
+    "source": "packages/scope/src/operations.ts",
+    "old": "work.push(() => this.#send(row, request, now));",
+    "new": "work.push(() => this.#send(row, request, now)); work.push(() => this.#send(row, request, now));",
+    "assertion": "expected [ [ '1:0#1', '1:0#1' ]"
+  },
+  "Voice": {
+    "source": "apps/counter/browser/voice-controller.ts",
+    "old": "if (marker) {",
+    "new": "if (false) {",
+    "assertion": "true !== false"
+  }
+}

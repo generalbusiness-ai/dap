@@ -1,0 +1,13 @@
+---
+title: "Connect an agent and retire its transport"
+---
+stateDiagram-v2
+  s0: Opening
+  s1: Connected
+  s2: Retired
+  s3: Closed
+  [*] --> s0
+  s0 --> s1: connection opens
+  s0 --> s2: connection ends or access expires
+  s1 --> s2: connection ends or access expires
+  s2 --> s3: transport disposal finishes
