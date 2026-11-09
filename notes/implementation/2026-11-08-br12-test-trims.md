@@ -78,4 +78,9 @@ The [focused manifest](evidence/2026-11-08-br12-focused.manifest.json), digest
 35 public files and points to complete private inventories for all six units.
 The five-compiler/body pipeline took 30.392 seconds; that measurement excludes
 the preliminary Node owner. This run supplies no comparable cost reduction.
-The Page workflow citation and shared gate remain due.
+The [Page workflow run 42558851410](https://github.com/generalbusiness-ai/dap/actions/runs/42558851410)
+passed all four required commands at combined stack head `99092048`.
+RoomOpening's [CI manifest](evidence/2026-11-08-room-br12-page-ci.manifest.json)
+retains the run metadata, full private logs and the unchanged workflow-path
+comparison. The integration of main `cf0487da` adds only the independently
+approved self-hosting note. The one shared top-head gate remains due.
