@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3310653072afbc4e9093c1a57f1c4d24d0bea0f7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-json-size-followup.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:33e5ff638ef4dd029574834392cab1f706c5e949","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/evidence.test.ts."}
