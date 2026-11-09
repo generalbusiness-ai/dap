@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "request": "b66b8f146a9813628e0325374f551ae22d77284f",
+  "promise": "0875dbf1182ef1ce98fa6119a6c2de06e3a2383b",
+  "sourceHead": "172ca8780fa568d35beeefb8b3360bc14eba7293",
+  "sourceTree": "683cb87be66311c2c6d5e3096229ec4481269a92",
+  "qualification": "Second R15 focused unit stays failed. The compiler repair passes all three contexts. Four conclusive complete owners require no rerun; repair only the failing test and its full24case static ledger, then run its whole owner. No R15 control or gate ran.",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r15-failed-revoke-witness-validation",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1456,
+          "sha256": "eda0b207bcb4e80f11701af3ea073a36545e3def92ce26ff7c06e8ff06f0f36f"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 10684,
+          "sha256": "3b99a2bad18d4f667412fc7d9b086e37957dfa1882048ce7a93c7c927fcc545d"
+        },
+        {
+          "path": "complete-owner-reconciliation.json",
+          "bytes": 3446,
+          "sha256": "8909e03196e4cbe9a1645f0d13081ea169a6cdd72d8f2f6cc62d858c899a38ff"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 8192,
+          "sha256": "1af5939b0e039e19929df7441110c79fa71cbd082025bb18e70499937fddd25f"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 1284,
+          "sha256": "194dfd680611820600e88aec1d1a107197ed9ba7c15286896d021302c8dd7bfc"
+        },
+        {
+          "path": "mcp-test.log",
+          "bytes": 29,
+          "sha256": "4fac13b301f45ee940b2160379d94334a6573a05c87a0b4ff0d1d4ccf981d748"
+        },
+        {
+          "path": "node-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node-result.json",
+          "bytes": 3001,
+          "sha256": "c329b9824c3a06d67107e7722e4ddfb6bb13d6696d11db44f2feb03b65bf9e67"
+        },
+        {
+          "path": "original-failed-coverage-ledger.json",
+          "bytes": 47928,
+          "sha256": "79686c51bcab56d8b46e6554385b454e1a10f992d06efc7a5f4999aa7f75ed9d"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 568,
+          "sha256": "62f048811c660107c49f130af2baba691d75f76ee6d4953bdf1ddacde9837106"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 31,
+          "sha256": "2aef3f0d010bbc19c97e3ea34a5dc9e3f4e3411092538ca3915cf44323cc0815"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 543,
+          "sha256": "13d6f6f9e3fb2ace7de1190a79ea198103576e95306d6c63e5b0777b2243bc70"
+        },
+        {
+          "path": "scope-source.log",
+          "bytes": 29,
+          "sha256": "a369badd5130f4df307d9a1392576143aa62548cc5f701600fee270e57bca8e8"
+        },
+        {
+          "path": "scope-test.log",
+          "bytes": 29,
+          "sha256": "10ef1b5e4292480964491fd9e22ee968cccac1c2a5499efaf3fee71044707909"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}

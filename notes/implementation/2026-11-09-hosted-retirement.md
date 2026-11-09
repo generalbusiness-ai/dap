@@ -4,12 +4,16 @@ Request: `b66b8f146a9813628e0325374f551ae22d77284f`.
 Promise: `0875dbf1182ef1ce98fa6119a6c2de06e3a2383b`.
 Current ruling: `e2fc59d54f6e920cedd9e4efa1fc3e2033d53d70`.
 
-Status: the first focused unit failed at `40ab4e2d`. Compatibility and
-all 11 Node inventory cases passed. The Scope source compiler required an
-explicit `ignoreBOM` option. The other two compilers and all 37 application
-cases remain unrun. This draft adds the explicit default, with its refreshed
-helper seal; the focused follow-up remains due. No control, gate, or review has
-run for R15. Main `6dd337d3` is the base.
+Status: the second focused unit at `172ca878` passed all 11 Node cases and
+all three compilers. Its application body collected 39 cases: 37 passed,
+one failed, and one remained pending after bail. The failed new witness
+omitted membership's expected roster and member revisions. Its frozen
+ledger also omitted two existing parameterized cases and misquoted three
+titles. The original unit and verifier remain failed. Four complete owners
+reconcile 15 passed cases without a rerun. This repair changes only the
+incomplete test owner and documentation. Its whole 24-case follow-up remains
+due. Production code and source seals stay equal to `172ca878`. No R15
+control, gate, or review has run. Main `6dd337d3` is the base.
 
 ## Endpoint shutdown and the recorded end
 
@@ -97,7 +101,8 @@ on an R13 test result.
 
 | Check and source | Actual result | Manifest SHA-256 |
 |---|---|---|
-| First focused, `40ab4e2d` | Compatibility and Node 11 passed; Scope source failed `TS2741`; MCP test, Scope test, and all 37 application cases unrun | [manifest](evidence/2026-11-09-r15-failed-source-compiler.manifest.json) `cb6df4d892e872c6b3c55534b3e8dc2e023d1590f46289af65c8263e9fa59703` |
+| First focused, `40ab4e2d` | Compatibility and Node 11 passed; Scope source failed `TS2741`; remaining compilers and application tests unrun | [manifest](evidence/2026-11-09-r15-failed-source-compiler.manifest.json) `cb6df4d892e872c6b3c55534b3e8dc2e023d1590f46289af65c8263e9fa59703` |
+| Decoder follow-up, `172ca878` | Node 11 and three compilers passed. Body exit 1: 39 collected, 37 passed, one failed witness and one pending. Original static ledger also failed. Qualified reconciliation: four complete passed owners, 15 cases | [manifest](evidence/2026-11-09-r15-failed-revoke-witness.manifest.json) `a0c4bfee5e081f0e218c5b02284a4ceb9954e098a2bafb908e45d6de4923d8dd` |
 
 ## Deployment
 
