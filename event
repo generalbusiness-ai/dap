@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:216921b122be297c0f9a3087ea5e18332a8e47cf","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-08-br12-test-trims.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2569e6d4f2c5316d5f7b0dcbae4dad85e57dbb58","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/http.test.ts."}
