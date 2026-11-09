@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:29a87e03b4f2f6ff9e38c95ab4e5f40e323e1d0b","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-02-readable-diff-design/truncated.DATA.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:29ff80d128a9902d7bc7dc35440ac36f283c9b51","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/site/gfm-spec.json."}
