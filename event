@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/cli/test/fixtures/application-release-listing.json","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"packages/cli/test/fixtures/application-release-listing.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/cli/tsconfig.scope.json","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"packages/cli/tsconfig.scope.json"}}
