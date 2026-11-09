@@ -65,8 +65,8 @@ Both refusals remain recorded. No validation repeats during sealing.
 The worktree now has an owned APFS dependency copy, made without installing
 packages. Its fourteen workspace links and forty-eight exports resolve to
 this worktree, with TypeScript 7.0.2, Vitest 4.1.12 and esbuild 0.28.1 under
-the unchanged lock digest. No compiler, Vitest/Workers, scale body, workflow
-or full gate has run for BR-5 yet. The one final gate must observe all six
+the unchanged lock digest. No Vitest/Workers, scale body or workflow has run
+for BR-5. A complete gate pass remains due and must observe all six
 unchanged cases in `scope-scale` and none of those cases in `scope`.
 No extra scale body runs before it. No elapsed cost reduction is claimed.
 
