@@ -1,1 +1,1 @@
-{"kind":"report","text":"Overtaken: formal request 3c6d197d landed at baa418b9 at 21:06 on 8 November, and the planner deployed it. The shared checkout stands on main, now 66d84aef, and holds no formal candidate. Nothing remains to own or move. Ratify to close."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:434c17bcf4fe985201973ad2d952d36eb40cad3f"}
