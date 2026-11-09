@@ -177,6 +177,13 @@ tracked byte before classification and reused the saved passing baseline.
 Manifest `28ff20678a22a4c201a1d42d1e7c3993d321d689043468b532d2da0b3dcdfb6a`
 seals 12 public and 265 private files. No baseline or restored run followed.
 
+The maintained Page recipe at `d5b4d8f7` rebuilt the shared answer
+decoder into both Page and OAuth scripts. Both HTML entries stayed equal,
+and only `apps/room/page/assets.ts` changed among tracked files. The
+build and outer driver exited 0; the generated module has SHA-256
+`e3e922c73aeb33214d5af1e0ea7d26f851021aab86fd1b89f14f5fca40d0af02`.
+The complete asset owner and Page CI remain due before review.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The
