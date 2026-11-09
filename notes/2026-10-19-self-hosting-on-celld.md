@@ -1,8 +1,12 @@
 # Self-hosting dap on celld
 
-Status: current. 19 October 2026, draft 3. It is approved (`410a56a5`)
-and landed at `6eaae3f7`. Slices H1 to H5 are not built. Section 12
-lists what changed after each checker review. The
+Status: current. Draft 4, 8 November 2026. Draft 3 of 19 October is
+approved (`410a56a5`) and landed at `6eaae3f7`. Draft 4 adds the drain
+of a node with no live peer and the waker's delay, from the
+[SeaweedFS evaluation](implementation/2026-10-27-seaweedfs-local-bucket.md)
+of 27 October. Slice H1, the celld project in the repository, landed at
+`d6967b7f`. Slices H2 to H5 are not built. Section 12 lists what changed
+in each draft. The
 [Git host choice note](2026-10-27-git-host-choice.md) of 27 October
 amends sections 4.2, 4.7, 9 and 10: the host is the deployer's choice,
 `none` first, and H2 is a later option.
@@ -269,6 +273,23 @@ The kit treats these as rules:
   at the stop, is an unknown drain: the kit keeps the VM, its work
   directory and its name, refuses to replace or delete it, and the same
   node restarts to recover by celld's normal path.
+- **A node with no live peer is checked by its node record alone.** A
+  one-node deployment has no peer to take its cells, and neither has the
+  last node that `down` or `backup` stops. Its SIGTERM cannot finish the
+  handoff: the process logs `shutdown_handoff_stalled` and writes no
+  sealed-close line. On one node in the SeaweedFS evaluation, every stop
+  did so after 25 seconds, and `nodes/<node>.json` kept
+  `"draining": true` with no `log` object. So with no live peer, the
+  kit does not wait for the line. The drain is complete when the node's
+  record is absent, has no `log` object, or is `sealed`. These are the
+  three ends at which celld's guarantees count the stopped process's
+  node log as recovered. A record whose `log` object is open or
+  recovering is an unknown drain, as above. The same node then restarts
+  under its name with traffic still stopped, recovers the log during
+  startup, and is stopped and checked again once it reports healthy.
+  The Mac kit of [Run on a Mac](../docs/self-host.md#run-on-a-mac)
+  takes celld's other one-node path: a preserve shutdown, and a restart
+  of the same node.
 - **A node is replaced only after a complete drain.** Stop it, check the
   drain, then remove the VM, then start the replacement with the same
   name, and never two at once.
@@ -292,7 +313,8 @@ acknowledged tail; replace one VM by the procedure; take a stopped-fleet
 backup and restore it into a fresh fleet; and force a drain to end
 unknown, by making the bucket unreachable from the node during the stop,
 and show that `drain` reports unknown, `down` refuses to remove the VM,
-and `backup` refuses to call its copy complete.
+and `backup` refuses to call its copy complete; and stop the last node
+of the fleet and show that `drain` judges it by its node record.
 
 For a verifiable history apart from the service, the archive binding of
 the sequenced note's section 4 points at a git host, which may be the
@@ -312,7 +334,7 @@ The release artifact `dap-host-<version>.tar.gz` holds:
 | `Caddyfile` | The proxy: the DNS name as the one substitution, 443 to the loopback port, `CF-Connecting-IP` overwritten with the remote address |
 | `up.gcp.sh`, `up.aws.sh` | Create the parts for one cloud |
 | `deploy.sh` | `celld deploy` of `worker/` to the bucket, with the vars filled from the operator's secret source |
-| `drain.sh` | Stop one node gracefully, then check the drain by the two conditions of 4.7: the sealed-close line in the shutdown log and a sealed or absent node record in the bucket. Exits non-zero on an unknown drain and says what it found |
+| `drain.sh` | Stop one node gracefully, then check the drain as 4.7 says. With a live peer, both conditions: the sealed-close line in the shutdown log and a sealed or absent node record in the bucket. With no live peer, the node record alone: absent, with no `log` object, or sealed. Exits non-zero on an unknown drain and says what it found |
 | `backup.sh` | The stopped-fleet backup of 4.7, in celld's order, refusing to report a complete copy after an unknown drain |
 | `down.gcp.sh`, `down.aws.sh` | Drain both nodes, and remove the parts only when both drains are complete. An unknown drain stops the script with the VM and its disk kept |
 
@@ -389,11 +411,19 @@ wrap the same binary and bucket, and the kit does not stop them.
   whole repositories as one pack within `maxBytes`. A customer who needs
   a full git host, or independence, configures GitHub or binds the archive
   outside.
-- **Alarms were not witnessed firing on schedule.** Nothing in the
-  qualification has a timed rule. The GCP node logged thirty warnings in
-  22 seconds while deferring one cell's wake-record maintenance after a
-  conditional write "may have committed", and recovered. H4 witnesses a
-  timed rule and a takeover with the grow package.
+- **A timed rule on a cold cell waits for the waker's scan.** The
+  SeaweedFS evaluation of 27 October saw timed rules fire on celld, on
+  one node. In a resident cell, an invitation of 0.02 hours lapsed 2 ms
+  after its end. A one-hour invitation whose end crossed several
+  restarts lapsed 20.2 s late, through a cold wake. celld's waker scans
+  for due wakes every 60 seconds by default, and `CELLD_WAKER_TICK_MS`
+  sets the interval. The kit keeps the default. A deployment that needs
+  a cold cell's rule within seconds lowers the interval, and a shorter
+  interval lists the bucket more often. In the qualification, the GCP
+  node logged thirty warnings in 22 seconds while deferring one cell's
+  wake-record maintenance after a conditional write "may have
+  committed", and recovered. H4 witnesses a timed rule and a takeover
+  with the grow package on two nodes.
 - **No on-premises store yet.** celld needs conditional writes and
   read-after-write consistency, and the qualified stores are the five
   named in section 3. A customer with only MinIO waits for celld to
@@ -450,7 +480,7 @@ redeploy was adopted in place within 60 seconds with no restart.
 | H1 | The celld project in the repository: `apps/room/celld/`, the direct-call change for the page and MCP routes, the qualification smoke as a script that sends the address header itself, and a CI job that runs it against `celld dev` | Now |
 | H2 | The own git host: `GitRepository`, the smart HTTP route, the `self` wiring, tokens, bounds; witnesses: the lane story over host `self`, a real `git clone` and `git push` from a laptop, a push refused `stale` | H1 |
 | H3 | The host kit and the GCP scripts with the unit, the proxy, `drain` and `down` of 4.7, the second self-host path in the docs with a measured run; witnesses: the three address witnesses of 4.6, and a node replaced by the procedure | H1, H2 |
-| H4 | Two-node fleet qualification: the grow package with a timed rule; stop the owner and watch the peer recover the acknowledged tail; a node replaced by the procedure; a stopped-fleet backup restored into a fresh fleet; a drain forced to end unknown by an unreachable bucket, with `drain`, `down` and `backup` refusing as 4.7 says; the package store's `put`, refused conditional `put`, `get` and readback; a celld version bump under its release rule; a timer in the Worker for the node's own turn time on one node and on two | H3 |
+| H4 | Two-node fleet qualification: the grow package with a timed rule; stop the owner and watch the peer recover the acknowledged tail; a node replaced by the procedure; a stopped-fleet backup restored into a fresh fleet; a drain forced to end unknown by an unreachable bucket, with `drain`, `down` and `backup` refusing as 4.7 says; the last node's drain judged by its node record; the package store's `put`, refused conditional `put`, `get` and readback; a celld version bump under its release rule; a timer in the Worker for the node's own turn time on one node and on two | H3 |
 | H5 | The AWS scripts and their measured run | H3 |
 
 H1 is a day. H2 is two to three days. H3 and H5 are a day each. H4 is a
@@ -475,7 +505,8 @@ day. None of them goes ahead of the grow demo of plan 033.
 8. The proxy owns the client address, and celld's public port is
    reachable only from the proxy on its node.
 9. Node work directories persist, nodes keep their names, stops are
-   graceful and a drain is a checked outcome, an unknown drain keeps the
+   graceful and a drain is a checked outcome, a node with no live peer
+   is checked by its node record alone, an unknown drain keeps the
    node, the supervisor restarts without limit after a lease lifetime,
    and a backup is celld's stopped-fleet backup of the bucket and every
    work directory.
@@ -492,7 +523,16 @@ day. None of them goes ahead of the grow demo of plan 033.
 | Q4 | Whether the CI job of H1 runs on every head or on heads that touch the scope package | On heads that touch `packages/scope`, `packages/mcp` or `apps/room` |
 | Q5 | The node's own turn time, single node and fleet | H4's timer |
 
-## 12. Changes in drafts 2 and 3
+## 12. Changes in drafts 2 to 4
+
+Draft 4 answers item 5 of request `a6847815`. Its findings come from the
+[SeaweedFS evaluation](implementation/2026-10-27-seaweedfs-local-bucket.md),
+not from a review.
+
+| Finding | Answer |
+|---|---|
+| A node with no live peer never seals its stop: it logs `shutdown_handoff_stalled`, writes no sealed-close line, and leaves a node record with `"draining": true` and no `log` object. So 4.7 read every one-node stop as unknown | 4.7: with no live peer, the node record alone decides, and the drain is complete when the record is absent, has no `log` object, or is sealed. Section 5's `drain`, H4's witness, decision 9 |
+| A timed rule on a cold cell fired 20.2 s late, through celld's 60 s waker scan, and section 6 still said that no alarm was seen firing | Section 6 states the observed firing, the waker's interval and `CELLD_WAKER_TICK_MS` |
 
 Review `783a1530` of draft 2 found F2, F3 and F4 resolved and held
 approval on one part of F1.
@@ -524,6 +564,10 @@ Review `9c5dadcc` of draft 1 requested four changes.
   [Durable Objects](https://celld.dev/docs/services/durable-objects/),
   [limitations](https://celld.dev/docs/limitations/),
   [the repository](https://github.com/denoland/celld).
+- celld v0.6.3, as the SeaweedFS evaluation ran it:
+  [guarantees](https://raw.githubusercontent.com/denoland/celld/v0.6.3/docs/guarantees.md)
+  (the stopped process's node log and node record, and the waker's
+  interval).
 - Caddy, [`reverse_proxy` headers](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#headers).
 - [Deno is joining Cloudflare](https://blog.cloudflare.com/deno-joins-cloudflare/), 9 October 2026.
 - [workerd pull request 6780](https://github.com/cloudflare/workerd/pull/6780), closed 11 September 2026.
