@@ -15,7 +15,7 @@ import { driveFixture, effectFixture, nativeFixtureLifetime } from "./support/na
 
 const { rita, una, vic, paul, sam } = keys;
 const HOST = "quota.invalid", NAMESPACE = "r13-read-quota-test";
-type Mode = "ok" | "refused" | "unknown" | "late";
+type Mode = "ok" | "refused" | "unknown" | "late" | "expired";
 
 async function quotaRoom() {
   const life = nativeFixtureLifetime(beginSessionFixture({ secret: null, sessions: false, inspector: null }), { required: false });
@@ -37,7 +37,7 @@ async function quotaRoom() {
         if (control.mode === "refused") throw Object.assign(new Error("TEST explicit refusal"), { code: "INVALID_TTL", numericCode: 400 });
         if (control.mode === "unknown") throw Error("TEST lost provider answer");
         if (control.mode === "late") return new Promise<unknown>(resolve => { control.finishLate = resolve; started(); });
-        return { id: `TEST-token-${control.calls.length}`, scope, plaintext: `TEST-read-${control.calls.length}`, expiresAt: timeOf(life.now() + seconds * 1000) };
+        return { id: `TEST-token-${control.calls.length}`, scope, plaintext: `TEST-read-${control.calls.length}`, expiresAt: timeOf(life.now() + (control.mode === "expired" ? -1000 : seconds * 1000)) };
       },
       revokeToken: async () => true,
       info: async () => ({ name, remote: `https://${HOST}/git/${NAMESPACE}/${name}.git` }),
@@ -146,6 +146,13 @@ test("Native read-token adapter frees explicit refusal, holds an unknown for req
     await effectFixture([G], life.wait);
     expect(await rows()).toEqual([]);
     expect(await outcome(`${refused.receipt.fact.seq}:0`)).toMatchObject({ type: "outcome", result: "refused", evidence: { basis: "own-answer", body: {} } });
+    control.mode = "expired";
+    const expired = await f.submit();
+    if (expired.answer !== "accepted") return expect.fail("Native known expired attempt was not admitted");
+    await effectFixture([G], life.wait);
+    // P16 records a genuine known mint even when its reported end elapsed.
+    // Quota must not turn that valid confirmed fact into an unknown answer.
+    expect(await outcome(`${expired.receipt.fact.seq}:0`)).toMatchObject({ type: "outcome", result: "confirmed", evidence: { basis: "own-answer", body: { ends: timeOf(life.now() - 1000) } } });
     control.mode = "unknown";
     const opened = life.now(), unknown = await f.submit();
     if (unknown.answer !== "accepted") return expect.fail("Native unknown attempt was not admitted");
@@ -169,6 +176,6 @@ test("Native read-token adapter frees explicit refusal, holds an unknown for req
     await effectFixture([G], life.wait);
     expect(await outcome(`${late.receipt.fact.seq}:0`)).toMatchObject({ type: "outcome", result: "unknown", evidence: { basis: "own-answer", body: {} } });
     expect(await life.wait(() => runInDurableObject(G.object, (_instance, state) => state.storage.sql.exec("SELECT COUNT(*) AS n FROM private_credential WHERE plaintext='TEST-late-plaintext'").one()["n"]))).toBe(0);
-    expect(control.calls).toHaveLength(3);
+    expect(control.calls).toHaveLength(4);
   } finally { life.release(); }
 });

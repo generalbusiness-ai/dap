@@ -37,6 +37,13 @@ A reply after that reservation expires cannot restore the row or disclose
 its plaintext. The quota counts reservations and does not prove that a
 provider token ended.
 
+A valid own reply whose reported end already elapsed retains the pinned
+`confirmed` meaning. Request `84d7f349` asks the planner to settle the
+remaining case: a valid reply after the fallback reservation expired.
+The source still returns `unknown` for that late reply. The proposed cut
+records its genuine nonsecret metadata, discards plaintext, and keeps the
+released slot closed. No validation runs until that decision settles.
+
 Destination 19 keeps its one-hour request. Earlier pins keep their
 existing one-to-twenty-four-hour field. The same helper supplies the
 adapter and admission lifetime without changing any recorded definition.
@@ -78,3 +85,5 @@ equal. Patch `artroom-r13-source-seals-20261109.patch` has SHA-256
 `f0b0c2f9c5e5c7ea8a6ce781b3fb1adb6a30c4e5eebced02cbf08fa942bdaa11`; Hugh's standing patch authorization covers adoption
 of these actual outputs. No route or gate assertion changes. Independent
 review still judges the source; no test result follows from a seal.
+The later known-expired-reply fix changes the quota owner again. Its seal
+must follow the next source freeze before the focused checks.

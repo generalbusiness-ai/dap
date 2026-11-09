@@ -93,7 +93,7 @@ export class ReadTokenQuota implements ReadTokenAdmission {
     const scope = this.#scope(), end = timeMs(ends), at = timeMs(now);
     if (scope === null || end === null || at === null) return false;
     const changed = this.#sql.exec("UPDATE private_read_quota SET ends_ms=? WHERE scope=? AND mint=? AND handle=? AND ends_ms>? RETURNING mint", end, scope, mint, handle, at).toArray().length === 1;
-    return changed && end > at;
+    return changed;
   }
 
   nextExpiry(): number | null {
