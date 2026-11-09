@@ -125,16 +125,38 @@ No test ran again for those checks.
 | Alarm drain control: one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109-v2.py /private/tmp/artroom-r3-alarm-drain-control-20261109.v2.task.json` | owner 1; verifier 0 | `39c6264c / bc3dcf55` | `586db0887430f7d24c8a7fc947f1f9a129ed415169cc5dfaab5f4ae735905411` |
 | Key bound control: five pass, one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109-v2.py /private/tmp/artroom-r3-key-bound-control-20261109.v2.task.json` | owner 1; verifier 1; metadata 0 | `39c6264c / bc3dcf55` | `7c5561ba8858c151cadc144dbee2f009806a217330df82a3d28328d36378f6d9` |
 
+| Final gate: 5,340 pass, 12 fail, 3 skip | `npm run gate` | 1 | `22b5f36f / 8ffde09a` | `526878104bee7a9daa9fc3720146b3b5ca84f64bc29d5df7b10de728906b3614` |
+
 Each pipeline records its own monotonic duration and command timing.
 Those measurements include source guards and report work where the driver
 states that scope. Summed command or case times are not one measured gate.
 The runners keep their original pools, workers and deadlines. The owned
 physical dependency view has 14 workspaces and 48 source export bindings.
-The final `npm run gate` has not run.
+The final gate ran once at `22b5f36f` / `8ffde09a` and failed with exit 1.
+The [failed-gate manifest](evidence/2026-11-09-r3-failed-gate.manifest.json)
+seals 16 public files and retains 2,400 private originals. Actual
+`gate.exit` contains `exit 1`; it was read before analysis and sealing.
+Node passed 144, Counting 56 and Plain 4,028 with one skip. Native recorded
+1,112 passes, 12 failures and two skips. The twelve failures belong to
+`hosted.scope.test.ts`, `manifest-tree.scope.test.ts`,
+`signed-read-standing.scope.test.ts`, `hold.scope.test.ts`,
+`device-command-install.test.ts` and the ordered `lending.test.ts` owner.
+All 1,126 Native case identities have final states. The summary still calls
+the failed Native phase partial; its terminal record reports no interruption.
+No report error or unhandled error occurred. Scale stayed omitted under
+the unchanged fifteen-path selector.
+
+The gate kept every tracked source byte fixed and closed its owned process
+group. The driver measured 1,000.142 seconds from launch through its receipt.
+This remains a failed gate. No repair, second gate or review followed it.
+A proposed continuation outside the checkout keeps the original assertions,
+drains expiry through real alarms and separates the device authority and
+release-admission probes. The planner must rule on its scope because six
+owners failed and the ordinary one-file follow-up exception does not apply.
 
 ## Open limits
 
-Request `03e5f6d7` still owns the final gate, independent review and landing.
+Request `03e5f6d7` still owns the failed-gate continuation, independent review and landing.
 The planner owns deployment after landing. These Native witnesses use
 labelled scripted Membership, admission and provider boundaries. They
 establish no live provider effect or hosted-room acceptance.
