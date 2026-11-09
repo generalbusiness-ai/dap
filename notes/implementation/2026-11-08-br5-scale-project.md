@@ -65,10 +65,9 @@ Both refusals remain recorded. No validation repeats during sealing.
 The worktree now has an owned APFS dependency copy, made without installing
 packages. Its fourteen workspace links and forty-eight exports resolve to
 this worktree, with TypeScript 7.0.2, Vitest 4.1.12 and esbuild 0.28.1 under
-the unchanged lock digest. No Vitest/Workers, scale body or workflow has run
-for BR-5. A complete gate pass remains due and must observe all six
-unchanged cases in `scope-scale` and none of those cases in `scope`.
-No extra scale body runs before it. No elapsed cost reduction is claimed.
+the unchanged lock digest. The completed gate below observes all six cases
+in their new project. No extra scale body ran before it, and no elapsed cost
+reduction is claimed.
 
 The first full gate at `5e087f06` exited 1 during typecheck. The Scope test
 compiler reported TS7016 at both new configuration imports from
@@ -96,4 +95,31 @@ The [typed-boundary manifest](evidence/2026-11-09-br5-typed-boundary.manifest.js
 digest `40fccf06ea9672672f7610d4069a8e4520bf522f253090509d621bb0a924bc95`,
 seals 15 public files and points to 62 private originals. No Vitest/Workers
 or scale body ran in this check. The original gate remains failed; the
-repaired full gate remains due.
+repaired full gate below supplies the required complete pass.
+
+At clean integrated head `4393c9fd`, tree `7d2e9b42`, the repaired full gate
+finished with actual `gate.exit` equal to `exit 0`. All prechecks, typecheck,
+and five fixed stages passed. Node reports 140 passes, Counting 56 passes,
+Plain 4,027 passes and one skip, and Native 1,118 passes and two skips.
+
+The maintained report reconciliation observes exactly the six unchanged
+cases in `scope-scale`, with no duplicate in Scope or any other project.
+All four owner hashes equal their earlier main bytes. Native's retained
+selection says `include: true`, reason `changed-scale-path`. The 102
+otherwise unclassified observations are the three Node wrapper events for
+each of 34 files. No failed case, contradiction, report error, or unhandled
+error remains. One explicitly skipped recorder module has no duration.
+
+All 4,341 tracked inputs stayed equal. The owned process group closed, and
+the retained before, during, and after process samples found no other
+validation body. Samples cannot prove uninterrupted isolation. The
+[repaired-gate manifest](evidence/2026-11-09-br5-repaired-gate.manifest.json),
+digest `ad5cf800103238571a802b9554d4810ca4d8d02ebb1ad14a2c379e50914ac7d7`,
+seals 21 public files and points to 2,377 private originals. The failed first
+gate remains failed. No validation repeats during analysis or sealing.
+
+The archive watch now holds nineteen distinct complete gate attempts:
+fifteen archive passes and four Native-unreached failures. None observes
+an archive retry. Watch `64552d40` stays open. Independent review and the
+main-push scale workflow remain due. This evidence supplies no deployment
+or live acceptance claim.
