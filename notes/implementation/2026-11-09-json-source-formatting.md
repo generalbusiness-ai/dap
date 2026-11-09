@@ -5,8 +5,8 @@ This head includes main `29926a3a`. Authoring, focused checks and the
 packet-exclusion control are complete. The single final gate failed; its
 unchanged source and complete original outcomes remain sealed. Planner
 ruling `794ef517` authorizes the two source-size exceptions, one focused
-follow-up and one new final gate. The follow-up passed; the new gate
-remains due.
+follow-up and one new final gate. The follow-up and the new gate passed. The new gate includes all six
+selected Scale cases under the original local deadlines.
 
 ## What changes
 
@@ -94,7 +94,7 @@ The real tracked packet wrongly entered the selected set. The assertion at
 `false`. The driver restored all tracked source bytes and checked group
 closure. The original owner exit remains 1; the control verifier exits 0.
 
-## Failed gate and pending size ruling
+## Failed gate and approved size exceptions
 
 The single gate at `3a1632b54ebbafc8d613711bac5a364db5130422`, tree
 `071df937cf8c2bdecff7883e43c0f301c72fc826`, ended naturally with actual
@@ -152,9 +152,39 @@ The corrected frozen v2 driver ran once. The
 [preparation record](evidence/2026-11-09-json-size-preparation.manifest.json)
 labels these errors separately from that passing body.
 
-The new final gate remains due. Any new gate failure stops work for a report.
+The new full gate at `8653385e250a125be02a648c3d5c779058b1d9d6`, tree
+`1da5f97f7a7ba675a8326600f4916cf9ff853f77`, ended naturally with actual
+`gate.exit` equal to `exit 0`. Formatting, typechecking and every test stage
+passed: Node 143, Counting 56, Plain 4,028 with one skip, and Native 1,128
+with two skips. The total is 5,355 passed and three skipped. All six selected
+Scale cases passed without a selection, worker-limit or deadline change.
 The original gate remains failed. Earlier branches establish no result for
 this head.
+
+The [repaired-gate manifest](evidence/2026-11-09-json-repaired-gate.manifest.json)
+has SHA-256 `0c7f7a6f612abee4db2c067491d6fb9eca159e40614d823406dec5fbbdc27eaa`.
+Its `gate.exit`, `receipt.json`, `classification.json`, `summary.json` and
+`stages.json` record the passing run. It retains sixteen public files and
+2,405 private files. The source stayed byte-identical, every selected phase
+has a complete terminal record, and the owned process group closed. The
+analysis reports no unhandled errors, contradictions or report errors.
+It reconciles 105 Node file-wrapper events across 35 owners. The wholly
+skipped Page recorder module has no final duration; the actual Scope timing
+summary therefore remains partial.
+
+The gate ran on this Mac from 14:59:28.303 to 15:22:31.487 UTC on
+9 November. The wrapper records 1,383.182 seconds by Python's monotonic
+clock. `/usr/bin/time` records 1,382.64 elapsed, 2,620.79 user and 308.81
+system seconds. These are separate measurements. The gate owned the local
+validation slot and used its existing dependency copy and caches. A process
+snapshot found no other validation body before the run; that snapshot is
+not continuous load evidence. `caffeinate -i` held an idle-sleep assertion
+for this child only. No per-case causal claim follows from it.
+
+The seal helper's final console object inherited an `actualGateExitRead: 1`
+label from the first failed-gate helper. Its assertions read `exit 0`, and
+its sealed classification correctly records zero. That console label is
+not the gate result. No source or test ran during analysis or sealing.
 
 ## Open limits
 
