@@ -4,7 +4,7 @@
  * Worker's default fetch, with the pinned MCP client where a client is named. rita creates the room through her own MCP service
  * and performs the admin's acts; the agent is created by a control request she signs.
  */
-import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
+import { env, evictDurableObject, runInDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ControlRequest, Digest, Entry, FactRef, Item, KeyId, MemberId, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, keyIdOfSecret, newIncarnation, signControl, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
@@ -963,6 +963,9 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     const over = await routed(`${SERVICE}/mcp/agents`, { method: "POST", headers: { authorization: control(room, rita.secret, "create", M, null, "", "big"), "content-type": "application/json" }, body: big, duplex: "half" } as RequestInit);
     expect(over.status).toBe(413);
     expect((await registryStub(M.scope).agents()).length).toBe(before);
+    // Membership's old invitations became due during the eight-day retention
+    // jump. Only its real alarm ends them before the following signed act.
+    expect(await room.wait(() => runDurableObjectAlarm(room.platform(M.scope).object))).toBe(true);
     // A revoked key cannot sign control: paul's key is revoked, then his bearer for @bot3 is refused.
     const paulKey = (await allItems(rita, "membership")).find((i) => i.type === "key" && i.values["id"] === paul.key)!;
     expect((await rita.ok("key.revoke", { on: paulKey.id, fields: { as: "retired" }, idempotencyKey: "revoke-paul" }))["answer"]).toBe("accepted");

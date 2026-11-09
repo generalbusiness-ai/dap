@@ -49,8 +49,13 @@ export interface Asked {
  * What one read of the authority port obtained for one act: phase two of the
  * port, which decides in the commit.
  *
- * `held` is given the folded state at the commit's head and the commit's one
- * reading. It answers each grant that the act may be judged on, with whether
+ * `held` receives folded state and one clock reading. Core first calls it
+ * before the turn to refuse a definite failure of an ordinary grant. That
+ * check authorizes no write. The commit calls it again at its own head and
+ * reading before judging authority. The port must allow these rechecks
+ * until `sealed` records a use.
+ *
+ * It answers each grant that the act may be judged on, with whether
  * it is current at that reading. The judge then looks for one that is to
  * the signing key, names the action and covers the scope (section 4.2,
  * check 9). Null: what was read cannot serve this commit, as when its window
@@ -95,11 +100,14 @@ export interface Standing {
  * it begins. The core stops waiting after `seconds`. Null, a late answer or
  * a failure: nothing was read, and the act is not judged at check 9.
  *
+ * `limit`: this run cannot admit another signing key. It reads no standing
+ * for that key and the caller refuses the input without starting a turn.
+ *
  * Phase two is the method of what phase one returns. So no commit decides
  * on authority without a read that was made for its own input.
  */
 export interface Authority {
-  read(asked: Asked, seconds: number): Promise<Standing | null>;
+  read(asked: Asked, seconds: number): Promise<Standing | "limit" | null>;
   /**
    * The further observations of one input (scope contract, revision 20,
    * section 16.1, "The subjects that an entry observes"): what the scope

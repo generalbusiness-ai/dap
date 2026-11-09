@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "request": "03e5f6d73c2482cc8627d09a241cd5c484716ea8",
+  "promise": "8787bcebc801a3144b562d32b7604f3f69f87836",
+  "sourceHead": "39c6264c5cc5a434321779a562fcd7e024a93ef6",
+  "sourceTree": "bc3dcf55217ba8df4c6c9e6aa78ad23fe6544ef2",
+  "qualification": "Original first focused run remains failed. Only creation.test.ts changed afterward: refused creation leaves head fixed, real alarm writes original pinned effects. Complete32case limited followup passes; healthy38cases remain retained. Each named fault causes one assertion failure with no unhandled errors. Two original verifier1 values reflect report-message/title representations, reconciled from same-run raw output without rerunning tests. No production bytes changed after maintained source seals. No deployment or live acceptance.",
+  "fileCount": 50,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r3-pre-gate",
+      "fileCount": 50,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 4957,
+          "sha256": "2539d108a1ea089ecd281d2d9d34dca4e2fc03d3b99883d9cc8f88693f0052a8"
+        },
+        {
+          "path": "alarm-drain-control--control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "alarm-drain-control--control.time",
+          "bytes": 29,
+          "sha256": "5c3276ef2d8a3605cd7541147cd8c393bbfd328e72db8eb733544303c2a03ad3"
+        },
+        {
+          "path": "alarm-drain-control--driver.py",
+          "bytes": 5448,
+          "sha256": "3d2d75fa29ffa9da00b6362628de1390161b49b4afb0ab67ed8dd72a38e5b1cd"
+        },
+        {
+          "path": "alarm-drain-control--private-retention.json",
+          "bytes": 488,
+          "sha256": "f9a6c3b1c258f7051a67e05cdb3f59c08bcc88fa065ef088edaf1c9b20abbc82"
+        },
+        {
+          "path": "alarm-drain-control--result.json",
+          "bytes": 843,
+          "sha256": "586db0887430f7d24c8a7fc947f1f9a129ed415169cc5dfaab5f4ae735905411"
+        },
+        {
+          "path": "alarm-drain-control--slot-before.json",
+          "bytes": 190,
+          "sha256": "c14bf32aa3371e90e59b9800e864ead6e84cc8972e98a117429a5e6e9abfbeec"
+        },
+        {
+          "path": "alarm-drain-control--verifier.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "artroom-r3-compiler-closure-20261109.json",
+          "bytes": 11522,
+          "sha256": "01d45ac587c08f0a69d830415623735eb19209f4b77aa9db8c6c5955ba26eb5d"
+        },
+        {
+          "path": "artroom-r3-dependency-copy-20261109.json",
+          "bytes": 2357,
+          "sha256": "2696a91244fc3d7f540ef530bc1530d13f296ed14c5ccc5afc2c5bf4e1c540f9"
+        },
+        {
+          "path": "artroom-r3-source-seals-20261109.json",
+          "bytes": 7476,
+          "sha256": "939930221a6448ae84a3bd64ee6fe651271025833c61701c4553c41a30e36696"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 1663,
+          "sha256": "eed00adea3ab98245d047f7277f9517b224698d4c8f2ed8af4612bf5ecd533d3"
+        },
+        {
+          "path": "creation-followup--driver.py",
+          "bytes": 2302,
+          "sha256": "9b610e46481504170b757a91f0fae6f34f8b81057ab699a1b1b501728a0ccc17"
+        },
+        {
+          "path": "creation-followup--focused--coverage-ledger.json",
+          "bytes": 52757,
+          "sha256": "cf35b2f34d3f8aedc2a21e654fb0448df61c4acf8f1cdc5d77b45dc28202d867"
+        },
+        {
+          "path": "creation-followup--focused--result.json",
+          "bytes": 6963,
+          "sha256": "49dc3ca3dbe5e32e9c6b8cefdfbe8a6fc0330f5f72c33e3fe65823374aca9f60"
+        },
+        {
+          "path": "creation-followup--pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "creation-followup--pipeline.time",
+          "bytes": 30,
+          "sha256": "70abc29ca495050bd1d6744da22c7360cea733c584f5e3a786b7cc03fa342962"
+        },
+        {
+          "path": "creation-followup--private-retention.json",
+          "bytes": 486,
+          "sha256": "e27938041da9fe20228af844e0cd6f9f00b343d48aea660a08cbf8ac5af06be4"
+        },
+        {
+          "path": "creation-followup--receipt.json",
+          "bytes": 485,
+          "sha256": "4a43dc08a250b0f2dbdba396cd0d1da235e2b60e603eb99bd3955a03e66ef444"
+        },
+        {
+          "path": "creation-followup--slot-before.json",
+          "bytes": 190,
+          "sha256": "6ea9879ad6cd270c13f667215b295f5c15420e4651e5e0f38f389e3043f9f988"
+        },
+        {
+          "path": "early-authority-control--control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "early-authority-control--control.time",
+          "bytes": 29,
+          "sha256": "e8af1d2210b1a90691236982c98ebd745c5fb8481c93877756627fca0a9f6393"
+        },
+        {
+          "path": "early-authority-control--driver.py",
+          "bytes": 5419,
+          "sha256": "d7bf9fc46072bba5b7f8d6070b5a7cf65e96436c692e5ce76d9eaea5cc509803"
+        },
+        {
+          "path": "early-authority-control--metadata-reconciliation.json",
+          "bytes": 1326,
+          "sha256": "36c5720b8dec5192db90885eaf4fde87f9a7eb8c1191ee881f23dc1f69228231"
+        },
+        {
+          "path": "early-authority-control--private-retention.json",
+          "bytes": 492,
+          "sha256": "54ac2592470138c60b47383c9485b334e347195b90f9fbef4ba296667bcbc695"
+        },
+        {
+          "path": "early-authority-control--result.json",
+          "bytes": 823,
+          "sha256": "350a580f091d213737c2313bac7b118fbfe2da6c5db669901ccea4a4c301fe16"
+        },
+        {
+          "path": "early-authority-control--slot-before.json",
+          "bytes": 190,
+          "sha256": "20453f692ce3af3b93c92ffea0c8c7d36921b188f5bc1da1bba0da0b337c400d"
+        },
+        {
+          "path": "early-authority-control--verifier.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "first-focused--driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "first-focused--driver.py",
+          "bytes": 8301,
+          "sha256": "5ba3c08d97abffc2551101a324686c09ae3abc545339dd04d04340ed91fe20cf"
+        },
+        {
+          "path": "first-focused--focused--coverage-ledger.json",
+          "bytes": 91227,
+          "sha256": "cc28b08b04e156e4b7b6a8c69abd6c1db5eb5acec368b5bcd8a398207a9f9eb2"
+        },
+        {
+          "path": "first-focused--focused--result.json",
+          "bytes": 33653,
+          "sha256": "15dce2fe0d740a7bfcb0eead94aa31703a9a70c21eb184edc241ace50963075c"
+        },
+        {
+          "path": "first-focused--outer-timing.json",
+          "bytes": 569,
+          "sha256": "750588e075303447a6f883fdff7ab019527465a85fad73ae07270a2d6e7cd16b"
+        },
+        {
+          "path": "first-focused--owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "first-focused--owner.time",
+          "bytes": 29,
+          "sha256": "3396ee0917dcb6bbd7a9e5d0ce9b9120901d1b15ac304a6671389e274c20315e"
+        },
+        {
+          "path": "first-focused--pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "first-focused--pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "first-focused--pipeline.time",
+          "bytes": 31,
+          "sha256": "b3dd9b5f89ffe21dfd6f8799852f2f1a11be5c697a20529281fe8c84cedf5e17"
+        },
+        {
+          "path": "first-focused--private-retention.json",
+          "bytes": 476,
+          "sha256": "0b0d27a40bbbda54a61d98ef6a0949a245c69d8c0378f8a5678b1b11117a8da3"
+        },
+        {
+          "path": "first-focused--result.json",
+          "bytes": 3228,
+          "sha256": "8657fcb94a9c8631bf5ca63e7f31291c45a848a2256d6aa6fff15fa98b095dda"
+        },
+        {
+          "path": "first-focused--slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        },
+        {
+          "path": "key-bound-control--control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "key-bound-control--control.time",
+          "bytes": 29,
+          "sha256": "65bfa66b6953ddfd83b8d569ba2c9a98e232c82b47d7ccc29d114ae41fb94b13"
+        },
+        {
+          "path": "key-bound-control--driver.py",
+          "bytes": 5448,
+          "sha256": "3d2d75fa29ffa9da00b6362628de1390161b49b4afb0ab67ed8dd72a38e5b1cd"
+        },
+        {
+          "path": "key-bound-control--metadata-reconciliation.json",
+          "bytes": 1518,
+          "sha256": "7c5561ba8858c151cadc144dbee2f009806a217330df82a3d28328d36378f6d9"
+        },
+        {
+          "path": "key-bound-control--private-retention.json",
+          "bytes": 486,
+          "sha256": "b583af17397acbed0f0d0491df5a7a4a90a9624c5ed2cf71d940f2377fce0720"
+        },
+        {
+          "path": "key-bound-control--result.json",
+          "bytes": 832,
+          "sha256": "5fd83521a1b924eb451e47089ce7d30580929d8fa39d29189e1d279c3b67aba0"
+        },
+        {
+          "path": "key-bound-control--slot-before.json",
+          "bytes": 190,
+          "sha256": "b99b626b1c6d23cd030fa7d48cda0aaf05321507901ad825bbd4af2676f23095"
+        },
+        {
+          "path": "key-bound-control--verifier.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 6732,
+          "sha256": "59914ca014adbe2d2d734d25053070402c7cf08a199a5ea0967740943f510c7c"
+        }
+      ]
+    }
+  ]
+}

@@ -74,7 +74,7 @@ test.each(["platform:destination@3", "platform:destination@4", "platform:destina
   for (const expiry of [{ clock: "available" as const, time: "2099-01-01T00:00:11Z" as const, expired: [5] }, { clock: "unavailable" as const }, undefined]) {
     const result = await observeCleanup({ summary: async () => read(expiry), items: async () => ({ ok: true, complete: true, at: head, value: [] }) }, target);
     if (expiry?.clock === "available") {
-      expect(result.lines[0]).toContain("Cleanup pending:"); expect(result.lines[0]).toContain("waits for the next act or alarm");
+      expect(result.lines[0]).toContain("Cleanup pending:"); expect(result.lines[0]).toContain("waits for the next alarm");
       expect(result.finding).toContain("Cleanup pending");
     } else {
       expect(result.lines[0]).toContain("Cleanup clock unavailable:"); expect(result.lines[0]).toContain("recorded state reserved; no expiry claim");

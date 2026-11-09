@@ -589,13 +589,18 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
       const pendingCleanup = await run(creator, "verify", "--all");
       expect(pendingCleanup.code, pendingCleanup.lines.join("\n")).toBe(1);
       expect(pendingCleanup.lines.join("\n")).toContain(`reservation ${expiring.id}`);
-      expect(pendingCleanup.lines.join("\n")).toContain("waits for the next act or alarm");
+      expect(pendingCleanup.lines.join("\n")).toContain("waits for the next alarm");
       expect(pendingCleanup.lines.join("\n")).not.toContain("Owed cleanup:");
       expect([await databaseDigest(), outsideSends]).toEqual([beforeDatabase, sendsBeforeRead]);
     } else {
       net.clock.now = timeOf(timeMs(net.clock.now)! + 1800_000);
     }
+    const beforeExpiryAct = (await G.summary()).at;
     await run(creator, "act", "add-room", "--on", "destination", "--target", String(expiring.id));
+    expect((await G.summary()).at).toEqual(beforeExpiryAct);
+    // Requests leave due work untouched. The real alarm records expiry and
+    // starts the same bounded cleanup before the existing custody checks.
+    expect(await runDurableObjectAlarm(G.object)).toBe(true);
     const expired = (await G.entries()).filter((entry) => entry.input.type === "timed" && entry.input.item === expiring.id && entry.effects.some((effect) => effect.effect === "operation" && effect.kind === "reservation-delete" && effect.attempts === 3));
     expect(expired).toHaveLength(1);
     if (newestCreation) expect(expired[0]!.effects).toContainEqual({ effect: "operation", k: 0, owner: FAILED_CLAIM_COHORT.destination, kind: "reservation-delete", attempts: 3, for: expiring.id });

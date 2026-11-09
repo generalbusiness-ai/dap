@@ -189,7 +189,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "14a2931a0fffc73fcd660e3816b5818c71338a8b1b8028718be3b9f01c2aec5c", // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
+    "packages/scope/src/core.ts:Scope": "09f30cd084ded0a13e764f488984d9a6b88679ac5a725877266aabb32f56d23b", // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
   },
 };
 
@@ -210,7 +210,8 @@ const seals = {
   "packages/platform/src/own-agent-cohort-data.ts": "5e018d8d4fa152ed3c827c64cbbf0587f5a7a2358b02e3e2cf90aec933fac502", // O2 own-agent guard and exact opt-in cohort owner.
   "packages/bytes/src/read-minimum.ts": "5ead3e9579b2805c525bae5d1ad3bd6883c0a18f0022a202c01eea91a181939c", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
   "packages/scope/src/read-wait.ts": "0bf31ae0c52975c9e91b22dfac278c03ab04c575b88941c3a6480433fd79e2cb", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
-  "packages/scope/src/authority.ts": "793b80180b0f1d719e720ea781a3e6338e41ea9552a9a6bf3b7697954015281d", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
+  "packages/scope/src/authority.ts": "7e186fb20ab6937db501a46bb8d5940d3ddbe41880d5fb7f53870476b673ec33", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
+  "packages/scope/src/turn.ts": "480fd9b6ace0b1704ca5900469a3b9dfb8bbb6148068dde3553a42f725747a2b", // R3 alarm-only timed drain; actual maintained parser output.
   "packages/platform/src/reservation-v17.ts": "e00aa0f08f9b3b1f4aca5e794436367ab550dcd1966c5258f1e96e42ab97a856", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "e3f0fa91c32d848b5bec7dc9ac047d4cc72815ddce70365ad8fade6884a7354b", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.

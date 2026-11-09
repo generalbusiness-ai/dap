@@ -538,10 +538,9 @@ export class Scope {
   }
 
   /**
-   * Submit an act (sections 4.2 and 5.2). Step 1 is here: the signature and
-   * the shape, then the foreign entries that the fields and the presented
-   * facts name, then what the authority port reads about the signer. The
-   * turn does the rest. A refusal is a statement about the head it names and
+   * Submit an act (sections 4.2 and 5.2). Check the signature and shape,
+   * then read standing before receiver policy and the foreign entries
+   * named by fields or presented facts. The turn does the rest. A refusal is a statement about the head it names and
    * writes nothing.
    *
    * `grants`: the grants presented beside the intent. The authority port's
@@ -575,9 +574,23 @@ export class Scope {
     const act = own(definition.declared.acts, intent.kind);
     const fields = act ? readFields(act.fields, intent.fields, bounds) : null;
     // Section 4.2: a key on a sealed entry is answered from history, with the same receipt or a mismatch. That answer reads no
-    // foreign entry, so none is fetched for it, and a lost dependency cannot hide it. The turn still drains first, and the
-    // judge gives the answer; an intent with a key that is not accepted is new work and meets every check below.
+    // foreign entry, so none is fetched for it, and a lost dependency cannot hide it.
+    // The judge gives the answer; an intent with a key that is not accepted is new work and meets every check below.
     let known = this.#store.accepted(intent.actor, intent.idempotencyKey) !== null;
+    // R3: obtain standing before provenance, receiver policy or foreign facts.
+    // A definite failure of an ordinary grant refuses without a queued turn.
+    // Native grant marks keep their own fallback, including recovery keys and
+    // action-null rows. The commit still checks every authority path afresh.
+    const given = (Array.isArray(grants) ? grants : []).filter(isGrant);
+    const read = known ? null : await this.#standing({ scope: scope.at, signed, action: act ? actionOf(act, definition) : null, grants: given, window: windowOf(definition, scope.at.kind, intent.kind) });
+    known = known || this.#store.accepted(intent.actor, intent.idempotencyKey) !== null;
+    if (!known && read === "limit") return { answer: "refused", reason: "limit", judgedAt: this.#store.scope()?.head ?? scope.head };
+    const standing = read === "limit" ? null : read;
+    if (!known && act && typeof act.grant === "string" && standing) {
+      const current = heldBy(standing, this.#store, clockOf(this.#store, this.#ports.clock.read()));
+      if (current !== null && current.length === 0) return { answer: "refused", reason: "unauthorized", judgedAt: this.#store.scope()?.head ?? scope.head };
+    }
+
     // Deployment admission changes no recorded judgment. A known key keeps
     // its original receipt or mismatch even after its release is withdrawn.
     // A refused genesis can never become active. Its terminal judgment is
@@ -619,12 +632,6 @@ export class Scope {
     if (facts === ARCHIVED_FACT) return { answer: "refused", reason: "archived", judgedAt: scope.head };
     if (!facts) return unavailable("dependency-unavailable");
 
-    // Section 5.1, held authority, in two phases. Phase one is here, the last read before the turn: what the judgment of this
-    // signer needs, read for this input and held by this call alone. It is never stored, and no other input's turn is given it.
-    // An accepted key is answered from history at check 3, so nothing is read for it (section 5.2, step 1). A read that fails or
-    // is late leaves nothing: the act is then not judged at check 9, `authority-unavailable`, and no earlier check is hidden.
-    const given = (Array.isArray(grants) ? grants : []).filter(isGrant);
-    const standing = known ? null : await this.#standing({ scope: scope.at, signed, action: act ? actionOf(act, definition) : null, grants: given, window: windowOf(definition, scope.at.kind, intent.kind) });
     // Phase two is in the commit: what that read holds at the commit's head, on the commit's one reading. The judge is given the
     // answer and reads nothing.
     // Section 16.1, "The order before the turn": the rows of the act, under a definition whose data states rows. The observations
@@ -740,6 +747,7 @@ export class Scope {
     }
     const given = (Array.isArray(grants) ? grants : []).filter(isGrant);
     const standing = needs === null ? null : await this.#standing({ scope: scope.at, signed, action: needs.action, grants: given, window: needs.window, ...(scopeGrant ? { scopeGrant: true } : {}) });
+    if (standing === "limit") return { answer: "refused", reason: "limit", judgedAt: this.#store.scope()?.head ?? scope.head };
     // Phase two, in the commit: the decision on the grant. It is the grant guard of `derive/src/grant.ts`, which the port's second
     // phase runs on the observation that the read obtained, at the commit's head and on the commit's one reading (section 16.1, "The
     // guards, in the commit"). The read was made for one action and one window. A commit that asks another is not judged on it.
@@ -785,10 +793,10 @@ export class Scope {
    * 3.3): one read for one act, within the fetch time limit of step 1. Null:
    * nothing was read. The port failed, was late, or gave no answer.
    */
-  async #standing(asked: Asked): Promise<Standing | null> {
+  async #standing(asked: Asked): Promise<Standing | "limit" | null> {
     const seconds = this.#bounds.fetchSeconds;
     const read = await within(() => this.#ports.authority.read(asked, seconds), seconds);
-    return read === LATE || !isObject(read) || typeof read.held !== "function" ? null : read;
+    return read === "limit" ? read : read === LATE || !isObject(read) || typeof read.held !== "function" ? null : read;
   }
 
   /**

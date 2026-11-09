@@ -12,6 +12,10 @@ import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/da
  * - **Counted.** A run is the life of one `observing`: the object makes one
  *   when it starts. Its `run` is random, and `n` counts the reads that it
  *   began, from 1, also those that got no answer.
+ * - **Bounded signing keys.** A run admits at most 4,096 distinct keys,
+ *   including failed and once-only reads. Another key gets `limit` before
+ *   membership is read. Existing keys remain usable; a restart starts a
+ *   fresh run.
  * - **Never kept across a restart.** Everything here is in memory. Nothing
  *   is stored, so after a restart the scope holds no observation and reads
  *   again. The order of heads holds across runs all the same: the folded
@@ -120,6 +124,9 @@ export function observing(config: Observing): Authority {
   const kept = new Map<KeyId, Read>();
   /** The highest head of membership, by key, of the observations that the entries written in this run retain (section 16.1, "Heads do not go back"). */
   const retained = new Map<KeyId, number>();
+  // One key budget also bounds once-only and discarded observations.
+  const keys = new Set<KeyId>();
+  const mostKeys = 4_096;
 
   /** How an entry written now would retain that read: `fresh`, or `reused` with the latest entry that retains it. */
   const useOf = (read: Read | Seen): ObservationUse => ({ observation: read.observation, read: { run, n: read.n }, use: read.last ? "reused" : "fresh", prior: read.last ? read.last.entry : null });
@@ -220,12 +227,16 @@ export function observing(config: Observing): Authority {
 
   return {
     further,
-    async read(asked: Asked, seconds: number): Promise<Standing | null> {
+    async read(asked: Asked, seconds: number): Promise<Standing | "limit" | null> {
       const { window, action, scope, scopeGrant } = asked;
       // No act of that kind, or no window stated for it: no commit could judge on a read, so none is made.
       const of = action === null || window === null ? null : config.membership(scope);
       if (action === null || window === null || !of) return null;
       const key = asked.signed.intent.actor;
+      if (!keys.has(key)) {
+        if (keys.size >= mostKeys) return "limit";
+        keys.add(key);
+      }
       /**
        * In the commit the order of heads is judged against the folded state, which holds the highest head of each subject over
        * every run (section 16.1, "The fold holds the highest head"). Before the turn there is no state at hand: the heads that
