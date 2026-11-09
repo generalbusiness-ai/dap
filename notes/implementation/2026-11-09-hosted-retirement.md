@@ -75,8 +75,16 @@ Four existing endpoint-only retire expectations and the OAuth lifecycle
 expectation now require pending `202`. Their authorization, stream, session,
 budget, and non-revival assertions remain. No allowance changes.
 
-Focused whole-owner checks, affected compiler contexts, the source seals,
-one meaningful control, and one final gate remain due. The actual
+The maintained source-seal producer ran at `75d4430c`. Its hosted owner
+gives `c41049c9597e2d2221066d60be526d85a50a730ad22d88ed999e124af6076956`;
+the new retirement owner gives
+`08e34ecbd584bde7dd196a86081f42d0be6b5e8323b7d4c565ac68fbe18ff1bb`.
+The inventory adopts those actual parser outputs under Hugh's standing
+patch approval. All route and gate assertions remain. Producer metadata
+establishes no test pass.
+
+Focused whole-owner checks, affected compiler contexts, one meaningful
+control, and one final gate remain due. The actual
 `gate.exit` must decide any gate pass claim. No current source claim rests
 on an R13 test result.
 
