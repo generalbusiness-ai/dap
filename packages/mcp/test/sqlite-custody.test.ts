@@ -7,7 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, test } from "vitest";
 import type { Receipt } from "@generalbusiness/dap-contract";
 import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
-import { COMPLETION_BYTES, SEGMENT_ROW_BYTES, chargedOf, sqliteStore, type Sql, type SqlValue, type SqliteCustodyBounds } from "../src/sqlite-custody.ts";
+import { COMPLETION_BYTES, SEGMENT_ROW_BYTES, SQLITE_CUSTODY_BOUNDS, chargedOf, sqliteStore, type Sql, type SqlValue, type SqliteCustodyBounds } from "../src/sqlite-custody.ts";
 import { Custody, CustodyError, Lost, RECORD_BYTES, TERMINAL, identityId, memoryStore, type CustodyRecord, type CustodyStore, type Outcome } from "../src/custody.ts";
 import { McpService } from "../src/service.ts";
 import { fixedSigner } from "./fixtures.ts";
@@ -73,7 +73,7 @@ describe("the custody store over SQLite", () => {
     expect((await store.unresolved()).map((r) => r.key)).toEqual(["small", "large"]);
   });
 
-  test("the default 256-record count refuses before signing and admits again after one record settles", async () => {
+  test("the default 256-record count and a smaller configured count refuse before signing; settlement frees one slot", async () => {
     const store = sqliteStore(nodeSql()), custody = new Custody(store, () => T);
     expect(store.unresolvedMost).toBe(256);
     // Synthetic envelopes isolate the real SQLite store and custody admission;
@@ -99,6 +99,17 @@ describe("the custody store over SQLite", () => {
     expect([builds, admitted.envelope]).toEqual([2, over.envelope]);
     expect((await store.unresolved()).length).toBe(256);
     expect(await store.read(identityId(first.identity))).toEqual(first);
+    const small = sqliteStore(nodeSql(), { ...SQLITE_CUSTODY_BOUNDS, unresolvedMost: 2 });
+    for (const key of ["small-a", "small-b"]) {
+      const seeded = recordOf(key, "unknown");
+      await small.write(identityId(seeded.identity), seeded);
+    }
+    await expect(new Custody(small, () => T).keep(over.identity, over.meaning, async () => {
+      builds++;
+      return { binding: over.binding, envelope: over.envelope };
+    }, T)).rejects.toMatchObject({ why: { held: "full", reason: "count" } });
+    expect(builds, "the configured smaller bound also refuses before building").toBe(2);
+    expect(await small.read(identityId(over.identity))).toBeNull();
   });
 
   test("outcomes spill to byte-bounded segment rows, in order, split when one is large, with an atomic index", async () => {

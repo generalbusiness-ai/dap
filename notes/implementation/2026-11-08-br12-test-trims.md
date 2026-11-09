@@ -21,6 +21,10 @@ admits the previously refused identity. The file store's existing concurrent
 admission cases still exercise the real bound across two processes. No
 record format or stored byte changes.
 
+The same store case also fills a configured two-record store and requires
+its next refusal before building. That gives the configured count a cheap
+witness alongside the endpoint case.
+
 The HTTP owner has no fixed sleeps or polling loop. Its configuration reader
 announces entry into each held snapshot. Its readers announce the expected
 stream text, and the existing `streamsChanged` port announces state changes.
