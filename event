@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-08-room-reuse-focused.manifest.json","body":{"commit":"4217a91377e4b10712f3f06117176a0e843ae8a8","path":"notes/implementation/evidence/2026-11-08-room-reuse-focused.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:061f3504099d277355dc5242d54c4bb110f61921","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/shell.ts."}
