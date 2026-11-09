@@ -57,7 +57,9 @@ case disappears from either native owner.
   unseen founding key without changing protected reads or waking parked
   work” case witnesses current native founding and exact-reference
   refusal. Its wrong-register, wrong-incarnation, malformed-query,
-  protected-read, and parked-work assertions remain.
+  protected-read, and parked-work assertions remain. The same case retains
+  the server's version 1 and 2 `DEMO_START_CONFIG` refusal loop: both
+  settings return 404 and leave the register lookup counts unchanged.
 - `packages/client/test/creation-offer.test.ts`: the bounded same-origin
   discovery case now selects the current exact register. It rejects wire
   version 1 at an exact retired register reference and mismatched scope
@@ -75,7 +77,7 @@ case disappears from either native owner.
   no v1 offer reaches the scripted successful return.
 
 This change edits no recorded definition, genesis packet, journal, or entry
-interpretation. Validation and independent exact-head review remain due.
+interpretation. Independent exact-head review remains due.
 
 ## Validation
 
@@ -85,7 +87,7 @@ stayed equal, every other tracked input stayed equal, and the process group
 closed. The build used the existing esbuild 0.28.1 and pinned Node 26.13.0;
 it installed nothing. Its [build manifest](evidence/2026-11-09-br11-assets.manifest.json),
 digest `e78cdb0b0cb5414976ffa50277933a3f5fcd5540b3b7b75ad9f41ed53363b27e`,
-seals 21 files. Focused checks and the gate remain due.
+seals 21 files. The later results below cover focused checks and the gate.
 
 The first focused run at `b132c932`, tree `f64f9549`, exited 1 in Node:
 9 passes and 5 failures across 14 cases. All three settings cases passed.
@@ -204,3 +206,20 @@ mode without a project bucket. Its local copy drives self-host deployment;
 the old Worker keeps its own exact binding and migration history. The
 planner owns the PD-6 live setting and secret removals and records their
 versions. This head performs no deployment and supplies no live acceptance.
+
+## Restore the retired-setting refusal witness
+
+Review `e84a5430` found that the removed native setup also held the only
+server witness for rejecting version 1 and 2 `DEMO_START_CONFIG`. That
+loop used no retired decoder. The old live setting can remain after a
+`--keep-vars` deployment until the planner removes it, so this refusal
+still matters.
+
+The follow-up restores the exact two-setting loop in the remaining
+Register 17 case, including both 404 and unchanged-lookup assertions.
+Only this test owner and explanatory documentation change. Production
+source, all other tests, configuration, dependencies, assets, seals, and
+historical pins match the passing gate head. The Scope test compiler and
+complete `demo-creation.test.ts` owner remain due for this follow-up.
+The earlier full gate and Page workflow retain their own passing results;
+neither runs again for this test-only repair.

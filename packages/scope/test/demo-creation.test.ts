@@ -86,7 +86,13 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     const oldAt=await lifetime.wait(()=>old.at());
     const forbidden=await signedIntent(newcomer,{to:oldAt,kind:"found",expected:{register:1},fields:{branch:"main","founderHandle":"@newcomer",recoveryKey:installer.key}},{now:lifetime.now()});
     expect(await lifetime.wait(()=>old.stub.submit(forbidden,[]))).toMatchObject({answer:"refused",reason:"unauthorized"});
+    // Public discovery never falls back to deployed Register7/8 settings.
     const unchanged = { ...lookups };
+    for (const [v, definition] of [[1, "platform:register@7"], [2, "platform:register@8"]] as const) {
+      const retired = { ...bindings, DEMO_START_CONFIG: canonicalize({ ...config, v, definition }) };
+      expect((await lifetime.wait(() => demoCreationRoute(new Request(origin+"/v1/demo/creation-offer"), retired))).status).toBe(404);
+    }
+    expect(lookups).toEqual(unchanged);
     const secondInstall=await signedIntent(installer,{to:null,kind:"install",fields:{host:"artifacts",namespace:"dap-demo",policy:"open"}},{now:lifetime.now()});
     const secondSeed:Seed={v:1,kind:"register",definition:ARCHIVE_DEVICE_APPLICATION_COHORT.register,creator:null,cause:intentDigest(secondInstall.intent),ordinal:0};
     const second=lifetime.platform(scopeIdOf(secondSeed));
