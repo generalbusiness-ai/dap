@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bbe649c74e45a547d1ae4faef27ad69b8f980b9f","text":"Merge retired a covered predecessor; the successor is at .github/workflows/scale-tests.yml."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bcd504d9bb1dd4dea970ca0ed09e4902964756f6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-scale-runner-focused.manifest.json."}
