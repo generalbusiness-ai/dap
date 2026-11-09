@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "request": "d8512f74f967badc4f51d40df529723331de0a7f",
+  "promise": "40f21bcc0e17f02088a832c7d9467b81fe294d86",
+  "sourceHead": "ecebb1cc365fd0afa843bfe6868a42fd2e804c6b",
+  "sourceTree": "943a7d0fe58574ffad0d6e65b535cdab502fe0f3",
+  "qualification": "Focused Node15 and1088local links pass; exact-name bypass control distinguishes with ownerexit1/verifierexit0 and exactrestoration. No gate or live claim.",
+  "fileCount": 29,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-security-d6-pre-gate",
+      "fileCount": 29,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2653,
+          "sha256": "2159ae95a75a65abc54611863445b91d3bdea32a88dbe116caef253d9ac0d7ee"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 687,
+          "sha256": "22ee2ae301eac870a40e0c141027a0ba6a5b5c32ab86627f846603d31f47dd9d"
+        },
+        {
+          "path": "focused--doc-links.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--doc-links.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "focused--doc-links.stdout",
+          "bytes": 36,
+          "sha256": "548b026cbad086ef1c5375a20689b0507560ec65aaf2969e6fa7b62bfa0ed962"
+        },
+        {
+          "path": "focused--doc-links.time",
+          "bytes": 29,
+          "sha256": "e2119bb87d679a721fc003fcd30263d56718bd551dd5b761211083fafa4b3fb5"
+        },
+        {
+          "path": "focused--driver.py",
+          "bytes": 4519,
+          "sha256": "2618b44f9a74f68ac56e136ee5062bc5827ef14708314464de01f79840485110"
+        },
+        {
+          "path": "focused--pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--private-retention.json",
+          "bytes": 448,
+          "sha256": "88f629f2c2d23bdf6b004dd271ab8e35ddee854454cde3372487a28b43af34ad"
+        },
+        {
+          "path": "focused--result.json",
+          "bytes": 1464,
+          "sha256": "84b5916ed60ffff15165b2aeba9e4761715b92433a739758dd638d35505dfdf0"
+        },
+        {
+          "path": "focused--security-entry-points.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--security-entry-points.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "focused--security-entry-points.stdout",
+          "bytes": 3228,
+          "sha256": "a7bc1bb57d02cb32d8974d1fd2c5c0640c73da0aafc94403177aaf4051fb09e7"
+        },
+        {
+          "path": "focused--security-entry-points.time",
+          "bytes": 29,
+          "sha256": "c1688527834b7057c615a36c456b4894ae44150604ff5948e4f5f3bac666107d"
+        },
+        {
+          "path": "focused--security-settings.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--security-settings.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "focused--security-settings.stdout",
+          "bytes": 826,
+          "sha256": "fd9b7a5df0d5b11da83d58067df61d47c8b366dfa1e9d33d0fdbea53efc9b129"
+        },
+        {
+          "path": "focused--security-settings.time",
+          "bytes": 32,
+          "sha256": "4334706c94f3f424794b2411586156e9ad173e51d5b62e510e73c3feb3348126"
+        },
+        {
+          "path": "focused--slot-before.json",
+          "bytes": 190,
+          "sha256": "1332c4d405cc341012a760d989416c9748af7a7c841fd2d84421c500c555bbcb"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 4940,
+          "sha256": "e942fb85dc34289cdede565ed8447fe797ea1d5d010e13f9db5e5797d967c054"
+        },
+        {
+          "path": "witness-control--control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "witness-control--control.time",
+          "bytes": 29,
+          "sha256": "de4a8c5eba18c4ca4f8d019eb13bfa5892162642aa690d5e11e4c54697a75007"
+        },
+        {
+          "path": "witness-control--driver.py",
+          "bytes": 4451,
+          "sha256": "463ded7a07aaa3cf0bc54f8b39e436f68932ee72b6fd01a8143a9e29548dc988"
+        },
+        {
+          "path": "witness-control--private-retention.json",
+          "bytes": 456,
+          "sha256": "05ee67ea1ede7355ac59daa9dd582b23d191406782e9b71a15feb34bf78dafd3"
+        },
+        {
+          "path": "witness-control--result.json",
+          "bytes": 772,
+          "sha256": "4e5b632b1f0732693b1f1444f2b9437bb7a4611b50c552c65a65bad4b5df38c4"
+        },
+        {
+          "path": "witness-control--slot-before.json",
+          "bytes": 190,
+          "sha256": "512364b1279a4495d170d5b2fef471f342b8af6bb42f3e0ab58f74e94fd0fb84"
+        },
+        {
+          "path": "witness-control--stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "witness-control--stdout",
+          "bytes": 4051,
+          "sha256": "734ff492d5cdc59f5a5f7126b2ed8b6d01324e03a1753f353d4da27a92ac8080"
+        },
+        {
+          "path": "witness-control--verifier.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        }
+      ]
+    }
+  ]
+}

@@ -196,9 +196,24 @@ A full register refuses only `found`. Rooms that exist go on. The way out is a n
 
 A test shows this on real scopes on each register pin of `CREATION_COHORTS`, through the production host wiring with a scripted host (`packages/cli/test/failed-claims-close-register.defect.scope.test.ts`). No real outage has run.
 
+## dap-self-host (template)
+
+[`apps/room/wrangler.jsonc`](../../apps/room/wrangler.jsonc) is the neutral
+self-host template. It uses the room entry and declares local `SCOPES`,
+`SCOPE_INDEX`, `REGISTRIES` and `AGENTS` classes. It starts in enforce mode.
+Its Artifacts binding and matching namespace setting name `dap-self-host`.
+The template contains no project register, R2 bucket, metrics dataset,
+session secret or application trust.
+
+The operator copies it to `wrangler.self-host.jsonc`, provisions distinct
+resources and supplies the register and session settings described in
+[Self-host dap](../self-host.md). The placeholder namespace name alone
+neither provisions a provider namespace nor proves its isolation. MCP opt-in
+is absent, and `APPLICATION_SCREEN_HOSTS` is empty.
+
 ## artroom-scope
 
-[`apps/room/wrangler.jsonc`](../../apps/room/wrangler.jsonc) uses the [room entry](../../apps/room/worker.ts), which exports the Scope classes and serves through [room fetch](../../apps/room/fetch.ts).
+[`apps/room/wrangler.artroom-scope.jsonc`](../../apps/room/wrangler.artroom-scope.jsonc) uses the [room entry](../../apps/room/worker.ts), which exports the Scope classes and serves through [room fetch](../../apps/room/fetch.ts).
 
 It declares its own `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS` bindings. These bindings have no cross-Worker `script_name`. The classes are local to this Worker. The same class name in another Worker does not share Durable Object storage.
 
@@ -265,11 +280,32 @@ variables are absent from the checked-in file. Retained operator settings
 and actual hosted routes still require their own evidence.
 
 The checked-in `DEMO_START_CONFIG` is not a Commons provisioning interface.
-The maintained Demo parser recognizes Register 17, not this Register 23
-cohort. Follow the
+The maintained Demo parser recognizes Registers 17 and 26, not this
+Register 23 cohort. Follow the
 [Commons CLI order](../deploy.md#provision-the-commons-worker) and bind only
 the two operational register fields. This source describes
 no deployment, activation, namespace creation, or hosted W1 result.
+
+## dap-connect
+
+[`apps/room/wrangler.connect.jsonc`](../../apps/room/wrangler.connect.jsonc)
+uses the room entry with local `SCOPES`, `SCOPE_INDEX`, `REGISTRIES` and
+`AGENTS` classes. It names the private `dap-connect-application-content`
+R2 bucket and no Artifacts binding or metrics dataset. These checked-in
+names differ from the other Workers' resources.
+
+The file sets `DEPLOYMENT` to `dap-connect` and the index to enforce.
+`REGISTER_SCOPE` remains `PLANNED_O4_REGISTER_SCOPE`; the planner replaces
+it from the own-agent plan. The operator supplies a fresh `SESSION_SECRET`.
+The explicit creation cohort is Register 27, Directory 26, Membership 13,
+Rules 10, Destination 20 and Inbox 1.
+
+`MCP_ENABLED` is explicitly false. The MCP resource URLs, card origins and
+application trust row configure the intended O4 surface but do not open it.
+`APPLICATION_SCREEN_HOSTS` is empty. Hosted grants and agent seeds live in
+this Worker's MCP objects, not the content bucket. The
+[O4 runbook](../o4-connect.md) owns deployment and the live test window;
+this file proves neither a live route nor a completed host test.
 
 ## dap-grow-simulator
 
@@ -297,7 +333,7 @@ A separate screen origin separates browser storage from the room origin. It does
 
 ## Shared resources
 
-`artroom-scope` and `dap-grow` share an Artifacts namespace and an R2 bucket. Three Workers share one analytics dataset. The checked-in configuration names these shared resources:
+`artroom-scope` and `dap-grow` share an Artifacts namespace and an R2 bucket. Four Workers share one analytics dataset. The checked-in configuration names these shared resources:
 
 | Resource | Configurations that name it |
 |---|---|
@@ -313,4 +349,6 @@ Secret equality, provider access controls, namespace IDs, bucket public-access s
 
 ## Source
 
-Checked against main `b0af01d2` on 1 November 2026. Sources: [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc), [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jsonc), [apps/room/wrangler.lending.jsonc](../../apps/room/wrangler.lending.jsonc), [apps/room/wrangler.demo.jsonc](../../apps/room/wrangler.demo.jsonc), [apps/room/celld/wrangler.json](../../apps/room/celld/wrangler.json), [examples/grow/wrangler.jsonc](../../examples/grow/wrangler.jsonc), [apps/sandbox/wrangler.jsonc](../../apps/sandbox/wrangler.jsonc), [homepage/wrangler.jsonc](../../homepage/wrangler.jsonc), [apps/jam/wrangler.jsonc](../../apps/jam/wrangler.jsonc).
+Deployment configuration references checked against main `29926a3a` on
+9 November 2026. The revocation and outage sections retain their cited
+source and run limits. Sources: [apps/room/wrangler.artroom-scope.jsonc](../../apps/room/wrangler.artroom-scope.jsonc), [apps/room/wrangler.connect.jsonc](../../apps/room/wrangler.connect.jsonc), [apps/room/wrangler.commons.jsonc](../../apps/room/wrangler.commons.jsonc), [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc), [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jsonc), [apps/room/wrangler.lending.jsonc](../../apps/room/wrangler.lending.jsonc), [apps/room/wrangler.demo.jsonc](../../apps/room/wrangler.demo.jsonc), [apps/room/celld/wrangler.json](../../apps/room/celld/wrangler.json), [examples/grow/wrangler.jsonc](../../examples/grow/wrangler.jsonc), [apps/sandbox/wrangler.jsonc](../../apps/sandbox/wrangler.jsonc), [homepage/wrangler.jsonc](../../homepage/wrangler.jsonc), [apps/jam/wrangler.jsonc](../../apps/jam/wrangler.jsonc).
