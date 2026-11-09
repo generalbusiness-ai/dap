@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c4b2a7921cb62d2d52421794790254fc5450114a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r15-failed-revoke-witness.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dbf1ecbe1c7f54477d7c436911f54387eedcd7ac","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/hosted-retirement.ts."}
