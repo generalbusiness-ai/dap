@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Pin the two lane definitions and the two of the demo profile: write the
-// canonical bytes of each to definitions/, and their digests to
-// src/digests.ts, from the values in src/.
+// Pin the two lane definitions and the two of the demo profile: write
+// readable JSON for each to definitions/. Their canonical values determine
+// the digests written to src/digests.ts. Source values live in src/.
 //
 //   node apps/room/lanes/scripts/pin.mjs
 //
