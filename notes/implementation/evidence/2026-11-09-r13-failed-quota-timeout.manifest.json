@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "89706f419dfd6de29dea5220760a8ef561f36e5d",
+  "sourceTree": "59c96bc63ba66fb1d25e7d769bfa29d4b6297c21",
+  "qualification": "Keep this follow-up failed. Original deadline preserved, no manual kill or concurrent local validation body.17cases in4complete owners are conclusive at this source; the quota owner needs a fresh bounded diagnostic with both cases unchanged in substance.",
+  "fileCount": 16,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-failed-quota-timeout-validation",
+      "fileCount": 16,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1274,
+          "sha256": "2b3e93b20b1b9944bfba963fe1a9b629672d60f9450de81ac67b34896502b515"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "27aeb94d2afa5e469c6e78b889a88b1d09961698d01178cc763bc53dc02dc96d"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 6772,
+          "sha256": "6743babb90758d2dd954992927792570c76d099edba2549c9a991ca4ac83e03d"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 24893,
+          "sha256": "9359c546fe22c84a4291fd6a8b0bfed8b04189a600daaeabedfd47a582b629ee"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 8290,
+          "sha256": "c998ce5e6020787d56594876ef056059f4f460788dda661e668c8f5875a21e49"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 3992,
+          "sha256": "79669fbe1b6a796d9c1d6b00b82d3df5bcea9be54ebb4fd818bcda32e35c111a"
+        },
+        {
+          "path": "node-reuse.json",
+          "bytes": 931,
+          "sha256": "266e8a7300a1d998b4b130327a0fca8652c908faa8d8304ab8a3ba2eec40af1a"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 574,
+          "sha256": "217f0e76d37d25bdad91e4693d7797359984f804ed7852af6313b638000863b6"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 31,
+          "sha256": "80b9dd81d002fb196b6a9a434831b4b0055aa1937eb153f28656a5f8a1116bc5"
+        },
+        {
+          "path": "prior-phase-reuse.json",
+          "bytes": 7310,
+          "sha256": "90d1adf540868a3911d5b124ee4a6e5c586548860e5dcd2c79932fc5cc694743"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 491,
+          "sha256": "632c46207374b5038eb63a3d2774170b571e970cd71bc375d7f32b94fcdcd85e"
+        },
+        {
+          "path": "scope-test.log",
+          "bytes": 29,
+          "sha256": "4f75c6623c66ce7f8d3a19980e727e39d2e843f1d83ceeaa2aa48be0ff5553dd"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}

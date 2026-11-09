@@ -119,6 +119,15 @@ Manifest `5e80040f24b407c5bb7ad3686b80817c32e593894e59f53eff35431175bfa929`
 seals 19 public and 268 private files. Only the affected test compiler and
 the five failing, incomplete, or uncollected Native owners need follow-up.
 
+The follow-up at `89706f41` passed its compiler and 17 cases in four
+complete owners. The first quota scenario then timed out at its unchanged
+30-second allowance. That scenario passed in the earlier run. Its second
+scenario stayed unfinished. The cause remains unknown. Manifest
+`cf3d46eed2aba655e8e690295d89faeb959e760ec56c13591183767cfc86e9e8`
+seals 16 public and 265 private files. Bounded test-only phase markers now
+identify the last completed step if the two-case quota owner stalls again.
+They change no clock, assertion, worker setting, deadline, or production code.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The
