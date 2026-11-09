@@ -3,13 +3,17 @@ import { SCOPE_BOUNDS } from "@generalbusiness/dap-contract";
 import { newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { ANSWERS } from "../src/answers.ts";
 
-test("creation transport accepts each named capacity refusal and legacy refusal, but rejects arbitrary names and names on other reasons", () => {
+test("transport accepts named capacity and member-admission refusals, but rejects arbitrary reasons and misplaced names", () => {
   const full = { answer: "refused", reason: "scope-full" };
   expect(ANSWERS.create(full)).toBe(true);
   for (const name of SCOPE_BOUNDS) expect(ANSWERS.create({ ...full, name })).toBe(true);
   expect(ANSWERS.create({ ...full, name: "scopePrivateText" })).toBe(false);
   expect(ANSWERS.create({ ...full, reason: "guard-failed", name: "scopeItems" })).toBe(false);
   expect(ANSWERS.create({ ...full, name: "scopeItems", extra: true })).toBe(false);
+  const limited = { answer: "refused", reason: "limit", judgedAt: { seq: 7, hash: `sha256:${"a".repeat(64)}` } };
+  expect(ANSWERS.submit(limited)).toBe(true);
+  expect(ANSWERS.submit({ ...limited, reason: "private-quota-full" })).toBe(false);
+  expect(ANSWERS.submit({ ...limited, judgedAt: undefined })).toBe(false);
 });
 
 test("deployment admission reasons are creation answers and never native act answers", () => {

@@ -21,6 +21,7 @@ export type RefusalReason = FloorRefusal | "archived"
   | "expired"           // the commit clock is at or past `notAfter`
   | "scope-refused"     // the scope's genesis was refused; it admits nothing
   | "application-revoked" // deployment trust no longer admits new acts under this installed release; no entry is written
+  | "limit"             // native runtime admission has no member reservation available; no entry is written
   | "wrong-pin"         // the sender's definition digest differs from the handler's declared pin
   | "unknown-act"       // the kind is not an act of the definition, or is its genesis act
   | "bad-field"         // a field is unknown, missing or not a value of its type

@@ -4,10 +4,11 @@ Request: `908786011e5c0acae29e7b2a7c70b87b0680a948`, item 4 only.
 Promise: `3a1d2b78e02d544489d3786415b9ed987c28e3af`.
 Live ruling: `67b1fb7faa0e17232a72e1588f834001dadbe9e1`.
 
-Status: unvalidated source preparation. The branch includes main
+Status: unvalidated repair after the first focused compiler failure. The branch includes main
 `f9eb50bc`. Its owned dependency view copies the completed runner checkout
-without an install. No compiler, focused check, control, asset build, or
-gate has run for this head. The planner closed the execution window in
+without an install. Compatibility and the 11-case Node owner passed at
+`16a3847c`; Scope source then failed on the missing `limit` type. No Native
+case, control, asset build, or gate has run. The planner closed the execution window in
 `7b2d5548` and sprint-cadence thread 22. The earlier items of R13 stay closed.
 
 ## Refuse before accepting a ninth operation
@@ -61,7 +62,30 @@ admission read to eight live rows. An unknown end beyond the last valid
 clock stays open at every representable time and schedules no impossible
 alarm; it never frees early through a capped timestamp.
 
-## Validation remains due
+## Add the ruled refusal to the public answer vocabulary
+
+The first focused run caught a missing transport reason: Scope source
+failed `TS2322` because `RefusalReason` did not include `limit`.
+The contract now names that pre-entry refusal. The bytes validator and
+the two exhaustive metric schemas recognize the same closed value.
+The existing client answer witness checks that the refusal crosses its
+decoder with a judged head and still rejects an unknown reason.
+
+This addition follows [kernel section 7](../../docs/kernel.md#7-rule-for-adding-to-the-kernel).
+Quota policy and storage stay in the replaceable runtime service. The
+closed public `Answer` vocabulary must name the exact reason that current
+clients decode, so an application cannot supply this part. Section 7.1
+admits the filed R13 security fix. No new K item, platform name, definition,
+recorded outcome rule, or historical pin follows from the new answer.
+
+## Validate the final source
+
+The first frozen run at `16a3847c` passed compatibility and all 11 Node
+inventory cases, then failed its first Scope source compiler. The test
+compiler and all 21 Native cases remained unrun. Manifest
+`66de9014e2a55a08948bb02bcb4b707f6b4dc8d0da387e517ace1a6ab905413f`
+seals 17 public and 36 private files. The failed run remains failed.
+The repair's focused checks, distinguishing controls, and gate remain due.
 
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
@@ -91,5 +115,5 @@ owners changed by the known-expired and late-reply cuts: the adapter,
 custody, and quota. Patch `artroom-r13-late-source-seals-20261109.patch`
 has SHA-256 `cba60792593f91c5b1537bb3e235c190e7839c5316c8193dffec801b87bd35cb`.
 The existing named Core and Object values stay equal to the first freeze.
-Hugh's standing patch authorization covers these actual outputs. No test
-has run yet.
+Hugh's standing patch authorization covers these actual outputs. The seal
+metadata supplied no test result.
