@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:db406c34aff1d746c456778b33aeb1c7c9966d26","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/read-token-quota-store.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:df8619a9fa336476985b43608115eccaa0f23f0e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-focused-closure.manifest.json."}
