@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:216d2e2e9e41fcd993ec16483de6873d04a208ff","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/metrics.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:23e9c567586ed29f708ad565ae1ac670a2a0daf0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-failed-quota-timeout.manifest.json."}
