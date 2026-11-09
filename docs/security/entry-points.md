@@ -1056,6 +1056,7 @@ Gate owners: [address.ts](../../packages/bytes/src/address.ts),
 [evidence.ts](../../packages/platform/src/evidence.ts),
 [checkout-snapshot.ts](../../packages/git/src/checkout-snapshot.ts),
 [hosted.ts](../../packages/mcp/src/hosted.ts),
+[hosted-retirement.ts](../../packages/mcp/src/hosted-retirement.ts),
 [hosted-tools.ts](../../packages/mcp/src/hosted-tools.ts),
 [service.ts](../../packages/mcp/src/service.ts),
 [catalogue.ts](../../packages/mcp/src/catalogue.ts), and

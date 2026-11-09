@@ -28,11 +28,12 @@ import { invitationRedemptionFields } from "@generalbusiness/dap-client";
  *   of each object has 16 MiB, of which the last 1 MiB admits `retire` alone.
  */
 
-import type { ControlAction, ControlRequest, Digest, KeyId, MemberId, ScopeRef, Seed, SignedControl } from "@generalbusiness/dap-contract";
+import type { ControlAction, ControlRequest, Digest, KeyId, MemberId, ScopeRef, Seed, SignedControl, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, isKeyId, isScopeRef, keyIdOfSecret, parseStrict, scopeIdOf, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
-import { TransportError, agentKeyInvitationOf, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
-import { CustodyError, Lost, meaningOf, type Envelope, type Identity } from "./custody.ts";
+import { b64url, canonicalize, digestBytes, isKeyId, isScopeRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
+import { TransportError, agentKeyInvitationOf, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
+import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity } from "./custody.ts";
+import { enrolledKeyItem, retirementBody } from "./hosted-retirement.ts";
 import { HttpGeneration, McpHttp, SESSIONS_MOST, SessionFull, type SessionRow } from "./http.ts";
 import type { McpConfig, Root } from "./inventory.ts";
 import { McpService, type ServerPort } from "./service.ts";
@@ -505,6 +506,9 @@ export class HostedAgent {
     sql.exec(`CREATE TABLE IF NOT EXISTS oauth_session (id TEXT PRIMARY KEY, grant_id TEXT NOT NULL, row TEXT NOT NULL, created INTEGER NOT NULL)`);
     this.#control = new ControlPlane(sql, ports.controlBudget?.budget, ports.controlBudget?.reserve);
     this.#control.migrateBearerAnswers(true);
+    sql.exec(`CREATE TABLE IF NOT EXISTS agent_retirement (id INTEGER PRIMARY KEY CHECK (id = 1), revoke TEXT)`);
+    // Old endpoint-only retirements must not retain their signing seed.
+    sql.exec(`UPDATE agent SET seed = ? WHERE state = 'retired' AND length(seed) <> 0`, new Uint8Array());
     this.#oauth = new OAuthAccess(sql, { now: ports.now, observe: (membership, ask) => ports.observe(membership, ask),
       agent: () => { const row = this.#row(); return row ? { state: row.state, membership: row.membership, key: row.key, handle: row.handle } : null; },
       charge: bytes => { this.#control.charge(bytes, "retire"); } });
@@ -673,10 +677,26 @@ export class HostedAgent {
   }
 
   #servicePort(row: AgentRow): ServerPort {
-    const read = async (): Promise<McpConfig> => { await this.ports.configHold?.(); return this.#row()?.config ?? row.config; };
+    const { op, key, config } = row;
+    const read = async (): Promise<McpConfig> => { await this.ports.configHold?.(); return this.#row()?.config ?? config; };
+    const active = (): AgentRow | null => {
+      const current = this.#row();
+      return current?.op === op && current.key === key && (current.state === "enrolling" || current.state === "enrolled") && current.seed.length === 32 ? current : null;
+    };
+    const fetch: Fetch = (url, init) => {
+      // A retained intent prepared before retirement cannot dispatch afterwards.
+      if (!active()) return Promise.reject(new Error("The hosted agent cannot dispatch."));
+      return this.ports.fetch(url, init);
+    };
     return {
       applicationTrust: this.ports.applicationTrust,
-      service: row.config.service, fetch: this.ports.fetch, signer: secretSigner(row.seed), custody: sqliteStore(this.sql, this.ports.custodyBounds, this.ports.now), now: this.ports.now,
+      service: config.service, fetch, signer: { key, sign: bytes => {
+        const current = active();
+        if (!current) throw new Error("The hosted agent cannot sign.");
+        const seed = current.seed.slice();
+        try { return sign(seed, bytes); }
+        finally { seed.fill(0); }
+      } }, custody: sqliteStore(this.sql, this.ports.custodyBounds, this.ports.now), now: this.ports.now,
       ...(this.ports.genericTools !== undefined ? { genericTools: this.ports.genericTools } : {}),
       ...(this.ports.metrics ? { metrics: this.ports.metrics } : {}),
       ...(this.ports.every ? { every: this.ports.every } : {}), ...(this.ports.pause ? { pause: this.ports.pause } : {}),
@@ -862,7 +882,7 @@ export class HostedAgent {
     return decided;
   }
 
-  /** `bearer` and `retire`: the rotation or the ending, every session's deletion, every stream's close and the answer, in one transaction. */
+  /** Controls serialize rotation and retirement; shutdown commits before outside work. */
   control(signed: SignedControl, action: "bearer" | "retire", body: Uint8Array): Promise<ControlAnswer> {
     return this.#controls.run(() => this.#control_(signed, action, body));
   }
@@ -880,6 +900,7 @@ export class HostedAgent {
     if (!same(r.membership, row.membership)) return answer(403, { error: "unauthorized", rule: "membership" });
     const authority = await authorityOf(this.ports, row.membership, r.actor, row.handle as MemberId);
     if (!authority.ok) return answer(403, { error: "unauthorized" });
+    if (action === "retire") return this.#retire(signed, row, body, authority, now);
     const fingerprint = fingerprintOf(r);
     // `fresh`: this call committed the action now. A replay returns the retained answer and disturbs nothing opened since.
     const { result, fresh } = this.sql.transaction((): { result: ControlAnswer; fresh: boolean } => {
@@ -890,22 +911,13 @@ export class HostedAgent {
         return { result: this.#control.retained(existing, now) ?? answer(409, { error: "op", rule: "stale" }), fresh: false };
       }
       if (row.state === "retired") return { result: answer(409, { error: "retired" }), fresh: false };
-      const issued = this.ports.now(), bearerExpires = action === "bearer" ? timeOf(issued + BEARER_LIFETIME_MS) : null;
-      const expiryDelta = (bearerExpires === null ? 0 : utf8(bearerExpires).length) - (row.bearerExpires === null ? 0 : utf8(row.bearerExpires).length);
+      const issued = this.ports.now(), bearerExpires = timeOf(issued + BEARER_LIFETIME_MS);
+      const expiryDelta = utf8(bearerExpires).length - (row.bearerExpires === null ? 0 : utf8(row.bearerExpires).length);
       // Reserve the operation and settle the expiry field in one admission.
       if (!this.#control.charge(CONTROL_ROW_BYTES + expiryDelta, action)) return { result: answer(507, { error: "full", rule: "control-budget" }), fresh: false };
-      const secret = action === "bearer" ? b64url(this.ports.random(32)) : null;
-      const done = action === "bearer"
-        ? answer(200, { agent: this.ports.id, by: authority.by, bearer: `${this.ports.id}.${secret}`, bearerExpires })
-        : answer(200, { agent: this.ports.id, by: authority.by, retired: true });
-      if (action === "bearer") this.sql.exec(`UPDATE agent SET bearer = ?, bearer_expires = ?, updated = ? WHERE id = 1`, digestBytes(utf8(secret!)), bearerExpires, timeOf(issued));
-      else this.sql.exec(`UPDATE agent SET state = 'retired', bearer = NULL, bearer_expires = NULL, updated = ? WHERE id = 1`, timeOf(issued));
-      if (action === "retire") {
-        this.#oauth.endAll();
-        const held = this.sql.exec(`SELECT row FROM oauth_session`).toArray().reduce((n, s) => n + utf8(String(s["row"])).length + ROW_OVERHEAD, 0);
-        this.sql.exec(`DELETE FROM oauth_session`);
-        this.#control.charge(-held, "retire");
-      }
+      const secret = b64url(this.ports.random(32));
+      const done = answer(200, { agent: this.ports.id, by: authority.by, bearer: `${this.ports.id}.${secret}`, bearerExpires });
+      this.sql.exec(`UPDATE agent SET bearer = ?, bearer_expires = ?, updated = ? WHERE id = 1`, digestBytes(utf8(secret)), bearerExpires, timeOf(issued));
       const held = this.sql.exec(`SELECT row FROM session`).toArray().reduce((n, s) => n + utf8(String(s["row"])).length + ROW_OVERHEAD, 0);
       this.sql.exec(`DELETE FROM session`);
       this.#control.charge(-held, "retire");
@@ -920,9 +932,81 @@ export class HostedAgent {
       const owner = this.#transport;
       this.#transport = null;
       await owner?.graceful();
-      if (action === "retire") { this.#oauthEpoch++; await this.#issuer.revokeAll(); await this.#oauthHttp.closeAll(); }
     }
     return result;
+  }
+
+  /** Endpoint shutdown and seed erasure precede every outside read or dispatch. */
+  async #retire(signed: SignedControl, row: AgentRow, body: Uint8Array, authority: Extract<Authorized, { ok: true }>, now: number): Promise<ControlAnswer> {
+    const r = signed.request, fingerprint = fingerprintOf(r);
+    const prior = this.sql.exec(`SELECT revoke FROM agent_retirement WHERE id = 1`).toArray()[0];
+    // Once captured, no later body replaces or changes the retained envelope.
+    const parsed = prior?.["revoke"] != null ? { valid: true as const, revoke: null } : retirementBody(body, row.membership, r.actor);
+    if (!parsed.valid) return answer(400, { error: "retire", rule: "revoke-envelope" });
+    const text = parsed.revoke ? canonicalize(parsed.revoke) : null;
+    const refused = this.sql.transaction((): ControlAnswer | null => {
+      this.#expire(now);
+      const existing = this.#control.row(r.op);
+      if (existing && existing.fingerprint !== fingerprint) return answer(409, { error: "op", rule: "fingerprint" });
+      const held = this.sql.exec(`SELECT revoke FROM agent_retirement WHERE id = 1`).toArray()[0];
+      const capture = held?.["revoke"] == null ? text : null;
+      const cost = (existing ? 0 : CONTROL_ROW_BYTES) + (held ? 0 : ROW_OVERHEAD) + (capture === null ? 0 : utf8(capture).length);
+      if (!this.#control.charge(cost, "retire")) return answer(507, { error: "full", rule: "control-budget" });
+      if (!held) this.sql.exec(`INSERT INTO agent_retirement (id, revoke) VALUES (1, ?)`, capture);
+      else if (capture !== null) this.sql.exec(`UPDATE agent_retirement SET revoke = ? WHERE id = 1 AND revoke IS NULL`, capture);
+      this.sql.exec(`UPDATE agent SET state = 'retired', seed = ?, bearer = NULL, bearer_expires = NULL, updated = ? WHERE id = 1`, new Uint8Array(), timeOf(now));
+      this.#oauth.endAll();
+      for (const table of ["session", "oauth_session"]) {
+        const bytes = this.sql.exec(`SELECT row FROM ${table}`).toArray().reduce((n, s) => n + utf8(String(s["row"])).length + ROW_OVERHEAD, 0);
+        this.sql.exec(`DELETE FROM ${table}`);
+        this.#control.charge(-bytes, "retire");
+      }
+      if (!existing) this.#control.insert(r.op, fingerprint, "retire", this.ports.id, "pending", r.notAfter, timeOf(now));
+      return null;
+    });
+    if (refused) return refused;
+    row.seed.fill(0);
+    this.#httpEpoch++; this.#oauthEpoch++;
+    const owner = this.#transport;
+    this.#transport = null; this.#service = null;
+    await owner?.graceful();
+    await this.#issuer.revokeAll();
+    await this.#oauthHttp.closeAll();
+    const result = (complete: boolean, reason?: string): ControlAnswer => answer(complete ? 200 : 202, {
+      agent: this.ports.id, by: authority.by, key: row.key, retired: complete,
+      endpointDisabled: true, seedErased: true,
+      ...(complete ? {} : { pending: true, reason: reason ?? "key-active", next: "A membership.manage holder or the recovery key must revoke this key. Retry retire after the recorded revoke." }),
+    });
+    const revoked = async (): Promise<boolean> => {
+      try {
+        const key = await this.ports.observe(row.membership, { key: row.key }) as KeyStanding | null;
+        return key?.keyState === "retired" || key?.keyState === "compromised";
+      } catch { return false; }
+    };
+    let decided: ControlAnswer;
+    if (await revoked()) decided = result(true);
+    else {
+      const kept = this.sql.exec(`SELECT revoke FROM agent_retirement WHERE id = 1`).toArray()[0]?.["revoke"];
+      let reason = "revoke-required";
+      if (typeof kept === "string") {
+        const revoke = parseStrict(kept) as SignedIntent;
+        const identity: Identity = { service: row.config.service, membership: row.membership, signer: row.key, target: row.membership, key: `enrol:${row.op}` };
+        try {
+          const record = await sqliteStore(this.sql, this.ports.custodyBounds, this.ports.now).read(identityId(identity));
+          const target = enrolledKeyItem(record, identity);
+          if (target === null) reason = "enrolment-unavailable";
+          else if (revoke.intent.on !== target) reason = "wrong-key";
+          else if ((timeMs(revoke.intent.notAfter) ?? -Infinity) <= this.ports.now()) reason = "revoke-expired";
+          else {
+            const reply = await httpTransport(row.config.service, { fetch: this.ports.fetch }).submit(row.membership.scope, revoke, []);
+            reason = reply.answer === "accepted" ? "revocation-unobserved" : "reason" in reply ? String(reply.reason) : reply.answer;
+          }
+        } catch { reason = "revoke-unresolved"; }
+      }
+      decided = await revoked() ? result(true) : result(false, reason);
+    }
+    this.sql.transaction(() => this.#control.complete(r.op, decided.status === 200 ? "complete" : "pending", decided));
+    return decided;
   }
 
   /** The bearer check, in constant time over digests, with failures counted per connecting address. */

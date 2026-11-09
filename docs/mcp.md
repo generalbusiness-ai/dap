@@ -2105,7 +2105,7 @@ See [hosted settings](security/settings.md) for configuration bounds.
 |---|---|---|
 | `POST /mcp/agents` | `Control`, action `create` | Creates and enrolls an agent. Body: `{ "link": "<artroom-agent-key:…>" }`, the private agent-key invitation described below. A fresh successful issuance answers `201` with `{ agent, key, handle, member, bearer, bearerExpires }`. The plaintext bearer is returned only by that fresh response; replay returns its secret-free receipt |
 | `POST /mcp/agents/<agent>/bearer` | `Control`, action `bearer` | A new static bearer. Its sessions end, its 2025-11-25 streams close with a final event, and its listens complete with their result. OAuth grants keep their own sessions. A fresh operation renews the bearer lifetime. A replay returns the original secret-free receipt and ends nothing |
-| `DELETE /mcp/agents/<agent>` | `Control`, action `retire` | Retires the agent and ends every OAuth grant, session, and stream. A retired agent answers `401` from then on, and no later `bearer` or unfinished `create` revives it. An unfinished enrollment can be retired |
+| `DELETE /mcp/agents/<agent>` | `Control`, action `retire` | Disables the endpoint, erases its seed, and ends every OAuth grant, session, and stream. Empty body or `{ "revoke": <SignedIntent> }`. Answers `200` only after membership shows the key revoked; otherwise `202` with explicit pending recovery. See retirement below |
 | `GET /.well-known/oauth-protected-resource/mcp` | None | Exact configured-resource metadata, including the query |
 | `GET /.well-known/oauth-authorization-server` | None | Public-client issuer metadata |
 | `GET /oauth/authorize` | Existing selected browser key for consent | Consent HTML; `/oauth/consent.js` serves its same-origin script |
@@ -2264,7 +2264,45 @@ Revocation also belongs to the membership. After an admin's `key.revoke`
 or `member.remove`, membership refuses the key's acts at once. Another scope
 of the room can still accept them for up to 300 seconds, as
 [What a revoked key keeps](security/trust-boundaries.md#what-a-revoked-key-keeps)
-states. `retire` only stops the hosted service.
+states. Retirement preserves that existing grant lifetime.
+
+### Retirement
+
+An admin or the agent's recorded controller may retire it. In one storage
+transaction, the endpoint clears its bearer, deletes its sessions, ends its
+OAuth access, and erases the private seed. Cached service signers and
+transports refuse further signing or dispatch. No later `bearer` or
+unfinished `create` revives the agent. Upgrading an already retired hosted
+row also erases its old seed.
+
+The body may contain one `revoke` signed intent. Its signer must be the
+retiring party, its target the same membership, its act `revoke-key` for
+this agent's key item, and its only field `as: "retired"`. The endpoint
+checks the item against its verified accepted enrollment record. It stores
+the first envelope and submits those exact bytes. A retry never signs or
+substitutes a revoke. Membership still decides whether the signer may
+revoke the key. The endpoint never signs a revoke with the agent's seed.
+
+A `200` answer with `retired: true` means membership shows the key revoked
+and the endpoint holds no seed. A `202` answer with `pending: true` and
+`retired: false` means the endpoint is disabled and the seed is gone, but
+it has not observed the recorded revoke. The answer names the current
+reason. An ordinary controller without `membership.manage` can disable
+its agent, but cannot complete the recorded revocation alone.
+
+Without an admitted envelope, or after refusal, expiry, or an uncertain
+reply, retirement stays pending. An authorized retry resubmits only the
+retained envelope while it remains valid. A different envelope cannot
+replace it. A `membership.manage` holder or the recovery key can revoke
+the agent's key independently. The next authorized retire retry completes
+when membership shows that recorded revoke, including a revoke another
+request wrote. A changed body under the same control `op` still fails the
+existing fingerprint check.
+
+An expired envelope or a permanent refusal never permits a replacement
+signature. An unavailable enrollment record supplies no guessed key item.
+No new membership pin or creation family belongs to this change.
+Self-revocation remains a candidate for a later membership revision.
 
 ### The two revisions over HTTP
 
@@ -2315,7 +2353,8 @@ server tells once more of a list change that the client has not listed.
 | One identity's history | 64 MiB | Further attempts on that identity refuse `full`. Its retained answer stays readable. |
 | Control, per registry and per agent | 16 MiB, the last 1 MiB for `retire` alone. One total covers every persisted row: each operation (4 KiB reserved, its answer charged beyond that), static and grant session rows (declared capabilities at most 16 KiB), grant rows (at most 4,096 UTF-8 bytes), and the agent's configuration. | `create` and `bearer` refuse `507`. A session cannot be issued (`507`, error `-32001`). A root cannot be added. `retire` still succeeds. If the reserve is also used up, the admin's `key.revoke` ends the agent's authority in the scope, whatever the hosted objects hold. |
 
-The endpoint deletes nothing. Terminal custody records move to an archive
+The endpoint retains custody records. Retirement erases the signing seed
+and deletes sessions. Terminal custody records move to an archive
 table in the same object. A storage failure rolls its transaction back and
 settles nothing, and the next `settle` writes the receipt. To recover an
 agent whose budget is full, `retire` it and create a new agent. The
