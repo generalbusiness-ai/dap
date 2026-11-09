@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:459a172e48a5e3d48f5855eb86bc047689b38a8d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br14-grow-routing-validation.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:57e8cec0a03bf78eccc39738ce82daa0b592c9ec","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/object.ts."}
