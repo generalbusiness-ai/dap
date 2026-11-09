@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "0abaa6c352aeb8a9bc5b5d591bd772e5cd72088a",
+  "sourceTree": "e5d8029c6b81f9efb17c800cdacc9668cccbbc8b",
+  "qualification": "One invocation of maintained MCP card generator with existing esbuild0.28.1 and pinnedNode26. The bytes record decoder is embedded by isMemberRef and its module initializers. Only generated.ts may change; resource metadata and styles stay equal. No install,UI feature,test,gate or deployment.",
+  "fileCount": 21,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-card-assets",
+      "fileCount": 21,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1623,
+          "sha256": "4309a6b1b9aa8d7d30e7bf6432f112efa6d949ef9133a4e398c233871f2e09af"
+        },
+        {
+          "path": "after.json",
+          "bytes": 552920,
+          "sha256": "69dd3c4dff3652ce92c018cf130c53813c0a5ee701c8c9fad26225f46566ffdd"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 316,
+          "sha256": "0ccc3db39e68e4b074428815df9eb66516e6eb6a0e8b39231cf2938a1cc3bfb6"
+        },
+        {
+          "path": "before.json",
+          "bytes": 562518,
+          "sha256": "302dfed8e9c1f7861b14a306d2053f224f0b6d18e034df2808ec50fca0152283"
+        },
+        {
+          "path": "build.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "build.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "build.stdout",
+          "bytes": 51,
+          "sha256": "4c1a2bf8e5b091d5863efe0cc2cf5d90d6a143c4b74b92e4180559d59bca58f9"
+        },
+        {
+          "path": "build.time",
+          "bytes": 29,
+          "sha256": "a7c8dfe00f8799bc545d44fe58688dbf439479c84c0a086127684815fe360cf1"
+        },
+        {
+          "path": "dependency-copy.json",
+          "bytes": 2105,
+          "sha256": "d3e7e7d9d2961997e1b9c8d2511029f1d6691de46c76484e6401979839ea7908"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7000,
+          "sha256": "6dd6e4ec9cdbf779a08d6b4bff19c9b5961dfc7bb9e1c18150acd73070934990"
+        },
+        {
+          "path": "generated/change.html",
+          "bytes": 48526,
+          "sha256": "b392f743e96cf2691d29ee6300cb6ca9457a6e3e0f696e0150d7bdc5d9a0baab"
+        },
+        {
+          "path": "generated/decision.html",
+          "bytes": 48528,
+          "sha256": "dbbe782688e90ca09f7d0c94daf5591297778ed68bab59f06b0be35aa08f2f4d"
+        },
+        {
+          "path": "generated/needs-you.html",
+          "bytes": 48529,
+          "sha256": "b751ef67dd0235844559bc35c395beedcf23b715ac3beb269006fd0761fc74d3"
+        },
+        {
+          "path": "generated/work.html",
+          "bytes": 48524,
+          "sha256": "080ce6c5b24f95104cfc16af0bf478254983729c73ee95f8e8362933142847dd"
+        },
+        {
+          "path": "plan.json",
+          "bytes": 565637,
+          "sha256": "4a3063e5dc4a340def687aa9eb4ed1a86cde28959f2c65a4af3cf9be43dcae8f"
+        },
+        {
+          "path": "process-closure.json",
+          "bytes": 50,
+          "sha256": "5d1d727b5b5a1a8b73088b118ef1fdc1f756632b6bac4daed184db3375639a19"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1478,
+          "sha256": "22b49f9e1668bb0ae492dc9151f75dd6a47a8db8ea3dc59cf438a4c57a999072"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 2597,
+          "sha256": "0abe0ca0b79d5b6ecae90a88157b1c1a260f7829129a05da5c0f4ba8723cc251"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 88,
+          "sha256": "d38f315057672b0a83fad35d490e4c248742bdecf2a5fe8f70912441473a42e2"
+        },
+        {
+          "path": "started.json",
+          "bytes": 96,
+          "sha256": "d3a7cab2ce2a1a31da31af6011f2aad5a7b3be82f66b106a5101cbb96a0ef8aa"
+        }
+      ]
+    }
+  ]
+}
