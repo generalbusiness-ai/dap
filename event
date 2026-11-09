@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:efd15e5d6fe152a473f30454634812da3914d3aa","text":"Merge retired a covered predecessor; the successor is at docs/security/threat-model.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f7a432dacef608600dbfe8ff131fd20146dc829a","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/compose.test.ts."}
