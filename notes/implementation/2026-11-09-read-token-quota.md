@@ -128,6 +128,17 @@ seals 16 public and 265 private files. Bounded test-only phase markers now
 identify the last completed step if the two-case quota owner stalls again.
 They change no clock, assertion, worker setting, deadline, or production code.
 
+The bounded diagnostic at `78f09695` repeated the timeout. It completed
+the rollback and row checks, then stalled in the following physical
+eviction. Manifest
+`5f12f8643d0fc9833cae97f74c6666dbb962623198803628924fe04527718e83`
+seals 17 public and 266 private files. That trace locates the pending
+await; it does not prove why eviction waits. The test now catches its
+deliberate storage error inside the object and returns the plain message
+before eviction. The same production submit, rollback assertions,
+physical restart, and original allowance remain. This follow-up checks
+the request-lifetime hypothesis without changing quota behavior.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The

@@ -98,7 +98,13 @@ test("Native read-token quota shares eight slots across a member's keys, refuses
       state.storage.sql.exec("CREATE TRIGGER TEST_quota_rollback AFTER INSERT ON private_read_quota BEGIN SELECT RAISE(ABORT,'TEST read quota rollback'); END").toArray();
     }));
     quotaPhase("admission", "rollback-trigger-ready");
-    await expect(G.stub.submit(first, [])).rejects.toThrow(/TEST read quota rollback/);
+    // Catch the deliberate storage error inside the object. The RPC then
+    // returns plain data before the physical eviction drains its requests.
+    const rollbackError = await life.wait(() => runInDurableObject(G.object, async instance => {
+      try { await (instance as { submit: typeof G.stub.submit }).submit(first, []); return null; }
+      catch (error) { return error instanceof Error ? error.message : "TEST unexpected non-Error rollback"; }
+    }));
+    expect(rollbackError).toMatch(/TEST read quota rollback/);
     quotaPhase("admission", "rollback-observed");
     const rollback = await life.wait(() => runInDurableObject(G.object, (_instance, state) => {
       state.storage.sql.exec("DROP TRIGGER TEST_quota_rollback").toArray();

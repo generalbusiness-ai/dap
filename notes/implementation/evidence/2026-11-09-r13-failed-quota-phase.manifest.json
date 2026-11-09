@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "78f0969532e41aa8f8deb2d61150bf2e4fb7ecd5",
+  "sourceTree": "584cde51db01abfecce701a8c3152fb3df2cd339",
+  "qualification": "Keep this bounded diagnostic failed. Original30000ms allowance, no manual kill. No case passed. The driver sampled no other validation body at start; this is not continuous proof or a load cause. Test-only RPC-boundary repair follows the localized stall, with unchanged production/assertions/restart semantics.",
+  "fileCount": 17,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-failed-quota-phase-validation",
+      "fileCount": 17,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1369,
+          "sha256": "3b7ac11f7793b6d673ff1620ba28f1f1446cc95f69ae1db8716161a45dfa5312"
+        },
+        {
+          "path": "additional-native-reuse.json",
+          "bytes": 3433,
+          "sha256": "a9811b5e9b4279e5aedb4b731f6f2ecd4ddfb64ea05ae55abadf0480d0990412"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "27aeb94d2afa5e469c6e78b889a88b1d09961698d01178cc763bc53dc02dc96d"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 5603,
+          "sha256": "b3083ae72fe648a14de8e11d0e1b363dddf44cb2d8ddddb4b730367c5b3a55c6"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 3493,
+          "sha256": "7c209cd57aeb53561fddadda5c1847615f28b0d96d8ad062c01040f314e34d3b"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 9313,
+          "sha256": "d1f0c976b8d6f1d0720c536007582df4331bc4819f1aa04149844f1eaa514c97"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 1624,
+          "sha256": "75c70f76927f91d42ccd9af76bacd292bc84aa1d75018d88036c6dc925a248bf"
+        },
+        {
+          "path": "node-reuse.json",
+          "bytes": 1018,
+          "sha256": "52b2bcdad3a7467de05cdfe4afa700301a332e854f9d4828940cd03abbd459d2"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 574,
+          "sha256": "17bb20a7d2e9c199ff81d22e51ee88733c986f30b23f4c3a80c31be35d5108ff"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 31,
+          "sha256": "b4d58093e57f4e491088dd8fd384cc936230f0ce1045ed91fb9e98e481c2130b"
+        },
+        {
+          "path": "prior-phase-reuse.json",
+          "bytes": 7397,
+          "sha256": "df494f17206995c984b20baaf52dc5f6cdf9b2c0da1773708290f78eee5fd333"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 491,
+          "sha256": "90dd90fe6e7f7ac4e309b9ef74b928add546cacb7d39f857125182ac5fdf751e"
+        },
+        {
+          "path": "scope-test.log",
+          "bytes": 29,
+          "sha256": "6468ccdd570316e306a26c9067615fdcd49415c7ceb1d2cf34ff33596cf41549"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}
