@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import ts from "typescript";
+import { parseAst } from "rolldown/parseAst";
 
 const documentPath = "docs/security/threat-model.md";
 const required = ["grant", "sealed-operation", "session-membership", "verified-genesis", "credential-custody"];
@@ -37,19 +37,24 @@ export function checkSecurityWitnesses(root, { document, overrides = new Map() }
   for (const row of rows) {
     if (!tracked.has(row.path)) throw new Error(`Untracked security witness: ${row.path}.`);
     if (!parsed.has(row.path)) {
-      const source = ts.createSourceFile(row.path, overrides.get(row.path) ?? readFileSync(resolve(root, row.path), "utf8"), ts.ScriptTarget.Latest, true);
-      if (source.parseDiagnostics.length) throw new Error(`Cannot parse security witness: ${row.path}.`);
+      const source = parseAst(overrides.get(row.path) ?? readFileSync(resolve(root, row.path), "utf8"), { lang: "ts" });
       const names = [];
-      const visit = node => {
-        if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)
-          && ["test", "it"].includes(node.expression.text)
-          && node.arguments.length >= 2 && ts.isStringLiteralLike(node.arguments[0])
-          && (ts.isArrowFunction(node.arguments.at(-1)) || ts.isFunctionExpression(node.arguments.at(-1)))) {
-          names.push(node.arguments[0].text);
+      const pending = [source];
+      while (pending.length) {
+        const node = pending.pop();
+        if (!node || typeof node !== "object") continue;
+        if (node.type === "CallExpression" && node.callee.type === "Identifier"
+          && ["test", "it"].includes(node.callee.name)
+          && node.arguments.length >= 2 && node.arguments[0].type === "Literal"
+          && typeof node.arguments[0].value === "string"
+          && ["ArrowFunctionExpression", "FunctionExpression"].includes(node.arguments.at(-1).type)) {
+          names.push(node.arguments[0].value);
         }
-        ts.forEachChild(node, visit);
-      };
-      visit(source);
+        for (const value of Object.values(node)) {
+          if (Array.isArray(value)) pending.push(...value);
+          else if (value && typeof value === "object") pending.push(value);
+        }
+      }
       parsed.set(row.path, names);
     }
     const matches = parsed.get(row.path).filter(name => name === row.name).length;
