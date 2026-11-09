@@ -35,8 +35,8 @@ The existing Native authority cases keep their original assertions.
 The two planned controls restore admission before the read and suppress the
 FIFO generation increment. They must distinguish the newcomer receiving
 `limit` and the old in-flight answer granting standing, respectively. No
-control, compiler, test or gate has run at this checkpoint. BR-14 owns the
-current validation slot. Its landing must be merged before R3a validation.
+control, compiler, test or gate has run at this checkpoint. BR-14 landed on
+main `86179b0c`, and this branch merged that main before validation.
 The authority seal records the maintained parser's actual source value.
 
 The threat model names the FIFO size, the changed guarantee for a
@@ -59,7 +59,7 @@ observation. `bytes/src/records.ts` accepts that form. `Further.read` keeps
 each answered non-once subject under `subjectName` before the act's later
 guards decide. A row's `max` bounds one input; it does not bound the distinct
 member names that inputs can accumulate in a run. The threat model therefore
-names that map as unbounded. The planner owns its separate placement under
-`4e8cf844`. No `Further` cache code changes here, and this patch makes no
+names that map as unbounded. Request `22b57b9e` owns its separate fix.
+No `Further` cache code changes here, and this patch makes no
 claim that every observation cache is bounded.
 No recorded format, definition pin, setting or deployment changes here.
