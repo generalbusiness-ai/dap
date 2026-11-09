@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "request": "e1b71b6b697c58723b3340681346f5f7145d345c",
+  "promise": "5a3fbb3db7dac1dc652f7403aabbf585641e4212",
+  "sourceHead": "8f59c9942e2ec9fc03b791fa2597952c7833af2e",
+  "sourceTree": "db46345bb462a70ea00a88f093209d8de04142c9",
+  "qualification": "Test-only follow-up: exact restored retired-setting refusal loop with 404 and unchanged lookup assertions. One compiler plus the whole owner. No full gate, Page CI, asset, seal, or control repeats.",
+  "fileCount": 11,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-setting-refusal-followup-validation",
+      "fileCount": 11,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 827,
+          "sha256": "c1dd1fd6737b032b335deabc9ac74827bfeee4f13a22089f29f964e0b368e932"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 5593,
+          "sha256": "0810dcf16344cafeb6c0b23edc86db327b52f3c9eb57a76afabe5b83c8662d11"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 1701,
+          "sha256": "568d03087d2038b92cd738ec9e761adb3b37ddaf5aa627c1781f13009ba3c873"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2671,
+          "sha256": "7eed0a954c256cb89af4d471b35ff4e00e32d6c520e717b67132990a68f499c0"
+        },
+        {
+          "path": "outer-result.json",
+          "bytes": 418,
+          "sha256": "15f714c1a48dd445c0829a5bc56b01bf3133b9163f945d555217d731545e16f0"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 29,
+          "sha256": "4403fddd438c1fba289922ea22ddbadc0194cd8add23ae89a9daf21ddcb8a0cd"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 411,
+          "sha256": "73b155af8015380c6fb7f191435a1cf3304c03a630517a5668393bf492d125a2"
+        },
+        {
+          "path": "result.json",
+          "bytes": 727,
+          "sha256": "9c9ac2c3caaa6be8ad108633d03c0e54bdabbfddd518e16bc566c21fd697c3b0"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 190,
+          "sha256": "f392af0e9cb02e409bb0bacd44c8f28d889c65573675b5852ed33d17314ef08b"
+        }
+      ],
+      "privateRegularFilesIncludingInventory": 259
+    }
+  ]
+}

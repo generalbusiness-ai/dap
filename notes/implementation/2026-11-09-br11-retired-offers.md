@@ -220,6 +220,13 @@ Register 17 case, including both 404 and unchanged-lookup assertions.
 Only this test owner and explanatory documentation change. Production
 source, all other tests, configuration, dependencies, assets, seals, and
 historical pins match the passing gate head. The Scope test compiler and
-complete `demo-creation.test.ts` owner remain due for this follow-up.
+complete `demo-creation.test.ts` owner each passed once at `8f59c994`,
+tree `db46345b`. Actual pipeline and driver exits are 0. The one case and
+one module passed without a skip, retry, report issue, or unhandled error.
+Every tracked input stayed equal and the owned process group closed.
+The [follow-up manifest](evidence/2026-11-09-br11-setting-followup.manifest.json),
+digest `fc253a343d353f4b1c0fe721837ff21ab8d03ae568f6fb1fef52e5c6fa30b3e7`,
+seals eleven public files and points to 259 private originals. Only this
+note and that manifest follow the tested repair.
 The earlier full gate and Page workflow retain their own passing results;
 neither runs again for this test-only repair.
