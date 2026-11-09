@@ -10,7 +10,7 @@ export type RetirementBody = { valid: true; revoke: SignedIntent | null } | { va
 export function retirementBody(bytes: Uint8Array, membership: ScopeRef, actor: KeyId): RetirementBody {
   if (bytes.byteLength === 0) return { valid: true, revoke: null };
   try {
-    const body: unknown = parseStrict(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    const body: unknown = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
     if (isRecord(body) && Object.keys(body).length === 0) return { valid: true, revoke: null };
     if (!isRecord(body) || Object.keys(body).length !== 1 || !Object.hasOwn(body, "revoke")) return { valid: false };
     const revoke = body["revoke"];

@@ -4,8 +4,12 @@ Request: `b66b8f146a9813628e0325374f551ae22d77284f`.
 Promise: `0875dbf1182ef1ce98fa6119a6c2de06e3a2383b`.
 Current ruling: `e2fc59d54f6e920cedd9e4efa1fc3e2033d53d70`.
 
-Status: source and witness draft. No compiler, focused test, control, gate,
-or review has run for R15. Main `6dd337d3` is the base.
+Status: the first focused unit failed at `40ab4e2d`. Compatibility and
+all 11 Node inventory cases passed. The Scope source compiler required an
+explicit `ignoreBOM` option. The other two compilers and all 37 application
+cases remain unrun. This draft adds the explicit default, with a refreshed
+helper seal and focused follow-up still due. No control, gate, or review has
+run for R15. Main `6dd337d3` is the base.
 
 ## Endpoint shutdown and the recorded end
 
@@ -87,6 +91,10 @@ Focused whole-owner checks, affected compiler contexts, one meaningful
 control, and one final gate remain due. The actual
 `gate.exit` must decide any gate pass claim. No current source claim rests
 on an R13 test result.
+
+| Check and source | Actual result | Manifest SHA-256 |
+|---|---|---|
+| First focused, `40ab4e2d` | Compatibility and Node 11 passed; Scope source failed `TS2741`; MCP test, Scope test, and all 37 application cases unrun | [manifest](evidence/2026-11-09-r15-failed-source-compiler.manifest.json) `cb6df4d892e872c6b3c55534b3e8dc2e023d1590f46289af65c8263e9fa59703` |
 
 ## Deployment
 
