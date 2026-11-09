@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9d1ce0ae44655694f9b7bdd17907c9731c7db995","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-card-assets.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b1c40e59bfe798275bb41d40310c6a9bd1b37433","text":"Merge retired a covered predecessor; the successor is at packages/contract/src/result.ts."}
