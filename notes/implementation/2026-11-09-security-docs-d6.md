@@ -1,7 +1,9 @@
 # Complete the security references and witness inventory
 
 Request `d8512f74`; promise `40f21bcc`. Source starts at main `29926a3a`.
-This draft has not run its focused checks, control or gate.
+Focused Node checks, documentation links and the named-witness control
+are complete at `ecebb1cc`. The final gate remains due after this head
+includes the preceding JSON landing.
 
 D3, D4 and D5 already exist on main, with the settings inventory and its
 three Node cases. This head adds D6, the root `SECURITY.md`, and a static
@@ -27,17 +29,27 @@ a passing test result or hosted behavior. The existing security entry-point
 owner runs this new case in the fixed Node stage. All source seals and
 route assertions remain byte-identical.
 
-## Evidence due
+## Evidence before the gate
 
 | Check | Required scope | Result |
 |---|---|---|
-| Focused Node owners | Complete entry-point and settings files; documentation links | Unrun |
-| Named-witness control | Bypass only the exact-name refusal, run the complete entry-point owner, then restore source | Unrun |
+| Focused Node owners | Complete entry-point and settings files; documentation links | 12 entry-point cases and 3 settings cases pass; 1,088 local links, 0 broken |
+| Named-witness control | Bypass only the exact-name refusal, run the complete entry-point owner, then restore source | Owner exits 1: 11 pass, 1 intended assertion fails; verifier exits 0 |
 | Final gate | `npm run gate` once after the focused evidence | Unrun |
 
 No new runtime invariant test duplicates the existing nine witnesses.
-The implementation note will record actual exits and immutable manifests
-before review. Earlier documentation checks establish no result here.
+The [pre-gate manifest](evidence/2026-11-09-security-d6-pre-gate.manifest.json)
+has SHA-256 `979d191bf641151e7c9c317e47287e8b661aa2b4a4e907a7b7775b197a68ded8`.
+It seals 29 public files and complete private inventories. The focused
+`result.json` and `pipeline.exit` record all three successful commands.
+The control `result.json`, `control.exit` and `verifier.exit` retain the
+intended assertion and exact source restoration. Both bodies checked their
+owned process groups after closure. The saved 12-case baseline ran once;
+the control did not rerun it.
+
+These results use the same helper and test bytes that this head retains.
+Later edits add evidence and explanatory documents only. Earlier branches
+establish no result here. The final gate remains unrun.
 
 ## Deployment and reporting
 
@@ -47,3 +59,21 @@ references, historical reviews and the private GitHub reporting path.
 Finding 3.13 remains explicit: Grow and legacy artroom-scope share their
 Artifacts namespace, content bucket and metrics dataset; code checks narrow
 shared capabilities but do not create resource isolation.
+
+
+## Fork storage documentation in the same review head
+
+The independent fork measurement request `d055b98f`, promise `063fb9f5`,
+requires a note on main. Planner ruling `afdebb8631`, phase 1 item 13,
+accepts an explicit unmeasurable result when Artifacts exposes no storage
+metric per repository. The updated
+[measurement note](2026-10-13-fork-cost-measurement.md#storage-metric-survey-9-november-2026)
+names the dataset and all ten metric fields checked. Its separate
+[survey manifest](evidence/2026-11-09-fork-storage-metrics.manifest.json),
+SHA-256 `8ec0a2423d18c220410546bea558d224bca1220163091044d7e0ac2c885b531b`,
+seals the five public response snapshots and their provenance.
+
+No authenticated metrics query or new fork ran. The earlier measurement's
+HTTP 401 and cleanup results stay as recorded. This documentation uses its
+own promise and artifact. Neither the ineffective workroom report nor this
+unreviewed head closes that request.

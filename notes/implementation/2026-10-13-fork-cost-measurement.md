@@ -2,6 +2,13 @@
 
 Request `d055b98f`, promise `063fb9f5`, [plan 029, item 0](../plans/029-2026-10-11-artifacts-forks.md#0-the-cost-measurement-first).
 
+Completion scope, 9 November 2026: planner ruling `afdebb8631`, phase 1
+item 13, accepts a report of unmeasurable storage when the provider exposes
+no per-repository storage metric. The public interface survey below finds
+none. Its exact metric names and retained sources complete that alternative;
+they establish no storage measurement or fork charging fraction. Exact-head
+review and landing remain due.
+
 Cloudflare Artifacts created one scratch repository and one fork in
 `artroom-demo`. The fork accepted one further commit. All three write
 tokens were revoked, and both repositories were deleted and confirmed
@@ -11,7 +18,8 @@ The provider metrics part remains incomplete. The before-fork GraphQL
 request returned HTTP 401. The after-fork metrics read was unrun. The
 documented dataset exposes no stored-byte field, so storage before and
 after is unavailable. This run establishes no storage charging fraction
-or monetary cost and does not close the full parent request.
+or monetary cost. The 9 November amendment below changes the completion
+condition without changing this original failed metrics read.
 
 ## Repository and measurement boundaries
 
@@ -201,4 +209,60 @@ ceilings, and concurrent verification's token and request cost.
 
 This note changes no product code, dependency, package metadata, or
 lockfile. No new measurement, metric query, test run, or gate accompanied
-the note. Full metrics acceptance remains owed under the parent request.
+the note. The original metrics acceptance remains unmeasured. The later ruling accepts
+the explicit unmeasurable result below instead.
+
+
+## Storage metric survey, 9 November 2026
+
+The documented public Cloudflare Artifacts interfaces expose no
+per-repository stored-byte metric. Step 3 is therefore unmeasurable through
+those interfaces. This is a documentation-derived conclusion, not an
+authenticated schema inspection or provider usage measurement.
+
+The [Metrics reference](https://developers.cloudflare.com/artifacts/observability/metrics/)
+lists dataset `artifactsEventsAdaptiveGroups` with these ten fields:
+`count`, `sum.durationMs`, `avg.durationMs`, `quantiles.durationMsP25`,
+`quantiles.durationMsP50`, `quantiles.durationMsP75`,
+`quantiles.durationMsP90`, `quantiles.durationMsP95`,
+`quantiles.durationMsP99` and `quantiles.durationMsP999`. Repository grouping
+uses `repository`, `repositoryNamespace` and `repositoryName`.
+`storageLimitReached` is an error event type, not a stored-byte metric.
+
+The [REST reference](https://developers.cloudflare.com/artifacts/api/rest-api/)
+gives `RepoInfo` and `RepoWithRemote` no stored-byte field. `ForkRepoResult`
+adds `objects`, an object count. The
+[Workers binding reference](https://developers.cloudflare.com/artifacts/api/workers-binding/)
+describes metadata and Git object reads but no storage usage read. An object
+count or a locally summed pack size cannot answer whether the provider
+charges fork storage in full, partly or not at all.
+
+The [pricing reference](https://developers.cloudflare.com/artifacts/platform/pricing/)
+describes account-wide storage as averaged daily peaks in `GB-mo`. That
+billing description supplies no per-repository usage read. The
+[limits reference](https://developers.cloudflare.com/artifacts/platform/limits/)
+gives storage ceilings, not current consumption. Neither one supplies the
+missing before-and-after observation.
+
+All five public Markdown requests returned HTTP 200 on 9 November 2026.
+The [survey manifest](evidence/2026-11-09-fork-storage-metrics.manifest.json)
+has SHA-256 `8ec0a2423d18c220410546bea558d224bca1220163091044d7e0ac2c885b531b`.
+It seals ten immutable files in
+`~/play/artroom-evidence/2026-11-09-fork-storage-metric-survey`, including
+full responses, retrieval times, `classification.json`, the retrieval
+driver and `SHA256SUMS`. The commands were:
+
+```text
+python3 /private/tmp/artroom-fork-metric-survey-20261109.py
+python3 /private/tmp/artroom-fork-metric-seal-20261109.py
+```
+
+The survey read public documentation only. It made no authenticated metrics
+request and created no repository, fork or token. The October run's HTTP
+401, measured wall times, revocations and deletion confirmations stay as
+recorded. The original failed metrics request remains failed.
+
+Workroom report `aa529bd7` records the conclusion but is ineffective because
+the parent request still requires a landing on main. This note carries the
+result for review and landing under promise `063fb9f5`; no task closure is
+claimed before those events.
