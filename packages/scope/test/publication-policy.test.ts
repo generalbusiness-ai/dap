@@ -129,7 +129,7 @@ test.each([
           connections: [{ from: id, item: "root", slot: "destination", to: "outside" }], capabilities: [{ name: DEVICE_COMMAND, bounds: { kinds: ["heater"], owners: 1 } }],
           projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: { root: { item: "root", read: "one", states: ["ready"], limit: 1, fields: {} } } }) } },
           presentation: { ...presentation, v: 2, views: {}, resources: {} } }, fixedSigner(81))
-        : await packApplication({ name: `test.publication-policy-${declared.name}`, version: "1", semantic: { ...semantic, v: 1, creates: [], capabilities: [], projections: {} }, presentation: { ...presentation, v: 1 } }, fixedSigner(81));
+        : await packApplication({ name: `test.publication-policy-${declared.name}`, version: "1", semantic: { ...semantic, v: 1, capabilities: [], projections: {} }, presentation: { ...presentation, v: 1 } }, fixedSigner(81));
       const fixture = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(fixture);
       const applicationBindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fixture.trust), env.SCOPE_INDEX);
       life.applicationTrust(() => applicationBindings.APPLICATION_TRUST);
