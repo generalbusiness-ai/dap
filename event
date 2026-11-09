@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:103f143bbaf71a5eb907dd4f18befa0ee34e407f","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/core.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:155e3a622d6462146628af705ab4639221b5bd80","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-09-r3-authority-turn-order.md."}
