@@ -907,7 +907,10 @@ after plaintext is taken or dropped. An explicit `minted:false` frees its
 slot. An unknown mint keeps the reservation until its opening time plus
 requested hours plus ten minutes. This quota counts reservations and does
 not prove that a provider token ended. A late reply cannot restore an
-expired reservation or disclose its plaintext. Destination 19 keeps its
+expired reservation or disclose its plaintext. Its valid own reply still
+records the pinned `confirmed` metadata, `{token, ends}`, without storing
+plaintext. A replacement keeps its slot, and the late mint's accepted-key
+retry reserves nothing. Destination 19 keeps its
 one-hour request; older pins keep the one-to-twenty-four-hour field.
 
 Legacy read markers without a member belong to no bucket. The private

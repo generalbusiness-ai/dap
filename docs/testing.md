@@ -1135,7 +1135,9 @@ The Scope owners `read-token-quota.test.ts` and
 real Native scopes, membership authority, transactions, alarms, and the
 Artifacts adapter over scripted provider replies. Its two scenarios cover
 the eight-slot admission rule, several keys of one member, another member,
-accepted-key reuse, rollback, refusal, unknown and late replies. The second
+accepted-key reuse, rollback, refusal, unknown and late replies. The late
+reply records confirmed metadata with no plaintext after a replacement
+takes the eighth place, and the next fresh mint still refuses `limit`. The second
 uses real SQLite with scripted opening entries and grants. It covers
 private expiry, legacy and incarnation boundaries, a 64-row cleanup quantum,
 and the last representable clock; it proves no Native authority or provider

@@ -38,11 +38,12 @@ its plaintext. The quota counts reservations and does not prove that a
 provider token ended.
 
 A valid own reply whose reported end already elapsed retains the pinned
-`confirmed` meaning. Request `84d7f349` asks the planner to settle the
-remaining case: a valid reply after the fallback reservation expired.
-The source still returns `unknown` for that late reply. The proposed cut
-records its genuine nonsecret metadata, discards plaintext, and keeps the
-released slot closed. No validation runs until that decision settles.
+`confirmed` meaning. Planner ruling `6cf4c1c8`, answering request
+`84d7f349`, also preserves a valid reply after the fallback reservation
+expired. The adapter records only its genuine `{token, ends}` metadata,
+stores no plaintext, and keeps the released slot closed. A replacement
+retains its eighth place. The old act's retry returns its original receipt
+without another slot; the member needs a new mint to read a token.
 
 Destination 19 keeps its one-hour request. Earlier pins keep their
 existing one-to-twenty-four-hour field. The same helper supplies the

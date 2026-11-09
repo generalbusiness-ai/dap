@@ -136,8 +136,9 @@ test("Native read-token quota shares eight slots across a member's keys, refuses
   } finally { life.release(); }
 });
 
-test("Native read-token adapter frees explicit refusal, holds an unknown for requested hours plus ten minutes, and discards a late plaintext without changing pinned outcomes", async () => {
+test("Native read-token adapter frees explicit refusal, holds an unknown for requested hours plus ten minutes, and confirms a late reply without plaintext or a slot after a replacement takes the eighth place", async () => {
   const f = await quotaRoom(), { life, G, control, rows } = f;
+  let driving: Promise<number> | null = null;
   try {
     const outcome = async (mint: OperationId) => (await G.entries()).find(entry => entry.input.type === "outcome" && entry.input.operation === mint)?.input;
     control.mode = "refused";
@@ -166,16 +167,40 @@ test("Native read-token adapter frees explicit refusal, holds an unknown for req
     expect(await life.wait(() => runDurableObjectAlarm(G.object))).toBe(true);
     expect(await rows()).toEqual([]);
     control.mode = "late";
-    const late = await f.submit();
+    const lateIntent = await G.intent(rita, "read-token", { on: f.branch.id, fields: {}, expected: await G.expected({ on: f.branch.id }) });
+    const late = await G.stub.submit(lateIntent, []);
     if (late.answer !== "accepted") return expect.fail("Native late attempt was not admitted");
-    const driving = life.wait(() => (G.stub as unknown as { effect(): Promise<number> }).effect());
+    driving = life.wait(() => (G.stub as unknown as { effect(): Promise<number> }).effect());
+    void driving.catch(() => undefined); // The awaited result below still decides.
     await f.providerStarted;
-    life.advance(4_200_000);
-    control.finishLate!({ id: "TEST-late", scope: "read", plaintext: "TEST-late-plaintext", expiresAt: timeOf(life.now() + 3_600_000) });
+    // The actual provider await stays held while seven later acts reserve
+    // their slots. Their fallback ends remain one second after the old end.
+    life.advance(1000);
+    for (let n = 0; n < 7; n++) expect((await f.submit()).answer).toBe("accepted");
+    life.advance(4_199_000);
+    const replacement = await f.submit();
+    expect(replacement.answer).toBe("accepted");
+    expect(await rows()).toHaveLength(8);
+    const lateMint = `${late.receipt.fact.seq}:0` as OperationId;
+    expect((await rows()).some(row => row["mint"] === lateMint)).toBe(false);
+    control.mode = "ok";
+    const lateEnd = timeOf(life.now() + 3_600_000);
+    control.finishLate!({ id: "TEST-late", scope: "read", plaintext: "TEST-late-plaintext", expiresAt: lateEnd });
+    control.finishLate = null;
     await driving;
     await effectFixture([G], life.wait);
-    expect(await outcome(`${late.receipt.fact.seq}:0`)).toMatchObject({ type: "outcome", result: "unknown", evidence: { basis: "own-answer", body: {} } });
-    expect(await life.wait(() => runInDurableObject(G.object, (_instance, state) => state.storage.sql.exec("SELECT COUNT(*) AS n FROM private_credential WHERE plaintext='TEST-late-plaintext'").one()["n"]))).toBe(0);
-    expect(control.calls).toHaveLength(4);
-  } finally { life.release(); }
+    expect(await outcome(lateMint)).toMatchObject({ type: "outcome", result: "confirmed", evidence: { basis: "own-answer", body: { token: expect.any(String), ends: lateEnd } } });
+    const kept = await life.wait(() => runInDurableObject(G.object, (_instance, state) => state.storage.sql.exec("SELECT ends,plaintext FROM private_credential WHERE mint=?", lateMint).toArray()));
+    expect(kept).toEqual([{ ends: lateEnd, plaintext: null }]);
+    expect(canonicalize(await G.entries())).not.toContain("TEST-late-plaintext");
+    expect(await G.stub.submit(lateIntent, [])).toEqual(late);
+    expect(await rows()).toHaveLength(8);
+    expect(await f.submit()).toMatchObject({ answer: "refused", reason: "limit" });
+    expect(control.calls).toHaveLength(12);
+  } finally {
+    control.finishLate?.(null);
+    control.finishLate = null;
+    if (driving) await driving.catch(() => undefined);
+    life.release();
+  }
 });

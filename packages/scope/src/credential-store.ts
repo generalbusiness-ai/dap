@@ -226,7 +226,10 @@ export class CredentialStore {
   /** Trusted destination mint-read path only; an id prefix is not eligibility. */
   putRead(credential: MintedCredential): CredentialPut { return this.#put(credential, true); }
 
-  #put(credential: MintedCredential, read: boolean): CredentialPut {
+  /** A genuine late read-mint reply keeps metadata, with no plaintext custody. */
+  putReadReply(credential: PendingCredentialReply): CredentialPut { return this.#put({ ...credential, plaintext: null }, true); }
+
+  #put(credential: Omit<MintedCredential, "plaintext"> & { plaintext: string | null }, read: boolean): CredentialPut {
     const scope = this.#scope();
     if (scope === null) return "no-scope";
     if (timeMs(credential.ends) === null) return "conflict";

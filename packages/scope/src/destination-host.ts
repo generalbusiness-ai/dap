@@ -65,7 +65,7 @@ export interface SnapshotReader {
   /** Fresh authenticated Rules observation; required only for room stage reads. */
   rules?(rules: ScopeRef): Promise<unknown>;
 }
-export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "putRead" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take" | "named" | "readTokens"> }
+export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "putRead" | "putReadReply" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take" | "named" | "readTokens"> }
 
 /** The byte domain of the nonsecret handle of a member's read credential. */
 const READ_HANDLE = "artroom.read-credential.v1";
@@ -217,8 +217,11 @@ export class DestinationHost implements Outside {
         }
         const body = members(reply, ["id", "ends", "plaintext"]);
         if (!body || body["id"] !== id || typeof body["ends"] !== "string" || timeMs(body["ends"]) === null || typeof body["plaintext"] !== "string" || body["plaintext"].length === 0 || utf8(body["plaintext"]).length > 4096) return null;
-        if (binding === "bound" && !quota.minted(operation.id, id, body["ends"], this.#given.clock.read())) return null;
-        const held = this.#options.custody.putRead({ id, ends: body["ends"], plaintext: body["plaintext"], mint: operation.id, attempt: request.attempt });
+        const received = { id, ends: body["ends"], mint: operation.id, attempt: request.attempt };
+        // A genuine late reply keeps its pinned confirmed meaning. Its
+        // released reservation stays closed and its plaintext never enters custody.
+        const keep = binding === "legacy" || quota.minted(operation.id, id, body["ends"], this.#given.clock.read());
+        const held = keep ? this.#options.custody.putRead({ ...received, plaintext: body["plaintext"] }) : this.#options.custody.putReadReply(received);
         return held === "stored" || held === "repeat" ? answer("confirmed", { token: id, ends: body["ends"] }) : null;
       }
       if (operation.kind === DESTINATION_KINDS.mint) {
