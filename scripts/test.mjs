@@ -4,6 +4,7 @@ import { tmpdir, constants } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
+import { gateScaleSelection } from './scale-selection.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const stageNames = ['kernel', 'node', 'counting', 'plain', 'native'];
@@ -37,11 +38,13 @@ const nodeFiles = [
   'scripts/test-summary.test.mjs',
   'scripts/test-progress.test.mjs',
   'scripts/test-phases.test.mjs',
+  'scripts/scale-selection.test.mjs',
 ];
 
 // Fixed production argv. The exported runner below accepts tiny commands only
 // so its owning test can observe real process ordering without starting Workers.
-export function fixedStages(directory, environment = process.env) {
+export function fixedStages(directory, environment = process.env, scaleSelection = { include: true, reason: 'ordinary-test' }) {
+  if (typeof scaleSelection.include !== "boolean") throw new Error('The native scale selection must be explicit.');
   const reporter = pathToFileURL(resolve(root, 'scripts/test-summary.mjs')).href;
   const phases = ['plain', 'native'];
   const progress = Object.fromEntries(phases.map(phase => [phase,
@@ -60,7 +63,9 @@ export function fixedStages(directory, environment = process.env) {
     ...phases.map(phase => ({ name: phase, command: process.execPath,
       args: [resolve(root, 'node_modules/vitest/vitest.mjs'), 'run', '--config', resolve(root, 'vitest.' + phase + '.config.ts')],
       env: { ARTROOM_TEST_PHASE: phase, ARTROOM_TEST_TIMING: resolve(directory, phase + '.jsonl'),
-        ...(progress[phase] ? { ARTROOM_TEST_PROGRESS: progress[phase] } : {}) } })),
+        ...(progress[phase] ? { ARTROOM_TEST_PROGRESS: progress[phase] } : {}),
+        ...(phase === 'native' ? { ARTROOM_SCALE_MODE: scaleSelection.include ? 'run' : 'omit' } : {}) },
+      ...(phase === 'native' ? { scaleSelection } : {}) })),
   ];
 }
 
@@ -86,6 +91,7 @@ export async function runStages({ stages, directory, cwd = root, environment = p
   }
   const ledger = { version: 1, stages: stageNames.map(name => ({ name, status: 'unreached', exitCode: null,
     signal: null, wallMs: null, userMs: null, systemMs: null })), reportErrors: [] };
+  if (stages[4].scaleSelection) ledger.stages[4].scaleSelection = stages[4].scaleSelection;
   let firstFailure = null, activeChild = null;
   const interrupt = signal => {
     if (ledger.interruption) return;
@@ -107,9 +113,9 @@ export async function runStages({ stages, directory, cwd = root, environment = p
       if (ledger.interruption) { record.status = 'unreached'; break; }
       const started = performance.now();
       const env = { ...environment, ARTROOM_TEST_EVIDENCE_DIR: directory };
-      // These are observation channels, not test or Worker settings. Each
-      // child receives only its own current stage's destinations.
-      for (const name of ['ARTROOM_TEST_PHASE', 'ARTROOM_TEST_TIMING', 'ARTROOM_TEST_PROGRESS']) delete env[name];
+      // Discard inherited observation destinations and scale modes. Each
+      // child receives only its own fixed destinations and Native selection.
+      for (const name of ['ARTROOM_TEST_PHASE', 'ARTROOM_TEST_TIMING', 'ARTROOM_TEST_PROGRESS', 'ARTROOM_SCALE_MODE']) delete env[name];
       Object.assign(env, stage.env);
       const outcome = await launch(stage, { cwd, env, stdio: 'inherit' }, child => { activeChild = child; });
       activeChild = null;
@@ -144,16 +150,20 @@ async function summary(directory) {
 }
 
 async function main(args) {
-  let directory = null, deferSummary = false;
+  let directory = null, deferSummary = false, gate = false;
   for (let index = 0; index < args.length; index++) {
     if (args[index] === '--defer-summary' && !deferSummary) deferSummary = true;
+    else if (args[index] === '--gate' && !gate) gate = true;
     else if (args[index] === '--evidence' && directory === null && args[index + 1] && !args[index + 1].startsWith('--')) directory = resolve(args[++index]);
-    else throw new Error('Usage: test.mjs [--evidence NEW_DIRECTORY] [--defer-summary]');
+    else throw new Error('Usage: test.mjs [--evidence NEW_DIRECTORY] [--defer-summary] [--gate]');
   }
   if (directory) await mkdir(directory, { mode: 0o700 });
   else directory = await mkdtemp(resolve(tmpdir(), 'artroom-test-'));
   console.log(`Test evidence: ${directory}`);
-  const result = await runStages({ directory, stages: fixedStages(directory), finalize: deferSummary ? null : () => summary(directory) });
+  const scaleSelection = gate ? gateScaleSelection(root) : { include: true, reason: 'ordinary-test' };
+  await writeFile(resolve(directory, 'scale-selection.json'), JSON.stringify(scaleSelection, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  console.log(`Scale selection: ${scaleSelection.include ? 'run' : 'omitted by review gate'} (${scaleSelection.reason})`);
+  const result = await runStages({ directory, stages: fixedStages(directory, process.env, scaleSelection), finalize: deferSummary ? null : () => summary(directory) });
   for (const error of result.ledger.reportErrors) console.error('Test reporting error: ' + error);
   process.exitCode = result.exitCode;
 }

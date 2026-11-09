@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "request": "d0afa034aa4946849911e9294543762fe67d4b8d",
+  "promise": "b6ab8ee7931721d20d62eb14ba03c894aa8b699e",
+  "sourceHead": "5e087f06b0dd9a63996cae975b75172e5009a542",
+  "sourceTree": "b8e5d29b1f3a0ca93d9d24f3e5f7893b65b5e761",
+  "qualification": "The first full gate remains failed. No scale or fixed-stage body ran. Repair the typed configuration boundary, then run the affected Scope test compiler and Node owners before a new gate. No deadline, witness or compiler-rule relaxation.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br5-failed-typecheck-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1059,
+          "sha256": "cf5817f4462676a17acca80a78d5025f118326acb26a49f6e3ca35ad67968a19"
+        },
+        {
+          "path": "archive-watch-audit.json",
+          "bytes": 14139,
+          "sha256": "223d0e2bd533a3bc750a61e018615d67c176fe9dee3a02d9e9eadec88c4886ba"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate.log",
+          "bytes": 5300,
+          "sha256": "72dfe5753e8980c1e10e4e22a9c83245a4d22647c81f3b73aec19dbcfec9949d"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 31,
+          "sha256": "42275b2a305548d73ac9089e821fe1ea774b61c36730aafaa6620f16850994ee"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 404,
+          "sha256": "14df0ff669b8d8e2ad3e3e888ca7457787ddd8ab654999c8213763f00fddde9d"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 537,
+          "sha256": "3ae08ca42e5b550006f1400ff86eeee4b4cc53976a11cfa28bdfeb5fcee7c364"
+        },
+        {
+          "path": "result.json",
+          "bytes": 876,
+          "sha256": "ac57a09b58a051d4e1068ab8e042743ddd08b7405ada02cbde326ee50b6077af"
+        },
+        {
+          "path": "sealing-attempts.json",
+          "bytes": 445,
+          "sha256": "1ad6302b9b99341d56143566ee46885ca2fe946277f5f9752ef2a327595feb49"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "b68f56ca3b0e948f1d6903c00920638ce0f2775bd4549db8ef314a0815695ae9"
+        },
+        {
+          "path": "started.json",
+          "bytes": 642,
+          "sha256": "fd4e31af103727e779872fc061294cc2f6c021b7270fbffa39c419fdb07c600d"
+        },
+        {
+          "path": "task.json",
+          "bytes": 6958,
+          "sha256": "40e7a0ec0319b660e32fd61405c1c1914d573aa8147b11c1f5c4762fe821b6fc"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 560,
+          "sha256": "fb68d466d8e76ff75b498a1ff3b4b0e84d6b5a8efac8f34ad42f553a30581fd8"
+        },
+        {
+          "path": "typecheck.log",
+          "bytes": 3093,
+          "sha256": "bf7a7bbff1a2bc662cc311f865337e4bdf69e8d878f29d1ba170f0e9b3ab40cc"
+        }
+      ]
+    }
+  ]
+}

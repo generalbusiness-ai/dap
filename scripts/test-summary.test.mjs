@@ -33,11 +33,19 @@ test('timing reconciles actual identities, missing callbacks and concurrent dura
   // Every real native project belongs to the native stage, and a missing
   // native terminal cannot silently become complete project coverage.
   const nativeStages = [{name:'native',status:'passed',wallMs:5,userMs:null,systemMs:null}];
-  const nativeModules = ['scope','scope-lending','scope-denial'].map(project =>
+  const nativeModules = ['scope','scope-lending','scope-denial','scope-scale'].map(project =>
     ({...knownModule,phase:'native',project,file:`/${project}.test.ts`}));
   const nativeSummary = summarize({stages:nativeStages,observations:[...nativeModules,{...end,phase:'native'}]});
   assert.deepEqual(nativeSummary.projects.filter(row=>row.phase==='native').map(row=>[row.project,row.status]),
-    [['scope','observed'],['scope-lending','observed'],['scope-denial','observed']]);
+    [['scope','observed'],['scope-lending','observed'],['scope-denial','observed'],['scope-scale','observed']]);
+  const omittedStages = [{ ...nativeStages[0], scaleSelection: { include:false, reason:'outside-scale-paths' } }];
+  const omittedSummary = summarize({stages:omittedStages,
+    observations:[...nativeModules.filter(row=>row.project!=='scope-scale'),{...end,phase:'native'}]});
+  assert.equal(omittedSummary.projects.find(row=>row.project==='scope-scale').status,'omitted-by-gate');
+  assert.equal(omittedSummary.projects.find(row=>row.project==='scope-scale').durationMs,null);
+  assert.equal(omittedSummary.issues.length,0);
+  const contradictoryOmission = summarize({stages:omittedStages,observations:[...nativeModules,{...end,phase:'native'}]});
+  assert(contradictoryOmission.issues.some(issue=>issue.includes('omitted scale project')));
   assert.equal(nativeSummary.completeness.find(row=>row.phase==='native').status,'complete');
   const nativeTruncated = summarize({stages:nativeStages,observations:nativeModules});
   assert(nativeTruncated.issues.some(issue=>issue.includes('terminal reporting: native')));

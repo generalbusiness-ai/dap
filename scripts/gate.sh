@@ -64,7 +64,7 @@ fi
 [ "$failed" = 0 ] && step typecheck npm run typecheck
 # npm's unchanged pretest hook prepares compatibility once. The fixed test
 # owner defers its summary to this gate's unconditional EXIT finalizer.
-[ "$failed" = 0 ] && step test npm test -- --defer-summary --evidence "$test_evidence"
+[ "$failed" = 0 ] && step test npm test -- --gate --defer-summary --evidence "$test_evidence"
 if [ -f "$out/test.log" ]; then
   grep -h "Tests \|ℹ pass\|Test evidence:\|plain timing:\|native timing:\|plain progress:\|native progress:" "$out/test.log" | sed 's/^ */  /'
 fi
