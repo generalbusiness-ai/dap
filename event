@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/test-celld-proxy.mjs","body":{"commit":"ce0290fb36c49f0743cc8df30e419fe76b846cf2","path":"scripts/test-celld-proxy.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1c4adfeafdbc4262927f555ed4acec0039fa9181","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-retire-smoke-gate.manifest.json."}
