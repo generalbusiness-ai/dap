@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/test/fixtures/usage-report/metrics-test-emissions.json","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"scripts/test/fixtures/usage-report/metrics-test-emissions.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at scripts/usage-report-mapping.example.json","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"scripts/usage-report-mapping.example.json"}}
