@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f4813a7c4db30dee832d73f112760e9df25cd40b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-failed-source-compiler.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f81e934efa186c822f22d52cb80e1fbd8b89b651","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/destination-host.ts."}
