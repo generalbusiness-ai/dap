@@ -120,6 +120,11 @@ The gate runs this check without changing the retained files. If a file
 differs, inspect the authored change before you regenerate and review its
 new pin.
 
+### Release status
+
+`@generalbusiness/dap-define` is in the release plan, and its
+compiled-output check and publication have not run.
+
 ## Declare the item types
 
 Write the item types first, in the definition's `items`.

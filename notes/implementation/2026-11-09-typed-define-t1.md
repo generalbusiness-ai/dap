@@ -57,8 +57,14 @@ include the package. The producer supplies the same opt-in Web API types
 as the existing portable consumers. The checker prepares a compiled
 helper journey with a typed source value, runtime validation, refusal
 metadata outside the pin, and strict NodeNext and Bundler consumers. The
-actual browser bundle must include the compiled `define` stage.
+standalone checker requires the compiled `define` stage in its browser
+bundle.
 
-These witnesses remain unrun. This source work publishes nothing and
-establishes no public installation, browser execution, or deployed
-acceptance. Existing portability and output-closure requirements stand.
+`@generalbusiness/dap-define` is in the release plan, and its
+compiled-output check and publication have not run.
+
+Planner ruling `0a797a2e3e8230675ddccb86052237f01faff696` leaves the
+standalone checker with the next publication request. Head C owes the
+release plan and its plan-shape and package-count gate witnesses. Its
+focused plan and gate start no additional package producer or capture
+scene. Existing portability and output-closure assertions stand.
