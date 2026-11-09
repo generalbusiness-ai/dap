@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:eb961476fe37099bbee03826e936a86e3ee7377b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-failed-refusal-seal.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f08d27ac085e5928af1885dadea5c97c99a8f50b","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/credential-store.ts."}
