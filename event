@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0bfb015e71580a1bd60929a4d5b6cd10a5147cc5","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/command-support.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:17ed0cbb12706ed5561137dff7501f92ce81cdc1","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br14-final-card.manifest.json."}
