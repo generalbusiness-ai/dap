@@ -3,7 +3,7 @@
 Status: the corrected v1 fixture passes both Scope compiler contexts and its
 complete native case at `63bb22a3`. The sender-guard control distinguishes.
 The first fixture failure and the control's parser failure remain retained.
-Main integration is complete. The full gate, independent review and landing remain due after S4.
+Published S4 is integrated. The full gate, independent review and landing remain due.
 
 Live request `f131d4e8c96a5821a5859d537b2223f7d0ff518a` and promise
 `2b9edaa678afae9b7439456250b960d124d2a8f8` carry this work forward from
@@ -12,7 +12,7 @@ after M8 made the earlier request stale. The question remains whether a
 declared application can send between rooms with different members.
 
 The original evidence starts from main `8faa38dcf31855a0a6264e5912b58061b5eda223`.
-This branch now integrates landed M8 main `0914c89ee94dc61e4df5e9b495a2953eeaad489b`.
+This branch integrates published S4 main `871df9a979bc68ecadef7ef4e618cc0bcef4a97c`, which includes landed M8 `0914c89e`.
 The test and helper retain their checked bytes. The existing note and roadmap
 already state the v1 behavior and v2 limit. No witness or control repeats.
 Historical manifests retain their original request and promise identities.
@@ -158,4 +158,4 @@ The table names preserved copies of the executed drivers under `~/play/artroom-e
 
 ## Open limits
 
-Live request `f131d4e8` still requires integration of landed S4, one final maintained gate, independent review and landing. Ruling `d3f960ab` assigns v2 cross-room receive-port design to M1. Ruling `99f628a5` preserves the deciding refusal entry; the pre-entry refusal question belongs to M1 and M2. This witness establishes no live-room or deployment acceptance.
+Live request `f131d4e8` still requires one final maintained gate, independent review and landing after S4 integration. Ruling `d3f960ab` assigns v2 cross-room receive-port design to M1. Ruling `99f628a5` preserves the deciding refusal entry; the pre-entry refusal question belongs to M1 and M2. This witness establishes no live-room or deployment acceptance.
