@@ -59,8 +59,11 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
     // The same lane, but the end of a hold tells nobody. A creation under it reaches the scope when the hold is due.
     const other = variant(definition.declared, creationNoAttentionChange());
     s.c.clock.now = at(HOLD);
+    const head = await s.head();
     expect(await s.stub.create(creation(at(HOLD + 60)).signed, other.declared)).toEqual({ answer: "refused", reason: "source-unverified" });
-    // The turn drained first, as every turn does, and the end it wrote is the pinned definition's.
+    expect(await s.head()).toEqual(head);
+    // Only the alarm drains. Its end still uses the pinned definition.
+    expect(await s.alarm()).toBe(true);
     expect((await s.entries(4)).map((e) => e.effects)).toEqual([[{ effect: "hold", item: hold, change: "end", epoch: 2 }, { effect: "attention", item: hold, members: [una.member], reason: "hold ended" }]]);
   });
 
