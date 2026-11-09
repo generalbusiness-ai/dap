@@ -52,5 +52,15 @@ It lists 18 read-only files under
 `result.json` and the four generated browser files. The generated module has
 SHA-256 `35459483398f83bc3525dee550007145dd10b64f76afb00160c12744b50fc320`.
 
-The workflow citation, BR-12 focused checks and shared gate remain due.
-No live acceptance or deployment follows from these checks.
+The [Page workflow run 42558851410](https://github.com/generalbusiness-ai/dap/actions/runs/42558851410)
+passed at combined stack head `99092048`: screenshots, recorded demo captures,
+the create-room witness and the local-label witness all passed. The
+[CI manifest](evidence/2026-11-08-room-br12-page-ci.manifest.json), digest
+`581821bde41515056ed51dddab2694c68c5eca468f47bc91c700116bb2987722`, retains
+the completed run metadata, its full private logs and the workflow-path
+comparison. The later integration of main `cf0487da` adds only the approved
+self-hosting note. Every Page workflow path stays byte-equal.
+
+BR-12's separate focused checks and configured-count control have also
+finished. The one shared top-head gate remains due. No live acceptance or
+deployment follows from these checks.

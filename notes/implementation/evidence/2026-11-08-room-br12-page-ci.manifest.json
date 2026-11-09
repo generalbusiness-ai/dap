@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "request": "b32c8fbd4d3510fd025cbc6b717b3df7cb09d754",
+  "promise": "e7fd9afbf1441866552fa43d7bb81e9b4db42fbf",
+  "sourceHead": "9909204872167376b2cf5134921ea24820451714",
+  "qualification": "One successful Page workflow at the combined stack head under ruling c5c24191. Later integration adds only the approved self-hosting note. Every path named by the Page workflow remains equal. Full CI logs and metadata remain read-only; this workflow publishes no downloadable artifacts. This supplies recorded-fixture browser checks, not a live-room acceptance or deployment.",
+  "fileCount": 4,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-room-br12-page-ci-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 242,
+          "sha256": "cdad83f9e238adf3ec8ece7abd27846545046b8926a5dd92fd19c32d5f55a79e"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 538,
+          "sha256": "2804992b32541e146f596fda7c1d0cfa1e9875802220904cd7ff45cc0c237d18"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1410,
+          "sha256": "56138b0c10b869fb63bd16b1c5e2f370305d9f0f5090a6d22361460e8a2c579d"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2651,
+          "sha256": "c7c1b55aeb1e644dbbd30d9fb3da3b321b5aaefd8093d21f04d6638046b23bb0"
+        }
+      ]
+    }
+  ]
+}
