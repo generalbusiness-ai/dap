@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3cc39597c6db4f7f3b7c8196e19f80aa385cdae9","text":"Merge retired a covered predecessor; the successor is at scripts/scale-runner.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:47e80e6237d9d08018f90a4e5a079f1d5d1ba48f","text":"Merge retired a covered predecessor; the successor is at packages/scope/vitest.scale.config.ts."}
