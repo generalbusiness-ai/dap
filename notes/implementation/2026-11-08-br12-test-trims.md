@@ -39,7 +39,18 @@ boundaries. They establish no provider or deployed-room result.
 
 ## Validation
 
-No compiler, test, control or gate has run for this preparation. The control
-runner gate owns the single executable slot, and the RoomOpening item comes
-next. The complete affected owners and their compiler contexts remain due,
-followed by one gate before review. No cost reduction has been measured yet.
+No compiler, test, control or gate has run for BR-12. Its two source commits
+now sit above RoomOpening head `a6c0f804`, whose compiler, owner, negative
+compiler-control and Page asset results stay separate in its own note.
+
+Planner ruling `c5c24191` permits one shared gate at the top of this stack.
+RoomOpening comes first and BR-12 follows. Each item keeps its own promise,
+note, artifacts and review request; both approvals must precede the ordered
+landings. A failure must name its owning item before any repair.
+
+The next focused check covers the five affected compiler contexts, the
+complete HTTP, SQLite, hosted and sandbox owners, and the Node entry-point
+inventory owner. The four Vitest owners contain 62 required cases. A cheap
+source control will then ignore the configured custody count and require
+the new SQLite case to fail before restoring every byte. The Page workflow
+citation and shared gate remain due. No cost reduction has been measured yet.
