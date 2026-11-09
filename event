@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4b532699a019b3f479793a69cbcff658a9374810","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/floor-archive.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4b5f77d6e92a849b536f93adc0151afef25345db","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-09-scale-runner.md."}
