@@ -53,7 +53,10 @@ The complete turn owner keeps its alarm budget, clock, timed ordering,
 listener and restart assertions. Its application-admission race now
 withdraws trust during an asynchronous foreign read after early standing,
 so it still distinguishes the final commit check. Existing Membership and
-creation owners must retain recovery-key and action-null witnesses.
+creation owners must retain recovery-key and action-null witnesses. The
+composition restart witness gives its scripted clock the additional early
+standing read before its deliberately earlier dispatch reading. Its
+outbox, alarm, eviction and duplicate-delivery assertions stay intact.
 
 Focused compiler contexts, complete owners, meaningful controls, source
 seals and one final gate all remain due. No runtime result is claimed by

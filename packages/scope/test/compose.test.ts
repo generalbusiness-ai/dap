@@ -205,9 +205,10 @@ describe("a request that cannot be delivered (section 7.4)", () => {
 describe("a restart of the sender (sections 7.2 and 7.4)", () => {
   test("a send written before the object is evicted is dispatched after it reloads, from the alarm stored with its entry; a second delivery of it is answered from the receiver's history", async () => {
     const D = await desk();
-    // The dispatch pass that follows the commit reads an earlier time than the entry's, so it finds nothing due and sends nothing.
+    // Early standing, selection and commit read now. The following dispatch
+    // reads before the entry, so it finds nothing due and sends nothing.
     const now = net.clock.now;
-    net.clock.script.push(now, now, "2098-12-31T23:59:59Z");
+    net.clock.script.push(now, now, now, "2098-12-31T23:59:59Z");
     const act = await D.did(rita, "open-issue", { fields: { title: "A" } });
     await settle();
     const I = await D.created(act.fact.seq);
