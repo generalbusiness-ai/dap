@@ -77,33 +77,97 @@ entry's recorded observations and retained values, with `run.reads`
 tracking previous recorded uses. A drop changes a future live read choice,
 not an existing entry or its replay.
 
-## Validation pending
+## Final evidence
 
-No compiler, Node owner, Native owner, control or gate has run at this
-source checkpoint. No generated file, dependency, package or setting
-changes. The gate's unchanged selector includes Scale because this head
-adds one Node-owner path to `scripts/test.mjs`.
+The focused pipeline and both controls used source
+`ef12271d530856a9a16bbd51dcb716b4f19c8b6e`, tree
+`561caa1f0eaa9aa767235ff8bd903234cc83627a`. That checkpoint includes the
+ordinary merge of main `fade0074` and the maintained parser's authority
+and store seals. No recorded pin, dependency, package or setting changed.
+The one final gate remains pending. Its unchanged selector includes Scale
+because this head adds a Node owner to `scripts/test.mjs`.
 
-| Check | Command or boundary | Exit | Output digest |
+The focused launcher, driver, Node owner and compiler/Native pipeline
+all returned 0. The two complete Node owners passed 13 cases: the 12
+security inventory cases and the store's one case. All 14 unique affected
+and owning compiler contexts returned 0. The two complete Native owners
+passed all 15 cases: eight in `authority.test.ts` and seven in
+`observes.test.ts`.
+
+The static project, file, pool and title ledger matches the same-run
+reporter and built-in JSON. All 15 Native obligations started and passed
+once, with no missing, extra, skipped, failed, retried or repeated case.
+The reporter recorded one accepted selection, two collected modules,
+15 starts, 15 results and one successful end, with no unhandled error.
+The source guards and process receipts agree throughout the run.
+
+The store's one Node case covers count drops, byte drops, FIFO replacement,
+and an oversized replacement removing its older namesake. Its fixed byte
+counts include a two-byte value and every duplicate value copy.
+
+The signed Native witness seeds `@una`, then submits signed acts naming
+4,097 absent members in batches of at most 64. It checks the actual cache
+count and accounted bytes after each batch. A final act names `@una`
+again inside the 300-second window and requires exactly one fresh member
+read and the original accepted outcome. The witness advances its test clock
+one second before each batch and before that final act. Membership, signatures, the Scope, SQLite
+and observation port are real. The observing declaration and its empty
+policy are labelled made-up fixtures. This proves neither Q13's
+publication policy nor a live-room outcome. The existing authority owner
+uses its labelled scripted Membership stand-in.
+
+The control driver ran four named Native invocations. It did not reuse a
+whole-owner focused run as a differently selected baseline. The signed
+flood baseline passed, then restoring unbounded insertion failed its real
+map-size assertion at 4,097 records. The existing eviction baseline passed,
+then removing `generation++` failed because the older active answer
+returned a grant where the witness requires null. Each baseline returned
+0 and each fault returned 1 at its expected assertion. The six other
+observation-owner cases and seven other authority-owner cases stayed
+skipped in each named invocation. No timeout or runtime failure counts as
+a distinction. Both original sources were restored byte for byte, and
+no recorded owned process group remained.
+
+The launchers measured 26.553 seconds elapsed and 54.580 seconds of CPU
+for the focused pipeline, and 30.594 seconds elapsed and 36.910 seconds
+of CPU for the controls. Each observation includes its outer guards,
+children and result parsing. These are two separate commands, not one
+combined run or summed case durations. Both ran on this Mac in a reserved
+local slot with an owned APFS dependency copy. The controls reused the
+focused run's dependency and transform caches. Original pools, workers
+and case deadlines remain. No command added a retry.
+
+Run commands:
+
+	python3 /private/tmp/artroom-r3b-focused-launch-20261109.py
+	python3 /private/tmp/artroom-r3b-controls-launch-20261109.py
+
+The public evidence manifest is
+[evidence/2026-11-09-r3b-pre-gate.manifest.json](evidence/2026-11-09-r3b-pre-gate.manifest.json),
+SHA-256 `367069e262d142e72a1601971e3c4ad72d571bb01e570c3b46d758cd2bcdacca`.
+Every completed row below cites `reconciliation.json`, SHA-256
+`4cec68c27455cb3faddfb7809cfe7598e070b50c536e72e135e3c43d804bae7a`.
+That summary reconciles the actual exits with the complete structured
+reports and source/process receipts. Its `raw-inputs.json` names and
+hashes all 78 terminal inputs used for the audit. Both public files have
+their sizes and digests in the manifest.
+
+| Check | Command or boundary | Exit | Output |
 |---|---|---|---|
-| Store Node owner | `node --test packages/scope/test/observation-cache.test.mjs` | Pending | Pending |
-| Native observation owner | Whole `packages/scope/test/observes.test.ts` in the existing Scope pool | Pending | Pending |
-| One unbounded-insertion control | Disable store eviction for the exact named Native flood witness | Pending | Pending |
-| Compiler closure | Affected and owning contexts, once each | Pending | Pending |
-| Final gate | `npm run gate`, original pools, workers and deadlines | Pending | Pending |
+| Complete security and store Node owners | `node --test --test-reporter=tap scripts/security-entry-points.test.mjs packages/scope/test/observation-cache.test.mjs` | 0. All 13 cases passed | `reconciliation.json`, `focus.NodeCases` and `focus.totals` |
+| Compiler closure | Fourteen unique configs through `scripts/focused-check.mjs` | All 0 | `reconciliation.json`, `focus.compilerContexts` |
+| Complete Native authority and observation owners | The frozen Scope selection through `scripts/focused-check.mjs` | 0. All 15 cases passed | `reconciliation.json`, `focus.NativeCases` and `focus.selection` |
+| Unbounded-insertion control | Exact named signed Native flood baseline and recorded store fault | Baseline 0, fault 1. Expected count assertion | `reconciliation.json`, `controls.cases[0]` |
+| Existing generation-eviction control | Exact named eviction baseline and recorded `generation++` fault | Baseline 0, fault 1. Expected old-answer assertion | `reconciliation.json`, `controls.cases[1]` |
+| Final gate | `npm run gate`, unchanged pools, workers and deadlines | Not run | Pending |
 
-The one Node owner covers count drops, byte drops, FIFO replacement, and
-an oversized replacement removing its older namesake. Its fixed byte
-counts include a two-byte value and duplicate value copies.
-
-The single Native witness seeds `@una`, then submits signed acts naming
-4,097 absent members in batches of at most 64. It inspects the real cache
-count and bytes after each batch. A final act names `@una` again inside
-300 seconds and requires exactly one fresh member read and its original
-accepted outcome. Membership, signatures, the Scope, SQLite and observation
-port are real. The observing declaration and its empty policy are labelled
-made-up fixtures. This does not prove Q13's publication policy or a live
-room outcome. The original observation-owner cases and deadlines remain.
+The four original raw and launcher units and the public unit each have
+`SHA256SUMS` and read-only permissions after their final metadata write.
+The public unit copies only the curated reconciliation and a raw-input
+hash index. Generated temporary fixtures, signing keys, raw reports,
+assertion payloads, request bodies and saved fault sources remain withheld
+in their original private units. No fixture or payload bytes enter the
+committed manifest.
 
 ## Open limits
 
