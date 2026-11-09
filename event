@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:56cf27e795315d55ded0457ab436c2eb9024b999","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/credential-store.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:62a5e681068fe88fb5eb585c8ad5d0024614fccf","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-admission-control.manifest.json."}
