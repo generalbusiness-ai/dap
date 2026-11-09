@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:474d3253ca12b44f57ab8085c8ff2474271359df","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-02-readable-diff-design/truncated.DATA.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:47b3a47a8dd5bca4c17af355ffa09845882eba8b","text":"Merge retired a covered predecessor; the successor is at apps/counter/scenarios/application.json."}
