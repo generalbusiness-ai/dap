@@ -38,7 +38,7 @@ export function roomContext(origin: string, place: { directory: string; membersh
 /** Share pending reads and reuse completed rooms only while their identity remains usable. */
 export class RoomOpening<T> {
   private current: { key: string; value: Promise<T>; result?: { value: T } } | null = null;
-  constructor(private readonly reusable: (value: T) => boolean = () => true) {}
+  constructor(private readonly reusable: (value: T) => boolean) {}
   clear(): void { this.current = null; }
   get(key: string, load: () => Promise<T>): Promise<T> {
     if (this.current?.key === key && (!this.current.result || this.reusable(this.current.result.value))) return this.current.value;
