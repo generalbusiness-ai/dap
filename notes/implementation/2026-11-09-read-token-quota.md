@@ -146,6 +146,15 @@ Durable Object callback. Manifest
 seals 16 public and 27 private files. The repair imports that class as a
 type and names it in the probe; the runtime call stays the same.
 
+At `22a4b9f4`, the compiler and the full first Native scenario passed,
+including the physical rollback restart. The late-reply scenario reached
+its eighth replacement slot, then Workerd reported cross-object I/O and
+ten unhandled errors before the original deadline. Manifest
+`2dcf066791ed52abce37608a842f72a796d0051f11bd2711f1341c36d7c03348`
+seals 17 public and 266 private files. The test now releases the held
+provider promise inside its owning Destination object, including cleanup.
+Quota behavior and all assertions stay unchanged.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The

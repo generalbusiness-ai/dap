@@ -72,7 +72,11 @@ async function quotaRoom() {
   const branch = (await G.summary()).value.items.find(item => item.type === "branch")!;
   const submit = async (who = rita) => G.act(who, "read-token", { on: branch.id, fields: {}, expected: await G.expected({ on: branch.id }) });
   const rows = () => life.wait(() => runInDurableObject(G.object, (_instance, state) => state.storage.sql.exec("SELECT scope,mint,bucket,ends_ms,handle FROM private_read_quota ORDER BY mint").toArray()));
-  return { life, now, R, D, M, G, seat, branch, control, providerStarted, submit, rows };
+  const releaseLate = (value: unknown) => life.wait(() => runInDurableObject(G.object, () => {
+    control.finishLate?.(value);
+    control.finishLate = null;
+  }));
+  return { life, now, R, D, M, G, seat, branch, control, providerStarted, releaseLate, submit, rows };
 }
 
 test("Native read-token quota shares eight slots across a member's keys, refuses a ninth without an entry, preserves retries and another member, and reserves atomically before the provider", async () => {
@@ -221,8 +225,7 @@ test("Native read-token adapter frees explicit refusal, holds an unknown for req
     expect((await rows()).some(row => row["mint"] === lateMint)).toBe(false);
     control.mode = "ok";
     const lateEnd = timeOf(life.now() + 3_600_000);
-    control.finishLate!({ id: "TEST-late", scope: "read", plaintext: "TEST-late-plaintext", expiresAt: lateEnd });
-    control.finishLate = null;
+    await f.releaseLate({ id: "TEST-late", scope: "read", plaintext: "TEST-late-plaintext", expiresAt: lateEnd });
     await driving;
     quotaPhase("adapter", "late-effect-joined");
     await effectFixture([G], life.wait);
@@ -237,8 +240,7 @@ test("Native read-token adapter frees explicit refusal, holds an unknown for req
     expect(control.calls).toHaveLength(12);
     quotaPhase("adapter", "late-quota-checked");
   } finally {
-    control.finishLate?.(null);
-    control.finishLate = null;
+    if (control.finishLate) await f.releaseLate(null);
     if (driving) await driving.catch(() => undefined);
     life.release();
   }
