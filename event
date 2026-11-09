@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:155e3a622d6462146628af705ab4639221b5bd80","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-09-r3-authority-turn-order.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1860f7e20112f154e9effcffdc6735b2e57380e8","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/authority.test.ts."}
