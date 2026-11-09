@@ -1,8 +1,9 @@
 # Agentic development practice and the journey
 
-Status: current. Draft 1, 26 October 2026. A research note. It commissions
-nothing. Section 6 records Hugh's decisions of 26 October 2026, and section
-7 proposes the order for the next draft of plan 032. Source facts cite
+Status: current. Draft 1, 26 October 2026, recut 8 November 2026. A
+research note. It commissions nothing. Section 6 records Hugh's decisions
+of 26 October 2026, and section 7 proposes the order that plan 032 draft 3
+(section 2f) took up on 30 October 2026. Source facts cite
 `path:line` at main `a97c7425`. External facts cite pages read on 26
 October 2026.
 
@@ -176,8 +177,9 @@ numbers move".
   approvals, an approver action, required checks, and a class of content,
   deployment or authority (`packages/platform/src/extents.ts:35-41`). The
   first definition puts agent instruction files and CI workflow
-  definitions in the authority extent (`extents.ts:53,64`), which is the
-  field's "CI workflow files always need one person".
+  definitions in the authority extent (`extents.ts:53,64`). That matches
+  section 2.3, where the change sets the review tier and people stay on
+  the riskiest code.
 - The [landing policy note](2026-10-16-declared-landing-policy.md) states
   an attempt limit of three with escalation, and the
   [evidence rules note](2026-10-16-evidence-rules-design.md) gives each
@@ -199,13 +201,13 @@ data, or does it need a platform version?
 | Practice | dap today | In dap's plans | By data? |
 |---|---|---|---|
 | Risk tier set by path; people sign off | Extents | | Yes, today |
-| Tier 0: a low-risk change lands with no person | Only a signed `merge` by a holder of `change.merge` lands (`reservation.ts:233`) | Landing policy, section 4.1 and order step 3: a destination version, "large, own design", unfiled | No |
+| Tier 0: a low-risk change lands with no person | Only a signed `merge` by a holder of `change.merge` lands (`reservation.ts:233`) | Landing policy, section 4.1 and order step 3: a destination version, "large (own design)", unfiled | No |
 | Open findings block the merge | A review is a verdict and a body (`change.ts:103-115`); a result has an outcome, a reason, a tree and a digest (`change.ts:144-155`) | The landing policy's assessment is one confidence number | Yes, as a lane revision with a `finding` item and a merge guard; not planned |
 | Round cap, then escalate | | Landing policy, section 3, as data and a local landing member | Yes, planned, unfiled |
 | Re-review only the interdiff | No diff view | Plan 032, J2 | Yes, J2 |
 | Agent wakes on CI fail, review comment, merge, timer | `wait` polls for at most 60 seconds (`packages/mcp/src/service.ts:92`); the inbox sends nothing (`packages/platform/src/inbox.ts:3-5`) | Designed three times: [wake and schedule](2026-10-01-wake-and-schedule.md), [condition subscriptions](2026-10-09-condition-subscriptions-and-webhooks.md) marked not prioritized, and the hosted teams' dispatch; J5 names "resuming agent work" as its next step | No |
 | Automation: an issue enters a state, an agent starts | Timed rules exist inside definitions | None reaches an agent | No |
-| An agent reviewer whose verdict is recorded apart from a person's | Agents comment only | The [roles note](2026-10-21-roles-flow-and-instances.md:275-278) defers it to a later membership version | No |
+| An agent reviewer whose verdict is recorded apart from a person's | Agents comment only | The [roles note](2026-10-21-roles-flow-and-instances.md), lines 275-278, defers it to a later membership version | No |
 | A trusted-author list gets lighter paths | Five roles; `set-actions` replaces one role's whole list (`membership.ts:473`) | No design | No |
 | Stacked changes; parallel integration | One destination head; a moved base is refused | The evidence rules note says batching on an unpublished reservation "changes the reservation model" (line 324) | No |
 | Rule and skill files versioned in the repository | `AGENTS.md`, `CLAUDE.md` and workflows in the authority extent (`extents.ts:53`) | | Yes; add `REVIEW.md`, `.agents/**` and `.claude/**` to a room's rules |
