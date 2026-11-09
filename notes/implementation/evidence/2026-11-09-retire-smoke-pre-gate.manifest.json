@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "request": "a6a57ffbe146f4892ab159491bb87b108ffbff2c",
+  "promise": "40a2162d22c3cc9b57fe62d2008b4c0c8f34d4f2",
+  "sourceHead": "8613548ae336b538e0649b02cd036beb227d1754",
+  "sourceTree": "817ff89834e22b117b7cde5e545f19ac70fdcb60",
+  "qualification": "Complete five-case maintained Node owner passes actual0 at8613548a with source equal/process group closed. One distinct branch-dispatched actual Local Worker proxy smoke42620457832 attempt1 passes at the same source, including exact pending202 and oldBearer401. First main smoke42619666050 remains failed. No Native complete-revocation or deployment acceptance claim.",
+  "fileCount": 21,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-retire-smoke-focused-validation",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 713,
+          "sha256": "10400422aeb28a17a5052d9fd6319c1cdd89458e97bcce4fa3eca5f243f71b4d"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 124,
+          "sha256": "b497d36cbfbfdb25e6d05c7f6b28b62a3c396daa98678bed7b9b73c3de7d0ec5"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2763,
+          "sha256": "080c69a66b1cf4eed133f56180f7068ce9dc47760cf54053f85a05cce64e10b5"
+        },
+        {
+          "path": "node.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "node.time",
+          "bytes": 29,
+          "sha256": "1668b24f321271bcc2b3fcc4d8ba8794d6fadba29175ef18f97fb0131aeffc88"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 538,
+          "sha256": "f967065d45187b7aef8279e75b5f808e602a62c90c28effc125957d5a924cd38"
+        },
+        {
+          "path": "result.json",
+          "bytes": 541,
+          "sha256": "9a0c78e0090cf181544e8b5aa5c736759ec93ae3d769c46d18f48015070b28d7"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 4266,
+          "sha256": "cfe376155c71e433394f68ee3ee96d141bdac3429c59e1d9b9ae2699f0bdfe64"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 190,
+          "sha256": "afe441ff1e25951b8eec541000fe7542e9576c2b7e36974beebedfad104545dc"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-retire-smoke-ci-42620457832-validation",
+      "fileCount": 11,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 811,
+          "sha256": "61ae8d03b97befab3205ae82f9a42e416c66e74144fe9ee6d658427e7289f340"
+        },
+        {
+          "path": "capture-driver.py",
+          "bytes": 2523,
+          "sha256": "515af382e37784e2036a55e0dc698bca732acb121bb9c3bc001e6345409b39d2"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 908,
+          "sha256": "25b35199bedbcab25dd8a6b8b33d78a11ba7b122430c4b50cd8feff092716ae6"
+        },
+        {
+          "path": "jobs.json",
+          "bytes": 2604,
+          "sha256": "1d727a742f328d2115ec2831103801c24ac59afac42a59ef338365f2e5b0d947"
+        },
+        {
+          "path": "jobs.json.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "logs.zip.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 543,
+          "sha256": "455d1c513d6aba6becf6532d8ed56fb6791bbacd056ba669c98efb0b34af634c"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 3783,
+          "sha256": "d3843d381af905a6564cf66a1bd9803f08a1e25ba9ad438bb8591208fe57f3b6"
+        },
+        {
+          "path": "run.json",
+          "bytes": 12587,
+          "sha256": "7659440211528204fefea6eb8124a21fa38d1b4c351ad48e9c139fe8df596756"
+        },
+        {
+          "path": "run.json.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 4266,
+          "sha256": "cfe376155c71e433394f68ee3ee96d141bdac3429c59e1d9b9ae2699f0bdfe64"
+        }
+      ]
+    }
+  ]
+}

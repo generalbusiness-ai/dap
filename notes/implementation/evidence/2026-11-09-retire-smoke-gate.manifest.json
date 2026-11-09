@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "request": "a6a57ffbe146f4892ab159491bb87b108ffbff2c",
+  "promise": "40a2162d22c3cc9b57fe62d2008b4c0c8f34d4f2",
+  "sourceHead": "ffaebf4a45fc17f59db5264623652d252a2bbc5a",
+  "sourceTree": "33c964df98960adbf29491b6a5bcede8db7f4634",
+  "qualification": "The standalone smoke correction full gate atffaebf4a passes actualgate.exit0read, allfixedstages,5343passes/3explicitskips, no contradictory/report/unhandled errors. 102unknown observations reconcile as34Nodefilewrappers, not unresolved leaves. Actualscaleomitted outsidefamilypaths; no archive attempt/pass. Alltrackedsourceunchanged/groupclosed; observedprocesssamplesfindnootherlocalbody. No deployment or complete-revocation claim; originalmainCI42619666050 remainsfailed and branchproxyCIseparate. No rerun.",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-retire-smoke-gate-validation",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1394,
+          "sha256": "07dd0b59d784afb751521462c45236267a4cef20058268e8a1bc3cce99c26d38"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2426,
+          "sha256": "eab5731ce5c7bd6b4d1733142d01c708582dcbf0b6f039a4677826939a1d9dc6"
+        },
+        {
+          "path": "analysis-driver.py",
+          "bytes": 3916,
+          "sha256": "69ae1fb95a8854cbacf81ce1c2b66067f89424e0593a8721c5abf16f4bf1c773"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 1245,
+          "sha256": "f60d091a49d44da1187fb0c2176cf0dc0e5c68c834e993c638da9fd2e3dbdde7"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7373,
+          "sha256": "b750f10055e074bcadfd1d32d3653ac94ff4deebc9c1d8d9aec931dd2fd6b3ef"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "043d955118d912de922b51e4bfa25eb6bdeab5a0ec5fa950c5a580e79386e1e7"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 551,
+          "sha256": "de9f4230c3c30601ec9f247ff24ba9b144bc6e66217908edbba763c3c8862a7f"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "3d86ac852fb944c46ada598b9dc1f33eece4723e2e663f60f290727a3c066dd4"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 3953,
+          "sha256": "4fed17b168c4554a7b9bfa9d0335fc6f936f3024bd81a37a69f3329114736c2b"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "e5b3affc90445e8b92f16900192ae8e2bb179a2ee6854cd2debea723189237a9"
+        },
+        {
+          "path": "slot-observations.jsonl",
+          "bytes": 5347,
+          "sha256": "7b0827174a66d6c5c2fe87aa74404f1119b2a5a394279ef1eafd4476fda01993"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 1616,
+          "sha256": "8a9cf4a267aa7dc19b130c7d9bcda5794b8d2ba7e616894fc8ee7c89d7820b7e"
+        },
+        {
+          "path": "started.json",
+          "bytes": 725,
+          "sha256": "28a9fd7372f8eb886ff8c82eeecc7c4fcdc25116bcdf12033dd90cde1ffed8ab"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 8044,
+          "sha256": "4431e890488588ae705ad9ba7041348185ed8e8c1f06fb16fa49fee9f23d7f6c"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 578,
+          "sha256": "06309d1d06a3b7ea3cde7e7370c4870717d2fd883737304b0b4dc905dac59a25"
+        }
+      ]
+    }
+  ]
+}
