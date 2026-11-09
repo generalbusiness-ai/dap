@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"86179b0c008e85eadc130bff58161ff69c5e4b10","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:01cececf49d56ffd6e19f61c3b65c2c272bc52e8","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/command-repository.ts."}
