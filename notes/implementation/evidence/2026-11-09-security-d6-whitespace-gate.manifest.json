@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "request": "d8512f74f967badc4f51d40df529723331de0a7f",
+  "promise": "40f21bcc0e17f02088a832c7d9467b81fe294d86",
+  "sourceHead": "bf5d64fb28709e5389ec0c2b9bf68b099660686a",
+  "sourceTree": "26c0dddecc070ba062cc5a0129d65001f857b1ab",
+  "qualification": "First D6 final gate failed before every test and every later check. The base-to-head whitespace check found one final blank line in the implementation note. Original failed exit2 remains authoritative. No compiler, test or gate rerun during sealing; prior focused results remain separate.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-security-d6-whitespace-gate-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 977,
+          "sha256": "7b37be61acd786176d16d3feb2a9985496da007268996d906f170ec00be829af"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 708,
+          "sha256": "3c6c51ca27a08590dc61fa9c7dafccc2653df6343f518e0e89d5ecbe07937d2a"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7372,
+          "sha256": "1becd22064e2e05045f9da45c38df792ccfe6b542059c860cf56d61a8f33d34a"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "5362fb632b157f283b9135804a517da6491d939d8635435911a91f389c9e4aff"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 29,
+          "sha256": "c0c62410f4fbf1393f6f066dcae406ff777ae33823432d7d1a943b86707ae109"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 466,
+          "sha256": "9e3c059ed0c6ee807f7aa9999c33b15bbd97e1655eb92b2d2b3b6c4917b6fe13"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "63b20f7931469026b8cf99443c0e96751d34d2f8a9728879127296c9555c5555"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 4620,
+          "sha256": "443542bd70049245635c96322bb31276e2a65c015c035c622c668afa821d9a84"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "26a152703ac79b00f37c8f084767be1a2f4208b8adc7f0c67d5af45fb2c5c261"
+        },
+        {
+          "path": "started.json",
+          "bytes": 717,
+          "sha256": "4f4f666ce54fb977eb6cd28980d4b2385eeb240801498ebf2bd887e2ba660e49"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 576,
+          "sha256": "21459d124f01affa71a526679202ecbd7a138c23cb506a3e43cf413e65b44d85"
+        },
+        {
+          "path": "whitespace.log",
+          "bytes": 79,
+          "sha256": "ba73fb8c789205497471e5fe539a032f14ee0c7d559b7cbbdb4a70de40730bc4"
+        },
+        {
+          "path": "whitespace.time",
+          "bytes": 29,
+          "sha256": "f5d04e3f394dbde846fb5bf863e4e5541e917ef60e9e5b8a7a746282662ee215"
+        }
+      ]
+    }
+  ]
+}

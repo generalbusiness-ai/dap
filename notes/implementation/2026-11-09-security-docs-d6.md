@@ -4,7 +4,8 @@ Request `d8512f74`; promise `40f21bcc`. Source starts at main `29926a3a`.
 This head includes the preceding JSON landing, main `ca6a54e2`. Focused
 Node checks, documentation links and the named-witness control are complete
 at `ecebb1cc`. Their helper and test bytes remain identical. The final
-gate remains due.
+gate stopped at the first whitespace check. The failure remains recorded;
+the planner continuation ruling is pending.
 
 D3, D4 and D5 already exist on main, with the settings inventory and its
 three Node cases. This head adds D6, the root `SECURITY.md`, and a static
@@ -36,7 +37,7 @@ route assertions remain byte-identical.
 |---|---|---|
 | Focused Node owners | Complete entry-point and settings files; documentation links | 12 entry-point cases and 3 settings cases pass; 1,088 local links, 0 broken |
 | Named-witness control | Bypass only the exact-name refusal, run the complete entry-point owner, then restore source | Owner exits 1: 11 pass, 1 intended assertion fails; verifier exits 0 |
-| Final gate | `npm run gate` once after the focused evidence | Unrun |
+| Original final gate at `bf5d64fb` | `npm run gate` once after the focused evidence | Exit 2 at whitespace; every later stage and test unreached |
 
 No new runtime invariant test duplicates the existing nine witnesses.
 The [pre-gate manifest](evidence/2026-11-09-security-d6-pre-gate.manifest.json)
@@ -56,7 +57,27 @@ identical. Fourteen workspace bindings resolve inside this checkout. No
 package manager ran in the checkout.
 
 Later D6 edits add evidence and explanatory documents only. Earlier branches
-establish no result here. The final gate remains unrun.
+establish no result here. The original gate remains failed.
+
+## Retain the failed whitespace gate
+
+The gate at `bf5d64fb28709e5389ec0c2b9bf68b099660686a`, tree
+`26c0dddecc070ba062cc5a0129d65001f857b1ab`, stopped at the first whitespace
+check. Actual `gate.exit` is `exit 2`. The base-to-head check found one new
+blank line at EOF in this note at line 69. Every later gate stage and every
+test remained unreached. Source hashes stayed exact and the owned group
+closed. The wrapper measured 0.527 seconds with its monotonic clock.
+
+The [failed-gate manifest](evidence/2026-11-09-security-d6-whitespace-gate.manifest.json)
+has SHA-256 `a0ff9f777c2995f6bb9ce6bf83ae8ff6fa152fa3c795d16e3a92ebc570ba08e5`.
+It seals thirteen public files and 126 private files. `whitespace.log`,
+`gate.exit`, `receipt.json` and `classification.json` retain the failure.
+No test or compiler ran during that gate or during sealing.
+
+The correction removes the final blank line and adds this explanation and
+manifest. No executable source, test, configuration, dependency, digest or
+setting changes. The planner ruling for one whitespace recheck and the
+unreached gate commands remains pending. No second gate or test body has run.
 
 ## Deployment and reporting
 
@@ -66,4 +87,3 @@ references, historical reviews and the private GitHub reporting path.
 Finding 3.13 remains explicit: Grow and legacy artroom-scope share their
 Artifacts namespace, content bucket and metrics dataset; code checks narrow
 shared capabilities but do not create resource isolation.
-
