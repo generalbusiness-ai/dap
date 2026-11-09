@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "request": "c6e29874f4194734ab68c9f7adeab54fd3543f40",
+  "promise": "197ace0743d3c4c26288e32708ae72aa2b7af5e1",
+  "sourceHead": "dc344d5854de198753f324deab009f72218afda0",
+  "sourceTree": "d32cba87e7816d62bf59e19b3ab8aac19864b723",
+  "qualification": "Planner794ef517 focused follow-up: selector Node1 and all five complete failed Plain owners8cases pass. Removing only the two-file source-size exclusion causes the intended assertion failure, with exact source restoration and no healthy baseline rerun. Original failed gate retained; one new final gate due. No compiler context changed or repeated. No live result.",
+  "fileCount": 29,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-json-size-followup-validation",
+      "fileCount": 29,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2561,
+          "sha256": "eddd64413caa3b0290c7af31cb269b207cd47860f62026094a8490cb21840b75"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 636,
+          "sha256": "76136ef423c54c74e6154d4918c18489121474f0ba31a670f33cbcdfcd5bfbed"
+        },
+        {
+          "path": "focused--compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--driver.py",
+          "bytes": 8287,
+          "sha256": "883c45a65e33602eb9f48497dd5a3cbf07475a8136696c50136d15a986f02aa1"
+        },
+        {
+          "path": "focused--focused--coverage-ledger.json",
+          "bytes": 10516,
+          "sha256": "95d7b470c7b6eb252b1bde127a015dd5ef5ca1ceca4a76a310b8f803155a03b5"
+        },
+        {
+          "path": "focused--focused--result.json",
+          "bytes": 4614,
+          "sha256": "81142a57370a53cc0447805aec5e879bb87937ae6dbdec21d2c0d922cc7db215"
+        },
+        {
+          "path": "focused--node-driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--outer-timing.json",
+          "bytes": 568,
+          "sha256": "741807feed2ac928cf9b56deaaa1c16bb0523995033311ddc760909ffc882ed0"
+        },
+        {
+          "path": "focused--owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--owner.time",
+          "bytes": 29,
+          "sha256": "eb0b15d387d5e0cad36852043c8e72cd355c7222ac7f20a1839f88ddb06fd33f"
+        },
+        {
+          "path": "focused--pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6fe5a51112a791d295899b046d989fcdb9060f985a3d32658086affb79dd8113"
+        },
+        {
+          "path": "focused--pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--pipeline.time",
+          "bytes": 30,
+          "sha256": "ebec4a42320a62eb23003da272f9b2d3ab9f75a258f1bfc2c733a91e5190df40"
+        },
+        {
+          "path": "focused--private-retention.json",
+          "bytes": 463,
+          "sha256": "67ebb9b196f0a1148450eb11002105fffe078409098196c17760fe2d9932674d"
+        },
+        {
+          "path": "focused--result.json",
+          "bytes": 1173,
+          "sha256": "25969c2324921d7caebdc08724fccb951388e1e8535ee8603c641af953744c48"
+        },
+        {
+          "path": "focused--slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        },
+        {
+          "path": "focused--stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "focused--stdout",
+          "bytes": 406,
+          "sha256": "9095754eba7abbc0b2fafe2bad1a49904b96504cf7e6fe8be0c0bd0f31aa2d4c"
+        },
+        {
+          "path": "packet-control--control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "packet-control--control.time",
+          "bytes": 29,
+          "sha256": "eb0b15d387d5e0cad36852043c8e72cd355c7222ac7f20a1839f88ddb06fd33f"
+        },
+        {
+          "path": "packet-control--driver.py",
+          "bytes": 4331,
+          "sha256": "d5756ec7ba4055a07d13a6338ca924a4cddaa38364b2e305965363481bf02903"
+        },
+        {
+          "path": "packet-control--private-retention.json",
+          "bytes": 473,
+          "sha256": "3d7cafc7e6b57c08690593d481439ea93702ecf1fa6b0cf2c360fc045d378d55"
+        },
+        {
+          "path": "packet-control--result.json",
+          "bytes": 800,
+          "sha256": "d2c11a2e36a4730e8729466d8834cb382956199aeda39732864f49089cef569a"
+        },
+        {
+          "path": "packet-control--slot-before.json",
+          "bytes": 190,
+          "sha256": "94ead68add745b8ae98f0820762ae166ae83cc4370135659b0fae56e5accd16c"
+        },
+        {
+          "path": "packet-control--stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "packet-control--stdout",
+          "bytes": 1158,
+          "sha256": "607c3e2100f1b365695b20bdd6c729e5aae18bd58c0d8d16f275fa5c9c3998f3"
+        },
+        {
+          "path": "packet-control--verifier.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 5349,
+          "sha256": "727409f7fcf548248d951dac69cfd3eabf71ee047090406f98bc5123ebd7bd72"
+        }
+      ]
+    }
+  ]
+}

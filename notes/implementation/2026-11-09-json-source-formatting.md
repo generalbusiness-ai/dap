@@ -5,7 +5,8 @@ This head includes main `29926a3a`. Authoring, focused checks and the
 packet-exclusion control are complete. The single final gate failed; its
 unchanged source and complete original outcomes remain sealed. Planner
 ruling `794ef517` authorizes the two source-size exceptions, one focused
-follow-up and one new final gate. Those runs remain due.
+follow-up and one new final gate. The follow-up passed; the new gate
+remains due.
 
 ## What changes
 
@@ -128,9 +129,32 @@ counts remain its actual observations.
 
 The ruling requires one healthy selector owner and the five complete failed
 owners, then one new full gate at the final head. This is an explicit
-exception to the ordinary single-gate rule. Those runs remain due. Any new
-gate failure stops work for a report. The original gate remains failed.
-Earlier branches establish no result for this head.
+exception to the ordinary single-gate rule. At `dc344d58`, the selector's
+one case and all eight cases in the five complete failed owners pass.
+No TypeScript source or compiler input changes in this repair, so the
+follow-up repeats no compiler context. Every source hash remains fixed and
+the owned groups close.
+
+The [size follow-up manifest](evidence/2026-11-09-json-size-followup.manifest.json)
+has SHA-256 `af2800c889a148e23737b50e4f490b4c636cc6a275e64b0cc18a04a449ab549b`.
+Its `focused--result.json` and `focused--pipeline.exit` record the passing
+Node owner and body. `focused--focused--coverage-ledger.json` matches all
+eight actual case names, projects and pools. The single control reuses that
+healthy baseline and removes only the two-file exclusion. The unchanged
+selector owner fails the bounded-input assertion with actual `true` and
+expected `false`; source restoration and group closure pass. The actual
+control owner exits 1 and the verifier exits 0. No healthy baseline repeats.
+
+Two preparation commands failed before the first test invocation: a saved
+Node case lacked the `project` key assumed by the plan generator, then its
+dependent driver found no plan file. Both stopped before application work.
+The corrected frozen v2 driver ran once. The
+[preparation record](evidence/2026-11-09-json-size-preparation.manifest.json)
+labels these errors separately from that passing body.
+
+The new final gate remains due. Any new gate failure stops work for a report.
+The original gate remains failed. Earlier branches establish no result for
+this head.
 
 ## Open limits
 
