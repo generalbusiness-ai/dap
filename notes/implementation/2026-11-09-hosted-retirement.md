@@ -1,189 +1,162 @@
-# End a hosted agent's signing custody and record its retirement
+# Hosted retirement ends signing and records the key's end
 
-Request: `b66b8f146a9813628e0325374f551ae22d77284f`.
-Promise: `0875dbf1182ef1ce98fa6119a6c2de06e3a2383b`.
-Current ruling: `e2fc59d54f6e920cedd9e4efa1fc3e2033d53d70`.
+Security request `b66b8f14`; promise `0875dbf1`; planner ruling `e2fc59d5`.
+This head addresses a retired endpoint that kept an active membership key
+and its private signing seed. The planner deploys after exact-head review.
 
-Status: the fifth focused unit at `65e8bd07` passed both affected compilers.
-The complete 24-case owner reports 22 passed, one failed direct-act revision
-check, and one pending case, with exact coverage and no unhandled errors.
-The signed act now carries its exact retained sidecar; it still copied the
-repository revision from the earlier accepted act. This repair reads the
-current revision before signing and keeps the revoked-key assertion.
-All five failed units remain failed. Four other complete owners reconcile
-15 passed cases without a rerun. Production and source seals stay equal
-to `172ca878`. The whole hosted-owner follow-up, meaningful control, gate,
-and review remain due.
+## What changed
 
-## Endpoint shutdown and the recorded end
+An authorized retire clears the bearer, all sessions and OAuth grants, sets
+the endpoint to retired, and erases its seed in one SQLite transaction.
+The seed becomes an empty BLOB because the existing column is `NOT NULL`.
+Cached signers reread current state before signing; cached transports also
+refuse dispatch after retirement. A later bearer request or unfinished
+create cannot revive the endpoint. Loading an already retired row erases
+its old retained seed as well.
 
-Retire keeps the existing admin and controller authorization. Its first
-storage transaction clears the bearer, deletes sessions, ends OAuth access,
-sets the endpoint's retired state, and erases the signing seed. The legacy
-column remains non-null and holds an empty BLOB. Loading an old retired row
-also erases its remaining seed.
+Retire accepts an empty body or one caller-signed `revoke-key` envelope for
+this agent, in this membership, with `as: retired`. The signer must be the
+retiring party. The endpoint proves the target key item from its verified
+accepted enrollment custody, including archived custody. Missing custody
+supplies no guessed target. The endpoint stores the first envelope and
+submits only that exact envelope. It never signs a revoke or substitutes
+a later envelope. The existing control fingerprint still refuses changed
+body bytes under the same operation identity.
 
-Cached service signers read the current row before signing. Their transport
-also checks the row before dispatch, so an intent prepared earlier cannot
-leave the endpoint after retirement. The cached signer retains no original
-seed. Shutdown invalidates both HTTP generations before any outside work.
+A `200` answer means membership shows the key retired or compromised and
+the endpoint holds no seed. Otherwise `202` names the pending reason while
+the endpoint remains disabled and seedless. Retry checks the recorded key
+again and can complete after any admitted admin or recovery revoke. It
+resubmits the retained envelope only while that envelope remains valid.
 
-The endpoint never signs a revoke. An empty body, `{}`, or a body containing
-one caller-signed `revoke` is valid. The signed intent must name the retiring
-actor, this membership, `revoke-key`, and only `as: retired`. The first
-envelope enters private storage before submission. The existing 64 KiB
-control-body bound and the control budget bound its storage. The last
-1 MiB of the 16 MiB control budget still admits retire alone.
+`docs/mcp.md` describes complete and pending retirement, exact retries,
+recovery and the existing lifetime of grants another scope already holds.
+The route inventory adds the helper as a reviewed whole-file source owner.
 
-The accepted enrollment custody identifies the key item. Its identity binds
-the service, membership incarnation, agent key, target, and original enroll
-operation. The retained signed enrollment names the invitation that opened
-the key item under the supported membership pins. An unavailable or
-unresolved record supplies no guessed item. A supplied revoke for another
-item never reaches membership.
+## Decisions and limits of the change
 
-A complete answer requires both an observed revoked key and an erased seed.
-Otherwise the answer reports pending retirement, disabled endpoint, erased
-seed, and the current refusal or uncertainty. A retry checks membership
-again and submits only the stored envelope while it remains valid. It never
-signs another one. A later body cannot replace it. A changed body under the
-same control operation still fails the existing fingerprint check.
+Ruling `e2fc59d5` replaces the earlier self-revocation proposal. It keeps
+current admin/controller authorization and existing membership meaning.
+An ordinary controller without `membership.manage` can disable the endpoint
+and erase the seed, but cannot complete a Native revoke alone. Permanent
+refusal or an expired envelope requires a separately admitted admin or
+recovery act. Keeping the first envelope prevents a retry from silently
+choosing a new signer, target or expected revision.
 
-An ordinary controller can disable the endpoint and erase the seed without
-holding `membership.manage`. Its revoke remains pending. A permanent
-refusal or expired envelope requires an independent revoke by an admitted
-admin or recovery key. The next authorized retire retry observes that act
-and completes, regardless of which request recorded it.
+No Native definition, creation family, offer, recorded byte or historical
+entry changes. Self-revocation remains a candidate for a later membership
+revision. This filed security fix falls under [kernel section 7](../../docs/kernel.md);
+it introduces no kernel item. The checker must assess that filing basis.
 
-## Existing native meaning
+Other scopes keep their existing grant lifetime of at most 300 seconds.
+The direct-scope witness restarts that scope to require a fresh authority
+read before checking the revoked key's `unauthorized` refusal. Endpoint
+shutdown takes effect before that separate grant lifetime expires.
 
-No pinned definition, creation family, offer, genesis, or historical entry
-changes. Self-revoke remains a candidate for a later membership revision.
-The ordinary membership judge still admits or refuses the caller's revoke.
-The private retirement row supplies neither authority nor a native result.
+The maintained source-seal producer ran at `75d4430c`. After the explicit
+Worker decoder default repair, the producer at `faa4be6b` gives hosted
+owner `c41049c9597e2d2221066d60be526d85a50a730ad22d88ed999e124af6076956`
+and helper `8707c99fe68ac3cf7af20a343f92c36b3bb81237b3681ae2a03169df5513882b`.
+The metadata manifest retains both runs and patches. All route and gate
+assertions remain. Hugh's standing patch approval covers adoption;
+independent exact-head review still assesses the changed source.
 
-The existing lifetime of grants another scope already holds remains at
-most 300 seconds. The direct-scope witness restarts that scope to make a
-fresh authority read before showing the revoked key's refusal. Endpoint
-shutdown takes effect before that separate native grant lifetime expires.
+## Final evidence
 
-This filed security fix falls under [kernel section 7](../../docs/kernel.md).
-It adds no kernel item or platform name. The review must cite that section.
+The Native scenes use the production endpoint, real membership, SQLite,
+restart, direct scope submission and replay. Their clock and one dropped
+request before dispatch are explicit TEST stand-ins. They contact no live
+room. The admin scene proves an accepted agent act, uncertain revoke,
+seed erasure, endpoint refusal, exact-envelope retry, one recorded revoke,
+fresh direct-key refusal and consistent replay. The controller scene
+proves empty-body pending retirement, permanent refusal, ignored replacement,
+expiry and completion after an independent admin act.
 
-## Validation obligations
+Four older endpoint-only retire expectations and the OAuth lifecycle
+expectation now require pending `202`. Their authority, stream, session,
+budget and non-revival assertions remain. No allowance changes.
 
-The Native witness draft uses the production endpoint, membership, SQLite,
-restart, and replay. Its clock and one failure before dispatch are explicit
-TEST stand-ins. It covers exact-envelope retry after uncertainty, seed
-erasure, endpoint refusal, fresh direct-scope refusal, and journal replay.
-A second scene covers an ordinary controller, permanent refusal, a refused
-replacement envelope, expiry, and completion after an independent admin act.
+The focused closure contains 39 cases across five complete owners. The
+24-case hosted owner passes at `ffc97d5d`. Four other complete owners with
+15 passes, Node's 11 inventory cases and Scope source typechecking retain
+their separate evidence at `172ca878`. The decoder follow-up manifest
+contains the explicit post-failure reconciliation for those four owners;
+its original whole unit remains failed. Only the hosted test and note or
+evidence changed after that runtime head. Frozen hashes establish equality
+for production, configuration, dependencies, seals and completed owners.
 
-Four existing endpoint-only retire expectations and the OAuth lifecycle
-expectation now require pending `202`. Their authorization, stream, session,
-budget, and non-revival assertions remain. No allowance changes.
+The seed-erasure control omits only the transaction's seed assignment and
+its SQL binding. The unchanged whole 24-case owner runs once with `--bail=0`.
+Both new cases fail at the intended SQLite assertions: zero expected bytes,
+32 actual bytes. The other 22 cases pass. The driver restores every tracked
+byte and closes its process group. No skip, timeout or unhandled error occurs.
+The original report verifier exits `1` because Vitest abbreviates the first
+object error in JSON. A separate metadata reconciliation reads the full
+same-run stderr and confirms both exact seed-only diffs. Its exit is `0`.
+The original verifier and result remain unchanged; no control repeats.
 
-The maintained source-seal producer ran at `75d4430c`. Its hosted owner
-gives `c41049c9597e2d2221066d60be526d85a50a730ad22d88ed999e124af6076956`;
-the new retirement owner gives
-`08e34ecbd584bde7dd196a86081f42d0be6b5e8323b7d4c565ac68fbe18ff1bb`.
-After the compiler repair, the maintained producer at `faa4be6b` gives
-`8707c99fe68ac3cf7af20a343f92c36b3bb81237b3681ae2a03169df5513882b`
-for the helper. The hosted owner stays equal.
-The inventory adopts those actual parser outputs under Hugh's standing
-patch approval. All route and gate assertions remain. Producer metadata
-establishes no test pass.
+The only full gate, at `522949c7` / `d53308958b879d84a0790d12145f17118388f8bb`,
+**failed with actual `gate.exit` 1**. All pre-typecheck checks passed. The
+focused compiler plan had omitted MCP's Worker-only `tsconfig.scope.json`.
+That context found two errors where the new witness's RPC seed type allowed
+`string | Uint8Array`. The gate reached no main test stage.
 
-Focused checks and the seed-erasure control are conclusive under the
-qualifications below. One final gate remains due. The actual
-`gate.exit` must decide any gate pass claim. No current source claim rests
-on an R13 test result.
+The isolated repair at `f34e58db` / `099ed063be78ca6a903ec00aad87faad3ca374f5`
+returns a numeric array across the callback and constructs the same local
+`Uint8Array`. Only that test and explanatory note or evidence differ from
+the failed gate. Production, imported code, shared helpers, configuration,
+dependencies, cases, assertions, line count and deadlines stay equal. No
+other file imports the test. The checker must assess this repair under the
+[isolated-test follow-up rule](../../docs/testing.md#follow-up-after-a-gate).
 
-| Check and source | Actual result | Manifest SHA-256 |
+The follow-up passes the failed MCP Worker context, unreached MCP browser
+context, and all ten unreached root contexts. It then runs the entire
+previously unreached `npm test` body, including the complete hosted owner,
+and the unconditional summary. Actual `test.exit`, `summary.exit` and
+`followup.exit` are all `0`: Node 142, Counting 56, Plain 4,028 plus one skip,
+and Native 1,117 plus two skips. Reports show no contradiction, failure,
+report error or unhandled error. The 102 unknown observations are 34 Node
+file wrappers, not unresolved leaf cases. The source stays equal and the
+owned process group closes. Scale correctly omits because no scale-family
+path changed; no archive attempt or pass follows. The failed gate stays
+failed; this follow-up supplies its missing checks without a gate repeat.
+
+The follow-up classification also preserves two metadata limits: its frozen
+task's booking placeholder points to durable booking `91c559d3`, and the
+failed gate task retained unused R13 count/control fields. Those fields
+never decide execution or coverage. The actual frozen R15 control input
+and all terminal results remain explicit in the sealed classification.
+
+| Check / checkpoint | Command | Actual exit and output manifest SHA-256 |
 |---|---|---|
-| First focused, `40ab4e2d` | Compatibility and Node 11 passed; Scope source failed `TS2741`; remaining compilers and application tests unrun | [manifest](evidence/2026-11-09-r15-failed-source-compiler.manifest.json) `cb6df4d892e872c6b3c55534b3e8dc2e023d1590f46289af65c8263e9fa59703` |
-| Decoder follow-up, `172ca878` | Node 11 and three compilers passed. Body exit 1: 39 collected, 37 passed, one failed witness and one pending. Original static ledger also failed. Qualified reconciliation: four complete passed owners, 15 cases | [manifest](evidence/2026-11-09-r15-failed-revoke-witness.manifest.json) `a0c4bfee5e081f0e218c5b02284a4ceb9954e098a2bafb908e45d6de4923d8dd` |
-| Final-key probe, `58d65173` | Both affected compilers passed. Body exit 1: 22 passed, one probe failure, one pending; exact 24-case ledger, no unhandled errors. Retire itself completed before the probe failed | [manifest](evidence/2026-11-09-r15-failed-final-key-probe.manifest.json) `7e629696462d4d65151505445ab9c3f6a3911802ea0e2596637885a09f5fe704` |
-| Direct sidecar, `5fd0601b` | Both affected compilers passed. Body exit 1: 22 passed, one direct-act field refusal, one pending; exact ledger and no unhandled errors. Missing original sidecar stopped the witness before authority | [manifest](evidence/2026-11-09-r15-failed-direct-sidecar.manifest.json) `a36f1ec12fbae56f64ac34a2b9f3f248e620d4a612d146910b5b7846f42cbb62` |
-| Direct revision, `65e8bd07` | Both affected compilers passed. Body exit 1: 22 passed, one stale expected revision, one pending; exact ledger, no unhandled errors. The field-complete act stopped before authority | [manifest](evidence/2026-11-09-r15-failed-direct-revision.manifest.json) `c5ead18b8bc7a6c4959c7b337b4e4229fde3bf7d8644fa63f1fa1bbc1f7bbcf1` |
-| Replay source, `8ad48f37` | Both affected compilers passed. Body exit 1: 22 passed, replay source failure, one pending; exact ledger, no unhandled errors. Seed erasure and fresh direct `unauthorized` refusal passed before replay | [manifest](evidence/2026-11-09-r15-failed-replay-source.manifest.json) `6fafc7fc8eb9525855726f7b7d905925a087a51de9a87b4e53bc84ad60339449` |
+| Source-seal producers / `75d4430c`, `faa4be6b` | `node /private/tmp/artroom-r15-source-seal-producer-20261109.mjs` and `node /private/tmp/artroom-r15-decoder-source-seal-producer-20261109.mjs` | Metadata only; [manifest](evidence/2026-11-09-r15-source-seal-metadata.manifest.json) `9a185af05e47bc7baa82799b223e6566a43ccf45b2490254dfe26abd7d17d4df` |
+| First focused / `40ab4e2d` | `python3 /private/tmp/artroom-r15-focused-20261109.py` | `1`: decoder compiler error; [manifest](evidence/2026-11-09-r15-failed-source-compiler.manifest.json) `cb6df4d892e872c6b3c55534b3e8dc2e023d1590f46289af65c8263e9fa59703` |
+| Decoder follow-up / `172ca878` | `python3 /private/tmp/artroom-r15-decoder-followup-20261109.py` | `1`: 37 passes, failed expected revisions, one pending; original ledger also failed; [manifest](evidence/2026-11-09-r15-failed-revoke-witness.manifest.json) `a0c4bfee5e081f0e218c5b02284a4ceb9954e098a2bafb908e45d6de4923d8dd` |
+| Final-key probe / `58d65173` | `python3 /private/tmp/artroom-r15-revoke-followup-20261109.py` | `1`: 22 passes, failed live-item probe, one pending; [manifest](evidence/2026-11-09-r15-failed-final-key-probe.manifest.json) `7e629696462d4d65151505445ab9c3f6a3911802ea0e2596637885a09f5fe704` |
+| Direct sidecar / `5fd0601b` | `python3 /private/tmp/artroom-r15-key-standing-followup-20261109.py` | `1`: 22 passes, missing original sidecar, one pending; [manifest](evidence/2026-11-09-r15-failed-direct-sidecar.manifest.json) `a36f1ec12fbae56f64ac34a2b9f3f248e620d4a612d146910b5b7846f42cbb62` |
+| Direct revision / `65e8bd07` | `python3 /private/tmp/artroom-r15-direct-sidecar-followup-20261109.py` | `1`: 22 passes, stale expected revision, one pending; [manifest](evidence/2026-11-09-r15-failed-direct-revision.manifest.json) `c5ead18b8bc7a6c4959c7b337b4e4229fde3bf7d8644fa63f1fa1bbc1f7bbcf1` |
+| Replay source / `8ad48f37` | `python3 /private/tmp/artroom-r15-direct-revision-followup-20261109.py` | `1`: 22 passes, partial signed-read history, one pending; [manifest](evidence/2026-11-09-r15-failed-replay-source.manifest.json) `6fafc7fc8eb9525855726f7b7d905925a087a51de9a87b4e53bc84ad60339449` |
+| Complete focused owner / `ffc97d5d` | `python3 /private/tmp/artroom-r15-replay-session-followup-20261109.py` | `0`: both selected compilers and all 24 cases; [manifest](evidence/2026-11-09-r15-complete-focused.manifest.json) `63bf106da1d57709b7bc962b725116e90893f8bd34f71be53c060e9c594d7558` |
+| Seed-erasure control / `ffc97d5d` | `python3 /private/tmp/artroom-r15-seed-erasure-control-20261109.py` | Owner `1`, original verifier `1`, metadata reconciliation `0`; [manifest](evidence/2026-11-09-r15-seed-erasure-control.manifest.json) `fd91826fbf26c1d509f9ce5c54a45c9d2f24debf7c8ba91e941da7f16dc3b648` |
+| Original gate / `522949c7` | `npm run gate` | `1`, isolated test type errors; [manifest](evidence/2026-11-09-r15-failed-gate.manifest.json) `c6e97f7d97bfebd5b830d219e97521283aee9c6d7d987f1c2924520cd95d319e` |
+| Targeted follow-up / `f34e58db` | `python3 /private/tmp/artroom-r15-gate-followup-20261109.py` | `0`: 12 contexts, complete unreached test body and summary; [manifest](evidence/2026-11-09-r15-gate-followup.manifest.json) `d17b8439110bb1730658244ef9065c187bb3a275bb257e3a3dfe2589aaa6933e` |
 
-The replay witness now requests Rita's real membership session. Signed
-reads show only her cause chain and omit the agent's independent enrollment.
-The existing signed-read fallback still handles bootstrap scopes that have
-not recorded membership. The consistent replay assertion stays unchanged.
+The follow-up's outer monotonic time is 933.281 seconds. Waited-child CPU
+is 2,014.203 seconds; driver CPU is 3.663 seconds. These are separate
+measurements from case-duration sums. The Mac uses owned dependency and
+Vite state with pinned Node 26.13.0, TypeScript 7.0.2 and Vitest 4.1.12.
+Process samples find no other validation body; samples cannot prove
+continuous isolation. Raw reports, TEST custody and request bodies stay in
+read-only external retention. The committed manifests bind all cited files.
+The final review head adds only this note and two manifests after `f34e58db`.
 
-## Focused result and control
+## Open limits and deployment
 
-At `ffc97d5d`, `python3 /private/tmp/artroom-r15-replay-session-followup-20261109.py`
-ran both affected test compilers, then the complete hosted Native owner.
-The actual pipeline and driver exits are `0`: all 24 cases passed with no
-unhandled errors or unfinished cases. The reporter and built-in JSON agree.
-The frozen source and owned process group checks passed.
-
-The complete focused closure has 39 cases in five owners: the new complete
-24-case hosted owner and four complete owners with 15 passes retained from
-`172ca878`. The latter require the explicit post-failure reconciliation in
-the decoder follow-up manifest; its original whole unit remains failed.
-Node's 11 inventory cases and Scope source typechecking also passed there.
-Only the hosted test and note/evidence changed afterward. Frozen input
-hashes establish equality for production, dependencies, seals, and the four
-completed owners. The two test compiler contexts passed again at `ffc97d5d`.
-The six earlier failed units keep their original results.
-
-`python3 /private/tmp/artroom-r15-seed-erasure-control-20261109.py` reused that
-passing baseline and removed only the seed assignment and its SQL binding
-from retirement. It ran the unchanged complete 24-case owner once with
-`--bail=0`: owner exit `1`, 22 old cases passed, and both new cases failed
-their intended SQLite assertions at lines 1882 and 1938. Each expected zero
-seed bytes and read 32. No skip, pending case, timeout, or unhandled error
-occurred. The driver restored every tracked byte and closed its process group.
-
-The control's original report verifier exited `1`: Vitest abbreviated the
-first object failure in JSON, so the checker could not find its `32` text.
-The same run's full stderr contains the exact seed-only diff for both
-assertions. A separate metadata reconciliation exits `0` and confirms both
-failures without rerunning the control or baseline. The original result and
-verifier exit stay unchanged beside that reconciliation.
-
-| Check and source | Command | Actual exit and output manifest |
-|---|---|---|
-| Complete focused owner, `ffc97d5d` | `python3 /private/tmp/artroom-r15-replay-session-followup-20261109.py` | Pipeline `0`; [manifest](evidence/2026-11-09-r15-complete-focused.manifest.json) `63bf106da1d57709b7bc962b725116e90893f8bd34f71be53c060e9c594d7558` |
-| Seed-erasure control, `ffc97d5d` | `python3 /private/tmp/artroom-r15-seed-erasure-control-20261109.py`; metadata sealing/reconciliation | Owner `1`, original verifier `1`, reconciliation `0`; [manifest](evidence/2026-11-09-r15-seed-erasure-control.manifest.json) `fd91826fbf26c1d509f9ce5c54a45c9d2f24debf7c8ba91e941da7f16dc3b648` |
-
-The driver records monotonic elapsed time and `time -p` child CPU separately.
-These focused commands ran on this Mac with owned dependency and Vite
-state and a preflight process sample. Samples establish observed isolation,
-not continuous machine exclusivity. No live room or deployment ran.
-
-## Failed gate and isolated compiler repair
-
-The only full `npm run gate` at `522949c7`, tree
-`d53308958b879d84a0790d12145f17118388f8bb`, failed with actual `gate.exit`
-`1`. All checks before typechecking passed. MCP's separate Worker test
-context, `tsconfig.scope.json`, found two type errors in the new witness:
-its RPC result allowed `string | Uint8Array` where direct signing and
-zeroing require `Uint8Array`. The earlier focused plan omitted that context;
-its two passed test compiler contexts did not cover this Worker-only type.
-The gate reached no main test stage and no archive-scale attempt.
-
-The repair changes only this test's copy of its TEST seed: return a numeric
-array across the Durable Object callback and build the same `Uint8Array`
-locally. No production, shared helper, imported file, dependency,
-configuration, case, assertion, or deadline changes. No file imports this
-test. The original gate remains failed. Under the isolated-test follow-up
-rule in `docs/testing.md`, the affected MCP Worker context, unreached MCP
-browser context and ten unreached root contexts must pass, followed by the
-complete previously unreached `npm test` body and its summary. That body
-includes the entire hosted owner. No separate baseline or full gate repeats.
-
-| Check and source | Command | Actual exit and output manifest |
-|---|---|---|
-| Original gate, `522949c7` | `npm run gate` | `1`, test compiler failure; [manifest](evidence/2026-11-09-r15-failed-gate.manifest.json) `c6e97f7d97bfebd5b830d219e97521283aee9c6d7d987f1c2924520cd95d319e` |
-
-## Deployment
-
-The planner deploys after exact-head review and routine landing. No new
-setting, Wrangler edit, activation, or recorded migration belongs to R15.
-The private retirement table starts empty. This draft establishes no
-deployed behavior or live acceptance.
+- `b66b8f14`: exact-head checker review, routine landing and planner deployment
+  remain due. No new setting, activation or recorded migration is required.
+  The private retirement table starts empty and old retired seeds erase on load.
+- `b66b8f14`: existing cross-scope grant lifetime remains at most 300 seconds.
+  The planner's later membership revision may consider self-revocation.
+- `64552d40`: archive observation stays open. This gate never reached Native;
+  its follow-up omitted scale. Neither run adds an archive-scale pass.
+- R15 establishes no deployed-room or J5 acceptance result.
