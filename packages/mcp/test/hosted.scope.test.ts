@@ -1877,7 +1877,7 @@ test("retire erases the seed before an uncertain revoke, retries only its retain
     await agentStub(bot.agent).reset();
     const finished = await retire();
     expect([finished.status, await finished.json()]).toEqual([200, expect.objectContaining({ retired: true, seedErased: true })]);
-    expect((await room.platform(M.scope).item(key.id)).state).toBe("retired");
+    expect(await room.platform(M.scope).stub.observe({ of: M, key: bot.key })).toMatchObject({ keyState: "retired" });
     const membership = await room.platform(M.scope).entries();
     const revokes = membership.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "revoke-key" && entry.input.signed.intent.on === key.id);
     expect(revokes).toHaveLength(1);

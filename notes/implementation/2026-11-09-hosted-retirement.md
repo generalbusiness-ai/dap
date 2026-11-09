@@ -4,16 +4,15 @@ Request: `b66b8f146a9813628e0325374f551ae22d77284f`.
 Promise: `0875dbf1182ef1ce98fa6119a6c2de06e3a2383b`.
 Current ruling: `e2fc59d54f6e920cedd9e4efa1fc3e2033d53d70`.
 
-Status: the second focused unit at `172ca878` passed all 11 Node cases and
-all three compilers. Its application body collected 39 cases: 37 passed,
-one failed, and one remained pending after bail. The failed new witness
-omitted membership's expected roster and member revisions. Its frozen
-ledger also omitted two existing parameterized cases and misquoted three
-titles. The original unit and verifier remain failed. Four complete owners
-reconcile 15 passed cases without a rerun. This repair changes only the
-incomplete test owner and documentation. Its whole 24-case follow-up remains
-due. Production code and source seals stay equal to `172ca878`. No R15
-control, gate, or review has run. Main `6dd337d3` is the base.
+Status: the third focused unit at `58d65173` passed both affected compilers.
+Its complete 24-case hosted owner reports 22 passed, one failed probe, and
+one pending case after bail, with exact static coverage and no unhandled
+errors. Admin retirement now completes its recorded revoke; the probe then
+used a live-item helper for the retired key. This repair reads membership's
+recorded key standing instead. All three failed units remain failed. Four
+other complete owners reconcile 15 passed cases without a rerun. Production
+and source seals stay equal to `172ca878`. The whole hosted-owner follow-up,
+meaningful control, gate, and review remain due.
 
 ## Endpoint shutdown and the recorded end
 
@@ -103,6 +102,7 @@ on an R13 test result.
 |---|---|---|
 | First focused, `40ab4e2d` | Compatibility and Node 11 passed; Scope source failed `TS2741`; remaining compilers and application tests unrun | [manifest](evidence/2026-11-09-r15-failed-source-compiler.manifest.json) `cb6df4d892e872c6b3c55534b3e8dc2e023d1590f46289af65c8263e9fa59703` |
 | Decoder follow-up, `172ca878` | Node 11 and three compilers passed. Body exit 1: 39 collected, 37 passed, one failed witness and one pending. Original static ledger also failed. Qualified reconciliation: four complete passed owners, 15 cases | [manifest](evidence/2026-11-09-r15-failed-revoke-witness.manifest.json) `a0c4bfee5e081f0e218c5b02284a4ceb9954e098a2bafb908e45d6de4923d8dd` |
+| Final-key probe, `58d65173` | Both affected compilers passed. Body exit 1: 22 passed, one probe failure, one pending; exact 24-case ledger, no unhandled errors. Retire itself completed before the probe failed | [manifest](evidence/2026-11-09-r15-failed-final-key-probe.manifest.json) `7e629696462d4d65151505445ab9c3f6a3911802ea0e2596637885a09f5fe704` |
 
 ## Deployment
 
