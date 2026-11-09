@@ -74,29 +74,53 @@ regenerated output that differs.
 
 ## Final evidence
 
-Source preparation only. No compiler, test, browser, catalogue capture,
-regeneration or gate has run for this head. The shared CLI helper's seal
-still needs the maintained parser value after the coordinated main merge.
-The seal table has not changed in this checkpoint.
+The first focused run used source `061bca1a`, tree
+`01c4ac29ebbe8b0f911efcdb0528f7959ef1e974`. Its actual launcher, driver
+and pipeline exits were 1. The complete security owner passed all 12
+Node cases. All 26 declared compiler contexts returned 0. The plain
+body returned 1 after one passed case, one failed case and ten unrun
+cases. Counting and the catalogue captures did not run.
+
+The failed client case constructed its input with `Object.assign`.
+That operation invoked an inherited `__proto__` setter and removed the
+own alias the test intended to supply. The fixture now uses
+`Object.create` with own property descriptors and checks that the alias
+exists before calling `expectedOf`. Every previous assertion, test title
+and case count remains. This correction changes no production source
+or source seal. Its validation remains pending.
+
+Commit `061bca1a` records the maintained parser's changed CLI helper seal
+and the new whole `packages/client/src/expected.ts` seal. The new owner
+protects the derivation that moved from the CLI helper. All route and
+gate assertions remain.
+
+Raw first-run evidence lives under
+`/Users/hughpyle/play/artroom-evidence/2026-11-09-t0a-focused` and its
+`-launch` sibling. The launcher measured 26.005 seconds elapsed and
+62.503 seconds of CPU through the failed result. Those observations
+include the outer guards and children. They are not summed case times.
 
 | Check | Command or boundary | Exit | Output digest |
 |---|---|---|---|
-| Client derivation owner | `packages/client/test/expected.test.ts` | Not run | Pending |
-| Existing MCP subject and captured-revision owner | `packages/mcp/test/shape.test.ts` | Not run | Pending |
-| Existing CLI browser export and bundle owner | `packages/cli/test/browser-boundary.test.ts` | Not run | Pending |
-| Existing Counter proposal assertions | `apps/counter/browser/client.test.ts` | Not run | Pending |
-| Lending catalogue and MCP tool-document byte comparison | Exact baseline and candidate outputs | Not run | Pending |
-| Final gate | `npm run gate` | Not run | Pending |
+| Initial compatibility | `scripts/cloudflare-pool-compat.mjs` | 0 | `28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320` (`compatibility.exit`) |
+| Initial security owner | `scripts/security-entry-points.test.mjs`, all 12 Node cases | 0 | `28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320` (`owner.exit`) |
+| Initial affected compiler closure | All 26 frozen contexts | All 0 | Pending manifest |
+| Initial plain body | Four complete owners, 12 obligations | 1. One passed, one failed, ten unrun | `0ea3af979b5fde8e6bdb7e226f0172e607b483848c6b67cf8b7bc40baf3a12c8` (`focused/coverage-ledger.json`) |
+| Fixture repair and complete plain owners | Client test compiler, then the same four owners | Not run | Pending |
+| Counter proposal and browser behavior | Maintained four-owner Counting runner, 56 cases | Not run | Pending |
+| Lending catalogue and MCP tool-document bytes | Exact baseline and candidate outputs | Not run | Pending |
+| Final gate | `npm run gate` after merging current main | Not run | Pending |
 
 ## Open limits
 
 Request `b9f85b9a` owns validation, the byte-identity witnesses and this
-head's landing. Merge current main before validation and the final gate
-so R3a, R3b and any BR-13 seal changes remain. No package installation in
+head's landing. The focused continuation retains its named source checkpoint. Merge
+current main before the final gate so R3a, R3b and any BR-13 seal changes
+remain. The focused result does not validate that later merge automatically. No package installation in
 the checkout is needed for source preparation.
 
 Request `260991d8` owns the shared descriptions and starts from this
 head's frozen source only after its review request. The DX-T0 parent
 `6f87a4e3` stays open for that head and the later typed browser models.
-This source checkpoint makes no validation, deployment or live acceptance
-claim.
+The initial focused failure and pending continuation make no gate,
+deployment or live acceptance claim.

@@ -27,8 +27,9 @@ test("expected revisions resolve one, by and chained via subjects, omit code and
 });
 
 test("prototype-like aliases remain signed own fields while inherited fields and aliases select no item", () => {
-  const also = Object.assign(Object.create({ inheritedAlias: { item: "participant", by: "constructor" } }),
-    JSON.parse('{"__proto__":{"item":"participant","by":"constructor"},"missing":{"item":"participant","by":"inheritedField"},"constructor":{"item":"participant","one":true}}'));
+  const also = Object.create({ inheritedAlias: { item: "participant", by: "constructor" } },
+    Object.getOwnPropertyDescriptors(JSON.parse('{"__proto__":{"item":"participant","by":"constructor"},"missing":{"item":"participant","by":"inheritedField"},"constructor":{"item":"participant","one":true}}')));
+  expect(Object.hasOwn(also, "__proto__")).toBe(true);
   const fields = Object.assign(Object.create({ inheritedField: 7 }), JSON.parse('{"constructor":7}'));
   const result = expectedOf({ step: "open", also }, [item(7, "participant", 8)], null, fields);
   expect(result).toEqual(JSON.parse('{"__proto__":8,"constructor":8}'));
