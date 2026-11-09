@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at .github/workflows/scale-tests.yml","body":{"commit":"f9eb50bcb6b1117c7c8bb656f5b617d110f3444d","path":".github/workflows/scale-tests.yml"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts","body":{"commit":"f9eb50bcb6b1117c7c8bb656f5b617d110f3444d","path":"apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts"}}
