@@ -4,10 +4,11 @@ Request: `908786011e5c0acae29e7b2a7c70b87b0680a948`, item 4 only.
 Promise: `3a1d2b78e02d544489d3786415b9ed987c28e3af`.
 Live ruling: `67b1fb7faa0e17232a72e1588f834001dadbe9e1`.
 
-Status: unvalidated source preparation. No dependency copy, compiler,
-focused check, control, asset build, or gate has run for this head.
-The planner's deployment window still holds local builds and validation
-until its explicit END. The earlier items of R13 stay closed.
+Status: unvalidated source preparation. The branch includes main
+`f9eb50bc`. Its owned dependency view copies the completed runner checkout
+without an install. No compiler, focused check, control, asset build, or
+gate has run for this head. The planner closed the execution window in
+`7b2d5548` and sprint-cadence thread 22. The earlier items of R13 stay closed.
 
 ## Refuse before accepting a ninth operation
 

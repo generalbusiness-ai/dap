@@ -887,6 +887,42 @@ operator caller. Its internal reader does no recovery and no writes. Cold
 constructor effects remain. A log tail is an observation channel, not
 authority to restart an archive.
 
+## Member read-token reservations
+
+Under ruling `67b1fb7f`, a Destination object admits at most eight open
+read-token reservations per authenticated member. The already judged
+grant's subject supplies the full Membership ScopeRef and member identity.
+Several keys of one member share the bucket. Neither a caller key nor a
+principal or handle prefix chooses it. The full Destination ScopeRef also
+partitions storage, so neither incarnation shares a bucket.
+
+The native commit refuses a fresh ninth act with `limit` before accepting
+its operation entry. The accepted entry and its private reservation share
+one SQLite transaction. An accepted-key retry returns its existing receipt
+or mismatch and counts no second slot. The adapter binds a nonsecret
+handle before its provider await.
+
+A known token keeps its slot until actual provider-reported expiry, even
+after plaintext is taken or dropped. An explicit `minted:false` frees its
+slot. An unknown mint keeps the reservation until its opening time plus
+requested hours plus ten minutes. This quota counts reservations and does
+not prove that a provider token ended. A late reply cannot restore an
+expired reservation or disclose its plaintext. Destination 19 keeps its
+one-hour request; older pins keep the one-to-twenty-four-hour field.
+
+Legacy read markers without a member belong to no bucket. The private
+cutover sequence leaves earlier pending operations on their original path;
+it infers no member from a key, token ID, or handle prefix. Existing
+authenticated plaintext-expiry cleanup remains separate. No recorded pin,
+entry meaning, or mint-read outcome changes.
+
+The private bucket index bounds each admission read to eight live rows.
+An independent due index lets the native alarm delete at most 64 expired
+reservation rows per pass, including rows whose plaintext left custody.
+An unknown end beyond the last representable clock schedules no invalid
+alarm and stays open at every valid clock. The quota's SQL, the custody
+scheduler, and the adapter each have an explicit source seal.
+
 ## Unread read-token custody
 
 Only the trusted destination `mint-read` adapter enrolls newly minted
@@ -1010,6 +1046,8 @@ Gate owners: [address.ts](../../packages/bytes/src/address.ts),
 [item-queries.ts](../../packages/scope/src/item-queries.ts),
 [applications/projection.ts](../../packages/scope/src/applications/projection.ts),
 [destination-host.ts](../../packages/scope/src/destination-host.ts),
+[read-token-quota.ts](../../packages/scope/src/read-token-quota.ts),
+[credential-store.ts](../../packages/scope/src/credential-store.ts),
 [stage-snapshot.ts](../../packages/scope/src/stage-snapshot.ts),
 [stage-origin.ts](../../packages/checkers/src/stage-origin.ts),
 [evidence.ts](../../packages/platform/src/evidence.ts),

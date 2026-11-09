@@ -1128,6 +1128,20 @@ as one observed run.
 
 State the machine, the load and the cache state with any figure.
 
+## Read-token quota witnesses
+
+The Scope owners `read-token-quota.test.ts` and
+`read-token-quota-store.test.ts` distinguish two boundaries. The first uses
+real Native scopes, membership authority, transactions, alarms, and the
+Artifacts adapter over scripted provider replies. Its two scenarios cover
+the eight-slot admission rule, several keys of one member, another member,
+accepted-key reuse, rollback, refusal, unknown and late replies. The second
+uses real SQLite with scripted opening entries and grants. It covers
+private expiry, legacy and incarnation boundaries, a 64-row cleanup quantum,
+and the last representable clock; it proves no Native authority or provider
+behavior. The existing read-token owner retains its one-time-read,
+historical-hours, and replay witnesses.
+
 ## Source
 
 The runner and selection rules above follow these sources:
