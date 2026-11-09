@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d39de36a7fd995dd5014a9ee280c50604494f7e4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r3a-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d7c03dde38a7b82efe1ead97ef2e1c7ad7e9555e","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/authority.test.ts."}
