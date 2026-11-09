@@ -16,6 +16,7 @@
 import type { PlatformDefinition } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition, platformName } from "@generalbusiness/dap-bytes";
 import type { Own, RuleGiven } from "@generalbusiness/dap-derive";
+import { answersVersionQuestion } from "./version-questions.ts";
 
 /** True when the value is a version of the platform definition of that name, such as `platform:destination@2` of `platform:destination`. */
 export const isOf = (named: unknown, name: string): named is PlatformDefinition => isPlatformDefinition(named) && platformName(named) === name;
@@ -25,10 +26,10 @@ export const isOf = (named: unknown, name: string): named is PlatformDefinition 
 export const isStandingDestination = (named: unknown): named is "platform:destination@5" | "platform:destination@6" => named === "platform:destination@5" || named === "platform:destination@6";
 
 /** Exact destination pins that use the native staged publication protocol. */
-export const usesStagedPublicationProtocol = (named: unknown): boolean => named === "platform:destination@3" || named === "platform:destination@4" || named === "platform:destination@5" || named === "platform:destination@6" || named === "platform:destination@7" || named === "platform:destination@8" || named === "platform:destination@13" || named === "platform:destination@14" || named === "platform:destination@15" || named === "platform:destination@16" || named === "platform:destination@17" || named === "platform:destination@18" || named === "platform:destination@19" || named === "platform:destination@20";
+export const usesStagedPublicationProtocol = (named: unknown): boolean => answersVersionQuestion(named, "nativeStagedPublication");
 
 /** Exact destination pins that use the native automatic file publication protocol. */
-export const usesFilePublicationProtocol = (named: unknown): boolean => named === "platform:destination@4" || named === "platform:destination@5" || named === "platform:destination@6" || named === "platform:destination@7" || named === "platform:destination@8" || named === "platform:destination@13" || named === "platform:destination@14" || named === "platform:destination@15" || named === "platform:destination@16" || named === "platform:destination@17" || named === "platform:destination@18" || named === "platform:destination@19" || named === "platform:destination@20";
+export const usesFilePublicationProtocol = (named: unknown): boolean => answersVersionQuestion(named, "nativeFilePublication");
 
 
 /** The version of a platform definition: the number after its `@`. */

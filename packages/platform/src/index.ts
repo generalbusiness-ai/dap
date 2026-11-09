@@ -132,3 +132,5 @@ export { readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidenc
 
 /** Default creation family with final failed claims and one-hour read tokens. */
 export { FAILED_CLAIM_COHORT } from "./failed-claim-cohort.ts";
+
+export { answersVersionQuestion, VERSION_QUESTIONS, type VersionQuestion } from "./version-questions.ts";
