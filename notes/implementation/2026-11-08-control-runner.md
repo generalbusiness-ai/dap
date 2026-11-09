@@ -37,5 +37,33 @@ It lists all 51 read-only files from these two units:
 | `2026-11-08-control-runner-focused` | `owner.exit`, `owner.stdout`, `receipt.json` |
 | `2026-11-08-control-runner-control` | `owner.exit`, `owner.stdout`, `classification.json`, `receipt.json` |
 
-The gate has not run yet. One gate follows at the clean candidate before
-review. No live acceptance or deployment follows from these local checks.
+The full gate passed once at clean head
+`95cbbce5a9e41a47daee6705d3135349ec84d1bb`, tree
+`5eb374610c5ab61a3c6db897cb1f0114e467a51d`. I read `gate.exit`: `exit 0`.
+Every tracked byte remained unchanged, and the owned process group closed.
+
+| Gate phase | Passed | Skipped |
+|---|---:|---:|
+| Node | 137 | 0 |
+| Counting | 56 | 0 |
+| Plain | 4,026 | 1 |
+| Native | 1,118 | 2 |
+
+The [gate manifest](evidence/2026-11-08-control-runner-gate.manifest.json)
+has SHA-256 `ed580a55e2b4f5995f48f074622719fe25b46b167b210fea86fd76f47cba0a4f`.
+It lists 20 read-only public files under
+`~/play/artroom-evidence/2026-11-08-control-runner-gate-validation`, including
+`gate.exit`, `result.json`, `test-summary.json` and `private-retention.json`.
+The private inventory retains 2,334 read-only raw files, including TEST
+custody. Report analysis found no failed case, contradiction, report error
+or unhandled error. The 99 suite observations are 33 Node file wrappers;
+one explicitly skipped recorder module has no observed duration.
+
+The archive-scale case passed. The retained watch now covers 16 full gates:
+13 archive passes and three failures that never reached Native. No retained
+gate shows an archive retry. Every failed gate stays failed, and watch
+`64552d40` remains open.
+
+The follow-up changes only this note and its gate manifest. Source and tests
+match the gated head. The changed paths trigger neither browser workflow.
+No live acceptance or deployment follows from these local checks.
