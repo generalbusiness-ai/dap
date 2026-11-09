@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e55253fbb29a465e2a302ad0b4024894cd2598ea","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-02-readable-diff-design/ten-file.DATA.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e5f36dad00f145ee34e51209b683a0d427d6c341","text":"Merge retired a covered predecessor; the successor is at packages/package-graph/package.json."}
