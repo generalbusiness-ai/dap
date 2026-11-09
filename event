@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2c78609a1656a196123f98e2657a00fad50ff263","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br14-pre-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:31635c9fdb11d936edaecc84d8960fbd50d7b50b","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.mjs."}
