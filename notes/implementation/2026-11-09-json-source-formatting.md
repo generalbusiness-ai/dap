@@ -186,6 +186,23 @@ label from the first failed-gate helper. Its assertions read `exit 0`, and
 its sealed classification correctly records zero. That console label is
 not the gate result. No source or test ran during analysis or sealing.
 
+## Review wording follow-up
+
+Checker report `f9fb645a` requests five wording corrections and accepts the
+code, exclusions and evidence. Checkpoint `aa19775020b7fe7a583383a48bcca3831b81fa99`,
+tree `74d72d44d407948bf41cac1df00fdda55b9047f1`, corrects those statements in the lane
+README, lane entry comment, pin-writer comment and Counting README. The
+exported definition paths now describe readable JSON whose canonical
+values determine their pinned digests.
+
+Against the reviewed head `4564da4e`, only those four files and this note
+change. Both source-file edits affect their opening comments only; their
+bytes from the first import onward match that reviewed head. Every test,
+configuration, dependency, digest and executable statement stays unchanged.
+The passing gate tree remains `1da5f97f7a7ba675a8326600f4916cf9ff853f77`.
+No compiler, test or gate repeats for this wording follow-up. All six
+immutable manifests and their 142 public files retain the same digests.
+
 ## Open limits
 
 Request `c6e29874` owns completion and exact-head review. The head changes
