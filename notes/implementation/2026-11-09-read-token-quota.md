@@ -6,8 +6,8 @@ Rulings: `67b1fb7faa0e17232a72e1588f834001dadbe9e1` and the late-reply answer
 `6cf4c1c8eb9b849d8c851a7488f981116672a1da`.
 
 Status: focused checks, the distinguishing control, the maintained Page
-build, and its complete asset owner are conclusive. The card build passed;
-its resource owner remains due. One gate, Page CI, Card CI,
+build, its complete asset owner, the card build, and the complete card
+resource owner are conclusive. One gate, Page CI, Card CI,
 exact-head independent review, and landing remain due. Main `f9eb50bc`
 is an ancestor. No deployment or live acceptance follows from this note.
 The earlier items of R13 stay closed.
@@ -161,6 +161,7 @@ specified commands or framework cases, not product latency.
 | Page build, `d5b4d8f7` | `node apps/room/page/scripts/assets.mjs` | Build and driver exit 0; both scripts changed, both HTML entries equal, only generated module changed | [manifest](evidence/2026-11-09-r13-page-assets.manifest.json) `60345323d4c31aabfc29c21b00da6da5f71db5e54ab6789804b2029a5794875f` |
 | Complete asset owner, `1fc483ce` | Page test compiler and `apps/room/page/test/assets.test.ts` | Compiler/body/driver exits 0; one complete case, exact coverage, no errors | [manifest](evidence/2026-11-09-r13-page-asset-owner.manifest.json) `25ffb1a84255d802496f86233bdf731dd570e8ad9fd98713853b94da7efbdee2` |
 | Card build, `0abaa6c3` | `node packages/mcp/scripts/views.mjs` | Build and driver exit 0; four resource digests changed, metadata and styles equal | [manifest](evidence/2026-11-09-r13-card-assets.manifest.json) `27da092887f7e65f1fbabed2766f19819168aa518d7fda612a2f2dbacd1cbc57` |
+| Complete card resource owner, `8512c99c` | MCP test compiler and `packages/mcp/test/view-resources.test.ts` | Compiler/body/driver exits 0; six complete cases, exact coverage, no errors | [manifest](evidence/2026-11-09-r13-card-resource-owner.manifest.json) `fb1e046758b3f28032c6e7c8622d693a9c0c17308b636f747ebf62a5855e4a31` |
 | Card CI | Four commands in `views-browser.yml` | Pending | Pending |
 | Page CI | Four commands in `page-browser.yml` | Pending | Pending |
 | Review gate | `npm run gate` | Pending; read actual `gate.exit` before a pass claim | Pending |
