@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/format-json.test.mjs","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"scripts/format-json.test.mjs"}}
+{"kind":"artifact","text":"Merge published the current artifact at scripts/gate.sh","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"scripts/gate.sh"}}
