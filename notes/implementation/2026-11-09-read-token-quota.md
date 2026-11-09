@@ -5,12 +5,13 @@ Promise: `3a1d2b78e02d544489d3786415b9ed987c28e3af`.
 Rulings: `67b1fb7faa0e17232a72e1588f834001dadbe9e1` and the late-reply answer
 `6cf4c1c8eb9b849d8c851a7488f981116672a1da`.
 
-Status: focused checks, the distinguishing control, the maintained Page
-build, its complete asset owner, the card build, and the complete card
-resource owner are conclusive. One gate, Page CI, Card CI,
-exact-head independent review, and landing remain due. Main `f9eb50bc`
-is an ancestor. No deployment or live acceptance follows from this note.
-The earlier items of R13 stay closed.
+Status: the full gate and both automatic browser workflows passed at
+`e180420c11b2e07a091fc58896b77c9885167859`, tree
+`99a8e2738aebcb7d10e111f7265d6c0076ad4ccc`. This follow-up changes only
+this note and two evidence manifests. All source, tests, configuration,
+and generated assets stay equal. Exact-head independent review and
+landing remain due. Main `f9eb50bc` is an ancestor. The earlier items of
+R13 stay closed. No deployment or live acceptance follows from this note.
 
 ## What changed
 
@@ -162,9 +163,25 @@ specified commands or framework cases, not product latency.
 | Complete asset owner, `1fc483ce` | Page test compiler and `apps/room/page/test/assets.test.ts` | Compiler/body/driver exits 0; one complete case, exact coverage, no errors | [manifest](evidence/2026-11-09-r13-page-asset-owner.manifest.json) `25ffb1a84255d802496f86233bdf731dd570e8ad9fd98713853b94da7efbdee2` |
 | Card build, `0abaa6c3` | `node packages/mcp/scripts/views.mjs` | Build and driver exit 0; four resource digests changed, metadata and styles equal | [manifest](evidence/2026-11-09-r13-card-assets.manifest.json) `27da092887f7e65f1fbabed2766f19819168aa518d7fda612a2f2dbacd1cbc57` |
 | Complete card resource owner, `8512c99c` | MCP test compiler and `packages/mcp/test/view-resources.test.ts` | Compiler/body/driver exits 0; six complete cases, exact coverage, no errors | [manifest](evidence/2026-11-09-r13-card-resource-owner.manifest.json) `fb1e046758b3f28032c6e7c8622d693a9c0c17308b636f747ebf62a5855e4a31` |
-| Card CI | Four commands in `views-browser.yml` | Pending | Pending |
-| Page CI | Four commands in `page-browser.yml` | Pending | Pending |
-| Review gate | `npm run gate` | Pending; read actual `gate.exit` before a pass claim | Pending |
+| [Card CI 42602787058](https://github.com/generalbusiness-ai/dap/actions/runs/42602787058), `e180420c` | Freshness, card, Grow room, and Grow routing commands | Automatic push attempt 1 passed all required commands | [manifest](evidence/2026-11-09-r13-browser-ci.manifest.json) `52bdf1a4c86c9560d531db84363c50631c1d9c350c543d75941fd84ea6dbbfec` |
+| [Page CI 42602786995](https://github.com/generalbusiness-ai/dap/actions/runs/42602786995), `e180420c` | Screenshots, recorded demo, create-room, and local-label commands | Automatic push attempt 1 passed all four commands | [manifest](evidence/2026-11-09-r13-browser-ci.manifest.json) `52bdf1a4c86c9560d531db84363c50631c1d9c350c543d75941fd84ea6dbbfec` |
+| Full gate, `e180420c` | `npm run gate` | Actual `gate.exit` 0 read. Node 142, Counting 56, Plain 4,028, Native 1,115 passed; Plain one skip, Native two skips. Every stage passed; no report or unhandled errors | [manifest](evidence/2026-11-09-r13-gate.manifest.json) `4d72b28e47579c84ded8e0253cca28422c73ac5cd39bde1ad7033a841bbffadf` |
+
+The final gate covers the complete composition, independently of the
+qualified focused closure. Its actual scale selection omits all six
+`scope-scale` cases: no changed path belongs to the declared scale families.
+This gate adds no archive-scale attempt or pass. Watch `64552d40` stays
+open. All 102 unknown observations reconcile as 34 Node file wrappers,
+with no additional cases or contradictions. Every tracked byte stays
+equal throughout the gate, and its owned process group closes. Eleven
+process samples find no other local validation body. Samples do not
+prove uninterrupted isolation. The gate's outer monotonic elapsed time
+is 942.014 seconds, separate from stage and case timings.
+
+Both browser manifests retain complete raw GitHub log ZIPs and API
+receipts. The workflows upload no downloadable screenshot artifact.
+Their successes establish the maintained automated browser scenes,
+with their declared stand-ins, and no live room acceptance.
 
 ## Open limits and deployment
 

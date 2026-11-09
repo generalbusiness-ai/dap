@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "sourceHead": "e180420c11b2e07a091fc58896b77c9885167859",
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "qualification": "Automatic first R13 branch-push runs at frozen gate head e180420c. Complete run, job, artifact responses and full raw log ZIPs retained. These browser workflows do not establish live acceptance or a local full gate. No local body or workflow rerun follows from this capture.",
+  "fileCount": 5,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-browser-ci-validation",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 343,
+          "sha256": "ec505ab44cc2c6d6aa04910de19284627a826e9a56962b6eb5286f0a9bb83b93"
+        },
+        {
+          "path": "card-log-members.json",
+          "bytes": 939,
+          "sha256": "b89b3086d9f7e4e13641a0a1492b536a1f22eb208465cf2c4bbdd80523acea47"
+        },
+        {
+          "path": "page-log-members.json",
+          "bytes": 818,
+          "sha256": "5beae8fe3b7db389f227c71f887fdc9d3b41ae35cfcb6e80a83b0c8075c1acfe"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 549,
+          "sha256": "92e7ca41bd891333ec97f7be14f2279a45e3d40da4e57ce5973cfe54d7a6fbe2"
+        },
+        {
+          "path": "result.json",
+          "bytes": 8532,
+          "sha256": "f16ae58b65b1fb89a0d17b005eaefa450460f2a8c765c74322c547a2faf92f8a"
+        }
+      ]
+    }
+  ]
+}
