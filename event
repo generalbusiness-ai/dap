@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at .claude-plugin/marketplace.json","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":".claude-plugin/marketplace.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/counter/README.md","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"apps/counter/README.md"}}
