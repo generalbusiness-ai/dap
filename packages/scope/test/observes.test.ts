@@ -16,6 +16,7 @@ import { outsideOf, wired } from "./outside.ts";
 import { copied, repository, rewritten } from "./repository.ts";
 import { START, at, objectOf, reader, stubOf } from "./fixtures-native.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";
+import { observing } from "../src/authority.ts";
 
 // Scope contract, revisions 20 and 21, sections 5.2 (step 1) and 16.1; source rows I3-40, I3-41 and I3-53; witnesses 18.46 (cases 4,
 // 5, 7, 8, 10 and 11), 18.48 (cases 6 to 8), 18.50 (cases 4 to 8) and 18.52 (case 5), on real storage with a scripted clock.
@@ -354,6 +355,71 @@ test("a scope with rows reads the real membership scope of the platform package:
     rewritten(changed[0]!, outcome.seq, (entry: { input: { observed: { observation: { count?: number } }[] } }) => { entry.input.observed[3]!.observation.count = 3; });
     const matched = await verify(new MemorySource(changed), options);
     expect([matched.report.result, matched.report.at?.seq, matched.why]).toEqual(["mismatch", outcome.seq, `the retained observation is not what the history of ${of.scope} gives the holders of that action at its entry ${head.seq}`]);
+  } finally {
+    wired.delete(s.name);
+  }
+});
+
+test("signed Native acts cannot grow reusable observations above 4096 records or 8 MiB, and an evicted real member is read fresh inside the window", async () => {
+  const { M } = await repository();
+  const of = await M.at();
+  // The declaration and its empty policy are the labelled weigher stand-in.
+  // Signatures, the observing Scope, SQLite and Membership answers are Native.
+  // A test-local 64-subject row stays inside the real list/entry bounds.
+  const s = await weighing(data => {
+    membershipObservationChange()(data);
+    data.acts["set-checks"].fields.checks.max = 64;
+    data.acts["set-checks"].observes[0].max = 64;
+  });
+  try {
+    const originalWiring = wired.get(s.name);
+    if (!originalWiring) return expect.fail("The Native observation fixture must keep its declaration wiring");
+    const requests: string[] = [];
+    let port: ReturnType<typeof observing> | undefined;
+    // Capture this actual port through the existing test-only wiring. There is
+    // no diagnostic RPC and no reconstructed cache in the witness.
+    wired.set(s.name, () => ({ ...originalWiring(), authority: (port = observing({
+      clock: s.c.clock,
+      random: { bytes: length => crypto.getRandomValues(new Uint8Array(length)) },
+      membership: () => of,
+      reader: { observe: asked => { requests.push(naming(asked)); return M.stub.observe(asked); } },
+    })) }));
+    await evictDurableObject(objectOf(s.name));
+    const counts = () => {
+      if (!port) return expect.fail("The Native Scope must construct its actual observing port");
+      return port.reusableCounts();
+    };
+    const send = async (handles: string[]) => {
+      const answer = await s.act(rita, "set-checks", { fields: { checks: handles.map((member, n) => ({ name: `c${n}`, checker: { membership: of, member } })) } });
+      expect(said(answer)).toEqual(["accepted", null]);
+      if (answer.answer !== "accepted") return expect.fail("The signed Native observation act must be accepted");
+      return answer.receipt.fact.seq;
+    };
+    const seed = await send(["@una"]);
+    const before = await stubOf(s.name).entry(reader, seed);
+    if (!before.ok) return expect.fail("The initial real-member entry must be readable");
+    const first = observedIn(before.value.entry)[0]!;
+    expect([counts().records, first.observation, first.use]).toMatchObject([1, { subject: "member", member: "@una", memberState: "active" }, "fresh"]);
+
+    for (let start = 0; start < 4_097; start += 64) {
+      advance(s.c, 1);
+      await send(Array.from({ length: Math.min(64, 4_097 - start) }, (_, n) => `@absent-${start + n}`));
+      const actual = counts();
+      // The unbounded-insertion control must fail on the real Map count.
+      expect(actual.records).toBeLessThanOrEqual(4_096);
+      expect(actual.bytes).toBeLessThanOrEqual(8 * 1_024 * 1_024);
+    }
+    expect(counts().records).toBe(4_096);
+    const asked = requests.length;
+    advance(s.c, 1);
+    const again = await send(["@una"]);
+    expect(requests.slice(asked)).toEqual(["member:@una"]);
+    const after = await stubOf(s.name).entry(reader, again);
+    if (!after.ok) return expect.fail("The fresh real-member entry must be readable");
+    const fresh = observedIn(after.value.entry)[0]!;
+    expect(fresh).toMatchObject({ observation: { subject: "member", member: "@una", memberState: "active" }, read: { run: first.read.run }, use: "fresh", prior: null });
+    expect(fresh.read.n).toBeGreaterThan(first.read.n);
+    expect([counts().records, counts().bytes <= 8 * 1_024 * 1_024]).toEqual([4_096, true]);
   } finally {
     wired.delete(s.name);
   }

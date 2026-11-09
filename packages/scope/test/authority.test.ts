@@ -344,7 +344,7 @@ test("evicting a never-admitted revoked key invalidates its older in-flight acti
   const old = await pending;
   const held = old === null || old === "limit" ? old : old.held(cacheView, cacheReading);
   expect(held).toBeNull();
-  expect(admitted.held(cacheView, cacheReading)).toBeNull();
+  expect(admitted.held(cacheView, cacheReading)).toMatchObject([{ current: true }]);
   const fresh = await port.read(cacheAsk(0), 5);
   expect(fresh === null || fresh === "limit" ? fresh : fresh.held(cacheView, cacheReading)).toBeNull();
   expect(keyReads).toBe(3);
