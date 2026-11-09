@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:83254e4b5a6c9fe051e8dae8ce5e043e4425877a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br5-repaired-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8d437887dcf3eb3dffeca7cca09307f04a918f42","text":"Merge retired a covered predecessor; the successor is at .github/workflows/scale-tests.yml."}
