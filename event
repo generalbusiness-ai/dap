@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6ce897d3514de85fc8ac0a455627c6ad212a104d","text":"Merge retired a covered predecessor; the successor is at packages/mcp/tsconfig.scope.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d0118cbf79c10a293af9a82744355255b57e0f2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence.json."}
