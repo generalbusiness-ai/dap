@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at package.json","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/checkers/test/fixtures/reservation-record.json","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"packages/checkers/test/fixtures/reservation-record.json"}}
