@@ -55,9 +55,27 @@ RoomOpening comes first and BR-12 follows. Each item keeps its own promise,
 note, artifacts and review request; both approvals must precede the ordered
 landings. A failure must name its owning item before any repair.
 
-The next focused check covers the five affected compiler contexts, the
-complete HTTP, SQLite, hosted and sandbox owners, and the Node entry-point
-inventory owner. The four Vitest owners contain 62 required cases. A cheap
-source control will then ignore the configured custody count and require
-the new SQLite case to fail before restoring every byte. The Page workflow
-citation and shared gate remain due. No cost reduction has been measured yet.
+At clean head `87755161`, the Node inventory owner passed all 11 cases.
+The five compiler contexts and all 62 cases in the complete HTTP, SQLite,
+hosted and sandbox owners then passed. The ledger reports no missing,
+unexpected, skipped, retried or errored case. The process group closed, and
+every tracked byte stayed equal. One outer launcher first refused before
+imports because its added inventory guard included historical notes and
+design files. The corrected launcher uses the maintained active-input rule.
+That refusal remains failed and caused no test rerun.
+
+One source control ignores the configured count at both custody admission
+guards. The unchanged SQLite owner then fails only its new configured-count
+rejection assertion at line 110; its other 19 cases pass. The driver restores
+every tracked byte before classification. Its first classifier expects
+`AssertionError:`, but Vitest reports the rejection assertion as `Error:`.
+A separate classifier reads the saved report, verifies that exact assertion
+and the restored source, and exits 0 without rerunning the owner. The original
+owner and classifier exits remain 1.
+
+The [focused manifest](evidence/2026-11-08-br12-focused.manifest.json), digest
+`6bdfc9af0569606fa990247b76d8128c1fbc7a38d0b3804d37894681d6fe2c71`, seals
+35 public files and points to complete private inventories for all six units.
+The five-compiler/body pipeline took 30.392 seconds; that measurement excludes
+the preliminary Node owner. This run supplies no comparable cost reduction.
+The Page workflow citation and shared gate remain due.
