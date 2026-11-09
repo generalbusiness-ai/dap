@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:66876ce61433dd862d5c336a30bd250e5ac732d6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r15-failed-direct-sidecar.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6cd9c8f888d044918d3301a89bd4ceb0e0e97484","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
