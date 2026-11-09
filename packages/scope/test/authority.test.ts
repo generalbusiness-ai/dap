@@ -302,7 +302,7 @@ test("more than 4096 unknown or unanswered signer reads do not charge a run or p
   const port = observing({ clock: { read: () => at(0) }, random: { bytes: n => new Uint8Array(n) }, membership: () => membership,
     reader: { observe: async (request: ObservationRequest) => {
       if (!("key" in request)) return null;
-      if (request.key === cacheKey(5000) && joined) return cacheAnswer(request.key);
+      if (request.key === cacheKey(5000) && joined) return { ...cacheAnswer(request.key), member: "@newcomer" };
       if (readNumber++ % 3 === 0) return null;
       if (readNumber % 3 === 0) throw Error("scripted unavailable Membership");
       return cacheAnswer(request.key, "unknown");
@@ -315,7 +315,8 @@ test("more than 4096 unknown or unanswered signer reads do not charge a run or p
   // must fail on the newcomer receiving limit, not on an intermediate size.
   const afterFlood = port.cacheCounts();
   joined = true;
-  currentCacheStanding(await port.read(cacheAsk(5000), 5));
+  const newcomer = currentCacheStanding(await port.read(cacheAsk(5000), 5));
+  expect(newcomer.held(cacheView, cacheReading)).toMatchObject([{ grant: { subject: { member: "@newcomer" } } }]);
   expect(afterFlood).toEqual({ admitted: 0, kept: 0, retained: 0, denied: 0 });
   expect(port.cacheCounts()).toEqual({ admitted: 1, kept: 1, retained: 0, denied: 0 });
 });
