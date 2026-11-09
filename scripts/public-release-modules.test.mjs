@@ -52,12 +52,12 @@ test("the platform skill carries committed bytes and modes into its external sta
 
 test("SDK module references preserve genuine imports and rewrite declarations without treating capability data as modules", () => {
   // Workspace names are already the public names; no publication alias is needed.
-  for (const dir of ["contract", "package-graph", "derive", "lanes", "page", "platform", "cli", "bytes", "client", "replay", "scope", "git", "checkers"]) {
+  for (const dir of ["contract", "package-graph", "derive", "define", "lanes", "page", "platform", "cli", "bytes", "client", "replay", "scope", "git", "checkers"]) {
     const workspace = dir === "lanes" || dir === "page" ? `apps/room/${dir}` : `packages/${dir}`;
     const manifest = JSON.parse(readFileSync(new URL(`${workspace}/package.json`, root), "utf8"));
     assert.equal(manifest.name, `@generalbusiness/dap-${dir}`);
   }
-  assert.deepEqual(PLAN.packages.map(spec => nameOf(spec.dir)), ["@generalbusiness/dap-contract", "@generalbusiness/dap-bytes", "@generalbusiness/dap-derive", "@generalbusiness/dap-package-graph", "@generalbusiness/dap-git", "@generalbusiness/dap-platform", "@generalbusiness/dap-client", "@generalbusiness/dap-replay"]);
+  assert.deepEqual(PLAN.packages.map(spec => nameOf(spec.dir)), ["@generalbusiness/dap-contract", "@generalbusiness/dap-bytes", "@generalbusiness/dap-derive", "@generalbusiness/dap-define", "@generalbusiness/dap-package-graph", "@generalbusiness/dap-git", "@generalbusiness/dap-platform", "@generalbusiness/dap-client", "@generalbusiness/dap-replay"]);
   // Small manifest fixture isolates naming from the separate compatibility obligation.
   const namingSpec = { dir: "bytes", exports: { ".": "src/index" }, dependencies: {} };
   const namingInput = { name: "@generalbusiness/dap-bytes", type: "module", license: "Apache-2.0", exports: { ".": "./src/index.ts" } };
@@ -216,7 +216,7 @@ test("Git publishes only two subpaths and their pure five-module closure", () =>
 // This existing compatibility obligation can fail independently of lexical/copy checks.
 // Preserve actual workspace manifests and expected compatibility; do not project a plan.
 test("SDK published manifests match the actual supported workspace manifests", () => {
-  // The eight-package plan preserves the actual public closure.
+  // The nine-package plan preserves the actual public closure.
   for (const spec of PLAN.packages) {
     const manifest = JSON.parse(readFileSync(new URL(`packages/${spec.dir}/package.json`, root), "utf8"));
     const published = publishManifest(spec, manifest, "0.1.0-dev.2");
@@ -226,6 +226,18 @@ test("SDK published manifests match the actual supported workspace manifests", (
     assert.throws(() => publishManifest(spec, { ...manifest, exports: { ...manifest.exports, "./unknown": "./src/unknown.ts" } }, "0.1.0-dev.2"), /unsupported-source-manifest/);
     assert.throws(() => publishManifest(spec, { ...manifest, dependencies: { ...manifest.dependencies, "unexpected-dependency": "1.0.0" } }, "0.1.0-dev.2"), /unsupported-source-dependencies/);
   }
+  assert.equal(PLAN.packages.length, 9);
+  const define = PLAN.packages.find(spec => spec.dir === "define");
+  const defineManifest = JSON.parse(readFileSync(new URL("packages/define/package.json", root), "utf8"));
+  const publicDefine = publishManifest(define, defineManifest, "0.1.0-dev.2");
+  assert.equal(defineManifest.version, "0.1.0-dev.1");
+  assert.deepEqual(publicDefine.exports, { ".": { types: "./dist/src/index.d.ts", default: "./dist/src/index.js" } });
+  assert.deepEqual(publicDefine.dependencies, {
+    "@generalbusiness/dap-bytes": "0.1.0-dev.2",
+    "@generalbusiness/dap-contract": "0.1.0-dev.2",
+    "@generalbusiness/dap-derive": "0.1.0-dev.2",
+  });
+  assert.throws(() => publishManifest(define, { ...defineManifest, dependencies: { ...defineManifest.dependencies, "@generalbusiness/dap-derive": "0.1.0-wrong" } }, "0.1.0-dev.2"), /dependency-pin/);
   const platform = PLAN.packages.find(spec => spec.dir === "platform");
   const replay = PLAN.packages.find(spec => spec.dir === "replay");
   const platformManifest = JSON.parse(readFileSync(new URL("packages/platform/package.json", root), "utf8"));

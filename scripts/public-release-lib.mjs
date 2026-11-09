@@ -1,4 +1,4 @@
-// Eight portable SDK packages only. No package loading or external service calls here.
+// Nine portable SDK packages only. No package loading or external service calls here.
 import { createHash } from "node:crypto";
 import { moduleSpecifierSpans } from "./public-release-modules.mjs";
 import { execFileSync } from "node:child_process";

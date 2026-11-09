@@ -30,7 +30,7 @@ export function check(manifestFile, captureFile, captureSha256, browserTool, bro
   for (const input of release.inputs) {
     const skill = skillInputs.find(row => row.path === input.path);
     const excludedGitInput = input.path.startsWith("packages/git/src/") && !PUBLIC_GIT_INPUTS.some(path => input.path === `packages/git/${path}`);
-    if ((!/^(?:LICENSE|NOTICE|packages\/(?:contract|package-graph|bytes|client|derive|git|platform|replay)\/(?:src\/[^\n]+\.ts|package\.json|README\.md))$/.test(input.path) && !PUBLIC_TESTING_INPUTS.includes(input.path) && !skill) || excludedGitInput || /^packages\/replay\/src\/(?:bin|git)\.ts$/.test(input.path) || !contained(output, realpathSync(input.copy))) refusal("input-path");
+    if ((!/^(?:LICENSE|NOTICE|packages\/(?:contract|package-graph|bytes|client|define|derive|git|platform|replay)\/(?:src\/[^\n]+\.ts|package\.json|README\.md))$/.test(input.path) && !PUBLIC_TESTING_INPUTS.includes(input.path) && !skill) || excludedGitInput || /^packages\/replay\/src\/(?:bin|git)\.ts$/.test(input.path) || !contained(output, realpathSync(input.copy))) refusal("input-path");
     if (digest(readFileSync(join(ROOT, input.path))) !== input.sha256 || digest(readFileSync(input.copy)) !== input.sha256) refusal("input-integrity");
     if (skill && (input.copy !== join(output, "packages/platform", skill.path) || input.bytes !== skill.bytes || input.mode !== skill.mode || lstatSync(input.copy).isSymbolicLink() || (lstatSync(input.copy).mode & 0o7777) !== skill.mode)) refusal("skill-input-integrity");
     if (input.path.startsWith("packages/") && /\.ts$/.test(input.path)) {
@@ -99,6 +99,15 @@ export function check(manifestFile, captureFile, captureSha256, browserTool, bro
 import { MemorySource, verify, TRUSTS } from '@generalbusiness/dap-replay';
 import { platform } from '@generalbusiness/dap-platform';
 import { capabilitiesOf, holdCapability, TOKENS_FLOOR, gitRead } from '@generalbusiness/dap-derive';
+import { compile as compileDefinition, define, equals, grants, item, live, open, reasons, require as requireGuard, required, text, value } from '@generalbusiness/dap-define';
+// This exported journey stays in the real browser bundle and runs under Node.
+export function authoringWitness() {
+  const permit = grants({ establish:'release-authoring.establish' });
+  const why = reasons({labelNotReady:'label-not-ready'});
+  const note = item('note',{states:{open:live},values:{label:value.fixed(text(40))}});
+  const establish = open(note,permit.establish,{fields:{label:required(text(40))}},({f,on})=>({guards:[requireGuard(equals(f.label,'ready'),why.labelNotReady)],effects:[...on.take(f,'label')]}));
+  return compileDefinition(define({name:'release-authoring',genesis:'establish',grants:permit,reasons:why,items:[note],acts:{establish}}));
+}
 const require = (condition, why) => { if (!condition) throw new Error(why); };
 const code = capabilitiesOf(holdCapability({tokensPerHold:TOKENS_FLOOR,rootRetentionSeconds:null}),gitRead());
 export async function replayCapture(capture) {
@@ -122,17 +131,26 @@ export async function replayCapture(capture) {
   const replayFile = join(consumer, "replay-journey.mjs"); writeFileSync(replayFile, replayJourney, { flag: "wx" });
   const witness = `import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { replayCapture } from './replay-journey.mjs';
+import { authoringWitness, replayCapture } from './replay-journey.mjs';
 import { PROPOSED_BOUNDS } from '@generalbusiness/dap-contract';
 import { fieldAssignable } from '@generalbusiness/dap-package-graph';
 import { readApplicationPackage } from '@generalbusiness/dap-platform/application';
 import { readApplicationPackage2 } from '@generalbusiness/dap-platform/application-v2';
 import { readApplicationPackage as readClientApplicationPackage } from '@generalbusiness/dap-client/application';
-import { canonicalBytes, keyIdOfSecret, sign, verify, verifySignedIntent } from '@generalbusiness/dap-bytes';
+import { canonicalBytes, definitionDigest, keyIdOfSecret, sign, verify, verifySignedIntent } from '@generalbusiness/dap-bytes';
 import { secretSigner, signedIntent, shapeDeclaredAct } from '@generalbusiness/dap-client';
 import { validateDefinition } from '@generalbusiness/dap-derive';
 import { RULE_PROFILES, evaluate, assertEngine } from '@generalbusiness/dap-derive/rule';
 import { small, variant } from '@generalbusiness/dap-derive/testing';
+const authored = authoringWitness();
+assert.equal(authored.definition.name,'release-authoring');
+assert.deepEqual(authored.definition.acts.establish.effects,[{of:'on',value:{slot:'label',from:{field:'label'}}}]);
+assert.equal(authored.digest,definitionDigest(authored.definition));
+assert.equal(authored.validation.ok,true);
+assert.deepEqual(authored.findings,[]);
+assert.deepEqual(authored.refusals,{establish:['label-not-ready']});
+assert.equal(Object.hasOwn(authored.definition,'grants'),false);
+assert.equal(Object.hasOwn(authored.definition,'reasons'),false);
 const secret = new Uint8Array(32).fill(9), message = canonicalBytes({ b:2, a:1 });
 assert.equal(verify(keyIdOfSecret(secret), sign(secret,message),message),true);
 assert.equal(fieldAssignable({type:'int',min:1,max:2},{type:'int',min:0,max:3}),true);
@@ -170,6 +188,19 @@ import { RULE_PROFILES } from '@generalbusiness/dap-derive/rule';
 import { verify as replay, httpSource, type Options, type Verification } from '@generalbusiness/dap-replay';
 import { platform } from '@generalbusiness/dap-platform';
 import { small } from '@generalbusiness/dap-derive/testing';
+import { compile as compileDefinition, define, equals, grants, item, live, open, reasons, require as requireGuard, required, text, value } from '@generalbusiness/dap-define';
+const permit = grants({establish:'release-authoring.establish'});
+const why = reasons({labelNotReady:'label-not-ready'});
+const note = item('note',{states:{open:live},values:{label:value.fixed(text(40))}});
+const establish = open(note,permit.establish,{fields:{label:required(text(40))}},({f,on})=>{
+  // @ts-expect-error Only declared slot names belong to the item.
+  on.slot('missing');
+  return {guards:[requireGuard(equals(f.label,'ready'),why.labelNotReady)],effects:[...on.take(f,'label')]};
+});
+const authored = compileDefinition(define({name:'release-authoring',genesis:'establish',grants:permit,reasons:why,items:[note],acts:{establish}}));
+const literalName: 'release-authoring' = authored.definition.name;
+const literalKind: 'note' = authored.definition.acts.establish.on;
+void literalName; void literalKind;
 const definition: DeclaredDefinition = small;
 const validation = validateDefinition(definition,{...PROPOSED_BOUNDS},RULE_PROFILES);
 import { PROPOSED_BOUNDS } from '@generalbusiness/dap-contract';
@@ -209,13 +240,13 @@ void sameApplicationCodec; void readApplicationPackage2;
   const browserOutputs = Object.entries(meta.outputs);
   if (!browserInputs.length || browserInputs.length > 10000 || browserOutputs.length !== 1 || realpathSync(join(consumer,browserOutputs[0][0])) !== browserFile || realpathSync(join(consumer,browserOutputs[0][1].entryPoint)) !== replayFile || browserOutputs[0][1].imports.some(ref=>ref.external)) refusal("browser-inventory");
   const browserProof = browserInputs.map(path => {const supplied = realpathSync(join(consumer,path)); if (supplied !== replayFile && !contained(join(output,"packages"),supplied) && !release.dependencies.some(dep=>contained(join(output,"node_modules",dep.name),supplied))) refusal("browser-source-ancestry"); return {path:supplied,sha256:digest(readFileSync(supplied))};});
-  for (const dir of ["replay","platform","derive","bytes","package-graph"]) if (!browserProof.some(input=>contained(join(output,"packages",dir),input.path))) refusal("browser-missing-package");
+  for (const dir of ["replay","platform","define","derive","bytes","package-graph"]) if (!browserProof.some(input=>contained(join(output,"packages",dir),input.path))) refusal("browser-missing-package");
   const jsonataInput = realpathSync(join(output,"node_modules/jsonata/jsonata.js"));
   if (Object.entries(meta.inputs).some(([name,input])=>input.imports.some(ref=>ref.external && !browserRuntimeEdge(realpathSync(join(consumer,name)),ref,jsonataInput))) || references(readFileSync(browserFile,"utf8")).length) refusal("browser-external-module");
   if (digest(readFileSync(capturePath)) !== captureSha256 || digest(readFileSync(captureCopy)) !== captureSha256) refusal("native-capture-changed");
   if (digest(readFileSync(binary)) !== browserToolSha256) refusal("browser-tool-changed");
   sourceIdentity(ROOT, release.source.head);
-  const result = { format: "artroom-public-sdk-output-check-1", releaseManifestSha256: digest(readFileSync(file)), packages: release.packages.map(p => ({ name: p.name, version: p.version, integrity: p.integrity })), compiledOutputJourney: "passed", nativeCapture: {path:capturePath,sha256:captureSha256,bytes:captureBytes.length,replay:json(join(consumer,"replay-result.json"))}, browserBundle: {tool:{path:binary,sha256:browserToolSha256,version:nativeManifest.version},inputs:browserProof,sha256:digest(readFileSync(browserFile)),metafileSha256:digest(metaBytes),qualification:"compiled closure bundle, not physical browser or public registry execution"}, testingFixtureClone: "native call preserved; private type erased; public variant signature unchanged; nested clone leaves original intact", compilerProof, qualification: "Owned staged output only. Public install/browser execution/native authorization/Jam/deployment/adoption remain unproved." };
+  const result = { format: "artroom-public-sdk-output-check-1", releaseManifestSha256: digest(readFileSync(file)), packages: release.packages.map(p => ({ name: p.name, version: p.version, integrity: p.integrity })), compiledOutputJourney: "passed", typedAuthoring: "compiled runtime and NodeNext/Bundler declarations; browser closure included", nativeCapture: {path:capturePath,sha256:captureSha256,bytes:captureBytes.length,replay:json(join(consumer,"replay-result.json"))}, browserBundle: {tool:{path:binary,sha256:browserToolSha256,version:nativeManifest.version},inputs:browserProof,sha256:digest(readFileSync(browserFile)),metafileSha256:digest(metaBytes),qualification:"compiled closure bundle, not physical browser or public registry execution"}, testingFixtureClone: "native call preserved; private type erased; public variant signature unchanged; nested clone leaves original intact", compilerProof, qualification: "Owned staged output only. Public install/browser execution/native authorization/Jam/deployment/adoption remain unproved." };
   writeJson(join(consumer, "result.json"), result);
   return result;
 }

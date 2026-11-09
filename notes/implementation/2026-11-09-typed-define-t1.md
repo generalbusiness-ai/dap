@@ -45,9 +45,20 @@ main before the full gate to include the runner changes. Read `gate.exit`
 before reporting the gate result. Exact pin equality remains unproved
 until those checks run.
 
-## Open integration
+## Release integration
 
-The public SDK producer currently lists eight packages. Its release plan
-and exact package assertions await the planner's ruling on adding this
-package to that release scope. Workspace registration and source use do
-not establish public release or deployed acceptance.
+Planner ruling `92c1bf7141c0509343bb471c7ac4caf18bf327b5` includes
+`define` as the ninth portable package. Its source version stays
+`0.1.0-dev.1`; the producer maps its three coordinated dependencies to
+the selected release version through the existing manifest rules.
+
+The release plan, exact package list, manifest checks, and release guide
+include the package. The producer supplies the same opt-in Web API types
+as the existing portable consumers. The checker prepares a compiled
+helper journey with a typed source value, runtime validation, refusal
+metadata outside the pin, and strict NodeNext and Bundler consumers. The
+actual browser bundle must include the compiled `define` stage.
+
+These witnesses remain unrun. This source work publishes nothing and
+establishes no public installation, browser execution, or deployed
+acceptance. Existing portability and output-closure requirements stand.

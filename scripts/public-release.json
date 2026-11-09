@@ -27,6 +27,15 @@
       }
     },
     {
+      "dir": "define",
+      "exports": { ".": "src/index" },
+      "dependencies": {
+        "@generalbusiness/dap-bytes": "coordinated",
+        "@generalbusiness/dap-contract": "coordinated",
+        "@generalbusiness/dap-derive": "coordinated"
+      }
+    },
+    {
       "dir": "package-graph",
       "exports": { ".": "src/index" },
       "dependencies": {
