@@ -685,10 +685,10 @@ export class DestinationHost implements Outside {
     if (!isJudgeChanges(parsed) || canonicalize(parsed) !== changes.bytes || valueDigest(DESTINATION_CHANGED_SET.domain, parsed) !== changes.digest) return null;
     const fixed = publicationRefusal(path, parsed, []);
     if (fixed) return { refusal: fixed };
-    const rules = destinationRulesScope(this.#given.state), read = this.#options.snapshotReader?.rules;
-    if (!rules || !read) return null;
+    const rules = destinationRulesScope(this.#given.state), reader = this.#options.snapshotReader;
+    if (!rules || !reader?.rules) return null;
     const of: ObservedScope = rules.inc === null ? { scope: rules.scope, kind: rules.kind } : { ...rules, inc: rules.inc };
-    const extents = publicationExtents(await read(of), rules);
+    const extents = publicationExtents(await reader.rules(of), rules);
     return extents ? { refusal: publicationRefusal(path, parsed, extents) } : null;
   }
 

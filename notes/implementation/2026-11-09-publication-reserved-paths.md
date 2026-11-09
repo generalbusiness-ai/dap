@@ -1,8 +1,7 @@
 # Reserve control paths from application publication
 
 Security request `b300dca1`; promise `d107501f`; ruling `d92b5f66`.
-This source draft has not run a compiler or test. It builds on the frozen
-R15 candidate and must incorporate its audited main landing before review.
+This source draft has not run a compiler or test. It incorporates the audited R15 main landing `c9583a00`.
 
 ## What changes
 
@@ -38,6 +37,20 @@ the next Rules and Destination revisions another change requires.
 A filed security fix uses [kernel section 7](../../docs/kernel.md); review
 must assess that exception and the host-only boundary.
 
+## Reserved readers
+
+| Paths | Reader |
+|---|---|
+| `.github` and `.github/**` | GitHub workflow/configuration and ownership readers; `packages/platform/src/extents.ts` includes workflows and actions in `RULES_PATTERNS` |
+| `CODEOWNERS`, `docs/CODEOWNERS` | GitHub ownership reader; `.github/CODEOWNERS` already falls under `.github/**` |
+| Every `AGENTS.md` and `CLAUDE.md` | Room control extent minimum in `RULES_PATTERNS`; ordinary changes use `classify` and `judgeExtents` |
+| Current room extents named `rules` or classified `authority` | `rulesObservedValues` supplies the canonical current extent value; Destination's existing reservation policy reads the same control policy |
+| Aliases into any of these paths | Existing `inspectGit` and `classify` follow old/new Git symlinks in both directions |
+
+The existing path grammar separately rejects `.git` and unsafe path segments.
+This head changes no path grammar. It adds no setting or deploy step beyond
+the planner's normal reviewed Worker deployment.
+
 ## Evidence due
 
 No validation result follows from this draft. Required witnesses cover old
@@ -45,13 +58,16 @@ and current creation pins: workflow and Rules-control refusals, the specific
 host answer and generic recorded reason, ordinary committed publication,
 Lending shelf publication and unchanged replay. Alias-to-control refusal,
 missing-policy refusal and an unchanged-content reserved path also need
-coverage. Include every affected Worker compiler context in the frozen
+coverage. The five-case witness draft covers pure bounded policy and aliases,
+old raw and trusted-package application routes, and the current family
+through its existing finite device package. Both older routes use the actual
+unchanged Lending definition for shelf commits. Include every affected
+Worker compiler context in the frozen
 focused plan, one meaningful policy-bypass control and one final gate.
 
 ## Open limits and deployment
 
-Exact-head review, integration of the R15 landing, focused checks, control
-and gate remain due under `b300dca1`. The planner deploys after landing;
+Exact-head review, focused checks, control and gate remain due under `b300dca1`. The planner deploys after landing;
 this draft changes no live room and supplies no acceptance result.
 
 GitHub's [workflow reader](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
