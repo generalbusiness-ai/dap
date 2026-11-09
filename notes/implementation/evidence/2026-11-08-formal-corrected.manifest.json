@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "request": "3c6d197df2db35e3d1603f63acfa63953da7c1a0",
+  "promise": "5c826d7435eef1e7a2b8df3c7db6efdf94f4654b",
+  "qualification": "Corrected formal checks after published M0 main f2677f77: Editor regeneration and rendering pass at 7b86cb87; generated files commit at87e21036. Editor model/source and Effects model/T19 source checks pass at87e21036. One Editor model fault breaks EvidenceBeforeProgress at the intended three-step path. One duplicate-dispatch Effects source fault fails the unchanged T19 assertion at operations.test.ts:85; baseline and exact restoration pass. Each T19 phase explicitly skips ten nonselected cases. Two scratch preflight cases refuse dirty or unreadable Git state before output creation or baseline. The first preflight wrapper fails on an output-directory collision before either probe; its actual exit1 remains failed and the corrected wrapper passes once. All tracked bytes restore exactly; final process inspection finds no executable validation body. No product source, live room or deployment changes. The original formal failed gate remains failed; a new final maintained gate and independent review remain due.",
+  "sourceHead": "87e210367b76dd799ce266a0f7503b3bb0282e4b",
+  "sourceTree": "ab05e0f97a1ab70fd53c05c0d7c3f05ae6f8be1f",
+  "fileCount": 26,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-formal-corrected-validation",
+      "fileCount": 26,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2307,
+          "sha256": "3960ae5e4f38fba6725456b545ee98caa46832bcecc00ad68c599811597e271c"
+        },
+        {
+          "path": "editor-chart.mmd",
+          "bytes": 497,
+          "sha256": "c844121af3d56a51b1a2c83be635599146039578a8e89b5f9c65b0e3926af0d2"
+        },
+        {
+          "path": "editor-chart.svg",
+          "bytes": 5819,
+          "sha256": "b9d3c8da60d4e6b354627375cbac098e32b6ec90109dfa42feef5fc3f1e71e3f"
+        },
+        {
+          "path": "editor-check-receipt.json",
+          "bytes": 265,
+          "sha256": "c498c743163c254d291253913e3c4a67d86bf27ea98bc451bbd1effb9eb9b964"
+        },
+        {
+          "path": "editor-check-task.json",
+          "bytes": 716,
+          "sha256": "d94474787601de7b8dd1aac3f7f64536ee37781f0e0aaed5e9c59939fcd91f0a"
+        },
+        {
+          "path": "editor-model-control-receipt.json",
+          "bytes": 273,
+          "sha256": "2076f11a6bc428e9d77fa58ab79330d0a15dd6e7effdb56fcb77c10c0de17e7e"
+        },
+        {
+          "path": "editor-model-control-task.json",
+          "bytes": 1263,
+          "sha256": "1ce7aafa9c621269d036870cd6a088acd04851f8ae90d553b8c4709dd156e20c"
+        },
+        {
+          "path": "editor-model-fault-report.md",
+          "bytes": 389,
+          "sha256": "f0586bbcc676f5d79714a6cdf2eacfb7b67cb98202a5b635e5b3edffd887e467"
+        },
+        {
+          "path": "editor-regeneration-receipt.json",
+          "bytes": 218,
+          "sha256": "280cfb2841ad6cb1eb9641e1b79e756ab3fa3c0d390cbdb92c47ccf818e04e58"
+        },
+        {
+          "path": "editor-regeneration-task.json",
+          "bytes": 1957,
+          "sha256": "226aae6a98c573fc18d53d18b0fb19066b6e110e5533b9cf021785187885f577"
+        },
+        {
+          "path": "editor-render.json",
+          "bytes": 435,
+          "sha256": "781b0b745add5f06b7ecc098302e5c57692cf8f035e190dc5beb47768feaef8d"
+        },
+        {
+          "path": "editor-report.md",
+          "bytes": 195,
+          "sha256": "c7f11b32b522bd58309e9f424399dc2d346fa518d3f7a0f593947fb25144eb59"
+        },
+        {
+          "path": "effects-assertion-review.json",
+          "bytes": 809,
+          "sha256": "e70bb492aabb4095d8a60d4a328aa73764f3ff648a5cbb9df4636d4d4279f981"
+        },
+        {
+          "path": "effects-check-receipt.json",
+          "bytes": 265,
+          "sha256": "7f2abed42d97236802494e01da6efe64dd80c7c324a3ba3e39c31b41947960a1"
+        },
+        {
+          "path": "effects-check-task.json",
+          "bytes": 718,
+          "sha256": "6cc026f8067519141381f88995bf9f7a4f17a05cd65966fec67732cce229fe77"
+        },
+        {
+          "path": "effects-source-control-receipt.json",
+          "bytes": 275,
+          "sha256": "c712f9ea70884136c9661cba49373867480f7c75ef4b5f760567d8509705bd4d"
+        },
+        {
+          "path": "effects-source-control-task.json",
+          "bytes": 823,
+          "sha256": "fb2339aaf9c7521d08e55b1545fe7afc48e3dc052e57dffd2ffe8621139f6b5c"
+        },
+        {
+          "path": "guard-preflight-result.json",
+          "bytes": 708,
+          "sha256": "07056b56015f85704e4a7feaf012453e6fedd18de3576212dfad835a02fd49b0"
+        },
+        {
+          "path": "guard-probes-corrected-receipt.json",
+          "bytes": 275,
+          "sha256": "6dc8dd359b55f78f1ece7301ce3632ddfa663f52cf3c05cf6a4ae61fe6aca470"
+        },
+        {
+          "path": "guard-probes-corrected-task.json",
+          "bytes": 851,
+          "sha256": "4dc9420f5757a70b484769ea53d12e1edfddb7a99427807e6d4e3c2e00d7efa9"
+        },
+        {
+          "path": "guard-probes-receipt.json",
+          "bytes": 265,
+          "sha256": "9ca229dd1287cfc9aeffbc325a418bbe161add1b7393f10af4e8df2ea41ef3ca"
+        },
+        {
+          "path": "guard-probes-task.json",
+          "bytes": 831,
+          "sha256": "5004afe57e9723230fa7724a7b7e12651e5854dbc1e52f35bac747b42d94cc0a"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 3177,
+          "sha256": "b5d14f5a82baccccb2a9fd9f163f3c7dec0a7e8a1b45e32023868ae430c42111"
+        },
+        {
+          "path": "result.json",
+          "bytes": 4642,
+          "sha256": "6cdf7b07b0d98d358007215f7bc4e3e135ccef3f3d1cf31a2a4e5416233aa5de"
+        },
+        {
+          "path": "slot-observations.json",
+          "bytes": 1219,
+          "sha256": "708cab745a6b8f6f3dabf0ccebe839e51cd4b75718413f0dbe6ea5204e494591"
+        },
+        {
+          "path": "source-correspondence.json",
+          "bytes": 1822,
+          "sha256": "73a98fdc8b2cc61cf55bae99405e0760201083f7f8078cb3336753832b95403c"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Verify the five priority state machines
 
-The corrected Editor model and regenerated chart pass at `7b86cb87` after published M0 integration. TLC reaches seven states and checks `EvidenceBeforeProgress` and `NoDeadlock`. The Editor source check and model fault, the Effects check and source control, preflight refusal probes, and the final gate remain due. Counts for the other four models still describe the original submission at `13e704a47a`.
+The corrected Editor chart and targeted checks pass after published M0 main `f2677f77`. Editor includes failed receipt verification and checks seven states. Its model fault fails the intended invariant. The reconciled Effects check and source control pass, and scratch preflight cases prove that dirty or unreadable Git state stops the control before baseline execution. The original failed gate and the failed preflight wrapper remain failed. One final maintained gate and renewed review remain due. Counts for the other four models retain their original checked values at `13e704a47a`.
 
 The 7 November survey lives in gitseq request `a99e32d9` at `attachments/full-report` and `attachments/priority-list`. It audited `e50d9eebb27f47d0f33549486751ab8bdce8de80`. This verification follows the five-item shortlist, not the full inventory. Gitseq request `3c6d197df2db35e3d1603f63acfa63953da7c1a0` tracks this delivery, under promise `5c826d7435eef1e7a2b8df3c7db6efdf94f4654b`.
 
