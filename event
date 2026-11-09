@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e15c35f29395baaa510860803d26d59ee8205e57","text":"Merge retired a covered predecessor; the successor is at verification/state-machines/Transport/Transport.cfg."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e293aca28b30905a38a2d0ad540fb88d8079feca","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-formal-state-machines.manifest.json."}
