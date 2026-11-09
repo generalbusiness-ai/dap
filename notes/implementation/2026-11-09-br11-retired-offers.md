@@ -3,10 +3,10 @@
 Request: `e1b71b6b697c58723b3340681346f5f7145d345c`.
 Promise: `5a3fbb3db7dac1dc652f7403aabbf585641e4212`.
 
-Status: the parser repair passed its eleven-case owner. The next compiler
-found a remaining v1 field in the CLI offer adapter. That repair and its
-updated seal await an asset rebuild and the remaining checks. No Vitest
-case, control, or gate has run for this head.
+Status: the CLI adapter repair and its Page asset are prepared. The
+entry-point owner must check the new seal, then the CLI compiler and five
+unrun contexts must pass before the thirteen unrun Vitest cases start.
+The two client compiler contexts keep their pass. No control or gate ran.
 
 ## Keep each deployment's configuration separate
 
@@ -125,3 +125,11 @@ assertion. Hugh's standing patch authorization applies. Because that sealed
 source changes, the entry-point owner must run again. The unchanged client
 compiler contexts and settings owner keep their conclusive results.
 The Page asset must rebuild after this CLI change.
+
+The required Page rebuild after the CLI repair ran once at `2fc38c44`,
+tree `ee4542cc`, and exited 0. Only `assets.ts` changed. Page HTML and both
+OAuth entries stayed equal, and the process group closed. The
+[CLI-repair build manifest](evidence/2026-11-09-br11-cli-offer-assets.manifest.json),
+digest `bd55d320770d10188a729049118633fcb781350c019f20b924ae80cad84dc67e`,
+seals 21 files. The earlier build remains evidence for its earlier source.
+No compiler, test, or gate repeats during sealing.
