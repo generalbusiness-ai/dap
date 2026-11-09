@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "request": "9719b634d5032278014d76e6604f533c45ead91a",
+  "promise": "31a6f928a1a0ff7898f50633f44bcb95d77cf6df",
+  "sourceHead": "ca6a54e278edbd14075ca37ca8ae1987e86a7c72",
+  "sourceTree": "99df66b7105ab7e87826f3ff4d2fcdac61adcfc2",
+  "qualification": "Read-only join parity inventory on exact published main. No source edit, compiler, test, join, credential, live-room or browser execution. The build and its acceptance remain future phase3 work.",
+  "fileCount": 5,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-join-parity-inventory",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 327,
+          "sha256": "a330c7897bf1764445b52cf2561b9e332a106c883de6e6bd2b5428737aec9e53"
+        },
+        {
+          "path": "inventory.md",
+          "bytes": 6932,
+          "sha256": "88bf7387d96713953cd49c6e2c00aec8dd2635d9cb68dc0d88e46386d1ccb95d"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 545,
+          "sha256": "c19562fc19e71cff92fe7f45c30bac8826f0edaf25d4913f11152c32baaceb9b"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 3516,
+          "sha256": "c84d2b951cb450dc9fb35a435ba28ae32ef3c8b900d41dd837f2448f5a10d2de"
+        },
+        {
+          "path": "source-inventory.json",
+          "bytes": 3511,
+          "sha256": "e6049b959391d90b7d6836f860aed0b80d0e2f34d8cc5969c8dd6a33b05411d7"
+        }
+      ]
+    }
+  ]
+}
