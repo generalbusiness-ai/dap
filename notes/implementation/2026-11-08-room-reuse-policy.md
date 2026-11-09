@@ -39,5 +39,18 @@ Each keeps its own promise, note, artifacts and review request. Both reviews
 must approve before the ordered landings. If only one item wins approval,
 that item needs a gate at a head that holds it alone.
 
-The Page asset build, workflow citation, BR-12 focused checks and the shared
-gate remain due. No live acceptance or deployment follows from these checks.
+After integrating published main `f1ec237c`, the Page source and owner files
+still matched the focused checkpoint. The asset recipe then passed once at
+`cc7f75d63f8a953dceaeff6c2c7cd8f4997d2fff`, tree
+`788ceb2516075408235277bc033d57f869ff7068`. Only `assets.ts` changed.
+Page HTML, OAuth HTML and OAuth JavaScript stayed byte-equal.
+
+The [build manifest](evidence/2026-11-08-room-reuse-build.manifest.json)
+has SHA-256 `bc02a00c974f3a5fc866934fc3c695050966c933276a49ed841735bd500f6cab`.
+It lists 18 read-only files under
+`~/play/artroom-evidence/2026-11-08-room-reuse-build`, including `build.exit`,
+`result.json` and the four generated browser files. The generated module has
+SHA-256 `35459483398f83bc3525dee550007145dd10b64f76afb00160c12744b50fc320`.
+
+The workflow citation, BR-12 focused checks and shared gate remain due.
+No live acceptance or deployment follows from these checks.

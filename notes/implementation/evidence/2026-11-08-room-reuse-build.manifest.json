@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "request": "b32c8fbd4d3510fd025cbc6b717b3df7cb09d754",
+  "promise": "e7fd9afbf1441866552fa43d7bb81e9b4db42fbf",
+  "sourceHead": "cc7f75d63f8a953dceaeff6c2c7cd8f4997d2fff",
+  "sourceTree": "788ceb2516075408235277bc033d57f869ff7068",
+  "qualification": "One Page asset recipe invocation passes using existing esbuild 0.28.1. Only the generated asset module changes. Page HTML, OAuth HTML and OAuth JavaScript stay byte-equal. The retained Page JavaScript matches the generated module digest. No installation, test, browser run or full gate. All listed files remain read-only.",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-room-reuse-build",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1367,
+          "sha256": "295bc1407886a6f542f6250ae145559288d695b8f11425c4bc3c7df753bfd886"
+        },
+        {
+          "path": "after.json",
+          "bytes": 546227,
+          "sha256": "44f74b611a9b711d7f1e57b8711b35f11f2bd7d0e667fb6b7d7d0d3412e2f100"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 317,
+          "sha256": "db2f56bf219dd7a1cac373a9e3fd3b77724760a3e4be79f4bddc5300b95466a9"
+        },
+        {
+          "path": "before.json",
+          "bytes": 555718,
+          "sha256": "12440f0c4bd9628465fc7b57c8040bedb6b7e8dffe4a3b4c552cd721d1d0cbc2"
+        },
+        {
+          "path": "build.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "build.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "build.stdout",
+          "bytes": 139,
+          "sha256": "1020d3c30ec85216c80ebfafa23349dc9727aec62406a7729e4ddde06f7c88c3"
+        },
+        {
+          "path": "build.time",
+          "bytes": 29,
+          "sha256": "0149ed5bc1fb662ee5618b89b049dbded3f5b37fd5f0f4b498f8c6bf37eb9f07"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 6153,
+          "sha256": "7d03defb4ef1aeca7897d4d1819601a815aac4f87be6f7269dfaf3530e565a26"
+        },
+        {
+          "path": "generated/index.html",
+          "bytes": 26259,
+          "sha256": "62339a1ea0bcea8af96184debab781bb20f679b51116a88551c94701a7a9a754"
+        },
+        {
+          "path": "generated/oauth.html",
+          "bytes": 3435,
+          "sha256": "87e3ea59858b3221b250910eaa6d5c2189e6185ace47a930f1c06479f73feb0a"
+        },
+        {
+          "path": "generated/oauth.js",
+          "bytes": 1002695,
+          "sha256": "fbb383319e8f09244cd61186e49b1c82e9abda44a6113324e610db16f584372e"
+        },
+        {
+          "path": "generated/page.js",
+          "bytes": 1263631,
+          "sha256": "17dea167d33ba7aff9853c83a339cb00e75a0dab504545a536a8633170f022d2"
+        },
+        {
+          "path": "process-closure.json",
+          "bytes": 50,
+          "sha256": "5d1d727b5b5a1a8b73088b118ef1fdc1f756632b6bac4daed184db3375639a19"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1079,
+          "sha256": "f18146cf9b56d781b4971ed15933eac2cc35f4acefb19e95732cd4c342edea72"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 88,
+          "sha256": "d38f315057672b0a83fad35d490e4c248742bdecf2a5fe8f70912441473a42e2"
+        },
+        {
+          "path": "started.json",
+          "bytes": 96,
+          "sha256": "d22c5722b7d706bd39030f3ad659b724bccc66141bd5c3af03a43555c42fc86f"
+        }
+      ]
+    }
+  ]
+}
