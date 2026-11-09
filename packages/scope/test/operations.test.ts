@@ -321,7 +321,17 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
     const minted: EffectAnswer = { result: "confirmed", evidence: { basis: "own-answer", body: { token: "t1" } } };
     expect([await late(s, out, older, 1, minted), await late(s, out, later, 1, own("c1")), (await s.head()).seq]).toEqual([{ recorded: "unavailable" }, { recorded: "unavailable" }, 14]);
     // The first pass offers the mint's answer. The turn is free, and the answer is still not written: its owner's fault. It goes behind the other.
-    expect([await s.alarm(), (await s.head()).seq]).toEqual([true, 15]);
+    // A retained refusal for that same attempt must not replace the answer
+    // already in hand. The reply port scripts public metadata, not custody.
+    const retainedPages: number[] = [];
+    Object.assign(out, { replies: (limit: number) => {
+      retainedPages.push(limit);
+      return { answers: [{ operation: older, attempt: 1, answer: { result: "refused", evidence: { basis: "own-answer", body: { token: "retained-refusal" } } } }], more: false };
+    } });
+    try {
+      expect([await s.alarm(), (await s.head()).seq]).toEqual([true, 15]);
+      expect(retainedPages).toEqual([1]);
+    } finally { delete (out as Outside).replies; }
     // The second pass, after the delay, writes the push's answer. The mint's is in hand: the driver asks for the next wake-up, and the operation is a task with what it reserved.
     s.c.clock.now = at(HOLD + PROPOSED_BOUNDS.drainRetrySeconds);
     expect([await s.alarm(), (await s.sealed(16))[0]?.entry.input, (await seen(s, later)).state, await seen(s, older), await s.alarmAt()]).toMatchObject([

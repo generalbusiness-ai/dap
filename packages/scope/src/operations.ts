@@ -205,17 +205,8 @@ const inputsOf = (answer: { retain?: unknown }): readonly RetainedInput[] | null
 /** An outcome as the driver offers it: it states no owner and no kind, which the judge sets from the operation (section 4.1). `retain`: the snapshots and values that came with its answer, which are no part of the input. */
 type Outcome = OutcomeOffered & { retain?: readonly RetainedInput[] | undefined };
 
-export class Operations {
-  readonly #scope: Scope;
-  readonly #store: Store;
-  readonly #outside: Outside;
-  readonly #resolver: Resolver;
-  readonly #definitions: Ports["definitions"] | undefined;
-  readonly #owners: Owners | undefined;
-  readonly #clock: Clock;
-  readonly #wakes: Wakes;
-  readonly #bounds: Bounds;
-  readonly #diagnoses: Ports["diagnoses"];
+/** Memory-only scheduling of attempts with no next time. It never writes a ledger or sends. */
+class ParkedAttempts {
   /**
    * True while an attempt is recorded and not sent because its owner's rule
    * says that it is not ready (`OperationRules.ready`): the request of an
@@ -226,22 +217,6 @@ export class Operations {
    * attempt once more. In memory only: a restart begins the walk in any case.
    */
   #waiting = false;
-  /**
-   * Answers in hand that the scope could not record yet, by attempt, in the
-   * order in which they are offered next (`#replies`): at most one for each
-   * attempt that was sent. Each is the `outcome`
-   * input as it was first offered, so it keeps the operation, the attempt
-   * and the evidence of its answer. An answer stays here until the scope
-   * has judged it: written, a copy, a contradiction, or no answer. It is
-   * offered again by the row of its attempt while that row is open, and by
-   * `#replies` whether the row is open or closed. Nothing here sends: the
-   * request of an attempt left once.
-   *
-   * They are in memory only. A process that ends loses them: the outside
-   * system's answer is then gone, and the attempt stays `unknown`, a task,
-   * as rule 2 requires, until that request's own answer is given again.
-   */
-  readonly #held = new Map<string, Outcome>();
   /**
    * The walk of this object's life over the attempts that nothing could send
    * before: those with no time to look at them next. Each pass takes one
@@ -257,10 +232,131 @@ export class Operations {
    * keeps it from being sent twice.
    */
   readonly #refused = new Map<string, { owner: CapabilityName | PlatformDefinition; kind: string }>();
-  #running: Promise<number> | null = null;
-  #again = false;
+
+  constructor(private readonly store: Pick<Store, "parked">, private readonly outside: Pick<Outside, "accepts">, private readonly bounds: Pick<Bounds, "deliveryBatch">) {}
+  reaccepted(): boolean { return this.#accepted(false); }
+  committed(): boolean {
+    if (!this.#waiting) return false;
+    this.#waiting = false;
+    this.#walk = { after: null };
+    return true;
+  }
+  wait(): void { this.#waiting = true; }
+  refuse(row: Sending, operation: Operation): void {
+    this.#refused.set(attemptKey(row.operation, row.attempt), { owner: operation.owner, kind: operation.kind });
+  }
+  forget(row: Sending): void { this.#refused.delete(attemptKey(row.operation, row.attempt)); }
+  page(runs: boolean): { walked: boolean; page: Sending[] } {
+    const batch = this.bounds.deliveryBatch;
+    if (!this.#walk && runs && this.#accepted()) this.#walk = { after: null };
+    const walked = this.#walk;
+    // Due rows do not consume this page. An unchanged row cannot hold back its successor.
+    const page = walked && runs ? this.store.parked(walked.after, batch) : [];
+    this.#walk = page.length < batch ? null : { after: page.at(-1)! };
+    return { walked: walked !== null, page };
+  }
+  wake(now: number): number | null { return this.#walk ? now : null; }
+
+  /** Bounded rotating inspection of the in-memory refused queue. A read
+   * leaves an accepted entry first, so its following pass sees that same
+   * entry; a pass removes accepted entries and restarts the durable walk. */
+  #accepted(remove = true): boolean {
+    let matched = false;
+    const limit = Math.min(this.bounds.deliveryBatch, this.#refused.size);
+    for (let n = 0; n < limit; n++) {
+      const first = this.#refused.entries().next().value;
+      if (!first) break;
+      const [key, refused] = first;
+      if (this.outside.accepts(refused.owner, refused.kind)) {
+        if (!remove) return true;
+        this.#refused.delete(key);
+        matched = true;
+      } else {
+        this.#refused.delete(key);
+        this.#refused.set(key, refused);
+      }
+    }
+    return matched;
+  }
+}
+
+/** Memory-only answers and retained-reply paging. It never judges, writes or sends. */
+class ReplyCustody {
+  /**
+   * Answers in hand that the scope could not record yet, by attempt, in the
+   * order in which Operations offers them next: at most one for each
+   * attempt that was sent. Each is the `outcome`
+   * input as it was first offered, so it keeps the operation, the attempt
+   * and the evidence of its answer. An answer stays here until the scope
+   * has judged it: written, a copy, a contradiction, or no answer. It is
+   * offered again by the row of its attempt while that row is open, and by
+   * Operations whether the row is open or closed. Nothing here sends: the
+   * request of an attempt left once.
+   *
+   * They are in memory only. A process that ends loses them: the outside
+   * system's answer is then gone, and the attempt stays `unknown`, a task,
+   * as rule 2 requires, until that request's own answer is given again.
+   */
+  readonly #held = new Map<string, Outcome>();
   /** A trusted retained-reply page has a successor; memory only, reset on restart. */
   #replyMore = false;
+  constructor(private readonly outside: Pick<Outside, "replies">, private readonly diagnoses: Ports["diagnoses"]) {}
+  get size(): number { return this.#held.size; }
+  get more(): boolean { return this.#replyMore; }
+  stopPaging(): void { this.#replyMore = false; }
+  get(operation: OperationId, attempt: number): Outcome | undefined { return this.#held.get(attemptKey(operation, attempt)); }
+  hold(input: Outcome): void { this.#held.set(attemptKey(input.operation, input.attempt), input); }
+  holdFirst(input: Outcome): void { if (!this.get(input.operation, input.attempt)) this.hold(input); }
+  forget(operation: OperationId, attempt: number): void { this.#held.delete(attemptKey(operation, attempt)); }
+  pending(offered: ReadonlySet<string>, batch: number): [string, Outcome][] {
+    return [...this.#held].filter(([key]) => !offered.has(key)).slice(0, batch);
+  }
+  judged(key: string, input: Outcome, recorded: OutcomeRecorded["recorded"]): boolean {
+    // A newer answer keeps its own place if it arrived during judgment.
+    if (this.#held.get(key) !== input) return false;
+    this.#held.delete(key);
+    if (recorded === "unavailable") this.#held.set(key, input);
+    return recorded !== "unavailable";
+  }
+  retained(batch: number): Array<{ operation: OperationId; attempt: number; answer: EffectAnswer }> {
+    this.#replyMore = false;
+    let answers: Array<{ operation: OperationId; attempt: number; answer: EffectAnswer }>;
+    try {
+      if (!this.outside.replies) return [];
+      const page = this.outside.replies(batch);
+      if (typeof page !== "object" || page === null || !Array.isArray(page.answers) || page.answers.length > batch || typeof page.more !== "boolean") throw new Error("invalid retained reply page");
+      // Validate and snapshot the entire page before any answer is offered.
+      answers = page.answers.map((reply) => {
+        if (!reply || !isOperationId(reply.operation) || !Number.isSafeInteger(reply.attempt) || reply.attempt < 1 || !isAnswer(reply.answer)) throw new Error("invalid retained reply metadata");
+        return { operation: reply.operation, attempt: reply.attempt, answer: reply.answer };
+      });
+      this.#replyMore = page.more;
+    } catch (failure) {
+      report(this.diagnoses, "outside-replies-failed", "retained-replies", failure);
+      return [];
+    }
+    return answers;
+  }
+  wake(now: number, delay: number): number | null {
+    return this.#replyMore ? now : this.#held.size > 0 ? now + delay : null;
+  }
+}
+
+export class Operations {
+  readonly #scope: Scope;
+  readonly #store: Store;
+  readonly #outside: Outside;
+  readonly #resolver: Resolver;
+  readonly #definitions: Ports["definitions"] | undefined;
+  readonly #owners: Owners | undefined;
+  readonly #clock: Clock;
+  readonly #wakes: Wakes;
+  readonly #bounds: Bounds;
+  readonly #diagnoses: Ports["diagnoses"];
+  readonly #parked: ParkedAttempts;
+  readonly #replyCustody: ReplyCustody;
+  #running: Promise<number> | null = null;
+  #again = false;
 
   /** Told of an answer that contradicts the outcome that entry `seq` records. It is the operator's record, which no judgment reads. */
   readonly #conflict: ((operation: OperationId, attempt: number, seq: number) => void) | undefined;
@@ -271,6 +367,8 @@ export class Operations {
     this.#scope = scope;
     this.#store = store;
     this.#outside = ports.outside;
+    this.#parked = new ParkedAttempts(store, ports.outside, bounds);
+    this.#replyCustody = new ReplyCustody(ports.outside, ports.diagnoses);
     this.#resolver = ports.resolver;
     this.#definitions = ports.definitions;
     this.#owners = ports.owners ?? undefined;
@@ -285,14 +383,11 @@ export class Operations {
    * Whether the outside port now accepts the kind of an attempt that a pass of this life left unsent because it did not. Bounded:
    * it asks about at most one batch of them, and writes nothing. A pass that finds one starts the walk again (`#pass`).
    */
-  reaccepted(): boolean { return this.#accepted(false); }
+  reaccepted(): boolean { return this.#parked.reaccepted(); }
 
   /** A committed entry may make a parked attempt ready. */
   committed(): void {
-    if (!this.#waiting) return;
-    this.#waiting = false;
-    this.#walk = { after: null };
-    this.#again = true;
+    if (this.#parked.committed()) this.#again = true;
   }
 
   /** Forward security check only: it changes neither old entries nor their derivation. */
@@ -316,28 +411,6 @@ export class Operations {
         ? (operation.owner === "platform:destination@7" || operation.owner === "platform:destination@8" || operation.owner === "platform:destination@13" || operation.owner === "platform:destination@14" || operation.owner === "platform:destination@15" || operation.owner === "platform:destination@16" || operation.owner === "platform:destination@17" || operation.owner === "platform:destination@18" || operation.owner === "platform:destination@19" || operation.owner === "platform:destination@20" ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
         : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []);
     } catch { return false; }
-  }
-
-  /** Bounded rotating inspection of the in-memory refused queue. A read
-   * leaves an accepted entry first, so its following pass sees that same
-   * entry; a pass removes accepted entries and restarts the durable walk. */
-  #accepted(remove = true): boolean {
-    let matched = false;
-    const limit = Math.min(this.#bounds.deliveryBatch, this.#refused.size);
-    for (let n = 0; n < limit; n++) {
-      const first = this.#refused.entries().next().value;
-      if (!first) break;
-      const [key, refused] = first;
-      if (this.#outside.accepts(refused.owner, refused.kind)) {
-        if (!remove) return true;
-        this.#refused.delete(key);
-        matched = true;
-      } else {
-        this.#refused.delete(key);
-        this.#refused.set(key, refused);
-      }
-    }
-    return matched;
   }
 
   /**
@@ -375,18 +448,13 @@ export class Operations {
     // is sent and nothing is offered. Each attempt stays as it is recorded, with no wake-up, until a runtime that can run the
     // definition restarts the object. The walk ends at once: it could do nothing for any row.
     const runs = Boolean(this.#scope.pinned()?.definition);
-    const replyMore = this.#replyMore;
-    if (!runs) this.#replyMore = false;
-    if (!this.#walk && runs && this.#accepted()) this.#walk = { after: null };
-    const walked = this.#walk;
-    // The page has its own batch, so what is due never uses it up. A page that is not full is the last. The walk goes on by the
-    // row it reached, so a row that stays as it is recorded is passed, and holds back no row after it.
-    const page = walked && runs ? store.parked(walked.after, batch) : [];
-    this.#walk = page.length < batch ? null : { after: page.at(-1)! };
+    const replyMore = this.#replyCustody.more;
+    if (!runs) this.#replyCustody.stopPaging();
+    const { walked, page } = this.#parked.page(runs);
     const due = [...store.unsent(now, batch), ...page];
-    if (due.length === 0 && (this.#held.size === 0 || !runs)) {
+    if (due.length === 0 && (this.#replyCustody.size === 0 || !runs)) {
       const resumed = runs ? await this.#resume(batch) : 0;
-      if (walked || resumed > 0 || replyMore || this.#replyMore) await this.#wake(now);
+      if (walked || resumed > 0 || replyMore || this.#replyCustody.more) await this.#wake(now);
       return resumed;
     }
     const scope = store.scope()!;
@@ -403,12 +471,12 @@ export class Operations {
         const operation = store.operation(id);
         if (operation && !await this.#publicationReady(operation)) {
           if (row.next !== null) store.postpone(id, attempt, null);
-          this.#waiting = true;
+          this.#parked.wait();
           continue;
         }
         // The request may have left: its durable mark has no outcome. An answer in hand wins; otherwise only an accepted safe
         // recovery read may obtain one. With neither, unknown is offered. The original mutation is never sent again.
-        const input = this.#held.get(attemptKey(id, attempt));
+        const input = this.#replyCustody.get(id, attempt);
         const recovery = input ? null : this.#recovery(row);
         offered.add(attemptKey(id, attempt));
         work.push(() => recovery ? this.#answer(row, recovery.request, now, recovery.read) : this.#offer(row, input ?? this.#unknown(id, attempt), now));
@@ -422,10 +490,10 @@ export class Operations {
       const rules = operation ? this.#scope.owners()?.rules(operation.owner, operation.kind) : null;
       if (!operation || !origin || !this.#outside.accepts(operation.owner, operation.kind) || !rules) {
         if (row.next !== null) store.postpone(id, attempt, null);
-        if (operation && origin && rules) this.#refused.set(attemptKey(id, attempt), { owner: operation.owner, kind: operation.kind });
+        if (operation && origin && rules) this.#parked.refuse(row, operation);
         continue;
       }
-      this.#refused.delete(attemptKey(id, attempt));
+      this.#parked.forget(row);
       const unmarked: Omit<EffectRequest, "sentAt"> = { scope: scope.at, operation: id, attempt, owner: operation.owner, kind: operation.kind,
         origin: { entry: JSON.parse(origin.bytes) as Entry, hash: origin.hash } };
       let hostReady = true;
@@ -435,7 +503,7 @@ export class Operations {
       // sent, with no wake-up, until a committed entry starts the walk again.
       if (!hostReady || !await this.#publicationReady(operation) || rules.ready && !rules.ready(store, operation, attempt)) {
         if (row.next !== null) store.postpone(id, attempt, null);
-        this.#waiting = true;
+        this.#parked.wait();
         continue;
       }
       // A stale file is judged as known not sent, before the durable mark.
@@ -447,7 +515,7 @@ export class Operations {
         if (recorded.recorded === "written") { localRefusals++; this.#again = true; }
         if (recorded.recorded === "unavailable" || recorded.recorded === "refused") {
           if (row.next !== null) store.postpone(id, attempt, null);
-          this.#waiting = true;
+          this.#parked.wait();
         }
         continue;
       }
@@ -470,25 +538,10 @@ export class Operations {
 
   /** One retained page after work/held answers; no network, mark or send. */
   async #resume(batch: number): Promise<number> {
-    this.#replyMore = false;
-    let answers: Array<{ operation: OperationId; attempt: number; answer: EffectAnswer }>;
-    try {
-      if (!this.#outside.replies) return 0;
-      const page = this.#outside.replies(batch);
-      if (typeof page !== "object" || page === null || !Array.isArray(page.answers) || page.answers.length > batch || typeof page.more !== "boolean") throw new Error("invalid retained reply page");
-      // Validate and snapshot the entire page before any answer is offered.
-      answers = page.answers.map((reply) => {
-        if (!reply || !isOperationId(reply.operation) || !Number.isSafeInteger(reply.attempt) || reply.attempt < 1 || !isAnswer(reply.answer)) throw new Error("invalid retained reply metadata");
-        return { operation: reply.operation, attempt: reply.attempt, answer: reply.answer };
-      });
-      this.#replyMore = page.more;
-    } catch (failure) {
-      report(this.#diagnoses, "outside-replies-failed", "retained-replies", failure);
-      return 0;
-    }
+    const answers = this.#replyCustody.retained(batch);
     let offered = 0;
     for (const reply of answers) {
-      if (this.#held.has(attemptKey(reply.operation, reply.attempt))) continue;
+      if (this.#replyCustody.get(reply.operation, reply.attempt)) continue;
       await this.answered(reply.operation, reply.attempt, reply.answer);
       offered++;
     }
@@ -519,13 +572,9 @@ export class Operations {
    */
   async #replies(offered: ReadonlySet<string>, batch: number): Promise<number> {
     let judged = 0;
-    for (const [key, input] of [...this.#held].filter(([key]) => !offered.has(key)).slice(0, batch)) {
+    for (const [key, input] of this.#replyCustody.pending(offered, batch)) {
       const { recorded } = await this.#record(input);
-      // Another answer of that attempt took its place while this one was judged: that one keeps its own place.
-      if (this.#held.get(key) !== input) continue;
-      this.#held.delete(key);
-      if (recorded === "unavailable") this.#held.set(key, input);
-      else judged++;
+      if (this.#replyCustody.judged(key, input, recorded)) judged++;
     }
     return judged;
   }
@@ -539,7 +588,7 @@ export class Operations {
    */
   #wake(now: number): void | Promise<void> {
     const runs = Boolean(this.#scope.pinned()?.definition);
-    this.#wakes.driver((this.#walk || this.#replyMore) && runs ? now : this.#held.size > 0 && runs ? now + this.#bounds.drainRetrySeconds * 1000 : null);
+    this.#wakes.driver(runs ? this.#parked.wake(now) ?? this.#replyCustody.wake(now, this.#bounds.drainRetrySeconds * 1000) : null);
     return this.#wakes.set();
   }
 
@@ -610,14 +659,13 @@ export class Operations {
    */
   async #offer(row: Sending, input: Outcome, now: number): Promise<void> {
     const { operation, attempt } = row;
-    const key = attemptKey(operation, attempt);
     let recorded = await this.#record(input);
     if (recorded.recorded === "refused" && input.result !== "unknown") recorded = await this.#record({ ...this.#unknown(operation, attempt), retain: undefined });
     if (recorded.recorded === "unavailable") {
-      if (input.result !== "unknown") this.#held.set(key, input);
+      if (input.result !== "unknown") this.#replyCustody.hold(input);
       return this.#store.postpone(operation, attempt, now + this.#bounds.drainRetrySeconds * 1000);
     }
-    this.#held.delete(key);
+    this.#replyCustody.forget(operation, attempt);
     // Written, or already written, the row is closed by the entry. An outcome that the scope can never write leaves the attempt as it is, and visible.
     if (recorded.recorded === "refused") this.#store.postpone(operation, attempt, this.#recovery(row) ? now + this.#bounds.drainRetrySeconds * 1000 : null);
   }
@@ -639,12 +687,11 @@ export class Operations {
     if (!isAnswer(answer)) return { recorded: "refused", detail: "bad-input: not an answer" };
     const row = isOperationId(operation) && Number.isSafeInteger(attempt) ? this.#store.sending(operation, attempt) : null;
     if (!row || row.sent === null) return { recorded: "refused", detail: "no request of that attempt was sent" };
-    const key = attemptKey(operation, attempt);
     const input: Outcome = { type: "outcome", operation, attempt, result: answer.result, evidence: answer.evidence, retain: answer.retain };
     const recorded = await this.#record(input);
     if (recorded.recorded === "unavailable") {
-      if (!this.#held.has(key)) this.#held.set(key, input);
-    } else if (recorded.recorded !== "refused") this.#held.delete(key);
+      this.#replyCustody.holdFirst(input);
+    } else if (recorded.recorded !== "refused") this.#replyCustody.forget(operation, attempt);
     await this.#wake(timeMs(this.#clock.read())!);
     return recorded;
   }
@@ -669,7 +716,7 @@ export class Operations {
     const receiver = definition.observing || rules?.publicationOrigin ? await this.#scope.receiverReads() : undefined;
     if (receiver === null) return { recorded: "unavailable" };
     if (operation && !await this.#publicationReady(operation, receiver)) {
-      this.#waiting = true;
+      this.#parked.wait();
       return { recorded: "unavailable" };
     }
     if (rules?.values !== undefined && rules.valueDomains === undefined) return { recorded: "unavailable" };
