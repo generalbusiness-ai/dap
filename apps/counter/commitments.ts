@@ -1,6 +1,6 @@
 /** The live Counter: counting commitments, Draft 4. The JSON file and pin remain the byte witness. */
 import type { DeclaredDefinition, Operand } from "@generalbusiness/dap-contract";
-import { anyOf, by, constant, count, define, differs, enumOf, equals, fact, final, grants, int, item, itemOf, list, live, member, none, one, open, party, plusSeconds, range, record, ref, required, rule, sameSet, self, signer, time, timed, transition, value, when, type Of } from "@generalbusiness/dap-define";
+import { anyOf, by, constant, count, define, differs, enumOf, equals, fact, final, grants, int, item, itemOf, list, live, member, none, normalize, one, open, party, plusSeconds, range, record, ref, required, rule, sameSet, self, signer, time, timed, transition, value, when, type Of } from "@generalbusiness/dap-define";
 
 const NAME = "counting-commitments";
 export const countingGrants = grants({ establish: "counting.establish", control: "counting.control", participate: "counting.participate",

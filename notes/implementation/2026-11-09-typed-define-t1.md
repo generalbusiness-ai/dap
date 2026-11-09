@@ -36,16 +36,34 @@ The gate summary includes `define` and reports its observed module count,
 state, and duration alongside the other projects.
 The kernel dependency direction remains unchanged.
 
-## Evidence pending
+## Validation status
 
-All executable checks are pending. This checkpoint ran no compiler, test,
-build, application import, pin producer, or gate. The shared slot order
-reserves those checks until R3a, R3b, and A finish their earlier work.
+The first focused run used source `98859d99144073836a806fc03a7ee19c43999f96`,
+tree `b9fd8982b421276f3aecaf71419d666f0c144b10`. The launcher, driver, and
+maintained pipeline each exited 1. Compatibility preparation exited 0.
+The first compiler context, Counter's browser, exited 1 because Counter's
+new declaration called `normalize` without importing it. The log also
+reports unknown `rule` values in the browser model; the missing export
+binding may cause those diagnostics. This repair adds only the import.
+It changes no browser or declaration type.
 
-Run the focused authoring, pin, and type witnesses first. Merge current
-main before the full gate to include the runner changes. Read `gate.exit`
-before reporting the gate result. Exact pin equality remains unproved
-until those checks run.
+No compiler passed. The other 12 compiler contexts, all 25 plain cases,
+all nine Node cases, and the exact pin check remain unrun. The continuation
+must run all 13 compiler contexts before those unrun phases. Compatibility
+may reuse its successful receipt only while the pinned bundle, tools, and
+dependency view remain unchanged.
+
+Raw failure evidence remains under
+`~/play/artroom-evidence/2026-11-09-t1-focused/`, including
+`pipeline/context-00.log`, with actual outer exits under
+`~/play/artroom-evidence/2026-11-09-t1-focused-launch/`.
+The launcher recorded all owned groups closed. The failed run and its raw
+artifacts stay unchanged; a continuation uses new evidence paths.
+
+Focused checks, a meaningful compiler refusal control, and the final gate
+remain owed. Merge current main before the full gate to include the runner
+changes. Read `gate.exit` before reporting the gate result. Exact pin
+equality remains unproved until its checks run.
 
 ## Release integration
 
