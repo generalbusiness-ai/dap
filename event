@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2bc995a8248529e9642803834cab41bafc0a2394","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/inventory.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2d93f57016c9e37ca95bba492417868c21902fac","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/definitions/change-j4.json."}
