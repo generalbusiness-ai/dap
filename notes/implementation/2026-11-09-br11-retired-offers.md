@@ -3,8 +3,8 @@
 Request: `e1b71b6b697c58723b3340681346f5f7145d345c`.
 Promise: `5a3fbb3db7dac1dc652f7403aabbf585641e4212`.
 
-Status: source preparation only. No compiler, test, asset build, or gate has
-run for this head. BR-5 holds the validation slot.
+Status: source and Page assets prepared. No compiler, test, or gate has
+run for this head. BR-5 has released the validation slot and awaits review.
 
 ## Keep each deployment's configuration separate
 
@@ -73,3 +73,13 @@ case disappears from either native owner.
 
 This change edits no recorded definition, genesis packet, journal, or entry
 interpretation. Validation and independent exact-head review remain due.
+
+## Validation
+
+The single maintained asset build at `23742c6e`, tree `90718804`, exited 0.
+Only `apps/room/page/assets.ts` changed. Page HTML and both OAuth entries
+stayed equal, every other tracked input stayed equal, and the process group
+closed. The build used the existing esbuild 0.28.1 and pinned Node 26.13.0;
+it installed nothing. Its [build manifest](evidence/2026-11-09-br11-assets.manifest.json),
+digest `e78cdb0b0cb5414976ffa50277933a3f5fcd5540b3b7b75ad9f41ed53363b27e`,
+seals 21 files. Focused checks and the gate remain due.
