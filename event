@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b80d2f7a375265e0c6f91a44bb76732838cb4b39","text":"Merge retired a covered predecessor; the successor is at docs/security/threat-model.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d39de36a7fd995dd5014a9ee280c50604494f7e4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r3a-gate.manifest.json."}
