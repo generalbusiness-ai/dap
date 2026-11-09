@@ -1,6 +1,6 @@
 # Verify the five priority state machines
 
-The requested repairs and targeted checks pass after published M0 main `f2677f77`. The corrected Editor chart shows failed receipt verification, Effects follows S4, and source controls refuse dirty or unreadable Git state. The final maintained gate and renewed independent review remain due. The original failed gate and the failed preflight wrapper remain failed.
+The requested repairs and targeted checks pass after published M0 main `f2677f77`. The corrected Editor chart shows failed receipt verification, Effects follows S4, and source controls refuse dirty or unreadable Git state. The final maintained gate passes at `cb5d7d70`. Renewed independent review and landing remain due. The original failed gate and the failed preflight wrapper remain failed.
 
 ## What changed
 
@@ -29,6 +29,18 @@ At the same checkpoint, the Effects model checks seven states and T19 passes onc
 The first preflight wrapper collides with its own output directory and exits 1 before either case runs. That invocation remains failed. A corrected wrapper uses distinct directories and runs both cases once: the dirty scratch repository refuses before baseline, and the non-repository fixture refuses on failed Git status. Both expected refusals exit 1, create no evidence directory and leave the copied runner unchanged. The successful wrapper exits 0. No product source or test runs in either probe.
 
 The [corrected-check manifest](evidence/2026-11-08-formal-corrected.manifest.json) hashes to `7948aed7278fc41b28786ec6f6e6a6b70a729b6ae8a76e5e2946e3a76e613f5e`. It names 26 public files and inventories 1,033 read-only private originals across eight retained units. Raw native logs and private snapshots stay withheld. The statechart runner copy disables file removal to retain scratch evidence and honor the owner's rule; checking, model inputs and process cancellation stay unchanged. Every executable body runs serially under booking `bc0fab16`. These results establish no refinement proof, live-room outcome or deployment acceptance.
+
+## The final maintained gate passes
+
+At `cb5d7d70e1564f7ff81fc286ec4d6252250bdbe5`, tree `885e32681028208c66b1883554b2bee60dab3bc8`, the maintained `npm run gate` passes once after published M0 integration. I read the actual `gate.exit`: `exit 0`. Kernel, Node, Counting, Plain and Native pass. Node records 135 passes, Counting 56, Plain 4,026 plus one skip, and Native 1,118 plus two skips. The reports contain no failed case, contradiction or unhandled error. The 99 non-case Node observations are the enqueue, dequeue and complete events of 33 file wrappers. One explicitly skipped recorder module has no duration.
+
+All tracked inputs stay unchanged, and no owned process remains. The Python monotonic observation measures 1,271.174 seconds for the whole gate on this Mac with the existing dependency cache. Runner and test-file durations remain separate measures. The gate's notes check exits 0 with one size warning: the unchanged original manifest is 50,898 bytes, above its 40,960-byte warning threshold. The original manifest retains its cited digest; this implementation note stays below the threshold.
+
+The initial combined-field process sampler truncates executable names on macOS. Its empty matches do not establish a complete process inventory. The gate's independent full-command preflight finds no other validation body. Corrected observations keep each long process field last, identify the Node, esbuild and workerd children in group 2556, and find no other validation body. The terminal group check confirms closure. The raw unit retains the earlier incomplete sample separately. This observation correction reruns no validation.
+
+The [gate manifest](evidence/2026-11-08-formal-gate.manifest.json) hashes to `2298cd8ca443d2a2f7442357e56f49e65448ec611add717bfbad8b14780b5212`. It names 20 public files and inventories 2,336 read-only private originals and inventory files. Raw native logs and request bodies stay withheld. Only this note, its gate manifest and the README status follow the tested checkpoint; all executable and model bytes stay unchanged.
+
+The final retained audit covers all 15 distinct full gates since M4: twelve archive-scale passes, three Native-unreached failures, and no observed archive retry. Every failed gate remains failed, including the original formal gate. Watch `64552d40` stays open. No browser workflow trigger applies to these changed paths. This gate establishes no live-room or deployment acceptance.
 
 ## Evidence
 
@@ -75,8 +87,10 @@ The original source checkpoint is commit `8faa38dcf31855a0a6264e5912b58061b5eda2
 | Corrected scratch preflight cases | `2026-11-08-formal-guard-probes-corrected/driver.py guard-probes-corrected bc0fab16…` | Runner 0; each expected refusal 1 | `07056b56015f85704e4a7feaf012453e6fedd18de3576212dfad835a02fd49b0` (`guard-preflight-result.json`) |
 | Corrected source and process audit | Retained before/after hashes and serial process observations | Equal bytes; no validation body remains | `708cab745a6b8f6f3dabf0ccebe839e51cd4b75718413f0dbe6ea5204e494591` (`slot-observations.json`) |
 
+| Final maintained gate at `cb5d7d70`, tree `885e3268` | `2026-11-08-formal-final-gate/driver.py` runs `npm run gate` | 0, actual `gate.exit` read | `b93cdd87c3f1e455a160854f9014ef121529aa5f81a0bf8d49153b77d3a9d32a` (`2026-11-08-formal-gate-validation/result.json`) |
+
 The corrected rows use checkpoint `87e21036` unless they name the earlier chart checkpoint `7b86cb87`. Their output names are relative to `~/play/artroom-evidence/2026-11-08-formal-corrected-validation/`; the retained drivers live in the sibling units shown in the table. The full booking ID and exact command arguments appear in each manifest-listed task record.
 
 ## Open limits
 
-Request `3c6d197df2db35e3d1603f63acfa63953da7c1a0` owns the five-subsystem delivery and the limits in each skill. The broader inventory has no formal coverage from this change. The models omit cryptography, provider correctness, cross-subsystem composition and unbounded liveness. Transport and editor probes use minimal stand-ins. Observation and audio witnesses use deterministic stand-ins. Effects uses a real scope with a stand-in outside system. A fresh successful single gate remains outside this evidence; no review or landing claims one.
+Request `3c6d197df2db35e3d1603f63acfa63953da7c1a0` owns the five-subsystem delivery and the limits in each skill. The broader inventory has no formal coverage from this change. The models omit cryptography, provider correctness, cross-subsystem composition and unbounded liveness. Transport and editor probes use minimal stand-ins. Observation and audio witnesses use deterministic stand-ins. Effects uses a real scope with a stand-in outside system. The fresh single gate passes as recorded above. Independent review and landing remain due. No live acceptance closes.
