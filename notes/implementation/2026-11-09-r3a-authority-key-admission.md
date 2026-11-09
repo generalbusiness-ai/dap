@@ -65,6 +65,7 @@ note and its manifest. Original pools, worker limits and deadlines apply.
 | Fourteen compiler contexts, then 14 cases in three whole Native owners | `node scripts/focused-check.mjs /private/tmp/artroom-r3a-focused-20261109.plan.json <evidence>/focused` | 0 | `b9ec83bf782cdd76e84de4fb8345178d84592d081f41f4ca2c82355aa7f135b3` |
 | First control wrapper, before any fault | `python3 /private/tmp/artroom-r3a-controls-20261109.py` | 1 | `0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3` |
 | Two precise controls, existing newcomer baseline reused | `python3 /private/tmp/artroom-r3a-controls-continuation-20261109.py` | 0 | `dd24bbfc746c3136c095ce7f3dd906d138c1cc577a0e8f0d8ec1c5d49c96007b` |
+| First full gate at `62d33377` | `npm run gate` | 0 | `b34adb7538b1e22cbb8778a192e95ab6eaf25b8a78110f130969dd302869650e` |
 
 The complete Node owner has no skipped or cancelled case. All compiler
 commands exited 0. The same-run structured ledger and JSON agree on all
@@ -81,7 +82,26 @@ reports, failure payloads and TEST custody remain in three private,
 read-only units. Each has its own SHA256SUMS and inventory. Keep them for
 at least 30 days after landing. The public credential scan found no match.
 The first wrapper's failed result remains separate from the controls that
-distinguish. The full gate has not run at this checkpoint.
+distinguish. The full gate follows below.
+
+The first full gate ran at `62d33377ffce1025369b98b483add4e233d03a59`,
+tree `6d6b51966de3c51f2696f67cd8ca34a7c4dda8b4`. The actual `gate.exit`
+reads `exit 0`. Node passed 144, Counting passed 56, Plain passed 4,028
+with one skip, and Native passed 1,126 with two skips: 5,354 passed and
+three skipped. All stages and case phases completed, with no failed or
+unfinished case, report error or unhandled error. Source stayed fixed and
+the process group closed. Python measured 1,106.973570375 seconds elapsed
+for the gate. The unchanged seven-path selector omitted Scale.
+
+The [gate manifest](evidence/2026-11-09-r3a-gate.manifest.json) hashes to
+`2a2a29fd9c2029193af49b43cb789e75c3be17e3d7fe8084963f542445a3cdfb`.
+Its 16 public files contain metadata. The private unit retains 2,421 files,
+including its inventory, read-only. The credential scan found no match in
+the public packet. All 105 unknown observations are 35 Node file wrappers,
+each with one enqueue, dequeue and completion. The wholly skipped Page
+recorder has no final duration, so the Scope module-duration sum remains
+partial. Its skip stays explicit. The review head changes only this note
+and the gate manifest after that gate, with source and tests unchanged.
 
 ## Open limits
 
