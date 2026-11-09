@@ -63,7 +63,7 @@ test("a scope fence permits pre-submit correction but never a fresh signature af
 });
 
 test("a late read from the previous room cannot replace the active room or reuse another membership incarnation", async () => {
-  const cache = new RoomOpening<string>();
+  const cache = new RoomOpening<string>(() => true);
   const place = { directory: "directory", membership: { scope: "membership", kind: "membership", inc: "one" } };
   const key = roomContext("origin", place, "device");
   const next = roomContext("origin", { ...place, membership: { ...place.membership, inc: "two" } }, "device");

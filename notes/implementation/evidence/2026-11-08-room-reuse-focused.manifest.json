@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "request": "b32c8fbd4d3510fd025cbc6b717b3df7cb09d754",
+  "promise": "e7fd9afbf1441866552fa43d7bb81e9b4db42fbf",
+  "sourceHead": "6713f84d11afa840926e4d907c03d6e76659408c",
+  "sourceTree": "d382d4de76eb50260ec6ea3dc303b3ee6093034b",
+  "qualification": "Three Page compiler contexts and both complete owners pass once. The actual Page caller refuses an omitted reuse predicate in one source-compiler control. Its compiler exit remains 1; its driver verifies the intended diagnostic and exact restoration. The first sealing attempt stopped at the already read-only focused output; the corrected inventory preserves every original byte. No restored rerun, asset build or gate runs during sealing. Shared-gate ruling c5c24191 governs the later stack. No live or browser acceptance follows.",
+  "fileCount": 22,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-room-reuse-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1978,
+          "sha256": "8e8943071b87c9d0544080e4ca2e3fc30672bd11600dc1b6f756962276c199b8"
+        },
+        {
+          "path": "compiler-control-compiler.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "compiler-control-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compiler-control-compiler.stdout",
+          "bytes": 83,
+          "sha256": "4459b10ac01d699af7ab8bc42d77d9712325a41815443548400efe002801bbf8"
+        },
+        {
+          "path": "compiler-control-compiler.time",
+          "bytes": 29,
+          "sha256": "3959d1812f21762337944b06acd5a447638970e8d2b7ed3c33d1c06595b43d71"
+        },
+        {
+          "path": "compiler-control-driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compiler-control-private-retention.json",
+          "bytes": 644,
+          "sha256": "c6572b9d3d859aff39ac3c3acbdd5d82327e19ba61368139ba26733e7f33c218"
+        },
+        {
+          "path": "compiler-control-result.json",
+          "bytes": 790,
+          "sha256": "d52419cff60f89a431248611e2d0625a67821004e359a5ac31e0af53401b2ec7"
+        },
+        {
+          "path": "focused-coverage-ledger.json",
+          "bytes": 6285,
+          "sha256": "7dd690e53f80b082bbb3a16a10611db646038dbaadf182fe7397707fd7aa58f6"
+        },
+        {
+          "path": "focused-launch-compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused-launch-outer.time",
+          "bytes": 31,
+          "sha256": "2a8b45eb0a6f396df87219d5792320ae6950bea7ae448c6bb02f13a9974143b9"
+        },
+        {
+          "path": "focused-launch-pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused-launch-private-retention.json",
+          "bytes": 642,
+          "sha256": "6b97096ddc86403310b581812ac32bdbf3dbbf62f4ab8648db0fac97994d51ad"
+        },
+        {
+          "path": "focused-launch-receipt.json",
+          "bytes": 577,
+          "sha256": "3919ad8f1c4f70773c57ed1b748f941346af2bc7531dd2ef41c2802588d84139"
+        },
+        {
+          "path": "focused-launch-started.json",
+          "bytes": 218,
+          "sha256": "9c81439d206b621907b75b9bffe8ed64b83f0a64508fbda397a55e9ebe7e0f98"
+        },
+        {
+          "path": "focused-page-scope.log",
+          "bytes": 29,
+          "sha256": "023cdf52a319e473f125a18203d8a58a8ecce07924fc2141b63423ed51d043e5"
+        },
+        {
+          "path": "focused-page-source.log",
+          "bytes": 29,
+          "sha256": "355bd59188463e73f918b7a3b7d7cf39a666c1f9ef82afabd1f156fca2bfb629"
+        },
+        {
+          "path": "focused-page-test.log",
+          "bytes": 29,
+          "sha256": "44140834aae670ea3dce5b13b7718f634144f7fe2b6ef25e9103a773cca2446a"
+        },
+        {
+          "path": "focused-private-retention.json",
+          "bytes": 626,
+          "sha256": "0aab87998f58ec52b83498de1c3cb275659d26fd2612bca1c907981b1afe53a1"
+        },
+        {
+          "path": "focused-result.json",
+          "bytes": 9722,
+          "sha256": "ee4cb11b846ec06e723115dcbddbefb466eb08641929616c6858ba956a342970"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1057,
+          "sha256": "3ab0abbf2ba2120a742b26b22b33ce8e2997372ec3f79294d1b3204f9a269ebd"
+        },
+        {
+          "path": "sealing-attempts.json",
+          "bytes": 343,
+          "sha256": "c6439295ec1e0ad7d761eae28d191829dceff7d0917afe90629709d6b564d123"
+        }
+      ]
+    }
+  ]
+}
