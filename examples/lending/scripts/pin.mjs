@@ -2,6 +2,7 @@
 // The literal TypeScript value is JSON; no TS/compiler/config import is needed.
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { format } from "prettier";
 const root = new URL("../", import.meta.url);
 const source = readFileSync(new URL("definition.ts", root), "utf8");
 const prefix = "export const lending: DeclaredDefinition = ";
@@ -28,6 +29,6 @@ function canonical(value, depth = 0) {
 }
 const bytes = canonical(value);
 const pin = `sha256:${createHash("sha256").update("artroom-definition-1\n").update(bytes, "utf8").digest("hex")}`;
-writeFileSync(new URL("definition.json", root), `${bytes}\n`);
+writeFileSync(new URL("definition.json", root), await format(bytes, { parser: "json" }));
 writeFileSync(new URL("pin.ts", root), `/** Canonical-byte digest of definition.ts; definition.test.ts checks it against the shared implementation. */\nexport const LENDING_DEFINITION = "${pin}" as const;\n`);
 process.stdout.write(`${pin}\n`);

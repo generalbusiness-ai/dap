@@ -42,8 +42,9 @@ chooses a speaker. There is no sort, key-projection or computed-effect extension
 
 The complete closure is the single [counting definition](definition.ts):
 it creates no other definitions and declares no outside operations or
-capabilities. [definition.json](definition.json) holds its canonical bytes,
-with one trailing newline. [pin.ts](pin.ts) records the validated digest:
+capabilities. [definition.json](definition.json) holds readable source JSON.
+The [pin writer](scripts/pin-definition.mjs) checks the existing digest and
+writes the formatted value. [pin.ts](pin.ts) records the validated digest:
 
 `sha256:435d9f5745048183d3cf0392ce909cd76909fd69ee368dfc57e142ba96af1d09`
 

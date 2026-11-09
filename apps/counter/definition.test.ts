@@ -54,7 +54,7 @@ test("the complete closure validates with actual rule grammar and canonical defi
   const checked = validateDefinition(counting, PROPOSED_BOUNDS, RULE_PROFILES);
   expect(checked.ok ? [] : checked.problems).toEqual([]);
   const bytes = readFileSync(new URL("./definition.json", import.meta.url));
-  expect(bytes).toEqual(Buffer.from(canonicalize(counting) + "\n", "utf8"));
+  expect(canonicalize(parseStrict(bytes.toString("utf8")))).toBe(canonicalize(counting));
   expect(parseStrict(bytes.toString("utf8"))).toEqual(counting);
   if (checked.ok) expect(checked.definition.digest).toBe(COUNTING_DEFINITION);
   expect(definitionDigest(counting)).toBe(COUNTING_DEFINITION);

@@ -224,10 +224,12 @@ default, signs `activate` with the definition's digest and its canonical
 bytes. The room's directory then creates new lanes under it. The command
 reads the `--value` file at the path you give. For the demo profile of
 the change lane, run this from the repository root, where the pin script
-wrote `apps/room/lanes/definitions/change-demo.json`:
+wrote readable `apps/room/lanes/definitions/change-demo.json`. Canonicalize
+that value before passing it to the byte-preserving client:
 
 ```sh
-dap act activate --on rules --set digest=sha256:d86c64ae0a570165660a6eb4d75153b8c2f59c9cdaec2ecc789e2c38524a17a2 --set name=change --value apps/room/lanes/definitions/change-demo.json
+node --input-type=module -e 'import { readFileSync } from "node:fs"; import { canonicalize, parseStrict } from "@generalbusiness/dap-bytes"; process.stdout.write(canonicalize(parseStrict(readFileSync("apps/room/lanes/definitions/change-demo.json", "utf8"))))' > /tmp/change-demo.canonical.json
+dap act activate --on rules --set digest=sha256:d86c64ae0a570165660a6eb4d75153b8c2f59c9cdaec2ecc789e2c38524a17a2 --set name=change --value /tmp/change-demo.canonical.json
 ```
 
 Lanes that already exist keep the digest they pinned.
@@ -252,8 +254,8 @@ commands for this path: `activate`, `establish-application` and
 `set-actions` for each role. Its rehearsal section records them run on a
 deployed service on 14 October 2026, under the library's first
 definition. `--value` sends a file exactly as it is, and the digest
-covers the canonical bytes with no trailing newline. The runbook writes a
-copy without the newline first.
+covers the canonical value bytes. The runbook parses the readable source
+and writes that canonical value first.
 
 Validation, pins and creation check the declaration and its record. They
 do not show that a host, an outside adapter or a whole application
