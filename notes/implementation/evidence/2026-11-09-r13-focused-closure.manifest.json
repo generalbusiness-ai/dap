@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "e360b00f16bdd59ea5123b81d95abd07f35f9edc",
+  "sourceTree": "89fb3e1899a6ff06388947cd788ae22bfd39e193",
+  "qualification": "Conclusive selected closure:54cases in10complete owners,11Node inventory cases and4compiler contexts across retained source-identical evidence and this final2case Native pass.35actual complete-owner terminals required an explicit post-failure describe > case identity reconciliation; their original pipeline/verifier remain failed.17other cases have exact frozen-ledger passes. This final Scope-test/compiler+2case body passed with exact ledger, no retries/skips/errors, original30000ms and source unchanged. All8earlier failed units remain failed; no gate,control,asset build or live acceptance follows.",
+  "fileCount": 23,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-focused-closure-validation",
+      "fileCount": 23,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1923,
+          "sha256": "4118a1dbd918cc91512772d2634c72e90d550d6354d0ac10cd19915b10310775"
+        },
+        {
+          "path": "additional-native-reuse.json",
+          "bytes": 3433,
+          "sha256": "a9811b5e9b4279e5aedb4b731f6f2ecd4ddfb64ea05ae55abadf0480d0990412"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "27aeb94d2afa5e469c6e78b889a88b1d09961698d01178cc763bc53dc02dc96d"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 5648,
+          "sha256": "1f26eb722ea8579804b0adf121a79b894f2986928e0aeebcbc603554230d7057"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 3265,
+          "sha256": "0b1fc1b718222d0ca819a45b3fbe1fe5ad55bcf612d12e5ac7c50f49e26dda9e"
+        },
+        {
+          "path": "decoder-source-seals.json",
+          "bytes": 8794,
+          "sha256": "4856c9b5bfca3d24b3b7b750dffe9a91b8e7089fedea35da7b8bfc45a7593086"
+        },
+        {
+          "path": "decoder-source-seals.patch",
+          "bytes": 1341,
+          "sha256": "ee0ef0c6fea3675fa8b95b5a687289503ec29e7fffff17155d8e8fa5f1101e85"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 9809,
+          "sha256": "376ff24c594ffe9913bae02b8dbedc4e1dc7349f673b5556f832eee477b427bc"
+        },
+        {
+          "path": "focused-closure.json",
+          "bytes": 12637,
+          "sha256": "b0535851bcc057b64c9fbfe5d31333386039e32256ea4ad09c3247e09c90ccd7"
+        },
+        {
+          "path": "initial-source-seals.json",
+          "bytes": 9090,
+          "sha256": "ac172926719a0827833532dfd7c46ab775f64d9a6d8e97be76493b33b0824f6b"
+        },
+        {
+          "path": "initial-source-seals.patch",
+          "bytes": 3670,
+          "sha256": "f0b0c2f9c5e5c7ea8a6ce781b3fb1adb6a30c4e5eebced02cbf08fa942bdaa11"
+        },
+        {
+          "path": "late-reply-source-seals.json",
+          "bytes": 8839,
+          "sha256": "69882cbc811bb00184b2a0c91f4b6693df54fb8626b17d0524a1bb0e12134b29"
+        },
+        {
+          "path": "late-reply-source-seals.patch",
+          "bytes": 2271,
+          "sha256": "cba60792593f91c5b1537bb3e235c190e7839c5316c8193dffec801b87bd35cb"
+        },
+        {
+          "path": "node-reuse.json",
+          "bytes": 1282,
+          "sha256": "ffe32f2f8e301a571d294f34a96e93a64616c047d69fdcf1e7cf476da17c34e0"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 573,
+          "sha256": "a79392111b1bdafc8aea660ae4f5e22a5c2218e010004419c33eba860896da3e"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6fe5a51112a791d295899b046d989fcdb9060f985a3d32658086affb79dd8113"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 30,
+          "sha256": "cf9f27962a4249267b9c972ae2de544f29a4e38db42663e561abaf0711d3de41"
+        },
+        {
+          "path": "prior-phase-reuse.json",
+          "bytes": 7661,
+          "sha256": "e6ec2ed732704ed65fc457104b28e57631c463d438c5f7415bf3ab78614c4963"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 490,
+          "sha256": "07baa4a821c641ca3aaf806b78f5daab0bea97446ad096bc26db0151b8d09a52"
+        },
+        {
+          "path": "scope-test.log",
+          "bytes": 29,
+          "sha256": "ecfe0ca896a95ebc440d3642adf48261930cfa54effcc70ceb11061f84d2a14e"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}

@@ -155,6 +155,20 @@ seals 17 public and 266 private files. The test now releases the held
 provider promise inside its owning Destination object, including cleanup.
 Quota behavior and all assertions stay unchanged.
 
+At `e360b00f`, the affected Scope test compiler and both complete Native
+quota scenarios passed. Exact full-title coverage passed with no unexpected
+case, skip, retry, or unhandled error. The late reply recorded confirmed
+metadata with no stored plaintext after the replacement took the eighth
+place; the next mint still refused `limit`.
+
+Manifest `b364fecd7228062145ce1b841135f5253b1a6ebfa9ef5c2fb944458e90a746c9`
+seals 23 public and 289 private files, including all three source-seal
+producer outputs and patches. The selected closure now covers 54 cases
+in ten complete owners, 11 Node inventory cases, and four compiler
+contexts through this pass and the qualified unchanged-source evidence
+above. All eight earlier failed units keep their results. Controls, the
+Page bundle and asset check, the gate, and independent review remain due.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The
