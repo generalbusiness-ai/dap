@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5323fb25b3f6f3160734533327f0e8853c927d3a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br11-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:66da0626046deda98da5f12f023c8a4a3767f089","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/claim.ts."}
