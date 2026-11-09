@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ce583a008e290bce7bd38cb8f2d66248544a35e","text":"Merge retired a covered predecessor; the successor is at examples/lending/definition.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d3569651b6e4ce7d5e7ef0548f55b3c26a11742","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-02-readable-diff-design/interdiff.DATA.json."}
