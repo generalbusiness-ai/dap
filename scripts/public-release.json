@@ -2,7 +2,7 @@
   "format": "artroom-public-sdk-plan-1",
   "compiler": "7.0.2",
   "packages": [
-    { "dir": "contract", "exports": { ".": "src/index" }, "dependencies": {} },
+    { "dir": "contract", "exports": { ".": "src/index", "./catalog-vocabulary": "src/catalog-vocabulary" }, "dependencies": {} },
     {
       "dir": "bytes",
       "exports": { ".": "src/index", "./web": "src/web.d.ts" },

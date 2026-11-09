@@ -1,4 +1,4 @@
-import { answersVersionQuestion } from "@generalbusiness/dap-platform";
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 /**
  * The verifier (scope contract, sections 9.3 to 9.5). It reads a scope's
  * history through a `HistorySource` and reports whether the history is
@@ -2243,13 +2243,13 @@ class Verifier {
         // The address is the one the sender wrote: the source entry's send at that ordinal.
         const to = source?.entry.sends.find((send) => send.n === input.n)?.to;
         if (!source || to === undefined) throw mismatch("the source entry holds no send at that ordinal");
-        if (answersVersionQuestion(run.named, "replayReadsLegacyPublication") && input.message.class === "request" && input.message.type === "tell"
+        if (answersCatalogVocabularyQuestion(run.named, "replayReadsLegacyPublication") && input.message.class === "request" && input.message.type === "tell"
           && isObject(input.message.body) && input.message.body["message"] === "publish-file") {
           const directory = state.page("branch", ["empty", "ready"], null, 1).items[0]?.refs["directory"];
           if (!isScopeRef(directory) || !run.at) throw mismatch("the destination records no full Directory reference");
           await this.#applicationOrigin(input.from, directory, run.at, where, depth, identity?.mode === "partition-v1" ? identity.evidence : undefined);
         }
-        if (identity?.mode === "partition-v1" && answersVersionQuestion(run.named, "replayPartitionChangeOrigin") && source.under === "change"
+        if (identity?.mode === "partition-v1" && answersCatalogVocabularyQuestion(run.named, "replayPartitionChangeOrigin") && source.under === "change"
           && input.message.class === "request" && input.message.type === "tell" && isObject(input.message.body) && input.message.body["message"] === "reserve") {
           const directory = state.page("branch", ["empty", "ready"], null, 1).items[0]?.refs["directory"];
           if (!isScopeRef(directory) || !run.at) throw mismatch("the destination records no full Directory reference");
@@ -2320,7 +2320,7 @@ class Verifier {
         // `unsupported-definition` at that entry, and never `consistent`.
         if (!owners?.rules(owner, kind)) throw new Stop("unsupported-definition", `entry ${entry.seq} is an outcome, and this replay has no rules of the owner of its operation`, where);
         const valueOwner = owners.rules(owner, kind);
-        const publication = answersVersionQuestion(run.named, "replayJudgesLegacyPublication") && operation ? valueOwner?.publicationOrigin?.(state, operation, reading.own!) : null;
+        const publication = answersCatalogVocabularyQuestion(run.named, "replayJudgesLegacyPublication") && operation ? valueOwner?.publicationOrigin?.(state, operation, reading.own!) : null;
         if (publication === false) throw mismatch("the operation has malformed publication provenance");
         if (publication && publication.mode === "application") await this.#applicationOrigin(publication.from, publication.directory, publication.destination, where, depth, identity?.mode === "partition-v1" ? identity.evidence : undefined);
         else if (publication && identity?.mode === "partition-v1") await this.#applicationOrigin(publication.from, publication.directory, publication.destination, where, depth, identity.evidence, "change");

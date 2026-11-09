@@ -45,15 +45,6 @@ const QUESTION_PINS = {
     "platform:register@21", "platform:register@24", "platform:register@25", "platform:register@26",
     "platform:register@5",
   ],
-  replayReadsLegacyPublication: [
-    "platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7",
-  ],
-  replayJudgesLegacyPublication: [
-    "platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7",
-  ],
-  replayPartitionChangeOrigin: [
-    "platform:destination@6",
-  ],
   destinationCertificateDriver: [
     "platform:destination@14", "platform:destination@15", "platform:destination@17",
   ],
@@ -62,13 +53,6 @@ const QUESTION_PINS = {
   ],
   evidenceStageSnapshot: [
     "platform:destination@17",
-  ],
-  archiveMembershipForeignCopy: [
-    "platform:membership@12", "platform:membership@8",
-  ],
-  archiveRegisterForeignCopy: [
-    "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20",
-    "platform:register@26",
   ],
   applicationOutsideWorkerRules: [
     "platform:rules@10", "platform:rules@11", "platform:rules@12", "platform:rules@13",
