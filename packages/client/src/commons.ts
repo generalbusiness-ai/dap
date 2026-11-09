@@ -1,4 +1,5 @@
 /** Bounded readings of Commons entries. Citations grant no read authority. */
+import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 import type { Digest, FactRef, Head, KeyId, MemberRef, ReferenceValue, ScopeRef, Sealed, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, isDigest, isMemberRef, isReference, isScopeRef, same, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { ScopeHandle } from "./handle.ts";
@@ -58,7 +59,7 @@ function noteOf(sealed: Sealed, scope: ScopeRef): Omit<CommonsNote, "text"> | nu
  * No referenced room or document is fetched through another member's rights. */
 export async function loadCommons(handle: ScopeHandle, scope: ScopeRef, options: { cursor?: string } = {}): Promise<CommonsView> {
   const initial = await handle.summary();
-  if (!initial.ok || !initial.complete || initial.next !== undefined || !same(initial.value.scope, scope) || initial.value.definition !== "platform:commons@1" || initial.value.status !== "active") throw Error("The exact active Commons could not be read.");
+  if (!initial.ok || !initial.complete || initial.next !== undefined || !same(initial.value.scope, scope) || !answersVersionQuestion(initial.value.definition, "clientCommonsReadDefinition") || initial.value.status !== "active") throw Error("The exact active Commons could not be read.");
   const view: CommonsView = { scope, head: initial.at, notes: [], complete: false, unreadable: [] };
   let cursor = options.cursor, last = -1, previousHash: Digest | null = null, entries = 0, textBytes = 0, ended = false, firstHead: Head | null = null;
   for (let page = 0; page < COMMONS_READ_LIMITS.pages; page++) {

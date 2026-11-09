@@ -1,9 +1,8 @@
-import { OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
-
+import { answersVersionQuestion, applicationRoom, applicationInstallation, applicationProjectionDeclaration, compromisedKey, sourceName, evidenceIncidentAdmissionPositionV17, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
 import { readMinimum } from "@generalbusiness/dap-bytes";
 import { ReadWait, type ReadWaitRefusal } from "./read-wait.ts";
 import { configuredArchive, archiveDriver, floorOffer } from "./object-archive.ts";
-import { applicationRoom, applicationInstallation, applicationProjectionDeclaration, compromisedKey, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+
 /**
  * One scope as one Durable Object (scope contract, section 2.3): the object
  * named by the scope's ID in the one scope namespace, with SQLite storage.
@@ -42,7 +41,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, ReadMinimum, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isFactRef, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
-import { sourceName, evidenceIncidentAdmissionPositionV17, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
+
 import type { Delivered, Fetched, StateView } from "@generalbusiness/dap-derive";
 import { Scope, creationKind, ownOf, type Checkpointed, type Created } from "./core.ts";
 import { Deliveries } from "./delivery.ts";
@@ -606,7 +605,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const scope = this.#store.scope();
     const judged = () => this.#scope.submit(signed, grants, beside);
     if (scope?.at.kind !== "membership" || !isJoin(signed)) return this.#sent(await judged());
-    return this.#sent(await this.#limits.serve({ address: typeof address === "string" ? address : null, now: timeMs(this.#clock.read()) ?? 0, head: scope.head, invitationProof: () => ["platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9", "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13"].includes(this.#scope.pinned()?.named ?? "") }, signed, judged));
+    return this.#sent(await this.#limits.serve({ address: typeof address === "string" ? address : null, now: timeMs(this.#clock.read()) ?? 0, head: scope.head, invitationProof: () => answersVersionQuestion(this.#scope.pinned()?.named, "scopeInvitationProofMembership") }, signed, judged));
 
     });
   }
@@ -617,7 +616,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const settled = this.#scope.settle(signed);
     // The existing exact-original check grants no general item read. The new
     // register adds only this claim's state at the reply's current head.
-    if (!settled.ok || settled.value.definition !== FAILED_CLAIM_COHORT.register || signed.intent.kind !== "found") return settled;
+    if (!settled.ok || !answersVersionQuestion(settled.value.definition, "scopeSettlementClaimRegister") || signed.intent.kind !== "found") return settled;
     const claim = this.#store.item(settled.value.fact.seq);
     if (!claim || claim.type !== "claim" || claim.opened !== settled.value.fact.hash || claim.values["intent"] !== settled.value.intent
       || !["pending", "failed", "active"].includes(claim.state)
@@ -1022,7 +1021,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     if (key === "sessions-unavailable" || key === "clock-behind") return { ok: false, reason: key };
     const scope = this.#store.scope();
     if (key !== false && typeof handle === "string" && scope?.status === "active" && scope.at.kind === "destination"
-      && (this.#scope.pinned()?.named === UNPUBLISHED_COHORT.destination || this.#scope.pinned()?.named === REPOSITORY_BINDING_COHORT.destination || this.#scope.pinned()?.named === OWN_AGENT_COHORT.destination)) {
+      && (answersVersionQuestion(this.#scope.pinned()?.named, "scopeCredentialUnpublishedBranch"))) {
       const positions = this.#store.itemPositions("branch", null, 2);
       const branch = positions.length === 1 && positions[0]!.size <= 1024 * 1024 ? this.#store.item(positions[0]!.id) : null;
       if (branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null

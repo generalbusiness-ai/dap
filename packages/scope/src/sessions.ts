@@ -1,3 +1,4 @@
+import { answersVersionQuestion, platform, standingOf } from "@generalbusiness/dap-platform";
 import { readDeployment } from "./deployment-setting.ts";
 /**
  * Read sessions, and the streams that a session opens (authority note,
@@ -82,7 +83,7 @@ import type { Head, ScopeRef, SessionAnswer, SessionClaims, SessionRefusal, Sign
 import { hex } from "@generalbusiness/dap-bytes";
 import { b64url, canonicalBytes, canonicalize, hmacSha256, isKeyId, isMemberId, isSignature, parseStrict, taggedBytes, unb64url, utf8, verifySessionRequest } from "@generalbusiness/dap-bytes";
 import { isObject, isScopeRef, same, timeMs, timeOf, type RecordedRef, type ScopeState, type StateView } from "@generalbusiness/dap-derive";
-import { platform, standingOf } from "@generalbusiness/dap-platform";
+
 import type { Clock, ReadName, Readers } from "./ports.ts";
 
 // ---------------------------------------------------------------- the secret
@@ -378,7 +379,7 @@ export function issueSession(
   const { to, actor, notAfter } = asked.request;
   const scope = state.scope();
   // A provisional membership answers no session (section 12.1.3).
-  if (!scope || scope.status !== "active" || scope.at.kind !== "membership" || !(pinned && (pinned.named === "platform:membership@1" || pinned.named === "platform:membership@2" || pinned.named === "platform:membership@4" || pinned.named === "platform:membership@5" || pinned.named === "platform:membership@6" || pinned.named === "platform:membership@7" || pinned.named === "platform:membership@8" || pinned.named === "platform:membership@9" || pinned.named === "platform:membership@10" || pinned.named === "platform:membership@11" || pinned.named === "platform:membership@12" || pinned.named === "platform:membership@13") && platform(pinned.named))) return no("not-found");
+  if (!scope || scope.status !== "active" || scope.at.kind !== "membership" || !(pinned && (answersVersionQuestion(pinned.named, "scopeSessionMembership")) && platform(pinned.named))) return no("not-found");
 
   if (to.scope !== scope.at.scope || to.inc !== scope.at.inc || to.kind !== scope.at.kind) return no("misaddressed");
   const [reading, previous, ends] = [timeMs(config.clock.read()), timeMs(scope.time), timeMs(notAfter)!];

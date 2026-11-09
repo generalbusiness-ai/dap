@@ -1,13 +1,14 @@
+import { deploymentCreationDefaults, platform } from "@generalbusiness/dap-platform";
 /** Deployment creation policy. Historical loading and replay never use it. */
 import type { PlatformDefinition } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { FAILED_CLAIM_COHORT, COMMONS_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
+
 
 export interface PlatformCreationSettings { PLATFORM_CREATION_PINS?: unknown }
 export interface PlatformCreationPolicy { readonly pins: readonly PlatformDefinition[] }
 // Admit the new default and retain children of the previous hosted baseline.
 // Existing scopes keep their recorded pins. Host none keeps its explicit family.
-const newest = [...new Set([...Object.values(FAILED_CLAIM_COHORT), ...Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT), ...Object.values(UNPUBLISHED_COHORT), ...Object.values(COMMONS_COHORT)])];
+const newest = deploymentCreationDefaults();
 const defaults: PlatformCreationPolicy = Object.freeze({ pins: Object.freeze([...newest]) });
 /** Undefined is the absent setting, including an explicitly undefined field.
  * Null is invalid. No caller-owned array or mutable setting survives parsing. */

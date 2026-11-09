@@ -1,3 +1,4 @@
+import { scopeArchiveAnchorForeignSource } from "@generalbusiness/dap-platform";
 /** Explicit caller trust derived only from already admitted exported bytes.
  * No copied body is proof, and no private source journal is read/exported. */
 import type { FactRef, ScopeRef } from "@generalbusiness/dap-contract";
@@ -84,9 +85,7 @@ export class ArchiveReplayAnchors {
         this.#pins.set(key, source.pin);
       }
       const pin = this.#pins.get(key);
-      if (pin !== "platform:register@17" && pin !== "platform:register@18" && pin !== "platform:membership@8"
-        && !(pin === "platform:membership@12" && fact.at.kind === "membership")
-        && !((pin === "platform:register@19" || pin === "platform:register@20" || pin === "platform:register@26") && fact.at.kind === "register")) return stop("unsupported-foreign-copy");
+      if (!scopeArchiveAnchorForeignSource(pin, fact.at.kind)) return stop("unsupported-foreign-copy");
     }
     this.budget.spend({ inputWork: this.#facts.size * 1024 * (Math.ceil(Math.log2(this.#facts.size + 1)) + 1) });
     const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;

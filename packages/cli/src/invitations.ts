@@ -1,12 +1,12 @@
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
-import { OWN_AGENT_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+import { cliInvitationDirectoriesForMembership, answersVersionQuestion, isHandle, platform } from "@generalbusiness/dap-platform";
 /** Retained invitation creation and explicitly tagged agent, checker and device enrollment.
  * Store.private holds secrets/envelopes; public config holds only exact pointers.
  * Callers serialize one Store and fence their captured Page context. */
 import type { Answer, Entry, FactRef, FieldValue, MemberRef, Receipt, SignedIntent, Summary, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { agentKeyInvitationOf, encodeAgentKeyInvitation, checkerKeyInvitationOf, deviceKeyInvitationOf, encodeCheckerKeyInvitation, isCheckerKeyMembership, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type DeviceKeyInvitation, type Signer } from "@generalbusiness/dap-client";
-import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, DEMO_REGISTER, DIRECTORY_OF, WEB_DEMO_COHORT, isHandle, platform } from "@generalbusiness/dap-platform";
+
 import { expectedOf, LINK, linkOf, type DefinitionShape, type Link } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./commands.ts";
 import { requiredReadsOf, Stop, usage } from "./command-support.ts";
@@ -70,28 +70,13 @@ async function pinnedSummary(M: ScopeHandle, at: ScopeRef): Promise<{ summary: S
   if (!read.ok || !read.complete || read.next !== undefined || !sameOptional(read.value.scope, at) || !isAgentKeyMembership(read.value.definition) || platform(read.value.definition)?.data.name !== "platform:membership") throw blocked();
   return { summary: read.value, definition: read.value.definition };
 }
-/** The directory definitions each membership pin is created beside: exact pairs of the cohorts, not names. */
-const DIRECTORIES_OF: Readonly<Record<AgentKeyMembership, readonly string[]>> = {
-  "platform:membership@13": ["platform:directory@26"],
-  "platform:membership@12": ["platform:directory@25"],
-
-  "platform:membership@11": ["platform:directory@24"],
-  "platform:membership@10": ["platform:directory@23"],
-  "platform:membership@9": ["platform:directory@22"],
-  "platform:membership@2": [DIRECTORY_OF[DEMO_REGISTER]!, WEB_DEMO_COHORT.directory],
-  "platform:membership@4": [APPLICATION_COHORT.directory, FILE_PUBLICATION_COHORT.directory],
-  "platform:membership@5": [COUNTING_COHORT.directory],
-  "platform:membership@6": [INVITATION_KEY_COHORT.directory],
-  "platform:membership@7": [TRUSTED_APPLICATION_COHORT.directory, DECLARED_APPLICATION_COHORT.directory, DEVICE_APPLICATION_COHORT.directory],
-  "platform:membership@8": [ARCHIVE_APPLICATION_COHORT.directory, ARCHIVE_DECLARED_APPLICATION_COHORT.directory, ARCHIVE_DEVICE_APPLICATION_COHORT.directory, ARCHIVE_DEVICE_PUBLICATION_COHORT.directory, ARCHIVE_CERTIFIED_RULES_COHORT.directory, HARDENED_CERTIFIED_RULES_COHORT.directory, UNPUBLISHED_COHORT.directory],
-};
 const pinOf = (issue: Pick<Issue, "definition">): AgentKeyMembership => issue.definition ?? "platform:membership@2";
 const closed = (value: unknown, required: string[], optional: string[] = []): value is Record<string, unknown> => isRecord(value) && required.every(k => Object.hasOwn(value, k)) && Object.keys(value).every(k => required.includes(k) || optional.includes(k));
 async function boundDirectory(reads: InvitationReads, repository: Repository, membership: Summary, definition: AgentKeyMembership): Promise<Repository | null> {
   const roster = membership.items.find(item => item.type === "roster" && item.state === "open");
   if (!roster || !sameOptional(roster.refs["directory"], repository.directory)) return null;
   const read = await handle(reads, repository.directory.scope).summary();
-  if (!read.ok || !read.complete || read.next !== undefined || read.value.status !== "active" || !DIRECTORIES_OF[definition].includes(read.value.definition) || !sameOptional(read.value.scope, repository.directory)) return null;
+  if (!read.ok || !read.complete || read.next !== undefined || read.value.status !== "active" || !cliInvitationDirectoriesForMembership(definition).some(directory => directory === read.value.definition) || !sameOptional(read.value.scope, repository.directory)) return null;
   const item = read.value.items.find(item => item.type === "repository"), rules = item?.refs["rules"], destination = item?.refs["destination"];
   if (!item || !sameOptional(item.refs["membership"], repository.membership) || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return null;
   return { directory: read.value.scope, membership: membership.scope, rules: rules.scope, destination: destination.scope };
@@ -118,7 +103,7 @@ function issueValid(value: unknown): value is Issue {
     const row = value as unknown as Issue;
     if (row.definition !== undefined && !isAgentKeyMembership(row.definition)) return false;
     if (row.input?.kind === "checker-key" && !isCheckerKeyMembership(row.definition)) return false;
-    if (row.input?.kind === "own-agent-key" && row.definition !== OWN_AGENT_COHORT.membership) return false;
+    if (row.input?.kind === "own-agent-key" && !answersVersionQuestion(row.definition, "cliOwnAgentInvitationMembership")) return false;
 
     if (row.v !== 1 || !uuid(row.operation) || !issuedInput(row.input) || typeof row.secret !== "string" || typeof row.ends !== "string" || timeMs(row.ends) === null || !isKeyId(row.actor) || !repositoryValid(row.repository) || typeof row.service !== "string") return false;
     if (row.previous && (!closed(row.previous, ["request", "digest"]) || typeof row.previous.request !== "string" || !/^i-[0-9a-f]{30}$/.test(row.previous.request) || !/^sha256:[0-9a-f]{64}$/.test(row.previous.digest))) return false;
@@ -211,11 +196,11 @@ const INBOX_WAIT_MS = 20_000, INBOX_WAIT_READS = 21;
 async function inboxOfOpening(reads: InvitationReads, opening: Entry, membership: ScopeRef, owner: MemberRef): Promise<ScopeRef | { pending: ScopeId } | null> {
   const births = opening.sends.filter(send => "creator" in send.to && send.to.kind === "inbox");
   const birth = births.length === 1 ? births[0] : undefined;
-  if (!birth || !("creator" in birth.to) || birth.to.definition !== "platform:inbox@1" || !sameOptional(birth.to.creator, membership)) return null;
+  if (!birth || !("creator" in birth.to) || !answersVersionQuestion(birth.to.definition, "cliInvitationInboxDefinition") || !sameOptional(birth.to.creator, membership)) return null;
   const scope = scopeIdOf(birth.to), I = handle(reads, scope);
   const summaryRead = await I.summary();
   if (!summaryRead.ok && (summaryRead.reason === "not-found" || summaryRead.reason === "forbidden")) return { pending: scope };
-  if (!summaryRead.ok || !summaryRead.complete || summaryRead.next !== undefined || summaryRead.value.definition !== "platform:inbox@1" || summaryRead.value.scope.kind !== "inbox" || summaryRead.value.scope.scope !== scope) return null;
+  if (!summaryRead.ok || !summaryRead.complete || summaryRead.next !== undefined || !answersVersionQuestion(summaryRead.value.definition, "cliInvitationInboxDefinition") || summaryRead.value.scope.kind !== "inbox" || summaryRead.value.scope.scope !== scope) return null;
   if (summaryRead.value.status === "provisional") return { pending: scope };
   if (summaryRead.value.status !== "active") return null;
   const birthRead = await I.entry(0);
@@ -296,7 +281,7 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
       // The membership's exact pin is read once and kept with the retained issuance: every later read and receipt is held to it.
       const pinned = await wait(options, async () => pinnedSummary(await membershipHandle(), config!.repository!.membership));
       if (input.kind === "checker-key" && !isCheckerKeyMembership(pinned.definition)) throw blocked();
-      if (input.kind === "own-agent-key" && pinned.definition !== OWN_AGENT_COHORT.membership) throw blocked();
+      if (input.kind === "own-agent-key" && !answersVersionQuestion(pinned.definition, "cliOwnAgentInvitationMembership")) throw blocked();
 
       row = { v: 1, operation: options.operation, input: structuredClone(input), service: config.service, repository: structuredClone(config.repository), actor, secret: b64url(crypto.getRandomValues(new Uint8Array(32))), ends: timeOf(Math.floor(now(ctx) / 1000) * 1000 + input.hours * 3600_000), definition: pinned.definition };
     }
@@ -326,7 +311,7 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
       const role = member?.values["role"], actions = typeof role === "string" ? roster?.values[role + "Actions"] : null;
       if (!activeKey || !member || member.values["kind"] !== "person" || !Array.isArray(actions)) throw blocked();
       if (row.input.kind === "own-agent-key") {
-        if (pin !== OWN_AGENT_COHORT.membership || !actions.includes("membership.own-agent") || !sameOptional(row.input.controller, member.parties["member"])) throw blocked();
+        if (!answersVersionQuestion(pin, "cliOwnAgentInvitationMembership") || !actions.includes("membership.own-agent") || !sameOptional(row.input.controller, member.parties["member"])) throw blocked();
       } else if (!actions.includes("membership.invite") || row.input.kind !== "person" && (!actions.includes("membership.manage") || row.input.kind === "agent-key" && !sameOptional(row.input.controller, member.parties["member"]))) throw blocked();
       const signed = await wait(options, () => signedIntent(key, { to: row.repository.membership, kind, fields, expected: expectedOf(shape.acts[kind]!, s.items, null, fields) }, { now: now(ctx) }));
       return { signed, attempted: false };
@@ -561,7 +546,7 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
       if (!memberEntry || !invitationEntry || memberEntry.input.type !== "act" || invitationEntry.input.type !== "act") return bad();
       const opened = memberEntry.input.signed.intent, invited = invitationEntry.input.signed.intent;
       const openingFields = link.kind === "agent-key" ? { handle: link.handle, kind: "agent", controller: link.controller } : { handle: link.handle, kind: "checker" };
-      const ownAgent = link.kind === "agent-key" && link.definition === OWN_AGENT_COHORT.membership;
+      const ownAgent = link.kind === "agent-key" && answersVersionQuestion(link.definition, "cliOwnAgentInvitationMembership");
       const openingKind = opened.kind === "add-member" || ownAgent && opened.kind === "add-own-agent";
       const invitationKind = invited.kind === "invite-key" || ownAgent && invited.kind === "invite-own-agent-key";
       if (!openingKind || !sameOptional(opened.fields, openingFields) || !invitationKind || !sameOptional(invited.fields, { member: link.member.seq, kind: nativeKind, ...invitationIssueFields(link.definition, link.secret), inviteEnds: invited.fields["inviteEnds"] })) return bad();

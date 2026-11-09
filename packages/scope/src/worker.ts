@@ -1,3 +1,4 @@
+import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 import { mcpRoute, type McpEnv } from "./worker-mcp.ts";
 import { readMinimumParameter } from "@generalbusiness/dap-bytes";
 import type { ReadMinimum } from "@generalbusiness/dap-contract";
@@ -11,7 +12,6 @@ import { within as boundedWait } from "@generalbusiness/dap-bytes";
 import { applicationHostOutside } from "./applications/wiring.ts";
 import { applicationAnnouncementOutside } from "./applications/announce.ts";
 import type { ApplicationBindings } from "./applications/bindings.ts";
-
 
 import { health } from "./health.ts";
 import { closeOnDisconnect } from "./http-stream.ts";
@@ -172,7 +172,6 @@ export class ScopeIndex extends DurableObject<Env> {
   admitServing(request: ServingRequest, address: string | null) { return this.#serving.admit(request, address, Date.now()); }
 }
 
-
 /** A scope's surface as a caller over RPC has it. */
 interface Remote {
   observed?(method: ObservedMethod, args: unknown[], identity: OperationalIdentity, httpPublic?: boolean): Promise<{ value: unknown; turn: boolean }>;
@@ -228,7 +227,6 @@ export interface Api extends ScopeApi {
   readOriginal(scope: string, reader: unknown, digest: string): Promise<OriginalBytes>;
   endOriginal(scope: string, reader: unknown, digest: string): Promise<OriginalEnded>;
 }
-
 
 /**
  * Every operation, each on the object the scope ID names. A name that is no
@@ -361,7 +359,6 @@ export function api(binding: Binding, address: string | null = null, creationAdm
 
 /** The most bytes a request body may have: more than one entry, which is the most an act can become. */
 const BODY_BYTES = 1024 * 1024;
-
 
 /** The status of an answer to a creation or an act (section 4.2). The body says which. */
 function answered(answer: Created | Answer, accepted: number): Response {
@@ -605,7 +602,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   };
   const selected = (owner: Parameters<Outside["accepts"]>[0], kind: string): Outside => {
     if (owner === "hold@2") return workspace();
-    if ((owner === "platform:rules@5" || owner === "platform:rules@6" || owner === "platform:rules@7" || owner === "platform:rules@8" || owner === "platform:rules@9" || owner === "platform:rules@10" || owner === "platform:rules@11" || owner === "platform:rules@12" || owner === "platform:rules@13" || owner === "platform:rules@14") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
+    if ((answersVersionQuestion(owner, "applicationOutsideWorkerRules")) && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
     // Share the bridge's exact owner policy; host-none install notices do
     // not depend on selecting a repository host.
     if (announcement.accepts(owner, kind)) return announcement;

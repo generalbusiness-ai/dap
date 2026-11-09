@@ -1,3 +1,4 @@
+import { answersVersionQuestion, FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { readDeployment } from "./deployment-setting.ts";
 import { readPublicOrigin } from "./public-origin.ts";
 /** One configured native register projection; grants nothing and wakes no work. */
@@ -5,13 +6,13 @@ import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord as record, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isScopeRef } from "@generalbusiness/dap-derive";
 import type { CreationOffer } from "@generalbusiness/dap-client";
-import { FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+
 import { artifactsConfiguration, ARTIFACTS_HOST, ARTIFACTS_NAMESPACE, type ArtifactsBindings } from "./artifacts-wiring.ts";
 import type { Store } from "./store.ts";
 export interface DemoCreationBindings extends Pick<ArtifactsBindings, "ARTIFACTS_CONFIG" | "ARTIFACTS_NAMESPACE"> { DEMO_START_CONFIG?: string; DEPLOYMENT?: string }
 /** Checked internal native projection context, not the public config wire. */
 type DemoDefinition = typeof ARCHIVE_DEVICE_APPLICATION_COHORT.register | typeof FAILED_CLAIM_COHORT.register;
-const demoDefinition = (value: unknown): value is DemoDefinition => value === FAILED_CLAIM_COHORT.register || value === ARCHIVE_DEVICE_APPLICATION_COHORT.register;
+const demoDefinition = (value: unknown): value is DemoDefinition => answersVersionQuestion(value, "scopeDemoCreationRegister");
 interface CurrentDemoCreationConfig { v: 2; origin: string; deployment: string; register: ScopeRef; definition: DemoDefinition; namespace: string }
 export type DemoCreationConfig = CurrentDemoCreationConfig;
 interface DemoCreationSettings { current: CurrentDemoCreationConfig }

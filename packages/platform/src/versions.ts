@@ -23,7 +23,7 @@ export const isOf = (named: unknown, name: string): named is PlatformDefinition 
 
 /** Only these explicit destination pins use D1's standing record. Future
  * versions do not acquire that provenance contract by numeric comparison. */
-export const isStandingDestination = (named: unknown): named is "platform:destination@5" | "platform:destination@6" => named === "platform:destination@5" || named === "platform:destination@6";
+export const isStandingDestination = (named: unknown): named is "platform:destination@5" | "platform:destination@6" => answersVersionQuestion(named, "nativeStandingDestination");
 
 /** Exact destination pins that use the native staged publication protocol. */
 export const usesStagedPublicationProtocol = (named: unknown): boolean => answersVersionQuestion(named, "nativeStagedPublication");

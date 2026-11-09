@@ -134,3 +134,4 @@ export { readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidenc
 export { FAILED_CLAIM_COHORT } from "./failed-claim-cohort.ts";
 
 export { answersVersionQuestion, VERSION_QUESTIONS, type VersionQuestion } from "./version-questions.ts";
+export * from "./version-relations.ts";

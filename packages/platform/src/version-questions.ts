@@ -2,6 +2,7 @@
  * Each question preserves its own old predicate, including equal pin sets.
  * A future or unknown pin acquires no answer from its version number. */
 const QUESTION_PINS = {
+  nativeStandingDestination: ["platform:destination@5", "platform:destination@6"],
   cliManifestListDestination: [
     "platform:destination@13", "platform:destination@14", "platform:destination@15", "platform:destination@16",
     "platform:destination@18", "platform:destination@19", "platform:destination@20", "platform:destination@3",
@@ -391,6 +392,6 @@ export type VersionQuestion = keyof typeof QUESTION_PINS;
 export const VERSION_QUESTIONS: readonly VersionQuestion[] = Object.freeze(Object.keys(QUESTION_PINS) as VersionQuestion[]);
 
 /** The exact old positive set answers this question; every other value is false. */
-export function answersVersionQuestion(named: unknown, question: VersionQuestion): boolean {
+export function answersVersionQuestion<Q extends VersionQuestion>(named: unknown, question: Q): named is (typeof QUESTION_PINS)[Q][number] {
   return typeof named === "string" && (QUESTION_PINS[question] as readonly string[]).includes(named);
 }
