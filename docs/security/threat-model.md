@@ -164,8 +164,12 @@ Membership's own folded authority uses no remote signer cache.
 
 An admitted key's observed retirement, compromise or member removal stays
 for the run. A separate FIFO keeps at most 4,096 revoked keys that were
-never admitted. Eviction invalidates older standing handles, including
-reads still in flight. A cache miss reads Membership again. For a
+never admitted. An eviction from the denied FIFO makes the Membership reads
+in flight at that instant unanswered for every key, and each caller retries.
+Handles already held stay valid while their own record remains: admitted
+handles consult their kept record, and denied handles require the same FIFO
+record. Only an act from a distinct revoked key that the FIFO does not hold
+causes an eviction. A cache miss reads Membership again. For a
 never-admitted key that leaves the FIFO, the run no longer remembers an
 exact permanent denial: it relies on a fresh trusted Membership read and
 Membership's irreversible retirement and removal. Distinct real revoked

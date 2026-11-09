@@ -4,6 +4,7 @@ Request `22b57b9e`, promise `26d84746`. This source checkpoint starts from
 R3a's frozen review head `07cc88520d3e46434c72972752d87505750a65a4`, after
 review request `e85e6cd8` was filed. Ruling `1f159465` sets both ceilings,
 first-use custody, and the three validation obligations below.
+Ruling `5da28958` narrows the signer-cache handle invalidation in this head.
 
 ## What changed
 
@@ -29,6 +30,13 @@ still cached. A different object that has replaced the name stays intact.
 The separate internal `reusableCounts()` diagnostic returns the actual
 count and measured byte total. R3a's four-field signer `cacheCounts()`
 result stays unchanged. Neither diagnostic adds a public RPC.
+
+An admitted standing handle keeps consulting its key's kept record after
+another key leaves the denied FIFO. A denied handle requires the exact FIFO
+record that it captured. The existing run-wide generation still makes an
+in-flight Membership read unanswered after any denied eviction, including
+the read whose new denial caused that eviction. Callers retry. This adds no
+pending-read store or deadline and leaves late Membership answers unchanged.
 
 ## Decisions and why
 

@@ -307,6 +307,7 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
         if (!window.once) kept.set(key, prefer(kept.get(key) ?? null, mine));
       }
       const read = mine;
+      const deniedRead = keys.has(key) ? undefined : denied.get(key);
 
       /** The read that the latest judgment found current. The entry that is written retains that one. */
       let offered: Read | null = null;
@@ -316,7 +317,7 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
         membership: fixedBy(of, read.observation.of),
         held(view, clock) {
           offered = null;
-          if (spent || startedGeneration !== generation) return null;
+          if (spent || (deniedRead !== undefined && denied.get(key) !== deniedRead)) return null;
           // A `compromised` notice named this key: no new read token. The commit asks, so a notice that landed during the read counts, and
           // so does an observation that still shows the key active. Membership refuses the key by itself once that observation ends.
           if (asked.signed.intent.kind === "read-token" && config.named?.(key)) return [];
@@ -339,7 +340,7 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
           return [{ grant: result.grant, current: true }];
         },
         sealed({ entry, hash }: { entry: Entry; hash: Digest }) {
-          if (startedGeneration !== generation) return;
+          if (deniedRead !== undefined && denied.get(key) !== deniedRead) return;
           const used = offered;
           // An act and a preparation retain the one grant judged, in the same place (section 16.1, "Where one stands").
           const proof: unknown = entry.input.type === "act" || entry.input.type === "preparation" ? entry.input.authority[0]?.fresh : null;
