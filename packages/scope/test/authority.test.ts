@@ -246,46 +246,110 @@ describe("a compromised notice that lands during the read, with a scripted reade
 });
 
 
-// Pure authority-port budget with synthetic key IDs below signature admission.
-// Ordinary, once-only and failed reads share the same run bound.
-test("an authority run admits 4096 keys, refuses a new key before reading at the bound, keeps old keys usable and resets only in a new run", async () => {
-  const key = (number: number): KeyId => {
-    const bytes = new Uint8Array(32);
-    new DataView(bytes.buffer).setUint32(0, number);
-    return `key_${b64url(bytes)}` as KeyId;
-  };
-  const failed = new Set(Array.from({ length: 4096 }, (_, number) => number).filter(number => number % 3 === 2).map(key));
-  let reads = 0;
-  const config = { clock: { read: () => at(0) }, random: { bytes: (n: number) => new Uint8Array(n) },
-    membership: () => membership, reader: { observe: async (request: ObservationRequest) => {
+// Actual authority-port cache below signature admission. Synthetic key IDs and
+// scripted Membership replies are stand-ins, not proof of a signed Native act.
+const cacheKey = (number: number): KeyId => {
+  const bytes = new Uint8Array(32);
+  new DataView(bytes.buffer).setUint32(0, number);
+  return `key_${b64url(bytes)}` as KeyId;
+};
+const cacheAsk = (number: number, once = false): Asked => ({ scope: { ...membership, kind: "destination" }, grants: [],
+  action: actions[0]!, window: once ? WINDOWS.once : WINDOWS.ordinary,
+  signed: { intent: { actor: cacheKey(number), kind: "read-token" } } }) as unknown as Asked;
+const cacheAnswer = (key: KeyId, keyState: Observation["keyState"] = "active", seq = 40): Omit<Observation, "at"> => ({
+  of: membership, head: { seq, hash: d("4") }, key, keyState,
+  member: "@rita", memberState: "active", role: "member", actions, within: { membership },
+  controller: null, controllerActive: null, notAfter: null, definition: "platform:membership@1",
+});
+const cacheView = { observed: () => null } as unknown as Parameters<Standing["held"]>[0];
+const cacheReading = { reading: at(0), behind: false, asOf: at(0) };
+const currentCacheStanding = (answer: Standing | "limit" | null): Standing => {
+  if (answer === null || answer === "limit") return expect.fail(`Expected current standing, got ${answer}`);
+  expect(answer.held(cacheView, cacheReading)).toMatchObject([{ current: true }]);
+  return answer;
+};
+
+test("an authority run charges only 4096 keys with standing, reserves concurrent arrivals after their read, keeps old keys usable and resets in a new run", async () => {
+  let reads = 0, delayed = false;
+  const waiting: { key: KeyId; resolve(answer: unknown): void }[] = [];
+  const config = { clock: { read: () => at(0) }, random: { bytes: (n: number) => new Uint8Array(n) }, membership: () => membership,
+    reader: { observe: async (request: ObservationRequest) => {
       if (!("key" in request)) return null;
       reads++;
-      if (failed.has(request.key)) return null;
-      return { of: membership, head: { seq: 40, hash: d("4") }, key: request.key, keyState: "active",
-        member: "@rita", memberState: "active", role: "member", actions, within: { membership },
-        controller: null, controllerActive: null, notAfter: null, definition: "platform:membership@1" };
+      return delayed ? new Promise(resolve => waiting.push({ key: request.key, resolve })) : cacheAnswer(request.key);
     } } };
-  const asked = (number: number): Asked => ({ scope: { ...membership, kind: "destination" }, grants: [],
-    action: actions[0]!, window: number % 3 === 1 ? WINDOWS.once : WINDOWS.ordinary,
-    signed: { intent: { actor: key(number), kind: "read-token" } } }) as unknown as Asked;
   const port = observing(config);
-  for (let number = 0; number < 4096; number++) {
-    const answer = await port.read(asked(number), 5);
-    if (number % 3 === 2) expect(answer).toBeNull();
-    else expect(answer).toEqual(expect.objectContaining({ held: expect.any(Function) }));
+  for (let number = 0; number < 4095; number++) currentCacheStanding(await port.read(cacheAsk(number, number % 3 === 1), 5));
+  expect(port.cacheCounts().admitted).toBe(4095);
+  delayed = true;
+  const first = port.read(cacheAsk(4095, true), 5), second = port.read(cacheAsk(4096), 5);
+  expect(waiting).toHaveLength(2);
+  waiting[1]!.resolve(cacheAnswer(waiting[1]!.key));
+  currentCacheStanding(await second);
+  waiting[0]!.resolve(cacheAnswer(waiting[0]!.key));
+  expect(await first).toBe("limit");
+  expect(port.cacheCounts()).toEqual({ admitted: 4096, kept: 2731, retained: 0, denied: 0 });
+  delayed = false;
+  const before = reads;
+  currentCacheStanding(await port.read(cacheAsk(0), 5)); expect(reads).toBe(before);
+  currentCacheStanding(await port.read(cacheAsk(1, true), 5)); expect(reads).toBe(before + 1);
+  expect(await port.read(cacheAsk(4097), 5)).toBe("limit"); expect(reads).toBe(before + 2);
+  currentCacheStanding(await observing(config).read(cacheAsk(4097), 5));
+});
+
+test("more than 4096 unknown or unanswered signer reads do not charge a run or prevent a newly joined member's standing", async () => {
+  let joined = false, readNumber = 0;
+  const port = observing({ clock: { read: () => at(0) }, random: { bytes: n => new Uint8Array(n) }, membership: () => membership,
+    reader: { observe: async (request: ObservationRequest) => {
+      if (!("key" in request)) return null;
+      if (request.key === cacheKey(5000) && joined) return cacheAnswer(request.key);
+      if (readNumber++ % 3 === 0) return null;
+      if (readNumber % 3 === 0) throw Error("scripted unavailable Membership");
+      return cacheAnswer(request.key, "unknown");
+    } } });
+  for (let number = 0; number < 4100; number++) {
+    const answer = await port.read(cacheAsk(number, number % 2 === 1), 5);
+    if (answer !== null && answer !== "limit") expect(answer.held(cacheView, cacheReading)).toEqual([]);
   }
-  expect(reads).toBe(4096);
-  expect(await port.read(asked(4096), 5)).toBe("limit");
-  expect(reads).toBe(4096);
-  expect(await port.read(asked(0), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
-  expect(reads).toBe(4096);
-  expect(await port.read(asked(1), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
-  expect(reads).toBe(4097);
-  failed.delete(key(2));
-  expect(await port.read(asked(2), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
-  expect(reads).toBe(4098);
-  expect(await port.read(asked(4096), 5)).toBe("limit");
-  expect(reads).toBe(4098);
-  expect(await observing(config).read(asked(4096), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
-  expect(reads).toBe(4099);
+  // Check the new member before memory diagnostics: today's counting control
+  // must fail on the newcomer receiving limit, not on an intermediate size.
+  const afterFlood = port.cacheCounts();
+  joined = true;
+  currentCacheStanding(await port.read(cacheAsk(5000), 5));
+  expect(afterFlood).toEqual({ admitted: 0, kept: 0, retained: 0, denied: 0 });
+  expect(port.cacheCounts()).toEqual({ admitted: 1, kept: 1, retained: 0, denied: 0 });
+});
+
+test("evicting a never-admitted revoked key invalidates its older in-flight active answer and reads Membership again", async () => {
+  let first = true, keyReads = 0;
+  let release: ((answer: unknown) => void) | undefined;
+  const port = observing({ clock: { read: () => at(0) }, random: { bytes: n => new Uint8Array(n) }, membership: () => membership,
+    reader: { observe: async (request: ObservationRequest) => {
+      if (!("key" in request)) return null;
+      if (request.key === cacheKey(5000)) return cacheAnswer(request.key);
+      if (request.key === cacheKey(0)) {
+        keyReads++;
+        if (first) { first = false; return new Promise(resolve => { release = resolve; }); }
+      }
+      return cacheAnswer(request.key, "retired", 50);
+    } } });
+  const pending = port.read(cacheAsk(0), 5);
+  const refused = await port.read(cacheAsk(0), 5);
+  expect(refused === null || refused === "limit" ? refused : refused.held(cacheView, cacheReading)).toEqual([]);
+  const admitted = currentCacheStanding(await port.read(cacheAsk(5000), 5));
+  for (let number = 1; number <= 4096; number++) await port.read(cacheAsk(number), 5);
+  expect(port.cacheCounts()).toEqual({ admitted: 1, kept: 1, retained: 0, denied: 4096 });
+  release!(cacheAnswer(cacheKey(0)));
+  const old = await pending;
+  const held = old === null || old === "limit" ? old : old.held(cacheView, cacheReading);
+  expect(held).toBeNull();
+  expect(admitted.held(cacheView, cacheReading)).toBeNull();
+  const fresh = await port.read(cacheAsk(0), 5);
+  expect(fresh === null || fresh === "limit" ? fresh : fresh.held(cacheView, cacheReading)).toBeNull();
+  expect(keyReads).toBe(3);
+  const remembered = await port.read(cacheAsk(0), 5);
+  expect(remembered === null || remembered === "limit" ? remembered : remembered.held(cacheView, cacheReading)).toEqual([]);
+  expect(keyReads).toBe(3);
+  currentCacheStanding(await port.read(cacheAsk(5000), 5));
+  expect(port.cacheCounts()).toEqual({ admitted: 1, kept: 1, retained: 0, denied: 4096 });
 });
