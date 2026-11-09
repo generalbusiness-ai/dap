@@ -83,4 +83,27 @@ passed all four required commands at combined stack head `99092048`.
 RoomOpening's [CI manifest](evidence/2026-11-08-room-br12-page-ci.manifest.json)
 retains the run metadata, full private logs and the unchanged workflow-path
 comparison. The integration of main `cf0487da` adds only the independently
-approved self-hosting note. The one shared top-head gate remains due.
+approved self-hosting note.
+
+The one shared gate passed at head
+`5364d4945d8255406521752aa1dd0f4eb95fecf4`, tree
+`a4b838014a3d555d02e7d0970e8e9568f9cf24a1`; its actual `gate.exit` says
+`exit 0`. Node passed 137 cases, Counting 56, Plain 4,027 with one skip,
+and Native 1,118 with two skips. Every stage passed. Analysis found no
+contradictory record, failed case, report error or unhandled error. Every
+tracked byte stayed equal, and the owned process group closed. The gate
+took 1,181.749 monotonic seconds. Missing recorder duration and the 33 Node
+file wrappers remain explicit in the retained report.
+
+RoomOpening's [shared gate manifest](evidence/2026-11-08-room-br12-shared-gate.manifest.json),
+digest `f7a94a2a4b9d07a6a1c89801ecd36f389a967ccdc856117baeaf8e4fa613c5f6`,
+seals 22 public files and points to 2,333 private files including their
+inventory. The first sealer completed the raw seal but stopped at a stale
+manifest destination. The finalizer preserves that failed attempt and
+finishes a fresh public unit without rerunning any test or analysis.
+
+The final lower RoomOpening head changes only its note and this shared
+manifest. BR-12 inherits that head; this follow-up changes only this note.
+Every gated source and Page byte stays equal. Both separate checker
+approvals remain due before the ordered landings. No live acceptance or
+deployment follows from the shared gate.
