@@ -61,6 +61,27 @@ the completed run metadata, its full private logs and the workflow-path
 comparison. The later integration of main `cf0487da` adds only the approved
 self-hosting note. Every Page workflow path stays byte-equal.
 
-BR-12's separate focused checks and configured-count control have also
-finished. The one shared top-head gate remains due. No live acceptance or
-deployment follows from these checks.
+BR-12's separate focused checks and configured-count control also passed.
+The one shared gate then passed at top head
+`5364d4945d8255406521752aa1dd0f4eb95fecf4`, tree
+`a4b838014a3d555d02e7d0970e8e9568f9cf24a1`. The actual `gate.exit` says
+`exit 0`. Node passed 137 cases, Counting 56, Plain 4,027 with one skip,
+and Native 1,118 with two skips. Every stage passed. Report analysis found
+no contradictory record, failed case, report error or unhandled error.
+The 99 unknown observations are 33 Node file wrappers; the skipped recorder
+module has no observed duration. Every tracked byte stayed equal, and the
+owned process group closed. The gate took 1,181.749 monotonic seconds.
+
+The [shared gate manifest](evidence/2026-11-08-room-br12-shared-gate.manifest.json),
+digest `f7a94a2a4b9d07a6a1c89801ecd36f389a967ccdc856117baeaf8e4fa613c5f6`,
+seals 22 public files and points to 2,333 private originals including their
+inventory. The first sealer completed the raw seal, then refused an existing
+manifest at a stale template path. The corrected finalizer preserves that
+failed attempt and completes a fresh public unit. No test or analysis ran
+again. Seventeen retained gates now show fourteen archive-scale passes and
+three Native-unreached failures; watch `64552d40` stays open.
+
+This final RoomOpening follow-up changes only this note and the shared gate
+manifest. BR-12 inherits it before its own documentation follow-up. Both
+independent approvals still precede the ordered landings. No live acceptance
+or deployment follows from these checks.
