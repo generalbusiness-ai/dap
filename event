@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bc103277ce0125aff0fdf37cbfa7c1adb2a05ea2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-09-publication-reserved-paths.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c0eeb284af81b19d37b73afd1ca7690dec0bcb4f","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/publication-policy.ts."}
