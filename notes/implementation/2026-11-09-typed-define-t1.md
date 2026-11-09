@@ -32,6 +32,8 @@ adds declaration witnesses without importing those later prototypes.
 
 The package inherits the normal strict configuration without a
 `skipLibCheck` override. Its tests belong to the plain root project group.
+The gate summary includes `define` and reports its observed module count,
+state, and duration alongside the other projects.
 The kernel dependency direction remains unchanged.
 
 ## Evidence pending
