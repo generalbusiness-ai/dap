@@ -313,7 +313,7 @@ const pendingArchiveSeals = {
 const pendingR8Seals = {
   "packages/cli/src/commands.ts": namedOwners["packages/cli/src/commands.ts"],
   "packages/cli/src/browser-helpers.ts": "7e5f139e800efad56f08799f4e34700f2fde7c76de33422a2eb69d03de4f03fa", // Moved description, expectation and value helpers; actual maintained parser output.
-  "packages/cli/src/claim.ts": "e98347fb01d8107fd0a048c718fb8b65088f35242f6df4ca567e04fa6a378a41", // Reviewed Register 25 operator/founder selection; served routes and Native authority stay fixed.
+  "packages/cli/src/claim.ts": "92958130e0851a08c30f66e96abcbaf5596d37711ffbf1a7ecc9ace9c2df5879", // Remove the retired v1 offer field; current founding, routes and Native authority stay fixed.
   "packages/cli/src/command-support.ts": "9659bd3c68857485218d0ce7a3d2c8be37d08893c6feda55524886fe09044f5e", // Moved shared read, session and signing support; actual maintained parser output.
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/verification.ts": "3fb0f354c0d00dd1d21cf293e11dfc81738b9de4e8f5eb43ac9fd918dc9db557", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.

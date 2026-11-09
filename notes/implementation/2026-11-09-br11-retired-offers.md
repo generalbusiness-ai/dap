@@ -3,9 +3,10 @@
 Request: `e1b71b6b697c58723b3340681346f5f7145d345c`.
 Promise: `5a3fbb3db7dac1dc652f7403aabbf585641e4212`.
 
-Status: the first focused Node run failed at the document parser. The
-settings owner passed. The parser repair awaits its affected owner and the
-previously unrun compiler and body phases. No gate has run for this head.
+Status: the parser repair passed its eleven-case owner. The next compiler
+found a remaining v1 field in the CLI offer adapter. That repair and its
+updated seal await an asset rebuild and the remaining checks. No Vitest
+case, control, or gate has run for this head.
 
 ## Keep each deployment's configuration separate
 
@@ -100,3 +101,27 @@ failed. The repair adds only the new heading to the finite parser list.
 The next pipeline reruns the complete eleven-case entry-point owner and
 then starts the previously unrun compiler and Vitest phases. The passed
 settings owner and compatibility preflight do not repeat.
+
+At integrated head `cbef2afd`, tree `124d2c72`, the repaired entry-point
+owner passed all eleven cases. The client source and test compiler contexts
+then passed. The CLI source compiler exited 1 with TS2367 at `claim.ts:195`:
+its v1-only `purpose` spread remained after `CreationOffer` became v2-only.
+The five later compiler contexts and all thirteen Vitest cases remained
+unrun. Source hashes stayed equal and both process groups closed.
+
+The [failed-compiler manifest](evidence/2026-11-09-br11-failed-cli-compiler.manifest.json),
+digest `aafbcd9fcdfcff1d55f8096071b8fb22c3dcf670b55964a25a3777413914c2f3`,
+seals 18 public files and retains 34 private originals. It preserves the
+Node and client compiler passes alongside the failed CLI compiler. No
+failed result becomes a pass.
+
+The repair removes the retired CLI `purpose` spread and the obsolete
+reference to that field in its refusal message. Current offers keep their
+same revision, host, namespace, and policy values. The maintained parser
+returns source seal
+`92958130e0851a08c30f66e96abcbaf5596d37711ffbf1a7ecc9ace9c2df5879`.
+The corresponding one-literal baseline update keeps every route and gate
+assertion. Hugh's standing patch authorization applies. Because that sealed
+source changes, the entry-point owner must run again. The unchanged client
+compiler contexts and settings owner keep their conclusive results.
+The Page asset must rebuild after this CLI change.
