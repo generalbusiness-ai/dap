@@ -176,6 +176,10 @@ the one line and run the one test file:
 node scripts/control.mjs <source file> '<old text>' '<new text>' [--expect '<part of the test name>'] -- <package dir> <test args>
 ```
 
+An explicit `.mjs` or `.cjs` test file selects Node. An explicit TypeScript
+test file selects Vitest, even when the package test script runs both.
+Other selections follow the package test script.
+
 It runs the tests unchanged, which must pass. Then it applies the change,
 runs them again and restores the file. It gives one of three results:
 
