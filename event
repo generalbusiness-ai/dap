@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc5d8d558ef96759f83a697264934b4931ee04da"}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7856057225f3ae497362265d51f24530b1e999ba","text":"Closed in the 2026-11-08 cleanup of finished items. Done, with nothing to land. Evidence and recording run. Assert 917ae901 records that Hugh accepted the generation-3 three-agent take for demo section 2, with no run to 100 needed."}
