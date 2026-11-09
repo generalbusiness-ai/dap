@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d4c921c3f748d71e89f90347ae96aa8190893058","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-13-fold-publication.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dfd77dc8f3114c3a6b9d21ad2707078ebf17449a","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/publication-policy.test.ts."}
