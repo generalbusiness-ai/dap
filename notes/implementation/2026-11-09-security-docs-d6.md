@@ -60,20 +60,3 @@ Finding 3.13 remains explicit: Grow and legacy artroom-scope share their
 Artifacts namespace, content bucket and metrics dataset; code checks narrow
 shared capabilities but do not create resource isolation.
 
-
-## Fork storage documentation in the same review head
-
-The independent fork measurement request `d055b98f`, promise `063fb9f5`,
-requires a note on main. Planner ruling `afdebb8631`, phase 1 item 13,
-accepts an explicit unmeasurable result when Artifacts exposes no storage
-metric per repository. The updated
-[measurement note](2026-10-13-fork-cost-measurement.md#storage-metric-survey-9-november-2026)
-names the dataset and all ten metric fields checked. Its separate
-[survey manifest](evidence/2026-11-09-fork-storage-metrics.manifest.json),
-SHA-256 `8ec0a2423d18c220410546bea558d224bca1220163091044d7e0ac2c885b531b`,
-seals the five public response snapshots and their provenance.
-
-No authenticated metrics query or new fork ran. The earlier measurement's
-HTTP 401 and cleanup results stay as recorded. This documentation uses its
-own promise and artifact. Neither the ineffective workroom report nor this
-unreviewed head closes that request.
