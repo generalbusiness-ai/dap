@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d018ff9fbe3f7605af1110e319a90e0896cb9384","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-04-g3b-live-witness.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d25673acc4aa2e9cbd4822c224e8fb5b430f916e","text":"Merge retired a covered predecessor; the successor is at apps/counter/definition.test.ts."}
