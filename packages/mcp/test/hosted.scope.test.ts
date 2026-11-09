@@ -8,7 +8,7 @@ import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ControlRequest, Digest, Entry, FactRef, Item, KeyId, MemberId, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, keyIdOfSecret, newIncarnation, signControl, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { invitationIssueFields, encodeAgentKeyInvitation, secretSigner, signedIntent, signedLogReader, type AgentKeyInvitation } from "@generalbusiness/dap-client";
+import { invitationIssueFields, encodeAgentKeyInvitation, requestSession, secretSigner, sessionRequest, signedIntent, signedLogReader, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, platform, FIRST_ACTIONS_OF, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, QUESTION_DIGESTS, changeDemo, issueDemo, issueQuestions } from "@generalbusiness/dap-lanes";
 import { counting } from "../../../apps/counter/definition.ts";
@@ -26,7 +26,7 @@ import { mcpRoom, SERVICE, type Agent, type Room, created as createRoom } from "
 import { MCP_METRIC_SCHEMA, type McpMetricPoint } from "../src/metrics.ts";
 import { OAUTH_STANDING_MS, type OAuthAccessGrant } from "../src/oauth-access.ts";
 import { ROW_OVERHEAD } from "../src/hosted.ts";
-import { httpSource, verify } from "@generalbusiness/dap-replay";
+import { httpSource, verify, type HistorySource } from "@generalbusiness/dap-replay";
 import { sqliteStore, type Sql } from "../src/sqlite-custody.ts";
 
 /** Production default dispatch, in this isolate. The actual native PLATFORM namespace is this fixture's Scope binding;
@@ -1899,7 +1899,17 @@ test("retire erases the seed before an uncertain revoke, retries only its retain
     const after = signIntent({ ...before.input.signed.intent, expected: { repository: repositoryItem.revision }, idempotencyKey: "TEST-after-retire", notAfter: timeOf(room.now() + 60_000) }, seed);
     expect(await D.stub.submit(after, [], original.beside)).toMatchObject({ answer: "refused", reason: "unauthorized" });
     expect((await modernCall(bot.bearer, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "TEST forbidden", conditions: ["done"] }, idempotencyKey: "TEST-after-endpoint-retire" })).status).toBe(401);
-    const source = httpSource(SERVICE, { fetch: room.fetch, reader: signedLogReader(secretSigner(rita.secret), { now: room.now }) });
+    // Signed reads expose only the signer's cause chain. Replay needs the
+    // admin's complete membership session, with signed bootstrap reads for
+    // scopes that have not recorded a membership incarnation yet.
+    const session = await requestSession(SERVICE, M.scope, sessionRequest(M, rita.secret, timeOf(room.now() + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16)))), { fetch: room.fetch });
+    if (!session.ok) throw new Error(`no replay session: ${session.reason}`);
+    const full = httpSource(SERVICE, { fetch: room.fetch, reader: session.session.reader() });
+    const signed = httpSource(SERVICE, { fetch: room.fetch, reader: signedLogReader(secretSigner(rita.secret), { now: room.now }) });
+    const source: HistorySource = {
+      page: async (scope, from, allow) => { const got = await full.page(scope, from, allow); return !got.ok && got.reason === "forbidden" ? signed.page(scope, from, allow) : got; },
+      retained: async (scope, kind, digest, allow, domain) => { const got = await full.retained(scope, kind, digest, allow, domain); return !got.ok && got.reason === "forbidden" ? signed.retained(scope, kind, digest, allow, domain) : got; },
+    };
     const replayed = await room.wait(() => verify(source, { mode: "replay", scope: M.scope, platform, grants: "proven" }));
     expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
     seed.fill(0);

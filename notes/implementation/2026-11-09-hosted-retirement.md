@@ -107,6 +107,13 @@ on an R13 test result.
 | Direct sidecar, `5fd0601b` | Both affected compilers passed. Body exit 1: 22 passed, one direct-act field refusal, one pending; exact ledger and no unhandled errors. Missing original sidecar stopped the witness before authority | [manifest](evidence/2026-11-09-r15-failed-direct-sidecar.manifest.json) `a36f1ec12fbae56f64ac34a2b9f3f248e620d4a612d146910b5b7846f42cbb62` |
 | Direct revision, `65e8bd07` | Both affected compilers passed. Body exit 1: 22 passed, one stale expected revision, one pending; exact ledger, no unhandled errors. The field-complete act stopped before authority | [manifest](evidence/2026-11-09-r15-failed-direct-revision.manifest.json) `c5ead18b8bc7a6c4959c7b337b4e4229fde3bf7d8644fa63f1fa1bbc1f7bbcf1` |
 
+| Replay source, `8ad48f37` | Both affected compilers passed. Body exit 1: 22 passed, replay source failure, one pending; exact ledger, no unhandled errors. Seed erasure and fresh direct `unauthorized` refusal passed before replay | [manifest](evidence/2026-11-09-r15-failed-replay-source.manifest.json) `6fafc7fc8eb9525855726f7b7d905925a087a51de9a87b4e53bc84ad60339449` |
+
+The replay witness now requests Rita's real membership session. Signed
+reads show only her cause chain and omit the agent's independent enrollment.
+The existing signed-read fallback still handles bootstrap scopes that have
+not recorded membership. The consistent replay assertion stays unchanged.
+
 ## Deployment
 
 The planner deploys after exact-head review and routine landing. No new
