@@ -26,9 +26,10 @@ import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/da
  *   head of membership. The observation of a ten-second kind serves the one
  *   commit it was read for, and is not kept.
  * - **An admitted key's revoked answer stays.** A revoked key that was
- *   never admitted uses a separate 4,096-entry FIFO. Eviction invalidates
- *   older standing handles, including reads still in flight. A later cache
- *   miss reads membership again; membership never reverses revocation.
+ *   never admitted uses a separate 4,096-entry FIFO. Eviction makes all
+ *   in-flight reads unanswered; callers retry. Admitted handles stay valid,
+ *   and denied handles require their exact FIFO record. A later cache miss
+ *   reads Membership again; Membership never reverses revocation.
  *
  * A read serves the act it was made for. What `read` returns is held by
  * that act's own call and by nothing else. The observation in it is of that
