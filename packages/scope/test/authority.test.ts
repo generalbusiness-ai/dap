@@ -247,28 +247,32 @@ describe("a compromised notice that lands during the read, with a scripted reade
 
 
 // Pure authority-port budget with synthetic key IDs below signature admission.
-// Alternating ordinary and once-only observations cannot evade the run bound.
+// Ordinary, once-only and failed reads share the same run bound.
 test("an authority run admits 4096 keys, refuses a new key before reading at the bound, keeps old keys usable and resets only in a new run", async () => {
   const key = (number: number): KeyId => {
     const bytes = new Uint8Array(32);
     new DataView(bytes.buffer).setUint32(0, number);
     return `key_${b64url(bytes)}` as KeyId;
   };
+  const failed = new Set(Array.from({ length: 4096 }, (_, number) => number).filter(number => number % 3 === 2).map(key));
   let reads = 0;
   const config = { clock: { read: () => at(0) }, random: { bytes: (n: number) => new Uint8Array(n) },
     membership: () => membership, reader: { observe: async (request: ObservationRequest) => {
       if (!("key" in request)) return null;
       reads++;
+      if (failed.has(request.key)) return null;
       return { of: membership, head: { seq: 40, hash: d("4") }, key: request.key, keyState: "active",
         member: "@rita", memberState: "active", role: "member", actions, within: { membership },
         controller: null, controllerActive: null, notAfter: null, definition: "platform:membership@1" };
     } } };
   const asked = (number: number): Asked => ({ scope: { ...membership, kind: "destination" }, grants: [],
-    action: actions[0]!, window: number % 2 ? WINDOWS.once : WINDOWS.ordinary,
+    action: actions[0]!, window: number % 3 === 1 ? WINDOWS.once : WINDOWS.ordinary,
     signed: { intent: { actor: key(number), kind: "read-token" } } }) as unknown as Asked;
   const port = observing(config);
   for (let number = 0; number < 4096; number++) {
-    expect(await port.read(asked(number), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
+    const answer = await port.read(asked(number), 5);
+    if (number % 3 === 2) expect(answer).toBeNull();
+    else expect(answer).toEqual(expect.objectContaining({ held: expect.any(Function) }));
   }
   expect(reads).toBe(4096);
   expect(await port.read(asked(4096), 5)).toBe("limit");

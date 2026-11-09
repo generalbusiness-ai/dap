@@ -24,7 +24,8 @@ A bounded key set covers ordinary, once-only and discarded observations,
 so neither the kept-observation nor retained-head map grows by cycling
 those forms. A new key at the bound gets the private port answer `limit`
 before a Membership read. Core maps that answer to the existing `limit`
-refusal for an act or preparation. Existing keys remain usable. A new
+refusal for an act or preparation. Consumers of `Authority.read` now handle
+that literal result as well as standing and null. Existing keys remain usable. A new
 object run starts with no cached keys or observations. Own-Membership
 standing uses no remote observation map and keeps its existing rules.
 
@@ -39,9 +40,9 @@ writes the act. The actual receiver-policy method is instrumented, with a
 positive call to distinguish an unused counter.
 
 The authority owner adds one pure budget witness using synthetic key IDs
-below signature admission. It admits the real 4,096-key limit once,
-refuses key 4,097 before a read, retains ordinary reuse and once-only reads
-of existing keys, and permits that new key in a new run. The Core witness
+below signature admission. It mixes ordinary, once-only and failed reads. It admits the real 4,096-key limit once,
+refuses key 4,097 before a read, retains ordinary reuse, once-only reads and failed responses
+for existing keys, and permits that new key in a new run. The Core witness
 covers the signed-input boundary separately.
 
 The complete turn owner keeps its alarm budget, clock, timed ordering,
