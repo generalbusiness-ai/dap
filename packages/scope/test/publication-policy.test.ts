@@ -55,7 +55,7 @@ test("publication policy takes only the canonical bounded extent bytes of the ex
 test.each([
   { name: "historical raw application pins", cohort: FILE_PUBLICATION_COHORT, route: "raw" },
   { name: "historical trusted package pins", cohort: TRUSTED_APPLICATION_COHORT, route: "package" },
-  { name: "the current failed-claim device package family", cohort: FAILED_CLAIM_COHORT, route: "device" },
+  { name: "current device package pins", cohort: FAILED_CLAIM_COHORT, route: "device" },
 ])("$name refuse control publications with a host diagnostic and generic journal reason, preserve ordinary commits, and replay", async ({ cohort, route }) => {
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   const life = nativeFixtureLifetime(owner, { required: false });
@@ -118,7 +118,9 @@ test.each([
         items: { ...devicePackageFixture.items, root: { ...devicePackageFixture.items["root"]!, refs: { destination: { fixed: true, required: true, to: { type: "scope", kind: "destination" } } } } },
         acts: { ...devicePackageFixture.acts,
           start: { ...devicePackageFixture.acts["start"]!, fields: { destination: { type: "scope", kind: "destination", required: true } }, effects: [{ ref: { slot: "destination", from: { field: "destination" } } }] },
-          write: { ...publisher.acts["write"]!, on: "root", grant: "start" },
+          write: { ...publisher.acts["write"]!, on: "root", grant: "start",
+            sends: [{ tell: { to: { slot: "destination" }, message: "publish-file", fields: { path: { field: "path" }, content: { field: "content" } }, result: { refused: [], undelivered: [] } } }],
+          },
         },
       };
       const id = definitionDigest(declared), actions = [...new Set(Object.values(declared.acts).map(act => act.grant))].sort();
