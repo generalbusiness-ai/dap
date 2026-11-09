@@ -125,12 +125,19 @@ No test ran again for those checks.
 | Alarm drain control: one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109-v2.py /private/tmp/artroom-r3-alarm-drain-control-20261109.v2.task.json` | owner 1; verifier 0 | `39c6264c / bc3dcf55` | `586db0887430f7d24c8a7fc947f1f9a129ed415169cc5dfaab5f4ae735905411` |
 | Key bound control: five pass, one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109-v2.py /private/tmp/artroom-r3-key-bound-control-20261109.v2.task.json` | owner 1; verifier 1; metadata 0 | `39c6264c / bc3dcf55` | `7c5561ba8858c151cadc144dbee2f009806a217330df82a3d28328d36378f6d9` |
 | Final gate: 5,340 pass, 12 fail, 3 skip | `npm run gate` | 1 | `22b5f36f / 8ffde09a` | `526878104bee7a9daa9fc3720146b3b5ca84f64bc29d5df7b10de728906b3614` |
+| Repaired gate: 5,352 pass, 3 skip | `npm run gate` | 0 | `7f560340 / fd8ac86b` | `46523b53efa1d0e54c52e643e3bbf75832b82a033eb38d810fded169521a8a8b` |
+| Page and Card browser workflows: both success | `gh run view 42669405583; gh run view 42669405892` | 0 | `7f560340 / fd8ac86b` | `c248b02e52dec04e8618496fa032fd62bba67cd6bf7ae1a5954ce92d799026f4` |
 
 Each pipeline records its own monotonic duration and command timing.
 Those measurements include source guards and report work where the driver
 states that scope. Summed command or case times are not one measured gate.
 The runners keep their original pools, workers and deadlines. The owned
 physical dependency view has 14 workspaces and 48 source export bindings.
+The machine is Hugh's Darwin arm64 Mac, using Node 26.13.0, TypeScript 7.0.2
+and Vitest 4.1.12. The repaired gate reused the owned dependency and Vite
+state after the original gate; this was not a controlled cold-cache run.
+The preflight and later process snapshot found only the owned validation
+group. Those snapshots do not measure continuous machine load.
 The final gate ran once at `22b5f36f` / `8ffde09a` and failed with exit 1.
 The [failed-gate manifest](evidence/2026-11-09-r3-failed-gate.manifest.json)
 seals 16 public files and retains 2,400 private originals. Actual
@@ -170,13 +177,39 @@ and restarts again before the original reserved-answer settlement, which
 still needs only current identity and retains its Membership-only authority.
 The CLI now says expired cleanup waits for the next alarm.
 
-The repaired gate has not run. If it fails, ruling `3da1f865` requires a
-report before any further change. The original failure and its manifest
-remain intact.
+The repaired gate passed at `7f560340` / `fd8ac86b`. Actual `gate.exit`
+contains `exit 0`; it was read before analysis and sealing. Node passed
+144, Counting 56, Plain 4,028 with one skip, and Native 1,124 with two skips:
+5,352 passes and three skips. All four test phases have complete terminal
+records. There were no failures, unhandled errors, contradictions or report
+errors. All six repaired owners passed, including the ordered Lending story.
+The scheduled-alarm assertions and the device precedence probes passed.
+Scale stayed omitted under the unchanged twenty-four-path selector.
+The original failed gate and its manifest remain failed and intact.
+
+The [repaired-gate manifest](evidence/2026-11-09-r3-repaired-gate.manifest.json)
+seals 16 public files and retains 2,402 private originals. The driver measured
+1,123.435 seconds from launch through its receipt. `/usr/bin/time` separately
+recorded 1,122.87 seconds real, 2,134.93 user and 301.23 system. The source
+stayed fixed and the owned process group closed. The wholly skipped Page
+recorder module has no final duration; the summary keeps that qualification.
+
+[Page browser run 42669405583](https://github.com/generalbusiness-ai/dap/actions/runs/42669405583)
+and [Card browser run 42669405892](https://github.com/generalbusiness-ai/dap/actions/runs/42669405892)
+both passed at the same published source head `7f560340`.
+The [browser-workflow manifest](evidence/2026-11-09-r3-browser-workflows.manifest.json)
+seals 11 public files with the existing runs' terminal job and step records.
+No workflow was dispatched or rerun for that read-only capture. These
+browser fixtures prove no live provider effect or hosted-room acceptance.
+
+Only this note and those two new manifests follow the validated head.
+Production, test, configuration, dependency and tool bytes remain unchanged.
+The earlier three meaningful controls remain the evidence for the unchanged
+guards; no limited pipeline ran after the planner's ruling.
 
 ## Open limits
 
-Request `03e5f6d7` still owns the repaired gate, independent review and landing.
+Request `03e5f6d7` still owns independent review and landing.
 The planner owns deployment after landing. These Native witnesses use
 labelled scripted Membership, admission and provider boundaries. They
 establish no live provider effect or hosted-room acceptance.
