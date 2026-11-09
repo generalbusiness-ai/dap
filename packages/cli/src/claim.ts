@@ -178,7 +178,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       }) : undefined);
       if (offeredBy) {
         const value = await offeredBy(structuredClone(register));
-        if (!isCreationOffer(value, config.service, register)) return failed("The demo offer does not match the configured origin, full register reference, pin and purpose. Nothing was prepared or submitted.");
+        if (!isCreationOffer(value, config.service, register)) return failed("The demo offer does not match the configured origin, full register reference and pin. Nothing was prepared or submitted.");
         // Own the projection before asynchronous recovery-key preparation.
         offered = JSON.parse(canonicalize(value)) as CreationOffer;
         if (!DIRECTORY_OF[offered.definition] || !platform(offered.definition)) return failed("The demo register version is unsupported here. Nothing was prepared or submitted.");
@@ -192,7 +192,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         definition = offered.definition;
         // Revision selector only: never present this projection as a Summary,
         // an authenticated roster or authority for the native `found` judgment.
-        items = [{ id: offered.registerItem.id, revision: offered.registerItem.revision, type: "register", state: "open", opened: null, parties: {}, refs: {}, attributed: [], values: { host: offered.registerItem.host, namespace: offered.registerItem.namespace, policy: "open", ...(offered.v === 1 ? { purpose: "demo-start" } : {}) } }];
+        items = [{ id: offered.registerItem.id, revision: offered.registerItem.revision, type: "register", state: "open", opened: null, parties: {}, refs: {}, attributed: [], values: { host: offered.registerItem.host, namespace: offered.registerItem.namespace, policy: "open" } }];
       } else if (retained) {
         definition = retained.definition; items = [];
       } else {

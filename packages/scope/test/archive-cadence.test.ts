@@ -1,3 +1,4 @@
+import { scaleDeadline } from "./support/archive-scale-deadline.ts";
 /** Archive fixture authority uses genuine Native Membership8 observations.
  * Its seat/key/role and source-birth preparation are external fixture setup;
  * each pass still pays its existing pin lookups and original complete ledger.
@@ -71,4 +72,4 @@ test("Native archive alarms clear three daily windows of4800entries without a ba
   (context.task.meta as Record<string, unknown>)["nativeArchiveCadence"] = { windows, totalNewEntries: 14_400,
     elapsedSeconds: (performance.now() - started) / 1000, actualAppendCalls: host.appendCalls, exactParentReads: host.objectReads.length,
     qualification: "Actual Native signed comment inputs and actual Native alarm dispatch. Three virtual eight-hour windows each produce4800new entries then drain actual adaptive passes to Native confirmation; no journal entries are written by export and wake is empty afterwards. Each pass uses its one unchanged default30s ledger/all original caps for scout, preparation, fresh inventory, writer, copies, production incremental copy/hash/validator/pack/send and Native mark/attempt/confirmation. Post-alarm receipt/wake inspections are separate test observations, no archive phase allowance. HTTP/token/repository/policy/clock are explicit TEST fixtures; genuine Membership8 authority/source setup is external fixture work; no real external-provider, deployed scheduling/network throughput, Git custody or real-day duration claim." };
-}, 600_000);
+}, scaleDeadline(600_000));

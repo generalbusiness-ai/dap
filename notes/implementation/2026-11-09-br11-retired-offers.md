@@ -1,0 +1,232 @@
+# BR-11: split the Worker template and retire old offers
+
+Request: `e1b71b6b697c58723b3340681346f5f7145d345c`.
+Promise: `5a3fbb3db7dac1dc652f7403aabbf585641e4212`.
+
+Status: the full gate and all four Page workflow commands pass at the
+frozen source. Both earlier focused failures stay failed. Independent
+exact-head review remains due. The separate first Ubuntu scale workflow
+failed at main and remains with the planner.
+
+## Keep each deployment's configuration separate
+
+`apps/room/wrangler.jsonc` becomes the neutral self-host template. It starts
+in enforce mode and names no project bucket, metrics dataset, register, or
+credential. The guide copies it to the ignored
+`apps/room/wrangler.self-host.jsonc`; `deploy:scope` uses that local copy.
+Secrets and Worker deletion commands name the same copy.
+
+`apps/room/wrangler.artroom-scope.jsonc` keeps the old Worker's bindings,
+bucket, metrics dataset, and exact migration prefix. It omits the expired
+`DEMO_START_CONFIG`. The planner owns the PD-6 live cutover. This head
+records no deployment or secret deletion.
+
+The settings inventory covers the new template and the old Worker as
+separate configurations. The entry-point inventory names both roots.
+
+## Accept only current offers
+
+The server already accepts only the current wire setting on main
+`9e2ac753`. This head removes the remaining client v1 offer decoder and
+uses the current decoder for Page Start. Version 2 offers still bind the
+exact origin, register, incarnation, closed fields, and response bounds.
+Register 17 and Register 26 remain the only supported offer pins.
+
+Saved private custody is a different format. Its existing migration and
+exact operation binding remain. A submitted operation keeps its signed
+intent and readback path. An old unsubmitted descriptor gains no new offer.
+The planner has been asked to confirm this custody boundary.
+
+## Map the removed witnesses
+
+The current cases replace the retired offer setups as follows. No whole
+case disappears from either native owner.
+
+- `apps/room/page/test/start.scope.test.ts`: the retired Register 7 exact
+  reference and wrong-incarnation queries accompanied the current founding
+  scene. The remaining case, “fresh Page Start discovers native Register17,
+  retains before dispatch, Checks a lost accepted reply without mutation
+  and explicitly Continues the original through enrolled room recovery”,
+  still witnesses current offer decoding, pre-dispatch retention, read-only
+  Check, and exact Continue. The SDK's bounded discovery case and the
+  native offer case below retain exact-reference refusal coverage.
+- `packages/scope/test/demo-creation.test.ts`: the Register 7 and Register 8
+  fresh, retained-reference, fallback-to-7, and wrong-incarnation refusal
+  setup belonged to the retired decoder. The remaining “Register17 offer
+  exposes only its configured Artifacts register and admits a previously
+  unseen founding key without changing protected reads or waking parked
+  work” case witnesses current native founding and exact-reference
+  refusal. Its wrong-register, wrong-incarnation, malformed-query,
+  protected-read, and parked-work assertions remain. The same case retains
+  the server's version 1 and 2 `DEMO_START_CONFIG` refusal loop: both
+  settings return 404 and leave the register lookup counts unchanged.
+- `packages/client/test/creation-offer.test.ts`: the bounded same-origin
+  discovery case now selects the current exact register. It rejects wire
+  version 1 at an exact retired register reference and mismatched scope
+  or incarnation, while accepting the two
+  supported current pins. The retired v1 success branch has no successor.
+- `packages/cli/test/creation-offer.test.ts`: the preflight case now uses a
+  current Register 17 offer with the same wrong incarnation. It still
+  stops before transport or recovery preparation, and Check reads no offer.
+- `apps/room/page/test/start-custody.test.ts`: the retained-operation case
+  now uses Register 17 with the original v1 private-custody format. It keeps
+  the founder key, envelope, read-only Check, and exact Continue witnesses.
+  The malformed-custody case rejects an obsolete offer before the workflow.
+- `apps/room/page/test/start-ui.test.ts`: the old retained request still
+  keeps its origin and controls. Its selected offer now fails as retired;
+  no v1 offer reaches the scripted successful return.
+
+This change edits no recorded definition, genesis packet, journal, or entry
+interpretation. Independent exact-head review remains due.
+
+## Validation
+
+The single maintained asset build at `23742c6e`, tree `90718804`, exited 0.
+Only `apps/room/page/assets.ts` changed. Page HTML and both OAuth entries
+stayed equal, every other tracked input stayed equal, and the process group
+closed. The build used the existing esbuild 0.28.1 and pinned Node 26.13.0;
+it installed nothing. Its [build manifest](evidence/2026-11-09-br11-assets.manifest.json),
+digest `e78cdb0b0cb5414976ffa50277933a3f5fcd5540b3b7b75ad9f41ed53363b27e`,
+seals 21 files. The later results below cover focused checks and the gate.
+
+The first focused run at `b132c932`, tree `f64f9549`, exited 1 in Node:
+9 passes and 5 failures across 14 cases. All three settings cases passed.
+The entry-point owner reported five `Route without Worker` failures because
+`documentedInventory` did not yet allow the new `dap-self-host` heading.
+All eight compiler contexts and all thirteen Vitest cases remained unrun.
+Every tracked input stayed equal, and the Node process group closed.
+
+The [failed-inventory manifest](evidence/2026-11-09-br11-failed-inventory.manifest.json),
+digest `021f776412dd293c9031694ce51591656f85d9e37b59dd1e2bfe02c8ac78ac4d`,
+seals 14 public files and retains 20 private originals. This failure stays
+failed. The repair adds only the new heading to the finite parser list.
+The next pipeline reruns the complete eleven-case entry-point owner and
+then starts the previously unrun compiler and Vitest phases. The passed
+settings owner and compatibility preflight do not repeat.
+
+At integrated head `cbef2afd`, tree `124d2c72`, the repaired entry-point
+owner passed all eleven cases. The client source and test compiler contexts
+then passed. The CLI source compiler exited 1 with TS2367 at `claim.ts:195`:
+its v1-only `purpose` spread remained after `CreationOffer` became v2-only.
+The five later compiler contexts and all thirteen Vitest cases remained
+unrun. Source hashes stayed equal and both process groups closed.
+
+The [failed-compiler manifest](evidence/2026-11-09-br11-failed-cli-compiler.manifest.json),
+digest `aafbcd9fcdfcff1d55f8096071b8fb22c3dcf670b55964a25a3777413914c2f3`,
+seals 18 public files and retains 34 private originals. It preserves the
+Node and client compiler passes alongside the failed CLI compiler. No
+failed result becomes a pass.
+
+The repair removes the retired CLI `purpose` spread and the obsolete
+reference to that field in its refusal message. Current offers keep their
+same revision, host, namespace, and policy values. The maintained parser
+returns source seal
+`92958130e0851a08c30f66e96abcbaf5596d37711ffbf1a7ecc9ace9c2df5879`.
+The corresponding one-literal baseline update keeps every route and gate
+assertion. Hugh's standing patch authorization applies. Because that sealed
+source changes, the entry-point owner must run again. The unchanged client
+compiler contexts and settings owner keep their conclusive results.
+The Page asset must rebuild after this CLI change.
+
+The required Page rebuild after the CLI repair ran once at `2fc38c44`,
+tree `ee4542cc`, and exited 0. Only `assets.ts` changed. Page HTML and both
+OAuth entries stayed equal, and the process group closed. The
+[CLI-repair build manifest](evidence/2026-11-09-br11-cli-offer-assets.manifest.json),
+digest `bd55d320770d10188a729049118633fcb781350c019f20b924ae80cad84dc67e`,
+seals 21 files. The earlier build remains evidence for its earlier source.
+No compiler, test, or gate repeats during sealing.
+
+At clean integrated head `b689c02f`, tree `9996dd80`, the affected
+entry-point owner passed all eleven cases. The six resumed compiler
+contexts passed: CLI source and tests, Page source and tests, Scope tests,
+and the Native Page story. All thirteen cases in eight complete Vitest
+owners then passed, with eight modules and no coverage issue, skip,
+retry, duplicate, or unfinished case. The maintained JSON report agrees.
+Actual owner, pipeline, and outer driver exits are 0. Every tracked input
+stayed equal and both process groups closed.
+
+The prior three settings passes and two client compiler passes remain
+recorded at their earlier heads. Their owner sources remain unchanged.
+The final gate still checks the complete final composition. The first
+failed document inventory and second failed CLI compiler remain failures.
+
+One named control restores the actual retired SDK decoder from main
+`4f06bbbc` for the unchanged complete SDK owner. It exits 1 only at the new
+retired-offer refusal assertion, `creation-offer.test.ts:43`: the old
+decoder answers true where the current decoder must answer false. The
+verifier exits 0, every tracked byte restores exactly, and the process
+group closes. The control reuses the saved passing baseline. Neither the
+baseline nor the restored owner runs again.
+
+The [focused and control manifest](evidence/2026-11-09-br11-focused.manifest.json),
+digest `05b3eabef866bba74dadfe7e83bc2fe56ea1ffb4713be5394c2dea8c05a68fb5`,
+seals 27 public files and points to 275 focused and 19 control originals.
+The public record separates current passes, the named negative control,
+and conclusive prior phases. No execution repeats during sealing.
+
+## Complete gate and Page workflow
+
+The full gate at clean `ebb95ee5`, tree `9b9afc2b`, finished with actual
+`gate.exit` equal to `exit 0`. All prechecks, typecheck, and five fixed
+stages passed: Node 140, Counting 56, Plain 4,028 with one skip, and Native
+1,118 with two skips. The maintained reports reconcile without failed
+cases, contradictions, report errors, or unhandled errors. Exactly six
+unchanged scale cases pass only in `scope-scale`. The 102 otherwise
+unclassified observations are the three Node wrapper events for each of
+34 files. One explicitly skipped recorder module has no duration.
+
+Every tracked input stayed equal and the owned process group closed.
+Retained process samples found no other local validation body. Samples
+cannot prove uninterrupted isolation. The
+[full-gate manifest](evidence/2026-11-09-br11-gate.manifest.json), digest
+`10db837b9c452de84420116158e0201168fc47d37e5185bdc7471773eb4cc02d`,
+seals 21 public files and points to 2,377 private originals. The archive
+watch now contains twenty full gate attempts, sixteen archive passes and
+four Native-unreached failures. Watch `64552d40` remains open.
+
+Page workflow run [42572096790](https://github.com/generalbusiness-ai/dap/actions/runs/42572096790)
+passed at that same head. All four maintained commands passed: page
+screenshots, recorded demo captures, create-room witness, and local-label
+witness. The [Page CI manifest](evidence/2026-11-09-br11-page-ci.manifest.json),
+digest `72d04812a58f44876667fd4a9f33973719a7571372545bb2d4bd05c42fea8a28`,
+seals four public files and retains eleven private originals. The workflow
+uploads no downloadable images or other artifacts. This record claims
+no retrieved screenshot. Only this note and the gate and CI manifests
+follow the tested source.
+
+The independent BR-5 first Ubuntu scale run at main `4f06bbbc` failed:
+five cases passed and the 30,000-entry floor case reached its unchanged
+600,000 ms deadline. Its raw archive, exact failure, and public manifest
+`95b70522` remain separate from this passing local gate. Planner request
+`65fb24b3` asks for the next CI step. No deadline, real bound, or witness
+changes here, and no workflow rerun is hidden in this result.
+
+This head adds no setting or secret. The neutral template starts in enforce
+mode without a project bucket. Its local copy drives self-host deployment;
+the old Worker keeps its own exact binding and migration history. The
+planner owns the PD-6 live setting and secret removals and records their
+versions. This head performs no deployment and supplies no live acceptance.
+
+## Restore the retired-setting refusal witness
+
+Review `e84a5430` found that the removed native setup also held the only
+server witness for rejecting version 1 and 2 `DEMO_START_CONFIG`. That
+loop used no retired decoder. The old live setting can remain after a
+`--keep-vars` deployment until the planner removes it, so this refusal
+still matters.
+
+The follow-up restores the exact two-setting loop in the remaining
+Register 17 case, including both 404 and unchanged-lookup assertions.
+Only this test owner and explanatory documentation change. Production
+source, all other tests, configuration, dependencies, assets, seals, and
+historical pins match the passing gate head. The Scope test compiler and
+complete `demo-creation.test.ts` owner each passed once at `8f59c994`,
+tree `db46345b`. Actual pipeline and driver exits are 0. The one case and
+one module passed without a skip, retry, report issue, or unhandled error.
+Every tracked input stayed equal and the owned process group closed.
+The [follow-up manifest](evidence/2026-11-09-br11-setting-followup.manifest.json),
+digest `fc253a343d353f4b1c0fe721837ff21ab8d03ae568f6fb1fef52e5c6fa30b3e7`,
+seals eleven public files and points to 259 private originals. Only this
+note and that manifest follow the tested repair.
+The earlier full gate and Page workflow retain their own passing results;
+neither runs again for this test-only repair.

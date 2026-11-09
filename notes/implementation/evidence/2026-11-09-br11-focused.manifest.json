@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "request": "e1b71b6b697c58723b3340681346f5f7145d345c",
+  "promise": "5a3fbb3db7dac1dc652f7403aabbf585641e4212",
+  "sourceHead": "b689c02f6d028139be8ab47dc3ac787a35b95209",
+  "sourceTree": "9996dd80d2dd9f6da9e1bffce1c17a3ecc24fcb4",
+  "qualification": "One successful resumed pipeline at the frozen source: affected11case Node owner, six failed/unrun compiler contexts,13cases in8complete owners. Preserve prior settings3pass/client2compilerpass without repetition. Both earlier failed pipelines remain failed. No full gate or live acceptance follows. The one retired-decoder control has actual owner1/verifier0 at the intended assertionline43 and exact restoration; it reuses the saved baseline without a repeat.",
+  "fileCount": 27,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-focused-validation",
+      "fileCount": 17,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1349,
+          "sha256": "70d4e3c479ba2754515a7908990eaed819bfbe1c9e85bc1ca62bca9201701152"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 213,
+          "sha256": "20806246b3f39c4418cddbd943b176c30b73fe9eaa0fea550e6723588d6d8579"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 17289,
+          "sha256": "f515a26aa48a5050a4308435726fc6374fec010cbdaf316232f3c62570800dca"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 18232,
+          "sha256": "ebb20c9bf896ec3887744373f36ea9348a6b31c92f35985540131159cf015768"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7083,
+          "sha256": "40ca8ea7ab44670fa11781fa1e665cb9953ecc274487914db26ec952b069454c"
+        },
+        {
+          "path": "node-driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node-owner.time",
+          "bytes": 29,
+          "sha256": "782a5c8c1e57af838146a0faada7e52703b822e496aed7a5ebbafab9c3e65622"
+        },
+        {
+          "path": "node-result.json",
+          "bytes": 3013,
+          "sha256": "bd9503762d489ffdd2c18a170a93ce0a4345834a287c14b13017b215627b2af2"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6fe5a51112a791d295899b046d989fcdb9060f985a3d32658086affb79dd8113"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 31,
+          "sha256": "1af6613a92b96f4885845da46bf0984851bc90acfb8d3614ab277f5f63566d89"
+        },
+        {
+          "path": "prior-conclusive-evidence.json",
+          "bytes": 909,
+          "sha256": "0174a846dc52733e0583859d1e983720419826d807e55b04604f65fa4177c30f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 518,
+          "sha256": "08e7fbebc5b3304900d069c0f6c95960509ee4895677aa6225f24e4a5a9f4711"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2040,
+          "sha256": "8c7d3fda7d3575d3a903898ede4f21a19902fb3018648a1b02506556addd6436"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ],
+      "privateRegularFilesIncludingInventory": 275
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-retired-decoder-control-validation",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 719,
+          "sha256": "5806182997c29ca5fb7b1c4a64c86395035a948b790b6ea60bbefd578735e2cc"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 614,
+          "sha256": "f79e592f16ba039d37821efb29b2c93a05b93669bf887229c98a2453bd1b397b"
+        },
+        {
+          "path": "control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "control.time",
+          "bytes": 29,
+          "sha256": "d971d0ad86c019313ad5edf06391e3316254fa7cb26534704ee3b4dab4a150cf"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 6574,
+          "sha256": "72d26c9bd43afbe0fcbeacc0edebc774f0985c5d7dfb5282712dfaba3bf9c693"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 519,
+          "sha256": "69d8a9a8a92a5456768c795e61634d4621ebbe2415bc11d74957317ec83ce0fc"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1200,
+          "sha256": "32b73756aa32361893b94603447e62f9584ba18e7803fe2b8640a6560d8c5693"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 108,
+          "sha256": "dffd0173fc7f9e447bb7d387f6cd98bc6207c2bc7cb14236828639bf969944f3"
+        },
+        {
+          "path": "started.json",
+          "bytes": 86,
+          "sha256": "f7077f35d7f7b6dc449174e3959c2ae775e42eb4661b2c3c4875a703a6eb1358"
+        },
+        {
+          "path": "verifier.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        }
+      ],
+      "privateRegularFilesIncludingInventory": 19
+    }
+  ]
+}

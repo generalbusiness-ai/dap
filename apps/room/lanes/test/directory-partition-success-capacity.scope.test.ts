@@ -1,3 +1,4 @@
+import { scaleDeadline } from "../../../../packages/scope/test/support/archive-scale-deadline.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
@@ -118,4 +119,4 @@ test("native initially full Root completes one thousand successful partition bir
     expect(final.written + final.reserved).toBeLessThanOrEqual(bounds.scopeEntries);
     expect([parts.size, creates]).toEqual([1000, 1000]);
   } finally { wired.delete(D.name); for (const name of parts) net.sized.delete(name); }
-}, 600_000);
+}, scaleDeadline(600_000));

@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "sourceHead": "9ce45bd19a5ff492c152a3773782b24833b75464",
+  "qualification": "Automatic BR11 main scale run42578225982 passed all6 cases at original unscaled deadlines; Page42578226025 passed all4 maintained commands. Earlier scale42570561287 remains failed. Four owners, both scale configs, project membership, native wrangler config and lock match across these main runs. This demonstrates a separate success, not a proved cause of the earlier timeout. No deployment, live acceptance, local gate or workflow rerun follows.",
+  "fileCount": 6,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-main-ci-validation",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 436,
+          "sha256": "52a74dd5613bbac8747f82f9894bdf7e93bac9236f5e22146fb66bfeb9570e1c"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 489,
+          "sha256": "e784013a0fe29cca4e681f24eb306234f7586fc4545f3550962ddd3a3b48dae0"
+        },
+        {
+          "path": "result.json",
+          "bytes": 7266,
+          "sha256": "7cd254480776aaa20bd9fc4893f6134ad0c06d1ce5886b1bb39b32ffd56f119a"
+        },
+        {
+          "path": "scale-case-times.json",
+          "bytes": 2163,
+          "sha256": "8fcdff073f876220dc13dd6c2f1032bd44e6d93a305f0ee973260c1a4e9fb9cc"
+        },
+        {
+          "path": "scale-input-equality.json",
+          "bytes": 2018,
+          "sha256": "6baa8ff87260e2fd94fff8a0af9dc433d84c7280dd75a0fe86718dca6b574efc"
+        },
+        {
+          "path": "scale-log-summary.json",
+          "bytes": 858,
+          "sha256": "e5d4a20f314fa331b73383a4b72efe9ca55975c271ce0a9fbac94a6912229c29"
+        }
+      ],
+      "privateRegularFilesIncludingInventory": 35
+    }
+  ]
+}

@@ -184,10 +184,10 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     find("form").fire("submit"); await flush(); expect(start.mock.calls.at(-1)![2].mode).toBe("continue");
     expect(original!.configured).toEqual({ register: legacyRegister, definition: "platform:register@7" });
     const selectOriginal = start.mock.calls.at(-1)![2].creationOffer!;
+    offerRead.mockRejectedValueOnce(new Error("SCRIPTED retired offer unavailable"));
     const selectedOffer = selectOriginal(legacyRegister);
     expect(offerRead.mock.calls.at(-1)).toEqual([location.origin, { register: legacyRegister }]);
-    finishOffer({ ...offer, v: 1, register: legacyRegister, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } });
-    expect((await selectedOffer).definition).toBe("platform:register@7");
+    await expect(selectedOffer).rejects.toThrow("retired offer unavailable");
     const wrongOffer = selectOriginal(legacyRegister); finishOffer(offer);
     await expect(wrongOffer).rejects.toThrow("offered register changed");
     // Scripted final-failure status must unlock a fresh explicit Start, never Continue.

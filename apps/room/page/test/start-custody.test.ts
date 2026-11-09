@@ -25,13 +25,13 @@ function fixture() {
   return { values, storage };
 }
 
-test("scripted retained register7 Start keeps its founder key before the CLI boundary; reload Check is read-only and Continue keeps the original envelope and key", async () => {
+test("scripted retained Start keeps its founder key before the CLI boundary; reload Check is read-only and Continue keeps the original envelope and key", async () => {
   cli.claim.mockReset(); cli.checkClaim.mockReset();
-  // This descriptor is the exact legacy register7 format, retained before this upgrade.
-  const register = { ...ref("register"), scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@7", creator: null, cause: textDigest("SCRIPTED legacy Start"), ordinal: 0 }) };
-  const legacyOffer: CreationOffer = { ...offer, v: 1, register, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } };
-  const f = fixture(), offerRead = vi.fn(async () => legacyOffer);
-  f.values.set(`artroom-page-start:${origin}`, canonicalize({ v: 1, origin, secret: b64url(new Uint8Array(32).fill(61)), configured: { register, definition: "platform:register@7" }, label: "Personal intent", handle: "@founder" }));
+  // The v1 private-custody format migrates independently of the current offer.
+  const register = { ...ref("register"), scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@17", creator: null, cause: textDigest("SCRIPTED retained Start"), ordinal: 0 }) };
+  const retainedOffer: CreationOffer = { ...offer, register };
+  const f = fixture(), offerRead = vi.fn(async () => retainedOffer);
+  f.values.set(`artroom-page-start:${origin}`, canonicalize({ v: 1, origin, secret: b64url(new Uint8Array(32).fill(61)), configured: { register, definition: "platform:register@17" }, label: "Personal intent", handle: "@founder" }));
   let original: SignedIntent | undefined, posts = 0, creator: string | undefined;
   cli.claim.mockImplementation(async (ctx: Context) => {
     const descriptorBytes = f.values.get(`artroom-page-start:${origin}`)!;
@@ -60,7 +60,7 @@ test("scripted retained register7 Start keeps its founder key before the CLI bou
   });
   const first = await startRoom(origin, f.storage, { mode: "continue", label: "Ignored replacement", creationOffer: offerRead, locks });
   expect(first.pending).toBe(true); expect(posts).toBe(1);
-  expect(first.configured).toEqual({ register, definition: "platform:register@7" });
+  expect(first.configured).toEqual({ register, definition: "platform:register@17" });
   const status = originalStart(origin, f.storage)!;
   expect(status.key).toBe(keyIdOfSecret(new Uint8Array(32).fill(61)));
   expect(JSON.parse(f.values.get(`artroom-page-start:${origin}`)!).secret).toBeUndefined();
@@ -96,12 +96,12 @@ test("scripted retained register7 Start keeps its founder key before the CLI bou
 
 test("scripted dropped, malformed or stale Start custody stops before the workflow; a retained key alone permits only explicit Continue", async () => {
   cli.claim.mockReset(); cli.checkClaim.mockReset();
-  const legacyNew = fixture();
-  await expect(startRoom(origin, legacyNew.storage, { mode: "new", label: "Room", offer: { ...offer, v: 1, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } }, locks })).rejects.toThrow("current same-origin creation offer");
-  await expect(startRoom(origin, legacyNew.storage, { mode: "new", label: "Room", offer: { ...offer, v: 1, definition: "platform:register@8", registerItem: { ...offer.registerItem, purpose: "demo-start" } }, locks })).rejects.toThrow("current same-origin creation offer");
-  expect(legacyNew.values.size).toBe(0); expect(cli.claim).not.toHaveBeenCalled();
+  const obsolete = fixture();
+  const obsoleteOffer = { ...offer, v: 1 } as unknown as CreationOffer;
+  await expect(startRoom(origin, obsolete.storage, { mode: "new", label: "Room", offer: obsoleteOffer, locks })).rejects.toThrow("current same-origin creation offer");
+  expect(obsolete.values.size).toBe(0); expect(cli.claim).not.toHaveBeenCalled();
   const mismatched = fixture();
-  await expect(startRoom(origin, mismatched.storage, { mode: "new", label: "Room", offer, locks, creationOffer: async () => ({ ...offer, v: 1, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } }) })).rejects.toThrow("private Start");
+  await expect(startRoom(origin, mismatched.storage, { mode: "new", label: "Room", offer, locks, creationOffer: async () => obsoleteOffer })).rejects.toThrow("private Start");
   expect(originalStart(origin, mismatched.storage)?.configured.definition).toBe("platform:register@17");
   const mismatchedBytes = [...mismatched.values.entries()];
   await startRoom(origin, mismatched.storage, { mode: "check", locks });
