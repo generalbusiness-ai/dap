@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2708280a1c89c092f3f359bcbf76bebd02a9dfec","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/worker.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2c78609a1656a196123f98e2657a00fad50ff263","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br14-pre-gate.manifest.json."}
