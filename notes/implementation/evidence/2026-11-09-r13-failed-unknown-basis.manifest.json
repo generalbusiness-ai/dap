@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "71e6e574a4cd555538d94e16ce69a12b13aff98c",
+  "sourceTree": "859e14555f313645249d3dc56d6b7af4fc050e66",
+  "qualification": "This first application run and its coverage verifier remain failed. Framework39passed,1failed,3bail-skipped,11uncollected from54required; original ledger13passed,1failed,3skipped,37unrun due26wrong described full names. Separate metadata reconciliation records35fullypassed cases in5wholeowners, never an overall pass. No user interruption or manual kill. Exact runtime/pool/deadlines unchanged.",
+  "fileCount": 19,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-failed-unknown-basis-validation",
+      "fileCount": 19,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1539,
+          "sha256": "b1482e85b069350def0e699f207935375953a7d07ba3d87d0ac24d70a3026b37"
+        },
+        {
+          "path": "client-test.log",
+          "bytes": 29,
+          "sha256": "edf6374a4b91249dbf9764c217ba712000995d6ca46d7f98f3a93fce5ca58780"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "27aeb94d2afa5e469c6e78b889a88b1d09961698d01178cc763bc53dc02dc96d"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 13951,
+          "sha256": "0cd827b37f2a06bbe000c0a9b3fcffafc8a1f6dee4705b65a2c80906ce331f31"
+        },
+        {
+          "path": "complete-owner-identity-reconciliation.json",
+          "bytes": 7265,
+          "sha256": "1af363bf3895141a0feed41403317f43c43e0578bd335498f8f21aabb03196cf"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 60254,
+          "sha256": "564f91546622939f2dfe9d7317dc8f3d13222a8f54447507a50e17c1d106fb3e"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 6686,
+          "sha256": "59d21d80290c590be508304f0c4a176c2295b0e34939d7c9e4cb96868091eeb3"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 3317,
+          "sha256": "52a69021f3f7c03bd408251eef7a1a3182169257261c6495e15d5a39f2ba0cb0"
+        },
+        {
+          "path": "mcp-test.log",
+          "bytes": 29,
+          "sha256": "d37d0dac9f3c56045efba14bdcf0897d627e788fd93d1ab3eb1a932699815a48"
+        },
+        {
+          "path": "node-reuse.json",
+          "bytes": 767,
+          "sha256": "8f84366ff49a4313acd8be6a2b480fab228514d230277254306e5a9b3ae42844"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 580,
+          "sha256": "947bc43937385392116167b589fb7f95a6f770d6ca80ee817b2c64dccb3d78b6"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 31,
+          "sha256": "bac4a7837c272ebfb8a176b76a6f470715dbab1a3264806fbd0fcd09d444934f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 497,
+          "sha256": "d6639bae98e0cb17a3418467f2dbb88ae21532f62fb032cf241074f1c736be5c"
+        },
+        {
+          "path": "scope-source.log",
+          "bytes": 29,
+          "sha256": "86936a9c1f6c011b8c569fd8cbff5760f6402d014db8d3c97c52984306490641"
+        },
+        {
+          "path": "scope-test.log",
+          "bytes": 29,
+          "sha256": "93ea3d582562b3c82b5891cd2dd7a0df1c063661eaa1db1170c5cab4225759a4"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}

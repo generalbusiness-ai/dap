@@ -159,7 +159,7 @@ test("Native read-token adapter frees explicit refusal, holds an unknown for req
     if (unknown.answer !== "accepted") return expect.fail("Native unknown attempt was not admitted");
     await effectFixture([G], life.wait);
     expect((await rows()).map(row => row["ends_ms"])).toEqual([opened + 4_200_000]);
-    expect(await outcome(`${unknown.receipt.fact.seq}:0`)).toMatchObject({ type: "outcome", result: "unknown", evidence: { basis: "own-answer", body: {} } });
+    expect(await outcome(`${unknown.receipt.fact.seq}:0`)).toMatchObject({ type: "outcome", result: "unknown", evidence: { basis: "none", body: {} } });
     await G.restart();
     life.advance(4_199_999);
     expect(await rows()).toHaveLength(1);

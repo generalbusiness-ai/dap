@@ -103,6 +103,22 @@ seals 17 public and 33 private files. MCP now explains the eight open
 reservations and tells the member to wait before a fresh request.
 Its existing every-refusal witness covers the new row.
 
+The application run at `71e6e574` passed all four compilers. Vitest reported
+39 passed, one failed, and three skipped after its first failure; eleven
+required cases never collected. The first Native quota scenario passed.
+The second expected `own-answer` for a lost provider reply, but the
+runtime correctly recorded `unknown` with `basis: none`. The test now
+requires that exact attribution, with the same result and empty body.
+
+That run's static case ledger also used spaces where Vitest inserts
+` > ` between a describe title and its case. Its verifier failed. Separate
+metadata reconciliation matches the unchanged literal source and actual
+file, project, pool, and terminal cases for 35 cases in five complete
+owners. Neither the original run nor its verifier becomes a pass.
+Manifest `5e80040f24b407c5bb7ad3686b80817c32e593894e59f53eff35431175bfa929`
+seals 19 public and 268 private files. Only the affected test compiler and
+the five failing, incomplete, or uncollected Native owners need follow-up.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The
