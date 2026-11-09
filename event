@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:52fa67c0503dc734229113391f7354142ae7908e","text":"Merge retired a covered predecessor; the successor is at spikes/typed-surface/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:532c516f0ec1aeab923e5c7084294285f9f3ff48","text":"Merge retired a covered predecessor; the successor is at scripts/format-json.test.mjs."}
