@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "request": "02174ceb7fcaa0742f7a71cfac2c793b7a252819",
+  "promise": "7498ea3f880fa830607fa8b64131c9f0c6bb6f27",
+  "sourceHead": "87755161aaf38039c57973915bf6c6e2ff4437e1",
+  "sourceTree": "4a62e608c8c994e4169fd8aa5c8177c70e83a3cd",
+  "qualification": "The first Node source-seal failure and the launcher-only inventory refusal remain failed. After the seal repair, the Node owner, five compiler contexts and all 62 whole-owner cases pass once. One configured-count control fails at the exact Vitest rejects assertion, with 19 other cases passing. Its first classifier rejected the Error label; saved-output classification verifies the assertion without a rerun. Original bytes and exits remain intact. Timing covers the five-compiler/body pipeline and excludes the preliminary Node owner; no comparable cost reduction, browser, deployed-room acceptance or full gate result follows. Shared-gate ruling c5c24191 governs the later top-head gate.",
+  "fileCount": 35,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-br12-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 3285,
+          "sha256": "1069275a9ac39a6118bd09dc86d3af58c1ad98f48ca5b341807c8387d3865ea9"
+        },
+        {
+          "path": "count-classification-classification.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "count-classification-private-retention.json",
+          "bytes": 560,
+          "sha256": "8f97ced5b162415eb203a0178205743c1bb571d78250a0a76dc8af332a5bc082"
+        },
+        {
+          "path": "count-classification-result.json",
+          "bytes": 2826,
+          "sha256": "aa600db67928d722a7182979270979042a8a4eb45ee6c8646d66c2d23b925e19"
+        },
+        {
+          "path": "count-control-control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "count-control-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "count-control-owner.time",
+          "bytes": 29,
+          "sha256": "cbae94146a719e1589c0adb673abcc8b9d2b6fa52d8ed86e692b0284abf45801"
+        },
+        {
+          "path": "count-control-private-retention.json",
+          "bytes": 548,
+          "sha256": "4edc9267e442df5318d38b4e99dc8cdbda4c3e05483d94bd6d06934caa5259e7"
+        },
+        {
+          "path": "count-control-result.json",
+          "bytes": 627,
+          "sha256": "60cdd278a80e651c3772b817115ab0de52d108bb0864e5b5aa17edfde5e35d5d"
+        },
+        {
+          "path": "failed-node-launch-failure-classification.json",
+          "bytes": 516,
+          "sha256": "6d556ec83710145666dd778c69b0711a9cee50868c1bc5926dd3b5c218252adf"
+        },
+        {
+          "path": "failed-node-launch-node-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "failed-node-launch-node-owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "failed-node-launch-node-owner.stdout",
+          "bytes": 4123,
+          "sha256": "d2a75149166d9d67324e1d512d1c4ee473e1920d5da28e9b3fd56bfe1a731136"
+        },
+        {
+          "path": "failed-node-launch-private-retention.json",
+          "bytes": 554,
+          "sha256": "d69aef8057ef11aa506c0f71b748459974cf475bc639c2560e89ec602ea1b5ac"
+        },
+        {
+          "path": "focused-coverage-ledger.json",
+          "bytes": 75889,
+          "sha256": "ba92e7e0c5e2acc17376f24292305240c1205bcb4a251732a6afebd30e3565f6"
+        },
+        {
+          "path": "focused-launch-compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused-launch-node-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused-launch-node-owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "focused-launch-node-owner.stdout",
+          "bytes": 2944,
+          "sha256": "acfea126d75195d8ee9163a099d4657accf6676679f9c073e6c33ef2b4fac131"
+        },
+        {
+          "path": "focused-launch-node-owner.time",
+          "bytes": 29,
+          "sha256": "64d393ac65af567155b79da4df8f62db8d2a699a4420065846947d41d6efad47"
+        },
+        {
+          "path": "focused-launch-outer.time",
+          "bytes": 31,
+          "sha256": "7b74403373d66e77a14db5d43e9c6de42c4e5e2621c61c91515c9d169d555dd1"
+        },
+        {
+          "path": "focused-launch-pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused-launch-private-retention.json",
+          "bytes": 561,
+          "sha256": "95bfbe89594c1c48e6b3a530e71a9e53b1b90ec6f2503f8544759049ef342156"
+        },
+        {
+          "path": "focused-launch-receipt.json",
+          "bytes": 575,
+          "sha256": "7e82b56eea054abf6eebf3aa84678917df40362367f9e6a01eba88f33965c923"
+        },
+        {
+          "path": "focused-launch-started.json",
+          "bytes": 219,
+          "sha256": "c84b070f02fa59782f8d87ac66f5a3a597e3aeb01a33e8b08ae1071b9fb350ef"
+        },
+        {
+          "path": "focused-mcp-source.log",
+          "bytes": 29,
+          "sha256": "4370159978f8ac6a38048615541648bbf779fa6a63e01d7cfcb5d370980b1536"
+        },
+        {
+          "path": "focused-mcp-test.log",
+          "bytes": 29,
+          "sha256": "494af3756b8835694f2363ac66385a746106b621a966f7592406b28c66b15924"
+        },
+        {
+          "path": "focused-private-retention.json",
+          "bytes": 545,
+          "sha256": "1b03ee14962bf5d65150ad0099c8f44ba0e634576126b44d13041ed8b2626474"
+        },
+        {
+          "path": "focused-result.json",
+          "bytes": 14081,
+          "sha256": "5f3dbe5388f76ce037094e46d7ff73fdca7352ca90f49decb8719f0658294e6b"
+        },
+        {
+          "path": "focused-sandbox.log",
+          "bytes": 29,
+          "sha256": "033d284226d2ee0135dc7a831457484305f8d773be4c6dc9dfdd991a37734318"
+        },
+        {
+          "path": "focused-scope-source.log",
+          "bytes": 29,
+          "sha256": "899a5e78a396ecbf683269df4cef699a074c3a0df9a0fdfd1a7cc77680da748d"
+        },
+        {
+          "path": "focused-scope-test.log",
+          "bytes": 29,
+          "sha256": "937286943b38738157842ee742a19dedadaad89a04c37e8ccfb4211b92a57f00"
+        },
+        {
+          "path": "launcher-refusal-private-retention.json",
+          "bytes": 562,
+          "sha256": "25dcccbb9c4dfbcf27c12131648a8eb893a20d6c885349c8caec4a7fead9eb54"
+        },
+        {
+          "path": "launcher-refusal-refusal.json",
+          "bytes": 805,
+          "sha256": "5ffa783ccb1354e87d4ec453468bd1abfec5ea7c9887d9bbc5634fa24229a65d"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1472,
+          "sha256": "7b567d3846a8fb9cd8764b3860c064449f93887aa21eb8d36d6e9454af56ed6e"
+        }
+      ]
+    }
+  ]
+}
