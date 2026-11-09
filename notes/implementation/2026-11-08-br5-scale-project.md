@@ -69,3 +69,21 @@ the unchanged lock digest. No compiler, Vitest/Workers, scale body, workflow
 or full gate has run for BR-5 yet. The one final gate must observe all six
 unchanged cases in `scope-scale` and none of those cases in `scope`.
 No extra scale body runs before it. No elapsed cost reduction is claimed.
+
+The first full gate at `5e087f06` exited 1 during typecheck. The Scope test
+compiler reported TS7016 at both new configuration imports from
+`vitest.projects.mjs`; the fixed Node, Counting, Plain and Native stages
+never started. Every tracked byte stayed equal, and the process group
+closed. The [failed-gate manifest](evidence/2026-11-09-br5-failed-typecheck.manifest.json),
+digest `ab9bca3b3b26fbf8fe36bb4b059ff7c3b0759265b3b62784e5c478f1cea14a54`,
+seals 14 public files and 142 private files. Its first sealer refused the
+empty durable-routing probe before writing output; the corrected stage
+selection preserves that refusal and changes no validation result.
+
+The repair moves the same file-list constant into
+`packages/scope/vitest.scale-files.ts`. Both Scope configurations import
+that typed local module, and the canonical Node project table reexports
+it. The trigger list names the new configuration data file. All four
+witness files and the two policy guards stay unchanged. The affected
+Scope test compiler and two complete Node owners, four cases, need their
+focused check before the next gate. The original gate remains failed.

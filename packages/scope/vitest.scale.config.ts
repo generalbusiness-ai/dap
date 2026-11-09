@@ -1,6 +1,6 @@
 import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
 import { defineConfig } from "vitest/config";
-import { scopeScaleFiles } from "../../vitest.projects.mjs";
+import { scopeScaleFiles } from "./vitest.scale-files.ts";
 
 // The four complete scale owners retain the original Worker, setup and limits.
 export default defineConfig({

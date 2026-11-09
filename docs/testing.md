@@ -743,7 +743,8 @@ path matches one of these ruled families or files:
 - `packages/scope/test/support/archive*.ts`
 - `packages/replay/src/archive.ts`
 - the configuration and selection owners: `packages/scope/vitest.scale.config.ts`,
-  `packages/scope/vitest.worker.config.ts`, `vitest.projects.mjs`,
+  `packages/scope/vitest.worker.config.ts`, `packages/scope/vitest.scale-files.ts`,
+  `vitest.projects.mjs`,
   `vitest.native.config.ts`, `vitest.scale.config.ts`, `scripts/gate.sh`,
   `scripts/test.mjs`, `scripts/scale-selection.mjs`,
   `scripts/scale-selection.test.mjs`, `scripts/test-phases.test.mjs`,

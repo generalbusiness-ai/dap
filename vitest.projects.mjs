@@ -28,12 +28,7 @@
 const project = (name, dir, config, group, more = [], options = {}) =>
   ({ extends: `./${dir}/${config}`, test: { name, root: `./${dir}`, ...(more.length > 0 ? { include: ["test/**/*.test.ts", ...more] } : {}), sequence: { groupOrder: group }, ...options } });
 
-export const scopeScaleFiles = [
-  "test/floor-archive.test.ts",
-  "test/archive-one-entry-scale.test.ts",
-  "test/archive-cadence.test.ts",
-  "../../apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts",
-];
+export { scopeScaleFiles } from "./packages/scope/vitest.scale-files.ts";
 
 const projects = [
       project("bytes", "packages/bytes", "vitest.config.ts", 0),

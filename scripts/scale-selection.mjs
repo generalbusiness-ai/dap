@@ -13,6 +13,7 @@ const families = [
 // These files choose the scale configuration or its actual gate invocation.
 const selectionFiles = new Set([
   "packages/scope/vitest.scale.config.ts", "packages/scope/vitest.worker.config.ts",
+  "packages/scope/vitest.scale-files.ts",
   "vitest.projects.mjs", "vitest.native.config.ts", "vitest.scale.config.ts",
   "scripts/scale-selection.mjs", "scripts/scale-selection.test.mjs",
   "scripts/test-phases.test.mjs", "scripts/test.mjs", "scripts/gate.sh",
