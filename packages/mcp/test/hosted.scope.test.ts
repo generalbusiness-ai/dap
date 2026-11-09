@@ -1894,7 +1894,9 @@ test("retire erases the seed before an uncertain revoke, retries only its retain
     // A fresh authority read sees the recorded revoke. The existing bounded
     // lifetime of grants another scope already holds does not change here.
     await D.restart();
-    const after = signIntent({ ...before.input.signed.intent, idempotencyKey: "TEST-after-retire", notAfter: timeOf(room.now() + 60_000) }, seed);
+    const repositoryItem = (await D.summary()).value.items.find(item => item.type === "repository")!;
+    expect(Object.keys(before.input.signed.intent.expected)).toEqual(["repository"]);
+    const after = signIntent({ ...before.input.signed.intent, expected: { repository: repositoryItem.revision }, idempotencyKey: "TEST-after-retire", notAfter: timeOf(room.now() + 60_000) }, seed);
     expect(await D.stub.submit(after, [], original.beside)).toMatchObject({ answer: "refused", reason: "unauthorized" });
     expect((await modernCall(bot.bearer, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "TEST forbidden", conditions: ["done"] }, idempotencyKey: "TEST-after-endpoint-retire" })).status).toBe(401);
     const source = httpSource(SERVICE, { fetch: room.fetch, reader: signedLogReader(secretSigner(rita.secret), { now: room.now }) });

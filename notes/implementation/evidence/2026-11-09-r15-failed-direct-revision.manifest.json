@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "request": "b66b8f146a9813628e0325374f551ae22d77284f",
+  "promise": "0875dbf1182ef1ce98fa6119a6c2de06e3a2383b",
+  "sourceHead": "65e8bd075fcd9088dbb74ab6d7f0bab48b3d4eca",
+  "sourceTree": "694335f1e73641417392b2603bed41e0c4597457",
+  "qualification": "Fifth R15 focused unit remains failed. Static24case identities reconcile exactly. Only the direct-act expected revision needs repair; production, helpers, security seals and all assertions/deadlines stay unchanged. Reused Node11, Scope source and four complete passed owners/15cases retain their own separate evidence. No R15 control or gate.",
+  "fileCount": 15,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r15-failed-direct-revision-validation",
+      "fileCount": 15,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1182,
+          "sha256": "052308dca51690a64c539689d58626d2022d72d16bc70adf4549d58e5a779cc7"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "126c264271c46399a42cfc6725bf64b6c4d72205be48a1c12b5d758537fd931e"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 7606,
+          "sha256": "a66b79ad2088e8d532202b8ea00e78b4d5c80fd5fd229f2a77bdd1a7d83cdab8"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 30689,
+          "sha256": "da9b602f58d6da3f05152be3c41ba2e902b0951c5c25e1ae3a928863d69cd59b"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 5420,
+          "sha256": "789643d32bea5fd129e4b5642eeb96082be01ced37102086d97ea27ad04a85db"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 1189,
+          "sha256": "bd9d40ac88db58f400cc16e946b0c0ce1d9d3f9bf6e2aa2ca0f4af58a7eba30d"
+        },
+        {
+          "path": "mcp-test.log",
+          "bytes": 29,
+          "sha256": "f9eb53ee264e3a11d54b6c74d459dc671f24c1fbea445ccae0442a105e7acf46"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 558,
+          "sha256": "8a651ac8506a39d8eb32f147c03831d21a922bd47be0af8946e79c02ef67130d"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 31,
+          "sha256": "e2918d1666de673bcff5fcf029c7328a07b966cd876aa130f3ac5e8087836995"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 478,
+          "sha256": "210eb8d53941edecb553be98fbcd87bf77f9aaab60c7761c4cb1f503db78dc18"
+        },
+        {
+          "path": "scope-test.log",
+          "bytes": 29,
+          "sha256": "dc850963489c91cb1a3d41449bf7b24ec4de7d0a65ae700d504938284eec65d0"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}
