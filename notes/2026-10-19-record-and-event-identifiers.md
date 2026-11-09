@@ -1,6 +1,8 @@
 # Sequence and event identifiers
 
-Status: current. Draft 6 landed at `2fcd50ab`. Nothing here is built.
+Status: current. Draft 6 landed at `2fcd50ab`. The adoption premise now
+follows the retirement ruling of 9 November 2026, `c0a795e7`.
+The protocol and dap's adoption remain unbuilt.
 
 Part one specifies a protocol for sequence and event identifiers. Part
 two describes how dap adopts this protocol.
@@ -718,10 +720,37 @@ did:seq:git256:6320f109df9ff94238c96c7a1c732aa7b9614589e74ef51bf382451f1c9e64a1
 
 ## 8. What changes in dap
 
-dap adopts this in one change. There is no deployed history to keep
-compatible, so the change writes nothing twice and translates nothing.
-That change is not built. Its request, `05d618e2`, is paused until the
-level that the protocol targets is settled.
+dap adopts this in one cutover. The deployed implementation serves the
+new format only.
+The cutover retires every room recorded in the old format on `dap-grow`,
+`dap-lending`, `dap-demo` and `artroom-scope`. These Workers now hold
+recorded journals. The earlier premise that there was no deployed history
+no longer applies.
+
+Before the cutover deploys, the planner records every affected room in one
+act. For each room, the act names its Worker, scope ID, last entry and
+archive state. It also names the last old-format main commit. Replay at
+that commit remains the reader for the old journals. Old entries keep
+their original bytes and signatures. Historical notes and retained
+evidence keep their old words. The condition that no old reference names
+remain covers source, tests and current docs.
+
+At the cutover, the planner deploys the new code onto the same four
+Workers. The new code recognizes a retired old-format room and answers a
+request for it with a named refusal. The refusal says that the room
+retired and names the commit that reads its journal. The rollout has no
+translation, dual writes or frozen old-format deployment.
+
+After the cutover, the planner and builder recreate the Grow, Lending and
+J5 Site demo rooms in the new format. They rerun J5's acceptance scene and
+record evidence for the new room.
+
+The change is not built. Request `05d618e2` resumed on 9 November 2026 in
+`9ab66624`. The identifiers build comes first in phase 3, before C1, M1a,
+the join-parity build and the foreign-hold work. The note amendment may
+run as filler in phase 2. It goes through review before the code that
+depends on it. If a rule of this section cannot be built as written, stop
+and ask the planner before choosing another construction.
 
 | Term here | In dap |
 |---|---|
@@ -803,9 +832,10 @@ stay as the address form. The archive ref stays keyed by scope ID, and
 the implementation. The tests of replay compare its integrity mode with
 the `dap1` vectors.
 
-**Size of the change, from a count of the source:** `ScopeRef` appears
-in 140 files, `FactRef` in 88, and the incarnation member in 53. Most of
-the change is mechanical. Six places need thought:
+**Original planning count:** `ScopeRef` appeared in 140 files, `FactRef`
+in 88, and the incarnation member in 53. These are the counts recorded
+for the original plan, not today's source inventory. Six places need
+thought:
 
 - the resolver and routing in the scope package;
 - the creation protocol and its conflict clause;
