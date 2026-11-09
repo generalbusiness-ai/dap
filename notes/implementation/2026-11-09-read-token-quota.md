@@ -87,6 +87,13 @@ compiler and all 21 Native cases remained unrun. Manifest
 seals 17 public and 36 private files. The failed run remains failed.
 The repair's focused checks, distinguishing controls, and gate remain due.
 
+The next frozen run at `42e9afa5` stopped in the Node owner: 10 passed
+and the decoder's unchanged seal failed. No compiler or application case
+ran. Manifest `b69127a68443831ade7286bd9447bc9c9a14464df9024d462f912f0038b765e6`
+seals 16 public and 20 private files. The maintained producer now supplies
+the bytes decoder's actual whole-file seal, `05bf74f7`, under Hugh's
+standing patch authorization. Both failed units keep their original results.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The
