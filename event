@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ef0637d0f7e0b9dbd354267b7d2734278bf9fd0","text":"Merge retired a covered predecessor; the successor is at .agents/skills/verify-retained-editor/SKILL.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7fc72055dca0972f48bc33a12848e020d3ff5ba8","text":"Merge retired a covered predecessor; the successor is at verification/state-machines/source-probes.mjs."}
