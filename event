@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:61cad705f8daa1a2a2cb5a14153304c4a1f50a3e","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/fixtures/application-release-listing.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:631041590aeb5602540e62afa53fec383bf8ccc6","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-17-journey-views-design/mockups.json."}
