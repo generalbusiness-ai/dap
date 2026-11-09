@@ -2,7 +2,7 @@ import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { DEVICE_COMMAND, type DeclaredDefinition, type Intent, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
-import { valueDigest } from "@generalbusiness/dap-derive";
+import { CAPABILITY_CODE, valueDigest } from "@generalbusiness/dap-derive";
 import { FAILED_CLAIM_COHORT, FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF, TRUSTED_APPLICATION_COHORT, firstExtents, platform } from "@generalbusiness/dap-platform";
 import { Reader } from "@generalbusiness/dap-git";
 import { packApplication, secretSigner, signedApplicationInstall, signedDeviceApplicationInstall } from "@generalbusiness/dap-client";
@@ -184,7 +184,7 @@ test.each([
     }
     expect((await G.summary()).value.definition).toBe(cohort.destination);
     expect(platform(cohort.destination)).not.toBeNull();
-    const replayed = await life.wait(() => verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: G.name, platform, grants: "proven" }));
+    const replayed = await life.wait(() => verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: G.name, platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven" }));
     expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
   } finally { life.release(); }
 }, 60_000);
