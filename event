@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d2eb0c11d4b8412112cea7f204e8f85a06faa4c3","text":"Merge retired a covered predecessor; the successor is at packages/cli/tsconfig.scope.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d5006fec8024c799821a1337a238743c2471eb1b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-json-pre-gate.manifest.json."}
