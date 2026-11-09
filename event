@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d98b4ea976eb62692ca87f62f18964a7b672112b","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e7fa31db01104f9aa99de27519c9654ee0b8c854","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-09-r3a-authority-key-admission.md."}
