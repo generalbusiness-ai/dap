@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:95125b182504bc11496037b29b74aa6f1c466ab7","text":"Merge retired a covered predecessor; the successor is at docs/roadmap.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ee1be06415f702256a26797564cb4029e4df2e8f","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/application-cross-room.test.ts."}
