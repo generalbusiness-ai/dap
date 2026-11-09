@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:87f2fd920ee33295b450e5a74924f36994760838","text":"Closed in the 2026-11-08 cleanup of finished items. Landed. Checker approved f17b259d in d8473646; landing 25467a36 carries candidate f17b259d (approval fc4e18d5)."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4a502d9e9b7dcb58ba51481125f3abf2d92aa640","text":"Closed in the 2026-11-08 cleanup of finished items. Landed. Checker assessed 39782012 in 80f4de7e; 39782012 is on main through landing 25467a36 (approval fc4e18d5)."}
