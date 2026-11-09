@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1cb68a6f59533e0e7252f5e23a1af79cb77eee49","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/demo-config.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:23c5a548248ee276d4850c465053d97b26012bbe","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br11-cli-offer-assets.manifest.json."}
