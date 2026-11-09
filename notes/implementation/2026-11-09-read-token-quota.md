@@ -94,6 +94,15 @@ seals 16 public and 20 private files. The maintained producer now supplies
 the bytes decoder's actual whole-file seal, `05bf74f7`, under Hugh's
 standing patch authorization. Both failed units keep their original results.
 
+At `b938e497`, Node's complete 11 cases passed again. Scope source then
+found the last exhaustive consumer: MCP's refusal-description table lacked
+`limit` (`TS2741`). The remaining three compilers and all 36 application
+cases stayed unrun. Manifest
+`54b1e2fdad9337128f87c8fc76813c587e84837b3c0d163729ea3ac597964477`
+seals 17 public and 33 private files. MCP now explains the eight open
+reservations and tells the member to wait before a fresh request.
+Its existing every-refusal witness covers the new row.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The
