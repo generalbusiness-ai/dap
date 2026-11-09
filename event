@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8361bdda5ae153ff7f643f2feda50db9bee7cba3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-24-kernel-hygiene-evidence/compatibility-readiness-proof.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8431ec40ca227797eee6574fad0fca787d70aeff","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/finding-definition.test.ts."}
