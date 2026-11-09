@@ -256,7 +256,7 @@ proposal to remove 36 acts by merging `-own`/`-any` pairs (line 64).
 
 ### 2f. The journey re-cut of 26 October
 
-The agentic-practice survey note (`a455fdba`, in review at `c81b168d`)
+The [agentic-practice survey note](../2026-10-26-agentic-development-practice-survey.md) (`a455fdba`)
 reads current practice in agent-assisted development against this plan
 and records five decisions. The journey as first cut measured a
 people-only loop. The decisions, and where each lands:

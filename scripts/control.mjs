@@ -9,8 +9,9 @@
 //     'entries === 0 && head.type === "checkpoint"' 'entries === 0' --expect 'closing checkpoint' \
 //     -- packages/scope test/turn.test.ts
 //
-// The test args go to vitest, or to `node --test` in a package whose test
-// script uses Node's runner. The change must occur exactly once in the file.
+// A requested .mjs or .cjs file uses Node's runner; a TypeScript file uses
+// Vitest. Other selections follow the package's test script.
+// The change must occur exactly once in the file.
 // The file is restored even if the run is interrupted.
 //
 // The tests are run twice: first unchanged, which must pass, and then with
@@ -65,7 +66,10 @@ const original = readFileSync(file, "utf8");
 const count = original.split(oldText).length - 1;
 if (count !== 1) inconclusive(`the text to change occurs ${count} times in ${file}; it must occur exactly once.`);
 
-const nodeRunner = /\bnode\b[^&|;]*--test\b/.test(JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).scripts?.test ?? "");
+const requestedFile = testArgs.find(arg => !arg.startsWith("-") && /\.(?:[cm]?ts|tsx|mjs|cjs)$/.test(arg));
+const nodeRunner = requestedFile !== undefined
+  ? /\.[cm]js$/.test(requestedFile)
+  : /\bnode\b[^&|;]*--test\b/.test(JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).scripts?.test ?? "");
 scratch = mkdtempSync(join(tmpdir(), "artroom-control-"));
 
 /** Run the tests once. Returns what happened, never a bare exit code. */
