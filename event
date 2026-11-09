@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:11ebd3209ec4369a23a05b5d5116aa7084a53bc5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-failed-unknown-basis.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:17f0949ca014b1eb9e23e736ca57d0c0601953c4","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
