@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bb7c860762e2b1b6f8d996985cd760a61153faff","text":"Merge retired a covered predecessor; the successor is at docs/security/trust-boundaries.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bb92595bc52391fee15fe77b73176c499833baf9","text":"Merge retired a covered predecessor; the successor is at notes/reviews/2026-10-04-security-review.md."}
