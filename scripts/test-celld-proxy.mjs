@@ -318,7 +318,13 @@ async function run() {
     must(rotated.status === 200 && typeof rotated.value.bearer === "string", "Actual bearer rotation must succeed");
     await connect(rotated.value.bearer);
     failureMetadata.stage = "retirement";
-    const retired = await control("retire", configured.value.agent, ""); must(retired.status === 200, "Actual retirement must succeed");
+    const retired = await control("retire", configured.value.agent, "");
+    must(retired.status === 202 && retired.value.pending === true && retired.value.retired === false
+      && retired.value.endpointDisabled === true && retired.value.seedErased === true && retired.value.reason === "revoke-required",
+    "Empty-body retirement must disable the endpoint, erase its seed and await a recorded revoke");
+    const retiredBearer = await transport(base + "/mcp", { method: "GET", headers: { authorization: `Bearer ${rotated.value.bearer}`, "mcp-protocol-version": MODERN } });
+    must(retiredBearer.status === 401, "The retired endpoint must refuse its former bearer");
+    await retiredBearer.body?.cancel();
     await stop(); await start(plan.register, false);
     failureMetadata.stage = "unset-control";
     const unset = await control("create", null, await fresh("unset"));
@@ -330,7 +336,7 @@ async function run() {
     owned.check();
     return { version: 1, qualification: "Actual generated-CA TLS client/proxy/celld and real Worker/Native/registry/agent; private owned TEST custody. No deployed proxy, production TLS profile, supervisor or global trust claim.",
       celld: { pin: expectedVersion, binarySha256: digest(await readFile(binary)), versionReceipt: version.receipt, shim: { sha256: digest(shim), productionEntry } },
-      smoke, controls: { configuredCreate: configured.status, unsetCreate: unset.status, forwardedOnlyCreate: forwarded.status, wrongServiceCreate: wrong.status, hostDifferent: true, initializedSessions: 2, roomToolCalls: 2, rotation: rotated.status, retirement: retired.status }, proxy: counters, processReceipts };
+      smoke, controls: { configuredCreate: configured.status, unsetCreate: unset.status, forwardedOnlyCreate: forwarded.status, wrongServiceCreate: wrong.status, hostDifferent: true, initializedSessions: 2, roomToolCalls: 2, rotation: rotated.status, retirement: retired.status, retirementPending: retired.value.pending, retiredBearer: retiredBearer.status }, proxy: counters, processReceipts };
   } finally {
     let closeFailed = false;
     for (const close of [
