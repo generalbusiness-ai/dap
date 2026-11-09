@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a07583160c73f6f9d3054eea0c8f8a73035fb6d4","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/definitions/change-finding.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a1b07ebd750d01f39c5013e98e98a2ff71916c6d","text":"Merge retired a covered predecessor; the successor is at apps/counter/dap.application.json."}
