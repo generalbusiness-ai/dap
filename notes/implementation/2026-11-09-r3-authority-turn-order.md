@@ -11,8 +11,10 @@ foreign facts or a queued turn. Signature and shape checks still come first.
 Native grant marks keep their own fallback, including recovery-key and
 action-null rules. No successful act relies on the early check alone:
 the commit still checks authority, revisions, time and current application
-admission. A key accepted during the asynchronous standing read retains its
-historical receipt or mismatch path.
+admission. The port documentation states that `held` can run before the
+turn and again at a commit; only `sealed` consumes a recorded use. A key
+accepted during the asynchronous standing read retains its historical
+receipt or mismatch path.
 
 Only `Turns.run(null)`, called by the native alarm, drains timed work.
 A waiting input does not pass a due transition: it waits with `busy`, and

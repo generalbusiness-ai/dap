@@ -49,8 +49,13 @@ export interface Asked {
  * What one read of the authority port obtained for one act: phase two of the
  * port, which decides in the commit.
  *
- * `held` is given the folded state at the commit's head and the commit's one
- * reading. It answers each grant that the act may be judged on, with whether
+ * `held` receives folded state and one clock reading. Core first calls it
+ * before the turn to refuse a definite failure of an ordinary grant. That
+ * check authorizes no write. The commit calls it again at its own head and
+ * reading before judging authority. The port must allow these rechecks
+ * until `sealed` records a use.
+ *
+ * It answers each grant that the act may be judged on, with whether
  * it is current at that reading. The judge then looks for one that is to
  * the signing key, names the action and covers the scope (section 4.2,
  * check 9). Null: what was read cannot serve this commit, as when its window
