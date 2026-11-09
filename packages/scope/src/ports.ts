@@ -100,8 +100,8 @@ export interface Standing {
  * it begins. The core stops waiting after `seconds`. Null, a late answer or
  * a failure: nothing was read, and the act is not judged at check 9.
  *
- * `limit`: this run cannot admit another signing key. It reads no standing
- * for that key and the caller refuses the input without starting a turn.
+ * `limit`: checked standing cannot reserve another signing-key place in
+ * this run. The caller refuses the input without starting a turn.
  *
  * Phase two is the method of what phase one returns. So no commit decides
  * on authority without a read that was made for its own input.

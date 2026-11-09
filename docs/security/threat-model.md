@@ -70,7 +70,17 @@ scripted recorded state. See [stand-ins and what they show](../testing.md#stand-
   {
     "invariant": "grant",
     "path": "packages/scope/test/authority.test.ts",
-    "name": "an authority run admits 4096 keys, refuses a new key before reading at the bound, keeps old keys usable and resets only in a new run"
+    "name": "an authority run charges only 4096 keys with standing, reserves concurrent arrivals after their read, keeps old keys usable and resets in a new run"
+  },
+  {
+    "invariant": "grant",
+    "path": "packages/scope/test/authority.test.ts",
+    "name": "more than 4096 unknown or unanswered signer reads do not charge a run or prevent a newly joined member's standing"
+  },
+  {
+    "invariant": "grant",
+    "path": "packages/scope/test/authority.test.ts",
+    "name": "evicting a never-admitted revoked key invalidates its older in-flight active answer and reads Membership again"
   },
   {
     "invariant": "sealed-operation",
@@ -145,11 +155,27 @@ retain their recovery-key and action-null checks, and the commit rechecks
 authority at its own head and clock. Only the alarm drains timed work;
 other inputs cannot pass a due transition.
 
-A remote authority run admits at most 4,096 distinct signing keys, including
-once-only and failed reads. A new key above that bound gets `limit` before
-another Membership read; existing keys remain usable. A new object run
-starts empty. Membership's own folded authority uses no remote kept-read
-map. The bound does not replace signature checks, local history or the
-current observation's checks.
+A remote authority run reserves a signing-key place only after a checked
+Membership observation grants current standing. Once-only grants count too:
+a sealed entry can retain their highest observed head. Unknown keys and
+failed reads take no place and keep no signer observation. `limit` needs
+4,096 keys with standing in that run. A new object run starts empty.
+Membership's own folded authority uses no remote signer cache.
+
+An admitted key's observed retirement, compromise or member removal stays
+for the run. A separate FIFO keeps at most 4,096 revoked keys that were
+never admitted. Eviction invalidates older standing handles, including
+reads still in flight. A cache miss reads Membership again. For a
+never-admitted key that leaves the FIFO, the run no longer remembers an
+exact permanent denial: it relies on a fresh trusted Membership read and
+Membership's irreversible retirement and removal. Distinct real revoked
+keys can cause cache eviction and require another read. Unknown or
+unanswered throwaway keys cannot cause that eviction. The signer-key cache
+bound does not replace signature checks, local history or the commit's
+current observation checks.
+The separate `Further.read` reusable-observation map has no run-wide size
+bound: definition rows can select member references from act fields, and
+distinct answered non-once subjects, including unknown members, grow that
+map.
 [Report a vulnerability](../../SECURITY.md#report-a-vulnerability) gives the
 private reporting path.
