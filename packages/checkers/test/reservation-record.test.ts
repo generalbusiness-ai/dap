@@ -46,12 +46,13 @@ afterAll(cleanup);
 const recordFile = new URL("./fixtures/reservation-record.json", import.meta.url);
 
 test("the same recorded Scope reservation is imported, staged under its exact ref, fetched by the runner, and checked by the fixture's configured Node step; absent or changed staging starts no step (local Git STAND-IN)", async () => {
-  const raw = readFileSync(recordFile);
+  const record = parseStrict(readFileSync(recordFile, "utf8")) as unknown as Record;
+  // Reconstruct the original producer artifact; readable fixture layout is not its byte identity.
+  const raw = Buffer.from(canonicalize(record), "utf8");
   const artifactHash = createHash("sha256").update(raw).digest("hex");
   expect(artifactHash).toBe("e0c0f1023925207bde7f52859d91601e76cd85c6093427244ae164df963fe4c9");
   const producer = parseStrict(readFileSync(new URL("./fixtures/reservation-record-producer.json", import.meta.url), "utf8"));
   expect(producer).toMatchObject({ recordSha256: artifactHash, recordBytes: raw.length });
-  const record = parseStrict(raw.toString("utf8")) as unknown as Record;
   expect(canonicalize(record)).toBe(raw.toString("utf8"));
   const { snapshot } = record;
   for (const sealed of [snapshot.job, snapshot.manifest, snapshot.reservation, ...snapshot.sources]) {

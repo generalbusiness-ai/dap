@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "request": "c6e29874f4194734ab68c9f7adeab54fd3543f40",
+  "promise": "197ace0743d3c4c26288e32708ae72aa2b7af5e1",
+  "qualification": "Preparation errors copied from the session tool results. Neither command started a test, formatter, compiler, compatibility command or application import. This is an explicit preparation record, not original stdout bytes or a validation result. Corrected frozenv2 plan then ran once and passed.",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-json-size-preparation",
+      "fileCount": 2,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 86,
+          "sha256": "edc671a80f71f804f774ab886da3b81cd0a89977bbfd508942be186706f78f77"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 1230,
+          "sha256": "e5e6c46876b25cb50dd2788fcd94a89942b2892d04906195c49bb185a9c4e69d"
+        }
+      ]
+    }
+  ]
+}

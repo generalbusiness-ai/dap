@@ -6,9 +6,7 @@
     "admin": {
       "seed": "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f",
       "member": "@admin",
-      "actions": [
-        "counting.control"
-      ]
+      "actions": ["counting.control"]
     },
     "alice": {
       "seed": "2020202020202020202020202020202020202020202020202020202020202020",

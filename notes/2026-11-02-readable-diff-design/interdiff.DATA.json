@@ -48,25 +48,14 @@
           "newPath": "b/README.md",
           "hunks": [
             {
-              "range": [
-                2,
-                4,
-                2,
-                4
-              ],
+              "range": [2, 4, 2, 4],
               "rows": [
-                [
-                  " ",
-                  "\n"
-                ],
+                [" ", "\n"],
                 [
                   " ",
                   "Founded by @owner through the room sc_vj3clikjdkracvqipp3dsble4nxgh4ojaa3k4yzcxchnytlc2eqq.\n"
                 ],
-                [
-                  " ",
-                  "\n"
-                ],
+                [" ", "\n"],
                 [
                   "-",
                   "The task-list directory holds a small browser app for keeping a list of tasks. You add a task, mark it done, and the browser keeps the list in local storage. To run it, serve the directory with a static file server and open index.html.\n"
@@ -103,25 +92,14 @@
           "newPath": "b/task-list/index.html",
           "hunks": [
             {
-              "range": [
-                23,
-                7,
-                23,
-                7
-              ],
+              "range": [23, 7, 23, 7],
               "rows": [
                 [
                   " ",
                   "            autocomplete=\"off\" aria-describedby=\"task-help\">\n"
                 ],
-                [
-                  " ",
-                  "          <button type=\"submit\">Add task</button>\n"
-                ],
-                [
-                  " ",
-                  "        </div>\n"
-                ],
+                [" ", "          <button type=\"submit\">Add task</button>\n"],
+                [" ", "        </div>\n"],
                 [
                   "-",
                   "        <p id=\"task-help\" class=\"hint\">Your tasks stay in this browser, on this device.</p>\n"
@@ -130,18 +108,9 @@
                   "+",
                   "        <p id=\"task-help\" class=\"hint\">Your tasks stay in this browser, on this device. Clearing this browser's data removes them.</p>\n"
                 ],
-                [
-                  " ",
-                  "      </form>\n"
-                ],
-                [
-                  " ",
-                  "\n"
-                ],
-                [
-                  " ",
-                  "      <section aria-labelledby=\"list-heading\">\n"
-                ]
+                [" ", "      </form>\n"],
+                [" ", "\n"],
+                [" ", "      <section aria-labelledby=\"list-heading\">\n"]
               ],
               "complete": true
             }

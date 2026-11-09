@@ -20,11 +20,13 @@
     "deploy:scope": "npx -y wrangler@4.147.0 deploy --keep-vars --config apps/room/wrangler.self-host.jsonc",
     "deploy:home": "cd homepage && npx -y wrangler@4.147.0 deploy",
     "pretest:scale": "node scripts/cloudflare-pool-compat.mjs",
-    "test:scale": "vitest run --config vitest.scale.config.ts"
+    "test:scale": "vitest run --config vitest.scale.config.ts",
+    "format:check": "node scripts/format-json.mjs"
   },
   "devDependencies": {
     "typescript": "7.0.2",
-    "vitest": "4.1.12"
+    "vitest": "4.1.12",
+    "prettier": "3.9.10"
   },
   "engines": {
     "node": ">=22"

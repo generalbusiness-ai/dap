@@ -25,12 +25,7 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                21,
-                9,
-                21,
-                9
-              ],
+              "range": [21, 9, 21, 9],
               "rows": [
                 [
                   " ",
@@ -76,10 +71,7 @@
                   " ",
                   "| `@generalbusiness/artroom-client` | Building and signing an intent, and a typed handle on one scope. | contract, bytes |\n"
                 ],
-                [
-                  " ",
-                  "\n"
-                ]
+                [" ", "\n"]
               ],
               "complete": true
             }
@@ -102,25 +94,11 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                1,
-                7,
-                1,
-                7
-              ],
+              "range": [1, 7, 1, 7],
               "rows": [
-                [
-                  " ",
-                  "{\n"
-                ],
-                [
-                  " ",
-                  "  \"name\": \"@generalbusiness/artroom-git\",\n"
-                ],
-                [
-                  " ",
-                  "  \"version\": \"0.1.0-dev.1\",\n"
-                ],
+                [" ", "{\n"],
+                [" ", "  \"name\": \"@generalbusiness/artroom-git\",\n"],
+                [" ", "  \"version\": \"0.1.0-dev.1\",\n"],
                 [
                   "-",
                   "  \"description\": \"Artroom's one place that touches a Git repository or a Git host: the object reader, the commands, the evidence of a push, and the gateway that holds a token. It runs in Node and in a container, never in a scope's commit.\",\n"
@@ -129,18 +107,9 @@
                   "+",
                   "  \"description\": \"Artroom's Git object reader, commands, push evidence, token gateway and Web HTTP provider primitives. It runs in Node, containers and Workers, outside a scope's commit.\",\n"
                 ],
-                [
-                  " ",
-                  "  \"license\": \"Apache-2.0\",\n"
-                ],
-                [
-                  " ",
-                  "  \"type\": \"module\",\n"
-                ],
-                [
-                  " ",
-                  "  \"sideEffects\": false,\n"
-                ]
+                [" ", "  \"license\": \"Apache-2.0\",\n"],
+                [" ", "  \"type\": \"module\",\n"],
+                [" ", "  \"sideEffects\": false,\n"]
               ],
               "complete": true
             }
@@ -163,12 +132,7 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                353,
-                7,
-                353,
-                8
-              ],
+              "range": [353, 7, 353, 8],
               "rows": [
                 [
                   " ",
@@ -202,10 +166,7 @@
                   " ",
                   "        await response.body?.cancel().catch(() => undefined);\n"
                 ],
-                [
-                  " ",
-                  "        throw fail(\"HTTP read response\");\n"
-                ]
+                [" ", "        throw fail(\"HTTP read response\");\n"]
               ],
               "complete": true
             }
@@ -228,57 +189,25 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                24,
-                154,
-                24,
-                155
-              ],
+              "range": [24, 154, 24, 155],
               "rows": [
-                [
-                  " ",
-                  "  maxBytes: number;\n"
-                ],
+                [" ", "  maxBytes: number;\n"],
                 [
                   " ",
                   "  /** An HTTP Authorization value. Kept privately, never in a URL or answer. */\n"
                 ],
-                [
-                  " ",
-                  "  authorization?: string;\n"
-                ],
+                [" ", "  authorization?: string;\n"],
                 [
                   "-",
                   "  /** A trusted fetch implementation that honors redirect:error and the signal. */\n"
                 ],
-                [
-                  "-",
-                  "  fetch?: (request: Request) => Promise<Response>;\n"
-                ],
-                [
-                  "-",
-                  "  transport?: Transport;\n"
-                ],
-                [
-                  "-",
-                  "  bounds?: ReadBounds;\n"
-                ],
-                [
-                  "-",
-                  "  timeoutMs?: number;\n"
-                ],
-                [
-                  "-",
-                  "}\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
-                [
-                  "-",
-                  "const utf8 = new TextEncoder();\n"
-                ],
+                ["-", "  fetch?: (request: Request) => Promise<Response>;\n"],
+                ["-", "  transport?: Transport;\n"],
+                ["-", "  bounds?: ReadBounds;\n"],
+                ["-", "  timeoutMs?: number;\n"],
+                ["-", "}\n"],
+                ["-", "\n"],
+                ["-", "const utf8 = new TextEncoder();\n"],
                 [
                   "-",
                   "const bad = (what: string) => new GitRefusal(\"unreadable\", what);\n"
@@ -291,46 +220,22 @@
                   "-",
                   "  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));\n"
                 ],
-                [
-                  "-",
-                  "  let at = 0;\n"
-                ],
+                ["-", "  let at = 0;\n"],
                 [
                   "-",
                   "  for (const part of parts) { out.set(part, at); at += part.length; }\n"
                 ],
-                [
-                  "-",
-                  "  return out;\n"
-                ],
-                [
-                  "-",
-                  "};\n"
-                ],
-                [
-                  "-",
-                  "const ascii = (bytes: Uint8Array): string => {\n"
-                ],
-                [
-                  "-",
-                  "  let out = \"\";\n"
-                ],
+                ["-", "  return out;\n"],
+                ["-", "};\n"],
+                ["-", "const ascii = (bytes: Uint8Array): string => {\n"],
+                ["-", "  let out = \"\";\n"],
                 [
                   "-",
                   "  for (const b of bytes) out += String.fromCharCode(b);\n"
                 ],
-                [
-                  "-",
-                  "  return out;\n"
-                ],
-                [
-                  "-",
-                  "};\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
+                ["-", "  return out;\n"],
+                ["-", "};\n"],
+                ["-", "\n"],
                 [
                   "-",
                   "/** A bounded stream read, cancelled on overflow or failure. */\n"
@@ -339,102 +244,36 @@
                   "-",
                   "async function bytes(stream: ReadableStream<Uint8Array> | null, limit: number): Promise<Uint8Array> {\n"
                 ],
-                [
-                  "-",
-                  "  if (stream === null) throw bad(\"HTTP body\");\n"
-                ],
-                [
-                  "-",
-                  "  const reader = stream.getReader();\n"
-                ],
-                [
-                  "-",
-                  "  const chunks: Uint8Array[] = [];\n"
-                ],
-                [
-                  "-",
-                  "  let size = 0;\n"
-                ],
-                [
-                  "-",
-                  "  try {\n"
-                ],
-                [
-                  "-",
-                  "    for (;;) {\n"
-                ],
-                [
-                  "-",
-                  "      const next = await reader.read();\n"
-                ],
-                [
-                  "-",
-                  "      if (next.done) return join(chunks);\n"
-                ],
-                [
-                  "-",
-                  "      size += next.value.length;\n"
-                ],
+                ["-", "  if (stream === null) throw bad(\"HTTP body\");\n"],
+                ["-", "  const reader = stream.getReader();\n"],
+                ["-", "  const chunks: Uint8Array[] = [];\n"],
+                ["-", "  let size = 0;\n"],
+                ["-", "  try {\n"],
+                ["-", "    for (;;) {\n"],
+                ["-", "      const next = await reader.read();\n"],
+                ["-", "      if (next.done) return join(chunks);\n"],
+                ["-", "      size += next.value.length;\n"],
                 [
                   "-",
                   "      if (size > limit) throw new GitRefusal(\"too-large\", \"HTTP body\");\n"
                 ],
-                [
-                  "-",
-                  "      chunks.push(next.value);\n"
-                ],
-                [
-                  "-",
-                  "    }\n"
-                ],
-                [
-                  "-",
-                  "  } catch (e) {\n"
-                ],
-                [
-                  "-",
-                  "    await reader.cancel().catch(() => undefined);\n"
-                ],
-                [
-                  "-",
-                  "    throw e;\n"
-                ],
-                [
-                  "-",
-                  "  } finally { reader.releaseLock(); }\n"
-                ],
-                [
-                  "-",
-                  "}\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
-                [
-                  "-",
-                  "function packet(line: string): Uint8Array {\n"
-                ],
-                [
-                  "-",
-                  "  const data = utf8.encode(line);\n"
-                ],
+                ["-", "      chunks.push(next.value);\n"],
+                ["-", "    }\n"],
+                ["-", "  } catch (e) {\n"],
+                ["-", "    await reader.cancel().catch(() => undefined);\n"],
+                ["-", "    throw e;\n"],
+                ["-", "  } finally { reader.releaseLock(); }\n"],
+                ["-", "}\n"],
+                ["-", "\n"],
+                ["-", "function packet(line: string): Uint8Array {\n"],
+                ["-", "  const data = utf8.encode(line);\n"],
                 [
                   "-",
                   "  return join([utf8.encode((data.length + 4).toString(16).padStart(4, \"0\")), data]);\n"
                 ],
-                [
-                  "-",
-                  "}\n"
-                ],
-                [
-                  "-",
-                  "const FLUSH = utf8.encode(\"0000\");\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
+                ["-", "}\n"],
+                ["-", "const FLUSH = utf8.encode(\"0000\");\n"],
+                ["-", "\n"],
                 [
                   "-",
                   "/** Entire pkt-line stream, including flushes; no trailing or truncated data. */\n"
@@ -443,26 +282,14 @@
                   "-",
                   "function packets(data: Uint8Array): (string | null)[] {\n"
                 ],
-                [
-                  "-",
-                  "  const out: (string | null)[] = [];\n"
-                ],
-                [
-                  "-",
-                  "  for (let at = 0; at < data.length;) {\n"
-                ],
-                [
-                  "-",
-                  "    const digits = ascii(data.subarray(at, at + 4));\n"
-                ],
+                ["-", "  const out: (string | null)[] = [];\n"],
+                ["-", "  for (let at = 0; at < data.length;) {\n"],
+                ["-", "    const digits = ascii(data.subarray(at, at + 4));\n"],
                 [
                   "-",
                   "    if (!/^[0-9a-f]{4}$/.test(digits)) throw bad(\"pkt-line\");\n"
                 ],
-                [
-                  "-",
-                  "    const size = Number.parseInt(digits, 16);\n"
-                ],
+                ["-", "    const size = Number.parseInt(digits, 16);\n"],
                 [
                   "-",
                   "    if (size === 0) { out.push(null); at += 4; continue; }\n"
@@ -479,38 +306,14 @@
                   "-",
                   "    if (line.endsWith(\"\\n\")) line = line.slice(0, -1);\n"
                 ],
-                [
-                  "-",
-                  "    out.push(line);\n"
-                ],
-                [
-                  "-",
-                  "    at += size;\n"
-                ],
-                [
-                  "-",
-                  "  }\n"
-                ],
-                [
-                  "-",
-                  "  if (out.at(-1) !== null) throw bad(\"pkt-line\");\n"
-                ],
-                [
-                  "-",
-                  "  return out;\n"
-                ],
-                [
-                  "-",
-                  "}\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
-                [
-                  "-",
-                  "/**\n"
-                ],
+                ["-", "    out.push(line);\n"],
+                ["-", "    at += size;\n"],
+                ["-", "  }\n"],
+                ["-", "  if (out.at(-1) !== null) throw bad(\"pkt-line\");\n"],
+                ["-", "  return out;\n"],
+                ["-", "}\n"],
+                ["-", "\n"],
+                ["-", "/**\n"],
                 [
                   "-",
                   " * A non-delta v2 pack containing exactly the supplied objects. The count,\n"
@@ -527,22 +330,13 @@
                   "-",
                   " * send changed caller-owned bytes under an already checked ID.\n"
                 ],
-                [
-                  "-",
-                  " */\n"
-                ],
+                ["-", " */\n"],
                 [
                   "-",
                   "export async function buildPack(objects: readonly RawGitObject[], options: { maxBytes: number; bounds?: ReadBounds }): Promise<Uint8Array> {\n"
                 ],
-                [
-                  "-",
-                  "  const bounds = options.bounds ?? READ_BOUNDS;\n"
-                ],
-                [
-                  "-",
-                  "  const maxBytes = options.maxBytes;\n"
-                ],
+                ["-", "  const bounds = options.bounds ?? READ_BOUNDS;\n"],
+                ["-", "  const maxBytes = options.maxBytes;\n"],
                 [
                   "-",
                   "  if (!Number.isSafeInteger(maxBytes) || maxBytes < 32 || Object.values(bounds).some((n) => !Number.isSafeInteger(n) || n <= 0)) throw new GitRefusal(\"too-large\", \"pack allowance\");\n"
@@ -551,22 +345,10 @@
                   "-",
                   "  if (objects.length > bounds.closureObjects || objects.length > 0xffffffff) throw new GitRefusal(\"too-large\", \"pack objects\");\n"
                 ],
-                [
-                  "-",
-                  "  let total = 0;\n"
-                ],
-                [
-                  "-",
-                  "  const seen = new Set<string>();\n"
-                ],
-                [
-                  "-",
-                  "  const verified = objects.map((o) => {\n"
-                ],
-                [
-                  "-",
-                  "    objectId(o.id, \"pack object\");\n"
-                ],
+                ["-", "  let total = 0;\n"],
+                ["-", "  const seen = new Set<string>();\n"],
+                ["-", "  const verified = objects.map((o) => {\n"],
+                ["-", "    objectId(o.id, \"pack object\");\n"],
                 [
                   "-",
                   "    if (o.type !== \"commit\" && o.type !== \"tree\" && o.type !== \"blob\") throw new GitRefusal(\"wrong-type\", \"pack object\");\n"
@@ -575,10 +357,7 @@
                   "-",
                   "    const limit = o.type === \"commit\" ? bounds.commitBytes : o.type === \"tree\" ? bounds.treeBytes : bounds.blobBytes;\n"
                 ],
-                [
-                  "-",
-                  "    total += o.data.length;\n"
-                ],
+                ["-", "    total += o.data.length;\n"],
                 [
                   "-",
                   "    if (o.data.length > limit || total > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
@@ -587,10 +366,7 @@
                   "-",
                   "    if (seen.has(o.id)) throw bad(\"repeated pack object\");\n"
                 ],
-                [
-                  "-",
-                  "    seen.add(o.id);\n"
-                ],
+                ["-", "    seen.add(o.id);\n"],
                 [
                   "-",
                   "    const data = new Uint8Array(o.data); // owns bytes even for Uint8Array subclasses\n"
@@ -603,174 +379,69 @@
                   "-",
                   "    if (o.type === \"commit\") parseCommit(data, bounds);\n"
                 ],
-                [
-                  "-",
-                  "    if (o.type === \"tree\") {\n"
-                ],
+                ["-", "    if (o.type === \"tree\") {\n"],
                 [
                   "-",
                   "      if (parseTree(data).some((entry) => entry.kind === \"gitlink\")) throw new GitRefusal(\"gitlink\", \"pack tree\");\n"
                 ],
-                [
-                  "-",
-                  "    }\n"
-                ],
-                [
-                  "-",
-                  "    return { type: o.type, data };\n"
-                ],
-                [
-                  "-",
-                  "  });\n"
-                ],
-                [
-                  "-",
-                  "  const header = new Uint8Array(12);\n"
-                ],
-                [
-                  "-",
-                  "  header.set(utf8.encode(\"PACK\"));\n"
-                ],
-                [
-                  "-",
-                  "  const view = new DataView(header.buffer);\n"
-                ],
-                [
-                  "-",
-                  "  view.setUint32(4, 2);\n"
-                ],
-                [
-                  "-",
-                  "  view.setUint32(8, verified.length);\n"
-                ],
-                [
-                  "-",
-                  "  const parts: Uint8Array[] = [header];\n"
-                ],
-                [
-                  "-",
-                  "  let size = 32; // header plus SHA-1 trailer\n"
-                ],
-                [
-                  "-",
-                  "  for (const o of verified) {\n"
-                ],
-                [
-                  "-",
-                  "    let remaining = o.data.length;\n"
-                ],
+                ["-", "    }\n"],
+                ["-", "    return { type: o.type, data };\n"],
+                ["-", "  });\n"],
+                ["-", "  const header = new Uint8Array(12);\n"],
+                ["-", "  header.set(utf8.encode(\"PACK\"));\n"],
+                ["-", "  const view = new DataView(header.buffer);\n"],
+                ["-", "  view.setUint32(4, 2);\n"],
+                ["-", "  view.setUint32(8, verified.length);\n"],
+                ["-", "  const parts: Uint8Array[] = [header];\n"],
+                ["-", "  let size = 32; // header plus SHA-1 trailer\n"],
+                ["-", "  for (const o of verified) {\n"],
+                ["-", "    let remaining = o.data.length;\n"],
                 [
                   "-",
                   "    const type = o.type === \"commit\" ? 1 : o.type === \"tree\" ? 2 : 3;\n"
                 ],
-                [
-                  "-",
-                  "    const entry = [(type << 4) | (remaining % 16)];\n"
-                ],
-                [
-                  "-",
-                  "    remaining = Math.floor(remaining / 16);\n"
-                ],
-                [
-                  "-",
-                  "    while (remaining > 0) {\n"
-                ],
-                [
-                  "-",
-                  "      entry[entry.length - 1]! |= 128;\n"
-                ],
-                [
-                  "-",
-                  "      entry.push(remaining % 128);\n"
-                ],
-                [
-                  "-",
-                  "      remaining = Math.floor(remaining / 128);\n"
-                ],
-                [
-                  "-",
-                  "    }\n"
-                ],
+                ["-", "    const entry = [(type << 4) | (remaining % 16)];\n"],
+                ["-", "    remaining = Math.floor(remaining / 16);\n"],
+                ["-", "    while (remaining > 0) {\n"],
+                ["-", "      entry[entry.length - 1]! |= 128;\n"],
+                ["-", "      entry.push(remaining % 128);\n"],
+                ["-", "      remaining = Math.floor(remaining / 128);\n"],
+                ["-", "    }\n"],
                 [
                   "-",
                   "    const compressed = await bytes(new Blob([o.data]).stream().pipeThrough(new CompressionStream(\"deflate\")), maxBytes - size - entry.length);\n"
                 ],
-                [
-                  "-",
-                  "    size += entry.length + compressed.length;\n"
-                ],
+                ["-", "    size += entry.length + compressed.length;\n"],
                 [
                   "-",
                   "    if (size > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
                 ],
-                [
-                  "-",
-                  "    parts.push(Uint8Array.from(entry), compressed);\n"
-                ],
-                [
-                  "-",
-                  "  }\n"
-                ],
+                ["-", "    parts.push(Uint8Array.from(entry), compressed);\n"],
+                ["-", "  }\n"],
                 [
                   "-",
                   "  if (size > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
                 ],
-                [
-                  "-",
-                  "  const body = join(parts);\n"
-                ],
-                [
-                  "-",
-                  "  return join([body, sha1(body)]);\n"
-                ],
-                [
-                  "-",
-                  "}\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
+                ["-", "  const body = join(parts);\n"],
+                ["-", "  return join([body, sha1(body)]);\n"],
+                ["-", "}\n"],
+                ["-", "\n"],
                 [
                   "-",
                   "/** Web fetch over one fixed remote; credentials never leave its origin. */\n"
                 ],
-                [
-                  "-",
-                  "export class SmartHttpGit {\n"
-                ],
-                [
-                  "-",
-                  "  readonly #remote: string;\n"
-                ],
-                [
-                  "-",
-                  "  readonly #authorization: string | undefined;\n"
-                ],
+                ["-", "export class SmartHttpGit {\n"],
+                ["-", "  readonly #remote: string;\n"],
+                ["-", "  readonly #authorization: string | undefined;\n"],
                 [
                   "-",
                   "  readonly #fetch: (request: Request) => Promise<Response>;\n"
                 ],
-                [
-                  "-",
-                  "  readonly #bounds: ReadBounds;\n"
-                ],
-                [
-                  "-",
-                  "  readonly #timeoutMs: number;\n"
-                ],
-                [
-                  "-",
-                  "  readonly #maxBytes: number;\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
-                [
-                  "-",
-                  "  constructor(options: SmartHttpOptions) {\n"
-                ],
+                ["-", "  readonly #bounds: ReadBounds;\n"],
+                ["-", "  readonly #timeoutMs: number;\n"],
+                ["-", "  readonly #maxBytes: number;\n"],
+                ["-", "\n"],
+                ["-", "  constructor(options: SmartHttpOptions) {\n"],
                 [
                   "-",
                   "    this.#remote = remoteUrl(options.remote, options.transport ?? \"https\").replace(/\\/$/, \"\");\n"
@@ -779,10 +450,7 @@
                   "-",
                   "    if (!this.#remote.startsWith(\"https://\") && !this.#remote.startsWith(\"http://\")) throw new GitRefusal(\"bad-remote\", \"HTTP remote\");\n"
                 ],
-                [
-                  "-",
-                  "    this.#authorization = options.authorization;\n"
-                ],
+                ["-", "    this.#authorization = options.authorization;\n"],
                 [
                   "-",
                   "    this.#fetch = options.fetch ?? ((request) => fetch(request));\n"
@@ -795,34 +463,19 @@
                   "-",
                   "    this.#timeoutMs = options.timeoutMs ?? COMMAND_MS;\n"
                 ],
-                [
-                  "-",
-                  "    this.#maxBytes = options.maxBytes;\n"
-                ],
+                ["-", "    this.#maxBytes = options.maxBytes;\n"],
                 [
                   "-",
                   "    if (!Number.isSafeInteger(this.#maxBytes) || this.#maxBytes < 32 || !Number.isSafeInteger(this.#timeoutMs) || this.#timeoutMs <= 0 || Object.values(this.#bounds).some((n) => !Number.isSafeInteger(n) || n <= 0)) throw new GitRefusal(\"too-large\", \"HTTP bounds\");\n"
                 ],
-                [
-                  "-",
-                  "  }\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
+                ["-", "  }\n"],
+                ["-", "\n"],
                 [
                   "-",
                   "  async #request(path: string, media: string, signal: AbortSignal, body?: Uint8Array): Promise<Uint8Array> {\n"
                 ],
-                [
-                  "-",
-                  "    try {\n"
-                ],
-                [
-                  "-",
-                  "      const url = `${this.#remote}/${path}`;\n"
-                ],
+                ["-", "    try {\n"],
+                ["-", "      const url = `${this.#remote}/${path}`;\n"],
                 [
                   "-",
                   "      const headers = new Headers({ accept: media, \"cache-control\": \"no-cache\" });\n"
@@ -843,34 +496,13 @@
                   "+",
                   "  /** A trusted fetch implementation that honors manual redirects and the signal. */\n"
                 ],
-                [
-                  "+",
-                  "  fetch?: (request: Request) => Promise<Response>;\n"
-                ],
-                [
-                  "+",
-                  "  transport?: Transport;\n"
-                ],
-                [
-                  "+",
-                  "  bounds?: ReadBounds;\n"
-                ],
-                [
-                  "+",
-                  "  timeoutMs?: number;\n"
-                ],
-                [
-                  "+",
-                  "}\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
-                [
-                  "+",
-                  "const utf8 = new TextEncoder();\n"
-                ],
+                ["+", "  fetch?: (request: Request) => Promise<Response>;\n"],
+                ["+", "  transport?: Transport;\n"],
+                ["+", "  bounds?: ReadBounds;\n"],
+                ["+", "  timeoutMs?: number;\n"],
+                ["+", "}\n"],
+                ["+", "\n"],
+                ["+", "const utf8 = new TextEncoder();\n"],
                 [
                   "+",
                   "const bad = (what: string) => new GitRefusal(\"unreadable\", what);\n"
@@ -883,46 +515,22 @@
                   "+",
                   "  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));\n"
                 ],
-                [
-                  "+",
-                  "  let at = 0;\n"
-                ],
+                ["+", "  let at = 0;\n"],
                 [
                   "+",
                   "  for (const part of parts) { out.set(part, at); at += part.length; }\n"
                 ],
-                [
-                  "+",
-                  "  return out;\n"
-                ],
-                [
-                  "+",
-                  "};\n"
-                ],
-                [
-                  "+",
-                  "const ascii = (bytes: Uint8Array): string => {\n"
-                ],
-                [
-                  "+",
-                  "  let out = \"\";\n"
-                ],
+                ["+", "  return out;\n"],
+                ["+", "};\n"],
+                ["+", "const ascii = (bytes: Uint8Array): string => {\n"],
+                ["+", "  let out = \"\";\n"],
                 [
                   "+",
                   "  for (const b of bytes) out += String.fromCharCode(b);\n"
                 ],
-                [
-                  "+",
-                  "  return out;\n"
-                ],
-                [
-                  "+",
-                  "};\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
+                ["+", "  return out;\n"],
+                ["+", "};\n"],
+                ["+", "\n"],
                 [
                   "+",
                   "/** A bounded stream read, cancelled on overflow or failure. */\n"
@@ -931,102 +539,36 @@
                   "+",
                   "async function bytes(stream: ReadableStream<Uint8Array> | null, limit: number): Promise<Uint8Array> {\n"
                 ],
-                [
-                  "+",
-                  "  if (stream === null) throw bad(\"HTTP body\");\n"
-                ],
-                [
-                  "+",
-                  "  const reader = stream.getReader();\n"
-                ],
-                [
-                  "+",
-                  "  const chunks: Uint8Array[] = [];\n"
-                ],
-                [
-                  "+",
-                  "  let size = 0;\n"
-                ],
-                [
-                  "+",
-                  "  try {\n"
-                ],
-                [
-                  "+",
-                  "    for (;;) {\n"
-                ],
-                [
-                  "+",
-                  "      const next = await reader.read();\n"
-                ],
-                [
-                  "+",
-                  "      if (next.done) return join(chunks);\n"
-                ],
-                [
-                  "+",
-                  "      size += next.value.length;\n"
-                ],
+                ["+", "  if (stream === null) throw bad(\"HTTP body\");\n"],
+                ["+", "  const reader = stream.getReader();\n"],
+                ["+", "  const chunks: Uint8Array[] = [];\n"],
+                ["+", "  let size = 0;\n"],
+                ["+", "  try {\n"],
+                ["+", "    for (;;) {\n"],
+                ["+", "      const next = await reader.read();\n"],
+                ["+", "      if (next.done) return join(chunks);\n"],
+                ["+", "      size += next.value.length;\n"],
                 [
                   "+",
                   "      if (size > limit) throw new GitRefusal(\"too-large\", \"HTTP body\");\n"
                 ],
-                [
-                  "+",
-                  "      chunks.push(next.value);\n"
-                ],
-                [
-                  "+",
-                  "    }\n"
-                ],
-                [
-                  "+",
-                  "  } catch (e) {\n"
-                ],
-                [
-                  "+",
-                  "    await reader.cancel().catch(() => undefined);\n"
-                ],
-                [
-                  "+",
-                  "    throw e;\n"
-                ],
-                [
-                  "+",
-                  "  } finally { reader.releaseLock(); }\n"
-                ],
-                [
-                  "+",
-                  "}\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
-                [
-                  "+",
-                  "function packet(line: string): Uint8Array {\n"
-                ],
-                [
-                  "+",
-                  "  const data = utf8.encode(line);\n"
-                ],
+                ["+", "      chunks.push(next.value);\n"],
+                ["+", "    }\n"],
+                ["+", "  } catch (e) {\n"],
+                ["+", "    await reader.cancel().catch(() => undefined);\n"],
+                ["+", "    throw e;\n"],
+                ["+", "  } finally { reader.releaseLock(); }\n"],
+                ["+", "}\n"],
+                ["+", "\n"],
+                ["+", "function packet(line: string): Uint8Array {\n"],
+                ["+", "  const data = utf8.encode(line);\n"],
                 [
                   "+",
                   "  return join([utf8.encode((data.length + 4).toString(16).padStart(4, \"0\")), data]);\n"
                 ],
-                [
-                  "+",
-                  "}\n"
-                ],
-                [
-                  "+",
-                  "const FLUSH = utf8.encode(\"0000\");\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
+                ["+", "}\n"],
+                ["+", "const FLUSH = utf8.encode(\"0000\");\n"],
+                ["+", "\n"],
                 [
                   "+",
                   "/** Entire pkt-line stream, including flushes; no trailing or truncated data. */\n"
@@ -1035,26 +577,14 @@
                   "+",
                   "function packets(data: Uint8Array): (string | null)[] {\n"
                 ],
-                [
-                  "+",
-                  "  const out: (string | null)[] = [];\n"
-                ],
-                [
-                  "+",
-                  "  for (let at = 0; at < data.length;) {\n"
-                ],
-                [
-                  "+",
-                  "    const digits = ascii(data.subarray(at, at + 4));\n"
-                ],
+                ["+", "  const out: (string | null)[] = [];\n"],
+                ["+", "  for (let at = 0; at < data.length;) {\n"],
+                ["+", "    const digits = ascii(data.subarray(at, at + 4));\n"],
                 [
                   "+",
                   "    if (!/^[0-9a-f]{4}$/.test(digits)) throw bad(\"pkt-line\");\n"
                 ],
-                [
-                  "+",
-                  "    const size = Number.parseInt(digits, 16);\n"
-                ],
+                ["+", "    const size = Number.parseInt(digits, 16);\n"],
                 [
                   "+",
                   "    if (size === 0) { out.push(null); at += 4; continue; }\n"
@@ -1071,38 +601,14 @@
                   "+",
                   "    if (line.endsWith(\"\\n\")) line = line.slice(0, -1);\n"
                 ],
-                [
-                  "+",
-                  "    out.push(line);\n"
-                ],
-                [
-                  "+",
-                  "    at += size;\n"
-                ],
-                [
-                  "+",
-                  "  }\n"
-                ],
-                [
-                  "+",
-                  "  if (out.at(-1) !== null) throw bad(\"pkt-line\");\n"
-                ],
-                [
-                  "+",
-                  "  return out;\n"
-                ],
-                [
-                  "+",
-                  "}\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
-                [
-                  "+",
-                  "/**\n"
-                ],
+                ["+", "    out.push(line);\n"],
+                ["+", "    at += size;\n"],
+                ["+", "  }\n"],
+                ["+", "  if (out.at(-1) !== null) throw bad(\"pkt-line\");\n"],
+                ["+", "  return out;\n"],
+                ["+", "}\n"],
+                ["+", "\n"],
+                ["+", "/**\n"],
                 [
                   "+",
                   " * A non-delta v2 pack containing exactly the supplied objects. The count,\n"
@@ -1119,22 +625,13 @@
                   "+",
                   " * send changed caller-owned bytes under an already checked ID.\n"
                 ],
-                [
-                  "+",
-                  " */\n"
-                ],
+                ["+", " */\n"],
                 [
                   "+",
                   "export async function buildPack(objects: readonly RawGitObject[], options: { maxBytes: number; bounds?: ReadBounds }): Promise<Uint8Array> {\n"
                 ],
-                [
-                  "+",
-                  "  const bounds = options.bounds ?? READ_BOUNDS;\n"
-                ],
-                [
-                  "+",
-                  "  const maxBytes = options.maxBytes;\n"
-                ],
+                ["+", "  const bounds = options.bounds ?? READ_BOUNDS;\n"],
+                ["+", "  const maxBytes = options.maxBytes;\n"],
                 [
                   "+",
                   "  if (!Number.isSafeInteger(maxBytes) || maxBytes < 32 || Object.values(bounds).some((n) => !Number.isSafeInteger(n) || n <= 0)) throw new GitRefusal(\"too-large\", \"pack allowance\");\n"
@@ -1143,22 +640,10 @@
                   "+",
                   "  if (objects.length > bounds.closureObjects || objects.length > 0xffffffff) throw new GitRefusal(\"too-large\", \"pack objects\");\n"
                 ],
-                [
-                  "+",
-                  "  let total = 0;\n"
-                ],
-                [
-                  "+",
-                  "  const seen = new Set<string>();\n"
-                ],
-                [
-                  "+",
-                  "  const verified = objects.map((o) => {\n"
-                ],
-                [
-                  "+",
-                  "    objectId(o.id, \"pack object\");\n"
-                ],
+                ["+", "  let total = 0;\n"],
+                ["+", "  const seen = new Set<string>();\n"],
+                ["+", "  const verified = objects.map((o) => {\n"],
+                ["+", "    objectId(o.id, \"pack object\");\n"],
                 [
                   "+",
                   "    if (o.type !== \"commit\" && o.type !== \"tree\" && o.type !== \"blob\") throw new GitRefusal(\"wrong-type\", \"pack object\");\n"
@@ -1167,10 +652,7 @@
                   "+",
                   "    const limit = o.type === \"commit\" ? bounds.commitBytes : o.type === \"tree\" ? bounds.treeBytes : bounds.blobBytes;\n"
                 ],
-                [
-                  "+",
-                  "    total += o.data.length;\n"
-                ],
+                ["+", "    total += o.data.length;\n"],
                 [
                   "+",
                   "    if (o.data.length > limit || total > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
@@ -1179,10 +661,7 @@
                   "+",
                   "    if (seen.has(o.id)) throw bad(\"repeated pack object\");\n"
                 ],
-                [
-                  "+",
-                  "    seen.add(o.id);\n"
-                ],
+                ["+", "    seen.add(o.id);\n"],
                 [
                   "+",
                   "    const data = new Uint8Array(o.data); // owns bytes even for Uint8Array subclasses\n"
@@ -1195,174 +674,69 @@
                   "+",
                   "    if (o.type === \"commit\") parseCommit(data, bounds);\n"
                 ],
-                [
-                  "+",
-                  "    if (o.type === \"tree\") {\n"
-                ],
+                ["+", "    if (o.type === \"tree\") {\n"],
                 [
                   "+",
                   "      if (parseTree(data).some((entry) => entry.kind === \"gitlink\")) throw new GitRefusal(\"gitlink\", \"pack tree\");\n"
                 ],
-                [
-                  "+",
-                  "    }\n"
-                ],
-                [
-                  "+",
-                  "    return { type: o.type, data };\n"
-                ],
-                [
-                  "+",
-                  "  });\n"
-                ],
-                [
-                  "+",
-                  "  const header = new Uint8Array(12);\n"
-                ],
-                [
-                  "+",
-                  "  header.set(utf8.encode(\"PACK\"));\n"
-                ],
-                [
-                  "+",
-                  "  const view = new DataView(header.buffer);\n"
-                ],
-                [
-                  "+",
-                  "  view.setUint32(4, 2);\n"
-                ],
-                [
-                  "+",
-                  "  view.setUint32(8, verified.length);\n"
-                ],
-                [
-                  "+",
-                  "  const parts: Uint8Array[] = [header];\n"
-                ],
-                [
-                  "+",
-                  "  let size = 32; // header plus SHA-1 trailer\n"
-                ],
-                [
-                  "+",
-                  "  for (const o of verified) {\n"
-                ],
-                [
-                  "+",
-                  "    let remaining = o.data.length;\n"
-                ],
+                ["+", "    }\n"],
+                ["+", "    return { type: o.type, data };\n"],
+                ["+", "  });\n"],
+                ["+", "  const header = new Uint8Array(12);\n"],
+                ["+", "  header.set(utf8.encode(\"PACK\"));\n"],
+                ["+", "  const view = new DataView(header.buffer);\n"],
+                ["+", "  view.setUint32(4, 2);\n"],
+                ["+", "  view.setUint32(8, verified.length);\n"],
+                ["+", "  const parts: Uint8Array[] = [header];\n"],
+                ["+", "  let size = 32; // header plus SHA-1 trailer\n"],
+                ["+", "  for (const o of verified) {\n"],
+                ["+", "    let remaining = o.data.length;\n"],
                 [
                   "+",
                   "    const type = o.type === \"commit\" ? 1 : o.type === \"tree\" ? 2 : 3;\n"
                 ],
-                [
-                  "+",
-                  "    const entry = [(type << 4) | (remaining % 16)];\n"
-                ],
-                [
-                  "+",
-                  "    remaining = Math.floor(remaining / 16);\n"
-                ],
-                [
-                  "+",
-                  "    while (remaining > 0) {\n"
-                ],
-                [
-                  "+",
-                  "      entry[entry.length - 1]! |= 128;\n"
-                ],
-                [
-                  "+",
-                  "      entry.push(remaining % 128);\n"
-                ],
-                [
-                  "+",
-                  "      remaining = Math.floor(remaining / 128);\n"
-                ],
-                [
-                  "+",
-                  "    }\n"
-                ],
+                ["+", "    const entry = [(type << 4) | (remaining % 16)];\n"],
+                ["+", "    remaining = Math.floor(remaining / 16);\n"],
+                ["+", "    while (remaining > 0) {\n"],
+                ["+", "      entry[entry.length - 1]! |= 128;\n"],
+                ["+", "      entry.push(remaining % 128);\n"],
+                ["+", "      remaining = Math.floor(remaining / 128);\n"],
+                ["+", "    }\n"],
                 [
                   "+",
                   "    const compressed = await bytes(new Blob([o.data]).stream().pipeThrough(new CompressionStream(\"deflate\")), maxBytes - size - entry.length);\n"
                 ],
-                [
-                  "+",
-                  "    size += entry.length + compressed.length;\n"
-                ],
+                ["+", "    size += entry.length + compressed.length;\n"],
                 [
                   "+",
                   "    if (size > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
                 ],
-                [
-                  "+",
-                  "    parts.push(Uint8Array.from(entry), compressed);\n"
-                ],
-                [
-                  "+",
-                  "  }\n"
-                ],
+                ["+", "    parts.push(Uint8Array.from(entry), compressed);\n"],
+                ["+", "  }\n"],
                 [
                   "+",
                   "  if (size > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
                 ],
-                [
-                  "+",
-                  "  const body = join(parts);\n"
-                ],
-                [
-                  "+",
-                  "  return join([body, sha1(body)]);\n"
-                ],
-                [
-                  "+",
-                  "}\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
+                ["+", "  const body = join(parts);\n"],
+                ["+", "  return join([body, sha1(body)]);\n"],
+                ["+", "}\n"],
+                ["+", "\n"],
                 [
                   "+",
                   "/** Web fetch over one fixed remote; credentials never leave its origin. */\n"
                 ],
-                [
-                  "+",
-                  "export class SmartHttpGit {\n"
-                ],
-                [
-                  "+",
-                  "  readonly #remote: string;\n"
-                ],
-                [
-                  "+",
-                  "  readonly #authorization: string | undefined;\n"
-                ],
+                ["+", "export class SmartHttpGit {\n"],
+                ["+", "  readonly #remote: string;\n"],
+                ["+", "  readonly #authorization: string | undefined;\n"],
                 [
                   "+",
                   "  readonly #fetch: (request: Request) => Promise<Response>;\n"
                 ],
-                [
-                  "+",
-                  "  readonly #bounds: ReadBounds;\n"
-                ],
-                [
-                  "+",
-                  "  readonly #timeoutMs: number;\n"
-                ],
-                [
-                  "+",
-                  "  readonly #maxBytes: number;\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
-                [
-                  "+",
-                  "  constructor(options: SmartHttpOptions) {\n"
-                ],
+                ["+", "  readonly #bounds: ReadBounds;\n"],
+                ["+", "  readonly #timeoutMs: number;\n"],
+                ["+", "  readonly #maxBytes: number;\n"],
+                ["+", "\n"],
+                ["+", "  constructor(options: SmartHttpOptions) {\n"],
                 [
                   "+",
                   "    this.#remote = remoteUrl(options.remote, options.transport ?? \"https\").replace(/\\/$/, \"\");\n"
@@ -1371,10 +745,7 @@
                   "+",
                   "    if (!this.#remote.startsWith(\"https://\") && !this.#remote.startsWith(\"http://\")) throw new GitRefusal(\"bad-remote\", \"HTTP remote\");\n"
                 ],
-                [
-                  "+",
-                  "    this.#authorization = options.authorization;\n"
-                ],
+                ["+", "    this.#authorization = options.authorization;\n"],
                 [
                   "+",
                   "    this.#fetch = options.fetch ?? ((request) => fetch(request));\n"
@@ -1387,34 +758,19 @@
                   "+",
                   "    this.#timeoutMs = options.timeoutMs ?? COMMAND_MS;\n"
                 ],
-                [
-                  "+",
-                  "    this.#maxBytes = options.maxBytes;\n"
-                ],
+                ["+", "    this.#maxBytes = options.maxBytes;\n"],
                 [
                   "+",
                   "    if (!Number.isSafeInteger(this.#maxBytes) || this.#maxBytes < 32 || !Number.isSafeInteger(this.#timeoutMs) || this.#timeoutMs <= 0 || Object.values(this.#bounds).some((n) => !Number.isSafeInteger(n) || n <= 0)) throw new GitRefusal(\"too-large\", \"HTTP bounds\");\n"
                 ],
-                [
-                  "+",
-                  "  }\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
+                ["+", "  }\n"],
+                ["+", "\n"],
                 [
                   "+",
                   "  async #request(path: string, media: string, signal: AbortSignal, body?: Uint8Array): Promise<Uint8Array> {\n"
                 ],
-                [
-                  "+",
-                  "    try {\n"
-                ],
-                [
-                  "+",
-                  "      const url = `${this.#remote}/${path}`;\n"
-                ],
+                ["+", "    try {\n"],
+                ["+", "      const url = `${this.#remote}/${path}`;\n"],
                 [
                   "+",
                   "      const headers = new Headers({ accept: media, \"cache-control\": \"no-cache\" });\n"
@@ -1431,14 +787,8 @@
                   "+",
                   "      const init: RequestInit & { credentials: \"omit\" } = { method: body === undefined ? \"GET\" : \"POST\", headers, redirect: \"manual\", credentials: \"omit\", signal, ...(body === undefined ? {} : { body }) };\n"
                 ],
-                [
-                  "+",
-                  "      const request = new Request(url, init);\n"
-                ],
-                [
-                  " ",
-                  "      const response = await this.#fetch(request);\n"
-                ],
+                ["+", "      const request = new Request(url, init);\n"],
+                [" ", "      const response = await this.#fetch(request);\n"],
                 [
                   " ",
                   "      if (response.status !== 200 || response.redirected || (response.url !== \"\" && response.url !== url) || response.headers.get(\"content-type\")?.split(\";\", 1)[0]?.trim() !== media) {\n"
@@ -1469,21 +819,10 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                2,
-                11,
-                2,
-                11
-              ],
+              "range": [2, 11, 2, 11],
               "rows": [
-                [
-                  " ",
-                  " * @generalbusiness/artroom-git\n"
-                ],
-                [
-                  " ",
-                  " *\n"
-                ],
+                [" ", " * @generalbusiness/artroom-git\n"],
+                [" ", " *\n"],
                 [
                   " ",
                   " * Everything of Artroom that touches a Git repository or a Git host (I3\n"
@@ -1496,14 +835,8 @@
                   "-",
                   " * commit. The review that each retained part passed is\n"
                 ],
-                [
-                  "-",
-                  " * `notes/2026-10-05-i3-git-review.md`.\n"
-                ],
-                [
-                  "-",
-                  " *\n"
-                ],
+                ["-", " * `notes/2026-10-05-i3-git-review.md`.\n"],
+                ["-", " *\n"],
                 [
                   "-",
                   " * `./node` has the one module that needs Node: `nodeExec`.\n"
@@ -1512,14 +845,8 @@
                   "+",
                   " * plan, section 3.1). It runs outside a scope's commit. The review that each retained part passed is\n"
                 ],
-                [
-                  "+",
-                  " * `notes/2026-10-05-i3-git-review.md`.\n"
-                ],
-                [
-                  "+",
-                  " *\n"
-                ],
+                ["+", " * `notes/2026-10-05-i3-git-review.md`.\n"],
+                ["+", " *\n"],
                 [
                   "+",
                   " * `./node` has the one module that needs Node: `nodeExec`.\n"
@@ -1528,14 +855,8 @@
                   "+",
                   " * `./http`, `./http-read` and `./github` use Web APIs and also run in Workers.\n"
                 ],
-                [
-                  " ",
-                  " */\n"
-                ],
-                [
-                  " ",
-                  "\n"
-                ],
+                [" ", " */\n"],
+                [" ", "\n"],
                 [
                   " ",
                   "export { GitRefusal, MAX_REF_NAME, ZERO_ID, branchRef, isObjectId, objectId, refName, remoteUrl } from \"./names.ts\";\n"
@@ -1562,12 +883,7 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                84,
-                7,
-                84,
-                7
-              ],
+              "range": [84, 7, 84, 7],
               "rows": [
                 [
                   " ",
@@ -1593,10 +909,7 @@
                   " ",
                   "  expect(JSON.stringify(source).includes(TOKEN)).toBe(false);\n"
                 ],
-                [
-                  " ",
-                  "\n"
-                ],
+                [" ", "\n"],
                 [
                   " ",
                   "  // A fresh reader wants a nonadvertised exact tree/blob only when real Git\n"
@@ -1623,17 +936,9 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                118,
-                7,
-                118,
-                7
-              ],
+              "range": [118, 7, 118, 7],
               "rows": [
-                [
-                  " ",
-                  "  const absent = await client.readRef(REF);\n"
-                ],
+                [" ", "  const absent = await client.readRef(REF);\n"],
                 [
                   " ",
                   "  expect([deleted.reported, posts, host.updates, absent.value]).toEqual([\"deleted\", 4, 4, null]);\n"
@@ -1658,10 +963,7 @@
                   " ",
                   "  expect(JSON.stringify([client, requests, applied, raced, lost]).includes(TOKEN)).toBe(false);\n"
                 ],
-                [
-                  " ",
-                  "\n"
-                ]
+                [" ", "\n"]
               ],
               "complete": true
             }
@@ -1684,12 +986,7 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                743,
-                7,
-                743,
-                7
-              ],
+              "range": [743, 7, 743, 7],
               "rows": [
                 [
                   " ",
@@ -1699,10 +996,7 @@
                   " ",
                   " *   scope's own entries back to `reservedAt` (I3 deltas, entry FA5).\n"
                 ],
-                [
-                  " ",
-                  " */\n"
-                ],
+                [" ", " */\n"],
                 [
                   "-",
                   "function mintRevoked(state: Pick<StateView, \"operation\" | \"item\">, own: Own, revoke: Operation): Operation | null {\n"
@@ -1711,18 +1005,9 @@
                   "+",
                   "export function mintRevoked(state: Pick<StateView, \"operation\" | \"item\">, own: Own, revoke: Operation): Operation | null {\n"
                 ],
-                [
-                  " ",
-                  "  const seq = seqOf(revoke.id);\n"
-                ],
-                [
-                  " ",
-                  "  const { input, effects } = ownEntry(own, seq);\n"
-                ],
-                [
-                  " ",
-                  "  if (input.type === \"outcome\") {\n"
-                ]
+                [" ", "  const seq = seqOf(revoke.id);\n"],
+                [" ", "  const { input, effects } = ownEntry(own, seq);\n"],
+                [" ", "  if (input.type === \"outcome\") {\n"]
               ],
               "complete": true
             }
@@ -1745,17 +1030,9 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                29,
-                6,
-                29,
-                7
-              ],
+              "range": [29, 6, 29, 7],
               "rows": [
-                [
-                  " ",
-                  "export type { LaneRead } from \"./destination.ts\";\n"
-                ],
+                [" ", "export type { LaneRead } from \"./destination.ts\";\n"],
                 [
                   " ",
                   "// The host port reads the same recorded operation context as the rules.\n"
@@ -1776,10 +1053,7 @@
                   " ",
                   "export type { JudgeChanges, JudgeEvidence, RecordedJudgeEvidence, Reservation, ReservationAsked, ReservationRead, Statement } from \"./reservation.ts\";\n"
                 ],
-                [
-                  " ",
-                  "export { RULES };\n"
-                ]
+                [" ", "export { RULES };\n"]
               ],
               "complete": true
             }
@@ -1802,41 +1076,18 @@
           "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
           "hunks": [
             {
-              "range": [
-                12,
-                62,
-                12,
-                62
-              ],
+              "range": [12, 62, 12, 62],
               "rows": [
                 [
                   " ",
                   "/** Each method sends once. Missing, lost or malformed replies are no answer. */\n"
                 ],
-                [
-                  " ",
-                  "export interface RegisterProvider {\n"
-                ],
-                [
-                  " ",
-                  "  createRepository(name: string): Promise<unknown>;\n"
-                ],
-                [
-                  "-",
-                  "  deleteRepository(id: string): Promise<unknown>;\n"
-                ],
-                [
-                  "-",
-                  "  revokeCredential(id: string): Promise<unknown>;\n"
-                ],
-                [
-                  "-",
-                  "}\n"
-                ],
-                [
-                  "-",
-                  "export type RepositoryCreation =\n"
-                ],
+                [" ", "export interface RegisterProvider {\n"],
+                [" ", "  createRepository(name: string): Promise<unknown>;\n"],
+                ["-", "  deleteRepository(id: string): Promise<unknown>;\n"],
+                ["-", "  revokeCredential(id: string): Promise<unknown>;\n"],
+                ["-", "}\n"],
+                ["-", "export type RepositoryCreation =\n"],
                 [
                   "-",
                   "  | { created: true; name: string; id: string; credential?: string }\n"
@@ -1857,10 +1108,7 @@
                   "-",
                   "export interface RegisterHostOptions { host: string; namespace: string; provider: RegisterProvider }\n"
                 ],
-                [
-                  "-",
-                  "\n"
-                ],
+                ["-", "\n"],
                 [
                   "-",
                   "const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;\n"
@@ -1869,10 +1117,7 @@
                   "-",
                   "const text = (value: unknown): value is string => typeof value === \"string\" && utf8(value).length <= 256;\n"
                 ],
-                [
-                  "-",
-                  "\n"
-                ],
+                ["-", "\n"],
                 [
                   "-",
                   "/** Snapshot untrusted members once, including getters, then validate that snapshot. */\n"
@@ -1885,18 +1130,9 @@
                   "-",
                   "  if (typeof reply !== \"object\" || reply === null || Array.isArray(reply)) return null;\n"
                 ],
-                [
-                  "-",
-                  "  const value = reply as Record<string, unknown>;\n"
-                ],
-                [
-                  "-",
-                  "  try {\n"
-                ],
-                [
-                  "-",
-                  "    const keys = Object.keys(value);\n"
-                ],
+                ["-", "  const value = reply as Record<string, unknown>;\n"],
+                ["-", "  try {\n"],
+                ["-", "    const keys = Object.keys(value);\n"],
                 [
                   "-",
                   "    if (!required.every((key) => Object.hasOwn(value, key)) || keys.some((key) => !required.includes(key) && !optional.includes(key))) return null;\n"
@@ -1905,122 +1141,50 @@
                   "-",
                   "    return Object.fromEntries(keys.map((key) => [key, value[key]]));\n"
                 ],
-                [
-                  "-",
-                  "  } catch { return null; }\n"
-                ],
-                [
-                  "-",
-                  "}\n"
-                ],
+                ["-", "  } catch { return null; }\n"],
+                ["-", "}\n"],
                 [
                   "-",
                   "const answer = (result: \"confirmed\" | \"refused\", body: Record<string, FieldValue>): EffectAnswer => ({ result, evidence: { basis: \"own-answer\", body } });\n"
                 ],
-                [
-                  "-",
-                  "\n"
-                ],
-                [
-                  "-",
-                  "export class RegisterHost implements Outside {\n"
-                ],
-                [
-                  "-",
-                  "  readonly #given: OutsideGiven;\n"
-                ],
-                [
-                  "-",
-                  "  readonly #host: string;\n"
-                ],
-                [
-                  "-",
-                  "  readonly #namespace: string;\n"
-                ],
-                [
-                  "-",
-                  "  readonly #provider: RegisterProvider;\n"
-                ],
+                ["-", "\n"],
+                ["-", "export class RegisterHost implements Outside {\n"],
+                ["-", "  readonly #given: OutsideGiven;\n"],
+                ["-", "  readonly #host: string;\n"],
+                ["-", "  readonly #namespace: string;\n"],
+                ["-", "  readonly #provider: RegisterProvider;\n"],
                 [
                   "-",
                   "  constructor(given: OutsideGiven, options: RegisterHostOptions) {\n"
                 ],
-                [
-                  "-",
-                  "    this.#given = given;\n"
-                ],
-                [
-                  "-",
-                  "    this.#host = options.host;\n"
-                ],
-                [
-                  "-",
-                  "    this.#namespace = options.namespace;\n"
-                ],
-                [
-                  "-",
-                  "    this.#provider = options.provider;\n"
-                ],
-                [
-                  "-",
-                  "  }\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
-                [
-                  "-",
-                  "  accepts(owner: string, kind: string): boolean {\n"
-                ],
+                ["-", "    this.#given = given;\n"],
+                ["-", "    this.#host = options.host;\n"],
+                ["-", "    this.#namespace = options.namespace;\n"],
+                ["-", "    this.#provider = options.provider;\n"],
+                ["-", "  }\n"],
+                ["-", "\n"],
+                ["-", "  accepts(owner: string, kind: string): boolean {\n"],
                 [
                   "-",
                   "    return owner === REGISTER && [\"create-repository\", \"delete-repository\", \"revoke-credential\"].includes(kind);\n"
                 ],
-                [
-                  "-",
-                  "  }\n"
-                ],
-                [
-                  "-",
-                  "\n"
-                ],
+                ["-", "  }\n"],
+                ["-", "\n"],
                 [
                   "-",
                   "  async send(request: EffectRequest): Promise<EffectAnswer | null> {\n"
                 ],
-                [
-                  "-",
-                  "    try {\n"
-                ],
-                [
-                  "-",
-                  "      if (!this.#bound(request)) return null;\n"
-                ],
-                [
-                  "-",
-                  "      if (request.kind === \"create-repository\") {\n"
-                ],
-                [
-                  "-",
-                  "        const name = this.#name(request);\n"
-                ],
-                [
-                  "-",
-                  "        if (name === null) return null;\n"
-                ],
+                ["-", "    try {\n"],
+                ["-", "      if (!this.#bound(request)) return null;\n"],
+                ["-", "      if (request.kind === \"create-repository\") {\n"],
+                ["-", "        const name = this.#name(request);\n"],
+                ["-", "        if (name === null) return null;\n"],
                 [
                   "-",
                   "        return this.#created(name, await this.#provider.createRepository(name));\n"
                 ],
-                [
-                  "-",
-                  "      }\n"
-                ],
-                [
-                  "-",
-                  "      const opening = request.origin.entry.input;\n"
-                ],
+                ["-", "      }\n"],
+                ["-", "      const opening = request.origin.entry.input;\n"],
                 [
                   "-",
                   "      if (opening.type !== \"outcome\" || opening.owner !== REGISTER || opening.kind !== \"create-repository\" || opening.result !== \"confirmed\" || opening.evidence.basis !== \"own-answer\") return null;\n"
@@ -2033,14 +1197,8 @@
                   "-",
                   "      if (!body || !text(body[\"name\"]) || !text(body[\"id\"]) || (body[\"credential\"] !== undefined && !text(body[\"credential\"]))) return null;\n"
                 ],
-                [
-                  "-",
-                  "      if (request.kind === \"delete-repository\") {\n"
-                ],
-                [
-                  "-",
-                  "        const id = body[\"id\"];\n"
-                ],
+                ["-", "      if (request.kind === \"delete-repository\") {\n"],
+                ["-", "        const id = body[\"id\"];\n"],
                 [
                   "-",
                   "        const reply = members(await this.#provider.deleteRepository(id), [\"deleted\", \"id\"]);\n"
@@ -2049,18 +1207,9 @@
                   "+",
                   "  deleteRepository(id: string, name: string): Promise<unknown>;\n"
                 ],
-                [
-                  "+",
-                  "  revokeCredential(id: string): Promise<unknown>;\n"
-                ],
-                [
-                  "+",
-                  "}\n"
-                ],
-                [
-                  "+",
-                  "export type RepositoryCreation =\n"
-                ],
+                ["+", "  revokeCredential(id: string): Promise<unknown>;\n"],
+                ["+", "}\n"],
+                ["+", "export type RepositoryCreation =\n"],
                 [
                   "+",
                   "  | { created: true; name: string; id: string; credential?: string }\n"
@@ -2081,10 +1230,7 @@
                   "+",
                   "export interface RegisterHostOptions { host: string; namespace: string; provider: RegisterProvider }\n"
                 ],
-                [
-                  "+",
-                  "\n"
-                ],
+                ["+", "\n"],
                 [
                   "+",
                   "const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;\n"
@@ -2093,10 +1239,7 @@
                   "+",
                   "const text = (value: unknown): value is string => typeof value === \"string\" && utf8(value).length <= 256;\n"
                 ],
-                [
-                  "+",
-                  "\n"
-                ],
+                ["+", "\n"],
                 [
                   "+",
                   "/** Snapshot untrusted members once, including getters, then validate that snapshot. */\n"
@@ -2109,18 +1252,9 @@
                   "+",
                   "  if (typeof reply !== \"object\" || reply === null || Array.isArray(reply)) return null;\n"
                 ],
-                [
-                  "+",
-                  "  const value = reply as Record<string, unknown>;\n"
-                ],
-                [
-                  "+",
-                  "  try {\n"
-                ],
-                [
-                  "+",
-                  "    const keys = Object.keys(value);\n"
-                ],
+                ["+", "  const value = reply as Record<string, unknown>;\n"],
+                ["+", "  try {\n"],
+                ["+", "    const keys = Object.keys(value);\n"],
                 [
                   "+",
                   "    if (!required.every((key) => Object.hasOwn(value, key)) || keys.some((key) => !required.includes(key) && !optional.includes(key))) return null;\n"
@@ -2129,122 +1263,50 @@
                   "+",
                   "    return Object.fromEntries(keys.map((key) => [key, value[key]]));\n"
                 ],
-                [
-                  "+",
-                  "  } catch { return null; }\n"
-                ],
-                [
-                  "+",
-                  "}\n"
-                ],
+                ["+", "  } catch { return null; }\n"],
+                ["+", "}\n"],
                 [
                   "+",
                   "const answer = (result: \"confirmed\" | \"refused\", body: Record<string, FieldValue>): EffectAnswer => ({ result, evidence: { basis: \"own-answer\", body } });\n"
                 ],
-                [
-                  "+",
-                  "\n"
-                ],
-                [
-                  "+",
-                  "export class RegisterHost implements Outside {\n"
-                ],
-                [
-                  "+",
-                  "  readonly #given: OutsideGiven;\n"
-                ],
-                [
-                  "+",
-                  "  readonly #host: string;\n"
-                ],
-                [
-                  "+",
-                  "  readonly #namespace: string;\n"
-                ],
-                [
-                  "+",
-                  "  readonly #provider: RegisterProvider;\n"
-                ],
+                ["+", "\n"],
+                ["+", "export class RegisterHost implements Outside {\n"],
+                ["+", "  readonly #given: OutsideGiven;\n"],
+                ["+", "  readonly #host: string;\n"],
+                ["+", "  readonly #namespace: string;\n"],
+                ["+", "  readonly #provider: RegisterProvider;\n"],
                 [
                   "+",
                   "  constructor(given: OutsideGiven, options: RegisterHostOptions) {\n"
                 ],
-                [
-                  "+",
-                  "    this.#given = given;\n"
-                ],
-                [
-                  "+",
-                  "    this.#host = options.host;\n"
-                ],
-                [
-                  "+",
-                  "    this.#namespace = options.namespace;\n"
-                ],
-                [
-                  "+",
-                  "    this.#provider = options.provider;\n"
-                ],
-                [
-                  "+",
-                  "  }\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
-                [
-                  "+",
-                  "  accepts(owner: string, kind: string): boolean {\n"
-                ],
+                ["+", "    this.#given = given;\n"],
+                ["+", "    this.#host = options.host;\n"],
+                ["+", "    this.#namespace = options.namespace;\n"],
+                ["+", "    this.#provider = options.provider;\n"],
+                ["+", "  }\n"],
+                ["+", "\n"],
+                ["+", "  accepts(owner: string, kind: string): boolean {\n"],
                 [
                   "+",
                   "    return owner === REGISTER && [\"create-repository\", \"delete-repository\", \"revoke-credential\"].includes(kind);\n"
                 ],
-                [
-                  "+",
-                  "  }\n"
-                ],
-                [
-                  "+",
-                  "\n"
-                ],
+                ["+", "  }\n"],
+                ["+", "\n"],
                 [
                   "+",
                   "  async send(request: EffectRequest): Promise<EffectAnswer | null> {\n"
                 ],
-                [
-                  "+",
-                  "    try {\n"
-                ],
-                [
-                  "+",
-                  "      if (!this.#bound(request)) return null;\n"
-                ],
-                [
-                  "+",
-                  "      if (request.kind === \"create-repository\") {\n"
-                ],
-                [
-                  "+",
-                  "        const name = this.#name(request);\n"
-                ],
-                [
-                  "+",
-                  "        if (name === null) return null;\n"
-                ],
+                ["+", "    try {\n"],
+                ["+", "      if (!this.#bound(request)) return null;\n"],
+                ["+", "      if (request.kind === \"create-repository\") {\n"],
+                ["+", "        const name = this.#name(request);\n"],
+                ["+", "        if (name === null) return null;\n"],
                 [
                   "+",
                   "        return this.#created(name, await this.#provider.createRepository(name));\n"
                 ],
-                [
-                  "+",
-                  "      }\n"
-                ],
-                [
-                  "+",
-                  "      const opening = request.origin.entry.input;\n"
-                ],
+                ["+", "      }\n"],
+                ["+", "      const opening = request.origin.entry.input;\n"],
                 [
                   "+",
                   "      if (opening.type !== \"outcome\" || opening.owner !== REGISTER || opening.kind !== \"create-repository\" || opening.result !== \"confirmed\" || opening.evidence.basis !== \"own-answer\") return null;\n"
@@ -2257,14 +1319,8 @@
                   "+",
                   "      if (!body || !text(body[\"name\"]) || !text(body[\"id\"]) || (body[\"credential\"] !== undefined && !text(body[\"credential\"]))) return null;\n"
                 ],
-                [
-                  "+",
-                  "      if (request.kind === \"delete-repository\") {\n"
-                ],
-                [
-                  "+",
-                  "        const id = body[\"id\"];\n"
-                ],
+                ["+", "      if (request.kind === \"delete-repository\") {\n"],
+                ["+", "        const id = body[\"id\"];\n"],
                 [
                   "+",
                   "        const reply = members(await this.#provider.deleteRepository(id, body[\"name\"]), [\"deleted\", \"id\"]);\n"
@@ -2273,14 +1329,8 @@
                   " ",
                   "        return reply?.[\"id\"] === id && typeof reply[\"deleted\"] === \"boolean\" ? answer(reply[\"deleted\"] ? \"confirmed\" : \"refused\", { id }) : null;\n"
                 ],
-                [
-                  " ",
-                  "      }\n"
-                ],
-                [
-                  " ",
-                  "      const credential = body[\"credential\"];\n"
-                ]
+                [" ", "      }\n"],
+                [" ", "      const credential = body[\"credential\"];\n"]
               ],
               "complete": true
             }

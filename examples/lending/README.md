@@ -73,7 +73,7 @@ previously observed staff role has changed.
 | File | What it is |
 |---|---|
 | `definition.ts` | The `lending` definition: a `library` item that holds the destination and many `thing` items; `publish` refreshes a thing's page without changing it. |
-| `definition.json` | The canonical declaration with an authoring LF; remove that LF before `--value`. |
+| `definition.json` | Readable declaration source; canonicalize its parsed value before `--value`. |
 | `pin.ts` | The digest of those bytes, `LENDING_DEFINITION`. |
 | `scripts/pin.mjs` | Writes `definition.json` and `pin.ts` from `definition.ts`. Run it after any change to the definition. |
 | `shelf.ts` | The shelf page of one thing as markdown, with members' text made literal; and every thing, live or gone, read from the journal. |

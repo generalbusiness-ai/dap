@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import { capabilitiesOf, counted, derivable, gitRead, holdCapabilityV2, validateDefinition } from "@generalbusiness/dap-derive";
 import { FINDING_DIGESTS, J4_DIGESTS, changeFinding, changeJ4 } from "../src/index.ts";
 
 test("the finding successor pins whole bytes, keeps the workspace rows outside its stated changes, and fits the bounds", () => {
-  expect(readFileSync(new URL("../definitions/change-finding.json", import.meta.url), "utf8")).toBe(canonicalize(changeFinding));
+  expect(canonicalize(parseStrict(readFileSync(new URL("../definitions/change-finding.json", import.meta.url), "utf8")))).toBe(canonicalize(changeFinding));
   expect(definitionDigest(changeFinding)).toBe(FINDING_DIGESTS.change);
   expect(FINDING_DIGESTS.change).not.toBe(J4_DIGESTS.change);
 

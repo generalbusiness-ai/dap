@@ -11,12 +11,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        701,
-        654,
-        654,
-        682
-      ]
+      "titleWidths": [701, 654, 654, 682]
     },
     {
       "view": "changes",
@@ -27,11 +22,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        693,
-        640,
-        653
-      ]
+      "titleWidths": [693, 640, 653]
     },
     {
       "view": "ready",
@@ -97,12 +88,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        701,
-        654,
-        654,
-        682
-      ]
+      "titleWidths": [701, 654, 654, 682]
     },
     {
       "view": "rules",
@@ -135,10 +121,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        678,
-        678
-      ]
+      "titleWidths": [678, 678]
     },
     {
       "view": "issues",
@@ -149,12 +132,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        445,
-        398,
-        398,
-        426
-      ]
+      "titleWidths": [445, 398, 398, 426]
     },
     {
       "view": "changes",
@@ -165,11 +143,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        299,
-        352,
-        365
-      ]
+      "titleWidths": [299, 352, 365]
     },
     {
       "view": "ready",
@@ -235,12 +209,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        445,
-        398,
-        398,
-        426
-      ]
+      "titleWidths": [445, 398, 398, 426]
     },
     {
       "view": "rules",
@@ -273,10 +242,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        422,
-        422
-      ]
+      "titleWidths": [422, 422]
     },
     {
       "view": "issues",
@@ -287,12 +253,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        413,
-        366,
-        366,
-        394
-      ]
+      "titleWidths": [413, 366, 366, 394]
     },
     {
       "view": "changes",
@@ -303,11 +264,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        267,
-        320,
-        333
-      ]
+      "titleWidths": [267, 320, 333]
     },
     {
       "view": "ready",
@@ -373,12 +330,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        413,
-        366,
-        366,
-        394
-      ]
+      "titleWidths": [413, 366, 366, 394]
     },
     {
       "view": "rules",
@@ -411,10 +363,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        390,
-        390
-      ]
+      "titleWidths": [390, 390]
     },
     {
       "view": "issues",
@@ -425,12 +374,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        642,
-        642,
-        642,
-        642
-      ]
+      "titleWidths": [642, 642, 642, 642]
     },
     {
       "view": "changes",
@@ -441,11 +385,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        642,
-        642,
-        642
-      ]
+      "titleWidths": [642, 642, 642]
     },
     {
       "view": "ready",
@@ -511,12 +451,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        642,
-        642,
-        642,
-        642
-      ]
+      "titleWidths": [642, 642, 642, 642]
     },
     {
       "view": "rules",
@@ -549,10 +484,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        586,
-        586
-      ]
+      "titleWidths": [586, 586]
     },
     {
       "view": "issues",
@@ -563,12 +495,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        506,
-        506,
-        506,
-        506
-      ]
+      "titleWidths": [506, 506, 506, 506]
     },
     {
       "view": "changes",
@@ -579,11 +506,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        506,
-        506,
-        506
-      ]
+      "titleWidths": [506, 506, 506]
     },
     {
       "view": "ready",
@@ -649,12 +572,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        506,
-        506,
-        506,
-        506
-      ]
+      "titleWidths": [506, 506, 506, 506]
     },
     {
       "view": "rules",
@@ -687,10 +605,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        450,
-        450
-      ]
+      "titleWidths": [450, 450]
     },
     {
       "view": "issues",
@@ -701,12 +616,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        296,
-        296,
-        296,
-        296
-      ]
+      "titleWidths": [296, 296, 296, 296]
     },
     {
       "view": "changes",
@@ -717,11 +627,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        296,
-        296,
-        296
-      ]
+      "titleWidths": [296, 296, 296]
     },
     {
       "view": "ready",
@@ -787,12 +693,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        296,
-        296,
-        296,
-        296
-      ]
+      "titleWidths": [296, 296, 296, 296]
     },
     {
       "view": "rules",
@@ -825,10 +726,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        240,
-        240
-      ]
+      "titleWidths": [240, 240]
     },
     {
       "view": "issues",
@@ -839,12 +737,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        258,
-        258,
-        258,
-        258
-      ]
+      "titleWidths": [258, 258, 258, 258]
     },
     {
       "view": "changes",
@@ -855,11 +748,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        258,
-        258,
-        258
-      ]
+      "titleWidths": [258, 258, 258]
     },
     {
       "view": "ready",
@@ -925,12 +814,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        258,
-        258,
-        258,
-        258
-      ]
+      "titleWidths": [258, 258, 258, 258]
     },
     {
       "view": "rules",
@@ -963,10 +847,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        202,
-        202
-      ]
+      "titleWidths": [202, 202]
     },
     {
       "view": "issues",
@@ -977,12 +858,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        226,
-        226,
-        226,
-        226
-      ]
+      "titleWidths": [226, 226, 226, 226]
     },
     {
       "view": "changes",
@@ -993,11 +869,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        226,
-        226,
-        226
-      ]
+      "titleWidths": [226, 226, 226]
     },
     {
       "view": "ready",
@@ -1063,12 +935,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        226,
-        226,
-        226,
-        226
-      ]
+      "titleWidths": [226, 226, 226, 226]
     },
     {
       "view": "rules",
@@ -1101,10 +968,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        170,
-        170
-      ]
+      "titleWidths": [170, 170]
     },
     {
       "view": "issues",
@@ -1115,12 +979,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        296,
-        296,
-        296,
-        296
-      ]
+      "titleWidths": [296, 296, 296, 296]
     },
     {
       "view": "merged",
@@ -1153,12 +1012,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        296,
-        296,
-        296,
-        296
-      ]
+      "titleWidths": [296, 296, 296, 296]
     },
     {
       "view": "rules",
@@ -1180,13 +1034,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        701,
-        654,
-        654,
-        682,
-        682
-      ]
+      "titleWidths": [701, 654, 654, 682, 682]
     },
     {
       "view": "merged",
@@ -1208,13 +1056,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        328,
-        328,
-        328,
-        328,
-        328
-      ]
+      "titleWidths": [328, 328, 328, 328, 328]
     },
     {
       "view": "create",
@@ -1225,13 +1067,7 @@
       "duplicateIds": [],
       "names": 1,
       "roomHeaders": 0,
-      "titleWidths": [
-        258,
-        258,
-        258,
-        258,
-        258
-      ]
+      "titleWidths": [258, 258, 258, 258, 258]
     },
     {
       "view": "blocked",

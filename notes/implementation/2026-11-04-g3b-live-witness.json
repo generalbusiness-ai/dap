@@ -270,12 +270,7 @@
     "qualification": "Actual G3b proposal, distinct-principal source approval and owner publication completed; original issue text and two-entry history unchanged. Final independent GitHub comparison, evidence review and main record landing remain."
   },
   "github": {
-    "actualGhExits": [
-      0,
-      0,
-      0,
-      0
-    ],
+    "actualGhExits": [0, 0, 0, 0],
     "ref": "refs/heads/g3-witness-2",
     "commit": "cfa22fb3af6db3d249ea7b010d03bb165365a2e0",
     "parent": "253b121310003bcb0995c1f2d9322d568b1da5d7",

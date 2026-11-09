@@ -61,6 +61,7 @@ if [ "$failed" = 0 ] && [ -n "$base" ]; then step whitespace git diff --check -B
 if [ "$failed" = 0 ]; then
   if step notes node scripts/check-notes.mjs "$base" HEAD; then cat "$out/notes.log"; fi
 fi
+[ "$failed" = 0 ] && step format npm run format:check
 [ "$failed" = 0 ] && step typecheck npm run typecheck
 # npm's unchanged pretest hook prepares compatibility once. The fixed test
 # owner defers its summary to this gate's unconditional EXIT finalizer.
