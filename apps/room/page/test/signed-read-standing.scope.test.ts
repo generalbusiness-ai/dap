@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { runInDurableObject } from "cloudflare:test";
+import { runInDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import type { Entry, Item, KeyId, PlatformDefinition, Read, ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
@@ -639,6 +639,12 @@ test("a key that is also the room's recovery key keeps signing at membership aft
     for (const round of [1, 2, 3]) {
       d.advanceClock(WINDOW_MS + 1);
       expect(await signedSummary(d.as(ritas), d.M.name), `round ${round}`).toBe("forbidden");
+      // End earlier invitations through the actual alarm. Its unsigned timed
+      // entries do not renew this revoked recovery key's signed-read window.
+      if (round > 1) {
+        expect(await d.wait(() => runDurableObjectAlarm(d.M.object)), `round ${round} scheduled expiry alarm`).toBe(true);
+        expect(await signedSummary(d.as(ritas), d.M.name), `round ${round} after alarm`).toBe("forbidden");
+      }
       expect((await invite(round)).answer, `round ${round}`).toBe("accepted");
       expect(await signedSummary(d.as(ritas), d.M.name), `round ${round}`).toBe("ok");
       // Only membership takes these acts. The directory refuses the key's act, and its read stays ended.

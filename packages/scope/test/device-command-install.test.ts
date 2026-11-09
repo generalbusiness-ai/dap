@@ -145,10 +145,20 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
     // Withdrawing the release stops new acts. The already-open command
     // keeps its reserved answer; revocation must not strand its settlement.
     bindings.APPLICATION_TRUST = "[]";
+    // Failed ordinary authority still refuses before release admission.
+    expect(await life.wait(async () => app.act(rita, "command", { on: device, expected: await app.expected({ on: device }), fields: { target: "off", level: 0 } })))
+      .toMatchObject({ answer: "refused", reason: "unauthorized" });
+    // Give the release probe its actual command grant so the original
+    // application-revoked assertion still exercises the independent guard.
+    await life.wait(async () => M.did(rita, "set-actions", { on: 0, expected: await M.expected({ on: 0 }), fields: { role: "admin", actions: ["membership.manage", "command"] } }));
+    await life.wait(() => app.restart());
     const revokedHead = (await life.wait(() => app.summary())).at;
     expect(await life.wait(async () => app.act(rita, "command", { on: device, expected: await app.expected({ on: device }), fields: { target: "off", level: 0 } })))
       .toMatchObject({ answer: "refused", reason: "application-revoked" });
     expect((await life.wait(() => app.summary())).at).toEqual(revokedHead);
+    // The retained answer must still settle without the target action.
+    await life.wait(async () => M.did(rita, "set-actions", { on: 0, expected: await M.expected({ on: 0 }), fields: { role: "admin", actions: ["membership.manage"] } }));
+    await life.wait(() => app.restart());
     const answered = await life.wait(() => mcp.call("prepare", { resource: app.name, capability: DEVICE_COMMAND, step: "answer",
       fields: { command: { at: scope, seq: command, hash: commandFact.hash }, outcome: "confirmed", description: "TEST device answered" }, idempotencyKey: "TEST-device-owner-answer" }));
     expect(answered.isError, JSON.stringify(answered.structuredContent)).toBe(false);

@@ -1,5 +1,6 @@
 import { retainHistoricalInstallPlan } from "../../cli/test/support/historical-install-plan.ts";
 import { expect, onTestFinished, test } from "vitest";
+import { runDurableObjectAlarm } from "cloudflare:test";
 import type { Entry, Intent, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { INVITATION_LINK, requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
@@ -396,6 +397,9 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     // the room's lending scope in the directory and donates. The reply to the join is lost.
     expect(ROOM_MEMBERSHIP).toBe(FILE_PUBLICATION_COHORT.membership);
     const inviteSecret = "lending-visitor-invitation-secret-of-at-least-32-bytes";
+    // The earlier unredeemed invitation is due after the grant-window jumps.
+    // Its real Membership alarm must end it before a new invitation can act.
+    expect(await lifetime.wait(() => runDurableObjectAlarm(M.object))).toBe(true);
     const invited = await M.did(neighbour, "invite-member", { fields: { handle: "@visitor", role: "member", inviteHash: textDigest(inviteSecret), inviteEnds: soon(60) } });
     const linkText = INVITATION_LINK + b64url(utf8(JSON.stringify({ v: 1, service: SERVICE, repository: { directory: await D.at(), membership, rules: Q.name, destination: G.name },
       invitation: invited, secret: inviteSecret, handle: "@visitor", definition: FILE_PUBLICATION_COHORT.membership })));

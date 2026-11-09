@@ -45,7 +45,7 @@ export async function observeCleanup(reader: CleanupReader, target: FactRef, pag
       const expiry = end.value.reservationExpiry;
       const reserved = [...items.values()].filter((item) => item.state === "reserved" && typeof item.values["checkDeadline"] === "string").sort((a, b) => a.id - b.id);
       const pending = expiry?.clock === "available" ? reserved.filter((item) => expiry.expired.includes(item.id)) : [];
-      const pendingLines = pending.map((item) => `Cleanup pending: destination ${target.at.scope}, reservation ${item.id}, entry ${target.seq}: expired by deadline ${item.values["checkDeadline"]} at read clock ${expiry?.clock === "available" ? expiry.time : "unavailable"}; recorded state ${item.state}; waits for the next act or alarm.`);
+      const pendingLines = pending.map((item) => `Cleanup pending: destination ${target.at.scope}, reservation ${item.id}, entry ${target.seq}: expired by deadline ${item.values["checkDeadline"]} at read clock ${expiry?.clock === "available" ? expiry.time : "unavailable"}; recorded state ${item.state}; waits for the next alarm.`);
       const clockUnavailable = reserved.length > 0 && (!expiry || expiry.clock === "unavailable");
       const clockLines = clockUnavailable ? reserved.map((item) => `Cleanup clock unavailable: destination ${target.at.scope}, reservation ${item.id}, entry ${target.seq}: recorded state ${item.state}; no expiry claim.`) : [];
       const lines = owed.flatMap((item) => {
@@ -63,7 +63,7 @@ export async function observeCleanup(reader: CleanupReader, target: FactRef, pag
         });
       });
       const observed = [...lines, ...pendingLines, ...clockLines];
-      const finding = lines.length ? `Owed cleanup: ${owed.length} reservation(s) at destination ${target.at.scope}; historical replay consistency does not settle cleanup.` : pending.length ? `Cleanup pending: ${pending.length} expired reservation(s) at destination ${target.at.scope}; waits for the next act or alarm.` : clockUnavailable ? `Cleanup clock unavailable: destination ${target.at.scope}; expiry was not determined.` : null;
+      const finding = lines.length ? `Owed cleanup: ${owed.length} reservation(s) at destination ${target.at.scope}; historical replay consistency does not settle cleanup.` : pending.length ? `Cleanup pending: ${pending.length} expired reservation(s) at destination ${target.at.scope}; waits for the next alarm.` : clockUnavailable ? `Cleanup clock unavailable: destination ${target.at.scope}; expiry was not determined.` : null;
       return { lines: observed.length ? observed : [`Cleanup status: destination ${target.at.scope}, entry ${target.seq}: no reservation is recorded as cleanup-owed.`], finding };
     }
     if (read.next === cursor) return unavailable("the publication cursor did not advance");

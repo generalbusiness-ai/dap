@@ -147,15 +147,36 @@ the unchanged fifteen-path selector.
 
 The gate kept every tracked source byte fixed and closed its owned process
 group. The driver measured 1,000.142 seconds from launch through its receipt.
-This remains a failed gate. No repair, second gate or review followed it.
-A proposed continuation outside the checkout keeps the original assertions,
-drains expiry through real alarms and separates the device authority and
-release-admission probes. The planner must rule on its scope because six
-owners failed and the ordinary one-file follow-up exception does not apply.
+This remains a failed gate. Planner ruling `3da1f865` authorizes the eight-path
+repair and one unchanged gate at the repaired head. The proposed limited
+pipeline will not run. Only the six failing Native owners, the CLI cleanup
+wording and its owner change; every original assertion remains.
+
+The hold and reservation witnesses now show that a due request leaves the
+head fixed before an actual alarm records expiry. The recovery-key witness
+ends each earlier invitation by the Membership alarm, beginning at round 2,
+when a prior invitation is due. It also shows that the alarm's unsigned
+entry cannot renew the key's signed-read window. Hosted-agent and Lending
+stories run the Membership alarm after their existing clock jumps. Every
+new alarm invocation asserts the runner's `true` result: production had to
+schedule that alarm. A missing due alarm is a production defect, not a
+reason to call the handler directly or weaken the check.
+
+The device probes now state R3's refusal precedence: an already failed
+ordinary grant returns `unauthorized` before a withdrawn release can return
+`application-revoked`. The original release-refusal assertion remains, with
+a valid `command` grant for that probe. The witness then removes the grant
+and restarts again before the original reserved-answer settlement, which
+still needs only current identity and retains its Membership-only authority.
+The CLI now says expired cleanup waits for the next alarm.
+
+The repaired gate has not run. If it fails, ruling `3da1f865` requires a
+report before any further change. The original failure and its manifest
+remain intact.
 
 ## Open limits
 
-Request `03e5f6d7` still owns the failed-gate continuation, independent review and landing.
+Request `03e5f6d7` still owns the repaired gate, independent review and landing.
 The planner owns deployment after landing. These Native witnesses use
 labelled scripted Membership, admission and provider boundaries. They
 establish no live provider effect or hosted-room acceptance.

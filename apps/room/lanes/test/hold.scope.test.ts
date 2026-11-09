@@ -37,8 +37,13 @@ test("T1, responsibility is not a hold: a hold ends by time before the act that 
   expect([await G.asks(una, "take-hold", { fields: { commitment: c1 } }), await G.alarmAt()]).toEqual(["guard-failed: hold-held", timeMs(first)]);
   const [before, other] = [await G.item(c1), await G.item(h2)];
 
-  // At the first end una asks for a new hold. The turn writes the timed end first, so the act is judged after it and is accepted.
+  // At the first deadline the request waits without ending either hold.
+  // The real alarm ends the due hold before a later request can proceed.
   net.clock.now = first;
+  const beforeAlarm = (await G.entries()).length;
+  expect(await G.asks(una, "take-hold", { fields: { commitment: c1 } })).toBe("unavailable: busy");
+  expect((await G.entries()).length).toBe(beforeAlarm);
+  expect(await G.alarm()).toBe(true);
   const h3 = (await G.did(una, "take-hold", { fields: { commitment: c1 } })).fact.seq;
   expect((await G.entries()).slice(-2).map((e) => [e.seq, e.time, e.input.type, e.effects[0]])).toEqual([
     [h3 - 1, first, "timed", { effect: "hold", item: h1, change: "end", epoch: 2 }],
