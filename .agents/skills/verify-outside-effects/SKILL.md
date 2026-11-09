@@ -12,10 +12,12 @@ A duplicate mutation could repeat a Git push or child-creation request.
 
 ## Coverage
 
-The correspondence review covers commit `8faa38dcf31855a0a6264e5912b58061b5eda223`. `verification/state-machines/coverage.json` records exact source hashes.
+The correspondence review covers commit `ce69f61a642ebec3c59be04e6f96e10122bc1bce`. `verification/state-machines/coverage.json` records exact source hashes.
 
-- `packages/scope/src/operations.ts`: `Operations.#pass`, `Operations.#send`, `Operations.#offer`.
+- `packages/scope/src/operations.ts`: `Operations.#pass`, `Operations.#send`, `Operations.#answer`, `Operations.#offer`.
 - `packages/scope/src/sqlite.ts`: `markSent`.
+
+S4 extracts `ParkedAttempts` and `ReplyCustody` as memory-only owners. `Operations` still reads the durable sent mark before choosing recovery, writes and reads back a new mark before queuing its sole original send, and awaits judgment before releasing a held answer. The model leaves parked scans and reply paging outside its bounds. This correspondence update awaits the formal turn's Effects check and source control.
 
 Rules: `AtMostOneSend`, `MarkBeforeEffect`.
 

@@ -1,6 +1,6 @@
 # Verify the five priority state machines
 
-Review repairs await validation. The Editor model now includes failed receipt verification, but the charts and counts below still describe the original checked models at `13e704a47a`. Regenerate the Editor charts and run its check and model fault during the formal validation turn. Review the Effects correspondence after S4 lands, then run its check and source control.
+Review repairs await validation. The Editor model now includes failed receipt verification, but the charts and counts below still describe the original checked models at `13e704a47a`. Regenerate the Editor charts and run its check and model fault during the formal validation turn. The Effects correspondence now follows approved S4 source at `ce69f61a`; its check and source control remain due.
 
 The 7 November survey lives in gitseq request `a99e32d9` at `attachments/full-report` and `attachments/priority-list`. It audited `e50d9eebb27f47d0f33549486751ab8bdce8de80`. This verification follows the five-item shortlist, not the full inventory. Gitseq request `3c6d197df2db35e3d1603f63acfa63953da7c1a0` tracks this delivery, under promise `5c826d7435eef1e7a2b8df3c7db6efdf94f4654b`.
 
@@ -43,7 +43,7 @@ node verification/state-machines/control.mjs Editor "$HOME/play/artroom-evidence
 | Transport `FactoryReturns`, `Retire`, `LateFactoryDisposed` | `HttpGeneration.open`, `#discard`, and `graceful` | Retirement changes the owner before awaiting cleanup. The factory return checks that owner before opening. Disposal completion abstracts resource cleanup. |
 | Observation `Invalidate`, `ReadReturns`, `Discard` | `ObservationConnection.cancel`, `RefreshCoordinator.check` and `read`, and the guarded `emit` callbacks | JavaScript checks and publication run synchronously. The snapshot await separates request from return. Invalidation represents loss of view ownership or cancellation. |
 | Editor `Attempt`, `Accept`, `Verify`, `VerificationFailed`, `Advance`, `Refuse` | `transitionEdit` result cases | Each reducer call changes one value synchronously. The executor supplies receipt-verification evidence separately. |
-| Effects `Mark`, `Send`, `Restart`, `LateAnswer` | `Operations.#pass`, `#send`, `#offer`, and SQLite `markSent` | The durable mark precedes the queued outside call. Restart loses the local dispatch closure. The model admits a matching late answer conservatively even when it cannot tell whether the call left. |
+| Effects `Mark`, `Send`, `Restart`, `LateAnswer` | `Operations.#pass`, `#send`, `#answer`, `#offer`, and SQLite `markSent` | The durable mark precedes the queued outside call. Restart loses the local dispatch closure. The model admits a matching late answer conservatively even when it cannot tell whether the call left. |
 | Voice `SaveStart`, `Speak`, `Interrupt`, `Complete`, `VerifyReport`, `Clear` | `start`, `stopAudio`, restoration in `ready`, and `settle` | `SaveStart` represents successful durable write and exact readback. Interruption after persistence but before playback keeps uncertainty. Verified reporting abstracts the reporter's proof checks. |
 
 ## Scope and evidence

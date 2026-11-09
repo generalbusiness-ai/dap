@@ -53,3 +53,7 @@ The source checkpoint is commit `8faa38dcf31855a0a6264e5912b58061b5eda223`, tree
 ## Open limits
 
 Request `3c6d197df2db35e3d1603f63acfa63953da7c1a0` owns the five-subsystem delivery and the limits in each skill. The broader inventory has no formal coverage from this change. The models omit cryptography, provider correctness, cross-subsystem composition and unbounded liveness. Transport and editor probes use minimal stand-ins. Observation and audio witnesses use deterministic stand-ins. Effects uses a real scope with a stand-in outside system. A fresh successful single gate remains outside this evidence; no review or landing claims one.
+
+## S4 correspondence preparation
+
+This branch integrates approved S4 candidate `ce69f61a` without the unpublished merge-message failure. `ParkedAttempts` and `ReplyCustody` own only memory. The sent-row branch still chooses held answer, safe recovery or unknown without another original send. The exact `markSent`/readback/dispatch fragment, `#send`, `#answer` and SQLite bytes equal the original model base. `#offer` still awaits the same judgment before postponing or releasing reply custody. The seven other covered source hashes remain unchanged. Coverage now names the S4 operation bytes and includes `#answer`; this source review establishes no new model or witness result. Effects check and one source control remain due after M0 in the formal validation turn.

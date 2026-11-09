@@ -68,6 +68,7 @@
       "packages/scope/src/operations.ts": [
         "Operations.#pass",
         "Operations.#send",
+        "Operations.#answer",
         "Operations.#offer"
       ],
       "packages/scope/src/sqlite.ts": [
@@ -79,9 +80,9 @@
       "AtMostOneSend": "sends <= 1",
       "MarkBeforeEffect": "sends > 0 => marked"
     },
-    "syncCommit": "8faa38dcf31855a0a6264e5912b58061b5eda223",
+    "syncCommit": "ce69f61a642ebec3c59be04e6f96e10122bc1bce",
     "sha256": {
-      "packages/scope/src/operations.ts": "f77b1511e7bd4c15a11e01a0777bff4dc43fbc941254e5d280ce77b0c65d897e",
+      "packages/scope/src/operations.ts": "0852d2c295b29e3ffe95a6157a638b525f016ee20807262607405892546413df",
       "packages/scope/src/sqlite.ts": "aed4f145d7cc3d8f101ff24bd787ba9dc9e62a8534aade31d94761ceca6a6acd"
     }
   },
