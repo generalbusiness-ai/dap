@@ -7,3 +7,4 @@ dist/
 .env.*
 *.log
 *.tsbuildinfo
+/apps/room/wrangler.self-host.jsonc

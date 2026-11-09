@@ -1,13 +1,13 @@
-/** Native Page Start through production HTTP/Register17/indexed Directory16/enrollment; deployed old offers refuse.
+/** Native Page Start through production HTTP/Register17/indexed Directory16/enrollment.
  * STAND-INs: OwnGit/provider, scripted clock, bounded dispatcher scheduler,
  * private storage/Web Locks, accepted-reply loss and native Response URL metadata.
  * No installer key is passed to Page. No browser/provider/deployment runs here. */
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import type { Seed, SignedIntent, ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, isSeed, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, intentDigest, isSeed, keyIdOfSecret, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { agentKeyInvitationOf, creationOffer, secretSigner, signedIntent, type Fetch, type CreationOfferFetch, type Signer } from "@generalbusiness/dap-client";
-import { DEMO_REGISTER, ARCHIVE_DEVICE_APPLICATION_COHORT, DEMO_PURPOSE } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import worker from "../../worker.ts";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";
 import { nativeFixtureLifetime, driveFixture } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
@@ -39,7 +39,7 @@ function locksOf(): ClaimLocks {
   } };
 }
 
-test("fresh Page Start discovers native Register17 and refuses a deployed legacy7 offer, retains before dispatch, Checks a lost accepted reply without mutation and explicitly Continues the original through enrolled room recovery (host, scheduler, storage and loss STAND-INs)", async () => {
+test("fresh Page Start discovers native Register17, retains before dispatch, Checks a lost accepted reply without mutation and explicitly Continues the original through enrolled room recovery (host, scheduler, storage and loss STAND-INs)", async () => {
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   const lifetime = nativeFixtureLifetime(owner);
   let recovered: Signer | undefined;
@@ -60,13 +60,6 @@ test("fresh Page Start discovers native Register17 and refuses a deployed legacy
     wire(R.name);
     await lifetime.wait(() => R.restart());
     // Every per-name child transport forwards through actual deployed indexed admission.
-    // A separate real legacy root models a previously configured register7.
-    // It is selected only by its exact retained scope+inc, never by a fresh GET.
-    const legacyInstall = await signedIntent(installer, { to: null, kind: "install", fields: { host: host.host, namespace: host.namespace, policy: "open", purpose: DEMO_PURPOSE } }, { now: lifetime.now() });
-    const legacySeed: Seed = { v: 1, kind: "register", definition: DEMO_REGISTER, creator: null, cause: intentDigest(legacyInstall.intent), ordinal: 0 };
-    const L = lifetime.platform(scopeIdOf(legacySeed));
-    expect((await lifetime.wait(() => L.stub.create(legacyInstall, DEMO_REGISTER))).answer).toBe("accepted");
-    const legacyRegister = await lifetime.wait(() => L.at());
     const bindings = { ...deployed, SCOPES: env.PLATFORM, DEMO_START_CONFIG: canonicalize({ v: 3, origin, deployment: TEST_DEPLOYMENT, register, definition: ARCHIVE_DEVICE_APPLICATION_COHORT.register }) };
     const native: Fetch = (url, init) => lifetime.wait(() => worker.fetch(new Request(url, init), bindings));
     const anonymous = await native(`${origin}/v1/scopes/${register.scope}`);
@@ -98,11 +91,7 @@ test("fresh Page Start discovers native Register17 and refuses a deployed legacy
     expect(offerFailed, "bounded SDK acceptance of the actual native offer").toBe(false);
     if (!offer) throw new Error("The actual native offer was not decoded.");
     expect([offer.definition, offer.register, offer.at.seq, offer.registerItem.revision]).toEqual([ARCHIVE_DEVICE_APPLICATION_COHORT.register, register, 0, 1]);
-    await expect(lifetime.wait(() => creationOffer(origin, { fetch: offerFetch, register: legacyRegister }))).rejects.toThrow("No claim was submitted");
     expect(offer.registerItem).not.toHaveProperty("purpose");
-    const unrelatedInc = newIncarnation(new Uint8Array(16).fill(1));
-    const unseenLegacy = { ...legacyRegister, inc: unrelatedInc !== legacyRegister.inc ? unrelatedInc : newIncarnation(new Uint8Array(16).fill(2)) };
-    await expect(lifetime.wait(() => creationOffer(origin, { fetch: offerFetch, register: unseenLegacy }))).rejects.toThrow();
     const values = new Map<string, string>(), readbacks = new Map<string, string>();
     const storage: ClaimStorage = { setItem: (key, bytes) => { lifetime.active(); values.set(key, bytes); }, getItem: key => { const bytes = values.get(key) ?? null; if (bytes !== null) readbacks.set(key, bytes); return bytes; } };
     const sent: SignedIntent[] = [], mutationPaths: string[] = [];

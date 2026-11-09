@@ -7,7 +7,7 @@ const read = (name: string) => JSON.parse(readFileSync(new URL(`../../../apps/ro
 // Each deployed Worker owns its migration history, including its tag scheme.
 // New migrations may append; existing steps must retain all their fields.
 const deployedMigrations = [
-  ["wrangler.jsonc", [
+  ["wrangler.artroom-scope.jsonc", [
     { tag: "v1", new_sqlite_classes: ["DeployedScope"] },
     { tag: "v2", new_sqlite_classes: ["McpRegistry", "McpAgent"] },
     { tag: "v3", new_sqlite_classes: ["ScopeIndex"] },
@@ -49,7 +49,8 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
     ["wrangler.commons.jsonc", "dap-commons", "worker.commons.ts", "enforce", ["platform:register@23", "platform:directory@22", "platform:membership@9", "platform:rules@14", "platform:destination@16", "platform:inbox@1", "platform:commons@1"]],
     ["wrangler.grow.jsonc", "dap-grow", "worker.grow.ts", "enforce", ["platform:register@17", "platform:directory@16", "platform:membership@8", "platform:rules@10", "platform:destination@12", "platform:inbox@1"]],
     ["wrangler.lending.jsonc", "dap-lending", "worker.ts", "enforce", ["platform:register@5", "platform:directory@5", "platform:membership@4", "platform:rules@3", "platform:destination@2", "platform:inbox@1"]],
-    ["wrangler.jsonc", "artroom-scope", "worker.ts", "register", null],
+    ["wrangler.artroom-scope.jsonc", "artroom-scope", "worker.ts", "register", null],
+    ["wrangler.jsonc", "dap-self-host", "worker.ts", "enforce", null],
   ] as const;
   for (const [file, name, main, mode, pins] of roomPolicies) {
     const config = read(file);
@@ -70,10 +71,24 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
   expect(start.register.scope).toBe(JSON.parse(demo.vars.ARTIFACTS_CONFIG).registerScope);
   for (const field of ["SERVING_CREATION_KEY_PER_HOUR", "SERVING_CREATION_ADDRESS_PER_HOUR", "SERVING_READ_KEY_PER_MINUTE", "SERVING_READ_ADDRESS_PER_MINUTE"]) expect(demo.vars[field]).toBe(grow.vars[field]);
   for (const field of ["ALLOW_OPEN_CREATION", "DEPLOYMENT", "SESSION_SECRET"]) expect(demo.vars).not.toHaveProperty(field);
-  // PD-6: artroom-scope carries its live retained-Start value until 8 November 2026 (docs/deploy.md).
-  const scope = read("wrangler.jsonc");
-  expect(JSON.parse(scope.vars.DEMO_START_CONFIG)).toEqual({"definition": "platform:register@8", "deployment": "artroom-scope-demo-2026-10-07", "origin": "https://artroom-scope.inguz.workers.dev", "register": {"inc": "in_dsfqvkghobbf4jkjqkcptkycua", "kind": "register", "scope": "sc_ncinb5dyvrhtzpos52pbzr2uib3vk5fovqc5nqypfjdxs6kugsmq"}, "v": 2});
-  for (const field of ["ARTIFACTS_CONFIG", "ARTIFACTS_NAMESPACE", "DEPLOYMENT", "SESSION_SECRET", "PLATFORM_CREATION_PINS"]) expect(scope.vars).not.toHaveProperty(field);
+
+});
+
+test("the self-host template has no project resources and the retired Worker retains its own deployment history", () => {
+  const template = read("wrangler.jsonc"), retired = read("wrangler.artroom-scope.jsonc");
+  expect([template.name, template.main, template.vars.SCOPE_INDEX_MODE]).toEqual(["dap-self-host", "worker.ts", "enforce"]);
+  expect(template.vars.ARTIFACTS_NAMESPACE).toBe("dap-self-host");
+  expect(template.artifacts).toEqual([{ binding: "ARTIFACTS", namespace: "dap-self-host", remote: true }]);
+  expect(template.durable_objects).toEqual(retired.durable_objects);
+  expect(template.migrations).toEqual(retired.migrations);
+  for (const field of ["r2_buckets", "analytics_engine_datasets"]) expect(template).not.toHaveProperty(field);
+  for (const config of [template, retired]) {
+    for (const field of ["DEMO_START_CONFIG", "DEPLOYMENT", "SESSION_SECRET", "GITHUB_APP_PRIVATE_KEY", "GITHUB_CREATION_TOKEN", "GITHUB_READ_TOKEN"]) expect(config.vars).not.toHaveProperty(field);
+  }
+  expect([retired.name, retired.main, retired.vars.SCOPE_INDEX_MODE]).toEqual(["artroom-scope", "worker.ts", "register"]);
+  expect(retired.r2_buckets).toEqual([{ binding: "APPLICATION_CONTENT", bucket_name: "artroom-application-content" }]);
+  const packageJson = JSON.parse(readFileSync(new URL("../../../package.json", import.meta.url), "utf8"));
+  expect(packageJson.scripts["deploy:scope"]).toBe("npx -y wrangler@4.147.0 deploy --keep-vars --config apps/room/wrangler.self-host.jsonc");
 });
 
 test("dap-commons declares its exact namespace and unplanned register configuration", () => {

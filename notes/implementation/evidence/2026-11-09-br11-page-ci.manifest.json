@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "request": "e1b71b6b697c58723b3340681346f5f7145d345c",
+  "sourceHead": "ebb95ee5ace0b5d763f4087ac19bd2f33c6c6753",
+  "qualification": "The exact pushed source passed all four maintained Page commands on the remote runner. Retain complete logs privately. The workflow uploads no downloadable images or other artifact, so this record claims no retrieved screenshot. No local body or deployment runs during evidence sealing.",
+  "fileCount": 4,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-page-ci-validation",
+      "fileCount": 4,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 251,
+          "sha256": "c8e8194ae25259e14794e7db85253b447cae0a0867d5e5302e5a45482a9f87ff"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 454,
+          "sha256": "fe417f26b3421fc436b763dfe98cbe67988ada6729fa1c6f82df8d2cdfc556b7"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2721,
+          "sha256": "ea3d28accd4d12822757966437108e64bf1bf312e8d41ac538ebe7f36cc1bb71"
+        },
+        {
+          "path": "terminal-result.json",
+          "bytes": 1336,
+          "sha256": "bdaf3c7343153bbe3dee036971a29d29d3f5073bbca4053b3fa83283f02e210b"
+        }
+      ]
+    }
+  ]
+}

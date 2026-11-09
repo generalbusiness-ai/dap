@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "request": "e1b71b6b697c58723b3340681346f5f7145d345c",
+  "promise": "5a3fbb3db7dac1dc652f7403aabbf585641e4212",
+  "sourceHead": "23742c6efff4f557bbfb24f20602adef6112b3fe",
+  "sourceTree": "9071880405ed116274c0b1b53c5f434149f7edd5",
+  "qualification": "One invocation of the checked-in Page asset recipe with existing esbuild 0.28.1 and pinned Node. Its canonical internal bundling stays unchanged. No installation, test, compiler-control repeat, browser run or gate. The build may change only the generated asset module; HTML and OAuth entries must remain equal.",
+  "fileCount": 21,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-assets",
+      "fileCount": 21,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1611,
+          "sha256": "8a560e39aee083358dc62d0a4565ba6dee7b11e1e316ede3bdc03218f8f804ac"
+        },
+        {
+          "path": "after.json",
+          "bytes": 547173,
+          "sha256": "50c895105b6c382df3ef4679b9914af48f8c48a843c947b84fb69649c14a1cf0"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 314,
+          "sha256": "176ec6a23d8f2851d5e97fed93ec312c5cfa1527218942fdd1f4d2392d5d4583"
+        },
+        {
+          "path": "before.json",
+          "bytes": 556684,
+          "sha256": "4e17e058d57486ed4c2e8b8682589ddbf20dc9c37952440350b0c79ae79518d5"
+        },
+        {
+          "path": "build.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "build.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "build.stdout",
+          "bytes": 141,
+          "sha256": "d430a8625d77bdd8add5561809be537c4b3b81e1d16a551036bd566eaa7dd708"
+        },
+        {
+          "path": "build.time",
+          "bytes": 29,
+          "sha256": "5809b7d696abe4049095c43758cd4e21da4c5b4a61c4035bdc4fab33457eb592"
+        },
+        {
+          "path": "dependency-copy.json",
+          "bytes": 2232,
+          "sha256": "0efd1628bc0054c3c8e3e2ecb3e318ed161f893b1f94215bd98505da5a759a07"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 6556,
+          "sha256": "10df24bbfaafbf03a42ffcb03890d63b5bb716e1396c11e21ad0c3a07b7f4c5a"
+        },
+        {
+          "path": "generated/index.html",
+          "bytes": 26259,
+          "sha256": "62339a1ea0bcea8af96184debab781bb20f679b51116a88551c94701a7a9a754"
+        },
+        {
+          "path": "generated/oauth.html",
+          "bytes": 3435,
+          "sha256": "87e3ea59858b3221b250910eaa6d5c2189e6185ace47a930f1c06479f73feb0a"
+        },
+        {
+          "path": "generated/oauth.js",
+          "bytes": 1002695,
+          "sha256": "fbb383319e8f09244cd61186e49b1c82e9abda44a6113324e610db16f584372e"
+        },
+        {
+          "path": "generated/page.js",
+          "bytes": 1263409,
+          "sha256": "bbedad1ca22afd762011bf9f6896c98677dcb8d3c3c5b2fa489ad695ff1d9639"
+        },
+        {
+          "path": "plan.json",
+          "bytes": 557149,
+          "sha256": "2e1287eacbd46825357806b32e126c97a625e226788f7cc507f57d1b6b881aa0"
+        },
+        {
+          "path": "process-closure.json",
+          "bytes": 50,
+          "sha256": "5d1d727b5b5a1a8b73088b118ef1fdc1f756632b6bac4daed184db3375639a19"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1078,
+          "sha256": "93f20cfa602a28dfc868b4cbbb8131782f3d45ffae7256a6e655c57a43278cfe"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 2382,
+          "sha256": "b9b87b6c648681c594e6b3133456544af4499a78ab2aa998fae301118a998f39"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 88,
+          "sha256": "d38f315057672b0a83fad35d490e4c248742bdecf2a5fe8f70912441473a42e2"
+        },
+        {
+          "path": "started.json",
+          "bytes": 96,
+          "sha256": "b950e1a21c0d5098faf15e9a4249a87a64a1fd43140dbea276c4c206481c4bbe"
+        }
+      ]
+    }
+  ]
+}
