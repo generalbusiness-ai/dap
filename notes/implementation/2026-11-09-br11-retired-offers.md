@@ -3,10 +3,9 @@
 Request: `e1b71b6b697c58723b3340681346f5f7145d345c`.
 Promise: `5a3fbb3db7dac1dc652f7403aabbf585641e4212`.
 
-Status: the CLI adapter repair and its Page asset are prepared. The
-entry-point owner must check the new seal, then the CLI compiler and five
-unrun contexts must pass before the thirteen unrun Vitest cases start.
-The two client compiler contexts keep their pass. No control or gate ran.
+Status: focused checks and the retired-decoder control pass. Both earlier
+failed focused units remain sealed as failures. The final full gate,
+Page workflow, and independent exact-head review remain due.
 
 ## Keep each deployment's configuration separate
 
@@ -133,3 +132,31 @@ OAuth entries stayed equal, and the process group closed. The
 digest `bd55d320770d10188a729049118633fcb781350c019f20b924ae80cad84dc67e`,
 seals 21 files. The earlier build remains evidence for its earlier source.
 No compiler, test, or gate repeats during sealing.
+
+At clean integrated head `b689c02f`, tree `9996dd80`, the affected
+entry-point owner passed all eleven cases. The six resumed compiler
+contexts passed: CLI source and tests, Page source and tests, Scope tests,
+and the Native Page story. All thirteen cases in eight complete Vitest
+owners then passed, with eight modules and no coverage issue, skip,
+retry, duplicate, or unfinished case. The maintained JSON report agrees.
+Actual owner, pipeline, and outer driver exits are 0. Every tracked input
+stayed equal and both process groups closed.
+
+The prior three settings passes and two client compiler passes remain
+recorded at their earlier heads. Their owner sources remain unchanged.
+The final gate still checks the complete final composition. The first
+failed document inventory and second failed CLI compiler remain failures.
+
+One named control restores the actual retired SDK decoder from main
+`4f06bbbc` for the unchanged complete SDK owner. It exits 1 only at the new
+retired-offer refusal assertion, `creation-offer.test.ts:43`: the old
+decoder answers true where the current decoder must answer false. The
+verifier exits 0, every tracked byte restores exactly, and the process
+group closes. The control reuses the saved passing baseline. Neither the
+baseline nor the restored owner runs again.
+
+The [focused and control manifest](evidence/2026-11-09-br11-focused.manifest.json),
+digest `05b3eabef866bba74dadfe7e83bc2fe56ea1ffb4713be5394c2dea8c05a68fb5`,
+seals 27 public files and points to 275 focused and 19 control originals.
+The public record separates current passes, the named negative control,
+and conclusive prior phases. No execution repeats during sealing.
