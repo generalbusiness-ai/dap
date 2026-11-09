@@ -1,6 +1,6 @@
 # Verify the five priority state machines
 
-Review repairs await validation. This branch includes main `0914c89e` and the requested control, Editor model, and documentation fixes. The evidence below describes the original submission at `13e704a47a`; it does not validate these repairs. Editor charts and checks, Effects correspondence after S4, and a successful final gate remain due in the formal validation turn.
+Review repairs are in progress after published M0 main `f2677f77`. The corrected Editor model and chart pass at `7b86cb87`, tree `7119596692d63f96df8d6cc16a0c6d5effe8fb0e`: seven states, nine steps, with `EvidenceBeforeProgress` and `NoDeadlock` holding. The original evidence below describes submission `13e704a47a`. The Editor source check and model fault, Effects check and source control, preflight refusal probes, and final maintained gate remain due.
 
 ## What changed
 
@@ -56,4 +56,4 @@ Request `3c6d197df2db35e3d1603f63acfa63953da7c1a0` owns the five-subsystem deliv
 
 ## S4 correspondence preparation
 
-This branch integrates approved S4 candidate `ce69f61a` without the unpublished merge-message failure. `ParkedAttempts` and `ReplyCustody` own only memory. The sent-row branch still chooses held answer, safe recovery or unknown without another original send. The exact `markSent`/readback/dispatch fragment, `#send`, `#answer` and SQLite bytes equal the original model base. `#offer` still awaits the same judgment before postponing or releasing reply custody. The seven other covered source hashes remain unchanged. Coverage now names the S4 operation bytes and includes `#answer`; this source review establishes no new model or witness result. Effects check and one source control remain due after M0 in the formal validation turn.
+This branch integrates approved S4 source and published M0 main `f2677f77`. The S4 landing retained its merge-message exception; this branch changes none of those signed bytes. `ParkedAttempts` and `ReplyCustody` own only memory. The sent-row branch still chooses held answer, safe recovery or unknown without another original send. The exact `markSent`/readback/dispatch fragment, `#send`, `#answer` and SQLite bytes equal the original model base. `#offer` still awaits the same judgment before postponing or releasing reply custody. The seven other covered source hashes remain unchanged. Coverage now names the S4 operation bytes and includes `#answer`; this source review establishes no new model or witness result. Effects check and one source control remain due after M0 in the formal validation turn.

@@ -1,10 +1,10 @@
 # Verify the five priority state machines
 
-Review repairs await validation. The Editor model now includes failed receipt verification, but the charts and counts below still describe the original checked models at `13e704a47a`. Regenerate the Editor charts and run its check and model fault during the formal validation turn. The Effects correspondence now follows approved S4 source at `ce69f61a`; its check and source control remain due.
+The corrected Editor model and regenerated chart pass at `7b86cb87` after published M0 integration. TLC reaches seven states and checks `EvidenceBeforeProgress` and `NoDeadlock`. The Editor source check and model fault, the Effects check and source control, preflight refusal probes, and the final gate remain due. Counts for the other four models still describe the original submission at `13e704a47a`.
 
 The 7 November survey lives in gitseq request `a99e32d9` at `attachments/full-report` and `attachments/priority-list`. It audited `e50d9eebb27f47d0f33549486751ab8bdce8de80`. This verification follows the five-item shortlist, not the full inventory. Gitseq request `3c6d197df2db35e3d1603f63acfa63953da7c1a0` tracks this delivery, under promise `5c826d7435eef1e7a2b8df3c7db6efdf94f4654b`.
 
-The models describe source at `8faa38dcf31855a0a6264e5912b58061b5eda223`. MCP, observation and editor refactors already landed after the survey. Each model checks a narrow safety obligation in the current implementation. None proves its entire subsystem.
+Transport, observation, editor and voice retain their source at `8faa38dcf31855a0a6264e5912b58061b5eda223`, unchanged through main `f2677f77`. Effects follows the reviewed S4 source at `ce69f61a`. Each model checks a narrow safety obligation. None proves its entire subsystem.
 
 In the original submission, TLC 1.7.4 exhaustively explored each finite model. All eight safety invariants passed. Deliberately broken transitions failed every invariant. Five deliberate source faults failed the corresponding source assertions, and the restored source passed. These controls establish that the checks can fail; they do not establish refinement of TypeScript by TLA+.
 
@@ -14,7 +14,7 @@ The finite-model invariants mostly restate the guards in those models. They prov
 |---|---:|---|---|
 | MCP transport | 5 | A late factory cannot revive a retired generation. | [verify-mcp-transport](../../.agents/skills/verify-mcp-transport/SKILL.md) |
 | Client observation | 4 | An obsolete observer cannot repaint the current view. | [verify-client-observation](../../.agents/skills/verify-client-observation/SKILL.md) |
-| Retained editor | 6 | Acceptance alone cannot advance an edit. | [verify-retained-editor](../../.agents/skills/verify-retained-editor/SKILL.md) |
+| Retained editor | 7 | Acceptance alone cannot advance an edit. | [verify-retained-editor](../../.agents/skills/verify-retained-editor/SKILL.md) |
 | Outside effects | 7 | Each attempt sends at most once, after its durable mark. | [verify-outside-effects](../../.agents/skills/verify-outside-effects/SKILL.md) |
 | Counter voice | 8 | Speech follows a durable mark, never replays that turn, and report custody needs proof before clear. | [verify-counter-voice](../../.agents/skills/verify-counter-voice/SKILL.md) |
 
@@ -117,14 +117,16 @@ stateDiagram-v2
   s1: Unknown
   s2: Checking receipt
   s3: Refused
-  s4: Receipt verified
-  s5: Next stage ready
+  s4: Acceptance unverified
+  s5: Receipt verified
+  s6: Next stage ready
   [*] --> s0
   s0 --> s1: you submit the retained request
   s1 --> s2: service accepts the request
   s1 --> s3: service refuses the request
-  s2 --> s4: the page verifies its receipt
-  s4 --> s5: the next edit stage opens
+  s2 --> s4: the page cannot verify its receipt
+  s2 --> s5: the page verifies its receipt
+  s5 --> s6: the next edit stage opens
 ```
 
 ## Recover an outside effect after a lost answer
