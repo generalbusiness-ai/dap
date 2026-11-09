@@ -1,0 +1,17 @@
+---
+title: "Recover an outside effect after a lost answer"
+---
+stateDiagram-v2
+  s0: Recorded
+  s1: May have been sent
+  s2: Settled
+  s3: Unknown
+  s4: Waiting for answer
+  [*] --> s0
+  s0 --> s1: the scope retains a sent mark
+  s1 --> s2: the original decisive answer arrives
+  s1 --> s3: the process restarts or loses the answer
+  s1 --> s4: the outside request leaves
+  s3 --> s2: the original decisive answer arrives
+  s4 --> s2: the original decisive answer arrives
+  s4 --> s3: the process restarts or loses the answer

@@ -1,0 +1,19 @@
+---
+title: "Speak once and reconcile the report"
+---
+stateDiagram-v2
+  s0: Armed
+  s1: Audio marked
+  s2: Audio uncertain
+  s3: Speaking
+  s4: Report unknown
+  s5: Report verified
+  s6: Recorded
+  [*] --> s0
+  s0 --> s1: the device retains the audio-start mark
+  s1 --> s2: speech stops or the device restarts
+  s1 --> s3: your device speaks
+  s3 --> s2: speech stops or the device restarts
+  s3 --> s4: speech ends and a report waits
+  s4 --> s5: the caller verifies the native report
+  s5 --> s6: the device clears report custody

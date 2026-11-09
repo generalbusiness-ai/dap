@@ -1,0 +1,18 @@
+---
+title: "Submit an edit without mistaking acceptance for proof"
+---
+stateDiagram-v2
+  s0: Prepared
+  s1: Unknown
+  s2: Checking receipt
+  s3: Refused
+  s4: Acceptance unverified
+  s5: Receipt verified
+  s6: Next stage ready
+  [*] --> s0
+  s0 --> s1: you submit the retained request
+  s1 --> s2: service accepts the request
+  s1 --> s3: service refuses the request
+  s2 --> s4: the page cannot verify its receipt
+  s2 --> s5: the page verifies its receipt
+  s5 --> s6: the next edit stage opens

@@ -1,0 +1,11 @@
+---
+title: "Read a room and leave while its snapshot loads"
+---
+stateDiagram-v2
+  s0: Reading
+  s1: Current
+  s2: Cancelled
+  [*] --> s0
+  s0 --> s1: snapshot arrives
+  s0 --> s2: you leave the view
+  s1 --> s2: you leave the view

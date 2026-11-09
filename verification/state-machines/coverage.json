@@ -1,0 +1,110 @@
+{
+  "Transport": {
+    "title": "Connect an agent and retire its transport",
+    "coverage": {
+      "packages/mcp/src/http.ts": [
+        "HttpGeneration.open",
+        "HttpGeneration.attach",
+        "HttpGeneration.#discard",
+        "HttpGeneration.graceful"
+      ],
+      "packages/mcp/src/oauth-http.ts": [
+        "OAuthHttpLayers.open",
+        "OAuthHttpLayers.#close"
+      ]
+    },
+    "limits": "One generation and one pending factory. Retirement abstracts detach, abrupt discard and graceful close only for the no-revival property. It does not prove row retention, stream capacity, deadlines or OAuth authorization.",
+    "rules": {
+      "NoRevival": "retired => phase # \"Connected\""
+    },
+    "syncCommit": "8faa38dcf31855a0a6264e5912b58061b5eda223",
+    "sha256": {
+      "packages/mcp/src/http.ts": "f6644b9962dc21e351462d51c2fdede5d4481265c95834f86c9c40a1386d8e77",
+      "packages/mcp/src/oauth-http.ts": "f60fcf6dda90457e0d97c351c91c4641d4ec174674ec4becee6c643a6e4aa383"
+    }
+  },
+  "Observation": {
+    "title": "Read a room and leave while its snapshot loads",
+    "coverage": {
+      "packages/client/src/observe.ts": [
+        "RefreshCoordinator.check",
+        "RefreshCoordinator.read",
+        "ObservationConnection.cancel",
+        "ObservationConnection.emit"
+      ]
+    },
+    "limits": "One read and one cancellation. A successful read represents a complete, context-matching snapshot. Authentication, reconnect backoff, head conflicts and coalesced refresh are outside this property.",
+    "rules": {
+      "NoObsoletePaint": "~paintedLate"
+    },
+    "syncCommit": "8faa38dcf31855a0a6264e5912b58061b5eda223",
+    "sha256": {
+      "packages/client/src/observe.ts": "a8cbce00f457f84c000202f05ccbe790444e9603685dcab14f6194653ffc7fd7"
+    }
+  },
+  "Editor": {
+    "title": "Submit an edit without mistaking acceptance for proof",
+    "coverage": {
+      "apps/room/page/src/retained-editor-state.ts": [
+        "transitionEdit: attempted, answer, receipt-verified, step-recorded"
+      ],
+      "apps/room/page/src/retained-editor-data.ts": [
+        "continueEdit"
+      ]
+    },
+    "limits": "One request step. Repeat this obligation at opening, rules, source and manifest stages. Receipt verification is a trusted input from the network executor. This model does not prove signatures, workflow stage order, reload persistence or source contents.",
+    "rules": {
+      "EvidenceBeforeProgress": "advanced => accepted /\\ verified"
+    },
+    "syncCommit": "8faa38dcf31855a0a6264e5912b58061b5eda223",
+    "sha256": {
+      "apps/room/page/src/retained-editor-state.ts": "159a82608a78b04f3849d10bcb5a5f2f8a7c6c0dcae69f932636cf3e0b688141",
+      "apps/room/page/src/retained-editor-data.ts": "adedf46d11c10a1bb614ff76c3258af6b202dffec5e697f2230094f3da7651c8"
+    }
+  },
+  "Effects": {
+    "title": "Recover an outside effect after a lost answer",
+    "coverage": {
+      "packages/scope/src/operations.ts": [
+        "Operations.#pass",
+        "Operations.#send",
+        "Operations.#answer",
+        "Operations.#offer"
+      ],
+      "packages/scope/src/sqlite.ts": [
+        "markSent"
+      ]
+    },
+    "limits": "One opened attempt, two possible send counts, arbitrary restarts. Mark and dispatch are separate actions. Durable storage survives restart; in-memory permission does not. Safe recovery reads, additional attempts, selection, parked scans and retained-reply paging are outside this model. A decisive answer must authenticate the exact original attempt. Send counts calls from Operations to its outside port, not provider-internal retries.",
+    "rules": {
+      "AtMostOneSend": "sends <= 1",
+      "MarkBeforeEffect": "sends > 0 => marked"
+    },
+    "syncCommit": "ce69f61a642ebec3c59be04e6f96e10122bc1bce",
+    "sha256": {
+      "packages/scope/src/operations.ts": "0852d2c295b29e3ffe95a6157a638b525f016ee20807262607405892546413df",
+      "packages/scope/src/sqlite.ts": "aed4f145d7cc3d8f101ff24bd787ba9dc9e62a8534aade31d94761ceca6a6acd"
+    }
+  },
+  "Voice": {
+    "title": "Speak once and reconcile the report",
+    "coverage": {
+      "apps/counter/browser/voice-controller.ts": [
+        "start",
+        "ready",
+        "stopAudio",
+        "settle"
+      ]
+    },
+    "limits": "One armed turn, two possible playback counts, one report. Storage succeeds, the lock serializes custody, and verified report proof is trusted. Audio interruption remains uncertain. Native pledge resolution, corrected requests, token-memory capacity and browser speech-engine behavior remain outside the model. Restart covers unresolved audio custody. After a verified report clears custody, this model assumes fresh authenticated observations cannot reoffer the fulfilled turn.",
+    "rules": {
+      "NoReplay": "speaks <= 1",
+      "ProofBeforeClear": "cleared => proof",
+      "MarkBeforeSpeech": "speaks > 0 => marker"
+    },
+    "syncCommit": "8faa38dcf31855a0a6264e5912b58061b5eda223",
+    "sha256": {
+      "apps/counter/browser/voice-controller.ts": "3e730253d863a5a8698a68b0f0ed65b17968f114942d01394ab7f84860f906b3"
+    }
+  }
+}
