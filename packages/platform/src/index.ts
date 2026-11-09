@@ -135,3 +135,4 @@ export { FAILED_CLAIM_COHORT } from "./failed-claim-cohort.ts";
 
 export { answersVersionQuestion, VERSION_QUESTIONS, type VersionQuestion } from "./version-questions.ts";
 export * from "./version-relations.ts";
+export { answersCatalogVocabularyQuestion, CATALOG_VOCABULARY_QUESTIONS, type CatalogVocabularyQuestion, type CatalogVocabularyPin } from "@generalbusiness/dap-contract/catalog-vocabulary";

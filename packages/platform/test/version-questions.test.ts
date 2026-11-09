@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
+import { answersCatalogVocabularyQuestion, CATALOG_VOCABULARY_QUESTIONS } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import { answersVersionQuestion, VERSION_QUESTIONS, type VersionQuestion } from "../src/version-questions.ts";
 import { VERSIONS } from "../src/native-catalog.ts";
 
@@ -29,6 +30,12 @@ test.each(frozen.rows)("the independent old-list answers hold for $pin", row => 
 
 test.each(standing.rows)("the separately frozen standing answer holds for $pin", row => {
   expect(answersVersionQuestion(row.pin, "nativeStandingDestination")).toBe(row.answer);
+});
+
+test.each(frozen.rows)("the lower-layer vocabulary keeps the old answers for $pin", row => {
+  for (const question of CATALOG_VOCABULARY_QUESTIONS) {
+    expect(answersCatalogVocabularyQuestion(row.pin, question)).toBe(row.answers[question]);
+  }
 });
 
 test.each([undefined, null, false, 0, {}, []])("non-pin inputs answer false: %j", named => {

@@ -1,6 +1,8 @@
 /** Exact pin answers frozen from the BR13 source inventory at 86179b0c.
  * Each question preserves its own old predicate, including equal pin sets.
  * A future or unknown pin acquires no answer from its version number. */
+import { answersCatalogVocabularyQuestion, CATALOG_VOCABULARY_QUESTIONS, type CatalogVocabularyQuestion, type CatalogVocabularyPin } from "@generalbusiness/dap-contract/catalog-vocabulary";
+
 const QUESTION_PINS = {
   nativeStandingDestination: ["platform:destination@5", "platform:destination@6"],
   cliManifestListDestination: [
@@ -51,10 +53,6 @@ const QUESTION_PINS = {
   ],
   replayPartitionChangeOrigin: [
     "platform:destination@6",
-  ],
-  nativeTimedOperationOpen: [
-    "platform:destination@13", "platform:destination@14", "platform:destination@15", "platform:destination@19",
-    "platform:destination@3",
   ],
   destinationCertificateDriver: [
     "platform:destination@14", "platform:destination@15", "platform:destination@17",
@@ -332,9 +330,6 @@ const QUESTION_PINS = {
     "platform:destination@6", "platform:directory-partition@1", "platform:directory@10", "platform:inbox@1",
     "platform:membership@6", "platform:rules@3",
   ],
-  gitArchiveDirectMembership: [
-    "platform:membership@6",
-  ],
   scopeArchiveForeignLegacyMembership: [
     "platform:membership@6",
   ],
@@ -386,12 +381,18 @@ const QUESTION_PINS = {
   ],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
-export type VersionQuestion = keyof typeof QUESTION_PINS;
+type PlatformVersionQuestion = keyof typeof QUESTION_PINS;
+export type VersionQuestion = PlatformVersionQuestion | CatalogVocabularyQuestion;
+export type VersionQuestionPin<Q extends VersionQuestion> = Q extends CatalogVocabularyQuestion ? CatalogVocabularyPin<Q>
+  : Q extends PlatformVersionQuestion ? (typeof QUESTION_PINS)[Q][number] : never;
 
 /** Named questions stay separate even when their current answers agree. */
-export const VERSION_QUESTIONS: readonly VersionQuestion[] = Object.freeze(Object.keys(QUESTION_PINS) as VersionQuestion[]);
+export const VERSION_QUESTIONS: readonly VersionQuestion[] = Object.freeze([...(Object.keys(QUESTION_PINS) as PlatformVersionQuestion[]), ...CATALOG_VOCABULARY_QUESTIONS]);
 
 /** The exact old positive set answers this question; every other value is false. */
-export function answersVersionQuestion<Q extends VersionQuestion>(named: unknown, question: Q): named is (typeof QUESTION_PINS)[Q][number] {
-  return typeof named === "string" && (QUESTION_PINS[question] as readonly string[]).includes(named);
+export function answersVersionQuestion<Q extends VersionQuestion>(named: unknown, question: Q): named is VersionQuestionPin<Q> {
+  if ((CATALOG_VOCABULARY_QUESTIONS as readonly string[]).includes(question)) {
+    return answersCatalogVocabularyQuestion(named, question as CatalogVocabularyQuestion);
+  }
+  return typeof named === "string" && (QUESTION_PINS[question as PlatformVersionQuestion] as readonly string[]).includes(named);
 }
