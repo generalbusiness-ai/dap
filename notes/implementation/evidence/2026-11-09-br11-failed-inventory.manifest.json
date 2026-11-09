@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "request": "e1b71b6b697c58723b3340681346f5f7145d345c",
+  "promise": "5a3fbb3db7dac1dc652f7403aabbf585641e4212",
+  "sourceHead": "b132c9326d21155f4ca3a2f72973c067b494d335",
+  "sourceTree": "f64f954916acfc28c68a4b585a67f783e4e4ed04",
+  "qualification": "The actual owner and outer execution failed. No compiler, Vitest body, control or gate started. Keep original output and snapshots; never relabel this unit as passing.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-failed-inventory-validation",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1071,
+          "sha256": "f5bad83f0c24112e191bea596e41c34ab4a4e6da536cf7685fd25bbbfab9eb4d"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 174,
+          "sha256": "e094a8e76f83f4141850d187be12228f9dcf00cabda86f1acdd36ddcfa0d688b"
+        },
+        {
+          "path": "compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compatibility.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compatibility.stdout",
+          "bytes": 369,
+          "sha256": "f1ef467b38bb8ace0be7fffcdd8674cbc238d9885981e4c77651797eb47add42"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7066,
+          "sha256": "1e6eacd5980bf275e638a1905ab4f0908b79ffc04a60358750e4783d84ce2c86"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 4259,
+          "sha256": "d5b468598d3b84c1457f7c17f3c4fb3c5b3fc529b56e8d0c513b4f5806c3749b"
+        },
+        {
+          "path": "node-driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 32,
+          "sha256": "39e8654ee4f8f788d08b324177b84cfaa1bc53f49b9653f505865a05b180ede3"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 475,
+          "sha256": "edbfc28b884dad36792b54bb73e5f422cc90dacf098400e1af6c7aa971204500"
+        },
+        {
+          "path": "result.json",
+          "bytes": 3611,
+          "sha256": "8c78a6f9c4c1fc977ef2336fdb4b7c524f5aad1aa8edffe7e1c9e5fcc1c7e25c"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        },
+        {
+          "path": "started.json",
+          "bytes": 88,
+          "sha256": "e8ca99f3eb00dc9b2ce5ebee520b12977e756f2b1c5f6e3e04d41bcb0bc8705b"
+        }
+      ]
+    }
+  ]
+}

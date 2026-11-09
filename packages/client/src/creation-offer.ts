@@ -13,19 +13,13 @@ interface CreationRegisterItem {
   readonly id: number; readonly revision: number; readonly state: "open";
   readonly host: string; readonly namespace: string; readonly policy: "open";
 }
-/** Old retained projections remain decodable, never selected for a fresh Start. */
-export interface LegacyCreationOffer extends CreationOfferBase {
-  readonly v: 1;
-  readonly definition: "platform:register@7" | "platform:register@8";
-  readonly registerItem: CreationRegisterItem & { readonly purpose: "demo-start" };
-}
 /** These native register pins have no purpose field; the offer invents none. */
 export interface CurrentCreationOffer extends CreationOfferBase {
   readonly v: 2;
   readonly definition: "platform:register@17" | "platform:register@26";
   readonly registerItem: CreationRegisterItem;
 }
-export type CreationOffer = LegacyCreationOffer | CurrentCreationOffer;
+export type CreationOffer = CurrentCreationOffer;
 export type CreationOfferFetch = (url: string, init: {
   method: "GET"; redirect: "error"; credentials: "omit"; cache: "no-store";
   headers: Record<string, string>; signal: never;
@@ -47,23 +41,23 @@ function exactOrigin(value: string): string {
 export function isCreationOffer(value: unknown, origin: string, register?: ScopeRef): value is CreationOffer {
   try {
     const expectedOrigin = exactOrigin(origin);
-    if (!closed(value, ["v", "origin", "register", "definition", "at", "registerItem"]) || value["origin"] !== expectedOrigin || !(value["v"] === 1 && ["platform:register@7", "platform:register@8"].includes(value["definition"] as string) || value["v"] === 2 && ["platform:register@17", "platform:register@26"].includes(value["definition"] as string))
+    if (!closed(value, ["v", "origin", "register", "definition", "at", "registerItem"]) || value["origin"] !== expectedOrigin || (value["v"] !== 2 || !["platform:register@17", "platform:register@26"].includes(value["definition"] as string))
       || !closed(value["register"], ["scope", "kind", "inc"]) || !isScopeRef(value["register"]) || value["register"].kind !== "register"
       || !closed(value["at"], ["seq", "hash"]) || !isHead(value["at"])) return false;
     const ref = value["register"], at = value["at"], item = value["registerItem"];
     if (register && (ref.scope !== register.scope || ref.inc !== register.inc || ref.kind !== register.kind)) return false;
-    return closed(item, value["v"] === 1 ? ["id", "revision", "state", "host", "namespace", "policy", "purpose"] : ["id", "revision", "state", "host", "namespace", "policy"])
+    return closed(item, ["id", "revision", "state", "host", "namespace", "policy"])
       && isLocalId(item["id"]) && isLocalId(item["revision"]) && item["revision"] >= 1 && item["id"] <= item["revision"] && item["revision"] <= at.seq + 1
-      && item["state"] === "open" && item["policy"] === "open" && (value["v"] === 2 || item["purpose"] === "demo-start")
+      && item["state"] === "open" && item["policy"] === "open"
       && typeof item["host"] === "string" && utf8(item["host"]).length > 0 && utf8(item["host"]).length <= 256
       && typeof item["namespace"] === "string" && utf8(item["namespace"]).length > 0 && utf8(item["namespace"]).length <= 256;
   } catch { return false; }
 }
 /** One current same-origin projection, not permission to create. */
 export function isCurrentCreationOffer(value: unknown, origin: string, register?: ScopeRef): value is CurrentCreationOffer {
-  return isCreationOffer(value, origin, register) && value.v === 2;
+  return isCreationOffer(value, origin, register);
 }
-/** One anonymous GET for the configured current register, or an exact retained reference. */
+/** One anonymous GET for a current register, optionally selected by exact reference. */
 export async function creationOffer(origin: string, options: { fetch?: CreationOfferFetch; register?: ScopeRef } = {}): Promise<CreationOffer> {
   try {
     if (options.register && (!closed(options.register, ["scope", "kind", "inc"]) || !isScopeRef(options.register) || options.register.kind !== "register")) throw failed();
@@ -77,7 +71,7 @@ export async function creationOffer(origin: string, options: { fetch?: CreationO
     });
     if (bytes === LATE || bytes === null) throw failed();
     const value: unknown = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
-    if (!isCreationOffer(value, origin, options.register) || !options.register && !isCurrentCreationOffer(value, origin)) throw failed();
+    if (!isCreationOffer(value, origin, options.register)) throw failed();
     return value;
   } catch { throw failed(); }
 }

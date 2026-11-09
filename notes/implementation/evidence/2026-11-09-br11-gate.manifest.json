@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "request": "e1b71b6b697c58723b3340681346f5f7145d345c",
+  "promise": "5a3fbb3db7dac1dc652f7403aabbf585641e4212",
+  "scaleRuling": "ea2e17abe3c0ba2b78fbc74a3e17aaaed79b1142",
+  "qualification": "The maintained BR-11 gate at ebb95ee5 ends with actual exit0. Every fixed stage passes, with skips explicit. Exactly six unchanged scale cases run only in scope-scale, selected because package.json changes. Every tracked input stays equal and the owned process group closes. Retained process snapshots find no other local validation body; snapshots cannot prove uninterrupted isolation. Reports reconcile without failure, contradiction, report error or unhandled error. Unknown observations are Node file wrappers, and one explicitly skipped recorder module has no duration. Both earlier BR-11 focused failures remain failed in their own manifests. Focused, compiler, asset and distinguishing-control evidence stay separately bound to their recorded heads. Twenty retained full-gate attempts contain sixteen archive passes and four Native-unreached failures, without an observed archive retry; watch64552d40 stays open. Sealing reruns nothing. Exact-head review and the Page workflow remain separate requirements. This proves no deployment or live acceptance.",
+  "sourceHead": "ebb95ee5ace0b5d763f4087ac19bd2f33c6c6753",
+  "sourceTree": "9b9afc2bbd5310b38358ba505dd86daa3d17d4a8",
+  "fileCount": 21,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-gate-validation",
+      "fileCount": 21,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1656,
+          "sha256": "4f6ce38a26ff240f72803257d1c1ca6737e3a9966f45d9312d1b117c17c55cf4"
+        },
+        {
+          "path": "after.json",
+          "bytes": 559889,
+          "sha256": "bfbd9dbe7d5ba035cf2918a7244fe521cc2715eb67817617014a3006723ef7bc"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2424,
+          "sha256": "a7e1e34b229ad3cfc6e2ad88653e8754519fc32d235813a4acbda448f1a8d819"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "archive-watch-audit.json",
+          "bytes": 15657,
+          "sha256": "31547b0eb4bea9e11039bb95c4150b7ddd1fc0d6c5124673bae53f3f8928a266"
+        },
+        {
+          "path": "before.json",
+          "bytes": 559889,
+          "sha256": "bfbd9dbe7d5ba035cf2918a7244fe521cc2715eb67817617014a3006723ef7bc"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "5bef31cd831241739aca7e94f26bf10a92197d20e404bb58758735140f75fb00"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8725,
+          "sha256": "f36f5ef5bfe1f22f2c457d1ee57fec6fa6aebf76e07676ecece2e1edd5bca6dd"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "7c941ccfa95830b5efbff23c33044db089f6aafbc3914f632523ced0aadcec7f"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 171,
+          "sha256": "7503c47e20155bbb77a42fea654689a78ae76df69d6ec33e7075cbc07210e571"
+        },
+        {
+          "path": "result.json",
+          "bytes": 7596,
+          "sha256": "eb3f128148b388c5832d31a77fa92d51b3377817c9a619ca338df591cfe7e731"
+        },
+        {
+          "path": "scale-owner-equality.json",
+          "bytes": 728,
+          "sha256": "d0ae1bd355e67b0b6e449c56b4cb3c1bab5b5bcb5e30224b67795b3710513a5a"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "feb1576ba16ff64ba133a0a430b34a2a23df36e63572428a23d158bad6c62c30"
+        },
+        {
+          "path": "slot-observations.jsonl",
+          "bytes": 2756,
+          "sha256": "78778d541ae4e8d47d6d5a3b70ffde61dc1969b633abe7d4ee04db14b30491e4"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 2789,
+          "sha256": "3667ca7ca4615c79efd0c925ef5e5691c68e84b2210f9e2205701ddbec74ed81"
+        },
+        {
+          "path": "started.json",
+          "bytes": 643,
+          "sha256": "a79ac56e494b9b78ef36b9be1554bf6860f094c8dfa05ce99dd03444fcdf217c"
+        },
+        {
+          "path": "task.json",
+          "bytes": 9020,
+          "sha256": "9ddcb72312787f7728e54add01efee99dbc65f2a476ac050827795e574cc04e9"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 562,
+          "sha256": "d9e7239f113b0cc49b92adbb777c4406f7c2f2a2463ba259b9968afa8b159860"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 18243,
+          "sha256": "4789f3ab84d6aaf30ddd57bcb90ddb71a079940645e58788f05e6f6489eef728"
+        }
+      ]
+    }
+  ]
+}

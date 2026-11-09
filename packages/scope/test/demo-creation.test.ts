@@ -4,7 +4,7 @@ import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { b64url, canonicalize, intentDigest, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedIntent } from "@generalbusiness/dap-client";
-import { DEMO_PURPOSE, DEMO_REGISTER, WEB_DEMO_REGISTER, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import type { Seed } from "@generalbusiness/dap-contract";
 import type { Binding } from "../src/namespace.ts";
 import { demoCreationConfig, demoCreationRoute, type DemoCreationOffer } from "../../../apps/room/demo-creation.ts";
@@ -86,40 +86,6 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     const oldAt=await lifetime.wait(()=>old.at());
     const forbidden=await signedIntent(newcomer,{to:oldAt,kind:"found",expected:{register:1},fields:{branch:"main","founderHandle":"@newcomer",recoveryKey:installer.key}},{now:lifetime.now()});
     expect(await lifetime.wait(()=>old.stub.submit(forbidden,[]))).toMatchObject({answer:"refused",reason:"unauthorized"});
-    // Actual old registers still exist, but neither a fresh request nor an
-    // exact retained reference can revive the retired server decoder.
-    const retiredOrigin = "https://artroom-scope.inguz.workers.dev";
-    const retiredCalls = { idFromName: 0, get: 0 };
-    const retiredScopes = { idFromName(name: string) { retiredCalls.idFromName++; return env.PLATFORM.idFromName(name); },
-      get(id: Parameters<typeof env.PLATFORM.get>[0]) { retiredCalls.get++; return env.PLATFORM.get(id); } } as unknown as Binding;
-    let retained7: typeof at | undefined;
-    for (const definition of [DEMO_REGISTER, WEB_DEMO_REGISTER] as const) {
-      const legacyInstall = await signedIntent(installer, { to: null, kind: "install", fields: {
-        host: "github.com", namespace: "generalbusiness-ai", policy: "open", purpose: DEMO_PURPOSE,
-      } }, { now: lifetime.now() });
-      const legacySeed: Seed = { v: 1, kind: "register", definition, creator: null, cause: intentDigest(legacyInstall.intent), ordinal: 0 };
-      const legacy = lifetime.platform(scopeIdOf(legacySeed));
-      lifetime.outside(legacy.name, () => ({ accepts: () => false, send: async () => null }));
-      expect((await lifetime.wait(() => legacy.stub.create(legacyInstall, definition))).answer).toBe("accepted");
-      const legacyAt = await lifetime.wait(() => legacy.at());
-      if (definition === DEMO_REGISTER) retained7 = legacyAt;
-      const legacyConfig = { v: definition === DEMO_REGISTER ? 1 : 2, origin: retiredOrigin, deployment, register: legacyAt, definition,
-        ...(definition === WEB_DEMO_REGISTER ? { legacy: { register: retained7!, definition: DEMO_REGISTER } } : {}) };
-      const retired = { ...bindings, SCOPES: retiredScopes, DEMO_START_CONFIG: canonicalize(legacyConfig) };
-      const beforeRetired = { ...retiredCalls };
-      const freshRetired = await lifetime.wait(() => demoCreationRoute(new Request(retiredOrigin + "/v1/demo/creation-offer"), retired));
-      expect([freshRetired.status, await freshRetired.json()]).toEqual([404, { error: "not-found" }]);
-      expect(retiredCalls).toEqual(beforeRetired);
-      for (const selected of definition === DEMO_REGISTER ? [legacyAt] : [legacyAt, retained7!]) {
-        const beforeSelected = { ...retiredCalls };
-        const response = await lifetime.wait(() => demoCreationRoute(new Request(`${retiredOrigin}/v1/demo/creation-offer?register=${selected.scope}&inc=${selected.inc}`), retired));
-        expect([response.status, await response.json()]).toEqual([404, { error: "not-found" }]);
-        expect(retiredCalls).toEqual(beforeSelected);
-      }
-      const beforeWrong = { ...retiredCalls };
-      expect((await lifetime.wait(() => demoCreationRoute(new Request(`${retiredOrigin}/v1/demo/creation-offer?register=${legacyAt.scope}&inc=${newIncarnation(new Uint8Array(16).fill(12))}`), retired))).status).toBe(404);
-      expect(retiredCalls).toEqual(beforeWrong);
-    }
     // Public discovery never falls back to deployed Register7/8 settings.
     const unchanged = { ...lookups };
     for (const [v, definition] of [[1, "platform:register@7"], [2, "platform:register@8"]] as const) {
@@ -138,7 +104,7 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     expect(lookups).toEqual(unchanged);
     for(const query of [`?register=${secondAt.scope}&inc=${secondAt.inc}`,`?register=${at.scope}&inc=${newIncarnation(new Uint8Array(16).fill(12))}`,`?register=${at.scope}&inc=${at.inc}&register=${secondAt.scope}`,`?register=${at.scope}`,`?register=${at.scope}&inc=${at.inc}&scope=${at.scope}`]) expect((await lifetime.wait(()=>demoCreationRoute(new Request(origin+"/v1/demo/creation-offer"+query),bindings))).status).toBe(404);
     expect(lookups).toEqual(unchanged); // request ref mismatches refuse before lookup
-    expect(demoCreationConfig(canonicalize({...config,legacy:{register:secondAt,definition:DEMO_REGISTER}}),deployment,bindings)).toBeNull();
+    expect(demoCreationConfig(canonicalize({...config,unexpected:secondAt}),deployment,bindings)).toBeNull();
     expect(demoCreationConfig(canonicalize({...config,origin:"https://foreign.invalid"}),deployment,bindings)).toMatchObject({ current: { origin: "https://foreign.invalid" } });
     const { origin: _origin, ...withoutOrigin } = config;
     for (const invalidConfig of [withoutOrigin, { ...config, origin: otherOrigin + "/path" }]) {

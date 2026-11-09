@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "request": "e1b71b6b697c58723b3340681346f5f7145d345c",
+  "promise": "5a3fbb3db7dac1dc652f7403aabbf585641e4212",
+  "sourceHead": "cbef2afda2df850c7f653b1472fd856271367741",
+  "sourceTree": "124d2c72904c1d77c7b42130fe5167ec3da8beba",
+  "qualification": "Keep this failed compiler pipeline distinct from the earlier failed document inventory. No Vitest case, control or gate ran. Client compiler contexts and Node pass remain conclusive unless a later source change reaches them.",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br11-failed-cli-compiler-validation",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1423,
+          "sha256": "b275f27b47ba0d0aa77b87464d00939e2a86917470235bf8028cd68aad48ef69"
+        },
+        {
+          "path": "cli-source.log",
+          "bytes": 170,
+          "sha256": "6b4f1dbcd67d5cf12c44e48f48bf2f89e13166b6bc2de8fc2b658d3688adcd55"
+        },
+        {
+          "path": "client-source.log",
+          "bytes": 29,
+          "sha256": "a825d3f3c89cddf567a41038ab119cc54396430cf92505601a5c3b9652e83d70"
+        },
+        {
+          "path": "client-test.log",
+          "bytes": 29,
+          "sha256": "44f261ddd3bfaae233f4030c29738a55b47f1ae8063352b612d292ad3ab31bdb"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 213,
+          "sha256": "20806246b3f39c4418cddbd943b176c30b73fe9eaa0fea550e6723588d6d8579"
+        },
+        {
+          "path": "compiler-result.json",
+          "bytes": 7139,
+          "sha256": "2b69867a17a5d6bb4d33a2200113580a017904ad59cf977b6cf9c90952338ff5"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7075,
+          "sha256": "283cf46b932ffce1fecb88b820b53b07d9b46779440e6809bc75d0596a893691"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 919,
+          "sha256": "997713e2574fba9bdc75c20975fd95dac07b3162705386fd608e2734fcbf5c06"
+        },
+        {
+          "path": "node-driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node-owner.time",
+          "bytes": 29,
+          "sha256": "cf249fb2bf28ff415eae636aaca748fb9ac7a4a61bbabd922b5b5f8ecb37927e"
+        },
+        {
+          "path": "node-result.json",
+          "bytes": 3012,
+          "sha256": "2cd6e9b0c18e686b33652d877f8201178be6fedf59dbf3298e3c18068f92db20"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 29,
+          "sha256": "da01ae67b8336784fa28a8148c03ec49c6e015c7ecae71fa0cac75fad718a4c3"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 492,
+          "sha256": "94c4ca6a4ff97b2c0560d02b3d45a1113114429156c9ca22a2273df125a1bdaa"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}
