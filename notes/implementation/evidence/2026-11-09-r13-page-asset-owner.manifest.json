@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "1fc483cef7f5397d097a7722fdbcb71eea517d8b",
+  "sourceTree": "6c2de0e89cbd698a405315babd42fda6f64c1d76",
+  "qualification": "One affected Page-test compiler and complete1case Plain asset owner passed at exact committed generated module. Actual compiler/body/driver exits0, complete literal file/project/pool/title identity, no retries/skips/errors and source unchanged. This checks the maintained generator against committed Page/OAuth assets; no Native repeat,browser scene,gate or deployment.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-page-asset-owner-validation",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1097,
+          "sha256": "f771b5895694801ad6c16fb4e1c92ed2f59ba807d077f04e8417c4e14a663959"
+        },
+        {
+          "path": "asset-owner-proof.json",
+          "bytes": 760,
+          "sha256": "1df86ffba6002250f2686a1338f3f18ffc45b47392425d8f662a0b890fa42f40"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "27aeb94d2afa5e469c6e78b889a88b1d09961698d01178cc763bc53dc02dc96d"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 5597,
+          "sha256": "808eba3dbeb2e13ec03d9994941ccf9998e10135d891926e00b1b3d26eb91abc"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 1601,
+          "sha256": "a236997e93b5d39c9fba755ea23876769a0a0644059508312187b9945411ba5c"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 5424,
+          "sha256": "6921d2c4a96bcbab3a1a238e86d99ddab3aa6b77c5ffa058548ed1f8b20659e3"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 572,
+          "sha256": "2faffdc79bce46a991be3cbeedce82765f8cc871c1a8236e6d29be597dca43f1"
+        },
+        {
+          "path": "page-test.log",
+          "bytes": 29,
+          "sha256": "1c17cad87eba27383f3f0fabbc14930ee27b43defaf06e1101083477e8722af2"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6fe5a51112a791d295899b046d989fcdb9060f985a3d32658086affb79dd8113"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 29,
+          "sha256": "914ab0b7cc38113983499f2418065aa1490a5c6d62aeecd1e1b790eb37d51ac4"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 483,
+          "sha256": "19ea1139dd8d84be340db3c401d2f1417310ff63f8e7ad4bd3a36ac0a4f72127"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}

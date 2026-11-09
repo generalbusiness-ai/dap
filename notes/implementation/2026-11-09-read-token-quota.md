@@ -1,216 +1,175 @@
-# Reserve member read tokens at native commit
+# Bound member read-token reservations at native commit
 
 Request: `908786011e5c0acae29e7b2a7c70b87b0680a948`, item 4 only.
 Promise: `3a1d2b78e02d544489d3786415b9ed987c28e3af`.
-Live ruling: `67b1fb7faa0e17232a72e1588f834001dadbe9e1`.
+Rulings: `67b1fb7faa0e17232a72e1588f834001dadbe9e1` and the late-reply answer
+`6cf4c1c8eb9b849d8c851a7488f981116672a1da`.
 
-Status: unvalidated repair after the first focused compiler failure. The branch includes main
-`f9eb50bc`. Its owned dependency view copies the completed runner checkout
-without an install. Compatibility and the 11-case Node owner passed at
-`16a3847c`; Scope source then failed on the missing `limit` type. No Native
-case, control, asset build, or gate has run. The planner closed the execution window in
-`7b2d5548` and sprint-cadence thread 22. The earlier items of R13 stay closed.
+Status: focused checks, the distinguishing control, the maintained Page
+build, and its complete asset owner are conclusive. One gate, Page CI,
+exact-head independent review, and landing remain due. Main `f9eb50bc`
+is an ancestor. No deployment or live acceptance follows from this note.
+The earlier items of R13 stay closed.
 
-## Refuse before accepting a ninth operation
+## What changed
 
-The native commit checks eight open reservations for the authenticated
-member in this Destination object. The already judged grant supplies the
-full Membership ScopeRef and member identity. Several keys of that member
-share one bucket; a principal, caller key, or handle prefix does not
-supply the identity. The current commit view supplies the Destination's
-full ScopeRef. No bucket crosses either incarnation.
+A Destination now refuses a fresh ninth read-token mint for one member
+with `refused/limit`, after authenticating membership and before recording
+an operation entry. Several keys of that member share eight slots.
+Another member keeps a separate bucket, including an agent controlled by
+the same person. Accepted-key retries return their existing receipt or
+mismatch and reserve nothing more.
 
-A fresh act at the limit returns `refused/limit` before accepting an
-operation entry. The accepted entry's sealed callback inserts its private
-reservation in the same SQLite transaction. A rollback keeps neither.
-An accepted idempotency key returns its existing receipt or mismatch
-without another reservation. The check changes no historical entry,
-definition, genesis packet, replay rule, or mint-read outcome meaning.
+`ReadTokenQuota` owns the private SQLite reservations. Core checks the
+bucket in the native commit and inserts its reservation in the accepted
+entry's existing transaction. `DestinationHost` binds the operation's
+nonsecret handle before the provider await, then records the actual end
+or explicit refusal. `CredentialStore` retains genuine late metadata
+without plaintext and supplies bounded expiry scheduling.
 
-## Keep a reservation while its token may remain
+The public answer type, byte decoder, both exhaustive metric schemas,
+and MCP refusal description recognize `limit`. The maintained recipe
+bundles that decoder into both Page and OAuth scripts. Their HTML stays
+equal. No Worker setting, dependency, lock, definition, genesis packet,
+or historical outcome rule changes.
 
-The adapter binds the operation's nonsecret handle before its provider
-await. A valid own reply replaces the fallback end with actual expiry.
-Taking or dropping plaintext leaves that slot open. An explicit
-`minted:false` frees it; a lost, malformed, or thrown reply keeps the
-reservation until its opening time plus requested hours plus ten minutes.
-A reply after that reservation expires cannot restore the row or disclose
-its plaintext. The quota counts reservations and does not prove that a
+## Decisions and boundaries
+
+### Use the authenticated member, inside one Destination incarnation
+
+The already judged grant supplies the full Membership ScopeRef and member
+identity. The current commit view supplies the Destination's full ScopeRef.
+Neither a caller key, fixture hint, principal, controller, nor handle prefix
+chooses the bucket. No bucket crosses either incarnation.
+
+The check reads at most eight live rows through the bucket index. The
+sealed callback writes the entry and reservation in the same SQLite
+transaction. A deliberate SQL failure in the Native witness leaves the
+entry, quota row, and first-sequence marker absent. The same request then
+succeeds. A limit refusal records nothing.
+
+A private first-sequence marker distinguishes pre-upgrade operations from
+new reservations that expired. Legacy read markers without a member stay
+unassigned and count in no bucket. The change infers no ownership from a
+key or token prefix. Existing authenticated plaintext-expiry cleanup
+keeps its own meaning.
+
+### Count reservations through their prescribed ends
+
+A known own reply replaces the fallback end with the provider's actual
+expiry. Taking or dropping plaintext does not free its slot. An explicit
+`minted:false` frees the slot at once. A lost, malformed, or thrown reply
+keeps the slot until the operation's opening time plus requested hours
+plus ten minutes. The quota counts reservations. It does not prove that a
 provider token ended.
 
-A valid own reply whose reported end already elapsed retains the pinned
-`confirmed` meaning. Planner ruling `6cf4c1c8`, answering request
-`84d7f349`, also preserves a valid reply after the fallback reservation
-expired. The adapter records only its genuine `{token, ends}` metadata,
-stores no plaintext, and keeps the released slot closed. A replacement
-retains its eighth place. The old act's retry returns its original receipt
-without another slot; the member needs a new mint to read a token.
+Destination 19 keeps its empty-fields, one-hour request. Earlier pins keep
+their existing one-to-twenty-four-hour field. Admission and the adapter
+share the extracted lifetime helper without changing those contracts.
+An already-ended but valid own reply still records `confirmed`, as the
+pinned mint-read rule requires.
 
-Destination 19 keeps its one-hour request. Earlier pins keep their
-existing one-to-twenty-four-hour field. The same helper supplies the
-adapter and admission lifetime without changing any recorded definition.
+A genuine reply after fallback expiry records only the pinned
+`{token, ends}` metadata. The adapter stores and returns no plaintext,
+reopens no reservation, and leaves the replacement's eighth place intact.
+The old act's retry returns its original receipt without another slot.
+The member needs a new mint to read another token. The Native witness
+holds the provider reply while later requests occupy seven places,
+expires the old place, accepts its replacement, and then confirms the
+late metadata. The next fresh mint still refuses `limit`.
 
-A private per-incarnation first-sequence marker distinguishes old pending
-operations from new expired reservations. Legacy read markers without a
-member remain unassigned: they count in no bucket and gain no ownership
-from a key or handle prefix. Existing authenticated plaintext-expiry
-cleanup keeps its own meaning.
+The private due index removes at most 64 reservation rows per pass,
+including rows whose plaintext left custody. An unknown fallback beyond
+the last representable clock remains open at every valid time and sets
+no impossible alarm. It never frees early through a capped timestamp.
+Quiet custody samples no other owner's clock.
 
-An indexed private queue expires at most 64 reservation rows in one pass,
-including rows whose plaintext left custody. The bucket index bounds each
-admission read to eight live rows. An unknown end beyond the last valid
-clock stays open at every representable time and schedules no impossible
-alarm; it never frees early through a capped timestamp.
+### Keep the quota in the runtime and name its public refusal
 
-## Add the ruled refusal to the public answer vocabulary
+The policy, tables, and native admission hook remain replaceable runtime
+service code. The closed public `Answer` vocabulary must name the exact
+`limit` reason that clients decode, so an application cannot supply that
+part. The addition follows [kernel section 7](../../docs/kernel.md#7-rule-for-adding-to-the-kernel),
+under section 7.1's exception for filed R1–R16 security fixes. It adds no
+K item, platform name, or definition. No old pinned judgment emits this
+new pre-entry refusal, and no recorded entry gains a new meaning.
 
-The first focused run caught a missing transport reason: Scope source
-failed `TS2322` because `RefusalReason` did not include `limit`.
-The contract now names that pre-entry refusal. The bytes validator and
-the two exhaustive metric schemas recognize the same closed value.
-The existing client answer witness checks that the refusal crosses its
-decoder with a judged head and still rejects an unknown reason.
+The existing client answer witness accepts the new refusal only with its
+required judged head and still rejects an unknown reason. MCP's existing
+every-refusal witness covers its new description. The closed metric maps
+retain their exhaustive contract types and reject free text as before.
 
-This addition follows [kernel section 7](../../docs/kernel.md#7-rule-for-adding-to-the-kernel).
-Quota policy and storage stay in the replaceable runtime service. The
-closed public `Answer` vocabulary must name the exact reason that current
-clients decode, so an application cannot supply this part. Section 7.1
-admits the filed R13 security fix. No new K item, platform name, definition,
-recorded outcome rule, or historical pin follows from the new answer.
+### Preserve source review and distinguish the Native boundary
 
-## Validate the final source
+The maintained seal producer changed the existing Core and Object named
+owners and the whole Destination adapter. New whole-file seals cover
+quota and custody. A later decoder repair updates the existing bytes
+record seal. All route and gate assertions remain. Hugh's standing future
+patch authorization covers adoption of these actual producer outputs.
+The focused-closure manifest preserves all three producer outputs and
+exact patches. A seal supplies no behavioral test result.
 
-The first frozen run at `16a3847c` passed compatibility and all 11 Node
-inventory cases, then failed its first Scope source compiler. The test
-compiler and all 21 Native cases remained unrun. Manifest
-`66de9014e2a55a08948bb02bcb4b707f6b4dc8d0da387e517ace1a6ab905413f`
-seals 17 public and 36 private files. The failed run remains failed.
-The repair's focused checks, distinguishing controls, and gate remain due.
+The two quota scenarios use real Native scopes, membership authority,
+transactions, SQLite, restart, alarms, and the Artifacts adapter. The
+provider replies and clock are explicit TEST stand-ins. The separate
+SQLite scenario uses scripted opening entries and grants. It proves
+private storage, incarnation, legacy, cleanup-quantum, and final-clock
+behavior, without claiming Native authority or a real provider.
 
-The next frozen run at `42e9afa5` stopped in the Node owner: 10 passed
-and the decoder's unchanged seal failed. No compiler or application case
-ran. Manifest `b69127a68443831ade7286bd9447bc9c9a14464df9024d462f912f0038b765e6`
-seals 16 public and 20 private files. The maintained producer now supplies
-the bytes decoder's actual whole-file seal, `05bf74f7`, under Hugh's
-standing patch authorization. Both failed units keep their original results.
+The meaningful control disables only Core's limit-return branch. Both
+unchanged Native cases then fail their ninth-limit assertions. It keeps
+authority, the quota read, and atomic insertion, and restores every tracked
+byte before classification. The saved passing baseline needs no repeat.
 
-At `b938e497`, Node's complete 11 cases passed again. Scope source then
-found the last exhaustive consumer: MCP's refusal-description table lacked
-`limit` (`TS2741`). The remaining three compilers and all 36 application
-cases stayed unrun. Manifest
-`54b1e2fdad9337128f87c8fc76813c587e84837b3c0d163729ea3ac597964477`
-seals 17 public and 33 private files. MCP now explains the eight open
-reservations and tells the member to wait before a fresh request.
-Its existing every-refusal witness covers the new row.
+## Evidence
 
-The application run at `71e6e574` passed all four compilers. Vitest reported
-39 passed, one failed, and three skipped after its first failure; eleven
-required cases never collected. The first Native quota scenario passed.
-The second expected `own-answer` for a lost provider reply, but the
-runtime correctly recorded `unknown` with `basis: none`. The test now
-requires that exact attribution, with the same result and empty body.
+The selected logic closure covers 54 cases in ten complete owners, 11
+Node inventory cases, and four compiler contexts. Its last two Native
+cases passed at `e360b00f`; 17 other cases passed with exact static coverage
+at `89706f41`. Thirty-five complete-owner terminals at `71e6e574` need the
+explicit sealed identity reconciliation: the original static ledger used
+a space where Vitest inserts ` > ` between a describe title and its case.
+Their actual file, project, pool, literal source titles, and complete
+terminal states reconcile. The original run and its verifier remain
+failed. Only changed or incomplete owners ran again.
 
-That run's static case ledger also used spaces where Vitest inserts
-` > ` between a describe title and its case. Its verifier failed. Separate
-metadata reconciliation matches the unchanged literal source and actual
-file, project, pool, and terminal cases for 35 cases in five complete
-owners. Neither the original run nor its verifier becomes a pass.
-Manifest `5e80040f24b407c5bb7ad3686b80817c32e593894e59f53eff35431175bfa929`
-seals 19 public and 268 private files. Only the affected test compiler and
-the five failing, incomplete, or uncollected Native owners need follow-up.
+The passing final quota owner retains the original 30-second allowance,
+worker ceiling, setup, clock actions, and assertions. The rollback probe
+catches its deliberate storage error inside the real object before
+returning a plain RPC message and performing the same physical eviction.
+The late-provider gate resolves inside its owning Destination context.
+Those current witnesses pass. The earlier eviction stall's full cause
+remains unproved; none of the failed units becomes a pass.
 
-The follow-up at `89706f41` passed its compiler and 17 cases in four
-complete owners. The first quota scenario then timed out at its unchanged
-30-second allowance. That scenario passed in the earlier run. Its second
-scenario stayed unfinished. The cause remains unknown. Manifest
-`cf3d46eed2aba655e8e690295d89faeb959e760ec56c13591183767cfc86e9e8`
-seals 16 public and 265 private files. Bounded test-only phase markers now
-identify the last completed step if the two-case quota owner stalls again.
-They change no clock, assertion, worker setting, deadline, or production code.
+Each manifest gives the exact head, tree, command output, and immutable
+external directory. Durations in those units are observations of the
+specified commands or framework cases, not product latency.
 
-The bounded diagnostic at `78f09695` repeated the timeout. It completed
-the rollback and row checks, then stalled in the following physical
-eviction. Manifest
-`5f12f8643d0fc9833cae97f74c6666dbb962623198803628924fe04527718e83`
-seals 17 public and 266 private files. That trace locates the pending
-await; it does not prove why eviction waits. The test now catches its
-deliberate storage error inside the object and returns the plain message
-before eviction. The same production submit, rollback assertions,
-physical restart, and original allowance remain. This follow-up checks
-the request-lifetime hypothesis without changing quota behavior.
+| Check and source | Command | Actual result | Manifest SHA-256 |
+|---|---|---|---|
+| First focused, `16a3847c` | Frozen Node and compiler driver | Node 11 passed; Scope source failed `TS2322` for missing `limit`; Native unrun | [manifest](evidence/2026-11-09-r13-failed-source-compiler.manifest.json) `66de9014e2a55a08948bb02bcb4b707f6b4dc8d0da387e517ace1a6ab905413f` |
+| Decoder seal, `42e9afa5` | Complete Node inventory owner | Exit 1: 10 passed, one stale decoder-seal assertion; compilers and application unrun | [manifest](evidence/2026-11-09-r13-failed-refusal-seal.manifest.json) `b69127a68443831ade7286bd9447bc9c9a14464df9024d462f912f0038b765e6` |
+| Refusal description, `b938e497` | Frozen Node and compiler driver | Node 11 passed; Scope source failed `TS2741`; application unrun | [manifest](evidence/2026-11-09-r13-failed-refusal-description.manifest.json) `54b1e2fdad9337128f87c8fc76813c587e84837b3c0d163729ea3ac597964477` |
+| First application body, `71e6e574` | `node scripts/focused-check.mjs <frozen-plan> <new-unit>` | Four compilers passed; body exit 1: 39 passed, one wrong unknown-basis expectation, three bail skips, eleven uncollected. Static full-title verification also failed | [manifest](evidence/2026-11-09-r13-failed-unknown-basis.manifest.json) `5e80040f24b407c5bb7ad3686b80817c32e593894e59f53eff35431175bfa929` |
+| Narrow follow-up, `89706f41` | Scope test compiler and five complete Native owners | Compiler passed; body exit 1: 17 passed, quota scenario timed out, second unfinished | [manifest](evidence/2026-11-09-r13-failed-quota-timeout.manifest.json) `cf3d46eed2aba655e8e690295d89faeb959e760ec56c13591183767cfc86e9e8` |
+| Phase diagnostic, `78f09695` | Same two-case quota owner with fixed nonsecret phase labels | Exit 1: repeated unchanged-budget timeout at physical eviction after rollback row checks | [manifest](evidence/2026-11-09-r13-failed-quota-phase.manifest.json) `5f12f8643d0fc9833cae97f74c6666dbb962623198803628924fe04527718e83` |
+| Probe annotation, `83543042` | Scope test compiler | Exit 1: `TS2352`; no quota body ran | [manifest](evidence/2026-11-09-r13-failed-rollback-probe-type.manifest.json) `7a6e04ead77b9092c83ee15fe5738a9358ffac55b358497ae484f13c1b842e1e` |
+| Typed probe, `22a4b9f4` | Compiler and complete quota owner | Compiler passed; first case passed; late gate caused cross-object I/O, ten unhandled errors, and timeout | [manifest](evidence/2026-11-09-r13-failed-late-context.manifest.json) `2dcf066791ed52abce37608a842f72a796d0051f11bd2711f1341c36d7c03348` |
+| Conclusive logic closure, `e360b00f` | Saved frozen drivers and complete-owner reconciliation | Final compiler/body/driver exits 0; both Native quota cases passed. Qualified selected closure: 54 cases, ten owners, 11 Node cases, four compilers | [manifest](evidence/2026-11-09-r13-focused-closure.manifest.json) `b364fecd7228062145ce1b841135f5253b1a6ebfa9ef5c2fb944458e90a746c9` |
+| Named admission control, `00239447` | Same unchanged two-case owner with only the limit-return branch disabled | Owner exit 1, verifier exit 0; both intended assertions fail, no unhandled errors, source restored | [manifest](evidence/2026-11-09-r13-admission-control.manifest.json) `28ff20678a22a4c201a1d42d1e7c3993d321d689043468b532d2da0b3dcdfb6a` |
+| Page build, `d5b4d8f7` | `node apps/room/page/scripts/assets.mjs` | Build and driver exit 0; both scripts changed, both HTML entries equal, only generated module changed | [manifest](evidence/2026-11-09-r13-page-assets.manifest.json) `60345323d4c31aabfc29c21b00da6da5f71db5e54ab6789804b2029a5794875f` |
+| Complete asset owner, `1fc483ce` | Page test compiler and `apps/room/page/test/assets.test.ts` | Compiler/body/driver exits 0; one complete case, exact coverage, no errors | [manifest](evidence/2026-11-09-r13-page-asset-owner.manifest.json) `25ffb1a84255d802496f86233bdf731dd570e8ad9fd98713853b94da7efbdee2` |
+| Page CI | Four commands in `page-browser.yml` | Pending | Pending |
+| Review gate | `npm run gate` | Pending; read actual `gate.exit` before a pass claim | Pending |
 
-The RPC-boundary follow-up at `83543042` reached no test body: the test
-compiler required the actual `PlatformScope` subclass for the generic
-Durable Object callback. Manifest
-`7a6e04ead77b9092c83ee15fe5738a9358ffac55b358497ae484f13c1b842e1e`
-seals 16 public and 27 private files. The repair imports that class as a
-type and names it in the probe; the runtime call stays the same.
+## Open limits and deployment
 
-At `22a4b9f4`, the compiler and the full first Native scenario passed,
-including the physical rollback restart. The late-reply scenario reached
-its eighth replacement slot, then Workerd reported cross-object I/O and
-ten unhandled errors before the original deadline. Manifest
-`2dcf066791ed52abce37608a842f72a796d0051f11bd2711f1341c36d7c03348`
-seals 17 public and 266 private files. The test now releases the held
-provider promise inside its owning Destination object, including cleanup.
-Quota behavior and all assertions stay unchanged.
+Request `90878601` owns this head's review, landing, and deployment handoff.
+The planner deploys the runtime and Page bundle after review. No new
+setting, Wrangler edit, recorded migration, or definition activation is
+needed. The two new private tables and their indexes start empty.
 
-At `e360b00f`, the affected Scope test compiler and both complete Native
-quota scenarios passed. Exact full-title coverage passed with no unexpected
-case, skip, retry, or unhandled error. The late reply recorded confirmed
-metadata with no stored plaintext after the replacement took the eighth
-place; the next mint still refused `limit`.
-
-Manifest `b364fecd7228062145ce1b841135f5253b1a6ebfa9ef5c2fb944458e90a746c9`
-seals 23 public and 289 private files, including all three source-seal
-producer outputs and patches. The selected closure now covers 54 cases
-in ten complete owners, 11 Node inventory cases, and four compiler
-contexts through this pass and the qualified unchanged-source evidence
-above. All eight earlier failed units keep their results. Controls, the
-Page bundle and asset check, the gate, and independent review remain due.
-
-The named Native control at `00239447` disabled only Core's limit-return
-branch. Both unchanged quota cases then failed at their ninth-limit
-assertions, with no skipped, pending, or unhandled error. The actual body
-exit was 1 and the control verifier exit was 0. The driver restored every
-tracked byte before classification and reused the saved passing baseline.
-Manifest `28ff20678a22a4c201a1d42d1e7c3993d321d689043468b532d2da0b3dcdfb6a`
-seals 12 public and 265 private files. No baseline or restored run followed.
-
-The maintained Page recipe at `d5b4d8f7` rebuilt the shared answer
-decoder into both Page and OAuth scripts. Both HTML entries stayed equal,
-and only `apps/room/page/assets.ts` changed among tracked files. The
-build and outer driver exited 0; the generated module has SHA-256
-`e3e922c73aeb33214d5af1e0ea7d26f851021aab86fd1b89f14f5fca40d0af02`.
-The complete asset owner and Page CI remain due before review.
-
-The Native witness must show eight accepted reservations, a ninth refused
-`limit` with no entry, another member's success, several keys sharing the
-same member bucket, accepted-key reuse, and transaction rollback. The
-adapter witness must distinguish known expiry, explicit refusal, unknown
-and late answers. The private SQLite witness covers restart, incarnation,
-legacy cutover, bounded expiry and the final representable clock.
-
-Source seals require their maintained producer after the source freezes.
-Hugh's standing patch authorization applies. Focused checks, distinguishing
-controls, one full gate, and independent exact-head review remain due.
-This source preparation performs no deployment and supplies no live
-acceptance.
-
-
-At source checkpoint `14aead39`, the maintained seal producer changed
-three existing values: `object.ts:ScopeObject`, `core.ts:Scope`, and the
-whole `destination-host.ts` owner. New whole-file seals cover
-`credential-store.ts` and `read-token-quota.ts`, including SQL, identity,
-lifetime, binding and scheduler code. All other named owner values stay
-equal. Patch `artroom-r13-source-seals-20261109.patch` has SHA-256
-`f0b0c2f9c5e5c7ea8a6ce781b3fb1adb6a30c4e5eebced02cbf08fa942bdaa11`; Hugh's standing patch authorization covers adoption
-of these actual outputs. No route or gate assertion changes. Independent
-review still judges the source; no test result follows from a seal.
-At source checkpoint `2b7c3423`, the producer also updates the three whole
-owners changed by the known-expired and late-reply cuts: the adapter,
-custody, and quota. Patch `artroom-r13-late-source-seals-20261109.patch`
-has SHA-256 `cba60792593f91c5b1537bb3e235c190e7839c5316c8193dffec801b87bd35cb`.
-The existing named Core and Object values stay equal to the first freeze.
-Hugh's standing patch authorization covers these actual outputs. The seal
-metadata supplied no test result.
+Legacy tokens remain unassigned and do not count toward new buckets.
+Unknown reservations may expire without proof that a provider token ended.
+The tests use provider stand-ins and establish no hosted provider or live
+room acceptance. This head makes no J5 acceptance claim.
