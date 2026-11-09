@@ -19,6 +19,14 @@ the removed scale path. NUL separation keeps paths with spaces intact.
 This helper has no caller yet; harness triggers and runner integration
 remain due.
 
+The archive fixture reads `inject("maintainedApplications")` in
+`packages/scope/test/support/archive-native-authority.ts`. The separate
+project must retain that setup. The preparation keeps both existing Scope
+global setup entries, its Worker and wrangler configuration, `isolate: false`,
+the two-worker ceiling and the 30-second default allowance. Each case keeps
+its explicit deadline. Copying the smaller denial configuration would omit
+an input these witnesses need.
+
 ## Validation
 
 No compiler, owner, control, workflow or gate has run for BR-5. Its three
