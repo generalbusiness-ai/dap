@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fdbebc0e1b7f5b14beb9dcb73c779d7897931abd","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/metrics.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fe151a7e7bfd54588a21b4b2c7a9b817bc088446","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-gate.manifest.json."}
