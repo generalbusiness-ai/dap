@@ -246,7 +246,7 @@ const seals = {
   "packages/platform/src/own-agent-cohort-data.ts": "5e018d8d4fa152ed3c827c64cbbf0587f5a7a2358b02e3e2cf90aec933fac502", // O2 own-agent guard and exact opt-in cohort owner.
   "packages/bytes/src/read-minimum.ts": "5ead3e9579b2805c525bae5d1ad3bd6883c0a18f0022a202c01eea91a181939c", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
   "packages/scope/src/read-wait.ts": "0bf31ae0c52975c9e91b22dfac278c03ab04c575b88941c3a6480433fd79e2cb", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
-  "packages/scope/src/authority.ts": "7e186fb20ab6937db501a46bb8d5940d3ddbe41880d5fb7f53870476b673ec33", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
+  "packages/scope/src/authority.ts": "1ff72892f9b9899eec3cfda90d9a976f81938fe63b5fe94cab835cea3ae06e62", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
   "packages/scope/src/turn.ts": "480fd9b6ace0b1704ca5900469a3b9dfb8bbb6148068dde3553a42f725747a2b", // R3 alarm-only timed drain; actual maintained parser output.
   "packages/platform/src/reservation-v17.ts": "e00aa0f08f9b3b1f4aca5e794436367ab550dcd1966c5258f1e96e42ab97a856", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "e3f0fa91c32d848b5bec7dc9ac047d4cc72815ddce70365ad8fade6884a7354b", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
