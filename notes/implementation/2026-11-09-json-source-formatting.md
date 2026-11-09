@@ -1,9 +1,8 @@
 # Format JSON source while preserving protocol bytes
 
 Request `c6e29874`; promise `197ace07`; scope ruling `85784814`.
-This preparation starts at main `ce0290fb`. Its first authoring pipeline
-passed. Compiler contexts, application owners, control and the final gate
-remain due. R16 awaits exact-head review.
+This head includes main `29926a3a`. Authoring, focused checks and the
+packet-exclusion control are complete. The final gate remains due.
 
 ## What changes
 
@@ -21,6 +20,8 @@ future-manifest specimen checks the whole evidence-directory exclusion.
 
 Lane, Counting and Lending pin writers produce readable JSON. Their tests
 compare the parsed canonical values and retain every existing digest. The
+MCP inventory writer also produces readable JSON. Its owner and the Views S4
+golden owner compare parsed canonical values. The
 reservation fixture owner reconstructs the original canonical producer
 artifact before checking its exact hash and byte count. Authoring guides
 canonicalize readable declaration files before the byte-preserving
@@ -46,24 +47,49 @@ bytes. The canonical Grow packet retains SHA-256
 `b1563c946435c2aad7173b5ae8a32da52c33d2a03b90faee80784c79ebcd96e9`.
 Any digest change stops this task for a planner report.
 
-## Evidence due
+## Evidence before the gate
 
-| Check | Command | Exit | Output |
-|---|---|---|---|
-| Formatter and generated source | Pinned formatter, all explicit pin modes, `format:check` | 0 each | Raw authoring receipt; sealing due |
-| Selection witness and packet-exclusion control | Complete Node owner | Unrun | Due |
-| Definition and reservation owners | Affected compiler contexts and complete owners | Unrun | Due |
-| Final gate | `npm run gate` once | Unrun | Due |
+| Check | Actual result | Manifest file |
+|---|---|---|
+| Formatter, explicit pin writers and final formatter check | All eleven commands exit 0 | Authoring `receipt.json`, `pipeline.exit` |
+| Selection baseline | One complete Node case passes | Authoring `selection-owner.stdout`, `selection-owner.exit` |
+| Packet-exclusion control | Owner exits 1 at the intended assertion; verifier exits 0 | Pre-gate `packet-control--result.json`, `packet-control--control.exit`, `packet-control--verifier.exit` |
+| Views adapter owner | 26 Node cases pass | Pre-gate `focused--result.json`, `focused--owner.exit` |
+| Affected compiler contexts and complete owners | Five compiler contexts and 29 Plain cases across twelve owners pass | Pre-gate `focused--focused--result.json`, `focused--focused--coverage-ledger.json`, `focused--pipeline.exit` |
+| Final gate | Unrun | Due |
 
-The authoring pipeline checked all 185 selected JSON paths and changed 65.
-Every parsed JSON value and comment remained equal after every command.
-Every nonselected byte stayed exact, including all 11 pin modules, the lock,
-canonical packet and retained evidence. Its complete one-case Node selection
-owner passed before formatting. All explicit lane writer modes, Counting,
-commitments and Lending writers, and the final formatter check exited 0.
-The body closed its group. No compiler, application owner, control or gate
-ran. Focused evidence and one final gate remain due; earlier branches'
-checks establish no result here.
+The [authoring manifest](evidence/2026-11-09-json-authoring.manifest.json)
+has SHA-256 `f561471f1db6574f97c8565b6b0d9aa59b5120e17fbb1e712c74a6e602a3a393`.
+The [pre-gate manifest](evidence/2026-11-09-json-pre-gate.manifest.json)
+has SHA-256 `7f1c1a23358bb770d58ebbcd120be3573c97e12a730ce849d81c146e5b1352e9`.
+Both manifests name immutable output directories and complete private inventories.
+
+The authoring pipeline at `0bc5eb42` checked all 185 selected JSON paths
+and changed 65. Every parsed JSON value and comment remained equal after
+every command. Every nonselected byte stayed exact, including all eleven pin
+modules, the lock, canonical packet and retained evidence. All explicit lane
+writer modes, Counting, commitments and Lending writers exited 0. No
+producer or saved baseline repeated after that run.
+
+The focused pipeline at `92d7193a` used owned dependencies with fourteen
+workspace bindings and 48 source aliases. The Views adapter runs over its
+labelled stand-ins. The definition owners validate pinned declarations and
+judge scenarios in memory. The reservation owner uses its labelled local Git
+stand-in. These checks establish no live room, provider or browser result.
+All selected compiler contexts and complete case ledgers passed without a
+retry. Source hashes stayed fixed and both process groups closed.
+
+The packet control reused the unchanged saved one-case baseline. It removed
+only the canonical packet exclusion, then ran the same complete Node owner.
+The real tracked packet wrongly entered the selected set. The assertion at
+`scripts/format-json.test.mjs:13` failed with actual `true` and expected
+`false`. The driver restored all tracked source bytes and checked group
+closure. The original owner exit remains 1; the control verifier exits 0.
+
+The single final gate remains due. Its unchanged selection rules select all
+six existing Scale cases because this head changes the root package, test
+runner and gate script. The gate keeps the original local deadlines, worker
+limits and selection. Earlier branches establish no result for this head.
 
 ## Open limits
 
