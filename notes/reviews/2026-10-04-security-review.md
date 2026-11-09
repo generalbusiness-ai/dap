@@ -1,5 +1,9 @@
 # Security review of Artroom, 2026-10-04
 
+Status: historical review of the earlier model at the commit below. It does
+not assess the current implementation. See [Security](../../SECURITY.md)
+for current references and private reporting.
+
 - Branch: `review/cloud-2026-10-04-security`
 - Reviewed head: `4a7a13a11313e7c26a21e5735d3d1c0df269b291` (`origin/main` at the start of the review)
 - Connectivity check: an empty `notes/cloud-reviews/.keep` was committed and pushed with

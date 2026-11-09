@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { checkSecurityWitnesses, readSecurityWitnesses } from "./security-witnesses.mjs";
 import { assertInventory, documentedInventory, servedInventory, sourceSeal, namedSourceSeals, roomHttpEntry, sandboxInventory, workerEntrypoints, scopeRows } from "./security-entry-points.mjs";
 
 // Every runtime declaration is selected. $module retains ordered imports,
@@ -580,4 +582,20 @@ test("the shared object seal protects its constructor, field, and private helper
       assert.throws(() => assertOwner(file, owners[file], changed), { code: "ERR_ASSERTION", message: /object\.ts:ScopeObject actual [a-f0-9]{64}; Review source/ });
     }
   }
+});
+
+test("the threat model names executable witnesses, and a renamed declaration left only in a comment is missing", () => {
+  const root = fileURLToPath(new URL("../", import.meta.url));
+  const document = sourceOf("docs/security/threat-model.md");
+  const checked = checkSecurityWitnesses(root, { document });
+  assert.equal(checked.invariants, 5);
+  assert.ok(checked.witnesses >= checked.invariants);
+  const witness = readSecurityWitnesses(document)[0];
+  const source = sourceOf(witness.path);
+  const quoted = JSON.stringify(witness.name);
+  assert.equal(source.split(quoted).length, 2, "the source has one literal witness declaration");
+  const renamed = source.replace(quoted, JSON.stringify(witness.name + " renamed"))
+    + `\n// test(${quoted}, () => {});\n`;
+  assert.throws(() => checkSecurityWitnesses(root, { document, overrides: new Map([[witness.path, renamed]]) }),
+    /Missing or ambiguous security witness/);
 });
