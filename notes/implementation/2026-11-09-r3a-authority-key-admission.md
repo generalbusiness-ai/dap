@@ -48,8 +48,9 @@ Planner ruling `19647eda` keeps the separate pre-existing `Further`
 reusable-observation map outside R3a. Definitions choose the observation
 rows, windows and per-input limits; act content can choose the subjects.
 `listedBy` in `derive/src/observes.ts` evaluates the row's operand over the
-act's fields. The validator accepts a typed member field or list and checks
-the membership reference, not a fixed list of member IDs. The Directory's
+act's fields. The validator accepts a typed member field or list. At runtime,
+`listedBy` checks its membership reference, without restricting the member ID
+to a fixed list. The Directory's
 `open-task` row reads the `worker` field. Rules `publish` reads each
 `checks[*].checker`, and Rules13 reads the `checkers` field.
 
