@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/tsconfig.test.json","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"packages/scope/tsconfig.test.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at scripts/format-json.mjs","body":{"commit":"ca6a54e278edbd14075ca37ca8ae1987e86a7c72","path":"scripts/format-json.mjs"}}
