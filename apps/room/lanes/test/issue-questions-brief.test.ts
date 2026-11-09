@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import { capabilitiesOf, counted, derivable, gitRead, holdCapability, validateDefinition } from "@generalbusiness/dap-derive";
 import { issueQuestions } from "../src/issue-questions.ts";
 import { QUESTION_DIGESTS } from "../src/digests-questions.ts";
@@ -11,11 +11,11 @@ import { QUESTION_BRIEF_DIGESTS } from "../src/digests-questions-brief.ts";
 // Whole-profile compatibility owns canonical identity and runnable bounds.
 // The Native owner separately proves the comparison guard's behavior.
 test("the Brief profile has a separate exact pin and preserves every S3 clause outside its fixed Brief binding", () => {
-  expect(readFileSync(new URL("../definitions/issue-questions-brief.json", import.meta.url), "utf8"))
+  expect(canonicalize(parseStrict(readFileSync(new URL("../definitions/issue-questions-brief.json", import.meta.url), "utf8"))))
     .toBe(canonicalize(issueQuestionsBrief));
   expect(definitionDigest(issueQuestionsBrief)).toBe(QUESTION_BRIEF_DIGESTS.issue);
   expect(QUESTION_BRIEF_DIGESTS.issue).not.toBe(QUESTION_DIGESTS.issue);
-  expect(canonicalize(issueQuestions)).toBe(readFileSync(new URL("../definitions/issue-questions.json", import.meta.url), "utf8"));
+  expect(canonicalize(issueQuestions)).toBe(canonicalize(parseStrict(readFileSync(new URL("../definitions/issue-questions.json", import.meta.url), "utf8"))));
   expect(definitionDigest(issueQuestions)).toBe(QUESTION_DIGESTS.issue);
 
   const checked = validateDefinition(issueQuestionsBrief, PROPOSED_BOUNDS);

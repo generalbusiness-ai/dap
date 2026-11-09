@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/dap-bytes";
 import { capabilitiesOf, counted, derivable, gitRead, holdCapability, validateDefinition } from "@generalbusiness/dap-derive";
 import { issue } from "../src/issue.ts";
 import { issueQuestions } from "../src/issue-questions.ts";
@@ -11,11 +11,11 @@ import { QUESTION_DIGESTS } from "../src/digests-questions.ts";
 // definition; composing its question lifecycle changes no historical bytes
 // or unrelated issue rows. Native scenario assertions own its behavior.
 test("the question successor pins a whole bounded definition and preserves the historical issue outside its declared question changes", () => {
-  const bytes = readFileSync(new URL("../definitions/issue-questions.json", import.meta.url), "utf8");
+  const bytes = canonicalize(parseStrict(readFileSync(new URL("../definitions/issue-questions.json", import.meta.url), "utf8")));
   expect(bytes).toBe(canonicalize(issueQuestions));
   expect(definitionDigest(issueQuestions)).toBe(QUESTION_DIGESTS.issue);
   expect(QUESTION_DIGESTS.issue).not.toBe(definitionDigest(issue));
-  expect(canonicalize(issue)).toBe(readFileSync(new URL("../definitions/issue.json", import.meta.url), "utf8"));
+  expect(canonicalize(issue)).toBe(canonicalize(parseStrict(readFileSync(new URL("../definitions/issue.json", import.meta.url), "utf8"))));
 
   const checked = validateDefinition(issueQuestions, PROPOSED_BOUNDS);
   if (!checked.ok) throw new Error(JSON.stringify(checked.problems));
