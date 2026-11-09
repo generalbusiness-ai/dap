@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-witnesses.mjs","body":{"commit":"c85a9bae9cfac88ba7e2046e3f00b19e19a74268","path":"scripts/security-witnesses.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:16ef5eff7823615cdae1f2c3c9588d11832d8282","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-09-security-docs-d6.md."}
