@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5bb76a13d90f80150c2eec076d1660c773d84e42","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-json-size-preparation.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5d51a6bc18ed184136aa44eb7f82a41d29a95d59","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/site/gfm-spec.json."}
