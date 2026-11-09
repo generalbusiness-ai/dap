@@ -134,7 +134,7 @@ test.each([
       const applicationBindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fixture.trust), env.SCOPE_INDEX);
       life.applicationTrust(() => applicationBindings.APPLICATION_TRUST);
       for (const node of [D, Q]) { life.outside(node.name, (given, sql) => outsideOf(given, sql, applicationBindings, peer.fetch)); await node.restart(); }
-      const options = { rules: await Q.at(), uri: fixture.uri, release: packet.ids.release, roles: ["admin"], values: {} };
+      const options = { rules: await Q.at(), uri: fixture.uri, release: packet.ids.release, roles: ["admin"] as const, values: {} };
       const prepared = route === "device"
         ? await signedDeviceApplicationInstall(secretSigner(rita.secret), packet.bytes, { ...options, owner: { membership: await M.at(), member: "@rita" } }, { now: life.now(), idempotencyKey: "TEST-reserved-path-package" })
         : await signedApplicationInstall(secretSigner(rita.secret), packet.bytes, options, { now: life.now(), idempotencyKey: `TEST-reserved-path-package-${declared.name}` });
