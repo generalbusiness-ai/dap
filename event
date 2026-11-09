@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"package.json at exact fbba5493e4972f91a8d8b7229568926a791783bb on builder/br11-retired-offers-20261109, under promise git:sha1…41e4212 on request git:sha1…45d345c","body":{"commit":"fbba5493e4972f91a8d8b7229568926a791783bb","path":"package.json"}}
+{"kind":"artifact","text":"packages/cli/src/claim.ts at exact fbba5493e4972f91a8d8b7229568926a791783bb on builder/br11-retired-offers-20261109, under promise git:sha1…41e4212 on request git:sha1…45d345c","body":{"commit":"fbba5493e4972f91a8d8b7229568926a791783bb","path":"packages/cli/src/claim.ts"}}
