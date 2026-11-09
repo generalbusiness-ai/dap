@@ -478,7 +478,7 @@ export function documentedInventory(text) {
   const tables = new Map();
   let table;
   for (const line of text.split("\n")) {
-    const heading = /^## (artroom-scope|dap-demo|dap-commons|dap-grow|dap-lending|dap-grow-simulator|dap-home|dap-application-sandbox)$/.exec(line);
+    const heading = /^## (dap-self-host|artroom-scope|dap-demo|dap-commons|dap-grow|dap-lending|dap-grow-simulator|dap-home|dap-application-sandbox)$/.exec(line);
     if (heading) { table = []; assert.ok(!tables.has(heading[1]), "Duplicate Worker table"); tables.set(heading[1], table); }
     if (!line.startsWith("| `")) continue;
     const cells = line.split("|").slice(1, -1).map(cell => cell.trim());

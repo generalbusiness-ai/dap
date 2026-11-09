@@ -3,8 +3,9 @@
 Request: `e1b71b6b697c58723b3340681346f5f7145d345c`.
 Promise: `5a3fbb3db7dac1dc652f7403aabbf585641e4212`.
 
-Status: source and Page assets prepared. No compiler, test, or gate has
-run for this head. BR-5 has released the validation slot and awaits review.
+Status: the first focused Node run failed at the document parser. The
+settings owner passed. The parser repair awaits its affected owner and the
+previously unrun compiler and body phases. No gate has run for this head.
 
 ## Keep each deployment's configuration separate
 
@@ -84,3 +85,18 @@ closed. The build used the existing esbuild 0.28.1 and pinned Node 26.13.0;
 it installed nothing. Its [build manifest](evidence/2026-11-09-br11-assets.manifest.json),
 digest `e78cdb0b0cb5414976ffa50277933a3f5fcd5540b3b7b75ad9f41ed53363b27e`,
 seals 21 files. Focused checks and the gate remain due.
+
+The first focused run at `b132c932`, tree `f64f9549`, exited 1 in Node:
+9 passes and 5 failures across 14 cases. All three settings cases passed.
+The entry-point owner reported five `Route without Worker` failures because
+`documentedInventory` did not yet allow the new `dap-self-host` heading.
+All eight compiler contexts and all thirteen Vitest cases remained unrun.
+Every tracked input stayed equal, and the Node process group closed.
+
+The [failed-inventory manifest](evidence/2026-11-09-br11-failed-inventory.manifest.json),
+digest `021f776412dd293c9031694ce51591656f85d9e37b59dd1e2bfe02c8ac78ac4d`,
+seals 14 public files and retains 20 private originals. This failure stays
+failed. The repair adds only the new heading to the finite parser list.
+The next pipeline reruns the complete eleven-case entry-point owner and
+then starts the previously unrun compiler and Vitest phases. The passed
+settings owner and compatibility preflight do not repeat.
