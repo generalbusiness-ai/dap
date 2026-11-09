@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e08d1b72ae6af094b54c06b7506a3f3f598ff95e","text":"Merge retired a covered predecessor; the successor is at packages/scope/vitest.scale.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e5a354eb492f0fae807c345e95980d882ca737a5","text":"Merge retired a covered predecessor; the successor is at scripts/scale-selection.test.mjs."}
