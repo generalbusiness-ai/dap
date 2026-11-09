@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at vitest.scale.config.ts","body":{"commit":"4f06bbbc5b7c18c8500e9f5f8998d4d72390a937","path":"vitest.scale.config.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:157ae8bcb19dffbb806d24f13e89ece0773bc684","text":"Merge retired a covered predecessor; the successor is at scripts/test-summary.test.mjs."}
