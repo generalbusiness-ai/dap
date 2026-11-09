@@ -51,3 +51,5 @@ export * from "./journal-tail.ts";
 
 export * from "./application-trust.ts";
 export * from "./commons.ts";
+
+export * from "./expected.ts";
