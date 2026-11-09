@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"SECURITY.md at exact 881f703550b52d8979baa771c10551423a46d2f5 on builder/security-docs-d6-20261109, under promise git:sha1…e294d86 on request git:sha1…1de0a7f","body":{"commit":"881f703550b52d8979baa771c10551423a46d2f5","path":"SECURITY.md"}}
+{"kind":"artifact","text":"docs/security/threat-model.md at exact 881f703550b52d8979baa771c10551423a46d2f5 on builder/security-docs-d6-20261109, under promise git:sha1…e294d86 on request git:sha1…1de0a7f","body":{"commit":"881f703550b52d8979baa771c10551423a46d2f5","path":"docs/security/threat-model.md"}}
