@@ -2,7 +2,7 @@ import { OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT } from
 
 import { readMinimum } from "@generalbusiness/dap-bytes";
 import { ReadWait, type ReadWaitRefusal } from "./read-wait.ts";
-import { offerFloor } from "./floor-writer.ts";
+import { configuredArchive, archiveDriver, floorOffer } from "./object-archive.ts";
 import { applicationRoom, applicationInstallation, applicationProjectionDeclaration, compromisedKey, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 /**
  * One scope as one Durable Object (scope contract, section 2.3): the object
@@ -53,7 +53,7 @@ import { OperatorRecord, sendAgain, type Incident, type Resent } from "./operato
 import { Dispatcher, Wakes } from "./outbox.ts";
 import { CredentialStore } from "./credential-store.ts";
 import { Originals, type OriginalBytes, type OriginalEnded, type OriginalKept, type OriginalPage } from "./originals.ts";
-import { ArchiveDriver, type FixtureArchiveDriverOptions, type RoomArchiveDriverOptions } from "./archive-driver.ts";
+import { type ArchiveDriver, type FixtureArchiveDriverOptions, type RoomArchiveDriverOptions } from "./archive-driver.ts";
 import { archiveRowDiagnostic } from "./archive-operator.ts";
 import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk } from "./archive-host-item.ts";
 import { GenesisProofs, type ProofTimer } from "./genesis-proof.ts";
@@ -288,19 +288,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#record = record;
     this.#streams = new Streams(ports.readers, () => store.scope()?.head ?? null);
     const archiveSql: Sql = { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) };
-    if (wiring.fixtureArchive && wiring.archive) throw new Error("archive wiring must have one owner");
-    const archive = wiring.archive?.(outsideGiven, archiveSql, bounds) ?? wiring.fixtureArchive;
+    const archive = configuredArchive(wiring, outsideGiven, archiveSql, bounds);
     this.#archiveRestart = wiring.archiveRestart;
-    this.#archive = archive ? new ArchiveDriver({
-      ...archive, sql: archiveSql,
-      current: () => store.scope(), clock: () => ports.clock.read(), bounds,
-    }) : null;
-    const floorEnabled = wiring.fixtureArchive && [...wiring.fixtureArchive.policies.registry.values()].some(policy => policy.floor !== undefined);
-    this.#floorOffer = floorEnabled ? () => {
-      const pinned = this.#scope.pinned(), pin = pinned?.named, policy = pin ? wiring.fixtureArchive!.policies.registry.get(pin)?.floor : null;
-      return policy && pinned?.definition ? offerFloor({ sql: { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) }, store,
-        own: ownOf(store), definition: pinned.definition, platform: pinned.platform ?? undefined, bounds, now: () => ports.clock.read(), discoveries: () => this.#chains.discoveries() }, policy) : null;
-    } : null;
+    this.#archive = archiveDriver(archive, archiveSql, store, ports, bounds);
+    this.#floorOffer = floorOffer(wiring, this.#readSql, ctx, store, this.#scope, this.#chains, ports, bounds);
     // Every commit that seals an entry is followed at once, whoever asked for its turn: a pass in the background and a late answer
     // of an outside operation write their entries in no caller's request, and nothing guarantees an alarm after the last of them.
     this.#scope.turns.measureWith(() => this.#context("dispatch"));

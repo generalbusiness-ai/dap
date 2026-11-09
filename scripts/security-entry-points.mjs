@@ -423,7 +423,7 @@ function sandboxBindings(scopeSource) {
 }
 
 function jsonc(file) { return JSON.parse(readSource(file).replace(/^\s*\/\/.*$/gm, "")); }
-export async function servedInventory({ scopeSource = readSource(scopeFile), applicationSource = readSource("packages/scope/src/applications/route.ts"), hostedSettings = { MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION: "on" }, oauthSource = readSource("packages/scope/src/oauth-routes.ts"), consentSource = readSource("apps/room/page/oauth-route.ts") } = {}) {
+export async function servedInventory({ scopeSource = readSource(scopeFile), hostedSource = readSource("packages/scope/src/worker-mcp.ts"), applicationSource = readSource("packages/scope/src/applications/route.ts"), hostedSettings = { MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION: "on" }, oauthSource = readSource("packages/scope/src/oauth-routes.ts"), consentSource = readSource("apps/room/page/oauth-route.ts") } = {}) {
   assert.deepEqual(workerEntrypoints(scopeSource), ["ApplicationScreenService"], "Production WorkerEntrypoint exports");
   const scope = await scopeRows(scopeSource);
   const page = readSource("apps/room/page/route.ts"), pagePaths = [];
@@ -438,7 +438,7 @@ export async function servedInventory({ scopeSource = readSource(scopeFile), app
   ];
   // The table describes reachability with valid deployment settings. Do not
   // bypass the real hosted policy to reach the finite matcher.
-  const hostedRows = await hostedInventory(scopeSource, hostedSettings, oauthSource, consentSource);
+  const hostedRows = await hostedInventory(hostedSource, hostedSettings, oauthSource, consentSource);
   const result = new Map();
   for (const [file, entry] of [
     ["apps/room/wrangler.jsonc", "worker.ts"],

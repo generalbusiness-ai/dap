@@ -3,7 +3,7 @@ import type { Answer, Created, KeyId, ReadMinimum, ScopeId, ScopeRef, Seed, Summ
 import { b64url, canonicalize, isFactRef, readMinimum, scopeIdOf, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, httpTransport, signedReads, requestSession, signerSessionRequest, type OperationalApi, type ReadSigning, type Session, type Signer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { SourceError } from "@generalbusiness/dap-replay";
-import type { Context, Outcome } from "./commands.ts";
+import type { Context, Outcome } from "./command-context.ts";
 import type { ClaimStep, Config } from "./store.ts";
 import { storedSigner } from "./store-signer.ts";
 import { cachedReadSession, ReadSessionCacheError, type CachedReadSession } from "./read-session-cache.ts";
