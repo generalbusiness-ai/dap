@@ -41,29 +41,48 @@ The kernel dependency direction remains unchanged.
 The first focused run used source `98859d99144073836a806fc03a7ee19c43999f96`,
 tree `b9fd8982b421276f3aecaf71419d666f0c144b10`. The launcher, driver, and
 maintained pipeline each exited 1. Compatibility preparation exited 0.
-The first compiler context, Counter's browser, exited 1 because Counter's
-new declaration called `normalize` without importing it. The log also
-reports unknown `rule` values in the browser model; the missing export
-binding may cause those diagnostics. This repair adds only the import.
-It changes no browser or declaration type.
+Counter's browser compiler found the missing `normalize` import and
+reported unknown rule values. No compiler passed in that attempt.
+Adding only the import resolved all of those compiler diagnostics.
 
-No compiler passed. The other 12 compiler contexts, all 25 plain cases,
-all nine Node cases, and the exact pin check remain unrun. The continuation
-must run all 13 compiler contexts before those unrun phases. Compatibility
-may reuse its successful receipt only while the pinned bundle, tools, and
-dependency view remain unchanged.
+Continuation 1 used source `97b82970f9fb1770d678a14873de4b9a8f134553`, tree
+`6ae16d91789f42793914af75dae58d31a591d5e3`. Its maintained pipeline exited 0:
+all 13 compiler contexts and all 25 plain cases passed. The following Node
+aggregate exited 1, with seven passes and two failures. Both failures
+belong to the five-case public release owner: the actual Git source exports
+`./diff`, but the exact release exclusion tables omitted it. This repair
+adds that path to both exclusion tables. Git's two public exports, five
+portable source inputs, dependencies, and existing assertions stay intact.
 
-Raw failure evidence remains under
-`~/play/artroom-evidence/2026-11-09-t1-focused/`, including
-`pipeline/context-00.log`, with actual outer exits under
-`~/play/artroom-evidence/2026-11-09-t1-focused-launch/`.
-The launcher recorded all owned groups closed. The failed run and its raw
-artifacts stay unchanged; a continuation uses new evidence paths.
+The next continuation reruns the whole five-case release owner and the
+six-case runner owner, then runs the still-unrun pin check. The runner
+registers the existing release owner once in the fixed Node stage; its
+existing first test checks the actual argv entry. The partition and
+summary owners' four passing cases retain their unchanged evidence.
+The Node-only repair does not change the passed C compiler or plain-owner
+inputs. Main integration still receives the full typecheck and test gate.
 
-Focused checks, a meaningful compiler refusal control, and the final gate
-remain owed. Merge current main before the full gate to include the runner
-changes. Read `gate.exit` before reporting the gate result. Exact pin
-equality remains unproved until its checks run.
+Raw evidence remains under `~/play/artroom-evidence/` in
+`2026-11-09-t1-focused/`, `2026-11-09-t1-focused-launch/`,
+`2026-11-09-t1-focused-continuation-1/`, and
+`2026-11-09-t1-focused-continuation-1-launch/`. Both launchers recorded their
+owned groups closed. Failed attempts and raw artifacts stay unchanged;
+each continuation uses new evidence paths.
+
+A meaningful compiler refusal control and the final gate remain owed.
+Read `gate.exit` before reporting the gate result. Exact retained JSON and
+pin-source byte equality remains unproved until the pin check runs.
+
+## Generated assets
+
+Static literal-import and re-export tracing from Page, OAuth, and Card
+production entries reaches no C-authored Lending, Counter, or `define`
+source. C alone therefore identifies no Page or Card module to regenerate.
+This inspection does not establish built byte equality. C inherits any
+regenerated shared-client assets that A lands before the final gate.
+Counter's browser and maintained Counting witnesses read the new authored
+value; their build outputs are transient, with no tracked canonical module
+to refresh here. No generator ran for this inspection.
 
 ## Release integration
 

@@ -28,6 +28,7 @@ const GIT_SOURCE_EXPORTS = Object.freeze({
   "./http-read": "./src/http-read.ts", "./archive-policy": "./src/archive-policy.ts",
   "./journal-reader": "./src/journal-reader.ts", "./journal-local": "./src/journal-local.ts",
   "./journal": "./src/journal.ts", "./application": "./src/application.ts",
+  "./diff": "./src/diff.ts",
 });
 export const nameOf = (dir) => `@generalbusiness/dap-${dir}`;
 export const digest = (bytes, algorithm = "sha256") => createHash(algorithm).update(bytes).digest("hex");

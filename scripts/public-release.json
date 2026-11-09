@@ -66,7 +66,8 @@
         "./journal-reader": "./src/journal-reader.ts",
         "./journal-local": "./src/journal-local.ts",
         "./journal": "./src/journal.ts",
-        "./application": "./src/application.ts"
+        "./application": "./src/application.ts",
+        "./diff": "./src/diff.ts"
       },
       "dependencies": {
         "@generalbusiness/dap-bytes": "coordinated",
