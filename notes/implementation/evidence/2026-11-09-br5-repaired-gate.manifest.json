@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "request": "d0afa034aa4946849911e9294543762fe67d4b8d",
+  "promise": "b6ab8ee7931721d20d62eb14ba03c894aa8b699e",
+  "ruling": "ea2e17abe3c0ba2b78fbc74a3e17aaaed79b1142",
+  "qualification": "The maintained gate at 4393c9fd ends with actual exit 0. Every fixed stage passes, with skips explicit. The four scale owners remain byte-equal, and exactly their six unchanged cases pass only in scope-scale. Native selection includes scale for changed-scale-path. Every tracked input remains unchanged and the owned process group closes. Preflight and retained process samples find no other validation body; samples cannot prove continuous isolation. Reconciled reports contain no failed case, contradiction, report error or unhandled error. Unknown observations are Node file wrappers; one explicitly skipped recorder module has no observed duration. The first BR-5 gate remains failed, sealed separately; the typed repair has its own focused manifest. Nineteen retained whole gates contain fifteen archive passes and four Native-unreached failures, without an observed archive retry. Watch 64552d40 stays open. Sealing runs no tests. Independent exact-head review remains due. No deployment or live acceptance follows.",
+  "sourceHead": "4393c9fdc7dbd96ef95dc56a65db32f08915c522",
+  "sourceTree": "7d2e9b425cfae8557419df07c0ffd617a3e59119",
+  "fileCount": 21,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br5-repaired-gate-validation",
+      "fileCount": 21,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1656,
+          "sha256": "3feeb63871c6c29bddfe5f2a21d4b34246f602b298f6d56ab92ac7c00a54e522"
+        },
+        {
+          "path": "after.json",
+          "bytes": 558725,
+          "sha256": "106401e3ba24b9b55e7fbe3b20638b9138c0a82907477aad581b5438b5f98729"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2422,
+          "sha256": "6f79e992582ab34177ca8e6d41ff0f7bae2393e22e37353040e330c6a40934fd"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "archive-watch-audit.json",
+          "bytes": 14926,
+          "sha256": "6cff805e2b28133723ec35f983ea7fd0bde14bb1d8340e32fd82e08be0b3a0c7"
+        },
+        {
+          "path": "before.json",
+          "bytes": 558725,
+          "sha256": "106401e3ba24b9b55e7fbe3b20638b9138c0a82907477aad581b5438b5f98729"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "bca8d6f7920bb01d278b882c6c29214ed3d90a8be8c4ecef680c3f591b63ebfa"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8733,
+          "sha256": "528b40684c46feff43b4d5b3f251017978b78d6a4887cab184122b69c52fc114"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "772fffd638d36c9e9f5571c170c61040bd5393ed7e4cbaa1b0bf239472a6e1ef"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 171,
+          "sha256": "7503c47e20155bbb77a42fea654689a78ae76df69d6ec33e7075cbc07210e571"
+        },
+        {
+          "path": "result.json",
+          "bytes": 7534,
+          "sha256": "c85eca98394258b79d02e4a0073655d52b71d5b86e10e877d2595feaad9245d9"
+        },
+        {
+          "path": "scale-owner-equality.json",
+          "bytes": 728,
+          "sha256": "d0ae1bd355e67b0b6e449c56b4cb3c1bab5b5bcb5e30224b67795b3710513a5a"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "1da9c44a2e3de665ecfc34f176f39bece942a5cbb8598e4ee5b201ca0d8ee5a6"
+        },
+        {
+          "path": "slot-observations.jsonl",
+          "bytes": 2775,
+          "sha256": "2bdd0979b6f839883f6a88c8723ebbce2ecdc5702976c4395af911c9ac68903f"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 2840,
+          "sha256": "a81a581980e1536b2aa9a08d333bf1c32b055fbeaf04fdb447fcf31606c6a551"
+        },
+        {
+          "path": "started.json",
+          "bytes": 651,
+          "sha256": "33842bb771603214e0159699353c4c57c34fa17c2d94242b28dbd5a95760a347"
+        },
+        {
+          "path": "task.json",
+          "bytes": 7903,
+          "sha256": "7bd92bc5803009fdb66d031bfb322e5f0d9f4c7ebec16dbecba12749531981dc"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 578,
+          "sha256": "5676d22e23d66471d4b4a0f165fa2eefdec3cc8c08de943857a3c80cd37059e0"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 18221,
+          "sha256": "243cdf3410ac94f7435f4b9f58d247a0d0ebeb713966df54da5bfc8e9016229d"
+        }
+      ]
+    }
+  ]
+}

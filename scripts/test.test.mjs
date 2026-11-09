@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
-import { runStages } from './test.mjs';
+import { fixedStages, runStages } from './test.mjs';
 
 const names = ['kernel', 'node', 'counting', 'plain', 'native'];
 async function fixture(t) {
@@ -30,7 +30,17 @@ function subprocess(command, args, options) {
 
 test('the fixed owner starts each stage once, in order, and finalizes once', async t => {
   const f = await fixture(t); let summaries = 0;
-  const result = await runStages({ ...f, finalize: async () => { summaries++; } });
+  const ordinary = fixedStages(f.directory, { ARTROOM_SCALE_MODE: 'omit' });
+  assert.equal(ordinary[4].env.ARTROOM_SCALE_MODE, 'run', 'ordinary npm test cannot inherit a gate omission');
+  const selection = { include:false, reason:'outside-scale-paths', changedPaths:['docs/note.md'] };
+  const gate = fixedStages(f.directory, {}, selection);
+  f.stages[4].env = gate[4].env; f.stages[4].scaleSelection = gate[4].scaleSelection;
+  const mode = resolve(f.directory, 'native-mode');
+  f.stages[4].args[1] += ';require("node:fs").writeFileSync(process.argv[3],process.env.ARTROOM_SCALE_MODE??"missing")';
+  f.stages[4].args.push(mode);
+  const result = await runStages({ ...f, environment: { ...process.env, ARTROOM_SCALE_MODE:'run' }, finalize: async () => { summaries++; } });
+  assert.equal(await readFile(mode, 'utf8'), 'omit');
+  assert.deepEqual(result.ledger.stages[4].scaleSelection, selection);
   assert.equal(result.exitCode, 0);
   assert.equal(await readFile(f.calls, 'utf8'), names.join('\n') + '\n');
   assert.equal(summaries, 1);

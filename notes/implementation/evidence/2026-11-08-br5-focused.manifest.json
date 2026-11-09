@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "request": "d0afa034aa4946849911e9294543762fe67d4b8d",
+  "promise": "b6ab8ee7931721d20d62eb14ba03c894aa8b699e",
+  "sourceHead": "e07ee76e5d4cc3cb12d5726a8fd384203159ee91",
+  "sourceTree": "5a7c77736ea4135b7ef7448ff5e2194ac2468dd7",
+  "qualification": "One whole-owner Node invocation passes thirteen cases. Two named policy faults each fail exactly the intended assertion in the unchanged three-case selection owner; the other two cases pass. Restore every tracked byte before classification. Retain the pre-plan source-list refusal and the occupied-slot refusal; neither started an owner. No baseline, restored, compiler, Vitest/Workers, scale, discovery or full gate rerun. Actual scale collection and execution remain due in the one final gate.",
+  "fileCount": 26,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-br5-focused-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2253,
+          "sha256": "f1f8dcdc8fa199a37a8d2b38194d4c10d6e9f6639b20db0391928561788b3018"
+        },
+        {
+          "path": "focused-driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused-owner.time",
+          "bytes": 29,
+          "sha256": "d9420ac22ee044dfe55dbddef482b3dab2fe46d055ea55f6036b12359479650c"
+        },
+        {
+          "path": "focused-private-retention.json",
+          "bytes": 536,
+          "sha256": "fe1206d019be16142d353dc765f3400d4ef7330077197379a59bbd55b36c154b"
+        },
+        {
+          "path": "focused-result.json",
+          "bytes": 3654,
+          "sha256": "4621cd36aea2515f39c611a945d392102942afa40f3e663ee648d60f1334b636"
+        },
+        {
+          "path": "focused-stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "focused-stdout",
+          "bytes": 3681,
+          "sha256": "24e4b977d80a01785a3764c5ac2302364bd0ebd838417b83b7a3be7f9b69f63c"
+        },
+        {
+          "path": "main-control-control.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "main-control-control.json",
+          "bytes": 363,
+          "sha256": "5a23166b7a1a8ddda62df74532564c07834b05b264567ef34c86a92c83f67e52"
+        },
+        {
+          "path": "main-control-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "main-control-owner.time",
+          "bytes": 29,
+          "sha256": "4eebca0cdbfd60524abb47134babc8c76479ee78e7d28d77a0685c88b9be8337"
+        },
+        {
+          "path": "main-control-private-retention.json",
+          "bytes": 541,
+          "sha256": "c534b430b352be295e21609e7a9e06d7f3385d4811fb66b5e896126d250cb1ce"
+        },
+        {
+          "path": "main-control-result.json",
+          "bytes": 828,
+          "sha256": "2c87ce7fdfa262225373f99ee4e2b127d8810fc5e681b215003bf3586d5695b8"
+        },
+        {
+          "path": "main-control-stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "main-control-stdout",
+          "bytes": 1584,
+          "sha256": "6f61490308fcbdf9c937485c9f8effcef4d75491ab01ba5a70a0efc65f22b869"
+        },
+        {
+          "path": "preparation-and-slot-history.json",
+          "bytes": 1280,
+          "sha256": "ac453bed79b07219fe11553924ff6974ed869dd0ffbe63d394b8fcee1036fd2f"
+        },
+        {
+          "path": "rename-control-control.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "rename-control-control.json",
+          "bytes": 276,
+          "sha256": "e067fa715a49108a57bd7ec52d335474c5007db5c8ff81f3f8b6bd345eb9c82a"
+        },
+        {
+          "path": "rename-control-owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "rename-control-owner.time",
+          "bytes": 29,
+          "sha256": "a69ab6fd350f0e8f3b3229972d5f0b79bf5a5e872bd4a145e865ce0fdda7be62"
+        },
+        {
+          "path": "rename-control-private-retention.json",
+          "bytes": 545,
+          "sha256": "94f00b402449a38466c8fb823e0231a3d6d715e5a2a854238f21e0844627ae8a"
+        },
+        {
+          "path": "rename-control-result.json",
+          "bytes": 839,
+          "sha256": "a16cfa30633670903c6e94fec7c21192bdefab825e546b643b2eea04973300b9"
+        },
+        {
+          "path": "rename-control-stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "rename-control-stdout",
+          "bytes": 1718,
+          "sha256": "3d5be22b69514140281dd7e8773d65da5d1080ad6f64b5abf24f14e677b83bc4"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1353,
+          "sha256": "54255cf02c1c99257d5662cd4a908e7ddb184ca83e694d424e50214828ed9ad0"
+        }
+      ]
+    }
+  ]
+}

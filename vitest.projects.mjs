@@ -2,12 +2,12 @@
  * Canonical projects for the root suite and its plain/native phase views.
  * Each project keeps its package's own config. The fifteen plain projects share a
  * group with at most four active file tasks in total. The `scope`,
- * `scope-lending` and `scope-denial` groups follow in order, with worker
- * limits of two, one and one in separate runtimes.
+ * `scope-lending`, `scope-denial` and `scope-scale` groups follow in order,
+ * with worker limits of two, one, one and two in separate runtimes.
  * The file-task limit does not cap child processes or overlapping teardown.
  *
- * The lane scenarios on real scopes, `apps/room/lanes/test/*.scope.test.ts`,
- * run here inside the `scope` project: one Worker loaded per runtime. A
+ * Most lane scenarios, `apps/room/lanes/test/*.scope.test.ts`, run inside
+ * `scope`; the named partition scale owner runs in `scope-scale`. A
  * second project in the Workers runtime pool historically added 0.7 seconds to this run,
  * and the files in the one project add 0.2 (observed, three runs each, on a
  * shared machine). The scope package does not name them: this file does.
@@ -28,6 +28,8 @@
 const project = (name, dir, config, group, more = [], options = {}) =>
   ({ extends: `./${dir}/${config}`, test: { name, root: `./${dir}`, ...(more.length > 0 ? { include: ["test/**/*.test.ts", ...more] } : {}), sequence: { groupOrder: group }, ...options } });
 
+export { scopeScaleFiles } from "./packages/scope/vitest.scale-files.ts";
+
 const projects = [
       project("bytes", "packages/bytes", "vitest.config.ts", 0),
       project("derive", "packages/derive", "vitest.config.ts", 0),
@@ -43,6 +45,7 @@ const projects = [
       }),
       project("scope-lending", "packages/scope", "vitest.lending.config.ts", 2),
       project("scope-denial", "packages/scope", "vitest.denial.config.ts", 3),
+      project("scope-scale", "packages/scope", "vitest.scale.config.ts", 4),
       project("lanes", "apps/room/lanes", "vitest.config.ts", 0),
       project("cli", "packages/cli", "vitest.config.ts", 0),
       project("page", "apps/room/page", "vitest.config.ts", 0),
@@ -66,24 +69,29 @@ const projects = [
 ];
 
 const plainNames = ["bytes", "derive", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow", "repo-in-ai"];
-const nativeNames = ["scope", "scope-lending", "scope-denial"];
+const nativeNames = ["scope", "scope-lending", "scope-denial", "scope-scale"];
 const namesEqual = (actual, expected) => actual.length === expected.length && actual.every((name, index) => name === expected[index]);
 
 // Select data before Vitest resolves any inherited package config/plugin.
 // This fixed partition is not a new project registration or runner API.
-export function testOptions(phase = "all") {
-  if (!["all", "plain", "native"].includes(phase)) throw new Error("Unknown test phase.");
+export function testOptions(phase = "all", scale = "run") {
+  if (!["all", "plain", "native", "scale"].includes(phase)) throw new Error("Unknown test phase.");
+  if (!["run", "omit"].includes(scale) || (scale === "omit" && phase !== "native")) {
+    throw new Error("Only the native gate phase may omit scale.");
+  }
   const plain = projects.filter(project => project.test.sequence.groupOrder === 0);
   const native = projects.filter(project => project.test.sequence.groupOrder !== 0);
   if (!namesEqual(plain.map(project => project.test.name), plainNames)
     || !namesEqual(native.map(project => project.test.name), nativeNames)
     || native.some((project, index) => project.test.sequence.groupOrder !== index + 1)) {
-    throw new Error("The canonical test projects do not match the fifteen/plain three/native partition.");
+    throw new Error("The canonical test projects do not match the fifteen/plain four/native partition.");
   }
   return {
     maxWorkers: 4,
     ...(process.env["ARTROOM_TEST_PROGRESS"] || process.env["ARTROOM_TEST_TIMING"]
       ? { reporters: ["verbose", "./scripts/test-progress.mjs"] } : {}),
-    projects: phase === "plain" ? plain : phase === "native" ? native : projects,
+    projects: phase === "plain" ? plain
+      : phase === "scale" ? native.filter(project => project.test.name === "scope-scale")
+      : phase === "native" ? native.filter(project => scale === "run" || project.test.name !== "scope-scale") : projects,
   };
 }
