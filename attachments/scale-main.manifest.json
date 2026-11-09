@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "request": "31f9c975b9ed0bbc2ad0f070026290fe949bcc44",
+  "promise": "39c71296ece73d050d5a53cc6ef772d2e7d45652",
+  "sourceHead": "f9eb50bcb6b1117c7c8bb656f5b617d110f3444d",
+  "qualification": "Automatic main run42583531786 passed all6 exact unchanged scale cases with factor3 recorded. The actual child exit and uploaded scale.exit are0. Workflow and artifact upload pass, and the downloaded artifact SHA equals GitHub digest. All6 original output files retained. Earlier failed42570561287 and unscaled successful42578225982 remain separate. No rerun, local gate, deployment or live acceptance.",
+  "fileCount": 11,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-scale-runner-main-42583531786-validation",
+      "fileCount": 11,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 836,
+          "sha256": "8adb7eba876a77810602e70235334976b6cb0709fbf4cfad4c416448a758bfbd"
+        },
+        {
+          "path": "artifact-digest.json",
+          "bytes": 205,
+          "sha256": "8fbc76721cba69b694fac3c24db2f04263154bf3312bf28d98a81e5bd86755fe"
+        },
+        {
+          "path": "capture-driver.py",
+          "bytes": 6339,
+          "sha256": "b318ff08980a825741e839ed6ae9332cbe03f082ab5de7e39bc36d4dc9c94198"
+        },
+        {
+          "path": "capture.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "command.json",
+          "bytes": 224,
+          "sha256": "614d6c435c9b91bea4a13fbeef244bc190a45e6ff5433400f9f18ae3c9611007"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 595,
+          "sha256": "864427d9a0a108a023d18d61922d34e85d661d79a37fd9efaa65c0c75c8cd125"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2813,
+          "sha256": "c84e751617a032828de3fbdeaeaf9fa2ed7268e981fc48c9424269278052efad"
+        },
+        {
+          "path": "scale.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "source-hashes.json",
+          "bytes": 684,
+          "sha256": "c8bc6d439642f6d0bef07563a7e94cdf9510d4bd7913d2c26ac16f9aa9f07b0e"
+        },
+        {
+          "path": "uploaded-file-hashes.json",
+          "bytes": 822,
+          "sha256": "aac3064b6f9667ee2b49c026f1b5a2533b6b2722e8c262cff76b9aa6e06499e1"
+        },
+        {
+          "path": "workflow-steps.json",
+          "bytes": 1911,
+          "sha256": "b608acf6f82e07724b296398073442d9f4f6ef0b500086c9f5361421a5790b2c"
+        }
+      ],
+      "privateRegularFilesIncludingInventory": 28
+    }
+  ]
+}
