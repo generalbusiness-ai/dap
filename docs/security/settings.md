@@ -144,7 +144,7 @@ failure behavior, health visibility and the other readers.
 <!-- dap-settings-lookup:start -->
 | Name | Kind | Workers | Main reader |
 | --- | --- | --- | --- |
-| `AGENTS` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `AGENTS` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`apps/room/page/oauth-route.ts`](../../apps/room/page/oauth-route.ts) |
 | `ALLOW_OPEN_CREATION` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-admission.ts`](../../packages/scope/src/creation-admission.ts) |
 | `APPLICATION_CONTENT` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `APPLICATION_SCREEN_HOSTS` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
@@ -172,14 +172,14 @@ failure behavior, health visibility and the other readers.
 | `MCP_ENABLED` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_RESOURCE_URLS` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_TOOL_ADDITIONS` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
-| `METRICS` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `METRICS` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/operational.ts`](../../packages/scope/src/operational.ts) |
 | `OAUTH_CLIENT_METADATA_ORIGINS` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
 | `OAUTH_DYNAMIC_REGISTRATION` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
 | `OAUTH_REDIRECT_URIS` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
 | `PLATFORM_CREATION_PINS` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
 | `PUBLIC_ORIGIN` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/public-origin.ts`](../../packages/scope/src/public-origin.ts) |
 | `REGISTER_SCOPE` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/register-setting.ts`](../../packages/scope/src/register-setting.ts) |
-| `REGISTRIES` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `REGISTRIES` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`apps/room/page/oauth-route.ts`](../../apps/room/page/oauth-route.ts) |
 | `ROOM` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
 | `SCOPES` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `SCOPE_INDEX` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/scope-index.ts`](../../packages/scope/src/scope-index.ts) |
@@ -190,7 +190,7 @@ failure behavior, health visibility and the other readers.
 | `SERVING_READ_ADDRESS_PER_MINUTE` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
 | `SERVING_READ_KEY_PER_MINUTE` | text | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
 | `SESSION_SECRET` | secret | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `VERSION_METADATA` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `VERSION_METADATA` | binding | `dap-self-host`, `artroom-scope`, `dap-connect`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/health.ts`](../../packages/scope/src/health.ts) |
 <!-- dap-settings-lookup:end -->
 
 <!-- security-settings -->
@@ -301,7 +301,8 @@ failure behavior, health visibility and the other readers.
         "apps/room/demo-creation.ts",
         "packages/scope/src/applications/route.ts",
         "packages/scope/src/scope-index.ts",
-        "packages/scope/src/creation-versions.ts"
+        "packages/scope/src/creation-versions.ts",
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "readDeployment: nonempty string of at most 128 UTF-8 bytes; shared by sessions, creation, demo, screens and metrics.",
       "missing": "Sessions unavailable; genuinely absent local creation retains the local API.",
@@ -644,7 +645,8 @@ failure behavior, health visibility and the other readers.
       "status": "read",
       "readers": [
         "packages/scope/src/worker.ts",
-        "packages/scope/src/scope-index.ts"
+        "packages/scope/src/scope-index.ts",
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "scopeIndex/indexedScopes accept register or enforce; undefined selects enforce. Census serves in enforce only; register returns unsupported.",
       "missing": "Uses enforce with a valid index binding.",
@@ -672,7 +674,8 @@ failure behavior, health visibility and the other readers.
         "packages/scope/src/applications/route.ts",
         "apps/room/fetch.ts",
         "apps/room/demo-creation.ts",
-        "packages/scope/src/site/route.ts"
+        "packages/scope/src/site/route.ts",
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "Wrangler DurableObjectNamespace; indexedScopes wraps target addressing. It is not a string parser.",
       "missing": "Scope routes cannot address their target; register readiness is unavailable.",
@@ -719,8 +722,8 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts",
-        "apps/room/page/oauth-route.ts"
+        "apps/room/page/oauth-route.ts",
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "Wrangler hosted-MCP DurableObjectNamespace; mcpRoute requires both namespaces and a valid opt-in policy.",
       "missing": "Hosted MCP route 404 before body/target work.",
@@ -742,8 +745,8 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts",
-        "apps/room/page/oauth-route.ts"
+        "apps/room/page/oauth-route.ts",
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "Wrangler hosted-MCP DurableObjectNamespace; mcpRoute requires both namespaces and a valid opt-in policy.",
       "missing": "Hosted MCP route 404 before body/target work.",
@@ -811,7 +814,7 @@ failure behavior, health visibility and the other readers.
       "readers": [
         "packages/mcp/src/hosted-tools.ts",
         "packages/mcp/src/oauth-resource.ts",
-        "packages/scope/src/worker.ts"
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "Optional closed JSON array, at most 8192 UTF-8 bytes and two rows; distinct hosts and exact HTTPS /mcp connector URLs. Claude domain must equal the first 32 SHA-256 hex digits of that URL plus .claudemcpcontent.com; ChatGPT domain must be an HTTPS origin. Each connector URL must also name a configured MCP resource.",
       "missing": "Resources declare no remote card domain.",
@@ -858,7 +861,8 @@ failure behavior, health visibility and the other readers.
       "readers": [
         "packages/scope/src/worker.ts",
         "packages/scope/src/applications/route.ts",
-        "packages/scope/src/applications/wiring.ts"
+        "packages/scope/src/applications/wiring.ts",
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "Wrangler R2 Bucket used by ApplicationContentStore; package integrity/trust checks remain separate.",
       "missing": "Application package custody unavailable.",
@@ -882,7 +886,8 @@ failure behavior, health visibility and the other readers.
       "readers": [
         "packages/scope/src/worker.ts",
         "packages/scope/src/applications/route.ts",
-        "packages/scope/src/applications/wiring.ts"
+        "packages/scope/src/applications/wiring.ts",
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "readApplicationTrust validates the supported exact release/publisher/host trust rows; later package checks still authenticate bytes and semantics.",
       "missing": "No package admitted or served; fresh acts under installed releases refuse application-revoked.",
@@ -950,8 +955,8 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts",
-        "packages/scope/src/operational.ts"
+        "packages/scope/src/operational.ts",
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "MetricBinding.writeDataPoint; emission is best effort and bounded by the metrics owner.",
       "missing": "No metrics emission.",
@@ -973,9 +978,9 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts",
         "packages/scope/src/health.ts",
-        "packages/scope/src/operational.ts"
+        "packages/scope/src/operational.ts",
+        "packages/scope/src/worker-mcp.ts"
       ],
       "parser": "Wrangler version metadata object; health accepts id only with the maintained UUID syntax.",
       "missing": "Health/metrics use unknown version.",

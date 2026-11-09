@@ -79,3 +79,50 @@ BR-14 still owes the final gate and exact-head review under `c7853c21`.
 The planner's R3a request `31f98f33` owns the existing denied-key exhaustion
 fix. This split leaves that authority behavior unchanged. No hosted scene,
 provider custody, deployment or live acceptance follows from these checks.
+
+The first final gate ran at `2ca326b5942b073575e7198a77aaa9882a37bf35`,
+tree `eb6947de93a7e9a9e18b14ba2f10f694774bff62`. Its actual `gate.exit`
+says 1. Pre-test checks and typecheck passed. Node finished with 142 passed
+and two failed settings-inventory cases. Counting, Plain and Native never
+started. The settings document still listed `worker.ts` for bindings whose
+reads moved into `worker-mcp.ts`. The source stayed fixed and the process
+group closed. The [failed-gate manifest](evidence/2026-11-09-br14-failed-gate.manifest.json),
+SHA-256 `0a42b67e264b15478c6e4497260a7249e3e0606623fe1fbda994172e905e4f0c`,
+keeps all 19 public files and the private raw inventory. The first analysis
+script also failed because Counting had never produced a source map. That
+error remains. A corrected reader analyzed the same gate without a test
+rerun and treated Counting as unreached.
+
+Page workflow [42680761832](https://github.com/generalbusiness-ai/dap/actions/runs/42680761832)
+passed at that head. Card workflow [42680775846](https://github.com/generalbusiness-ai/dap/actions/runs/42680775846)
+passed generated-card equality, the card browser and Grow room scripts,
+then timed out after 30 seconds in the Grow routing script. It waited for
+one chat message after **Report in chat**. The CI log did not retain the
+observed message count or bridge errors. Its cause remains unexplained.
+The [browser manifest](evidence/2026-11-09-br14-browser-workflows.manifest.json),
+SHA-256 `7bbc3e2b3b81cbbafc80000685a5c8c1a61afffb8eed43e02e6118a1b8857b41`,
+keeps the terminal results and original failed log in 12 public files.
+
+Planner ruling `41db04f1` authorized one unchanged local Grow routing owner
+before another gate. The original 320 and 592 widths, fixtures and 30-second
+wait ran with Playwright 1.63.0 and Chromium revision 1243 on macOS arm64.
+The Browser plugin was unavailable. Both widths passed, replay reported
+consistent and the recorded browser error lists were empty. Actual owner
+and driver exits both say 0. Source and tool hashes matched before and
+after, and the process group closed. I inspected the two completed-task
+screenshots. This local pass does not explain the Linux CI timeout.
+The [diagnostic manifest](evidence/2026-11-09-br14-grow-routing-validation.manifest.json),
+SHA-256 `8904ca95c22d60636e523e0b04a3ad88e8e92b0452323f2f2823c0823ae07007`,
+keeps 26 public files, including screenshots. Raw signed TEST requests and
+host proof stay private. Its result digest is
+`52df3104b2b17894580e6b684fb1b2e7ca9208d1a20f0af2b4a3b19c87b145d8`.
+
+Planner ruling `33ff7a38` authorizes the reader-path correction and one new
+unchanged full gate. The correction changes reader paths in ten existing
+settings rows and regenerates the lookup. It changes no setting value,
+deployment, parser or missing/invalid/health rule. A read-only check with an
+in-memory document override classified 313 deployment/name rows, 1,602
+source reads and 13 configurations. Runtime, test and declaration-seal
+bytes stay fixed. The second gate has not run yet. After it passes, the
+planner requires one Card workflow at the final source head. Another Card
+failure requires a report before further work.
