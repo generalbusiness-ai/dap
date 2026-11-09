@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "22a4b9f4881235d240ed64e875e1f525d9c61fc5",
+  "sourceTree": "46d47ff2df947e3c7424600320bc3fa79d929d73",
+  "qualification": "Keep this bounded diagnostic failed. Original30000ms allowance, no manual kill. The first case passed; the second failed and unhandled errors invalidate the whole run. The driver sampled no other validation body at start; this is not continuous proof or a load cause. Test-only provider-gate ownership repair follows the cross-object I/O error, with unchanged production/assertions/restart semantics.",
+  "fileCount": 17,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-failed-late-context-validation",
+      "fileCount": 17,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1369,
+          "sha256": "579d64ce78453226833c1e13b030750c1db74dbf944c973f9ecc7e338cf2960c"
+        },
+        {
+          "path": "additional-native-reuse.json",
+          "bytes": 3433,
+          "sha256": "a9811b5e9b4279e5aedb4b731f6f2ecd4ddfb64ea05ae55abadf0480d0990412"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "27aeb94d2afa5e469c6e78b889a88b1d09961698d01178cc763bc53dc02dc96d"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 5625,
+          "sha256": "ff6cc1d3608939c4340adcccb08207cc7f9509fed2e470fb919d42fb9113f83f"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 3487,
+          "sha256": "5ec76e7f97f0f7fd6b05e937bfbbe20831324aaeeb18f25f2a0b686b87ddba72"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 9651,
+          "sha256": "5892126ee88895bb99c1073ea97190e47281937acdddd857f33352c293d478f5"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 2870,
+          "sha256": "69fd2cf4e8cecd87dc445bfff5c6694ca8e763cc6e4f91a19f7db30c7a53b2f5"
+        },
+        {
+          "path": "node-reuse.json",
+          "bytes": 1196,
+          "sha256": "28dcf891eacf610675a10db9214d8dedc73d85c6b03de858b41700fc35feebf4"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 574,
+          "sha256": "23bc1f032d07396f1fa5f60719eed04b18f63349c3671ec809ccdef3470a08d5"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 31,
+          "sha256": "e5ca9af1dd3a8a9ffe3b22d73c935afc35cf472055e125e9e65af8495afbdcd7"
+        },
+        {
+          "path": "prior-phase-reuse.json",
+          "bytes": 7575,
+          "sha256": "9cbed40de86d17c8464685fa55f970d0c1fe01f9dac75368db3432aa058d189f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 492,
+          "sha256": "a2b5742efd5258d7051417dc3f32873b641536825cc137533fbff83b96f46ff5"
+        },
+        {
+          "path": "scope-test.log",
+          "bytes": 29,
+          "sha256": "a1e99206b236ec77b4e992c0eb9ac5dc11cfa5a9c290611a510936046802659f"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}

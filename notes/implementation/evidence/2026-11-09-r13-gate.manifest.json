@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "ruling": "67b1fb7faa0e17232a72e1588f834001dadbe9e1",
+  "qualification": "The full R13 gate at e180420c ends with actual exit 0 read. Every fixed stage passes, with skips explicit. The actual Native selection omits six scope-scale cases because no changed path belongs to the scale families. No archive attempt or pass follows from this gate. Every tracked input stays equal and the owned process group closes. Retained process samples find no other local validation body; samples cannot prove uninterrupted isolation. Reports reconcile without failure, contradiction, report error or unhandled error. Unknown observations are Node file wrappers. Earlier focused failures, qualified closure and named control keep their own outcomes and heads. Twenty-two retained full gates contain seventeen archive passes, four Native-unreached failures and this scale-omitted pass; watch 64552d40 stays open. Sealing reruns nothing. Both automatic browser workflows have separate sealed success evidence at the same source head. Exact-head review remains due. This supplies no deployment or live acceptance.",
+  "sourceHead": "e180420c11b2e07a091fc58896b77c9885167859",
+  "sourceTree": "99a8e2738aebcb7d10e111f7265d6c0076ad4ccc",
+  "fileCount": 21,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-gate-validation",
+      "fileCount": 21,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1656,
+          "sha256": "d87b01a24f65fc5572b016118677db959aac0973355f3cd96476553bc7a5b528"
+        },
+        {
+          "path": "after.json",
+          "bytes": 563929,
+          "sha256": "b2c1d5b0c469ceb9e76b1115b59a41f33a42d21be875576a752545456bc30180"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2425,
+          "sha256": "d1cfaa978f835987ddc8b4c347301c7533cb7876979dd998c01ec66f36f8604e"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "archive-watch-audit.json",
+          "bytes": 17067,
+          "sha256": "62c769c3fa96f78e3891a57923becd674c66c64ef87486fb6bcf9230149b09eb"
+        },
+        {
+          "path": "before.json",
+          "bytes": 563929,
+          "sha256": "b2c1d5b0c469ceb9e76b1115b59a41f33a42d21be875576a752545456bc30180"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 36,
+          "sha256": "dbe8794dabc0198442dab4dfb64a3e63afe42e48b9504aa6c53a90bb0357a411"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8724,
+          "sha256": "f1c8ad91f273fb9c38aff306197666b85b3dfa2ce80ca4cf473e079253137baa"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 537,
+          "sha256": "20c88e25347cf0b3bb2070c9bc5f27e61e85b8a3b20e7c1faf52493586a7fcbf"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 171,
+          "sha256": "7503c47e20155bbb77a42fea654689a78ae76df69d6ec33e7075cbc07210e571"
+        },
+        {
+          "path": "result.json",
+          "bytes": 3536,
+          "sha256": "555d4b61eb1d9b4508f9467755026496688e587157ccadcc5ffa65e5af9bdefa"
+        },
+        {
+          "path": "scale-owner-equality.json",
+          "bytes": 833,
+          "sha256": "b257bccd67eeba850615860dc8bea2e6f6d02090f05eec7e426c518f26cbba1e"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "cc7cb6c5c5efa97f740c0933b2a6a97dd97a29571b70a0a0558a6b4edd746aba"
+        },
+        {
+          "path": "slot-observations.jsonl",
+          "bytes": 30690,
+          "sha256": "69568df2e684144f35aca3714b5c51ffa499ce569b7f40de4fcd4f6248bb49a5"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 3548,
+          "sha256": "e24c732f87bcb55124f60ceb9de1eec364ab3ece363b5d1ad8c83ca9bd33621c"
+        },
+        {
+          "path": "started.json",
+          "bytes": 715,
+          "sha256": "84fc452c9f6283687fc1cfaa868f13eddb11b0564a5689183ad7ec514d224202"
+        },
+        {
+          "path": "task.json",
+          "bytes": 8795,
+          "sha256": "427bc9aa6fe12a319fe4314bc3fa3e0a2f90b6d81808891a0949a1bbcafede48"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 560,
+          "sha256": "c9ed2498c9908ed67df0325d60ca54e9940752dcbf905d2f435f268f33f4d195"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 9973,
+          "sha256": "03f9588636db7e0d0b3d1feecb11387d3da9b268dbea1532379b2a97664b0b2a"
+        }
+      ]
+    }
+  ]
+}

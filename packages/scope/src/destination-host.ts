@@ -11,13 +11,14 @@ import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldV
 import { canonicalize, b64url, entryHash, isEntry, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, valueDigest, type Item, type Operation, type Own } from "@generalbusiness/dap-derive";
 import { isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
-import { FAILED_CLAIM_COHORT, DESTINATION_KINDS, READ_TOKEN_HOURS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
+import { DESTINATION_KINDS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
 import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "@generalbusiness/dap-platform";
 import { rulesCertificateOpeningV15, rulesCertificateDeclineV15 } from "@generalbusiness/dap-platform";
 import { rulesCertificateOpeningV17, rulesCertificateDeclineV17, RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidenceAuditPending, destinationEvidencePlanPending } from "@generalbusiness/dap-platform";
 import type { RulesTreeRequest, RulesTreeObjects } from "./rules-tree-provider.ts";
 import type { CredentialPosition, CredentialStore, RevocationPosition } from "./credential-store.ts";
+import { readTokenHours } from "./read-token-quota.ts";
 import type { OutsideGiven } from "./given.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
 import type { Sealed } from "./store.ts";
@@ -64,7 +65,7 @@ export interface SnapshotReader {
   /** Fresh authenticated Rules observation; required only for room stage reads. */
   rules?(rules: ScopeRef): Promise<unknown>;
 }
-export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "putRead" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take" | "named"> }
+export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "putRead" | "putReadReply" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take" | "named" | "readTokens"> }
 
 /** The byte domain of the nonsecret handle of a member's read credential. */
 const READ_HANDLE = "artroom.read-credential.v1";
@@ -206,11 +207,21 @@ export class DestinationHost implements Outside {
         const hours = this.#hours(operation);
         if (hours === null) return null;
         const id = this.#readHandle(request);
+        const quota = this.#options.custody.readTokens;
+        const binding = quota.bind(operation.id, id, this.#given.clock.read());
+        if (binding === "closed") return null;
         const reply = await this.#options.provider.mintRead(repository, { handle: id, seconds: hours * 3600 });
-        if (members(reply, ["minted"])?.["minted"] === false) return answer("refused", {});
+        if (members(reply, ["minted"])?.["minted"] === false) {
+          if (binding === "bound") quota.refused(operation.id, id);
+          return answer("refused", {});
+        }
         const body = members(reply, ["id", "ends", "plaintext"]);
         if (!body || body["id"] !== id || typeof body["ends"] !== "string" || timeMs(body["ends"]) === null || typeof body["plaintext"] !== "string" || body["plaintext"].length === 0 || utf8(body["plaintext"]).length > 4096) return null;
-        const held = this.#options.custody.putRead({ id, ends: body["ends"], plaintext: body["plaintext"], mint: operation.id, attempt: request.attempt });
+        const received = { id, ends: body["ends"], mint: operation.id, attempt: request.attempt };
+        // A genuine late reply keeps its pinned confirmed meaning. Its
+        // released reservation stays closed and its plaintext never enters custody.
+        const keep = binding === "legacy" || quota.minted(operation.id, id, body["ends"], this.#given.clock.read());
+        const held = keep ? this.#options.custody.putRead({ ...received, plaintext: body["plaintext"] }) : this.#options.custody.putReadReply(received);
         return held === "stored" || held === "repeat" ? answer("confirmed", { token: id, ends: body["ends"] }) : null;
       }
       if (operation.kind === DESTINATION_KINDS.mint) {
@@ -482,10 +493,7 @@ export class DestinationHost implements Outside {
   /** New default tokens last one hour; historical pins retain their requested hours. */
   #hours(operation: Operation): number | null {
     const input = this.#given.own(Number(operation.id.split(":")[0]))?.entry.input;
-    if (input?.type !== "act" || input.signed.intent.kind !== "read-token") return null;
-    if (operation.owner === FAILED_CLAIM_COHORT.destination) return Object.keys(input.signed.intent.fields).length === 0 ? 1 : null;
-    const hours = input.signed.intent.fields["hours"];
-    return typeof hours === "number" && Number.isSafeInteger(hours) && hours >= READ_TOKEN_HOURS.min && hours <= READ_TOKEN_HOURS.max ? hours : null;
+    return input ? readTokenHours(operation.owner, input) : null;
   }
   /** A read credential's nonsecret handle, fixed by the sealed operation and its attempt before the request leaves. */
   #readHandle(request: EffectRequest): string {

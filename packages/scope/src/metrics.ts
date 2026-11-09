@@ -20,7 +20,7 @@ export const METRIC_PLACES = ["create", "acts", "preparations", "rpc:create", "r
 // An exhaustive union makes a new contract reason an explicit schema decision.
 const REASONS: Record<RefusalReason | CreationUnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = { behind: true,
   "archived": true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
-  "wrong-pin": true, "application-revoked": true,
+  "wrong-pin": true, "application-revoked": true, limit: true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true,
   "bad-intent": true, misaddressed: true, expired: true, "scope-refused": true, "unknown-act": true, "bad-field": true,
   "no-item": true, final: true, "fact-mismatch": true, unauthorized: true, "guard-failed": true, "capability-refused": true, late: true,

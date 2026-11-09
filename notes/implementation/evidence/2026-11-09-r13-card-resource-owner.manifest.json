@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "8512c99c07977e89ed42b84e3f274ca403419dc2",
+  "sourceTree": "0a5b7c384aad854f0bc1c3d0873aa0f69db9f9ff",
+  "qualification": "One affected MCP-test compiler and complete6case Plain card resource owner passed at exact committed generated module. Actual compiler/body/driver exits0, complete literal file/project/pool/title identity, no retries/skips/errors and source unchanged. This checks the maintained generator against committed card resources; no Native repeat,browser scene,gate or deployment.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-card-resource-owner-validation",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1096,
+          "sha256": "235a00b368a4301e0ea2feb6f1abea8a17040bb7e92e2cf5b3d0b669f5e297b6"
+        },
+        {
+          "path": "asset-owner-proof.json",
+          "bytes": 764,
+          "sha256": "eb114af6e0f2979a8af90f024e5b3a1878000105f2c7730a1c70e296152e0e08"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "27aeb94d2afa5e469c6e78b889a88b1d09961698d01178cc763bc53dc02dc96d"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 5588,
+          "sha256": "a307d63064a7b07e6a4c7f57488969168ea791e846ec90fb0b4f570cd9ec990c"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 6781,
+          "sha256": "99727d9bd600272435b862533659e8b403c6b0a3b2e8f1068dbf2efd399c0aea"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 5432,
+          "sha256": "1202debe666b829b253abfceb5bbe06ce15d11b0b91d7a84cd01f4dc866f6c00"
+        },
+        {
+          "path": "mcp-test.log",
+          "bytes": 29,
+          "sha256": "e4d1c4218b11a363936c7a5c43e104e5d3823b06fddf9f42470dd88651661b74"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 568,
+          "sha256": "aadbe7e4cf047e98f3ea363e5716ed9dd3f15935b3cb821da17023bfa904ef3e"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6fe5a51112a791d295899b046d989fcdb9060f985a3d32658086affb79dd8113"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 29,
+          "sha256": "87c1ad5620a9a58faf5e10e22755b249b1c6eb18f0c49fb7eb5793576a05e72b"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 486,
+          "sha256": "6fa3935c5e4dcde4dc329d64d4b24459f5de1ed0f7ba8aee3caafe20d36dffd7"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}

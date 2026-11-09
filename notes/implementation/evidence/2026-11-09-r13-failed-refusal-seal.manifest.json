@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "42e9afa564b3d03f0166e3945f9bfec64bcaee28",
+  "sourceTree": "c3e429f93b732cb14826a6031cc792564c4d3bc4",
+  "qualification": "This failed Node unit remains failed. No compiler, Vitest, control or gate started. Adopt the actual maintained decoder seal under standing authorization, preserve all assertions, then run the affected complete owner and allunrun phases.",
+  "fileCount": 16,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-failed-refusal-seal-validation",
+      "fileCount": 16,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1211,
+          "sha256": "2d04e19a03366083a5ed5aa8eae7cbc84f0739381e7825fcb90164a82d6e4fd6"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 134,
+          "sha256": "5b7801e52fed5769d93e7bea76795cbf0c4815824bb4d777e670eebd95228aca"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "27aeb94d2afa5e469c6e78b889a88b1d09961698d01178cc763bc53dc02dc96d"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 8025,
+          "sha256": "a0ac6601f39c2aea97ee27deb4a3496fa68976e7611d4621ff98df17f5bb2337"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 1071,
+          "sha256": "45559d1469781ab78e8cea972cc8d00caf5bdfbdb844d6d69bf82ef8d8813a64"
+        },
+        {
+          "path": "node-driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 572,
+          "sha256": "7228d9932a1c79dab885812f02237c98fc1662e6b6b200c1b3cf6a0f0b02585e"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 29,
+          "sha256": "8ff44119b3c2871dec9799e7dfe1776292d26e38e6a5ebcb35a9f7ce632b7a14"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 491,
+          "sha256": "e6276e6c9ff38cd9660bb680aebbb1abeddcaecef100b7bdf68ba2c527f52e39"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2985,
+          "sha256": "d9683266219b7821ba6caad529ddaa4998fb2966ffd08f002f8f741e0d1b6ea1"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        },
+        {
+          "path": "started.json",
+          "bytes": 88,
+          "sha256": "11723a2fbd083e821bcc8293e5bc525a1308aa1e508a833db34164849dcacf0f"
+        },
+        {
+          "path": "stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "stdout",
+          "bytes": 4150,
+          "sha256": "d40a35ba495193994e540bdf7ffbaf6776a536794b48fe97891432f6b061d09b"
+        }
+      ]
+    }
+  ]
+}

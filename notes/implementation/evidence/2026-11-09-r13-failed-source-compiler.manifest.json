@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "16a3847c3898c3ae5a9c7de53361d90210fb564c",
+  "sourceTree": "80347b3b77acb1763900d302be2489f30021f70a",
+  "qualification": "Retain the first R13 focused failure. Node11 and dependency compatibility passed; Scope source failed; Scope test and all21Native cases remain unrun. No control or gate ran. Source stayed frozen and groups closed.",
+  "fileCount": 17,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-failed-source-compiler-validation",
+      "fileCount": 17,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1337,
+          "sha256": "c1218784377a538bf5af8dcbcb4d53ac7e01d7d303b0a41f7a00706293496437"
+        },
+        {
+          "path": "compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compiler-result.json",
+          "bytes": 2819,
+          "sha256": "53dffc7f84ca4737668ad0986ea30f4a49f92ad5aec397c480356937f65fc0c6"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 8280,
+          "sha256": "3191040940386a62a997fcfbc7105f8ab515f78cd743df77ef9b167c807bbd5f"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 792,
+          "sha256": "0bd04ee62e69568b79b77af5e7d994672ef643109aeec575d2bb3aa30bc4d135"
+        },
+        {
+          "path": "node-driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node-owner.time",
+          "bytes": 29,
+          "sha256": "14ae731b145a3b10929db2c7fd7c10de9b59aded75e2a707ffead2c9235b242c"
+        },
+        {
+          "path": "node-result.json",
+          "bytes": 2994,
+          "sha256": "b5bba4dbaa9bbe651f1b90e784eb92c6881de0a57727e8216e591ecfc9b13373"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 572,
+          "sha256": "0f47c2b48222c7d56f870eb0e50c6f177c100a1f2763ffe8969498130d9fbecd"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 29,
+          "sha256": "0db42934b1a5f7aaa268d1d4041ea40e8f2bcbfd79dc797263db445b58bc632f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 482,
+          "sha256": "ad24d36605ecfc72dfab060f1101c60b06e4b5152eb9a9e82f298fcae6b3e398"
+        },
+        {
+          "path": "scope-source.log",
+          "bytes": 137,
+          "sha256": "3f89c9f18b9bae59f20519f33755c009dae8460709a953f733e0e654f52d9f7f"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}
