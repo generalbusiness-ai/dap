@@ -1,9 +1,9 @@
-# Read authority before receiver work and drain timers only from alarms
+# Refuse failed authority before foreign work and leave timed drains to alarms
 
-Request `03e5f6d7`; promise `8787bceb`; source starts at main `29926a3a`.
-This head contains source and dependency preparation with maintained seal
-metadata. No compiler, test, control or gate has run for R3. It now includes
-published D6 main `c85a9bae`.
+Request `03e5f6d7`; promise `8787bceb`. This head includes published D6 main
+`c85a9bae`. R3 changes no recorded format, definition pin or deployment setting.
+
+## What changed
 
 An ordinary act whose held observation already denies its grant now
 returns `unauthorized` before application provenance, receiver policy,
@@ -32,7 +32,7 @@ that literal result as well as standing and null. Existing keys remain usable. A
 object run starts with no cached keys or observations. Own-Membership
 standing uses no remote observation map and keeps its existing rules.
 
-## Witnesses and validation due
+## Decisions and witnesses
 
 The new Native order witness uses real ScopeObject, SQLite, a real foreign
 entry and a timed alarm. Its Membership and release-admission ports are
@@ -76,13 +76,6 @@ Those actual parser outputs now appear in the inventory. Every route and
 gate assertion remains in place. These structural tripwires establish no
 runtime result.
 
-Focused compiler contexts, complete owners, meaningful controls and one
-final gate all remain due. This preparation claims no runtime result.
-R3 includes the security documentation landing and replaces D6's queued-R3
-wording with the current branch's order and bound.
-
-## Kernel filing and deployment
-
 This is the filed R3 security remediation under
 [Kernel section 7.1](../../docs/kernel.md#71-filing-while-parts-fail-the-test).
 It adds no kernel package, export, scope kind, platform name, capability,
@@ -96,3 +89,52 @@ This head introduces no environment setting or redeploy step beyond the
 reviewed code deployment. The planner owns deployment. The generic runtime
 behavior applies to existing pins; it creates no new cohort. Earlier
 review or hosted evidence establishes no result for this head.
+
+## Evidence
+
+The [pre-gate manifest](evidence/2026-11-09-r3-pre-gate.manifest.json)
+seals 50 public files and retains 1,378 private raw files. The first frozen
+run remains failed. Its complete Node owner passed all 12 cases, and all
+14 compiler contexts passed. Native bail left 20 cases unrun, four unfinished
+and one skipped after the creation witness failed. That witness still
+expected a refused request to drain a timer. The correction checks that
+creation leaves the head fixed, then invokes the real alarm and keeps the
+original pinned effects assertion.
+
+The limited follow-up ran the affected Scope test compiler and six complete
+owners. It passed all 32 cases. The first run's complete turn owner (27)
+and operation owner (11) remain the healthy results for those unchanged
+files. Thus eight owners have complete passing results for 70 unique cases;
+that count combines retained runs and is not one observed test invocation.
+
+Each control reused its saved healthy whole-owner baseline and changed
+only one guard. Each caused its intended assertion failure, restored every
+tracked source byte, and closed its owned process group. The first and
+third control verifiers returned 1 because their report comparisons assumed
+untruncated messages and identical title separators. The same-run complete
+diff and structured case records resolve those metadata mismatches.
+The original verifier exits remain 1; separate metadata checks return 0.
+No test ran again for those checks.
+
+| Check | Command | Exit | Checkpoint head / tree | Output SHA-256 |
+|---|---|---|---|---|
+| Security owner and 14 compiler contexts | `python3 /private/tmp/artroom-r3-focused-20261109.py` | 0 for each | `fcd53eed / f2b10f8a` | `15dce2fe0d740a7bfcb0eead94aa31703a9a70c21eb184edc241ace50963075c` |
+| First Native run: 44 passed, 1 failed; incomplete | `same first focused command` | 1 | `fcd53eed / f2b10f8a` | `cc28b08b04e156e4b7b6a8c69abd6c1db5eb5acec368b5bcd8a398207a9f9eb2` |
+| Creation correction: affected compiler and six complete owners, 32 passed | `python3 /private/tmp/artroom-r3-creation-followup-20261109.py` | 0 | `39c6264c / bc3dcf55` | `cf35b2f34d3f8aedc2a21e654fb0448df61c4acf8f1cdc5d77b45dc28202d867` |
+| Early refusal control: one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109.py /private/tmp/artroom-r3-early-authority-control-20261109.task.json` | owner 1; verifier 1; metadata 0 | `39c6264c / bc3dcf55` | `36c5720b8dec5192db90885eaf4fde87f9a7eb8c1191ee881f23dc1f69228231` |
+| Alarm drain control: one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109-v2.py /private/tmp/artroom-r3-alarm-drain-control-20261109.v2.task.json` | owner 1; verifier 0 | `39c6264c / bc3dcf55` | `586db0887430f7d24c8a7fc947f1f9a129ed415169cc5dfaab5f4ae735905411` |
+| Key bound control: five pass, one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109-v2.py /private/tmp/artroom-r3-key-bound-control-20261109.v2.task.json` | owner 1; verifier 1; metadata 0 | `39c6264c / bc3dcf55` | `7c5561ba8858c151cadc144dbee2f009806a217330df82a3d28328d36378f6d9` |
+
+Each pipeline records its own monotonic duration and command timing.
+Those measurements include source guards and report work where the driver
+states that scope. Summed command or case times are not one measured gate.
+The runners keep their original pools, workers and deadlines. The owned
+physical dependency view has 14 workspaces and 48 source export bindings.
+The final `npm run gate` has not run.
+
+## Open limits
+
+Request `03e5f6d7` still owns the final gate, independent review and landing.
+The planner owns deployment after landing. These Native witnesses use
+labelled scripted Membership, admission and provider boundaries. They
+establish no live provider effect or hosted-room acceptance.
