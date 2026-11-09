@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1ab264351957b019c0aaa87a7a45af3ddf6796a3","text":"Merge retired a covered predecessor; the successor is at verification/state-machines/Voice/chart.mmd."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1e74f66c2e3f9e0bf871ac45c93770bb2065566d","text":"Merge retired a covered predecessor; the successor is at verification/state-machines/Observation/Observation.tla."}
