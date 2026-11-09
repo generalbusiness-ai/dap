@@ -235,9 +235,12 @@ export class Turns {
     if (!definition) return { end: "unavailable" };
     for (let attempt = resume; ; attempt = null) {
       if (!attempt) {
-        const stopped = this.#drain(definition, turn);                 // step 3
+        const stopped = waiting ? null : this.#drain(definition, turn); // alarms alone drain timed work
         if (stopped) return this.#close<A>(definition, turn, stopped);
         if (!waiting) return this.#close<A>(definition, turn, { end: "idle" });
+        turn.last = clockOf(this.#store, this.#ports.clock.read());
+        // Preserve the clock refusal without asking this input to drain.
+        if (turn.last.behind && nextDue(this.#store, definition, turn.last.asOf)) return this.#close<A>(definition, turn, { end: "clock-behind" });
         const head = this.#store.scope()?.head ?? null;                // step 4
         // The walk that finds the rules uses the reading of step 3. Nothing is judged on it.
         const asks = waiting.asks(this.#store, turn.last!);

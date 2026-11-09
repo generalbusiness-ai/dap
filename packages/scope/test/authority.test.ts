@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest";
-import type { Entry, KeyId, Observation, ObservationUse, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Entry, KeyId, Observation, ObservationRequest, ObservationUse, ScopeRef } from "@generalbusiness/dap-contract";
+import { b64url } from "@generalbusiness/dap-bytes";
 import { WINDOWS, agrees } from "@generalbusiness/dap-derive";
 import { d, membership } from "@generalbusiness/dap-derive/testing";
 import { observing } from "../src/authority.ts";
-import type { Asked } from "../src/ports.ts";
+import type { Asked, Standing } from "../src/ports.ts";
 import { HOLD, at, definition, create, rita, una, type Lane } from "./fixtures-native.ts";
 
 const actions = Object.values(definition.declared.acts).map((a) => a.grant);
@@ -221,7 +222,7 @@ describe("the observation read, with a scripted membership, a stand-in (authorit
 describe("a compromised notice that lands during the read, with a scripted reader, a stand-in", () => {
   test("the commit of `read-token` is refused on the answer that shows the key active; another act of the key, and another key, are judged as before", async () => {
     const reading = { reading: at(0), behind: false, asOf: at(0) };
-    const view = { observed: () => null } as unknown as Parameters<NonNullable<Awaited<ReturnType<ReturnType<typeof observing>["read"]>>>["held"]>[0];
+    const view = { observed: () => null } as unknown as Parameters<Standing["held"]>[0];
     const named = new Set<KeyId>();
     const answers: ((answer: unknown) => void)[] = [];
     const port = observing({ clock: { read: () => at(0) }, random: { bytes: (n) => new Uint8Array(n) }, membership: () => membership, reader: { observe: () => new Promise((resolve) => answers.push(resolve)) }, named: (key) => named.has(key) });
@@ -231,7 +232,9 @@ describe("a compromised notice that lands during the read, with a scripted reade
       const read = port.read(asked(who, kind), 5);
       if (name) named.add(una.key);
       answers.shift()?.(active(who));
-      return (await read)!.held(view, reading);
+      const result = await read;
+      if (result === null || result === "limit") return expect.fail("the two-key witness must obtain standing");
+      return result.held(view, reading);
     };
     expect(await held(una, "read-token", true)).toEqual([]);
     named.clear();
@@ -240,4 +243,42 @@ describe("a compromised notice that lands during the read, with a scripted reade
     expect(await held(rita, "read-token", false)).toMatchObject([{ current: true }]);
     expect(await held(una, "evidence-recover-timeout", false)).toMatchObject([{ current: true }]);
   });
+});
+
+
+// Pure authority-port budget with synthetic key IDs below signature admission.
+// Alternating ordinary and once-only observations cannot evade the run bound.
+test("an authority run admits 4096 keys, refuses a new key before reading at the bound, keeps old keys usable and resets only in a new run", async () => {
+  const key = (number: number): KeyId => {
+    const bytes = new Uint8Array(32);
+    new DataView(bytes.buffer).setUint32(0, number);
+    return `key_${b64url(bytes)}` as KeyId;
+  };
+  let reads = 0;
+  const config = { clock: { read: () => at(0) }, random: { bytes: (n: number) => new Uint8Array(n) },
+    membership: () => membership, reader: { observe: async (request: ObservationRequest) => {
+      if (!("key" in request)) return null;
+      reads++;
+      return { of: membership, head: { seq: 40, hash: d("4") }, key: request.key, keyState: "active",
+        member: "@rita", memberState: "active", role: "member", actions, within: { membership },
+        controller: null, controllerActive: null, notAfter: null, definition: "platform:membership@1" };
+    } } };
+  const asked = (number: number): Asked => ({ scope: { ...membership, kind: "destination" }, grants: [],
+    action: actions[0]!, window: number % 2 ? WINDOWS.once : WINDOWS.ordinary,
+    signed: { intent: { actor: key(number), kind: "read-token" } } }) as unknown as Asked;
+  const port = observing(config);
+  for (let number = 0; number < 4096; number++) {
+    expect(await port.read(asked(number), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
+  }
+  expect(reads).toBe(4096);
+  expect(await port.read(asked(4096), 5)).toBe("limit");
+  expect(reads).toBe(4096);
+  expect(await port.read(asked(0), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
+  expect(reads).toBe(4096);
+  expect(await port.read(asked(1), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
+  expect(reads).toBe(4097);
+  expect(await port.read(asked(4096), 5)).toBe("limit");
+  expect(reads).toBe(4097);
+  expect(await observing(config).read(asked(4096), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
+  expect(reads).toBe(4098);
 });

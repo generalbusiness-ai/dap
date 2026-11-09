@@ -95,11 +95,14 @@ export interface Standing {
  * it begins. The core stops waiting after `seconds`. Null, a late answer or
  * a failure: nothing was read, and the act is not judged at check 9.
  *
+ * `limit`: this run cannot admit another signing key. It reads no standing
+ * for that key and the caller refuses the input without starting a turn.
+ *
  * Phase two is the method of what phase one returns. So no commit decides
  * on authority without a read that was made for its own input.
  */
 export interface Authority {
-  read(asked: Asked, seconds: number): Promise<Standing | null>;
+  read(asked: Asked, seconds: number): Promise<Standing | "limit" | null>;
   /**
    * The further observations of one input (scope contract, revision 20,
    * section 16.1, "The subjects that an entry observes"): what the scope

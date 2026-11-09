@@ -243,11 +243,17 @@ test("logical key counts in real SQLite retain final keys, ignore transport ACKs
   expect(counts.rolledBack).toBe(true);
 });
 
-test("fresh application admission is rechecked after an async authority read; accepted keys bypass unavailable admission", async () => {
-  // Real Core, turn, judgment and SQLite. Admission and authority are narrow
-  // scripted ports: no native release provenance or trust lookup is proved.
-  const s = await create(), authority = testAuthority();
-  let state: FreshActAdmissionDecision = "allowed", available = true, revokeDuringRead = false;
+test("fresh application admission is rechecked after an async foreign read following standing; accepted keys bypass unavailable admission", async () => {
+  // Real Core, turn, judgment and SQLite. Admission, authority and the foreign
+  // resolver are scripted ports: no native release provenance is proved.
+  const under = variant(definition.declared, data => {
+    data.acts.remark.fields.proof = { type: "fact", kind: ["remark"], under: data.name, required: false };
+  });
+  const peer = await create();
+  const proof = (await peer.did(rita, "remark", { on: 0, fields: { text: "foreign evidence" } })).fact;
+  const evidence = (await peer.entries(proof.seq))[0]!;
+  const s = await create({}, {}, under), authority = testAuthority();
+  let state: FreshActAdmissionDecision = "allowed", available = true, revokeDuringForeignRead = false;
   const reads = { admission: 0, current: 0, authority: 0 }, observed: FreshActAdmissionDecision[] = [];
   wired.set(s.name, () => ({
     freshActAdmission: { read: async () => {
@@ -258,8 +264,12 @@ test("fresh application admission is rechecked after an async authority read; ac
     authority: { read: async (asked, seconds) => {
       reads.authority++;
       const held = await authority.read(asked, seconds);
-      if (revokeDuringRead) state = "application-revoked";
       return held;
+    } },
+    resolver: { read: async asked => {
+      await Promise.resolve();
+      if (revokeDuringForeignRead) state = "application-revoked";
+      return asked.hash === proof.hash ? { fact: proof, entry: evidence, under: definition.declared.name } : null;
     } },
   }));
   onTestFinished(() => { wired.delete(s.name); });
@@ -268,8 +278,8 @@ test("fresh application admission is rechecked after an async authority read; ac
   expect(accepted).toMatchObject({ answer: "accepted" });
   const before = await s.head();
   observed.length = 0;
-  revokeDuringRead = true;
-  expect(await s.submit(s.remark("withdrawn during authority read"))).toEqual({
+  revokeDuringForeignRead = true;
+  expect(await s.submit(s.intent(rita, "remark", { on: 0, fields: { text: "withdrawn during foreign read", proof } }))).toEqual({
     answer: "refused", reason: "application-revoked", judgedAt: before,
   });
   expect(observed[0]).toBe("allowed");
@@ -317,14 +327,17 @@ describe("the head check (section 5.2, steps 4 to 6)", () => {
 });
 
 describe("a due expiry is written before any other input (section 5.2, steps 3 and 6.3)", () => {
-  test("an act whose commit reading is at two holds' deadline stops; the drain writes both ends, the lower item first, and then the act", async () => {
+  test("an act at two holds' deadline waits; the alarm writes both ends in item order before the same act retries", async () => {
     const s = await create();
     const [low, high] = await s.holds(2);                     // entries 1 to 6; both holds end at the same time
     expect(await s.alarmAt()).toBe(timeMs(at(HOLD)));         // after a commit, the alarm is at the earliest deadline
-    // Step 3 reads one second before the deadline and finds nothing due. Every later reading is the deadline.
+    // The request never drains. The alarm alone writes the due transitions.
     s.c.clock.now = at(HOLD);
     const remark = s.remark();
-    s.c.clock.script.push(at(HOLD - 1));
+    const before = await s.head();
+    expect(await s.submit(remark)).toMatchObject({ answer: "unavailable", reason: "busy" });
+    expect(await s.head()).toEqual(before);
+    await s.alarm();
     expect(await s.submit(remark)).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 9 } } });
     const timed = (item: number) => ({ type: "timed", item, rule: "hold-end", due: at(HOLD) });
     expect((await s.entries(7)).map((e) => [e.time, e.input.type === "act" ? "act" : e.input])).toEqual([[at(HOLD), timed(low!)], [at(HOLD), timed(high!)], [at(HOLD), "act"]]);
@@ -364,18 +377,22 @@ describe("the budget of timed attempts, here 2 for a turn (section 5.2, step 7)"
     { due: 1, answer: "accepted", written: 1, left: 0 },
     { due: 2, answer: "accepted", written: 2, left: 0 },
     { due: 3, answer: "busy", written: 2, left: 1 },
-  ])("$due due: $written timed entries are written, $left stays due, and the waiting act is $answer", async ({ due, answer, written, left }) => {
+  ])("$due due: the alarm writes $written timed entries, $left stays due, and the waiting act is $answer", async ({ due, answer, written, left }) => {
     const s = await create(budget);
     await s.holds(due);
     const head = (await s.head()).seq;
     s.c.clock.now = at(HOLD);
     const remark = s.remark();
+    expect(await s.submit(remark)).toMatchObject({ answer: "unavailable", reason: "busy" });
+    expect((await s.head()).seq).toBe(head);
+    await s.alarm();
     const answered = await s.submit(remark);
     expect(answered.answer === "unavailable" ? answered.reason : answered.answer).toBe(answer);
     expect([(await s.head()).seq, await s.count("hold", "ended"), await s.count("hold", "held")]).toEqual([head + written + (answer === "accepted" ? 1 : 0), written, left]);
     if (answer !== "busy") return;
     // The timed entries are kept and the alarm is set again, a retry delay ahead. The act's key was not consumed: sent again, it follows the last expiry.
     expect(await s.alarmAt()).toBe(timeMs(at(HOLD + PROPOSED_BOUNDS.drainRetrySeconds)));
+    await s.alarm();
     expect(await s.submit(remark)).toMatchObject({ answer: "accepted", receipt: { fact: { seq: head + due + 1 } } });
   });
 
@@ -387,8 +404,15 @@ describe("the budget of timed attempts, here 2 for a turn (section 5.2, step 7)"
     const remark = s.remark();
     // Two selections and their two commits. The entry before is earlier than both readings, so the clock is not behind.
     s.c.clock.script.push(at(HOLD), at(HOLD - 1), at(HOLD), at(HOLD - 1));
-    expect([await s.submit(remark), s.c.clock.script, await s.head()]).toEqual([{ answer: "unavailable", reason: "busy" }, [], head]);
-    // The hold is still due and the key is not consumed. A turn whose readings are all the deadline writes the expiry, then the act.
+    const ended = await s.inside(async state => {
+      const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+      const wakes = new Wakes(store, { set: time => time === null ? state.storage.deleteAlarm() : state.storage.setAlarm(timeMs(time)!) }, false);
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, s.c.bounds, () => definition, () => undefined);
+      return turns.run(null);
+    });
+    expect([ended, s.c.clock.script, await s.head()]).toEqual([{ end: "busy" }, [], head]);
+    // The alarm can now write the expiry; the waiting act has consumed no key.
+    await s.alarm();
     expect(await s.submit(remark)).toMatchObject({ answer: "accepted", receipt: { fact: { seq: head.seq + 2 } } });
   });
 
@@ -398,10 +422,12 @@ describe("the budget of timed attempts, here 2 for a turn (section 5.2, step 7)"
     const head = await s.head();
     s.c.clock.now = at(HOLD - 1);
     const remark = s.remark();
-    // Twice: step 3 reads before the deadline and finds nothing due, and the commit reads the deadline and stops.
-    s.c.clock.script.push(at(HOLD - 1), at(HOLD), at(HOLD - 1), at(HOLD));
+    // The early standing check reads first, then twice: selection precedes
+    // the deadline while the commit finds the hold due. No request drains.
+    s.c.clock.script.push(at(HOLD - 1), at(HOLD - 1), at(HOLD), at(HOLD - 1), at(HOLD));
     expect([await s.submit(remark), s.c.clock.script, await s.head()]).toEqual([{ answer: "unavailable", reason: "busy" }, [], head]);
     s.c.clock.now = at(HOLD);
+    await s.alarm();
     expect(await s.submit(remark)).toMatchObject({ answer: "accepted", receipt: { fact: { seq: head.seq + 2 } } });
   });
 

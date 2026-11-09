@@ -1,0 +1,72 @@
+# Read authority before receiver work and drain timers only from alarms
+
+Request `03e5f6d7`; promise `8787bceb`; source starts at main `29926a3a`.
+This is source preparation while the JSON gate owns the local validation
+slot. No compiler, test, control, seal producer or gate has run for R3.
+
+An ordinary act whose held observation already denies its grant now
+returns `unauthorized` before application provenance, receiver policy,
+foreign facts or a queued turn. Signature and shape checks still come first.
+Native grant marks keep their own fallback, including recovery-key and
+action-null rules. No successful act relies on the early check alone:
+the commit still checks authority, revisions, time and current application
+admission. A key accepted during the asynchronous standing read retains its
+historical receipt or mismatch path.
+
+Only `Turns.run(null)`, called by the native alarm, drains timed work.
+A waiting input does not pass a due transition: it waits with `busy`, and
+its exact retry can follow the alarm's timed entries. A backward clock
+still refuses a due waiting input without writing. Alarm budgets, item
+ordering, entry meanings and every existing definition pin stay intact.
+
+The remote authority run admits at most 4,096 distinct signing keys.
+A bounded key set covers ordinary, once-only and discarded observations,
+so neither the kept-observation nor retained-head map grows by cycling
+those forms. A new key at the bound gets the private port answer `limit`
+before a Membership read. Core maps that answer to the existing `limit`
+refusal for an act or preparation. Existing keys remain usable. A new
+object run starts with no cached keys or observations. Own-Membership
+standing uses no remote observation map and keeps its existing rules.
+
+## Witnesses and validation due
+
+The new Native order witness uses real ScopeObject, SQLite, a real foreign
+entry and a timed alarm. Its Membership and release-admission ports are
+labelled stand-ins. It checks zero provenance, receiver and foreign reads
+and no new entry on a failed observation. An authorized input reaches those
+boundaries but leaves due timers unchanged until the alarm; its retry then
+writes the act. The actual receiver-policy method is instrumented, with a
+positive call to distinguish an unused counter.
+
+The authority owner adds one pure budget witness using synthetic key IDs
+below signature admission. It admits the real 4,096-key limit once,
+refuses key 4,097 before a read, retains ordinary reuse and once-only reads
+of existing keys, and permits that new key in a new run. The Core witness
+covers the signed-input boundary separately.
+
+The complete turn owner keeps its alarm budget, clock, timed ordering,
+listener and restart assertions. Its application-admission race now
+withdraws trust during an asynchronous foreign read after early standing,
+so it still distinguishes the final commit check. Existing Membership and
+creation owners must retain recovery-key and action-null witnesses.
+
+Focused compiler contexts, complete owners, meaningful controls, source
+seals and one final gate all remain due. No runtime result is claimed by
+this preparation. R3 follows the security documentation landing; its final
+head must include that landing and update D6's queued-R3 wording.
+
+## Kernel filing and deployment
+
+This is the filed R3 security remediation under
+[Kernel section 7.1](../../docs/kernel.md#71-filing-while-parts-fail-the-test).
+It adds no kernel package, export, scope kind, platform name, capability,
+record field, reason code or tool family. It changes the runtime's order
+before recording, not a recorded entry's judgment or replay meaning. A
+platform service or application guard cannot stop reads that the native
+runtime performs before reaching it. The exact-head review must assess
+that boundary and cite section 7.
+
+This head introduces no environment setting or redeploy step beyond the
+reviewed code deployment. The planner owns deployment. The generic runtime
+behavior applies to existing pins; it creates no new cohort. Earlier
+review or hosted evidence establishes no result for this head.
