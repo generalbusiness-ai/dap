@@ -27,6 +27,7 @@ import { MCP_METRIC_SCHEMA, type McpMetricPoint } from "../src/metrics.ts";
 import { OAUTH_STANDING_MS, type OAuthAccessGrant } from "../src/oauth-access.ts";
 import { ROW_OVERHEAD } from "../src/hosted.ts";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
+import { sqliteStore, type Sql } from "../src/sqlite-custody.ts";
 
 /** Production default dispatch, in this isolate. The actual native PLATFORM namespace is this fixture's Scope binding;
  * REGISTRIES and AGENTS keep their existing native subclasses, clocks, custody and control fences. */
@@ -1857,6 +1858,13 @@ test("retire erases the seed before an uncertain revoke, retries only its retain
     const before = (await D.entries()).find(entry => entry.input.type === "act" && entry.input.signed.intent.actor === bot.key);
     expect(before?.input.type).toBe("act");
     if (!before || before.input.type !== "act") throw new Error("The agent's original signed act is missing.");
+    const original = await runInDurableObject(object, async (_instance, state) => {
+      const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
+      const kept = sql.exec("SELECT id FROM record WHERE key = ?", "TEST-retire-before").toArray()[0];
+      return kept ? (await sqliteStore(sql).read(String(kept["id"])))?.envelope ?? null : null;
+    });
+    expect(original?.signed).toEqual(before.input.signed);
+    if (!original) throw new Error("The original custody envelope is missing.");
     const items = await allItems(rita, "membership");
     const key = items.find(item => item.type === "key" && item.values["id"] === bot.key)!;
     const expected = { on: key.revision, roster: items.find(item => item.type === "roster")!.revision, member: items.find(item => item.type === "member" && item.values["handle"] === "@retire-admin")!.revision };
@@ -1887,7 +1895,7 @@ test("retire erases the seed before an uncertain revoke, retries only its retain
     // lifetime of grants another scope already holds does not change here.
     await D.restart();
     const after = signIntent({ ...before.input.signed.intent, idempotencyKey: "TEST-after-retire", notAfter: timeOf(room.now() + 60_000) }, seed);
-    expect(await D.stub.submit(after, [])).toMatchObject({ answer: "refused", reason: "unauthorized" });
+    expect(await D.stub.submit(after, [], original.beside)).toMatchObject({ answer: "refused", reason: "unauthorized" });
     expect((await modernCall(bot.bearer, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "TEST forbidden", conditions: ["done"] }, idempotencyKey: "TEST-after-endpoint-retire" })).status).toBe(401);
     const source = httpSource(SERVICE, { fetch: room.fetch, reader: signedLogReader(secretSigner(rita.secret), { now: room.now }) });
     const replayed = await room.wait(() => verify(source, { mode: "replay", scope: M.scope, platform, grants: "proven" }));

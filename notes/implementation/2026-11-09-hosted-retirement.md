@@ -4,14 +4,15 @@ Request: `b66b8f146a9813628e0325374f551ae22d77284f`.
 Promise: `0875dbf1182ef1ce98fa6119a6c2de06e3a2383b`.
 Current ruling: `e2fc59d54f6e920cedd9e4efa1fc3e2033d53d70`.
 
-Status: the third focused unit at `58d65173` passed both affected compilers.
-Its complete 24-case hosted owner reports 22 passed, one failed probe, and
-one pending case after bail, with exact static coverage and no unhandled
-errors. Admin retirement now completes its recorded revoke; the probe then
-used a live-item helper for the retired key. This repair reads membership's
-recorded key standing instead. All three failed units remain failed. Four
-other complete owners reconcile 15 passed cases without a rerun. Production
-and source seals stay equal to `172ca878`. The whole hosted-owner follow-up,
+Status: the fourth focused unit at `5fd0601b` passed both affected compilers.
+The complete 24-case hosted owner reports 22 passed, one failed direct-act
+witness, and one pending case, with exact static coverage and no unhandled
+errors. Retirement and recorded key standing pass. The direct signed act
+omitted its retained sidecar and therefore failed field validation first.
+This repair supplies the exact original custody sidecar and keeps the
+revoked-key assertion. All four failed units remain failed. Four other
+complete owners reconcile 15 passed cases without a rerun. Production and
+source seals stay equal to `172ca878`. The whole hosted-owner follow-up,
 meaningful control, gate, and review remain due.
 
 ## Endpoint shutdown and the recorded end
@@ -103,6 +104,7 @@ on an R13 test result.
 | First focused, `40ab4e2d` | Compatibility and Node 11 passed; Scope source failed `TS2741`; remaining compilers and application tests unrun | [manifest](evidence/2026-11-09-r15-failed-source-compiler.manifest.json) `cb6df4d892e872c6b3c55534b3e8dc2e023d1590f46289af65c8263e9fa59703` |
 | Decoder follow-up, `172ca878` | Node 11 and three compilers passed. Body exit 1: 39 collected, 37 passed, one failed witness and one pending. Original static ledger also failed. Qualified reconciliation: four complete passed owners, 15 cases | [manifest](evidence/2026-11-09-r15-failed-revoke-witness.manifest.json) `a0c4bfee5e081f0e218c5b02284a4ceb9954e098a2bafb908e45d6de4923d8dd` |
 | Final-key probe, `58d65173` | Both affected compilers passed. Body exit 1: 22 passed, one probe failure, one pending; exact 24-case ledger, no unhandled errors. Retire itself completed before the probe failed | [manifest](evidence/2026-11-09-r15-failed-final-key-probe.manifest.json) `7e629696462d4d65151505445ab9c3f6a3911802ea0e2596637885a09f5fe704` |
+| Direct sidecar, `5fd0601b` | Both affected compilers passed. Body exit 1: 22 passed, one direct-act field refusal, one pending; exact ledger and no unhandled errors. Missing original sidecar stopped the witness before authority | [manifest](evidence/2026-11-09-r15-failed-direct-sidecar.manifest.json) `a36f1ec12fbae56f64ac34a2b9f3f248e620d4a612d146910b5b7846f42cbb62` |
 
 ## Deployment
 
