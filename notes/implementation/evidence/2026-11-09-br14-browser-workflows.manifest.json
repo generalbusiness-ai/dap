@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "request": "c7853c217edb64ea06cfaecd4e458a7ba514b8ef",
+  "promise": "1d4473a5442653a9654cac557f9c09e7ad1b694f",
+  "sourceHead": "2ca326b5942b073575e7198a77aaa9882a37bf35",
+  "sourceTree": "eb6947de93a7e9a9e18b14ba2f10f694774bff62",
+  "qualification": "Page42680761832 reports success and Card42680775846 reports failure at exact2ca326b5. Read-only terminal CI job/step capture; no new run, local browser, provider, deployment or localgate result.",
+  "fileCount": 12,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br14-browser-workflows",
+      "fileCount": 12,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 862,
+          "sha256": "b8d3e164e485ed9da3df7f6732565965b3b63ba28df1bb5e1afca84e2abfe5f4"
+        },
+        {
+          "path": "card-failed-job.log",
+          "bytes": 2647,
+          "sha256": "5e7dfa790b241b839fa778ea4fd25b1843f0df0b3b4f6015a8338cf75d933ff5"
+        },
+        {
+          "path": "card.argv.json",
+          "bytes": 110,
+          "sha256": "2b73c6c4f13c887bd69111171af3bff52bc109debb24c71fc4b706c5fc7f5678"
+        },
+        {
+          "path": "card.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "card.json",
+          "bytes": 2827,
+          "sha256": "8eadddc5b48b76e445010749e1ea21fae73263dd863c509090ed5ece204703a6"
+        },
+        {
+          "path": "card.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 4032,
+          "sha256": "44998ace7de9cb99cd1630fbfbb13f28176170a1c3186cb306c3043687737381"
+        },
+        {
+          "path": "page.argv.json",
+          "bytes": 110,
+          "sha256": "edb724ac5f7900eb88fc9ef2159807d5fa649fc1fd9abc6a2a3b2ea8c52101ba"
+        },
+        {
+          "path": "page.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "page.json",
+          "bytes": 2606,
+          "sha256": "12aebe5febc6fe98a2c6c7af47f49828eaa2e3c3b7efc123e7b0d45a792cb238"
+        },
+        {
+          "path": "page.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "result.json",
+          "bytes": 6155,
+          "sha256": "923caf46373374c98df21091c16f84e04c638c894f164689aefc6e86efaf27a5"
+        }
+      ]
+    }
+  ]
+}

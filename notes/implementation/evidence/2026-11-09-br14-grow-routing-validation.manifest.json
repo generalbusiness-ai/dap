@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "request": "c7853c217edb64ea06cfaecd4e458a7ba514b8ef",
+  "promise": "1d4473a5442653a9654cac557f9c09e7ad1b694f",
+  "sourceHead": "2ca326b5942b073575e7198a77aaa9882a37bf35",
+  "sourceTree": "eb6947de93a7e9a9e18b14ba2f10f694774bff62",
+  "qualification": "One unchanged local Grow-routing owner passed0 at both320and592 with pinned browser tools. CI timeout remains unexplained. No source repair or finalgate/CI pass claimed.",
+  "fileCount": 26,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br14-grow-routing-validation",
+      "fileCount": 26,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2043,
+          "sha256": "ab7324b720414a9e445183ceff91992c6ce4736958d345f634dc38ea36d3a227"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 6200,
+          "sha256": "e5b032e6498fcddc74ac6d214b3850c81268e5866ac349ef7ffec06ed53255cb"
+        },
+        {
+          "path": "operator-320.png",
+          "bytes": 37553,
+          "sha256": "8cb7e7808c82c5322fcd202d7e4d90bcbdd0a6e5dae1cb3c8d13ae9226f990a9"
+        },
+        {
+          "path": "operator-592.png",
+          "bytes": 40183,
+          "sha256": "a5abbac9fad6dd2e4a4248d3f5c090319fdf05382a427fa90d05419633c38ba7"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 31,
+          "sha256": "a8fbf27b7b7fcaf4086530efeb6011bdaa3bb69327b225cc8403e0b6a8a2426d"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 447,
+          "sha256": "054643d841481f78e3eda799b4cb7f143fa85044f25b631fc26921b9e672df44"
+        },
+        {
+          "path": "qualification.txt",
+          "bytes": 557,
+          "sha256": "eb1c10285a3c5f242b43e1c3ecb920be08897ec24192ff1e299f8a1c39730d8c"
+        },
+        {
+          "path": "report.json",
+          "bytes": 1646,
+          "sha256": "8c3d5efbc6c60590d60a2f9bfb218dd76fcc7b18d6b02bbda6761a878c76a9e7"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1760,
+          "sha256": "52df3104b2b17894580e6b684fb1b2e7ca9208d1a20f0af2b4a3b19c87b145d8"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 190,
+          "sha256": "db00b80b265a5e1a99fbd76207c20937fc9bc13ac18dae3891e6ec9595d18668"
+        },
+        {
+          "path": "started.json",
+          "bytes": 86,
+          "sha256": "c7c26bbcfebcba79c1ac00d06cfa1a78fbaf255dd5d497256a137fe4383b8e25"
+        },
+        {
+          "path": "stderr",
+          "bytes": 190,
+          "sha256": "647600db40eb397dcfcb92197d43e75f4516451ea1fb7398124eb7ad59417b19"
+        },
+        {
+          "path": "stdout",
+          "bytes": 1184,
+          "sha256": "d123210c8d1ad057a9dd1f8a75534ab089c0e51e3240fe211ac8e8aee67a1e6f"
+        },
+        {
+          "path": "task-320.png",
+          "bytes": 21361,
+          "sha256": "0543e838c1ff4b259b2a82647a3cce84da45af79f23cd5176b199a3554cffaba"
+        },
+        {
+          "path": "task-592.png",
+          "bytes": 23145,
+          "sha256": "819fbe0fc96132f6dd8ebab54cc0a95de44b3978dbef21b42b40df0b15994b78"
+        },
+        {
+          "path": "task-complete-320.png",
+          "bytes": 21302,
+          "sha256": "24f0ab72ca52357c10abf7bf2786982f94ca4c5065d91e4452b579720e89eb09"
+        },
+        {
+          "path": "task-complete-592.png",
+          "bytes": 22573,
+          "sha256": "e61f3836e75b02883fce7dddaee63299a9a40d93e465c310704657a4e31bac9a"
+        },
+        {
+          "path": "task.json",
+          "bytes": 1297,
+          "sha256": "fe52c562fc13019e3a999807bca2b91294509b599b9e6b65ca314a42250e3d2f"
+        },
+        {
+          "path": "unavailable-320.png",
+          "bytes": 60841,
+          "sha256": "dc914e634543c40029bed6e51ba6f2470d67c70124f67ef2ba53b1d88bc4305a"
+        },
+        {
+          "path": "unavailable-592.png",
+          "bytes": 60603,
+          "sha256": "743f001ed0c615a395b78980eafde5111269c093fefac9a7b0b407dca167b9ee"
+        },
+        {
+          "path": "watering-320.png",
+          "bytes": 23833,
+          "sha256": "a004664c9b9844cebcc47d4c594a2d401d16593db3c689765074e0a14abd239d"
+        },
+        {
+          "path": "watering-592.png",
+          "bytes": 25901,
+          "sha256": "51250af4d9671b7900638c3a43de7307cd6f421ad7d2df6636070ae0b115c60b"
+        },
+        {
+          "path": "watering-complete-320.png",
+          "bytes": 21723,
+          "sha256": "428d89afb2305a577bb701dcdcee5a63c1da410b2023cd3de00ad45d27d4bbba"
+        },
+        {
+          "path": "watering-complete-592.png",
+          "bytes": 23058,
+          "sha256": "c3e717cf4173a41363ebdae810abc408d3c3ae177128648ba07008af288e397f"
+        }
+      ]
+    }
+  ]
+}

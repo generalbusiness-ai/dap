@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "request": "c7853c217edb64ea06cfaecd4e458a7ba514b8ef",
+  "promise": "1d4473a5442653a9654cac557f9c09e7ad1b694f",
+  "sourceHead": "2ca326b5942b073575e7198a77aaa9882a37bf35",
+  "sourceTree": "eb6947de93a7e9a9e18b14ba2f10f694774bff62",
+  "qualification": "BR14 first final gate remains FAILED at exact2ca326b594/treeeb6947de. Its actual exit was read before analysis. Every original output, failed case and unrun obligation stays retained. This seal performs no test, source repair, second gate, deployment or live acceptance. Any continuation needs the planner to rule on scope because the first final gate has already run; the two failing settings cases share one moved-reader documentation cause.",
+  "fileCount": 19,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br14-failed-gate-validation",
+      "fileCount": 19,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1476,
+          "sha256": "d4caaea6b4f66cf9653a4dd64396523a419bc88043b76716766a87a189e76e55"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1965,
+          "sha256": "90b9b24a0c231416bf57216c81a11ebf4e81915044b3c502c9968671de8aa388"
+        },
+        {
+          "path": "analysis-v2-driver.mjs",
+          "bytes": 2020,
+          "sha256": "6636805c35d335b9da25f1a65a0cf83ad5faae9d47f3dde8382449d726996e3b"
+        },
+        {
+          "path": "analysis-v2.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis-v2.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 766,
+          "sha256": "c0b2e0c66b04cf37d9574f8f15d530163f57df569a5ebc48919a2d585fb51cc9"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 5528,
+          "sha256": "00166c46d9c4ca2f0185e4ae8604e0e1a0e1ee363ee0f844ceedbb963f7f9e80"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7342,
+          "sha256": "1c7aba552533b69fff9b4c61b837545410d2dcd0c86ed319188106d75ed4303c"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 33,
+          "sha256": "d3891553c56bdf0de4d5b1884f410e66ec57afc846bcde8e151aefaa6cf11d7b"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 506,
+          "sha256": "b907ca07a6212a4b3c848d67fbc5c5d01dc3d266b099e981161c49b4199909bf"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 532,
+          "sha256": "12292a93ca742ddd5eff18b067d953ae96c2444e7f6dab5774b27b6fd31fa098"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 4958,
+          "sha256": "9443399dcd206b90fdc7e0dc0c565c789f3cf9223e8abd9d7fa799c0bdbe5dab"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "c38f9cdd356a1e38b25d87eb750f9bb95da21a63e396a3b0c3d06bf08550137e"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 2275,
+          "sha256": "71c2a112b9743ca7686d886971149c45be3e0502e85558d8979f840f575d4df7"
+        },
+        {
+          "path": "started.json",
+          "bytes": 714,
+          "sha256": "1b273265af5dc816b7d82ef9e2ad46254b1bd838e9548b977919bd9494a22fac"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 7715,
+          "sha256": "5f2803f39d196a619d0d2cea48dc62a9c6d615b49b3b51cc2deb510308dc90cc"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 562,
+          "sha256": "5e4e5627376c32459755dc9b86245b9023ea5bc60c99d322339ae5fb7d1001b6"
+        }
+      ]
+    }
+  ]
+}

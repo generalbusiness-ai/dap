@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "request": "c7853c217edb64ea06cfaecd4e458a7ba514b8ef",
+  "promise": "1d4473a5442653a9654cac557f9c09e7ad1b694f",
+  "sourceHead": "d0b362adab7823fb6c72fb805dc3b9daef7110b0",
+  "sourceTree": "36d92484cf069908481d17cfe5938eb674b2e3ff",
+  "qualification": "Card42686766157 reports success at the exact docs-corrected gate head. Original Card timeout remains unexplained and retained. Read-only capture of existing job/step evidence, no new run or live claim.",
+  "fileCount": 7,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br14-final-card",
+      "fileCount": 7,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 465,
+          "sha256": "87d1295c1516e9d0d1c76eca0037b95e5038b7fe2507776e682501b1c2b7c281"
+        },
+        {
+          "path": "card.argv.json",
+          "bytes": 110,
+          "sha256": "51ef4b20b2bf94f2d19c11f9521f0741437e43db9b46f61bfa434741780e6159"
+        },
+        {
+          "path": "card.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "card.json",
+          "bytes": 2827,
+          "sha256": "29cc6263819daa4574bd1259624d1e8b317221e7122b4cbd242e2475ab9d6a04"
+        },
+        {
+          "path": "card.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 3261,
+          "sha256": "9bca3abcb3fd899d0c7ab788e22b16ceee19ac0957e822ebea0c7e24c26f5a00"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1057,
+          "sha256": "bfbdd2f3e56b87a3f76d94bd23150acd9958dfe25eca5644bbb86054bcb90f90"
+        }
+      ]
+    }
+  ]
+}
