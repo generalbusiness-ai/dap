@@ -7,7 +7,7 @@
  * inspection of those objects. For its push it builds the same objects again, with
  * the time of the entry that reserved it, and sends them with the base's closure.
  * Every provider sends them the same way. */
-import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldValue, KeyId, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldValue, KeyId, ObservedScope, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, b64url, entryHash, isEntry, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, valueDigest, type Item, type Operation, type Own } from "@generalbusiness/dap-derive";
 import { isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
@@ -24,6 +24,11 @@ import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
 import type { Sealed } from "./store.ts";
 import { inspectGit } from "./github-host.ts";
 import { readStageSnapshot } from "./stage-snapshot.ts";
+import { publicationExtents, publicationRefusal, type PublicationRefusal } from "./publication-policy.ts";
+import { DESTINATION_CHANGED_SET, destinationRulesScope, isJudgeChanges } from "@generalbusiness/dap-platform";
+
+/** Host diagnostics stay outside the historical Native evidence body. */
+export type DestinationAnswer = EffectAnswer & { refusal?: PublicationRefusal };
 
 export interface DestinationRepository { host: string; namespace: string; name: string; id: string }
 export interface DestinationBinding { scope: ScopeRef; mint: OperationId; attempt: number; write: OperationId; writeAttempt: number; ref: string }
@@ -62,8 +67,8 @@ export interface SnapshotReader {
   source?(fact: FactRef): Promise<Sealed | null>;
   /** Exact current declared source item, not a scan or a replacement for its immutable fact. */
   sourceState?(fact: FactRef): Promise<string | null>;
-  /** Fresh authenticated Rules observation; required only for room stage reads. */
-  rules?(rules: ScopeRef): Promise<unknown>;
+  /** Fresh authenticated Rules observation with its exact retained extent value. */
+  rules?(rules: ObservedScope): Promise<unknown>;
 }
 export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "putRead" | "putReadReply" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take" | "named" | "readTokens"> }
 
@@ -159,7 +164,7 @@ export class DestinationHost implements Outside {
     return { answers, more: (revocations.more && revocations.items.length > 0) || (page.more && page.items.length > 0) };
   }
 
-  async send(request: EffectRequest): Promise<EffectAnswer | null> {
+  async send(request: EffectRequest): Promise<DestinationAnswer | null> {
     try {
       const context = this.#bound(request);
       if (!context) return null;
@@ -544,7 +549,7 @@ export class DestinationHost implements Outside {
   async #seen(repository: DestinationRepository, ref: string): Promise<string> {
     try { const seen = await this.#options.provider.ref(repository, ref); return seen === null ? "absent" : objectId(seen) ? seen : "failed"; } catch { return "failed"; }
   }
-  async #write(request: EffectRequest, write: Operation, repository: DestinationRepository, branchRef: string): Promise<EffectAnswer | null> {
+  async #write(request: EffectRequest, write: Operation, repository: DestinationRepository, branchRef: string): Promise<DestinationAnswer | null> {
     const state = this.#given.state;
     const own = this.#given.own;
     const binding = this.#binding(request, write, request.attempt, branchRef);
@@ -643,6 +648,15 @@ export class DestinationHost implements Outside {
       const held = this.#options.custody.live(binding.mint, 1, this.#given.clock.read());
       return destinationSends(state, own, write, request.attempt) && (target?.type !== "file-publication" || filePublicationCurrent(state, target)) && held?.id === credential.id && held?.plaintext === credential.plaintext;
     };
+    if (target?.type === "file-publication") {
+      if (!objectId(old) || !objectId(expectedTree) || typeof target.values["path"] !== "string") return null;
+      const policy = await this.#publicationPolicy(repository, binding.ref, old, commit, expectedTree, objects, target.values["path"]);
+      if (!policy) return null;
+      if (policy.refusal) return { ...answer("refused", { send: "not-sent", seen: await this.#seen(repository, binding.ref) }), refusal: policy.refusal };
+      // The authenticated policy read yields. Recheck this exact source and
+      // private credential before any provider call can forward the push.
+      if (!allowed()) return null;
+    }
     const reply = members(await this.#options.provider.send({ repository, ref: binding.ref, old, commit, objects, ...(expectedTree === undefined ? {} : { expectedTree }), ...(request.sentAt === undefined ? {} : { sentAt: request.sentAt }), requireParentless, token: live.plaintext!, binding, allowed }), ["send"]);
     const sent = reply?.["send"];
     if (sent !== "accepted" && sent !== "refused" && sent !== "not-sent") return null;
@@ -654,6 +668,28 @@ export class DestinationHost implements Outside {
       return answer(sent === "accepted" ? "confirmed" : "refused", { send: sent, seen, tree });
     }
     return answer(sent === "accepted" ? "confirmed" : "refused", { send: sent, seen: await this.#seen(repository, binding.ref) });
+  }
+
+  /** This host guard offers no policy evidence to a pinned judge. */
+  async #publicationPolicy(repository: DestinationRepository, ref: string, base: string, commit: string, tree: string, objects: readonly DestinationObject[], path: string): Promise<{ refusal: PublicationRefusal | null } | null> {
+    const held = new Map(objects.map(object => [object.id, object]));
+    const source: GitSource = {
+      object: async id => { const object = held.get(id); return object ? { type: object.kind, size: object.body.length, data: new Uint8Array(object.body) } : null; },
+      ref: async name => name === ref ? base : null,
+      refs: async () => { throw new GitRefusal("unreadable", "a publication policy lists no refs"); },
+    };
+    const inspected = await inspectGit(new Reader(source, READ_BOUNDS), { repository, ref, recorded: base, base, integration: commit, tree, reports: [] });
+    const changes = inspected.retain?.find(value => value.kind === "value" && value.domain === DESTINATION_CHANGED_SET.domain && value.digest === inspected.evidence.changes);
+    if (!changes || changes.bytes.length > DESTINATION_CHANGED_SET.max) return null;
+    const parsed: unknown = parseStrict(changes.bytes);
+    if (!isJudgeChanges(parsed) || canonicalize(parsed) !== changes.bytes || valueDigest(DESTINATION_CHANGED_SET.domain, parsed) !== changes.digest) return null;
+    const fixed = publicationRefusal(path, parsed, []);
+    if (fixed) return { refusal: fixed };
+    const rules = destinationRulesScope(this.#given.state), read = this.#options.snapshotReader?.rules;
+    if (!rules || !read) return null;
+    const of: ObservedScope = rules.inc === null ? { scope: rules.scope, kind: rules.kind } : { ...rules, inc: rules.inc };
+    const extents = publicationExtents(await read(of), rules);
+    return extents ? { refusal: publicationRefusal(path, parsed, extents) } : null;
   }
 
   #readRef(read: Operation, branchRef: string): string | null {
