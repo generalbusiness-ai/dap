@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import { answersCatalogVocabularyQuestion, CATALOG_VOCABULARY_QUESTIONS } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import { answersVersionQuestion, VERSION_QUESTIONS, type VersionQuestion } from "../src/version-questions.ts";
 import { VERSIONS } from "../src/native-catalog.ts";
+import { isStandingDestination, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "../src/versions.ts";
 
 /** Copied unchanged from the pre-edit source inventory, before the new table. */
 const frozen = JSON.parse(readFileSync(new URL("./fixtures/version-questions-86179b0c.json", import.meta.url), "utf8")) as {
@@ -26,10 +27,13 @@ test.each(frozen.rows)("the independent old-list answers hold for $pin", row => 
   for (const question of frozen.questions.map(value => value.name as VersionQuestion)) {
     expect(answersVersionQuestion(row.pin, question), `${question}: ${row.pin}`).toBe(row.answers[question]);
   }
+  expect(usesStagedPublicationProtocol(row.pin)).toBe(row.answers["nativeStagedPublication"]);
+  expect(usesFilePublicationProtocol(row.pin)).toBe(row.answers["nativeFilePublication"]);
 });
 
 test.each(standing.rows)("the separately frozen standing answer holds for $pin", row => {
   expect(answersVersionQuestion(row.pin, "nativeStandingDestination")).toBe(row.answer);
+  expect(isStandingDestination(row.pin)).toBe(row.answer);
 });
 
 test.each(frozen.rows)("the lower-layer vocabulary keeps the old answers for $pin", row => {
@@ -38,7 +42,11 @@ test.each(frozen.rows)("the lower-layer vocabulary keeps the old answers for $pi
   }
 });
 
-test.each([undefined, null, false, 0, {}, []])("non-pin inputs answer false: %j", named => {
+test.each([
+  { label: "undefined", named: undefined }, { label: "null", named: null },
+  { label: "false", named: false }, { label: "zero", named: 0 },
+  { label: "record", named: {} }, { label: "array", named: [] },
+])("non-pin inputs answer false: $label", ({ named }) => {
   for (const question of VERSION_QUESTIONS) expect(answersVersionQuestion(named, question)).toBe(false);
 });
 
