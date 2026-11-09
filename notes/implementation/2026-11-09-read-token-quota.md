@@ -169,6 +169,14 @@ contexts through this pass and the qualified unchanged-source evidence
 above. All eight earlier failed units keep their results. Controls, the
 Page bundle and asset check, the gate, and independent review remain due.
 
+The named Native control at `00239447` disabled only Core's limit-return
+branch. Both unchanged quota cases then failed at their ninth-limit
+assertions, with no skipped, pending, or unhandled error. The actual body
+exit was 1 and the control verifier exit was 0. The driver restored every
+tracked byte before classification and reused the saved passing baseline.
+Manifest `28ff20678a22a4c201a1d42d1e7c3993d321d689043468b532d2da0b3dcdfb6a`
+seals 12 public and 265 private files. No baseline or restored run followed.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The

@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "00239447dda2a8946e19235d5dabea366c940491",
+  "sourceTree": "7619cf13ded68be21ee25ae7bd1c34cb2efc23ec",
+  "qualification": "One named native counterexample at the complete2case owner, saved exact passing baseline, original pool/setup/clock/assertions/deadlines. Both failures must hit the intended ninth-limit assertions with zero unhandled errors. Restore every tracked byte before classification; no baseline/restored rerun,compiler,gate or deployment. Actual ownerexit1/verifierexit0 read; both unchanged cases failed exactly at their ninth-limit assertions, no skips/pending/unhandled errors, all source bytes restored and group closed.",
+  "fileCount": 12,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-admission-control-validation",
+      "fileCount": 12,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 884,
+          "sha256": "5f54e4a6b6b3e3ed2c87106880451949c1833af5dbd88474be22315a0b217398"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 727,
+          "sha256": "087eb7e555d4a254211ce4e6af902751bc55945a393900af0cc225a2eb231778"
+        },
+        {
+          "path": "control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "control.time",
+          "bytes": 29,
+          "sha256": "c5c978dee819ce50f2b3ffccc1caccf7b80540c2634badbff9cac8534e862c8e"
+        },
+        {
+          "path": "coverage.jsonl",
+          "bytes": 4205,
+          "sha256": "808780fd9285b0949ed282d93ca05b8a1ae11449a286b8705b2d20083b437f9d"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7585,
+          "sha256": "4e0cbffb2853f5136b4f514aa030c979838383e0b79c8d27ba8f6e8f68adf30a"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 486,
+          "sha256": "caf3f2665ae0c79e47321da55d5522018192fa5b9d0c847e169f0f77f9b534a8"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1751,
+          "sha256": "62c1b0400467942794d208cecd5e7ce50eadb385be39518880797014641faf44"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 108,
+          "sha256": "dffd0173fc7f9e447bb7d387f6cd98bc6207c2bc7cb14236828639bf969944f3"
+        },
+        {
+          "path": "source-proof.json",
+          "bytes": 1226,
+          "sha256": "4a5702fc1943ee75af9016e54e03b6e9fea239c994592af3174a7f24ec90c288"
+        },
+        {
+          "path": "started.json",
+          "bytes": 88,
+          "sha256": "89f014553fe7ee487b64cf0f3169c21399ef65ce0213a8c363a7f0bd3a59837f"
+        },
+        {
+          "path": "verifier.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        }
+      ]
+    }
+  ]
+}
