@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "request": "b32c8fbd4d3510fd025cbc6b717b3df7cb09d754",
+  "promise": "e7fd9afbf1441866552fa43d7bb81e9b4db42fbf",
+  "sharedRequest": "02174ceb7fcaa0742f7a71cfac2c793b7a252819",
+  "sharedPromise": "7498ea3f880fa830607fa8b64131c9f0c6bb6f27",
+  "sharedGateRuling": "c5c241911c06e5c397b989f239c1ea1cff0a2004",
+  "qualification": "The maintained gate at 5364d494 ends with actual exit 0. Every stage passes, with skips explicit. All tracked inputs remain unchanged and the owned process group closes. The preflight and retained process samples use separate untruncated comm and args snapshots and find no other validation body; samples do not prove continuous isolation. Report analysis finds no contradiction, failed case, report error or unhandled error. The unknown or suite observations are Node file wrappers; one explicitly skipped recorder module has no observed duration. RoomOpening and BR-12 keep their own focused and control manifests. Seventeen retained full gates now contain fourteen archive passes and three Native-unreached failures, with no observed archive retry. Every failed gate stays failed and watch 64552d40 remains open. Sealing runs no tests. Independent review remains due. This evidence establishes no live acceptance or deployment. The first sealing attempt completed the raw seal but refused a stale output manifest path. A fresh public view preserves that failure and every original byte; no gate or analysis rerun.",
+  "sourceHead": "5364d4945d8255406521752aa1dd0f4eb95fecf4",
+  "sourceTree": "a4b838014a3d555d02e7d0970e8e9568f9cf24a1",
+  "fileCount": 22,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-room-br12-shared-gate-validation-v2",
+      "fileCount": 22,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1740,
+          "sha256": "9c49a8fedcf14a51163f55df3340e87e0aeb3367ac3613af32bd7ed9a0885d70"
+        },
+        {
+          "path": "after.json",
+          "bytes": 557332,
+          "sha256": "e30be1fdc58b3e94663de30a27f326197b0bc41b541475dcc938fb9836ab68a5"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1892,
+          "sha256": "5bf5b98dce31f5212b352b47a207e89c5b23946452807e76475744c97358a1a4"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "archive-watch-audit.json",
+          "bytes": 13612,
+          "sha256": "38a5f6cc6cf4f27f4a816d21c5056695a4ab9afd746375c8e7d96dac981a3ea2"
+        },
+        {
+          "path": "before.json",
+          "bytes": 557332,
+          "sha256": "e30be1fdc58b3e94663de30a27f326197b0bc41b541475dcc938fb9836ab68a5"
+        },
+        {
+          "path": "first-seal-SHA256SUMS",
+          "bytes": 1564,
+          "sha256": "cbcacd5d2e3f5b965a50df8afd0c2c2c5cbc35e525457d5fd2d89d9585b1c94d"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "7b22b4d34ce882f113886c8e0d8e3468c7fd49a1d225cb6b87040b1bf50a5de2"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8393,
+          "sha256": "0f6130803c014bedcb61e45561e05975c1bc2cd1e5714904af9e456f5e95e43c"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "4c67d3c3746258227be23b4aaca2bfaaf0ae457224f2541abed681fdbb370fab"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 170,
+          "sha256": "f4c7fc9cd908bf6d51900022d103c820ced4142bf21ed5b52a22f13b35acdeb4"
+        },
+        {
+          "path": "result.json",
+          "bytes": 3648,
+          "sha256": "b1b8b9660ca8c8393622cf53cdff679e51f832bcf0f52df9e05cf5106b7cd8ba"
+        },
+        {
+          "path": "sealing-attempts.json",
+          "bytes": 1648,
+          "sha256": "00635f463030216d9b8598ca8e8c84b4bdbe017e0dbbdb50c7b1b594917a31f0"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "756ea397ef082946f7318e6f90bdca7289ebe37fbaf501b47e5ea08bb922a217"
+        },
+        {
+          "path": "slot-observations.jsonl",
+          "bytes": 15528,
+          "sha256": "c336098ccb0983d7f89f7eceaf459e0a3b905eaf23187d56e58757c1775cd682"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 969,
+          "sha256": "8cd3a519041ab1ce177a5fe0999c1d5a8edef122c16e83e3ed566b638688b3b1"
+        },
+        {
+          "path": "started.json",
+          "bytes": 653,
+          "sha256": "2e6218c5d614ac644fc1909cf4a9c80ee10d67ae12e6764a9ec1cb129bab7191"
+        },
+        {
+          "path": "task.json",
+          "bytes": 1456,
+          "sha256": "974ab2e542cf33791b3c97a05acc6784ef4866bb783a89c20824d87720efb12c"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 586,
+          "sha256": "ec80f342c1e02be434d139251ac08da4cdab0d1c3a9bfe16672c2cce7029a631"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5864,
+          "sha256": "1a9d815c0c6c197fb8021d5588113b48d2f9302bc9f733ce0c43f8cfd0e18762"
+        }
+      ]
+    }
+  ]
+}
