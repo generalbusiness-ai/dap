@@ -26,9 +26,10 @@ import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/da
  *   head of membership. The observation of a ten-second kind serves the one
  *   commit it was read for, and is not kept.
  * - **An admitted key's revoked answer stays.** A revoked key that was
- *   never admitted uses a separate 4,096-entry FIFO. Eviction invalidates
- *   older standing handles, including reads still in flight. A later cache
- *   miss reads membership again; membership never reverses revocation.
+ *   never admitted uses a separate 4,096-entry FIFO. Eviction makes all
+ *   in-flight reads unanswered; callers retry. Admitted handles stay valid,
+ *   and denied handles require their exact FIFO record. A later cache miss
+ *   reads Membership again; Membership never reverses revocation.
  *
  * A read serves the act it was made for. What `read` returns is held by
  * that act's own call and by nothing else. The observation in it is of that
@@ -45,6 +46,7 @@ import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { COMMONS_COHORT, SIBLINGS_OF, UNPUBLISHED_COHORT, destinationBranch, unpublishedDestinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
 import type { Asked, Authority, Clock, Further, Random, Standing } from "./ports.ts";
 import type { SessionReading } from "./sessions.ts";
+import { ObservationCache, observationPayloadBytes } from "./observation-cache.ts";
 
 /**
  * One read of a membership scope: the standing of one key, answered from
@@ -116,7 +118,7 @@ interface Read { observation: Observation; n: number; last: Retains | null }
 /**
  * The authority port over reads of membership. Each call makes one run.
  */
-export function observing(config: Observing): Authority & { cacheCounts(): { admitted: number; kept: number; retained: number; denied: number } } {
+export function observing(config: Observing): Authority & { cacheCounts(): { admitted: number; kept: number; retained: number; denied: number }; reusableCounts(): { records: number; bytes: number } } {
   const run: RunId = hex(config.random.bytes(16));
   // `n` counts the reads of membership and of the rules scope with one counter (section 16.1): the read of a signer's key, below,
   // and each further read for a row of `observes` (`further`).
@@ -139,7 +141,7 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
    * The further observations that are kept for reuse, by the name of the subject of each: one for each, the one that was read last.
    * An observation that was read for a row which states `once` serves the one input that it was read for, and is not kept here.
    */
-  const reusable = new Map<string, Seen>();
+  const reusable = new ObservationCache<Seen>(4_096, 8 * 1_024 * 1_024, (name, seen) => observationPayloadBytes(name, run, seen));
 
   /**
    * One read of one subject (section 16.1, "The order before the turn", part 4). Null: no answer. That is so when the reader fails or
@@ -191,7 +193,10 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
     const mine = new Map<string, Seen>();
     const failed = new Set<string>();
     let closed = false;
-    const hand = (): Seen[] => [...mine.values(), ...[...reusable.entries()].flatMap(([name, seen]) => (mine.has(name) ? [] : [seen]))];
+    const hand = (): Seen[] => {
+      for (const [name, seen] of reusable.entries()) if (!mine.has(name)) mine.set(name, seen);
+      return [...mine.values()];
+    };
     return {
       async read(needed, seconds) {
         for (const want of needed) {
@@ -223,6 +228,7 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
           if (!seen) continue;
           // The last use of the read is this entry. A later entry retains it only as `reused`, on a reading later than this entry's time.
           seen.last = { entry: { seq: entry.seq, hash }, time: entry.time, observation: seen.observation as Observation };
+          reusable.refresh(observedName(seen.observation), seen);
           // An observation that was read for one commit has served it.
           if (reusable.get(observedName(seen.observation)) !== seen) mine.delete(observedName(seen.observation));
         }
@@ -233,6 +239,7 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
   return {
     // Internal signer-key memory counts, without key or observation data. No wire route.
     cacheCounts: () => ({ admitted: keys.size, kept: kept.size, retained: retained.size, denied: denied.size }),
+    reusableCounts: () => reusable.counts(),
     further,
     async read(asked: Asked, seconds: number): Promise<Standing | "limit" | null> {
       const { window, action, scope, scopeGrant } = asked;
@@ -301,6 +308,7 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
         if (!window.once) kept.set(key, prefer(kept.get(key) ?? null, mine));
       }
       const read = mine;
+      const deniedRead = keys.has(key) ? undefined : denied.get(key);
 
       /** The read that the latest judgment found current. The entry that is written retains that one. */
       let offered: Read | null = null;
@@ -310,7 +318,7 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
         membership: fixedBy(of, read.observation.of),
         held(view, clock) {
           offered = null;
-          if (spent || startedGeneration !== generation) return null;
+          if (spent || (deniedRead !== undefined && denied.get(key) !== deniedRead)) return null;
           // A `compromised` notice named this key: no new read token. The commit asks, so a notice that landed during the read counts, and
           // so does an observation that still shows the key active. Membership refuses the key by itself once that observation ends.
           if (asked.signed.intent.kind === "read-token" && config.named?.(key)) return [];
@@ -333,7 +341,7 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
           return [{ grant: result.grant, current: true }];
         },
         sealed({ entry, hash }: { entry: Entry; hash: Digest }) {
-          if (startedGeneration !== generation) return;
+          if (deniedRead !== undefined && denied.get(key) !== deniedRead) return;
           const used = offered;
           // An act and a preparation retain the one grant judged, in the same place (section 16.1, "Where one stands").
           const proof: unknown = entry.input.type === "act" || entry.input.type === "preparation" ? entry.input.authority[0]?.fresh : null;

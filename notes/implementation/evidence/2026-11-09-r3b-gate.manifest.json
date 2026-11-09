@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "request": "22b57b9e817a36bff25dcb3275a35a9807282123",
+  "promise": "26d847463c52af40d0acf925cfb2c90da4461cd9",
+  "qualification": "The first R3b final gate passed at the exact source checkpoint. Actual gate.exit, outer actualdriver.exit, launcher.exit and analysis.exit each read 0. The complete frozen obligation ledger reconciles 5362 passed cases and three explicit skips; all 108 top-level Node file-wrapper observations remain unknown. This proves no hosted deployment or live acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r3b-gate-validation",
+  "checkpoint": "1fe7b6cf4069820d4d4bb84d430d4a30a280fb32",
+  "tree": "96c9da026de06066e888ff495479375750d878b1",
+  "fileCount": 4,
+  "files": [
+    {
+      "path": "case-reconciliation.json",
+      "bytes": 2379672,
+      "sha256": "38d827475cac5d26dbd2ad301a287f8f91dfed7745aaf67cd51fc3f586f6dcae"
+    },
+    {
+      "path": "classification.json",
+      "bytes": 26128,
+      "sha256": "455b1efe9a6c3c263fa7f2e3f33b37aa94f4c49b6647360a7389923229d6bbcb"
+    },
+    {
+      "path": "private-retention.json",
+      "bytes": 1047,
+      "sha256": "a133ab5bef0eaf162f873b6d0799761ed5789eb09e755f9cc26b44418f29b06a"
+    },
+    {
+      "path": "raw-inputs.json",
+      "bytes": 41905,
+      "sha256": "63188d34946dccac855be6e32d9059566b75f63820b4e8ece6237032bcf9a4b9"
+    }
+  ]
+}
