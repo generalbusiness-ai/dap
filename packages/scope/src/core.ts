@@ -654,6 +654,9 @@ export class Scope {
             // outlived the configuration observed before the turn.
             const refusal = admissionRefusal(head);
             if (refusal) return said<Answer>(refusal);
+            const quota = this.#ports.readTokenAdmission?.check(view.scope()!.at, judged.draft, clock.reading);
+            if (quota === "limit") return said<Answer>({ answer: "refused", reason: "limit", judgedAt: head });
+            if (quota === "unavailable") return said<Answer>(unavailable("unavailable"));
             return {
               // Section 6.2, "Retention": each value that the entry names is kept with it, in the entry's own transaction.
               verdict: "write", draft: judged.draft, facts, retain: [...used(judged.draft, facts), ...texts.retain(definition, judged.draft), ...valuesOf(judged.draft)],
@@ -661,6 +664,7 @@ export class Scope {
               // transaction, which entry used it last (authority note, section 3.3, guard 3). A transaction that then does not commit
               // breaks the object, and what the port holds in memory is gone with it.
               sealed: (sealed) => {
+                this.#ports.readTokenAdmission?.sealed(sealed.entry);
                 if (standing) told(standing, sealed);
                 rows.sealed(sealed);
                 return { answer: "accepted", receipt: receiptOf(sealed, named) };

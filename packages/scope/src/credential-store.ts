@@ -15,6 +15,7 @@ import { canonicalize, entryHash, isEntry, isOperationId, isRecord, utf8 } from 
 import { timeMs, timeOf } from "@generalbusiness/dap-derive";
 import { isOf } from "@generalbusiness/dap-platform";
 import type { Entry } from "@generalbusiness/dap-contract";
+import { ReadTokenQuota } from "./read-token-quota.ts";
 
 export interface CredentialReply { id: string; ends: Timestamp }
 export interface CredentialPosition { mint: OperationId; attempt: number }
@@ -85,6 +86,7 @@ END;
 `;
 
 export class CredentialStore {
+  readonly readTokens: ReadTokenQuota;
   readonly #sql: Pick<Sql, "exec">;
   readonly #current: () => ScopeRef | null;
 
@@ -93,6 +95,7 @@ export class CredentialStore {
     this.#sql = sql;
     this.#current = current;
     sql.exec(SCHEMA).toArray();
+    this.readTokens = new ReadTokenQuota(sql, current);
   }
 
 
@@ -112,9 +115,11 @@ export class CredentialStore {
   /** Durable private scheduling, across every incarnation. No plaintext is selected. */
   expiryWake(now: Timestamp | (() => Timestamp)): Timestamp | null {
     const control = this.#sql.exec("SELECT done FROM private_credential_expiry_backfill WHERE singleton = 1").toArray()[0];
-    const next = control?.["done"] === 1
+    const custodyNext = control?.["done"] === 1
       ? this.#sql.exec("SELECT ends_ms FROM private_credential_expiry ORDER BY ends_ms, scope, id LIMIT 1").toArray()[0]?.["ends_ms"]
       : undefined;
+    const quotaNext = this.readTokens.nextExpiry();
+    const next = typeof custodyNext === "number" ? Math.min(custodyNext, quotaNext ?? Infinity) : quotaNext;
     // Quiet custody must not sample another owner's scripted or live clock.
     if (control?.["done"] === 1 && typeof next !== "number" && typeof now === "function") return null;
     const reading = typeof now === "function" ? now() : now;
@@ -153,6 +158,7 @@ export class CredentialStore {
       // Independent fixed quantum still runs if malformed backfill metadata refuses.
       // No provider secret crosses the SQL boundary.
       this.#sql.exec("UPDATE private_credential SET plaintext = NULL WHERE (scope,id) IN (SELECT scope,id FROM private_credential_expiry WHERE ends_ms <= ? AND EXISTS (SELECT 1 FROM private_read_credential AS r WHERE r.scope=private_credential_expiry.scope AND r.id=private_credential_expiry.id) ORDER BY ends_ms,scope,id LIMIT 64)", at).toArray();
+      this.readTokens.expire(now);
     }
   }
 
