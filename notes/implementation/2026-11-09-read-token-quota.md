@@ -67,3 +67,14 @@ Hugh's standing patch authorization applies. Focused checks, distinguishing
 controls, one full gate, and independent exact-head review remain due.
 This source preparation performs no deployment and supplies no live
 acceptance.
+
+
+At source checkpoint `14aead39`, the maintained seal producer changed
+three existing values: `object.ts:ScopeObject`, `core.ts:Scope`, and the
+whole `destination-host.ts` owner. New whole-file seals cover
+`credential-store.ts` and `read-token-quota.ts`, including SQL, identity,
+lifetime, binding and scheduler code. All other named owner values stay
+equal. Patch `artroom-r13-source-seals-20261109.patch` has SHA-256
+`f0b0c2f9c5e5c7ea8a6ce781b3fb1adb6a30c4e5eebced02cbf08fa942bdaa11`; Hugh's standing patch authorization covers adoption
+of these actual outputs. No route or gate assertion changes. Independent
+review still judges the source; no test result follows from a seal.

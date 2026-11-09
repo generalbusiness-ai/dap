@@ -9,7 +9,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 const namedOwners = {
   "packages/scope/src/object.ts": {
     "packages/scope/src/object.ts:$module": "1fdab10d607e13009c34b387de859db08007f97feb549f48b1b8d85e1aaf3973", // Token refusal: the delivery's transaction keeps a key that a compromised notice named.
-    "packages/scope/src/object.ts:ScopeObject": "ebb1140ed7ec9e1501217b95e493f623920e304fbe44ba4a3514b2e0dd3e90ed", // Token refusal: the delivery's transaction keeps a key that a compromised notice named, and the authority asks for it.
+    "packages/scope/src/object.ts:ScopeObject": "34fae8c3229d2fd828f4a5b37008939c8331492f41a700316ff0e36d8ac29b84", // Token refusal: the delivery's transaction keeps a key that a compromised notice named, and the authority asks for it.
   },
   "packages/scope/src/worker.ts": {
     "packages/scope/src/worker.ts:$module": "41f2c0c505b5b75791c94504ca1a8ef654c85ba33f83dd575ba752a72266fd2d", // HTTP context forwarding and explicit disconnect close; route and authority gates stay fixed.
@@ -187,7 +187,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "21beb2ace9f9eee5889cc06352e603eb8975f1957d76d1ac823de466f680d984", // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
+    "packages/scope/src/core.ts:Scope": "14a2931a0fffc73fcd660e3816b5818c71338a8b1b8028718be3b9f01c2aec5c", // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
   },
 };
 
@@ -264,7 +264,9 @@ const seals = {
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection-source.ts": "00edbc4215cbd8fc9bf35f5e001ad9e656cad5eee594546db2804a1cb84225ce", // Closed native room metadata with optional supported membership pin.
   "packages/scope/src/applications/projection.ts": "8576f78bb68850421ca7843e6fd0e4ecfb18f136009b82296097feca603f5484",
-  "packages/scope/src/destination-host.ts": "e4f291079ed7a0ccd7fab4abd91489e55a8908bd4259c4520ba886966eec0e49", // Token refusal: a key that a compromised notice named takes no read token.
+  "packages/scope/src/destination-host.ts": "56a62008cd929345f4606273f430b2098a392666a580aa8148b1caad8066030e", // Token refusal: a key that a compromised notice named takes no read token.
+  "packages/scope/src/credential-store.ts": "07f8a368880aeb9697731c3de1011da57895df0860e1cc89e71dcd0b080c9c20", // R13 private reservation and custody owner; actual maintained parser output.
+  "packages/scope/src/read-token-quota.ts": "0456473938cffe851ba9ff5248db551d06d3bdad30615e3ad247f84334416e8f", // R13 private reservation and custody owner; actual maintained parser output.
   "packages/scope/src/workspace-host.ts": "537ed96759a3889f59272b1a660a3cfd8ef8f46ec2aa15618c8b7c3568b57bfe", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
   "packages/scope/src/workspace-lineage.ts": "dbb0409a8ab6a8127d2734455cb3db867e46a96dfe0f2ccda0dcf998bd2aced9", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
