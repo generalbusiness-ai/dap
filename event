@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4e1892b67a18da6bd637e5d6c64e9dc64433cc16","text":"Merge retired a covered predecessor; the successor is at apps/counter/scenarios/application.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5221b270645913525ee658b9e49ea909b8a7c52d","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-17-compact-cards-design/examples/manifest.json."}
