@@ -1,10 +1,11 @@
 # Format JSON source while preserving protocol bytes
 
-Request `c6e29874`; promise `197ace07`; scope ruling `85784814`.
+Request `c6e29874`; promise `197ace07`; scope rulings `85784814` and `794ef517`.
 This head includes main `29926a3a`. Authoring, focused checks and the
 packet-exclusion control are complete. The single final gate failed; its
-unchanged source and complete original outcomes remain sealed. A planner
-ruling on the authoring size conflict and follow-up remains due.
+unchanged source and complete original outcomes remain sealed. Planner
+ruling `794ef517` authorizes the two source-size exceptions, one focused
+follow-up and one new final gate. Those runs remain due.
 
 ## What changes
 
@@ -16,7 +17,11 @@ normal parser. The command uses the pinned executable and default options.
 
 The selector excludes lockfiles, dependency directories, the published
 canonical packet `examples/grow/demo/application.dap.json`, and all retained
-files under `notes/implementation/evidence/`. The new Node owner checks
+files under `notes/implementation/evidence/`. It also excludes
+`examples/grow/check/dap.application.json` and
+`examples/grow/check/fault-scenario.json`: the CLI reads each under
+`LIMITS.metadataBytes` (65,536 bytes), and default formatting exceeds that
+limit. Both files retain main `29926a3a` bytes. The Node owner checks
 the actual tracked packet exclusion and ordinary source selection. Its
 future-manifest specimen checks the whole evidence-directory exclusion.
 
@@ -113,12 +118,19 @@ files. Native and all six selected Scale cases remained unreached.
 The unchanged selection rules include Scale because this head changes the
 root package, test runner and gate script. No selection or deadline changed.
 
-Planner ruling request `68f6934d` names the conflict between default
-formatting and the existing source allowance. Addendum `2b3f7f31` names the
-second input. No repair, larger allowance, new exception or second gate has
-run. The original gate remains failed. This later checkpoint changes only
-this explanatory note and its retained manifest. Earlier branches establish
-no result for this head.
+Planner ruling `794ef517`, answering `68f6934d` and `2b3f7f31`, excludes
+both inputs and preserves every source-read and portable package limit.
+The repair restores their exact main bytes and adds both to the existing
+selector witness. No production reader or allowance changes. The current
+selector covers 183 JSON paths; 63 formatted source files remain changed
+against main. The original authoring run's 185 selected and 65 changed
+counts remain its actual observations.
+
+The ruling requires one healthy selector owner and the five complete failed
+owners, then one new full gate at the final head. This is an explicit
+exception to the ordinary single-gate rule. Those runs remain due. Any new
+gate failure stops work for a report. The original gate remains failed.
+Earlier branches establish no result for this head.
 
 ## Open limits
 

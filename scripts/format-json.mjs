@@ -8,11 +8,18 @@ export const CANONICAL_PROTOCOL_PACKETS = Object.freeze([
   "examples/grow/demo/application.dap.json",
 ]);
 
+// Default formatting exceeds the CLI's 65,536-byte source-read allowance.
+export const BOUNDED_SOURCE_INPUTS = Object.freeze([
+  "examples/grow/check/dap.application.json",
+  "examples/grow/check/fault-scenario.json",
+]);
+
 export function selectedJsonFiles(paths) {
   return paths.filter((path) => path.endsWith(".json")
     && !path.split("/").includes("node_modules")
     && !["package-lock.json", "npm-shrinkwrap.json", "bun.lock.json"].includes(basename(path))
     && !path.startsWith("notes/implementation/evidence/")
+    && !BOUNDED_SOURCE_INPUTS.includes(path)
     && !CANONICAL_PROTOCOL_PACKETS.includes(path));
 }
 

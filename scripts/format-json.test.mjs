@@ -11,6 +11,10 @@ test("tracked JSON formatting preserves the byte-compared Grow packet and retain
   assert.ok(paths.includes(packet), "The actual published byte-compared packet must exist");
   const selected = selectedJsonFiles(paths);
   assert.equal(selected.includes(packet), false, "The canonical packet reader must receive the original bytes");
+  for (const source of ["examples/grow/check/dap.application.json", "examples/grow/check/fault-scenario.json"]) {
+    assert.ok(paths.includes(source), "The actual source with a byte-limited CLI read must exist");
+    assert.equal(selected.includes(source), false, "Formatting must preserve the bounded source input");
+  }
   assert.equal(selected.some(path => path.startsWith("notes/implementation/evidence/")), false);
   assert.ok(selected.includes("apps/room/lanes/definitions/change.json"));
   assert.ok(selected.includes("packages/checkers/test/fixtures/reservation-record.json"));
