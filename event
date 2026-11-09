@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e6a6a0b90db0d422ec276397447dca15ec187f52","text":"Replaced by the review request for exact head da3e0d9ff9ffeb4b996afe4ef2850f89dd49e8d1; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"I will review BR-11 at exact head da3e0d9ff9ffeb4b996afe4ef2850f89dd49e8d1, all 30 artifacts, for F1 from e84a5430 and every byte since fbba5493."}
