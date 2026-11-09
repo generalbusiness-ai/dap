@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f9fb645a834f1bcfdf8c82607bcda506cff8e15e"}
+{"kind":"artifact","text":".claude-plugin/marketplace.json at exact 1f5cf84000e57d038c52e543fa1211e07ee50be5 on builder/json-formatting-20261109, under promise git:sha1…b7af5e1 on request git:sha1…3543f40","body":{"commit":"1f5cf84000e57d038c52e543fa1211e07ee50be5","path":".claude-plugin/marketplace.json"}}
