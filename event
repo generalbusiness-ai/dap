@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e7fa31db01104f9aa99de27519c9654ee0b8c854","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-09-r3a-authority-key-admission.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e86b3706d117a5bb90a24fb09f35ad5aa53d4096","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/ports.ts."}
