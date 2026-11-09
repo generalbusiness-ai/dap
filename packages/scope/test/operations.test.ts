@@ -283,7 +283,7 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
     expect(diagnoses.join("").includes("private-retained-reply-secret")).toBe(false);
   });
 
-  test("a late answer that arrives while the scope's turn is unavailable is kept in hand, and the driver writes it at the next wake-up, after the attempt's row is closed; the request is not sent again", async () => {
+  test("a late answer that arrives while the scope's turn is unavailable is kept in hand through bounded alarm drains, then written after the attempt's row is closed; the request is not sent again", async () => {
     // A turn writes one timed entry. Two holds end at one time, so a turn at that time leaves one due and is `busy`.
     const s = await create({ timedAttemptsPerTurn: 1 });
     const out = outsideOf(s.name);
@@ -293,11 +293,15 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
     out.answer(op, 1, null);
     expect([await s.alarm(), outcomes(await seen(s, op))]).toEqual([true, [["unknown at 8"]]]);
 
-    // The request's own answer arrives when both holds are due. The turn writes one end and is spent: the answer cannot be written.
+    // A late reply drains neither hold and writes no outcome while time is due.
     s.c.clock.now = at(HOLD);
-    const retry = timeMs(at(HOLD + PROPOSED_BOUNDS.drainRetrySeconds));
-    expect([await late(s, out, op, 1, own("c1")), (await s.head()).seq, outcomes(await seen(s, op)), await s.alarmAt()]).toEqual([{ recorded: "unavailable" }, 9, [["unknown at 8"]], retry]);
-    // The wake-up's turn writes the other end. The driver then offers the answer it kept: the late answer, of that operation and attempt, with its evidence.
+    const delay = PROPOSED_BOUNDS.drainRetrySeconds, retry = timeMs(at(HOLD + delay));
+    expect([await late(s, out, op, 1, own("c1")), (await s.head()).seq, outcomes(await seen(s, op)), await s.alarmAt()]).toEqual([{ recorded: "unavailable" }, 8, [["unknown at 8"]], retry]);
+    // The first alarm drains one end. The kept reply still cannot pass the other.
+    expect([await s.alarm(), (await s.head()).seq, outcomes(await seen(s, op)), await s.alarmAt()]).toEqual([true, 9, [["unknown at 8"]], retry]);
+    expect((await s.sealed(9))[0]?.entry.input.type).toBe("timed");
+    s.c.clock.now = at(HOLD + delay);
+    // The next alarm writes the other end, then offers the exact kept reply.
     expect([await s.alarm(), (await s.sealed(11))[0]?.entry.input, (await seen(s, op)).state, out.attempts, await s.alarmAt()]).toEqual([
       true, { type: "outcome", operation: op, attempt: 1, owner: "platform:destination@1", kind: "push", result: "confirmed", evidence: { basis: "own-answer", body: { commit: "c1" } } }, "settled", [`${op}#1`], null,
     ]);
@@ -305,7 +309,7 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
     expect([await surface(s).effect(), await late(s, out, op, 1, own("c1")), (await s.head()).seq]).toEqual([0, { recorded: "repeat", seq: 11 }, 11]);
   });
 
-  test("an answer in hand that stays unavailable for a reason of its own owner holds back no other: with a batch of 1 the answer behind it is written at the second pass, and the first stays in hand, of its attempt and with its evidence, and its operation stays a duty", async () => {
+  test("after alarm drains, an answer unavailable for its own owner holds back no other: with a batch of 1 the next reply pass writes the answer behind it, and the first keeps its attempt, evidence and reserved duty", async () => {
     // Three holds end at one time, and a turn writes one timed entry. The owner of a mint declares no cleanup, and a confirmed mint would open one.
     const s = await create({ timedAttemptsPerTurn: 1, deliveryBatch: 1 });
     const out = outsideOf(s.name);
@@ -316,11 +320,21 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
     for (const id of [older, later]) out.answer(id, 1, null);
     expect([await s.alarm(), await s.alarm(), outcomes(await seen(s, older)), outcomes(await seen(s, later))]).toEqual([true, true, [["unknown at 11"]], [["unknown at 12"]]]);
 
-    // Both late answers arrive while the turn is spent on the ends of the holds: both are kept in hand, the mint's first.
+    // Both replies arrive while time is due. Neither drains; both stay in hand.
     s.c.clock.now = at(HOLD);
+    const delay = PROPOSED_BOUNDS.drainRetrySeconds;
     const minted: EffectAnswer = { result: "confirmed", evidence: { basis: "own-answer", body: { token: "t1" } } };
-    expect([await late(s, out, older, 1, minted), await late(s, out, later, 1, own("c1")), (await s.head()).seq]).toEqual([{ recorded: "unavailable" }, { recorded: "unavailable" }, 14]);
-    // The first pass offers the mint's answer. The turn is free, and the answer is still not written: its owner's fault. It goes behind the other.
+    expect([await late(s, out, older, 1, minted), await late(s, out, later, 1, own("c1")), (await s.head()).seq]).toEqual([{ recorded: "unavailable" }, { recorded: "unavailable" }, 12]);
+    // Two bounded alarms drain two ends. Their blocked reply offers rotate
+    // the mint and push once each; no outcome or replacement request is written.
+    expect([await s.alarm(), (await s.head()).seq]).toEqual([true, 13]);
+    s.c.clock.now = at(HOLD + delay);
+    expect([await s.alarm(), (await s.head()).seq]).toEqual([true, 14]);
+    expect((await s.sealed(13)).map(row => row.entry.input.type)).toEqual(["timed", "timed"]);
+    expect([outcomes(await seen(s, older)), outcomes(await seen(s, later))]).toEqual([[["unknown at 11"]], [["unknown at 12"]]]);
+    s.c.clock.now = at(HOLD + 2 * delay);
+    // The third alarm drains the last end and offers the mint. Its own
+    // undeclared cleanup still prevents the answer; it goes behind the push.
     // A retained refusal for that same attempt must not replace the answer
     // already in hand. The reply port scripts public metadata, not custody.
     const retainedPages: number[] = [];
@@ -333,14 +347,14 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
       expect(retainedPages).toEqual([1]);
     } finally { delete (out as Outside).replies; }
     // The second pass, after the delay, writes the push's answer. The mint's is in hand: the driver asks for the next wake-up, and the operation is a task with what it reserved.
-    s.c.clock.now = at(HOLD + PROPOSED_BOUNDS.drainRetrySeconds);
+    s.c.clock.now = at(HOLD + 3 * delay);
     expect([await s.alarm(), (await s.sealed(16))[0]?.entry.input, (await seen(s, later)).state, await seen(s, older), await s.alarmAt()]).toMatchObject([
       true, { type: "outcome", operation: later, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { commit: "c1" } } }, "settled",
-      { state: "unknown", operation: { attempts: [{ outcomes: [{ result: "unknown", seq: 11 }] }] } }, timeMs(at(HOLD + 2 * PROPOSED_BOUNDS.drainRetrySeconds)),
+      { state: "unknown", operation: { attempts: [{ outcomes: [{ result: "unknown", seq: 11 }] }] } }, timeMs(at(HOLD + 4 * delay)),
     ]);
     // Once the owner declares the cleanup, the answer that was kept is written as it arrived, and opens the cleanup. No request was sent again.
     mint.closure = 2;
-    s.c.clock.now = at(HOLD + 2 * PROPOSED_BOUNDS.drainRetrySeconds);
+    s.c.clock.now = at(HOLD + 4 * delay);
     expect([await s.alarm(), (await s.sealed(17))[0]?.entry, out.attempts.slice(0, 2)]).toMatchObject([
       true, { input: { type: "outcome", operation: older, attempt: 1, result: "confirmed", evidence: minted.evidence }, effects: [{ effect: "attempt", operation: older, attempt: 1, result: "confirmed" }, { effect: "operation", kind: "push" }, { effect: "attempt", attempt: 1, result: "opened" }] },
       [`${older}#1`, `${later}#1`],

@@ -36,7 +36,10 @@ rollout needs its own [operator evidence](../deploy.md).
 ## Named witness inventory
 
 The grant judge uses explicit scripted grants. The authority witness runs
-real ScopeObject turns with a labelled Membership stand-in. The outside
+real ScopeObject turns with a labelled Membership stand-in. The order
+witness also uses a real foreign entry and alarm, with scripted admission
+and resolver ports. The key-bound witness uses the real authority port
+with synthetic key IDs below signature admission. The outside
 operation witness runs real SQLite dispatch with a scripted provider, while
 the host adapter witness uses platform judgments in memory and private
 SQLite custody. Neither one proves a live provider effect.
@@ -58,6 +61,16 @@ scripted recorded state. See [stand-ins and what they show](../testing.md#stand-
     "invariant": "grant",
     "path": "packages/scope/test/authority.test.ts",
     "name": "an observation admits inside its window and is reused there; at its window it is outside, and with membership silent the act is not judged and uses no key; a ten-second kind is read for its one commit, an act or a step of a capability (a scripted step, a stand-in); after a restart nothing read is used"
+  },
+  {
+    "invariant": "grant",
+    "path": "packages/scope/test/authority-order.test.ts",
+    "name": "a failed authority observation reaches no receiver or foreign work and drains no timer; only the alarm drains before an authorized retry"
+  },
+  {
+    "invariant": "grant",
+    "path": "packages/scope/test/authority.test.ts",
+    "name": "an authority run admits 4096 keys, refuses a new key before reading at the bound, keeps old keys usable and resets only in a new run"
   },
   {
     "invariant": "sealed-operation",
@@ -125,8 +138,18 @@ well-formed data and finite work, not the author's policy intent. [D5's
 fail-open list](definition-authors.md#fail-open-authoring-list) includes valid
 vacuous guards and permissive review thresholds.
 
-R3's early authority refusal and per-run observation bound remain a separate
-queued change. Current code can fetch foreign facts and drain timed work
-before a grant refusal. This page claims no earlier admission order.
+A held observation that already denies an ordinary grant causes
+`unauthorized` before provenance, receiver policy, foreign facts or a queued
+turn. Null or unavailable standing proves no denial. Native grant marks
+retain their recovery-key and action-null checks, and the commit rechecks
+authority at its own head and clock. Only the alarm drains timed work;
+other inputs cannot pass a due transition.
+
+A remote authority run admits at most 4,096 distinct signing keys, including
+once-only and failed reads. A new key above that bound gets `limit` before
+another Membership read; existing keys remain usable. A new object run
+starts empty. Membership's own folded authority uses no remote kept-read
+map. The bound does not replace signature checks, local history or the
+current observation's checks.
 [Report a vulnerability](../../SECURITY.md#report-a-vulnerability) gives the
 private reporting path.

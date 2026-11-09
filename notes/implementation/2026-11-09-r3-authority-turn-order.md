@@ -3,7 +3,7 @@
 Request `03e5f6d7`; promise `8787bceb`; source starts at main `29926a3a`.
 This head contains source and dependency preparation with maintained seal
 metadata. No compiler, test, control or gate has run for R3. It now includes
-JSON main `ca6a54e2`; D6 has not landed.
+published D6 main `c85a9bae`.
 
 An ordinary act whose held observation already denies its grant now
 returns `unauthorized` before application provenance, receiver policy,
@@ -61,6 +61,15 @@ composition restart witness gives its scripted clock the additional early
 standing read before its deliberately earlier dispatch reading. Its
 outbox, alarm, eviction and duplicate-delivery assertions stay intact.
 
+The operation owner retains both late-reply custody and FIFO witnesses.
+Late callbacks now leave the journal head unchanged while timers are due.
+Real alarms drain one transition per configured budget before the retained
+answers can be recorded. The owner still checks exact unknown and confirmed
+entries, duplicate replies, no second provider send, first-answer retention,
+one-owner failure isolation and the reserved cleanup duty. Its two names
+now state the alarm boundary. D6's inventory adds the new order and bound
+witnesses to its nine original rows: eleven witnesses in nine source files.
+
 The maintained producer at `7431eb21` changes only the named Core `Scope`
 seal and the whole authority seal, and supplies a new whole-file turn seal.
 Those actual parser outputs now appear in the inventory. Every route and
@@ -68,9 +77,9 @@ gate assertion remains in place. These structural tripwires establish no
 runtime result.
 
 Focused compiler contexts, complete owners, meaningful controls and one
-final gate all remain due. No runtime result is claimed by
-this preparation. R3 follows the security documentation landing; its final
-head must include that landing and update D6's queued-R3 wording.
+final gate all remain due. This preparation claims no runtime result.
+R3 includes the security documentation landing and replaces D6's queued-R3
+wording with the current branch's order and bound.
 
 ## Kernel filing and deployment
 
