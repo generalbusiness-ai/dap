@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "request": "7542970fb47e57ae9360f297bdfe8c49e3752c24",
+  "promise": "9a8c22e6f27ecdbfc7328ac6fc5f48bf4b3fc1ff",
+  "sourceHead": "63bb22a39ec0607790710537c87d55cbb6a6bc6c",
+  "qualification": "The saved native case fails at its exact named-refusal assertion because the wrong sender applies when the TEST guard is absent. The original classifier also required the word refused in Vitest failureMessages, but Vitest abbreviates the expected object there. This read-only classification checks the retained stack location against the unchanged source assertion and all restored input hashes. The original driver remains exit1. No compiler, test, baseline, control or gate runs again.",
+  "fileCount": 7,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m0-sender-control-validation",
+      "files": [
+        {
+          "path": "2026-11-08-m0-sender-control-classification.inventory.json",
+          "bytes": 723,
+          "sha256": "f46c78fff1f36a430da8fe4b5e9a0702edf4a4f618691525575b00302bcc7901"
+        },
+        {
+          "path": "2026-11-08-m0-sender-guard-control.inventory.json",
+          "bytes": 47271,
+          "sha256": "e5e047580ecc0bd86ceb39cf264f4d2c2a1c91d14da865d9da22b331c5456c35"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 569,
+          "sha256": "9db10bf14ad352f08b11a4cb75eda614ef428b01416002af296d007ca86277ad"
+        },
+        {
+          "path": "classification.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "original-driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2015,
+          "sha256": "8ced12e9912287f1c87a97cf7df16897bd1c6f13294bd38411be34cefff8df89"
+        }
+      ]
+    }
+  ]
+}

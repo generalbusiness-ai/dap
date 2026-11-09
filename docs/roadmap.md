@@ -65,7 +65,7 @@ In order, nearest first.
 | Capability | State | Use cases that need it |
 |---|---|---|
 | [The commons `note` act](../notes/2026-10-28-boundary-objects-in-use.md) | The first slice is built: `commons@1`, its `note` act and reference fields. The hosted `dap-commons` Worker is configured and holds no planned register in its source | Every case: readings, marks and agreements between parties |
-| [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Runs within one room, for the grow site and its rooms. Not yet across rooms | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
+| [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | A native test-host witness passes across rooms under v1 installation. V2 packages cannot yet declare an external receive port | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
 | [Durability levels](#durability-levels) | Recorded runs. The journal floor's first two slices and the archive binding are built. Live and the Sequenced level are designed, not built | 36, 44, and the live part of every case |
 | [A fork for each hold](#a-fork-for-each-hold) | Planned. A first measurement ran | 34 |
 | [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Proposing a branch's UTF-8 files is built. Offline work is designed, not built. A pack upload protocol is not designed | 34 |
@@ -97,10 +97,21 @@ may also declare a send to a scope that one of its slots holds. The
 lending library sends one kind of message, to its room's destination, to
 publish a page. The grow application consists of scopes of its own that
 ask one another: its site creates grow rooms and receives each room's
-summary, all within one room. No declared application yet sends between
-scopes in different rooms, which have different members. The brokered
-market (use case 51) needs that: one market room and one room for each
-provider.
+summary, all within one room.
+
+The [M0 witness](../notes/implementation/2026-11-08-cross-room-m0.md) now
+passes in a native test host with two rooms and different members, using the
+existing v1 installation cohort. The receiver's genesis names the sending
+scope. Its declared guard admits that sender and refuses another verified
+sender by name. The refusal keeps one deciding entry and one result, with
+no handler effect or business-state change. The receiving member can read
+the retained source entries, but gains no general access to the sending
+room's entries, membership or scope state. This requires no production change.
+
+V2 packages cannot yet declare a receive port whose sender belongs to another
+installation. M0 establishes the v1 behavior, not v2 composition or a live
+market. The brokered market (use case 51) still needs that package contract
+for one market room and one room for each provider.
 
 **Not offered.** One act cannot take effect in two scopes at once.
 Instead, one scope sends a request, the other answers with a result, and
@@ -120,8 +131,10 @@ That fixture had one trusted writer, and the report states its limits on
 proof, disclosure and availability. It is not free composition of two
 records.
 
-**Next.** Messages between an application's scopes in different rooms, as
-the [market note](../notes/2026-10-20-market-application-design.md) needs.
+**Next.** Define v2 admission for a receive port from another installation,
+then use that boundary in the [market note](../notes/2026-10-20-market-application-design.md).
+A cross-room message still discloses its whole source entry to the receiving
+room. The package design must keep that disclosure explicit.
 
 ### Durability levels
 

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "request": "7542970fb47e57ae9360f297bdfe8c49e3752c24",
+  "promise": "9a8c22e6f27ecdbfc7328ac6fc5f48bf4b3fc1ff",
+  "sourceHead": "6824e90725806343cfb9224a4b8cdf5ca31bf402",
+  "qualification": "The first M0 native case fails its installation assertion: the resolver reports package bytes do not match the expected signed release or install bounds. It reaches no cross-room acceptance. No retry, repeat or control ran. The focused ledger reports failed-case/count status issues; these do not turn the failure into a pass.",
+  "fileCount": 5,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m0-initial-validation",
+      "files": [
+        {
+          "path": "2026-11-08-m0-initial-focused-launch.inventory.json",
+          "bytes": 46580,
+          "sha256": "d35c8f97798d127302893fce9d55f28f26d82c2785e57b4e453f4add7b413c5b"
+        },
+        {
+          "path": "2026-11-08-m0-initial-focused.inventory.json",
+          "bytes": 1454,
+          "sha256": "f7753005ec3a897dd6674177bc8e25f9391fa0d4a9100c584ffab4dbeb14f92d"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 387,
+          "sha256": "12da3e08a64d1366bd875d02812036c46de88a3f94fe2e4f0e8d15ecaaa80276"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1094,
+          "sha256": "eb6469b44a01d263a43776fc44770645fdd5bbf9ac53a7827627fc78adddfaa7"
+        }
+      ]
+    }
+  ]
+}
