@@ -39,9 +39,16 @@ boundaries. They establish no provider or deployed-room result.
 
 ## Validation
 
-No compiler, test, control or gate has run for BR-12. Its two source commits
-now sit above RoomOpening head `a6c0f804`, whose compiler, owner, negative
-compiler-control and Page asset results stay separate in its own note.
+The first Node entry-point owner exited 1: ten cases passed and the source-seal
+case failed. The seal still matched an earlier sandbox-handler draft. The
+repair adopts the maintained parser's actual hash for the four changed lines;
+every route and gate assertion stays in place. The failed launch remains in
+`2026-11-08-br12-focused-launch`. It stopped before all five compiler contexts
+and the 62 Vitest cases. No control or gate has run for BR-12.
+
+The source commits sit above RoomOpening head `a6c0f804`, whose compiler,
+owner, negative compiler-control and Page asset results stay separate in its
+own note.
 
 Planner ruling `c5c24191` permits one shared gate at the top of this stack.
 RoomOpening comes first and BR-12 follows. Each item keeps its own promise,

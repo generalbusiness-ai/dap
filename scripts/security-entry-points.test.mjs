@@ -325,7 +325,7 @@ const pendingR8Seals = {
   "packages/cli/src/scope-index-manifest.ts": "b4ed87bcb7aab9633d50b01106ff73da4412d2e65809a2b0e45f42ba27b3c1af", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "200a440b06850a2d8773ae9c2ad82d6bf0b5864fbce92a714eafb622eba0484c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "3e4dfcbab9c9ab8585929b4c75ba01ac86c4e9ea7978f70f6bf3681af15bddb6", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "apps/sandbox/worker.ts": "28bc07653ba1178d000c438d495bbdacb481478a75de292c754e8dbdf55aaebb", // Retain the existing Native lifetime close on an observed HTTP disconnect.
+  "apps/sandbox/worker.ts": "6554155ed7854425c60b859d62c0a4da53e172a3be0fe3bd2cd0032f3e108e0b", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
   "packages/client/src/application-route.ts": "66c59740a8af2d1303eb610a0d6ded1a16a08ebfc1066ab210fde01e03989208",
   "packages/scope/src/applications/bindings.ts": "b89e8155ad5479d5b4f9175b2e941ef80b54c75dc9af4a993401c544e150cd78",
