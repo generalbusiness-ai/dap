@@ -1,7 +1,7 @@
 # Reserve control paths from application publication
 
 Security request `b300dca1`; promise `d107501f`; ruling `d92b5f66`.
-The head incorporates main `ce0290fb`, including R15 and its approved standalone smoke correction. Focused checks and the policy-bypass control are complete. The one final gate remains due.
+The head incorporates main `ce0290fb`, including R15 and its approved standalone smoke correction. Focused checks, the policy-bypass control and the one final gate are complete. The actual gate.exit contains exit 0.
 
 ## What changes
 
@@ -69,6 +69,7 @@ intervals and Python monotonic outer durations. Each command has separate
 | Complete follow-up at `242fc152` | Affected compiler, then policy 5, publication 5 and Lending 1 | 0 | `71ff46daa35890ef9dbd460ffe2bafd68894e9928a5c3be2520b0fdb388922ec` (`r16-replay-followup--focused--coverage-ledger.json`) |
 | Host-policy bypass at `242fc152` | Policy owner, `--bail=0`, saved passing baseline | Owner 1; verifier 1; reconciliation 0 | `14c12eab6239cda3189c83be29ae08ce2d002e11ff02ff0076f574f4813c7ce6` (`r16-host-policy-control--reconciliation.json`) |
 | Source-seal metadata at `187c9f56` | Maintained `sourceSeal` for two host-policy owners | 0 | `f2a7b47c2a56ee52c22b2f5e943bfda344f95c94a1c480e193d3dfa972b1b1f1` (`artroom-r16-source-seals-20261109.json`) |
+| Full gate at `c96996de`, tree `81798a19aef0dc054d03e97dd73e862a7d9b9115` | `npm run gate` once | 0 | `9bac4cbf4661f3a009b9c2e55ed3cc05d89a80101c6a3ab7940bd482f6914895` (`classification.json` in the gate manifest) |
 
 The first compiler failed because the new fixture widened its valid role
 string to `string[]`. The repair keeps its literal type. Other workspace
@@ -125,11 +126,27 @@ outputs. This head changes one existing seal and adds the new policy owner.
 All route and gate assertions remain. Independent review must assess these
 source changes and [kernel section 7](../../docs/kernel.md).
 
-The one final gate remains due. No gate pass is claimed.
+The [gate manifest](evidence/2026-11-09-r16-gate.manifest.json) has SHA-256
+`bde4cd790fcb6c034f770e79485c29de58144034000893944cfc8a9e011f2d68`.
+It seals 18 public files and the complete private inventory of 2,393 files.
+I read `gate.exit`: exit 0. All maintained stages passed: Node 142, Counting
+56, Plain 4,028 plus one skip, and Native 1,122 plus two skips. Reports
+contain no contradictory, unhandled or coverage errors. The 102 unknown
+observations reconcile to 34 Node file wrappers. Scale stayed outside this
+change and the gate omitted it by the maintained path selection. No scale
+case or archive attempt is claimed.
+
+The gate ran from 13:42:25.355 to 13:58:51.612 UTC on 9 November, with
+986.255 seconds of Python monotonic outer elapsed time. Its source snapshot
+stayed exact and its group closed. Three process samples found no other
+validation body; samples do not prove continuous isolation. After the gate,
+only this note and its gate manifest change. Source and tests remain the
+bytes that the passing gate checked. The exact final tree accompanies the
+review request so it does not create a self-referential note hash.
 
 ## Open limits and deployment
 
-Exact-head review and the one final gate remain due under `b300dca1`. The planner deploys after landing. This head changes no live room and supplies no live acceptance result. Declared prefixes and judged Destination policy remain deferred by ruling `d92b5f66`.
+Exact-head review remains due under `b300dca1`. The planner deploys after landing. This head changes no live room and supplies no live acceptance result. Declared prefixes and judged Destination policy remain deferred by ruling `d92b5f66`.
 
 GitHub's [workflow reader](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
 uses `.github/workflows/`. Its [ownership reader](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
