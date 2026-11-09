@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8c5be64a3848f6c317019eb4dd64467dbd933615","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/grow-owned-fault-scenario.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8ed80dd83ba6a6c1e298ef82186e0b5ff76b4170","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-json-failed-gate.manifest.json."}
