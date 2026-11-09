@@ -1,3 +1,4 @@
+import { scaleDeadline } from "./support/archive-scale-deadline.ts";
 /** Archive fixture authority uses genuine Native Membership8 observations.
  * Its seat/key/role and source-birth preparation are external fixture setup;
  * each pass still pays its existing pin lookups and original complete ledger.
@@ -392,4 +393,4 @@ test("the Native driver confirms 10,001 one-entry passes and preserves retained 
     conflict: { ...conflict, pending: pendingInput.digest, providerPointer: divergent, sendAttempts: foreignSendCalls, unchangedInputPassValues: beforeConflict.input.length, unchangedValuePassValues: beforeConflict.value.length },
     qualification: "Same genuine factory-born Native fixture after the 10002 lower-entry-cap passes including the repeated3700 rule: 4609 distinct actual signed rule acts exported with unchanged default ArchiveBudget, whole-entry prefix/resume receipts, then post-history restart and one default mixed old3700/new pass. All previous paths remain byte-identical; direct immutable-object and whole-table pass assertions are separate observations outside archive execution. Mixed driver I/O is exact provider object IDs plus real Native cursor keyed-read statistics. Referenced old/new local rule bodies receive charged exact-key canonical payload validation; there is no retained-table scan, old Git payload/manifest read or old retained-blob resend. Native ArchiveRows.target(otherRepository) exercises the stored identity guard. The separate scripted provider with a divergent ref exercises driver ref-conflict/no-confirmation; it does not re-resolve or change a bound repository. Original caps, debits, 30s deadline, authority and payload admission are unchanged. Scripted host/token/HTTP and fixture policy remain test boundaries." };
   console.info("TEST Native default retained scale", JSON.stringify((context.task.meta as Record<string, unknown>)["nativeDefaultRetainedScale"]));
-}, 1_200_000);
+}, scaleDeadline(1_200_000));

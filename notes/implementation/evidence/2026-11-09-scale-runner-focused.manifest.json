@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "request": "a5f3d838aaaf7b2f44a162eb045e6878fc25457e",
+  "promise": "2f8e738275709d36411f1d73f5da84a330971783",
+  "sourceHead": "5ac318c40ad1308de1733080a82409340f48b97d",
+  "sourceTree": "8d342e2bf1be3a25eefbdabb79af43f86e3a8768",
+  "qualification": "One complete five-case cheap Node owner, then two exact compiler contexts. No scale case repeats before the required full gate. The explicit CI factor remains unset locally. No package install.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-scale-runner-focused-validation",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1123,
+          "sha256": "7efa21d705eb7eb1fb9e1d0b78b5d8277245e0dd5ddd4545eeab71f438091000"
+        },
+        {
+          "path": "artroom-scale-runner-dependency-copy-20261109.json",
+          "bytes": 1918,
+          "sha256": "b75c73c96087bb817a957ee5439ef59a992b386ccf560efe805e6a6ee68b40ec"
+        },
+        {
+          "path": "artroom-scale-runner-witness-body-proof-20261109.json",
+          "bytes": 833,
+          "sha256": "b257bccd67eeba850615860dc8bea2e6f6d02090f05eec7e426c518f26cbba1e"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 4443,
+          "sha256": "7bd3de6083b94ed1bf0599b9430cf6eeb2accd66ce985dacc346a6f3906b70bd"
+        },
+        {
+          "path": "lanes-scope.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "lanes-scope.time",
+          "bytes": 29,
+          "sha256": "b7918e7c01151a676b7f99329f9d7176de1057a5e7dc7a24d97ae63809b10818"
+        },
+        {
+          "path": "node.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node.time",
+          "bytes": 29,
+          "sha256": "95c890b34406b6a1316d434713bb73b4de45c19a9925f58580ed4acb3611778b"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 313,
+          "sha256": "3aac3eb87d4e241842d4796d8e9fefe7a0cab61709f882391979db9fb807c756"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1259,
+          "sha256": "0bfbdc80d3d59b89e62404222cf2228c7f64403781638abd8fb78f717669f448"
+        },
+        {
+          "path": "scope-test.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "scope-test.time",
+          "bytes": 29,
+          "sha256": "3048eed234d69b063a4d189d96a45e18133e51baddd88e745331b7831c846e93"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 190,
+          "sha256": "9fd0419b466642846eb7b49b9ed8bc485aff4490075f236d32aa318300cf4af5"
+        }
+      ],
+      "privateRegularFilesIncludingInventory": 77
+    }
+  ]
+}

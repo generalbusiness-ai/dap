@@ -719,8 +719,8 @@ denial project starts no clone fixture or Git server.
 The `scope-scale` project follows `scope-denial` in its own Worker runtime.
 It keeps the original Scope Worker, wrangler configuration, both global setup
 entries, `isolate: false`, two-worker ceiling and thirty-second default.
-Every case keeps its explicit deadline and real bounds. Its four unchanged
-whole owners contain six cases:
+Every case keeps its real bounds and original explicit deadline locally.
+Its four complete owners contain six cases:
 
 - `packages/scope/test/floor-archive.test.ts` (three cases, including the
   ten-input measurement that supplies no acceptance witness)
@@ -766,6 +766,21 @@ scale project after every push to main, including each landing, and catches
 changes through those shared inputs. A review outside the listed paths
 therefore establishes no scale result. The unchanged witness bodies retain
 their earlier acceptance meanings.
+
+Planner ruling `38d61076` gives the slower main GitHub runner a deadline
+factor of three. Only the main scale workflow sets
+`ARTROOM_SCALE_DEADLINE_FACTOR=3`; the local and review gates leave it
+unset and retain the original deadlines. The factor changes each case's
+harness allowance, including the thirty-second measurement. It changes
+no test body, entry count, bound, or assertion. The workflow allows ninety
+minutes for the complete job.
+
+`scripts/scale-runner.mjs` writes full stdout, stderr, and the Vitest JSON
+report to `$RUNNER_TEMP/artroom-scale`. It prints each case's result and
+duration and preserves the child failure. Missing, duplicate, or incomplete
+results also fail the summary. An always-run artifact step retains these
+files for seven days. The first main run `42570561287` remains failed;
+a later runner result records a separate observation.
 
 The command line's story, `packages/cli/test/*.scope.test.ts`, runs from
 the root inside the `scope` project too, and has no Worker of its own. Its

@@ -1,3 +1,4 @@
+import { scaleDeadline } from "./support/archive-scale-deadline.ts";
 /** Archive fixture authority uses genuine Native Membership8 observations.
  * Its seat/key/role and source-birth preparation are external fixture setup;
  * each pass still pays its existing pin lookups and original complete ledger.
@@ -60,7 +61,7 @@ test("Native floor-policy alarm measures a10-input archive prefix", async () => 
     if (observed.confirmed === head.seq) { expect(await lane.head()).toEqual(head); return; }
   }
   expect.fail("a small native archive prefix must confirm within its actual alarm schedule");
-}, 30_000);
+}, scaleDeadline(30_000));
 
 // Invariant: the actual writer uses its confirmed receipt and minimum
 // increment, rather than creating a succession of one-entry floors.
@@ -137,7 +138,7 @@ test("Native alarm writer advances a30000-entry journal in five bounded floors t
     return { floor: store.floor(), head: store.scope()!.head, count, digest: stateDigest(store.all()) };
   });
   const beforeRestart = await stable(); await lane.restart(); expect(await stable()).toEqual(beforeRestart);
-}, 600_000);
+}, scaleDeadline(600_000));
 
 
 // Invariant: a floor is writable at the exact entry ceiling and lets a
@@ -202,4 +203,4 @@ test("Native archive floors reclaim an exact2000-entry ceiling while10000 real i
   expect(await held()).toBeLessThan(2000);
   console.info("F2 capacity summary", { protocolInputs: inputs + 1, signedRemarks: inputs - 1, checkpoints: 1, genesis: 1, archiveAlarms: alarms, floor: floors,
     head: (await lane.head()).seq, held: await held(), scopeEntries: lane.c.bounds.scopeEntries });
-}, 600_000);
+}, scaleDeadline(600_000));

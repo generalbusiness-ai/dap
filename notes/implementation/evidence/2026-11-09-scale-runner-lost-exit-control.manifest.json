@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "request": "a5f3d838aaaf7b2f44a162eb045e6878fc25457e",
+  "promise": "2f8e738275709d36411f1d73f5da84a330971783",
+  "sourceHead": "5ac318c40ad1308de1733080a82409340f48b97d",
+  "sourceTree": "8d342e2bf1be3a25eefbdabb79af43f86e3a8768",
+  "qualification": "One named lost-child-exit control. Reuse the retained five-pass baseline, change only the child failure propagation, run the unchanged complete Node owner once, require only its capture assertion to fail, restore every tracked byte. No baseline or restored rerun.",
+  "fileCount": 10,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-scale-runner-lost-exit-control-validation",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 728,
+          "sha256": "cddd5045b0bfbdcdcce58c36b3aa769aa6583f00b8916c10814a3a05018d34d1"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 128,
+          "sha256": "71c6b8c0ed4a96feccda56d08eda203e34ad6f0e946e9244619e73c726413ad2"
+        },
+        {
+          "path": "control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "control.time",
+          "bytes": 29,
+          "sha256": "d21fa5c646df271c7212bf8ac4a56976925e5e1f77de07ece99c5adee69772fd"
+        },
+        {
+          "path": "controlled-source.mjs",
+          "bytes": 4724,
+          "sha256": "557f642f16282c493d0c493243ddb7dc207d441069275583cd9f9045f27af185"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 4431,
+          "sha256": "da439ec511ebe081575e8bb10388034344ec76ecd0ec75a4455627a4374e6395"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 323,
+          "sha256": "53f7d38cfade5e84b55a3a9d0b48f5e2f3333d44c7566bd35c87e85e7f4916b7"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1003,
+          "sha256": "e0db55687b1efa144b3ff7dc562d36ef9867d6854654d62392d7de0a721b28cc"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 190,
+          "sha256": "020b9feb2bebd0a743c73ddc7c5ef47d73f9f42bb243ca0fc677d1710a8a9d56"
+        },
+        {
+          "path": "verifier.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        }
+      ],
+      "privateRegularFilesIncludingInventory": 66
+    }
+  ]
+}
