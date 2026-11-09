@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b34941d0cacf5fa486d62dfae99839d847e1a240","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br11-setting-followup.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bf4df6dbb25a84ee83db556193a8ab7c67f7e674","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.artroom-scope.jsonc."}
