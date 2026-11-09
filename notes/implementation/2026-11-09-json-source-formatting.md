@@ -2,7 +2,9 @@
 
 Request `c6e29874`; promise `197ace07`; scope ruling `85784814`.
 This head includes main `29926a3a`. Authoring, focused checks and the
-packet-exclusion control are complete. The final gate remains due.
+packet-exclusion control are complete. The single final gate failed; its
+unchanged source and complete original outcomes remain sealed. A planner
+ruling on the authoring size conflict and follow-up remains due.
 
 ## What changes
 
@@ -56,7 +58,7 @@ Any digest change stops this task for a planner report.
 | Packet-exclusion control | Owner exits 1 at the intended assertion; verifier exits 0 | Pre-gate `packet-control--result.json`, `packet-control--control.exit`, `packet-control--verifier.exit` |
 | Views adapter owner | 26 Node cases pass | Pre-gate `focused--result.json`, `focused--owner.exit` |
 | Affected compiler contexts and complete owners | Five compiler contexts and 29 Plain cases across twelve owners pass | Pre-gate `focused--focused--result.json`, `focused--focused--coverage-ledger.json`, `focused--pipeline.exit` |
-| Final gate | Unrun | Due |
+| Final gate at `3a1632b5` | Exit 1: six Plain failures; Native and Scale unreached | Failed-gate `gate.exit`, `classification.json`, `summary.json` |
 
 The [authoring manifest](evidence/2026-11-09-json-authoring.manifest.json)
 has SHA-256 `f561471f1db6574f97c8565b6b0d9aa59b5120e17fbb1e712c74a6e602a3a393`.
@@ -86,10 +88,37 @@ The real tracked packet wrongly entered the selected set. The assertion at
 `false`. The driver restored all tracked source bytes and checked group
 closure. The original owner exit remains 1; the control verifier exits 0.
 
-The single final gate remains due. Its unchanged selection rules select all
-six existing Scale cases because this head changes the root package, test
-runner and gate script. The gate keeps the original local deadlines, worker
-limits and selection. Earlier branches establish no result for this head.
+## Failed gate and pending size ruling
+
+The single gate at `3a1632b54ebbafc8d613711bac5a364db5130422`, tree
+`071df937cf8c2bdecff7883e43c0f301c72fc826`, ended naturally with actual
+`gate.exit` equal to `exit 1`. Formatting, typechecking, Node 143 and
+Counting 56 passed. Plain reports 4,022 passed, six failed and one skipped
+across 372 files. No unhandled error or contradictory report occurred.
+The source stayed byte-identical and the owned group closed.
+
+All six failures, in five complete owners, reach the same unchanged
+pre-read allowance in `packages/cli/src/application-files.ts`. Default
+formatting grows `examples/grow/check/dap.application.json` from 64,776
+to 108,311 bytes, beyond `LIMITS.metadataBytes` at 65,536 bytes. The parsed
+value is unchanged. A later static audit found
+`examples/grow/check/fault-scenario.json` grows from 63,337 to 106,670 bytes
+and uses that same allowance. The failed configuration load masks that
+later scenario read; no run is claimed for the second failure.
+
+The [failed-gate manifest](evidence/2026-11-09-json-failed-gate.manifest.json)
+has SHA-256 `fe93b406f686c623eba569b05dc689079d178593324ccc93a7fccd2403e74392`.
+It seals sixteen public files and the complete private inventory of 2,371
+files. Native and all six selected Scale cases remained unreached.
+The unchanged selection rules include Scale because this head changes the
+root package, test runner and gate script. No selection or deadline changed.
+
+Planner ruling request `68f6934d` names the conflict between default
+formatting and the existing source allowance. Addendum `2b3f7f31` names the
+second input. No repair, larger allowance, new exception or second gate has
+run. The original gate remains failed. This later checkpoint changes only
+this explanatory note and its retained manifest. Earlier branches establish
+no result for this head.
 
 ## Open limits
 
