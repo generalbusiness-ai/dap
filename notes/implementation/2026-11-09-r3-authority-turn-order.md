@@ -37,7 +37,10 @@ labelled stand-ins. It checks zero provenance, receiver and foreign reads
 and no new entry on a failed observation. An authorized input reaches those
 boundaries but leaves due timers unchanged until the alarm; its retry then
 writes the act. The actual receiver-policy method is instrumented, with a
-positive call to distinguish an unused counter.
+positive call to distinguish an unused counter. A final scripted port-limit
+answer reaches the signed Core boundary as `limit`, with no additional
+provenance, receiver or foreign read and no new entry. The separate budget
+owner fills the real observation map.
 
 The authority owner adds one pure budget witness using synthetic key IDs
 below signature admission. It mixes ordinary, once-only and failed reads.

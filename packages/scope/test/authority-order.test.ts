@@ -5,8 +5,9 @@ import { ReceiverReads } from "../src/receiver-reads.ts";
 import { HOLD, at, create, definition, rita, una } from "./fixtures-native.ts";
 import { wired } from "./outside.ts";
 
-// Real ScopeObject, judgments, SQLite, foreign entry and timed alarm. Membership
-// and release admission are scripted ports; no live room or provider runs.
+// Real ScopeObject, judgments, SQLite, foreign entry and timed alarm. Membership,
+// release admission and the final port-limit answer are scripted. No live room
+// or provider runs.
 test("a failed authority observation reaches no receiver or foreign work and drains no timer; only the alarm drains before an authorized retry", async () => {
   const under = variant(definition.declared, data => {
     data.acts.remark.fields.proof = { type: "fact", kind: ["remark"], under: data.name, required: false };
@@ -28,7 +29,9 @@ test("a failed authority observation reaches no receiver or foreign work and dra
       actions: denied ? [] : actions, within: { membership }, controller: null, controllerActive: null,
       notAfter: null, definition: "platform:membership@1" };
   } };
+  let bounded = false;
   wired.set(scope.name, () => ({
+    ...(bounded ? { authority: { read: async () => "limit" as const } } : {}),
     freshActAdmission: { read: async () => { calls.provenance++; return { current: () => "allowed" as const }; } },
     resolver: { read: async asked => {
       calls.foreign++;
@@ -60,4 +63,14 @@ test("a failed authority observation reaches no receiver or foreign work and dra
   expect(calls.provenance).toBe(2);
   expect(calls.receiver).toBe(2);
   expect(calls.foreign).toBe(2);
+
+  // The port's key bound reaches the signed Core boundary without another
+  // provenance, receiver or foreign read. The separate owner fills the real map.
+  bounded = true;
+  await scope.restart();
+  const atBound = await scope.head(), beforeLimit = { ...calls };
+  const over = scope.intent(una, "remark", { on: 0, fields: { text: "new key at the bound", proof: fact } });
+  expect(await scope.submit(over)).toEqual({ answer: "refused", reason: "limit", judgedAt: atBound });
+  expect(calls).toEqual(beforeLimit);
+  expect(await scope.head()).toEqual(atBound);
 });
