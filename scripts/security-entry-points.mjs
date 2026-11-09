@@ -357,10 +357,11 @@ export async function sandboxInventory({ sandboxSource = readSource("apps/sandbo
   return rows;
 }
 
-/** The production module uses direct declaration exports and an object default.
+/** The production module uses direct exports and one exact hosted MCP forward.
  * Refuse other export forms rather than silently omit another RPC entrypoint. */
-export function workerEntrypoints(source = readSource(scopeFile)) {
+export function workerEntrypoints(source = readSource(scopeFile), hostedSource = readSource("packages/scope/src/worker-mcp.ts")) {
   const body = parse(source).body, imports = new Set(), bases = new Set(), classes = new Map(), exported = [];
+  let hostedForwards = 0;
   for (const node of body) {
     if (node.type === "ImportDeclaration" && node.importKind !== "type") {
       for (const specifier of node.specifiers) {
@@ -377,6 +378,15 @@ export function workerEntrypoints(source = readSource(scopeFile)) {
       assert.equal(node.declaration.type, "ObjectExpression", "Worker entry inventory: unsupported default export");
     }
     if (node.type === "ExportNamedDeclaration") {
+      if (node.source) {
+        assert.equal(node.source.value, "./worker-mcp.ts", "Worker entry inventory: unsupported forward");
+        assert.ok(!node.declaration && node.exportKind === "value", "Worker entry inventory: unsupported forward form");
+        assert.deepEqual(node.specifiers.map(part => [part.local.name, part.exported.name, part.exportKind]), [
+          ["mcpRoute", "mcpRoute", "value"], ["McpRegistry", "McpRegistry", "value"], ["McpAgent", "McpAgent", "value"], ["McpEnv", "McpEnv", "type"],
+        ], "Worker entry inventory: exact hosted exports");
+        hostedForwards++;
+        continue;
+      }
       assert.ok(!node.source && node.declaration && !node.specifiers.length, "Worker entry inventory: unsupported named export");
       assert.ok(["ClassDeclaration", "FunctionDeclaration", "TSInterfaceDeclaration", "TSTypeAliasDeclaration"].includes(node.declaration.type),
         "Worker entry inventory: unsupported exported declaration");
@@ -388,6 +398,21 @@ export function workerEntrypoints(source = readSource(scopeFile)) {
     classes.set(declaration.id.name, declaration.superClass?.name ?? null);
     if (node.type === "ExportNamedDeclaration") exported.push(declaration.id.name);
   }
+  assert.equal(hostedForwards, 1, "Worker entry inventory: one hosted forward required");
+  const hosted = parse(hostedSource).body;
+  const platform = hosted.filter(node => node.type === "ImportDeclaration" && node.source.value === "cloudflare:workers");
+  assert.equal(platform.length, 1, "Worker entry inventory: one hosted platform import");
+  assert.equal(platform[0].importKind, "value", "Worker entry inventory: hosted platform value import");
+  assert.deepEqual(platform[0].specifiers.map(part => [part.type, part.imported?.name, part.local.name, part.importKind]),
+    [["ImportSpecifier", "DurableObject", "DurableObject", "value"]], "Worker entry inventory: exact hosted platform base");
+  assert.ok(!hosted.some(node => ["ExportAllDeclaration", "ExportDefaultDeclaration"].includes(node.type)), "Worker entry inventory: unsupported hosted export");
+  assert.deepEqual(hosted.filter(node => node.type === "ExportNamedDeclaration").map(node => {
+    assert.ok(!node.source && node.declaration && !node.specifiers.length, "Worker entry inventory: unsupported hosted forward");
+    return [node.declaration.id?.name, node.declaration.type, node.declaration.superClass?.name ?? null];
+  }), [
+    ["McpEnv", "TSInterfaceDeclaration", null], ["mcpRoute", "FunctionDeclaration", null],
+    ["McpRegistry", "ClassDeclaration", "DurableObject"], ["McpAgent", "ClassDeclaration", "DurableObject"],
+  ], "Worker entry inventory: exact hosted declarations");
   assert.equal(bases.size, 1, "Worker entry inventory: exact platform base required");
   const inherits = (name, seen = new Set()) => {
     assert.ok(!seen.has(name), "Worker entry inventory: cyclic class base");
@@ -424,7 +449,7 @@ function sandboxBindings(scopeSource) {
 
 function jsonc(file) { return JSON.parse(readSource(file).replace(/^\s*\/\/.*$/gm, "")); }
 export async function servedInventory({ scopeSource = readSource(scopeFile), hostedSource = readSource("packages/scope/src/worker-mcp.ts"), applicationSource = readSource("packages/scope/src/applications/route.ts"), hostedSettings = { MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION: "on" }, oauthSource = readSource("packages/scope/src/oauth-routes.ts"), consentSource = readSource("apps/room/page/oauth-route.ts") } = {}) {
-  assert.deepEqual(workerEntrypoints(scopeSource), ["ApplicationScreenService"], "Production WorkerEntrypoint exports");
+  assert.deepEqual(workerEntrypoints(scopeSource, hostedSource), ["ApplicationScreenService"], "Production WorkerEntrypoint exports");
   const scope = await scopeRows(scopeSource);
   const page = readSource("apps/room/page/route.ts"), pagePaths = [];
   walk(parse(declaration(page, "page")), node => { if (node.type === "SwitchCase" && typeof node.test?.value === "string") pagePaths.push(node.test.value); });

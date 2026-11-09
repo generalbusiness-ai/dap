@@ -414,6 +414,16 @@ test("production RPC export inventory rejects an additional entrypoint with docu
   assert.deepEqual(workerEntrypoints(changed), ["ApplicationScreenService", "UnexpectedEntry"]);
   await assert.rejects(() => servedInventory({ scopeSource: changed }),
     { code: "ERR_ASSERTION", message: /Production WorkerEntrypoint exports/ });
+  const forward = 'export { mcpRoute, McpRegistry, McpAgent, type McpEnv } from "./worker-mcp.ts";';
+  assert.equal(source.split(forward).length, 2);
+  for (const replacement of ["", forward.replace("worker-mcp.ts", "other-mcp.ts"), forward.replace("McpAgent,", "McpAgent as OtherAgent,")]) {
+    assert.throws(() => workerEntrypoints(source.replace(forward, replacement)), { code: "ERR_ASSERTION" });
+  }
+  const hosted = sourceOf("packages/scope/src/worker-mcp.ts");
+  for (const extra of [
+    hosted + "\nexport class UnexpectedHostedEntry extends WorkerEntrypoint {}\n",
+    hosted.replace("McpAgent<E extends McpEnv = McpEnv> extends DurableObject", "McpAgent<E extends McpEnv = McpEnv> extends WorkerEntrypoint"),
+  ]) assert.throws(() => workerEntrypoints(source, extra), { code: "ERR_ASSERTION" });
 });
 
 test("every served Worker route/method has exactly its reviewed gate-class row", async () => {

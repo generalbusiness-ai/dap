@@ -35,6 +35,14 @@ The existing structural controls follow the new display-helper path and a
 surviving Worker import. Route and gate assertions retain their meanings.
 The CLI stories, claim, archive, restart and object tests remain unchanged.
 
-Validation has not run yet. The planner closed the R3 deployment window in
-`247c9435` and released the local slot for the focused checks and final gate.
+The first focused pipeline stopped at the security inventory: six cases
+passed, and six rejected the new Worker re-export form. No compiler or
+runtime test started. The raw unit `2026-11-09-br14-focused` retains exit 1.
+The finite export model now checks the exact MCP forward, the hosted module's
+four exported declarations and its direct `DurableObject` import. Controls
+reject a missing, renamed or aliased forward, an extra hosted export and a
+hosted RPC base. The existing direct RPC export control remains.
+
+The planner closed the R3 deployment window in `247c9435` and released the
+local slot for focused checks and the final gate. Neither has passed yet.
 This split changes no recorded format, definition pin or deployment setting.
