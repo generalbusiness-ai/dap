@@ -98,7 +98,7 @@ test("refresh retains its own sessions and revocation removes only that grant's 
       const empty = utf8("{}");
       const listed = await agent.connectionControl(signed("connections", "list", empty), "connections", empty);
       expect((listed.body["connections"] as { id: string }[]).map(c => c.id)).toEqual([b.id]);
-      expect((await agent.control(signed("retire", "retire", empty), "retire", empty)).status).toBe(200);
+      expect((await agent.control(signed("retire", "retire", empty), "retire", empty)).status).toBe(202);
       expect(sql.exec(`SELECT count(*) AS n FROM oauth_issuer WHERE state != 'ended'`).toArray()[0]!["n"]).toBe(0);
       expect(sql.exec(`SELECT count(*) AS n FROM oauth_session`).toArray()[0]!["n"]).toBe(0);
     } finally { agent.abrupt(); }

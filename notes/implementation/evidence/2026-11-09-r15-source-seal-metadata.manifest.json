@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "request": "b66b8f146a9813628e0325374f551ae22d77284f",
+  "promise": "0875dbf1182ef1ce98fa6119a6c2de06e3a2383b",
+  "sourceHead": "faa4be6b352cbe2a00c045e0decedc1d09a546db",
+  "sourceTree": "3ceb152e02fbed3533ead6ddb5f6b7c10b4bbb68",
+  "qualification": "Seal existing maintained-parser metadata from75d4430c andfaa4be6b without rerunning it. Verify original Git source hashes, producer files and current adopted literals; hosted and helper production match latest source hashes. Patches adopt one hosted owner and one helper row; all route/gate assertions retained. Metadata proves no authority/test/deployment pass. Hugh standing future patch approval covers adoption; independent exact-head review remains required.",
+  "fileCount": 8,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r15-source-seal-metadata",
+      "fileCount": 8,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 756,
+          "sha256": "ca6bd91eb53870dfbafd818d707c38a690891aece4ec6fe4a3b7cefc6c7618a0"
+        },
+        {
+          "path": "artroom-r15-decoder-source-seal-producer-20261109.mjs",
+          "bytes": 2138,
+          "sha256": "23d7d4b28a58927272227dbb76025250a7a73e17bc237f6d13f639f8b91a1676"
+        },
+        {
+          "path": "artroom-r15-decoder-source-seals-20261109.json",
+          "bytes": 1325,
+          "sha256": "9ef192fb5f18d18d976ae5e2b13a30927d3816904cd7c38b88532a3e22d81c2d"
+        },
+        {
+          "path": "artroom-r15-decoder-source-seals-20261109.patch",
+          "bytes": 1447,
+          "sha256": "3d31f9adc04abe1432d2f0d7c4b5b7a69a5f8094ed6623d1c40eab4222a49cc6"
+        },
+        {
+          "path": "artroom-r15-source-seal-producer-20261109.mjs",
+          "bytes": 2114,
+          "sha256": "dc83c59a9751899b6bac76dbf69b0d3f87eae77ab7977d7c6132ba74f8bdcc0e"
+        },
+        {
+          "path": "artroom-r15-source-seals-20261109.json",
+          "bytes": 1255,
+          "sha256": "1b110c93a6b7db585053ee1f23035793e934c30c0434dae3c76df196cb32788b"
+        },
+        {
+          "path": "artroom-r15-source-seals-20261109.patch",
+          "bytes": 1537,
+          "sha256": "839f3c75ba75220cb81a8fb780611d75aa52b5c3cae0fb19a6f1fe16ee455429"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 2618,
+          "sha256": "4a3e8de96a568017c1b0666dddce6ada49f9bf58e002026c597f00a645816d04"
+        }
+      ]
+    }
+  ]
+}

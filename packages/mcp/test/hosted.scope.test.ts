@@ -7,9 +7,9 @@
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ControlRequest, Digest, Entry, FactRef, Item, KeyId, MemberId, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, keyIdOfSecret, newIncarnation, signControl, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { invitationIssueFields, encodeAgentKeyInvitation, secretSigner, type AgentKeyInvitation } from "@generalbusiness/dap-client";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT, FIRST_ACTIONS_OF, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
+import { b64url, canonicalize, digestBytes, keyIdOfSecret, newIncarnation, signControl, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { invitationIssueFields, encodeAgentKeyInvitation, requestSession, secretSigner, sessionRequest, signedIntent, signedLogReader, type AgentKeyInvitation } from "@generalbusiness/dap-client";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT, platform, FIRST_ACTIONS_OF, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, QUESTION_DIGESTS, changeDemo, issueDemo, issueQuestions } from "@generalbusiness/dap-lanes";
 import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
@@ -26,6 +26,8 @@ import { mcpRoom, SERVICE, type Agent, type Room, created as createRoom } from "
 import { MCP_METRIC_SCHEMA, type McpMetricPoint } from "../src/metrics.ts";
 import { OAUTH_STANDING_MS, type OAuthAccessGrant } from "../src/oauth-access.ts";
 import { ROW_OVERHEAD } from "../src/hosted.ts";
+import { httpSource, verify, type HistorySource } from "@generalbusiness/dap-replay";
+import { sqliteStore, type Sql } from "../src/sqlite-custody.ts";
 
 /** Production default dispatch, in this isolate. The actual native PLATFORM namespace is this fixture's Scope binding;
  * REGISTRIES and AGENTS keep their existing native subclasses, clocks, custody and control fences. */
@@ -228,7 +230,7 @@ async function roomWithIssues(): Promise<{ room: Room; rita: Agent }> {
   expect((await rita.ok("rules.activate", { fields: { digest: DEMO_DIGESTS.issue, name: "issue" }, values: [canonicalize(issueDemo)], idempotencyKey: "activate-issue" }))["answer"]).toBe("accepted");
   return { room, rita };
 }
-const done = (room: Room) => { hostedTest.metrics = null; hostedTest.now = null; hostedTest.pause = null; hostedTest.lose = null; hostedTest.controlBudget = null; hostedTest.custodyBounds = null; hostedTest.failWrite = null; hostedTest.faultAt = null; hostedTest.failSession = false; hostedTest.scheduleExpiry = null; room.done(); };
+const done = (room: Room) => { hostedTest.metrics = null; hostedTest.now = null; hostedTest.pause = null; hostedTest.lose = null; hostedTest.drop = null; hostedTest.controlBudget = null; hostedTest.custodyBounds = null; hostedTest.failWrite = null; hostedTest.faultAt = null; hostedTest.failSession = false; hostedTest.scheduleExpiry = null; room.done(); };
 /** A raw request to the agent's endpoint with a bearer. */
 const mcp = async (bearer: string, method: string, headers: Record<string, string>, body?: unknown): Promise<Response> => {
   const response = await routed(`${SERVICE}/mcp`, { method, headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json", ...headers }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
@@ -402,7 +404,7 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
     const retired = await hosted(room, rita, "@oauth-retired", "TEST-oauth-retired");
     const retiredToken = await issue(claude, "@rita", 3_600_000, retired.agent);
     expect((await list(claude, retiredToken.token)).status).toBe(200);
-    expect((await room.wait(() => post(`/mcp/agents/${retired.agent}`, control(room, rita.secret, "retire", M, retired.agent, "", "TEST-oauth-retire"), "", "DELETE"))).status).toBe(200);
+    expect((await room.wait(() => post(`/mcp/agents/${retired.agent}`, control(room, rita.secret, "retire", M, retired.agent, "", "TEST-oauth-retire"), "", "DELETE"))).status).toBe(202);
     expect((await list(claude, retiredToken.token)).status).toBe(401);
     const revoked = await hosted(room, rita, "@oauth-revoked", "TEST-oauth-revoked");
     const revokedToken = await issue(claude, "@rita", 3_600_000, revoked.agent);
@@ -881,7 +883,7 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect(afterStream.text()).not.toContain("event: end");
     // After retire: 401 for the bearer, and the control answers 409 for a further bearer. The stream gets its final event; the
     // listen its result and the end of its body.
-    expect((await room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, "", "rita-retire-bot"), "", "DELETE"))).status).toBe(200);
+    expect((await room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, "", "rita-retire-bot"), "", "DELETE"))).status).toBe(202);
     expect(await afterStream.ended).toBe(200);
     expect(afterStream.text()).toContain("event: end");
     expect(await afterListen.ended, "the listen's body ended").toBe(200);
@@ -1120,7 +1122,7 @@ test("H5, H6 and H7: eviction and reconciliation, custody across a lost reply an
     // The reserved agent ID is the registry's: find it by retiring through the control route with the reserved ID from the op's row.
     const reservedId = (await (env.REGISTRIES.get(env.REGISTRIES.idFromName(rita.config.repository!.membership.scope)) as unknown as { reservedAgent(op: string): Promise<string | null> }).reservedAgent("create-4"))!;
     expect(reservedId).toMatch(/^[0-9a-f]{64}$/);
-    expect((await room.wait(() => post(retireUrl(reservedId), control(room, rita.secret, "retire", rita.config.repository!.membership, reservedId, "", "retire-4"), "", "DELETE"))).status, "an admin retires the unfinished agent").toBe(200);
+    expect((await room.wait(() => post(retireUrl(reservedId), control(room, rita.secret, "retire", rita.config.repository!.membership, reservedId, "", "retire-4"), "", "DELETE"))).status, "an admin retires the unfinished agent").toBe(202);
     const retried = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", rita.config.repository!.membership, null, lostLinkBody, "create-4"), lostLinkBody));
     expect([retried.status, (await retried.json() as { error: string }).error], "the retry does not revive it").toEqual([409, "retired"]);
     // H7. The HTTP framing overhead of a 2026-07-28 tools/call: the response's bytes beyond the CallResult, measured once.
@@ -1343,7 +1345,7 @@ test("the control budget is one aggregate: operations, sessions and configuratio
     expect(await stub.used()).toBe(beforeReset);
     expect((await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "rotate-after-reset"), ""))).status).toBe(507);
     // Retire draws on the reserve: it succeeds where create and bearer were refused.
-    expect((await room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, "", "retire-at-full"), "", "DELETE"))).status).toBe(200);
+    expect((await room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, "", "retire-at-full"), "", "DELETE"))).status).toBe(202);
     expect((await mcp(bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status).toBe(401);
   } finally { done(room); }
 });
@@ -1836,3 +1838,127 @@ test("H6 matrix through the endpoint: prepared reset, concurrent send and settle
     expect((await registry2.agents()).some((a) => a.handle === "@nobody")).toBe(false);
   } finally { done(room); }
 }, 180_000);
+
+// Native membership, endpoint, SQLite and replay. Only the transport failure
+// and fixture clock are scripted. These scenes contact no deployed service.
+test("retire erases the seed before an uncertain revoke, retries only its retained envelope, and replays the recorded end", async () => {
+  const { room, rita } = await roomWithIssues();
+  try {
+    const M = rita.config.repository!.membership;
+    const bot = await hosted(room, rita, "@retire-admin", "TEST-retire-admin-create");
+    const object = env.AGENTS.get(env.AGENTS.idFromString(bot.agent));
+    const seed = Uint8Array.from(await runInDurableObject(object, (_instance, state) => {
+      const value = state.storage.sql.exec("SELECT seed FROM agent WHERE id = 1").toArray()[0]!["seed"];
+      return Array.from(value instanceof Uint8Array ? value : new Uint8Array(value as ArrayBuffer));
+    }));
+    expect(seed.length).toBe(32);
+    const created = await room.wait(() => modernCall(bot.bearer, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "TEST before retirement", conditions: ["done"] }, values: [canonicalize(issueDemo)], idempotencyKey: "TEST-retire-before" }));
+    expect(created.status).toBe(200);
+    const D = room.platform(rita.config.repository!.directory.scope);
+    const before = (await D.entries()).find(entry => entry.input.type === "act" && entry.input.signed.intent.actor === bot.key);
+    expect(before?.input.type).toBe("act");
+    if (!before || before.input.type !== "act") throw new Error("The agent's original signed act is missing.");
+    const original = await runInDurableObject(object, async (_instance, state) => {
+      const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
+      const kept = sql.exec("SELECT id FROM record WHERE key = ?", "TEST-retire-before").toArray()[0];
+      return kept ? (await sqliteStore(sql).read(String(kept["id"])))?.envelope ?? null : null;
+    });
+    expect(original?.signed).toEqual(before.input.signed);
+    if (!original) throw new Error("The original custody envelope is missing.");
+    const items = await allItems(rita, "membership");
+    const key = items.find(item => item.type === "key" && item.values["id"] === bot.key)!;
+    const expected = { on: key.revision, roster: items.find(item => item.type === "roster")!.revision, member: items.find(item => item.type === "member" && item.values["handle"] === "@retire-admin")!.revision };
+    const revoke = await signedIntent(secretSigner(rita.secret), { to: M, kind: "revoke-key", on: key.id, fields: { as: "retired" }, expected }, { idempotencyKey: "TEST-retire-exact-revoke", now: room.now() });
+    const body = canonicalize({ revoke });
+    const retire = () => room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, body, "TEST-retire-admin"), body, "DELETE"));
+    hostedTest.drop = `/${M.scope}/acts`;
+    const first = await retire();
+    expect([first.status, await first.json()]).toEqual([202, expect.objectContaining({ retired: false, pending: true, seedErased: true, endpointDisabled: true, reason: "revoke-unresolved" })]);
+    const stored = () => runInDurableObject(object, (_instance, state) => ({
+      agent: state.storage.sql.exec("SELECT length(seed) AS bytes, state, bearer FROM agent WHERE id = 1").toArray(),
+      revoke: state.storage.sql.exec("SELECT revoke FROM agent_retirement WHERE id = 1").toArray(),
+      sessions: state.storage.sql.exec("SELECT count(*) AS count FROM session").toArray(),
+    }));
+    expect(await stored()).toMatchObject({ agent: [{ bytes: 0, state: "retired", bearer: null }], revoke: [{ revoke: canonicalize(revoke) }], sessions: [{ count: 0 }] });
+    expect((await modernCall(bot.bearer, "room", {})).status).toBe(401);
+    expect((await room.platform(M.scope).item(key.id)).state).toBe("active");
+    await agentStub(bot.agent).reset();
+    const finished = await retire();
+    expect([finished.status, await finished.json()]).toEqual([200, expect.objectContaining({ retired: true, seedErased: true })]);
+    expect(await room.platform(M.scope).stub.observe({ of: M, key: bot.key })).toMatchObject({ keyState: "retired" });
+    const membership = await room.platform(M.scope).entries();
+    const revokes = membership.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "revoke-key" && entry.input.signed.intent.on === key.id);
+    expect(revokes).toHaveLength(1);
+    expect(revokes[0]!.input).toMatchObject({ type: "act", signed: revoke });
+    expect((await stored()).revoke).toEqual([{ revoke: canonicalize(revoke) }]);
+    // A fresh authority read sees the recorded revoke. The existing bounded
+    // lifetime of grants another scope already holds does not change here.
+    await D.restart();
+    const repositoryItem = (await D.summary()).value.items.find(item => item.type === "repository")!;
+    expect(Object.keys(before.input.signed.intent.expected)).toEqual(["repository"]);
+    const after = signIntent({ ...before.input.signed.intent, expected: { repository: repositoryItem.revision }, idempotencyKey: "TEST-after-retire", notAfter: timeOf(room.now() + 60_000) }, seed);
+    expect(await D.stub.submit(after, [], original.beside)).toMatchObject({ answer: "refused", reason: "unauthorized" });
+    expect((await modernCall(bot.bearer, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "TEST forbidden", conditions: ["done"] }, idempotencyKey: "TEST-after-endpoint-retire" })).status).toBe(401);
+    // Signed reads expose only the signer's cause chain. Replay needs the
+    // admin's complete membership session, with signed bootstrap reads for
+    // scopes that have not recorded a membership incarnation yet.
+    const session = await requestSession(SERVICE, M.scope, sessionRequest(M, rita.secret, timeOf(room.now() + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16)))), { fetch: room.fetch });
+    if (!session.ok) throw new Error(`no replay session: ${session.reason}`);
+    const full = httpSource(SERVICE, { fetch: room.fetch, reader: session.session.reader() });
+    const signed = httpSource(SERVICE, { fetch: room.fetch, reader: signedLogReader(secretSigner(rita.secret), { now: room.now }) });
+    const source: HistorySource = {
+      page: async (scope, from, allow) => { const got = await full.page(scope, from, allow); return !got.ok && got.reason === "forbidden" ? signed.page(scope, from, allow) : got; },
+      retained: async (scope, kind, digest, allow, domain) => { const got = await full.retained(scope, kind, digest, allow, domain); return !got.ok && got.reason === "forbidden" ? signed.retained(scope, kind, digest, allow, domain) : got; },
+    };
+    const replayed = await room.wait(() => verify(source, { mode: "replay", scope: M.scope, platform, grants: "proven" }));
+    expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
+    seed.fill(0);
+  } finally { done(room); }
+});
+
+test("a controller's pending retire keeps no seed or replacement revoke and completes only after an admitted recorded revocation", async () => {
+  const { room, rita } = await roomWithIssues();
+  try {
+    const M = rita.config.repository!.membership;
+    const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+    const invited = await rita.ok("member.invite", { fields: { handle: "@retire-controller", role: "member", inviteHash: textDigest(secret), inviteEnds: timeOf(room.now() + 3_600_000) }, idempotencyKey: "TEST-retire-controller-invite" });
+    const { inbox: _inbox, ...repository } = rita.config.repository!;
+    const link = INVITATION_LINK + b64url(utf8(canonicalize({ v: 1, service: SERVICE, repository, invitation: (invited["fact"] as FactRef).seq, secret, handle: "@retire-controller", definition: "platform:membership@2" })));
+    const controller = room.agent("retire-controller", { config: { service: "" } });
+    expect((await controller.ok("join", { link, idempotencyKey: "TEST-retire-controller-join" }))["answer"]).toBe("accepted");
+    const bot = await hosted(room, rita, "@retire-controlled", "TEST-retire-controlled-create", controller.secret, "platform:membership@2", "@retire-controller");
+    const retire = (body: string, op: string, signer = controller.secret) => room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, signer, "retire", M, bot.agent, body, op), body, "DELETE"));
+    const first = await retire("", "TEST-retire-no-envelope");
+    expect([first.status, await first.json()]).toEqual([202, expect.objectContaining({ pending: true, retired: false, seedErased: true, reason: "revoke-required" })]);
+    const object = env.AGENTS.get(env.AGENTS.idFromString(bot.agent));
+    const stored = () => runInDurableObject(object, (_instance, state) => ({
+      seedBytes: state.storage.sql.exec("SELECT length(seed) AS bytes FROM agent WHERE id = 1").toArray()[0]!["bytes"],
+      revoke: state.storage.sql.exec("SELECT revoke FROM agent_retirement WHERE id = 1").toArray()[0]!["revoke"],
+    }));
+    expect(await stored()).toEqual({ seedBytes: 0, revoke: null });
+    expect((await modernCall(bot.bearer, "room", {})).status).toBe(401);
+    const items = await allItems(rita, "membership");
+    const key = items.find(item => item.type === "key" && item.values["id"] === bot.key)!;
+    const expected = { on: key.revision, roster: items.find(item => item.type === "roster")!.revision, member: items.find(item => item.type === "member" && item.values["handle"] === "@retire-controlled")!.revision };
+    const revoke = await signedIntent(secretSigner(controller.secret), { to: M, kind: "revoke-key", on: key.id, fields: { as: "retired" }, expected }, { idempotencyKey: "TEST-controller-refused-revoke", now: room.now() });
+    const body = canonicalize({ revoke });
+    const refused = await retire(body, "TEST-retire-controller-envelope");
+    expect([refused.status, await refused.json()]).toEqual([202, expect.objectContaining({ pending: true, retired: false, reason: "unauthorized" })]);
+    expect(await stored()).toEqual({ seedBytes: 0, revoke: canonicalize(revoke) });
+    await agentStub(bot.agent).reset();
+    const replacement = await signedIntent(secretSigner(rita.secret), { to: M, kind: "revoke-key", on: key.id, fields: { as: "retired" }, expected }, { idempotencyKey: "TEST-ignored-replacement-revoke", now: room.now() });
+    const ignored = await retire(canonicalize({ revoke: replacement }), "TEST-retire-replacement", rita.secret);
+    expect(ignored.status).toBe(202);
+    expect(await stored()).toEqual({ seedBytes: 0, revoke: canonicalize(revoke) });
+    expect((await room.platform(M.scope).item(key.id)).state).toBe("active");
+    room.advance(Date.parse(revoke.intent.notAfter) - room.now() + 1);
+    const expired = await retire(body, "TEST-retire-controller-envelope");
+    expect([expired.status, await expired.json()]).toEqual([202, expect.objectContaining({ pending: true, reason: "revoke-expired" })]);
+    expect((await rita.ok("key.revoke", { on: key.id, fields: { as: "retired" }, idempotencyKey: "TEST-external-admin-revoke" }))["answer"]).toBe("accepted");
+    const finished = await retire(body, "TEST-retire-controller-envelope");
+    expect([finished.status, await finished.json()]).toEqual([200, expect.objectContaining({ retired: true, seedErased: true })]);
+    expect(await stored()).toEqual({ seedBytes: 0, revoke: canonicalize(revoke) });
+    const entries = await room.platform(M.scope).entries();
+    expect(entries.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "revoke-key" && entry.input.signed.intent.on === key.id)).toHaveLength(1);
+  } finally { done(room); }
+});

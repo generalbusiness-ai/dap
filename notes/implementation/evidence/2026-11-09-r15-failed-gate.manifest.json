@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "request": "b66b8f146a9813628e0325374f551ae22d77284f",
+  "promise": "0875dbf1182ef1ce98fa6119a6c2de06e3a2383b",
+  "sourceHead": "522949c7d79d37e00269fc3417b2524d3051b3f3",
+  "sourceTree": "d53308958b879d84a0790d12145f17118388f8bb",
+  "qualification": "The only R15 full gate remains failed. All pre-typecheck steps passed. Workspace npm continues independent workspace commands after MCP failure, but its && chain did not reach MCP browser or the 10 root contexts. The failure belongs solely to new hosted.scope test seed value across Workers RPC types. No root test stage ran. Targeted isolated-test follow-up must retain production/config/deps/helpers/assertions/deadlines, run affected and unreached compiler contexts and the previously unreached complete npm test body plus summary. No full gate repeat.",
+  "fileCount": 31,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r15-failed-gate-validation",
+      "fileCount": 31,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2456,
+          "sha256": "c600c5a9a57e0c2b0c0ef763085d659a52230373d3c7d570e7505a27ae2f3274"
+        },
+        {
+          "path": "citations.log",
+          "bytes": 1570063,
+          "sha256": "ae3e554b6a9fd019f755ea387d124347315ac389b0ad21e18726477097f950a4"
+        },
+        {
+          "path": "citations.time",
+          "bytes": 29,
+          "sha256": "bdd5014620f8ed875a6e2ab8ba47a8e31bff7ff9384b41605ff8e7736bb8cb48"
+        },
+        {
+          "path": "cite-test.log",
+          "bytes": 759,
+          "sha256": "b4e7aab13df4c4be3bb511931c5b2692f1d14b96498304ac749600f58daf0efe"
+        },
+        {
+          "path": "cite-test.time",
+          "bytes": 29,
+          "sha256": "d9918759d9ab2757144f827c20769d929f617fcc6c8127e4f493ee1dc947ff29"
+        },
+        {
+          "path": "commit-messages.log",
+          "bytes": 39,
+          "sha256": "c64f9d2f70fb4de448ee0851e246caf40a7e086ec6e00713dddddf9db032d016"
+        },
+        {
+          "path": "commit-messages.time",
+          "bytes": 29,
+          "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+        },
+        {
+          "path": "commit-test.log",
+          "bytes": 592,
+          "sha256": "189799362c70a96d8c9ca525574bb2b2fa50ca62687648617e82b790e9723de7"
+        },
+        {
+          "path": "commit-test.time",
+          "bytes": 29,
+          "sha256": "ef6b4d2abfdc4f28168e43175bd3711763a631260e7a33bac43c4361370eb7f4"
+        },
+        {
+          "path": "doc-links.log",
+          "bytes": 36,
+          "sha256": "453cfea149af906e0b58949bffd5019c75bc2b1286d0da89d165879f605ab254"
+        },
+        {
+          "path": "doc-links.time",
+          "bytes": 29,
+          "sha256": "42bbd5f82f23d8630fd588bd0df2d18199f7d8ab9f1215d1a9e3e4e5f855b59f"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7354,
+          "sha256": "275694e352fcaf5b725f9dcca3275cff4a4564122aa3848d91966d19c875c804"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 1159,
+          "sha256": "3923153830a087066bc79bc8b041931f454d23348e22041c6a4a50d3e9542575"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 31,
+          "sha256": "2a2be6009bf13b98de41c9e84a38b10967a1b0cd550567bb8d222e2725b0e044"
+        },
+        {
+          "path": "helpers.log",
+          "bytes": 68,
+          "sha256": "61f64e598401da377387ea4a62a66f6b67e88c9f6498859a84d525034462a0f8"
+        },
+        {
+          "path": "helpers.time",
+          "bytes": 29,
+          "sha256": "18bc43900227cb4023e139ac398357b7594b2c4ec97d358bbbc1fa0634ab95ab"
+        },
+        {
+          "path": "notes.log",
+          "bytes": 18,
+          "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+        },
+        {
+          "path": "notes.time",
+          "bytes": 29,
+          "sha256": "4ac24bdf06761132a6923c7916a397d6e08cd3c1dc36ca18a9d8e1ae7b4be958"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 318,
+          "sha256": "46106b148724256e463c9bf0fe77f36bfba8b7b9f62b726c9fabf5be0db1aa87"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "22b6f9142fa541da25a75381fcdafaa9506161f4315e8f48e38fbf14dc70ad6c"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 5293,
+          "sha256": "56e8983a39e6248a06de6b68762b5402aae06017a3d7d2dd33da195ebb454b93"
+        },
+        {
+          "path": "section-citations.json",
+          "bytes": 3934349,
+          "sha256": "83132f31145448f8e6c106354352f73a8116424dc34f1a7e78455ae3b39222d5"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "0d689caa1ab5a0270efa92192104b2f6a8efd9c81cd21931ee5c009037471692"
+        },
+        {
+          "path": "slot-observations.jsonl",
+          "bytes": 267,
+          "sha256": "d8b476fb14613ce2a1fb5f2f189d9d4bfa03504159a028b9920211293c7ac16c"
+        },
+        {
+          "path": "started.json",
+          "bytes": 716,
+          "sha256": "86b4b6b741e8fccb07bb39ad2f0824fbd0aa7ed4c1f73e6fbe50aa662fee0ce4"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 560,
+          "sha256": "c07a8463a5c0a9c220b57ef2afcf7c6c0d37d0ffc524c4dc1a5abb98bf667f16"
+        },
+        {
+          "path": "typecheck.log",
+          "bytes": 3046,
+          "sha256": "877fefe58b05db3bcbb75ecc695fc388007840ddc9dc96dc694ce7a2a568505a"
+        },
+        {
+          "path": "typecheck.time",
+          "bytes": 31,
+          "sha256": "af72dcb8b842914ec942149f0a9658fda99fda5cd7cbd6120d4c39cba90ff765"
+        },
+        {
+          "path": "whitespace.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "whitespace.time",
+          "bytes": 29,
+          "sha256": "f5d04e3f394dbde846fb5bf863e4e5541e917ef60e9e5b8a7a746282662ee215"
+        }
+      ]
+    }
+  ]
+}

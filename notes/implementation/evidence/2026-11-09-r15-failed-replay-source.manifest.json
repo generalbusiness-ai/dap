@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "request": "b66b8f146a9813628e0325374f551ae22d77284f",
+  "promise": "0875dbf1182ef1ce98fa6119a6c2de06e3a2383b",
+  "sourceHead": "8ad48f3773b1874c60339b07f48f51e7d430d677",
+  "sourceTree": "ce6d668decb84a065e8248a2e6afea2ddd7a46f9",
+  "qualification": "Sixth R15 focused unit remains failed. Static 24 case identities reconcile exactly. Replay source diagnosis remains due; production, helpers, security seals and all assertions/deadlines stay unchanged. Reused Node11, Scope source and four complete passed owners/15cases retain their own separate evidence. No R15 control or gate.",
+  "fileCount": 15,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r15-failed-replay-source-validation",
+      "fileCount": 15,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1182,
+          "sha256": "3605f980668e8df96c3d797606113b66cc6ee7e7ef7717faaca3f42ead490544"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "126c264271c46399a42cfc6725bf64b6c4d72205be48a1c12b5d758537fd931e"
+        },
+        {
+          "path": "compiler-body-result.json",
+          "bytes": 7649,
+          "sha256": "be3b5a8dc3aa60c8a07201df32273df0a461d04a6ed6cb39f8497b0af4b8c45c"
+        },
+        {
+          "path": "coverage-ledger.json",
+          "bytes": 30689,
+          "sha256": "da9b602f58d6da3f05152be3c41ba2e902b0951c5c25e1ae3a928863d69cd59b"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 5422,
+          "sha256": "a74a9d511b1e43aaf347a512d6afe4695115d5a9e5de1ae0a8f37fca1859cb43"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 1081,
+          "sha256": "7f8f27651fb0f19be8303436901e87a3878f9b1ba96d5364cb16a944fd3c62a8"
+        },
+        {
+          "path": "mcp-test.log",
+          "bytes": 29,
+          "sha256": "a2d3e93f183afdc44f95afdfd7f147b0f7d4bea1d486c74feb9c39afe18e030a"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 558,
+          "sha256": "3ffd0041bd31e3254547c32a5d390986b0cf8a50eada0c37a1cbff2bc4a42638"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 31,
+          "sha256": "06df126b03277d8b0e7536308bfcc6e6949b96a35ba4895147f519b9b7afeba3"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 479,
+          "sha256": "2aa698695ea044162401bbe07e5970e65f43d6b06e60338f9fbe1c20d3c6f02a"
+        },
+        {
+          "path": "scope-test.log",
+          "bytes": 29,
+          "sha256": "0c4ffdc42f9d26d8cfb67f9f377a640b3b20001308a7dab70df1fc4b9eb8faef"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}

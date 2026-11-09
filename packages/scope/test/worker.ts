@@ -365,6 +365,8 @@ export const hostedTest: {
   now: (() => number) | null; pause: ((waiting: readonly string[]) => Promise<void>) | null;
   /** The next request whose path ends with this reaches the scope, and its reply is lost: a STAND-IN for a dropped reply. */
   lose: string | null;
+  /** The next matching request never reaches the scope: a TEST transport failure. */
+  drop: string | null;
   /** A small control budget for an agent object made while it is set, in place of 16 MiB and 1 MiB. */
   controlBudget: { budget: number; reserve: number } | null;
   /** Small custody bounds for an agent object made while it is set; `failWrite` makes its next custody write fail, as SQLITE_FULL would. */
@@ -385,7 +387,7 @@ export const hostedTest: {
   toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string; MCP_CARD_ORIGINS?: string; MCP_RESOURCE_URLS?: string } | null;
   /** Raw deployment setting for the native constructor witness, never an AgentPorts override. */
   applicationSettings: Pick<McpEnv, "APPLICATION_TRUST"> | null;
-} = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, clientRetention: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
+} = { metrics: null, now: null, pause: null, lose: null, drop: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, clientRetention: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
 /** The scripted reset: thrown at a fence, once. */
 export class ScriptedReset extends Error { constructor(fence: string) { super(`scripted reset at ${fence}`); } }
 type HostedEnv = McpEnv & { PLATFORM: DurableObjectNamespace };
@@ -437,6 +439,7 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
       now: () => hostedTest.now?.() ?? Date.now(), every: () => () => {},
       pause: (waiting: readonly string[]) => hostedTest.pause?.(waiting) ?? new Promise<void>((r) => setTimeout(r, 50)),
       ...(this.#productionHostedFetch ? {} : { fetch: (async (url: string, init?: RequestInit) => {
+        if (hostedTest.drop !== null && new URL(url).pathname.endsWith(hostedTest.drop)) { hostedTest.drop = null; throw new Error("scripted failure before dispatch"); }
         const response = await route(new Request(url, init), scopes, this.env);
         if (hostedTest.lose !== null && new URL(url).pathname.endsWith(hostedTest.lose)) { hostedTest.lose = null; await response.body?.cancel(); throw new Error("scripted loss of the reply"); }
         return response;
