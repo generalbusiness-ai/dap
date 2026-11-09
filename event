@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7f0b9a3faeb185695d4c6bed6faec34936b5e87b","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/shell.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a84930b47ee844ebd47335654858ebee27141217","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-08-room-br12-shared-gate.manifest.json."}
