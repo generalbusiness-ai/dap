@@ -84,6 +84,16 @@ The repair moves the same file-list constant into
 `packages/scope/vitest.scale-files.ts`. Both Scope configurations import
 that typed local module, and the canonical Node project table reexports
 it. The trigger list names the new configuration data file. All four
-witness files and the two policy guards stay unchanged. The affected
-Scope test compiler and two complete Node owners, four cases, need their
-focused check before the next gate. The original gate remains failed.
+witness files and the two policy guards stay unchanged. At repaired head
+`b844b830`, tree `a2bf1f2c`, the affected Scope test compiler exited 0.
+Both complete affected Node owners then passed all four cases, with no
+skip or unfinished case. Every tracked byte stayed equal; the compiler and
+Node process groups closed. The unchanged stage and reporting owners keep
+their earlier thirteen-case evidence, and the two unchanged policy guards
+keep their earlier conclusive controls.
+
+The [typed-boundary manifest](evidence/2026-11-09-br5-typed-boundary.manifest.json),
+digest `40fccf06ea9672672f7610d4069a8e4520bf522f253090509d621bb0a924bc95`,
+seals 15 public files and points to 62 private originals. No Vitest/Workers
+or scale body ran in this check. The original gate remains failed; the
+repaired full gate remains due.

@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "request": "d0afa034aa4946849911e9294543762fe67d4b8d",
+  "promise": "b6ab8ee7931721d20d62eb14ba03c894aa8b699e",
+  "sourceHead": "b844b8302b0aba8da9b579e99c41b4d227f21956",
+  "sourceTree": "a2bf1f2cbbf83b05c5ffc1a51a1445a11d647594",
+  "qualification": "One affected Scope test compiler, then four cases in the two complete affected Node owners. Pin source, tools, owned fourteen-workspace dependency view and forty-eight exports. Preserve the failed first gate. The four unchanged witness files and their six scale cases do not run; no Vitest/Workers, scale body, discovery, baseline control or full gate runs. Elapsed time covers initial guards and both commands; command timings remain separate. Actual exits remain authoritative.",
+  "fileCount": 15,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br5-typed-boundary-validation",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1124,
+          "sha256": "0358b08f38ce7ecbf51a2cdb8d7ccd549c42b80272dcc31dd02282e7558ba688"
+        },
+        {
+          "path": "compiler-receipt.json",
+          "bytes": 85,
+          "sha256": "0a3d988149e4cb0af139972ff259cc03195205d49c38f7d2c37911137d399610"
+        },
+        {
+          "path": "compiler-started.json",
+          "bytes": 88,
+          "sha256": "803c0c8b7589aa85dbaa1ecb73ef5a6e75f087ad45ca71719d0ff9a164788280"
+        },
+        {
+          "path": "compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compiler.time",
+          "bytes": 29,
+          "sha256": "42b2eebab56e92edc58a80615fdde9d7d099b3f973c459aa0328f40208646b85"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 29,
+          "sha256": "aa58565300e85493f8e610f05fc5773ae94b5d1f8cc244d24925dfa18f663d45"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 574,
+          "sha256": "f7c309dd803fda88818c7a84f5fbdd4fc084f1b8864fa3ed469d98d21e733326"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2110,
+          "sha256": "1b14ef43087a60ed91dfdc06196e400298011b2584259e227d0099331a68b805"
+        },
+        {
+          "path": "started.json",
+          "bytes": 88,
+          "sha256": "22eca503cf2302df5fad96ec4d7e6a020047547c3a3d2a54265783de208b7fe8"
+        },
+        {
+          "path": "stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "stdout",
+          "bytes": 1129,
+          "sha256": "a1fae635c9eb90a52c38e3cc1dc1c0999c13510dc8aacfb816f260b5706778fc"
+        }
+      ]
+    }
+  ]
+}
