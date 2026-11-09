@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "request": "908786011e5c0acae29e7b2a7c70b87b0680a948",
+  "promise": "3a1d2b78e02d544489d3786415b9ed987c28e3af",
+  "sourceHead": "83543042b32e29839c8e54b598100994cb0626a2",
+  "sourceTree": "8df4bce8705c502be95735a5b6c87f4d1f9ee05a",
+  "qualification": "Retain this compiler failure separately. Narrow type annotation repair only; production, asserts,physical restart and deadlines stay. Reuse earlier conclusive owners; no retry of a body occurred.",
+  "fileCount": 16,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r13-failed-rollback-probe-type-validation",
+      "fileCount": 16,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1277,
+          "sha256": "b437ee7e6d3fac79bd8f46d62afe43007ad83158a8402bde667eb31ed97e479f"
+        },
+        {
+          "path": "additional-native-reuse.json",
+          "bytes": 3433,
+          "sha256": "a9811b5e9b4279e5aedb4b731f6f2ecd4ddfb64ea05ae55abadf0480d0990412"
+        },
+        {
+          "path": "compatibility-prior.json",
+          "bytes": 212,
+          "sha256": "27aeb94d2afa5e469c6e78b889a88b1d09961698d01178cc763bc53dc02dc96d"
+        },
+        {
+          "path": "compiler-result.json",
+          "bytes": 2725,
+          "sha256": "3696cea735972f17d867b3102f33c6d2201955c4beac6c57b6e593e6fa5dfe7c"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 9471,
+          "sha256": "669ae25a44e1d065b74dd05c2f51cd40e36d30a9c9acf8d7003aebe51fd55afa"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 740,
+          "sha256": "72e063363a4deff9dabc6756ba574b3b9733d7a63bd816aa5f21f164ac678e5c"
+        },
+        {
+          "path": "node-reuse.json",
+          "bytes": 1103,
+          "sha256": "07b9ebeb4e3e170d4e448d3c8128967af54f4f475e3ef4b98e75c37f5295224e"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 589,
+          "sha256": "9b00757ff0f47c4ed33376c84c2ed400b44d1cc5f7f6e0b63e45711da8815081"
+        },
+        {
+          "path": "pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6bd89da331d346cc092a3d3811bf40b0dd6871dc950bd48f4d88a5ef506821fb"
+        },
+        {
+          "path": "pipeline.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "pipeline.time",
+          "bytes": 29,
+          "sha256": "6572ad6d4dbf180c4bdbefb82a0678b0ab5ba0ed3ae814d4c8c9ade17a9ceaa1"
+        },
+        {
+          "path": "prior-phase-reuse.json",
+          "bytes": 7482,
+          "sha256": "d38f35da2661d79fd0cf06a5edea70450f3e67205f0a8fac02c11d4c658e7884"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 488,
+          "sha256": "78b2335cb467a948f01ebd2b915026b6906f3d93dbf804e7275729381e490357"
+        },
+        {
+          "path": "scope-test.log",
+          "bytes": 654,
+          "sha256": "42e19f69c2154f15288e05c198cf1ed24e3190ba56f57869fca0dbf71edcaebc"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 98,
+          "sha256": "7ac0962027d5259bfb497af83b9ebab7f4ba435530b0f39235eb254a9629a8e0"
+        }
+      ]
+    }
+  ]
+}

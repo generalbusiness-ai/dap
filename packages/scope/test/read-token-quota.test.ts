@@ -11,6 +11,7 @@ import { artifactsOutside } from "../src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { CredentialStore } from "../src/credential-store.ts";
 import { beginSessionFixture } from "./session-settings.ts";
+import type { PlatformScope } from "./worker.ts";
 import { driveFixture, effectFixture, nativeFixtureLifetime } from "./support/native-fixture-lifetime.ts";
 
 const { rita, una, vic, paul, sam } = keys;
@@ -101,7 +102,7 @@ test("Native read-token quota shares eight slots across a member's keys, refuses
     // Catch the deliberate storage error inside the object. The RPC then
     // returns plain data before the physical eviction drains its requests.
     const rollbackError = await life.wait(() => runInDurableObject(G.object, async instance => {
-      try { await (instance as { submit: typeof G.stub.submit }).submit(first, []); return null; }
+      try { await (instance as PlatformScope).submit(first, []); return null; }
       catch (error) { return error instanceof Error ? error.message : "TEST unexpected non-Error rollback"; }
     }));
     expect(rollbackError).toMatch(/TEST read quota rollback/);

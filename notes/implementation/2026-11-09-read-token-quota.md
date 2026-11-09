@@ -139,6 +139,13 @@ before eviction. The same production submit, rollback assertions,
 physical restart, and original allowance remain. This follow-up checks
 the request-lifetime hypothesis without changing quota behavior.
 
+The RPC-boundary follow-up at `83543042` reached no test body: the test
+compiler required the actual `PlatformScope` subclass for the generic
+Durable Object callback. Manifest
+`7a6e04ead77b9092c83ee15fe5738a9358ffac55b358497ae484f13c1b842e1e`
+seals 16 public and 27 private files. The repair imports that class as a
+type and names it in the probe; the runtime call stays the same.
+
 The Native witness must show eight accepted reservations, a ninth refused
 `limit` with no entry, another member's success, several keys sharing the
 same member bucket, accepted-key reuse, and transaction rollback. The
