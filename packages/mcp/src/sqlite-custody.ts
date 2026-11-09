@@ -39,7 +39,7 @@
  */
 
 import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
-import { CustodyError, OUTCOMES_INLINE, RECORD_BYTES, TERMINAL, type CustodyRecord, type CustodyStore, type Outcome } from "./custody.ts";
+import { CustodyError, OUTCOMES_INLINE, RECORD_BYTES, TERMINAL, UNRESOLVED_MOST, type CustodyRecord, type CustodyStore, type Outcome } from "./custody.ts";
 
 export type SqlValue = string | number | null | ArrayBuffer | Uint8Array;
 /** What this store needs of a Durable Object's SQLite storage: `ctx.storage.sql.exec` and `ctx.storage.transactionSync`. */
@@ -65,6 +65,8 @@ const TERMINAL_PHASES = [...TERMINAL].map((phase) => `'${phase}'`).join(", ");
 export const IDENTITY_MOST = 64 * 1024 * 1024;
 
 export interface SqliteCustodyBounds {
+  /** A test can use a smaller count while production keeps UNRESOLVED_MOST. */
+  unresolvedMost?: number;
   budget: number;
   identityMost: number;
   terminalMost: number;
@@ -191,6 +193,7 @@ export function sqliteStore(sql: Sql, bounds: SqliteCustodyBounds = SQLITE_CUSTO
   const locks = new Map<string, Queue>();
   const admission = new Queue();
   return {
+    unresolvedMost: bounds.unresolvedMost ?? UNRESOLVED_MOST,
     used: () => budget("used"),
     reserved: () => budget("reserved"),
     archived: () => Number(one(`SELECT COUNT(*) AS n FROM archive`)!["n"]),

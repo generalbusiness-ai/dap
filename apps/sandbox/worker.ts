@@ -35,7 +35,7 @@ const refused = (status: number) => new Response(null, { status, headers: { "cac
 async function discard(response: Response): Promise<void> { try { await response.body?.cancel(); } catch { /* refusal does not depend on disposal */ } }
 
 export default {
-  async fetch(request: Request, env: SandboxEnv, ctx: Pick<ExecutionContext, "waitUntil">): Promise<Response> {
+  async fetch(request: Request, env: SandboxEnv, ctx: Pick<ExecutionContext, "waitUntil">, replySeconds = REPLY_SECONDS): Promise<Response> {
     const url = new URL(request.url);
     if (request.url.length > 128 * 1024 || url.username || url.password || url.hash) return refused(400);
     const mapping = mappings(env.SCREEN_HOSTS).find(row => row.host.screenOrigin === url.origin);
@@ -77,7 +77,7 @@ export default {
       const owned = exchange;
       if (!owned) return;
       try {
-        if (await within(REPLY_SECONDS, () => owned.lifetime.close()) === LATE) throw new Error("Native stream cleanup was not acknowledged within the transport window.");
+        if (await within(replySeconds, () => owned.lifetime.close()) === LATE) throw new Error("Native stream cleanup was not acknowledged within the transport window.");
       } finally {
         // Disposing a stub is not an acknowledgement. It follows the explicit
         // call (or its named timeout) and never substitutes for successful close.
@@ -87,12 +87,12 @@ export default {
     const pending = stream ? service.nativeStream(host.screenOrigin, forwarded).then(owned => { exchange = owned; return owned.response; })
       : screen ? service.screen(host.screenOrigin, forwarded) : service.native(host.screenOrigin, forwarded);
     let response;
-    try { response = await within(REPLY_SECONDS, () => pending); } catch { return refused(503); }
+    try { response = await within(replySeconds, () => pending); } catch { return refused(503); }
     if (response === LATE) {
       const cleanup = pending.then(async late => { try { await close(); } finally { await discard(late); } }, () => undefined);
       // Own this abandonment path after the 503 is returned. The additional
       // cleanup window is bounded; neither timeout nor disposal is an ack.
-      ctx.waitUntil(within(REPLY_SECONDS, () => cleanup).then(() => undefined, () => undefined));
+      ctx.waitUntil(within(replySeconds, () => cleanup).then(() => undefined, () => undefined));
       return refused(503);
     }
     if (response.status >= 300 && response.status < 400 && response.status !== 304) {

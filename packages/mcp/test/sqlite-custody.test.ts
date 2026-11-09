@@ -73,6 +73,34 @@ describe("the custody store over SQLite", () => {
     expect((await store.unresolved()).map((r) => r.key)).toEqual(["small", "large"]);
   });
 
+  test("the default 256-record count refuses before signing and admits again after one record settles", async () => {
+    const store = sqliteStore(nodeSql()), custody = new Custody(store, () => T);
+    expect(store.unresolvedMost).toBe(256);
+    // Synthetic envelopes isolate the real SQLite store and custody admission;
+    // no scope, signer or hosted endpoint runs at this cheaper boundary.
+    for (let n = 0; n < 255; n++) {
+      const seeded = recordOf(`count-${n}`, "unknown");
+      await store.write(identityId(seeded.identity), seeded);
+    }
+    let builds = 0;
+    const keep = (record: CustodyRecord) => custody.keep(record.identity, record.meaning, async () => {
+      builds++;
+      return { binding: record.binding, envelope: record.envelope };
+    }, T);
+    const last = recordOf("last", "prepared"), over = recordOf("over", "prepared");
+    await keep(last);
+    expect((await store.unresolved()).length).toBe(256);
+    await expect(keep(over)).rejects.toMatchObject({ why: { held: "full", reason: "count" } });
+    expect(builds, "the refused identity never builds or signs an envelope").toBe(1);
+    expect(await store.read(identityId(over.identity))).toBeNull();
+    const first = recordOf("count-0", "accepted", 0, [settled(1)]);
+    await store.write(identityId(first.identity), first);
+    const admitted = await keep(over);
+    expect([builds, admitted.envelope]).toEqual([2, over.envelope]);
+    expect((await store.unresolved()).length).toBe(256);
+    expect(await store.read(identityId(first.identity))).toEqual(first);
+  });
+
   test("outcomes spill to byte-bounded segment rows, in order, split when one is large, with an atomic index", async () => {
     const sql = nodeSql();
     let failing = false;

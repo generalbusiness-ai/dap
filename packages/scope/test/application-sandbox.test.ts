@@ -216,7 +216,7 @@ function pendingValue<T>() {
   const promise = new Promise<T>(accept => { resolve = accept; });
   return { promise, resolve };
 }
-function cleanupGateway(body: ReadableStream<Uint8Array>, release: () => Promise<void>, delayHeaders = false) {
+function cleanupGateway(body: ReadableStream<Uint8Array>, release: () => Promise<void>, delayHeaders = false, replySeconds?: number) {
   const host = SCREEN_TEST_HOST, headers = pendingValue<void>(), background: Promise<unknown>[] = [];
   let closes = 0, disposals = 0;
   const exchange = { response: new Response(body, { headers: { "content-type": "application/x-ndjson" } }), lifetime: { close: () => { closes++; return release(); } }, [Symbol.dispose]() { disposals++; } };
@@ -229,7 +229,7 @@ function cleanupGateway(body: ReadableStream<Uint8Array>, release: () => Promise
   const bindings: SandboxEnv = { SCREEN_HOSTS: JSON.stringify([{ host, service: "ROOM" }]), ROOM: service };
   const execution = { waitUntil: (work: Promise<unknown>) => { background.push(work); } };
   return {
-    send: (signal?: AbortSignal) => sandbox.fetch(new Request(`${host.screenOrigin}/v1/scopes/${host.directory}/stream`, { signal: signal ?? null }), bindings, execution),
+    send: (signal?: AbortSignal) => sandbox.fetch(new Request(`${host.screenOrigin}/v1/scopes/${host.directory}/stream`, { signal: signal ?? null }), bindings, execution, replySeconds),
     headers, background, counts: () => ({ closes, disposals }),
   };
 }
@@ -289,10 +289,9 @@ test("sandbox EOF and overlapping cancellation share one release and dispose the
 
 test("sandbox late headers retain bounded cleanup in the context until the exact exchange is released", async () => {
   const entered = pendingValue<void>(), ack = pendingValue<void>(); let cancelled = 0;
-  const fixture = cleanupGateway(new ReadableStream<Uint8Array>({ cancel() { cancelled++; } }), async () => { entered.resolve(); await ack.promise; }, true);
-  // This control intentionally awaits the real 30-second header deadline.
-  // Its local 60-second test allowance includes the subsequent cleanup checks;
-  // the production transport window and all other test deadlines are unchanged.
+  const fixture = cleanupGateway(new ReadableStream<Uint8Array>({ cancel() { cancelled++; } }), async () => { entered.resolve(); await ack.promise; }, true, 0.02);
+  // Exercise expiry with a small injected reply window. Production still uses
+  // the REPLY_SECONDS default; the release acknowledgement stays gated.
   try {
     const response = await fixture.send();
     expect(response.status).toBe(503); expect(fixture.background).toHaveLength(1);
