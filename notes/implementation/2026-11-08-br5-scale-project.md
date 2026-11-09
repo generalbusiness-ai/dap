@@ -37,11 +37,35 @@ an input these witnesses need.
 
 ## Validation
 
-No compiler, owner, control, workflow or gate has run for BR-5. Its three
-prepared selection cases cover the main/review decision, the ruled families,
-and a real Git rename out of a scale family. They use local scratch Git
-only. The RoomOpening/BR-12 gate has passed and released the executable slot.
-The four complete Node owners for selection, project partition, fixed stages
-and report summary need their focused check, followed by two cheap controls
-and one gate. The gate must observe all six unchanged cases in `scope-scale`
-and none in `scope`; no extra scale body runs before it.
+At clean integrated head `e07ee76e`, tree `5a7c7773`, the four complete Node
+owners passed all thirteen cases in one invocation: selection (three),
+project partition (one), fixed stages (six), and report summary (three).
+The actual owner and driver exits are 0. No case skips, retries or remains
+unfinished. Every tracked byte stays equal, and the process group closes.
+These owners use built-ins and project data, real scratch Git, and the
+existing bounded process/report stand-ins. They import no workspace namespace.
+
+Two named controls run the unchanged complete selection owner against that
+saved passing baseline. Removing main's unconditional selection fails only
+the assertion at line 12; enabling rename detection fails only the real-Git
+removed-path assertion at line 67. Each owner exits 1 with two cases passing
+and one assertion failure. Each control verifier exits 0 after restoring
+every tracked byte and checking process closure. Neither baseline nor
+restored source runs again.
+
+The [focused manifest](evidence/2026-11-08-br5-focused.manifest.json), digest
+`7cfef3181e3fcb7dd19c88977bf3cfbcb5cf2c617d0321a5b97e7485d5978f7b`, seals
+26 public files and points to 55 focused originals and 57 files for each
+control. The initial source-list freeze refused its empty terminal NUL
+entry before producing a plan or starting an owner. The first control
+preflight found an active esbuild service; neither control started until
+the planner's deployment finished and a fresh sample found the slot clear.
+Both refusals remain recorded. No validation repeats during sealing.
+
+The worktree now has an owned APFS dependency copy, made without installing
+packages. Its fourteen workspace links and forty-eight exports resolve to
+this worktree, with TypeScript 7.0.2, Vitest 4.1.12 and esbuild 0.28.1 under
+the unchanged lock digest. No compiler, Vitest/Workers, scale body, workflow
+or full gate has run for BR-5 yet. The one final gate must observe all six
+unchanged cases in `scope-scale` and none of those cases in `scope`.
+No extra scale body runs before it. No elapsed cost reduction is claimed.

@@ -1114,10 +1114,14 @@ State the machine, the load and the cache state with any figure.
 
 ## Source
 
-Checked against main `ada88648` on 31 October 2026. Sources:
+The runner and selection rules above follow these sources:
 [`package.json`](../package.json), [`scripts/gate.sh`](../scripts/gate.sh),
 [`scripts/test.mjs`](../scripts/test.mjs),
 [`vitest.projects.mjs`](../vitest.projects.mjs),
 [`scripts/test-changed.mjs`](../scripts/test-changed.mjs),
 [`scripts/control.mjs`](../scripts/control.mjs),
 [`scripts/focused-check.mjs`](../scripts/focused-check.mjs).
+
+Scale selection also uses [`scripts/scale-selection.mjs`](../scripts/scale-selection.mjs),
+[`vitest.scale.config.ts`](../vitest.scale.config.ts) and
+[the main scale workflow](../.github/workflows/scale-tests.yml).
