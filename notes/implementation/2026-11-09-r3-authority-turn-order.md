@@ -124,7 +124,6 @@ No test ran again for those checks.
 | Early refusal control: one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109.py /private/tmp/artroom-r3-early-authority-control-20261109.task.json` | owner 1; verifier 1; metadata 0 | `39c6264c / bc3dcf55` | `36c5720b8dec5192db90885eaf4fde87f9a7eb8c1191ee881f23dc1f69228231` |
 | Alarm drain control: one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109-v2.py /private/tmp/artroom-r3-alarm-drain-control-20261109.v2.task.json` | owner 1; verifier 0 | `39c6264c / bc3dcf55` | `586db0887430f7d24c8a7fc947f1f9a129ed415169cc5dfaab5f4ae735905411` |
 | Key bound control: five pass, one intended assertion failure | `python3 /private/tmp/artroom-r3-control-20261109-v2.py /private/tmp/artroom-r3-key-bound-control-20261109.v2.task.json` | owner 1; verifier 1; metadata 0 | `39c6264c / bc3dcf55` | `7c5561ba8858c151cadc144dbee2f009806a217330df82a3d28328d36378f6d9` |
-
 | Final gate: 5,340 pass, 12 fail, 3 skip | `npm run gate` | 1 | `22b5f36f / 8ffde09a` | `526878104bee7a9daa9fc3720146b3b5ca84f64bc29d5df7b10de728906b3614` |
 
 Each pipeline records its own monotonic duration and command timing.
