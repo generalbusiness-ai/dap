@@ -26,6 +26,7 @@ const nodeFiles = [
   'scripts/demo/recorder-output.test.mjs',
   'homepage/test/home.test.mjs',
   'packages/cli/test/config-dir.test.mjs',
+  'packages/scope/test/observation-cache.test.mjs',
   'examples/repo-in-ai/test/custody.test.mjs',
   'examples/repo-in-ai/test/session.test.mjs',
   'examples/repo-in-ai/task-list/test/tasks.test.mjs',
