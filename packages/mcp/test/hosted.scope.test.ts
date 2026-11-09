@@ -1847,10 +1847,10 @@ test("retire erases the seed before an uncertain revoke, retries only its retain
     const M = rita.config.repository!.membership;
     const bot = await hosted(room, rita, "@retire-admin", "TEST-retire-admin-create");
     const object = env.AGENTS.get(env.AGENTS.idFromString(bot.agent));
-    const seed = await runInDurableObject(object, (_instance, state) => {
+    const seed = Uint8Array.from(await runInDurableObject(object, (_instance, state) => {
       const value = state.storage.sql.exec("SELECT seed FROM agent WHERE id = 1").toArray()[0]!["seed"];
-      return value instanceof Uint8Array ? value.slice() : new Uint8Array(value as ArrayBuffer);
-    });
+      return Array.from(value instanceof Uint8Array ? value : new Uint8Array(value as ArrayBuffer));
+    }));
     expect(seed.length).toBe(32);
     const created = await room.wait(() => modernCall(bot.bearer, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "TEST before retirement", conditions: ["done"] }, values: [canonicalize(issueDemo)], idempotencyKey: "TEST-retire-before" }));
     expect(created.status).toBe(200);

@@ -156,6 +156,31 @@ These focused commands ran on this Mac with owned dependency and Vite
 state and a preflight process sample. Samples establish observed isolation,
 not continuous machine exclusivity. No live room or deployment ran.
 
+## Failed gate and isolated compiler repair
+
+The only full `npm run gate` at `522949c7`, tree
+`d53308958b879d84a0790d12145f17118388f8bb`, failed with actual `gate.exit`
+`1`. All checks before typechecking passed. MCP's separate Worker test
+context, `tsconfig.scope.json`, found two type errors in the new witness:
+its RPC result allowed `string | Uint8Array` where direct signing and
+zeroing require `Uint8Array`. The earlier focused plan omitted that context;
+its two passed test compiler contexts did not cover this Worker-only type.
+The gate reached no main test stage and no archive-scale attempt.
+
+The repair changes only this test's copy of its TEST seed: return a numeric
+array across the Durable Object callback and build the same `Uint8Array`
+locally. No production, shared helper, imported file, dependency,
+configuration, case, assertion, or deadline changes. No file imports this
+test. The original gate remains failed. Under the isolated-test follow-up
+rule in `docs/testing.md`, the affected MCP Worker context, unreached MCP
+browser context and ten unreached root contexts must pass, followed by the
+complete previously unreached `npm test` body and its summary. That body
+includes the entire hosted owner. No separate baseline or full gate repeats.
+
+| Check and source | Command | Actual exit and output manifest |
+|---|---|---|
+| Original gate, `522949c7` | `npm run gate` | `1`, test compiler failure; [manifest](evidence/2026-11-09-r15-failed-gate.manifest.json) `c6e97f7d97bfebd5b830d219e97521283aee9c6d7d987f1c2924520cd95d319e` |
+
 ## Deployment
 
 The planner deploys after exact-head review and routine landing. No new
