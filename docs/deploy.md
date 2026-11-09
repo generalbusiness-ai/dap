@@ -1,13 +1,15 @@
 # Deploy the scope Worker
 
 `npm run deploy:scope` deploys the scope Worker from
-`apps/room/wrangler.jsonc` with Wrangler 4.147.0 and `--keep-vars`. That
+the ignored local file `apps/room/wrangler.self-host.jsonc` with Wrangler 4.147.0 and `--keep-vars`. That
 flag keeps the plain settings that the Worker already has and the file
 omits. A value in the file, or a value given with `--var`, replaces the
 stored one. The command sets no missing setting and changes no secret.
 
 Deploy only from a checkout of the reviewed commit, after a review of that
-exact head. From that checkout, run:
+exact head. Copy and configure the neutral template as described in
+[Run your own service](self-host.md) before the first deployment. From that
+checkout, run:
 
 ```sh
 npm run deploy:scope
@@ -363,18 +365,21 @@ incarnation, or a setting of version 1 or 2 produces no offer. An offer
 grants no authority: the native namespace still judges the signed creation
 lineage.
 
-The `artroom-scope` Start page links to `dap-demo` for new rooms. It keeps
+The retired `artroom-scope` Worker uses
+`apps/room/wrangler.artroom-scope.jsonc`. Its Start page links to `dap-demo`
+for new rooms. It keeps
 **Check** and **Continue** for a creation that started on `artroom-scope`.
-The link carries no saved request or browser key. `artroom-scope` keeps its
-live `DEMO_START_CONFIG` for existing GitHub destinations and retained Start
-references until 8 November 2026.
+The link carries no saved request or browser key. The retained Start window
+ended on 8 November 2026 under PD-6. The retired Worker's file no longer
+contains `DEMO_START_CONFIG`. The planner owns the live setting removal and
+the deletion of `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN`, and
+`GITHUB_READ_TOKEN`. This source change records no deployment or secret
+removal.
 
-The client keeps its earlier private custody and can still read version 1
-offers. The server makes no offer from setting version 1 or 2, including
-the preflight for an existing register 7 or register 8 reference. An
-operation that the client already submitted keeps its retained intent and
-its readback path. The client does not move a prepared earlier descriptor
-to another register.
+The client accepts only version 2 offers for Register 17 or Register 26.
+The server makes no offer from setting version 1 or 2. Existing submitted
+operations keep their saved intent and readback path. A saved descriptor
+does not move to another register.
 
 The setting adds no GitHub host authority. GitHub authority comes from the
 register that `GITHUB_APP_CONFIG` pins and from its verified destinations.
@@ -389,7 +394,7 @@ commit its packet and install it in the room. The Worker needs no new
 deployment.
 
 1. Create a private R2 bucket and bind it as `APPLICATION_CONTENT`.
-   `apps/room/wrangler.jsonc` binds the project's bucket
+   `apps/room/wrangler.artroom-scope.jsonc` binds the project's bucket
    `artroom-application-content`. Leave public access to the bucket off.
 2. Set `APPLICATION_TRUST` to nonsecret JSON rows with exactly `release`,
    `publisher` and `host`. Use the release and publisher that `dap pack`

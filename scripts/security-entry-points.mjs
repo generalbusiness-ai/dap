@@ -442,6 +442,7 @@ export async function servedInventory({ scopeSource = readSource(scopeFile), app
   const result = new Map();
   for (const [file, entry] of [
     ["apps/room/wrangler.jsonc", "worker.ts"],
+    ["apps/room/wrangler.artroom-scope.jsonc", "worker.ts"],
     ["apps/room/wrangler.demo.jsonc", "worker.ts"],
     ["apps/room/wrangler.commons.jsonc", "worker.commons.ts"],
     ["apps/room/wrangler.grow.jsonc", "worker.grow.ts"],

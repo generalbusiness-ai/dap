@@ -59,31 +59,31 @@ checkout.
    Login opens your browser. `whoami` prints your account and its ID.
    Keep the ID for the Artifacts hostname in step 6.
 
-3. Choose an unused Worker name and a new Artifacts namespace, such as
-   `dap-my-room` for both. Edit `apps/room/wrangler.jsonc` as follows.
+3. Copy the neutral template to an ignored local file:
+
+   ```sh
+   cp apps/room/wrangler.jsonc apps/room/wrangler.self-host.jsonc
+   ```
+
+   Choose an unused Worker name and a new Artifacts namespace, such as
+   `dap-my-room` for both. Edit `apps/room/wrangler.self-host.jsonc`:
 
    - Set `name` to your Worker name.
-   - In `vars`, remove the `DEMO_START_CONFIG` line. It belongs to the
-     project's own `artroom-scope` Worker.
-   - In `vars`, set `SCOPE_INDEX_MODE` to `"enforce"`. A new deployment
-     has no older scopes to register.
-   - In `vars`, add `"ARTIFACTS_NAMESPACE": "dap-my-room"`.
-   - In the `artifacts` entry, set `namespace` to `dap-my-room`.
+   - Set `vars.ARTIFACTS_NAMESPACE` and the `artifacts` entry's `namespace`
+     to your Artifacts namespace.
+   - Keep `SCOPE_INDEX_MODE` set to `"enforce"`. A new Worker has no older
+     scopes to register.
    - Keep the four Durable Object bindings, `SCOPES`, `SCOPE_INDEX`,
-     `REGISTRIES` and `AGENTS`, and the three migrations, `v1`, `v2` and
-     `v3`, as they are. Deployment creates new Durable Object namespaces
-     for your Worker.
-   - Remove the `r2_buckets` entry. It names `artroom-application-content`,
-     a bucket in the project's account. Without the `APPLICATION_CONTENT`
-     binding, the application screen route answers `503`
-     `application-unavailable` and the Worker installs no application
-     package. A new room needs neither. To serve application screens
-     later, create a private R2 bucket in your account and bind it as
-     `APPLICATION_CONTENT` (see
-     [Trusted application screens](deploy.md#trusted-application-screens)).
-   - In `analytics_engine_datasets`, change `dataset` to a name of your
-     own, such as `dap_my_room_metrics`. To write no metrics, remove the
-     entry. The Worker then skips its metric points.
+     `REGISTRIES`, and `AGENTS`, and the three migrations, `v1`, `v2`, and
+     `v3`. Deployment creates their namespaces for your Worker.
+
+   The template has no project bucket, metrics dataset, or Start setting.
+   Without `APPLICATION_CONTENT`, application screen requests answer `503`
+   `application-unavailable`. To serve installed application screens, create
+   a private R2 bucket and bind it as `APPLICATION_CONTENT` (see
+   [Trusted application screens](deploy.md#trusted-application-screens)).
+   To collect metrics, add an `analytics_engine_datasets` entry with binding
+   `METRICS` and a dataset name in your account.
 
    The first room's repository creates the Artifacts namespace in your
    account. You do not run a command to create the namespace. See
@@ -98,7 +98,7 @@ checkout.
    ```sh
    npm run deploy:scope
    cd apps/room
-   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({DEPLOYMENT:"dap-my-room",SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.147.0 secret bulk
+   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({DEPLOYMENT:"dap-my-room",SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.147.0 secret bulk --config wrangler.self-host.jsonc
    cd ../..
    ```
 
@@ -238,7 +238,7 @@ for a room you keep.
    printf '%s\n' 'export default { fetch() { return new Response("Removed", {status: 410}); } };' > apps/room/cleanup-worker.mjs
    ```
 
-3. In `apps/room/wrangler.jsonc`, change `main` to `cleanup-worker.mjs`,
+3. In `apps/room/wrangler.self-host.jsonc`, change `main` to `cleanup-worker.mjs`,
    remove `durable_objects`, and append this migration after `v3`:
 
    ```json
@@ -254,7 +254,7 @@ for a room you keep.
    ```sh
    npm run deploy:scope
    cd apps/room
-   npx -y wrangler@4.147.0 delete
+   npx -y wrangler@4.147.0 delete --config wrangler.self-host.jsonc
    cd ../..
    ```
 
@@ -664,6 +664,8 @@ and the node name.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [apps/room/wrangler.jsonc](../apps/room/wrangler.jsonc), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts), [packages/cli/src/line.ts](../packages/cli/src/line.ts), [apps/room/celld/mac](../apps/room/celld/mac/), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs).
+The configuration steps use the neutral BR-11 template and its ignored local
+copy. The broader guide retains its 30 October 2026 source review at main
+`5dc9765f`. Sources: [apps/room/wrangler.jsonc](../apps/room/wrangler.jsonc), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts), [packages/cli/src/line.ts](../packages/cli/src/line.ts), [apps/room/celld/mac](../apps/room/celld/mac/), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs).
 The project ran this guide on 13 October 2026 with an earlier Worker
 configuration. The commands on this page were not run for this revision.

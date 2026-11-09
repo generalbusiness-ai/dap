@@ -1,7 +1,7 @@
 /** Public key references for one explicit Start; private keys live in IDB. */
 import type { KeyId } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isKeyId, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/dap-bytes";
-import { isCreationOffer, isCurrentCreationOffer, type CreationOffer, type Fetch, type Signer } from "@generalbusiness/dap-client";
+import { isCreationOffer, type CreationOffer, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { pageKeyStore } from "./browser-key-store.ts";
 import { custodyKind } from "./custody.ts";
 import { claimRoom, claimStatus, migrateRecoveryCustody, type ClaimOptions, type ClaimRegister, type ClaimStorage, type ClaimedRoom } from "./claim.ts";
@@ -24,6 +24,7 @@ function decode(raw: string, origin: string): KeptStart {
     if (!isRecord(row) || !Object.keys(row).every(key => ["v", "origin", "secret", "publicKey", "configured", "label", "handle", "operation", "recoverySaved"].includes(key)) || ![1, 2].includes(Number(row["v"])) || row["origin"] !== origin || row["handle"] !== "@founder" || typeof row["label"] !== "string" || !row["label"].trim() || row["label"].length > 256) throw unavailable();
     if (row["operation"] !== undefined && (typeof row["operation"] !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(row["operation"]))) throw unavailable();
     if (row["recoverySaved"] !== undefined && row["recoverySaved"] !== true) throw unavailable();
+    // Saved old pins bind existing journals. They grant no fresh offer.
     const configured = row["configured"];
     if (!isRecord(configured) || Object.keys(configured).sort().join(",") !== "definition,register" || !["platform:register@7", "platform:register@8", "platform:register@17", "platform:register@26"].includes(configured["definition"] as string) || !isScopeRef(configured["register"]) || configured["register"].kind !== "register") throw unavailable();
     if (row["v"] === 1) {
@@ -85,7 +86,7 @@ export async function startRoom(origin: string, storage: ClaimStorage, options: 
     if (row) row = await migrateStart(row, storage, options);
     let retryFailed = false;
     if (options.mode === "new") {
-      if (!options.offer || !isCurrentCreationOffer(options.offer, origin)) throw new Error("A current same-origin creation offer is required. Nothing was submitted.");
+      if (!options.offer || !isCreationOffer(options.offer, origin)) throw new Error("A current same-origin creation offer is required. Nothing was submitted.");
       const label = options.label?.trim() ?? "";
       if (!label || label.length > 256) throw new Error("Enter a personal room label of at most 256 characters.");
       if (row) {
