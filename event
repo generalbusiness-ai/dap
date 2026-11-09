@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7bc026061883a440c1b4496d0607249928abd49c","text":"Merge retired a covered predecessor; the successor is at .claude-plugin/marketplace.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ce583a008e290bce7bd38cb8f2d66248544a35e","text":"Merge retired a covered predecessor; the successor is at examples/lending/definition.test.ts."}
