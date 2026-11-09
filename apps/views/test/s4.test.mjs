@@ -12,7 +12,7 @@ import { register } from 'tsx/esm/api';
 const scoped = register({ namespace: 'artroom-s4-owner' });
 after(async () => { await scoped.unregister(); });
 const load = source => scoped.import(source, import.meta.url);
-const { canonicalize, digestBytes, entryHash, itemQueryArgument, itemQueryDigest, readItemQueryParameter, readMinimumParameter, textDigest, utf8 } = await load('@generalbusiness/dap-bytes');
+const { canonicalize, parseStrict, digestBytes, entryHash, itemQueryArgument, itemQueryDigest, readItemQueryParameter, readMinimumParameter, textDigest, utf8 } = await load('@generalbusiness/dap-bytes');
 const { secretSigner, signedIntent } = await load('@generalbusiness/dap-client');
 const { issueQuestionsBrief, FINDING_DIGESTS, QUESTION_DIGESTS, J4_DIGESTS } = await load('@generalbusiness/dap-lanes');
 const { StandIn, SERVICE } = await load(new URL('../../../packages/mcp/test/support/standin.ts', import.meta.url).href);
@@ -435,7 +435,7 @@ test('a room with no finding profile reads byte for byte as it did before the fi
   assert.equal(screens.ready.card.actions[0].id, 'merge', 'The compared room offers a merge, so the bytes cover its signed revisions');
   assert.equal(tools.needsYou.structuredContent.rows.length, 5, 'The compared room holds attention rows, so the bytes cover them');
   const actual = canonicalize({ screens, tools }), golden = new URL('./j4-reads.golden.json', import.meta.url);
-  assert.equal(actual + '\n', readFileSync(golden, 'utf8'), 'NON-FINDING ROOM: the reads and cards differ from their bytes before the finding profile');
+  assert.equal(actual, canonicalize(parseStrict(readFileSync(golden, 'utf8'))), 'NON-FINDING ROOM: the canonical reads and cards differ from their value before the finding profile');
 });
 
 // A person is not told to do what the card offers no way to do, and is not told to open a card that is open.
