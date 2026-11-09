@@ -58,7 +58,8 @@ case disappears from either native owner.
   protected-read, and parked-work assertions remain.
 - `packages/client/test/creation-offer.test.ts`: the bounded same-origin
   discovery case now selects the current exact register. It rejects wire
-  version 1 and mismatched scope or incarnation, while accepting the two
+  version 1 at an exact retired register reference and mismatched scope
+  or incarnation, while accepting the two
   supported current pins. The retired v1 success branch has no successor.
 - `packages/cli/test/creation-offer.test.ts`: the preflight case now uses a
   current Register 17 offer with the same wrong incarnation. It still

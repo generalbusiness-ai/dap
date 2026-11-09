@@ -38,13 +38,15 @@ test("fixed same-origin founding discovery accepts only the closed bounded demo 
   };
   expect(await creationOffer(origin, { register, fetch: selected })).toEqual(offer);
   expect(selectedReads).toBe(1);
-  expect(isCreationOffer({ ...offer, v: 1 }, origin, register)).toBe(false);
+  const retiredRegister = { ...register, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@7", creator: null, cause: textDigest("TEST retired offer"), ordinal: 0 }) };
+  const retiredOffer = { ...offer, v: 1, register: retiredRegister, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } };
+  expect(isCreationOffer(retiredOffer, origin, retiredRegister)).toBe(false);
   expect(isCreationOffer({ ...offer, origin: "https://foreign.test" }, origin)).toBe(false);
   expect(isCreationOffer({ ...offer, registerItem: { ...offer.registerItem, purpose: "demo-start" } }, origin)).toBe(false);
   expect(isCurrentCreationOffer(offer, origin, register)).toBe(true);
   expect(isCreationOffer({ ...offer, definition: "platform:register@26" }, origin, register)).toBe(true);
   expect(isCreationOffer({ ...offer, definition: "platform:register@9" }, origin)).toBe(false);
-  await expect(creationOffer(origin, { fetch: async url => ({ status: 200, url, redirected: false, body: Response.json({ ...offer, v: 1 }).body }) })).rejects.toThrow("No claim was submitted");
+  await expect(creationOffer(origin, { register: retiredRegister, fetch: async url => ({ status: 200, url, redirected: false, body: Response.json(retiredOffer).body }) })).rejects.toThrow("No claim was submitted");
   const other = { ...register, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@26", creator: null, cause: textDigest("TEST different offer"), ordinal: 0 }) };
   await expect(creationOffer(origin, { register: other, fetch: async url => ({ status: 200, url, redirected: false, body: Response.json(offer).body }) })).rejects.toThrow("No claim was submitted");
   await expect(creationOffer(origin, { register: { ...register, inc: newIncarnation(new Uint8Array(16).fill(9)) }, fetch: async url => ({ status: 200, url, redirected: false, body: Response.json(offer).body }) })).rejects.toThrow("No claim was submitted");
