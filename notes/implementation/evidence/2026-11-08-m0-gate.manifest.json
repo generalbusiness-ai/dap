@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "request": "f131d4e8c96a5821a5859d537b2223f7d0ff518a",
+  "promise": "2b9edaa678afae9b7439456250b960d124d2a8f8",
+  "qualification": "The M0 final gate at c2bc07a2 ends with actual exit 0 after integration of published S4 main871df9a9. Every maintained stage passes and all skipped cases remain explicit in the counts. The archive-scale owner passes. Source and tracked inputs remain unchanged; owned processes have closed. Process inspections before and during the run found no other validation body. The M0 two-compiler/one-case focused witness and distinguishing sender-guard control remain separate. No report contradiction or unhandled error appears. Sealing runs no tests. The retained fourteen-gate archive audit finds eleven archive passes and three Native-unreached failures; it closes no watch. Independent review remains due. This evidence makes no live acceptance or deployment claim.",
+  "sourceHead": "c2bc07a218a2d62780951498719e79c9a5114632",
+  "sourceTree": "8514cec4b12df40b1a849c4f0c6f708ef8e96daf",
+  "fileCount": 20,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-m0-gate-validation",
+      "fileCount": 20,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1564,
+          "sha256": "4ab4f5c40ad5a3c7c975f630cb65b77647eaa257ca4cd8e3f91e99a26d407abc"
+        },
+        {
+          "path": "after.json",
+          "bytes": 550827,
+          "sha256": "f357e1e3a0570cc72384471fca3cef98085efaacc6c2c8d36400c51649fcc079"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1890,
+          "sha256": "3a550704253ae5eb4aaedceec29caf7941e15c62295923de897d5d443968597b"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "archive-watch-audit.json",
+          "bytes": 11430,
+          "sha256": "b39787f9595e5d8f6a0486f0b2f8b38f540b1a5f36adf3d58060de38a9c2566b"
+        },
+        {
+          "path": "before.json",
+          "bytes": 550827,
+          "sha256": "f357e1e3a0570cc72384471fca3cef98085efaacc6c2c8d36400c51649fcc079"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "c091eace82170c9f556dab483d1b52dcb10a8d7a233f0e38e16b8871def5904c"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8539,
+          "sha256": "9fd3e696bc0fb233c3fdd6a27483f9eb281cc011e8f95cca9ce5124313835e66"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "c37b870b79aad55f9841f34fbc8b4bd29c8ff995b5bb65345f4061c6f5fdaa2f"
+        },
+        {
+          "path": "report-classification.json",
+          "bytes": 179,
+          "sha256": "656c430a109c7846872cc644ae74eca542a4832b442bec3c515c67e59f485cac"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2259,
+          "sha256": "42fd02fc45b678ecc15a3ff8cd3f6c6b99e5c77e05365043fcc91ebd697a7846"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 149,
+          "sha256": "31fee558c4f246a3041ae7178a015561bedcce5e6936edc77e769a5ea716085a"
+        },
+        {
+          "path": "slot-observations.jsonl",
+          "bytes": 1181,
+          "sha256": "2d1803f798650276b1a1f13e0983d8a4125a28ea78645c97bf2d9f13b0782c7e"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 974,
+          "sha256": "cab6629202afe21a2aca7eecac6682b2568d4824c121bf58fdb23ed551e1ac3b"
+        },
+        {
+          "path": "started.json",
+          "bytes": 643,
+          "sha256": "668e97c4ee40f48ec5986dac9a9de9c5ef05feaad37b3f1f55dce93eeb6ec35d"
+        },
+        {
+          "path": "task.json",
+          "bytes": 1186,
+          "sha256": "86053b2ca599a2a0e4d1b296a4988d891cd3412beb01576d33ad7dcfc580687c"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 570,
+          "sha256": "f5f710ff4a76db1fe82ebbd16d21b83211e62c3caf89567d7e1ae6089ea27b2a"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5856,
+          "sha256": "770dba792bd9609558392a1dc07b478aa0d5f1c15791ddbee35bcf22ecbc2dd9"
+        }
+      ]
+    }
+  ]
+}
