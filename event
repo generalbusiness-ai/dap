@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-19-self-hosting-on-celld.md","body":{"commit":"cf0487da8035d157744b0c794603bcacf1885142","path":"notes/2026-10-19-self-hosting-on-celld.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:384c28ebc57f9147c1bb1d632d3e541ba2942291","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-19-self-hosting-on-celld.md."}
