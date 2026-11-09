@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:714affccfe59f5227319344d1308520a63620ab6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r13-failed-quota-phase.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:716d3d69a942019963a3e931e6c8de333c0b577c","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/read-token-quota.ts."}
