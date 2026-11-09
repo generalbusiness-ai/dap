@@ -654,8 +654,8 @@ files and excludes test fixtures. Its two Node cases run in `npm test`.
 It installs only if `package-lock.json` changed since the last install,
 typechecks every workspace, and runs the fixed stages of `scripts/test.mjs`
 in order: the kernel boundary check, the maintained Node checks, the
-Counting build and generated Node witnesses, the fourteen plain Vitest
-projects, then the three native Vitest projects. Any failed stage stops the
+Counting build and generated Node witnesses, the fifteen plain Vitest
+projects, then the native Vitest projects selected below. Any failed stage stops the
 later stages. The plain phase selects its project data before Vitest
 resolves inherited configs, so an early failure starts no Worker project.
 The two phases share the canonical declarations in `vitest.projects.mjs`.
@@ -667,7 +667,7 @@ platform package depends on the lanes package or imports from it. It prints the 
 each step's elapsed and CPU time. It also fails on a whitespace error in
 what the branch changed.
 
-The fourteen plain projects share one group with at most four active file
+The fifteen plain projects share one group with at most four active file
 tasks in total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
 The `scope` project follows in the workerd pool, against real Durable
 Objects with SQLite storage, with an explicit limit of two workers.
@@ -713,6 +713,58 @@ Operations witnesses, including T19's native global abort, stay in `scope`.
 The original denial body and all T19 assertions stay. Their operation
 opening uses one shared helper, not a second fixture implementation. The
 denial project starts no clone fixture or Git server.
+
+### Scale selection in the review gate
+
+The `scope-scale` project follows `scope-denial` in its own Worker runtime.
+It keeps the original Scope Worker, wrangler configuration, both global setup
+entries, `isolate: false`, two-worker ceiling and thirty-second default.
+Every case keeps its explicit deadline and real bounds. Its four unchanged
+whole owners contain six cases:
+
+- `packages/scope/test/floor-archive.test.ts` (three cases, including the
+  ten-input measurement that supplies no acceptance witness)
+- `packages/scope/test/archive-one-entry-scale.test.ts`
+- `packages/scope/test/archive-cadence.test.ts`
+- `apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts`
+
+`npm test` includes all four native projects. `npm run test:scale` selects
+only `scope-scale`. The review gate passes `--gate` to the fixed test owner,
+which reads the actual head, `origin/main`, their merge base and the complete
+changed-path list. Main always includes scale. A review includes it when a
+path matches one of these ruled families or files:
+
+- `packages/scope/src/archive*` and `packages/scope/test/archive*`
+- `packages/git/src/journal*` and `packages/git/test/journal*`
+- `packages/derive/src/floor*`, `packages/derive/test/floor*` and
+  `packages/scope/test/floor*`
+- `packages/platform/src/directory-partitions*`, its corresponding test
+  prefix, and `apps/room/lanes/test/directory-partition*`
+- `packages/scope/test/support/archive*.ts`
+- `packages/replay/src/archive.ts`
+- the configuration and selection owners: `packages/scope/vitest.scale.config.ts`,
+  `packages/scope/vitest.worker.config.ts`, `vitest.projects.mjs`,
+  `vitest.native.config.ts`, `vitest.scale.config.ts`, `scripts/gate.sh`,
+  `scripts/test.mjs`, `scripts/scale-selection.mjs`,
+  `scripts/scale-selection.test.mjs`, `scripts/test-phases.test.mjs`,
+  `package.json` and `.github/workflows/scale-tests.yml`
+
+The diff disables rename detection and separates paths with NUL. A move out
+of a scale family still selects the removed source path. Missing Git context
+refuses the selection. The test owner's `scale-selection.json` and native
+stage ledger retain the decision, its reason and the changed paths. A gate
+outside these paths reports `scope-scale` as `omitted-by-gate`, with unknown
+duration, rather than as a passed, skipped or missing test project. Observed
+scale modules that contradict an omission fail the summary.
+
+Planner ruling `ea2e17ab` leaves shared inputs off the trigger list:
+`fixtures-native.ts`, `test/worker.ts`, `test/outside.ts`, the room test
+support, `sqlite.ts` and the rest of derive. The
+[main scale workflow](../.github/workflows/scale-tests.yml) runs the complete
+scale project after every push to main, including each landing, and catches
+changes through those shared inputs. A review outside the listed paths
+therefore establishes no scale result. The unchanged witness bodies retain
+their earlier acceptance meanings.
 
 The command line's story, `packages/cli/test/*.scope.test.ts`, runs from
 the root inside the `scope` project too, and has no Worker of its own. Its

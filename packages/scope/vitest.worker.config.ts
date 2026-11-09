@@ -1,5 +1,6 @@
 import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
 import { defineConfig } from "vitest/config";
+import { scopeScaleFiles } from "../../vitest.projects.mjs";
 
 // The workerd run: the scope's Durable Object with real SQLite storage.
 export default defineConfig({
@@ -7,7 +8,7 @@ export default defineConfig({
   test: {
     globalSetup: ["./test/support/local-clone-setup.ts", "./test/support/maintained-applications-setup.ts"],
     include: ["test/**/*.test.ts"],
-    exclude: ["test/operation-denial.test.ts", "test/lending.test.ts"],
+    exclude: ["test/operation-denial.test.ts", "test/lending.test.ts", ...scopeScaleFiles],
     // Two worker runtimes reuse their own isolate across files. Each test
     // creates its own scope, which is its own object and storage.
     isolate: false,

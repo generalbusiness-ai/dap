@@ -22,10 +22,21 @@ test("runtime families and their test owners select scale with literal full path
     "packages/scope/test/floor-archive.test.ts", "packages/derive/src/floor.ts", "packages/derive/test/floor.test.ts",
     "packages/git/src/journal-v2.ts", "packages/git/test/journal-v2-tree.test.ts",
     "packages/platform/src/directory-partitions.ts", "packages/platform/test/directory-partitions.test.ts",
-    "apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts"]) {
+    "apps/room/lanes/test/directory-partition-success-capacity.scope.test.ts",
+    "packages/scope/test/support/archive-native-authority.ts", "packages/replay/src/archive.ts",
+    "packages/scope/vitest.scale.config.ts", "packages/scope/vitest.worker.config.ts",
+    "vitest.projects.mjs", "vitest.native.config.ts", "vitest.scale.config.ts",
+    "scripts/scale-selection.mjs", "scripts/scale-selection.test.mjs", "scripts/test-phases.test.mjs",
+    "scripts/test.mjs", "scripts/gate.sh", "package.json", ".github/workflows/scale-tests.yml"]) {
     const decision = scaleGateDecision({ head, main, changedPaths: [path] });
     assert.equal(decision.include, true, path);
     assert.deepEqual(decision.matchedPaths, [path]);
+  }
+  // The planner explicitly leaves these shared inputs to the main run.
+  for (const path of ["packages/scope/test/fixtures-native.ts", "packages/scope/test/worker.ts",
+    "packages/scope/test/outside.ts", "apps/room/lanes/test/support/room.ts",
+    "packages/scope/src/sqlite.ts", "packages/derive/src/judge.ts", "package-lock.json"]) {
+    assert.equal(scaleGateDecision({ head, main, changedPaths: [path] }).include, false, path);
   }
   assert.throws(() => scaleGateDecision({ head: "a", main, changedPaths: [] }), /exact heads/);
   assert.throws(() => scaleGateDecision({ head, main, changedPaths: [null] }), /complete changed-path/);

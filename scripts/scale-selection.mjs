@@ -10,12 +10,24 @@ const families = [
   "apps/room/lanes/test/directory-partition",
 ];
 
+// These files choose the scale configuration or its actual gate invocation.
+const selectionFiles = new Set([
+  "packages/scope/vitest.scale.config.ts", "packages/scope/vitest.worker.config.ts",
+  "vitest.projects.mjs", "vitest.native.config.ts", "vitest.scale.config.ts",
+  "scripts/scale-selection.mjs", "scripts/scale-selection.test.mjs",
+  "scripts/test-phases.test.mjs", "scripts/test.mjs", "scripts/gate.sh",
+  "package.json", ".github/workflows/scale-tests.yml",
+]);
+const selectsScale = path => families.some(prefix => path.startsWith(prefix))
+  || /^packages\/scope\/test\/support\/archive[^/]*\.ts$/.test(path)
+  || path === "packages/replay/src/archive.ts" || selectionFiles.has(path);
+
 export function scaleGateDecision({ head, main, changedPaths }) {
   if (!/^[a-f0-9]{40}$/.test(head) || !/^[a-f0-9]{40}$/.test(main)
     || !Array.isArray(changedPaths) || changedPaths.some(path => typeof path !== "string" || !path)) {
     throw new Error("The scale gate needs exact heads and the complete changed-path list.");
   }
-  const matchedPaths = changedPaths.filter(path => families.some(prefix => path.startsWith(prefix)));
+  const matchedPaths = changedPaths.filter(selectsScale);
   return { include: head === main || matchedPaths.length > 0,
     reason: head === main ? "main" : matchedPaths.length ? "changed-scale-path" : "outside-scale-paths",
     head, main, changedPaths, matchedPaths };
