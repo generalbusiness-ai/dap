@@ -3,9 +3,10 @@
 Request: `e1b71b6b697c58723b3340681346f5f7145d345c`.
 Promise: `5a3fbb3db7dac1dc652f7403aabbf585641e4212`.
 
-Status: focused checks and the retired-decoder control pass. Both earlier
-failed focused units remain sealed as failures. The final full gate,
-Page workflow, and independent exact-head review remain due.
+Status: the full gate and all four Page workflow commands pass at the
+frozen source. Both earlier focused failures stay failed. Independent
+exact-head review remains due. The separate first Ubuntu scale workflow
+failed at main and remains with the planner.
 
 ## Keep each deployment's configuration separate
 
@@ -160,3 +161,46 @@ digest `05b3eabef866bba74dadfe7e83bc2fe56ea1ffb4713be5394c2dea8c05a68fb5`,
 seals 27 public files and points to 275 focused and 19 control originals.
 The public record separates current passes, the named negative control,
 and conclusive prior phases. No execution repeats during sealing.
+
+## Complete gate and Page workflow
+
+The full gate at clean `ebb95ee5`, tree `9b9afc2b`, finished with actual
+`gate.exit` equal to `exit 0`. All prechecks, typecheck, and five fixed
+stages passed: Node 140, Counting 56, Plain 4,028 with one skip, and Native
+1,118 with two skips. The maintained reports reconcile without failed
+cases, contradictions, report errors, or unhandled errors. Exactly six
+unchanged scale cases pass only in `scope-scale`. The 102 otherwise
+unclassified observations are the three Node wrapper events for each of
+34 files. One explicitly skipped recorder module has no duration.
+
+Every tracked input stayed equal and the owned process group closed.
+Retained process samples found no other local validation body. Samples
+cannot prove uninterrupted isolation. The
+[full-gate manifest](evidence/2026-11-09-br11-gate.manifest.json), digest
+`10db837b9c452de84420116158e0201168fc47d37e5185bdc7471773eb4cc02d`,
+seals 21 public files and points to 2,377 private originals. The archive
+watch now contains twenty full gate attempts, sixteen archive passes and
+four Native-unreached failures. Watch `64552d40` remains open.
+
+Page workflow run [42572096790](https://github.com/generalbusiness-ai/dap/actions/runs/42572096790)
+passed at that same head. All four maintained commands passed: page
+screenshots, recorded demo captures, create-room witness, and local-label
+witness. The [Page CI manifest](evidence/2026-11-09-br11-page-ci.manifest.json),
+digest `72d04812a58f44876667fd4a9f33973719a7571372545bb2d4bd05c42fea8a28`,
+seals four public files and retains eleven private originals. The workflow
+uploads no downloadable images or other artifacts. This record claims
+no retrieved screenshot. Only this note and the gate and CI manifests
+follow the tested source.
+
+The independent BR-5 first Ubuntu scale run at main `4f06bbbc` failed:
+five cases passed and the 30,000-entry floor case reached its unchanged
+600,000 ms deadline. Its raw archive, exact failure, and public manifest
+`95b70522` remain separate from this passing local gate. Planner request
+`65fb24b3` asks for the next CI step. No deadline, real bound, or witness
+changes here, and no workflow rerun is hidden in this result.
+
+This head adds no setting or secret. The neutral template starts in enforce
+mode without a project bucket. Its local copy drives self-host deployment;
+the old Worker keeps its own exact binding and migration history. The
+planner owns the PD-6 live setting and secret removals and records their
+versions. This head performs no deployment and supplies no live acceptance.
