@@ -42,8 +42,27 @@ harness stand-in; it supplies no Native scale result.
 
 ## Validation
 
-Source preparation only. The complete five-case Node owner and the Scope
-and lane test compiler contexts remain due. The full gate must run once
-with the factor unset before exact-head review. The next main workflow
-result must pass all six cases or name each failed case and its duration.
+At `5ac318c4`, tree `8d342e2b`, the complete five-case Node owner passed,
+then the Scope test and lane scope compiler contexts each exited 0.
+Actual driver exit is 0. Every tracked input stayed equal and all process
+groups closed. No scale case ran in this focused pipeline. The
+[focused manifest](evidence/2026-11-09-scale-runner-focused.manifest.json),
+digest `c72399f77f11de81e508137810fbc20ba367bdf315f5387f270a049d302606a7`,
+seals fourteen public files and retains 77 private originals.
+
+One named control removes only the child-exit propagation. The unchanged
+complete Node owner then exits 1: four cases pass, and only the capture
+case fails at its assertion that a child exit of 1 stays a failure. The
+verifier exits 0, every tracked byte restores exactly, and the process
+group closes. The control reuses the saved passing baseline; neither the
+baseline nor the restored owner repeats. The
+[control manifest](evidence/2026-11-09-scale-runner-lost-exit-control.manifest.json),
+digest `ba790205ebd336682f636ff0ae9c6cc62782532847a7a18f6bb110231a177b6d`,
+seals ten public files and retains 66 private originals.
+
+The branch integrates approved BR11 main `9ce45bd1` before its full gate.
+No integration conflict or runner source change follows the focused checks.
+The full gate must run once with the factor unset before exact-head
+review. The next main workflow result after this change lands must pass
+all six cases or name each failed case and its duration.
 No Worker deployment or live acceptance follows this test-harness change.
