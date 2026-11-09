@@ -173,5 +173,9 @@ keys can cause cache eviction and require another read. Unknown or
 unanswered throwaway keys cannot cause that eviction. The signer-key cache
 bound does not replace signature checks, local history or the commit's
 current observation checks.
+The separate `Further.read` reusable-observation map has no run-wide size
+bound: definition rows can select member references from act fields, and
+distinct answered non-once subjects, including unknown members, grow that
+map.
 [Report a vulnerability](../../SECURITY.md#report-a-vulnerability) gives the
 private reporting path.

@@ -44,7 +44,21 @@ never-admitted key after eviction and the limit's dependency on 4,096 keys
 with standing. Membership's irreversible retirement and removal remain
 trusted. Real revoked keys can cause eviction and require another read.
 
-Request `4e8cf844` asks the planner to place the separate pre-existing
-`Further` reusable-observation map. This patch changes only signer-key
-cache state and makes no claim that every observation cache is bounded.
+Planner ruling `19647eda` keeps the separate pre-existing `Further`
+reusable-observation map outside R3a. Definitions choose the observation
+rows, windows and per-input limits; act content can choose the subjects.
+`listedBy` in `derive/src/observes.ts` evaluates the row's operand over the
+act's fields. The validator accepts a typed member field or list and checks
+the membership reference, not a fixed list of member IDs. The Directory's
+`open-task` row reads the `worker` field. Rules `publish` reads each
+`checks[*].checker`, and Rules13 reads the `checkers` field.
+
+Membership answers an absent member with a valid `memberState: "unknown"`
+observation. `bytes/src/records.ts` accepts that form. `Further.read` keeps
+each answered non-once subject under `subjectName` before the act's later
+guards decide. A row's `max` bounds one input; it does not bound the distinct
+member names that inputs can accumulate in a run. The threat model therefore
+names that map as unbounded. The planner owns its separate placement under
+`4e8cf844`. No `Further` cache code changes here, and this patch makes no
+claim that every observation cache is bounded.
 No recorded format, definition pin, setting or deployment changes here.
