@@ -1,0 +1,276 @@
+{
+  "version": 1,
+  "request": "116694e3771b55378dfb4d94d3f3d4a2cd2bf666",
+  "promise": "17e9052f364d24edde819e7fbda9989655650868",
+  "sourceHead": "738d80134e8fb4bbae0de0ac74ef3b45c6d14ccd",
+  "sourceTree": "8f06f1f67f9ee2b09428261ca7b82a41ea637aa1",
+  "qualification": "One complete five-case owner passes once. One old-selection control fails only the new TypeScript case by assertion at scripts/control.test.mjs:85:10; the actual owner exit remains 1. The control driver exits 0 for that intended result. Exact tracked bytes are restored without a restored rerun. Real Node and Vitest execute in synthetic scratch packages; only npx resolution is a stand-in. No gate or installation. All listed files remain read-only.",
+  "fileCount": 51,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-control-runner-focused",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1974,
+          "sha256": "4a7ba65f37048c4f093d2cabda044184f13020ed4806fa55265456b20fbd6da9"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 251,
+          "sha256": "04473b3d9080836501c6941ed61843d10488ec6c3c93f2dc0b388798c252ba23"
+        },
+        {
+          "path": "compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compatibility.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compatibility.stdout",
+          "bytes": 364,
+          "sha256": "89b63059ffe36f049a6c2aed33d0d8ce48169ee480b13fd995b63561e5877481"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 5529,
+          "sha256": "0d8168cde0598031144751e045d8e0be24e61c12c65f5f02ad206d4ed6c7c360"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "owner.stdout",
+          "bytes": 817,
+          "sha256": "4b14683e29e38d9ed79dc68bdc631f509724e445c7186d48cfb556f2f4ab9865"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 29,
+          "sha256": "ea3a95776b4285e77a63aa29e153767d9b5487ee06d74304799ff8036a6a59ba"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 495,
+          "sha256": "17999cae99e88f3b6c540ac831b569f528f1f5785fb02768e11f171c8ce0150f"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 275,
+          "sha256": "ff77bcb30d0eeb949736dc52959f6c36a1f0cbd55c2aec3a821a6ce83d8c24d4"
+        },
+        {
+          "path": "started.json",
+          "bytes": 96,
+          "sha256": "55403a4212b4d05d9ca4fbf20c9f3a739831e7f945a5980b4533b3874252e261"
+        },
+        {
+          "path": "task.json",
+          "bytes": 558484,
+          "sha256": "efece4f026fd160c6fff9afef685623ffc8ed7c8d54d7cb7aa0ffb82700e45b4"
+        },
+        {
+          "path": "tmp/artroom-control-FOogag/after.stderr.log",
+          "bytes": 166,
+          "sha256": "92f590789e1a37c7e22ad29e0293b43996463342fddc8c798d947411b3a3ccb8"
+        },
+        {
+          "path": "tmp/artroom-control-FOogag/after.tap",
+          "bytes": 1028,
+          "sha256": "11741d9c83d436e645feb33ec411be7d0be907dd00dda196cd159cd3b12c39eb"
+        },
+        {
+          "path": "tmp/artroom-control-FOogag/before.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tmp/artroom-control-FOogag/before.tap",
+          "bytes": 230,
+          "sha256": "1df60893cada4e90019747f7fc05e16b9513d5cad6638218b5c8972077d32f94"
+        },
+        {
+          "path": "tmp/artroom-control-tFZ5tU/after.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tmp/artroom-control-tFZ5tU/after.tap",
+          "bytes": 249,
+          "sha256": "2ecc7de3ad968eaf9ff8aabd5aee1d850727cd33747a263e9384625d0762b006"
+        },
+        {
+          "path": "tmp/artroom-control-tFZ5tU/before.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tmp/artroom-control-tFZ5tU/before.tap",
+          "bytes": 337,
+          "sha256": "7c5cb0b962ef930774c4757202c89e3e63b0a33465e4d9f3cd9e2c14c670970b"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-08-control-runner-control",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2449,
+          "sha256": "4e45e0f14fe8258896cddf71525617b1f86ace431d2c64815c5363485d0258f4"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 276,
+          "sha256": "b3080ea8a9446c6459b97022b661a71110067024d8d5107401627592b3b7dc53"
+        },
+        {
+          "path": "broken-source.sha256",
+          "bytes": 65,
+          "sha256": "469276085d4a21e9b600cf4986cca950376251ea4d36a98794739ac7d8829fd9"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 196,
+          "sha256": "fae343d2972c0e72b8bfe2261aa9194e19c0b98d8972b0870aceaa3708b1f2ab"
+        },
+        {
+          "path": "compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compatibility.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compatibility.stdout",
+          "bytes": 364,
+          "sha256": "89b63059ffe36f049a6c2aed33d0d8ce48169ee480b13fd995b63561e5877481"
+        },
+        {
+          "path": "driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 6683,
+          "sha256": "de09c1e5d099fd8e1fed9c27b3cbeaea89a942461ab08f8d1f735d2f5492f2c6"
+        },
+        {
+          "path": "owner.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "owner.stdout",
+          "bytes": 2694,
+          "sha256": "cf2c061a4ebcfcb07bd810b116aad41fca95297547f354ffd3195621b8e2d920"
+        },
+        {
+          "path": "owner.time",
+          "bytes": 29,
+          "sha256": "a72a91adce848fdbc8997cbfb767f43673884d31dd1aa153e7411a79d6798560"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 518,
+          "sha256": "25abcf2b1ccf152032903cbeb6a397540e046f95dcb9ad0b460d2f71f40edafa"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "6c47d4611cb35885e60e5d9814049c4173b9c3996e4b82c507258feb157f4c43"
+        },
+        {
+          "path": "source-before.sha256",
+          "bytes": 65,
+          "sha256": "1ef6aeede0e0562649c5dd39ca40723e7f571e1d73255968f34bed01e7fe5221"
+        },
+        {
+          "path": "started.json",
+          "bytes": 96,
+          "sha256": "8a472e48767c8e9fecf2a7b6e303764749595843dfb60d802987c196cd5bbf4c"
+        },
+        {
+          "path": "task.json",
+          "bytes": 558425,
+          "sha256": "697181df94bd828064d99fbf32657e4cbbfaad2b79c06e13f799c1a6affa05ca"
+        },
+        {
+          "path": "tmp/artroom-control-HmaCRO/after.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tmp/artroom-control-HmaCRO/after.tap",
+          "bytes": 249,
+          "sha256": "2ecc7de3ad968eaf9ff8aabd5aee1d850727cd33747a263e9384625d0762b006"
+        },
+        {
+          "path": "tmp/artroom-control-HmaCRO/before.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tmp/artroom-control-HmaCRO/before.tap",
+          "bytes": 337,
+          "sha256": "b179548cc9913220af4a097930c954d0a5ff5c89e090c9ea2bfa48469cd25090"
+        },
+        {
+          "path": "tmp/artroom-control-ZgCLLz/after.stderr.log",
+          "bytes": 166,
+          "sha256": "92f590789e1a37c7e22ad29e0293b43996463342fddc8c798d947411b3a3ccb8"
+        },
+        {
+          "path": "tmp/artroom-control-ZgCLLz/after.tap",
+          "bytes": 1028,
+          "sha256": "0a2040201df65c4a7f93d2b2bc4104cb04e686cdb04617fc236384a93aedc7a2"
+        },
+        {
+          "path": "tmp/artroom-control-ZgCLLz/before.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tmp/artroom-control-ZgCLLz/before.tap",
+          "bytes": 227,
+          "sha256": "2392b55f3ddcf5708756049acb6d5b67b75a5ea16656910fc3a895d3dc566be5"
+        },
+        {
+          "path": "tmp/artroom-control-qgouO5/before.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tmp/artroom-control-qgouO5/before.tap",
+          "bytes": 1880,
+          "sha256": "27cb19692f9b2b63cd1d9c04ddd7378a58f0360a8304552e733ca2057c9fa638"
+        }
+      ]
+    }
+  ]
+}
