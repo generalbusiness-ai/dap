@@ -84,8 +84,8 @@ The focused pipeline and both controls used source
 `561caa1f0eaa9aa767235ff8bd903234cc83627a`. That checkpoint includes the
 ordinary merge of main `fade0074` and the maintained parser's authority
 and store seals. No recorded pin, dependency, package or setting changed.
-The one final gate remains pending. Its unchanged selector includes Scale
-because this head adds a Node owner to `scripts/test.mjs`.
+The final gate at the checkpoint below passed. Its unchanged selector included
+Scale because this head adds a Node owner to `scripts/test.mjs`.
 
 The focused launcher, driver, Node owner and compiler/Native pipeline
 all returned 0. The two complete Node owners passed 13 cases: the 12
@@ -145,12 +145,48 @@ Run commands:
 The public evidence manifest is
 [evidence/2026-11-09-r3b-pre-gate.manifest.json](evidence/2026-11-09-r3b-pre-gate.manifest.json),
 SHA-256 `367069e262d142e72a1601971e3c4ad72d571bb01e570c3b46d758cd2bcdacca`.
-Every completed row below cites `reconciliation.json`, SHA-256
+The focused and control rows below cite `reconciliation.json`, SHA-256
 `4cec68c27455cb3faddfb7809cfe7598e070b50c536e72e135e3c43d804bae7a`.
 That summary reconciles the actual exits with the complete structured
 reports and source/process receipts. Its `raw-inputs.json` names and
 hashes all 78 terminal inputs used for the audit. Both public files have
 their sizes and digests in the manifest.
+
+The final gate used source `1fe7b6cf4069820d4d4bb84d430d4a30a280fb32`, tree
+`96c9da026de06066e888ff495479375750d878b1`. Actual `gate.exit`, the outer driver and launcher exits, and
+`analysis.exit` each read 0. The complete frozen ledger reconciles
+5,362 passed cases and three explicit skips: Node 145, Counting 56,
+Plain 4,028 with one skip, and Native 1,133 with two skips. All five fixed
+stages and four case phases completed. Typecheck retained all 15 scripts
+and 43 compiler contexts. No failure, incomplete obligation, report error
+or unhandled error remains.
+
+The unchanged selector matched `scripts/test.mjs` and ran all six original
+Scale cases across four owners with the original local deadlines. All 108
+top-level Node file-wrapper observations stay unknown: 36 files each have
+one enqueue, dequeue and complete event. They never count as test cases.
+The three declared skips retain their exact identities in the gate record.
+The wholly skipped Page recorder, `apps/room/page/test/record.scope.test.ts`,
+has no final duration. Its skip remains counted, no duration is supplied,
+and the Scope module-duration sum remains partial. Concurrent case and
+module sums do not become wall time or CPU.
+
+The gate launcher measured 1531.347 seconds elapsed and
+3201.617 seconds of CPU, including guards, child processes and result parsing.
+The gate driver's monotonic time, UTC interval, `gate.time`, step times
+and runner durations remain separate observations. The run used the same
+owned dependency view on this Mac and retained the focused/control caches.
+The reserved slot had no competing validation body. No pool, worker limit,
+deadline or retry changed, and no gate reran.
+
+The final gate manifest is
+[evidence/2026-11-09-r3b-gate.manifest.json](evidence/2026-11-09-r3b-gate.manifest.json),
+SHA-256 `2f918a78a478733041b427b532e865a9f6fd0debe1e0cda1cfcd87d9341bb508`. Its curated `classification.json` has SHA-256
+`455b1efe9a6c3c263fa7f2e3f33b37aa94f4c49b6647360a7389923229d6bbcb`. The full metadata-only `case-reconciliation.json`
+has SHA-256 `38d827475cac5d26dbd2ad301a287f8f91dfed7745aaf67cd51fc3f586f6dcae` and records every accepted obligation.
+Both original gate and launcher units and the public validation unit have
+checksums and read-only permissions. Temporary custody, fixtures, signing
+keys, request bodies and raw assertion payloads stay private.
 
 | Check | Command or boundary | Exit | Output |
 |---|---|---|---|
@@ -159,12 +195,14 @@ their sizes and digests in the manifest.
 | Complete Native authority and observation owners | The frozen Scope selection through `scripts/focused-check.mjs` | 0. All 15 cases passed | `reconciliation.json`, `focus.NativeCases` and `focus.selection` |
 | Unbounded-insertion control | Exact named signed Native flood baseline and recorded store fault | Baseline 0, fault 1. Expected count assertion | `reconciliation.json`, `controls.cases[0]` |
 | Existing generation-eviction control | Exact named eviction baseline and recorded `generation++` fault | Baseline 0, fault 1. Expected old-answer assertion | `reconciliation.json`, `controls.cases[1]` |
-| Final gate | `npm run gate`, unchanged pools, workers and deadlines | Not run | Pending |
+| Final gate | `npm run gate`, unchanged pools, workers and deadlines; all six Scale cases | 0. 5,362 passed, three explicit skips | Gate `classification.json` and `case-reconciliation.json`, digests above |
 
-The four original raw and launcher units and the public unit each have
-`SHA256SUMS` and read-only permissions after their final metadata write.
-The public unit copies only the curated reconciliation and a raw-input
-hash index. Generated temporary fixtures, signing keys, raw reports,
+The four pre-gate focus, control and launcher units and their public unit
+each have `SHA256SUMS` and read-only permissions after the final metadata
+write. That public unit holds the curated reconciliation and a raw-input
+hash index. The separate gate unit has the four metadata files listed in
+its manifest. Original external tool paths in the gate hash index remain
+writable; their retained hashes and private metadata copies record the run. Generated temporary fixtures, signing keys, raw reports,
 assertion payloads, request bodies and saved fault sources remain withheld
 in their original private units. No fixture or payload bytes enter the
 committed manifest.
