@@ -7,8 +7,8 @@ Current ruling: `e2fc59d54f6e920cedd9e4efa1fc3e2033d53d70`.
 Status: the first focused unit failed at `40ab4e2d`. Compatibility and
 all 11 Node inventory cases passed. The Scope source compiler required an
 explicit `ignoreBOM` option. The other two compilers and all 37 application
-cases remain unrun. This draft adds the explicit default, with a refreshed
-helper seal and focused follow-up still due. No control, gate, or review has
+cases remain unrun. This draft adds the explicit default, with its refreshed
+helper seal; the focused follow-up remains due. No control, gate, or review has
 run for R15. Main `6dd337d3` is the base.
 
 ## Endpoint shutdown and the recorded end
@@ -83,6 +83,9 @@ The maintained source-seal producer ran at `75d4430c`. Its hosted owner
 gives `c41049c9597e2d2221066d60be526d85a50a730ad22d88ed999e124af6076956`;
 the new retirement owner gives
 `08e34ecbd584bde7dd196a86081f42d0be6b5e8323b7d4c565ac68fbe18ff1bb`.
+After the compiler repair, the maintained producer at `faa4be6b` gives
+`8707c99fe68ac3cf7af20a343f92c36b3bb81237b3681ae2a03169df5513882b`
+for the helper. The hosted owner stays equal.
 The inventory adopts those actual parser outputs under Hugh's standing
 patch approval. All route and gate assertions remain. Producer metadata
 establishes no test pass.
