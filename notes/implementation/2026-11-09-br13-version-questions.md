@@ -29,10 +29,11 @@ plus Replay's five questions. Platform dispatches these names to that one
 owner and re-exports the vocabulary. Derive, Git and portable Replay import
 the leaf directly. Named-pin stand-ins keep their existing shape.
 
-Replay's two legacy publication questions retain separate names and the
-same destination4/5/6/7 answers. Its partition-origin question retains
-destination6. Its archive naming questions retain membership8/12 and
-register17/18/19/20/26, with their existing kind and caller-anchor checks.
+Replay's two legacy publication questions retain separate names and accept
+destination versions 4, 5, 6 and 7. Its partition-origin question accepts
+destination version 6. Its archive naming questions accept membership
+versions 8 and 12, and register versions 17, 18, 19, 20 and 26, with their
+existing kind and caller-anchor checks.
 
 Replay's portable release plan keeps Platform as an excluded source-only
 dependency. The direct contract import preserves that public boundary.

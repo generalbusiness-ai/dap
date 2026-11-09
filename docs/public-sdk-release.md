@@ -117,7 +117,7 @@ and derive exports `.`, `./rule` and `./testing`.
 
 | Package | Planned exports | Excluded source exports | Coordinated dependencies |
 |---|---|---|---|
-| contract | `.` | | |
+| contract | `.`, `./catalog-vocabulary` | | |
 | bytes | `.`, `./web` | | contract |
 | derive | `.`, `./rule`, `./field-types`, `./testing` | | bytes, contract |
 | package-graph | `.` | | contract, derive |
