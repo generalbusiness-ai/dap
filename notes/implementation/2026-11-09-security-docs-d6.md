@@ -1,9 +1,10 @@
 # Complete the security references and witness inventory
 
 Request `d8512f74`; promise `40f21bcc`. Source starts at main `29926a3a`.
-Focused Node checks, documentation links and the named-witness control
-are complete at `ecebb1cc`. The final gate remains due after this head
-includes the preceding JSON landing.
+This head includes the preceding JSON landing, main `ca6a54e2`. Focused
+Node checks, documentation links and the named-witness control are complete
+at `ecebb1cc`. Their helper and test bytes remain identical. The final
+gate remains due.
 
 D3, D4 and D5 already exist on main, with the settings inventory and its
 three Node cases. This head adds D6, the root `SECURITY.md`, and a static
@@ -48,7 +49,13 @@ owned process groups after closure. The saved 12-case baseline ran once;
 the control did not rerun it.
 
 These results use the same helper and test bytes that this head retains.
-Later edits add evidence and explanatory documents only. Earlier branches
+The main merge adds the already reviewed JSON formatting and pinned
+formatter. The owned dependency view adds only the exact Prettier 3.9.10
+files from the integrity-verified scratch copy; all other lock rows remain
+identical. Fourteen workspace bindings resolve inside this checkout. No
+package manager ran in the checkout.
+
+Later D6 edits add evidence and explanatory documents only. Earlier branches
 establish no result here. The final gate remains unrun.
 
 ## Deployment and reporting
