@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:30d535b398a6a82d23a9f57a1f8f1a68f5b39690","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r15-source-seal-metadata.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:364371365f185a96a63e1b3df98c9dd102042c10","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/worker.ts."}
