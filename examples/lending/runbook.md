@@ -104,13 +104,13 @@ that allows a member's key to sign the corresponding acts.
 Use the approved declaration's canonical bytes under the deployed bounds.
 Its pin is
 `sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993`.
-The checked-in authoring file has one trailing LF. `--value` sends a file
-unchanged, so remove that authoring newline before activation or establishment.
-The current canonical input is 4,603 bytes. The authoring file is 4,604 bytes.
+The checked-in file contains readable source JSON. `--value` sends a file
+unchanged, so parse and canonicalize that source before activation or
+establishment. The canonical input remains 4,603 bytes.
 
 ```sh
 umask 077
-node -e 'process.stdout.write(require("fs").readFileSync("examples/lending/definition.json", "utf8").replace(/\n$/, ""))' > "$DAP_HOME/lending.json"
+node --input-type=module -e 'import { readFileSync } from "node:fs"; import { canonicalize, parseStrict } from "@generalbusiness/dap-bytes"; process.stdout.write(canonicalize(parseStrict(readFileSync("examples/lending/definition.json", "utf8"))))' > "$DAP_HOME/lending.json"
 node packages/cli/bin/dap.js act activate --on rules --set digest=sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993 --set name=lending --value "$DAP_HOME/lending.json"
 node packages/cli/bin/dap.js act establish-application --on directory --set definition=sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993 --set 'values={}' --set execution=recorded-do --value "$DAP_HOME/lending.json"
 ```
@@ -332,7 +332,7 @@ Corrections found in the run:
 - `examples/lending/definition.json` ends with a newline, and the pin is
   the digest of the bytes without it. `--value` sends a file as it is, so
   the runbook's first commands were refused `bad-field`. The commands
-  above now send a copy without the newline.
+  above now parse the readable source and send its canonical value.
 - During this rehearsal, the interface offered a cancel button to an
   ordinary member, and the scope refused the act. Shot 8a was changed to
   show that refusal. The current interface hides the button unless the

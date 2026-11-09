@@ -59,8 +59,7 @@ wrong-next/reset/late reports; and max16/ownership/removal/re-entry. They have
 **not been run**. Memory refolding is not native persistence, native authority,
 Worker restart, durable custody, audible completion or V1 delivery evidence.
 
-[commitments.json](commitments.json) contains authored canonical JSON plus one
-trailing newline. [commitments-pin.ts](commitments-pin.ts) currently names:
+[commitments.json](commitments.json) contains readable source JSON. [commitments-pin.ts](commitments-pin.ts) currently names:
 
 `sha256:b55824346382d9b158be4cadd9d098008f8129147fba772537778e2f738d5271`
 
@@ -68,8 +67,9 @@ These bytes were authored with a scratch Python standard-library serializer:
 ASCII keys/strings, safe integer values, sorted compact JSON and SHA-256 over
 `artroom-definition-1`, one LF, and canonical JSON without its file LF. The
 [byte authoring script](scripts/pin-commitments.mjs) reproduces this from the
-literal source with built-in Node filesystem/crypto only. It imports no
-compiler, test config, evaluator or validator. It has been authored but not
+literal source with built-in Node filesystem and crypto, then writes
+readable JSON with the pinned formatter. It imports no compiler, test
+configuration, evaluator or validator. It has been authored but not
 executed; the actual canonical implementation equality and declaration/pin
 validation remain required focused checks. This pin is not a validation claim.
 

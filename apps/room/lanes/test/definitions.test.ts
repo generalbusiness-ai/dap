@@ -25,8 +25,8 @@ describe("the two lane definitions, as data (lane forms, revision 14)", () => {
     expect(LANE_FORMS).toEqual({ revision: 14, commit: "4b3bf5da" });
     expect(definitions).toEqual([issue, change]);
     for (const name of names) {
-      // The byte file is the canonical JSON of the value, with nothing before or after it. A changed row with no new pin fails here.
-      expect(file(name) === canonicalize(lanes[name]), `${name}: the byte file is not the canonical bytes of the value; run scripts/pin.mjs`).toBe(true);
+      // The readable file parses to the exact canonical value. A changed row with no new pin fails here.
+      expect(canonicalize(parseStrict(file(name))) === canonicalize(lanes[name]), `${name}: the readable file has a different canonical value; run scripts/pin.mjs`).toBe(true);
       // The digest is of those bytes, in the definition's own domain, by the one implementation.
       expect([definitionDigest(lanes[name]), definitionDigest(parseStrict(file(name)) as DeclaredDefinition)], name).toEqual([DIGESTS[name], DIGESTS[name]]);
     }
@@ -104,7 +104,7 @@ describe("the two lane definitions, as data (lane forms, revision 14)", () => {
   test("the demo profile: each definition is exactly its pinned bytes and digest, keeps its full definition's name, holds a strict subset of its acts and handlers, each the full definition's row unchanged, with every item type and timed rule, and passes the validator whole", () => {
     const profile = { issue: [issueDemo, issue, "issue-demo"], change: [changeDemo, change, "change-demo"] } as const;
     for (const [name, [demo, full, pinned]] of Object.entries(profile)) {
-      expect(file(pinned) === canonicalize(demo), `${pinned}: the byte file is not the canonical bytes of the value; run scripts/pin.mjs`).toBe(true);
+      expect(canonicalize(parseStrict(file(pinned))) === canonicalize(demo), `${pinned}: the readable file has a different canonical value; run scripts/pin.mjs`).toBe(true);
       expect([definitionDigest(demo), definitionDigest(parseStrict(file(pinned)) as DeclaredDefinition)], name).toEqual([DEMO_DIGESTS[name as "issue"], DEMO_DIGESTS[name as "issue"]]);
       const checked = validated(demo);
       expect([checked.ok && checked.definition.digest, demo.name], name).toEqual([DEMO_DIGESTS[name as "issue"], full.name]);

@@ -182,14 +182,10 @@
       "also": {},
       "guards": [
         {
-          "state": [
-            "open"
-          ]
+          "state": ["open"]
         },
         {
-          "signer": [
-            "author"
-          ],
+          "signer": ["author"],
           "reason": "not-your-note"
         }
       ],
@@ -228,9 +224,7 @@
       "guards": [
         {
           "of": "also.board",
-          "state": [
-            "open"
-          ]
+          "state": ["open"]
         }
       ],
       "effects": [
@@ -251,9 +245,7 @@
   "timed": {
     "expire": {
       "on": "note",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "deadline": "until",
       "effects": [
         {

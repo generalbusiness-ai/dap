@@ -31,7 +31,7 @@ contract package's types. Its tests and scripts also use `bytes`,
 | `LANE_FORMS` | The revision and the commit of the lane forms that the rows were written from. |
 | `definitions` | Both declarations as a list. A creator supplies it as the `definitions` of a creation, so that a directory which names the two digests in `create` sends retains their bytes for its children. |
 | `LaneDefinition` | The type each value is checked against. |
-| `./definitions/issue.json`, `./definitions/change.json` | The canonical bytes of each definition, by path. The main entry reads no file. |
+| `./definitions/issue.json`, `./definitions/change.json` | Readable JSON for each definition, by path. Its canonical value determines the pinned digest. The main entry reads no file. |
 
 ## The files
 
@@ -41,7 +41,7 @@ contract package's types. Its tests and scripts also use `bytes`,
 | `src/shared.ts` | The rows that the lane forms state once for both definitions, and that differ only by a grant's prefix or by the definition's name: the `hold` and `export` item types, six discussion acts, three acts on a hold or an export, the timed rule `hold-end`, and the two export handlers. |
 | `src/demo.ts` | The demo profile: `issueDemo` and `changeDemo`, each its full definition with a subset of its acts and handlers, under the same name. |
 | `src/digests.ts` | `DIGESTS`, `DEMO_DIGESTS` and `LANE_FORMS`. `scripts/pin.mjs` writes it. |
-| `definitions/*.json` | The canonical bytes, of the two definitions and of the two of the demo profile. `scripts/pin.mjs` writes them. |
+| `definitions/*.json` | Readable JSON for the two definitions and the two demo definitions. Each canonical value determines its pinned digest. `scripts/pin.mjs` writes the files. |
 | `scripts/pin.mjs` | Writes the four byte files and `src/digests.ts` from the values. |
 | `scripts/reference.mjs` | Writes `docs/lanes-reference.md` from the values. With `--check` it writes nothing and exits 1 when the file is stale. |
 | `test/definitions.test.ts` | Four plain tests: the pins, with the generated reference; the counts against the bounds; validation of both definitions whole; and the demo profile's pins, its strict subset of rows and its validation. |

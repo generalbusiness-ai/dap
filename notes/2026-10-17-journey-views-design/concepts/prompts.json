@@ -69,73 +69,49 @@
       "path": "change-desktop.png",
       "bytes": 1315569,
       "sha256": "20c45212f868afaa08b3d7e044c838c355eb7cc1429f73d99f9be9cb2828efc8",
-      "dimensions": [
-        1536,
-        1024
-      ]
+      "dimensions": [1536, 1024]
     },
     {
       "path": "change-unknown-mobile-light.png",
       "bytes": 1294494,
       "sha256": "d65f0e9e4707a95a98a6f2f2146dcee8d42732f42aeec3a5fd954f38f5b499c0",
-      "dimensions": [
-        950,
-        1655
-      ]
+      "dimensions": [950, 1655]
     },
     {
       "path": "decision-desktop.png",
       "bytes": 1347478,
       "sha256": "23a2e7f0ff52dbfa9346d7f0040f9dba6cadfed3f672af2dd2e0a4ec1312d1e8",
-      "dimensions": [
-        1536,
-        1024
-      ]
+      "dimensions": [1536, 1024]
     },
     {
       "path": "file-diff-desktop.png",
       "bytes": 1218551,
       "sha256": "c2e060eef81215ef2675d6ca9a7a1c20e847c4253b899fef59976a9da6e36116",
-      "dimensions": [
-        1536,
-        1024
-      ]
+      "dimensions": [1536, 1024]
     },
     {
       "path": "interdiff-mobile-light.png",
       "bytes": 1335244,
       "sha256": "2b21f5e79959179b4a5329b3ea1dc73c51f5bca664f70cbb7e960b956a91d6f3",
-      "dimensions": [
-        977,
-        1610
-      ]
+      "dimensions": [977, 1610]
     },
     {
       "path": "needs-you-desktop.png",
       "bytes": 1338291,
       "sha256": "3786b6d41aa80a3e029276e0a97b9a8bba37ae069bbfdd143498560365291506",
-      "dimensions": [
-        1536,
-        1024
-      ]
+      "dimensions": [1536, 1024]
     },
     {
       "path": "needs-you-mobile-dark.png",
       "bytes": 1357513,
       "sha256": "513514140aff9389f9562a825e6803ed1ff933c3a27498546b3161361636421e",
-      "dimensions": [
-        977,
-        1610
-      ]
+      "dimensions": [977, 1610]
     },
     {
       "path": "work-desktop.png",
       "bytes": 1512174,
       "sha256": "333f2aa4481cb4d8d39a7bf92454aa9786b1898e5348f0dc3e887288bff95f87",
-      "dimensions": [
-        1536,
-        1024
-      ]
+      "dimensions": [1536, 1024]
     }
   ]
 }

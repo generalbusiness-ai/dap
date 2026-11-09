@@ -1,10 +1,7 @@
 {
   "kind": "static-design-fixtures",
   "noLiveActs": true,
-  "themes": [
-    "light",
-    "dark"
-  ],
+  "themes": ["light", "dark"],
   "commits": {
     "Base": "8475e1beda99cd9b32d3617f1fb255664090fbe0",
     "Version 1 source": "94e6b0427e0779b4cd686d3c46ec196cf105aacc",

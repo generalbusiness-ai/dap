@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "request": "c6e29874f4194734ab68c9f7adeab54fd3543f40",
+  "promise": "197ace0743d3c4c26288e32708ae72aa2b7af5e1",
+  "sourceHead": "8653385e250a125be02a648c3d5c779058b1d9d6",
+  "sourceTree": "1da5f97f7a7ba675a8326600f4916cf9ff853f77",
+  "qualification": "One new full gate authorized by planner ruling794ef517 passed0 at the exact frozen source head, after the one focused size follow-up and restored control. Node143, Counting56, Plain4028+1skip, Native1128+2skip; all six selected Scale cases passed under original local deadlines. Original failed gate remains failed and retained. No test rerun, deployed or browser result during analysis or sealing.",
+  "fileCount": 16,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-json-repaired-gate-validation",
+      "fileCount": 16,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1219,
+          "sha256": "07495eb575caed893cf3cafa37b76349b6f9d1f8fb6fbec140dd28685ece3837"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2420,
+          "sha256": "a380b70a5975a5fd03a95a34ac06ab117c5b0f18a38bee36c82fd7a5f16a18f1"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 5502,
+          "sha256": "532cd99f103fb1f8d541acf8306f3d1b73cda7d6542507b309e9b478aa11dbb0"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7380,
+          "sha256": "c63539cc5ea05f0df6c921ef0da586bdc9301a72ab91d899a60150d6e0fc2342"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "8c9a8b881a210c17c62fbd5861f548543f9ec21a78dfb1c51b3f463c2dd1a84a"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 519,
+          "sha256": "1f620aab9a4c78d3eed1f7dd2fe7332d3f3de9f6fe741aa194f5ffada267353b"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "e4bf286ee0ba78cd0d8285cbdc50f0f3494774062fdf36a52d1fc27acbd5b9a9"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 6034,
+          "sha256": "e6c5a201c55b3027e259cbdeefe0b5f9bc0a4945a62b45fc15aee117969fb4b5"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "596431961022bed5eb8c98990925df03970557aaa378f0f2fc45eb7c2f53af06"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 6862,
+          "sha256": "62ad29d08640cad578d39d0cdf9d6b0f66300723e2decc70677327c2d8e26a8a"
+        },
+        {
+          "path": "started.json",
+          "bytes": 718,
+          "sha256": "32b4c6f7e67d907571eaf0f1b6afdbd1d036ccae778e13b1bd0c598ac4ea04a4"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 22201,
+          "sha256": "ad003bcda1dd5b89af443333507e8af984b1874f6e0e64e9c76b57790fdfe314"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 580,
+          "sha256": "4075889f9a3eb8c7a506551d5adc77fbdfa963e06a046eb7ef4c7596cbb714e2"
+        }
+      ]
+    }
+  ]
+}

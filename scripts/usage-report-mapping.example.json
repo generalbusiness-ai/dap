@@ -3,9 +3,7 @@
   "workers": [
     {
       "worker": "dap-grow",
-      "deployments": [
-        "TEST-ONLY-replace-with-operator-deployment-history"
-      ]
+      "deployments": ["TEST-ONLY-replace-with-operator-deployment-history"]
     }
   ]
 }

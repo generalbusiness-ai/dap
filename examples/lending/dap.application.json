@@ -3,14 +3,10 @@
   "name": "ai.generalbusiness.lending",
   "version": "0.2.0",
   "entry": "examples/lending/definition.json",
-  "definitions": [
-    "examples/lending/definition.json"
-  ],
+  "definitions": ["examples/lending/definition.json"],
   "host": {
     "execution": "recorded-do",
-    "profiles": [
-      "restricted@1"
-    ]
+    "profiles": ["restricted@1"]
   },
   "capabilities": [],
   "projections": {
@@ -22,9 +18,7 @@
         "library": {
           "item": "library",
           "read": "many",
-          "states": [
-            "open"
-          ],
+          "states": ["open"],
           "limit": 1,
           "fields": {
             "destination": {
@@ -53,11 +47,7 @@
         "thing": {
           "item": "thing",
           "read": "many",
-          "states": [
-            "available",
-            "gone",
-            "lent"
-          ],
+          "states": ["available", "gone", "lent"],
           "limit": 100,
           "fields": {
             "description": {
@@ -128,11 +118,7 @@
         },
         "events": {
           "read": "entries",
-          "acts": [
-            "borrow",
-            "donate",
-            "return"
-          ],
+          "acts": ["borrow", "donate", "return"],
           "window": 100,
           "limit": 100,
           "latestBy": null,
@@ -151,9 +137,7 @@
         },
         "cancellations": {
           "read": "entries",
-          "acts": [
-            "cancel"
-          ],
+          "acts": ["cancel"],
           "window": 100,
           "limit": 100,
           "latestBy": null,
@@ -183,9 +167,7 @@
         },
         "publications": {
           "read": "entries",
-          "acts": [
-            "publish"
-          ],
+          "acts": ["publish"],
           "window": 100,
           "limit": 100,
           "latestBy": null,
@@ -222,13 +204,7 @@
       "sources": {
         "events": {
           "read": "entries",
-          "acts": [
-            "borrow",
-            "cancel",
-            "donate",
-            "publish",
-            "return"
-          ],
+          "acts": ["borrow", "cancel", "donate", "publish", "return"],
           "window": 100,
           "limit": 100,
           "latestBy": null,
@@ -249,17 +225,9 @@
     }
   },
   "roles": {
-    "admin": [
-      "lending.member",
-      "lending.staff",
-      "lending.establish"
-    ],
-    "member": [
-      "lending.member"
-    ],
-    "agent": [
-      "lending.member"
-    ]
+    "admin": ["lending.member", "lending.staff", "lending.establish"],
+    "member": ["lending.member"],
+    "agent": ["lending.member"]
   },
   "predecessor": null,
   "presentation": {
@@ -367,10 +335,7 @@
         "projection": "state",
         "item": "thing",
         "title": "name",
-        "facts": [
-          "state",
-          "description"
-        ],
+        "facts": ["state", "description"],
         "context": "thing {id} v{revision}",
         "fallback": "thing {id}: {state}"
       },
@@ -387,11 +352,7 @@
         "projection": "state",
         "item": "thing",
         "title": "name",
-        "facts": [
-          "state",
-          "description",
-          "reason"
-        ],
+        "facts": ["state", "description", "reason"],
         "context": "thing {id} v{revision}",
         "fallback": "thing {id}: {state}"
       },
@@ -408,17 +369,13 @@
         "projection": "activity",
         "item": "events",
         "title": "type",
-        "facts": [
-          "time"
-        ],
+        "facts": ["time"],
         "context": "Recent entry {id}: {type}",
         "fallback": "Recent entry {id}: {type}"
       }
     }
   },
-  "scenarios": [
-    "examples/lending/scenarios/application.json"
-  ],
+  "scenarios": ["examples/lending/scenarios/application.json"],
   "connections": [
     {
       "from": "examples/lending/definition.json",
