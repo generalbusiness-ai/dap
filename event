@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3d48291769af70b5d324e98d08df0e3a4c2365cd","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-r15-failed-direct-revision.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:40b20e5a0499c665bd4e5927d9667cb3e6202981","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
