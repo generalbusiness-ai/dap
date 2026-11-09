@@ -264,9 +264,9 @@ const seals = {
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection-source.ts": "00edbc4215cbd8fc9bf35f5e001ad9e656cad5eee594546db2804a1cb84225ce", // Closed native room metadata with optional supported membership pin.
   "packages/scope/src/applications/projection.ts": "8576f78bb68850421ca7843e6fd0e4ecfb18f136009b82296097feca603f5484",
-  "packages/scope/src/destination-host.ts": "56a62008cd929345f4606273f430b2098a392666a580aa8148b1caad8066030e", // Token refusal: a key that a compromised notice named takes no read token.
-  "packages/scope/src/credential-store.ts": "07f8a368880aeb9697731c3de1011da57895df0860e1cc89e71dcd0b080c9c20", // R13 private reservation and custody owner; actual maintained parser output.
-  "packages/scope/src/read-token-quota.ts": "0456473938cffe851ba9ff5248db551d06d3bdad30615e3ad247f84334416e8f", // R13 private reservation and custody owner; actual maintained parser output.
+  "packages/scope/src/destination-host.ts": "c09958d98acff1aae6dc641c08badd162faa06fe098daf00c4344a0298529561", // Token refusal: a key that a compromised notice named takes no read token.
+  "packages/scope/src/credential-store.ts": "e1dacade2330f66d0df7cc8fe0f34159760d144dbaffbec25e89451cf2c997e2", // R13 private reservation and custody owner; actual maintained parser output.
+  "packages/scope/src/read-token-quota.ts": "73a3df3ecd1434add309fba8a8cc205faf38b017e4d06b148c84622cd30290a1", // R13 private reservation and custody owner; actual maintained parser output.
   "packages/scope/src/workspace-host.ts": "537ed96759a3889f59272b1a660a3cfd8ef8f46ec2aa15618c8b7c3568b57bfe", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
   "packages/scope/src/workspace-lineage.ts": "dbb0409a8ab6a8127d2734455cb3db867e46a96dfe0f2ccda0dcf998bd2aced9", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.

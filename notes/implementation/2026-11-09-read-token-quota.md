@@ -86,5 +86,10 @@ equal. Patch `artroom-r13-source-seals-20261109.patch` has SHA-256
 `f0b0c2f9c5e5c7ea8a6ce781b3fb1adb6a30c4e5eebced02cbf08fa942bdaa11`; Hugh's standing patch authorization covers adoption
 of these actual outputs. No route or gate assertion changes. Independent
 review still judges the source; no test result follows from a seal.
-The later known-expired-reply fix changes the quota owner again. Its seal
-must follow the next source freeze before the focused checks.
+At source checkpoint `2b7c3423`, the producer also updates the three whole
+owners changed by the known-expired and late-reply cuts: the adapter,
+custody, and quota. Patch `artroom-r13-late-source-seals-20261109.patch`
+has SHA-256 `cba60792593f91c5b1537bb3e235c190e7839c5316c8193dffec801b87bd35cb`.
+The existing named Core and Object values stay equal to the first freeze.
+Hugh's standing patch authorization covers these actual outputs. No test
+has run yet.
