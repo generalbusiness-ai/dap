@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8a50389bf0f0a583363da749142de1930204bb7e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-security-d6-gate2.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9feae109bd5e077bec1d821a784d9431f345ee78","text":"Merge retired a covered predecessor; the successor is at scripts/security-witnesses.mjs."}
