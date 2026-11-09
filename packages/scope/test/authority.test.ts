@@ -281,8 +281,11 @@ test("an authority run admits 4096 keys, refuses a new key before reading at the
   expect(reads).toBe(4096);
   expect(await port.read(asked(1), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
   expect(reads).toBe(4097);
-  expect(await port.read(asked(4096), 5)).toBe("limit");
-  expect(reads).toBe(4097);
-  expect(await observing(config).read(asked(4096), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
+  failed.delete(key(2));
+  expect(await port.read(asked(2), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
   expect(reads).toBe(4098);
+  expect(await port.read(asked(4096), 5)).toBe("limit");
+  expect(reads).toBe(4098);
+  expect(await observing(config).read(asked(4096), 5)).toEqual(expect.objectContaining({ held: expect.any(Function) }));
+  expect(reads).toBe(4099);
 });

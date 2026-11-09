@@ -540,8 +540,7 @@ export class Scope {
   /**
    * Submit an act (sections 4.2 and 5.2). Check the signature and shape,
    * then read standing before receiver policy and the foreign entries
-   * named by fields or presented facts. The
-   * turn does the rest. A refusal is a statement about the head it names and
+   * named by fields or presented facts. The turn does the rest. A refusal is a statement about the head it names and
    * writes nothing.
    *
    * `grants`: the grants presented beside the intent. The authority port's
@@ -575,8 +574,8 @@ export class Scope {
     const act = own(definition.declared.acts, intent.kind);
     const fields = act ? readFields(act.fields, intent.fields, bounds) : null;
     // Section 4.2: a key on a sealed entry is answered from history, with the same receipt or a mismatch. That answer reads no
-    // foreign entry, so none is fetched for it, and a lost dependency cannot hide it. The
-    // judge gives the answer; an intent with a key that is not accepted is new work and meets every check below.
+    // foreign entry, so none is fetched for it, and a lost dependency cannot hide it.
+    // The judge gives the answer; an intent with a key that is not accepted is new work and meets every check below.
     let known = this.#store.accepted(intent.actor, intent.idempotencyKey) !== null;
     // R3: obtain standing before provenance, receiver policy or foreign facts.
     // A definite failure of an ordinary grant refuses without a queued turn.

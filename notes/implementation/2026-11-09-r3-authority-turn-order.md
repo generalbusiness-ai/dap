@@ -1,8 +1,8 @@
 # Read authority before receiver work and drain timers only from alarms
 
 Request `03e5f6d7`; promise `8787bceb`; source starts at main `29926a3a`.
-This is source preparation while the JSON gate owns the local validation
-slot. No compiler, test, control, seal producer or gate has run for R3.
+This head contains source preparation only. No compiler, test, control,
+seal producer or gate has run for R3.
 
 An ordinary act whose held observation already denies its grant now
 returns `unauthorized` before application provenance, receiver policy,
@@ -40,10 +40,11 @@ writes the act. The actual receiver-policy method is instrumented, with a
 positive call to distinguish an unused counter.
 
 The authority owner adds one pure budget witness using synthetic key IDs
-below signature admission. It mixes ordinary, once-only and failed reads. It admits the real 4,096-key limit once,
-refuses key 4,097 before a read, retains ordinary reuse, once-only reads and failed responses
-for existing keys, and permits that new key in a new run. The Core witness
-covers the signed-input boundary separately.
+below signature admission. It mixes ordinary, once-only and failed reads.
+It admits the real 4,096-key limit once and refuses key 4,097 before a read.
+Existing keys retain ordinary reuse, once-only reads and recovery after a
+failed read. A new run permits the new key. The Core witness covers the
+signed-input boundary separately.
 
 The complete turn owner keeps its alarm budget, clock, timed ordering,
 listener and restart assertions. Its application-admission race now
