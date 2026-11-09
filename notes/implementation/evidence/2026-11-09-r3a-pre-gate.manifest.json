@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "request": "31f98f3330401a9795f52622b57ca495eecbd002",
+  "promise": "cf19eb3ad7c503a37e6900c0c65869eb410845a2",
+  "sourceHead": "de03d2b319c4b0f32908e166bafe6ccdde6262e5",
+  "sourceTree": "4f07930b896bf49c3be667331bb3cd92e15b8a5e",
+  "qualification": "R3a focused Node12,14compiler contexts and14Native cases in3whole owners pass at the exact source. Both precise controls distinguish: old pre-read admission limits the newcomer; removing FIFO generation invalidation admits the older active answer. The first wrapper exit1 and its single successful baseline remain separate. No baseline repeat, full gate, deployment or live acceptance claim.",
+  "fileCount": 24,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r3a-pre-gate-validation",
+      "fileCount": 24,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2138,
+          "sha256": "8eb940b399dff3bfb204c4ca9148db5a6a3f5d45ad14ea01c8ecad12b1a56ee1"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 14226,
+          "sha256": "1216b8eed36e41a328bbe2ff506fbc52d7ce759a82a67b07a091e45ccbac045e"
+        },
+        {
+          "path": "compiler-closure.json",
+          "bytes": 11531,
+          "sha256": "91dafa04ad8cc7ba3816fab484f61bad5d4e8f203ceec60caf6a1761509589e3"
+        },
+        {
+          "path": "controls-continuation--driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "controls-continuation--private-retention.json",
+          "bytes": 600,
+          "sha256": "b5aac046eed2906a7ce177e7d339ed1a4df4115419d6c0fa95fec8ccc6350502"
+        },
+        {
+          "path": "controls-first--driver.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "controls-first--newcomer-baseline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "controls-first--private-retention.json",
+          "bytes": 587,
+          "sha256": "18cb47ba3d34ae9c0c44feaa61794a52a92597023d3a532ca849d10590e67b61"
+        },
+        {
+          "path": "controls-summary.json",
+          "bytes": 2426,
+          "sha256": "dd24bbfc746c3136c095ce7f3dd906d138c1cc577a0e8f0d8ec1c5d49c96007b"
+        },
+        {
+          "path": "focused--compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--coverage-ledger.json",
+          "bytes": 24715,
+          "sha256": "b9ec83bf782cdd76e84de4fb8345178d84592d081f41f4ca2c82355aa7f135b3"
+        },
+        {
+          "path": "focused--driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--node-driver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--node-result.json",
+          "bytes": 3227,
+          "sha256": "436154eae4d695b939f676fc80d19eac15cada88e51c9cf5a66a05a06c92439e"
+        },
+        {
+          "path": "focused--outer-timing.json",
+          "bytes": 591,
+          "sha256": "eead9429da32b04aea08d838d08ac6b302b2fd3eec7449e6fc9a4dbe9b7b99b3"
+        },
+        {
+          "path": "focused--owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--owner.time",
+          "bytes": 29,
+          "sha256": "29a3b74332a6ed1442db492a7f9db2d87ececff8833928bc4f2835900dcc6308"
+        },
+        {
+          "path": "focused--pipeline-receipt.json",
+          "bytes": 93,
+          "sha256": "6fe5a51112a791d295899b046d989fcdb9060f985a3d32658086affb79dd8113"
+        },
+        {
+          "path": "focused--pipeline-result.json",
+          "bytes": 32594,
+          "sha256": "34dac4664610379ad1d88d62c9bac73ee0645f79f438103b940d8ecd22a46264"
+        },
+        {
+          "path": "focused--pipeline.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused--pipeline.time",
+          "bytes": 31,
+          "sha256": "158d31a683cd1da297c4b76f1f5cf5f163b95c7581be15e8274a1e02f485a39a"
+        },
+        {
+          "path": "focused--private-retention.json",
+          "bytes": 586,
+          "sha256": "2b09b014415052bdf7b16919e2d4c46107603fd91c7b3a49c281248a6696fa4f"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 15694,
+          "sha256": "5986eecd9cd60e82bd260a7d273102119a82cdb63bd2862c08d387e9d7c0bb44"
+        },
+        {
+          "path": "source-seal.json",
+          "bytes": 862,
+          "sha256": "1cd6d5a5949fb8d6fdb82fe9817c37600f7cf989aecc6eb3e8a50122556b395d"
+        }
+      ]
+    }
+  ]
+}
