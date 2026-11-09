@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "sourceHead": "c9583a00b3d7ee99464585878780e1d51fae4208",
+  "qualification": "First automatic R15 main Local Worker smoke attempt failed at its stale empty-body retire200 expectation; actual202 is reviewed pending semantics. Captured run metadata and complete failed-step log only. GitHub reported a private scratch path, but no retained runner scratch or Native content is claimed. No rerun or runtime change.",
+  "fileCount": 6,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r15-main-smoke-42619666050",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 404,
+          "sha256": "ac1b24404e6fa4b462dea9439e469355a367cb29d0d06d88a494c7344bf0c60d"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 623,
+          "sha256": "22b0ed3a7281ffc7bc45f04d35af69bb9228859ab078464bd0d5591c5896c162"
+        },
+        {
+          "path": "failed.log",
+          "bytes": 1983,
+          "sha256": "46ae72e4a6d48d88373c7af733f3a2a3e47f35f9c2b60289a5ea00fbc65069e8"
+        },
+        {
+          "path": "failed.log.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2082,
+          "sha256": "0308f250f524a525f0bc40f150691739153b96ee1b8ba8b41c57f58231f31767"
+        },
+        {
+          "path": "run.json.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ]
+}
