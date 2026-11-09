@@ -3,7 +3,8 @@
 Status: the corrected v1 fixture passes both Scope compiler contexts and its
 complete native case at `63bb22a3`. The sender-guard control distinguishes.
 The first fixture failure and the control's parser failure remain retained.
-Published S4 is integrated. The full gate, independent review and landing remain due.
+Published S4 is integrated. The final gate passes at `c2bc07a2`.
+Independent review and landing remain due.
 
 Live request `f131d4e8c96a5821a5859d537b2223f7d0ff518a` and promise
 `2b9edaa678afae9b7439456250b960d124d2a8f8` carry this work forward from
@@ -76,12 +77,11 @@ refusal entry per request. Whether a cross-room receiver should refuse
 before that deciding entry remains a design question for M1 and M2. M0
 preserves the existing entry and result guarantee.
 
-## Validation remains due
+## Validation follows the native boundary
 
 The one native owner covers the four requested cross-room facts. The
 focused witness and sender-guard control now have evidence below. The
-roadmap states the observed v1 behavior and the v2 limitation. The final
-full gate and independent review still remain due.
+roadmap states the observed v1 behavior and the v2 limitation. The final full gate passes below. Independent review remains due.
 
 ## The first run finds a cohort mismatch in the fixture
 
@@ -143,7 +143,38 @@ hashes to `d6cc26435159d54d946806666a9aefee3ce93307043bb56c323f95860ee3c648`.
 It names seven public files and inventories 252 read-only private originals
 and inventory files under `~/play/artroom-evidence/2026-11-08-m0-sender-*`.
 The intended test failure, parser failure and independent classification
-remain separate. The final gate and independent review remain due.
+remain separate. The final gate passes below. Independent review remains due.
+
+## The final maintained gate passes
+
+At `c2bc07a218a2d62780951498719e79c9a5114632`, tree
+`8514cec4b12df40b1a849c4f0c6f708ef8e96daf`, the maintained `npm run gate`
+passes once after published S4 integration. I read the actual `gate.exit`:
+`exit 0`. Kernel, Node, Counting, Plain and Native all pass. Node records
+135 passes, Counting 56, Plain 4,026 plus one skip, and Native 1,118 plus
+two skips. No report error, failed case or unhandled error appears.
+
+All 4,279 tracked inputs stay unchanged, and no owned process remains.
+Process inspections before and during the run find no other validation
+body. The Python monotonic observation takes 1,320.402 seconds. That duration
+measures the whole gate on this Mac with the existing dependency cache;
+it is not a sum of runner or test-file durations.
+
+The [gate manifest](evidence/2026-11-08-m0-gate.manifest.json) hashes to
+`2f94dcef9290a3b32d71951a896a4342457734dd4bb66d62f714d6cec562829d`.
+It names 20 public files and inventories 2,334 read-only private originals
+and inventory files. Private request bodies and TEST custody stay withheld.
+The 99 Node observations outside the case ledger are the enqueue, dequeue
+and complete events of 33 file wrappers. The only final module without a
+duration is an explicitly skipped recorder module. Neither adds an unknown
+case or failure.
+
+The retained audit covers all 14 distinct full gates since M4: eleven
+archive-scale passes, three Native-unreached failures, and no observed
+archive retry. Every failed gate remains failed. Watch `64552d40` stays open.
+The source and tests retain the tested bytes; only this note and its gate
+manifest follow the tested checkpoint. No browser workflow trigger applies
+to these changed paths. Independent review remains due.
 
 ## Evidence table
 
@@ -156,6 +187,8 @@ The table names preserved copies of the executed drivers under `~/play/artroom-e
 | Sender guard fault | `2026-11-08-m0-sender-guard-control/driver.py` | Owner 1 at the intended assertion; original classifier 1 | `2026-11-08-m0-sender-control-validation/result.json`: `8ced12e9912287f1c87a97cf7df16897bd1c6f13294bd38411be34cefff8df89` |
 | Independent retained-output classification | `2026-11-08-m0-sender-control-classification/driver.py` | 0; no test rerun | `2026-11-08-m0-sender-control-validation/result.json`: `8ced12e9912287f1c87a97cf7df16897bd1c6f13294bd38411be34cefff8df89` |
 
+| Final maintained gate at `c2bc07a2`, tree `8514cec4` | `2026-11-08-m0-final-gate/driver.py` runs `npm run gate` | 0, actual `gate.exit` read | `2026-11-08-m0-gate-validation/result.json`: `42fd02fc45b678ecc15a3ff8cd3f6c6b99e5c77e05365043fcc91ebd697a7846` |
+
 ## Open limits
 
-Live request `f131d4e8` still requires one final maintained gate, independent review and landing after S4 integration. Ruling `d3f960ab` assigns v2 cross-room receive-port design to M1. Ruling `99f628a5` preserves the deciding refusal entry; the pre-entry refusal question belongs to M1 and M2. This witness establishes no live-room or deployment acceptance.
+Live request `f131d4e8` still requires independent review and landing. The final maintained gate passes after S4 integration. Ruling `d3f960ab` assigns v2 cross-room receive-port design to M1. Ruling `99f628a5` preserves the deciding refusal entry; the pre-entry refusal question belongs to M1 and M2. This witness establishes no live-room or deployment acceptance.
