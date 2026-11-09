@@ -264,7 +264,8 @@ const seals = {
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection-source.ts": "00edbc4215cbd8fc9bf35f5e001ad9e656cad5eee594546db2804a1cb84225ce", // Closed native room metadata with optional supported membership pin.
   "packages/scope/src/applications/projection.ts": "8576f78bb68850421ca7843e6fd0e4ecfb18f136009b82296097feca603f5484",
-  "packages/scope/src/destination-host.ts": "c09958d98acff1aae6dc641c08badd162faa06fe098daf00c4344a0298529561", // Token refusal: a key that a compromised notice named takes no read token.
+  "packages/scope/src/destination-host.ts": "421493f12a3f7174a8c3fc79066f0d861ea2837801b1fe890f70aa7d8265cbd3", // Token refusal: a key that a compromised notice named takes no read token.
+  "packages/scope/src/publication-policy.ts": "e2594477a0116afc4ca6615f8710390fbf116eedd6d82c90770bec6f19a3bcf9", // R16 bounded host publication policy; no Native evidence or pin change.
   "packages/scope/src/credential-store.ts": "e1dacade2330f66d0df7cc8fe0f34159760d144dbaffbec25e89451cf2c997e2", // R13 private reservation and custody owner; actual maintained parser output.
   "packages/scope/src/read-token-quota.ts": "73a3df3ecd1434add309fba8a8cc205faf38b017e4d06b148c84622cd30290a1", // R13 private reservation and custody owner; actual maintained parser output.
   "packages/scope/src/workspace-host.ts": "537ed96759a3889f59272b1a660a3cfd8ef8f46ec2aa15618c8b7c3568b57bfe", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.

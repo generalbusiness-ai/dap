@@ -403,6 +403,23 @@ it on the member's action. Code views run in the sandbox domain. None of
 that is built. Today a view lives in a package's `presentation`, binds to
 the package's projections, and a `surface` declares no acts.
 
+## Application file publication
+
+An application's `publish-file` send may write any valid ordinary path in
+its own room. The host reserves `.github/`, root and `docs/` CODEOWNERS,
+`AGENTS.md`, `CLAUDE.md`, and current Rules control extents. The check also
+follows control-file aliases. It runs before a provider push on both
+historical pins and current rooms.
+
+The journal records the existing `host-refused` reason. The separate host
+answer identifies the reserved path or control extent; it adds no new field
+to historical Native evidence. A missing authenticated Rules policy permits
+no publication. Ordinary paths, including Lending shelf pages, retain their
+existing behavior. One application can still overwrite another's ordinary
+file. Declared per-application prefixes belong to a later Rules and
+Destination revision, as [fold publication, section 6](../notes/2026-10-13-fold-publication.md#6-authority)
+states. No new package declaration or setting is required today.
+
 ## Source
 
 Checked against main `5dc9765f` on 30 October 2026. Sources:

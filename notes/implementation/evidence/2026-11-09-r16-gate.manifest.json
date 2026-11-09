@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "request": "b300dca1381f27beed6c0d3278ccc5955f86c7dc",
+  "promise": "d107501f110b3999dded992f08676cf0722243b6",
+  "sourceHead": "c96996dec9baa27a48e849484842d624f623d543",
+  "sourceTree": "81798a19aef0dc054d03e97dd73e862a7d9b9115",
+  "qualification": "R16 full gate atc96996de passes actualgate.exit0read, allfixedstages,5348passes/3explicitskips, no contradictory/report/unhandled errors. Unknown observations reconcile as Node file wrappers, not unresolved leaves. Actual scale omitted outside family paths; no archive attempt/pass. Tracked source unchanged and ownedgroup closed; process samples show no other local body. No deployment or live acceptance claim. No rerun.",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r16-gate-validation",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1394,
+          "sha256": "215a3433aae73dc3db9d62268bec84e1d25d6f9e7a87f29b12ce3b6a1ec87c70"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2426,
+          "sha256": "ba547d5ed3d81c6da4a3229a3722152a094bfae065faaf6e84f5945f4481547a"
+        },
+        {
+          "path": "analysis-driver.py",
+          "bytes": 3799,
+          "sha256": "bedf0ea54980b5ca9ef9f4142329cf096ff6b9bca09eccf26606e780a951a995"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 1155,
+          "sha256": "9bac4cbf4661f3a009b9c2e55ed3cc05d89a80101c6a3ab7940bd482f6914895"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7356,
+          "sha256": "cd96f6b4379ea73a0c6aed775eaa401fa5ee039955f6b5b87e328cd1ba8b44b8"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 36,
+          "sha256": "aa265504d32085b6f16c09ed047542f14c11a5e08cee264b49390dba14e8eab8"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 542,
+          "sha256": "86615ba45e030ec0638944b9080a809d36cbc7d7e98303a33132ce4c8d82972a"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 537,
+          "sha256": "8b78808e4dc4387422057d8bc7c798eaaefd29d3b61efdf8f0c5e668f8ba8830"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 3917,
+          "sha256": "5c7e30758163d5e989dc24c36f1bb7faa8febdf5c8ef7cabcbd8398d200faf7d"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "37e1542af68613786a5fbb18b1bd03cd077d3c7927cb416c8697ce6b3179bf74"
+        },
+        {
+          "path": "slot-observations.jsonl",
+          "bytes": 8853,
+          "sha256": "97b3a89fbc47cbfdba7c2eee3bf01caa6494d74066eeb144c3cae1ee62f8478b"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 1787,
+          "sha256": "68da8c5f5f5cbd7da790172d4c156c7f6c7e93e34117f2db95cd728d4aa6e954"
+        },
+        {
+          "path": "started.json",
+          "bytes": 716,
+          "sha256": "967a7b3f2fa77cd081215e33730fad29672c8d51fc14644a9cd6d13f7784767c"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 8216,
+          "sha256": "a4cf46ba6595f1a81749653822bb3a14cea7f1fe9f3f67d18b1793d548303f78"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 560,
+          "sha256": "7c59c3ab04d31853878f31698a8d667eb20460eaba992d6b052321597de0b314"
+        }
+      ]
+    }
+  ]
+}

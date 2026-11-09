@@ -19,7 +19,7 @@ this is built.
 Hugh set the direction on 13 October 2026: "I'd like the fold to be able
 to commit this file update to the artifacts repo." He settled three
 points: the act produces text output that lands at a path; any
-application may write any path for now, because the change is recorded;
+application could write any path at that stage, because the change was recorded;
 and the publication's base needs no new rule.
 
 Draft 2 follows Hugh's decision of 13 October 2026, 15:48 Eastern, that
@@ -359,25 +359,38 @@ section 4.4.
 
 ## 6. Authority
 
-Any application scope of the room may write any path. This is Hugh's
-decision for now, on the ground that every such write has a recorded
-cause: the sending entry, its signer, the publication and the receipt.
-The review accepted it and asked that it be documented; the user
-documentation of the new destination version states it with the
-consequences below.
+An application scope of the room may publish any valid path outside the
+host's reserved control paths. Security R16 and planner ruling `d92b5f66`
+replace this note's earlier unrestricted-path decision. The host refuses
+before the provider push; no historical Native rule changes.
 
-Consequences to state plainly in the documentation:
+Reserved paths are `.github/` and its contents, root `CODEOWNERS`,
+`docs/CODEOWNERS`, every `AGENTS.md` and `CLAUDE.md`, and the room's current
+Rules control extents. The ordinary extent classifier follows aliases in
+both trees, so writing an ordinary file through a protected control-file
+symlink cannot bypass the check. The host requires the authenticated
+Rules answer and the exact canonical extent value it names. An unavailable
+policy permits no push.
 
-- An application can overwrite a file in an extent that asks for
-  approval when a person changes it, including the rules extent's
-  files. The room's review rules do not govern `publish-file`.
-- The control is at activation: only a member who holds `rules.activate`
-  puts a definition in force, and only a member who holds
-  `application.establish` creates a scope under it. A room that does not
-  trust a definition does not activate it.
+A refusal records the existing `host-refused` outcome with truthful
+`send: not-sent` and the actual observed head. A separate host answer names
+the requested path and matched control pattern or extent. That diagnostic
+is not a new field in historical evidence. The host never fabricates an
+absent file or changes the old file judge to force a refusal. Replay keeps
+its original recorded meaning.
 
-One check is not waived: the destination must accept `publish-file` only
-from a scope of its own room. Section 9.2 proposes how.
+Other review extents do not impose change-lane approval on an ordinary
+application publication. A trusted application can still overwrite another
+application's ordinary file. Declared per-application prefixes and a judged
+Destination policy wait for the next Rules and Destination revisions that
+another change requires; `publication-paths@1` is the starting proposal.
+This head adds no package declaration, new pin, family, setting or legacy
+prefix map. Lending's existing shelf paths keep working under the existing
+raw and trusted-package installation routes.
+
+The destination still accepts `publish-file` only from an application of
+its own room. Section 9.2 describes that source proof. Activation or package
+installation decides which definitions and applications the room trusts.
 
 ## 7. What it guarantees
 
