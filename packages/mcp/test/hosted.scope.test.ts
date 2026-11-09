@@ -1746,9 +1746,10 @@ test("H6 through the endpoint: a preparation step whose answer the store could n
   } finally { done(room); }
 });
 
-test("H6 matrix through the endpoint: prepared reset, concurrent send and settle, 255 unresolved, archived refusal and replay, repeated uncertain attempts, a full create", async () => {
+test("H6 matrix through the endpoint: prepared reset, concurrent send and settle, bounded unresolved records, archived refusal and replay, repeated uncertain attempts, a full create", async () => {
   const { room, rita } = await roomWithIssues();
-  hostedTest.custodyBounds = { budget: 1024 * 1024 * 1024, identityMost: 64 * 1024 * 1024, terminalMost: 0, ageDays: 30 };
+  const unresolvedMost = 2;
+  hostedTest.custodyBounds = { budget: 1024 * 1024 * 1024, identityMost: 64 * 1024 * 1024, terminalMost: 0, ageDays: 30, unresolvedMost };
   try {
     const M = rita.config.repository!.membership;
     const bot = await hosted(room, rita, "@bot", "create-bot");
@@ -1808,8 +1809,9 @@ test("H6 matrix through the endpoint: prepared reset, concurrent send and settle
     expect([resubmitted["answer"], resubmitted["retained"]], JSON.stringify(resubmitted)).toEqual(["refused", false]);
     const again = (await agentStub(bot.agent).custodyRecord("close-2"))!;
     expect([again.intent, again.attempt, again.outcomes, again.phase], "the same envelope, a second attempt, a second outcome").toEqual([original.intent, 2, 2, "refused"]);
-    // 256 unresolved records (the most), then the next admission is refused by count before anything is signed.
-    for (let n = 0; n < 256; n++) {
+    // The small injected count crosses the real endpoint. The default 256 is
+    // witnessed by sqlite-custody.test.ts and the file store's concurrent case.
+    for (let n = 0; n < unresolvedMost; n++) {
       hostedTest.lose = `/${rita.config.repository!.directory.scope}/acts`;
       const lost = await result(await room.wait(() => open(`lost-${n}`)));
       expect(lost["error"], `lost-${n}: ${JSON.stringify(lost)}`).toBe("transport");

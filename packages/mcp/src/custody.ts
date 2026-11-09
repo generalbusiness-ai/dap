@@ -134,6 +134,8 @@ export interface CustodyRecord {
 
 /** Where records live. Every write is whole and read back before the caller sends. */
 export interface CustodyStore {
+  /** A configured count bound; omitted stores use the production bound. */
+  readonly unresolvedMost?: number;
   /** An exclusive lock on one identity, or null when another holds it. */
   lock(id: string, notAfter: string): Promise<(() => Promise<void>) | null>;
   /** Run `work` alone among every process sharing the store: admission against the capacity. */
@@ -331,7 +333,7 @@ export class Custody {
     if (bytes + RECORD_OVERHEAD > RECORD_BYTES) throw new CustodyError({ held: "full", reason: "bytes", bytes });
     return this.store.exclusive(async () => {
       const open = await this.store.unresolved();
-      if (open.length >= UNRESOLVED_MOST) throw new CustodyError({ held: "full", reason: "count", keys: open.slice(0, 8).map((o) => o.key) });
+      if (open.length >= (this.store.unresolvedMost ?? UNRESOLVED_MOST)) throw new CustodyError({ held: "full", reason: "count", keys: open.slice(0, 8).map((o) => o.key) });
       // A store with a budget admits the new identity's completion need now, before anything is signed.
       await this.store.admit?.(id, bytes + RECORD_OVERHEAD);
       try {
@@ -373,7 +375,7 @@ export class Custody {
         // shared lease, and the new attempt is kept there, before anything is sent. A store that is full keeps the refusal as it was.
         await this.store.exclusive(async () => {
           const open = await this.store.unresolved();
-          if (open.length >= UNRESOLVED_MOST) throw new CustodyError({ held: "full", reason: "count", keys: open.slice(0, 8).map((o) => o.key) });
+          if (open.length >= (this.store.unresolvedMost ?? UNRESOLVED_MOST)) throw new CustodyError({ held: "full", reason: "count", keys: open.slice(0, 8).map((o) => o.key) });
           record.attempt++;
           record.phase = "sent";
           record.updated = this.now();

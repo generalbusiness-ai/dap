@@ -368,7 +368,7 @@ export const hostedTest: {
   /** A small control budget for an agent object made while it is set, in place of 16 MiB and 1 MiB. */
   controlBudget: { budget: number; reserve: number } | null;
   /** Small custody bounds for an agent object made while it is set; `failWrite` makes its next custody write fail, as SQLITE_FULL would. */
-  custodyBounds: { budget: number; identityMost: number; terminalMost: number; ageDays: number } | null;
+  custodyBounds: { budget: number; identityMost: number; terminalMost: number; ageDays: number; unresolvedMost?: number } | null;
   /** The next custody write of this kind fails, as SQLITE_FULL would. */
   failWrite: "keep" | "dispatch" | "result" | "segment" | null;
   /** The creation fence at which the next creation fails, as a reset would: the object throws there and drops its memory. */
