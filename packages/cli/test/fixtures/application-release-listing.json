@@ -8,21 +8,9 @@
       "observation": {
         "complete": true,
         "counts": [
-          [
-            "installation",
-            "active",
-            0
-          ],
-          [
-            "installation",
-            "pending",
-            0
-          ],
-          [
-            "installation",
-            "refused",
-            0
-          ]
+          ["installation", "active", 0],
+          ["installation", "pending", 0],
+          ["installation", "refused", 0]
         ],
         "head": {
           "hash": "sha256:11aedba81723dcad66aae99b2eb585ca9257590ce633dd5efb30ad66a9a414eb",
@@ -47,21 +35,9 @@
       "observation": {
         "complete": true,
         "counts": [
-          [
-            "installation",
-            "active",
-            1
-          ],
-          [
-            "installation",
-            "pending",
-            0
-          ],
-          [
-            "installation",
-            "refused",
-            0
-          ]
+          ["installation", "active", 1],
+          ["installation", "pending", 0],
+          ["installation", "refused", 0]
         ],
         "head": {
           "hash": "sha256:f592b0ac8fcfa59a4d12f18beb6c6ad6c43285de25a31bedeb66ff1967276556",

@@ -2,10 +2,7 @@
   "kind": "static-compact-card-design",
   "noLiveActs": true,
   "browserPlugin": "not available",
-  "themes": [
-    "light",
-    "dark"
-  ],
+  "themes": ["light", "dark"],
   "commits": {
     "Base": "8475e1beda99cd9b32d3617f1fb255664090fbe0",
     "Version 1 source": "94e6b0427e0779b4cd686d3c46ec196cf105aacc",
@@ -247,9 +244,7 @@
       "mode": "full",
       "subject": "q7",
       "revision": "text v2 · entry 245",
-      "acts": [
-        "approve-text-v2"
-      ],
+      "acts": ["approve-text-v2"],
       "context": {
         "item": "q7",
         "revision": "text v2 · entry 245",
@@ -275,9 +270,7 @@
       "mode": "full",
       "subject": "q7",
       "revision": "text v2 · approval 246",
-      "acts": [
-        "record-decision-q7-v2"
-      ],
+      "acts": ["record-decision-q7-v2"],
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
@@ -381,9 +374,7 @@
       "mode": "full",
       "subject": "clear-completed",
       "revision": "conditions v1 · decision 247",
-      "acts": [
-        "revise-conditions"
-      ],
+      "acts": ["revise-conditions"],
       "context": {
         "item": "clear-completed",
         "revision": "conditions v1 · decision 247",
@@ -461,9 +452,7 @@
       "mode": "full",
       "subject": "commitment-interface",
       "revision": "conditions v2 · entry 250",
-      "acts": [
-        "offer-v2-to-interface"
-      ],
+      "acts": ["offer-v2-to-interface"],
       "context": {
         "item": "commitment-interface",
         "revision": "conditions v2 · entry 250",
@@ -515,9 +504,7 @@
       "mode": "full",
       "subject": "commitment-storage",
       "revision": "conditions v2 · entry 250",
-      "acts": [
-        "offer-v2-to-storage"
-      ],
+      "acts": ["offer-v2-to-storage"],
       "context": {
         "item": "commitment-storage",
         "revision": "conditions v2 · entry 250",
@@ -621,9 +608,7 @@
       "mode": "full",
       "subject": "commitment-interface",
       "revision": "offer 221 · conditions v1",
-      "acts": [
-        "accept-v1-as-interface"
-      ],
+      "acts": ["accept-v1-as-interface"],
       "context": {
         "item": "commitment-interface",
         "revision": "offer 221 · conditions v1",
@@ -701,9 +686,7 @@
       "mode": "full",
       "subject": "change18",
       "revision": "version 2 · entry 18",
-      "acts": [
-        "approve-change18-v2"
-      ],
+      "acts": ["approve-change18-v2"],
       "context": {
         "item": "change18",
         "revision": "version 2 · entry 18",
@@ -729,9 +712,7 @@
       "mode": "full",
       "subject": "change18",
       "revision": "version 2 · approved",
-      "acts": [
-        "publish-change18-v2"
-      ],
+      "acts": ["publish-change18-v2"],
       "context": {
         "item": "change18",
         "revision": "version 2 · approved",
@@ -778,9 +759,7 @@
       "mode": "full",
       "subject": "change9",
       "revision": "version 1 · request 9",
-      "acts": [
-        "check-original-request9"
-      ],
+      "acts": ["check-original-request9"],
       "context": {
         "item": "change9",
         "revision": "version 1 · request 9",
@@ -806,9 +785,7 @@
       "mode": "full",
       "subject": "change9",
       "revision": "version 1 · request 9",
-      "acts": [
-        "check-original-request9"
-      ],
+      "acts": ["check-original-request9"],
       "context": {
         "item": "change9",
         "revision": "version 1 · request 9",
@@ -1090,9 +1067,7 @@
       "mode": "full",
       "subject": "review-cut",
       "revision": "Exact review cut",
-      "acts": [
-        "mark-exact-ranges-reviewed"
-      ],
+      "acts": ["mark-exact-ranges-reviewed"],
       "context": {
         "item": "review-cut",
         "revision": "Exact review cut",
@@ -1353,9 +1328,7 @@
       "mode": "inline",
       "subject": "q7",
       "revision": "text v2 · approval 246",
-      "acts": [
-        "retry-context-only"
-      ],
+      "acts": ["retry-context-only"],
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
@@ -1847,9 +1820,7 @@
       "mode": "full",
       "subject": "q7",
       "revision": "text v2 · entry 245",
-      "acts": [
-        "approve-text-v2"
-      ],
+      "acts": ["approve-text-v2"],
       "context": {
         "item": "q7",
         "revision": "text v2 · entry 245",
@@ -1875,9 +1846,7 @@
       "mode": "full",
       "subject": "q7",
       "revision": "text v2 · approval 246",
-      "acts": [
-        "record-decision-q7-v2"
-      ],
+      "acts": ["record-decision-q7-v2"],
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
@@ -1981,9 +1950,7 @@
       "mode": "full",
       "subject": "clear-completed",
       "revision": "conditions v1 · decision 247",
-      "acts": [
-        "revise-conditions"
-      ],
+      "acts": ["revise-conditions"],
       "context": {
         "item": "clear-completed",
         "revision": "conditions v1 · decision 247",
@@ -2061,9 +2028,7 @@
       "mode": "full",
       "subject": "commitment-interface",
       "revision": "conditions v2 · entry 250",
-      "acts": [
-        "offer-v2-to-interface"
-      ],
+      "acts": ["offer-v2-to-interface"],
       "context": {
         "item": "commitment-interface",
         "revision": "conditions v2 · entry 250",
@@ -2115,9 +2080,7 @@
       "mode": "full",
       "subject": "commitment-storage",
       "revision": "conditions v2 · entry 250",
-      "acts": [
-        "offer-v2-to-storage"
-      ],
+      "acts": ["offer-v2-to-storage"],
       "context": {
         "item": "commitment-storage",
         "revision": "conditions v2 · entry 250",
@@ -2221,9 +2184,7 @@
       "mode": "full",
       "subject": "commitment-interface",
       "revision": "offer 221 · conditions v1",
-      "acts": [
-        "accept-v1-as-interface"
-      ],
+      "acts": ["accept-v1-as-interface"],
       "context": {
         "item": "commitment-interface",
         "revision": "offer 221 · conditions v1",
@@ -2301,9 +2262,7 @@
       "mode": "full",
       "subject": "change18",
       "revision": "version 2 · entry 18",
-      "acts": [
-        "approve-change18-v2"
-      ],
+      "acts": ["approve-change18-v2"],
       "context": {
         "item": "change18",
         "revision": "version 2 · entry 18",
@@ -2329,9 +2288,7 @@
       "mode": "full",
       "subject": "change18",
       "revision": "version 2 · approved",
-      "acts": [
-        "publish-change18-v2"
-      ],
+      "acts": ["publish-change18-v2"],
       "context": {
         "item": "change18",
         "revision": "version 2 · approved",
@@ -2378,9 +2335,7 @@
       "mode": "full",
       "subject": "change9",
       "revision": "version 1 · request 9",
-      "acts": [
-        "check-original-request9"
-      ],
+      "acts": ["check-original-request9"],
       "context": {
         "item": "change9",
         "revision": "version 1 · request 9",
@@ -2406,9 +2361,7 @@
       "mode": "full",
       "subject": "change9",
       "revision": "version 1 · request 9",
-      "acts": [
-        "check-original-request9"
-      ],
+      "acts": ["check-original-request9"],
       "context": {
         "item": "change9",
         "revision": "version 1 · request 9",
@@ -2690,9 +2643,7 @@
       "mode": "full",
       "subject": "review-cut",
       "revision": "Exact review cut",
-      "acts": [
-        "mark-exact-ranges-reviewed"
-      ],
+      "acts": ["mark-exact-ranges-reviewed"],
       "context": {
         "item": "review-cut",
         "revision": "Exact review cut",
@@ -2953,9 +2904,7 @@
       "mode": "inline",
       "subject": "q7",
       "revision": "text v2 · approval 246",
-      "acts": [
-        "retry-context-only"
-      ],
+      "acts": ["retry-context-only"],
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",

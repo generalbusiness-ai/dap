@@ -47,9 +47,7 @@
     "relativeLinks": 32,
     "allTargetPhysicalIdentitiesDisjointFromDonor": true,
     "allTargetRegularFilesSingleLink": true,
-    "onlyPayloadDifference": [
-      ".artroom-lock-sha256"
-    ],
+    "onlyPayloadDifference": [".artroom-lock-sha256"],
     "qualification": "This copy invocation executed no package or compatibility script. Readiness derives from the prior successful maintained invocation and verified custody continuity."
   },
   "sourcePins": [
@@ -76,12 +74,7 @@
       "bytes": 2607,
       "sha256": "17f59cd527395976f966fd22a7d6de071596f13a2b8d22c9624369185ec413a1",
       "targetIdentity": [
-        16777231,
-        546040205,
-        33188,
-        1,
-        2607,
-        1792711954772029579,
+        16777231, 546040205, 33188, 1, 2607, 1792711954772029579,
         1792828464860401151
       ]
     },
@@ -90,12 +83,7 @@
       "bytes": 45613,
       "sha256": "cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39",
       "targetIdentity": [
-        16777231,
-        546040184,
-        33188,
-        1,
-        45613,
-        1792711956435726317,
+        16777231, 546040184, 33188, 1, 45613, 1792711956435726317,
         1792828464857865647
       ]
     },
@@ -104,12 +92,7 @@
       "bytes": 377,
       "sha256": "ab3cab29116dbfebb2dce7e10097f8a8971ac4b6322b9b421f8bfc9ac293b61d",
       "targetIdentity": [
-        16777231,
-        546040229,
-        33188,
-        1,
-        377,
-        1792711954772587413,
+        16777231, 546040229, 33188, 1, 377, 1792711954772587413,
         1792828464862522362
       ]
     },
@@ -118,12 +101,7 @@
       "bytes": 141187784,
       "sha256": "1136b482136aa93d67b0f77d4987a338a64a725b209ad1b889b8ae975dc7f388",
       "targetIdentity": [
-        16777231,
-        546040227,
-        33261,
-        1,
-        141187784,
-        1792711955334541336,
+        16777231, 546040227, 33261, 1, 141187784, 1792711955334541336,
         1792828464862354154
       ]
     },
@@ -132,12 +110,7 @@
       "bytes": 676,
       "sha256": "edeaa6dd138cc6f40cfaecd955042cb366afc32f5931313b824b6dd56a6a2e96",
       "targetIdentity": [
-        16777231,
-        546039920,
-        33188,
-        1,
-        676,
-        1792711954758558352,
+        16777231, 546039920, 33188, 1, 676, 1792711954758558352,
         1792828464833952025
       ]
     },
@@ -146,12 +119,7 @@
       "bytes": 5933,
       "sha256": "e5a6d55e103f04929442595df0f641f128b02fd706ff01474c094863b44511d0",
       "targetIdentity": [
-        16777231,
-        546040391,
-        33188,
-        1,
-        5933,
-        1792711954754407804,
+        16777231, 546040391, 33188, 1, 5933, 1792711954754407804,
         1792828464877860345
       ]
     }

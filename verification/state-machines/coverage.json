@@ -48,9 +48,7 @@
       "apps/room/page/src/retained-editor-state.ts": [
         "transitionEdit: attempted, answer, receipt-verified, step-recorded"
       ],
-      "apps/room/page/src/retained-editor-data.ts": [
-        "continueEdit"
-      ]
+      "apps/room/page/src/retained-editor-data.ts": ["continueEdit"]
     },
     "limits": "One request step. Repeat this obligation at opening, rules, source and manifest stages. Receipt verification is a trusted input from the network executor. This model does not prove signatures, workflow stage order, reload persistence or source contents.",
     "rules": {
@@ -71,9 +69,7 @@
         "Operations.#answer",
         "Operations.#offer"
       ],
-      "packages/scope/src/sqlite.ts": [
-        "markSent"
-      ]
+      "packages/scope/src/sqlite.ts": ["markSent"]
     },
     "limits": "One opened attempt, two possible send counts, arbitrary restarts. Mark and dispatch are separate actions. Durable storage survives restart; in-memory permission does not. Safe recovery reads, additional attempts, selection, parked scans and retained-reply paging are outside this model. A decisive answer must authenticate the exact original attempt. Send counts calls from Operations to its outside port, not provider-internal retries.",
     "rules": {

@@ -3,15 +3,10 @@
   "name": "test.example.notes",
   "version": "0.1.0",
   "entry": "definition.json",
-  "definitions": [
-    "definition.json",
-    "signal.json"
-  ],
+  "definitions": ["definition.json", "signal.json"],
   "host": {
     "execution": "recorded-do",
-    "profiles": [
-      "restricted@1"
-    ]
+    "profiles": ["restricted@1"]
   },
   "capabilities": [],
   "projections": {
@@ -23,9 +18,7 @@
         "board": {
           "item": "board",
           "read": "many",
-          "states": [
-            "open"
-          ],
+          "states": ["open"],
           "limit": 1,
           "fields": {
             "title": {
@@ -54,11 +47,7 @@
         "notes": {
           "item": "note",
           "read": "many",
-          "states": [
-            "done",
-            "expired",
-            "open"
-          ],
+          "states": ["done", "expired", "open"],
           "limit": 16,
           "fields": {
             "text": {
@@ -104,9 +93,7 @@
         "connection": {
           "item": "connection",
           "read": "many",
-          "states": [
-            "ready"
-          ],
+          "states": ["ready"],
           "limit": 1,
           "fields": {
             "target": {
@@ -126,13 +113,8 @@
     }
   },
   "roles": {
-    "admin": [
-      "notes.write",
-      "signal.establish"
-    ],
-    "member": [
-      "notes.write"
-    ]
+    "admin": ["notes.write", "signal.establish"],
+    "member": ["notes.write"]
   },
   "predecessor": null,
   "presentation": {
@@ -160,18 +142,13 @@
         "display": "inline",
         "back": null,
         "title": "text",
-        "facts": [
-          "state",
-          "until"
-        ],
+        "facts": ["state", "until"],
         "context": "Note {id}: {state}",
         "fallback": "Note {id}"
       }
     }
   },
-  "scenarios": [
-    "scenarios/basic.json"
-  ],
+  "scenarios": ["scenarios/basic.json"],
   "connections": [
     {
       "from": "signal.json",

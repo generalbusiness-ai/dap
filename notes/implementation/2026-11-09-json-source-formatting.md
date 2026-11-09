@@ -1,9 +1,9 @@
 # Format JSON source while preserving protocol bytes
 
 Request `c6e29874`; promise `197ace07`; scope ruling `85784814`.
-This preparation starts at main `ce0290fb`. It has run no formatter,
-producer, compiler, application test, control or gate. R16 owns the local
-validation slot.
+This preparation starts at main `ce0290fb`. Its first authoring pipeline
+passed. Compiler contexts, application owners, control and the final gate
+remain due. R16 awaits exact-head review.
 
 ## What changes
 
@@ -50,14 +50,20 @@ Any digest change stops this task for a planner report.
 
 | Check | Command | Exit | Output |
 |---|---|---|---|
-| Formatter and generated source | Pinned formatter and pin writers | Unrun | Due |
+| Formatter and generated source | Pinned formatter, all explicit pin modes, `format:check` | 0 each | Raw authoring receipt; sealing due |
 | Selection witness and packet-exclusion control | Complete Node owner | Unrun | Due |
 | Definition and reservation owners | Affected compiler contexts and complete owners | Unrun | Due |
 | Final gate | `npm run gate` once | Unrun | Due |
 
-The preparation has changed source only. JSON formatting, pin production,
-private dependency setup, focused evidence and the one final gate remain
-due. No earlier branch's checks establish a result for this head.
+The authoring pipeline checked all 185 selected JSON paths and changed 65.
+Every parsed JSON value and comment remained equal after every command.
+Every nonselected byte stayed exact, including all 11 pin modules, the lock,
+canonical packet and retained evidence. Its complete one-case Node selection
+owner passed before formatting. All explicit lane writer modes, Counting,
+commitments and Lending writers, and the final formatter check exited 0.
+The body closed its group. No compiler, application owner, control or gate
+ran. Focused evidence and one final gate remain due; earlier branches'
+checks establish no result here.
 
 ## Open limits
 
