@@ -3,14 +3,10 @@
   "name": "ai.generalbusiness.counter",
   "version": "0.2.0",
   "entry": "apps/counter/commitments.json",
-  "definitions": [
-    "apps/counter/commitments.json"
-  ],
+  "definitions": ["apps/counter/commitments.json"],
   "host": {
     "execution": "recorded-do",
-    "profiles": [
-      "restricted@1"
-    ]
+    "profiles": ["restricted@1"]
   },
   "capabilities": [],
   "projections": {
@@ -22,11 +18,7 @@
         "board": {
           "item": "board",
           "read": "many",
-          "states": [
-            "finished",
-            "open",
-            "paused"
-          ],
+          "states": ["finished", "open", "paused"],
           "limit": 1,
           "fields": {
             "generation": {
@@ -93,9 +85,7 @@
                 "name": "lastFulfilledAt"
               },
               "of": {
-                "kind": [
-                  "fulfill"
-                ],
+                "kind": ["fulfill"],
                 "type": "fact",
                 "under": "counting-commitments"
               },
@@ -137,9 +127,7 @@
         "configuration": {
           "item": "configuration",
           "read": "many",
-          "states": [
-            "ready"
-          ],
+          "states": ["ready"],
           "limit": 1,
           "fields": {
             "target": {
@@ -169,11 +157,7 @@
         "participant": {
           "item": "participant",
           "read": "many",
-          "states": [
-            "active",
-            "inactive",
-            "removed"
-          ],
+          "states": ["active", "inactive", "removed"],
           "limit": 100,
           "fields": {
             "agent": {
@@ -191,13 +175,7 @@
         "promise": {
           "item": "promise",
           "read": "many",
-          "states": [
-            "cancelled",
-            "expired",
-            "failed",
-            "fulfilled",
-            "pledged"
-          ],
+          "states": ["cancelled", "expired", "failed", "fulfilled", "pledged"],
           "limit": 100,
           "fields": {
             "basis": {
@@ -294,9 +272,7 @@
                 "name": "admittedAt"
               },
               "of": {
-                "kind": [
-                  "commit"
-                ],
+                "kind": ["commit"],
                 "type": "fact",
                 "under": "counting-commitments"
               },
@@ -512,13 +488,7 @@
         "projection": "state",
         "item": "board",
         "title": "state",
-        "facts": [
-          "lastNumber",
-          "target",
-          "generation",
-          "serial",
-          "until"
-        ],
+        "facts": ["lastNumber", "target", "generation", "serial", "until"],
         "context": "board {id} v{revision}",
         "fallback": "board {id}: {state}"
       },
@@ -535,9 +505,7 @@
         "projection": "state",
         "item": "participant",
         "title": "agent",
-        "facts": [
-          "state"
-        ],
+        "facts": ["state"],
         "context": "participant {id} v{revision}",
         "fallback": "participant {id}: {state}"
       },
@@ -554,10 +522,7 @@
         "projection": "state",
         "item": "promise",
         "title": "n",
-        "facts": [
-          "state",
-          "until"
-        ],
+        "facts": ["state", "until"],
         "context": "promise {id} v{revision}",
         "fallback": "promise {id}: {state}"
       },
@@ -574,17 +539,13 @@
         "projection": "activity",
         "item": "events",
         "title": "type",
-        "facts": [
-          "time"
-        ],
+        "facts": ["time"],
         "context": "Recent entry {id}: {type}",
         "fallback": "Recent entry {id}: {type}"
       }
     }
   },
-  "scenarios": [
-    "apps/counter/scenarios/application.json"
-  ],
+  "scenarios": ["apps/counter/scenarios/application.json"],
   "connections": [],
   "rights": {},
   "exercises": [],

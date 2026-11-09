@@ -169,7 +169,7 @@ other definitions.
 | File | What it is |
 | --- | --- |
 | [commitments.ts](commitments.ts) | The `counting-commitments` definition. |
-| [commitments.json](commitments.json), [commitments-pin.ts](commitments-pin.ts) | Its canonical bytes and its digest. |
+| [commitments.json](commitments.json), [commitments-pin.ts](commitments-pin.ts) | Readable JSON and the digest of its canonical value. |
 | [commitments.test.ts](commitments.test.ts) | Four tests of the definition in a scope held in memory. |
 | [commitments-README.md](commitments-README.md) | The source record for the definition, with its evidence and limits. |
 | [browser](browser) | The Counter page. [browser/startup.md](browser/startup.md) covers its setup, device keys and speech. |

@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import {
   canonicalize,
+  parseStrict,
   definitionDigest,
 } from "@generalbusiness/dap-bytes";
 import {
@@ -29,7 +30,7 @@ const profiles = { issue: issueJ4, change: changeJ4 } as const;
 test("the explicit workspace profile pins whole definitions and preserves the demo rows outside its stated changes", () => {
   for (const name of ["issue", "change"] as const) {
     const bytes = readFileSync(new URL(`../definitions/${name}-j4.json`, import.meta.url), "utf8");
-    expect(bytes, name).toBe(canonicalize(profiles[name]));
+    expect(canonicalize(parseStrict(bytes)), name).toBe(canonicalize(profiles[name]));
     expect(definitionDigest(profiles[name]), name).toBe(J4_DIGESTS[name]);
     expect(J4_DIGESTS[name], name).not.toBe(DEMO_DIGESTS[name]);
   }

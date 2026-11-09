@@ -6,16 +6,12 @@
     "member": {
       "seed": "2222222222222222222222222222222222222222222222222222222222222222",
       "member": "@member",
-      "actions": [
-        "lending.member"
-      ]
+      "actions": ["lending.member"]
     },
     "staff": {
       "seed": "2323232323232323232323232323232323232323232323232323232323232323",
       "member": "@staff",
-      "actions": [
-        "lending.staff"
-      ]
+      "actions": ["lending.staff"]
     },
     "visitor": {
       "seed": "2424242424242424242424242424242424242424242424242424242424242424",

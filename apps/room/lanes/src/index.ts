@@ -2,9 +2,10 @@
  * The two lane definitions, `issue` and `change`, as data. A lane is a
  * definition: this package holds no rule and no code that judges.
  *
- * `DIGESTS` holds the pinned digest of each, and `definitions/issue.json`
- * and `definitions/change.json` its canonical bytes: what a creator retains
- * for its children, and what a rules scope will activate by digest. The
+ * `DIGESTS` holds each pinned digest. `definitions/issue.json` and
+ * `definitions/change.json` hold readable JSON. Their canonical values
+ * determine the digests and provide the canonical bytes that a creator
+ * retains for its children or a rules scope activates by digest. The
  * package exports both files. `scripts/pin.mjs` writes them from the values.
  */
 

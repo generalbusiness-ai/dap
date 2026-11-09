@@ -744,11 +744,12 @@ Took effect: entry sc_p6xp2lmd...:8, hash sha256:2cd70f9ada97.
 Refused: guard-failed (not-activated), judged at entry sc_hs5f27fz...:4. The request was refused.
 ```
 
-For example, an admin activates the demo profile's change definition
-with this command. Its digest is in `apps/room/lanes/src/digests.ts`.
+For example, an admin canonicalizes the readable demo definition, then
+activates it. Its digest is in `apps/room/lanes/src/digests.ts`.
 
 ```sh
-dap act activate --on rules --set digest=<digest> --set name=change --value apps/room/lanes/definitions/change-demo.json
+node --input-type=module -e 'import { readFileSync } from "node:fs"; import { canonicalize, parseStrict } from "@generalbusiness/dap-bytes"; process.stdout.write(canonicalize(parseStrict(readFileSync("apps/room/lanes/definitions/change-demo.json", "utf8"))))' > /tmp/change-demo.canonical.json
+dap act activate --on rules --set digest=<digest> --set name=change --value /tmp/change-demo.canonical.json
 ```
 
 ### `dap log`

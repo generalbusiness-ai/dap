@@ -175,10 +175,7 @@
       "rootAttributedUnknownIds": 0,
       "rootAttributedUnhandledErrors": 0,
       "rootAttributedGuards": "stable",
-      "unreached": [
-        "Node 39",
-        "Counting 55"
-      ],
+      "unreached": ["Node 39", "Counting 55"],
       "preTestStageExits": {
         "whitespace": 0,
         "commit-messages": 0,

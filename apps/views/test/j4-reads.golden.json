@@ -1,1 +1,1872 @@
-{"screens":{"needs-you":{"card":{"actions":[],"entries":[],"fallback":"Read needs_you for exact rows, heads and omissions. To read a question and answer it, open its Decision card.","identity":{"at":{},"item":"5","kind":"approval-request","revision":"5","subject":{"item":5,"scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"}},"kicker":"Question 1","projection":[{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa","seq":0},{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q","seq":0},{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq","seq":5},{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq","seq":20},{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za","seq":20}],"reasons":["What settles it: Your approve act on the current text closes this request, with the verdict approve or request-changes.","Rule: this lane's rule for an approval request.","Reading this item leaves it open. This list grants no permission.","The opening act's signer is unavailable in this read."],"record":{"label":"Exact record","text":"{\n  \"scope\": {\n    \"scope\": \"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\n    \"inc\": \"in_a4dqobyha4dqobyha4dqobyha4\",\n    \"kind\": \"lane\"\n  },\n  \"head\": {\n    \"seq\": 5,\n    \"hash\": \"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"\n  },\n  \"item\": 5,\n  \"type\": \"approval-request\",\n  \"rule\": {\n    \"definition\": \"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\n    \"clause\": \"acts.request-approval;items.approval-request\"\n  },\n  \"category\": \"requested-review\",\n  \"kicker\": \"Question 1\",\n  \"needs\": \"Approve or request changes on question 1: \\\"TEST question\\\".\",\n  \"why\": \"@vic asked you by name.\",\n  \"settles\": \"Your approve act on the current text closes this request, with the verdict approve or request-changes.\",\n  \"settledBy\": [\n    \"approve\"\n  ],\n  \"bodyAt\": 1,\n  \"currentBody\": true,\n  \"permission\": \"not-determined\"\n}"},"reviewIntended":[],"rule":{"clause":"acts.request-approval;items.approval-request","definition":"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"},"settles":["approve"],"summary":"Why it is yours: @vic asked you by name.","title":"Approve or request changes on question 1: \"TEST question\".","unavailable":[],"waitsOn":[]},"count":5,"fallback":"Read needs_you for exact rows, heads and omissions. To read a question and answer it, open its Decision card.","position":0,"status":"ready"},"question":{"card":{"actions":[{"args":{"at":{"ask":1,"request":5},"fields":{"bodyAt":{"at":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"},"hash":"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04","seq":1},"request":5,"verdict":"approve"},"on":null,"target":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"},"done":"Review recorded: approved.","id":"approve","kind":"approve","label":"Approve","purpose":"approve"},{"args":{"at":{"ask":1,"request":5},"fields":{"bodyAt":{"at":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"},"hash":"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04","seq":1},"request":5,"verdict":"request-changes"},"on":null,"target":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"},"done":"Review recorded: changes requested.","id":"request-changes","kind":"approve","label":"Request changes","purpose":"approve"}],"actor":{"kind":"person","name":"@rita"},"actorLabel":"Question text signed by","body":"TEST current Question body\n","fallback":"Use context for the exact text versions, requests, approvals, comments and conditions.","identity":{"at":{"ask":1,"request":5},"item":"1","kind":"ask","revision":"1","subject":{"item":1,"scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"}},"kicker":"Question 1","projection":[{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq","seq":5}],"reasons":["The room's rules decide each act."],"reviewIntended":[],"settles":[],"summary":"Question text under its immutable Brief. Approval does not approve the Brief or conditions.","title":"TEST question","unavailable":[],"waitsOn":[],"wholeText":true},"count":1,"fallback":"Use context for the exact text versions, requests, approvals, comments and conditions.","position":0,"status":"ready"},"ready":{"card":{"actions":[{"args":{"at":{"manifest":6,"proposal":0,"rules":1},"fields":{"manifest":6,"reports":[]},"on":null,"target":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"},"done":"Merge started.","id":"merge","kind":"merge","label":"Merge","purpose":"act"}],"body":"Version 2, manifest 6.\nBase: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nIntegration: cccccccccccccccccccccccccccccccccccccccc\nTree: 3333333333333333333333333333333333333333\n\nEarlier versions:\nVersion 1, manifest 5. Base: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb. Integration: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.\n\nReviews of this version:\n@vic (person): approve.\n\nChecks of this version:\nsecurity-review: passed, by @vic (person).\n\nRules:\nLane definition: sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7.\nApprovals needed: 1. Given: 1. The owner may review: no. Rules revision: 7.\nApprove here counts for the source extent. It does not approve a change to the rules or to deployment files.\n\nLinked issues:\nNone.","diffAvailable":true,"diffRead":{"base":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","integration":"cccccccccccccccccccccccccccccccccccccccc","label":"Version 2","target":"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa"},"fallback":"Read change for this version's base, integration, reviews, checks, rules and linked issues.","identity":{"at":{"manifest":6,"proposal":0,"rules":1},"item":"6","kind":"manifest","revision":"6","subject":{"item":0,"scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"}},"interdiffReads":[{"from":{"base":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","integration":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","label":"Version 1"},"target":"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa","to":{"base":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","integration":"cccccccccccccccccccccccccccccccccccccccc","label":"Version 2"}}],"kicker":"Change 4, version 2","projection":[{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa","seq":0},{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q","seq":0},{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq","seq":20}],"reasons":["The room's rules decide each act.","The signer of this entry is unavailable in this read."],"reviewIntended":[],"settles":[],"summary":"Change 4, open, version 2.","title":"TEST change","unavailable":[],"waitsOn":[]},"count":1,"fallback":"Read change for this version's base, integration, reviews, checks, rules and linked issues.","position":0,"status":"ready"},"requested":{"card":{"actions":[],"body":"Version 2, manifest 6.\nBase: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nIntegration: cccccccccccccccccccccccccccccccccccccccc\nTree: 3333333333333333333333333333333333333333\n\nEarlier versions:\nVersion 1, manifest 5. Base: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb. Integration: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.\n\nReviews of this version:\n@vic (person): approve.\n\nChecks of this version:\nsecurity-review: passed, by @vic (person).\n\nRules:\nLane definition: sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7.\nApprovals needed: 1. Given: 1. The owner may review: no. Rules revision: 7.\nApprove here counts for the source extent. It does not approve a change to the rules or to deployment files.\n\nMerges:\nMerge 11: unknown. @rita (person) started it. The destination cannot say yet if the push landed. No card can merge until it can.\n\nLinked issues:\nNone.","diffAvailable":true,"diffRead":{"base":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","integration":"cccccccccccccccccccccccccccccccccccccccc","label":"Version 2","target":"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa"},"fallback":"Read change for this version's base, integration, reviews, checks, rules and linked issues.","identity":{"at":{"manifest":6,"proposal":0,"rules":1},"item":"6","kind":"manifest","revision":"6","subject":{"item":0,"scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"}},"interdiffReads":[{"from":{"base":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","integration":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","label":"Version 1"},"target":"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa","to":{"base":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","integration":"cccccccccccccccccccccccccccccccccccccccc","label":"Version 2"}}],"kicker":"Change 4, version 2","projection":[{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa","seq":0},{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q","seq":0},{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za","seq":20}],"reasons":["The signer of this entry is unavailable in this read."],"reviewIntended":[],"settles":[],"summary":"Change 4, open, version 2.","title":"TEST change","unavailable":[],"waitsOn":[]},"count":1,"fallback":"Read change for this version's base, integration, reviews, checks, rules and linked issues.","position":0,"status":"ready"},"updates":{"card":{"actions":[{"capture":{"directory":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"},"heads":[{"head":{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","seq":0},"scope":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},{"head":{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","seq":0},"scope":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"}},{"head":{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","seq":5},"scope":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"}},{"head":{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","seq":20},"scope":{"inc":"in_aucqkbifaucqkbifaucqkbifau","kind":"lane","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"}},{"head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"}}],"key":"key_bjLBl0Hwr4JgYSrpn9E9ijiURyLgiWTdI5c49VKmFTs","ranges":[{"from":5,"scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq","to":5},{"from":20,"scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq","to":20},{"from":20,"scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za","to":20},{"from":0,"scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa","to":0},{"from":0,"scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q","to":0}],"service":"https://scopes.test","viewer":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"id":"mark-reviewed","label":"Mark reviewed","local":true,"purpose":"mark-reviewed"}],"entries":[{"scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq","seq":5,"text":"Lane 3. You have not marked this one on this device. Entry 0: the scope opened. Entry 1: ask by @rita (person). Entry 2: the timed rule TEST history position. Entry 3: the timed rule TEST history position. Entry 4: the timed rule TEST history position. Entry 5: the timed rule TEST history position."},{"scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq","seq":20,"text":"Lane 1. You have not marked this one on this device. Entry 15: the timed rule TEST scripted change position. Entry 16: the timed rule TEST scripted change position. Entry 17: the timed rule TEST scripted change position. Entry 18: the timed rule TEST scripted change position. Entry 19: the timed rule TEST scripted change position. Entry 20: the timed rule TEST scripted change position. This list leaves out 15 earlier entries."},{"scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za","seq":20,"text":"Lane 2. You have not marked this one on this device. Entry 15: the timed rule TEST scripted change position. Entry 16: the timed rule TEST scripted change position. Entry 17: the timed rule TEST scripted change position. Entry 18: the timed rule TEST scripted change position. Entry 19: the timed rule TEST scripted change position. Entry 20: the timed rule TEST scripted change position. This list leaves out 15 earlier entries."},{"scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa","seq":0,"text":"The membership. You have not marked this one on this device. Entry 0: the scope opened."},{"scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q","seq":0,"text":"The directory. You have not marked this one on this device. Entry 0: the scope opened."}],"fallback":"Read since for exact rows, heads and omissions.","identity":{"at":{},"item":"5","kind":"head","revision":"5","subject":{"item":5,"scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"}},"kicker":"Updates","projection":[{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa","seq":0},{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q","seq":0},{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq","seq":5},{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq","seq":20},{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za","seq":20}],"reasons":["Mark reviewed moves your place on this device and closes nothing. Another device keeps its own place, so it shows these changes again."],"reviewIntended":[{"from":5,"scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq","to":5},{"from":20,"scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq","to":20},{"from":20,"scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za","to":20},{"from":0,"scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa","to":0},{"from":0,"scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q","to":0}],"settles":[],"summary":"Each scope below lists its newest entries since you last pressed Mark reviewed on this device.","title":"What changed since your last review","unavailable":[],"waitsOn":[]},"count":5,"fallback":"Read since for exact rows, heads and omissions.","position":0,"status":"ready"},"work":{"count":0,"fallback":"No work is open in this room.","position":0,"status":"empty"}},"tools":{"context":{"content":[{"text":"{\"context\":{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"},\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"ask\":{\"id\":1,\"type\":\"ask\",\"state\":\"asked\",\"revision\":1,\"opened\":null,\"values\":{\"question\":\"TEST question\",\"body\":\"sha256:13ce45a8dc8d1f8e2dfa7cbae2155494bd0ac0b3d5b1702e3cee66b7e18121d5\",\"brief\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\"},\"refs\":{\"bodyAt\":1},\"parties\":{\"asker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[]},\"bodyAt\":{\"at\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"seq\":1,\"hash\":\"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04\"},\"body\":\"TEST current Question body\\n\",\"requests\":[{\"attributed\":[],\"id\":5,\"opened\":null,\"parties\":{\"requested\":{\"member\":\"@rita\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}},\"requester\":{\"member\":\"@vic\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"ask\":1,\"bodyAt\":1},\"revision\":5,\"state\":\"open\",\"type\":\"approval-request\",\"values\":{}}],\"approvals\":[],\"approvalTexts\":[],\"comments\":[],\"conditions\":null,\"brief\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\",\"briefMatches\":true,\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"versions\":[{\"fact\":{\"at\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"seq\":1,\"hash\":\"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04\"},\"current\":true}]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}}],\"counters\":{\"scopes\":5,\"requests\":9,\"bytes\":12112,\"pages\":8,\"items\":10,\"history\":6,\"textBytes\":27},\"briefResource\":{\"uri\":\"dap://package/brief\",\"digest\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\"},\"complete\":true}","type":"text"}],"isError":false,"structuredContent":{"briefResource":{"digest":"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e","uri":"dap://package/brief"},"complete":true,"context":{"actions":["issue.approve","issue.decide","change.merge"],"approvalTexts":[],"approvals":[],"ask":{"attributed":[],"id":1,"opened":null,"parties":{"asker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{"bodyAt":1},"revision":1,"state":"asked","type":"ask","values":{"body":"sha256:13ce45a8dc8d1f8e2dfa7cbae2155494bd0ac0b3d5b1702e3cee66b7e18121d5","brief":"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e","question":"TEST question"}},"body":"TEST current Question body\n","bodyAt":{"at":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"},"hash":"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04","seq":1},"brief":"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e","briefMatches":true,"comments":[],"conditions":null,"definition":"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3","head":{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","seq":5},"requests":[{"attributed":[],"id":5,"opened":null,"parties":{"requested":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"requester":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{"ask":1,"bodyAt":1},"revision":5,"state":"open","type":"approval-request","values":{}}],"scope":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"},"versions":[{"current":true,"fact":{"at":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"},"hash":"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04","seq":1}}],"viewer":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"counters":{"bytes":12112,"history":6,"items":10,"pages":8,"requests":9,"scopes":5,"textBytes":27},"heads":[{"head":{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","seq":0},"scope":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},{"head":{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","seq":0},"scope":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"}},{"head":{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","seq":5},"scope":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"}}]}},"needsYou":{"content":[{"text":"{\"rows\":[{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"},\"item\":5,\"type\":\"approval-request\",\"rule\":{\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"clause\":\"acts.request-approval;items.approval-request\"},\"category\":\"requested-review\",\"kicker\":\"Question 1\",\"needs\":\"Approve or request changes on question 1: \\\"TEST question\\\".\",\"why\":\"@vic asked you by name.\",\"settles\":\"Your approve act on the current text closes this request, with the verdict approve or request-changes.\",\"settledBy\":[\"approve\"],\"bodyAt\":1,\"currentBody\":true,\"permission\":\"not-determined\"},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"},\"item\":6,\"type\":\"manifest\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge\"},\"category\":\"merge-attention\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge change 4: \\\"TEST change\\\".\",\"why\":\"Your role holds change.merge.\",\"settles\":\"A merge act on the current version settles it.\",\"settledBy\":[\"merge\"],\"roleIncludes\":\"change.merge\",\"permission\":\"not-determined\",\"rules\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"holds\":[],\"changesRequested\":[]},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":10,\"type\":\"review-request\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.request-review-own;items.review-request\"},\"category\":\"requested-review\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Review change 4: \\\"TEST change\\\".\",\"why\":\"@vic asked you by name.\",\"settles\":\"Your review-verdict act that names this request closes it.\",\"settledBy\":[\"review-verdict\"],\"currentManifest\":6,\"requestVersionBound\":false,\"permission\":\"not-determined\"},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":11,\"type\":\"merge\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge;items.merge\"},\"category\":\"unknown-merge\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge 11 of this change has no known outcome.\",\"why\":\"You signed this merge.\",\"settles\":\"The destination's publication delivery settles it. Check the original request, and do not merge again.\",\"settledBy\":[\"publication\"],\"manifest\":6,\"retryAllowed\":false},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":6,\"type\":\"manifest\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge\"},\"category\":\"merge-attention\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge change 4: \\\"TEST change\\\". Merge 11 must finish first.\",\"why\":\"Your role holds change.merge.\",\"settles\":\"A merge act on the current version settles it. The room refuses that act until then.\",\"settledBy\":[\"merge\"],\"roleIncludes\":\"change.merge\",\"permission\":\"not-determined\",\"rules\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"holds\":[\"merge-in-progress\"],\"changesRequested\":[]}],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"unread\":[],\"omittedScopes\":[],\"next\":null,\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":6,\"bytes\":11031,\"pages\":5,\"items\":22,\"history\":0,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"complete\":true}","type":"text"}],"isError":false,"structuredContent":{"complete":true,"counters":{"bytes":11031,"history":0,"items":22,"pages":5,"requests":6,"scopes":5,"textBytes":0},"directory":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"},"discoveryComplete":true,"heads":[{"head":{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","seq":0},"scope":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},{"head":{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","seq":0},"scope":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"}},{"head":{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","seq":5},"scope":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"}},{"head":{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","seq":20},"scope":{"inc":"in_aucqkbifaucqkbifaucqkbifau","kind":"lane","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"}},{"head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"}}],"next":null,"omittedRows":0,"omittedScopes":[],"rows":[{"bodyAt":1,"category":"requested-review","currentBody":true,"head":{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","seq":5},"item":5,"kicker":"Question 1","needs":"Approve or request changes on question 1: \"TEST question\".","permission":"not-determined","rule":{"clause":"acts.request-approval;items.approval-request","definition":"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"},"scope":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"},"settledBy":["approve"],"settles":"Your approve act on the current text closes this request, with the verdict approve or request-changes.","type":"approval-request","why":"@vic asked you by name."},{"category":"merge-attention","changesRequested":[],"head":{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","seq":20},"holds":[],"item":6,"kicker":"Change 4, version 2","needs":"Merge change 4: \"TEST change\".","permission":"not-determined","roleIncludes":"change.merge","rule":{"clause":"acts.merge","definition":"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"},"rules":{"approvals":1,"checks":[{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"name":"security-review","required":true},{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"name":"style-review","required":false}],"extents":[{"class":"content","name":"source"}],"ownerMayReview":false,"revision":7},"scope":{"inc":"in_aucqkbifaucqkbifaucqkbifau","kind":"lane","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"},"settledBy":["merge"],"settles":"A merge act on the current version settles it.","type":"manifest","why":"Your role holds change.merge."},{"category":"requested-review","currentManifest":6,"head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"item":10,"kicker":"Change 4, version 2","needs":"Review change 4: \"TEST change\".","permission":"not-determined","requestVersionBound":false,"rule":{"clause":"acts.request-review-own;items.review-request","definition":"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"},"settledBy":["review-verdict"],"settles":"Your review-verdict act that names this request closes it.","type":"review-request","why":"@vic asked you by name."},{"category":"unknown-merge","head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"item":11,"kicker":"Change 4, version 2","manifest":6,"needs":"Merge 11 of this change has no known outcome.","retryAllowed":false,"rule":{"clause":"acts.merge;items.merge","definition":"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"},"settledBy":["publication"],"settles":"The destination's publication delivery settles it. Check the original request, and do not merge again.","type":"merge","why":"You signed this merge."},{"category":"merge-attention","changesRequested":[],"head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"holds":["merge-in-progress"],"item":6,"kicker":"Change 4, version 2","needs":"Merge change 4: \"TEST change\". Merge 11 must finish first.","permission":"not-determined","roleIncludes":"change.merge","rule":{"clause":"acts.merge","definition":"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"},"rules":{"approvals":1,"checks":[{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"name":"security-review","required":true},{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"name":"style-review","required":false}],"extents":[{"class":"content","name":"source"}],"ownerMayReview":false,"revision":7},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"},"settledBy":["merge"],"settles":"A merge act on the current version settles it. The room refuses that act until then.","type":"manifest","why":"Your role holds change.merge."}],"unread":[],"viewer":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}}},"ready":{"content":[{"text":"{\"change\":{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"},\"destination\":\"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa\",\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"proposal\":{\"id\":0,\"type\":\"proposal\",\"state\":\"open\",\"revision\":0,\"opened\":null,\"values\":{\"title\":\"TEST change\",\"number\":4},\"refs\":{},\"parties\":{\"author\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}},\"attributed\":[]},\"manifest\":{\"id\":6,\"type\":\"manifest\",\"state\":\"current\",\"revision\":6,\"opened\":null,\"values\":{\"base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"integration\":\"cccccccccccccccccccccccccccccccccccccccc\",\"tree\":\"3333333333333333333333333333333333333333\",\"complete\":true,\"selected\":[]},\"refs\":{},\"parties\":{\"authors\":[{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}]},\"attributed\":[]},\"versions\":2,\"rules\":{\"id\":1,\"type\":\"rules\",\"state\":\"current\",\"revision\":1,\"opened\":null,\"values\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"refs\":{},\"parties\":{},\"attributed\":[]},\"reviews\":[{\"id\":9,\"type\":\"review\",\"state\":\"submitted\",\"revision\":9,\"opened\":null,\"values\":{\"verdict\":\"approve\"},\"refs\":{\"manifest\":6},\"parties\":{\"reviewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[],\"reviewerIs\":\"@vic (person)\"}],\"requests\":[],\"jobs\":[{\"id\":7,\"type\":\"job\",\"state\":\"passed\",\"revision\":7,\"opened\":null,\"values\":{\"name\":\"security-review\"},\"refs\":{\"manifest\":6},\"parties\":{},\"attributed\":[]}],\"results\":[{\"attributed\":[],\"id\":8,\"opened\":null,\"parties\":{\"checker\":{\"member\":\"@vic\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"job\":7},\"revision\":8,\"state\":\"recorded\",\"type\":\"result\",\"values\":{\"outcome\":\"passed\"},\"checkerIs\":\"@vic (person)\"}],\"merges\":[],\"linked\":[]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}}],\"counters\":{\"scopes\":3,\"requests\":7,\"bytes\":8464,\"pages\":6,\"items\":15,\"history\":0,\"textBytes\":0},\"complete\":true}","type":"text"}],"isError":false,"structuredContent":{"change":{"actions":["issue.approve","issue.decide","change.merge"],"destination":"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa","head":{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","seq":20},"jobs":[{"attributed":[],"id":7,"opened":null,"parties":{},"refs":{"manifest":6},"revision":7,"state":"passed","type":"job","values":{"name":"security-review"}}],"linked":[],"manifest":{"attributed":[],"id":6,"opened":null,"parties":{"authors":[{"member":"@una","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}]},"refs":{},"revision":6,"state":"current","type":"manifest","values":{"base":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","complete":true,"integration":"cccccccccccccccccccccccccccccccccccccccc","selected":[],"tree":"3333333333333333333333333333333333333333"}},"merges":[],"proposal":{"attributed":[],"id":0,"opened":null,"parties":{"author":{"member":"@una","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{},"revision":0,"state":"open","type":"proposal","values":{"number":4,"title":"TEST change"}},"requests":[],"results":[{"attributed":[],"checkerIs":"@vic (person)","id":8,"opened":null,"parties":{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{"job":7},"revision":8,"state":"recorded","type":"result","values":{"outcome":"passed"}}],"reviews":[{"attributed":[],"id":9,"opened":null,"parties":{"reviewer":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{"manifest":6},"reviewerIs":"@vic (person)","revision":9,"state":"submitted","type":"review","values":{"verdict":"approve"}}],"rules":{"attributed":[],"id":1,"opened":null,"parties":{},"refs":{},"revision":1,"state":"current","type":"rules","values":{"approvals":1,"checks":[{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"name":"security-review","required":true},{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"name":"style-review","required":false}],"extents":[{"class":"content","name":"source"}],"ownerMayReview":false,"revision":7}},"scope":{"inc":"in_aucqkbifaucqkbifaucqkbifau","kind":"lane","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"},"versions":2,"viewer":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"complete":true,"counters":{"bytes":8464,"history":0,"items":15,"pages":6,"requests":7,"scopes":3,"textBytes":0},"heads":[{"head":{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","seq":0},"scope":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},{"head":{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","seq":0},"scope":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"}},{"head":{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","seq":20},"scope":{"inc":"in_aucqkbifaucqkbifaucqkbifau","kind":"lane","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"}}]}},"requested":{"content":[{"text":"{\"change\":{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"destination\":\"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa\",\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"proposal\":{\"id\":0,\"type\":\"proposal\",\"state\":\"open\",\"revision\":0,\"opened\":null,\"values\":{\"title\":\"TEST change\",\"number\":4},\"refs\":{},\"parties\":{\"author\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}},\"attributed\":[]},\"manifest\":{\"id\":6,\"type\":\"manifest\",\"state\":\"current\",\"revision\":6,\"opened\":null,\"values\":{\"base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"integration\":\"cccccccccccccccccccccccccccccccccccccccc\",\"tree\":\"3333333333333333333333333333333333333333\",\"complete\":true,\"selected\":[]},\"refs\":{},\"parties\":{\"authors\":[{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}]},\"attributed\":[]},\"versions\":2,\"rules\":{\"id\":1,\"type\":\"rules\",\"state\":\"current\",\"revision\":1,\"opened\":null,\"values\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"refs\":{},\"parties\":{},\"attributed\":[]},\"reviews\":[{\"id\":9,\"type\":\"review\",\"state\":\"submitted\",\"revision\":9,\"opened\":null,\"values\":{\"verdict\":\"approve\"},\"refs\":{\"manifest\":6},\"parties\":{\"reviewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[],\"reviewerIs\":\"@vic (person)\"}],\"requests\":[{\"id\":10,\"type\":\"review-request\",\"state\":\"open\",\"revision\":10,\"opened\":null,\"values\":{},\"refs\":{},\"parties\":{\"requested\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"requester\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[]}],\"jobs\":[{\"id\":7,\"type\":\"job\",\"state\":\"passed\",\"revision\":7,\"opened\":null,\"values\":{\"name\":\"security-review\"},\"refs\":{\"manifest\":6},\"parties\":{},\"attributed\":[]}],\"results\":[{\"attributed\":[],\"id\":8,\"opened\":null,\"parties\":{\"checker\":{\"member\":\"@vic\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"job\":7},\"revision\":8,\"state\":\"recorded\",\"type\":\"result\",\"values\":{\"outcome\":\"passed\"},\"checkerIs\":\"@vic (person)\"}],\"merges\":[{\"id\":11,\"type\":\"merge\",\"state\":\"unknown\",\"revision\":11,\"opened\":null,\"values\":{},\"refs\":{\"manifest\":6},\"parties\":{\"merger\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"}},\"attributed\":[],\"mergerIs\":\"@rita (person)\"}],\"linked\":[]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"counters\":{\"scopes\":3,\"requests\":8,\"bytes\":9932,\"pages\":7,\"items\":17,\"history\":1,\"textBytes\":0},\"complete\":true}","type":"text"}],"isError":false,"structuredContent":{"change":{"actions":["issue.approve","issue.decide","change.merge"],"destination":"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa","head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"jobs":[{"attributed":[],"id":7,"opened":null,"parties":{},"refs":{"manifest":6},"revision":7,"state":"passed","type":"job","values":{"name":"security-review"}}],"linked":[],"manifest":{"attributed":[],"id":6,"opened":null,"parties":{"authors":[{"member":"@una","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}]},"refs":{},"revision":6,"state":"current","type":"manifest","values":{"base":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","complete":true,"integration":"cccccccccccccccccccccccccccccccccccccccc","selected":[],"tree":"3333333333333333333333333333333333333333"}},"merges":[{"attributed":[],"id":11,"mergerIs":"@rita (person)","opened":null,"parties":{"merger":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{"manifest":6},"revision":11,"state":"unknown","type":"merge","values":{}}],"proposal":{"attributed":[],"id":0,"opened":null,"parties":{"author":{"member":"@una","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{},"revision":0,"state":"open","type":"proposal","values":{"number":4,"title":"TEST change"}},"requests":[{"attributed":[],"id":10,"opened":null,"parties":{"requested":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"requester":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{},"revision":10,"state":"open","type":"review-request","values":{}}],"results":[{"attributed":[],"checkerIs":"@vic (person)","id":8,"opened":null,"parties":{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{"job":7},"revision":8,"state":"recorded","type":"result","values":{"outcome":"passed"}}],"reviews":[{"attributed":[],"id":9,"opened":null,"parties":{"reviewer":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"refs":{"manifest":6},"reviewerIs":"@vic (person)","revision":9,"state":"submitted","type":"review","values":{"verdict":"approve"}}],"rules":{"attributed":[],"id":1,"opened":null,"parties":{},"refs":{},"revision":1,"state":"current","type":"rules","values":{"approvals":1,"checks":[{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"name":"security-review","required":true},{"checker":{"member":"@vic","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},"name":"style-review","required":false}],"extents":[{"class":"content","name":"source"}],"ownerMayReview":false,"revision":7}},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"},"versions":2,"viewer":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}},"complete":true,"counters":{"bytes":9932,"history":1,"items":17,"pages":7,"requests":8,"scopes":3,"textBytes":0},"heads":[{"head":{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","seq":0},"scope":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},{"head":{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","seq":0},"scope":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"}},{"head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"}}]}},"since":{"content":[{"text":"{\"rows\":[{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"},\"item\":5,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"},{\"seq\":1,\"what\":\"ask by @rita (person)\"},{\"seq\":2,\"what\":\"the timed rule TEST history position\"},{\"seq\":3,\"what\":\"the timed rule TEST history position\"},{\"seq\":4,\"what\":\"the timed rule TEST history position\"},{\"seq\":5,\"what\":\"the timed rule TEST history position\"}],\"earlier\":0,\"name\":\"Lane 3\"},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"},\"item\":20,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":15,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":16,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":17,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":18,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":19,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":20,\"what\":\"the timed rule TEST scripted change position\"}],\"earlier\":15,\"name\":\"Lane 1\"},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":20,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":15,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":16,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":17,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":18,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":19,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":20,\"what\":\"the timed rule TEST scripted change position\"}],\"earlier\":15,\"name\":\"Lane 2\"},{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"},\"item\":0,\"type\":\"head\",\"rule\":{\"definition\":\"platform:membership@8\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"}],\"earlier\":0,\"name\":\"The membership\"},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"},\"item\":0,\"type\":\"head\",\"rule\":{\"definition\":\"platform:directory@16\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"}],\"earlier\":0,\"name\":\"The directory\"}],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"unread\":[],\"omittedScopes\":[],\"next\":null,\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":11,\"bytes\":39192,\"pages\":10,\"items\":22,\"history\":20,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"complete\":true}","type":"text"}],"isError":false,"structuredContent":{"complete":true,"counters":{"bytes":39192,"history":20,"items":22,"pages":10,"requests":11,"scopes":5,"textBytes":0},"directory":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"},"discoveryComplete":true,"heads":[{"head":{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","seq":0},"scope":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},{"head":{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","seq":0},"scope":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"}},{"head":{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","seq":5},"scope":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"}},{"head":{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","seq":20},"scope":{"inc":"in_aucqkbifaucqkbifaucqkbifau","kind":"lane","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"}},{"head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"}}],"next":null,"omittedRows":0,"omittedScopes":[],"rows":[{"changed":[{"seq":0,"what":"the scope opened"},{"seq":1,"what":"ask by @rita (person)"},{"seq":2,"what":"the timed rule TEST history position"},{"seq":3,"what":"the timed rule TEST history position"},{"seq":4,"what":"the timed rule TEST history position"},{"seq":5,"what":"the timed rule TEST history position"}],"earlier":0,"head":{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","seq":5},"interpretation":"Repeated until an explicit mark","item":5,"name":"Lane 3","rule":{"clause":"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)","definition":"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"},"scope":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"},"since":null,"type":"head"},{"changed":[{"seq":15,"what":"the timed rule TEST scripted change position"},{"seq":16,"what":"the timed rule TEST scripted change position"},{"seq":17,"what":"the timed rule TEST scripted change position"},{"seq":18,"what":"the timed rule TEST scripted change position"},{"seq":19,"what":"the timed rule TEST scripted change position"},{"seq":20,"what":"the timed rule TEST scripted change position"}],"earlier":15,"head":{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","seq":20},"interpretation":"Repeated until an explicit mark","item":20,"name":"Lane 1","rule":{"clause":"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)","definition":"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"},"scope":{"inc":"in_aucqkbifaucqkbifaucqkbifau","kind":"lane","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"},"since":null,"type":"head"},{"changed":[{"seq":15,"what":"the timed rule TEST scripted change position"},{"seq":16,"what":"the timed rule TEST scripted change position"},{"seq":17,"what":"the timed rule TEST scripted change position"},{"seq":18,"what":"the timed rule TEST scripted change position"},{"seq":19,"what":"the timed rule TEST scripted change position"},{"seq":20,"what":"the timed rule TEST scripted change position"}],"earlier":15,"head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"interpretation":"Repeated until an explicit mark","item":20,"name":"Lane 2","rule":{"clause":"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)","definition":"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"},"since":null,"type":"head"},{"changed":[{"seq":0,"what":"the scope opened"}],"earlier":0,"head":{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","seq":0},"interpretation":"Repeated until an explicit mark","item":0,"name":"The membership","rule":{"clause":"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)","definition":"platform:membership@8"},"scope":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"},"since":null,"type":"head"},{"changed":[{"seq":0,"what":"the scope opened"}],"earlier":0,"head":{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","seq":0},"interpretation":"Repeated until an explicit mark","item":0,"name":"The directory","rule":{"clause":"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)","definition":"platform:directory@16"},"scope":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"},"since":null,"type":"head"}],"unread":[],"viewer":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}}},"work":{"content":[{"text":"{\"rows\":[],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"unread\":[],\"omittedScopes\":[],\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":6,\"bytes\":11031,\"pages\":5,\"items\":22,\"history\":0,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"complete\":true}","type":"text"}],"isError":false,"structuredContent":{"complete":true,"counters":{"bytes":11031,"history":0,"items":22,"pages":5,"requests":6,"scopes":5,"textBytes":0},"directory":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"},"discoveryComplete":true,"heads":[{"head":{"hash":"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e","seq":0},"scope":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}},{"head":{"hash":"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234","seq":0},"scope":{"inc":"in_aqcaibaeaqcaibaeaqcaibaeaq","kind":"directory","scope":"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"}},{"head":{"hash":"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5","seq":5},"scope":{"inc":"in_a4dqobyha4dqobyha4dqobyha4","kind":"lane","scope":"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"}},{"head":{"hash":"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa","seq":20},"scope":{"inc":"in_aucqkbifaucqkbifaucqkbifau","kind":"lane","scope":"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"}},{"head":{"hash":"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc","seq":20},"scope":{"inc":"in_aydambqgaydambqgaydambqgay","kind":"lane","scope":"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"}}],"omittedRows":0,"omittedScopes":[],"rows":[],"unread":[],"viewer":{"member":"@rita","membership":{"inc":"in_aeaqcaibaeaqcaibaeaqcaibae","kind":"membership","scope":"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"}}}}}}
+{
+  "screens": {
+    "needs-you": {
+      "card": {
+        "actions": [],
+        "entries": [],
+        "fallback": "Read needs_you for exact rows, heads and omissions. To read a question and answer it, open its Decision card.",
+        "identity": {
+          "at": {},
+          "item": "5",
+          "kind": "approval-request",
+          "revision": "5",
+          "subject": {
+            "item": 5,
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+          }
+        },
+        "kicker": "Question 1",
+        "projection": [
+          {
+            "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+            "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
+            "seq": 0
+          },
+          {
+            "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+            "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
+            "seq": 0
+          },
+          {
+            "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+            "seq": 5
+          },
+          {
+            "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+            "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
+            "seq": 20
+          },
+          {
+            "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+            "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
+            "seq": 20
+          }
+        ],
+        "reasons": [
+          "What settles it: Your approve act on the current text closes this request, with the verdict approve or request-changes.",
+          "Rule: this lane's rule for an approval request.",
+          "Reading this item leaves it open. This list grants no permission.",
+          "The opening act's signer is unavailable in this read."
+        ],
+        "record": {
+          "label": "Exact record",
+          "text": "{\n  \"scope\": {\n    \"scope\": \"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\n    \"inc\": \"in_a4dqobyha4dqobyha4dqobyha4\",\n    \"kind\": \"lane\"\n  },\n  \"head\": {\n    \"seq\": 5,\n    \"hash\": \"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"\n  },\n  \"item\": 5,\n  \"type\": \"approval-request\",\n  \"rule\": {\n    \"definition\": \"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\n    \"clause\": \"acts.request-approval;items.approval-request\"\n  },\n  \"category\": \"requested-review\",\n  \"kicker\": \"Question 1\",\n  \"needs\": \"Approve or request changes on question 1: \\\"TEST question\\\".\",\n  \"why\": \"@vic asked you by name.\",\n  \"settles\": \"Your approve act on the current text closes this request, with the verdict approve or request-changes.\",\n  \"settledBy\": [\n    \"approve\"\n  ],\n  \"bodyAt\": 1,\n  \"currentBody\": true,\n  \"permission\": \"not-determined\"\n}"
+        },
+        "reviewIntended": [],
+        "rule": {
+          "clause": "acts.request-approval;items.approval-request",
+          "definition": "sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"
+        },
+        "settles": ["approve"],
+        "summary": "Why it is yours: @vic asked you by name.",
+        "title": "Approve or request changes on question 1: \"TEST question\".",
+        "unavailable": [],
+        "waitsOn": []
+      },
+      "count": 5,
+      "fallback": "Read needs_you for exact rows, heads and omissions. To read a question and answer it, open its Decision card.",
+      "position": 0,
+      "status": "ready"
+    },
+    "question": {
+      "card": {
+        "actions": [
+          {
+            "args": {
+              "at": { "ask": 1, "request": 5 },
+              "fields": {
+                "bodyAt": {
+                  "at": {
+                    "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+                    "kind": "lane",
+                    "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+                  },
+                  "hash": "sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04",
+                  "seq": 1
+                },
+                "request": 5,
+                "verdict": "approve"
+              },
+              "on": null,
+              "target": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            },
+            "done": "Review recorded: approved.",
+            "id": "approve",
+            "kind": "approve",
+            "label": "Approve",
+            "purpose": "approve"
+          },
+          {
+            "args": {
+              "at": { "ask": 1, "request": 5 },
+              "fields": {
+                "bodyAt": {
+                  "at": {
+                    "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+                    "kind": "lane",
+                    "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+                  },
+                  "hash": "sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04",
+                  "seq": 1
+                },
+                "request": 5,
+                "verdict": "request-changes"
+              },
+              "on": null,
+              "target": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            },
+            "done": "Review recorded: changes requested.",
+            "id": "request-changes",
+            "kind": "approve",
+            "label": "Request changes",
+            "purpose": "approve"
+          }
+        ],
+        "actor": { "kind": "person", "name": "@rita" },
+        "actorLabel": "Question text signed by",
+        "body": "TEST current Question body\n",
+        "fallback": "Use context for the exact text versions, requests, approvals, comments and conditions.",
+        "identity": {
+          "at": { "ask": 1, "request": 5 },
+          "item": "1",
+          "kind": "ask",
+          "revision": "1",
+          "subject": {
+            "item": 1,
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+          }
+        },
+        "kicker": "Question 1",
+        "projection": [
+          {
+            "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+            "seq": 5
+          }
+        ],
+        "reasons": ["The room's rules decide each act."],
+        "reviewIntended": [],
+        "settles": [],
+        "summary": "Question text under its immutable Brief. Approval does not approve the Brief or conditions.",
+        "title": "TEST question",
+        "unavailable": [],
+        "waitsOn": [],
+        "wholeText": true
+      },
+      "count": 1,
+      "fallback": "Use context for the exact text versions, requests, approvals, comments and conditions.",
+      "position": 0,
+      "status": "ready"
+    },
+    "ready": {
+      "card": {
+        "actions": [
+          {
+            "args": {
+              "at": { "manifest": 6, "proposal": 0, "rules": 1 },
+              "fields": { "manifest": 6, "reports": [] },
+              "on": null,
+              "target": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+            },
+            "done": "Merge started.",
+            "id": "merge",
+            "kind": "merge",
+            "label": "Merge",
+            "purpose": "act"
+          }
+        ],
+        "body": "Version 2, manifest 6.\nBase: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nIntegration: cccccccccccccccccccccccccccccccccccccccc\nTree: 3333333333333333333333333333333333333333\n\nEarlier versions:\nVersion 1, manifest 5. Base: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb. Integration: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.\n\nReviews of this version:\n@vic (person): approve.\n\nChecks of this version:\nsecurity-review: passed, by @vic (person).\n\nRules:\nLane definition: sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7.\nApprovals needed: 1. Given: 1. The owner may review: no. Rules revision: 7.\nApprove here counts for the source extent. It does not approve a change to the rules or to deployment files.\n\nLinked issues:\nNone.",
+        "diffAvailable": true,
+        "diffRead": {
+          "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "integration": "cccccccccccccccccccccccccccccccccccccccc",
+          "label": "Version 2",
+          "target": "sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa"
+        },
+        "fallback": "Read change for this version's base, integration, reviews, checks, rules and linked issues.",
+        "identity": {
+          "at": { "manifest": 6, "proposal": 0, "rules": 1 },
+          "item": "6",
+          "kind": "manifest",
+          "revision": "6",
+          "subject": {
+            "item": 0,
+            "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+          }
+        },
+        "interdiffReads": [
+          {
+            "from": {
+              "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "integration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "label": "Version 1"
+            },
+            "target": "sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa",
+            "to": {
+              "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "integration": "cccccccccccccccccccccccccccccccccccccccc",
+              "label": "Version 2"
+            }
+          }
+        ],
+        "kicker": "Change 4, version 2",
+        "projection": [
+          {
+            "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+            "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
+            "seq": 0
+          },
+          {
+            "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+            "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
+            "seq": 0
+          },
+          {
+            "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+            "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
+            "seq": 20
+          }
+        ],
+        "reasons": [
+          "The room's rules decide each act.",
+          "The signer of this entry is unavailable in this read."
+        ],
+        "reviewIntended": [],
+        "settles": [],
+        "summary": "Change 4, open, version 2.",
+        "title": "TEST change",
+        "unavailable": [],
+        "waitsOn": []
+      },
+      "count": 1,
+      "fallback": "Read change for this version's base, integration, reviews, checks, rules and linked issues.",
+      "position": 0,
+      "status": "ready"
+    },
+    "requested": {
+      "card": {
+        "actions": [],
+        "body": "Version 2, manifest 6.\nBase: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nIntegration: cccccccccccccccccccccccccccccccccccccccc\nTree: 3333333333333333333333333333333333333333\n\nEarlier versions:\nVersion 1, manifest 5. Base: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb. Integration: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.\n\nReviews of this version:\n@vic (person): approve.\n\nChecks of this version:\nsecurity-review: passed, by @vic (person).\n\nRules:\nLane definition: sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7.\nApprovals needed: 1. Given: 1. The owner may review: no. Rules revision: 7.\nApprove here counts for the source extent. It does not approve a change to the rules or to deployment files.\n\nMerges:\nMerge 11: unknown. @rita (person) started it. The destination cannot say yet if the push landed. No card can merge until it can.\n\nLinked issues:\nNone.",
+        "diffAvailable": true,
+        "diffRead": {
+          "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "integration": "cccccccccccccccccccccccccccccccccccccccc",
+          "label": "Version 2",
+          "target": "sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa"
+        },
+        "fallback": "Read change for this version's base, integration, reviews, checks, rules and linked issues.",
+        "identity": {
+          "at": { "manifest": 6, "proposal": 0, "rules": 1 },
+          "item": "6",
+          "kind": "manifest",
+          "revision": "6",
+          "subject": {
+            "item": 0,
+            "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+          }
+        },
+        "interdiffReads": [
+          {
+            "from": {
+              "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "integration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "label": "Version 1"
+            },
+            "target": "sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa",
+            "to": {
+              "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "integration": "cccccccccccccccccccccccccccccccccccccccc",
+              "label": "Version 2"
+            }
+          }
+        ],
+        "kicker": "Change 4, version 2",
+        "projection": [
+          {
+            "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+            "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
+            "seq": 0
+          },
+          {
+            "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+            "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
+            "seq": 0
+          },
+          {
+            "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+            "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
+            "seq": 20
+          }
+        ],
+        "reasons": ["The signer of this entry is unavailable in this read."],
+        "reviewIntended": [],
+        "settles": [],
+        "summary": "Change 4, open, version 2.",
+        "title": "TEST change",
+        "unavailable": [],
+        "waitsOn": []
+      },
+      "count": 1,
+      "fallback": "Read change for this version's base, integration, reviews, checks, rules and linked issues.",
+      "position": 0,
+      "status": "ready"
+    },
+    "updates": {
+      "card": {
+        "actions": [
+          {
+            "capture": {
+              "directory": {
+                "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+                "kind": "directory",
+                "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+              },
+              "heads": [
+                {
+                  "head": {
+                    "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+                    "seq": 0
+                  },
+                  "scope": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                },
+                {
+                  "head": {
+                    "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+                    "seq": 0
+                  },
+                  "scope": {
+                    "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+                    "kind": "directory",
+                    "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+                  }
+                },
+                {
+                  "head": {
+                    "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+                    "seq": 5
+                  },
+                  "scope": {
+                    "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+                    "kind": "lane",
+                    "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+                  }
+                },
+                {
+                  "head": {
+                    "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+                    "seq": 20
+                  },
+                  "scope": {
+                    "inc": "in_aucqkbifaucqkbifaucqkbifau",
+                    "kind": "lane",
+                    "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+                  }
+                },
+                {
+                  "head": {
+                    "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+                    "seq": 20
+                  },
+                  "scope": {
+                    "inc": "in_aydambqgaydambqgaydambqgay",
+                    "kind": "lane",
+                    "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+                  }
+                }
+              ],
+              "key": "key_bjLBl0Hwr4JgYSrpn9E9ijiURyLgiWTdI5c49VKmFTs",
+              "ranges": [
+                {
+                  "from": 5,
+                  "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+                  "to": 5
+                },
+                {
+                  "from": 20,
+                  "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
+                  "to": 20
+                },
+                {
+                  "from": 20,
+                  "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
+                  "to": 20
+                },
+                {
+                  "from": 0,
+                  "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
+                  "to": 0
+                },
+                {
+                  "from": 0,
+                  "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
+                  "to": 0
+                }
+              ],
+              "service": "https://scopes.test",
+              "viewer": {
+                "member": "@rita",
+                "membership": {
+                  "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                  "kind": "membership",
+                  "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                }
+              }
+            },
+            "id": "mark-reviewed",
+            "label": "Mark reviewed",
+            "local": true,
+            "purpose": "mark-reviewed"
+          }
+        ],
+        "entries": [
+          {
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+            "seq": 5,
+            "text": "Lane 3. You have not marked this one on this device. Entry 0: the scope opened. Entry 1: ask by @rita (person). Entry 2: the timed rule TEST history position. Entry 3: the timed rule TEST history position. Entry 4: the timed rule TEST history position. Entry 5: the timed rule TEST history position."
+          },
+          {
+            "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
+            "seq": 20,
+            "text": "Lane 1. You have not marked this one on this device. Entry 15: the timed rule TEST scripted change position. Entry 16: the timed rule TEST scripted change position. Entry 17: the timed rule TEST scripted change position. Entry 18: the timed rule TEST scripted change position. Entry 19: the timed rule TEST scripted change position. Entry 20: the timed rule TEST scripted change position. This list leaves out 15 earlier entries."
+          },
+          {
+            "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
+            "seq": 20,
+            "text": "Lane 2. You have not marked this one on this device. Entry 15: the timed rule TEST scripted change position. Entry 16: the timed rule TEST scripted change position. Entry 17: the timed rule TEST scripted change position. Entry 18: the timed rule TEST scripted change position. Entry 19: the timed rule TEST scripted change position. Entry 20: the timed rule TEST scripted change position. This list leaves out 15 earlier entries."
+          },
+          {
+            "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
+            "seq": 0,
+            "text": "The membership. You have not marked this one on this device. Entry 0: the scope opened."
+          },
+          {
+            "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
+            "seq": 0,
+            "text": "The directory. You have not marked this one on this device. Entry 0: the scope opened."
+          }
+        ],
+        "fallback": "Read since for exact rows, heads and omissions.",
+        "identity": {
+          "at": {},
+          "item": "5",
+          "kind": "head",
+          "revision": "5",
+          "subject": {
+            "item": 5,
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+          }
+        },
+        "kicker": "Updates",
+        "projection": [
+          {
+            "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+            "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
+            "seq": 0
+          },
+          {
+            "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+            "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
+            "seq": 0
+          },
+          {
+            "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+            "seq": 5
+          },
+          {
+            "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+            "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
+            "seq": 20
+          },
+          {
+            "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+            "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
+            "seq": 20
+          }
+        ],
+        "reasons": [
+          "Mark reviewed moves your place on this device and closes nothing. Another device keeps its own place, so it shows these changes again."
+        ],
+        "reviewIntended": [
+          {
+            "from": 5,
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq",
+            "to": 5
+          },
+          {
+            "from": 20,
+            "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq",
+            "to": 20
+          },
+          {
+            "from": 20,
+            "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za",
+            "to": 20
+          },
+          {
+            "from": 0,
+            "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa",
+            "to": 0
+          },
+          {
+            "from": 0,
+            "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q",
+            "to": 0
+          }
+        ],
+        "settles": [],
+        "summary": "Each scope below lists its newest entries since you last pressed Mark reviewed on this device.",
+        "title": "What changed since your last review",
+        "unavailable": [],
+        "waitsOn": []
+      },
+      "count": 5,
+      "fallback": "Read since for exact rows, heads and omissions.",
+      "position": 0,
+      "status": "ready"
+    },
+    "work": {
+      "count": 0,
+      "fallback": "No work is open in this room.",
+      "position": 0,
+      "status": "empty"
+    }
+  },
+  "tools": {
+    "context": {
+      "content": [
+        {
+          "text": "{\"context\":{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"},\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"ask\":{\"id\":1,\"type\":\"ask\",\"state\":\"asked\",\"revision\":1,\"opened\":null,\"values\":{\"question\":\"TEST question\",\"body\":\"sha256:13ce45a8dc8d1f8e2dfa7cbae2155494bd0ac0b3d5b1702e3cee66b7e18121d5\",\"brief\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\"},\"refs\":{\"bodyAt\":1},\"parties\":{\"asker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[]},\"bodyAt\":{\"at\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"seq\":1,\"hash\":\"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04\"},\"body\":\"TEST current Question body\\n\",\"requests\":[{\"attributed\":[],\"id\":5,\"opened\":null,\"parties\":{\"requested\":{\"member\":\"@rita\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}},\"requester\":{\"member\":\"@vic\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"ask\":1,\"bodyAt\":1},\"revision\":5,\"state\":\"open\",\"type\":\"approval-request\",\"values\":{}}],\"approvals\":[],\"approvalTexts\":[],\"comments\":[],\"conditions\":null,\"brief\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\",\"briefMatches\":true,\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"versions\":[{\"fact\":{\"at\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"seq\":1,\"hash\":\"sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04\"},\"current\":true}]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}}],\"counters\":{\"scopes\":5,\"requests\":9,\"bytes\":12112,\"pages\":8,\"items\":10,\"history\":6,\"textBytes\":27},\"briefResource\":{\"uri\":\"dap://package/brief\",\"digest\":\"sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e\"},\"complete\":true}",
+          "type": "text"
+        }
+      ],
+      "isError": false,
+      "structuredContent": {
+        "briefResource": {
+          "digest": "sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e",
+          "uri": "dap://package/brief"
+        },
+        "complete": true,
+        "context": {
+          "actions": ["issue.approve", "issue.decide", "change.merge"],
+          "approvalTexts": [],
+          "approvals": [],
+          "ask": {
+            "attributed": [],
+            "id": 1,
+            "opened": null,
+            "parties": {
+              "asker": {
+                "member": "@vic",
+                "membership": {
+                  "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                  "kind": "membership",
+                  "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                }
+              }
+            },
+            "refs": { "bodyAt": 1 },
+            "revision": 1,
+            "state": "asked",
+            "type": "ask",
+            "values": {
+              "body": "sha256:13ce45a8dc8d1f8e2dfa7cbae2155494bd0ac0b3d5b1702e3cee66b7e18121d5",
+              "brief": "sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e",
+              "question": "TEST question"
+            }
+          },
+          "body": "TEST current Question body\n",
+          "bodyAt": {
+            "at": {
+              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+              "kind": "lane",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            },
+            "hash": "sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04",
+            "seq": 1
+          },
+          "brief": "sha256:a33f09119bf6b420986ee3207c5116954fc7c048eac486c2a5d7b085af0e1a1e",
+          "briefMatches": true,
+          "comments": [],
+          "conditions": null,
+          "definition": "sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3",
+          "head": {
+            "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+            "seq": 5
+          },
+          "requests": [
+            {
+              "attributed": [],
+              "id": 5,
+              "opened": null,
+              "parties": {
+                "requested": {
+                  "member": "@rita",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                },
+                "requester": {
+                  "member": "@vic",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                }
+              },
+              "refs": { "ask": 1, "bodyAt": 1 },
+              "revision": 5,
+              "state": "open",
+              "type": "approval-request",
+              "values": {}
+            }
+          ],
+          "scope": {
+            "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+            "kind": "lane",
+            "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+          },
+          "versions": [
+            {
+              "current": true,
+              "fact": {
+                "at": {
+                  "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+                  "kind": "lane",
+                  "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+                },
+                "hash": "sha256:df50d4c136b39a5b137a08ccd66240e0b0acf2a32f89db793228f0e9eb2adb04",
+                "seq": 1
+              }
+            }
+          ],
+          "viewer": {
+            "member": "@rita",
+            "membership": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            }
+          }
+        },
+        "counters": {
+          "bytes": 12112,
+          "history": 6,
+          "items": 10,
+          "pages": 8,
+          "requests": 9,
+          "scopes": 5,
+          "textBytes": 27
+        },
+        "heads": [
+          {
+            "head": {
+              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+              "kind": "directory",
+              "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+              "seq": 5
+            },
+            "scope": {
+              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+              "kind": "lane",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            }
+          }
+        ]
+      }
+    },
+    "needsYou": {
+      "content": [
+        {
+          "text": "{\"rows\":[{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"},\"item\":5,\"type\":\"approval-request\",\"rule\":{\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"clause\":\"acts.request-approval;items.approval-request\"},\"category\":\"requested-review\",\"kicker\":\"Question 1\",\"needs\":\"Approve or request changes on question 1: \\\"TEST question\\\".\",\"why\":\"@vic asked you by name.\",\"settles\":\"Your approve act on the current text closes this request, with the verdict approve or request-changes.\",\"settledBy\":[\"approve\"],\"bodyAt\":1,\"currentBody\":true,\"permission\":\"not-determined\"},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"},\"item\":6,\"type\":\"manifest\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge\"},\"category\":\"merge-attention\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge change 4: \\\"TEST change\\\".\",\"why\":\"Your role holds change.merge.\",\"settles\":\"A merge act on the current version settles it.\",\"settledBy\":[\"merge\"],\"roleIncludes\":\"change.merge\",\"permission\":\"not-determined\",\"rules\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"holds\":[],\"changesRequested\":[]},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":10,\"type\":\"review-request\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.request-review-own;items.review-request\"},\"category\":\"requested-review\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Review change 4: \\\"TEST change\\\".\",\"why\":\"@vic asked you by name.\",\"settles\":\"Your review-verdict act that names this request closes it.\",\"settledBy\":[\"review-verdict\"],\"currentManifest\":6,\"requestVersionBound\":false,\"permission\":\"not-determined\"},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":11,\"type\":\"merge\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge;items.merge\"},\"category\":\"unknown-merge\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge 11 of this change has no known outcome.\",\"why\":\"You signed this merge.\",\"settles\":\"The destination's publication delivery settles it. Check the original request, and do not merge again.\",\"settledBy\":[\"publication\"],\"manifest\":6,\"retryAllowed\":false},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":6,\"type\":\"manifest\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"acts.merge\"},\"category\":\"merge-attention\",\"kicker\":\"Change 4, version 2\",\"needs\":\"Merge change 4: \\\"TEST change\\\". Merge 11 must finish first.\",\"why\":\"Your role holds change.merge.\",\"settles\":\"A merge act on the current version settles it. The room refuses that act until then.\",\"settledBy\":[\"merge\"],\"roleIncludes\":\"change.merge\",\"permission\":\"not-determined\",\"rules\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"holds\":[\"merge-in-progress\"],\"changesRequested\":[]}],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"unread\":[],\"omittedScopes\":[],\"next\":null,\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":6,\"bytes\":11031,\"pages\":5,\"items\":22,\"history\":0,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"complete\":true}",
+          "type": "text"
+        }
+      ],
+      "isError": false,
+      "structuredContent": {
+        "complete": true,
+        "counters": {
+          "bytes": 11031,
+          "history": 0,
+          "items": 22,
+          "pages": 5,
+          "requests": 6,
+          "scopes": 5,
+          "textBytes": 0
+        },
+        "directory": {
+          "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+          "kind": "directory",
+          "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+        },
+        "discoveryComplete": true,
+        "heads": [
+          {
+            "head": {
+              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+              "kind": "directory",
+              "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+              "seq": 5
+            },
+            "scope": {
+              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+              "kind": "lane",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "seq": 20
+            },
+            "scope": {
+              "inc": "in_aucqkbifaucqkbifaucqkbifau",
+              "kind": "lane",
+              "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "seq": 20
+            },
+            "scope": {
+              "inc": "in_aydambqgaydambqgaydambqgay",
+              "kind": "lane",
+              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            }
+          }
+        ],
+        "next": null,
+        "omittedRows": 0,
+        "omittedScopes": [],
+        "rows": [
+          {
+            "bodyAt": 1,
+            "category": "requested-review",
+            "currentBody": true,
+            "head": {
+              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+              "seq": 5
+            },
+            "item": 5,
+            "kicker": "Question 1",
+            "needs": "Approve or request changes on question 1: \"TEST question\".",
+            "permission": "not-determined",
+            "rule": {
+              "clause": "acts.request-approval;items.approval-request",
+              "definition": "sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"
+            },
+            "scope": {
+              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+              "kind": "lane",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            },
+            "settledBy": ["approve"],
+            "settles": "Your approve act on the current text closes this request, with the verdict approve or request-changes.",
+            "type": "approval-request",
+            "why": "@vic asked you by name."
+          },
+          {
+            "category": "merge-attention",
+            "changesRequested": [],
+            "head": {
+              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "seq": 20
+            },
+            "holds": [],
+            "item": 6,
+            "kicker": "Change 4, version 2",
+            "needs": "Merge change 4: \"TEST change\".",
+            "permission": "not-determined",
+            "roleIncludes": "change.merge",
+            "rule": {
+              "clause": "acts.merge",
+              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
+            },
+            "rules": {
+              "approvals": 1,
+              "checks": [
+                {
+                  "checker": {
+                    "member": "@vic",
+                    "membership": {
+                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                      "kind": "membership",
+                      "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                    }
+                  },
+                  "name": "security-review",
+                  "required": true
+                },
+                {
+                  "checker": {
+                    "member": "@vic",
+                    "membership": {
+                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                      "kind": "membership",
+                      "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                    }
+                  },
+                  "name": "style-review",
+                  "required": false
+                }
+              ],
+              "extents": [{ "class": "content", "name": "source" }],
+              "ownerMayReview": false,
+              "revision": 7
+            },
+            "scope": {
+              "inc": "in_aucqkbifaucqkbifaucqkbifau",
+              "kind": "lane",
+              "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+            },
+            "settledBy": ["merge"],
+            "settles": "A merge act on the current version settles it.",
+            "type": "manifest",
+            "why": "Your role holds change.merge."
+          },
+          {
+            "category": "requested-review",
+            "currentManifest": 6,
+            "head": {
+              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "seq": 20
+            },
+            "item": 10,
+            "kicker": "Change 4, version 2",
+            "needs": "Review change 4: \"TEST change\".",
+            "permission": "not-determined",
+            "requestVersionBound": false,
+            "rule": {
+              "clause": "acts.request-review-own;items.review-request",
+              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
+            },
+            "scope": {
+              "inc": "in_aydambqgaydambqgaydambqgay",
+              "kind": "lane",
+              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            },
+            "settledBy": ["review-verdict"],
+            "settles": "Your review-verdict act that names this request closes it.",
+            "type": "review-request",
+            "why": "@vic asked you by name."
+          },
+          {
+            "category": "unknown-merge",
+            "head": {
+              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "seq": 20
+            },
+            "item": 11,
+            "kicker": "Change 4, version 2",
+            "manifest": 6,
+            "needs": "Merge 11 of this change has no known outcome.",
+            "retryAllowed": false,
+            "rule": {
+              "clause": "acts.merge;items.merge",
+              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
+            },
+            "scope": {
+              "inc": "in_aydambqgaydambqgaydambqgay",
+              "kind": "lane",
+              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            },
+            "settledBy": ["publication"],
+            "settles": "The destination's publication delivery settles it. Check the original request, and do not merge again.",
+            "type": "merge",
+            "why": "You signed this merge."
+          },
+          {
+            "category": "merge-attention",
+            "changesRequested": [],
+            "head": {
+              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "seq": 20
+            },
+            "holds": ["merge-in-progress"],
+            "item": 6,
+            "kicker": "Change 4, version 2",
+            "needs": "Merge change 4: \"TEST change\". Merge 11 must finish first.",
+            "permission": "not-determined",
+            "roleIncludes": "change.merge",
+            "rule": {
+              "clause": "acts.merge",
+              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
+            },
+            "rules": {
+              "approvals": 1,
+              "checks": [
+                {
+                  "checker": {
+                    "member": "@vic",
+                    "membership": {
+                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                      "kind": "membership",
+                      "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                    }
+                  },
+                  "name": "security-review",
+                  "required": true
+                },
+                {
+                  "checker": {
+                    "member": "@vic",
+                    "membership": {
+                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                      "kind": "membership",
+                      "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                    }
+                  },
+                  "name": "style-review",
+                  "required": false
+                }
+              ],
+              "extents": [{ "class": "content", "name": "source" }],
+              "ownerMayReview": false,
+              "revision": 7
+            },
+            "scope": {
+              "inc": "in_aydambqgaydambqgaydambqgay",
+              "kind": "lane",
+              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            },
+            "settledBy": ["merge"],
+            "settles": "A merge act on the current version settles it. The room refuses that act until then.",
+            "type": "manifest",
+            "why": "Your role holds change.merge."
+          }
+        ],
+        "unread": [],
+        "viewer": {
+          "member": "@rita",
+          "membership": {
+            "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+            "kind": "membership",
+            "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+          }
+        }
+      }
+    },
+    "ready": {
+      "content": [
+        {
+          "text": "{\"change\":{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"},\"destination\":\"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa\",\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"proposal\":{\"id\":0,\"type\":\"proposal\",\"state\":\"open\",\"revision\":0,\"opened\":null,\"values\":{\"title\":\"TEST change\",\"number\":4},\"refs\":{},\"parties\":{\"author\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}},\"attributed\":[]},\"manifest\":{\"id\":6,\"type\":\"manifest\",\"state\":\"current\",\"revision\":6,\"opened\":null,\"values\":{\"base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"integration\":\"cccccccccccccccccccccccccccccccccccccccc\",\"tree\":\"3333333333333333333333333333333333333333\",\"complete\":true,\"selected\":[]},\"refs\":{},\"parties\":{\"authors\":[{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}]},\"attributed\":[]},\"versions\":2,\"rules\":{\"id\":1,\"type\":\"rules\",\"state\":\"current\",\"revision\":1,\"opened\":null,\"values\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"refs\":{},\"parties\":{},\"attributed\":[]},\"reviews\":[{\"id\":9,\"type\":\"review\",\"state\":\"submitted\",\"revision\":9,\"opened\":null,\"values\":{\"verdict\":\"approve\"},\"refs\":{\"manifest\":6},\"parties\":{\"reviewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[],\"reviewerIs\":\"@vic (person)\"}],\"requests\":[],\"jobs\":[{\"id\":7,\"type\":\"job\",\"state\":\"passed\",\"revision\":7,\"opened\":null,\"values\":{\"name\":\"security-review\"},\"refs\":{\"manifest\":6},\"parties\":{},\"attributed\":[]}],\"results\":[{\"attributed\":[],\"id\":8,\"opened\":null,\"parties\":{\"checker\":{\"member\":\"@vic\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"job\":7},\"revision\":8,\"state\":\"recorded\",\"type\":\"result\",\"values\":{\"outcome\":\"passed\"},\"checkerIs\":\"@vic (person)\"}],\"merges\":[],\"linked\":[]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}}],\"counters\":{\"scopes\":3,\"requests\":7,\"bytes\":8464,\"pages\":6,\"items\":15,\"history\":0,\"textBytes\":0},\"complete\":true}",
+          "type": "text"
+        }
+      ],
+      "isError": false,
+      "structuredContent": {
+        "change": {
+          "actions": ["issue.approve", "issue.decide", "change.merge"],
+          "destination": "sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa",
+          "head": {
+            "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+            "seq": 20
+          },
+          "jobs": [
+            {
+              "attributed": [],
+              "id": 7,
+              "opened": null,
+              "parties": {},
+              "refs": { "manifest": 6 },
+              "revision": 7,
+              "state": "passed",
+              "type": "job",
+              "values": { "name": "security-review" }
+            }
+          ],
+          "linked": [],
+          "manifest": {
+            "attributed": [],
+            "id": 6,
+            "opened": null,
+            "parties": {
+              "authors": [
+                {
+                  "member": "@una",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                }
+              ]
+            },
+            "refs": {},
+            "revision": 6,
+            "state": "current",
+            "type": "manifest",
+            "values": {
+              "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "complete": true,
+              "integration": "cccccccccccccccccccccccccccccccccccccccc",
+              "selected": [],
+              "tree": "3333333333333333333333333333333333333333"
+            }
+          },
+          "merges": [],
+          "proposal": {
+            "attributed": [],
+            "id": 0,
+            "opened": null,
+            "parties": {
+              "author": {
+                "member": "@una",
+                "membership": {
+                  "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                  "kind": "membership",
+                  "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                }
+              }
+            },
+            "refs": {},
+            "revision": 0,
+            "state": "open",
+            "type": "proposal",
+            "values": { "number": 4, "title": "TEST change" }
+          },
+          "requests": [],
+          "results": [
+            {
+              "attributed": [],
+              "checkerIs": "@vic (person)",
+              "id": 8,
+              "opened": null,
+              "parties": {
+                "checker": {
+                  "member": "@vic",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                }
+              },
+              "refs": { "job": 7 },
+              "revision": 8,
+              "state": "recorded",
+              "type": "result",
+              "values": { "outcome": "passed" }
+            }
+          ],
+          "reviews": [
+            {
+              "attributed": [],
+              "id": 9,
+              "opened": null,
+              "parties": {
+                "reviewer": {
+                  "member": "@vic",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                }
+              },
+              "refs": { "manifest": 6 },
+              "reviewerIs": "@vic (person)",
+              "revision": 9,
+              "state": "submitted",
+              "type": "review",
+              "values": { "verdict": "approve" }
+            }
+          ],
+          "rules": {
+            "attributed": [],
+            "id": 1,
+            "opened": null,
+            "parties": {},
+            "refs": {},
+            "revision": 1,
+            "state": "current",
+            "type": "rules",
+            "values": {
+              "approvals": 1,
+              "checks": [
+                {
+                  "checker": {
+                    "member": "@vic",
+                    "membership": {
+                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                      "kind": "membership",
+                      "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                    }
+                  },
+                  "name": "security-review",
+                  "required": true
+                },
+                {
+                  "checker": {
+                    "member": "@vic",
+                    "membership": {
+                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                      "kind": "membership",
+                      "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                    }
+                  },
+                  "name": "style-review",
+                  "required": false
+                }
+              ],
+              "extents": [{ "class": "content", "name": "source" }],
+              "ownerMayReview": false,
+              "revision": 7
+            }
+          },
+          "scope": {
+            "inc": "in_aucqkbifaucqkbifaucqkbifau",
+            "kind": "lane",
+            "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+          },
+          "versions": 2,
+          "viewer": {
+            "member": "@rita",
+            "membership": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            }
+          }
+        },
+        "complete": true,
+        "counters": {
+          "bytes": 8464,
+          "history": 0,
+          "items": 15,
+          "pages": 6,
+          "requests": 7,
+          "scopes": 3,
+          "textBytes": 0
+        },
+        "heads": [
+          {
+            "head": {
+              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+              "kind": "directory",
+              "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "seq": 20
+            },
+            "scope": {
+              "inc": "in_aucqkbifaucqkbifaucqkbifau",
+              "kind": "lane",
+              "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+            }
+          }
+        ]
+      }
+    },
+    "requested": {
+      "content": [
+        {
+          "text": "{\"change\":{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"destination\":\"sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa\",\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"actions\":[\"issue.approve\",\"issue.decide\",\"change.merge\"],\"proposal\":{\"id\":0,\"type\":\"proposal\",\"state\":\"open\",\"revision\":0,\"opened\":null,\"values\":{\"title\":\"TEST change\",\"number\":4},\"refs\":{},\"parties\":{\"author\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}},\"attributed\":[]},\"manifest\":{\"id\":6,\"type\":\"manifest\",\"state\":\"current\",\"revision\":6,\"opened\":null,\"values\":{\"base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"integration\":\"cccccccccccccccccccccccccccccccccccccccc\",\"tree\":\"3333333333333333333333333333333333333333\",\"complete\":true,\"selected\":[]},\"refs\":{},\"parties\":{\"authors\":[{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@una\"}]},\"attributed\":[]},\"versions\":2,\"rules\":{\"id\":1,\"type\":\"rules\",\"state\":\"current\",\"revision\":1,\"opened\":null,\"values\":{\"revision\":7,\"approvals\":1,\"ownerMayReview\":false,\"checks\":[{\"name\":\"security-review\",\"required\":true,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},{\"name\":\"style-review\",\"required\":false,\"checker\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}}],\"extents\":[{\"name\":\"source\",\"class\":\"content\"}]},\"refs\":{},\"parties\":{},\"attributed\":[]},\"reviews\":[{\"id\":9,\"type\":\"review\",\"state\":\"submitted\",\"revision\":9,\"opened\":null,\"values\":{\"verdict\":\"approve\"},\"refs\":{\"manifest\":6},\"parties\":{\"reviewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[],\"reviewerIs\":\"@vic (person)\"}],\"requests\":[{\"id\":10,\"type\":\"review-request\",\"state\":\"open\",\"revision\":10,\"opened\":null,\"values\":{},\"refs\":{},\"parties\":{\"requested\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"requester\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@vic\"}},\"attributed\":[]}],\"jobs\":[{\"id\":7,\"type\":\"job\",\"state\":\"passed\",\"revision\":7,\"opened\":null,\"values\":{\"name\":\"security-review\"},\"refs\":{\"manifest\":6},\"parties\":{},\"attributed\":[]}],\"results\":[{\"attributed\":[],\"id\":8,\"opened\":null,\"parties\":{\"checker\":{\"member\":\"@vic\",\"membership\":{\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\",\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\"}}},\"refs\":{\"job\":7},\"revision\":8,\"state\":\"recorded\",\"type\":\"result\",\"values\":{\"outcome\":\"passed\"},\"checkerIs\":\"@vic (person)\"}],\"merges\":[{\"id\":11,\"type\":\"merge\",\"state\":\"unknown\",\"revision\":11,\"opened\":null,\"values\":{},\"refs\":{\"manifest\":6},\"parties\":{\"merger\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"}},\"attributed\":[],\"mergerIs\":\"@rita (person)\"}],\"linked\":[]},\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"counters\":{\"scopes\":3,\"requests\":8,\"bytes\":9932,\"pages\":7,\"items\":17,\"history\":1,\"textBytes\":0},\"complete\":true}",
+          "type": "text"
+        }
+      ],
+      "isError": false,
+      "structuredContent": {
+        "change": {
+          "actions": ["issue.approve", "issue.decide", "change.merge"],
+          "destination": "sc_pm57aorugedbbar3ep5g5a4cupxmkkvbhm5a7ltb5ilxhb2hmrwa",
+          "head": {
+            "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+            "seq": 20
+          },
+          "jobs": [
+            {
+              "attributed": [],
+              "id": 7,
+              "opened": null,
+              "parties": {},
+              "refs": { "manifest": 6 },
+              "revision": 7,
+              "state": "passed",
+              "type": "job",
+              "values": { "name": "security-review" }
+            }
+          ],
+          "linked": [],
+          "manifest": {
+            "attributed": [],
+            "id": 6,
+            "opened": null,
+            "parties": {
+              "authors": [
+                {
+                  "member": "@una",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                }
+              ]
+            },
+            "refs": {},
+            "revision": 6,
+            "state": "current",
+            "type": "manifest",
+            "values": {
+              "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "complete": true,
+              "integration": "cccccccccccccccccccccccccccccccccccccccc",
+              "selected": [],
+              "tree": "3333333333333333333333333333333333333333"
+            }
+          },
+          "merges": [
+            {
+              "attributed": [],
+              "id": 11,
+              "mergerIs": "@rita (person)",
+              "opened": null,
+              "parties": {
+                "merger": {
+                  "member": "@rita",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                }
+              },
+              "refs": { "manifest": 6 },
+              "revision": 11,
+              "state": "unknown",
+              "type": "merge",
+              "values": {}
+            }
+          ],
+          "proposal": {
+            "attributed": [],
+            "id": 0,
+            "opened": null,
+            "parties": {
+              "author": {
+                "member": "@una",
+                "membership": {
+                  "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                  "kind": "membership",
+                  "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                }
+              }
+            },
+            "refs": {},
+            "revision": 0,
+            "state": "open",
+            "type": "proposal",
+            "values": { "number": 4, "title": "TEST change" }
+          },
+          "requests": [
+            {
+              "attributed": [],
+              "id": 10,
+              "opened": null,
+              "parties": {
+                "requested": {
+                  "member": "@rita",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                },
+                "requester": {
+                  "member": "@vic",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                }
+              },
+              "refs": {},
+              "revision": 10,
+              "state": "open",
+              "type": "review-request",
+              "values": {}
+            }
+          ],
+          "results": [
+            {
+              "attributed": [],
+              "checkerIs": "@vic (person)",
+              "id": 8,
+              "opened": null,
+              "parties": {
+                "checker": {
+                  "member": "@vic",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                }
+              },
+              "refs": { "job": 7 },
+              "revision": 8,
+              "state": "recorded",
+              "type": "result",
+              "values": { "outcome": "passed" }
+            }
+          ],
+          "reviews": [
+            {
+              "attributed": [],
+              "id": 9,
+              "opened": null,
+              "parties": {
+                "reviewer": {
+                  "member": "@vic",
+                  "membership": {
+                    "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                    "kind": "membership",
+                    "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                  }
+                }
+              },
+              "refs": { "manifest": 6 },
+              "reviewerIs": "@vic (person)",
+              "revision": 9,
+              "state": "submitted",
+              "type": "review",
+              "values": { "verdict": "approve" }
+            }
+          ],
+          "rules": {
+            "attributed": [],
+            "id": 1,
+            "opened": null,
+            "parties": {},
+            "refs": {},
+            "revision": 1,
+            "state": "current",
+            "type": "rules",
+            "values": {
+              "approvals": 1,
+              "checks": [
+                {
+                  "checker": {
+                    "member": "@vic",
+                    "membership": {
+                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                      "kind": "membership",
+                      "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                    }
+                  },
+                  "name": "security-review",
+                  "required": true
+                },
+                {
+                  "checker": {
+                    "member": "@vic",
+                    "membership": {
+                      "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+                      "kind": "membership",
+                      "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+                    }
+                  },
+                  "name": "style-review",
+                  "required": false
+                }
+              ],
+              "extents": [{ "class": "content", "name": "source" }],
+              "ownerMayReview": false,
+              "revision": 7
+            }
+          },
+          "scope": {
+            "inc": "in_aydambqgaydambqgaydambqgay",
+            "kind": "lane",
+            "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+          },
+          "versions": 2,
+          "viewer": {
+            "member": "@rita",
+            "membership": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            }
+          }
+        },
+        "complete": true,
+        "counters": {
+          "bytes": 9932,
+          "history": 1,
+          "items": 17,
+          "pages": 7,
+          "requests": 8,
+          "scopes": 3,
+          "textBytes": 0
+        },
+        "heads": [
+          {
+            "head": {
+              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+              "kind": "directory",
+              "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "seq": 20
+            },
+            "scope": {
+              "inc": "in_aydambqgaydambqgaydambqgay",
+              "kind": "lane",
+              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            }
+          }
+        ]
+      }
+    },
+    "since": {
+      "content": [
+        {
+          "text": "{\"rows\":[{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"},\"item\":5,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"},{\"seq\":1,\"what\":\"ask by @rita (person)\"},{\"seq\":2,\"what\":\"the timed rule TEST history position\"},{\"seq\":3,\"what\":\"the timed rule TEST history position\"},{\"seq\":4,\"what\":\"the timed rule TEST history position\"},{\"seq\":5,\"what\":\"the timed rule TEST history position\"}],\"earlier\":0,\"name\":\"Lane 3\"},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"},\"item\":20,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":15,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":16,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":17,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":18,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":19,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":20,\"what\":\"the timed rule TEST scripted change position\"}],\"earlier\":15,\"name\":\"Lane 1\"},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"},\"item\":20,\"type\":\"head\",\"rule\":{\"definition\":\"sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":15,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":16,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":17,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":18,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":19,\"what\":\"the timed rule TEST scripted change position\"},{\"seq\":20,\"what\":\"the timed rule TEST scripted change position\"}],\"earlier\":15,\"name\":\"Lane 2\"},{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"},\"item\":0,\"type\":\"head\",\"rule\":{\"definition\":\"platform:membership@8\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"}],\"earlier\":0,\"name\":\"The membership\"},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"},\"item\":0,\"type\":\"head\",\"rule\":{\"definition\":\"platform:directory@16\",\"clause\":\"apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)\"},\"since\":null,\"interpretation\":\"Repeated until an explicit mark\",\"changed\":[{\"seq\":0,\"what\":\"the scope opened\"}],\"earlier\":0,\"name\":\"The directory\"}],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"unread\":[],\"omittedScopes\":[],\"next\":null,\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":11,\"bytes\":39192,\"pages\":10,\"items\":22,\"history\":20,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"complete\":true}",
+          "type": "text"
+        }
+      ],
+      "isError": false,
+      "structuredContent": {
+        "complete": true,
+        "counters": {
+          "bytes": 39192,
+          "history": 20,
+          "items": 22,
+          "pages": 10,
+          "requests": 11,
+          "scopes": 5,
+          "textBytes": 0
+        },
+        "directory": {
+          "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+          "kind": "directory",
+          "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+        },
+        "discoveryComplete": true,
+        "heads": [
+          {
+            "head": {
+              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+              "kind": "directory",
+              "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+              "seq": 5
+            },
+            "scope": {
+              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+              "kind": "lane",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "seq": 20
+            },
+            "scope": {
+              "inc": "in_aucqkbifaucqkbifaucqkbifau",
+              "kind": "lane",
+              "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "seq": 20
+            },
+            "scope": {
+              "inc": "in_aydambqgaydambqgaydambqgay",
+              "kind": "lane",
+              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            }
+          }
+        ],
+        "next": null,
+        "omittedRows": 0,
+        "omittedScopes": [],
+        "rows": [
+          {
+            "changed": [
+              { "seq": 0, "what": "the scope opened" },
+              { "seq": 1, "what": "ask by @rita (person)" },
+              { "seq": 2, "what": "the timed rule TEST history position" },
+              { "seq": 3, "what": "the timed rule TEST history position" },
+              { "seq": 4, "what": "the timed rule TEST history position" },
+              { "seq": 5, "what": "the timed rule TEST history position" }
+            ],
+            "earlier": 0,
+            "head": {
+              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+              "seq": 5
+            },
+            "interpretation": "Repeated until an explicit mark",
+            "item": 5,
+            "name": "Lane 3",
+            "rule": {
+              "clause": "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)",
+              "definition": "sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3"
+            },
+            "scope": {
+              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+              "kind": "lane",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            },
+            "since": null,
+            "type": "head"
+          },
+          {
+            "changed": [
+              {
+                "seq": 15,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 16,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 17,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 18,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 19,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 20,
+                "what": "the timed rule TEST scripted change position"
+              }
+            ],
+            "earlier": 15,
+            "head": {
+              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "seq": 20
+            },
+            "interpretation": "Repeated until an explicit mark",
+            "item": 20,
+            "name": "Lane 1",
+            "rule": {
+              "clause": "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)",
+              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
+            },
+            "scope": {
+              "inc": "in_aucqkbifaucqkbifaucqkbifau",
+              "kind": "lane",
+              "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+            },
+            "since": null,
+            "type": "head"
+          },
+          {
+            "changed": [
+              {
+                "seq": 15,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 16,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 17,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 18,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 19,
+                "what": "the timed rule TEST scripted change position"
+              },
+              {
+                "seq": 20,
+                "what": "the timed rule TEST scripted change position"
+              }
+            ],
+            "earlier": 15,
+            "head": {
+              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "seq": 20
+            },
+            "interpretation": "Repeated until an explicit mark",
+            "item": 20,
+            "name": "Lane 2",
+            "rule": {
+              "clause": "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)",
+              "definition": "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7"
+            },
+            "scope": {
+              "inc": "in_aydambqgaydambqgaydambqgay",
+              "kind": "lane",
+              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            },
+            "since": null,
+            "type": "head"
+          },
+          {
+            "changed": [{ "seq": 0, "what": "the scope opened" }],
+            "earlier": 0,
+            "head": {
+              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "seq": 0
+            },
+            "interpretation": "Repeated until an explicit mark",
+            "item": 0,
+            "name": "The membership",
+            "rule": {
+              "clause": "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)",
+              "definition": "platform:membership@8"
+            },
+            "scope": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            },
+            "since": null,
+            "type": "head"
+          },
+          {
+            "changed": [{ "seq": 0, "what": "the scope opened" }],
+            "earlier": 0,
+            "head": {
+              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "seq": 0
+            },
+            "interpretation": "Repeated until an explicit mark",
+            "item": 0,
+            "name": "The directory",
+            "rule": {
+              "clause": "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)",
+              "definition": "platform:directory@16"
+            },
+            "scope": {
+              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+              "kind": "directory",
+              "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+            },
+            "since": null,
+            "type": "head"
+          }
+        ],
+        "unread": [],
+        "viewer": {
+          "member": "@rita",
+          "membership": {
+            "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+            "kind": "membership",
+            "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+          }
+        }
+      }
+    },
+    "work": {
+      "content": [
+        {
+          "text": "{\"rows\":[],\"heads\":[{\"scope\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"head\":{\"seq\":0,\"hash\":\"sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e\"}},{\"scope\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"head\":{\"seq\":0,\"hash\":\"sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234\"}},{\"scope\":{\"scope\":\"sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq\",\"inc\":\"in_a4dqobyha4dqobyha4dqobyha4\",\"kind\":\"lane\"},\"head\":{\"seq\":5,\"hash\":\"sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5\"}},{\"scope\":{\"scope\":\"sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq\",\"inc\":\"in_aucqkbifaucqkbifaucqkbifau\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa\"}},{\"scope\":{\"scope\":\"sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za\",\"inc\":\"in_aydambqgaydambqgaydambqgay\",\"kind\":\"lane\"},\"head\":{\"seq\":20,\"hash\":\"sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc\"}}],\"unread\":[],\"omittedScopes\":[],\"discoveryComplete\":true,\"omittedRows\":0,\"counters\":{\"scopes\":5,\"requests\":6,\"bytes\":11031,\"pages\":5,\"items\":22,\"history\":0,\"textBytes\":0},\"viewer\":{\"membership\":{\"scope\":\"sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa\",\"inc\":\"in_aeaqcaibaeaqcaibaeaqcaibae\",\"kind\":\"membership\"},\"member\":\"@rita\"},\"directory\":{\"scope\":\"sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q\",\"inc\":\"in_aqcaibaeaqcaibaeaqcaibaeaq\",\"kind\":\"directory\"},\"complete\":true}",
+          "type": "text"
+        }
+      ],
+      "isError": false,
+      "structuredContent": {
+        "complete": true,
+        "counters": {
+          "bytes": 11031,
+          "history": 0,
+          "items": 22,
+          "pages": 5,
+          "requests": 6,
+          "scopes": 5,
+          "textBytes": 0
+        },
+        "directory": {
+          "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+          "kind": "directory",
+          "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+        },
+        "discoveryComplete": true,
+        "heads": [
+          {
+            "head": {
+              "hash": "sha256:0578b3f038f14db988acb7528ebdfbac3c9088e2f627e8b04f0f7eeba942110e",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+              "kind": "membership",
+              "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:c880ec38b75ca69694004b8ff9394072b7b4542304f53c081696dfe6adc34234",
+              "seq": 0
+            },
+            "scope": {
+              "inc": "in_aqcaibaeaqcaibaeaqcaibaeaq",
+              "kind": "directory",
+              "scope": "sc_gywfvij2rvgvux4rrrkbueizan5hymyobl4mgrkstmgfacurmg7q"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:17308424aec7be501203037724d43a275653a921d6be095bfd5ef80e76bc5bd5",
+              "seq": 5
+            },
+            "scope": {
+              "inc": "in_a4dqobyha4dqobyha4dqobyha4",
+              "kind": "lane",
+              "scope": "sc_n3syqvbjeasiqog2ew6hifzvrr472jjnwk2xgscobllcvle4trfq"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:d5ca7686e4debda064e1927f9beb3c1a7866c47d9948494886c548096981f7aa",
+              "seq": 20
+            },
+            "scope": {
+              "inc": "in_aucqkbifaucqkbifaucqkbifau",
+              "kind": "lane",
+              "scope": "sc_4iibpyunjdz54y7sjphxlhvo5c6vtcboba3smytkgrhaghvniaoq"
+            }
+          },
+          {
+            "head": {
+              "hash": "sha256:492dcaffb3c38520ad6ae7bc34bd6d5938647eb4a2b9e426c3b2fdfc8fcfa0dc",
+              "seq": 20
+            },
+            "scope": {
+              "inc": "in_aydambqgaydambqgaydambqgay",
+              "kind": "lane",
+              "scope": "sc_2u3bszmhbabf55tbttl5l3pjblbd4qgsuzsihvz5fg5wn3wnx6za"
+            }
+          }
+        ],
+        "omittedRows": 0,
+        "omittedScopes": [],
+        "rows": [],
+        "unread": [],
+        "viewer": {
+          "member": "@rita",
+          "membership": {
+            "inc": "in_aeaqcaibaeaqcaibaeaqcaibae",
+            "kind": "membership",
+            "scope": "sc_bzcdepjer24dnyy7wcughcesnd7jqc5z3pvcwfgqpejyxtil57wa"
+          }
+        }
+      }
+    }
+  }
+}
