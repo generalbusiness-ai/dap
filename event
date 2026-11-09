@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4712ec3b7aeae8c928a987b55481be820d065350","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/verify-cleanup.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:474fe12d7fa9d59ed8c4d28f1fc0d4eab818f61a","text":"Merge retired a covered predecessor; the successor is at docs/security/threat-model.md."}
