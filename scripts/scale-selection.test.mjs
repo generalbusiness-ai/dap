@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { gateScaleSelection, scaleGateDecision } from "./scale-selection.mjs";
+import { runScale, scaleResults } from "./scale-runner.mjs";
+import { scaleDeadline, scaleDeadlineFactor } from "../packages/scope/test/support/archive-scale-deadline.ts";
+import { scopeScaleFiles } from "../packages/scope/vitest.scale-files.ts";
+import { readFileSync, statSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
 import { mkdtempSync, mkdirSync, writeFileSync, renameSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -8,6 +14,37 @@ import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 
 const head = "a".repeat(40), main = "b".repeat(40);
+test("scale deadlines retain local limits and multiply only an explicit runner factor", () => {
+  assert.equal(scaleDeadlineFactor(undefined), 1);
+  for (const milliseconds of [30_000, 600_000, 1_200_000]) {
+    assert.equal(scaleDeadline(milliseconds), milliseconds);
+    assert.equal(scaleDeadline(milliseconds, scaleDeadlineFactor("3")), milliseconds * 3);
+  }
+  for (const invalid of ["", "0", "-1", "0.5", "3x", "Infinity", "9007199254740992"]) assert.throws(() => scaleDeadlineFactor(invalid));
+  assert.throws(() => scaleDeadline(1_200_000, 2000), /timer range/);
+});
+
+test("the scale capture retains full process output and failures; its summary requires all six case results", () => {
+  const repository = resolve(fileURLToPath(new URL("..", import.meta.url))), scratch = mkdtempSync(join(tmpdir(), "scale-capture-"));
+  const modules = scopeScaleFiles.map((file, i) => ({ name: resolve(repository, "packages/scope", file), status: "passed", assertionResults: Array.from({ length: i === 0 ? 3 : 1 }, (_, n) => ({ fullName: `TEST witness ${i}:${n}`, status: "passed", duration: 1000 + i + n })) }));
+  const report = { testResults: modules, numTotalTests: 6, numPassedTests: 6, numFailedTests: 0, numPendingTests: 0, numTodoTests: 0, success: true };
+  assert.equal(scaleResults(report, repository).complete, true);
+  assert.equal(scaleResults({ ...report, testResults: modules.slice(1) }, repository).complete, false);
+  assert.equal(scaleResults({ ...report, testResults: [...modules, modules[0]] }, repository).complete, false);
+  const failed = structuredClone(report);
+  failed.testResults[0].status = "failed";
+  Object.assign(failed.testResults[0].assertionResults[1], { status: "failed", duration: 600_000 });
+  Object.assign(failed, { numPassedTests: 5, numFailedTests: 1, success: false });
+  const failedResult = scaleResults(failed, repository);
+  assert.deepEqual([failedResult.complete, failedResult.passed, failedResult.failed, failedResult.cases[1].durationMs], [true, 5, 1, 600_000]);
+  const command = join(scratch, "scripted-runner.mjs");
+  writeFileSync(command, `import { writeFileSync } from 'node:fs';\nprocess.stdout.write('x'.repeat(3*1024*1024));\nprocess.stderr.write('TEST retained stderr\\n');\nwriteFileSync(process.argv.find(v=>v.startsWith('--outputFile=')).slice('--outputFile='.length), ${JSON.stringify(JSON.stringify(report))});\nprocess.exitCode=1;\n`);
+  const output = join(scratch, "output"), result = runScale(output, { command: [process.execPath, command], repository });
+  assert.deepEqual([result.childExit, result.exitCode, result.passed, result.complete], [1, 1, 6, true]);
+  assert.equal(statSync(join(output, "scale.stdout.log")).size, 3 * 1024 * 1024);
+  assert.equal(readFileSync(join(output, "scale.stderr.log"), "utf8"), "TEST retained stderr\n");
+  assert.equal(readFileSync(join(output, "scale.exit"), "utf8"), "exit 1\n");
+});
 test("main always selects scale; a review outside the ruled families records its omission", () => {
   assert.equal(scaleGateDecision({ head: main, main, changedPaths: [] }).include, true);
   const decision = scaleGateDecision({ head, main, changedPaths: ["docs/testing.md", "notes/archive-finding.md"] });
