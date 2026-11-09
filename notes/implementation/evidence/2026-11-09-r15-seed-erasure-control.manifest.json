@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "request": "b66b8f146a9813628e0325374f551ae22d77284f",
+  "promise": "0875dbf1182ef1ce98fa6119a6c2de06e3a2383b",
+  "sourceHead": "ffc97d5dab972c0a1272f5626759abfc783d4178",
+  "sourceTree": "7f999b056d29f6a420866bd62614786864f0af21",
+  "qualification": "Metadata-only reconciliation after original verifier1. Its JSON failureMessages requirement missed32 in the first abbreviated object message. Full same-run stderr has exactly two AssertionErrors at the frozen seed assertions, each diff changes only stored seed length0 to32. Preserve original verifier/result unchanged. No control or baseline rerun; the single control distinguishes the seed-erasure fault. Actual owner1/original verifier1/reconciliation0 read. Both new unchanged cases fail seed0 vs32;22 old cases pass, no skips/pending/unhandled errors, every tracked byte restored and group closed.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r15-seed-erasure-control-validation",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1056,
+          "sha256": "096eb06e8a213f191055380c8ea384f737db58c793b75186fec431075be70852"
+        },
+        {
+          "path": "argv.json",
+          "bytes": 729,
+          "sha256": "cbf10d73130ffe4ffc2c03391ff61100679c56f1450e6eedca18945c3036d35a"
+        },
+        {
+          "path": "control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "control.time",
+          "bytes": 31,
+          "sha256": "855d4f1241761f8c11fc602e6bf2f261dafbc808d3e7599d1e3df31728bcbd0c"
+        },
+        {
+          "path": "coverage.jsonl",
+          "bytes": 34840,
+          "sha256": "e85a58741c8dae0a4ea623cd6d0fc2f4f1cb59e583cf91b188306241047266f0"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7751,
+          "sha256": "5c28cf7521dee2c006299f5cce197853cb9fd161862a70d2a26398f8fcda7d1b"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 489,
+          "sha256": "db78f9982de26ee952857210bcc6dab70be3cf4d00582c9e85115c4237b9c06d"
+        },
+        {
+          "path": "reconciliation.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "reconciliation.json",
+          "bytes": 1253,
+          "sha256": "43c50f21abe1ca95ea7727e2aea2c39110e487ff7a31e84a46d873375913558a"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1668,
+          "sha256": "fa75d34cb20fc9a301f42b6a6a6bb006816030dff8d9b13ec607d31340991faf"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 108,
+          "sha256": "dffd0173fc7f9e447bb7d387f6cd98bc6207c2bc7cb14236828639bf969944f3"
+        },
+        {
+          "path": "source-proof.json",
+          "bytes": 1266,
+          "sha256": "f191c4309c471ef26d52117144476e320ef445fc866055712683988628d7ce89"
+        },
+        {
+          "path": "started.json",
+          "bytes": 88,
+          "sha256": "d5ca75157d10f6134566308a0e72ca9d048e55df71baeb421ea175675c60bee7"
+        },
+        {
+          "path": "verifier.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        }
+      ]
+    }
+  ]
+}

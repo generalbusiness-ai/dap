@@ -94,8 +94,8 @@ The inventory adopts those actual parser outputs under Hugh's standing
 patch approval. All route and gate assertions remain. Producer metadata
 establishes no test pass.
 
-Focused whole-owner checks, affected compiler contexts, one meaningful
-control, and one final gate remain due. The actual
+Focused checks and the seed-erasure control are conclusive under the
+qualifications below. One final gate remains due. The actual
 `gate.exit` must decide any gate pass claim. No current source claim rests
 on an R13 test result.
 
@@ -106,13 +106,55 @@ on an R13 test result.
 | Final-key probe, `58d65173` | Both affected compilers passed. Body exit 1: 22 passed, one probe failure, one pending; exact 24-case ledger, no unhandled errors. Retire itself completed before the probe failed | [manifest](evidence/2026-11-09-r15-failed-final-key-probe.manifest.json) `7e629696462d4d65151505445ab9c3f6a3911802ea0e2596637885a09f5fe704` |
 | Direct sidecar, `5fd0601b` | Both affected compilers passed. Body exit 1: 22 passed, one direct-act field refusal, one pending; exact ledger and no unhandled errors. Missing original sidecar stopped the witness before authority | [manifest](evidence/2026-11-09-r15-failed-direct-sidecar.manifest.json) `a36f1ec12fbae56f64ac34a2b9f3f248e620d4a612d146910b5b7846f42cbb62` |
 | Direct revision, `65e8bd07` | Both affected compilers passed. Body exit 1: 22 passed, one stale expected revision, one pending; exact ledger, no unhandled errors. The field-complete act stopped before authority | [manifest](evidence/2026-11-09-r15-failed-direct-revision.manifest.json) `c5ead18b8bc7a6c4959c7b337b4e4229fde3bf7d8644fa63f1fa1bbc1f7bbcf1` |
-
 | Replay source, `8ad48f37` | Both affected compilers passed. Body exit 1: 22 passed, replay source failure, one pending; exact ledger, no unhandled errors. Seed erasure and fresh direct `unauthorized` refusal passed before replay | [manifest](evidence/2026-11-09-r15-failed-replay-source.manifest.json) `6fafc7fc8eb9525855726f7b7d905925a087a51de9a87b4e53bc84ad60339449` |
 
 The replay witness now requests Rita's real membership session. Signed
 reads show only her cause chain and omit the agent's independent enrollment.
 The existing signed-read fallback still handles bootstrap scopes that have
 not recorded membership. The consistent replay assertion stays unchanged.
+
+## Focused result and control
+
+At `ffc97d5d`, `python3 /private/tmp/artroom-r15-replay-session-followup-20261109.py`
+ran both affected test compilers, then the complete hosted Native owner.
+The actual pipeline and driver exits are `0`: all 24 cases passed with no
+unhandled errors or unfinished cases. The reporter and built-in JSON agree.
+The frozen source and owned process group checks passed.
+
+The complete focused closure has 39 cases in five owners: the new complete
+24-case hosted owner and four complete owners with 15 passes retained from
+`172ca878`. The latter require the explicit post-failure reconciliation in
+the decoder follow-up manifest; its original whole unit remains failed.
+Node's 11 inventory cases and Scope source typechecking also passed there.
+Only the hosted test and note/evidence changed afterward. Frozen input
+hashes establish equality for production, dependencies, seals, and the four
+completed owners. The two test compiler contexts passed again at `ffc97d5d`.
+The six earlier failed units keep their original results.
+
+`python3 /private/tmp/artroom-r15-seed-erasure-control-20261109.py` reused that
+passing baseline and removed only the seed assignment and its SQL binding
+from retirement. It ran the unchanged complete 24-case owner once with
+`--bail=0`: owner exit `1`, 22 old cases passed, and both new cases failed
+their intended SQLite assertions at lines 1882 and 1938. Each expected zero
+seed bytes and read 32. No skip, pending case, timeout, or unhandled error
+occurred. The driver restored every tracked byte and closed its process group.
+
+The control's original report verifier exited `1`: Vitest abbreviated the
+first object failure in JSON, so the checker could not find its `32` text.
+The same run's full stderr contains the exact seed-only diff for both
+assertions. A separate metadata reconciliation exits `0` and confirms both
+failures without rerunning the control or baseline. The original result and
+verifier exit stay unchanged beside that reconciliation.
+
+| Check and source | Command | Actual exit and output manifest |
+|---|---|---|
+| Complete focused owner, `ffc97d5d` | `python3 /private/tmp/artroom-r15-replay-session-followup-20261109.py` | Pipeline `0`; [manifest](evidence/2026-11-09-r15-complete-focused.manifest.json) `63bf106da1d57709b7bc962b725116e90893f8bd34f71be53c060e9c594d7558` |
+| Seed-erasure control, `ffc97d5d` | `python3 /private/tmp/artroom-r15-seed-erasure-control-20261109.py`; metadata sealing/reconciliation | Owner `1`, original verifier `1`, reconciliation `0`; [manifest](evidence/2026-11-09-r15-seed-erasure-control.manifest.json) `fd91826fbf26c1d509f9ce5c54a45c9d2f24debf7c8ba91e941da7f16dc3b648` |
+
+The driver records monotonic elapsed time and `time -p` child CPU separately.
+These focused commands ran on this Mac with owned dependency and Vite
+state and a preflight process sample. Samples establish observed isolation,
+not continuous machine exclusivity. No live room or deployment ran.
 
 ## Deployment
 
