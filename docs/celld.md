@@ -4,10 +4,12 @@ Run the production room Worker on your machine with celld, the runtime
 release named in [`celld.version`](../apps/room/celld/celld.version). You
 need Node 26 and the checkout's locked dependencies.
 [`apps/room/celld/wrangler.json`](../apps/room/celld/wrangler.json)
-configures the local Worker `dap-celld-local`, separate from the deployed
-`artroom-scope`. It keeps the four Durable Object bindings and all three
-migration tags of the room configuration. It has no Git host, no
-application content bucket and no committed secret.
+configures the local Worker `dap-celld-local`, separate from
+`dap-self-host`, the Worker that
+[`apps/room/wrangler.jsonc`](../apps/room/wrangler.jsonc) deploys.
+It keeps the four Durable Object bindings and all three migration tags of
+the room configuration. It has no Git host, no application content bucket
+and no committed secret.
 
 To run persistent services with HTTPS on one Mac, follow
 [Run on a Mac](self-host.md#run-on-a-mac).
