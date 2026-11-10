@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f4315ee08361b24be8a70a444b0de156c18cebb3","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-membership-copy.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f4b816b208a518c69a6b563036699858c3828184","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br13-formal.manifest.json."}
