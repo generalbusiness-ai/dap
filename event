@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f671057ce33452f0e38376f85e8cae58abc659e9","text":"Merge retired a covered predecessor; the successor is at apps/room/page/assets.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f7fc839a1221a639a09769921e1b0fb2cd2a133f","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/read-token-quota.ts."}
