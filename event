@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d834e241d31c895c1c6aa77cc7e61268f957f796","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-09-br13-version-questions.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:da4315f22336ebcfd6857f7e87aea9501a6abb0d","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/act-admission.ts."}
