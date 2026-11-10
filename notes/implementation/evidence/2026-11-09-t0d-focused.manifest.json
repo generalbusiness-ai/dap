@@ -1,0 +1,76 @@
+{
+  "qualification": "Independent metadata-only audit; no compiler, test, browser, application import or build ran. Earlier failed attempt remains failed at its own exact source. Native and projection witnesses do not claim a real DOM interaction. Value-print comparison and final gate remain separate owed evidence.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-audit",
+  "checkpoint": {
+    "commit": "8292fe9a141572e73a5ec2413b61954c8f6a754d",
+    "tree": "b60ec36360ab69607cd6972803e51eb45b3d38c8"
+  },
+  "fileCount": 6,
+  "sha256Sums": "ccc905734089d71a323005bc9fa0277eed567f4ed02e37d19a6f8f1c90af1844",
+  "files": [
+    {
+      "path": "case-identities.json",
+      "bytes": 1077,
+      "sha256": "2961c73b868fa941855d3f696afffd23b7b9de53a7174f43ae4fd8ca08ff08b2"
+    },
+    {
+      "path": "focus-reconciliation.json",
+      "bytes": 2322,
+      "sha256": "72f9048a4abdecd217b7aa22547820881bbcee16c4ccfcd66545d8607cafecf4"
+    },
+    {
+      "path": "frozen-inputs.json",
+      "bytes": 788551,
+      "sha256": "a771f4cc7ff10e199bd547b7e5539b95106a1276aa42a2b1ee2ae1d69a582ba7"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 12045,
+      "sha256": "5e946569f4af2d61da2ed0b9eb1c51ade854fe32ab24642b29248a9416f42ae9"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 610,
+      "sha256": "36eba0240102d348264067b09be31239a58a43596b13e75e0e0922e0f4675cb6"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused",
+      "payloadFileCount": 21,
+      "fileCount": 22,
+      "payloadBytes": 2229257,
+      "sha256Sums": "49e90d326d3baf059de047d51ad379e7795c315fa210b79c30f9b5bec7b548e3",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 2235,
+      "sha256Sums": "47a23ae684364c2f5338057c41f4ccbfe3155b023103f7a5f7af93052697e72b",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    }
+  ],
+  "withheldOutputs": [
+    {
+      "name": "plain:context-00",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/examples/lending/tsconfig.json"
+      ],
+      "exitCode": 1,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused/pipeline/context-00.log",
+      "bytes": 829,
+      "sha256": "7e51d3e98a309d6d5ac3b6c6fd9ecd06b5db8dd70dc376cab82cf0717b1bec67"
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}
