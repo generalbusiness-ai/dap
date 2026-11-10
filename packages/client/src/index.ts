@@ -53,3 +53,6 @@ export * from "./application-trust.ts";
 export * from "./commons.ts";
 
 export * from "./expected.ts";
+
+export * from "./describe.ts";
+export type { MarkCatalogue } from "./mark-descriptions.ts";

@@ -20,6 +20,8 @@ test("the browser package boundary retains all eleven page exports without the C
   });
   const inputs = Object.keys(bundled.metafile.inputs).map(path => resolve(root, path));
   expect(inputs).toContain(resolve(root, "src/browser.ts"));
+  expect(inputs).toContain(resolve(root, "../client/src/describe.ts"));
+  expect(inputs.some(path => path.includes("/packages/mcp/"))).toBe(false);
   for (const name of ["commands.ts", "line.ts", "main.ts", "files.ts", "source.ts", "scope-index-command.ts", "scope-index-applications-command.ts"]) {
     expect(inputs, `Runtime input closure must exclude ${name}`).not.toContain(resolve(root, "src", name));
   }

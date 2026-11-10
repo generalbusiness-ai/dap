@@ -1,0 +1,187 @@
+{
+  "qualification": "Safe metadata summary of the actual authorized B history copy and independent full-graph audit. Complete source proof and initial refusal stay in a separate owner-only archive. Every original remains unchanged.",
+  "checkpoint": "3cf87cb5e409bbde6f7480493afd91d2d9b728f2",
+  "oldCheckpoint": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
+  "tree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-history-proof/unit",
+  "fileCount": 5,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 328,
+      "sha256": "1aa7c4821b1ac9bfc258baa8c5334a3f3a80ccc16ed53921ff087a969d9d6af4",
+      "mode": "0400"
+    },
+    {
+      "path": "index.json",
+      "bytes": 589,
+      "sha256": "91256ae4889f7c23b18e513cb0f7ad36f743d5615386b117d3407bc41d88ec27",
+      "mode": "0400"
+    },
+    {
+      "path": "setup-history.json",
+      "bytes": 613,
+      "sha256": "b4985734c6366eccd1ef6ddee1f5825bfddd38126c55f08956b3ca881d2d7984",
+      "mode": "0400"
+    },
+    {
+      "path": "source-bindings.json",
+      "bytes": 4106,
+      "sha256": "1802bf4447a8131254f5545326a34030a5fe6470d2161572bc2ea616a5decec6",
+      "mode": "0400"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 2231,
+      "sha256": "24d32430c00522e0aa2d315ac6a7e38c9c0d175b71e7d9c53eeeffa2135a0780",
+      "mode": "0400"
+    }
+  ],
+  "directoryMode": "0500",
+  "fileMode": "0400",
+  "privateArchive": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-history-proof-raw-private",
+    "fileCount": 21,
+    "files": [
+      {
+        "path": "SHA256SUMS",
+        "bytes": 1812,
+        "sha256": "449663cf7be4a2d4aea2b43533c17a292e1b18725eea96b50d2ee23a4b29b941",
+        "mode": "0400"
+      },
+      {
+        "path": "independent/auditor.py",
+        "bytes": 10557,
+        "sha256": "5ba634f7510ca90d63351129f61d03c6f509b5664ff9efd80b19e0248fe012e0",
+        "mode": "0400"
+      },
+      {
+        "path": "independent/before-snapshot.json",
+        "bytes": 1322,
+        "sha256": "58b05331f567e97456882e1f6a73f407b62d7ae47039e236326dd8ee48208a0a",
+        "mode": "0400"
+      },
+      {
+        "path": "independent/report.json",
+        "bytes": 1147814,
+        "sha256": "af03019698e40a1a967e82aa8f36b1cfbd9243f8ced905d14c065878e7701ea4",
+        "mode": "0400"
+      },
+      {
+        "path": "index.json",
+        "bytes": 3527,
+        "sha256": "00d50d33aedc342681ab454cc66b842c4d032fa885af06f0f2c27eaa796a968e",
+        "mode": "0400"
+      },
+      {
+        "path": "preparation/root-observed-tool-receipts.json",
+        "bytes": 1769,
+        "sha256": "220ec45205178498cc9577c0e1caaba1de84ae56aa223734e3d698fcacd20aa1",
+        "mode": "0400"
+      },
+      {
+        "path": "preparation/root-raw-metadata.json",
+        "bytes": 3877,
+        "sha256": "f34c9c93c1ea04edcd3c63e7798a8d877c861ffb3951350486055c0be0583657",
+        "mode": "0400"
+      },
+      {
+        "path": "preparation/ruling.event.json",
+        "bytes": 2094,
+        "sha256": "4dd8268b468667da39cfa7295301dcedcc4b857a6be89e8502990a1203bf20e1",
+        "mode": "0400"
+      },
+      {
+        "path": "preparation/setup-refusal.json",
+        "bytes": 568,
+        "sha256": "14650178ce81f6d50100b0de0e7572d3c663033c042ccb319eb43c558a49697b",
+        "mode": "0400"
+      },
+      {
+        "path": "preparation/v1-plan.json",
+        "bytes": 18339,
+        "sha256": "9de17965debd9527e0cd50cf21f30974b1bc4bc0a163be57982534f711401662",
+        "mode": "0400"
+      },
+      {
+        "path": "preparation/v1-script.py",
+        "bytes": 14697,
+        "sha256": "95a99b2157b26441609a127f8c9dc29857d269159cdac3c7e1d2e834d081c2ef",
+        "mode": "0400"
+      },
+      {
+        "path": "preparation/v2-plan.json",
+        "bytes": 18339,
+        "sha256": "15063a047a36619796243466938d426adca72cb1d3478896b957181ea9bd7735",
+        "mode": "0400"
+      },
+      {
+        "path": "preparation/v2-script.py",
+        "bytes": 14697,
+        "sha256": "72c2f0f58eaab1d9073b87e0932a5034c6e4da66d0faacbe4341f10cf5a661e6",
+        "mode": "0400"
+      },
+      {
+        "path": "rebuild/after.json",
+        "bytes": 776647,
+        "sha256": "f82054e09a72bd71a50198f1342d56bdc9bc0c16cd01836c90c900bbe969fcb8",
+        "mode": "0400"
+      },
+      {
+        "path": "rebuild/before.json",
+        "bytes": 776647,
+        "sha256": "f82054e09a72bd71a50198f1342d56bdc9bc0c16cd01836c90c900bbe969fcb8",
+        "mode": "0400"
+      },
+      {
+        "path": "rebuild/plan.json",
+        "bytes": 18339,
+        "sha256": "15063a047a36619796243466938d426adca72cb1d3478896b957181ea9bd7735",
+        "mode": "0400"
+      },
+      {
+        "path": "rebuild/ref-transaction.json",
+        "bytes": 179,
+        "sha256": "81f225d5210bdadbc0840113c076e5340e8abdf2c3aa31b0311b826acb16aa03",
+        "mode": "0400"
+      },
+      {
+        "path": "rebuild/result.json",
+        "bytes": 2245,
+        "sha256": "9f2f2ba1b8b00de8b9a8438f4447bb110ce2a707952e488a0f6765eb166a7964",
+        "mode": "0400"
+      },
+      {
+        "path": "rebuild/script.py",
+        "bytes": 14697,
+        "sha256": "72c2f0f58eaab1d9073b87e0932a5034c6e4da66d0faacbe4341f10cf5a661e6",
+        "mode": "0400"
+      },
+      {
+        "path": "sealer/inputs.json",
+        "bytes": 5442,
+        "sha256": "6d48032690730c3af1349adc728edae0f8307e4765123591e5dea927fef36885",
+        "mode": "0400"
+      },
+      {
+        "path": "sealer/sealer.py",
+        "bytes": 10271,
+        "sha256": "6733666d2eee6d192e917d891c9304348fdd40525cbcadad269b0a16679e6ff2",
+        "mode": "0400"
+      }
+    ],
+    "directoryMode": "0500",
+    "fileMode": "0400",
+    "retention": {
+      "retainThroughAtLeast": "2026-12-10",
+      "atLeastDaysAfterLanding": 30,
+      "removalRequires": "recorded planner act naming the adopted manifest"
+    }
+  },
+  "originalFilesUnchanged": true,
+  "sealer": {
+    "sha256": "6733666d2eee6d192e917d891c9304348fdd40525cbcadad269b0a16679e6ff2",
+    "inputsSHA256": "6d48032690730c3af1349adc728edae0f8307e4765123591e5dea927fef36885"
+  },
+  "validationBodiesRunBySealer": 0
+}

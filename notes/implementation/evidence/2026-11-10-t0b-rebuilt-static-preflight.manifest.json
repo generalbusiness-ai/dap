@@ -1,0 +1,64 @@
+{
+  "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
+  "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-rebuilt-static-preflight-audit/unit",
+  "sourceHead": "3cf87cb5e409bbde6f7480493afd91d2d9b728f2",
+  "sourceTree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
+  "booking": "5788eebe76dc5fb667cff163849e072e9b3e9b88",
+  "end": "73a68ba518496dbcc1101b2d868934af07ff72c1",
+  "qualification": "Independent metadata audit of the actual rebuilt-branch static preflight. All three child exits, inner exit, outer actual-driver exit and launcher exit read 0. No executable validation body repeated.",
+  "readonlyScope": "New public files 0444 and directories 0555; complete separate private archive files 0400 and directories 0500 through at least 2026-12-10. Original inner and outer runs remain untouched.",
+  "files": [
+    {
+      "path": "actual-exits.json",
+      "bytes": 856,
+      "sha256": "4f29bafcef66de2a544412a5e481c45085c11325ff98eba18a0e9a7dbb371be5"
+    },
+    {
+      "path": "custody.json",
+      "bytes": 668,
+      "sha256": "98fa906300c1d8ca2ba8b42af230837b67c5db33fd938af44608131bbbf3ce81"
+    },
+    {
+      "path": "source-tool-fences.json",
+      "bytes": 1080,
+      "sha256": "6b385bec8a59ce9836d80286749e19c244829a022f17874f65e9c3455a994907"
+    },
+    {
+      "path": "steps.json",
+      "bytes": 1626,
+      "sha256": "edbf43c2c686c4a8ec2765344781ab86735af88a77d4b0b86983c110e00e4e75"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 920,
+      "sha256": "a368f77068dced49bbe3787e6c0e07f420de799cb39944f9e48a379ba2e1832e"
+    }
+  ],
+  "privateArchive": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-rebuilt-static-preflight-audit/private-archive",
+    "archiveIndexSha256": "b0ff69848310ba1afb5a250ebbd624e373e1e944bb5dc26c439ebe319496fd07",
+    "rawInnerFiles": 135,
+    "rawOuterFiles": 9,
+    "retentionThrough": "2026-12-10"
+  },
+  "outcome": {
+    "sourceHead": "3cf87cb5e409bbde6f7480493afd91d2d9b728f2",
+    "sourceTree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
+    "booking": "5788eebe76dc5fb667cff163849e072e9b3e9b88",
+    "end": "73a68ba518496dbcc1101b2d868934af07ff72c1",
+    "staticCommandsPassed": 3,
+    "actualExitFilesReadZero": 6,
+    "commitMessagesChecked": 15,
+    "commitMessagesFlagged": 0,
+    "formatter": "All matched files use Prettier code style",
+    "innerElapsedSeconds": 11.416213458993298,
+    "outerElapsedSeconds": 12.971013792004669,
+    "sourcePathsFixed": 4521,
+    "toolPinsFixed": 7534,
+    "inputPinsFixed": 22,
+    "oldBranchPreservedAt90c7": true,
+    "cleanupEmpty": true,
+    "qualification": "One actual three-command static preflight. Inner and outer times measure different boundaries. No compiler, test, application, parser, capture, control, build, full gate or repeat ran during this audit. These results make no full-gate or acceptance claim."
+  }
+}

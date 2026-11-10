@@ -371,7 +371,10 @@ const pendingR8Seals = {
   "packages/cli/src/command-repository.ts": namedOwners["packages/cli/src/command-repository.ts"],
   "packages/cli/src/command-change.ts": namedOwners["packages/cli/src/command-change.ts"],
   "packages/cli/src/command-issues.ts": namedOwners["packages/cli/src/command-issues.ts"],
-  "packages/cli/src/browser-helpers.ts": "68ab88a1ad9dde8d4c1f9bc86c200b4ffdea277eb0c6a88c92ce56f64f42cfd3", // Forward the shared expected derivation; description and value helpers retain their reviewed behavior.
+  "packages/cli/src/browser-helpers.ts": "725e0e4135e419f89391d8bb69abe8a3a6263759f3a67142ef516a07471e5b20", // Shared declaration line and expected forwards; actual maintained parser output.
+  "packages/client/src/describe.ts": "1583520baf30f89bf0059b63fdc6022bf704e25a5394b09a2861f7dc2b809cbd", // Moved portable full/compact declaration and schema derivations; actual maintained parser output.
+  "packages/client/src/mark-descriptions.ts": "7e22b5140e2a808e091b02d80acaa439f3d57d8c323a2480bfb994db9c063664", // Moved platform mark descriptions, own-property fallbacks and refusal names; actual maintained parser output.
+  "packages/mcp/src/description-context.ts": "d249472e0f84ef0984c884685d85ba287a9bc35f1fce6800874b896eac138a41", // Private native-to-plain catalogue binding; actual maintained parser output.
   "packages/client/src/expected.ts": "adf24f343ed1becd2138638d092663a78ffadce6b11435ddb531995fbbadba8b", // Moved prototype-safe expected/via subject resolution; actual maintained parser output.
   "packages/cli/src/claim.ts": "ea9e90d5e2d6f65a621b351d53e96bddc8f11cacb7113ecc0305bfba0b95233b", // Remove the retired v1 offer field; current founding, routes and Native authority stay fixed.
   "packages/cli/src/command-support.ts": "53798996a3c1c0b8591d09c4b575b4fcf3859125c7dfd5d010be795d90eeb036", // Moved shared read, session and signing support; actual maintained parser output.
