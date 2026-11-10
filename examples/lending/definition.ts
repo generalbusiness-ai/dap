@@ -1,505 +1,72 @@
-/** The lending library of notes/2026-10-13-lending-library.md, using existing declaration forms only. */
-import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
+/** The lending library authored with typed helpers. The JSON file and pin remain the byte witness. */
+import type { DeclaredDefinition, Operand } from "@generalbusiness/dap-contract";
+import { by, define, normalize, equals, final, grants, item, live, member, none, one, open, party, ref, required, rule, scope, signer, tell, text, transition, value, type ItemDef, type Of } from "@generalbusiness/dap-define";
 
-export const lending: DeclaredDefinition = {
-  "format": "artroom-definition-1",
-  "name": "lending",
-  "profile": {
-    "name": "restricted",
-    "version": 1
-  },
-  "capabilities": [],
-  "genesis": "establish",
-  "items": {
-    "library": {
-      "many": false,
-      "max": 1,
-      "states": {
-        "open": {
-          "final": false
-        }
-      },
-      "initial": "open",
-      "parties": {
-        "founder": {
-          "fixed": true,
-          "required": true,
-          "list": false,
-          "author": false
-        }
-      },
-      "refs": {
-        "destination": {
-          "fixed": true,
-          "required": true,
-          "to": {
-            "type": "scope",
-            "kind": "destination"
-          }
-        }
-      },
-      "values": {}
-    },
-    "thing": {
-      "many": true,
-      "max": 64,
-      "states": {
-        "available": {
-          "final": false
-        },
-        "lent": {
-          "final": false
-        },
-        "gone": {
-          "final": true
-        }
-      },
-      "initial": "available",
-      "parties": {
-        "donor": {
-          "fixed": true,
-          "required": true,
-          "list": false,
-          "author": false
-        },
-        "borrower": {
-          "fixed": false,
-          "required": false,
-          "list": false,
-          "author": false
-        }
-      },
-      "refs": {},
-      "values": {
-        "name": {
-          "fixed": true,
-          "required": true,
-          "of": {
-            "type": "text",
-            "max": 80
-          }
-        },
-        "description": {
-          "fixed": true,
-          "required": true,
-          "of": {
-            "type": "text",
-            "max": 1000
-          }
-        },
-        "reason": {
-          "fixed": false,
-          "required": false,
-          "of": {
-            "type": "text",
-            "max": 280
-          }
-        },
-        "page": {
-          "fixed": true,
-          "required": true,
-          "of": {
-            "type": "text",
-            "max": 1024
-          }
-        }
-      }
-    }
-  },
-  "acts": {
-    "establish": {
-      "step": "open",
-      "on": "library",
-      "grant": "lending.establish",
-      "also": {},
-      "fields": {
-        "opener": {
-          "type": "member",
-          "required": true
-        },
-        "destination": {
-          "type": "scope",
-          "kind": "destination",
-          "required": true
-        }
-      },
-      "guards": [],
-      "effects": [
-        {
-          "party": {
-            "slot": "founder",
-            "from": {
-              "field": "opener"
-            }
-          }
-        },
-        {
-          "ref": {
-            "slot": "destination",
-            "from": {
-              "field": "destination"
-            }
-          }
-        }
-      ],
-      "sends": [],
-      "attention": []
-    },
-    "donate": {
-      "step": "open",
-      "on": "thing",
-      "grant": "lending.member",
-      "also": {
-        "library": {
-          "item": "library",
-          "one": true
-        }
-      },
-      "fields": {
-        "name": {
-          "type": "text",
-          "max": 80,
-          "required": true
-        },
-        "description": {
-          "type": "text",
-          "max": 1000,
-          "required": true
-        },
-        "content": {
-          "type": "text",
-          "max": 4096,
-          "required": true
-        },
-        "page": {
-          "type": "text",
-          "max": 1024,
-          "required": true
-        }
-      },
-      "guards": [
-        {
-          "rule": "shelf-page"
-        },
-        {
-          "none": {
-            "type": "thing",
-            "states": [
-              "available",
-              "lent",
-              "gone"
-            ],
-            "where": [
-              {
-                "equals": {
-                  "a": {
-                    "slot": "page"
-                  },
-                  "b": {
-                    "field": "page"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "effects": [
-        {
-          "party": {
-            "slot": "donor",
-            "from": {
-              "signer": true
-            }
-          }
-        },
-        {
-          "value": {
-            "slot": "name",
-            "from": {
-              "field": "name"
-            }
-          }
-        },
-        {
-          "value": {
-            "slot": "description",
-            "from": {
-              "field": "description"
-            }
-          }
-        },
-        {
-          "value": {
-            "slot": "page",
-            "from": {
-              "field": "page"
-            }
-          }
-        }
-      ],
-      "sends": [
-        {
-          "tell": {
-            "to": {
-              "slot": "destination",
-              "of": "also.library"
-            },
-            "message": "publish-file",
-            "fields": {
-              "path": {
-                "field": "page"
-              },
-              "content": {
-                "field": "content"
-              }
-            },
-            "result": { "refused": [], "undelivered": [] }
-          }
-        }
-      ],
-      "attention": []
-    },
-    "borrow": {
-      "step": "transition",
-      "on": "thing",
-      "grant": "lending.member",
-      "also": {
-        "library": {
-          "item": "library",
-          "one": true
-        }
-      },
-      "fields": {
-        "content": {
-          "type": "text",
-          "max": 4096,
-          "required": true
-        }
-      },
-      "guards": [
-        {
-          "state": [
-            "available"
-          ]
-        }
-      ],
-      "effects": [
-        {
-          "state": "lent"
-        },
-        {
-          "party": {
-            "slot": "borrower",
-            "from": {
-              "signer": true
-            }
-          }
-        }
-      ],
-      "sends": [
-        {
-          "tell": {
-            "to": {
-              "slot": "destination",
-              "of": "also.library"
-            },
-            "message": "publish-file",
-            "fields": {
-              "path": {
-                "slot": "page"
-              },
-              "content": {
-                "field": "content"
-              }
-            },
-            "result": { "refused": [], "undelivered": [] }
-          }
-        }
-      ],
-      "attention": []
-    },
-    "return": {
-      "step": "transition",
-      "on": "thing",
-      "grant": "lending.member",
-      "also": {
-        "library": {
-          "item": "library",
-          "one": true
-        }
-      },
-      "fields": {
-        "content": {
-          "type": "text",
-          "max": 4096,
-          "required": true
-        }
-      },
-      "guards": [
-        {
-          "state": [
-            "lent"
-          ]
-        }
-      ],
-      "effects": [
-        {
-          "state": "available"
-        },
-        {
-          "party": {
-            "slot": "borrower",
-            "from": null
-          }
-        }
-      ],
-      "sends": [
-        {
-          "tell": {
-            "to": {
-              "slot": "destination",
-              "of": "also.library"
-            },
-            "message": "publish-file",
-            "fields": {
-              "path": {
-                "slot": "page"
-              },
-              "content": {
-                "field": "content"
-              }
-            },
-            "result": { "refused": [], "undelivered": [] }
-          }
-        }
-      ],
-      "attention": []
-    },
-    "cancel": {
-      "step": "transition",
-      "on": "thing",
-      "grant": "lending.staff",
-      "also": {
-        "library": {
-          "item": "library",
-          "one": true
-        }
-      },
-      "fields": {
-        "reason": {
-          "type": "text",
-          "max": 280,
-          "required": true
-        },
-        "content": {
-          "type": "text",
-          "max": 4096,
-          "required": true
-        }
-      },
-      "guards": [
-        {
-          "state": [
-            "available",
-            "lent"
-          ]
-        }
-      ],
-      "effects": [
-        {
-          "state": "gone"
-        },
-        {
-          "value": {
-            "slot": "reason",
-            "from": {
-              "field": "reason"
-            }
-          }
-        },
-        {
-          "party": {
-            "slot": "borrower",
-            "from": null
-          }
-        }
-      ],
-      "sends": [
-        {
-          "tell": {
-            "to": {
-              "slot": "destination",
-              "of": "also.library"
-            },
-            "message": "publish-file",
-            "fields": {
-              "path": {
-                "slot": "page"
-              },
-              "content": {
-                "field": "content"
-              }
-            },
-            "result": { "refused": [], "undelivered": [] }
-          }
-        }
-      ],
-      "attention": []
-    },
-    "publish": {
-      "step": "transition",
-      "on": "library",
-      "grant": "lending.member",
-      "also": {
-        "thing": {
-          "item": "thing",
-          "by": "thing"
-        }
-      },
-      "fields": {
-        "thing": {
-          "type": "item",
-          "of": "thing",
-          "required": true
-        },
-        "content": {
-          "type": "text",
-          "max": 4096,
-          "required": true
-        }
-      },
-      "guards": [],
-      "effects": [],
-      "sends": [
-        {
-          "tell": {
-            "to": {
-              "slot": "destination"
-            },
-            "message": "publish-file",
-            "fields": {
-              "path": {
-                "slot": "page",
-                "of": "also.thing"
-              },
-              "content": {
-                "field": "content"
-              }
-            },
-            "result": { "refused": [], "undelivered": [] }
-          }
-        }
-      ],
-      "attention": []
-    }
-  },
-  "receives": {},
-  "timed": {},
-  "rules": {
-    "shelf-page": "$substring(fields.page, 0, 6) = \"shelf/\" and $substring(fields.page, -3) = \".md\" and $not($contains(fields.page, \"..\"))"
-  }
-};
+export const lendingGrants = grants({ establish: "lending.establish", member: "lending.member", staff: "lending.staff" });
+
+export const library = item("library", {
+  initial: "open", states: { open: live },
+  parties: { founder: party.fixed },
+  refs: { destination: ref.fixed(scope("destination")) },
+});
+export const thing = item("thing", {
+  many: 64,
+  initial: "available", states: { available: live, lent: live, gone: final },
+  parties: { donor: party.fixed, borrower: party.optional },
+  values: { name: value.fixed(text(80)), description: value.fixed(text(1000)), reason: value.optional(text(280)), page: value.fixed(text(1024)) },
+});
+
+// ---------------------------------------------------------------- combinators
+
+/** No item, live or final, holds `given` in `slot`. */
+export const unique = <I extends ItemDef>(of: I, slot: Parameters<Of<I>["slot"]>[0], given: Operand) =>
+  none(of, undefined, (it) => [equals(it.slot(slot), given)]);
+/** Publish `content` at `path` through a destination. The result clauses change nothing; the journal keeps the answer. */
+export const publishes = (destination: Operand, path: Operand, content: Operand) =>
+  tell({ to: destination, message: "publish-file", fields: { path, content }, result: { refused: [], undelivered: [] } });
+export const content = { content: required(text(4096)) };
+
+/** Circulation takes its subjects and permissions from the definition. */
+function circulation(libraryItem: typeof library, thingItem: typeof thing, permits: typeof lendingGrants) {
+  const inLibrary = { library: one(libraryItem) };
+  return {
+    establish: open(libraryItem, permits.establish, { fields: { opener: required(member), destination: required(scope("destination")) } }, ({ f, on }) => ({
+      effects: [on.party("founder", f.opener), on.ref("destination", f.destination)],
+    })),
+    donate: open(thingItem, permits.member, { also: inLibrary, fields: { name: required(text(80)), description: required(text(1000)), ...content, page: required(text(1024)) } }, ({ f, on, also }) => ({
+      guards: [rule("shelf-page", '$substring(fields.page, 0, 6) = "shelf/" and $substring(fields.page, -3) = ".md" and $not($contains(fields.page, ".."))'), unique(thingItem, "page", f.page)],
+      effects: [on.party("donor", signer), ...on.take(f, "name", "description", "page")],
+      sends: [publishes(also.library.slot("destination"), f.page, f.content)],
+    })),
+    borrow: transition(thingItem, permits.member, { also: inLibrary, fields: content }, ({ f, on, also }) => ({
+      guards: [on.in("available")],
+      effects: [on.to("lent"), on.party("borrower", signer)],
+      sends: [publishes(also.library.slot("destination"), on.slot("page"), f.content)],
+    })),
+    return: transition(thingItem, permits.member, { also: inLibrary, fields: content }, ({ f, on, also }) => ({
+      guards: [on.in("lent")],
+      effects: [on.to("available"), on.party("borrower", null)],
+      sends: [publishes(also.library.slot("destination"), on.slot("page"), f.content)],
+    })),
+    cancel: transition(thingItem, permits.staff, { also: inLibrary, fields: { reason: required(text(280)), ...content } }, ({ f, on, also }) => ({
+      guards: [on.in("available", "lent")],
+      effects: [on.to("gone"), on.value("reason", f.reason), on.party("borrower", null)],
+      sends: [publishes(also.library.slot("destination"), on.slot("page"), f.content)],
+    })),
+    // by(thingItem) also declares the required thing input field.
+    publish: transition(libraryItem, permits.member, { also: { thing: by(thingItem) }, fields: content }, ({ f, on, also }) => ({
+      sends: [publishes(on.slot("destination"), also.thing.slot("page"), f.content)],
+    })),
+  };
+}
+
+export const lendingSource = define({
+  name: "lending", genesis: "establish", grants: lendingGrants,
+  items: [library, thing], acts: circulation(library, thing, lendingGrants),
+});
+
+/** Canonical declaration data consumed by the application. */
+export const lending = normalize(lendingSource);
 
 /** No create sends: the complete declared closure is this definition alone. */
 export const lendingClosure: readonly DeclaredDefinition[] = [lending];

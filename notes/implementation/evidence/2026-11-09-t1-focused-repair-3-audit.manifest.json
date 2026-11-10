@@ -1,0 +1,353 @@
+{
+  "qualification": "Independent metadata-only reconciliation of the repaired A/main-merged focus. Earlier failed attempts and 9f9 control remain separately sealed at their actual checkpoints. No compiler, test, control, build, generator or app import ran in this audit.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-repair-3-audit",
+  "checkpoint": {
+    "commit": "8ae77528f483dee4fe76b022d3a1fa6cd8352a20",
+    "tree": "e41c12fb3e2b1d7e74220a62e5cc50593258e1ad"
+  },
+  "fileCount": 6,
+  "sha256Sums": "14c3d5a541d112af4c252121f8c4d1851ab25011248afcf37a929cb7911f7224",
+  "files": [
+    {
+      "path": "audit-report.json",
+      "bytes": 26173,
+      "sha256": "2d1ff0bb4de78b537a001960184661c45a289fb06dd50185c37593bede48e90b"
+    },
+    {
+      "path": "case-identities.json",
+      "bytes": 8284,
+      "sha256": "84010092b87124a4f7d402b7e8fb8ab7f6d5966af52a8b029e472b035620f107"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 582,
+      "sha256": "55f09f1974f9ef5b62b367e8fe20559a75143f2c5c460dfc79e9117d1d63c713"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-repair-3",
+      "payloadFileCount": 208,
+      "fileCount": 209,
+      "payloadBytes": 2865410,
+      "sha256Sums": "60e22f0685bf95361f26062115af106e9a3c703d2f7af0f666523b19c3bba371",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-repair-3-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 1952,
+      "sha256Sums": "3639b475b9738567ae2a6ac0b4aa67404ae693033f919436d6dee3c7d1b7f5db",
+      "ownerPrivate": true
+    }
+  ],
+  "priorAudits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-pre-gate-audit",
+      "sha256Sums": "057944d39ca155e29a26a9b71809752527340d0a2e2020b65617e323232ca5fe"
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-control-audit",
+      "sha256Sums": "9b6da1f720b0cc3b6ce70d4d723f6401ab3178e83a1d03e8207143a481de5d50"
+    }
+  ],
+  "limits": [
+    "Full C gate UNRUN.",
+    "Compiled SDK output check and publication UNRUN under planner 0a797a2e; no private capture accessed."
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  },
+  "withheldOutputs": [
+    {
+      "check": "repair3/context-00",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 0,
+      "bytes": 29,
+      "sha256": "332fe85afe83640c97b3128ca6eec72cf8b93bad3c381445e99cf3fea72cf613",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-01",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 1,
+      "bytes": 29,
+      "sha256": "42caae702ff848d01bcda5ef5093507df9e91e01602d959b469d0539f60b17b4",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-02",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 2,
+      "bytes": 29,
+      "sha256": "d88f47dc3a82e888940b9bfcd185ddc723d7b7582537e6665111eae73a71bedd",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-03",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 3,
+      "bytes": 29,
+      "sha256": "d34a739655fc7a03b7bce03aa03e794fc46d9e1aaf4da58c1fbe850e0f130270",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-04",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 4,
+      "bytes": 29,
+      "sha256": "58fb9b14f1226c20cf72705da2be8ae85abcba4b7f0dc41289e487abb6ba9ad0",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-05",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 5,
+      "bytes": 29,
+      "sha256": "5d9f5dc26d3c743b0b2b363a8af105470fcb9c721a767b97abb55a11d32d9c09",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-06",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 6,
+      "bytes": 29,
+      "sha256": "3faed859d8c49968eaa17b29c303c6e233f2c1b06062485421dd7266bcc3abb4",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-07",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 7,
+      "bytes": 29,
+      "sha256": "de4ff1157fa6eca5157db2abfc1b238019f5234bf31bb3d1057dbd9877b79122",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-08",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 8,
+      "bytes": 29,
+      "sha256": "6fa757faf162e76ebdf929ebb5542c0fc8f9f1ba4108c0d2bd6712ac7ec72159",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-09",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 9,
+      "bytes": 29,
+      "sha256": "1931ab30a6855074ea3b49eb183a02bcb97d0006d907a212d2fa6b89794ff233",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-10",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 10,
+      "bytes": 29,
+      "sha256": "c70f1a66ee4954fe944adeee30db5cce2e2d1b3a28f322e782a708bf00e0196f",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-11",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 11,
+      "bytes": 29,
+      "sha256": "31247fa8ab85d55b283f8c83d63f407c54b9b6af1473fe56aec1a24f61b2c18e",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-12",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 12,
+      "bytes": 29,
+      "sha256": "118a84ca3a411fa60fc93afcf2262fdc358dae03e713afcaee359234f111af10",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-13",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 13,
+      "bytes": 29,
+      "sha256": "e8d10beccdfe11fd3c5baeda1fb398c8ef49d76d61fd32a5fcdd243e683cc2c8",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-14",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 14,
+      "bytes": 29,
+      "sha256": "4a23f0cbd4adc0ee945bd140cc6ffecc24e7c2dad9b7a707f06bf3587a4dc57c",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-15",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 15,
+      "bytes": 29,
+      "sha256": "1fca8cbeafba942a7283354425bea4a14182983e5c6fb35a3b0754124dd58c87",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-16",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 16,
+      "bytes": 29,
+      "sha256": "da776556ff7273cd1ef1c23c7b87e7b00bffa4358530a4cce058af4381e5a2fb",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-17",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 17,
+      "bytes": 29,
+      "sha256": "bc399655ccabf9badb7ea94b94a43b30eb2a3056a2a9ef21868fe02b6bf4a349",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-18",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 18,
+      "bytes": 29,
+      "sha256": "095ac494e24c989fa4fcfa7a67f8c9867bc12ce94eb06e4733e665a051e27f16",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-19",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 19,
+      "bytes": 29,
+      "sha256": "c81f3d4bb562039be8d950f40d85f7ec7971e6f7928b42b7ef1b801882c9ab18",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-20",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 20,
+      "bytes": 29,
+      "sha256": "d2e517fe34d6360916e0d8f260ac2e553f0865b7caad04a770a7b7e2e125058d",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-21",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 21,
+      "bytes": 29,
+      "sha256": "6dbb6c7367616d8a224b8332f23676f9c1d07adfc5af39e410e419f936ae0b79",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-22",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 22,
+      "bytes": 29,
+      "sha256": "6fa757faf162e76ebdf929ebb5542c0fc8f9f1ba4108c0d2bd6712ac7ec72159",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-23",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 23,
+      "bytes": 29,
+      "sha256": "8ac9a7c043b2ec2f42788197d472c931897a617a9fb4ef4fe865aea0184bf3be",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-24",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 24,
+      "bytes": 29,
+      "sha256": "eec7d48f0e5c4cd9f0026320de8dbc938c2a64ecd4fc99e25787d7f95fe1ddd7",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-25",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 25,
+      "bytes": 29,
+      "sha256": "e84d12c1d02a1cd428fdbba8ae84ea51726a913c1c8f7104bbca04932039c047",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-26",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 26,
+      "bytes": 29,
+      "sha256": "5aca95b0fe80fe4a08caa5c9c5c92fbb0f8102bb1656fabbd44d1ea52a7d9afc",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-27",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 27,
+      "bytes": 29,
+      "sha256": "2d2a6f4b1d8362aaea524bdc0014abc55abacaebe6825346e8c3240a37e73c6f",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-28",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 28,
+      "bytes": 29,
+      "sha256": "b68e7c383bcbf976a65d003f5d1290a691f7cfdb164f77eeda57b3b571da1080",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-29",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 29,
+      "bytes": 29,
+      "sha256": "e4cf7a5e30acd86845f1ae58754f0510ce666bb4388aab5bc0eba9188dfc289f",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-30",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 30,
+      "bytes": 29,
+      "sha256": "b2ac57be65736ca479689428a7ded78caa29c9cabfca5391bf578cf7ea2d5d2a",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-31",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 31,
+      "bytes": 29,
+      "sha256": "21c66be5b7a6228e3aa866fece93bba8d4040f5c28edad25d6580a78af3fa07e",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/context-32",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 32,
+      "bytes": 29,
+      "sha256": "1d39c794e70def078cb65f5bc298c7ffdfba8a29892551a516a9489d58bbbc5e",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/body",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 33,
+      "bytes": 4602,
+      "sha256": "9b7bea8393256455d45a056b6f3f9083be708d82034688b5e644187ede80f337",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/node",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 34,
+      "bytes": 1330,
+      "sha256": "b01fc0d482b1c05bb27762016b3b3c27b3a50eb3e3ac4e4a282de02e26a1bd20",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "repair3/pin-check",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 35,
+      "bytes": 162,
+      "sha256": "548c4e7e38b9da798685a82481eb0e6a21228ff2ecca60753efea1dbdb472544",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    }
+  ]
+}

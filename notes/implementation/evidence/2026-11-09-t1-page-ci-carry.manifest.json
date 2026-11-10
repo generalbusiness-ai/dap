@@ -1,0 +1,29 @@
+{
+  "qualification": "Actual Page browser run42731853327 succeeded at8178 with its job and every step completed successfully. Ten conservative source/import roots including both fixed Native recorders and Worker roots have no changed input through623944ab and exclude Define. This carries source-input equivalence, not a new run or a hosted deployment/live acceptance claim. No browser, build, recorder, test, application import or private capture ran during custody.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-page-ci-carry",
+  "checkpoint": "623944abbb3d7feba56e97958423d346bc8449d1",
+  "CIHead": "8178fe63dca58e27d720e723fc1d1b9776405ec5",
+  "fileCount": 4,
+  "sha256Sums": "a1db433fe1dc43326481d4287dd021af0ca870e3d990bfc5952f7b0edf335808",
+  "files": [
+    {
+      "path": "carry-qualification.json",
+      "bytes": 710,
+      "sha256": "daaa1b93b1a0b483858561e797ad48dfcd7f025e3ab0e4d3dd199f789def6171"
+    },
+    {
+      "path": "input-equivalence.json",
+      "bytes": 2170,
+      "sha256": "25a11bf4d7498af949984ce12cd68a5f0e0ea46de507e7d2c65adef673dd3b21"
+    },
+    {
+      "path": "page-ci-run.json",
+      "bytes": 2651,
+      "sha256": "ce872cbcec5d7c6673130259a4f39a3b96d27cdd538ee087fe5d0c2869b2b162"
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}

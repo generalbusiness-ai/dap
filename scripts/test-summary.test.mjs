@@ -14,11 +14,16 @@ test('timing reconciles actual identities, missing callbacks and concurrent dura
   const observations = [end,row,{...row,source:'final'},{...row,id:'b',file:'/b.test.ts',durationMs:12,source:'final'},
     {...row,id:'unknown-duration',durationMs:null,source:'final'},
     {version:1,runner:'vitest',phase:'plain',record:'module',source:'final',project:'bytes',file:'/a.test.ts',state:'passed',durationMs:0},
-    {version:1,runner:'vitest',phase:'plain',record:'module',source:'final',project:'bytes',file:'/b.test.ts',state:'failed',durationMs:null}];
+    {version:1,runner:'vitest',phase:'plain',record:'module',source:'final',project:'bytes',file:'/b.test.ts',state:'failed',durationMs:null},
+    {version:1,runner:'vitest',phase:'plain',record:'module',source:'final',project:'define',file:'/authoring.test.ts',state:'passed',durationMs:3}];
   const summary = summarize({stages,observations});
   assert.equal(summary.cases.length,3); assert.equal(summary.top.length,2); assert.equal(summary.top[1].durationMs,0);
   assert.equal(summary.projects.find(row=>row.project==='bytes').status,'partial');
   assert.equal(summary.projects.find(row=>row.project==='scope').status,'unreached');
+  assert.equal(summary.projects.length,20);
+  assert.deepEqual(summary.projects.find(row=>row.project==='define'),
+    {project:'define',phase:'plain',modules:1,durationMs:3,status:'observed'});
+  assert.match(formatSummary(summary),/Vitest define: observed; 1 observed modules; test-and-hook duration sum 3\.00 ms/);
   assert.match(formatSummary(summary),/not wall time or CPU/); assert.match(formatSummary(summary),/user unknown/);
   assert.equal(summarize({stages,observations:[end,row,{...row,source:'final',state:'failed'}]}).issues.length,1);
   assert.match(formatSummary(summarize({stages:[],observations:[]})),/No observed cases/);

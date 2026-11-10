@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { prepareRules, validateDefinition } from "../src/index.ts";
-import { ENGINE_FINGERPRINT, RULE_PROFILES, admit, evaluate, evaluateRules, probeResults, type RuleEvalError } from "../src/rule/index.ts";
+import { ENGINE_FINGERPRINT, RULE_PROFILES, admit, evaluate, evaluateRules, probeResults, ruleReferences, type RuleEvalError } from "../src/rule/index.ts";
 import { Scope, d, keys, on, ticket, ticketDefinition, type Actor } from "./fixtures-entry.ts";
 
 const { rita, una, vic } = keys;
@@ -36,9 +36,9 @@ describe("a rule guard (sections 5.2 and 6.5)", () => {
 });
 
 describe("the evaluator profile restricted@1", () => {
-  const refusal = (source: string) => {
+  const refusal = (source: string, check = admit) => {
     try {
-      admit(source);
+      check(source);
       return null;
     } catch (error) {
       return (error as RuleEvalError).code;
@@ -47,6 +47,12 @@ describe("the evaluator profile restricted@1", () => {
 
   test("the engine behaves as the pinned one; an expression can read no clock and nothing outside its input", async () => {
     expect(digestBytes(utf8(await probeResults()))).toBe(ENGINE_FINGERPRINT);
+    expect(ruleReferences('"fields.absent" = "subjects.on.values.absent"')).toEqual({ fields: [], values: [] });
+    expect(ruleReferences('fields.label = subjects.on.values.label and fields.label = $$.fields.label')).toEqual({ fields: ["label"], values: ["label"] });
+    expect(ruleReferences('fields.settings.values.limit = $$.subjects.on.values.limit')).toEqual({ fields: ["settings"], values: ["limit"] });
+    expect(ruleReferences('fields.settings.values.limit = 1')).toEqual({ fields: ["settings"], values: [] });
+    for (const source of ["$now()", "$outside", "("])
+      expect(refusal(source, ruleReferences)).toBe(refusal(source));
     expect(Object.fromEntries(["$now()", "$millis()", "$random()", '$eval("1")', "$outside", "function($x){$x}(1)", "**.a", "a.%.b", "signer != subjects.on"].map((s) => [s, refusal(s)]))).toEqual({
       "$now()": "unsupported_function", "$millis()": "unsupported_function", "$random()": "unsupported_function", '$eval("1")': "unsupported_function",
       "$outside": "unsupported_variable", "function($x){$x}(1)": "unsupported_function", "**.a": "unsupported_expression", "a.%.b": "unsupported_expression",

@@ -1,0 +1,277 @@
+{
+  "qualification": "Metadata-only audit of three actual C attempts; both failures remain failed. Thirteen compiler and 25 plain passes belong to 97b82970, selective Node 11/pin pass to 9f9dacf5; B integration awaits final gate. Raw fixture/payload files are withheld from the curated publication and remain owner-private.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-pre-gate-audit",
+  "checkpoint": {
+    "commit": "9f9dacf591df07195d78b147bd729ee781736a34",
+    "tree": "267261fc3921d63c0e0fd8d65f7f93ac7eb884e2"
+  },
+  "checkpoints": [
+    {
+      "attempt": "initial",
+      "commit": "98859d99144073836a806fc03a7ee19c43999f96",
+      "tree": "b9fd8982b421276f3aecaf71419d666f0c144b10",
+      "actualExit": 1
+    },
+    {
+      "attempt": "continuation1",
+      "commit": "97b82970f9fb1770d678a14873de4b9a8f134553",
+      "tree": "6ae16d91789f42793914af75dae58d31a591d5e3",
+      "actualExit": 1
+    },
+    {
+      "attempt": "selective2",
+      "commit": "9f9dacf591df07195d78b147bd729ee781736a34",
+      "tree": "267261fc3921d63c0e0fd8d65f7f93ac7eb884e2",
+      "actualExit": 0
+    }
+  ],
+  "fileCount": 12,
+  "sha256Sums": "057944d39ca155e29a26a9b71809752527340d0a2e2020b65617e323232ca5fe",
+  "files": [
+    {
+      "path": "audit-report.json",
+      "bytes": 23785,
+      "sha256": "c0496b23ceec122b69dd872886356625128290e06cad17b0f26351accfd2aed8"
+    },
+    {
+      "path": "case-identities.json",
+      "bytes": 28953,
+      "sha256": "d79e18452117266fa6967662d58a68cbbfce640479140a39279b70b9083a1832"
+    },
+    {
+      "path": "source-tool-dependency-audit.json",
+      "bytes": 56433,
+      "sha256": "046816a1508d29465ec0b094a79a906dbd106a9e855f5701e1ee43d48022513f"
+    },
+    {
+      "path": "check-results.json",
+      "bytes": 16230,
+      "sha256": "5f0745dfa6f3a9bff602d21bee3ae23517b8f544952ac9b72d3adc1f319a802f"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 1884,
+      "sha256": "52166c460d70c8f4717da25638ef82ee17797bb4243472feaf8a677c2f2dd51b"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused",
+      "payloadFileCount": 27,
+      "fileCount": 28,
+      "payloadBytes": 1347796,
+      "sha256Sums": "2f74bcf1bb515457bf2ab4182519463bb25e104881621057a2f7b95d992bcbab",
+      "indexBytes": 2290,
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 2265,
+      "sha256Sums": "154939c3f31ae51b8e620434d947f8c8dde6ad68eed90490d54d47926869685d",
+      "indexBytes": 724,
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-continuation-1",
+      "payloadFileCount": 42,
+      "fileCount": 43,
+      "payloadBytes": 1451025,
+      "sha256Sums": "4b529ec8d3bf5c0feee7176030c40f55ae7c9994be50c325c801481a4a15d81d",
+      "indexBytes": 3574,
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-continuation-1-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 2342,
+      "sha256Sums": "f62ddfb6e64d61117bf4309d27898fb3e2f889b2528e02c032ac6cc86a81fd5c",
+      "indexBytes": 724,
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-continuation-2",
+      "payloadFileCount": 162,
+      "fileCount": 163,
+      "payloadBytes": 2019445,
+      "sha256Sums": "d0d9ac05524e6415f61225d766bbf92ee6132457c5de7d8eb40d58ae93a6a248",
+      "indexBytes": 19169,
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-continuation-2-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 1850,
+      "sha256Sums": "c353a4cd5604558143657f7bb71f11e6afcc7331328bb1f3ca5835311782e543",
+      "indexBytes": 724,
+      "ownerPrivate": true
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming the adopted manifest"
+  },
+  "openLimits": [
+    "compile-refusal control UNRUN",
+    "full gate UNRUN",
+    "future A/main inheritance unresolved",
+    "compiled SDK output check and publication UNRUN under 0a797a2e"
+  ],
+  "withheldOutputs": [
+    {
+      "check": "initial/context-00",
+      "metadataFile": "check-results.json",
+      "metadataRow": 0,
+      "bytes": 496,
+      "sha256": "d2ba7dcbe27ec968597709ff2fe01797f8269e095f6eb8b2da8aba7f9cfa028f",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "initial/compatibility",
+      "metadataFile": "check-results.json",
+      "metadataRow": 1,
+      "bytes": 365,
+      "sha256": "3efd02ab3cdd635388a49ade8416450349f1cbb01749c1fb3b15bfbb5986e1d9",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-00",
+      "metadataFile": "check-results.json",
+      "metadataRow": 2,
+      "bytes": 29,
+      "sha256": "cc3900f6a9e89b927c3dc1c0479541579dd61cb2277efe262d0e02ea2a42bf70",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-01",
+      "metadataFile": "check-results.json",
+      "metadataRow": 3,
+      "bytes": 29,
+      "sha256": "42caae702ff848d01bcda5ef5093507df9e91e01602d959b469d0539f60b17b4",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-02",
+      "metadataFile": "check-results.json",
+      "metadataRow": 4,
+      "bytes": 29,
+      "sha256": "d1ab4e3fac6c22b80553fc6c4f1cbd98955364ea5635e7bab5df0bab3f4309d0",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-03",
+      "metadataFile": "check-results.json",
+      "metadataRow": 5,
+      "bytes": 29,
+      "sha256": "c1cea8fd27bb34832b11f9c20e2319a71b54e9138c7081f55c57ef34e7d235be",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-04",
+      "metadataFile": "check-results.json",
+      "metadataRow": 6,
+      "bytes": 29,
+      "sha256": "feedbb77e52ef6dead81978ec0aea678ed1584bc50cae174fed7cd6548ba866e",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-05",
+      "metadataFile": "check-results.json",
+      "metadataRow": 7,
+      "bytes": 29,
+      "sha256": "78fefe2c60a317942abe5a56d1dd59d9d48588a0b22a6dfd303e453b8cbe6adf",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-06",
+      "metadataFile": "check-results.json",
+      "metadataRow": 8,
+      "bytes": 29,
+      "sha256": "746c31fe28d533297bc0d7d39ce33ac747fa3ffd253f6bcd151625a7db59edd7",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-07",
+      "metadataFile": "check-results.json",
+      "metadataRow": 9,
+      "bytes": 29,
+      "sha256": "bb656faef693f36a5e3ca2fb6e682b15f35f6732eb2947d4b4bc99de02a1f551",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-08",
+      "metadataFile": "check-results.json",
+      "metadataRow": 10,
+      "bytes": 29,
+      "sha256": "b2ad68e8c12550e70d6a78a38881bcad8227f615e7b9916edd7f13988ead034f",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-09",
+      "metadataFile": "check-results.json",
+      "metadataRow": 11,
+      "bytes": 29,
+      "sha256": "3caa4a560442807336e3995a94fbaa7955a1971d678ab981b1fb26067537415a",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-10",
+      "metadataFile": "check-results.json",
+      "metadataRow": 12,
+      "bytes": 29,
+      "sha256": "a9facc2430debbbf024b7804f4c6758c80ab359a373316d7be6535d0c8934404",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-11",
+      "metadataFile": "check-results.json",
+      "metadataRow": 13,
+      "bytes": 29,
+      "sha256": "f26d1bfd916be5a6200ee88fbbf3cf1a79a00a793c21662dd21edf78d9c6aac0",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/context-12",
+      "metadataFile": "check-results.json",
+      "metadataRow": 14,
+      "bytes": 29,
+      "sha256": "6bb7b5392c8814a228b6a9e05917d816d9eff55319f49c27b9c5c191748d95ad",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/body",
+      "metadataFile": "check-results.json",
+      "metadataRow": 15,
+      "bytes": 3579,
+      "sha256": "9db6875aa4333c33193f259e7cfc053c9c413a9d7d0b1edfccb42f874f3bddcb",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "continuation1/node",
+      "metadataFile": "check-results.json",
+      "metadataRow": 16,
+      "bytes": 4452,
+      "sha256": "04ee033d896f679f14b74e454c14af0d8e417e9747cfa6bd36a9998c69844e2b",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "selective2/node",
+      "metadataFile": "check-results.json",
+      "metadataRow": 17,
+      "bytes": 3179,
+      "sha256": "276bd445ecfd60cb0ff84f7dd1c641c3eceb4cd1612ee7defc8aaa72dc0ae352",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "selective2/pin-check",
+      "metadataFile": "check-results.json",
+      "metadataRow": 18,
+      "bytes": 162,
+      "sha256": "548c4e7e38b9da798685a82481eb0e6a21228ff2ecca60753efea1dbdb472544",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    }
+  ]
+}
