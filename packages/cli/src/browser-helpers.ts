@@ -1,6 +1,7 @@
 /** Portable CLI views and codecs shared with the browser. */
 import type { FieldValue } from "@generalbusiness/dap-contract";
 import { unb64url } from "@generalbusiness/dap-bytes";
+import { grantAction } from "@generalbusiness/dap-client";
 import type { Role } from "@generalbusiness/dap-platform";
 import type { Config, Repository } from "./store.ts";
 
@@ -17,20 +18,8 @@ export interface ActShape {
 }
 export interface DefinitionShape { name: string; genesis: string; acts: Record<string, ActShape> }
 
-const typeName = (field: { type?: string; code?: string }): string => field.type === "code" || field.type === undefined ? `${field.code ?? "code"} (rule)` : field.type;
-const fieldsLine = (act: ActShape): string => Object.entries(act.fields).map(([name, field]) => `${name}${field.required ? "" : "?"}:${typeName(field)}`).join(" ") || "none";
-const grantName = (act: ActShape): string | null => (typeof act.grant === "string" ? act.grant : act.grant.grant ?? null);
-
-/**
- * One line about an act, from its declaration. The definition format has no
- * text that describes an act, so the line is made from what the declaration
- * states: its step, its item and what may sign it.
- */
-export function describe(kind: string, act: ActShape): string {
-  const what = act.step === "open" ? `opens a ${act.on}` : act.step === "transition" ? `moves a ${act.on}` : act.on === null ? "comments on no item" : `comments on a ${act.on}`;
-  const who = typeof act.grant === "string" ? `needs ${act.grant}` : `the rule ${act.grant.code} decides who may sign${act.grant.grant ? `, with ${act.grant.grant}` : ""}`;
-  return `${kind}: ${what}; ${who}. Fields: ${fieldsLine(act)}.`;
-}
+/** The CLI keeps its compact format; the client owns all declaration wording. */
+export { describeActLine as describe } from "@generalbusiness/dap-client";
 
 export { expectedOf } from "@generalbusiness/dap-client";
 
@@ -87,7 +76,7 @@ export function heldActs(shape: DefinitionShape, held: Standing | null): { acts:
   let hidden = 0;
   for (const [kind, act] of Object.entries(shape.acts)) {
     if (kind === shape.genesis) continue;
-    const action = grantName(act);
+    const action = grantAction(act);
     if (typeof act.grant !== "string" || (action !== null && held?.actions.includes(action))) acts.push([kind, act]);
     else hidden++;
   }
