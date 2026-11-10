@@ -182,8 +182,9 @@ The library's `borrow` act changes a `thing`, so its `step` is
 `transition`. The signer supplies no fields and needs `lending.member`.
 Its one guard requires the state `available`. Its effects move the thing
 to `lent` and make the signer its `borrower`. The counter's `say` act
-takes a field `n` and needs `counter.play`. Each of its guards names a
-refusal reason, such as `not-your-turn`. Its last effect moves the board
+takes a field `n` and needs `counter.play`. Its first guard requires the
+state `counting`. Each of the other three names a refusal reason, such as
+`not-your-turn`. Its last effect moves the board
 to `done` when `n` equals the board's `target`.
 
 Then write the handlers in `receives` and the timed rules in `timed`.

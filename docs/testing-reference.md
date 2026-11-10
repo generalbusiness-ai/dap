@@ -466,7 +466,7 @@ outside these paths reports `scope-scale` as `omitted-by-gate`, with unknown
 duration, rather than as a passed, skipped or missing test project. Observed
 scale modules that contradict an omission fail the summary.
 
-Planner ruling `ea2e17ab` leaves shared inputs off the trigger list:
+The trigger list leaves out these shared inputs:
 `fixtures-native.ts`, `test/worker.ts`, `test/outside.ts`, the room test
 support, `sqlite.ts` and the rest of derive. The
 [main scale workflow](../.github/workflows/scale-tests.yml) runs the complete
@@ -475,8 +475,8 @@ changes through those shared inputs. A review outside the listed paths
 therefore establishes no scale result. The unchanged witness bodies retain
 their earlier acceptance meanings.
 
-Planner ruling `38d61076` gives the slower main GitHub runner a deadline
-factor of three. Only the main scale workflow sets
+The main scale workflow gives the slower GitHub runner a deadline factor
+of three. Only the main scale workflow sets
 `ARTROOM_SCALE_DEADLINE_FACTOR=3`; the local and review gates leave it
 unset and retain the original deadlines. The factor changes each case's
 harness allowance, including the thirty-second measurement. It changes

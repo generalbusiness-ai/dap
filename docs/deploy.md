@@ -146,59 +146,6 @@ with its reader, parser and failure behavior. The order uses these:
 - `ALLOW_OPEN_CREATION`: local and test deployments only. Never set it on
   a hosted Worker.
 
-## Provision the Commons Worker
-
-`dap-commons` is a separate Worker at
-`https://dap-commons.inguz.workers.dev`, configured by
-[`apps/room/wrangler.commons.jsonc`](../apps/room/wrangler.commons.jsonc).
-It uses the same Artifacts host as `dap-demo` and its own namespace,
-`dap-commons`. The file pins Register 23, Directory 22, Membership 9,
-Rules 14, Destination 16, Inbox 1 and Commons 1. The CLI's default cohort
-stays the same, so planning and installing select `--cohort commons`.
-
-Run the pinned Wrangler from a scratch directory for each reviewed
-deployment:
-
-```sh
-DAP_REPO=/absolute/path/to/the-reviewed-checkout
-cd "$(mktemp -d)"
-npx -y wrangler@4.147.0 deploy --keep-vars --config "$DAP_REPO/apps/room/wrangler.commons.jsonc"
-```
-
-After the reviewed head lands, follow [the order](#the-order):
-
-1. Create the `dap-commons` Artifacts namespace. Deploy the reviewed
-   configuration with `DEPLOYMENT=dap-commons` and `SESSION_SECRET`.
-2. From a separate empty private CLI directory, run:
-
-   ```sh
-   dap install --plan https://dap-commons.inguz.workers.dev --cohort commons --host artifacts --namespace dap-commons
-   ```
-
-3. Keep that exact install plan. Replace `unplanned` with its public
-   register ID in `REGISTER_SCOPE` and in `ARTIFACTS_CONFIG.registerScope`.
-   Deploy the same configuration again before you submit the plan.
-4. From the same private directory, run:
-
-   ```sh
-   dap install --planned --cohort commons
-   ```
-
-5. Record the full register reference after the install. Its incarnation
-   is not known while the plan only names the future scope. Record it with
-   the planned scope ID and the deployed version, and commit the two public
-   register bindings. Check the full reference and the exact Register 23
-   definition before you create a room.
-
-The `unplanned` pins in the file make no claim about identity. Provisioning
-uses the explicit cohort and the kept plan. The `dap-demo` Start metadata
-does not govern this path or revive the retired demo-offer route. Keep the
-existing `dap-demo`, `dap-grow` and `dap-lending` registers, and leave
-`ALLOW_OPEN_CREATION` unset. Commons rooms use this Worker until the
-[register succession design](../notes/2026-10-22-definition-succession.md)
-lands. Existing rooms on `dap-demo` stay on Register 17, and new rooms there
-use Register 26.
-
 ## Roll out new creation versions
 
 `PLATFORM_CREATION_PINS` decides which platform versions a Worker accepts
@@ -299,7 +246,7 @@ A register holds at most 64 live claims. Register 26 closes a claim as final `fa
 
 Earlier registers retain their historical behavior. In particular, Register 17 keeps a claim `pending` after all three attempts fail. At 64 live claims, it refuses later `found` requests with `type-full`. A returning host, rerun, `--again`, restart, or elapsed time does not free those places. [An outage can close a register](security/trust-boundaries.md#an-outage-can-close-a-register) describes that retained failure mode.
 
-The way out of a full register is a new register. On the same Worker, retain the old root in `INSTALLED_REGISTER_SCOPES` before you switch `REGISTER_SCOPE` and the host's configured register to the new root. The installed list preserves child creation and Git host authority for old rooms, including pending register operations. After the switch, check an old room's child creation and Git access before creating a new scratch room. You can also keep separate Workers, as [the Commons steps](#provision-the-commons-worker) show.
+The way out of a full register is a new register. On the same Worker, retain the old root in `INSTALLED_REGISTER_SCOPES` before you switch `REGISTER_SCOPE` and the host's configured register to the new root. The installed list preserves child creation and Git host authority for old rooms, including pending register operations. After the switch, check an old room's child creation and Git access before creating a new scratch room. You can also put the new register on a separate Worker.
 
 The [demo register packet](../notes/implementation/2026-11-05-failed-claim-register/deploy.md) stages one same-Worker cutover and rollback. Keep both roots and verify old-room child creation, Git access, and Site source access before the new scratch room. The packet changes only demo; a Grow register switch still needs its archive bridge fixed and reviewed.
 
@@ -404,17 +351,6 @@ Forwarded headers supply no identity. A different register, a different
 incarnation, or a setting of version 1 or 2 produces no offer. An offer
 grants no authority: the native namespace still judges the signed creation
 lineage.
-
-The retired `artroom-scope` Worker uses
-`apps/room/wrangler.artroom-scope.jsonc`. Its Start page links to `dap-demo`
-for new rooms. It keeps
-**Check** and **Continue** for a creation that started on `artroom-scope`.
-The link carries no saved request or browser key. The retained Start window
-ended on 8 November 2026 under PD-6. The retired Worker's file no longer
-contains `DEMO_START_CONFIG`. The planner owns the live setting removal and
-the deletion of `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN`, and
-`GITHUB_READ_TOKEN`. This source change records no deployment or secret
-removal.
 
 The client accepts only version 2 offers for Register 17 or Register 26.
 The server makes no offer from setting version 1 or 2. Existing submitted
