@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:196be22ad855b0f48dea4dbb1e9d9b43d703eaf0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-br13-query-controls.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1bffb7c6fec4996c8c527481bcac297306677ae4","text":"Merge retired a covered predecessor; the successor is at packages/client/src/creation-offer.ts."}
