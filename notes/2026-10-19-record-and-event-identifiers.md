@@ -333,8 +333,8 @@ level 4. Each system does it with its own replay, outside this protocol.
 | `depth` | `incomplete` | The walk reached the depth limit of the caller. |
 | `profile` | `incomplete` | The verifier does not have the signature profile of the sequence. |
 | `digest` | `mismatch` | The bytes of the cited event or of a predecessor hash to a different digest. |
-| `sequence` | `mismatch` | An event carries a different genesis digest. |
-| `position` | `mismatch` | A carried position differs, or the walk reaches a genesis before position 0, or no genesis at position 0. |
+| `sequence` | `mismatch` | An event carries a different genesis digest, or none where the format requires one. |
+| `position` | `mismatch` | A carried position differs, or the walk reaches a genesis before position 0, or no genesis at position 0, or the bytes carry no position, or an event above position 0 carries no predecessor digest. |
 | `genesis` | `mismatch` | The walk reaches a genesis at position 0, with a different digest. |
 | `anchor` | `mismatch` | The digest of the predecessor differs from the digest of the anchor at its position. |
 | `signature` | `mismatch` | A signature does not verify. |
@@ -619,6 +619,14 @@ The cases for each format include at least:
 - one depth limit shorter than the walk (`incomplete`, `depth`);
 - for a format with a profile, one event with a changed signature, cited
   with its own correct digest (`signature`, reached 2).
+
+The `dap1` cases also include correctly hashed bytes that cannot decode
+as an entry (`mismatch`, `position`, reached 0), and an entry above
+position 0 that passes levels 0 and 1 but has no valid predecessor
+digest (`mismatch`, `position`, reached 1). Both reports have a null
+anchor and empty trusts. During a level 2 walk, correctly hashed
+predecessor bytes that cannot decode as an entry stop with `mismatch`,
+`position`, reached 1.
 
 An implementation conforms when it passes the vectors of the formats
 that it claims and states the levels that it runs.
