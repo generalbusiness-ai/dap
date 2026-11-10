@@ -3,8 +3,9 @@
 Request d5fa31c9, promise 230f5474. E adds typed act preparation, shared
 forms, declared slot groups, state candidates, and a rule-string tag.
 Planner ruling 0be8be71 fixes their public contracts. The source starts
-from landed B main a5b82ee0. C has also landed; D proceeds independently.
-The first compiler check below names the source checkpoint `5cf4209c`.
+from landed B main a5b82ee0 and now includes landed D and the identifiers
+notes. The first compiler check below names `5cf4209c`; the generated
+Page asset enters at `01337382`.
 
 ## Prepare, then submit
 
@@ -89,61 +90,104 @@ It returns a string to the existing `rule` helper. TypeScript checks
 interpolated names; the unchanged compiler and restricted profile check
 raw text. No expression tree, evaluator, profile, hoisting, or pin changes.
 
-## Compiler check and reviewed source seals
+## Compiler checks and reviewed source seals
 
-The [compiler check](evidence/2026-11-10-t0e-compiler-first.manifest.json)
-passed at `5cf4209c`. All 31 unique compiler contexts returned zero,
-including the Define test context with the three wrong-name directives.
-All 62 compiler logs are empty. The inner and outer drivers returned zero,
-and the owned process groups closed. The 65 boundary observations retain
-identical source, tool, input, runtime, and dependency identities.
-The inner interval was 81.556853791 seconds; the outer interval was
-83.89673825 seconds. This run executed no runtime cases.
+The [first compiler check][compiler-first] passed at `5cf4209c`.
+All 31 compiler contexts returned zero, including the Define test context
+with the three wrong-name directives. The [post-D check][compiler-d]
+passed four affected contexts at `3d345cfa`. The later fixture repair
+passed the MCP test compiler at `721ea5db`. These runs cover overlapping
+compiler contexts.
 
-The [maintained seal producer](evidence/2026-11-10-t0e-source-seal-producer.manifest.json)
-reproduced the two old reviewed syntax-tree seals from retained main
-`a5b82ee0` source. It then calculated replacement seals for Client
+The [maintained seal producer][seals] reproduced the old syntax-tree
+seals from retained main source and calculated replacements for Client
 `expected.ts` and MCP `catalogue.ts`. The patch changes exactly those two
-existing hash literals. Every other byte in the route and gate assertions
-stays identical. The producer extracts the maintained `sourceSeal`
-function and invokes the pinned syntax parser without importing application
-setup. Both actual producer and launcher exits are zero.
+existing hash literals. Every route and gate assertion remains identical.
+The producer extracts the maintained `sourceSeal` function and invokes
+the pinned syntax parser without importing application setup. Both actual
+producer and launcher exits are zero.
 
-| Check | Command | Actual result | Output/log SHA-256 |
-| --- | --- | --- | --- |
-| Compiler contexts | [31 exact Node/TSC commands](evidence/2026-11-10-t0e-compiler-first.manifest.json) | 31 exits zero | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
-| Reviewed seal values | [Maintained parser argv](evidence/2026-11-10-t0e-source-seal-producer.manifest.json) | Exit zero | `dc8e0130be984d9d47a51c0482b2ca62d63cc4310cda9c4ef808b219a88eda16` |
+## Focused checks preserve each failure
 
-The compiler digest names each empty compiler stdout and stderr file.
-The seal digest names actual Node stdout. Full argv, timings, source
-identities, and retained output paths appear in the manifests. These checks
-establish no runtime, authority, deployment, or acceptance result.
+The [read-failure baseline][baseline] passed all three existing cases.
+Its original controller stopped with exit two on reporter metadata.
+A separate metadata reconciliation returned zero and retained the actual
+baseline exit zero. The [mutant-only control][mutant] then produced two
+passes and the intended assertion failure in the signer-order witness.
+The control restored the production source and closed its process groups.
+The earlier startup failure remains a failed attempt in that evidence.
 
-## Runtime and final validation owed
+The [Node owner][node] passed all 12 cases at `3d345cfa`. Its original
+analyzer expected a null test identifier for an unknown reporter wrapper.
+The actual wrapper had `entryFile: null` and `testId: 1`, so the controller
+refused that metadata and returned two. The corrected metadata analyzer
+returned zero without repeating the owner. Three wrapper observations
+remain unknown and do not count as cases.
 
-The existing Native Lending scenario now prepares its lending acts
-through `handle.intents` over the real Scope binding. It retains the
-membership, factory, SQLite, replay, refusal, final-item, and capacity
-assertions. Normal acts derive revisions; explicit captured revisions
-still reach the scope unchanged. This strengthens an existing case.
-The only added runtime case checks a failed fresh read before the signer,
-including an input with captured revisions. Three compiler-only lines
-check wrong field, slot, and sibling names in tag holes.
+The first Plain continuation recorded 32 passes and one failure. Two
+cases remained pending when bail stopped the run. Native Lending
+remained unrun. The failure exposed a
+stale MCP fixture: it replaced only the bound act while keeping the old
+whole definition and inventory. The repair constructs the complete
+required-presentation definition, derives its digest and fresh inventory,
+and selects its real `bindingsOf` result. The existing optional,
+standing, capability, and required-presentation assertions remain intact.
 
-Before source edits, the builder retained the complete prior files in
-private custody. Their SHA-256 values are:
+The [repaired focused evidence][focused] preserves that failed attempt
+and passes the complete eight-case MCP owner and the existing Native
+Lending scenario at `721ea5db`. The Native scenario prepares acts through
+`handle.intents` over the real Scope binding. It retains membership,
+SQLite, replay, refusal, final-item, and capacity assertions. Captured
+revisions still reach the scope unchanged.
 
-| Original | SHA-256 |
-| --- | --- |
-| Lanes reference | `1b1272ba17778b79cac8e351196e206e6473594fb8da36d064ccde11a2a79b04` |
-| MCP tools | `4e18d71826d10cd3d8ab64f507ee59e5a69dc740185348988143488098659b64` |
-| Lending catalogue, default/generic/add | `7f4bd447c30a078dd68ce1f2ed57decdf3652ccbb1caf9efacd950bc0969f468` |
+The combined evidence contains 51 distinct positive cases across nine
+whole owners: the three-case control baseline, 12 Node cases, 27 retained
+Plain cases, eight repaired MCP cases, and one Native Lending case.
+The retained 27 cases come from five completed owners whose source
+remains unchanged across the one-file fixture repair. The mutant's
+intended failure and the original controller failures remain separate
+from those positive results.
 
-The retained baseline index has SHA-256
-`243848e5fabb5e78d1a679d7a57715225df90b1d1c2e7a7dc6c2440e36089377`.
-These hashes identify original bytes; they do not claim an E capture.
-The remaining checks are the read-failure guard control, existing owning
-tests, the complete Lending catalogue comparison, the maintained Page build,
-applicable browser witnesses, and the final gate. No test, build, capture,
-control, application import, install, or gate has run for E. No acceptance
-or deployment claim follows from this checkpoint.
+E adds one runtime case: a failed fresh read must stop preparation before
+the signer, including when the caller supplies captured revisions.
+The three wrong-name tag examples remain compiler-only checks.
+
+## Page build and remaining validation
+
+The [maintained Page build][page] passed at `fffbfee4`. Build, runner,
+outer driver, and launcher each returned zero. The evidence retains the
+four served/dist byte comparisons and the unchanged source and tool
+fences. The generated asset enters the candidate at `01337382`; this
+adoption does not relabel the build's actual source checkpoint.
+
+The retained original Lanes reference, MCP tool listing, and
+three Lending catalogue forms supply the three strict comparison
+inputs. Their original bytes remain separate from future E captures.
+
+- The [strict three-output comparison][capture] passed at `01337382`.
+  The Lanes reference, MCP tool listing, and combined Lending catalogue
+  exactly match their three retained original byte outputs.
+- Final static checks and one full gate: **PENDING**. Add the actual
+  whitespace, commit-message, format, and gate exits with full case
+  reconciliation after they run at the final candidate.
+- [Automatic Page CI][browser-ci] passed at `01337382`. Run
+  `42846059399`, attempt one, completed all 12 steps successfully.
+  Root read the run, jobs, and step metadata with three GET exits zero.
+- Card CI: **NOT APPLICABLE**. The [workflow filter proof][ci-filters]
+  finds no changed Card path. Only the generated asset matches Page.
+
+Focused checks and the Page build do not establish final gate or browser
+acceptance. No deployment or live acceptance claim follows from this
+checkpoint.
+
+[compiler-first]: evidence/2026-11-10-t0e-compiler-first.manifest.json
+[seals]: evidence/2026-11-10-t0e-source-seal-producer.manifest.json
+[compiler-d]: evidence/2026-11-10-t0e-post-d-four-compilers.manifest.json
+[baseline]: evidence/2026-11-10-t0e-control2-baseline-reconciled.manifest.json
+[mutant]: evidence/2026-11-10-t0e-mutant-only-control.manifest.json
+[node]: evidence/2026-11-10-t0e-node-positive-reconciled.manifest.json
+[focused]: evidence/2026-11-10-t0e-repaired-focus.manifest.json
+[page]: evidence/2026-11-10-t0e-page-build.manifest.json
+[ci-filters]: evidence/2026-11-10-t0e-browser-ci.manifest.json
+[capture]: evidence/2026-11-10-t0e-strict-three-output.manifest.json
+[browser-ci]: evidence/2026-11-10-t0e-browser-ci.manifest.json
