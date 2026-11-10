@@ -1,3 +1,4 @@
+import { CREATION_LINEAGE_COHORTS, creationLineageCohort } from "@generalbusiness/dap-platform";
 import { readDeployment } from "./deployment-setting.ts";
 import { injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
 /** Serving admission, not a kernel judgment. Only checked applied native
@@ -8,7 +9,7 @@ import { canonicalize, definitionDigest, intentDigest, isDigest, isPlatformDefin
 import { creates, isObject, isScopeRef, same, sentBy, validateDefinition, type Delivered } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
-import { OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+
 import { readInstalledRegisters } from "./register-setting.ts";
 
 import type { CreationAdmission } from "./creation-admission.ts";
@@ -19,7 +20,7 @@ import { proofEntry, type ProofBody } from "./proof-bytes.ts";
 export const CREATION_LINEAGE_BOUNDS = Object.freeze({ bodies: 16, bytes: 1024 * 1024, attempts: 64, visits: 512, milliseconds: 10_000 });
 /** Exact code-supported creation families, each bound to its configured
  * register and native creator proofs. This is not a deployment inventory. */
-export const CREATION_COHORTS = [OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT] as const;
+export const CREATION_COHORTS = CREATION_LINEAGE_COHORTS;
 
 type Cohort = typeof CREATION_COHORTS[number];
 type Pin = Digest | PlatformDefinition;
@@ -129,7 +130,7 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
         edges.push({ child, from, n, message, source, creator });
         const genesis = creatorEntry.input;
         if (genesis.seed.creator === null) {
-          cohort = CREATION_COHORTS.find(candidate => candidate.register === creator.named);
+          cohort = creationLineageCohort(creator.named) ?? undefined;
           if (!cohort || !register.scopes.includes(from.at.scope) || from.at.kind !== "register" || genesis.seed.kind !== "register"
             || genesis.source !== null || genesis.n !== null || genesis.message !== null || genesis.seed.ordinal !== 0
             || !genesis.founding || !isSignedIntentShape(genesis.founding) || !verifySignedIntent(genesis.founding)

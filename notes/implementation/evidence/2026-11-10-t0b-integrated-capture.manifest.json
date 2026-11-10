@@ -1,0 +1,66 @@
+{
+  "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
+  "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-integrated-capture/independent-audit/unit",
+  "sourceHead": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
+  "sourceTree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
+  "booking": "480d644924a6d9dcbf433632f87804283a1a7b84",
+  "end": "b22c12bfc942ea1c7ef0eb932f23df6472377992",
+  "qualification": "Independent metadata-only audit of the completed integrated capture slot. All actual exits and complete same-run evidence reconcile. No validation body repeated.",
+  "readonlyScope": "New public unit files 0444 and directories 0555; complete separate private archive files 0400 and directories 0500 through at least 2026-12-10. Original run remains untouched.",
+  "files": [
+    {
+      "path": "actual-exits.json",
+      "bytes": 1009,
+      "sha256": "22255d933429bad72d876c9fb4bfd63181ff4400d45e9462fa6f874d4f8f3c59"
+    },
+    {
+      "path": "custody.json",
+      "bytes": 778,
+      "sha256": "02d70ebce7c269ef5cc866b1ea1205695ff31bff7666b106667ebf612eae95ba"
+    },
+    {
+      "path": "details.json",
+      "bytes": 2827,
+      "sha256": "9686bae887e1dc35a28b520ed751e0057bbb6e4bb1050634feb839f131305be5"
+    },
+    {
+      "path": "fences.json",
+      "bytes": 954,
+      "sha256": "a3d4eaa5b5cdfc478d99f4344049ed5397bf7de0305420629a50b7ad37a5ee54"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 1146,
+      "sha256": "5e64f971241ed2358aaea6005e0c3a5bf98954a0ba05f004990b22ff7044a795"
+    }
+  ],
+  "privateArchive": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-integrated-capture/independent-audit/private-archive",
+    "archiveIndexSha256": "d7f3a276a99ba8bcdd0de972a39f95f20ca0cc182e9b12bce87ab56a82b16afa",
+    "rawFiles": 416,
+    "retentionThrough": "2026-12-10"
+  },
+  "outcome": {
+    "sourceHead": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
+    "sourceTree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
+    "booking": "480d644924a6d9dcbf433632f87804283a1a7b84",
+    "end": "b22c12bfc942ea1c7ef0eb932f23df6472377992",
+    "outerElapsedSeconds": 4.732434667000001,
+    "sourcePathsUnchanged": 4521,
+    "toolsUnchanged": 7525,
+    "inputsUnchanged": 11,
+    "workspaces": 15,
+    "exportAliases": 50,
+    "binEntries": 17,
+    "npmAliases": 9,
+    "ownedGroupsClosed": true,
+    "originalRun": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-integrated-capture/run",
+    "qualification": "Independent metadata audit only. Frozen UNRUN and copied Page-build preparation sentences remain historical; actual receipts and specific outcomes describe this completed slot. No body repeated.",
+    "strictOutputFiles": 3,
+    "lendingModes": "default, generic, add",
+    "originalBytes": "139830, 262660, 298441",
+    "warning": "Retained DEP0205 deprecation warning only",
+    "limits": "Exact derived bytes over maintained generators and kept explicit fixtures; no Native authority, transport, deployment or live acceptance claim. Full gate remains outstanding."
+  }
+}

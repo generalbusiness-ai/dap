@@ -1,4 +1,4 @@
-import { FAILED_CLAIM_COHORT } from "@generalbusiness/dap-platform";
+import { mcpApplicationRoomCohort, answersVersionQuestion, FAILED_CLAIM_COHORT, SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, OWN_AGENT_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/dap-client";
 /**
@@ -18,7 +18,7 @@ import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Ite
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { TransportError, ScopeHandle, ApplicationPackageError, actBodyText, originalsAt, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
-import { SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, OWN_AGENT_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
+
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
@@ -547,7 +547,7 @@ export class McpService {
       if (!isScopeId(read.target)) return failed({ error: "target", what: "the exact read has no scope target" });
       const context = await this.#exactSnapshot(read.target);
       const pinned = context.read.inventory.scopes.find(held => held.scope === read.target)?.pinned;
-      const fields = pinned === FAILED_CLAIM_COHORT.destination ? {} : { hours: 1 };
+      const fields = answersVersionQuestion(pinned, "mcpReadTokenFixedHourDestination") ? {} : { hours: 1 };
       const signed = await this.#perform(null, { target: read.target, on: 0, fields, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit, context);
       if (signed.structuredContent["answer"] !== "accepted") return signed;
       const entry = (signed.structuredContent["fact"] as { seq: number }).seq;
@@ -600,7 +600,7 @@ export class McpService {
     if (number !== null && room) {
       let lane = room.lanes.find((l) => l.number === number);
       if (!lane) {
-        if (held(room.directory.scope)?.pinned === "platform:directory@10") {
+        if (answersVersionQuestion(held(room.directory.scope)?.pinned, "mcpCurrentRoomPartitionDirectory")) {
           const coverage = await readPartitionIndexes(this.#reads, room.directory, room.membership);
           if (!coverage.complete) return stopCall({ error: "read", scope: room.directory.scope, reason: "unavailable" });
           const row = coverage.indexes.flatMap(index => [...index.lanes]).find(item => item.values["number"] === number && isScopeRef(item.refs["scope"]));
@@ -1019,7 +1019,7 @@ export class McpService {
     const snapshot = await this.#current();
     const { scope, membership } = await this.#scope(snapshot, args["scope"] ?? "commons");
     const { summary } = await this.#summary(scope, membership);
-    if (summary.scope.kind !== "commons" || summary.definition !== "platform:commons@1") return failed({ error: "target", what: "the target is not Commons@1" });
+    if (summary.scope.kind !== "commons" || !answersVersionQuestion(summary.definition, "mcpCommonsReadDefinition")) return failed({ error: "target", what: "the target is not Commons@1" });
     const cursor = fromCursor<{ c?: string; i: number; h: string }>(args["cursor"]);
     if (cursor && (!Number.isSafeInteger(cursor.i) || cursor.i < 0 || typeof cursor.h !== "string" || (cursor.c !== undefined && typeof cursor.c !== "string"))) return failed({ error: "shape", field: "cursor", what: "is not a Commons continuation", declared: "the cursor returned by commons" });
     const view = await this.#reads.read(membership, async (transport, reader) => {
@@ -1377,7 +1377,7 @@ export class McpService {
     if (!repository || config.service !== this.#service) return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    const cohort = [FAILED_CLAIM_COHORT, SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, OWN_AGENT_COHORT, COMMONS_COHORT].find(cohort => directory.definition === cohort.directory);
+    const cohort = mcpApplicationRoomCohort(directory.definition);
 
     if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
@@ -1385,7 +1385,7 @@ export class McpService {
       || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stopCall({ error: "target", what: "the configured room does not match its exact generic native siblings" });
     const { summary } = await this.#summary(rules.scope, repository.membership);
     if (summary.status !== "active" || summary.definition !== cohort.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stopCall({ error: "target", what: "the actual Rules sibling does not support native application installation" });
-    if (cohort.directory === COMMONS_COHORT.directory) {
+    if (answersVersionQuestion(cohort.directory, "mcpCommonsRoomDirectory")) {
       const { summary: membership } = await this.#summary(repository.membership.scope, repository.membership);
       if (membership.status !== "active" || membership.definition !== COMMONS_COHORT.membership || canonicalize(membership.scope) !== canonicalize(repository.membership)) return stopCall({ error: "target", what: "the Commons room does not hold its exact Membership sibling" });
     }
@@ -1394,7 +1394,7 @@ export class McpService {
 
   async #declaredInstallation(item: number): Promise<ApplicationInstallation | null> {
     const room = await this.#applicationRoom();
-    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== COMMONS_COHORT.rules) return null;
+    if (!answersVersionQuestion(room.cohort.rules, "mcpSemanticInstallRoomRules")) return null;
     const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active"], ids: [item], limit: 1, cursor: null }));
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const row = read.value.items[0];
@@ -1414,8 +1414,8 @@ export class McpService {
     let selected: ReturnType<typeof readApplicationInstallOptions> | ReturnType<typeof readDeviceApplicationInstallOptions>;
     try {
       const ordinary = { rules: room.rules, uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"] };
-      selected = room.cohort.rules === DEVICE_APPLICATION_COHORT.rules || room.cohort.rules === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || room.cohort.rules === COMMONS_COHORT.rules ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args["owner"] }) : readApplicationInstallOptions(ordinary);
-      if (room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== COMMONS_COHORT.rules && args["owner"] !== undefined) throw Error("this cohort has no owner selection");
+      selected = answersVersionQuestion(room.cohort.rules, "mcpDeviceInstallOptionsRules") ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args["owner"] }) : readApplicationInstallOptions(ordinary);
+      if (!answersVersionQuestion(room.cohort.rules, "mcpOwnerFieldRules") && args["owner"] !== undefined) throw Error("this cohort has no owner selection");
     }
     catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles, bounded genesis values and a full existing owner for a device package", declared: "the install_application input" }); }
     const address = readApplicationReleaseUri(selected.uri);
@@ -1434,7 +1434,7 @@ export class McpService {
       const source = applicationGitHttpSource(address, { blobBytes: 4 * 1024 * 1024, ...(this.#port.applicationFetch ? { send: this.#port.applicationFetch } : {}) });
       try {
         const bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024);
-        const prepare = pin === DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules ? signedApplicationInstall2 : signedApplicationInstall;
+        const prepare = answersVersionQuestion(pin, "mcpSemanticInstallSignatureRules") ? signedApplicationInstall2 : signedApplicationInstall;
         const packet = prepare === signedApplicationInstall2 || "owner" in selected
           ? readPublishedApplicationPackage2(bytes, selected.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 })
           : readApplicationPackage(bytes, selected.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
@@ -1658,12 +1658,12 @@ export class McpService {
     const seq = Number(args["entry"]);
     const reader = await this.#reads.reader(membership);
     if (reader === null) return failed({ error: "credential", destination: scope, why: "no read session is given here, and only a session reads a credential" });
-    if (!held || held.pinned === UNPUBLISHED_COHORT.destination) {
+    if (!held || answersVersionQuestion(held.pinned, "mcpVerifyEmptyDestination")) {
       const { summary, at } = await this.#summary(scope, membership);
       const branches = summary.items.filter(item => item.type === "branch");
       const branch = branches.length === 1 ? branches[0]! : null;
       if (at.complete && summary.status === "active" && summary.scope.kind === "destination" && summary.scope.scope === scope
-        && summary.definition === UNPUBLISHED_COHORT.destination && branch?.state === "unpublished"
+        && answersVersionQuestion(summary.definition, "mcpVerifyEmptyDestination") && branch?.state === "unpublished"
         && branch.values["repository"] == null && branch.values["head"] == null && typeof branch.values["name"] === "string"
         && isScopeId(branch.values["membership"]) && isScopeId(branch.values["rules"])
         && isScopeRef(branch.refs["directory"]) && branch.refs["directory"].kind === "directory") return failed({ error: "credential", destination: scope, why: "no-repository" });

@@ -1,6 +1,7 @@
 /** Portable CLI views and codecs shared with the browser. */
-import type { FactRef, FieldValue, Item } from "@generalbusiness/dap-contract";
+import type { FieldValue } from "@generalbusiness/dap-contract";
 import { unb64url } from "@generalbusiness/dap-bytes";
+import { grantAction } from "@generalbusiness/dap-client";
 import type { Role } from "@generalbusiness/dap-platform";
 import type { Config, Repository } from "./store.ts";
 
@@ -17,53 +18,10 @@ export interface ActShape {
 }
 export interface DefinitionShape { name: string; genesis: string; acts: Record<string, ActShape> }
 
-const typeName = (field: { type?: string; code?: string }): string => field.type === "code" || field.type === undefined ? `${field.code ?? "code"} (rule)` : field.type;
-const fieldsLine = (act: ActShape): string => Object.entries(act.fields).map(([name, field]) => `${name}${field.required ? "" : "?"}:${typeName(field)}`).join(" ") || "none";
-const grantName = (act: ActShape): string | null => (typeof act.grant === "string" ? act.grant : act.grant.grant ?? null);
+/** The CLI keeps its compact format; the client owns all declaration wording. */
+export { describeActLine as describe } from "@generalbusiness/dap-client";
 
-/**
- * One line about an act, from its declaration. The definition format has no
- * text that describes an act, so the line is made from what the declaration
- * states: its step, its item and what may sign it.
- */
-export function describe(kind: string, act: ActShape): string {
-  const what = act.step === "open" ? `opens a ${act.on}` : act.step === "transition" ? `moves a ${act.on}` : act.on === null ? "comments on no item" : `comments on a ${act.on}`;
-  const who = typeof act.grant === "string" ? `needs ${act.grant}` : `the rule ${act.grant.code} decides who may sign${act.grant.grant ? `, with ${act.grant.grant}` : ""}`;
-  return `${kind}: ${what}; ${who}. Fields: ${fieldsLine(act)}.`;
-}
-
-/**
- * The revision of each item the act names, as the scope's summary has them
- * now: the target for a transition, the one item of a type, and an item a
- * field names. A name that a rule selects has no key: the scope resolves it.
- * The scope checks every revision again and refuses one that moved.
- */
-export function expectedOf(act: ActShape, items: readonly Item[], target: number | null, fields: Record<string, FieldValue>): Record<string, number> {
-  const expected: Record<string, number> = {};
-  const revision = (id: number | null | undefined) => items.find((item) => item.id === id)?.revision;
-  if (act.step === "transition" && target !== null) {
-    const at = revision(target);
-    if (at !== undefined) expected["on"] = at;
-  }
-  const bound = new Map<string, Item | null>();
-  const subject = (name: string): Item | null => {
-    if (bound.has(name)) return bound.get(name)!;
-    if (name === "on") return items.find((item) => item.id === target) ?? null;
-    const rule = act.also[name.replace(/^also\./, "")];
-    if (!rule || rule.code !== undefined) return null;
-    bound.set(name, null);
-    const via = rule.via ? subject(rule.via.of)?.refs[rule.via.slot] : undefined;
-    const id = typeof via === "number" ? via : via && typeof via === "object" && "seq" in via ? (via as FactRef).seq : undefined;
-    const item = rule.one ? items.find((item) => item.type === rule.item) : rule.by !== undefined && typeof fields[rule.by] === "number" ? items.find((item) => item.id === fields[rule.by!]) : items.find((item) => item.id === id);
-    bound.set(name, item ?? null); return item ?? null;
-  };
-  for (const [name, rule] of Object.entries(act.also)) {
-    if (rule.code !== undefined) continue;
-    const item = subject(name);
-    if (item) expected[name] = item.revision;
-  }
-  return expected;
-}
+export { expectedOf } from "@generalbusiness/dap-client";
 
 /**
  * A value given as `name=value`, read by the field's declared type. A list,
@@ -118,7 +76,7 @@ export function heldActs(shape: DefinitionShape, held: Standing | null): { acts:
   let hidden = 0;
   for (const [kind, act] of Object.entries(shape.acts)) {
     if (kind === shape.genesis) continue;
-    const action = grantName(act);
+    const action = grantAction(act);
     if (typeof act.grant !== "string" || (action !== null && held?.actions.includes(action))) acts.push([kind, act]);
     else hidden++;
   }

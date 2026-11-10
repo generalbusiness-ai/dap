@@ -1,478 +1,137 @@
-/** Draft 4 counting commitments, using existing declaration forms only. */
-import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
+/** The live Counter: counting commitments, Draft 4. The JSON file and pin remain the byte witness. */
+import type { DeclaredDefinition, Operand } from "@generalbusiness/dap-contract";
+import { anyOf, by, constant, count, define, differs, enumOf, equals, fact, final, grants, int, item, itemOf, list, live, member, none, normalize, one, open, party, plusSeconds, range, record, ref, required, rule, sameSet, self, signer, time, timed, transition, value, when, type Of } from "@generalbusiness/dap-define";
 
-export const countingCommitments: DeclaredDefinition = {
-  "format": "artroom-definition-1",
-  "name": "counting-commitments",
-  "profile": {"name": "restricted", "version": 1},
-  "capabilities": [],
-  "genesis": "establish",
-  "items": {
-    "configuration": {
-      "many": false,
-      "max": 1,
-      "states": {"ready": {"final": false}},
-      "initial": "ready",
-      "parties": {"controller": {"fixed": true, "required": true, "list": false, "author": false}},
-      "refs": {},
-      "values": {"target": {"fixed": true, "required": true, "of": {"type": "int", "min": 1, "max": 100}}}
-    },
-    "board": {
-      "many": false,
-      "max": 1,
-      "states": {"paused": {"final": false}, "open": {"final": false}, "finished": {"final": false}},
-      "initial": "paused",
-      "parties": {
-        "controller": {"fixed": true, "required": true, "list": false, "author": false},
-        "lastSpeaker": {"fixed": false, "required": false, "list": false, "author": false}
-      },
-      "refs": {
-        "pledge": {"fixed": false, "required": false, "to": {"type": "item", "of": "promise"}},
-        "lastFulfilledAt": {
-          "fixed": false,
-          "required": false,
-          "to": {"type": "fact", "under": "counting-commitments", "kind": ["fulfill"]}
-        }
-      },
-      "values": {
-        "target": {"fixed": true, "required": true, "of": {"type": "int", "min": 1, "max": 100}},
-        "generation": {"fixed": false, "required": true, "of": {"type": "int", "min": 0, "max": 1000000}, "default": 0},
-        "serial": {"fixed": false, "required": true, "of": {"type": "int", "min": 0, "max": 1000000}, "default": 0},
-        "lastNumber": {"fixed": false, "required": true, "of": {"type": "int", "min": 0, "max": 100}, "default": 0},
-        "until": {"fixed": false, "required": false, "of": {"type": "time"}}
-      }
-    },
-    "participant": {
-      "many": true,
-      "max": 16,
-      "states": {"inactive": {"final": false}, "active": {"final": false}, "removed": {"final": true}},
-      "initial": "inactive",
-      "parties": {"agent": {"fixed": true, "required": true, "list": false, "author": false}},
-      "refs": {},
-      "values": {}
-    },
-    "promise": {
-      "many": true,
-      "max": 1,
-      "states": {
-        "pledged": {"final": false},
-        "fulfilled": {"final": true},
-        "failed": {"final": true},
-        "cancelled": {"final": true},
-        "expired": {"final": true}
-      },
-      "initial": "pledged",
-      "parties": {"agent": {"fixed": true, "required": true, "list": false, "author": false}},
-      "refs": {
-        "participant": {"fixed": true, "required": true, "to": {"type": "item", "of": "participant"}},
-        "admittedAt": {
-          "fixed": true,
-          "required": true,
-          "to": {"type": "fact", "under": "counting-commitments", "kind": ["commit"]}
-        }
-      },
-      "values": {
-        "n": {"fixed": true, "required": true, "of": {"type": "int", "min": 1, "max": 100}},
-        "generation": {"fixed": true, "required": true, "of": {"type": "int", "min": 0, "max": 1000000}},
-        "serial": {"fixed": true, "required": true, "of": {"type": "int", "min": 1, "max": 1000000}},
-        "basis": {
-          "fixed": true,
-          "required": true,
-          "of": {
-            "type": "list",
-            "max": 16,
-            "of": {
-              "type": "record",
-              "of": {
-                "id": {"type": "item", "of": "participant", "required": true},
-                "member": {"type": "member", "required": true}
-              }
-            }
-          }
-        },
-        "until": {"fixed": true, "required": true, "of": {"type": "time"}},
-        "reason": {
-          "fixed": false,
-          "required": false,
-          "of": {"type": "enum", "of": ["media-error", "process-error", "cancelled", "interrupted", "speech-uncertain"]}
-        }
-      }
-    }
+const NAME = "counting-commitments";
+export const countingGrants = grants({ establish: "counting.establish", control: "counting.control", participate: "counting.participate",
+  activity: "counting.activity", commit: "counting.commit", fulfill: "counting.fulfill", fail: "counting.fail" });
+const level = int(0, 1_000_000), number = int(1, 100);
+const failureReasons = enumOf("media-error", "process-error", "cancelled", "interrupted", "speech-uncertain");
+
+export const configuration = item("configuration", { initial: "ready", states: { ready: live }, parties: { controller: party.fixed }, values: { target: value.fixed(number) } });
+export const board = item("board", {
+  initial: "paused", states: { paused: live, open: live, finished: live },
+  parties: { controller: party.fixed, lastSpeaker: party.optional },
+  refs: { pledge: ref.optional(itemOf("promise")), lastFulfilledAt: ref.optional(fact(NAME, "fulfill")) },
+  values: { target: value.fixed(number), generation: value.required(level, 0), serial: value.required(level, 0), lastNumber: value.required(int(0, 100), 0), until: value.optional(time) },
+});
+export const participant = item("participant", { many: 16, initial: "inactive", states: { inactive: live, active: live, removed: final }, parties: { agent: party.fixed } });
+const basis = list(record({ id: required(itemOf(participant)), member: required(member) }), 16);
+export const promise = item("promise", {
+  many: 1,
+  initial: "pledged", states: { pledged: live, fulfilled: final, failed: final, cancelled: final, expired: final },
+  parties: { agent: party.fixed },
+  refs: { participant: ref.fixed(itemOf(participant)), admittedAt: ref.fixed(fact(NAME, "commit")) },
+  values: { n: value.fixed(number), generation: value.fixed(level), serial: value.fixed(int(1, 1_000_000)), basis: value.fixed(basis), until: value.fixed(time), reason: value.optional(failureReasons) },
+});
+
+// ---------------------------------------------------------------- combinators
+
+/** No pledged promise belongs to `agent`. Other agents' pledges do not block this guard. */
+const noPledgeBy = (pledges: typeof promise, agent: Operand) =>
+  none(pledges, ["pledged"], (pledge) => [equals(pledge.slot("agent"), agent)]);
+/** No promise is pledged and the board links none. */
+const boardClear = (b: Of<typeof board>, pledges: typeof promise) => [b.unset("pledge"), none(pledges, ["pledged"])];
+/** The resolution of a pledge: the board's open, its link is this promise, and the plan rule holds. */
+const resolving = (on: Of<typeof promise>, b: Of<typeof board>) => [on.in("pledged"), b.in("open"), equals(b.slot("pledge"), on.id),
+  rule("resolution-plan", "($b := $lookup(subjects,\"also.board\"); $v := subjects.on.values; $exists($b) and fields.generation = $v.generation and fields.generation = $b.values.generation and fields.serial = $v.serial and fields.serial = $b.values.serial and fields.n = $v.n and fields.n = $b.values.lastNumber + 1 and fields.n <= $b.values.target)")];
+/** The board drops its link and deadline. */
+const unlink = (b: Of<typeof board>) => [b.ref("pledge", null), b.value("until", null)];
+const resolution = { generation: required(level), serial: required(int(1, 1_000_000)), n: required(number) };
+
+type CounterItems = { configuration: typeof configuration; board: typeof board; participant: typeof participant; promise: typeof promise };
+
+/** The definition passes every subject and permission this module uses. */
+function countingActs({ configuration, board, participant, promise }: CounterItems, permits: typeof countingGrants) {
+  return {
+    establish: open(configuration, permits.establish, { fields: { opener: required(member), target: required(number) } }, ({ f, on }) => ({
+      effects: [on.party("controller", f.opener), on.value("target", f.target)],
+    })),
+    initialize: open(board, permits.control, { also: { configuration: one(configuration) } }, ({ on, also }) => ({
+      guards: [also.configuration.in("ready"), also.configuration.signer("controller")],
+      effects: [on.party("controller", also.configuration.slot("controller")), on.value("target", also.configuration.slot("target"))],
+    })),
+    participate: open(participant, permits.participate, {}, ({ on }) => ({
+      guards: [none(participant, ["inactive", "active"], (member) => [equals(member.slot("agent"), signer)])],
+      effects: [on.party("agent", signer)],
+    })),
+    activate: transition(participant, permits.activity, {}, ({ on }) => ({
+      guards: [on.in("inactive"), on.signer("agent")],
+      effects: [on.to("active")],
+    })),
+    deactivate: transition(participant, permits.activity, {}, ({ on }) => ({
+      guards: [on.in("active"), on.signer("agent"), noPledgeBy(promise, on.slot("agent"))],
+      effects: [on.to("inactive")],
+    })),
+    "force-deactivate": transition(participant, permits.control, { also: { configuration: one(configuration) } }, ({ on, also }) => ({
+      guards: [on.in("active"), also.configuration.signer("controller"), differs(signer, on.slot("agent")), noPledgeBy(promise, on.slot("agent"))],
+      effects: [on.to("inactive")],
+    })),
+    "remove-participant": transition(participant, permits.control, { also: { configuration: one(configuration) } }, ({ on, also }) => ({
+      guards: [on.in("inactive"), also.configuration.signer("controller"), noPledgeBy(promise, on.slot("agent"))],
+      effects: [on.to("removed")],
+    })),
+    start: transition(board, permits.control, {}, ({ on }) => ({
+      guards: [on.in("paused"), on.signer("controller"), ...boardClear(on, promise), rule("start-plan", "subjects.on.values.lastNumber < subjects.on.values.target")],
+      effects: [on.to("open")],
+    })),
+    // by(participant) also declares the required participant input field.
+    commit: open(promise, permits.commit, { also: { board: one(board), participant: by(participant) }, fields: { ...resolution, basis: required(basis) } }, ({ f, on, also }) => ({
+      guards: [
+        also.board.in("open"), ...boardClear(also.board, promise), also.participant.in("active"), also.participant.signer("agent"),
+        sameSet(f.basis, "p", (p) => p.id, participant, ["active"], { match: (activeParticipant, p) => [equals(activeParticipant.slot("agent"), p.member)], ordered: true }),
+        anyOf([count(range(participant, ["active"]), { max: 1 })], [differs(signer, also.board.slot("lastSpeaker"))]),
+        rule("commit-plan", "($b := $lookup(subjects,\"also.board\"); $p := $lookup(subjects,\"also.participant\"); $exists($b) and $exists($p) and fields.generation = $b.values.generation and fields.serial = $b.values.serial + 1 and fields.n = $b.values.lastNumber + 1 and fields.n <= $b.values.target)"),
+      ],
+      effects: [
+        on.party("agent", signer), on.ref("participant", also.participant.id), on.ref("admittedAt", self),
+        ...on.take(f, "n", "generation", "serial", "basis"), on.value("until", plusSeconds(30)),
+        also.board.value("serial", f.serial), also.board.ref("pledge", self), also.board.value("until", plusSeconds(30)),
+      ],
+    })),
+    fulfill: transition(promise, permits.fulfill, { also: { board: one(board) }, fields: resolution }, ({ f, on, also }) => ({
+      guards: [...resolving(on, also.board), on.signer("agent"), on.before("until")],
+      effects: [
+        on.to("fulfilled"), also.board.value("lastNumber", f.n), also.board.party("lastSpeaker", on.slot("agent")), also.board.ref("lastFulfilledAt", self), ...unlink(also.board),
+        when(also.board.to("finished"), { if: [equals(f.n, also.board.slot("target"))] }),
+        when(also.board.to("open"), { unless: [equals(f.n, also.board.slot("target"))] }),
+      ],
+      // Settlement eligibility is a declaration; the effects write state.
+      settles: on.settles("pledged"),
+    })),
+    fail: transition(promise, permits.fail, { also: { board: one(board) }, fields: { ...resolution, reason: required(failureReasons) } }, ({ f, on, also }) => ({
+      guards: [...resolving(on, also.board), on.signer("agent")],
+      effects: [on.to("failed"), on.value("reason", f.reason), also.board.to("paused"), ...unlink(also.board)],
+      settles: on.settles("pledged"),
+    })),
+    cancel: transition(promise, permits.control, { also: { board: one(board) }, fields: resolution }, ({ on, also }) => ({
+      guards: [...resolving(on, also.board), also.board.signer("controller")],
+      effects: [on.to("cancelled"), on.value("reason", constant("cancelled")), also.board.to("paused"), ...unlink(also.board)],
+      settles: on.settles("pledged"),
+    })),
+    pause: transition(board, permits.control, {}, ({ on }) => ({
+      guards: [on.in("open"), on.signer("controller"), ...boardClear(on, promise)],
+      effects: [on.to("paused"), ...unlink(on)],
+    })),
+    reset: transition(board, permits.control, { fields: { generation: required(int(1, 1_000_000)) } }, ({ f, on }) => ({
+      guards: [on.in("paused", "finished"), on.signer("controller"), ...boardClear(on, promise), rule("reset-plan", "fields.generation = subjects.on.values.generation + 1")],
+      effects: [on.to("paused"), on.value("generation", f.generation), on.value("serial", constant(0)), on.value("lastNumber", constant(0)), on.party("lastSpeaker", null), on.ref("lastFulfilledAt", null), ...unlink(on)],
+    })),
+  };
+}
+
+export const countingCommitmentsSource = define({
+  name: NAME, genesis: "establish", grants: countingGrants,
+  items: [configuration, board, participant, promise],
+  acts: countingActs({ configuration, board, participant, promise }, countingGrants),
+  timed: {
+    "commitment-expired": timed(board, { states: ["open"], deadline: "until", effects: (b) => [b.to("paused"), ...unlink(b)] }),
+    "promise-expired": timed(promise, { states: ["pledged"], deadline: "until", effects: (p) => [p.to("expired")] }),
   },
-  "acts": {
-    "establish": {
-      "step": "open",
-      "on": "configuration",
-      "grant": "counting.establish",
-      "also": {},
-      "fields": {
-        "opener": {"type": "member", "required": true},
-        "target": {"type": "int", "min": 1, "max": 100, "required": true}
-      },
-      "guards": [],
-      "effects": [
-        {"party": {"slot": "controller", "from": {"field": "opener"}}},
-        {"value": {"slot": "target", "from": {"field": "target"}}}
-      ],
-      "sends": [],
-      "attention": []
-    },
-    "initialize": {
-      "step": "open",
-      "on": "board",
-      "grant": "counting.control",
-      "also": {"configuration": {"item": "configuration", "one": true}},
-      "fields": {},
-      "guards": [{"state": ["ready"], "of": "also.configuration"}, {"signer": ["controller"], "of": "also.configuration"}],
-      "effects": [
-        {"party": {"slot": "controller", "from": {"slot": "controller", "of": "also.configuration"}}},
-        {"value": {"slot": "target", "from": {"slot": "target", "of": "also.configuration"}}}
-      ],
-      "sends": [],
-      "attention": []
-    },
-    "participate": {
-      "step": "open",
-      "on": "participant",
-      "grant": "counting.participate",
-      "also": {},
-      "fields": {},
-      "guards": [
-        {
-          "none": {
-            "type": "participant",
-            "states": ["inactive", "active"],
-            "where": [{"equals": {"a": {"slot": "agent"}, "b": {"signer": true}}}]
-          }
-        }
-      ],
-      "effects": [{"party": {"slot": "agent", "from": {"signer": true}}}],
-      "sends": [],
-      "attention": []
-    },
-    "activate": {
-      "step": "transition",
-      "on": "participant",
-      "grant": "counting.activity",
-      "also": {},
-      "fields": {},
-      "guards": [{"state": ["inactive"]}, {"signer": ["agent"]}],
-      "effects": [{"state": "active"}],
-      "sends": [],
-      "attention": []
-    },
-    "deactivate": {
-      "step": "transition",
-      "on": "participant",
-      "grant": "counting.activity",
-      "also": {},
-      "fields": {},
-      "guards": [
-        {"state": ["active"]},
-        {"signer": ["agent"]},
-        {
-          "none": {
-            "type": "promise",
-            "states": ["pledged"],
-            "where": [{"equals": {"a": {"slot": "agent"}, "b": {"slot": "agent", "of": "on"}}}]
-          }
-        }
-      ],
-      "effects": [{"state": "inactive"}],
-      "sends": [],
-      "attention": []
-    },
-    "force-deactivate": {
-      "step": "transition",
-      "on": "participant",
-      "grant": "counting.control",
-      "also": {"configuration": {"item": "configuration", "one": true}},
-      "fields": {},
-      "guards": [
-        {"state": ["active"]},
-        {"signer": ["controller"], "of": "also.configuration"},
-        {"differs": {"a": {"signer": true}, "b": {"slot": "agent"}}},
-        {
-          "none": {
-            "type": "promise",
-            "states": ["pledged"],
-            "where": [{"equals": {"a": {"slot": "agent"}, "b": {"slot": "agent", "of": "on"}}}]
-          }
-        }
-      ],
-      "effects": [{"state": "inactive"}],
-      "sends": [],
-      "attention": []
-    },
-    "remove-participant": {
-      "step": "transition",
-      "on": "participant",
-      "grant": "counting.control",
-      "also": {"configuration": {"item": "configuration", "one": true}},
-      "fields": {},
-      "guards": [
-        {"state": ["inactive"]},
-        {"signer": ["controller"], "of": "also.configuration"},
-        {
-          "none": {
-            "type": "promise",
-            "states": ["pledged"],
-            "where": [{"equals": {"a": {"slot": "agent"}, "b": {"slot": "agent", "of": "on"}}}]
-          }
-        }
-      ],
-      "effects": [{"state": "removed"}],
-      "sends": [],
-      "attention": []
-    },
-    "start": {
-      "step": "transition",
-      "on": "board",
-      "grant": "counting.control",
-      "also": {},
-      "fields": {},
-      "guards": [
-        {"state": ["paused"]},
-        {"signer": ["controller"]},
-        {"unset": "pledge"},
-        {"none": {"type": "promise", "states": ["pledged"]}},
-        {"rule": "start-plan"}
-      ],
-      "effects": [{"state": "open"}],
-      "sends": [],
-      "attention": []
-    },
-    "commit": {
-      "step": "open",
-      "on": "promise",
-      "grant": "counting.commit",
-      "also": {"board": {"item": "board", "one": true}, "participant": {"item": "participant", "by": "participant"}},
-      "fields": {
-        "participant": {"type": "item", "of": "participant", "required": true},
-        "generation": {"type": "int", "min": 0, "max": 1000000, "required": true},
-        "serial": {"type": "int", "min": 1, "max": 1000000, "required": true},
-        "n": {"type": "int", "min": 1, "max": 100, "required": true},
-        "basis": {
-          "type": "list",
-          "max": 16,
-          "of": {
-            "type": "record",
-            "of": {
-              "id": {"type": "item", "of": "participant", "required": true},
-              "member": {"type": "member", "required": true}
-            }
-          },
-          "required": true
-        }
-      },
-      "guards": [
-        {"state": ["open"], "of": "also.board"},
-        {"of": "also.board", "unset": "pledge"},
-        {"none": {"type": "promise", "states": ["pledged"]}},
-        {"state": ["active"], "of": "also.participant"},
-        {"of": "also.participant", "signer": ["agent"]},
-        {
-          "sameSet": {
-            "list": {"field": "basis"},
-            "as": "p",
-            "key": {"element": "p.id"},
-            "items": {"type": "participant", "states": ["active"]},
-            "match": [{"equals": {"a": {"slot": "agent"}, "b": {"element": "p.member"}}}],
-            "ordered": true
-          }
-        },
-        {
-          "anyOf": [
-            [{"count": {"type": "participant", "states": ["active"], "max": 1}}],
-            [{"differs": {"a": {"signer": true}, "b": {"slot": "lastSpeaker", "of": "also.board"}}}]
-          ]
-        },
-        {"rule": "commit-plan"}
-      ],
-      "effects": [
-        {"party": {"slot": "agent", "from": {"signer": true}}},
-        {"ref": {"slot": "participant", "from": {"item": "also.participant"}}},
-        {"ref": {"slot": "admittedAt", "from": "self"}},
-        {"value": {"slot": "n", "from": {"field": "n"}}},
-        {"value": {"slot": "generation", "from": {"field": "generation"}}},
-        {"value": {"slot": "serial", "from": {"field": "serial"}}},
-        {"value": {"slot": "basis", "from": {"field": "basis"}}},
-        {"value": {"slot": "until", "from": {"time": {"plusSeconds": 30}}}},
-        {"value": {"slot": "serial", "from": {"field": "serial"}}, "of": "also.board"},
-        {"ref": {"slot": "pledge", "from": "self"}, "of": "also.board"},
-        {"value": {"slot": "until", "from": {"time": {"plusSeconds": 30}}}, "of": "also.board"}
-      ],
-      "sends": [],
-      "attention": []
-    },
-    "fulfill": {
-      "step": "transition",
-      "on": "promise",
-      "grant": "counting.fulfill",
-      "also": {"board": {"item": "board", "one": true}},
-      "fields": {
-        "generation": {"type": "int", "min": 0, "max": 1000000, "required": true},
-        "serial": {"type": "int", "min": 1, "max": 1000000, "required": true},
-        "n": {"type": "int", "min": 1, "max": 100, "required": true}
-      },
-      "guards": [
-        {"state": ["pledged"]},
-        {"state": ["open"], "of": "also.board"},
-        {"equals": {"a": {"slot": "pledge", "of": "also.board"}, "b": {"item": "on"}}},
-        {"rule": "resolution-plan"},
-        {"signer": ["agent"]},
-        {"before": {"slot": "until"}}
-      ],
-      "effects": [
-        {"state": "fulfilled"},
-        {"value": {"slot": "lastNumber", "from": {"field": "n"}}, "of": "also.board"},
-        {"party": {"slot": "lastSpeaker", "from": {"slot": "agent", "of": "on"}}, "of": "also.board"},
-        {"ref": {"slot": "lastFulfilledAt", "from": "self"}, "of": "also.board"},
-        {"ref": {"slot": "pledge", "from": null}, "of": "also.board"},
-        {"value": {"slot": "until", "from": null}, "of": "also.board"},
-        {
-          "of": "also.board",
-          "state": "finished",
-          "if": [{"equals": {"a": {"field": "n"}, "b": {"slot": "target", "of": "also.board"}}}]
-        },
-        {
-          "of": "also.board",
-          "state": "open",
-          "unless": [{"equals": {"a": {"field": "n"}, "b": {"slot": "target", "of": "also.board"}}}]
-        }
-      ],
-      "sends": [],
-      "attention": [],
-      "settles": {"of": "on", "in": ["pledged"]}
-    },
-    "fail": {
-      "step": "transition",
-      "on": "promise",
-      "grant": "counting.fail",
-      "also": {"board": {"item": "board", "one": true}},
-      "fields": {
-        "generation": {"type": "int", "min": 0, "max": 1000000, "required": true},
-        "serial": {"type": "int", "min": 1, "max": 1000000, "required": true},
-        "n": {"type": "int", "min": 1, "max": 100, "required": true},
-        "reason": {
-          "type": "enum",
-          "of": ["media-error", "process-error", "cancelled", "interrupted", "speech-uncertain"],
-          "required": true
-        }
-      },
-      "guards": [
-        {"state": ["pledged"]},
-        {"state": ["open"], "of": "also.board"},
-        {"equals": {"a": {"slot": "pledge", "of": "also.board"}, "b": {"item": "on"}}},
-        {"rule": "resolution-plan"},
-        {"signer": ["agent"]}
-      ],
-      "effects": [
-        {"state": "failed"},
-        {"value": {"slot": "reason", "from": {"field": "reason"}}},
-        {"of": "also.board", "state": "paused"},
-        {"ref": {"slot": "pledge", "from": null}, "of": "also.board"},
-        {"value": {"slot": "until", "from": null}, "of": "also.board"}
-      ],
-      "sends": [],
-      "attention": [],
-      "settles": {"of": "on", "in": ["pledged"]}
-    },
-    "cancel": {
-      "step": "transition",
-      "on": "promise",
-      "grant": "counting.control",
-      "also": {"board": {"item": "board", "one": true}},
-      "fields": {
-        "generation": {"type": "int", "min": 0, "max": 1000000, "required": true},
-        "serial": {"type": "int", "min": 1, "max": 1000000, "required": true},
-        "n": {"type": "int", "min": 1, "max": 100, "required": true}
-      },
-      "guards": [
-        {"state": ["pledged"]},
-        {"state": ["open"], "of": "also.board"},
-        {"equals": {"a": {"slot": "pledge", "of": "also.board"}, "b": {"item": "on"}}},
-        {"rule": "resolution-plan"},
-        {"of": "also.board", "signer": ["controller"]}
-      ],
-      "effects": [
-        {"state": "cancelled"},
-        {"value": {"slot": "reason", "from": {"const": "cancelled"}}},
-        {"of": "also.board", "state": "paused"},
-        {"ref": {"slot": "pledge", "from": null}, "of": "also.board"},
-        {"value": {"slot": "until", "from": null}, "of": "also.board"}
-      ],
-      "sends": [],
-      "attention": [],
-      "settles": {"of": "on", "in": ["pledged"]}
-    },
-    "pause": {
-      "step": "transition",
-      "on": "board",
-      "grant": "counting.control",
-      "also": {},
-      "fields": {},
-      "guards": [
-        {"state": ["open"]},
-        {"signer": ["controller"]},
-        {"unset": "pledge"},
-        {"none": {"type": "promise", "states": ["pledged"]}}
-      ],
-      "effects": [{"state": "paused"}, {"ref": {"slot": "pledge", "from": null}}, {"value": {"slot": "until", "from": null}}],
-      "sends": [],
-      "attention": []
-    },
-    "reset": {
-      "step": "transition",
-      "on": "board",
-      "grant": "counting.control",
-      "also": {},
-      "fields": {"generation": {"type": "int", "min": 1, "max": 1000000, "required": true}},
-      "guards": [
-        {"state": ["paused", "finished"]},
-        {"signer": ["controller"]},
-        {"unset": "pledge"},
-        {"none": {"type": "promise", "states": ["pledged"]}},
-        {"rule": "reset-plan"}
-      ],
-      "effects": [
-        {"state": "paused"},
-        {"value": {"slot": "generation", "from": {"field": "generation"}}},
-        {"value": {"slot": "serial", "from": {"const": 0}}},
-        {"value": {"slot": "lastNumber", "from": {"const": 0}}},
-        {"party": {"slot": "lastSpeaker", "from": null}},
-        {"ref": {"slot": "lastFulfilledAt", "from": null}},
-        {"ref": {"slot": "pledge", "from": null}},
-        {"value": {"slot": "until", "from": null}}
-      ],
-      "sends": [],
-      "attention": []
-    }
-  },
-  "receives": {},
-  "timed": {
-    "commitment-expired": {
-      "on": "board",
-      "states": ["open"],
-      "deadline": "until",
-      "effects": [{"state": "paused"}, {"ref": {"slot": "pledge", "from": null}}, {"value": {"slot": "until", "from": null}}],
-      "attention": []
-    },
-    "promise-expired": {
-      "on": "promise",
-      "states": ["pledged"],
-      "deadline": "until",
-      "effects": [{"state": "expired"}],
-      "attention": []
-    }
-  },
-  "rules": {
-    "start-plan": "subjects.on.values.lastNumber < subjects.on.values.target",
-    "commit-plan": "($b := $lookup(subjects,\"also.board\"); $p := $lookup(subjects,\"also.participant\"); $exists($b) and $exists($p) and fields.generation = $b.values.generation and fields.serial = $b.values.serial + 1 and fields.n = $b.values.lastNumber + 1 and fields.n <= $b.values.target)",
-    "resolution-plan": "($b := $lookup(subjects,\"also.board\"); $v := subjects.on.values; $exists($b) and fields.generation = $v.generation and fields.generation = $b.values.generation and fields.serial = $v.serial and fields.serial = $b.values.serial and fields.n = $v.n and fields.n = $b.values.lastNumber + 1 and fields.n <= $b.values.target)",
-    "reset-plan": "fields.generation = subjects.on.values.generation + 1"
-  }
-};
+});
+
+/** Canonical declaration data consumed by the application. */
+export const countingCommitments = normalize(countingCommitmentsSource);
 
 /** No create sends: the complete declared closure is this definition alone. */
 export const countingCommitmentsClosure: readonly DeclaredDefinition[] = [countingCommitments];

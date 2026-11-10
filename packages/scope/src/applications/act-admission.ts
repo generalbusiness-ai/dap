@@ -1,10 +1,11 @@
-import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { applicationAdmissionCohort, platform } from "@generalbusiness/dap-platform";
+
 /** Deployment admission for fresh acts only. Immutable native creation proves
  * which installed release owns a scope; current trust is never cached. */
 import type { Digest, Entry, FactRef } from "@generalbusiness/dap-contract";
 import { canonicalize, deliveryCauseDigest, isDigest, isFactRef, isMemberRef, isPlatformDefinition, isRecord, isScopeRef, isSeed, messageDigest, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { same, sentBy } from "@generalbusiness/dap-derive";
-import { FAILED_CLAIM_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, HARDENED_CERTIFIED_RULES_COHORT, TRUSTED_APPLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
+
 import { readApplicationTrust } from "./admission.ts";
 import type { ProofTimer } from "../genesis-proof.ts";
 import { readNativeBirth, type NativeBirthSource } from "../native-birth.ts";
@@ -27,9 +28,6 @@ export interface ApplicationActAdmissionOptions {
 /** Seventeen package definitions can form a chain, followed by its Directory.
  * These are proof-work limits, not a new package quota or a heap guarantee. */
 export const APPLICATION_ACT_ADMISSION_BOUNDS = Object.freeze({ ancestors: 18, bodies: 37, bytes: 16 * 1024 * 1024, rpcs: 36, body: PROOF_BYTE_BOUNDS.body });
-const cohorts = [FAILED_CLAIM_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT,
-  ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT,
-  OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT] as const;
 type Provenance = { kind: "unpackaged" } | { kind: "installed"; release: Digest };
 type Cache = { identity: string; provenance: Provenance };
 type AdmissionAnswer = { current(): FreshActAdmissionDecision };
@@ -183,7 +181,7 @@ export class ApplicationActAdmission implements FreshActAdmission {
       // have no package release to revoke. A package-shaped request with no
       // recognized native factory is incomplete, never an exemption.
       if (!installing) return { kind: "unpackaged" };
-      const cohort = cohorts.find(candidate => candidate.directory === birth.named);
+      const cohort = applicationAdmissionCohort(birth.named);
       if (!cohort || parent.kind !== "directory" || creator.input.seed.kind !== "directory" || made.type !== "delivery"
         || !("decision" in made) || made.decision !== "applied" || !isRecord(made.message.body)
         || !isRecord(made.message.body["fields"])) return null;

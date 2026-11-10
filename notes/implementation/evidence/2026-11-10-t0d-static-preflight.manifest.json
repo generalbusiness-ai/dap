@@ -1,0 +1,74 @@
+{
+  "request": "6f87a4e3bc6186ffa6b08ad7c5ca01be1a2c49bd",
+  "promise": "00b5bef0936bad3bd01429eb95bd018f11ec717e",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-static-preflight-audit/unit",
+  "sourceHead": "9b92bd28a4550162abde0be388670388bff3413e",
+  "sourceTree": "c532751f02a08875a704a696ae6ecd28b8fb269f",
+  "booking": "bff87eba4ef1f9d491e54428d5e40c766be7f715",
+  "end": "f112064342b98b201a9b15a3df34a0b2d1570a29",
+  "qualification": "Independent metadata audit of the actual final D static preflight. All three child exits, inner exit, outer actual-driver exit and launcher exit read 0. No executable validation body repeated.",
+  "readonlyScope": "New public files 0444 and directories 0555; complete separate private archive files 0400 and directories 0500 through at least 2026-12-10. Original inner and outer runs remain untouched.",
+  "files": [
+    {
+      "path": "actual-exits.json",
+      "bytes": 856,
+      "sha256": "4f29bafcef66de2a544412a5e481c45085c11325ff98eba18a0e9a7dbb371be5"
+    },
+    {
+      "path": "custody.json",
+      "bytes": 644,
+      "sha256": "702a9a3b99a53f876ee15d15e13e61fbd2c3a67f403e1ade8517f5ba0d444040"
+    },
+    {
+      "path": "source-tool-fences.json",
+      "bytes": 1554,
+      "sha256": "e16caf4e9aff72ae150846ba1dc4b16159219e76d9597e92f9a53616c3ffa1a5"
+    },
+    {
+      "path": "steps.json",
+      "bytes": 2296,
+      "sha256": "40bf88a533fcca0b679ac423cb0409c97e432371b5f80b017d5f77eb1eca229b"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 1666,
+      "sha256": "e855d290bb3b4a3dfcd7a4f8b44ffc1e2f4f10f687d04da1f8c34e5a0d670a81"
+    }
+  ],
+  "privateArchive": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-static-preflight-audit/private-archive",
+    "archiveIndexSha256": "568c6ed3a57c42f7666bd912a0fb97097811473a07ef6e77fd2c1b9e72b52923",
+    "rawInnerFiles": 135,
+    "rawOuterFiles": 9,
+    "retentionThrough": "2026-12-10"
+  },
+  "outcome": {
+    "sourceHead": "9b92bd28a4550162abde0be388670388bff3413e",
+    "sourceTree": "c532751f02a08875a704a696ae6ecd28b8fb269f",
+    "booking": "bff87eba4ef1f9d491e54428d5e40c766be7f715",
+    "end": "f112064342b98b201a9b15a3df34a0b2d1570a29",
+    "staticCommandsPassed": 3,
+    "actualExitFilesReadZero": 6,
+    "commitMessagesChecked": 6,
+    "commitMessagesFlagged": 0,
+    "formatter": "All matched files use Prettier code style",
+    "innerElapsedSeconds": 13.337504416995216,
+    "outerElapsedSeconds": 15.210437708003155,
+    "sourcePathsFixed": 4535,
+    "toolPinsFixed": 7534,
+    "inputPinsFixed": 12,
+    "cleanupEmpty": true,
+    "outerStartedUtc": "2026-11-10T11:29:32.857586+00:00",
+    "outerEndedUtc": "2026-11-10T11:29:48.068016+00:00",
+    "deploymentTimingCorrection": {
+      "plannerStartAct": "c099592b7e6fb48bb02b3be4664766edaf534fe7",
+      "plannerStartUtc": "2026-11-10T11:29:37+00:00",
+      "rootCorrectionAct": "370217ef70297aecb5e636711e64ec9e23402d4e",
+      "actualStaticOuterStartedUtc": "2026-11-10T11:29:32.857586+00:00",
+      "actualStaticOuterEndedUtc": "2026-11-10T11:29:48.068016+00:00",
+      "secondsAfterPlannerStartUntilStaticEnd": 11.068016,
+      "qualification": "The actual static interval crossed the deployment START. Root corrected its earlier non-overlap statement. Actual precheck exits stay0; no replay or claim that the runs did not overlap. Full gate remains a separate outcome."
+    },
+    "qualification": "One actual three-command static preflight. Inner and outer times measure different boundaries. No compiler, test, application, parser, capture, control, build, full gate or repeat ran during this audit. These results make no full-gate or acceptance claim."
+  }
+}

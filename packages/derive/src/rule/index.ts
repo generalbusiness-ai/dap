@@ -13,7 +13,7 @@ import { admit, evaluate } from "./evaluator.ts";
 import { PROFILE } from "./profile.ts";
 
 export { BUDGET_CODES, TYPE_CODES, RuleEvalError, RuleRuntimeFailure, type EvalCode } from "./errors.ts";
-export { ENGINE_FINGERPRINT, admit, assertEngine, evaluate, probeResults, type Evaluation, type Meter } from "./evaluator.ts";
+export { ENGINE_FINGERPRINT, admit, assertEngine, evaluate, probeResults, ruleReferences, type Evaluation, type Meter } from "./evaluator.ts";
 export { JSONATA_VERSION, PROFILE } from "./profile.ts";
 
 /** The profile table for `validateDefinition` that also checks each rule's text against the profile. */

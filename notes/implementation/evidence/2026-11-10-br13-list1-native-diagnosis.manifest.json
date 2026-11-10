@@ -1,0 +1,316 @@
+{
+  "status": "PASS_ISOLATED_OWNER_ONLY",
+  "request": "487496f5ad73675926a070808188cd2a228334c1",
+  "promise": "4b0e1a79fc0054ca2e330c22f1282f542bdce9fe",
+  "sourceHead": "ff0eee7d1a047ce1e94bc9040c1e6c96e5bf6d3a",
+  "sourceTree": "f17cb1507a81614a37d56ac84a156451a01aa820",
+  "booking": "6fad1152ce9f132a8372dc1d0aedb45cfa618b7e",
+  "end": "1e0ff86e63cbd4e2166f803f20db95288b000f4e",
+  "case": {
+    "project": "scope",
+    "file": "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/apps/room/page/test/list1-source.scope.test.ts",
+    "name": "LIST1 preview authenticates the exact frozen source and rejects altered or missing source evidence"
+  },
+  "pool": "cloudflare-pool",
+  "originalCaseTimeoutMilliseconds": 120000,
+  "existingNativeCases": 1,
+  "wholeOwners": 1,
+  "compilerContexts": 0,
+  "nodeCases": 0,
+  "actualExits": {
+    "body/focused.exit": 0,
+    "body/actualrunner.exit": 0,
+    "actualdriver.exit": 0,
+    "launcher.exit": 0,
+    "actualNativeVitestBody": 0
+  },
+  "errors": 0,
+  "retryCount": 0,
+  "repeatCount": 0,
+  "unexpectedCases": 0,
+  "builtInAndStructuredLedgerEqual": true,
+  "sourceToolInputCustody": {
+    "sourceHead": "ff0eee7d1a047ce1e94bc9040c1e6c96e5bf6d3a",
+    "sourceTree": "f17cb1507a81614a37d56ac84a156451a01aa820",
+    "sourceRowsEqualImmutableGitAndRestoredCheckout": 4504,
+    "physicalToolRowsEqual": 7529,
+    "npmAliasPinsEqual": 9,
+    "inputRowsEqual": 26,
+    "priorV5bInputs": 23,
+    "dependencies": 33,
+    "workspaceBindings": 15,
+    "aliases": 50,
+    "guardRecords": [
+      {
+        "head": "ff0eee7d1a047ce1e94bc9040c1e6c96e5bf6d3a",
+        "tree": "f17cb1507a81614a37d56ac84a156451a01aa820",
+        "clean": true,
+        "sources": 4504,
+        "inputs": 26,
+        "workspaces": 15,
+        "aliases": 50,
+        "milliseconds": 635.2112079999999
+      },
+      {
+        "head": "ff0eee7d1a047ce1e94bc9040c1e6c96e5bf6d3a",
+        "tree": "f17cb1507a81614a37d56ac84a156451a01aa820",
+        "clean": true,
+        "sources": 4504,
+        "inputs": 26,
+        "workspaces": 15,
+        "aliases": 50,
+        "milliseconds": 653.2650419999991
+      }
+    ],
+    "caseTimeoutMilliseconds": 120000,
+    "compilers": 0,
+    "nodeTestCases": 0,
+    "sourceUnchanged": true,
+    "qualification": "Metadata-only current readback at audit; no input/source mutation. Prior v5b remains FAILED separately."
+  },
+  "allProcessGuardsAndCleanupEmpty": true,
+  "originalV5bFailureManifest": {
+    "path": "/private/tmp/artroom-br13-final-gate-v5b-native-failure.manifest.json",
+    "sha256": "211b1b6e2b210010b248a7ae0ca4941bdfd167620d7a5e0888444ef540266940"
+  },
+  "plannerRuling": "a2e43e022a6d12414fac04406f1c8dd8e1b72468",
+  "qualification": "Isolated LIST1 owner passes once with unchanged maintained Native scope project/pool and original120000ms. Preserve v5b actual FAILED/V8heapabort; one additional unchanged-source whole gate with passive memory samples remains required. No heap/worker/deadline change, full-gate waiver, runtime repair, app import or body rerun in this audit.",
+  "planSha256": "d931cf5f271a73376be7be5b283bffd74c8bd80e6df55953a97d9e58eab138de",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-list1-native-diagnosis-ff0eee7d/run",
+      "ownerPrivate": true,
+      "fileCount": 26,
+      "files": [
+        {
+          "path": "actualdriver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/actualrunner.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/compatibility-reuse.json",
+          "bytes": 2188,
+          "sha256": "fd7230d2bb9e94b79d0da409c3f1c5c025c8d7529363b275c1c6a404c28bbce7",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused/body.log",
+          "bytes": 4858,
+          "sha256": "5e1fb53c713d45e97e895d4121da1cbb51577230467c5a13f5d09e601e80adc0",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused/coverage-ledger.json",
+          "bytes": 1541,
+          "sha256": "d00b54ff5d9f1564a61428e134fa2ae3979112a058e3589a8be6511e30dd55a7",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused/coverage.jsonl",
+          "bytes": 2172,
+          "sha256": "bf461b40315b7b748cf966ace98ab7968c7f06f380f262b0b3b6b271bb43750e",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused/manifest.json",
+          "bytes": 825,
+          "sha256": "446fdab5e9cc6052bdbf5631fc8e55909998e21efa574155dc069ff594a0c7a9",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused/plan.json",
+          "bytes": 2625271,
+          "sha256": "d931cf5f271a73376be7be5b283bffd74c8bd80e6df55953a97d9e58eab138de",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused/result.json",
+          "bytes": 3717,
+          "sha256": "0d896f134ec4e98892e5df9c9ab1a050a943228ce98146f31ea1a8d755a2bd4c",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused/vitest.json",
+          "bytes": 1039,
+          "sha256": "b86689161f4fa71513935b0ddd5e4c1432032fefc530d2c754ff30671db1ea2c",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused-process-guard.json",
+          "bytes": 653,
+          "sha256": "fa37e61cbf6931701b219d5738cefec18f35e6c3ea23b07723891fe12a2eddfd",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused.log",
+          "bytes": 221,
+          "sha256": "6dd2d8449183b678b1d75c2cb539e40b33368ee6e50c476112acefc5c642bb8d",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/focused.started.json",
+          "bytes": 363,
+          "sha256": "2e9cc12136b0410bac2616c653a5d3ca6dc5d0f4c3a69528807f7985cba46266",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/owned-descendants.jsonl",
+          "bytes": 3359,
+          "sha256": "d4d988bd6282674d6af07108c6596aff827446c7ffb7c43e1b02b0f7768f853e",
+          "mode": "0o400"
+        },
+        {
+          "path": "body/slot-receipt.json",
+          "bytes": 2078,
+          "sha256": "bb420a3d035a299944cd088bc95bf1650467f15dcd2e3744cafced48a6fb509c",
+          "mode": "0o400"
+        },
+        {
+          "path": "cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+          "mode": "0o400"
+        },
+        {
+          "path": "driver.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mode": "0o400"
+        },
+        {
+          "path": "driver.stdout",
+          "bytes": 60,
+          "sha256": "d8b5bd286db1235a7176a91beb278d795b07e4769984116dce7ac572a6bdd3f2",
+          "mode": "0o400"
+        },
+        {
+          "path": "launcher.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+          "mode": "0o400"
+        },
+        {
+          "path": "launcher.json",
+          "bytes": 794,
+          "sha256": "0821911eabfd68d5ae4e4fdbef871fb51963f52588fc35646863b80e3b4c7af3",
+          "mode": "0o400"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 560,
+          "sha256": "23442a799951c791e71a0fa2d0ce67d43b497b5b6c729da7e306e575dc4f16b0",
+          "mode": "0o400"
+        },
+        {
+          "path": "result.json",
+          "bytes": 250,
+          "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55",
+          "mode": "0o400"
+        },
+        {
+          "path": "started.json",
+          "bytes": 44,
+          "sha256": "59e249529ad18d0015d6742e51c720c7fd397a7c68d2a7ce41f31467800b3dda",
+          "mode": "0o400"
+        }
+      ],
+      "directories": [
+        {
+          "path": ".",
+          "mode": "0o500"
+        },
+        {
+          "path": "body",
+          "mode": "0o500"
+        },
+        {
+          "path": "body/focused",
+          "mode": "0o500"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-list1-native-diagnosis-ff0eee7d-review",
+      "ownerPrivate": false,
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "actual-exits.json",
+          "bytes": 139,
+          "sha256": "92d5fb4bc938b04d8b5e6f6af2c50175ef2a7df43e7650a5531e86f3bb528624",
+          "mode": "0o444"
+        },
+        {
+          "path": "audit.json",
+          "bytes": 3082,
+          "sha256": "d4d5dd824c9fbc753a8ff90a98f00135e67f77b23c12e5b61d6dbf8b77f73151",
+          "mode": "0o444"
+        },
+        {
+          "path": "case-ledger.json",
+          "bytes": 2264,
+          "sha256": "780d2d750c3af76e9ce348996602ef89afb34f7701424ff27fd68edb9a96756b",
+          "mode": "0o444"
+        },
+        {
+          "path": "focused-result.json",
+          "bytes": 3717,
+          "sha256": "0d896f134ec4e98892e5df9c9ab1a050a943228ce98146f31ea1a8d755a2bd4c",
+          "mode": "0o444"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 560,
+          "sha256": "23442a799951c791e71a0fa2d0ce67d43b497b5b6c729da7e306e575dc4f16b0",
+          "mode": "0o444"
+        },
+        {
+          "path": "source-tool-custody.json",
+          "bytes": 1164,
+          "sha256": "8bb5be3c1d0a348858a6dc3bd24fce9e753b62ffcd6ad389bde1c09c3ff92c47",
+          "mode": "0o444"
+        }
+      ],
+      "directories": [
+        {
+          "path": ".",
+          "mode": "0o555"
+        }
+      ]
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "rawLogs": "owner-private, read-only",
+    "removalRequires": "recorded planner act naming adopted manifest"
+  },
+  "v5bAbortAttribution": {
+    "status": "PENDING_SEPARATE_BOUNDED_REVIEW",
+    "qualification": "No Node-versus-workerd classification or owner-at-abort inference follows from this isolated result. Root and the evidence agent own PID74991 crash/process proof; LIST1 is the known final pending owner, not yet proven owner-at-abort."
+  }
+}

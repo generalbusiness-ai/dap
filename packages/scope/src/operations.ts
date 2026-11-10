@@ -1,3 +1,4 @@
+import { answersVersionQuestion, applicationPublicationOrigin, publishingLaneOrigin } from "@generalbusiness/dap-platform";
 import { countedEntries } from "@generalbusiness/dap-derive";
 /**
  * Outside effects (scope contract, section 4.3; authority note, sections
@@ -42,7 +43,7 @@ import type { Bounds, CapabilityName, DecisiveEvidence, Entry, Evidence, FactRef
 import type { ReceiverReads } from "./receiver-reads.ts";
 import { canonicalize, isEvidence, isPlatformDefinition, isOperationId, isRetainedInput, parseStrict, retainedValueKey, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, recordedOutcome, evidenceValues, isEntryOf, valueDigest, settleOutcome, snapshotInput, snapshotRead, timeMs, timeOf, type Clock as Reading, type Fetched, type Operation, type OutcomeOffered, type Owners } from "@generalbusiness/dap-derive";
-import { applicationPublicationOrigin, publishingLaneOrigin } from "@generalbusiness/dap-platform";
+
 import { ownOf, valuesOf, type Scope } from "./core.ts";
 import { report } from "./diag.ts";
 import type { Wakes } from "./outbox.ts";
@@ -408,7 +409,7 @@ export class Operations {
       const read = await within(() => this.#resolver.read(asked.from, this.#bounds.fetchSeconds, true), this.#bounds.fetchSeconds);
       if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from)) return false;
       return asked.mode === "application"
-        ? (operation.owner === "platform:destination@7" || operation.owner === "platform:destination@8" || operation.owner === "platform:destination@13" || operation.owner === "platform:destination@14" || operation.owner === "platform:destination@15" || operation.owner === "platform:destination@16" || operation.owner === "platform:destination@17" || operation.owner === "platform:destination@18" || operation.owner === "platform:destination@19" || operation.owner === "platform:destination@20" ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
+        ? (answersVersionQuestion(operation.owner, "scopeOperationNativeApplicationOrigin") ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
         : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []);
     } catch { return false; }
   }

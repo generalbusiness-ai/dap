@@ -1,0 +1,27 @@
+{
+  "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
+  "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-rule-refusal-seal/unit",
+  "qualification": "Actual maintained AST metadata at b4d followed by exact root adoption246. No compiler failure has been observed, and no compiler/test/control/build/capture body ran during this metadata audit. Bounded focus and later integration witnesses remain due.",
+  "files": [
+    {
+      "path": "audit.json",
+      "bytes": 2557,
+      "sha256": "07737c5a620269c8c4abd73d8c08a28df4076f0e93d87ce65f3d6ef9d447ba8d"
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-rule-refusal-seal/private",
+    "manifestSha256": "32681845e3756c2690570c8bc0b086596595f0b21c79b6ccc8d79a412d53d868",
+    "files": 25,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T06:33:55.404754+00:00",
+      "action": "Retain original raw evidence and owner-only durable archive; no cleanup scheduled or executed."
+    }
+  },
+  "withheld": [
+    "Complete raw outputs, source copies and historical input plans."
+  ],
+  "readonlyScope": "Only new public unit0444/0555 and private archive0400/0500; original raw evidence and checkout unchanged."
+}

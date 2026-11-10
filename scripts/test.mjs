@@ -11,6 +11,7 @@ const stageNames = ['kernel', 'node', 'counting', 'plain', 'native'];
 const nodeFiles = [
   'scripts/usage-report.test.mjs',
   'scripts/format-json.test.mjs',
+  'scripts/public-release-modules.test.mjs',
   'scripts/security-settings.test.mjs',
   'scripts/celld-smoke.test.mjs',
   'scripts/mac-host-kit.test.mjs',
@@ -26,6 +27,7 @@ const nodeFiles = [
   'scripts/demo/recorder-output.test.mjs',
   'homepage/test/home.test.mjs',
   'packages/cli/test/config-dir.test.mjs',
+  'packages/scope/test/observation-cache.test.mjs',
   'examples/repo-in-ai/test/custody.test.mjs',
   'examples/repo-in-ai/test/session.test.mjs',
   'examples/repo-in-ai/task-list/test/tasks.test.mjs',

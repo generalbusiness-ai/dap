@@ -20,7 +20,8 @@ async function cli() {
     const line = await tsImport(new URL("../packages/cli/src/line.ts", import.meta.url).href, import.meta.url);
     const files = await tsImport(new URL("../packages/cli/src/files.ts", import.meta.url).href, import.meta.url);
     const helpers = await tsImport(new URL("../packages/cli/src/browser-helpers.ts", import.meta.url).href, import.meta.url);
-    return { command: line.command, fileStore: files.fileStore, linkOf: helpers.linkOf, LINK: helpers.LINK };
+    const questions = await tsImport(new URL("../packages/platform/src/version-questions.ts", import.meta.url).href, import.meta.url);
+    return { command: line.command, fileStore: files.fileStore, linkOf: helpers.linkOf, LINK: helpers.LINK, answersVersionQuestion: questions.answersVersionQuestion };
   })();
 }
 
@@ -78,8 +79,9 @@ const scope = value => typeof value === "string" && /^sc_[a-z2-7]{52}$/.test(val
 const ref = (value, kind) => value && typeof value === "object" && value.kind === kind && scope(value.scope)
   && typeof value.inc === "string" && /^in_[a-z2-7]{26}$/.test(value.inc);
 const publicRef = value => ({ scope: value.scope, inc: value.inc, kind: value.kind });
-const planIsOurs = (config, base) => config?.v === 1 && config.service === base && config.plan?.service === base
-  && config.plan.definition === "platform:register@21" && scope(config.plan.register)
+export const celldAnswersVersionQuestion = async (named, question) => (await cli()).answersVersionQuestion(named, question);
+const planIsOurs = async (config, base) => config?.v === 1 && config.service === base && config.plan?.service === base
+  && await celldAnswersVersionQuestion(config.plan.definition, "celldSmokeOwnedPlanRegister") && scope(config.plan.register)
   && config.plan.founding?.intent?.fields?.host === "none" && config.plan.founding.intent.fields.namespace === "";
 
 async function health(ctx, base) {
@@ -115,18 +117,18 @@ async function smoke(options) {
   if (phase === "plan") {
     await command(ctx, ["install", "--plan", base, "--host", "none"], "plan");
     const config = await ctx.store.config();
-    if (!planIsOurs(config, base)) fail("plan-identity");
+    if (!await planIsOurs(config, base)) fail("plan-identity");
     return { version: 1, phase, register: config.plan.register, definition: config.plan.definition };
   }
   const before = await ctx.store.config();
-  if (!planIsOurs(before, base)) fail("retained-plan");
+  if (!await planIsOurs(before, base)) fail("retained-plan");
   // A failed smoke can leave an acknowledged act without a local completion
   // marker. Never turn a second smoke invocation into fresh replacement acts.
   if (await ctx.store.private("celld-smoke-run-started")) fail("run-already-started");
   await ctx.store.keepPrivate("celld-smoke-run-started", new Uint8Array([1]));
   if (!before.register) await command(ctx, ["install", "--planned"], "install");
   const installed = await ctx.store.config();
-  if (!planIsOurs(installed, base) || !ref(installed.register, "register") || installed.register.scope !== before.plan.register) fail("install-identity");
+  if (!await planIsOurs(installed, base) || !ref(installed.register, "register") || installed.register.scope !== before.plan.register) fail("install-identity");
   await command(ctx, ["verify", "register"], "verify-register");
   if (!installed.repository) await command(ctx, ["create", "TEST celld public-origin room", "--handle", "@owner"], "create");
   const created = await ctx.store.config(), repository = created?.repository;

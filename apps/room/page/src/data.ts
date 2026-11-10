@@ -50,7 +50,7 @@ import {
   ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, completeSummary, declaredHandle, httpTransport, openHttpHeadStream, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
 } from "@generalbusiness/dap-client";
 import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli/browser";
-import { COMMONS_COHORT, OWN_AGENT_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
+import { answersVersionRelation, pagePartitionOpeningDeclaration, answersVersionQuestion, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
 import type { Extent as PolicyExtent } from "@generalbusiness/dap-platform";
 import { Q11_READ_ONLY, rulesSummaryV11 } from "./rules-summary-v11.ts";
 import { knownLIST1 } from "./source-support.ts";
@@ -414,7 +414,7 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   if (fullScopeRef(commons) && commons.kind === "commons") room.commons = commons;
   else if (commons !== undefined && commons !== null) throw new Unreadable("The directory has an invalid Commons reference.");
   const recordedRepository = repository.values["repository"];
-  if ((summary.definition === "platform:directory@20" || summary.definition === COMMONS_COHORT.directory || summary.definition === OWN_AGENT_COHORT.directory) && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
+  if (answersVersionQuestion(summary.definition, "pageUnpublishedDirectory") && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
   else if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && ["host", "namespace", "name", "id"].every(field => field in recordedRepository && typeof (recordedRepository as Record<string, unknown>)[field] === "string")) room.publication = "repository";
   else throw new Unreadable(`The directory ${place.directory} records no valid publication metadata.`);
   if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && "name" in recordedRepository && typeof recordedRepository["name"] === "string") room.name = recordedRepository["name"];
@@ -456,7 +456,7 @@ export async function listLanes(room: Room): Promise<{ issues: LaneRow[]; change
 async function directoryLanes(room: Room): Promise<readonly Item[]> {
   const index = room.directoryIndex;
   if (!index || index.scope.scope !== room.directory) throw new Unreadable("The room has no bound directory index reference. Reopen the room.");
-  if (index.definition === "platform:directory@10") {
+  if (answersVersionQuestion(index.definition, "pagePartitionRootDirectory")) {
     const coverage = await partitionIndexes({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, index.scope, room.membership);
     if (!coverage.complete) throw new Unreadable(`Directory indexes incomplete (${coverage.reason ?? "unavailable"}); partitions read: ${coverage.indexes.length}.`);
     return coverage.indexes.flatMap(part => [...part.lanes]);
@@ -747,7 +747,7 @@ async function reviewPolicyOf(room: Room, change: ScopeRef, proposal: Item, held
     const handle = handleOf(room, source.at.scope);
     const { summary, at } = await summaryOf(handle);
     if (summary.status !== "active" || canonicalize(summary.scope) !== canonicalize(source.at) || at.seq < source.seq
-      || !["platform:rules@1", "platform:rules@2", "platform:rules@3", "platform:rules@4", ARCHIVE_DEVICE_PUBLICATION_COHORT.rules].includes(summary.definition)) return null;
+      || !answersVersionQuestion(summary.definition, "pageReviewPolicyRules")) return null;
     const rules = summary.items.find(item => item.type === "rules" && item.state === "current");
     if (!rules) return null;
     const published = rules.refs["published"] ?? 0;
@@ -1042,7 +1042,7 @@ export async function roomInitialization(room: Room): Promise<RoomInitialization
       || canonicalize(repository?.refs["membership"]) !== canonicalize(room.membership)) return unavailable;
     const handle = handleOf(room, room.rules), { summary, at } = await summaryOf(handle);
     if (summary.status !== "active" || canonicalize(summary.scope) !== canonicalize(named)
-      || !["platform:rules@1", "platform:rules@2", "platform:rules@3", "platform:rules@4", ARCHIVE_DEVICE_PUBLICATION_COHORT.rules].includes(summary.definition)) return unavailable;
+      || !answersVersionQuestion(summary.definition, "pageInitializationRules")) return unavailable;
     const rules = summary.items.filter(item => item.type === "rules");
     if (rules.length !== 1) return unavailable;
     const current = rules[0]!;
@@ -1058,7 +1058,7 @@ export async function roomInitialization(room: Room): Promise<RoomInitialization
     // Rules10 inherits the Rules3 policy item; only explicit Rules4 defaults owner review to true.
     if (canonicalize(current.refs["directory"]) !== canonicalize(directory.summary.scope)
       || current.values["membership"] !== room.membership.scope || typeof current.values["branch"] !== "string"
-      || current.values["approvals"] !== 1 || current.values["ownerMayReview"] !== (summary.definition === "platform:rules@4") || current.values["singleControllerException"] !== false
+      || current.values["approvals"] !== 1 || current.values["ownerMayReview"] !== answersVersionQuestion(summary.definition, "pageInitialOwnerMayReviewRules") || current.values["singleControllerException"] !== false
       || ["checks", "labels", "extents"].some(name => current.values[name] !== undefined && current.values[name] !== null)) return unavailable;
     const after = await summaryOf(handle);
     const latestDirectory = await summaryOf(handleOf(room, room.directory));
@@ -1089,7 +1089,7 @@ export interface RulesView {
   controllers: string[];
 }
 
-const isCertifiedRules = (definition: unknown): boolean => definition === "platform:rules@11" || definition === "platform:rules@12";
+const isCertifiedRules = (definition: unknown): boolean => answersVersionQuestion(definition, "pageCertifiedRulesReadOnly");
 
 /** The rules of the room, as the rules scope holds them, and the members who may change them. */
 export async function loadRules(room: Room): Promise<RulesView> {
@@ -1208,10 +1208,10 @@ export async function actsOn(room: Room, scope: ScopeId): Promise<{ acts: Offere
   const summary = (await summaryOf(handle)).summary;
   if (isCertifiedRules(summary.definition)) return { acts: [], hidden: 0 };
   let { shape } = await shapeOf(room, handle, summary);
-  if (scope === room.directory && summary.definition === "platform:directory@10") {
+  if (scope === room.directory && answersVersionQuestion(summary.definition, "pagePartitionRootDirectory")) {
     const selected = await activeDirectory({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, summary.scope, room.membership);
     if (selected.ref) {
-      const part = platform("platform:directory-partition@1")!.data;
+      const part = platform(pagePartitionOpeningDeclaration())!.data;
       shape = { ...shape, acts: { ...shape.acts, ...Object.fromEntries(Object.entries(part.acts).filter(([kind]) => OPENING_ACTS.has(kind))) } } as DefinitionShape;
     } else if (!["no-active-partition", "partition-pending", "partition-sealed"].includes(selected.reason ?? "")) throw new Unreadable(`Cannot read the opening partition: ${selected.reason}.`);
   }
@@ -1267,7 +1267,7 @@ export async function issueCreation(room: Room, result: Acted, current: () => bo
     if (canonicalize(summary.scope) !== canonicalize(receipt.fact.at) || summary.definition !== receipt.definition) return unavailable;
     if (result.scope !== room.directory) {
       const control = summary.items.find(item => item.id === 0 && item.type === "repository" && item.state === "open");
-      if (room.directoryIndex?.definition !== "platform:directory@10" || summary.definition !== "platform:directory-partition@1"
+      if (!room.directoryIndex || !answersVersionRelation("pageOpeningPartitionPair", room.directoryIndex.definition, summary.definition)
         || !control || canonicalize(control.refs["root"]) !== canonicalize(room.directoryIndex.scope) || canonicalize(control.refs["membership"]) !== canonicalize(room.membership)) return unavailable;
     }
     const row = summary.items.find(item => item.id === receipt.fact.seq && item.type === "lane" && item.values["kind"] === "issue");
@@ -1318,7 +1318,7 @@ const OPENING_ACTS = new Set(["open-issue", "open-pr", "open-task", "establish-a
  * keeps its actual partition; follow-up never reselects a successor. */
 export async function openingScope(room: Room): Promise<ScopeId> {
   const root = (await summaryOf(handleOf(room, room.directory))).summary;
-  if (root.definition !== "platform:directory@10") return room.directory;
+  if (!answersVersionQuestion(root.definition, "pagePartitionRootDirectory")) return room.directory;
   const selected = await activeDirectory({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, root.scope, room.membership);
   if (!selected.ref) throw new Unreadable(`Cannot open work: ${selected.reason}. This press sent nothing.`);
   return selected.ref.scope;

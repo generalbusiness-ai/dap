@@ -1,3 +1,4 @@
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 /**
  * The verifier (scope contract, sections 9.3 to 9.5). It reads a scope's
  * history through a `HistorySource` and reports whether the history is
@@ -40,10 +41,7 @@
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Seed, Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import {
-  AmountError, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
-  archivedPosition, countedEntries, heldPositions, judgeFloor, judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds,
-} from "@generalbusiness/dap-derive";
+import { AmountError, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery, archivedPosition, countedEntries, heldPositions, judgeFloor, judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds } from "@generalbusiness/dap-derive";
 import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, Own, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, RETAINED_REPLY_BYTES, hashOfBytes, type HistorySource, type Stored } from "./source.ts";
@@ -449,7 +447,6 @@ const fixedFor = (recorded: RecordedRef | null, input: Entry["input"]): ScopeRef
 };
 /** The membership reference, so. */
 const fixedIn = (run: Run, input: Entry["input"]): ScopeRef | null => fixedFor(recordedMembership(run), input);
-
 
 const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;
 const named = (ref: ScopeRef): string => `${ref.scope} (incarnation ${ref.inc})`;
@@ -2246,13 +2243,13 @@ class Verifier {
         // The address is the one the sender wrote: the source entry's send at that ordinal.
         const to = source?.entry.sends.find((send) => send.n === input.n)?.to;
         if (!source || to === undefined) throw mismatch("the source entry holds no send at that ordinal");
-        if (["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7"].includes(run.named ?? "") && input.message.class === "request" && input.message.type === "tell"
+        if (answersCatalogVocabularyQuestion(run.named, "replayReadsLegacyPublication") && input.message.class === "request" && input.message.type === "tell"
           && isObject(input.message.body) && input.message.body["message"] === "publish-file") {
           const directory = state.page("branch", ["empty", "ready"], null, 1).items[0]?.refs["directory"];
           if (!isScopeRef(directory) || !run.at) throw mismatch("the destination records no full Directory reference");
           await this.#applicationOrigin(input.from, directory, run.at, where, depth, identity?.mode === "partition-v1" ? identity.evidence : undefined);
         }
-        if (identity?.mode === "partition-v1" && run.named === "platform:destination@6" && source.under === "change"
+        if (identity?.mode === "partition-v1" && answersCatalogVocabularyQuestion(run.named, "replayPartitionChangeOrigin") && source.under === "change"
           && input.message.class === "request" && input.message.type === "tell" && isObject(input.message.body) && input.message.body["message"] === "reserve") {
           const directory = state.page("branch", ["empty", "ready"], null, 1).items[0]?.refs["directory"];
           if (!isScopeRef(directory) || !run.at) throw mismatch("the destination records no full Directory reference");
@@ -2323,7 +2320,7 @@ class Verifier {
         // `unsupported-definition` at that entry, and never `consistent`.
         if (!owners?.rules(owner, kind)) throw new Stop("unsupported-definition", `entry ${entry.seq} is an outcome, and this replay has no rules of the owner of its operation`, where);
         const valueOwner = owners.rules(owner, kind);
-        const publication = ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7"].includes(run.named ?? "") && operation ? valueOwner?.publicationOrigin?.(state, operation, reading.own!) : null;
+        const publication = answersCatalogVocabularyQuestion(run.named, "replayJudgesLegacyPublication") && operation ? valueOwner?.publicationOrigin?.(state, operation, reading.own!) : null;
         if (publication === false) throw mismatch("the operation has malformed publication provenance");
         if (publication && publication.mode === "application") await this.#applicationOrigin(publication.from, publication.directory, publication.destination, where, depth, identity?.mode === "partition-v1" ? identity.evidence : undefined);
         else if (publication && identity?.mode === "partition-v1") await this.#applicationOrigin(publication.from, publication.directory, publication.destination, where, depth, identity.evidence, "change");

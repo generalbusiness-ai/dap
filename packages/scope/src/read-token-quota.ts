@@ -1,14 +1,15 @@
+import { answersVersionQuestion, READ_TOKEN_HOURS, isOf } from "@generalbusiness/dap-platform";
 /** Private admission reservations, not provider revocation or recorded rules. */
 import type { Entry, Input, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { LAST_MS, timeMs, type Draft } from "@generalbusiness/dap-derive";
-import { FAILED_CLAIM_COHORT, READ_TOKEN_HOURS, isOf } from "@generalbusiness/dap-platform";
+
 import type { Sql } from "./sqlite.ts";
 
 /** Destination 19 fixes one hour; the older definitions retain their hours field. */
 export function readTokenHours(owner: string, input: Input): number | null {
   if (input.type !== "act" || input.signed.intent.kind !== "read-token") return null;
-  if (owner === FAILED_CLAIM_COHORT.destination) return Object.keys(input.signed.intent.fields).length === 0 ? 1 : null;
+  if (answersVersionQuestion(owner, "scopeReadTokenFixedHourDestination")) return Object.keys(input.signed.intent.fields).length === 0 ? 1 : null;
   const hours = input.signed.intent.fields["hours"];
   return typeof hours === "number" && Number.isSafeInteger(hours) && hours >= READ_TOKEN_HOURS.min && hours <= READ_TOKEN_HOURS.max ? hours : null;
 }

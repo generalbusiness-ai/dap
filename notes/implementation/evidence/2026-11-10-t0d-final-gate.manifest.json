@@ -1,0 +1,195 @@
+{
+  "qualification": "Independent terminal metadata reconciliation of D at9b92/treec532. Earlier first-focus compiler failure stays failed; passing continuation and paired109values retain their actual earlier heads, while integrated109values and Page/Card ran1088. The9b92 adoption changed only the note and capturemanifest, with all4533other oldblob/modes corresponding exactly. Current gate source and all outcomes stay separately labeled. All111wrappers remain unknown; omittedScale6 is not a skipped/pass result. Original flags/pools/workers/deadlines and passive10sRSS sampler remain. RSS is sampled single-process resident memory, not heap/sum/threshold; prior baseline scope differs. Actual static prechecks crossed planner deployment START, corrected by370217ef; no non-overlap claim or replay. No deployment, hosted acceptance, SDKoutputchecker, private capture or publication claim.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate-review",
+  "checkpoint": "9b92bd28a4550162abde0be388670388bff3413e",
+  "tree": "c532751f02a08875a704a696ae6ecd28b8fb269f",
+  "fileCount": 7,
+  "sha256Sums": "77bb5c162ef9da70d7758dfb0efb5c5fddcc4fee6e90d2905b7237cb535a6842",
+  "files": [
+    {
+      "path": "gate-reconciliation.json",
+      "bytes": 9544,
+      "sha256": "32e4968a94055cca6b3d00ee08981f49bd820a62bd4409a74b002c85671e8aa6"
+    },
+    {
+      "path": "raw-inputs.json",
+      "bytes": 2703,
+      "sha256": "106283f9f197816773ed0f928849bb824ac87877b9135cfbdb1f939c127c8511"
+    },
+    {
+      "path": "rss-baseline.json",
+      "bytes": 2556,
+      "sha256": "cc7ea75e75eb14fc17a46175e960d4daebebe6f8649bfb4dc9f66418b31277d7"
+    },
+    {
+      "path": "scope-custody.json",
+      "bytes": 1955,
+      "sha256": "f026ecac4ccd121945b2a0845b04e8a123cb808855cf9c0052954862bdb102ff"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 42217,
+      "sha256": "a4d8144ca308b2c544d5cbc8dbc9ac2127e8c98b7184372adea12d518bcb1f7d"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 876,
+      "sha256": "399acb0a4c136141c574d2b5ca0e95313ed37015bb482366e4295a1761af4d4a"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate",
+      "payloadFileCount": 2457,
+      "fileCount": 2458,
+      "payloadBytes": 81397557,
+      "sha256Sums": "750fa9860fddbee4fa0d137d8a006195fab1963afdeb6c9c95d9676efa084f0a",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate-launch",
+      "payloadFileCount": 12,
+      "fileCount": 13,
+      "payloadBytes": 591623,
+      "sha256Sums": "c51bc8b89f07e22aae0099bf723e88fed33e6e5cfb8f6ffa75ace077840fdf91",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate-analysis-private",
+      "payloadFileCount": 7,
+      "fileCount": 8,
+      "payloadBytes": 21391370,
+      "sha256Sums": "1bab2fed29446e7266ad20b53eeebd425ee156de26a2f80367ec327974cc2228",
+      "ownerPrivate": true
+    }
+  ],
+  "priorAudits": [
+    {
+      "manifest": "notes/implementation/evidence/2026-11-09-t0d-focused-continuation-1.manifest.json",
+      "manifestSha256": "66ccb9ba56b0090e1c6ccc2f22aed21e3c7f6961f053c54fb9c3441dec541c55",
+      "qualification": "Historical source/scope/outcome remains unchanged; failed attempts and control refusals stay failed."
+    },
+    {
+      "manifest": "notes/implementation/evidence/2026-11-09-t0d-focused.manifest.json",
+      "manifestSha256": "1d134d38377b66794250a4487e976193a11d2f556a9369fb62666b77aaab8dd7",
+      "qualification": "Historical source/scope/outcome remains unchanged; failed attempts and control refusals stay failed."
+    },
+    {
+      "manifest": "notes/implementation/evidence/2026-11-09-t0d-paired-values.manifest.json",
+      "manifestSha256": "a61a17c15bf1c485361f4e76109c50647d849895a27210d079113391864c9417",
+      "qualification": "Historical source/scope/outcome remains unchanged; failed attempts and control refusals stay failed."
+    },
+    {
+      "manifest": "notes/implementation/evidence/2026-11-10-t0d-final-head-values.manifest.json",
+      "manifestSha256": "7d201cb333973f44c689f021c7a7dd7a395e454f0b84f41a9ca7e14356ac90c6",
+      "qualification": "Historical source/scope/outcome remains unchanged; failed attempts and control refusals stay failed."
+    }
+  ],
+  "externalPriorEvidence": [
+    {
+      "path": "/private/tmp/artroom-t0d-static-preflight-20261110.manifest.json",
+      "sha256": "8926f6b3652faed8d6bc3493a3a6156622b4e35137fd5ee5b9613b61f7724991",
+      "role": "Three actual9b92 prechecks passed; actual deployment-START overlap and correction370217ef remain explicit"
+    }
+  ],
+  "withheldOutputs": [
+    {
+      "name": "whitespace",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "commit-messages",
+      "bytes": 38,
+      "sha256": "70b235d629dedfb1f76eb6b8a46feb6d4145fef5efa7705ba09b8874f78d7662",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "commit-test",
+      "bytes": 591,
+      "sha256": "31bd26dfc9f619e97055325c181cc319987310e390f6eb3782f918d07c9fad17",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "helpers",
+      "bytes": 68,
+      "sha256": "192c69b8c9197758e18574e6e760995fb09650847295a8c01b477b9a28c81539",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "citations",
+      "bytes": 1570394,
+      "sha256": "e3523b72ff516ddab6a8db32c1d6cb15de7ed1ef73b12af3e00daaedc2f7339e",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "cite-test",
+      "bytes": 760,
+      "sha256": "c22ae623001ea92555ad0b551e0f4721bd8cf90dae472ea6d9236c52f574199b",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "doc-links",
+      "bytes": 36,
+      "sha256": "40d07cb44f51e6b8126957e91832efabb0a87160865396cb64fa9a1792f914e2",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "notes",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "format",
+      "bytes": 114,
+      "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "typecheck",
+      "bytes": 2218,
+      "sha256": "808c1cacdb754403a1470d046090f319f2a65157619d867b7423c4788c4cbe15",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "def-pins",
+      "bytes": 353,
+      "sha256": "c875b3f04269a9011815cd40c3d471fdaa02b25515eb6380e6cb78bdc7ae6a50",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "test",
+      "bytes": 10989285,
+      "sha256": "916de2300ff283d703d468c411eb22386962e11794600ec653ee163fb4495e4e",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "gate",
+      "bytes": 7453,
+      "sha256": "3a965d2e4f57d15b2a8473ae4eba1f320828c67662043e2153f3ca6ef1a0c8b5",
+      "qualification": "Original output stays owner-private."
+    }
+  ],
+  "privateAnalysisCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-gate-analysis-private",
+    "file": "full-reconciliation.private.json",
+    "bytes": 15798364,
+    "sha256": "c04cd42e4173c692cb4401780a6e0c4a1b666f9a45bd75c43c0e621f4e46f6b8",
+    "independentReconciliation": {
+      "file": "independent-reconciliation.private.json",
+      "bytes": 5578113,
+      "sha256": "52f3f2a4dab07add2697d688439c8c1212c0212e69beceb1c9eda4b95da4d025"
+    },
+    "actualAnalyzerReceipt": {
+      "file": "analyzer-process.private.json",
+      "sha256": "96b06c667aed7a22b9ae29604463d362628e25de5a2a89ab29df9376514e2c98"
+    },
+    "qualification": "Owner-private complete root analysis, independent5841-obligation reconciliation and actual analyzer process receipt; never copied into curated metadata."
+  },
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}

@@ -1,4 +1,5 @@
 /** Public key references for one explicit Start; private keys live in IDB. */
+import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 import type { KeyId } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isKeyId, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/dap-bytes";
 import { isCreationOffer, type CreationOffer, type Fetch, type Signer } from "@generalbusiness/dap-client";
@@ -26,7 +27,7 @@ function decode(raw: string, origin: string): KeptStart {
     if (row["recoverySaved"] !== undefined && row["recoverySaved"] !== true) throw unavailable();
     // Saved old pins bind existing journals. They grant no fresh offer.
     const configured = row["configured"];
-    if (!isRecord(configured) || Object.keys(configured).sort().join(",") !== "definition,register" || !["platform:register@7", "platform:register@8", "platform:register@17", "platform:register@26"].includes(configured["definition"] as string) || !isScopeRef(configured["register"]) || configured["register"].kind !== "register") throw unavailable();
+    if (!isRecord(configured) || Object.keys(configured).sort().join(",") !== "definition,register" || !answersVersionQuestion(configured["definition"], "pageRetainedCreationRegister") || !isScopeRef(configured["register"]) || configured["register"].kind !== "register") throw unavailable();
     if (row["v"] === 1) {
       if (typeof row["secret"] !== "string" || row["publicKey"] !== undefined) throw unavailable();
       secret = unb64url(row["secret"]);

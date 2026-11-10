@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "request": "31f98f3330401a9795f52622b57ca495eecbd002",
+  "promise": "cf19eb3ad7c503a37e6900c0c65869eb410845a2",
+  "sourceHead": "62d33377ffce1025369b98b483add4e233d03a59",
+  "sourceTree": "6d6b51966de3c51f2696f67cd8ca34a7c4dda8b4",
+  "qualification": "R3a first final gate passed at exact head 62d33377ffce1025369b98b483add4e233d03a59 and tree 6d6b51966de3c51f2696f67cd8ca34a7c4dda8b4. Actual gate.exit and analysis.exit both read exit 0. Node passed 144 cases, Counting 56, Plain 4028 with one skip, and Native 1126 with two skips, totaling 5354 passed and three skipped. All phases complete with no failure, coverage issue, report error or unhandled error. Original pools, worker limits and local deadlines. The unchanged seven-path selector omits Scale. The failed earlier control wrapper and its successful continuation remain in the separate pre-gate record. No gate rerun, source change, deployment or live acceptance claim during analysis or sealing.",
+  "fileCount": 16,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-r3a-gate-validation",
+      "fileCount": 16,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1219,
+          "sha256": "1ea69035de5e4c71f1d6501b7fc940cafec4fb58d9975a304a19621b45030217"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2029,
+          "sha256": "e3f76b3ee09eb9b275e9e1b91747020c5b6b39e6c8ecd0914e29e3d57b321d22"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "classification.json",
+          "bytes": 2883,
+          "sha256": "d6c88284ec43d5b458b23905d580e0014aa06658ba81980f1de489b7c7dcaabf"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7360,
+          "sha256": "38031af846d8757cb8ddeb9c42c0277f4b22637d59db3e2ae13d97909e3d5a29"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate.time",
+          "bytes": 37,
+          "sha256": "5ba04a1d0b482a48fb97f527c46ed9f83399eb4278b5f64b731278b1bba54612"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 614,
+          "sha256": "ae255e6d5118dd1241c3eea37e8559abd92f7b87a7740d774d90df6c043cf9b7"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 534,
+          "sha256": "c4479d1c0ec31d37e11e1191042ca4719685f0721e2a15dc8f0ed6ae745c3007"
+        },
+        {
+          "path": "seal-driver.py",
+          "bytes": 10083,
+          "sha256": "178eb549bfff69c40aa12acc0752bf1642a903dc1cf051f99016bb3a9053683d"
+        },
+        {
+          "path": "slot-before.json",
+          "bytes": 216,
+          "sha256": "2609338fcacd961ff9e28d93d7cd3b3073d7f6e70fe95dff4cb44d3b1b46361a"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 1717,
+          "sha256": "95a09d01f0c3c6b0fe69160e18b9f9427dfb65ab562d1f82003d51956160b952"
+        },
+        {
+          "path": "started.json",
+          "bytes": 722,
+          "sha256": "5cace237062aaad7764e5da61fc2a638338238d53bce90f7680d9cc102258328"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 6099,
+          "sha256": "b34adb7538b1e22cbb8778a192e95ab6eaf25b8a78110f130969dd302869650e"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 560,
+          "sha256": "b593f782a39de0806d463ba99c5cf7d9a734cf9f983b8518dab8a73da5a7f2ff"
+        }
+      ]
+    }
+  ]
+}

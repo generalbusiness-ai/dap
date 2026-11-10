@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { fixedStages, runStages } from './test.mjs';
 
 const names = ['kernel', 'node', 'counting', 'plain', 'native'];
@@ -31,6 +32,8 @@ function subprocess(command, args, options) {
 test('the fixed owner starts each stage once, in order, and finalizes once', async t => {
   const f = await fixture(t); let summaries = 0;
   const ordinary = fixedStages(f.directory, { ARTROOM_SCALE_MODE: 'omit' });
+  const sdkOwner = fileURLToPath(new URL('./public-release-modules.test.mjs', import.meta.url));
+  assert.equal(ordinary[1].args.filter(argument => argument === sdkOwner).length, 1);
   assert.equal(ordinary[4].env.ARTROOM_SCALE_MODE, 'run', 'ordinary npm test cannot inherit a gate omission');
   const selection = { include:false, reason:'outside-scale-paths', changedPaths:['docs/note.md'] };
   const gate = fixedStages(f.directory, {}, selection);

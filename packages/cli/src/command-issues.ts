@@ -1,4 +1,5 @@
 /** Issue workflows and closure links. */
+import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 import { type ActShape, expectedOf } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./command-context.ts";
 import { accepted, answered, configOf, createdBy, done, failed, handleOf, readerOf, run, signerOf, signing, stopCommand, summaryOf, usage, waitFor } from "./command-support.ts";
@@ -24,7 +25,7 @@ async function issuesOf(ctx: Context, config: Config, reader: string | null): Pr
   const D = await handleOf(ctx, config, config.repository!.directory.scope, reader);
   const summary = await summaryOf(D);
   let rows = summary.items;
-  if (summary.definition === "platform:directory@10") {
+  if (answersVersionQuestion(summary.definition, "cliIssuesPartitionRootDirectory")) {
     const coverage = await partitionIndexes(directoryReader(ctx, config, reader), config.repository!.directory, config.repository!.membership);
     if (!coverage.complete) return stopCommand(failed(`Directory indexes incomplete: ${coverage.reason}. No issue absence is inferred.`));
     rows = coverage.indexes.flatMap(index => [...index.lanes]);

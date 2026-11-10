@@ -1,0 +1,83 @@
+{
+  "qualification": "Independent metadata-only audit of the actual first C full-gate failure. Whitespace exited2 before every compiler and test stage. No case or wrapper observation ran; no pass is inferred. The authorized repair removes exactly one extra EOF LF and changes no assertion or token. Earlier attempts/control remain separate. No validation body ran during this audit.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate1-failure-audit",
+  "checkpoint": "8178fe63dca58e27d720e723fc1d1b9776405ec5",
+  "tree": "668ec7c3c30e5d0e7dcdfc57037a7ebcb8002197",
+  "fileCount": 6,
+  "sha256Sums": "cd97947e66c30beeedbde66b610502da8afd68231d2db24d01c5bb493ce8e5a8",
+  "files": [
+    {
+      "path": "eof-repair-proof.json",
+      "bytes": 636,
+      "sha256": "aa7ff49184aa7b0312b099eeb0904786cde16d86488423b0d87646ccc297ac10"
+    },
+    {
+      "path": "failure-reconciliation.json",
+      "bytes": 2886,
+      "sha256": "55a731709942d5aa52a0d4aefbad735a0ba4a2eabdde9cad46167d3f4216fa5b"
+    },
+    {
+      "path": "scope-custody.json",
+      "bytes": 9776,
+      "sha256": "960c0193bf6267a517bfba593fa0a56bf90e08967d03fe586a5f86ae1b91295a"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 8903,
+      "sha256": "70b029cb978ba31078ba09f6dee1125b2d501dcd546496056d00fa7d5b686e88"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 559,
+      "sha256": "8165593fd55b43204c0c74b898f5f083b412e7c7a7bd21c1998b3d02e040d891"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate",
+      "fileCount": 130,
+      "payloadFileCount": 129,
+      "payloadBytes": 7138864,
+      "sha256Sums": "da54b655f3238d9a38b627ad64c02ff0113c5ce16d058a6d6edb5504c6f0bb07",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate-launch",
+      "fileCount": 10,
+      "payloadFileCount": 9,
+      "payloadBytes": 10181,
+      "sha256Sums": "b7a95549fd6ddd2111fd776f7cf000215e1cb7d1886dd0670c81081eb2b3bb41",
+      "ownerPrivate": true
+    }
+  ],
+  "withheldOutputs": [
+    {
+      "name": "gate1",
+      "argv": [
+        "npm",
+        "run",
+        "gate"
+      ],
+      "exitCode": 2,
+      "bytes": 3076,
+      "sha256": "4cef11bff5f0c0ae119fa5d383d82d325108ed052fe2e7317e04348ad92ad82f"
+    },
+    {
+      "name": "gate1-whitespace",
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "-B",
+        "64be0cabd1e5a156d260e0c6ac9520be09afc7bf"
+      ],
+      "exitCode": 2,
+      "bytes": 62,
+      "sha256": "c72960c1f297a5417befcbc646e539ed4926e3e71984ceab8a9099c0a88d46f9"
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}

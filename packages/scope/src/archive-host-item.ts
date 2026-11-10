@@ -1,3 +1,4 @@
+import { answersVersionQuestion, directoryIdOf } from "@generalbusiness/dap-platform";
 /** Namespace-only host reads authorized by the admitted room binding.
  * No session, member, inspector, public reader or HTTP route uses this port.
  * This helper accepts trusted host input: it does not independently prove
@@ -6,7 +7,7 @@
 import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isEntry, isFactRef, isScopeRef, parseStrict, readItemQueryParameter, same } from "@generalbusiness/dap-bytes";
 import { isEntryOf } from "@generalbusiness/dap-derive";
-import { FAILED_CLAIM_COHORT as FC, ARCHIVE_DEVICE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_PUBLICATION_COHORT as PC, ARCHIVE_CERTIFIED_RULES_COHORT as RC, HARDENED_CERTIFIED_RULES_COHORT as HC, directoryIdOf } from "@generalbusiness/dap-platform";
+
 import type { OutsideGiven } from "./given.ts";
 import { hostBound } from "./host-wiring.ts";
 import { itemQueryPage } from "./item-query-page.ts";
@@ -26,7 +27,7 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
     const scope = given.scope(), genesis = given.genesis();
     if (!query || !scope || !pinned || !same(query.scope, scope.at) || query.limit !== 1 || query.cursor !== null || query.ids !== null) return refused;
     if (scope.at.kind === "directory") {
-      if (!same(scope.at, ask.directory) || (pinned.named !== FC.directory && pinned.named !== C.directory && pinned.named !== PC.directory && pinned.named !== RC.directory && pinned.named !== HC.directory) || query.type !== "repository" || query.states.join() !== "open") return refused;
+      if (!same(scope.at, ask.directory) || (!answersVersionQuestion(pinned.named, "scopeArchiveHostDirectory")) || query.type !== "repository" || query.states.join() !== "open") return refused;
       const row = given.state.page("repository", ["open"], null, 1).items[0];
       const claim = row?.refs["claim"], repository = row?.values["repository"] as Record<string, unknown> | undefined;
       if (row?.values["archive"] !== "journal" || !same(row.refs["register"], genesis?.seed.creator)
@@ -40,7 +41,7 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
       const seed = seeds.length === 1 && seeds[0]?.effect === "value" ? seeds[0].value : null;
       if (!isDigest(seed) || directoryIdOf(seed) !== scope.at.scope) return refused;
     } else if (scope.at.kind === "destination") {
-      if ((pinned.named !== FC.destination && pinned.named !== C.destination && pinned.named !== PC.destination && pinned.named !== RC.destination && pinned.named !== HC.destination) || query.type !== "branch" || query.states.join() !== "empty,ready"
+      if ((!answersVersionQuestion(pinned.named, "scopeArchiveHostDestination")) || query.type !== "branch" || query.states.join() !== "empty,ready"
         || !same(genesis?.seed.creator, ask.directory) || !hostBound(given, config.registerScope, config.host, config.namespace)(pinned.named)) return refused;
     } else return refused;
     return itemQueryPage(sql, { scope, pinned }, query, () => true);

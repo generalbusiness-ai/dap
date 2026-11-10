@@ -1,0 +1,74 @@
+{
+  "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
+  "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-combined-page-build/independent-audit/unit",
+  "sourceHead": "623ae740e12cfdbc56a11ad1caebae7e5beda871",
+  "sourceTree": "fd4278e948e78dff82d6f79d1a5e0ef7b9bfc83b",
+  "booking": "f1967929c8147c56f8d3afcc1162a754c1899ab3",
+  "end": "c26a3bb76e0e15e8659989b8f0d39795ff850b62",
+  "qualification": "Independent metadata audit of one actual maintained combined Page build. Four actual exits read 0, four served/dist leaf bindings agree, and all source/tool/namespace guards pass. No executable validation body ran in this audit.",
+  "readonlyScope": "New public unit files 0444 and directories 0555; complete separate private archive files 0400 and directories 0500 through at least 2026-12-10. Original run remains untouched.",
+  "files": [
+    {
+      "path": "actual-exits.json",
+      "bytes": 962,
+      "sha256": "03af87524769d58e1ce1d7de2569c848b0554a0b4fe3ac35c644d08a0189ce7e"
+    },
+    {
+      "path": "custody.json",
+      "bytes": 749,
+      "sha256": "4b0f51de07bf937c836cd41b4b469ec56ab6d4542b0101a563156b1d5bd45430"
+    },
+    {
+      "path": "served-dist-bindings.json",
+      "bytes": 903,
+      "sha256": "9cf6a7908ac1c650a62ebb4797f5110bf38faa26dc63c412ff69ddfe5ee4a397"
+    },
+    {
+      "path": "source-tool-fences.json",
+      "bytes": 743,
+      "sha256": "b01a3827479b479f6da68ab694c87ca9c9a22cc4d095fd771c03fddbcce62def"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 1790,
+      "sha256": "4b74610c14dbc0304f295b7cfd03f9832e946b70d16714d5dcd255df7fe4fc1d"
+    }
+  ],
+  "privateArchive": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-combined-page-build/independent-audit/private-archive",
+    "archiveIndexSha256": "7a4c3c4a312197ca27744df0a4a7e48b01f6ba5f7ed9ba356b5b4586f1f8e6f1",
+    "rawFiles": 134,
+    "retentionThrough": "2026-12-10"
+  },
+  "outcome": {
+    "sourceHead": "623ae740e12cfdbc56a11ad1caebae7e5beda871",
+    "sourceTree": "fd4278e948e78dff82d6f79d1a5e0ef7b9bfc83b",
+    "booking": "f1967929c8147c56f8d3afcc1162a754c1899ab3",
+    "end": "c26a3bb76e0e15e8659989b8f0d39795ff850b62",
+    "command": "npm run build --workspace @generalbusiness/dap-page",
+    "actualExits": {
+      "build": 0,
+      "innerRunner": 0,
+      "outerDriver": 0,
+      "outerLauncher": 0
+    },
+    "outerElapsedSeconds": 2.914570833,
+    "changedTrackedPath": "apps/room/page/assets.ts",
+    "assetBytes": 2424349,
+    "assetSha256": "b2aca4783893ee7f8d7882faccf8526d6430614129e4f91582ec5d9b14b83a32",
+    "matchedFourDistLeaves": true,
+    "sourcePaths": 4520,
+    "unchangedOtherSourcePaths": 4519,
+    "tools": 7525,
+    "frozenInputs": 5,
+    "workspaceLinks": 15,
+    "exportAliases": 50,
+    "binEntries": 17,
+    "globalNpmAliases": 9,
+    "ownedGroupsClosed": true,
+    "remainingChecks": "Integrated focused owners, strict original document and three-mode Lending bytes, fresh own-source Page and Card workflows, and full gate remain outstanding.",
+    "qualification": "Independent metadata readback only. No build repeat, application import, parser, compiler, test, control, capture, CI, or gate body ran during the audit. Frozen plan and launch-ready UNRUN sentences describe preparation; actual receipts above record execution.",
+    "auditHistory": "The first two metadata audits returned 1 before any evidence copy: the first compared runtime path strings with path/hash rows; the second excluded nine symlink aliases from npm's file inventory. A later launch returned 1 at Python syntax parsing before any audit step. The corrected metadata follow-up checks complete membership, every hash and all aliases using the maintained inventory semantics. No build or other validation body repeated."
+  }
+}
