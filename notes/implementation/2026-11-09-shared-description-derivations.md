@@ -1,342 +1,209 @@
-# Share the declaration descriptions
+# Share declaration descriptions
 
-Request 260991d8, promise b1536885. This is head B of coverage report
-b8b6248d under DX-T0 6f87a4e3. Placement 176190ba and A's review request
-96041272 permit B to start from A's frozen source 61dc5d2f, tree
-af81f18beb67c8caf894a3e076a5d6381c71355c.
+Request 260991d8, promise b1536885. Head B moves declaration wording and
+input-schema derivation into portable Client code. The integrated source
+has tree c278e416. The original checkpoint remains at 90c7dd9b; the
+rebuilt branch reaches 3cf87cb5 with the same tree.
+This evidence adoption changes only this note and seven manifest files.
+All 4,520 other prior blobs and modes match tested 3cf87cb5. Regenerate
+the comparison with:
 
-## Current integrated Page build
+```sh
+git diff --raw --no-abbrev --no-renames 3cf87cb5 HEAD
+```
 
-Actual main c905518409e4449f35e1b9423c4aa226bce5c2ce landed BR13 at tree
-86f3511a63d4822b99341863b933bd13ad485908. B merged that main in ordinary
-merge 623ae740e12cfdbc56a11ad1caebae7e5beda871, tree
-fd4278e948e78dff82d6f79d1a5e0ef7b9bfc83b. The merge preserves both
-reviewed seal sets and all three completed Client control boundary files.
-The owned namespace now has 15 workspace links and 50 export aliases,
-including the supported Contract catalog-vocabulary subpath.
+The workroom binds the final Git head and tree after the documentation
+commit.
 
-Booking f1967929c8147c56f8d3afcc1162a754c1899ab3 ran one maintained
-npm run build --workspace @generalbusiness/dap-page at that merge.
-END c26a3bb76e0e15e8659989b8f0d39795ff850b62 closes the slot. The actual
-build, inner runner, outer driver and launcher exits each read 0.
-The outer receipt records 2.914570833 seconds. All 7,525 tool pins and
-five frozen inputs stayed exact. Only apps/room/page/assets.ts changed
-among 4,520 tracked paths; the other 4,519 source hashes stayed fixed.
-Every owned process group closed, with empty inner and outer cleanup.
+## Implementation
 
-The generated asset has 2,424,349 bytes and SHA-256
-b2aca4783893ee7f8d7882faccf8526d6430614129e4f91582ec5d9b14b83a32.
-The independent audit matches PAGE_HTML, PAGE_JS, OAUTH_HTML and OAUTH_JS
-to the retained and checkout copies of all four dist leaves. It verifies
-every frozen source baseline against immutable merge blobs. No build
-or other application validation body repeated during the audit.
-[Combined Page build manifest](evidence/2026-11-10-t0b-combined-page-build.manifest.json)
-retains the actual exits, output bindings and guard results.
+Client owns the complete declaration renderer and its shared field,
+step, grant, guard and schema helpers. `descriptionsOf(catalogue)` closes
+those helpers over an explicit structural `MarkCatalogue`: pin keys,
+rule keys and optional readonly refusal names. The description modules
+import no Platform, MCP service or Node adapter. No executable rule or
+callback enters the catalogue, and no global native catalogue supplies
+a hidden default.
 
-The independent metadata audit returned 0. The new public unit contains
-only safe summaries and hashes. Its separate complete private archive
-retains the original raw files, frozen inputs, temporary Node compile
-cache and metadata audit history through at least 2026-12-10. Both new
-copies are read-only; the original run, membership and modes remain
-untouched.
+The mark wording table remains in Client. Each binding expands it over
+the supplied catalogue's own pin keys. Pin, rule, mark-code and BY_NAME
+lookups require own properties. Unknown names keep the literal fallback.
+Recursive guards and schemas use the same lexical binding, so two
+catalogues can render different nested refusal names independently.
 
-The earlier Page builds and workflow outcomes below remain historical.
-They do not establish the combined source's browser or gate results.
-The integrated focused owners, strict original document bytes, all three
-Lending catalogue modes, fresh own-source Page and Card workflows, and
-full gate remain outstanding. The retained Native CLI story belongs in
-that gate. The earlier preparation and open-limit paragraphs describe
-their recorded checkpoints. This head claims no deployment or live
-acceptance result.
+MCP's private `description-context.ts` reads actual `VERSIONS` once and
+projects only plain pin and refusal metadata. It creates one binding.
+The existing describe module retains all 27 exports, and the marks
+module retains its three exports. Ten bound members use direct
+member destructuring; no wrapper functions change their signatures.
+The private binding does not enter the public MCP barrel. Existing
+service and catalogue consumers retain their imports.
 
-## What changed
+CLI browser helpers forward Client's `describeActLine` as the existing
+`describe` export and use the shared grant helper. The compact renderer
+binds an empty catalogue inside Client. It preserves CLI wording and
+states the declared requirement without asserting caller standing.
+The complete MCP description, guard labels, schema, 1,000-character
+bound and pointer to omitted guards retain their behavior.
 
-The client now owns the five description derivations: actSentence,
-typeWords, fieldLines, guardSentences and actInputSchema. The complete
-portable module moved with its private helpers, complete-description
-composition and schema helpers. Splitting those functions would leave
-the same guard, operand and field logic in two packages.
+B adds two cases overall: the compact-line case and the catalogue-binding
+case. The latter checks two independent nested refusal catalogues and
+the `constructor@1` fallback. The existing totality case moves intact
+and binds an empty catalogue. Existing MCP, CLI and Native story
+assertions remain in place.
 
-The platform mark text and refusal descriptions moved to
-packages/client/src/mark-descriptions.ts. Its table, version expansion,
-own-property checks and fallback text remain exact copies. The client
-already depends on the bytes and platform packages. This head adds no
-package dependency and imports no MCP service or Node adapter into the
-client.
+## Integration and boundaries
 
-The existing MCP describe and marks modules forward every previous
-public export from the client. The MCP service, catalogue, errors and
-view consumers retain their existing imports. Their integration cases
-remain at that boundary. The pure contract guard, operand and part
-totality case moved to the client with its full title and every assertion
-unchanged.
+B merged landed BR13 main c9055184 in ordinary merge 623ae740. The seal
+table keeps the exact BR13 table plus B's reviewed helper row and three
+new owner rows. It preserves BR13's claim seal and A's shared expected
+helper. The maintained parser produced the adopted values; no assertion
+or selector weakened. The [initial source metadata], [binding seals] and
+[narrowed adapter seal] retain their actual producer receipts.
 
-CLI browser helpers now forward the client's describeActLine as their
-existing describe export. They also use the shared grantAction when
-listing held acts. The compact line keeps the current CLI text,
-including its existing article and grant wording. Common act, grant,
-field and type helpers own both display formats. No generic description
-algorithm remains in the CLI module.
+The owned namespace has 15 workspace links and 50 supported export
+aliases. It includes Contract's catalog-vocabulary leaf and the inherited
+Counter, Lending and browser alias repairs. B adds no package or lock
+dependency. Definition pins, canonical protocol packets, admission,
+custody and application rules stay unchanged.
 
-The new compact-line case fixes the current output at the portable
-boundary. The existing browser bundle case also requires the shared
-client description module and excludes MCP runtime inputs. All existing
-MCP integration and Native CLI story assertions remain unchanged.
+The combined Page build ran at 623ae740. The generated asset and sealed
+[combined build] evidence entered 90c7dd9b. Its four served scalars match
+the retained HTML and JavaScript dist leaves. The own-row control ran at
+6869a035. Its Client describe, mark-descriptions and describe-test files
+remain byte-identical through 90c7dd9b and 3cf87cb5. The integrated focus,
+strict capture and actual browser workflows ran at 90c7dd9b. Clarification
+ea70e3dd preserves these execution labels. Their existing source
+correspondence and the new tree-equality proof support the rebuilt head;
+no earlier witness reran.
 
-## Decisions and why
+## Actual validation
 
-MCP descriptions include caller standing, whole guard sentences and
-closed schemas. CLI compact lines state only the declared requirement.
-The CLI adapter keeps that distinction. It supplies no standing claim
-and judges no guard. Its compact formatting uses the same step, grant
-and field derivation helpers as the full text.
+Each row records its execution source. Workflow steps are not individual
+case counts. A failed gate remains failed.
 
-The full format remains the default for typeWords and fieldLines. The
-compact format is an explicit adapter choice. The MCP guards, unknown
-guard label, schema construction, tool-description bound and omitted
-guard pointer retain their existing code. A's shared expected-revision
-helper and its prototype-safe subject resolution remain unchanged.
-
-Both description modules remain portable. The mark module reads the
-existing platform version table. It derives documentation, not
-authority. No kernel, definition, pin, canonical byte or scope rule
-changes in this head.
-
-Before any source edit, the builder copied the two committed document
-files and recorded their byte counts and hashes:
-
-| Document | Bytes | SHA-256 |
-|---|---:|---|
-| docs/lanes-reference.md | 139830 | 1b1272ba17778b79cac8e351196e206e6473594fb8da36d064ccde11a2a79b04 |
-| docs/mcp-tools.json | 262660 | 4e18d71826d10cd3d8ab64f507ee59e5a69dc740185348988143488098659b64 |
-
-The durable baseline is
-/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-source-metadata/unit/baseline.
-Its manifest retains both exact pre-edit files. Neither document changed. The booked document witness regenerated both
-files into fresh evidence and compared their actual bytes with those
-originals. Both comparisons passed without rewriting a document.
-
-The MCP inventory case currently compares canonical JSON. That protects
-the listed tools' meaning but does not establish byte equality. The
-booked witness must generate the same formatted tool list into a new
-scratch output and compare its actual UTF-8 bytes with the original
-baseline. The lane reference witness must use its maintained generator
-and the same exact comparison. A differing generated file fails the
-witness. Rewriting the committed document does not repair it.
-
-The CLI browser helper already has a whole-file source seal. Its moved
-algorithm needs protection in the new shared owner as well. The builder ran
-the maintained sourceSeal with the pinned Rolldown parser
-after checking its result against the exact landed A/main CLI blob.
-The candidate table changes the CLI row and adds the two portable
-owners. An independent line comparison confirms that every other
-table byte and assertion remains unchanged. Commit 0ee5b70a adopts
-the actual output. No guessed hash enters the table.
-
-## Bind catalogue data below the Platform boundary
-
-Ruling f917e28d accepts the explicit-catalogue repair. The active-source
-boundary permits only exact Client application wrappers to import
-Platform. The first moved mark module fell outside that boundary.
-Its successful focused run did not include the active-source owner.
-
-Client now exports descriptionsOf(catalogue) and the structural
-MarkCatalogue type. Seven description helpers and the three mark
-members close over that supplied metadata. Nested guard and schema
-recursion retain the same binding. Client holds no native catalogue,
-registration, setter, shipped-pin copy, or refusal snapshot.
-
-The private MCP description-context.ts adapter reads actual VERSIONS
-once. Object.entries/fromEntries projects only own pin/rule records and
-their existing readonly refusal values. It passes no callable rule to
-Client and invokes no rule callback. The two legacy MCP modules expose
-the same 27 description names and three mark names through direct bound
-members and independent forwards. The MCP barrel does not export the
-adapter. CLI compact wording uses one empty catalogue inside Client.
-
-The existing own-definition and own-rule checks remain. BY_NAME now
-also requires an own wording row because an explicit catalogue may
-contain prototype-like names. Exactly one new case binds two distinct
-catalogues side by side, checks each through a nested sentence, and
-requires the unknown fallback for an own constructor@1 entry and the
-Object constructor's own name key. A shared last-binding variable or
-an inherited BY_NAME row would change those expected answers.
-
-The pure totality title and assertions remain unchanged, bound to an
-empty catalogue. All existing MCP and CLI assertions remain unchanged.
-The next booked focus must include the whole active-source owner.
-The binding repair now has actual source-seal metadata and one bounded
-guard control at 6869a035, tree 769324fbbaa4c6b575509776687687fcfe116a53.
-Full integrated compiler, focused-test, document, Page and gate witnesses
-remain due after actual BR13 main integration.
-
-Producer END 9e7e1275625b2cd4957897c7e53046f44fcc0fed records actual exit
-0. The maintained parser matched both old Client seals against immutable
-374ab615 source before deriving two changed Client values and one new
-private MCP adapter value. The independent audit confirms that every
-other table byte and assertion stays exact.
-[Binding source-seal manifest](evidence/2026-11-10-t0b-explicit-catalogue-seals.manifest.json)
-records those results. The builder committed the exact proposed table at
-d25554e49358cb1a399a532c512c44d20d645b80. Every other production
-and test blob remains identical to 6869a035.
-
-Control END d043dfa8bdc15f9b058aa49ae3554b42ea11ff2a records the one
-maintained BY_NAME control. The whole three-case owner passed unchanged:
-actual child exit 0, three passed. Replacing the single own-row condition
-with true produced actual child exit 1: two passed and the named case
-failed by the intended AssertionError. The inherited Object name differed
-from the literal unknown-mark fallback. The maintained control, driver
-and launcher each returned 0. The maintained control restored the exact
-source bytes, and the outer runner rewrote nothing. All source/tool
-fences passed and all owned process groups closed naturally.
-[Own-row control manifest](evidence/2026-11-10-t0b-by-name-control.manifest.json)
-retains every case identity, status and actual exit.
-
-The first metadata sealer returned 1 because it compared the original
-relative cwd, packages/client, with an absolute path. Its separate
-metadata follow-up resolved that unchanged cwd under the frozen root
-and returned 0. No test or control body reran. The audit history retains
-both metadata outcomes.
-
-The public units expose safe summaries and hashes. Private archives keep
-the complete original buffers, reports, source copies and remaining
-cache files through at least 2026-12-10. The curated units and private
-archives are read-only. All original raw evidence remains untouched.
-
-The earlier a52690e7 and 0ee5b70a witnesses below remain historical.
-They do not establish the explicit-catalogue repair's integrated results.
-
-A later static type review found that PlatformRule exposes refusals only
-on its grant and guard variants. The builder committed the one-line
-property narrowing at b4d35c53, preserving absent and undefined metadata,
-the same readonly refusal arrays, and every Client module and assertion.
-No actual compiler failure preceded that source repair.
-
-Producer END be3c3bda039c204c468b04769d8df348adc5170a records actual exit
-0 for the single adapter owner. The maintained parser matched immutable
-c0a4ace7 source against its admitted d8ef725f seal before deriving the
-narrowed d249472e value. The builder committed the exact one-literal
-replacement at 2461231a84ff0de1b2307ccb3642937f7513ac20. Every other
-security-table byte and assertion remains exact.
-[Adapter narrowing seal manifest](evidence/2026-11-10-t0b-rule-refusal-seal.manifest.json)
-retains the actual metadata and independent audit.
-
-Focus END ba76184617785f66d49622cdcc08799e82f65569 records the bounded
-run at 2461231a, tree 5fd43395e626234bd3e49afafdb79d9d5e9f588b.
-All four actual exit files read 0. The two Client compiler contexts and
-four MCP compiler contexts passed, followed by the whole eight-case MCP
-describe owner. All seven maintained commands returned 0. The static
-ledger, public reporter and built-in JSON agree on eight cases passed
-exactly once, with no skipped cases, retries or unhandled errors.
-All 4491 tracked source fences stayed exact and all owned process groups
-closed naturally. The Client test owner did not run, and the completed
-BY_NAME control did not repeat.
-[Bounded adapter focus manifest](evidence/2026-11-10-t0b-rule-refusal-focused.manifest.json)
-retains those actual results and their complete case identities.
-
-The raw slot receipt retains its frozen preparation sentence, "no focused
-body has run". That sentence predates execution. The actual completed
-commands, case records and exit files supersede it. The raw archive
-remains unchanged, and the public audit states this qualification.
-
-This bounded run does not cover the final BR13 integration. The whole
-active-source owner, integrated Page build and browser workflow, strict
-original document and Lending catalogue bytes, and the final gate still
-remain due. The retained Native CLI story belongs in that final gate.
-
-Before the final gate, check the format step on every touched JSON file
-and check every added package subpath against the Counter and Lending
-alias maps. Integrate actual BR13 main with preserved history, refresh
-the owned dependency and runtime-package inputs, and regenerate the
-original document and Lending catalogue bytes without accepting rewrites.
-
-## Final evidence
-
-The original source preparation used an APFS dependency copy that returned
-0. Its original setup returned 1 because the bin guard wrongly excluded
-owned workspace commands under packages. A separate metadata follow-up
-returned 0 without repeating the copy. The original dependency view had 14
-workspace links, 48 export aliases, 17 bin entries, and 162 verified
-copied tool files.
-
-The builder's source-seal metadata producer returned 0. The independent audit
-returned 0 and preserves every setup outcome. The curated unit contains
-only public-safe metadata and the original document bytes. Only that
-new unit is read-only; the original temporary receipts remain untouched.
-
-The focused compiler, test, and document results below cover exact
-source a52690e7, tree a0a63c0e997d7b412fb503291dac4cb084763bec.
-The source-seal parser remains a separate metadata operation. The
-retained Native CLI story, Page browser workflow for the final integrated
-source, and final gate remain pending.
-
-[Source metadata manifest](evidence/2026-11-09-t0b-source-metadata.manifest.json)
-records the exact receipts, sources, and hashes.
-
-| Check | Command or boundary | Exit | Output digest |
+| Witness | Execution head | Actual outcome | Evidence |
 |---|---|---|---|
-| Portable descriptions | Complete client describe owner, 2 cases | 0 | See focused manifest |
-| MCP integration | Complete MCP describe and inventory owners, 13 cases | 0 | See focused manifest |
-| Browser API boundary | Complete CLI browser-boundary owner, 1 case | 0 | See focused manifest |
-| Existing CLI wording | Retained Native CLI story assertions | Not run | Pending |
-| Document generation | Actual lane reference and formatted MCP tool-list bytes against saved originals | 0 | Original hashes above |
-| Source seals | Actual maintained producer; all other table and assertion bytes unchanged | 0 | See source metadata manifest |
-| Security inventory | Complete Node owner, 12 cases | 0 | See focused manifest |
-| Compiler closure | 26 unique affected contexts | 0 | See focused manifest |
-| Page production asset | One maintained npm run build --workspace @generalbusiness/dap-page | 0 | See Page build manifest |
-| Final gate | One npm run gate at the final source | Not run | Pending |
+| Combined Page build | 623ae740 | Four exits 0; all four dist bindings match | [combined build] |
+| Own-row control | 6869a035 | Baseline: 3 pass, exit 0. Mutant: 2 pass, one intended AssertionError, exit 1. Control and wrappers: 0 | [own-row control] |
+| Integrated focus | 90c7dd9b | 26 compiler phases, 24 Node cases and 17 plain cases pass; no skips, retries or errors | [integrated focus] |
+| Strict original bytes | 90c7dd9b | All three complete files match their originals; Lending includes default, generic and add | [strict capture] |
+| Page and Card workflows | 90c7dd9b | First attempts succeed: Page 12 steps, Card 13 steps, including seven named browser steps | [browser CI] |
+| First gate | 90c7dd9b | FAILED 1 at commit messages; all 5,841 cases, 45 compilers and 16 typecheck scripts unreached | [first gate failure] |
+| Static prechecks | 3cf87cb5 | Whitespace, commit messages and format pass; all six actual exit files read 0 | [static preflight] |
+| Replacement gate | 3cf87cb5 | PASS: 5,838 cases and 3 expected skips; all 5,841 obligations match; three actual exits 0 | [replacement gate] |
 
-The maintained Page build ran once at bbbadc4080, tree
-6d92cc072623cd7f77c84e8f3ac183b6d9d2167a, under booking ea2f6439.
-The actual build, inner runner, outer driver, and launcher exits each
-read 0. The independent metadata audit returned 0 and confirms that
-only apps/room/page/assets.ts changed among tracked files. All other
-source, tools, and lock bytes stayed fixed, the four required dist
-leaves matched their receipts, and the owned process group closed.
+The replacement gate passed at 3cf87cb5. END 58a16d59 closes the slot.
+All 45 compiler contexts, 16 typecheck scripts and 12 maintained gate
+steps passed. The pinned analyzer found zero issues or unexpected known cases. All 111 wrapper records remain
+unknown. The Scale predicate omitted six obligations; they count as
+neither passed nor skipped. The skipped Page recorder module has no
+reported duration. The inner time is 976.739126583 seconds; the outer
+time is 979.060520417 seconds.
 
-The generated asset has 2377462 bytes and SHA-256
-bf8f50411467d86d35142f36f31a9fe63ae7535bc4b636b2e9d49b66eab0f80a.
-[Page build manifest](evidence/2026-11-09-t0b-page-build.manifest.json)
-retains the actual exits, output hashes, guards, and source receipts.
-Only the curated unit is read-only. The original raw run and its
-unpublished temporary Node compile cache remain untouched. This build
-provides no browser workflow or gate result.
+The unchanged passive ten-second RSS sampler recorded 98 samples,
+568 Node or workerd rows, 17 explicit PID races and zero sampling errors.
+Maximum sampled single-process RSS was 2,477,568 KiB for Node and
+3,061,872 KiB for workerd. The prior BR13 baseline has a different scope.
+These samples measure neither heap usage nor summed or instantaneous
+peak memory, and they define no threshold. Flags, pools, workers and
+deadlines remained unchanged.
 
-The sequential focused body ran once under booking 6ea9884c. Its Node,
-focused pipeline, document capture, inner driver, and outer launcher
-exits each read 0. All 26 compiler invocations and the plain test command
-returned 0. An independent audit reconciles all 12 Node titles and all
-16 plain cases against the static ledger, public reporter, and built-in
-JSON. Every case passed exactly once.
+The focus reconciles complete static, public-reporter, built-in JSON and
+Node TAP identities. Its four whole plain owners cover Client describe,
+MCP describe, MCP inventory and CLI browser-boundary tests. Both complete
+Node owners, active-source and security-entry-points, passed. The
+[historical focus] remains a separate earlier result.
 
-The document capture produced exactly 139830 lane-reference bytes and
-262660 MCP tool-list bytes. Their SHA-256 values equal the original
-hashes above. The witness uses the maintained lane generator and the
-kept MCP catalogue fixtures with the same Prettier formatting. Those
-fixtures establish document bytes, not Native authority or live
-acceptance.
+The strict capture produced 139,830 lane-reference bytes, 262,660 MCP
+tool-document bytes and one 298,441-byte Lending file containing all
+three modes. Every byte equals its retained original. No document,
+fixture or baseline changed. The retained DEP0205 warning concerns the
+loader's deprecated `module.register()` API. These explicit fixtures
+establish derived bytes; they establish no Native authority or live
+outcome.
 
-[Focused validation manifest](evidence/2026-11-09-t0b-focused.manifest.json)
-retains the actual exits, all 27 pipeline commands, full case records,
-source fences, and both generated documents. All 4463 tracked paths
-stayed fixed throughout the body, and every owned process group closed.
-Only the new curated unit is read-only. The original raw run and its
-temporary files remain untouched. The original 9d2e5fa4 follow-up changed only the note
-and evidence manifest. Its runtime source stayed at a52690e7.
+Page run 42784374227 and Card run 42784378544 used original attempt 1.
+The Page browser steps cover screenshots, recorded demos, create room
+and local label. Card covers Card, Grow room and Grow routing. Both
+annotation lists are empty; no workflow retry or fallback ran.
 
-## Open limits
+The focus and capture kept all 4,521 source hashes and 7,525 tool pins
+fixed, with six and eleven external inputs respectively. Their complete
+namespace and process guards passed, and inner and outer cleanup stayed
+empty. The preflight kept 4,521 source paths, 7,534 tool pins and 22 inputs
+fixed. Its inner time is 11.416213459 seconds; its outer time is
+12.971013792 seconds. Those times measure different boundaries.
 
-Request 260991d8 owns validation, the byte-identity witnesses, source
-seals, review and landing. Before its final gate, merge current main and
-retain the shared seal table exactly as main has it. The candidate
-starts from A's frozen review head and merges its
-landed main commit 64be0cab in ordinary merge 9256f2de.
+## Failed gate and authorized history copy
 
-The moved browser dependency changed the generated Page module.
-The earlier a52690e7 commit adopted the maintained output. The final
-integrated source still needs its Page browser workflow and final gate.
+The first gate passed whitespace, then rejected the inherited 9256f2de
+merge subject at 101 characters. It observed no cases and ran no pass
+analyzer. END 9b17bfc6 closes that failed slot. Its raw evidence stays
+separate from the successful focused checks and distinguishing control.
 
-The DX-T0 parent 6f87a4e3 stays open for its typed browser-model head.
-Request d5fa31c9 later reuses these shared derivations for its typed
-client methods and expressions. This head makes no deployment or live
-acceptance claim.
+Ruling 7fb1a2da requires the checker to remain unchanged and the old
+branch to stay at 90c7dd9b. The new branch is
+`builder/shared-descriptions-t0b-20261110`. Its replacement merge subject
+is "Merge landed shared expected revisions into descriptions", with
+56 characters. The original branch and observed remote remain at 90c7.
+
+The first reconstruction setup returned 1 before any Git call because
+its guard expected 55 rather than 56 characters. It created no new
+objects, ref or receipt directory. The corrected v2 reconstruction and
+independent auditor each returned 0, as root-observed process receipts
+record. The [history proof] matches all 6,180 ordered commit trees and
+mapped parent order, including the 15-commit branch range. Fourteen
+commit objects change only mapped parent IDs and that one authorized
+subject. Every other header, author, committer, message body and tree
+stays exact. The final source diff is empty.
+
+Before-and-after ref snapshots alone do not prove the absence of
+transient writes. The retained process receipts bind the reconstruction
+to the reviewed driver. No reset, amend or force operation formed part
+of that driver. The failed original gate stays failed; tree equality
+carries earlier evidence without relabeling its execution head.
+
+The actual prechecks at 3cf87cb5 then passed. The unchanged message
+checker checked 15 commits and flagged none, and format reported that
+all matched files use Prettier code style. END 73a68ba5 closes that
+preflight. It is separate from the replacement gate's pending result.
+
+## Retained audit history and limits
+
+The original dependency copy returned 0. Its first setup audit returned
+1 on the owned-bin guard; a metadata follow-up returned 0 without another
+copy. The control sealer first misread its relative cwd and then passed
+a metadata-only follow-up. The combined-build audit retains two reader
+assertions and a Python syntax refusal before its final audit returned
+0. None repeated the build or control. The [initial source metadata],
+[own-row control] and [combined build] retain those outcomes. The
+[historical build] records an earlier asset, not the combined build.
+
+The own-row control restored exact source bytes. Its intended mutant
+failure distinguishes inherited BY_NAME data from the literal unknown
+fallback; it does not establish Native authority or acceptance. Complete
+raw buffers, reports, setup receipts and indexes stay in separate private
+archives through at least 2026-12-10. Archives retain original output bytes and all audit outcomes.
+Manifests name each sealed unit and its modes. Public manifests expose
+safe summaries and hashes rather than raw payloads.
+
+This head claims no deployment or live acceptance and accepts no altered
+fixture bytes. DX-T0 parent 6f87a4e3 stays open for D's typed
+browser-model item. Under placement 176190ba, E (d5fa31c9) starts source
+work after B and C land.
+
+[combined build]: evidence/2026-11-10-t0b-combined-page-build.manifest.json
+[own-row control]: evidence/2026-11-10-t0b-by-name-control.manifest.json
+[integrated focus]: evidence/2026-11-10-t0b-integrated-focus.manifest.json
+[strict capture]: evidence/2026-11-10-t0b-integrated-capture.manifest.json
+[browser CI]: evidence/2026-11-10-t0b-browser-ci.manifest.json
+[first gate failure]: evidence/2026-11-10-t0b-final-gate-commit-message-failure.manifest.json
+[history proof]: evidence/2026-11-10-t0b-history-proof.manifest.json
+[static preflight]: evidence/2026-11-10-t0b-rebuilt-static-preflight.manifest.json
+[replacement gate]: evidence/2026-11-10-t0b-final-gate-2.manifest.json
+[initial source metadata]: evidence/2026-11-09-t0b-source-metadata.manifest.json
+[binding seals]: evidence/2026-11-10-t0b-explicit-catalogue-seals.manifest.json
+[narrowed adapter seal]: evidence/2026-11-10-t0b-rule-refusal-seal.manifest.json
+[historical focus]: evidence/2026-11-09-t0b-focused.manifest.json
+[historical build]: evidence/2026-11-09-t0b-page-build.manifest.json

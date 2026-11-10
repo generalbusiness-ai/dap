@@ -1,0 +1,72 @@
+{
+  "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
+  "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-integrated-focus/independent-audit/unit",
+  "sourceHead": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
+  "sourceTree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
+  "booking": "405977ef19b3c062a4e4c3d0a1ec08fc3b195b24",
+  "end": "34b3c8c6169aa065c2262fc7209277993beb692c",
+  "qualification": "Independent metadata-only audit of the completed integrated focus slot. All actual exits and complete same-run evidence reconcile. No validation body repeated.",
+  "readonlyScope": "New public unit files 0444 and directories 0555; complete separate private archive files 0400 and directories 0500 through at least 2026-12-10. Original run remains untouched.",
+  "files": [
+    {
+      "path": "actual-exits.json",
+      "bytes": 1256,
+      "sha256": "4d1bd818c6527fdf864c60954a89307153287b2e55200a154d50745fb4b3b7ab"
+    },
+    {
+      "path": "custody.json",
+      "bytes": 773,
+      "sha256": "bb9bb26ca7cde65f4f582911ed505ef29389e11898fc6d95d55c4f1f6e53391a"
+    },
+    {
+      "path": "details.json",
+      "bytes": 31957,
+      "sha256": "ff979dc931b6510a0ff020b47474a6bcecaa34d592f115a0f305e76c1d519287"
+    },
+    {
+      "path": "fences.json",
+      "bytes": 953,
+      "sha256": "be876ee8a444fbe18b2ce93faf26bf98744a46aa1ea6d494e2aff16e5d81e736"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 1024,
+      "sha256": "a5ab22e374234de59904f8cdd2bb56e1f8ab63f57143894ef68c89f67df90513"
+    }
+  ],
+  "privateArchive": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-integrated-focus/independent-audit/private-archive",
+    "archiveIndexSha256": "b32966043a0ef50e3dd09fc33bcd08db3a3403b5731cb774246d4dc1969666ee",
+    "rawFiles": 63,
+    "retentionThrough": "2026-12-10"
+  },
+  "outcome": {
+    "sourceHead": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
+    "sourceTree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
+    "booking": "405977ef19b3c062a4e4c3d0a1ec08fc3b195b24",
+    "end": "34b3c8c6169aa065c2262fc7209277993beb692c",
+    "outerElapsedSeconds": 43.306313791,
+    "sourcePathsUnchanged": 4521,
+    "toolsUnchanged": 7525,
+    "inputsUnchanged": 6,
+    "workspaces": 15,
+    "exportAliases": 50,
+    "binEntries": 17,
+    "npmAliases": 9,
+    "ownedGroupsClosed": true,
+    "originalRun": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-integrated-focus/run",
+    "qualification": "Independent metadata audit only. Frozen UNRUN and copied Page-build preparation sentences remain historical; actual receipts and specific outcomes describe this completed slot. No body repeated.",
+    "compilerContexts": 26,
+    "maintainedCommands": 27,
+    "nodeCasesPassed": 24,
+    "plainCasesPassed": 17,
+    "wholePlainOwners": 4,
+    "errors": 0,
+    "retries": 0,
+    "repeats": 0,
+    "skips": 0,
+    "controlRepeated": false,
+    "fullGate": "Outstanding"
+  }
+}
