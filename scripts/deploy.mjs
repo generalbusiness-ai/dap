@@ -1,7 +1,8 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { createHash, randomUUID } from "node:crypto";
-import { lstat, readFile, writeFile, mkdir, mkdtemp, realpath, readdir, rename } from "node:fs/promises";
+import { constants } from "node:fs";
+import { lstat, readFile, writeFile, mkdir, mkdtemp, realpath, readdir, rename, open } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -61,7 +62,8 @@ function argumentsOf(argv) {
 
 async function boundedFile(path, limit) {
   const info = await lstat(path);
-  if (!info.isFile() || info.isSymbolicLink() || info.size > limit) throw new Error("Invalid retained file.");
+  if (!info.isFile() || info.isSymbolicLink()) throw new Error("Invalid retained file.");
+  if (info.size > limit) throw new Error("Retained file exceeds its bound.");
   const bytes = await readFile(path);
   if (bytes.length > limit) throw new Error("Retained file exceeds its bound.");
   return bytes;
@@ -132,6 +134,31 @@ function reportedDeployments(bytes) {
       && uuidPattern.test(row.version_id)) rows.push({ worker: row.worker_name, version: row.version_id }); } catch { /* Retain a reported version despite another malformed row. */ }
   }
   return rows;
+}
+
+async function recoverDeploymentOutput(path, pending) {
+  const limit = 256 * 1024;
+  const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+  try {
+    const info = await file.stat();
+    if (!info.isFile()) throw new Error("Invalid retained file.");
+    const buffer = Buffer.alloc(Math.min(info.size, limit));
+    let length = 0;
+    while (length < buffer.length) {
+      const { bytesRead } = await file.read(buffer, length, buffer.length - length, length);
+      if (!bytesRead) break;
+      length += bytesRead;
+    }
+    const bytes = buffer.subarray(0, length), after = await file.stat();
+    const truncated = Math.max(info.size, after.size) > length;
+    // A partial final line cannot establish a reported deployment.
+    const complete = truncated ? bytes.subarray(0, bytes.lastIndexOf(10) + 1) : bytes;
+    pending.reportedDeployments = reportedDeployments(complete);
+    pending.version = pending.reportedDeployments.length === 1 ? pending.reportedDeployments[0].version : null;
+    pending.outputRecovery = { kind: "bounded-prefix", bytes: length, fileBytes: after.size, truncated,
+      completeRecordBytes: complete.length, sha256: sha256(bytes) };
+    if (!truncated) pending.outputSha256 = sha256(bytes);
+  } finally { await file.close(); }
 }
 
 export async function deployMain(argv, { root = checkout, run = runProcess, env = process.env, now = () => new Date(), write = line => process.stdout.write(line), persist = atomicRecord } = {}) {
@@ -211,8 +238,12 @@ export async function deployMain(argv, { root = checkout, run = runProcess, env 
         previousCommit: plan.prior, acceptedMigrations: plan.added, bundle: plan.bundle, wrangler: WRANGLER,
         version: null, time: now().toISOString(), scratch, qualification: "Deployment attempted; reconcile its version before another run. No automatic retry or rollback." };
       const deployed = await wrangler(["--config", resolve(root, plan.path)], plan.name, "deploy");
-      let bytes = Buffer.alloc(0);
-      try { bytes = await boundedFile(deployed.output, 256 * 1024); } catch { /* Preserve the attempted deployment as partial. */ }
+      let bytes;
+      try { bytes = await boundedFile(deployed.output, 256 * 1024); }
+      catch (error) {
+        pending.outputReadFailure = error instanceof Error ? error.message : "Deployment output read failed.";
+        throw error;
+      }
       pending.reportedDeployments = reportedDeployments(bytes);
       pending.version = pending.reportedDeployments.length === 1 ? pending.reportedDeployments[0].version : null;
       pending.outputSha256 = sha256(bytes);
@@ -230,11 +261,8 @@ export async function deployMain(argv, { root = checkout, run = runProcess, env 
     if (pending) {
       // A log write can fail after Wrangler has already reported its version.
       if (!pending.reportedDeployments) {
-        try {
-          const bytes = await boundedFile(join(scratch, `${pending.config}-deploy.ndjson`), 256 * 1024);
-          pending.reportedDeployments = reportedDeployments(bytes); pending.outputSha256 = sha256(bytes);
-          pending.version = pending.reportedDeployments.length === 1 ? pending.reportedDeployments[0].version : null;
-        } catch { /* Preserve the unknown attempted outcome. */ }
+        try { await recoverDeploymentOutput(join(scratch, `${pending.config}-deploy.ndjson`), pending); }
+        catch (recoveryError) { pending.outputRecoveryFailure = recoveryError instanceof Error ? recoveryError.message : "Deployment output recovery failed."; }
       }
       let path = null;
       try { path = await atomicRecord(scratch, pending); } catch { /* The JSON result remains available when storage fails. */ }

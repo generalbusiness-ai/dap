@@ -44,7 +44,8 @@ async function fixture(t, names = ["grow"]) {
       { type: "wrangler-session", version: 1, wrangler_version: "4.147.0", command_line_args: ["deploy", "--keep-vars"] },
       { type: "deploy", version: 1, worker_name: behavior.worker ?? config.name, version_id: version },
     ];
-    await writeFile(options.env.WRANGLER_OUTPUT_FILE_PATH, rows.map(JSON.stringify).join("\n") + (behavior.badOutput ? "\nTEST malformed output" : "\n"));
+    await writeFile(options.env.WRANGLER_OUTPUT_FILE_PATH, rows.map(JSON.stringify).join("\n")
+      + (behavior.oversizedOutput ? "\n" + "X".repeat(256 * 1024) : behavior.badOutput ? "\nTEST malformed output" : "\n"));
     return { code: behavior.deployExit ?? 0, stdout: "TEST deployed", stderr: "" };
   };
   const write = line => { const value = JSON.parse(line); outputs.push(value); if (value.scratch) scratch.add(value.scratch); };
@@ -95,8 +96,13 @@ test("dry-run output hashes exact module bytes and omits generated diagnostics",
   assert.equal(await f.invoke(["--dry-run"]), 0);
   assert.equal(f.outputs.filter(row => row.bundle).at(-1).bundle.sha256, first.sha256);
   const directory = join(f.directory, "manual-bundle"); await mkdir(directory);
-  await writeFile(join(directory, "worker.js"), "changed TEST bytes");
-  assert.notEqual((await bundleManifest(directory, "worker.ts")).sha256, first.sha256);
+  await writeFile(join(directory, "worker.js"), "first TEST bytes");
+  const before = await bundleManifest(directory, "worker.ts");
+  await writeFile(join(directory, "worker.js"), "other TEST bytes");
+  const after = await bundleManifest(directory, "worker.ts");
+  assert.deepEqual(after.files.map(row => row.name), before.files.map(row => row.name));
+  assert.equal(after.files[0].bytes, before.files[0].bytes);
+  assert.notEqual(after.sha256, before.sha256);
   await symlink(join(directory, "worker.js"), join(directory, "escape"));
   await assert.rejects(bundleManifest(directory, "worker.ts"), /symlink/);
   assert.ok(f.calls.every(call => call.args.includes("--dry-run")));
@@ -129,6 +135,24 @@ test("a receipt write failure keeps a partial record and never retries or rolls 
   const result = f.outputs.at(-1); assert.equal(result.partial.version, version);
   assert.match(result.failure, /Do not retry or roll back/); assert.equal(f.calls.length, 2);
   assert.equal(JSON.parse(await readFile(result.partialRecord, "utf8")).status, "partial");
+});
+
+test("oversized scripted output keeps its read failure and reported version without another upload", async t => {
+  const f = await fixture(t, ["grow", "lending"]); f.behavior({ oversizedOutput: true });
+  assert.equal(await f.invoke(), 3);
+  assert.equal(f.calls.filter(call => !call.args.includes("--dry-run")).length, 1);
+  const result = f.outputs.at(-1), partial = result.partial;
+  assert.equal(partial.version, version); assert.equal(partial.commit, f.baseline); assert.equal(partial.config, "grow");
+  assert.match(partial.outputReadFailure, /exceeds its bound/);
+  assert.equal(partial.outputRecovery.kind, "bounded-prefix"); assert.equal(partial.outputRecovery.truncated, true);
+  assert.equal(partial.outputRecovery.bytes, 256 * 1024);
+  assert.ok(partial.outputRecovery.fileBytes > partial.outputRecovery.bytes);
+  assert.ok(partial.outputRecovery.completeRecordBytes < partial.outputRecovery.bytes);
+  assert.match(partial.outputRecovery.sha256, /^[a-f0-9]{64}$/); assert.equal(partial.outputSha256, undefined);
+  assert.deepEqual(partial.reportedDeployments, [{ worker: "dap-grow", version }]);
+  const retained = JSON.parse(await readFile(result.partialRecord, "utf8"));
+  assert.equal(retained.version, version); assert.equal(retained.outputReadFailure, partial.outputReadFailure);
+  assert.deepEqual(retained.outputRecovery, partial.outputRecovery);
 });
 
 test("failed builds and source edits between build and upload prevent deployment", async t => {

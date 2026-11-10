@@ -206,7 +206,8 @@ the file holds and settings that `--keep-vars` keeps.
    ```
 
    Both commands run Wrangler 4.147.0 from an external scratch directory.
-   They install nothing in the checkout. The deployment uses `--keep-vars`.
+   They install nothing in the checkout. Wrangler can still create temporary
+   files under the config root's `.wrangler/tmp`. The deployment uses `--keep-vars`.
    Each completed Worker gets a receipt with its commit, configuration,
    dry-run bundle hash, Worker version ID and time. Keep those receipts.
    On the next run, `--previous-receipt "grow=/absolute/receipt.json"`
@@ -216,6 +217,10 @@ the file holds and settings that `--keep-vars` keeps.
    reconcile the reported Worker version before another run. A failed
    output, hash or receipt check can follow a completed upload. The command
    stops later Workers, never retries and never rolls back automatically.
+   If output admission fails, recovery reads at most the first 256 KiB and
+   keeps only complete deployment records. The partial record keeps the
+   read failure and qualifies any prefix hash. Versions beyond those
+   complete records remain unknown.
    Exit 1 means another command failure. Keep the external scratch output.
 
 6. Run the read-only smoke checks.
