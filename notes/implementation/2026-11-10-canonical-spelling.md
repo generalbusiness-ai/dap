@@ -3,17 +3,19 @@
 Request `2ad35350`, promise `226d9000`, and rulings `0a0286c4`, `865f4d70`,
 and `23559d21` own this change.
 
-The repaired focus passed at `a9727fb3`. This note records its results and
-retains all seven earlier failed runs. Prechecks, the full gate, review,
-landing, and planner deployment remain pending.
+The repaired focus passed at `a9727fb3`. Three prechecks passed at `43e9b328`,
+and its full gate failed. Review, landing, and planner deployment remain pending.
+The seven earlier focus failures retain their original results.
 
 ## What changed
 
 Canonical source admission gives new authors one spelling before signing.
 Recorded journals, signatures, declarations, and raw digests keep their bytes.
-The current candidate is `a9727fb3cc3a5b428652d01481271392a3221284`, tree
-`dd03adb503a2086e03089b346f2cc3527fd72d13`, with 4,581 tracked paths. Its parent
-`e6ed7365` integrates Docs D, Docs F, and the sprint report from main `d7736fa3`.
+The gate tested `43e9b32801908301066d83de2ab5725edccd3f2a`, tree
+`d54901187e16e485549723249521e6c8b069f803`, with 4,598 tracked paths.
+It adds the review note and 17 public manifests to repaired focus
+`a9727fb3`. Earlier `e6ed7365` integrates Docs D, Docs F, and the sprint
+report from main `d7736fa3`.
 The Page dependency repair and served asset, the Counting test repair, and
 the retained Site corpus repair entered by the 4,575-path `9578637f` checkpoint.
 Attempts five and six used that checkpoint. Attempt seven used `e6ed7365`.
@@ -70,8 +72,8 @@ packet, signatures, journals, and simulator constants. Retained lookup stays
 in `packages/scope/src/core.ts:375–396` and `namespace.ts:170–187`; Replay
 checks raw bytes in `packages/replay/src/verify.ts:1430–1447`. The complete
 Native archive owner contains nine obligations, including its retained Grow
-producer-clone and old R17 witnesses. Their eventual full-gate results remain
-owed; this note claims no dump or replay of live pre-F journals.
+producer-clone and old R17 witnesses. Both passed in the gate, which failed
+three fresh Grow cases. These results cover the TEST journals.
 
 The first Counting TypeScript and JSON declarations keep their original bytes
 and pin `435d9f57`. The corpus names exactly four retained rows: those two
@@ -114,10 +116,8 @@ that cutover or introduce a second historical spelling algorithm.
 Follow [Testing reference](../../docs/testing-reference.md) for stand-in and
 measurement limits, and [File test evidence](../../docs/evidence-filing.md)
 for retained outputs and final review. The manifest links name repository
-copies of the sealed public manifests. Raw
-secret-bearing output stays withheld in each owner-only private archive.
-Copied payloads use modes 400/500; original status directories do not thereby
-become sealed. Retention lasts at least 30 days after landing.
+copies of sealed manifests. Raw payloads stay in owner-only custody. Copies use modes 400/500. Retention lasts
+at least 30 days after landing.
 
 The AST metadata runs passed at their recorded sources. The first sealed
 producer adds three whole-owner rows and updates two named Scope hashes; the
@@ -316,24 +316,20 @@ The repaired focus at booking `3a7a63cc` passed Scope compiler 23, the repaired
 evidence-parent case, and all six RetainedEditor cases. Public callbacks and
 built-in JSON agree on seven passes across both whole Native owners. The run
 adds one current compiler result to 40 carried results and seven current
-Native passes to 124 carried cases. The 24 Node cases remain owed in the gate,
-which accounts for the remaining cases in the 155-case scope.
+Native passes to 124 carried cases. The gate records the 24 Node cases that
+remained due in the 155-case focus scope.
 
 The compiler and Vitest child exited zero. The Native wrapper, runner, driver,
 launcher, and command each exited zero. Compiler and Vitest wall times were
 0.84 and 17.77 seconds. The inner and outer elapsed times were
 29.369934791 and 29.619219917 seconds. Three RSS samples recorded sampled
 single-process maxima of 793,024 KiB for Node and 454,912 KiB for workerd.
-Root readback `e4f54cc9` records empty cleanup. The sealed focus records
-END `9e8a6cf7`. [Repaired focus][m-focus-repaired]
+Ruling `be87ca86` set this scope. Root readback `e4f54cc9` records empty
+cleanup. The sealed focus records END `9e8a6cf7`. [Repaired focus][m-focus-repaired]
 
-The following single table records actual commands, exits, and output hashes.
-It keeps each checkpoint and manifest separate. `node` means pinned Node
-26.13.0_2. Command stdout supplies each hash unless a row explicitly names a
-complete command log or stderr. Private raw outputs stay withheld; the
-manifest indexes retain their digests and exact argv, environment, wrappers,
-reporters, pools, deadlines, timing, and process closure. A future row has no
-exit or output hash. A sum of separately timed steps is not one gate duration.
+The table records actual commands, exits, and output hashes. `node` means
+pinned Node 26.13.0_2. Hashes cover stdout unless a row names another file.
+Manifest indexes retain exact argv, timing, environment, and cleanup.
 
 ```text
 F /Users/hughpyle/play/artroom/.builder-worktrees/canonical-spelling-f-20261110
@@ -341,7 +337,6 @@ R0 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-successor143/run
 R1 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-continuation18-8dc/run
 R2 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-node-native-0ca2/run
 R3 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-editor-8dc1381c/run
-R4 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-page-boundary-6df/run
 R5 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-combined82-3de/run
 R6 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-site-docs94-957/run
 R7 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-same957-crash-control/run
@@ -349,6 +344,10 @@ R8 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-native8-only/run
 R9 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-native7-scope23/run
 S0 /private/tmp/artroom-f-source-seal-frozen-93a87a7b-20261110
 S1 /private/tmp/artroom-f-supports-edit-seal-frozen-038480f8-20261110
+RD /Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/run
+G /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9
+BASE d7736fa3de1c75d588f003f3d7e467545cf8ed06
+HEAD 43e9b32801908301066d83de2ab5725edccd3f2a
 ```
 
 | Check and source | Actual command | Exit | Output SHA-256 | Manifest |
@@ -361,8 +360,8 @@ S1 /private/tmp/artroom-f-supports-edit-seal-frozen-038480f8-20261110
 | Finding pins, `e99a771e` | `node apps/room/lanes/scripts/pin.mjs --finding` | `0` | `a1ab178b05eccf36570b336c402ec64db09127e7449c1aa16a4e92e89651fbff` | [88d4acda][m-continuation] |
 | Fresh verifier, `e99a771e` | `node /private/tmp/artroom-f-eleven-pin-continuation-e99a771e-20261110/verifier.mjs /private/tmp/artroom-f-eleven-pin-continuation-e99a771e-20261110/verify.config.json` | `0` | `a4932cec5a2d7c90d7b95907e2aa9461e4bd9bf47aa49f2ad6d3e8e8baee5990` | [88d4acda][m-continuation] |
 | Lane reference, `9bf8a1a8` | `/opt/homebrew/Cellar/node/26.13.0_2/bin/node apps/room/lanes/scripts/reference.mjs` | `0` | `504d8ea0886a6b49e9ca6d766ccca8e5bdec57e3e765c6afaf9fa8180683b26b` | [411a31e9][m-docs] |
-| MCP two whole owners, `9bf8a1a8` | `/opt/homebrew/Cellar/node/26.13.0_2/bin/node /Users/hughpyle/play/artroom/.builder-worktrees/canonical-spelling-f-20261110/node_modules/vitest/vitest.mjs run /Users/hughpyle/play/artroom/.builder-worktrees/canonical-spelling-f-20261110/packages/mcp/test/inventory.test.ts /Users/hughpyle/play/artroom/.builder-worktrees/canonical-spelling-f-20261110/packages/mcp/test/describe.test.ts --config /Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/run/body/mcp-config/mcp-docs.config.mts --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter=/Users/hughpyle/play/artroom/.builder-worktrees/canonical-spelling-f-20261110/scripts/focused-check.mjs --outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/run/body/mcp-report/vitest.json` | `0` | `c43072787a29b9cb4e48ce991237b621a71851df8ed43c337a4d38a91bf02892` | [411a31e9][m-docs] |
-| Lending capture, `9bf8a1a8` | `/opt/homebrew/Cellar/node/26.13.0_2/bin/node --import /Users/hughpyle/play/artroom/.builder-worktrees/canonical-spelling-f-20261110/node_modules/tsx/dist/loader.mjs /private/tmp/artroom-f-docs-assets-frozen-v3c-9bf8-20261110/lending.mjs /private/tmp/artroom-f-docs-assets-frozen-v3c-9bf8-20261110/lending.config.json` | `0` | `fa4ef99ddb86197f2a8b2d511d3626000f0bb4774ebbb56e24ea060e54005926` | [411a31e9][m-docs] |
+| MCP two whole owners, `9bf8a1a8` | `node $F/node_modules/vitest/vitest.mjs run $F/packages/mcp/test/inventory.test.ts $F/packages/mcp/test/describe.test.ts --config $RD/body/mcp-config/mcp-docs.config.mts --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter=$F/scripts/focused-check.mjs --outputFile.json=$RD/body/mcp-report/vitest.json` | `0` | `c43072787a29b9cb4e48ce991237b621a71851df8ed43c337a4d38a91bf02892` | [411a31e9][m-docs] |
+| Lending capture, `9bf8a1a8` | `node --import $F/node_modules/tsx/dist/loader.mjs /private/tmp/artroom-f-docs-assets-frozen-v3c-9bf8-20261110/lending.mjs /private/tmp/artroom-f-docs-assets-frozen-v3c-9bf8-20261110/lending.config.json` | `0` | `fa4ef99ddb86197f2a8b2d511d3626000f0bb4774ebbb56e24ea060e54005926` | [411a31e9][m-docs] |
 | Initial Page build, `9bf8a1a8` | `npm run build --workspace @generalbusiness/dap-page` | `0` | `a1d1fa6e3ec8faa73bd5f32e43acc78cb37e7cd5a5be5477f2e9411f23b87aed` | [411a31e9][m-docs] |
 | Subject-repair Page build, `01b9e7bf` | `npm run build --workspace @generalbusiness/dap-page` (repair source `01b9e7bf`) | `0` | `0f138ddca565eb91b92de2e3fb73cfa80dd96527310c3e216dd020d2d9415a02` | [88ff2040][m-page-subject] |
 | Failed compiler, `d1d09f3c` | `node node_modules/typescript/bin/tsc -p packages/scope/tsconfig.test.json` (source `d1d09f3c`; complete `compiler-23.log`) | `1` | `9165ab72a321cbd4b6e02be359370b5a2d26f245a828818779cba20238dd6e4f` | [4ce79882][m-focus1] |
@@ -385,10 +384,10 @@ S1 /private/tmp/artroom-f-supports-edit-seal-frozen-038480f8-20261110
 | Scope compiler 23, `a9727fb3` | `node $F/node_modules/typescript/bin/tsc -p $F/packages/scope/tsconfig.test.json` | `0` | `7f5629617c854d2823254ea5eec1fa954e1b375fc96f8db4b31b517193505177` (complete compiler log) | [d818c3dc][m-focus-repaired] |
 | Repaired Native, `a9727fb3` | `node $F/node_modules/vitest/vitest.mjs run $F/packages/scope/test/evidence-parent-spelling.test.ts $F/apps/room/page/test/retained-editor.scope.test.ts --config $R9/body/native-config/native.config.mts --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter=$F/scripts/focused-check.mjs --outputFile.json=$R9/body/native-focused/vitest.json` | `0` | `baa73252b94de0c36823487f414154f5c070d599ba6588c923a934d37e16f7b3` (complete Vitest log) | [d818c3dc][m-focus-repaired] |
 | Repaired focus wrapper, `a9727fb3` | `node $F/scripts/focused-check.mjs $R9/body/native-config/plan.json $R9/body/native-focused` | Native/runner/driver/launcher/command `0/0/0/0/0` | `8eacfaec682a813833e404c216bd32dde6be6bb33fa02bd231a1d798b3daf2ff` (Native stdout) | [d818c3dc][m-focus-repaired] |
-| Final source pending | `git diff --check BASE HEAD` | **UNRUN; result null** | — | No final manifest yet |
-| Final source pending | `node scripts/check-commit-messages.mjs BASE HEAD` | **UNRUN; result null** | — | No final manifest yet |
-| Final source pending | `npm run format:check` | **UNRUN; result null** | — | No final manifest yet |
-| Final source pending | `npm run gate` | **UNRUN; result null** | — | No final manifest yet |
+| Whitespace, `43e9b328` | `git diff --check "$BASE" "$HEAD"` | `0` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | [85d1c563][m-static] |
+| Commit messages, `43e9b328` | `node scripts/check-commit-messages.mjs "$BASE" "$HEAD"` | `0`; 26 checked, zero flagged | `fbcfeda467c63e2a28b82227b54478d1e327c437a59d6b142e7c8020234e8fc4` | [85d1c563][m-static] |
+| Format, `43e9b328` | `/opt/homebrew/Cellar/node/26.13.0_2/bin/npm run format:check` | `0` | `6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79` | [85d1c563][m-static] |
+| Full gate, `43e9b328` | `/usr/bin/caffeinate -i /usr/bin/time -p -o "$G/gate.time" npm run gate` | gate/inner/outer/launcher/command `1/1/1/1/1` | `d3be465224a5007787d84935a686112d3f71b40066f07717f832dafc81bd17e4` (gate log) | [b19a7114][m-gate] |
 
 The V2 metadata freezer exited one because published main advanced from Docs C
 to Docs D before its parent check. It created no frozen output and launched
@@ -413,42 +412,57 @@ The Page, Card, and MCP closure proof at `76dde02d` covers 703, 727, and 398
 inputs respectively. Final review must confirm the corresponding closure at
 its actual source before carrying any of that evidence.
 
+## Prechecks and failed gate
+
+Static booking `3e25e213` and END `cf15d1e6` record all six original exits
+and the command exit at zero. Inner and outer times were 12.209 and 12.397
+seconds. The 4,598 source, 8,311 tool, and 43 input pins matched, both main
+refs matched before and after, and cleanup closed empty. An earlier launcher
+refused the inherited PATH before any static body, exit one. The first
+static archive `d6ea338a` had two invalid checksum self-entries. Gate booking
+`42f4` closed at `10c5` without a body. V3 readback and seal exited zero and
+retain the same static originals with valid checksums. [Precheck seal][m-static]
+
+The gate ran once at booking `5d75e0ee`, END `ea310c10`. It passed the 11
+stages before tests, including 16 typecheck scripts and 45 compiler contexts.
+Node passed 150, Counting 56, and Plain 4,509 with one skip. Native recorded
+1,130 passes, three failures, and two skips. All six selected Scale cases
+passed. The terminal report covers 5,851 of 5,852 expected cases and 707
+of 708 owner identities. The 111 unknown wrapper observations stay outside
+case counts. The skipped Page Recorder duration stays unknown.
+
+Original Grow looked up a historical cost by the new fixture pin and received
+`undefined` at `archive-installed.test.ts:954:40`. Publication and failed-claim
+failed the old Room text digest check at Directory sequence 5, line
+`1370:144`. The Native reporter separately records one unhandled
+`cloudflare-pool` Worker exit. The log records a 10,000 ms close timeout.
+The terminal ledger has no final case for `source-order.test.ts`. The
+receipts establish no cause or relation for those observations. The earlier
+`SIGBUS` did not recur here.
+
+The gate's source, tool, and input fences matched 4,598/8,311/63. Both main
+refs matched and cleanup closed empty. Inner and outer times were 1,414.062
+and 1,414.348 seconds. The ten-second RSS observer completed 142 samples
+without error. Sampled single-process maxima were 2,602,448 KiB for Node and
+3,057,488 KiB for workerd. The first terminal metadata readback exited one
+because it expected command receipt mode 0600 after the receipt became 0400.
+The bytes matched. V3 readback and seal exited zero and retain the failed
+gate. [Failed gate seal][m-gate]
+
 ## Open limits and remaining checks
 
-Ruling `c207fd46` authorized the seventh attempt after six expectation fields
-changed to `cloudflare-pool`. The installed pool, configuration, reporters,
-dependencies, workers, and deadlines kept their settings.
+Request `51cb1f6e` asks the planner to choose the archive fixture scope and
+next validation. The proposed split preserves exact pre-F TEST Room/Site
+bytes for the gross-cost case. Publication and failed-claim would keep the
+canonical packet and compute the omission expectation from the signed
+child before export. The missing source-order result and another gate
+remain part of the ruling. No repair or later result is recorded.
 
-Ruling `be87ca86` accepts the one-file fixture correction and authorizes one
-Scope test compiler context plus the complete evidence-parent and
-RetainedEditor owners. The repaired focus completed that scope and carried
-Story after exact closure and root adoption. The ruling retains all seven
-failed histories and assigns the 24 Node cases to the gate. Prechecks and one
-full gate remain pending. Final review must confirm source and evidence
-correspondence against actual main.
-
-The final review head, tree, base, and prerequisites remain unresolved.
-Precheck and gate bookings and results remain pending. Expected full-gate data contain 5,852
-obligations: 5,849 passes and three skips, including all six Scale cases, 708
-whole owners, 45 compiler contexts, 16 typecheck scripts, and 111 explicitly
-unknown wrapper records. Those are expected counts only. Original pools,
-workers, per-case deadlines, and local Scale factor remain unchanged. A passive
-ten-second observer records RSS separately. Missing Node/workerd peaks remain
-UNKNOWN, not zero or a reason to repeat a case; sampling completion, errors,
-interval, and stream integrity still require reconciliation. Skipped Recorder
-duration remains UNKNOWN.
-
-The nine-case Native archive owner remains in that final gate, including the
-retained Grow and old R17 witnesses; no extra archive-focused repeat is planned.
-The repaired Native focus passed the nine-fact compatibility case. The full
-gate still owes the archive owner and its other full-gate obligations.
-
-Ruling `865f4d70` assigns new-format canonical fold admission to identifiers
-head (c+d), which depends on F. Ruling `23559d21` assigns removal of the temporary
-Counting helper and two Counting exclusions to that same cutover. Neither
-change occurs in F. F performs no live activation, deployment, migration, or
-rollback and establishes no HTTP cutover, room acceptance, or live J5 acceptance.
-Review, landing, and planner deployment remain pending.
+Ruling `865f4d70` assigns canonical fold admission to identifiers head (c+d).
+Ruling `23559d21` assigns removal of the temporary Counting helper and two
+Counting exclusions to that same cutover. F establishes no live activation,
+deployment, migration, rollback, HTTP cutover, room acceptance, or live J5
+acceptance.
 
 [m-seals]: evidence/2026-11-10-f-canonical-source-seals.manifest.json
 [m-cli-seal]: evidence/2026-11-10-f-supports-edit-seal.manifest.json
@@ -468,3 +482,5 @@ Review, landing, and planner deployment remain pending.
 [m-ci-current]: evidence/2026-11-10-f-current3de-browser-ci.manifest.json
 [m-focus7]: evidence/2026-11-10-f-native8-assertion-failure.manifest.json
 [m-focus-repaired]: evidence/2026-11-10-f-native7-scope23-repaired-focus.manifest.json
+[m-static]: evidence/2026-11-10-f-final-static-43e9-v3.manifest.json
+[m-gate]: evidence/2026-11-10-f-final-gate-43e9.manifest.json
