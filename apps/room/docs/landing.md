@@ -1,54 +1,80 @@
 # Follow a change through publication
 
-For a maintainer or admin using an already configured source CLI, this page helps you tell a recorded proposal or reservation from the destination's confirmed publication.
+You merge a reviewed change and confirm that the room published it. You
+need a role that holds `change.merge`. By default, an admin and a
+maintainer hold it. A member cannot merge, even a change of their own.
 
-**Status. This guide cites the code at `0e5954ecfca23f531cfa2ec42be1524bef3bc9a8`, which is incorporated in main `a1277d9c43bdaff1873e61f0a3d2444fc5f72b53`. Its commands have not been run for this page.** No public package release, hosted tutorial or rendered acceptance is established. Your room keeps its original definition pins; activating new declarations alone does not upgrade an older native destination.
+A merge asks the room's destination to publish the current version. The
+change is merged only when the destination reports a published commit.
 
-Read the intended version, content and required evidence before the mutation:
+## Merge in the browser
+
+1. Open **Changes** and choose the change.
+2. Check the state beside the title. **Needs review** or
+   **Waiting for review** means that the version still lacks approvals.
+3. Choose **Merge change** when the page offers it. The page shows the
+   room's answer.
+4. Read the state again. **Awaiting confirmation** means that the
+   destination is still publishing. **Merged** means that it published the
+   version.
+5. For a one-file version, choose **Open latest page** to see the published
+   file.
+
+**Open latest page** shows the latest published branch. A later change can
+replace what it shows.
+
+## Merge with the dap command
+
+1. Merge the change by its scope ID.
+
+   ```sh
+   dap merge sc_q3xk...
+   ```
+
+2. Read the result. The command waits for the destination's answer.
+
+   | You see | It means |
+   |---|---|
+   | `Published: commit ...` | The room published this commit. For one file, a `Page:` line follows. |
+   | `Reserved: merge ..., tree ...` | The destination reserved the version. Required checks must pass before it publishes. |
+   | `Not published: ... rules-not-met:<requirement>` | A review requirement lacks approvals. The change stays open. |
+   | `Refused: unauthorized` | Your role does not hold `change.merge`. |
+   | `Observation unknown: ...` | The merge took effect, but the command could not read its outcome. |
+
+   A published merge looks like this:
+
+   ```
+   Published: commit 5d0c1e6b..., by the merge sc_q3xk...:8.
+   Page: https://dap-demo.inguz.workers.dev/site/sc_hs5f27fz.../HEAD/guide/start.md
+   ```
+
+3. If the change is refused, read the reason. After the missing reviews
+   arrive, run `dap merge` again.
+
+To close an issue when the change is published, add `--closes <issue>`.
+`--closes` links the change as its author, so only the author can use it.
+
+## If you do not know whether the merge took effect
+
+If the page shows **Check status**, choose it. It reads the outcome and
+sends nothing new.
+
+If the command prints `Observation unknown`, do not run `dap merge` again.
+The merge already took effect. Read the change's journal instead.
 
 ```sh
-dap log <change-scope>
-dap show <change-scope>:<manifest-entry>
-dap show <change-scope>:<source-entry>
-# Read every referenced file and the required review/check evidence.
-dap merge <change-scope>
-dap log <change-scope>
-dap verify --all
+dap log sc_q3xk...
 ```
 
-Use exact recorded references. For a manifest list, the frozen manifest points to source entries; read each relevant entry. The CLI selects the current manifest and the reports it records when signing `merge`. It does not bind your memory of an earlier version as approval of the new one. [Merge selection](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/cli/src/commands.ts#L1523)
-
-## Know which result you have
-
-| Result | What it establishes | What remains |
-|---|---|---|
-| Proposed | A recorded change/version | Required review, checks and destination publication |
-| Merge took effect | The merge act took effect | Observe its actual publication result |
-| Reserved tree | The destination recorded an integration for checks | Authentic required check results and publication |
-| Published commit | The destination confirmed publication of that commit | Inspect any separately recorded cleanup duties |
-| Refused, aborted or observation unknown | Publication is not confirmed by this result | Follow the recorded reason or original operation's reconciliation |
-
-The default admin and maintainer roles hold `change.merge`; the default member and native agent roles do not. A valid proposal does not supply merge authority. Every touched extent must meet its actual independent reviews and required checks. A task completed message, displayed spinner or unrelated successful job is not that evidence. [Default role actions](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/membership.ts#L115)
-
-For a manifest-list change, the destination constructs and records the reservation tree before its required checks. The checker must use the exact recorded integration/ref/tree/configuration and qualified signer. A missing or mismatched stage is not a runnable replacement checkout. This path requires its supported declaration and destination versions; older pinned rooms are not upgraded by using a newer command. [Manifest-list successor](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/lanes/src/change3.ts#L30)
-
-A `Published: commit ...` result names the destination's confirmed commit. Keep that commit when sharing the result. A latest-page `HEAD` address can later show another publication; it is not the immutable subject you judged. [Printed publication result](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/cli/src/commands.ts#L1576)
-
-## Follow an unknown result without signing a replacement
-
-A merge that took effect, followed by `Observation unknown`, has already taken effect. Read the stated merge fact and the change's journal; do not submit another merge to recover only its observation. A lost transport reply likewise does not prove absence. Generic `act`, `edit`, `propose` and `merge` have no universal retained-envelope recovery journal. Rerunning one may sign another request or open another lane.
-
-Exact recovery needs the original signed request and its existing owning mechanism. Read-only inspection does not authorize a replacement or erase outside duties. Join and saved creation recovery are narrower flows, not a promise about every command. [Unknown observation](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/cli/src/commands.ts#L1540)
-
-`verify --all` uses the caller's session and signed-read fallback and reports actual coverage and trusts. The source also inspects destination cleanup against the verified target; an unread or inconsistent journal cannot supply that snapshot. A consistency result is not a general proof that every external operation is finished. [Verifier source](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/cli/src/commands.ts#L971)
+A repeated merge signs a new request. It does not recover the outcome of
+the first one.
 
 ## If publication stops
 
-- **Missing or stale review:** retain the version; have each requirement judged by a qualified reviewer.
-- **Unauthorized merger:** use the actual authorized maintainer/admin path, without borrowing its key.
-- **Conflict or incompatible base:** inspect the published base and create a deliberate new proposal; old approvals are not silently retargeted.
-- **Failed check or stage mismatch:** correct the named configuration/source/stage under its owner; do not substitute an unrelated pass.
-- **Invalid path or unsupported file operation:** make a deliberate supported proposal. This source's branch path does not promise binary, delete or rename support.
-- **Unknown publication or cleanup:** retain the original operation and duties; follow reconciliation instead of assuming success or failure from a read alone.
-
-This guide for manual outcome 18 reconciles the earlier Landing manuscript as one page. Initial source publication receipt `732ca210b84469513b3a53b618b2867ca92a71e0` does not approve this new guide. Sample CI, style and exact independent review, public release, actual host/browser outcomes and full manual acceptance remain open. No command or fixture ran for this manuscript.
+- **A review is missing:** ask an eligible reviewer to follow
+  [Review an exact change version](reviewing.md).
+- **A required check failed:** fix the cause and ask for the check again.
+- **The path is invalid:** the destination refuses a path such as one with
+  a `..` or `.git` segment as `path-invalid`. Propose a corrected change.
+  In the browser, the change shows **Invalid path** and offers
+  **Create corrected proposal**.

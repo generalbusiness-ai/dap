@@ -1,156 +1,178 @@
 # Join a room and publish one text change
 
-For a developer joining an existing room, this guide covers the current
-command-line path: join, propose one text file, obtain the reviews its rules
-require, and follow the room's confirmed publication.
+You join a room, file an issue and propose a change to one text file. You
+need an invitation link from a room admin. In the browser you need nothing
+else. For the `dap` command you need Node 22.18 or later and Git.
 
-This draft describes capabilities in main
-`9d7e4c2777ea8d35441b4a9d79b407cd701065fa`, inspected on 2026-10-09.
-The current CLI creates rooms under the native `@2` cohort. Workspace packages
-are `0.1.0-dev.1`; no current public registry release or cold-reader result
-is established. Use an already supplied, supported CLI and an invitation
-from the room admin. This guide supplies no npm installation command,
-operator permission or new-room bootstrap.
+## Get the dap command
+
+Skip this section if you use only the browser. No package registry
+publishes `dap`, so you run it from a clone of the source.
+
+1. Follow [Get the dap command](../../../docs/get-dap.md). It clones the
+   source and makes `dap` run the checkout's launcher.
+2. Choose an empty config directory for this room. The command keeps your
+   key and the room's settings there.
+
+   ```sh
+   export DAP_HOME="$HOME/.config/dap-myroom"
+   ```
+
+[The dap command](../../../docs/cli.md#what-it-needs) describes the config
+directory and the key.
 
 ## Join with your invitation
 
-In a terminal with a fresh dap user context, run:
+Your invitation link starts with `artroom-invite:` and holds a private
+secret. Give it to nobody else, and keep it out of screenshots and logs.
+
+### In the browser
+
+1. Open the room page at the address that the admin gives you, such as
+   `https://dap-demo.inguz.workers.dev/page/`. In a browser with no room
+   yet, the page shows **Join or create a room**.
+2. Choose **Join with an invitation link**.
+3. Paste the complete link into **Invitation link**. The page shows
+   "Working on joining the room". It makes a key in this browser and joins
+   with it. You press no button.
+4. Wait for the room to open. The page shows **Needs you** and the
+   **Issues** list.
+
+The key stays in this browser. If you clear the browser's saved data, this
+browser loses its access to the room. If the page shows **Check status**,
+choose it. It reads the result of your original join and sends nothing new.
+
+### With the dap command
+
+1. Run `join` with the complete link in quotes.
+
+   ```sh
+   dap join '<invitation link>'
+   ```
+
+   You see your handle, your key's ID and your inbox:
+
+   ```
+   Joined as @una on key key_H1bY2Hml....
+   Your inbox: sc_zbtu7vax....
+   ```
+
+2. List the room's issues.
+
+   ```sh
+   dap issues
+   ```
+
+If the reply is lost, run the same `join` command again with the same link.
+The command reuses the same key and the same signed request. A different
+link does not replace a join that is still unresolved.
+
+## File an issue
+
+An issue states a goal. Its title is also its condition: the result that
+closes it. Any member can file one.
+
+### In the browser
+
+1. Open **Issues**.
+2. Choose **Create issue**. A dialog shows **Title** and **Description**.
+3. In **Title**, write the result that closes the issue.
+4. Optionally, add details in **Description**.
+5. Choose **Create issue**. The page shows the room's answer.
+
+If the page says "This room is not initialized yet", the room's creator
+must finish setting up the room before you can file an issue.
+
+### With the dap command
 
 ```sh
-dap join '<your invitation link>'
-dap acts
-dap issues
+dap issue open --title 'The handbook has no start page' \
+  --body 'New readers cannot find where to begin.'
 ```
 
-The admin chooses your room role when inviting you. The CLI creates and
-keeps your device key; you do not paste a private key into a command.
-The invitation contains a one-time secret. Keep it out of shared notes,
-screenshots and logs. A shell may retain the command in its private history;
-follow your environment's handling of sensitive arguments.
+You see the issue's number and its lane:
 
-The CLI saves the exact signed Join request privately before sending it.
-If the reply is lost or the inbox is still being created, rerun `join` with
-that original link. It uses the same key, request and deadline. A different
-invitation cannot replace a pending Join. Missing private records or keys
-stop recovery; they do not authorize a new enrollment as the same member.
-See [the command reference](../../../docs/cli.md) for custody and refusal details.
-
-`acts` lists the acts your current role allows. An offered act can still be refused by the room's rules or state. A member can propose and
-review changes, but the default member role cannot merge; a maintainer or
-admin with `change.merge` performs publication.
-
-## Propose one text file
-
-Create a local UTF-8 file, then use its path as the input:
-
-```sh
-dap edit README.md --file ./readme.md --title 'Explain the room'
+```
+Opened issue #1: The handbook has no start page. Its lane is sc_4bbosp5k....
 ```
 
-`README.md` is the target path in the room's repository. `./readme.md` is
-the local file whose bytes you want to propose. The current command carries
-one UTF-8 text file of at most 65,536 bytes. It reads the active change
-definition and the destination's published head, computes the content digest
-and size, opens a change, proposes that file, and attempts a merge. The room
-judges each act; your command never pushes the published branch directly.
+To comment on the issue, run `dap issue comment 1 '<text>'`.
 
-Read the outcome carefully. `Proposed` identifies a recorded change and
-version. It does not mean published. A missing approval, unauthorized merger
-or invalid path can leave a recorded proposal unpublished. Keep the change
-and version shown in that output for review and later merge.
+## Propose a change to one text file
 
-This source has no application preset. To propose the committed files of
-a local branch, use [`dap propose <branch>`](../../../docs/cli.md#dap-propose).
-In the browser, **Propose an edit** on [the page](page.md#what-it-shows)
-changes one text file. A clone is optional for this
-one-file path. [Clone and host credentials](../../../docs/hosts.md) explain the separate
-read-token path and its limits.
+A change holds versions. Each version has a number. Reviewers and mergers
+name a version by that number, so keep it.
 
-## Review the exact version and extent
+### In the browser
 
-A reviewer must read the proposed content and hold the action required by
-the touched extent. An extent is a named part of the repository with its own
-review requirements. For a source extent named `source`, an eligible reviewer
-uses the actual change and version printed earlier:
+The browser editor starts from the text of a change that the room already
+holds. You can keep the file's path or type a new one.
 
-```sh
-dap act review-verdict --on <change-scope> \
-  --set manifest=<version> --set verdict=approve --set extent=source
-```
+1. Open **Changes**.
+2. Choose **Propose change**.
+3. If the room has more than one change, choose a source change from the
+   list. Then choose **Use source**. The editor opens with that change's
+   file text.
+4. Edit **Proposal title**, **Target file path** and **Text**. A new path
+   writes a new file. The old file stays.
+5. Choose **Prepare proposal**. The page reads the room's published base and
+   shows the base, the target and the size in UTF-8 bytes.
+6. Choose **Confirm new proposal**. The page records a new change.
+7. Choose **Open new proposal**. The change page shows **Version** and its
+   number.
 
-For an authority file such as `AGENTS.md`, the default rules extent requires
-an eligible controller holding `rules.publish`:
+You can also start the editor from a change page with **Propose an edit**.
+The page does not merge your change. It keeps your draft only while the
+page stays open.
 
-```sh
-dap act review-verdict --on <change-scope> \
-  --set manifest=<version> --set verdict=approve --set extent=rules
-```
+If the room has no change yet, **Propose change** is not available. Make
+the room's first change with `dap edit`.
 
-Replace each placeholder with the exact recorded value. Inspect the room's
-Rules view and [lane reference](../../../docs/lanes-reference.md) before choosing an
-extent. One verdict names one extent; mixed changes need each touched
-extent's required verdicts. Authors cannot supply an independent review of
-their own version. Current rules also judge controller relationships and
-any explicitly declared exception. These are native authority checks, not
-proof that the reviewing actor is a person rather than an agent.
+### With the dap command
 
-The browser's current one-file source preview checks the retained proposal
-bytes for the selected version. It is literal source, not a complete tree
-diff or rendered immutable page preview. General proposal-object access and
-cold-review acceptance retain their own owners. Do not approve content you
-could not obtain or verify.
+1. Write the new content in a local UTF-8 text file of at most 65,536
+   bytes.
+2. Run `edit` with the path in the room's repository and your local file.
 
-## Follow confirmed publication
+   ```sh
+   dap edit README.md --file ./readme.md --title 'Explain the room'
+   ```
 
-An authorized merger runs:
+   The command opens a change, proposes the file and asks the room to merge
+   it. You see the change and the version number:
 
-```sh
-dap merge <change-scope>
-dap log <change-scope>
-dap verify --all
-```
+   ```
+   Proposed README.md (37 bytes) as change sc_q3xk..., version 6.
+   ```
 
-A `Published: commit ...` result names the room destination's confirmed
-commit. A refusal or uncertain result does not. The room may retain outside
-operations and cleanup duties after an unavailable reply; inspection is not
-permission to create another merge request blindly.
+3. Read the lines that follow. A member cannot merge, so a member sees the
+   merge refused and the change waiting:
 
-The Page link and Pages navigation use `/site/<directory>/HEAD/...` for the
-latest published branch. Opening that address later may show a newer change.
-It does not preserve the earlier version. `verify` reports consistency only
-for the journals, coverage and trusted inputs it states; it does not prove
-that all external effects are finished or that an unobserved journal is complete.
+   ```
+   Refused: unauthorized, judged at entry sc_q3xk...:7. The request was refused.
+   The change sc_q3xk... waits, at version 6. When it may be merged, run: dap merge sc_q3xk...
+   ```
 
-## If you cannot continue
+   If the rules ask no approval for the path, an admin or a maintainer sees
+   the change published at once:
 
-- **Join expired, used or refused:** keep the original pending request.
-  Ask the admin about the invitation; do not infer recovery from a fresh key.
-- **No active change definition:** an authorized admin must activate the
-  correct definition. Your role or a generated key cannot do that implicitly.
-- **Approval required:** keep the recorded proposal and have an eligible
-  reviewer judge its exact version and extent.
-- **Merge unauthorized:** a member's proposal can be valid while its merge
-  is refused. Use the authorized maintainer/admin path.
-- **Path invalid:** create a deliberate corrected proposal. The current
-  command does not promise in-place path correction or rename.
-- **Reply unavailable:** inspect the original records. Generic `act`, `edit`
-  and `merge` do not provide a universal durable recovery journal; rerunning
-  them may sign new requests. Join's saved-request recovery is narrower.
+   ```
+   Published: commit 5d0c1e6b..., by the merge sc_q3xk...:7.
+   Page: https://dap-demo.inguz.workers.dev/site/sc_hs5f27fz.../HEAD/README.md
+   ```
 
-## Evidence and remaining acceptance
+To link the change to an issue, add `--closes 1`. When the change is
+published, the issue closes.
 
-Commands match current [CLI help](../../../packages/cli/src/line.ts).
-[CLI story](../../../packages/cli/test/story.scope.test.ts) covers native
-creation, enrollment, authority refusals and journal reads with labelled
-Git host, scheduler and clock stand-ins. The existing
-[one-file scenario](../../../apps/room/lanes/test/edit.scope.test.ts) and
-[demo rehearsal](../../../scripts/demo/rehearse.ts) supply contribution,
-extent-review and publication examples. This documentation change runs no
-new tests or hosted commands and claims no new fixture result.
+To propose the committed files of a local branch, run
+[`dap propose <branch>`](../../../docs/cli.md#dap-propose). The room must
+run the change definition for several files. Otherwise the command refuses
+with `version-mismatch`.
 
-The [full manual ledger](ledger.md) retains installation, browser/agent,
-source-review, recovery, release and cold-reader obligations. The guide at
-`f17b259d4e6302e247ed24db827793ef796d0b71` received the independent draft
-review and publication recorded in [the ledger's history](ledger.md#review-and-publication-history).
-These revised bytes require a new review. The bounded guide does not complete
-the manual's full first-change tutorial or its hosted 15-minute target.
+## After you propose
+
+A version that waits for approval needs a review. A reviewer follows
+[Review an exact change version](reviewing.md). An admin or a maintainer
+then follows [Follow a change through publication](landing.md).
+[Choose a role and manage membership](roles-and-membership.md) lists what
+each role can do.
