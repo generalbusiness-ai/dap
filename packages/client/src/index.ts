@@ -55,4 +55,4 @@ export * from "./commons.ts";
 export * from "./expected.ts";
 
 export * from "./describe.ts";
-export * from "./mark-descriptions.ts";
+export type { MarkCatalogue } from "./mark-descriptions.ts";

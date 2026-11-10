@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { describeActLine, guardSentences, inline, type ActLike, type DefinitionLike } from "../src/index.ts";
+import { describeActLine, descriptionsOf, inline, type ActLike, type DefinitionLike } from "../src/index.ts";
+
+const { guardSentences } = descriptionsOf({});
 
 // Pure declaration descriptions. Supplied records prove no read, admission,
 // caller standing or Native scope outcome.
@@ -44,4 +46,25 @@ test("compact declaration lines retain CLI wording while sharing field, step and
     checked: { type: "code", code: "value-form" }, ready: { type: "bool", required: true },
   } })).toBe("move: moves a issue; the rule decide decides who may sign, with issue.move. Fields: checked?:value-form (rule) ready:bool.");
   expect(describeActLine("note", { ...base, step: "comment", on: null, fields: {} })).toBe("note: comments on no item; needs issue.open. Fields: none.");
+});
+
+test("catalogue bindings keep nested refusals independent and prototype-like pins unknown", () => {
+  const pin = "platform:rules@1";
+  const first = descriptionsOf({
+    [pin]: { rules: { checkers: { refusals: ["first-catalogue"] } } },
+    "constructor@1": { rules: {} },
+  });
+  const second = descriptionsOf({
+    [pin]: { rules: { checkers: { refusals: ["second-catalogue"] } } },
+    "constructor@1": { rules: {} },
+  });
+  const act: ActLike = { step: "comment", on: null, grant: "write", also: {}, fields: {},
+    guards: [{ anyOf: [[{ code: "checkers", row: "P1" }]] }], effects: [] };
+  const definition: DefinitionLike = { name: "nested-marks", genesis: "g0", items: {}, acts: { write: act } };
+  expect(inline(first.guardSentences(definition, act, { pinned: pin })[0]!))
+    .toBe("one of: [each check's checker is an active member whose role is checker (first-catalogue)]");
+  expect(inline(second.guardSentences(definition, act, { pinned: pin })[0]!))
+    .toBe("one of: [each check's checker is an active member whose role is checker (second-catalogue)]");
+  expect(first.markText("constructor@1", { code: "name", row: "P1" }))
+    .toBe("the platform rule name (row P1) holds");
 });
