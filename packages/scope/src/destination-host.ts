@@ -1,3 +1,4 @@
+import { answersVersionQuestion, isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol, DESTINATION_KINDS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence, RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding, rulesCertificateOpeningV15, rulesCertificateDeclineV15, rulesCertificateOpeningV17, rulesCertificateDeclineV17, RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidenceAuditPending, destinationEvidencePlanPending, DESTINATION_CHANGED_SET, destinationRulesScope, isJudgeChanges } from "@generalbusiness/dap-platform";
 /** Destination outside effects. Provider calls happen outside the scope's commit;
  * platform rules alone judge their evidence. Plaintexts stay in private custody.
  *
@@ -10,12 +11,12 @@
 import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldValue, KeyId, ObservedScope, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, b64url, entryHash, isEntry, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, valueDigest, type Item, type Operation, type Own } from "@generalbusiness/dap-derive";
-import { isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
-import { DESTINATION_KINDS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
+
+
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
-import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "@generalbusiness/dap-platform";
-import { rulesCertificateOpeningV15, rulesCertificateDeclineV15 } from "@generalbusiness/dap-platform";
-import { rulesCertificateOpeningV17, rulesCertificateDeclineV17, RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidenceAuditPending, destinationEvidencePlanPending } from "@generalbusiness/dap-platform";
+
+
+
 import type { RulesTreeRequest, RulesTreeObjects } from "./rules-tree-provider.ts";
 import type { CredentialPosition, CredentialStore, RevocationPosition } from "./credential-store.ts";
 import { readTokenHours } from "./read-token-quota.ts";
@@ -25,7 +26,7 @@ import type { Sealed } from "./store.ts";
 import { inspectGit } from "./github-host.ts";
 import { readStageSnapshot } from "./stage-snapshot.ts";
 import { publicationExtents, publicationRefusal, type PublicationRefusal } from "./publication-policy.ts";
-import { DESTINATION_CHANGED_SET, destinationRulesScope, isJudgeChanges } from "@generalbusiness/dap-platform";
+
 
 /** Host diagnostics stay outside the historical Native evidence body. */
 export type DestinationAnswer = EffectAnswer & { refusal?: PublicationRefusal };
@@ -113,10 +114,10 @@ export class DestinationHost implements Outside {
   /** Successor source/stage proof; distinct from a live legacy reservation snapshot. */
   stageSnapshot(asked: SignedIntent) { return readStageSnapshot(this.#given, this.#options, asked); }
 
-  accepts(owner: string, kind: string): boolean { return (owner === "platform:destination@14" || owner === "platform:destination@15" || owner === "platform:destination@17") && kind === RULES_CERTIFICATE_KIND || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
+  accepts(owner: string, kind: string): boolean { return (answersVersionQuestion(owner, "destinationCertificateDriver")) && kind === RULES_CERTIFICATE_KIND || answersVersionQuestion(owner, "scopeDestinationEvidenceOperation") && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
   /** Repeating these reads never repeats a host mutation. The driver keeps the same attempt. */
   readonly recovery = {
-    accepts: (owner: string, kind: string): boolean => owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
+    accepts: (owner: string, kind: string): boolean => answersVersionQuestion(owner, "scopeDestinationEvidenceOperation") && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
     read: (request: EffectRequest): Promise<EffectAnswer | null> => this.recovery.accepts(request.owner, request.kind) ? this.send(request) : Promise.resolve(null),
   };
 
@@ -169,7 +170,7 @@ export class DestinationHost implements Outside {
       const context = this.#bound(request);
       if (!context) return null;
       const { operation, repository, ref } = context;
-      if (operation.owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(operation.kind)) {
+      if (answersVersionQuestion(operation.owner, "scopeDestinationEvidenceOperation") && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(operation.kind)) {
         if (request.attempt !== 1) return null;
         if (operation.kind === "evidence-funding") {
           const pending = destinationEvidenceFundingPending(this.#given.state, this.#given.own, operation);
@@ -194,7 +195,7 @@ export class DestinationHost implements Outside {
                 : destinationEvidenceNoticePending(this.#given.state, this.#given.own, operation);
         return pending ? answer("confirmed", { job: pending.job }) : null;
       }
-      if ((operation.owner === "platform:destination@14" || operation.owner === "platform:destination@15" || operation.owner === "platform:destination@17") && operation.kind === RULES_CERTIFICATE_KIND) {
+      if ((answersVersionQuestion(operation.owner, "destinationCertificateDriver")) && operation.kind === RULES_CERTIFICATE_KIND) {
         return await this.#certifyRulesTree(request, operation, repository, ref);
       }
       if (operation.kind === "check-judge") {
@@ -277,8 +278,8 @@ export class DestinationHost implements Outside {
    * freshness claim. The policy copy stays private across the provider await. */
   async #certifyRulesTree(request: EffectRequest, operation: Operation, repository: DestinationRepository, ref: string): Promise<EffectAnswer | null> {
     if (request.attempt !== 1) return null;
-    const evidenceProfile = operation.owner === "platform:destination@17";
-    const hardened = evidenceProfile || operation.owner === "platform:destination@15";
+    const evidenceProfile = answersVersionQuestion(operation.owner, "scopeCertificateEvidenceProfile");
+    const hardened = answersVersionQuestion(operation.owner, "scopeCertificateHardenedProfile");
     const readOpening = evidenceProfile ? rulesCertificateOpeningV17 : hardened ? rulesCertificateOpeningV15 : rulesCertificateOpening;
     const policyValue = evidenceProfile ? RULES_POLICY_VALUE_V13 : RULES_POLICY_VALUE_V11;
     const opening = readOpening(this.#given.own, operation, request.scope);
@@ -440,13 +441,13 @@ export class DestinationHost implements Outside {
     const generationFits = () => {
       const current = this.#given.state.item(publication.id), value = current?.values["passes"];
       let rows: readonly { name: string; job: FactRef }[];
-      if (this.#given.genesis()?.seed.definition === "platform:destination@15") {
+      if (answersVersionQuestion(this.#given.genesis()?.seed.definition, "scopeCheckGenerationV15")) {
         const bounds = this.#given.bounds;
         if (!bounds) return false;
         const record = certifiedPublicationStateV15(value, bounds);
         if (!record) return false;
         rows = record.generations;
-      } else if (this.#given.genesis()?.seed.definition === "platform:destination@14") {
+      } else if (answersVersionQuestion(this.#given.genesis()?.seed.definition, "scopeCheckGenerationV14")) {
         const record = certifiedPublicationState(value);
         if (!record) return false;
         rows = record.generations;

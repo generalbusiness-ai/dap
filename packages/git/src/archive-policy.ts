@@ -1,6 +1,6 @@
 /** Private v1 export admission. The A1 inventory/writer must call this before
  * selecting archive bodies. This module neither inventories nor exports. */
-import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { isDigest } from "@generalbusiness/dap-bytes";
 
@@ -92,7 +92,7 @@ export function admitArchiveNativeValuePlace(pin: string, data: Digest, domain: 
 /** Pin stage only. Success is not whole-cohort admission or permission to
  * read/export payloads; the complete privacy inventory is still required. */
 export function admitArchivePin(definition: string, certified: Pick<ReadonlySet<Digest>, "has">, nativeData?: Digest): ArchiveExportAdmission {
-  if (definition !== INVITATION_KEY_MEMBERSHIP) {
+  if (!answersCatalogVocabularyQuestion(definition, "gitArchiveDirectMembership")) {
     if (definition.startsWith("platform:membership@")) return { ok: false, reason: "unsupported-credential-cohort" };
     if (Object.hasOwn(ARCHIVE_NATIVE_DATA, definition)) return nativeData === ARCHIVE_NATIVE_DATA[definition]
       ? { ok: true } : { ok: false, reason: "unsupported-archive-cohort" };

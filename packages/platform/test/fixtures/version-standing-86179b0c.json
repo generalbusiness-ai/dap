@@ -1,0 +1,431 @@
+{
+  "baseHead": "86179b0c008e85eadc130bff58161ff69c5e4b10",
+  "question": "nativeStandingDestination",
+  "owner": "packages/platform/src/versions.ts",
+  "sourceText": "export const isStandingDestination = (named: unknown): named is \"platform:destination@5\" | \"platform:destination@6\" => named === \"platform:destination@5\" || named === \"platform:destination@6\";",
+  "sourceSha256": "6ee269a29932694bb0ac48cae1313705161994a8814d9266a85e56932ad0625b",
+  "positivePins": ["platform:destination@5", "platform:destination@6"],
+  "rows": [
+    {
+      "pin": "platform:commons@1",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@1",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@10",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@11",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@12",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@13",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@14",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@15",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@16",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@17",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@18",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@19",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@2",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@20",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@3",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@4",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@5",
+      "answer": true
+    },
+    {
+      "pin": "platform:destination@6",
+      "answer": true
+    },
+    {
+      "pin": "platform:destination@7",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@8",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@9",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory-partition@1",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@1",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@10",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@11",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@12",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@13",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@14",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@15",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@16",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@17",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@18",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@19",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@2",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@20",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@21",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@22",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@23",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@24",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@25",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@26",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@3",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@5",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@6",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@7",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@8",
+      "answer": false
+    },
+    {
+      "pin": "platform:directory@9",
+      "answer": false
+    },
+    {
+      "pin": "platform:inbox@1",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@1",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@10",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@11",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@12",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@13",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@2",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@4",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@5",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@6",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@7",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@8",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@9",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@1",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@10",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@11",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@12",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@13",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@14",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@15",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@16",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@17",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@18",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@19",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@2",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@20",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@21",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@22",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@23",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@24",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@25",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@26",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@27",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@3",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@5",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@6",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@7",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@8",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@9",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@1",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@10",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@11",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@12",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@13",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@14",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@2",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@3",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@4",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@5",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@6",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@7",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@8",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@9",
+      "answer": false
+    },
+    {
+      "pin": "platform:destination@999",
+      "answer": false
+    },
+    {
+      "pin": "platform:membership@999",
+      "answer": false
+    },
+    {
+      "pin": "platform:register@999",
+      "answer": false
+    },
+    {
+      "pin": "platform:rules@999",
+      "answer": false
+    },
+    {
+      "pin": "not-a-platform-pin",
+      "answer": false
+    }
+  ],
+  "qualification": "Supplement frozen from the original Git source before editing isStandingDestination. The original 104-question fixture remains unchanged. No executable validation ran."
+}

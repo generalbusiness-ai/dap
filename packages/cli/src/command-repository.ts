@@ -9,7 +9,7 @@ import type { Config } from "./store.ts";
 import { canonicalize, isReceipt, isSignedIntentShape, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { type Fetch, readCredential, ScopeHandle, signedIntent } from "@generalbusiness/dap-client";
 import type { PlatformDefinition, Receipt, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { FAILED_CLAIM_COHORT, OWN_AGENT_COHORT, platform, READ_TOKEN_HOURS, REPOSITORY_BINDING_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, platform, READ_TOKEN_HOURS } from "@generalbusiness/dap-platform";
 
 // ---------------------------------------------------------------- the repository's remote, and a clone
 
@@ -48,7 +48,7 @@ async function destinationStateOf(ctx: Context, config: Config): Promise<{ summa
   if (read.value.scope.scope !== scope || read.value.scope.kind !== "destination" || !knownPlatform(read.value.definition, "platform:destination")) return stopCommand(failed(`${scope} is no supported destination.`));
   const branch = read.value.items.find((item) => item.type === "branch");
   const repository = branch?.values["repository"] as Recorded | undefined;
-  if (read.complete && read.next === undefined && read.value.status === "active" && (read.value.definition === UNPUBLISHED_COHORT.destination || read.value.definition === REPOSITORY_BINDING_COHORT.destination || read.value.definition === OWN_AGENT_COHORT.destination) && branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null && branch.values["token"] == null) return { summary: read.value, reader, repository: null };
+  if (read.complete && read.next === undefined && read.value.status === "active" && answersVersionQuestion(read.value.definition, "cliUnpublishedDestination") && branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null && branch.values["token"] == null) return { summary: read.value, reader, repository: null };
   if (!branch || !repository || typeof repository.host !== "string" || typeof repository.name !== "string" || typeof repository.namespace !== "string" || typeof repository.id !== "string") return stopCommand(failed(`The destination ${scope} records no repository.`));
   return { summary: read.value, reader, repository };
 }
@@ -113,7 +113,7 @@ function cloneUsing(ctx: Context, directory: string | undefined, options: { hour
     if (!Number.isSafeInteger(hours) || hours < READ_TOKEN_HOURS.min || hours > READ_TOKEN_HOURS.max) return usage(`--hours is a whole number from ${READ_TOKEN_HOURS.min} to ${READ_TOKEN_HOURS.max}.`);
     const config = await configOf(ctx);
     const { summary, repository } = await destinationOf(ctx, config);
-    const fixedLifetime = summary.definition === FAILED_CLAIM_COHORT.destination;
+    const fixedLifetime = answersVersionQuestion(summary.definition, "cliFixedReadTokenLifetimeDestination");
     if (fixedLifetime && hours !== 1) return usage("This room issues one-hour read tokens; --hours must be 1.");
     const tokenFields = fixedLifetime ? {} : { hours };
     if (options.archive && !ctx.git?.archiveRun) return failed("Archive clone needs the hardened Git runner. No read token was requested.");

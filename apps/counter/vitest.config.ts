@@ -9,7 +9,8 @@ export default defineConfig({
     { find: "@generalbusiness/dap-derive/rule", replacement: source("derive/src/rule/index.ts") },
     { find: "@generalbusiness/dap-derive", replacement: source("derive/src/index.ts") },
     { find: /^@generalbusiness\/dap-bytes$/, replacement: source("bytes/src/index.ts") },
-    { find: "@generalbusiness/dap-contract", replacement: source("contract/src/index.ts") },
+    { find: "@generalbusiness/dap-contract/catalog-vocabulary", replacement: source("contract/src/catalog-vocabulary.ts") },
+    { find: /^@generalbusiness\/dap-contract$/, replacement: source("contract/src/index.ts") },
   ] },
   test: { include: ["definition.test.ts", "commitments.test.ts"], environment: "node", pool: "threads" },
 });

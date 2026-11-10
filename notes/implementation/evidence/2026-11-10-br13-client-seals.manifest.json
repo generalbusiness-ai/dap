@@ -1,0 +1,203 @@
+{
+  "status": "PASS",
+  "sourceHead": "c7fda1dde909218288e3cc5b118bdf00edc4fd3c",
+  "sourceTree": "cc2dbfadc5738c60a8a0c8ac130893da98c71af3",
+  "baseHead": "c18298a48dfc6b56a06cf220e7a95de34011f131",
+  "booking": "7b09a4f0f904a8f094714827d7431bfabead2505",
+  "end": "464d52a8b82cfaf653a8b7e566607d5c14fa0ed5",
+  "actualExits": {
+    "body/producer.exit": 0,
+    "actualdriver.exit": 0,
+    "launcher.exit": 0
+  },
+  "existingOldLiteralsVerifiedBeforeCandidateActuals": 3,
+  "changedHashLiterals": 3,
+  "newRows": 0,
+  "allOtherTableBytesEqual": true,
+  "sourceRowsVerified": 4498,
+  "toolRowsVerified": 7529,
+  "patchSha256": "64cc933a0547fd12a2d5b78f7cf61f7b66dba52990e730c7df8328633c7573db",
+  "beforeTableSha256": "d709d8c7faca4ffc42a9e37e6326fbe91585e90f7417e70e7b6e1deb02fa916a",
+  "proposedTableSha256": "6407036a4ae9bdfc09d00a7e0722de7756c862778f7509126a62e33b92778fc1",
+  "qualification": "Actual unchanged maintained parser-derived seals only. No raw source-hash substitution, assertion weakening, application/test import or compiler/test/control/build rerun. Fixture guard remains untouched.",
+  "request": "487496f5ad73675926a070808188cd2a228334c1",
+  "promise": "4b0e1a79fc0054ca2e330c22f1282f542bdce9fe",
+  "producer": {
+    "path": "/private/tmp/artroom-br13-client-seal-producer-c7fda1dd-20261110.mjs",
+    "sha256": "cefd13f565bae9812b558cb150966684e40c24ebfa7aa70fa681b7cc557c66d6"
+  },
+  "metadata": {
+    "path": "/private/tmp/artroom-br13-client-seal-owner-metadata-c7fda1dd-20261110.json",
+    "sha256": "d8ea0eb54491a7c117625140703a72961f69d2f0f27ddeb4704b2b867fde08c8"
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-client-seals-c7fda1dd/run",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "actualdriver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+          "mode": "0o444"
+        },
+        {
+          "path": "body/invocation.json",
+          "bytes": 549,
+          "sha256": "2274fae4e56f8672015b8ca6c909cce4d6b4c2150c760943ee9bdcf4459224ef",
+          "mode": "0o444"
+        },
+        {
+          "path": "body/produced/actual-metadata.json",
+          "bytes": 4670,
+          "sha256": "6aaee8db38d286c5788de77d2836d3f696118337ccb78e49355dcd1bccced916",
+          "mode": "0o444"
+        },
+        {
+          "path": "body/produced/before-table.txt",
+          "bytes": 67558,
+          "sha256": "d709d8c7faca4ffc42a9e37e6326fbe91585e90f7417e70e7b6e1deb02fa916a",
+          "mode": "0o444"
+        },
+        {
+          "path": "body/produced/proposed-seals.patch",
+          "bytes": 2522,
+          "sha256": "64cc933a0547fd12a2d5b78f7cf61f7b66dba52990e730c7df8328633c7573db",
+          "mode": "0o444"
+        },
+        {
+          "path": "body/produced/proposed-table.txt",
+          "bytes": 67558,
+          "sha256": "6407036a4ae9bdfc09d00a7e0722de7756c862778f7509126a62e33b92778fc1",
+          "mode": "0o444"
+        },
+        {
+          "path": "body/producer.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+          "mode": "0o444"
+        },
+        {
+          "path": "body/producer.started.json",
+          "bytes": 38,
+          "sha256": "e3e0a91dc17628a19aa762576a9f6827897d36975f76f0baa83bd74822af4ef5",
+          "mode": "0o444"
+        },
+        {
+          "path": "body/producer.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mode": "0o444"
+        },
+        {
+          "path": "body/producer.stdout",
+          "bytes": 400,
+          "sha256": "73ff1a33b10018fe9879e9cb399825ed981c7375728855c5447e198e4abe2616",
+          "mode": "0o444"
+        },
+        {
+          "path": "cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+          "mode": "0o444"
+        },
+        {
+          "path": "driver.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mode": "0o444"
+        },
+        {
+          "path": "driver.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mode": "0o444"
+        },
+        {
+          "path": "launcher.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+          "mode": "0o444"
+        },
+        {
+          "path": "launcher.json",
+          "bytes": 815,
+          "sha256": "66372265532610d2c2d4a93203d77b06f59cff2f8eda535970f5344551377dc9",
+          "mode": "0o444"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 554,
+          "sha256": "2699b4cc2d618157297cbf0e40e4b001cb3465b9e84b9fa1404f754e2c3c4927",
+          "mode": "0o444"
+        },
+        {
+          "path": "result.json",
+          "bytes": 250,
+          "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55",
+          "mode": "0o444"
+        },
+        {
+          "path": "started.json",
+          "bytes": 44,
+          "sha256": "0557386a585f1b7ba55eb637e19d239981e1a99cbec0eef90e047b0c74805a11",
+          "mode": "0o444"
+        }
+      ],
+      "directories": [
+        {
+          "path": ".",
+          "mode": "0o555"
+        },
+        {
+          "path": "body",
+          "mode": "0o555"
+        },
+        {
+          "path": "body/produced",
+          "mode": "0o555"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-client-seals-c7fda1dd-review",
+      "fileCount": 4,
+      "files": [
+        {
+          "path": "actual-metadata.json",
+          "bytes": 4670,
+          "sha256": "6aaee8db38d286c5788de77d2836d3f696118337ccb78e49355dcd1bccced916",
+          "mode": "0o444"
+        },
+        {
+          "path": "audit.json",
+          "bytes": 1105,
+          "sha256": "e84c30153ad201a6c92fd1e1907c2e149e9071021fa20c4dda8d76721f76c6d3",
+          "mode": "0o444"
+        },
+        {
+          "path": "outer-result.json",
+          "bytes": 250,
+          "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55",
+          "mode": "0o444"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 554,
+          "sha256": "2699b4cc2d618157297cbf0e40e4b001cb3465b9e84b9fa1404f754e2c3c4927",
+          "mode": "0o444"
+        }
+      ],
+      "directories": [
+        {
+          "path": ".",
+          "mode": "0o555"
+        }
+      ]
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}

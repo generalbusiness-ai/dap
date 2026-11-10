@@ -1,3 +1,4 @@
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 /** Portable archive adaptation. The trusted read port owns object parsing
  * and I/O. This module imports neither Git nor Node and changes no judge. */
 import { natural } from "@generalbusiness/dap-bytes";
@@ -174,8 +175,8 @@ class Session implements HistorySource {
       for (const source of archive.foreignSources ?? []) {
         this.work.spend({ metadata: 256, inputWork: 512 });
         if (!this.#anchorScopes.has(source.at.scope)) continue;
-        if ((source.pin === "platform:membership@8" || source.pin === "platform:membership@12") && source.at.kind === "membership"
-          || (source.pin === "platform:register@17" || source.pin === "platform:register@18" || source.pin === "platform:register@19" || source.pin === "platform:register@20" || source.pin === "platform:register@26") && source.at.kind === "register") selected.set(canonicalize(source.at), platformName(source.pin));
+        if ((answersCatalogVocabularyQuestion(source.pin, "archiveMembershipForeignCopy")) && source.at.kind === "membership"
+          || (answersCatalogVocabularyQuestion(source.pin, "archiveRegisterForeignCopy")) && source.at.kind === "register") selected.set(canonicalize(source.at), platformName(source.pin));
       }
       names = selected; this.#privateNames.set(archive.scope.scope, names);
     }

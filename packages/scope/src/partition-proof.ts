@@ -1,9 +1,10 @@
+import { partitionRole, PARTITION_COHORT, PARTITION_IDENTITY_BOUNDS, partitionReceiverPolicy, partitionCreationPolicy, partitionDeclaredCreationPolicy, partitionSourceName, partitionNativeCreationPolicy, partitionProducerName, type PartitionCreationSelection, type PartitionCreation, type PartitionCreationPolicy, type PartitionNativeFrame, type PartitionReceiverPolicy } from "@generalbusiness/dap-platform";
 /** Raw immutable partition birth evidence. No frame is a judged `Fetched`
  * identity: receiver policy must validate the complete chain separately. */
 import type { DeclaredDefinition, FactRef, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, isDigest, isPlatformDefinition, isFactRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import { isObject, same } from "@generalbusiness/dap-derive";
-import { PARTITION_COHORT, PARTITION_IDENTITY_BOUNDS, partitionReceiverPolicy, partitionCreationPolicy, partitionDeclaredCreationPolicy, partitionSourceName, partitionNativeCreationPolicy, partitionProducerName, type PartitionCreationSelection, type PartitionCreation, type PartitionCreationPolicy, type PartitionNativeFrame, type PartitionReceiverPolicy } from "@generalbusiness/dap-platform";
+
 import type { NativeBirth, NativeBirthSource } from "./native-birth.ts";
 import { readNativeBirth } from "./native-birth.ts";
 import { PROOF_BYTE_BOUNDS, proofEntry, type ProofBody, type ProofSource } from "./proof-bytes.ts";
@@ -177,7 +178,7 @@ class View {
   }
   async partition(at: ScopeRef): Promise<boolean> {
     const part = await this.birth(at), born = part?.entry;
-    if (!part?.native || part.named !== PARTITION_COHORT.partition || !born || born.input.type !== "genesis"
+    if (!part?.native || partitionRole(part.named) !== "partition" || !born || born.input.type !== "genesis"
       || !isFactRef(born.input.source) || !isScopeRef(born.input.seed.creator) || !same(born.input.source.at, born.input.seed.creator)
       || born.input.n === null || !born.input.message || !isObject(born.input.message.body) || !isObject(born.input.message.body["fields"])) return false;
     return this.rootCreation({ seed: born.input.seed, source: born.input.source, n: born.input.n, message: born.input.message });
@@ -186,7 +187,7 @@ class View {
     if (!isScopeRef(creation.seed.creator) || !isFactRef(creation.source) || !same(creation.seed.creator, creation.source.at)
       || !isObject(creation.message.body) || !isObject(creation.message.body["fields"])) return false;
     const root = await this.birth(creation.seed.creator);
-    if (!root?.native || root.named !== PARTITION_COHORT.directory || !await this.exact(creation.source)) return false;
+    if (!root?.native || partitionRole(root.named) !== "directory" || !await this.exact(creation.source)) return false;
     const fields = creation.message.body["fields"];
     for (const [name, pin] of [["membership", PARTITION_COHORT.membership], ["rules", PARTITION_COHORT.rules], ["destination", PARTITION_COHORT.destination]] as const) {
       const ref = fields[name]; if (!isScopeRef(ref)) return false;
@@ -199,17 +200,17 @@ class View {
     if (!birth || !own || own.entry.input.type !== "genesis") return null;
     const born = own.entry.input;
     if (birth.native) {
-      if (birth.named === PARTITION_COHORT.partition) return await this.partition(at) ? own : null;
-      if (birth.named === PARTITION_COHORT.membership || birth.named === PARTITION_COHORT.rules || birth.named === PARTITION_COHORT.destination) {
+      if (partitionRole(birth.named) === "partition") return await this.partition(at) ? own : null;
+      if (partitionRole(birth.named) === "membership" || partitionRole(birth.named) === "rules" || partitionRole(birth.named) === "destination") {
         if (isScopeRef(born.seed.creator) && !await this.birth(born.seed.creator)) return null;
-      } else if (birth.named === PARTITION_COHORT.inbox && isScopeRef(born.seed.creator)) {
+      } else if (partitionRole(birth.named) === "inbox" && isScopeRef(born.seed.creator)) {
         const parent = await this.birth(born.seed.creator);
         if (!parent) return null;
-        if (parent.named === PARTITION_COHORT.membership && parent.native) {
+        if (partitionRole(parent.named) === "membership" && parent.native) {
           const entry = parent.entry;
           if (!entry || entry.input.type !== "genesis" || !isScopeRef(entry.input.seed.creator)) return null;
           const root = await this.birth(entry.input.seed.creator);
-          if (!root || root.named === PARTITION_COHORT.directory && (!isFactRef(born.source) || !await this.exact(born.source))) return null;
+          if (!root || partitionRole(root.named) === "directory" && (!isFactRef(born.source) || !await this.exact(born.source))) return null;
         }
       }
       return own;
@@ -220,7 +221,7 @@ class View {
     if (!candidate) return null;
     // A locator can cheaply establish that no upgrade is requested. A
     // positive partition pin still needs the entire actual creator chain.
-    return candidate.native && candidate.named === PARTITION_COHORT.partition && !await this.lane(at) ? null : own;
+    return candidate.native && partitionRole(candidate.named) === "partition" && !await this.lane(at) ? null : own;
   }
   finish(source: RawPartitionFrame, includeSource = false): PartitionProof | null {
     const frames = this.collection.frames(this.#needed).filter(frame => includeSource || source.fact.seq === 0 || !same(frame.fact, source.fact));
@@ -252,12 +253,12 @@ export class PartitionProofOperation {
   async creationCandidate(creation: PartitionCreation): Promise<boolean | null> {
     try {
       const named = creation.seed.definition;
-      if ([PARTITION_COHORT.directory, PARTITION_COHORT.partition, PARTITION_COHORT.destination].some(pin => pin === named)) return true;
-      if (named === PARTITION_COHORT.membership || named === PARTITION_COHORT.rules) {
+      if (["directory", "partition", "destination"].includes(partitionRole(named) ?? "")) return true;
+      if (partitionRole(named) === "membership" || partitionRole(named) === "rules") {
         const source = await this.#collection.birth(creation.source.at);
-        return source && this.#collection.active() ? source.native && source.named === PARTITION_COHORT.directory : null;
+        return source && this.#collection.active() ? source.native && partitionRole(source.named) === "directory" : null;
       }
-      if (named === PARTITION_COHORT.inbox) {
+      if (partitionRole(named) === "inbox") {
         const selected = await this.receiver(creation.source.at);
         return selected ? selected.policy.mode === "partition-v1" : null;
       }
@@ -265,7 +266,7 @@ export class PartitionProofOperation {
       const directory = isObject(creation.message.body) ? creation.message.body["directory"] : null;
       if (!isScopeRef(directory)) return false;
       const source = await this.#collection.birth(directory);
-      return source && this.#collection.active() ? source.native && source.named === PARTITION_COHORT.partition : null;
+      return source && this.#collection.active() ? source.native && partitionRole(source.named) === "partition" : null;
     } catch { return null; }
   }
   /** Both labels come from the same authenticated raw operation. This never
@@ -309,10 +310,10 @@ export class PartitionProofOperation {
       const view = new View(this.#collection);
       if (typeof definition === "string") {
         if (!isPlatformDefinition(definition) || definition !== creation.seed.definition) return null;
-        if (definition === PARTITION_COHORT.partition) return this.creation(creation);
+        if (partitionRole(definition) === "partition") return this.creation(creation);
         const source = await view.exact(creation.source);
         if (!source) return null;
-        if (definition === PARTITION_COHORT.inbox && !await view.receiver(creation.source.at)) return null;
+        if (partitionRole(definition) === "inbox" && !await view.receiver(creation.source.at)) return null;
         const proof = view.finish(source, true), policy = proof && partitionNativeCreationPolicy(creation, proof.frames);
         return policy && proof && this.#collection.active() ? { policy, proof } : null;
       }
@@ -321,7 +322,7 @@ export class PartitionProofOperation {
       if (!isScopeRef(directory)) return { policy: { mode: "legacy" }, proof: null };
       const candidate = await view.birth(directory);
       if (!candidate) return null;
-      if (!candidate.native || candidate.named !== PARTITION_COHORT.partition) return { policy: { mode: "legacy" }, proof: null };
+      if (!candidate.native || partitionRole(candidate.named) !== "partition") return { policy: { mode: "legacy" }, proof: null };
       return this.declaredCreation(creation, definition);
     } catch { return null; }
   }

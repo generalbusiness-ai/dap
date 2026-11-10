@@ -1,4 +1,3 @@
-import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
 /**
  * The observation read: the authority port of a scope whose grants are
  * judged on membership (scope contract, sections 5.1 and 16.1; authority
@@ -43,7 +42,7 @@ import type { Digest, Entry, Input, KeyId, Observation, ObservationRequest, Obse
 import { canonicalize, hex, isObservationUse, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
 import { WINDOWS, contentChecked, contentStates, fixedBy, highestHead, isScopeRef, judgeGrant, membershipOf, namedBy, observationOf, observedName, observedOf, prefer, revoked, same, subjectName, valueDigest, type Clock as Reading, type ContentStates, type GrantJudgment, type Needed, type RecordedRef, type Retains, type StateView, type ValueRead } from "@generalbusiness/dap-derive";
 import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
-import { COMMONS_COHORT, SIBLINGS_OF, UNPUBLISHED_COHORT, destinationBranch, unpublishedDestinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, authoritySessionBirthDirectories, destinationBranch, unpublishedDestinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
 import type { Asked, Authority, Clock, Further, Random, Standing } from "./ports.ts";
 import type { SessionReading } from "./sessions.ts";
 import { ObservationCache, observationPayloadBytes } from "./observation-cache.ts";
@@ -387,7 +386,7 @@ export function ownStanding(random: Random, genesis: Repository["genesis"]): Aut
         membership: scope,
         held(view, clock) {
           const named = genesis()?.seed.definition;
-          const observation = (named === "platform:membership@1" || named === "platform:membership@2" || named === "platform:membership@4" || named === "platform:membership@5" || named === "platform:membership@6" || named === "platform:membership@7" || named === "platform:membership@8" || named === "platform:membership@9" || named === "platform:membership@10" || named === "platform:membership@11" || named === "platform:membership@12" || named === "platform:membership@13") && platform(named)
+          const observation = answersVersionQuestion(named, "scopeOwnStandingMembership") && platform(named)
 
             ? observationOf(standingOf(view, { of: scope, key }, named), clock.reading) : null;
           // No answer: the scope is not an active membership scope at this head, so no grant rests on it (section 12.1.3, case e).
@@ -462,12 +461,11 @@ export function repositorySessionBirth(config: Pick<Repository, "genesis" | "sta
   const genesis = config.genesis();
   const state = config.state;
   // The directory/child cohort is the exact supported catalog, never a name alias or newest fallback.
-  const definitions = scope.kind === "commons" && genesis?.seed.definition === COMMONS_COHORT.commons ? [COMMONS_COHORT.directory]
-    : Object.keys(SIBLINGS_OF).filter((named) => platform(named) && (scope.kind === "destination" || scope.kind === "rules") && SIBLINGS_OF[named]![scope.kind] === genesis?.seed.definition);
+  const definitions = authoritySessionBirthDirectories(scope.kind, genesis?.seed.definition);
   if (!definitions.length || !state || !same(state.scope()?.at, scope) || genesis?.decision !== "applied" || genesis.seed.kind !== scope.kind) return null;
   const directory = genesis.seed.creator;
   const item = scope.kind === "destination"
-    ? ((genesis.seed.definition === UNPUBLISHED_COHORT.destination || genesis.seed.definition === REPOSITORY_BINDING_COHORT.destination || genesis.seed.definition === OWN_AGENT_COHORT.destination) ? unpublishedDestinationBranch(state) : destinationBranch(state))
+    ? (answersVersionQuestion(genesis.seed.definition, "authoritySessionBirthUnpublishedBranch") ? unpublishedDestinationBranch(state) : destinationBranch(state))
     : state.page(scope.kind === "commons" ? "commons" : "rules", [scope.kind === "commons" ? "open" : "current"], null, 1).items[0];
   const held = item?.refs["directory"];
   const membership = recorded === undefined ? recordedMembership(config, scope) : recorded;

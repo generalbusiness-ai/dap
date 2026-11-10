@@ -1,0 +1,336 @@
+{
+  "version": 1,
+  "request": "487496f5ad73675926a070808188cd2a228334c1",
+  "promise": "4b0e1a79fc0054ca2e330c22f1282f542bdce9fe",
+  "sourceHead": "c7800a6282a5e0871364eb15fc6666d3103f9433",
+  "sourceTree": "2bb5185657cf3d0a3ee23f22c2410989e4ae6476",
+  "start": "d565fb6d834a5bf68d156ad906f4e560fe76dc98",
+  "end": "1a3c511ed89077e97ff08c8b48dd2fe4e4349ab7",
+  "qualification": "Actual post-C merge at c780 retains both SDK/table guide changes, BR13 seals and8formal-covered source hashes. APFS dependencies retain5598 exact source/copy file/mode/link rows with truthfulf19 lock,15workspaces and50aliases; old view/cache retained. Maintained read-only Page asset owner passes1exact same-run case, so no additional build runs. Complete SDK module Node owner passes5exact TAP/JSON statuses. Pagefocused/Node/inner/outerdriver/launcher actual exits0 and every group closes empty. Earlier SDK5 deferment is discharged at this actual source; this is no standalone SDK compiled-output/capture check, browser workflow, live acceptance or deployment claim.37affectedcompiler contexts/347purecases and2querycontrols remain for separate bookings; final maintained gate and actual source-specific workflow review remain due.",
+  "retention": {
+    "readOnly": true,
+    "retainUntil": "2026-12-09",
+    "privateFixturesCopied": false
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-integration-first-curated-c7800a6282",
+      "classification": "safe actual source/dependency/process/case metadata",
+      "fileCount": 28,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2413,
+          "sha256": "683070d2555ef78187389b80bf8f621c9506db97697c4152a0ece92dc666fc8a"
+        },
+        {
+          "path": "actual-merge.json",
+          "bytes": 717,
+          "sha256": "f9f9bd109186c68d32a85a0d017073c1fa21f7cafd81656ebc421f90a60eacf8"
+        },
+        {
+          "path": "dependency-copy.json",
+          "bytes": 16385,
+          "sha256": "47a55062cc30331aaeacd4352448a9d7bc19ed7cb6e25f26e3e38144f69802a0"
+        },
+        {
+          "path": "dependency-source-inventory.json",
+          "bytes": 1071718,
+          "sha256": "0e5481cc479aba125b598163f7023bc035015af5511e6bd2518edc776df0d480"
+        },
+        {
+          "path": "independent-audit.json",
+          "bytes": 1928,
+          "sha256": "bbb245c8656e918c747acf562589ae35d7625631e80373a5f067e4322678b4be"
+        },
+        {
+          "path": "inner-actualrunner.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "inner-cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "inner-compatibility-reuse.json",
+          "bytes": 2050,
+          "sha256": "8f2d70a52028dd120fc996201c2104dfeb3986bee74ec158b2b7eae039121590"
+        },
+        {
+          "path": "inner-focused-process-guard.json",
+          "bytes": 653,
+          "sha256": "b889fcda7b19feb05bc75bf38ebf739c368a6be9d301b1288771cf972b911934"
+        },
+        {
+          "path": "inner-focused.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "inner-focused.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "inner-focused.started.json",
+          "bytes": 365,
+          "sha256": "b12a740f91dca1f3dc8551697d5d8bf5bbf7d39769d4c1c12a1a12f4ee1286da"
+        },
+        {
+          "path": "inner-node-coverage.json",
+          "bytes": 2325,
+          "sha256": "029396fb8fe349874b16f8c9be4ad59ab4577a7e7634260a7f4f65af5587e45e"
+        },
+        {
+          "path": "inner-node-process-guard.json",
+          "bytes": 653,
+          "sha256": "b889fcda7b19feb05bc75bf38ebf739c368a6be9d301b1288771cf972b911934"
+        },
+        {
+          "path": "inner-node.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "inner-node.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "inner-node.started.json",
+          "bytes": 232,
+          "sha256": "0db95efa47f355380870644b69953ac1a49269af5a3522721d48094c406fbf21"
+        },
+        {
+          "path": "inner-slot-receipt.json",
+          "bytes": 3260,
+          "sha256": "1fd11245128cbcf5803a512c1f1f62b2bcbf45c079a525d389a35108a2f1ef98"
+        },
+        {
+          "path": "maintained-result.json",
+          "bytes": 3676,
+          "sha256": "a7a771e68d462321534ac2e25929d005116aa8c5e6027ad74eb3f5ef115b1a0c"
+        },
+        {
+          "path": "outer-actualdriver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "outer-cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "outer-launcher.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "outer-launcher.json",
+          "bytes": 840,
+          "sha256": "bb962586dced6c87c03765f6e4cf4a53ba40bc750c9d67044cd964290b99a67d"
+        },
+        {
+          "path": "outer-result.json",
+          "bytes": 250,
+          "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55"
+        },
+        {
+          "path": "outer-started.json",
+          "bytes": 44,
+          "sha256": "9dfcfc77c91139c6860a0f11fb6c0d987a83dff3afdaa21b3c10a89b792e8dc5"
+        },
+        {
+          "path": "raw-unit-inventory.json",
+          "bytes": 5464,
+          "sha256": "114b7ebfa609c9251a4688749f4902aa6c285d178b5550bbcb0023e75e2acde7"
+        },
+        {
+          "path": "retention.json",
+          "bytes": 220,
+          "sha256": "f49bf37e33df8a0d97068fe3309f8f84587c3ef2b925ee62298532558f8675d3"
+        },
+        {
+          "path": "same-run-Page-case-status.json",
+          "bytes": 1609,
+          "sha256": "750252ec4eec7e0eb1ecdcb63fe2bcfc3c8354545f806f9b949c54e34ea33f95"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-integration-first-c7800a6282",
+      "classification": "retained original outer/inner and same-run output",
+      "fileCount": 33,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2924,
+          "sha256": "623e1efcf3f4fd3fd1f742173ddc002c393071a4c48b2362aa4d6bb4604445de"
+        },
+        {
+          "path": "run/actualdriver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "run/body/actualrunner.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run/body/cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "run/body/compatibility-reuse.json",
+          "bytes": 2050,
+          "sha256": "8f2d70a52028dd120fc996201c2104dfeb3986bee74ec158b2b7eae039121590"
+        },
+        {
+          "path": "run/body/focused/body.log",
+          "bytes": 603,
+          "sha256": "a01b594cea39c2203b6f110024815cfe1ea48d172a69864ad4612ace080efc1d"
+        },
+        {
+          "path": "run/body/focused/coverage-ledger.json",
+          "bytes": 1609,
+          "sha256": "750252ec4eec7e0eb1ecdcb63fe2bcfc3c8354545f806f9b949c54e34ea33f95"
+        },
+        {
+          "path": "run/body/focused/coverage.jsonl",
+          "bytes": 2212,
+          "sha256": "fd52cba253fbe9993277a072a2ae13e00a9cebc9ca1a99de4ad11812b3ec1b03"
+        },
+        {
+          "path": "run/body/focused/manifest.json",
+          "bytes": 825,
+          "sha256": "f9ba41cd6898df977ab68f4d59d3dbe5bd73c914c236ca41a2167a15fb8631ca"
+        },
+        {
+          "path": "run/body/focused/plan.json",
+          "bytes": 370785,
+          "sha256": "b61a15d4276f62d99ebd2b193963a15f61cdd28a34aa72b0f9d514a44dfc7f62"
+        },
+        {
+          "path": "run/body/focused/result.json",
+          "bytes": 3676,
+          "sha256": "a7a771e68d462321534ac2e25929d005116aa8c5e6027ad74eb3f5ef115b1a0c"
+        },
+        {
+          "path": "run/body/focused/vitest.json",
+          "bytes": 1126,
+          "sha256": "2a84e23a14f9778cdd81a1b237ff65dd4eb653e46b018ad0b37e36e6100e1ed7"
+        },
+        {
+          "path": "run/body/focused-process-guard.json",
+          "bytes": 653,
+          "sha256": "b889fcda7b19feb05bc75bf38ebf739c368a6be9d301b1288771cf972b911934"
+        },
+        {
+          "path": "run/body/focused.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "run/body/focused.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run/body/focused.log",
+          "bytes": 218,
+          "sha256": "d58b65ec52dd9c628fc2be2449c905414a8c0ff9f11da78406ca077447062d48"
+        },
+        {
+          "path": "run/body/focused.started.json",
+          "bytes": 365,
+          "sha256": "b12a740f91dca1f3dc8551697d5d8bf5bbf7d39769d4c1c12a1a12f4ee1286da"
+        },
+        {
+          "path": "run/body/node-coverage.json",
+          "bytes": 2325,
+          "sha256": "029396fb8fe349874b16f8c9be4ad59ab4577a7e7634260a7f4f65af5587e45e"
+        },
+        {
+          "path": "run/body/node-process-guard.json",
+          "bytes": 653,
+          "sha256": "b889fcda7b19feb05bc75bf38ebf739c368a6be9d301b1288771cf972b911934"
+        },
+        {
+          "path": "run/body/node.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "run/body/node.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run/body/node.log",
+          "bytes": 1329,
+          "sha256": "c41a83747b7ebdc201f4001c6af3a47d164de727565874b58f2985def8b9a7f3"
+        },
+        {
+          "path": "run/body/node.started.json",
+          "bytes": 232,
+          "sha256": "0db95efa47f355380870644b69953ac1a49269af5a3522721d48094c406fbf21"
+        },
+        {
+          "path": "run/body/owned-descendants.jsonl",
+          "bytes": 3132,
+          "sha256": "b10f3939133f46bd5c2ee3353c3bba8937fce6bb34549a503a58aee11df97ae0"
+        },
+        {
+          "path": "run/body/slot-receipt.json",
+          "bytes": 3260,
+          "sha256": "1fd11245128cbcf5803a512c1f1f62b2bcbf45c079a525d389a35108a2f1ef98"
+        },
+        {
+          "path": "run/cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "run/driver.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run/driver.stdout",
+          "bytes": 114,
+          "sha256": "097daa9994bed20fd2b0a89c572fd25262b9f590d8db783e2942ae8f5daa74e0"
+        },
+        {
+          "path": "run/launcher.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "run/launcher.json",
+          "bytes": 840,
+          "sha256": "bb962586dced6c87c03765f6e4cf4a53ba40bc750c9d67044cd964290b99a67d"
+        },
+        {
+          "path": "run/outer-timing.json",
+          "bytes": 554,
+          "sha256": "9e54fe9642d0b6f5862e585b01285f619f12f34ad5b1fac38e1968da48a73ae3"
+        },
+        {
+          "path": "run/result.json",
+          "bytes": 250,
+          "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55"
+        },
+        {
+          "path": "run/started.json",
+          "bytes": 44,
+          "sha256": "9dfcfc77c91139c6860a0f11fb6c0d987a83dff3afdaa21b3c10a89b792e8dc5"
+        }
+      ]
+    }
+  ]
+}

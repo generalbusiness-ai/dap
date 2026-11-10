@@ -12,7 +12,7 @@ Premature progress could present an unverified change as recorded.
 
 ## Coverage
 
-The correspondence review covers commit `8faa38dcf31855a0a6264e5912b58061b5eda223`. `verification/state-machines/coverage.json` records exact source hashes.
+The correspondence review covers commit `c9f4dff6267d12d89d1215a0d894e7ec2f5f2435`. `verification/state-machines/coverage.json` records exact source hashes. BR13 moves version queries outside `continueEdit`; its protected function stays byte-identical to the earlier correspondence. The 9 November model and source checks pass. Planner ruling `12c4f5fb` requires no repeated fault control for this unchanged boundary. See the [BR13 note](../../../notes/implementation/2026-11-09-br13-version-questions.md) for the comparison and retained evidence.
 
 - `apps/room/page/src/retained-editor-state.ts`: `transitionEdit: attempted, answer, receipt-verified, step-recorded`.
 - `apps/room/page/src/retained-editor-data.ts`: `continueEdit`.

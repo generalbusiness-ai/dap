@@ -1,3 +1,4 @@
+import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 /** Two native metadata peers, selected only after the read owner authenticates
  * and checks the target's recorded birth. No R2, Git or application code. */
 import type { ScopeRef } from "@generalbusiness/dap-contract";
@@ -28,7 +29,7 @@ export function applicationDeclarationsIn(binding: Binding): ApplicationDeclarat
       if (!isRecord(room)) return null;
       const keys = Object.keys(room).sort().join();
       if (keys !== "directory,rules" && (keys !== "directory,membershipDefinition,rules"
-        || (room["membershipDefinition"] !== "platform:membership@10" && room["membershipDefinition"] !== "platform:membership@11" && room["membershipDefinition"] !== "platform:membership@12" && room["membershipDefinition"] !== "platform:membership@13"))) return null;
+        || (!answersVersionQuestion(room["membershipDefinition"], "applicationProjectionMembership")))) return null;
 
       if (!isScopeRef(room["directory"])
         || canonicalize(room["directory"]) !== canonicalize(directory) || !isScopeRef(room["rules"]) || room["rules"].kind !== "rules") return null;
