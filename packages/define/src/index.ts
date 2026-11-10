@@ -26,6 +26,8 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, RuleEvalError, ruleReferences } from "@generalbusiness/dap-derive/rule";
+import { copyDefinitionProvenance, definitionProvenance } from "./provenance.ts";
+export { extend, definitionProvenance, type DefinitionProvenance, type CompiledParent } from "./provenance.ts";
 
 declare const ACT_NAME: unique symbol;
 const actNames = new WeakMap<object, { readonly under: string; readonly kind: string }>();
@@ -465,8 +467,8 @@ function inferredFields<F extends Fields, AL extends AlsoSpec>(fields: F, also: 
   return { ...inferred, ...fields } as EffectiveFields<F, AL>;
 }
 
-function act<S extends ActType["step"], I extends ItemDef | null, const F extends Fields, const AL extends AlsoSpec, const P extends Presents>(
-  step: S, on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P>, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body,
+function act<S extends ActType["step"], I extends ItemDef | null, const F extends Fields, const AL extends AlsoSpec, const P extends Presents, const G extends GrantRef = GrantRef>(
+  step: S, on: I, grant: G, spec: ActSpec<I, F, AL, P>, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body,
 ) {
   const also = (typeof spec.also === "function" ? spec.also(on === null ? undefined as OnOf<I> : of(on, "on") as OnOf<I>) : spec.also ?? {}) as AL;
   const fields = inferredFields((spec.fields ?? {}) as F, also), presents = (spec.presents ?? {}) as P;
@@ -477,9 +479,9 @@ function act<S extends ActType["step"], I extends ItemDef | null, const F extend
     guards: b.guards ?? [], effects: b.effects ?? [], sends: b.sends ?? [], attention: b.attention ?? [], ...(b.settles ? { settles: b.settles } : {}),
   };
 }
-export const open = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("open", on, grant, spec, body);
-export const transition = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("transition", on, grant, spec, body);
-export const comment = <I extends ItemDef | null, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("comment", on, grant, spec, body);
+export const open = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}, const G extends GrantRef = GrantRef>(on: I, grant: G, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("open", on, grant, spec, body);
+export const transition = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}, const G extends GrantRef = GrantRef>(on: I, grant: G, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("transition", on, grant, spec, body);
+export const comment = <I extends ItemDef | null, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}, const G extends GrantRef = GrantRef>(on: I, grant: G, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("comment", on, grant, spec, body);
 
 /** What a handler's body may name, beyond an act's: the envelope's sender, and parts of the verified source entry. */
 export interface HandlerCtx<I extends ItemDef | null, F extends Fields, AL extends AlsoSpec> extends Ctx<I, F, AL, {}> {
@@ -652,6 +654,7 @@ export class CompileError extends Error {
 }
 /** Validate the full definition. A row slice must first be overlaid on its complete pinned definition. */
 export function compile<D extends DeclaredDefinition>(definition: D) {
+  const provenance = definitionProvenance(definition);
   const declarations = (definition as D & DeclaredMetadata)[DECLARATIONS];
   const canonical = normalize(definition);
   const found = findings(canonical);
@@ -672,7 +675,7 @@ export function compile<D extends DeclaredDefinition>(definition: D) {
     diagnostics.push(diagnostic("validator", form, valueAt(canonical, form), problem.message, problem.code));
   }
   if (diagnostics.length) throw new CompileError(diagnostics);
-  return { definition: canonical, digest: definitionDigest(canonical), findings: found, validation, refusals };
+  return { definition: canonical, digest: definitionDigest(canonical), findings: found, validation, refusals, ...(provenance ? { provenance } : {}) };
 }
 
 // ================================================================ one spelling
@@ -770,8 +773,8 @@ export function normalize<D extends DeclaredDefinition>(definition: D): D {
     if (name) actNames.set(normalized, name);
     return normalized;
   };
-  return {
+  return copyDefinitionProvenance(definition, {
     ...definition,
     acts: mapValues(definition.acts as unknown as Record<string, J>, rowN), receives: mapValues(definition.receives as unknown as Record<string, J>, rowN), timed: mapValues(definition.timed as unknown as Record<string, J>, rowN),
-  } as D;
+  } as D);
 }

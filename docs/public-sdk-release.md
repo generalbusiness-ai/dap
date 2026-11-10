@@ -121,7 +121,7 @@ and derive exports `.`, `./rule` and `./testing`.
 | contract | `.`, `./catalog-vocabulary` | | |
 | bytes | `.`, `./web` | | contract |
 | derive | `.`, `./rule`, `./field-types`, `./testing` | | bytes, contract |
-| define | `.` | | bytes, contract, derive |
+| define | `.`, `./package`, `./story` | | bytes, contract, derive |
 | package-graph | `.` | | contract, derive |
 | git | `./tree-proof`, `./checkout-types`. No root export | `.` and every other subpath | bytes, contract |
 | platform | `.`, `./membership-actions`, `./application`, `./application-v2`, `./package-validation` | `./testing`, `./application-install` | bytes, contract, derive, package-graph, git |

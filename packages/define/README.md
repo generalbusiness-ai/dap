@@ -5,6 +5,22 @@ item, act, and handler values. `compile` normalizes that data, checks its
 declared grant and reason vocabulary, runs the definition validator, and
 returns the declaration, digest, findings, and per-act refusal metadata.
 
+`@generalbusiness/dap-define/package` derives package metadata and
+projections from the definition value. `declareRoles` declares the action
+union before acts use it. The manifest checks role coverage and projected
+view fields in TypeScript and again at runtime.
+
+`@generalbusiness/dap-define/story` writes scenario v1 data over the
+maintained judges and fold. Each step asserts its complete entries,
+effects, sends and timed firings during generation. TEST actor seeds and
+scripted grants supply its local authority. The resulting JSON remains
+the input to `dap check`.
+
+`extend` marks an additive child of a compiled definition. `compile`
+returns its parent digest and added form names as `provenance`; that
+metadata never enters the pinned definition. Package derivation and
+parameters remain unbuilt.
+
 Follow [Write an application](../../docs/write-an-application.md) for the
 authoring workflow. The
 [generated vocabulary](../../spikes/typed-surface/VOCABULARY.md)
