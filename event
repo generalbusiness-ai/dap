@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e4eefc3fbf049503d1b60a2b55f04d77a61b41af","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/version-questions.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e5192ea8b42732e3d0d61c97ef0288cc8e8fdffd","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-br13-lower-client-focused.manifest.json."}
