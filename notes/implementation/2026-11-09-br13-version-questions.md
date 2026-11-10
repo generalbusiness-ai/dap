@@ -127,10 +127,10 @@ its model checking and cancellation logic stay unchanged. No private
 fixture or raw checker log enters the repository.
 
 These bounded safety checks prove no implementation refinement, liveness,
-live-room outcome or deployment acceptance. The combined-source checks below cover the frozen question fixtures,
-affected consumers and release metadata. The maintained gate remains due.
-Unchanged protected source needs
-no repeated formal body after that integration.
+live-room outcome or deployment acceptance. The combined-source checks
+below cover the frozen question fixtures, affected consumers and release
+metadata. The maintained gate remains due. Unchanged protected source
+needs no repeated formal body after that integration.
 
 
 ## Rebuild the served Page module
@@ -246,15 +246,15 @@ through C; the final-source workflow outcomes need their own review.
 
 ## Combined-source compiler and pure-owner checks pass
 
-START `d082a7ec`, END `94b12f73`, runs the fresh affected closure at
-`6cbc96f05bf9de0cae3cfc8270e530b2e5ea9c8f`. All 37 unique compiler
-contexts and the complete two pure owners pass. Their structured ledger
-and actual Vitest report agree on 347 unique cases: 323 question cases
-and 24 relation cases, with no skips, errors, retries or repeats.
-The audit reads all four actual exit files as zero. Every one of the 39
-source fences retains the exact 2,253 inputs, eight external inputs,
-15 workspace bindings and 50 aliases. The process and cleanup receipts
-contain no remaining owned group.
+Booking `d082a7ec` runs the fresh affected closure at
+`6cbc96f05bf9de0cae3cfc8270e530b2e5ea9c8f`. END `94b12f73` closes the slot. All
+37 unique compiler contexts and the complete two pure owners pass. Their
+structured ledger and actual Vitest report agree on 347 unique cases: 323
+question cases and 24 relation cases, with no skips, errors, retries or
+repeats. The audit reads all four actual exit files as zero. Every one of the
+39 source fences retains the exact 2,253 inputs, eight external inputs, 15
+workspace bindings and 50 aliases. The process and cleanup receipts contain no
+remaining owned group.
 
 The [combined focused manifest](evidence/2026-11-10-br13-remaining-focused.manifest.json)
 hashes to
@@ -268,13 +268,13 @@ current maintained gate runs its Node stage.
 
 ## Both query controls distinguish the intended failures
 
-START `7d3daa8c`, END `56dfc3d5`, runs both maintained query controls once
-at the same 6cbc source. Each control runs its whole baseline file and
-one exact mutant. The CLI baseline passes all 105 cases. Replacing
-`cliManifestListDestination` with `nativeStagedPublication` then yields
-102 passes and three `AssertionError` failures at destination17,
-destination7 and destination8. All 105 identities match the independent
-frozen ledger, including the required named destination7 assertion.
+Booking `7d3daa8c` runs both maintained query controls once at the same 6cbc
+source. END `56dfc3d5` closes the slot. Each control runs its whole baseline
+file and one exact mutant. The CLI baseline passes all 105 cases. Replacing
+`cliManifestListDestination` with `nativeStagedPublication` then yields 102
+passes and three `AssertionError` failures at destination17, destination7 and
+destination8. All 105 identities match the independent frozen ledger, including
+the required named destination7 assertion.
 
 The ordinary timed-opener baseline passes its one case. Replacing
 destination3 with destination4 in `nativeTimedOperationOpen` makes the
@@ -302,7 +302,7 @@ The [query-control manifest](evidence/2026-11-10-br13-query-controls.manifest.js
 hashes to
 `e4f7dd262c26a5d5a596ed2e8501f005b4e9ae5123c2c5c513b0af0f8025838e`.
 It inventories five safe metadata files and 1,135 retained original
-files, including harmless Node compile-cache files. The cache files add
+files, including Node compile-cache files. The cache files add
 no test claim. The units remain read-only through 10 December. No raw
 report, output buffer or private fixture enters the repository.
 
