@@ -408,4 +408,4 @@ facts are anchored: manifest, check opening, check decision and merge.
 The host replies and most read authorization remain
 scripted; publication updates to that lane are still pending. None of
 these tests deploys a Worker or shows a production host. They do not close
-full I3; `docs/testing.md` states their boundaries.
+full I3; `docs/testing-reference.md` states their boundaries.

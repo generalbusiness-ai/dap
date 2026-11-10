@@ -87,7 +87,7 @@ Run the gate once, at the commit you send for review.
    `gate FAILED; logs in <directory>`. A failed step also prints the last
    lines of its log.
 
-[What the gate runs](testing.md#what-the-gate-runs) lists its steps.
+[What the gate runs](testing-reference.md#what-the-gate-runs) lists its steps.
 
 ## Send the change for review
 

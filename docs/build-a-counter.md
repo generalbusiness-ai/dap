@@ -402,7 +402,7 @@ definition.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. The commands ran on
+Checked against main `6bfb6e16` on 10 November 2026. The commands ran on
 15 October 2026 with the published packages at `0.1.0-dev.2`, and every
 output block is copied from that run. Sources:
 [the test fixtures](../packages/derive/test/fixtures.ts) and

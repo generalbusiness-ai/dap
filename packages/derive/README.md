@@ -157,8 +157,9 @@ account with their holder. Runtime and replay both check admission against
 used plus reserved entries. Full admission in the other four capacity
 dimensions remains request `cc570904`; computing five-dimensional amounts
 is not evidence that every dimension is enforced. The current platform
-witnesses and their scripted inputs are described in `docs/testing.md`.
-Full I3 and a deployed production host remain unproved.
+witnesses and their scripted inputs are described in
+`docs/testing-reference.md`. Full I3 and a deployed production host remain
+unproved.
 
 ## Rules
 
