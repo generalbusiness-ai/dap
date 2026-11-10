@@ -96,8 +96,8 @@ stayed unreached (5,187 obligations). All nine failures occurred in the
 shared fake gateway setup, with `snapshot-read-failed`; no timeout
 appeared. The partial audit preserves each actual identity and outcome.
 All 111 file-wrapper observations remain unknown. The new SDK wrapper's
-completion expectation incorrectly said null; the next metadata freeze
-must record its actual passed state without counting it as a case.
+completion expectation incorrectly said null; the third-gate metadata
+records its actual passed state without counting it as a case.
 
 The normalized Counting declaration retained an own `ACT_NAME` symbol on
 its acts. Its fake projection producer passed that object to the existing
@@ -125,7 +125,33 @@ Ten explicit browser, recorder and Worker input closures have no changed
 input through `623944ab` and exclude Define. That source-only equivalence
 carries the actual prior run; it claims no new CI run or live acceptance.
 
-The seven manifests below adopt separate sealed metadata units; they keep
+The third complete gate at `8b7de735`, tree
+`40556767cc554e2ccc5733ed3a18ea45993921ef`, exited 0. Its driver,
+launcher and pinned terminal analyzer also exited 0. Independent saved
+output reconciliation confirms every one of 5,393 obligations: 5,390
+passes and three explicit skips. Node passed 150; Counting passed 56;
+Plain passed 4,051 with one skip; Native passed 1,133 with two skips,
+including all six selected Scale cases. All 45 compiler contexts and
+16 scripts completed. All 111 file-wrapper observations stay unknown;
+none adds a case. The three skips are the existing MCP budget witness
+and the two opt-in Native recorders. The skipped Page recorder module
+has no final duration; its time remains unknown. No deadline diagnostic,
+report error, unhandled error, missing case or extra case remained.
+
+The third-gate metadata corrects only the new SDK wrapper's expected
+completion state. Both earlier full-gate failures remain failed. The
+independent audit verifies source and tool hashes, exact pins, semantic
+selector scope, forward reference lineage and closed inner/outer groups.
+The full private terminal analysis stays in a separate sealed owner-private
+unit for restart retention. Raw logs and fixture payloads stay withheld.
+
+This final follow-up changes only this note, its new gate manifest and
+line wrapping in the writing guide. The guide keeps the same sentence
+and words, with every prose line at most 79 characters. Runtime,
+tests, configuration, dependencies and tools keep the validated gate
+bytes. The document-only follow-up does not repeat the gate.
+
+The eight manifests below adopt separate sealed metadata units; they keep
 the earlier failures and time-specific UNRUN statements intact. Raw logs,
 reports, fixture payloads and custody stay withheld in their original
 owner-private units. Table output digests appear in each manifest's
@@ -144,6 +170,8 @@ run and does not relabel earlier failures.
 
 - [2026-11-09-t1-act-metadata-focus.manifest.json](evidence/2026-11-09-t1-act-metadata-focus.manifest.json): `93b7b8cc9f719e519348a7f47e74d52b64b67c1272ac5aa3e68bb1e7da26f4b9`.
 - [2026-11-09-t1-page-ci-carry.manifest.json](evidence/2026-11-09-t1-page-ci-carry.manifest.json): `69d66263dca024e63300e276f432706fefdb7f723f789fef7d7865aa2b5a528f`.
+
+- [2026-11-09-t1-gate3.manifest.json](evidence/2026-11-09-t1-gate3.manifest.json): `27850975ae3b2c27772b7f8025837fe9b2dc63e19f857b041588c2d89ee09e90`.
 
 The table uses these fixed path abbreviations. Expanding them gives the
 exact argv retained in the audit metadata; each row keeps its actual
@@ -246,6 +274,19 @@ taskVitest="$taskSource/node_modules/vitest/vitest.mjs"
 | act-metadata/body | `623944ab` | `$taskNode $taskVitest run $taskSource/packages/define/test/authoring.test.ts $taskSource/packages/define/test/pins.test.ts $taskSource/examples/lending/definition.test.ts $taskSource/apps/counter/commitments.test.ts --config /private/tmp/artroom-t1-act-metadata-focus-20261109.config.mts --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter=$taskSource/scripts/focused-check.mjs --outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/vitest.json` | 0 | `78a02f73893a5a181e1eefffff486facce22b9d5e78cbf94f87f02557ed2da31` |
 | act-metadata/counting | `623944ab` | `$taskNode $taskSource/apps/counter/scripts/test-browser.mjs` | 0 | `20d07072ba6d777f106e799ce95fa0c1e604810f13f51cc29f7322b010a7c630` |
 | Page browser CI | `8178fe63` | GitHub Actions `.github/workflows/page-browser.yml`, run 42731853327 | 0 | `ce872cbcec5d7c6673130259a4f39a3b96d27cdd538ee087fe5d0c2869b2b162` |
+| gate3/whitespace | `8b7de735` | `git diff --check -B 64be0cabd1e5a156d260e0c6ac9520be09afc7bf` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| gate3/commit-messages | `8b7de735` | `node scripts/check-commit-messages.mjs 64be0cabd1e5a156d260e0c6ac9520be09afc7bf HEAD` | 0 | `6dce18de89c6416d2a318232f10094302db7a025bf21ae2601db21f6ca6ca4c7` |
+| gate3/commit-test | `8b7de735` | `node --test scripts/check-commit-messages.test.mjs` | 0 | `2bd76ff4b2b26f3ad2d3fbf94ab0be43163e5572d406b1804699925d076819c4` |
+| gate3/helpers | `8b7de735` | `node scripts/check-shared-helpers.mjs` | 0 | `fe16de4eb8af93a344a7934b996a75e8028456a5325271764cbcc42b5fc3ea43` |
+| gate3/citations | `8b7de735` | `node scripts/check-section-citations.mjs --report /Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3/stage.yoNbgd7i/section-citations.json` | 0 | `c4951c8692a3b0765a7aad642735fc753e7b9b2d9df3bab872144820c515001b` |
+| gate3/cite-test | `8b7de735` | `node --test scripts/check-section-citations.test.mjs` | 0 | `42f49ca56b59e38c0ca91b614e92e7b9d0dd3bafab3a8885f66c2405f02e5abf` |
+| gate3/doc-links | `8b7de735` | `node scripts/check-doc-links.mjs` | 0 | `6e3a711d14bb393ffcb48de01bc2ca244de49f2cacb5bb3d0f8519ee3e8cf710` |
+| gate3/notes | `8b7de735` | `node scripts/check-notes.mjs 64be0cabd1e5a156d260e0c6ac9520be09afc7bf HEAD` | 0 | `35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1` |
+| gate3/format | `8b7de735` | `npm run format:check` | 0 | `6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79` |
+| gate3/typecheck | `8b7de735` | `npm run typecheck` | 0 | `808c1cacdb754403a1470d046090f319f2a65157619d867b7423c4788c4cbe15` |
+| gate3/def-pins | `8b7de735` | `node --import tsx scripts/check-definition-pins.mjs` | 0 | `eff23402479b52ad9d6b7ad093d9d3e843b60fcb00d8f6c78d9b77245e9aec03` |
+| gate3/test | `8b7de735` | `npm test -- --gate --defer-summary --evidence /Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3/stage.yoNbgd7i/test-evidence` | 0 | `ee430b758910b16a15c88f7ea1b5afd90aa755502889e65c2aea41dbe4be3e42` |
+| gate3/gate | `8b7de735` | `npm run gate` | 0 | `90ef0f4e3f98f8c8b909b1840b748b894ac3d456fd2647f6ed6530c9945cbf26` |
 
 The independent audits read terminal receipts, same-run case identities,
 source/tool/dependency hashes, exact retained pins and owned-group
@@ -259,13 +300,17 @@ Outer elapsed time uses each launcher's monotonic clock; CPU uses its
 self and waited-child getrusage deltas. Separate command times and
 concurrent case/module durations are distinct observations, not whole-run
 wall time. No deadline, pool, worker count, retry or scale factor changed.
-The next complete gate remains UNRUN; both earlier full gates stay failed. A later document-only evidence commit must
-cite the actual gate source/tree and preserve the source and test bytes.
+The third gate launcher measured 1,476.239 seconds of whole-run wall
+time. Its waited-child CPU deltas were 2,752.553 user seconds and
+337.647 system seconds. These values come from the monotonic launcher
+clock and getrusage, distinct from the gate command's own time output.
+Both earlier full gates remain failed. This final document-only commit
+preserves the runtime and test bytes of the cited gate checkpoint.
 
 ## Open limits
 
-- DX-T1 `00c50371`: the one final full gate and exact-head review remain
-  owed. Focused evidence proves no hosted deployment or live acceptance.
+- DX-T1 `00c50371`: exact-head checker review and landing remain owed.
+  The gate and focused witnesses prove no hosted deployment or live acceptance.
 - K-spell `2ad35350` and DX-T3 `f682cbc4`: pin migration and the remaining
   complete definition witnesses belong to those later requests.
 - DX-T4 `d49269fd`: manifest, story and view authoring remain separate;

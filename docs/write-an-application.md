@@ -83,7 +83,8 @@ Act fields that contain record lists expose their declared members inside
 list callbacks. For a list read from a fetched fact, declare its members
 with `elements(list, "memberName")`. An unannotated list exposes only
 `self`. Keep ordinary operands as plain data and modules as functions.
-Use `elementMember(row, "self")` to read a declared member named `self`; `row.self` reads the whole element.
+Use `elementMember(row, "self")` to read a declared member named `self`;
+`row.self` reads the whole element.
 
 Keep these four forms distinct:
 
@@ -206,8 +207,9 @@ supported yet. The validator refuses their declarations as
 An archive is a binding of the room, not of a definition. A signed
 package can require it with `host.requires: ["archive"]`, and
 installation in a room without the binding ends with
-`archive-unavailable`. An admin binds an archive when the room is created or later
-with `bind-archive`. A binding does not prove that any journal has been
+`archive-unavailable`. An admin binds an archive when the room is
+created or later with `bind-archive`.
+A binding does not prove that any journal has been
 exported. [The dap command](cli.md) lists the creation cohorts that can
 bind one.
 
@@ -524,7 +526,8 @@ installed grant, target acts open no command. See the
 Local `dap check` scenarios may name a public TEST actor with
 `deviceOwner` and use `prepare` steps for native answers. `$position`
 resolves a saved accepted receipt's position, and `$fact` resolves its
-full fact. The [Grow fault scenario](../examples/grow/check/fault-scenario.json)
+full fact. The
+[Grow fault scenario](../examples/grow/check/fault-scenario.json)
 uses these references and checks native command records. The scenario
 proves no production grant or physical device action.
 
@@ -541,4 +544,5 @@ pin commands on this page ran on 12 October 2026 at main `d309b6b9`, and
 the printed digests are from that run. The scope-creation commands were
 not run for this revision. The text about consuming the published Grow
 release that an earlier revision carried is kept in
-[the relocated text of the 30 October review](../notes/implementation/2026-10-30-docs-relocated-text.md).
+[the relocated text of the 30 October
+review](../notes/implementation/2026-10-30-docs-relocated-text.md).
