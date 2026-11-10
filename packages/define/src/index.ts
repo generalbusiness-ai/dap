@@ -27,6 +27,7 @@ import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, RuleEvalError, ruleReferences } from "@generalbusiness/dap-derive/rule";
 
+export { expression } from "./expression.ts";
 export { reference } from "./field-types.ts";
 
 declare const ACT_NAME: unique symbol;
@@ -242,6 +243,12 @@ export interface Of<I extends ItemDef> {
   authors(slot: Parties<I>): AuthorSource;
 }
 
+/** An act body's named subject. Its slot read retains the subject and slot names. */
+export interface BoundOf<I extends ItemDef, S extends Subject = Subject> extends Of<I> {
+  readonly subject: S;
+  slot<const N extends Slots<I>>(name: N): { readonly slot: N; readonly of: S };
+}
+
 function of<I extends ItemDef>(item: I, subject?: Subject): Of<I> {
   const at = subject === undefined ? {} : { of: subject };
   const g = (form: object): Guard => ({ ...at, ...form }) as Guard;
@@ -445,12 +452,12 @@ type Presents = Record<string, { kind: readonly string[]; under: string; require
 /** A fact presented beside the intent. */
 export const presented = <const U extends string, const K extends readonly string[]>(under: U, kinds: K, req = true) => ({ kind: kinds, under, required: req }) as const;
 
-type OnOf<I extends ItemDef | null> = I extends ItemDef ? Of<I> : undefined;
+type OnOf<I extends ItemDef | null> = I extends ItemDef ? BoundOf<I, "on"> : undefined;
 export interface Ctx<I extends ItemDef | null, F extends Fields, AL extends AlsoSpec, P extends Presents> {
   readonly f: { readonly [K in keyof F & string]: { field: K } & Typed<F[K]> };
   readonly p: { readonly [K in keyof P & string]: { presented: K } };
   readonly on: OnOf<I>;
-  readonly also: { readonly [K in keyof AL & string]: Of<AL[K]["item"]> };
+  readonly also: { readonly [K in keyof AL & string]: BoundOf<AL[K]["item"], `also.${K}`> };
 }
 /** The `f` of a context over `F`: one `{ field }` operand per declared field. */
 export type FieldRefs<F extends Fields> = Ctx<null, F, {}, {}>["f"];

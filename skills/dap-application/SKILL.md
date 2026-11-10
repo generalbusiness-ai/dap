@@ -87,8 +87,8 @@ before selecting an install path. Keep an uncertain original request for
 readback instead of replacing it.
 
 For the complete maintained reference, use
-[Write an application](https://github.com/generalbusiness-ai/artroom/blob/main/docs/write-an-application.md),
-[Declared application views](https://github.com/generalbusiness-ai/artroom/blob/main/docs/application-views.md),
-and [Scopes](https://github.com/generalbusiness-ai/artroom/blob/main/docs/scopes.md).
+[Write an application](https://github.com/generalbusiness-ai/dap/blob/main/docs/write-an-application.md),
+[Declared application views](https://github.com/generalbusiness-ai/dap/blob/main/docs/application-views.md),
+and [Scopes](https://github.com/generalbusiness-ai/dap/blob/main/docs/scopes.md).
 The bundled rules cover the narrow authoring loop without requiring those
 pages for each edit.

@@ -22,7 +22,9 @@
 
 import type { Digest, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, hex, isPlatformDefinition, sha256, utf8 } from "@generalbusiness/dap-bytes";
-import { actInputSchema, describeAct, grantAction, type ActLike, type DefinitionLike, type Described, type Who } from "./describe.ts";
+import { formFor } from "@generalbusiness/dap-client";
+import { describeAct, grantAction, type ActLike, type DefinitionLike, type Described, type Who } from "./describe.ts";
+import { descriptions } from "./description-context.ts";
 import { surfaceOf, wordsDigest, type Words } from "./words.ts";
 import { markRefusals, markText } from "./marks.ts";
 
@@ -235,11 +237,12 @@ export const ACT_OUTPUT: Record<string, unknown> = {
 /** The act tool of one binding. */
 export function actTool(binding: Binding, inventory: Inventory, mode: Mode): Tool {
   const text = describedOf(binding, inventory, mode);
+  const form = formFor(binding.holder, binding.kind, { describe: descriptions, setting: { pinned: binding.pinned, active: inventory.active }, who: whoOf(binding, inventory), target: binding.singleton ? "optional" : "required" });
   return {
     name: binding.name,
     title: `${binding.kind} (${binding.definition})`,
     description: text.description,
-    inputSchema: actInputSchema(binding.act, { pinned: binding.pinned, active: inventory.active }, binding.singleton ? "optional" : "required"),
+    inputSchema: form.inputSchema,
     outputSchema: ACT_OUTPUT,
     // Truthful annotations: an act can close, remove or redact declared state; a repeat under the required key is idempotent.
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },

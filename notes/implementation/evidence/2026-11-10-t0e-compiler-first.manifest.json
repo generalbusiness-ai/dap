@@ -1,0 +1,1264 @@
+{
+  "kind": "E compiler-first actual terminal evidence",
+  "head": "5cf4209c5298fb0386cb36790c1d476811a37fd4",
+  "tree": "dc0bc979b91a042c19aa286a10c393fa9f959b88",
+  "booking": "6aeee0e017dd8fe97c8528b299458bd8a408863d",
+  "end": "a0fc5580225fe52c628bcc567868cefe9cd3d043",
+  "safeFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-review/SHA256SUMS",
+      "sha256": "bb853bdfa96f5ef853bd6b4058c4a328e7b4bdf50befa3949a52d601ede1aa26",
+      "bytes": 350,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-review/compiler-contexts.json",
+      "sha256": "ab34f3587e4144650cee84d2d057cbb38fa41993e8bca7dad9ac307201891fd1",
+      "bytes": 28315,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-review/compiler-summary.json",
+      "sha256": "d886af8d756ac50e841d03a73604c203a6439afb68f339a82528e0e022d3d59b",
+      "bytes": 1181,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-review/raw-input-index.json",
+      "sha256": "d20c6c0479338a1e50f21e4b4147d1cc7d79810dec0af5926ecf5d8cfabff1b8",
+      "bytes": 47718,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-review/source-custody.json",
+      "sha256": "a95a1eccf562a77baa175e0a783abd206465f3af0de41d5384177162e0864ce4",
+      "bytes": 1565,
+      "sealedMode": 256
+    }
+  ],
+  "rawFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-01-argv.json",
+      "bytes": 407,
+      "sha256": "b2390a124cc0fd60d5e448161341e2e2ec5d663219e07b03148b3b7c7bbdd39e",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-01-started.json",
+      "bytes": 44,
+      "sha256": "277fd85b7d064dada13c9c5ac639e75eec84f46664f339070da39834e68185c1",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-01.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-02-argv.json",
+      "bytes": 412,
+      "sha256": "98c32b9885bc5128068d04ae9317c601a2858a59ed0ef100c8f3b16247d66135",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-02-started.json",
+      "bytes": 44,
+      "sha256": "519d8cd457c8bb95ce858181a29516c1739accd3fbc3b4ee0cb0f4330cf2236c",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-02.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-02.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-03-argv.json",
+      "bytes": 407,
+      "sha256": "539dd43c94c50f4e16a60f5cd5ffe0dfbc01bedd23baa87f4bbb370d348fbc3c",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-03-started.json",
+      "bytes": 44,
+      "sha256": "458590e8ab86711ac420936c9950aec929f0a8f1b2361b98abf01601b0a5df92",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-03.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-03.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-04-argv.json",
+      "bytes": 412,
+      "sha256": "0bcd83ff869469de193e91ca25cf42437205364d15303ed64a3e517e0dbdfb30",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-04-started.json",
+      "bytes": 44,
+      "sha256": "8107e3676b8757c412807cf3678b37542dd6655c782989dff53e662042263f39",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-04.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-04.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-05-argv.json",
+      "bytes": 410,
+      "sha256": "f860b67d8111e6aa91959f9de6bb5eeff7ba77ec39d27e4455bfe95cae5cce70",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-05-started.json",
+      "bytes": 44,
+      "sha256": "58921f015eae21f0cd08beb80a9c9398909d365d61194b5b576a9feef4a7a27c",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-05.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-05.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-06-argv.json",
+      "bytes": 401,
+      "sha256": "456bfcc3b9e73d3e962b087aa3366c8c89cd90dd594df3bccfa6f5db466ae128",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-06-started.json",
+      "bytes": 44,
+      "sha256": "33f6eea825449a1764e4af5421fa69aa086f421901454c8ab139a3f2b12a885d",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-06.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-06.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-07-argv.json",
+      "bytes": 406,
+      "sha256": "9beffba3872a7ec33f779eb9b31e7ba103c35e43dd6d4ca89066b77b6544ad14",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-07-started.json",
+      "bytes": 44,
+      "sha256": "3c318501d39e1c7e471b943eea8661b4ab609f6cf8ba6a7d3610f420adb18772",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-07.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-08-argv.json",
+      "bytes": 407,
+      "sha256": "a567261073d6f5de6e5c813b3c9dd9240c95781773daea553a12636a9b56be40",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-08-started.json",
+      "bytes": 44,
+      "sha256": "ab88260df699661caf1aab5b5a48b2d1495c1d2c78ef9f55dd63a4f53ac1391d",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-08.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-08.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-09-argv.json",
+      "bytes": 409,
+      "sha256": "02754d996dd59b2397e3fc15af4e78229233f612ae224ae19677ac9965e04bb2",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-09-started.json",
+      "bytes": 44,
+      "sha256": "c97fd756b906cad55a24512670049be059d5d13cb7c84b27d282796a55243170",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-09.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-09.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-09.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-10-argv.json",
+      "bytes": 396,
+      "sha256": "43cd44634c8c6fd937c4dd61cda589e0636d501c9abd94de6bab1762029d8400",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-10-started.json",
+      "bytes": 44,
+      "sha256": "74de1b1e440efd0712e43d72ff380755629f2194aff2dccad66e1619effc69fe",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-10.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-10.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-10.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-11-argv.json",
+      "bytes": 388,
+      "sha256": "2a26dc5943fa3add0ba38d4e9937b539cf22bb810b5bc808c3d2a1b3729df0ee",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-11-started.json",
+      "bytes": 44,
+      "sha256": "d34e727e4443ac592e5fb78cf60de6d3e2d0b17982b2dd4dc0437730195e7260",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-11.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-11.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-11.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-12-argv.json",
+      "bytes": 413,
+      "sha256": "de0a8642cdad23215bcc575a49f114ebfa3e973f729baf8a633917ffbfc71057",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-12-started.json",
+      "bytes": 44,
+      "sha256": "2fb5116e110f19bda67564d85a2ccff7245b1a548a0c827c404ca77de4b4f6fa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-12.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-12.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-12.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-13-argv.json",
+      "bytes": 412,
+      "sha256": "e069ac61896ac408f14dca640551907dc5c81d77c9bb3a6c3c53aecc8c6e0440",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-13-started.json",
+      "bytes": 44,
+      "sha256": "cfb05d043a7ea3da2d92111c3886102c7ace5a6dc2bfa24327b7fffd553bc808",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-13.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-13.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-13.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-14-argv.json",
+      "bytes": 405,
+      "sha256": "c5168a41b3b727b3825fefc4815dbe7f2b6cbfa2e2e771b338327980c81ba3a1",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-14-started.json",
+      "bytes": 44,
+      "sha256": "557c0644e658b19f3e41f206614739d78d98e4fb43ff4a25b004a9fc405cc734",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-14.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-14.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-14.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-15-argv.json",
+      "bytes": 411,
+      "sha256": "6398464e7fcc417b133560118d225886907ccd7a54639a90b94e0a51491d3595",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-15-started.json",
+      "bytes": 44,
+      "sha256": "ff1a10d53e98b1a66a35eedf0c5f6c8bf65cd90b9273b8919f0e4228a42a0c85",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-15.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-15.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-15.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-16-argv.json",
+      "bytes": 410,
+      "sha256": "ace189c9dbc0928a17dc8720b06bdf44c11bcd1c60d6378699b50677c134567d",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-16-started.json",
+      "bytes": 44,
+      "sha256": "18b346cb3d334cb7fde7c838d2eca0143da3ef404c8dded533a316f1abfae6f3",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-16.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-16.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-16.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-17-argv.json",
+      "bytes": 388,
+      "sha256": "d411a89d7ce5363966197ddcbeff842f1a57421caf6a8f5a33d4f719d86bae2f",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-17-started.json",
+      "bytes": 44,
+      "sha256": "4523159ae68c4ec516eb2ce102980e7eab5b2c42480bd5b94868759b94a4cac1",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-17.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-17.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-17.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-18-argv.json",
+      "bytes": 386,
+      "sha256": "dfaf889bdb223be603c91bcba41c3007e1bb0db0ff1fb20d6561710dcd4bbeee",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-18-started.json",
+      "bytes": 44,
+      "sha256": "5d135cbb7c24f3a95c9d2ef1a749dc457141f0a3c1d94acdb5c258e29a74f718",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-18.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-18.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-18.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-19-argv.json",
+      "bytes": 397,
+      "sha256": "531f8aebcbd7dd21cb4b8c8ede38ca94ec97c7fee917770cf36a296666781681",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-19-started.json",
+      "bytes": 44,
+      "sha256": "cd36429ea29606baee290ac80e22a1e4d1817da084128fad359ee201658c91d4",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-19.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-19.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-19.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-20-argv.json",
+      "bytes": 389,
+      "sha256": "6bb6f0e92a17e5f1fcf510302e5513820bbcbd43f0711aef0a16d4b241ac2521",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-20-started.json",
+      "bytes": 44,
+      "sha256": "29a5f78562e2d6e8d2e7795a0a3d66ee2133509144008261262688edce77b792",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-20.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-20.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-20.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-21-argv.json",
+      "bytes": 400,
+      "sha256": "d68e95c9a34a3202e269f292afda74f68799456ad7c736b8113aafe01bbe900a",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-21-started.json",
+      "bytes": 44,
+      "sha256": "65092ff34bcdd77a145605088a254ed6d23a1a2c69b98ec5c46a011db4d3f4cd",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-21.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-21.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-21.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-22-argv.json",
+      "bytes": 392,
+      "sha256": "827b461919264c4890a5db45cec3c821123b2f6931783774c65a7fd57e45f39c",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-22-started.json",
+      "bytes": 44,
+      "sha256": "78ccf621c4114f6c4a0bf24ba9f9302aaa06dab1faa1efc62ea76eb30dd1a4df",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-22.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-22.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-22.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-23-argv.json",
+      "bytes": 395,
+      "sha256": "242051b84152d3689b2cf205722446f75b3d354fc276bf722de9b4199749a1b6",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-23-started.json",
+      "bytes": 44,
+      "sha256": "37caf18d0e82851a0ffeac653961d339f4a33ca5772c6d3418402c1059b2634c",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-23.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-23.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-23.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-24-argv.json",
+      "bytes": 401,
+      "sha256": "50d7795ea496df362cdcc7dc448b86a1f9e10a136e4e7d14ed30b7af2d608230",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-24-started.json",
+      "bytes": 44,
+      "sha256": "06035c462b7cade66b1df375b5dea7af60523f7857008283cb56fb1836f2d038",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-24.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-24.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-24.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-25-argv.json",
+      "bytes": 407,
+      "sha256": "907186c6bfdf216df35a73bea2d21766e87a3149a59bf877e6d3b2732535c385",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-25-started.json",
+      "bytes": 44,
+      "sha256": "13af397eaf4f0972b4a5aef280748ad9e46aad8daa11f91b5d59d0f6fe153300",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-25.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-25.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-25.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-26-argv.json",
+      "bytes": 406,
+      "sha256": "97ce0a89275f887f7d255bd9dd0a7a3b0d8856d654de681b4e15c769b1cb69e7",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-26-started.json",
+      "bytes": 44,
+      "sha256": "2475bc4471ddd83759170cea5a690f1934809af9dbe67da30592ad10e335a831",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-26.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-26.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-26.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-27-argv.json",
+      "bytes": 412,
+      "sha256": "d56a0f89e35b386f6eb9a07b79c6dfd87ba448c30e33d0695677b18e010e2b84",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-27-started.json",
+      "bytes": 44,
+      "sha256": "456b782dc3c9580479b3f17df9fea73fe81867342d56f1a23ad75dbbd75532bc",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-27.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-27.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-27.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-28-argv.json",
+      "bytes": 416,
+      "sha256": "f691aa33be4df6ca42d9bd648e0cb22f11883d4300c2412e64b3baacaaa16ccc",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-28-started.json",
+      "bytes": 44,
+      "sha256": "b65147db92cbdb7efbb868a608fa65e756f4263c3a634c7970cc40d80f0cd91b",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-28.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-28.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-28.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-29-argv.json",
+      "bytes": 423,
+      "sha256": "2af2232e945cfefc41511b11944101a8ba04cec741784694f75658b581b52f56",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-29-started.json",
+      "bytes": 44,
+      "sha256": "eaa5cbb800a424f44bef25d9c34d6107024ddf2dd266485e2d4ad149cd91beb9",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-29.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-29.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-29.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-30-argv.json",
+      "bytes": 405,
+      "sha256": "ca953c2c5f013212358631993876eb61e8a5fd3b952f6653605e47b2b72df084",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-30-started.json",
+      "bytes": 44,
+      "sha256": "9064acb7b7e6788ffa43fb7e64b3ada3c17e429916560c4fb2c5127d04c0ec0a",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-30.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-30.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-30.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-31-argv.json",
+      "bytes": 383,
+      "sha256": "8a1aa5507cb60a444250c3446daac0b73ebaf3c21c9a3f6b82ac99b4d9d6fabf",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-31-started.json",
+      "bytes": 44,
+      "sha256": "2438fd7cba42d764a4faa2a853f0eb401d82374f89b12a3cb1739e83cd007dea",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-31.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-31.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/compiler-31.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/driver.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/guards.json",
+      "bytes": 44146,
+      "sha256": "6a9304453d9af26ea5227dc6d125ea85cbfec9e7871dbc02fd5fc34146c6c063",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/inner.py",
+      "bytes": 10579,
+      "sha256": "8b0568c945dc099ff1470a6c45a879015eca5c68ebd32f5d7cddeb268fbeac95",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/launch.json",
+      "bytes": 455,
+      "sha256": "2cbec670076ed0e7e793cee92a77d52e4fa98614b91154c31abe6a4280db690d",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/result.json",
+      "bytes": 35246,
+      "sha256": "4c63f342641458be98d949db6c4b32baba01e88b3404f12c44116c3b1695a0c6",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/steps.json",
+      "bytes": 31194,
+      "sha256": "0462c521d7136fe4fec30a7db692c65041503792a2e71fc22014b84f91b83b06",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/actualdriver.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/after.json",
+      "bytes": 534,
+      "sha256": "54fffab71b43d3358d58baa9bad38b3ca669c1d7c0dd3d5026e45ef0228aa3ab",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/before.json",
+      "bytes": 534,
+      "sha256": "54fffab71b43d3358d58baa9bad38b3ca669c1d7c0dd3d5026e45ef0228aa3ab",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/cleanup.json",
+      "bytes": 109,
+      "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/driver.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/driver.stdout",
+      "bytes": 198,
+      "sha256": "91dd4f676773c0d3d29f64ada4ccb3898f2f9434a27ecf2679a0013c05f627de",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/launcher.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/launcher.json",
+      "bytes": 1233,
+      "sha256": "50074044082ecee1e7d2a87483b5d970a53612df3330fa58578f3b829df89419",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/outer-timing.json",
+      "bytes": 518,
+      "sha256": "9bc817a9aa32ea245da1ff79dde31d5abed3d8d6b35c7acdf5ea6a4aead13dc1",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/result.json",
+      "bytes": 250,
+      "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55",
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch/started.json",
+      "bytes": 44,
+      "sha256": "0605e146a848ca821ae50823ff441b0639e902516116384d29200a184497994c",
+      "capturedMode": 384,
+      "sealedMode": 256
+    }
+  ],
+  "rawDirectories": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/node-compile-cache",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first/node-compile-cache/v26.13.0-arm64-310b2ce3-501",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-compiler-first-launch",
+      "sealedMode": 320
+    }
+  ],
+  "qualification": "31 compiler contexts only. Later guard control,35plain owning cases,1Native Lending case,strict capture,Page/browser witnesses and gate remain separate obligations. No evidence claims their success."
+}

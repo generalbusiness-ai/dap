@@ -22,11 +22,12 @@
  */
 
 import type { ReferenceValue,
-  Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldType, FieldValue, Grant, MemberRef, PlatformDefinition, ReadRefusal, ScopeRef, SignedIntent, Timestamp,
+  Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldType, FieldValue, Grant, Head, ItemQueryRead, MemberRef, PlatformDefinition, Read, ReadRefusal, ScopeRef, SignedIntent, Summary, Timestamp,
 } from "@generalbusiness/dap-contract";
 import { isReference, definitionDigest, isDigest, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import type { ScopeHandle } from "./handle.ts";
 import { signedIntent, type Signer, type Signing } from "./intent.ts";
+import { effectiveFields, expectedOf, finalStates, viaLeft } from "./expected.ts";
 
 // ---------------------------------------------------------------- the types, from the definition's data
 
@@ -68,6 +69,19 @@ export type AskedOf<D extends DeclaredDefinition, K extends string> =
 
 /** A signed intent, with what travels beside it and is not signed: each detached text, and each presented fact. */
 export interface Signed { signed: SignedIntent; beside: Beside }
+
+/** A read used to derive revisions failed. Its original refusal stays available to the caller. */
+export type FailedDeclaredRead = Extract<Read<Summary>, { ok: false }> | Extract<ItemQueryRead, { ok: false }>;
+/** A signed packet or the read that stopped preparation before the signer ran. `at` names the summary used, not a promised submission head. */
+export type DeclaredIntentResult =
+  | ({ ok: true; at: Head } & Signed)
+  | { ok: false; reason: "read"; read: FailedDeclaredRead }
+  | { ok: false; reason: "definition-mismatch"; published: Digest | PlatformDefinition }
+  | { ok: false; reason: "incomplete"; at: Head };
+/** Every non-genesis declared act, independently of standing, state or guards. Each method signs; submit remains explicit. */
+export type Intents<D extends DeclaredDefinition> = {
+  readonly [K in Kind<D>]: (signer: Signer, asked: AskedOf<D, K>, signing?: Signing) => Promise<DeclaredIntentResult>;
+};
 
 /** A value that is not of the shape its act declares. Nothing was signed. `path` names the field. */
 export class ShapeError extends Error {
@@ -151,12 +165,53 @@ export function shapeDeclaredAct<D extends DeclaredDefinition, K extends Kind<D>
 // ---------------------------------------------------------------- the handle
 
 export class DeclaredHandle<D extends DeclaredDefinition> {
+  readonly intents: Intents<D>;
   /**
    * `scope`: the handle whose published definition was checked. `at`: the
    * scope's reference, which every intent is addressed to. `definition`: the
    * value the caller holds, and `digest` its digest, which the scope pins.
    */
-  constructor(readonly scope: ScopeHandle, readonly at: ScopeRef, readonly definition: D, readonly digest: Digest) {}
+  constructor(readonly scope: ScopeHandle, readonly at: ScopeRef, readonly definition: D, readonly digest: Digest) {
+    const methods: Record<string, (signer: Signer, asked: AskedOf<D, Kind<D>>, signing?: Signing) => Promise<DeclaredIntentResult>> = Object.create(null) as Record<string, (signer: Signer, asked: AskedOf<D, Kind<D>>, signing?: Signing) => Promise<DeclaredIntentResult>>;
+    for (const kind of Object.keys(definition.acts)) {
+      if (kind === definition.genesis) continue;
+      Object.defineProperty(methods, kind, { enumerable: true, value: (signer: Signer, asked: AskedOf<D, Kind<D>>, signing: Signing = {}) => this.#fromSummary(signer, kind as Kind<D>, asked, signing) });
+    }
+    this.intents = methods as Intents<D>;
+  }
+
+  /** Derive revisions from one fresh summary, then shape and sign. A caller's captured revisions never refresh. This checks no grant, state or guard and sends nothing. */
+  async #fromSummary<K extends Kind<D>>(signer: Signer, kind: K, asked: AskedOf<D, K>, signing: Signing): Promise<DeclaredIntentResult> {
+    const definition = structuredClone(this.definition);
+    const { on, fields, beside } = structuredClone(shapeDeclaredAct(definition, kind, asked));
+    const given = asked as { expected?: Record<string, number> };
+    const captured = given.expected === undefined ? undefined : structuredClone(given.expected);
+    const controls = { ...signing };
+    const summary = await this.scope.summary();
+    if (!summary.ok) return { ok: false, reason: "read", read: summary };
+    const published = summary.value.definition;
+    let digest: Digest | null = null;
+    try { digest = definitionDigest(definition); } catch { /* A value without canonical bytes cannot match. */ }
+    if (digest !== this.digest || published !== this.digest) return { ok: false, reason: "definition-mismatch", published };
+    if (!summary.complete) return { ok: false, reason: "incomplete", at: summary.at };
+    let expected = captured;
+    if (expected === undefined) {
+      const act = definition.acts[kind]!;
+      const effective = effectiveFields(act, fields, this.at);
+      const items = [...summary.value.items];
+      for (const { type, id } of viaLeft(act, items, on, effective)) {
+        const states = finalStates(definition.items[type]);
+        if (states.length === 0) continue;
+        const read = await this.scope.queryItems({ v: 1, scope: this.at, type, states, ids: [id], limit: 1, cursor: null });
+        if (!read.ok) return { ok: false, reason: "read", read };
+        if (!read.complete) return { ok: false, reason: "incomplete", at: read.at };
+        items.push(...read.value.items.filter((item) => item.id === id && item.type === type));
+      }
+      expected = expectedOf(act, items, on, effective);
+    }
+    const signed = await signedIntent(signer, { to: this.at, kind, on, expected, fields }, controls);
+    return { ok: true, at: summary.at, signed, beside };
+  }
 
   /**
    * One signed intent of that act kind. Each field is checked against its

@@ -2,7 +2,10 @@
  * This derives no authority and checks no guard. The scope still judges the
  * signed input and every expected revision at its own head.
  */
-import type { FactRef, FieldValue, Item } from "@generalbusiness/dap-contract";
+import type { FactRef, FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
+
+import { isFactRef, isRecord } from "@generalbusiness/dap-bytes";
+type ExpectedField = Readonly<Record<string, unknown>> & { type?: string };
 
 interface ExpectedAct {
   step: "open" | "transition" | "comment";
@@ -75,4 +78,36 @@ export function viaLeft<A extends ExpectedAct>(act: A, items: readonly Bound[], 
     const rule = value as Rule, id = viaId(rule);
     return id !== undefined && rule.item !== undefined && subject(name) === null ? [{ type: rule.item, id }] : [];
   });
+}
+
+/** The final states an item type declares, byte-sorted, as an item query takes them. An undeclared type has none. */
+export function finalStates(declared: unknown): string[] {
+  const states = isRecord(declared) ? declared["states"] : undefined;
+  return isRecord(states) ? Object.keys(states).filter((state) => { const row = states[state]; return isRecord(row) && row["final"] === true; }).sort() : [];
+}
+
+/**
+ * The fields as the scope will read them, for resolving the act's subjects only, never signed. Two steps, as derive takes them:
+ * readFields gives each declared field the caller gave, else its declared default (an own value, else `default`; an absent
+ * optional with no default stays absent); then readFacts puts each local fact, one whose scope and incarnation are the
+ * target's, as its `seq`, in a declared fact field and in the lists and records that hold one. A foreign fact stays a fact, so
+ * its `seq` never names a local item. The intent carries the fields as given: the original fact, and no default.
+ */
+export function effectiveFields(act: { fields: Readonly<Record<string, ExpectedField>> }, fields: Readonly<Record<string, FieldValue>>, at: Pick<ScopeRef, "scope" | "inc"> | null): Record<string, FieldValue> {
+  const local = (v: unknown): boolean => at !== null && isFactRef(v) && v.at.scope === at.scope && v.at.inc === at.inc;
+  const normal = (type: ExpectedField | undefined, value: unknown): unknown => {
+    if (type?.type === "list" && Array.isArray(value)) return value.map((v) => normal(type["of"] as ExpectedField, v));
+    if (type?.type === "record" && isRecord(value)) {
+      const out: Record<string, unknown> = {};
+      for (const name of Object.keys(value)) put(out, name, normal(ownValue(type["of"] as Record<string, ExpectedField>, name) as ExpectedField | undefined, ownValue(value, name)));
+      return out;
+    }
+    return type?.type === "fact" && local(value) ? (value as FactRef).seq : value;
+  };
+  const out: Record<string, FieldValue> = {};
+  for (const [name, type] of Object.entries(act.fields)) {
+    const value = Object.hasOwn(fields, name) ? ownValue(fields, name) : type["default"];
+    if (value !== undefined) put(out, name, normal(type, value) as FieldValue);
+  }
+  return out;
 }
