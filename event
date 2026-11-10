@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:61a3f5a20baef0ddbf40d6c477c3ec041a179540","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0b-integrated-focus.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:68930a99d3556d508e4f3c969682e15dfc06b885","text":"Merge retired a covered predecessor; the successor is at packages/client/src/index.ts."}
