@@ -7,8 +7,12 @@ returns the declaration, digest, findings, and per-act refusal metadata.
 
 `@generalbusiness/dap-define/package` derives package metadata and
 projections from the definition value. `declareRoles` declares the action
-union before acts use it. The manifest checks role coverage and projected
-view fields in TypeScript and again at runtime.
+union before acts use it. `views(definition, projections, roles)` binds
+card, carousel, record, and log authors to selected row fields. Its
+template tag emits flat field substitutions. Its condition tag uses the
+same `expression` serializer as acts, and its controls derive `needs`
+from the real act grant. The manifest checks role coverage and view
+bindings in TypeScript and again at runtime.
 
 `@generalbusiness/dap-define/story` writes scenario v1 data over the
 maintained judges and fold. Each step asserts its complete entries,

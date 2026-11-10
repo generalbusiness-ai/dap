@@ -405,6 +405,22 @@ the definition. The
 [Counter package](../apps/counter/package.ts) author their existing
 manifest data this way.
 
+Bind views with `views(definition, projections, roles)` from the same
+subpath. Select a projection and source through `card`, `carousel`,
+`record`, or `log`. The callback supplies `row`, `text`, and `when`.
+Use `text` holes for templates and `when` holes for flat row references
+in conditions. Item rows also supply `act(kind, label, when, options)`;
+that helper derives the required grant from the selected native act.
+Its optional `args` and `parameters` use that act's declared fields.
+Journal rows expose no act constructor.
+
+Choose an actor from the selected member fields. Use selected integer
+fields for scaled facts and time fields for age facts. Context and
+fallback templates can also use the callback's `waiting` reference.
+The manifest checks back targets after you supply the complete view
+map. The host still admits conditions, checks current authority, and
+submits native acts through its ordinary guards.
+
 A version 2 package describes how its definitions fit together. Each
 scope still pins its own whole definition. Package metadata names the
 connections and responsibilities between those definitions. It does not

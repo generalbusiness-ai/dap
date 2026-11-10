@@ -2,6 +2,8 @@
 import type { DeclaredDefinition, FieldType } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict } from "@generalbusiness/dap-bytes";
 import type { GrantRef, ItemDef, Slots, States } from "./index.ts";
+import { checkViews, type ViewData, type CheckedViews } from "./views.ts";
+export { views, type ViewData, type ViewFact, type ViewControl, type ViewParameter } from "./views.ts";
 
 type Roles = Readonly<Record<string, readonly string[]>>;
 type Action<R extends Roles> = R[keyof R][number];
@@ -58,8 +60,17 @@ export interface ProjectionSource<F extends string = string> {
   readonly limit: number;
   readonly fields: Readonly<Record<F, ProjectionField>>;
 }
-type SelectedFields<S extends SourceSpec> = S extends ItemsSpec<ItemDef, infer F> ? F[number] : S extends EntriesSpec<readonly string[], infer F> ? keyof F & string : never;
-type BuiltSource<S extends SourceSpec> = ProjectionSource<SelectedFields<S>> & { readonly read: S extends ItemsSpec ? "many" : "entries" };
+type ItemField<I extends ItemDef, N extends Slots<I>> = N extends keyof I["type"]["parties"]
+  ? ProjectionField & { readonly of: I["type"]["parties"][N]["list"] extends true ? { readonly type: "list"; readonly of: { readonly type: "member" }; readonly max: I["type"]["parties"][N]["max"] } : { readonly type: "member" }; readonly nullable: I["type"]["parties"][N]["required"] extends true ? false : true }
+  : N extends keyof I["type"]["values"] ? ProjectionField & { readonly of: I["type"]["values"][N]["of"]; readonly nullable: I["type"]["values"][N]["required"] extends true ? false : true }
+  : N extends keyof I["type"]["refs"] ? ProjectionField & { readonly of: I["type"]["refs"][N]["to"]; readonly nullable: I["type"]["refs"][N]["required"] extends true ? false : true } : never;
+type ActField<D extends DeclaredDefinition, A extends string, N extends string> = A extends keyof D["acts"] ? N extends keyof D["acts"][A]["fields"] ? D["acts"][A]["fields"][N] : never : never;
+type JournalField<D extends DeclaredDefinition, A extends readonly string[], F extends EntryField> = F extends "signer"
+  ? ProjectionField & { readonly of: { readonly type: "member" }; readonly nullable: true }
+  : F extends { field: infer N extends string } ? ProjectionField & { readonly of: Omit<ActField<D, A[number], N>, "required" | "default">; readonly nullable: ActField<D, A[number], N>["required"] extends true ? false : true } : never;
+type BuiltSource<D extends DeclaredDefinition, S extends SourceSpec> = S extends ItemsSpec<infer I, infer F>
+  ? Omit<ProjectionSource<F[number]>, "read" | "item" | "fields"> & { readonly read: "many"; readonly item: I["name"]; readonly fields: { readonly [N in F[number]]: ItemField<I, N> } }
+  : S extends EntriesSpec<infer A, infer F> ? Omit<ProjectionSource<keyof F & string>, "read" | "fields"> & { readonly read: "entries"; readonly fields: { readonly [N in keyof F]: JournalField<D, A, F[N]> } } : never;
 export interface Projection<S extends Readonly<Record<string, ProjectionSource>> = Readonly<Record<string, ProjectionSource>>> {
   readonly v: 1;
   readonly definition: string;
@@ -76,7 +87,7 @@ const fieldType = (field: FieldType & { required?: boolean; default?: unknown })
 };
 
 /** Select slots and let their definition supply field types and nullability. */
-export function projection<const D extends DeclaredDefinition, const S extends SourceSpecs>(definition: D, path: string, sources: S & CheckedSources<NoInfer<D>, S>): Projection<{ readonly [K in keyof S]: BuiltSource<S[K]> }> {
+export function projection<const D extends DeclaredDefinition, const S extends SourceSpecs>(definition: D, path: string, sources: S & CheckedSources<NoInfer<D>, S>): Projection<{ readonly [K in keyof S]: BuiltSource<D, S[K]> }> {
   const built = Object.fromEntries(Object.entries(sources).map(([name, spec]) => {
     if (spec.kind === "items") {
       const type = Object.hasOwn(definition.items, spec.item.name) ? definition.items[spec.item.name] : undefined;
@@ -109,27 +120,13 @@ export function projection<const D extends DeclaredDefinition, const S extends S
     }));
     return [name, { read: "entries", acts, window: bounded(spec.window ?? 100), limit: bounded(spec.limit ?? 100), latestBy: null, fields }];
   }));
-  return { v: 1, definition: path, revision: "revision", sources: built } as Projection<{ readonly [K in keyof S]: BuiltSource<S[K]> }>;
+  return { v: 1, definition: path, revision: "revision", sources: built } as Projection<{ readonly [K in keyof S]: BuiltSource<D, S[K]> }>;
 }
 
-type NativeField = "id" | "type" | "state" | "revision";
-export interface ViewSpec {
-  readonly projection: string;
-  readonly item: string;
-  readonly title: string;
-  readonly facts: readonly string[];
-  readonly actor: string | null;
-  readonly [key: string]: unknown;
-}
-type ViewFields<P extends Readonly<Record<string, Projection>>, V extends ViewSpec> = V["projection"] extends keyof P
-  ? V["item"] extends keyof P[V["projection"]]["sources"] ? keyof P[V["projection"]]["sources"][V["item"]]["fields"] | NativeField | (P[V["projection"]]["sources"][V["item"]]["read"] extends "entries" ? "time" : never) : never : never;
-type CheckedViews<P extends Readonly<Record<string, Projection>>, V extends Readonly<Record<string, ViewSpec>>> = {
-  readonly [K in keyof V]: Exclude<V[K]["title"] | V[K]["facts"][number] | Exclude<V[K]["actor"], null>, ViewFields<P, V[K]>> extends never ? V[K] : never;
-};
 type GrantName<G> = G extends GrantRef<infer N> ? N : G;
 type MissingGrant<D extends DeclaredDefinition, R extends Roles> = Exclude<GrantName<D["acts"][keyof D["acts"]]["grant"]>, GrantName<Action<R>>>;
 export interface Asset { readonly path: string; readonly file: string; readonly mediaType: string }
-export interface ManifestSpec<D extends DeclaredDefinition, P extends Readonly<Record<string, Projection>>, R extends Roles, V extends Readonly<Record<string, ViewSpec>>> {
+export interface ManifestSpec<D extends DeclaredDefinition, P extends Readonly<Record<string, Projection>>, R extends Roles, V extends Readonly<Record<string, ViewData>>> {
   readonly name: string;
   readonly version: string;
   readonly definition: { readonly path: string; readonly value: D };
@@ -141,16 +138,10 @@ export interface ManifestSpec<D extends DeclaredDefinition, P extends Readonly<R
   readonly assets?: readonly Asset[];
 }
 /** Derive the package fields that its entry definition already states. */
-export function manifest<const D extends DeclaredDefinition, const P extends Readonly<Record<string, Projection>>, const R extends Roles, const V extends Readonly<Record<string, ViewSpec>>>(spec: ManifestSpec<D, P, R, V> & { readonly views: CheckedViews<NoInfer<P>, V> } & ([MissingGrant<NoInfer<D>, NoInfer<R>>] extends [never] ? unknown : { readonly missingGrants: MissingGrant<NoInfer<D>, NoInfer<R>> })) {
+export function manifest<const D extends DeclaredDefinition, const P extends Readonly<Record<string, Projection>>, const R extends Roles, const V extends Readonly<Record<string, ViewData>>>(spec: ManifestSpec<D, P, R, V> & { readonly views: CheckedViews<NoInfer<D>, NoInfer<P>, V> } & ([MissingGrant<NoInfer<D>, NoInfer<R>>] extends [never] ? unknown : { readonly missingGrants: MissingGrant<NoInfer<D>, NoInfer<R>> })) {
   const definition = spec.definition.value, held = new Set<string>(Object.values(spec.roles).flat());
   for (const [kind, act] of Object.entries(definition.acts)) if (!held.has(act.grant)) throw new Error(`no role holds ${act.grant}, which ${kind} needs`);
-  const native = new Set<NativeField>(["id", "type", "state", "revision"]);
-  for (const [name, view] of Object.entries(spec.views)) {
-    const projected = Object.hasOwn(spec.projections, view.projection) ? spec.projections[view.projection] : undefined;
-    const source = projected && Object.hasOwn(projected.sources, view.item) ? projected.sources[view.item] : undefined;
-    if (!source) throw new Error(`view ${name} names an unknown projection source`);
-    for (const field of [view.title, ...view.facts, ...(view.actor === null ? [] : [view.actor])]) if (!native.has(field as NativeField) && !(source.read === "entries" && field === "time") && !Object.hasOwn(source.fields, field)) throw new Error(`view ${name} names an unknown field ${field}`);
-  }
+  checkViews(definition, spec.projections, spec.roles, spec.views);
   for (const [name, projected] of Object.entries(spec.projections)) if (projected.definition !== spec.definition.path) throw new Error(`projection ${name} names another definition path`);
   const connections = Object.entries(definition.items).flatMap(([item, type]) => Object.entries(type.refs).filter(([, ref]) => ref.to.type === "scope").map(([slot]) => ({ from: spec.definition.path, item, slot, to: "outside" as const })));
   return {

@@ -18,3 +18,18 @@ export function typedExpressionNames() {
     return { guards: [rule("level-range", source)] };
   });
 }
+
+/** View conditions share the serializer and keep their flat row namespace. */
+export function typedRowExpressionNames() {
+  const row = { state: { row: "state" }, "queue length": { row: "queue length" } } as const;
+  const e = expression({ row });
+  const source = e`${row.state} = 'ready' and ${row["queue length"]} >= 0`;
+  // @ts-expect-error The bound row has state, not status.
+  const badName = () => e`${{ row: "status" }}`;
+  // @ts-expect-error An act field is not a projected row reference.
+  const badKind = () => e`${{ field: "state" }}`;
+  // @ts-expect-error Rows do not add computed parts to a reference.
+  const badPart = () => e`${{ row: "state", part: "nested" }}`;
+  void [badName, badKind, badPart];
+  return source;
+}

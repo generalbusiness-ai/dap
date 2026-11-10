@@ -2,7 +2,9 @@
 
 Request `d49269fd` owns this head under promise `d43e33e1`.
 Planner ruling `88cf23c3` opens items 1, 2, 4 and 5 beside E, F and G.
-Item 3, typed views, joins this head after E lands.
+E landed at `8289d9e5`. This source integrates item 3, typed views, after
+an ordinary merge that preserves E's expression context and H's grant
+and provenance metadata.
 
 ## What changed
 
@@ -12,6 +14,14 @@ assets and browser entry. A roles-first declaration supplies the action
 union that acts may use. The manifest checks role coverage and view
 field names at compile time and at runtime. Lending and Counter declare
 their roles before constructing their real grant maps.
+
+The view factory binds card, carousel, record and log authors to real
+projection sources. The selected field types constrain actor and fact
+choices. Templates name flat row references, and conditions share E's
+expression serializer. The real act supplies each control's grant.
+Runtime checks also reject forged structural inputs, extra fields,
+wrong source types, and missing or incompatible act inputs. These
+helpers emit the existing presentation schema and property order.
 
 The story subpath uses the maintained judges, rule preparation and fold.
 Each queued step checks the author's expected answer and its complete
@@ -73,6 +83,7 @@ slot, static checks, one gate, sealed evidence and exact-head review.
 
 ## Open limits
 
-Request `d49269fd` still owes typed views after E, the final source
-integration and all validation. This source draft supplies no passing
+Request `d49269fd` still owes F integration and all validation.
+The later merge must retain F's normalization and row-name transfer
+with H's provenance copy. This source draft supplies no passing
 manifest, scenario, gate, deployment or live-acceptance evidence.
