@@ -152,7 +152,7 @@ E adds one runtime case: a failed fresh read must stop preparation before
 the signer, including when the caller supplies captured revisions.
 The three wrong-name tag examples remain compiler-only checks.
 
-## Page build and remaining validation
+## Page build and final validation
 
 The [maintained Page build][page] passed at `fffbfee4`. Build, runner,
 outer driver, and launcher each returned zero. The evidence retains the
@@ -162,23 +162,43 @@ adoption does not relabel the build's actual source checkpoint.
 
 The retained original Lanes reference, MCP tool listing, and
 three Lending catalogue forms supply the three strict comparison
-inputs. Their original bytes remain separate from future E captures.
+inputs. Their original bytes remain separate from the actual E outputs.
 
 - The [strict three-output comparison][capture] passed at `01337382`.
   The Lanes reference, MCP tool listing, and combined Lending catalogue
   exactly match their three retained original byte outputs.
-- Final static checks and one full gate: **PENDING**. Add the actual
-  whitespace, commit-message, format, and gate exits with full case
-  reconciliation after they run at the final candidate.
+- The [three final static checks][static] passed at `c370fcbb`.
+  Whitespace, commit messages, and selected JSON formatting returned zero.
+  The commit check examined seven messages and flagged none. All six
+  actual command, driver, and launcher exit files record zero.
+- The [full gate][gate] passed at `c370fcbb`. Gate, driver, launcher,
+  and analyzer returned zero. The complete reconciliation accepts all
+  5,842 distinct obligations: 5,839 passes and three skips. It covers
+  45 compiler contexts and 16 typecheck scripts. The 111 reporter wrappers
+  remain unknown. The unchanged source selector omits all six Scale
+  obligations. The terminal reports contain no unexpected cases,
+  reconciliation issues, unhandled errors, or deadline diagnostics.
+
+  The first analyzer launcher stopped on a syntax error before starting
+  the analyzer. A corrected launcher ran the unchanged analyzer once and
+  returned zero. The wholly skipped Page recorder module has no duration;
+  that duration remains unknown. Six evidence-size warnings remain in
+  the retained logs.
+
+  The inner interval was 979.9855555 seconds. The outer interval was
+  982.248283542 seconds. Across 99 passive samples, the largest sampled
+  single-process RSS was 2,650,912 KiB for Node and 3,148,480 KiB for
+  workerd. These values describe sampled RSS, not heap, a process sum,
+  or an instantaneous maximum. Source and tool fences match, the accepted
+  scope remains fixed, and the owned process groups closed.
 - [Automatic Page CI][browser-ci] passed at `01337382`. Run
   `42846059399`, attempt one, completed all 12 steps successfully.
   Root read the run, jobs, and step metadata with three GET exits zero.
 - Card CI: **NOT APPLICABLE**. The [workflow filter proof][ci-filters]
   finds no changed Card path. Only the generated asset matches Page.
 
-Focused checks and the Page build do not establish final gate or browser
-acceptance. No deployment or live acceptance claim follows from this
-checkpoint.
+The final gate passed at `c370fcbb`. Automatic Page CI passed at
+`01337382`. The planner owns deployment and live acceptance.
 
 [compiler-first]: evidence/2026-11-10-t0e-compiler-first.manifest.json
 [seals]: evidence/2026-11-10-t0e-source-seal-producer.manifest.json
@@ -191,3 +211,5 @@ checkpoint.
 [ci-filters]: evidence/2026-11-10-t0e-browser-ci.manifest.json
 [capture]: evidence/2026-11-10-t0e-strict-three-output.manifest.json
 [browser-ci]: evidence/2026-11-10-t0e-browser-ci.manifest.json
+[static]: evidence/2026-11-10-t0e-static-preflight.manifest.json
+[gate]: evidence/2026-11-10-t0e-final-gate.manifest.json
