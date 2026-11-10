@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:51a95fc4ad69529749610a4a42908c30e4898c8c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0b-rule-refusal-focused.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:51f2450171e33c09e396fd2da49ed2ef6a98f54c","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/browser-boundary.test.ts."}
