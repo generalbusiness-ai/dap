@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e0929b145b7259b5abd7d8c97ff012d2ec52fdd8","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/command-targets.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e178576eea23216471e0f3c54a072a0a5f433adc","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-br13-remaining-focused.manifest.json."}
