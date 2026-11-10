@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f1bf5f50ac6b9c0cba9318882bade618766771b3","text":"Merge retired a covered predecessor; the successor is at packages/define/vitest.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f1c1715a549cc68b4c57c0272fa17fd17dda46a4","text":"Merge retired a covered predecessor; the successor is at package-lock.json."}
