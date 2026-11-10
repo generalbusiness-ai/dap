@@ -30,8 +30,8 @@ records. They prove no read, signature, authority or Native outcome.
 The committed Page asset module now contains the current shared helper.
 The unchanged Page build regenerated that production output after the
 first full gate detected stale bytes. No Page test or source assertion
-changed. The new asset still needs a full gate and a Page browser
-workflow run at the branch head.
+changed. The second full gate and the Page browser workflow passed at the
+repaired source checkpoint 9295b11c.
 
 ## Decisions and why
 
@@ -165,8 +165,8 @@ read-only permissions after their final metadata writes.
 | Lending catalogue and MCP tool-document bytes | Exact baseline `86179b0c` and candidate `2fc5f712` outputs | Both captures 0. Bytes identical | `reconciliation.json`, byte comparison |
 | First full gate | `npm run gate` at `a7af51bb` | 1. Node 144 and Counting 56 passed. Plain had 4,030 passed, one failed and one skipped. Native did not run | `failed-gate-reconciliation.json`, SHA-256 `9726d079d93802f99b298ecedac9e0ae567000e14baa48d8f1b8671a4c352840` |
 | Production Page asset repair | `npm run build --workspace @generalbusiness/dap-page` at `6a5d6ace` | Build 0. Original wrapper 2. Separate metadata audit 0 | `build-reconciliation.json`, SHA-256 `306ff7aaa72fc7c742655d6373eb3f026030538bad9b0acf2c8ac071fb89d531` |
-| Second full gate | `npm run gate` at the committed repaired source | Not run | Pending |
-| Page browser workflow | `.github/workflows/page-browser.yml` at the branch's own head | Not run | Pending |
+| Second full gate | `npm run gate` at `9295b11c` | 0. 5,359 passed and three skipped | `gate2-reconciliation.json`, SHA-256 `f0dec4890dd05b5cf15e845db33582cdcc2bd1d557f7abf7d0b0a4baa8d301ea` |
+| Page browser workflow | [Page browser scripts run 42725479793](https://github.com/generalbusiness-ai/dap/actions/runs/42725479793) at 9295b11c | Success | The run and job name the validated branch source |
 
 The first full gate remains failed. Its sole failure was
 `apps/room/page/test/assets.test.ts`. The stored module contained
@@ -208,6 +208,48 @@ output and custody metadata. It binds the original raw inputs by hash
 and copies no raw payload, generated fixture or signing key. The audit
 left both original raw units untouched.
 
+The second full gate ran at source
+`9295b11c97e6c35a005f47a81282a06169a7cf06`, tree
+`04d6739f876de12b7940ce93b02887cb118072fd`. Its actual gate, outer
+driver and launcher exits were all 0. Node passed 145 cases. Counting
+passed 56. Plain passed 4,031 and skipped one. Native passed 1,127 and
+skipped two. All 43 compiler contexts and all 11 gate steps returned 0.
+The dependency view matched the existing lock, so the gate skipped
+installation.
+
+The complete static ledger reconciles with public per-file test
+identities, titles and final states. The 108 file-wrapper observations
+remain unknown and never enter the case totals. Every test phase
+reached its successful terminal record. The independent metadata
+audit repeated that reconciliation over the retained JSON lines and
+checked all 15 typecheck script headers and their 43 invocations.
+
+The maintained selector omitted Scale because none of this source's
+11 changed paths matched its trigger set. The actual selector record,
+its exact merge-base and path set, and the before-and-after reference
+snapshots remain in the evidence. Mutable main references stay
+separate from source equality. The source hashes, lock, tool bytes and
+owned process closure remained fixed. Both drivers returned 0.
+
+The final gate manifest is
+[evidence/2026-11-09-t0a-gate2.manifest.json](evidence/2026-11-09-t0a-gate2.manifest.json).
+It cites `gate2-reconciliation.json` with SHA-256
+`f0dec4890dd05b5cf15e845db33582cdcc2bd1d557f7abf7d0b0a4baa8d301ea` and
+`scope-custody.json` with SHA-256
+`9065c9f5a42076196a711d0c893337161f8e20cb2a77f11d26f7c3f4b6c0f5d0`.
+The new gate's raw units and curated unit have SHA256SUMS and read-only
+permissions after their final metadata writes. Private fixture keys,
+generated temporary fixtures and raw comparison payloads stay out of
+the curated unit. The earlier failed gate and original build-wrapper
+exit 2 remain separate evidence.
+
+[Page browser scripts run 42725479793](https://github.com/generalbusiness-ai/dap/actions/runs/42725479793)
+completed successfully at the branch's own source 9295b11c. The retained
+CI metadata names that full commit. Its job and every step completed
+successfully. It covers Page rendering and the recorded browser
+workflows at that checkpoint. It establishes no deployment or live-room
+acceptance.
+
 The Vitest owners retain the repository's thread pools and four-worker
 limit. MCP retains its 60-second case deadline. The other selected owners
 retain their package defaults. Counting retains its 30-second case
@@ -217,17 +259,14 @@ acceptance.
 
 ## Open limits
 
-Request `b9f85b9a` owns the second full gate, the Page browser workflow
-citation and this head's landing. The current source includes main
-`f3ddcc06` through merge `6a5d6ace`. The second gate must freeze the
-actual repaired commit, compiler closure, case ledger and maintained
-scale decision. The first gate's A-only counts do not describe this
-B-merged candidate. The Page workflow must run at this branch's own
-head because `apps/room/page/assets.ts` matches its trigger paths.
-No package installation in the checkout is needed.
+Request `b9f85b9a` owns this head's review filing and landing. The final
+gate and Page browser workflow describe source `9295b11c`. Only this
+implementation note and the new gate2 evidence manifest changed
+after that checkpoint. The tree comparison confirms unchanged runtime
+source, generated assets, tests, configuration and dependencies.
 
 Request `260991d8` owns the shared descriptions and starts from this
 head's frozen source only after its review request. The DX-T0 parent
 `6f87a4e3` stays open for that head and the later typed browser models.
-The failed gate and the rebuilt output make no final-gate, deployment
-or live acceptance claim.
+The final gate and Page workflow make no deployment or live acceptance
+claim.
