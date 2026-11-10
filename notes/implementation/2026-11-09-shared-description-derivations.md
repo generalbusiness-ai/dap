@@ -5,6 +5,50 @@ b8b6248d under DX-T0 6f87a4e3. Placement 176190ba and A's review request
 96041272 permit B to start from A's frozen source 61dc5d2f, tree
 af81f18beb67c8caf894a3e076a5d6381c71355c.
 
+## Current integrated Page build
+
+Actual main c905518409e4449f35e1b9423c4aa226bce5c2ce landed BR13 at tree
+86f3511a63d4822b99341863b933bd13ad485908. B merged that main in ordinary
+merge 623ae740e12cfdbc56a11ad1caebae7e5beda871, tree
+fd4278e948e78dff82d6f79d1a5e0ef7b9bfc83b. The merge preserves both
+reviewed seal sets and all three completed Client control boundary files.
+The owned namespace now has 15 workspace links and 50 export aliases,
+including the supported Contract catalog-vocabulary subpath.
+
+Booking f1967929c8147c56f8d3afcc1162a754c1899ab3 ran one maintained
+npm run build --workspace @generalbusiness/dap-page at that merge.
+END c26a3bb76e0e15e8659989b8f0d39795ff850b62 closes the slot. The actual
+build, inner runner, outer driver and launcher exits each read 0.
+The outer receipt records 2.914570833 seconds. All 7,525 tool pins and
+five frozen inputs stayed exact. Only apps/room/page/assets.ts changed
+among 4,520 tracked paths; the other 4,519 source hashes stayed fixed.
+Every owned process group closed, with empty inner and outer cleanup.
+
+The generated asset has 2,424,349 bytes and SHA-256
+b2aca4783893ee7f8d7882faccf8526d6430614129e4f91582ec5d9b14b83a32.
+The independent audit matches PAGE_HTML, PAGE_JS, OAUTH_HTML and OAUTH_JS
+to the retained and checkout copies of all four dist leaves. It verifies
+every frozen source baseline against immutable merge blobs. No build
+or other application validation body repeated during the audit.
+[Combined Page build manifest](evidence/2026-11-10-t0b-combined-page-build.manifest.json)
+retains the actual exits, output bindings and guard results.
+
+The independent metadata audit returned 0. The new public unit contains
+only safe summaries and hashes. Its separate complete private archive
+retains the original raw files, frozen inputs, temporary Node compile
+cache and metadata audit history through at least 2026-12-10. Both new
+copies are read-only; the original run, membership and modes remain
+untouched.
+
+The earlier Page builds and workflow outcomes below remain historical.
+They do not establish the combined source's browser or gate results.
+The integrated focused owners, strict original document bytes, all three
+Lending catalogue modes, fresh own-source Page and Card workflows, and
+full gate remain outstanding. The retained Native CLI story belongs in
+that gate. The earlier preparation and open-limit paragraphs describe
+their recorded checkpoints. This head claims no deployment or live
+acceptance result.
+
 ## What changed
 
 The client now owns the five description derivations: actSentence,
