@@ -27,9 +27,10 @@ Platform.” It states: “Code below Platform imports the module directly.”
 
 Contract is the lowest existing common dependency. Its
 `catalog-vocabulary.ts` owns the timed-opening and Git credential questions,
-plus Replay's five questions. Platform dispatches these names to that one
-owner and re-exports the vocabulary. Derive, Git and portable Replay import
-the leaf directly. Named-pin stand-ins keep their existing shape.
+plus Replay's five questions and nine client questions. Platform dispatches
+these names to that one owner and re-exports the vocabulary. Derive, Git,
+portable Replay and the seven lower client readers import the leaf
+directly. Named-pin stand-ins keep their existing shape.
 
 Replay's two legacy publication questions retain separate names and accept
 destination versions 4, 5, 6 and 7. Its partition-origin question accepts
@@ -308,8 +309,8 @@ files, including Node compile-cache files. The cache files add
 no test claim. The units remain read-only through 10 December. No raw
 report, output buffer or private fixture enters the repository.
 
-This evidence commit changes only this note and the two manifests after
-the tested 6cbc checkpoint. The current maintained full gate and review
+The controls-evidence adoption at `a40adbee7e` changes only this note and
+the two manifests after the tested 6cbc checkpoint. The current maintained full gate and review
 remain due. These checks establish no browser, deployment, SDK
 publication or live-room acceptance.
 
@@ -364,3 +365,85 @@ JSON and token-equality proof hashes to
 `26f15fdb161a11b20afcf43c84f4ce6d4c6aa08c5c5b110cdfba839f82377d37`.
 No test, compiler or build reruns for this whitespace-only repair. The
 repaired maintained gate remains due.
+
+
+## Retain the architecture failure and repair the lower client imports
+
+Booking `396be819` runs gate v3 at c182. END `7b077fa4` closes its failed
+slot. Formatting, all 45 compiler contexts, all 16 typecheck scripts and
+the exact pin check pass. Node reports 150 cases: 148 pass and two fail
+in the active-source architecture owner. Seven new client imports cross
+the exact Platform application-wrapper boundary. The other assertion sees
+checker-owner paths retained as provenance in the independent fixture.
+The other 5,695 Counting, Plain and Native obligations remain unreached.
+The [partial gate-v3 manifest](evidence/2026-11-10-br13-final-gate-v3-partial.manifest.json)
+hashes to
+`5ee635e05d505f33e0af1dccf96ce39c954091a7eff41d206a6c5ce046b22d4f`.
+It preserves actual failure reports and raw assertion custody separately
+from the later repair witnesses. No pass analyzer runs on that failure.
+
+The source repair at `c7fda1dde9` moves nine exact question rows from
+Platform into the existing import-free Contract vocabulary. The seven
+client readers now import that leaf directly. The leaf owns 16 distinct
+questions; the complete Platform dispatcher retains all 105. Each ordered
+positive pin array and all 11,025 independently frozen answers stay equal.
+The fixture, relations, port contracts and existing tests stay unchanged.
+The allowed application wrapper in `answers.ts` keeps its existing import.
+
+Booking `7b09a4f0` runs the extracted maintained seal producer at exact c7.
+END `464d52a8` closes the slot. Before computing current seals, it verifies all
+three selected old literals against immutable c182 owners. The emitted
+patch changes exactly three maintained AST hashes and adds no row. An
+independent mask comparison finds every other assertion and table byte
+identical. The table-only adoption at `624cd00e2c` matches that output; its
+SHA-256 is
+`6407036a4ae9bdfc09d00a7e0722de7756c862778f7509126a62e33b92778fc1`.
+The [client-seal manifest](evidence/2026-11-10-br13-client-seals.manifest.json)
+hashes to
+`c69cc179c5e6ebc9a133a2e7a4dba66e7a6ad183d5773a4fd55f88ca4f1bd9d8`.
+Actual producer, driver and launcher exits are zero; cleanup is empty.
+
+Planner ruling `74e0de0d` approves only one exact fixture-path exception.
+The guard commit `e4d6060419` adds that path to the final checker expected
+list and one provenance comment. The existing pattern, source filter,
+runtime consumers and five other paths stay unchanged. The fixture data
+stays independent. The ruling requires the complete active-source owner
+in focused validation and the gate, with no fault control or additional
+provenance classifier.
+
+## The lower-client focus and rebuilt Page pass at e4
+
+Booking `4a5c94dc` runs the repair focus at
+`e4d60604198153602d89a6f45d20de54593187fd`. END `6af16a09` closes the slot.
+Five owning compiler contexts pass. The whole Platform owners pass 347
+cases, and the existing client route owner passes two. The complete
+active-source and security-entry Node owners pass 12 cases each. All
+actual exits are zero; exact same-run ledgers reconcile the 349 Plain and
+24 Node identities. Guards and cleanup are empty. These passing repair
+witnesses retain their actual e4 source and do not erase v3's failures.
+The [lower-client focused manifest](evidence/2026-11-10-br13-lower-client-focused.manifest.json)
+hashes to
+`46d2859d4fbbbe8ffc8e57cea1761bbab39b4375c9173a1a5f29ee4a9af27d1e`.
+
+Both Page entries reach changed production inputs, so the maintained Page
+build runs once at the same e4 source in booking `b267c5ae`. END
+`17eb424b` closes that build. Actual build, inner runner, outer driver and
+launcher exits are zero. Only `apps/room/page/assets.ts` changes; the other
+4,497 tracked hashes stay fixed. The asset changes from `ad040a6d3f` to
+`b5e486326a03e00bc903a680906a4d6e6b6857569446c751df949ac48d532649`.
+All four decoded served asset exports equal the retained `dist` bytes.
+The audit verifies 7,538 tool pins, the complete 1,971-file npm inventory,
+nine npm links, 15 workspace bindings and 50 aliases. The exact original
+XY and NUL status records only the asset delta. Cleanup is empty and
+closed. No additional local Card frontend build runs.
+
+The [client Page-build manifest](evidence/2026-11-10-br13-client-page-build.manifest.json)
+hashes to
+`d21dac174a1647d7b4a36610d6f6e028a83454b68761b9d0a0112fadb2b3fe31`.
+It inventories 132 retained original files, including four copied output
+leaves, and four safe metadata files. Every original and curated file
+and directory stays nonwritable for at least 30 days after landing. The
+asset-and-evidence adoption changes no other production source. Fresh
+Page and Card workflows must use this new production checkpoint. The
+repaired full maintained gate and review remain due. No browser,
+deployment or live acceptance follows from these local checks.
