@@ -1,8 +1,8 @@
 # Produce the public SDK
 
-The public SDK is eight npm packages that let a program outside this
-repository build, sign, shape and replay dap records. Two scripts produce
-it. `scripts/public-release.mjs`, the producer, builds and packs the
+The public SDK plan contains nine npm packages for programs outside this
+repository to author definitions and build, sign, shape, and replay dap
+records. Two scripts produce it. `scripts/public-release.mjs`, the producer, builds and packs the
 packages into a staging directory. `scripts/check-public-release.mjs`,
 the checker, inspects what the producer staged. Neither script publishes,
 installs application packages, configures accounts or deploys a service.
@@ -73,7 +73,7 @@ authority gives no npm publishing rights. An operator controls each
 deployed service: its HTTPS URL, version, bindings, migration and real
 provisioning.
 
-Publishing the eight packages is not atomic. Publish the whole set, and
+Publishing the nine packages is not atomic. Publish the whole set, and
 check every public version and integrity before you call it a
 coordinated release. A consumer installs the published registry
 packages, with a public lockfile. Producer stages and local tarballs do
@@ -83,20 +83,21 @@ not take their place.
 
 ### Packages
 
-The eight packages, in build order:
+The nine packages, in build order:
 
 1. `@generalbusiness/dap-contract`
 2. `@generalbusiness/dap-bytes`
 3. `@generalbusiness/dap-derive`
-4. `@generalbusiness/dap-package-graph`
-5. `@generalbusiness/dap-git`
-6. `@generalbusiness/dap-platform`
-7. `@generalbusiness/dap-client`
-8. `@generalbusiness/dap-replay`
+4. `@generalbusiness/dap-define`
+5. `@generalbusiness/dap-package-graph`
+6. `@generalbusiness/dap-git`
+7. `@generalbusiness/dap-platform`
+8. `@generalbusiness/dap-client`
+9. `@generalbusiness/dap-replay`
 
 Every coordinated source dependency must equal its source package's
 version before the producer maps it to the release version. Staged
-manifests carry the eight names, the coordinated dependencies at the
+manifests carry the nine names, the coordinated dependencies at the
 selected version, and the dap repository and homepage.
 [`scripts/public-release.json`](../scripts/public-release.json) holds the
 plan: each package's exports, excluded source exports and dependencies.
@@ -120,6 +121,7 @@ and derive exports `.`, `./rule` and `./testing`.
 | contract | `.` | | |
 | bytes | `.`, `./web` | | contract |
 | derive | `.`, `./rule`, `./field-types`, `./testing` | | bytes, contract |
+| define | `.` | | bytes, contract, derive |
 | package-graph | `.` | | contract, derive |
 | git | `./tree-proof`, `./checkout-types`. No root export | `.` and every other subpath | bytes, contract |
 | platform | `.`, `./membership-actions`, `./application`, `./application-v2`, `./package-validation` | `./testing`, `./application-install` | bytes, contract, derive, package-graph, git |
@@ -168,6 +170,12 @@ table does not check rule syntax. Call
 `validateDefinition(value, bounds, RULE_PROFILES)` for declared input,
 without `platform: true`. A pass grants no authority and does not show
 that a deployed runtime supplies every capability or platform rule.
+
+**define.** The root export composes item, act, and handler values into
+pinned declaration data. `compile` normalizes the declaration, runs the
+existing validator, and returns the digest and refusal metadata. Grant
+and reason declarations stay outside the pinned bytes. The source package
+uses the coordinated version. Its release integration publishes nothing.
 
 **derive/testing.** The release keeps the compiled fixture export. It
 uses fixed keys, made-up grants and scopes in memory. It is not a test
@@ -218,11 +226,15 @@ The checker compares each tarball's contents with every staged file, and
 checks both input copies against the original bytes. It never installs
 the tarballs and never loads raw SDK TypeScript. Then it runs one
 journey through the compiled output: bytes, signing, client shaping,
-declaration and rule validation, the jsonata engine, the testing
-fixture's clone, and a replay of the native capture. It checks the
-types in three strict contexts, NodeNext, Bundler and the opt-in ambient
-declaration, each with `skipLibCheck: false`. Last, it bundles the same
-replay journey for a browser.
+typed definition authoring, declaration and rule validation, the jsonata
+engine, the testing fixture's clone, and a replay of the native capture.
+The authoring witness checks compiled helpers, the declaration digest,
+and refusal metadata outside the pin. It checks the types in three
+strict contexts, NodeNext, Bundler and the opt-in ambient declaration,
+each with `skipLibCheck: false`. The NodeNext and Bundler consumers also
+check literal definition names and reject an undeclared slot. Last, it
+bundles the same journey for a browser, including the compiled authoring
+package.
 
 ### The native capture
 
@@ -272,7 +284,10 @@ onboarding protocol, and no universal durable outbox.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+The historical release and registry observations describe main
+`5dc9765f` on 30 October 2026. The ninth package follows planner ruling
+`92c1bf7141c0509343bb471c7ac4caf18bf327b5`; its added witnesses remain
+unrun in this source checkpoint. Sources:
 [`public-release.mjs`](../scripts/public-release.mjs),
 [`check-public-release.mjs`](../scripts/check-public-release.mjs),
 [`public-release-modules.test.mjs`](../scripts/public-release-modules.test.mjs),

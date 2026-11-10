@@ -63,6 +63,7 @@ if [ "$failed" = 0 ]; then
 fi
 [ "$failed" = 0 ] && step format npm run format:check
 [ "$failed" = 0 ] && step typecheck npm run typecheck
+[ "$failed" = 0 ] && step def-pins node --import tsx scripts/check-definition-pins.mjs
 # npm's unchanged pretest hook prepares compatibility once. The fixed test
 # owner defers its summary to this gate's unconditional EXIT finalizer.
 [ "$failed" = 0 ] && step test npm test -- --gate --defer-summary --evidence "$test_evidence"

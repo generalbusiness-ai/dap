@@ -27,6 +27,15 @@
       }
     },
     {
+      "dir": "define",
+      "exports": { ".": "src/index" },
+      "dependencies": {
+        "@generalbusiness/dap-bytes": "coordinated",
+        "@generalbusiness/dap-contract": "coordinated",
+        "@generalbusiness/dap-derive": "coordinated"
+      }
+    },
+    {
       "dir": "package-graph",
       "exports": { ".": "src/index" },
       "dependencies": {
@@ -57,7 +66,8 @@
         "./journal-reader": "./src/journal-reader.ts",
         "./journal-local": "./src/journal-local.ts",
         "./journal": "./src/journal.ts",
-        "./application": "./src/application.ts"
+        "./application": "./src/application.ts",
+        "./diff": "./src/diff.ts"
       },
       "dependencies": {
         "@generalbusiness/dap-bytes": "coordinated",

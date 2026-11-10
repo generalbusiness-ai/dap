@@ -166,6 +166,31 @@ export function admit(source: string): void {
   compile(source);
 }
 
+/** Direct field and value-slot names in the admitted syntax tree, without evaluating the rule. */
+export function ruleReferences(source: string): { fields: string[]; values: string[] } {
+  const { expression } = compile(source);
+  const fields = new Set<string>();
+  const values = new Set<string>();
+  function walk(value: unknown): void {
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) { value.forEach(walk); return; }
+    const node = value as Ast;
+    if (node["type"] === "path") {
+      const steps = node["steps"] as Ast[];
+      const start = steps[0];
+      const first = start?.["type"] === "variable" && ["", "$"].includes(start["value"]) ? 1 : 0;
+      const head = steps[first], field = steps[first + 1];
+      if (head?.["type"] === "name" && head["value"] === "fields" && field?.["type"] === "name") fields.add(field["value"]);
+      const subject = steps[first + 1], slots = steps[first + 2], slot = steps[first + 3];
+      if (head?.["type"] === "name" && head["value"] === "subjects" && subject?.["type"] === "name" &&
+          slots?.["type"] === "name" && slots["value"] === "values" && slot?.["type"] === "name") values.add(slot["value"]);
+    }
+    Object.values(node).forEach(walk);
+  }
+  walk(expression.ast());
+  return { fields: [...fields], values: [...values] };
+}
+
 /** The budget an evaluation used. Updated as it runs, so it is accurate after a refusal too. */
 export interface Meter {
   steps: number;
