@@ -231,8 +231,8 @@ const namedOwners = {
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
-  "packages/contract/src/catalog-vocabulary.ts": "3b9fa0f4e053a8b4181a4c7ba2a3a1916346915f65638cc4560f5961603714db", // BR13 exact native question/relation owner; actual maintained parser output.
-  "packages/platform/src/version-questions.ts": "2f1f4f05e72034c94db2b230ac67a751c08a370fcca267d8846fe99eae82befc", // BR13 exact native question/relation owner; actual maintained parser output.
+  "packages/contract/src/catalog-vocabulary.ts": "87e8a51c86fa079adde3f08f0be6dadfd17c731d1b3ee7f9d94e6fe1a8e6592c", // BR13 exact native question/relation owner; actual maintained parser output.
+  "packages/platform/src/version-questions.ts": "eefb44287cc13e9dbd11702efc7c6fd5af121bec6802bc361f35bd34efa7aded", // BR13 exact native question/relation owner; actual maintained parser output.
   "packages/platform/src/version-relations.ts": "245685492d713c42be17181a62cf9436dbe12eeffa902741c31c19640de67416", // BR13 exact native question/relation owner; actual maintained parser output.
   "packages/scope/src/http-stream.ts": "ac798ac542c6295bda6495ef9c3f46f2c78511bfb89b88ee4b2d4df7711e2168", // Retain the exact existing close capability on observed HTTP disconnect.
   "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
@@ -387,7 +387,7 @@ const pendingR8Seals = {
   "packages/client/src/session.ts": "3e4dfcbab9c9ab8585929b4c75ba01ac86c4e9ea7978f70f6bf3681af15bddb6", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "apps/sandbox/worker.ts": "6554155ed7854425c60b859d62c0a4da53e172a3be0fe3bd2cd0032f3e108e0b", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
-  "packages/client/src/application-route.ts": "8f3499a176ecfe9556fad6afac8391c89cc1ba4d561cbaee3cf1e6be8c68c6a1",
+  "packages/client/src/application-route.ts": "3ba8c4d9e680ce7ff2078bbb3067b557aece506506efc4c0a89751777ba2a300",
   "packages/scope/src/applications/bindings.ts": "b89e8155ad5479d5b4f9175b2e941ef80b54c75dc9af4a993401c544e150cd78",
 };
 const sourceOf = file => readFileSync(new URL("../" + file, import.meta.url), "utf8");
