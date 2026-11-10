@@ -1,9 +1,10 @@
 import { retainHistoricalInstallPlan } from "../../cli/test/support/historical-install-plan.ts";
 import { expect, onTestFinished, test } from "vitest";
 import { runDurableObjectAlarm } from "cloudflare:test";
-import type { Entry, Intent, Seed } from "@generalbusiness/dap-contract";
+import { env } from "cloudflare:workers";
+import type { Entry, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
-import { INVITATION_LINK, requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
+import { INVITATION_LINK, ScopeHandle, bindingTransport, declaredHandle, requestSession, secretSigner, sessionRequest, type AskedOf, type Fetch, type Kind } from "@generalbusiness/dap-client";
 import { command, memoryStore, type Context } from "../../cli/src/index.ts";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF, platform, repositoryName } from "@generalbusiness/dap-platform";
@@ -14,6 +15,7 @@ import { findLending, joining, newDeviceKey, readInvitation, ROOM_MEMBERSHIP, ty
 import { lending } from "../../../examples/lending/definition.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
 import { NO_OUTSIDE } from "../src/index.ts";
+import { api } from "../src/worker.ts";
 import { soon } from "./net.ts";
 import { reader as inspector, dispatchFixture, siteFixtureLifetime } from "./fixtures-native.ts";
 import { outsideOf, wired } from "./outside.ts";
@@ -109,11 +111,27 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     expect((await L.summary()).value).toMatchObject({ definition: LENDING_DEFINITION, status: "active",
       items: [{ type: "library", state: "open", refs: { destination: await G.at() }, parties: { "founder": { membership, member: "@neighbour" } } }] });
 
+    // Typed preparation reads this real scope. Submission remains explicit and
+    // the native membership, state and guard checks still decide every answer.
+    const opened = await lifetime.wait(() => declaredHandle(new ScopeHandle(bindingTransport(api(env.PLATFORM)), L.name, inspector), lending));
+    if (!opened.ok) throw new Error(`the lending handle refused its definition: ${opened.reason}`);
+    const handle = opened.handle;
+    const act = async <K extends Kind<typeof lending>>(who: Actor, kind: K, asked: AskedOf<typeof lending, K>) => lifetime.wait(async () => {
+      const packet = await handle.intents[kind](secretSigner(who.secret), asked, { now: timeMs(soon(0))!, lifetimeSeconds: 60 });
+      if (!packet.ok) throw new Error(`typed ${kind} preparation failed: ${packet.reason}`);
+      return handle.submit(packet.signed, [], packet.beside);
+    });
+    const did = async <K extends Kind<typeof lending>>(who: Actor, kind: K, asked: AskedOf<typeof lending, K>): Promise<number> => {
+      const answer = await act(who, kind, asked);
+      if (answer.answer !== "accepted") throw new Error(`${kind} was not accepted: ${JSON.stringify(answer)}`);
+      return answer.receipt.fact.seq;
+    };
+
     // Enrollment and the factory grant no lending action by implication.
     let pageOrdinal = 0;
     const fixtureContent = "Signed fixture page text. State agreement is not asserted for this stand-in text.";
-    const donation = async (name: string, description: string): Promise<Partial<Intent>> => ({ expected: await L.expected({ library: 0 }), fields: { name, description, page: `shelf/${(++pageOrdinal).toString(16).padStart(16, "0")}.md`, content: fixtureContent } });
-    expect(await L.act(neighbour, "donate", await donation("Big pot", "A heavy copper pot. Holds eight litres."))).toMatchObject({ answer: "refused", reason: "unauthorized" });
+    const donation = async (name: string, description: string): Promise<AskedOf<typeof lending, "donate">> => ({ fields: { name, description, page: `shelf/${(++pageOrdinal).toString(16).padStart(16, "0")}.md`, content: fixtureContent } });
+    expect(await act(neighbour, "donate", await donation("Big pot", "A heavy copper pot. Holds eight litres."))).toMatchObject({ answer: "refused", reason: "unauthorized" });
 
     // Staff is the action lending.staff on a role membership already has. set-actions
     // replaces a role's whole list, so each grant restates what the role held.
@@ -126,7 +144,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     await M.did(neighbour, "set-actions", { on: 0, expected: await M.expected({ on: 0 }), fields: { role: "member", actions: lists.member } });
     lifetime.advance(301);
 
-    const on = async (thing: number): Promise<Partial<Intent>> => ({ on: thing, expected: await L.expected({ on: thing, library: 0 }), fields: { content: fixtureContent } });
+    const on = async (thing: number): Promise<AskedOf<typeof lending, "borrow">> => ({ on: thing, fields: { content: fixtureContent } });
     const head = async () => (await L.summary()).at;
     const refused = async (answer: () => Promise<unknown>, reason: string) => {
       await settle(L, G); // Dispatch older causal tells/results only; this starts no outside effect.
@@ -137,11 +155,11 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const person = (handle: string) => ({ membership, member: handle });
 
     // 1 to 3: the neighbour donates the big pot; Nasruddin borrows it and returns it.
-    const big = await L.did(neighbour, "donate", await donation("Big pot", "A heavy copper pot. Holds eight litres."));
-    await L.did(nasruddin, "borrow", await on(big));
+    const big = await did(neighbour, "donate", await donation("Big pot", "A heavy copper pot. Holds eight litres."));
+    await did(nasruddin, "borrow", await on(big));
     expect(await L.item(big)).toMatchObject({ state: "lent", parties: { donor: person("@neighbour"), borrower: person("@nasruddin") } });
-    await refused(async () => L.act(passerby, "borrow", await on(big)), "guard-failed");
-    await L.did(nasruddin, "return", await on(big));
+    await refused(async () => act(passerby, "borrow", await on(big)), "guard-failed");
+    await did(nasruddin, "return", await on(big));
     expect(await L.item(big)).toMatchObject({ state: "available", parties: { borrower: null } });
 
     // 4: the small pot is not a thing in the library, so a return has no item to name.
@@ -149,23 +167,23 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     expect((await things()).map((thing) => thing.values["name"])).toEqual(["Big pot"]);
 
     // 5: Nasruddin donates it in his own words. The scope does not judge the description.
-    const small = await L.did(nasruddin, "donate", await donation("Small pot", "Baby born when the big pot was with me"));
+    const small = await did(nasruddin, "donate", await donation("Small pot", "Baby born when the big pot was with me"));
     expect(await L.item(small)).toMatchObject({ state: "available", parties: { donor: person("@nasruddin") }, values: { description: "Baby born when the big pot was with me" } });
 
     // 6 to 8: he borrows the big pot again and says it died. Only staff cancel.
-    await L.did(nasruddin, "borrow", await on(big));
-    await refused(async () => L.act(nasruddin, "cancel", { ...await on(big), fields: { content: fixtureContent, reason: "The pot died" } }), "unauthorized");
+    await did(nasruddin, "borrow", await on(big));
+    await refused(async () => act(nasruddin, "cancel", { ...await on(big), fields: { content: fixtureContent, reason: "The pot died" } }), "unauthorized");
     const lent = (await L.item(big)).revision;
-    const cancelled = await L.did(neighbour, "cancel", { ...await on(big), fields: { content: fixtureContent, reason: "Nasruddin says the pot died" } });
+    const cancelled = await did(neighbour, "cancel", { ...await on(big), fields: { content: fixtureContent, reason: "Nasruddin says the pot died" } });
     // A thing that is gone has left the summary, which lists live items. Its end and its reason are in the record.
     expect((await things()).map((thing) => thing.id)).toEqual([small]);
     expect((await L.entries())[cancelled]).toMatchObject({ input: { type: "act", signed: { intent: { actor: neighbour.key, kind: "cancel", on: big, fields: { content: fixtureContent, reason: "Nasruddin says the pot died" } } } } });
     expect((await L.entries())[1]!.input).toMatchObject({ type: "delivery", message: { class: "control", type: "confirm" } });
 
     // 9: the shelf is replenished. No act changes the thing that is gone.
-    const fresh = await L.did(neighbour, "donate", await donation("New big pot", "Copper, eight litres."));
+    const fresh = await did(neighbour, "donate", await donation("New big pot", "Copper, eight litres."));
     for (const [who, kind, fields] of [[nasruddin, "borrow", {}], [passerby, "return", {}], [neighbour, "cancel", { reason: "Again" }]] as const) {
-      await refused(async () => L.act(who, kind, { on: big, expected: { on: lent + 1, library: 1 }, fields: { content: fixtureContent, ...fields } }), "final");
+      await refused(async () => act(who, kind, { on: big, expected: { on: lent + 1, library: 1 }, fields: { content: fixtureContent, ...fields } }), "final");
     }
     expect((await things()).map((thing) => [thing.id, thing.state])).toEqual([[small, "available"], [fresh, "available"]]);
 
@@ -200,14 +218,14 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const libraryBeforePublish = await L.item(0), gonePage = (await L.entries())[big]!.input;
     expect(gonePage.type).toBe("act");
     const path = gonePage.type === "act" ? gonePage.signed.intent.fields["page"] : null;
-    await L.did(nasruddin, "publish", { on: 0, expected: { on: libraryBeforePublish.revision, thing: lent + 1 }, fields: { thing: big, content: fixtureContent } });
+    await did(nasruddin, "publish", { on: 0, expected: { on: libraryBeforePublish.revision, thing: lent + 1 }, fields: { thing: big, content: fixtureContent } });
     expect(await L.item(0)).toEqual(libraryBeforePublish);
     expect((await things()).some(thing => thing.id === big)).toBe(false);
     expect((await L.last()).sends).toMatchObject([{ to: await G.at(), message: { class: "request", type: "tell", body: { message: "publish-file", fields: { path, content: fixtureContent } } } }]);
 
     // Anyone may return a lent thing: the passer-by brings back what Nasruddin borrowed.
-    await refused(async () => L.act(passerby, "return", await on(small)), "guard-failed");
-    await L.did(nasruddin, "borrow", await on(small));
+    await refused(async () => act(passerby, "return", await on(small)), "guard-failed");
+    await did(nasruddin, "borrow", await on(small));
 
     // The member interface's gateway, on the same real scopes. The private store and the
     // lock are in-memory STAND-INS for the browser's; the lost reply is made by the test.
@@ -254,7 +272,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       const response = await fetch(url, init);
       if (!returned && new URL(url).pathname === `/v1/scopes/${encodeURIComponent(L.name)}/query-items`) {
         returned = true;
-        await L.did(passerby, "return", await on(small));
+        await did(passerby, "return", await on(small));
         await settle(L, G);
       }
       return response;
@@ -360,7 +378,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const older = reader.look();
     await entered;
     try {
-      await L.did(neighbour, "borrow", await on(small));
+      await did(neighbour, "borrow", await on(small));
       const newer = await reader.look();
       expect(newer).toMatchObject({ status: "current" });
       if (newer.status === "current") expect(newer.actions).toContain("lending.staff");
@@ -376,7 +394,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       const rosterRead = await reader.look();
       const rosterReadStatus = { status: rosterRead.status, reason: rosterRead.status === "behind" ? rosterRead.reason.slice(0, 160) : null };
       expect(rosterRead, JSON.stringify(rosterReadStatus)).toMatchObject({ status: "current", actions: null });
-      const returnedSmall = await L.did(neighbour, "return", await on(small));
+      const returnedSmall = await did(neighbour, "return", await on(small));
       // The historical projection reads items and history separately. Finish
       // this return's causal publication result before the visitor's read.
       // Dispatch only: no outside effect or clock advance is started here.
@@ -479,11 +497,11 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     expect((await L.summary()).value).toEqual(before.value);
 
     // 64 live things. The gone pot does not count; the 65th donation is refused until a thing is cancelled.
-    for (let n = 6; n <= 64; n++) await L.did(nasruddin, "donate", await donation(`Thing ${n}`, "One of many."));
+    for (let n = 6; n <= 64; n++) await did(nasruddin, "donate", await donation(`Thing ${n}`, "One of many."));
     expect(await things()).toHaveLength(64);
-    await refused(async () => L.act(nasruddin, "donate", await donation("Thing 65", "One too many.")), "type-full");
-    await L.did(neighbour, "cancel", { ...await on(fresh), fields: { content: fixtureContent, reason: "Dented" } });
-    await L.did(nasruddin, "donate", await donation("Thing 65", "Room again."));
+    await refused(async () => act(nasruddin, "donate", await donation("Thing 65", "One too many.")), "type-full");
+    await did(neighbour, "cancel", { ...await on(fresh), fields: { content: fixtureContent, reason: "Dented" } });
+    await did(nasruddin, "donate", await donation("Thing 65", "Room again."));
 
     // An independent reader replays the lending scope from its record, with the grants proven from membership.
     const issued = await lifetime.wait(() => requestSession(SERVICE, M.name, sessionRequest(membership, neighbour.secret, soon(60), crypto.randomUUID()), { fetch: routed as unknown as Fetch }));

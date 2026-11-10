@@ -1,0 +1,78 @@
+{
+  "request": "d5fa31c9c36fc1afb93f401b61e3b3f3b31d92f9",
+  "promise": "230f5474cedda62059b5c9f4f89d11bb61a6f638",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-source-seal-producer-v2-audit/unit",
+  "sourceHead": "5cf4209c5298fb0386cb36790c1d476811a37fd4",
+  "sourceTree": "dc0bc979b91a042c19aa286a10c393fa9f959b88",
+  "booking": "7eeac917d3c11b480729cd8d12651a9efdfbc37f",
+  "end": "ded060d8cf780345a5473cb222623ba2e78dc125",
+  "files": [
+    {
+      "path": "actual-exits.json",
+      "bytes": 298,
+      "sha256": "292a9792c0c8677f7b1266604cb70231e76548c71040fdda38a5f9b6e51fe126"
+    },
+    {
+      "path": "custody.json",
+      "bytes": 721,
+      "sha256": "f97561ae4abf0099ff6cde5265f942c3f5d5ad58f7dbfcfc71f49cd93f5b7500"
+    },
+    {
+      "path": "owner-seals.json",
+      "bytes": 2347,
+      "sha256": "972382c010a4bdee7368d04f0923f299d239aeb040698ff6af61e61704c0ee9d"
+    },
+    {
+      "path": "source-tool-fences.json",
+      "bytes": 2241,
+      "sha256": "d45d4150a36902ae5c72fa9c7c36b35e4310c7de2063fa4e240fcb9818fff661"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 1232,
+      "sha256": "1aacab3e03e1b3f676a389f881e3c90f8ef2b6289f445f14c506c12ac8350230"
+    }
+  ],
+  "outcome": {
+    "head": "5cf4209c5298fb0386cb36790c1d476811a37fd4",
+    "tree": "dc0bc979b91a042c19aa286a10c393fa9f959b88",
+    "booking": "7eeac917d3c11b480729cd8d12651a9efdfbc37f",
+    "end": "ded060d8cf780345a5473cb222623ba2e78dc125",
+    "actualProducerExit": 0,
+    "actualLauncherExit": 0,
+    "baselineSealsReproduced": 2,
+    "proposedHashLiterals": 2,
+    "appliedHashLiterals": 0,
+    "otherTableAndAssertionBytesIdentical": true,
+    "sourcePathsFixed": 4532,
+    "toolPinsFixed": 7525,
+    "sourceAndToolModesFixed": true,
+    "inputPinsFixed": 10,
+    "cleanupEmpty": true,
+    "startedUtc": "2026-11-10T12:20:59.475727+00:00",
+    "endedUtc": "2026-11-10T12:21:01.171573+00:00",
+    "outerElapsedSeconds": 1.695855458,
+    "cpu": [
+      {
+        "owner": "launcher",
+        "userSeconds": 0.679701,
+        "systemSeconds": 0.513557
+      },
+      {
+        "owner": "waitedChildren",
+        "userSeconds": 0.167424,
+        "systemSeconds": 0.159054
+      }
+    ],
+    "qualification": "One maintained sourceSeal metadata-parser run. It extracts the exact maintained function and imports only Rolldown. The audit does not execute a producer, parser, compiler, test, application, build, control or capture. Numeric proposals are not applied; no security test or gate result follows."
+  },
+  "privateArchive": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-source-seal-producer-v2-audit/private-archive",
+    "archiveIndexSha256": "a56b8918c2027ab6efd2eba1c4744df6b87f207b7f1cd55aac8166302f3b087d",
+    "rawRunFiles": 17,
+    "scratchValueFiles": 2,
+    "retentionThrough": "2026-12-10"
+  },
+  "readonlyScope": "Only new copies are sealed. Complete originals remain unchanged. Private files0400/directories0500; public files0444/directories0555.",
+  "qualification": "One maintained sourceSeal metadata-parser run. It extracts the exact maintained function and imports only Rolldown. The audit does not execute a producer, parser, compiler, test, application, build, control or capture. Numeric proposals are not applied; no security test or gate result follows."
+}

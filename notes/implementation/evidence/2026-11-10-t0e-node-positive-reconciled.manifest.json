@@ -1,0 +1,294 @@
+{
+  "kind": "E retained Node positive plus original analyzer/controller stop",
+  "head": "3d345cfae86257cfbc297e5967917ba686410ba3",
+  "tree": "93f6882911cf4a13a8ca61376f5682ed459c0830",
+  "booking": "e36d406b784467927fd6b6c5bc1d92b1d07b1031",
+  "end": "6b9d26064f7e0a9e4d9fec2b2cb0eddfe5745ee4",
+  "reconciliationAct": "ea3b6f84ebcfce5dffd88ebd7ca145c96c49b665",
+  "actualExits": {
+    "node": 0,
+    "inner": 2,
+    "outerDriver": 2,
+    "launcher": 2,
+    "correctedMetadataAnalyzer": 0
+  },
+  "nodePassedCases": 12,
+  "unknownWrapperObservations": 3,
+  "plainStatus": "UNRUN",
+  "nativeStatus": "UNRUN",
+  "nodeMustNotRepeat": true,
+  "safeFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-node-review/SHA256SUMS",
+      "sha256": "db2ceb9d90fe1cd170ff608de65490c606ad9e16dbfb63525001141afb8aa60d",
+      "bytes": 342,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-node-review/node-positive.json",
+      "sha256": "d4eff89b2e8abfd9ad89f55fde9797f3714e96fc59a792fac475910efb977ed5",
+      "bytes": 8438,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-node-review/node-summary.json",
+      "sha256": "42fab80e2b24b68e262e6041729c2b0305245428540b29f4535c5f8405fef51b",
+      "bytes": 1030,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-node-review/raw-input-index.json",
+      "sha256": "b095a3441042a5c67a986143934ac2f27bea01db154d8bc4c863b60b01d89c30",
+      "bytes": 9716,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-node-review/source-custody.json",
+      "sha256": "e58cb2e16e8ace87f9f6a1c00997a3152c580d6317a8ce606a0060d8a29e6cd6",
+      "bytes": 5359,
+      "sealedMode": 256
+    }
+  ],
+  "rawFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/active-source-argv.json",
+      "sha256": "e54ef7674263ba12323e9edc022686cd3a3be9db5f279b9f7a20457bca2f7730",
+      "bytes": 606,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/active-source-started.json",
+      "sha256": "29641cc70c6c39324a3d39a4d0824ff45d1090194be9e9cdad96219ce59a5a2d",
+      "bytes": 44,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/active-source.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/active-source.jsonl",
+      "sha256": "31dae5b6d458ff21f3c6bb14446ed5014f4d7a26ef4d392f3d90b4799256b829",
+      "bytes": 28545,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/active-source.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/active-source.stdout",
+      "sha256": "04c01f86a42948198085ca03fd2f4eeb4695f49da7020626a0640cf47311913e",
+      "bytes": 3046,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/config-staging.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "bytes": 3,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/driver.exit",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/guards.json",
+      "sha256": "5d7c2ff36301440435f9f6ebe499b36fe09af162d4eabbd140e92a02ec24201a",
+      "bytes": 2713,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/inner.py",
+      "sha256": "46eba44e2116d340c7c671928e22f93d006e735df7fec24dfbdc4894b0fb3650",
+      "bytes": 15043,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/launch.json",
+      "sha256": "87b6bfd09579c085eb5c374476aab0d51fb8c57766a2def431e70507f4c422b0",
+      "bytes": 575,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/node-compile-cache/v26.13.0-arm64-310b2ce3-501/1613ae9f",
+      "sha256": "4530e4199da2ab3e2f2e0ddd31e10bf94d7cc3da07818e03a461b9b8ad4f9f4f",
+      "bytes": 5084,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/node-compile-cache/v26.13.0-arm64-310b2ce3-501/30a0d081",
+      "sha256": "a7f354c6848db18a8eee023f22751d9da4c465ba5db2cdfc16ca7e884bb0db44",
+      "bytes": 8716,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9f6291c9",
+      "sha256": "fe20a4dfc9904ba705e4744d4d658c3c24e3e42eb24c3c5721b74f2730827d88",
+      "bytes": 1084,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/result.json",
+      "sha256": "da4c5c2b07138feec6e329cbd38fc19cc49fb77af608096f792ebbe3b420bed3",
+      "bytes": 6034,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/steps.json",
+      "sha256": "b4aa49234b3357cf2d72e467f764bf1a6841b6d51e8e848e1e53a40bee170b9a",
+      "bytes": 2688,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/actualdriver.exit",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/after.json",
+      "sha256": "30e29c1b915d1a64c748be6ec7de7efc1481ca85eb93d58426a555f2cf73e133",
+      "bytes": 535,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/before.json",
+      "sha256": "30e29c1b915d1a64c748be6ec7de7efc1481ca85eb93d58426a555f2cf73e133",
+      "bytes": 535,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/cleanup.json",
+      "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+      "bytes": 109,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/driver.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/driver.stdout",
+      "sha256": "c0fcd4d0f9f47c4a92acaa2d6b447a4a603c71490c3259af4a1a7ef59e684d2d",
+      "bytes": 200,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/launcher.exit",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/launcher.json",
+      "sha256": "96f64cc455f6f08bd33a8d7dd2c2c47a8107dd51c5537f4ca57640c167861057",
+      "bytes": 1276,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/outer-timing.json",
+      "sha256": "22e533941582bd83614d3f9c0569c54ddfa83f0f13f85eb27f391e7935a2b8a9",
+      "bytes": 535,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/result.json",
+      "sha256": "e233edf302be52946ad1858ee924ea20b78c0698b4fb18ea6e65c735495b7a96",
+      "bytes": 251,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch/started.json",
+      "sha256": "c758d70d1c0cc32dadb4bdbb8f67e86654628edab3c58b4acf42092a9513b905",
+      "bytes": 44,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-node-analysis-20261110/actual-analyzer.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-node-analysis-20261110/argv.json",
+      "sha256": "66efa9aeef2f81f48fcc9bdf940492209416d6f0ace6cf7d714f2b11adb0c48e",
+      "bytes": 706,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-node-analysis-20261110/classification.json",
+      "sha256": "d4eff89b2e8abfd9ad89f55fde9797f3714e96fc59a792fac475910efb977ed5",
+      "bytes": 8438,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-node-analysis-20261110/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "capturedMode": 420,
+      "sealedMode": 256
+    }
+  ],
+  "rawDirectories": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/node-compile-cache",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused/node-compile-cache/v26.13.0-arm64-310b2ce3-501",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-positive-focused-launch",
+      "sealedMode": 320
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-node-analysis-20261110",
+      "sealedMode": 320
+    }
+  ],
+  "qualification": "Split evidence: twelve existing Node cases passed; three isolated-file wrapper observations remain unknown. The original controller failed and remains failed. The reviewed corrected metadata analysis ran without repeating Node. Plain35 and Native1 remain unrun; no complete focus, gate, capture, browser or deployment claim."
+}
