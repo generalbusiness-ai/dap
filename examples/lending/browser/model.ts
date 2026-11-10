@@ -3,13 +3,19 @@
  * a declared projection, or historical complete record; nothing here signs or sends.
  */
 import type { ApplicationProjectionData, Entry, FactRef, FieldValue, Item, KeyId, MemberRef, Summary } from "@generalbusiness/dap-contract";
-import { applicationItemSnapshot } from "@generalbusiness/dap-client";
+import { applicationItemSnapshot, expectedOf, shapeDeclaredAct, type AskedOf, type Kind, type Members } from "@generalbusiness/dap-client";
 import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
 import { ROLE_LISTS, isActions, type Role } from "@generalbusiness/dap-platform/membership-actions";
 import { shelfPage, shelfPath, thingsOf, type RecordPointer, type Thing } from "../shelf.ts";
 import { lendingStateProjection } from "./projection.ts";
+import { lending, library as declaredLibrary, thing as declaredThing } from "../definition.ts";
+import { annotatedRefusal, proposalWords } from "./annotations.ts";
 
-export type LendingAct = "donate" | "borrow" | "return" | "cancel" | "publish";
+type Definition = typeof lending;
+export type LendingAct = Kind<Definition>;
+type Fields<K extends LendingAct> = Members<Definition["acts"][K]["fields"]>;
+export type ProposalInput = Partial<Pick<Fields<"donate">, "name" | "description"> & Pick<Fields<"cancel">, "reason"> & Pick<Fields<"publish">, "thing">>;
+const actKinds = Object.keys(lending.acts).filter((kind): kind is LendingAct => kind !== lending.genesis && Object.hasOwn(lending.acts, kind));
 /** A thing with its retained revision; publish reads a gone thing without changing it. */
 export interface ShownThing extends Omit<Thing, "seq"> { /** Present only for the historical complete-record adapter. */ seq?: number }
 export interface LendingView {
@@ -37,7 +43,9 @@ export function journalRows(entries: readonly Entry[]): { seq: number; kind: str
   });
 }
 
-export const NAME_BYTES = 80, DESCRIPTION_BYTES = 1000, REASON_BYTES = 280;
+export const NAME_BYTES = lending.acts.donate.fields.name.max;
+export const DESCRIPTION_BYTES = lending.acts.donate.fields.description.max;
+export const REASON_BYTES = lending.acts.cancel.fields.reason.max;
 const bytes = (text: string): number => new TextEncoder().encode(text).length;
 const handle = (party: unknown): string | null =>
   typeof party === "object" && party !== null && typeof (party as { member?: unknown }).member === "string" ? (party as { member: string }).member : null;
@@ -94,7 +102,12 @@ export function lendingProjectionActivity(data: ApplicationProjectionData, view:
 
 /** The acts a thing's state allows. Whether the signer may cancel is membership's to say; the scope answers. */
 export function actsFor(thing: ShownThing): LendingAct[] {
-  return thing.state === "available" ? ["borrow", "cancel", "publish"] : thing.state === "lent" ? ["return", "cancel", "publish"] : ["publish"];
+  return actKinds.filter(kind => {
+    const act = lending.acts[kind];
+    const readsThing = act.step !== "open" && act.on === declaredThing.name
+      || Object.values(act.also).some(binding => binding.item === declaredThing.name);
+    return readsThing && act.guards.every(guard => !("state" in guard) || guard.of !== undefined && guard.of !== "on" || guard.state.includes(thing.state));
+  });
 }
 
 /** This key's active member in an authenticated membership summary.
@@ -134,52 +147,52 @@ export function membershipActions(summary: Summary, who: MemberRef, key: KeyId):
 
 /** Unknown or stale standing offers no cancellation. Native authority still decides every submitted act. */
 export function offeredActs(thing: ShownThing, actions: readonly string[] | null): LendingAct[] {
-  return actsFor(thing).filter(kind => kind !== "cancel" || actions?.includes("lending.staff") === true);
+  return actsFor(thing).filter(kind => kind !== "cancel" || actions?.includes(lending.acts.cancel.grant) === true);
 }
 
-export interface Proposal { kind: LendingAct; on: number | null; expected: Record<string, number>; fields: Record<string, FieldValue> }
-export type Proposed = { ok: true; proposal: Proposal } | { ok: false; reason: string };
-const no = (reason: string): Proposed => ({ ok: false, reason });
+/** Validate the selected fields once against the authored act, then derive its bound revisions. */
+function proposed<K extends LendingAct,F extends Fields<NoInfer<K>>>(view:LendingView,kind:K,asked:AskedOf<Definition,NoInfer<K>> & {fields:F}) {
+  const fields:F=asked.fields;
+  const shaped = shapeDeclaredAct(lending, kind, asked);
+  const items = [
+    ...(view.library ? [{ ...view.library, type: declaredLibrary.name, refs: {} }] : []),
+    ...view.things.map(thing => ({ id: thing.id, revision: thing.revision, type: declaredThing.name, refs: {} })),
+  ];
+  return { ok: true, proposal: { kind, on: shaped.on, expected: expectedOf(lending.acts[kind], items, shaped.on, shaped.fields), fields } } as const;
+}
+const no = (reason: string) => ({ ok: false, reason }) as const;
 
 /** The exact act to sign, or why there is nothing to sign. A refusal here sends nothing. */
-export function propose(view: LendingView, kind: LendingAct, input: { thing?: number; name?: string; description?: string; reason?: string } = {}, author = "", random: () => Uint8Array = () => crypto.getRandomValues(new Uint8Array(8))): Proposed {
-  if (!view.library) return no("The library could not be read.");
-  const expectedLibrary = { "library": view.library.revision };
+export function propose(view: LendingView, kind: LendingAct, input: ProposalInput = {}, author = "", random: () => Uint8Array = () => crypto.getRandomValues(new Uint8Array(8))) {
+  const unavailable = (reason: Parameters<typeof proposalWords>[1]) => no(proposalWords(kind, reason));
+  if (!view.library) return unavailable("library-unavailable");
   if (kind === "donate") {
     const name = (input.name ?? "").trim(), description = (input.description ?? "").trim();
-    if (!name) return no("Give the thing a name.");
-    if (!description) return no("Describe the thing.");
-    if (bytes(name) > NAME_BYTES) return no(`The name is too long: at most ${NAME_BYTES} bytes.`);
-    if (bytes(description) > DESCRIPTION_BYTES) return no(`The description is too long: at most ${DESCRIPTION_BYTES} bytes.`);
+    if (!name) return unavailable("name-required");
+    if (!description) return unavailable("description-required");
+    if (bytes(name) > NAME_BYTES) return unavailable("name-too-long");
+    if (bytes(description) > DESCRIPTION_BYTES) return unavailable("description-too-long");
     const page = shelfPath(random());
     const content = shelfPage({ id: 0, page, revision: 1, state: "available", name, description, donor: author, borrower: null, reason: null }, view.record);
-    return { ok: true, proposal: { kind, on: null, expected: expectedLibrary, fields: { name, description, page, content } } };
+    return proposed(view, kind, { fields: { name, description, page, content } });
   }
   const thing = view.things.find((candidate) => candidate.id === input.thing);
-  if (!thing) return no("That thing is not in the library.");
-  if (kind === "publish") return { ok: true, proposal: { kind, on: view.library.id, expected: { on: view.library.revision, thing: thing.revision }, fields: { thing: thing.id, content: shelfPage(thing, view.record) } } };
-  if (thing.state === "gone") return no("That thing is gone.");
-  if (!actsFor(thing).includes(kind)) return no(kind === "borrow" ? "That thing is already lent." : "That thing is not lent.");
-  const fields: Record<string, FieldValue> = {};
+  if (!thing) return unavailable("thing-unavailable");
+  if (kind === "publish") return proposed(view, kind, { on: view.library.id, fields: { thing: thing.id, content: shelfPage(thing, view.record) } });
+  if (thing.state === "gone") return unavailable("gone");
+  if (!actsFor(thing).includes(kind)) return unavailable(kind === "borrow" ? "lent" : "not-lent");
   if (kind === "cancel") {
     const reason = (input.reason ?? "").trim();
-    if (!reason) return no("Say why the thing is gone.");
-    if (bytes(reason) > REASON_BYTES) return no(`The reason is too long: at most ${REASON_BYTES} bytes.`);
-    fields["reason"] = reason;
+    if (!reason) return unavailable("reason-required");
+    if (bytes(reason) > REASON_BYTES) return unavailable("reason-too-long");
+    const after = { ...thing, state: "gone" as const, borrower: null, reason };
+    return proposed(view, kind, { on: thing.id, fields: { reason, content: shelfPage(after, view.record) } });
   }
-  const after = { ...thing, state: kind === "borrow" ? "lent" as const : kind === "return" ? "available" as const : "gone" as const, borrower: kind === "borrow" ? author : null, reason: kind === "cancel" ? String(fields["reason"]) : thing.reason };
-  fields["content"] = shelfPage(after, view.record);
-  return { ok: true, proposal: { kind, on: thing.id, expected: { on: thing.revision, ...expectedLibrary }, fields } };
+  const after = { ...thing, state: kind === "borrow" ? "lent" as const : "available" as const, borrower: kind === "borrow" ? author : null };
+  return proposed(view, kind, { on: thing.id, fields: { content: shelfPage(after, view.record) } });
 }
+export type Proposed = ReturnType<typeof propose>;
+export type Proposal = Extract<Proposed, { ok: true }>["proposal"];
 
 /** A refusal in plain words, with the reason the scope gave. */
-export function refusalWords(kind: LendingAct, reason: string): string {
-  const said = reason === "unauthorized" ? (kind === "cancel" ? "Only staff can cancel a thing." : "Your seat in this room does not allow that.")
-    : reason === "guard-failed" ? (kind === "borrow" ? "That thing is already lent." : kind === "return" ? "That thing is not lent." : "That thing cannot be cancelled now.")
-      : reason === "revision-moved" ? "Someone changed that thing first. Look again, then decide."
-        : reason === "type-full" ? "The library is full: it holds 64 things. Staff can cancel one to make room."
-          : reason === "final" ? "That thing is gone."
-            : reason === "bad-field" ? "The library did not accept that text."
-              : "The library refused.";
-  return `${said} (${reason})`;
-}
+export const refusalWords = annotatedRefusal;

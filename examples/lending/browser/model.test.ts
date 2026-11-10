@@ -8,6 +8,16 @@ import { applicationProjectionQueries, isApplicationJournalSource, projectApplic
 import { lending } from "../definition.ts";
 import { lendingStateProjection } from "./projection.ts";
 
+/** Compiler-only examples. No test or fixture calls this function. */
+export function checkProposalTypes(view: ReturnType<typeof lendingView>): void {
+  // @ts-expect-error Genesis does not name a browser action.
+  propose(view, "establish");
+  // @ts-expect-error The authored name field is text.
+  propose(view, "donate", { name: 3 });
+  // @ts-expect-error Annotation keys come from the authored act names.
+  refusalWords("not-an-act", "unauthorized");
+}
+
 /** Fold-derived query replies are STAND-INS for native read ownership. */
 function projected(s: Ledger) {
   const at = { seq: s.last.seq, hash: s.entries.at(-1)!.hash };

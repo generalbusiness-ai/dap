@@ -5,12 +5,22 @@ import type { Entry, Item, MemberRef, Receipt, ScopeRef, Summary } from "@genera
 import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
-import { assignedTurn, canCommit, countingView, proposal } from "./model.ts";
+import { assignedTurn, canCommit, countingView, proposal, type CountingView } from "./model.ts";
 import { nativeGateway, type CommandStore } from "./client.ts";
 import { scriptedCounterProjection } from "./projection-fixture.ts";
 import { activeAttempt, markActive, type DispatchPhase } from "./journal.ts";
 import { attemptDispatcher } from "./dispatcher.ts";
 import type { ActorIdentity } from "./voice-controller.ts";
+
+/** Compiler-only examples. No test or fixture calls this function. */
+export function checkProposalTypes(view: CountingView, actor: ActorIdentity): void {
+  // @ts-expect-error Genesis does not name a command on an existing scope.
+  proposal(view, actor, "establish");
+  // @ts-expect-error Failure reasons come from the authored enum.
+  proposal(view, actor, "fail", undefined, { reason: "not-a-failure" });
+  // @ts-expect-error The participant field is an authored item ID.
+  proposal(view, actor, "activate", undefined, { participant: "first" });
+}
 
 async function fixture(joined=true) {
   const secret=new Uint8Array(32).fill(51),definition=COUNTING_COMMITMENTS_DEFINITION;

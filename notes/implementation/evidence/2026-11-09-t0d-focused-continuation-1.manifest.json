@@ -1,0 +1,171 @@
+{
+  "qualification": "Independent metadata-only audit; no compiler, test, browser, application import or build ran. Earlier failed attempt remains failed at its own exact source. Native and projection witnesses do not claim a real DOM interaction. Value-print comparison and final gate remain separate owed evidence.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1-audit",
+  "checkpoint": {
+    "commit": "dcfa66866d842dd4a34106ac339c5d24025c17e6",
+    "tree": "6b854d7e64c2a56a77e04e530b96cc55c306b8cd"
+  },
+  "fileCount": 6,
+  "sha256Sums": "5a1a65f8ee8e8cac5de528cb6c2c41c872811cbf74d63338c0a8ac857bbcec74",
+  "files": [
+    {
+      "path": "case-identities.json",
+      "bytes": 16833,
+      "sha256": "532c04e6c79c7f2a4a39a714b6150064f2859b4cd28c497e8cacaa930d8c0453"
+    },
+    {
+      "path": "focus-reconciliation.json",
+      "bytes": 7164,
+      "sha256": "37d5d923669a364e1fe733d7743859f7f8413a77ae2615daaaf5173c2c428937"
+    },
+    {
+      "path": "frozen-inputs.json",
+      "bytes": 788803,
+      "sha256": "4deed085026eae3cc691ab8491bc20faac5d732ba2cdd98e06f6573dafc78242"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 12045,
+      "sha256": "5e946569f4af2d61da2ed0b9eb1c51ade854fe32ab24642b29248a9416f42ae9"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 642,
+      "sha256": "a72fd6ab05557063a3619d0e33e21ec001dd289e085636063730519a5a713019"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1",
+      "payloadFileCount": 296,
+      "fileCount": 297,
+      "payloadBytes": 6786990,
+      "sha256Sums": "4a9e097495cafb470ed6152534cff1850de723fbfe2d9230b9ecaefc614cdad4",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 1997,
+      "sha256Sums": "6f31f1a3d66cf14e6fac60fbdf0080805406602d12f4a7ea0dd8e5af1fb61a77",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    }
+  ],
+  "withheldOutputs": [
+    {
+      "name": "plain:context-00",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/examples/lending/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1/pipeline/context-00.log",
+      "bytes": 29,
+      "sha256": "cb8dc7a2b118da50f368af75b43fac786650db7a11653c7292146607ecd69b3f"
+    },
+    {
+      "name": "plain:context-01",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/examples/lending/browser/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1/pipeline/context-01.log",
+      "bytes": 29,
+      "sha256": "3710c9355883fe9e3892d55fce94b4efe0f9bf182bc4e07f399e5e80922dd3e0"
+    },
+    {
+      "name": "plain:context-02",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/apps/counter/browser/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1/pipeline/context-02.log",
+      "bytes": 29,
+      "sha256": "d9fea4258e0cec95faea746008858b72d13510767276f436a3344234dd23d86f"
+    },
+    {
+      "name": "plain:context-03",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/packages/scope/tsconfig.test.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1/pipeline/context-03.log",
+      "bytes": 29,
+      "sha256": "1b97d8c678be8c51a87285bd420795d386c0e8d947ee86726bef450bd37547be"
+    },
+    {
+      "name": "plain:body",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/vitest/vitest.mjs",
+        "run",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/examples/lending/browser/model.test.ts",
+        "--config",
+        "/private/tmp/artroom-t0d-focused-continuation-1-20261109.config.mts",
+        "--bail=1",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=verbose",
+        "--reporter=json",
+        "--reporter=/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/scripts/focused-check.mjs",
+        "--outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1/pipeline/vitest.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1/pipeline/body.log",
+      "bytes": 1029,
+      "sha256": "d254a892d26da6655141df3bd39a3a0751f7824fb0a20825ff555b0d28e0aa29"
+    },
+    {
+      "name": "native:body",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/vitest/vitest.mjs",
+        "run",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/packages/scope/test/maintained-application-projections.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/packages/scope/test/lending.test.ts",
+        "--config",
+        "/private/tmp/artroom-t0d-native-focused-continuation-1-20261109.config.mts",
+        "--bail=1",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=verbose",
+        "--reporter=json",
+        "--reporter=/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/scripts/focused-check.mjs",
+        "--outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1/native-pipeline/vitest.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1/native-pipeline/body.log",
+      "bytes": 14680,
+      "sha256": "fd9744f9734e7f7366494c49c574baf654126c1befd91ed695e7f601dbca7fa6"
+    },
+    {
+      "name": "counting",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/apps/counter/scripts/test-browser.mjs"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-focused-continuation-1/counting.stdout",
+      "bytes": 6880,
+      "sha256": "04aaee150c9375561c4b8b95e029bd562bb09ad66f36ef6081942c4345a36c1c"
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}
