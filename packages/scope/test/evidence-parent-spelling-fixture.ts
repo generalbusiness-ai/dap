@@ -1,6 +1,6 @@
 /** TEST proof rebasing only. The caller first obtains nine actual Native facts.
  * Re-signing a copied factory does not claim that its judge ran again. */
-import type { Digest, Entry, FactRef, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, deliveryCauseDigest, factRefOf, intentDigest, isFactRef, isRecord, isScopeRef, isSeed, messageDigest, parseStrict, same, scopeIdOf, signIntent, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isEntryOf, sentBy, type Fetched } from "@generalbusiness/dap-derive";
 import { evidenceBindingDigest, readEvidenceBinding } from "@generalbusiness/dap-platform";

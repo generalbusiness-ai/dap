@@ -15,7 +15,7 @@ test("real old and canonical evidence parents keep native incident identity whil
   ask.tell.to = { ...ask.tell.to, of: "on" }; restored++;
   for (const kind of ["request-check", "review-verdict"]) {
     for (const guard of earlier.acts[kind]!.guards) {
-      if (guard.of !== "also.earlier" || !("equals" in guard) || !isRecord(guard.equals.a) || typeof guard.equals.a["slot"] !== "string") continue;
+      if (guard.of !== "also.earlier" || !("equals" in guard) || !isRecord(guard.equals.a) || !("slot" in guard.equals.a) || typeof guard.equals.a["slot"] !== "string") continue;
       guard.equals.a = { slot: guard.equals.a["slot"], of: "also.earlier" }; restored++;
     }
   }
