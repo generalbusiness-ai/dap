@@ -18,6 +18,7 @@ import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT a
 import { DIRECTORY_OF } from "./register.ts";
 import { SIBLINGS_OF } from "./directory.ts";
 import { platform } from "./native-catalog.ts";
+import { answersVersionQuestion } from "./version-questions.ts";
 
 const CLIINVITATIONDIRECTORIESFORMEMBERSHIP_ROWS: Readonly<Record<string, readonly PlatformDefinition[]>> = {
   "platform:membership@2": ["platform:directory@3", "platform:directory@7"],
@@ -125,7 +126,7 @@ export const deploymentCreationDefaults = (): readonly PlatformDefinition[] => [
 
 /** Session birth lookup preserves SIBLINGS_OF order and shared child pins. */
 export function authoritySessionBirthDirectories(kind: string, pin: string | undefined): readonly PlatformDefinition[] {
-  if (kind === "commons" && pin === CC.commons) return [CC.directory];
+  if (kind === "commons" && answersVersionQuestion(pin, "authoritySessionBirthCommons")) return [CC.directory];
   if (kind !== "destination" && kind !== "rules") return [];
   return Object.keys(SIBLINGS_OF).filter(named => platform(named) && SIBLINGS_OF[named]![kind] === pin) as PlatformDefinition[];
 }

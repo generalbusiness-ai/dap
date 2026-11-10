@@ -43,15 +43,19 @@ cover this release obligation.
 
 ## Pending integration and validation
 
-Authority's three predicates and its directory-birth relation remain held
-until R3b lands. A scratch patch targets B's frozen authority source at
-`1fe7b6cf`; it preserves admission, caching and per-key cancellation code.
-The shared source seals also await the exact merged source.
+Authority's three predicates now use the named owners after the merge of
+landed main `f3ddcc06`. The applied scratch patch matched B's frozen
+authority source at `1fe7b6cf` exactly. Its own-standing and unpublished
+branch readers ask their separate questions. The directory-birth relation
+asks the Commons question inside the catalog. B's admission, caching and
+cancellation code stays intact. The shared source seals await the parent's
+review of actual parser output for this merged source.
 
-The prepared focused ledger at `429eb1d287` lists 454 Vitest cases and eight
-Node cases. Its source analysis selects 38 compiler contexts. The export
-repair adds the existing public-release module owner to the next ledger.
-Current main integration must determine the final counts and source hashes.
+The prepared focused ledger at `913eff93a1` lists 454 Vitest cases and
+13 Node cases, including the existing public-release module owner. Its
+source analysis selects 38 compiler contexts. The merged source needs a
+fresh ledger and source hashes. C owns the separate Git `./diff` release
+metadata repair; BR13 must inherit it before running the SDK owner.
 
 The owned APFS dependency copy retains the matching lock stamp, real
 namespace and cache directories, and relative workspace links. No package

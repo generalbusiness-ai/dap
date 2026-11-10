@@ -6,7 +6,7 @@ import type { Config, PlannedInstall } from "./store.ts";
 import { canonicalize, intentDigest, isReceipt, isScopeId, isSignedIntentShape, parseStrict, scopeIdOf, textDigest, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { create, signedIntent, type Signing } from "@generalbusiness/dap-client";
 import { type Digest, type KeyId, type PlatformDefinition, PROPOSED_BOUNDS, type ScopeId, type SignedIntent } from "@generalbusiness/dap-contract";
-import { CLI_INSTALL_REGISTERS as INSTALL_COHORTS, answersVersionQuestion, ARCHIVE_DEVICE_APPLICATION_COHORT, NEWEST, platform, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { CLI_INSTALL_REGISTERS, answersVersionQuestion, ARCHIVE_DEVICE_APPLICATION_COHORT, NEWEST, platform, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 
 const NEW_REGISTER = NEWEST["platform:register"]!;
 
@@ -18,6 +18,8 @@ export type InstallCohort = "own-agent" | "failed-claim" | "repository-binding" 
 export type RegisterPolicy = "keys" | "open";
 
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort; registerPolicy?: RegisterPolicy }
+
+const INSTALL_COHORTS = CLI_INSTALL_REGISTERS;
 
 /** New plans only. Historical selectors remain in INSTALL_COHORTS for retained custody.
  * The owning test pins these register versions to Scope's CREATION_COHORTS. */
