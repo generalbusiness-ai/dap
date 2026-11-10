@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c005f898ab5513f7ef120b19d6d69b2cefbe6f58","text":"Merge retired a covered predecessor; the successor is at packages/client/src/forms.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c060ad980467f6482902b2b00ecdc4feca3ece74","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0e-mutant-only-control.manifest.json."}
