@@ -529,7 +529,7 @@ export function timed<I extends ItemDef>(on: I, spec: { states: readonly States<
 // ================================================================ the definition
 
 type ItemsOf<L extends readonly ItemDef[]> = { [I in L[number] as I["name"]]: I["type"] };
-type NamedActs<N extends string, A extends Record<string, ActType>> = { [K in keyof A & string]: A[K] & NamedAct<N, K> };
+type NamedActs<N extends string, A extends Record<string, ActType>> = { [K in keyof A & string]: A[K] & Pick<NamedAct<N, K>, typeof ACT_NAME> };
 interface Declarations { grants?: readonly string[]; reasons?: readonly string[]; diagnostics: readonly Diagnostic[] }
 type DeclaredMetadata = { readonly [DECLARATIONS]?: Declarations };
 
