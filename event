@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7d1028f88430bd552ba3a55a37634d8f7454529c","text":"Merge retired a covered predecessor; the successor is at scripts/public-release.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7e1af7c8a2e287932706acb6ff29283a6e74621f","text":"Merge retired a covered predecessor; the successor is at packages/define/test/list-elements.types.ts."}
