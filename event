@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cef2b33716a6e835ad0ea65d3511043f519cdcb5","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/stage-origin.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d0e800c7bba2a2bafbeb718b48e37e14aec598c2","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-br13-browser-ci.manifest.json."}
