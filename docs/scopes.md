@@ -80,7 +80,7 @@ A definition the platform supplies in code has a name and a version
 them. It does not supply `platform:task`. A change to a platform
 definition's data or rules makes a new version, and a shipped version does
 not change. The catalog (`VERSIONS`, in
-`packages/platform/src/native-catalog.ts`) holds 88 versions, and
+`packages/platform/src/native-catalog.ts`) holds 100 versions, and
 `platform(name)` resolves any of them. A scope pins its version in its seed,
 and that version judges and replays it for as long as it exists. Replay needs
 the code of those versions: see
@@ -954,7 +954,8 @@ native receiver reserved for it, and suppression grants no license. A native ite
 source order. Every decision whose result depends on the order of two
 scopes' acts belongs to one scope, where its journal is the order. The
 [sequenced level](../notes/2026-10-18-sequenced-level-and-order-scope.md)
-design note adds a level for scopes that need a shared order.
+design note adds a level for scopes that need a shared order. That level
+is not built.
 
 **Diagnoses.** When a request cannot be delivered, the sender stops and
 writes a `diagnosis` entry with its attempt log. There are two findings.

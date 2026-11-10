@@ -83,9 +83,10 @@ act. Due deadlines can take effect first, so the journal's head can still
 advance before the refusal.
 
 Tools and commands report these outcomes in their own words. The answer
-`accepted`, from the command line and MCP, and the judgment `write`,
-from the in-memory test scope, both mean the act took effect. Two other
-answers say nothing about the outcome: `unavailable`, and a lost reply.
+`accepted` from MCP, the line `Took effect` from `dap act`, and the
+judgment `write` from the in-memory test scope all mean the act took
+effect. Two other answers say nothing about the outcome: `unavailable`,
+and a lost reply.
 [The life of an act](life-of-an-act.md) says what to do after each.
 
 ## 7. Member and keys
@@ -165,7 +166,7 @@ holds for that coverage and those trusts. It is in
 
 ## Source
 
-Checked against main `b0af01d2` on 1 November 2026. Sources: the types in
+Checked against main `6bfb6e16` on 10 November 2026. Sources: the types in
 [packages/contract](../../packages/contract/src), the judges in
 [packages/derive](../../packages/derive/src), and the platform definitions
 in [packages/platform](../../packages/platform/src). The room's own terms,

@@ -158,13 +158,16 @@ outside Git credential.
 
 ## Install a maintained application
 
-Counter and Lending are signed application packages. The Worker serves their
-screens through the route
+No room that you create on this Worker installs Counter or Lending. They
+are ordinary signed application packages, and new room creation offers no
+cohort that installs ordinary packages. The steps below apply only to an
+existing historical `declared-application` room. In a new room, run a
+definition on its own, as [Run your app](run-your-app.md) shows.
+
+The Worker serves an installed package's screens through the route
 `/applications/<directory>/<install-item>/<presentation>/`.
 
-New room creation offers no cohort that installs ordinary application
-packages such as Counter or Lending. These steps apply to an existing
-`trusted-application` room. Before you install an application, configure
+Before you install an application in an existing room, configure
 the [private application content bucket and exact release trust](deploy.md#trusted-application-screens).
 
 1. Check and pack the [Counter](../apps/counter/APPLICATION.md) or

@@ -275,7 +275,7 @@ of the lanes' own pages.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+Checked against main `6bfb6e16` on 10 November 2026. Sources:
 [Worker routes](../packages/scope/src/worker.ts),
 [turns](../packages/scope/src/turn.ts),
 [entries](../packages/contract/src/entry.ts),

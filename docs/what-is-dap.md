@@ -153,7 +153,7 @@ the configuration file and key in the room's browser page. To run a service of y
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+Checked against main `6bfb6e16` on 10 November 2026. Sources:
 [the entry and its inputs](../packages/contract/src/entry.ts),
 [the five answers](../packages/contract/src/result.ts),
 [the judges](../packages/derive/src/index.ts),
