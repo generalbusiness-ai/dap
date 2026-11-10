@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8eb35781c20181306924ee8cc1086e90e6352e06","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-t1-gate1-failure.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:925f846ccf6b91f86252a77b7db435ae2014da3e","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/rule/evaluator.ts."}
