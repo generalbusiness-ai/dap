@@ -1,4 +1,4 @@
-// Eight portable SDK packages only. No package loading or external service calls here.
+// Nine portable SDK packages only. No package loading or external service calls here.
 import { createHash } from "node:crypto";
 import { moduleSpecifierSpans } from "./public-release-modules.mjs";
 import { execFileSync } from "node:child_process";
@@ -28,6 +28,7 @@ const GIT_SOURCE_EXPORTS = Object.freeze({
   "./http-read": "./src/http-read.ts", "./archive-policy": "./src/archive-policy.ts",
   "./journal-reader": "./src/journal-reader.ts", "./journal-local": "./src/journal-local.ts",
   "./journal": "./src/journal.ts", "./application": "./src/application.ts",
+  "./diff": "./src/diff.ts",
 });
 export const nameOf = (dir) => `@generalbusiness/dap-${dir}`;
 export const digest = (bytes, algorithm = "sha256") => createHash(algorithm).update(bytes).digest("hex");

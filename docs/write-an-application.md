@@ -30,6 +30,103 @@ Start from a template and remove what your application does not need:
 
 After you remove rows, validate the whole result.
 
+## Write a definition in TypeScript
+
+Import the authoring helpers from `@generalbusiness/dap-define`. Declare
+items and acts as values, then pass them to `define`. Call `compile` on the
+whole definition before you pin it. The compiler runs the existing
+validator and reports the act, form, and offending value for a finding.
+Keep the compiled JSON beside its authored source.
+
+```ts
+import {
+	compile, define, grants, item, live, open, required, text, value,
+} from "@generalbusiness/dap-define";
+
+const permit = grants({ establish: "example.establish" });
+const root = item("root", {
+	states: { open: live },
+	values: { label: value.fixed(text(40)) },
+});
+const establish = open(root, permit.establish, {
+	fields: { label: required(text(40)) },
+}, ({ f, on }) => ({ effects: [...on.take(f, "label")] }));
+const authored = define({
+	name: "example", genesis: "establish", grants: permit,
+	items: [root], acts: { establish },
+});
+const { definition, digest, refusals } = compile(authored);
+```
+
+Use the same six patterns throughout the definition:
+
+- Read slots and apply effects through a subject such as `on`, an `also`
+  item, or the item that a range scans.
+- Quantify over items with `none`, `some`, `count`, and `sameSet`. Quantify
+  over list elements with `each`, `has`, and `distinct`.
+- Wrap conditions with `when`, `anyOf`, `ifPresent`, and `require`.
+- Send messages with `tell`, `create`, `relate`, and `index`.
+- Write handlers with `receive`, using the same subjects and forms as acts.
+- Pass declared item and act values into modules as explicit arguments.
+
+Use `by` or `via` once to declare another subject. Use `siblings` when one
+subject reads another sibling. Compare reads with primitive literals in
+`equals`, `differs`, and range predicates. Use `on.take` for fields whose
+names match their destination slots. Pass the slot names in effect order.
+
+Declare grants with `grants` and refusal names with `reasons`. Use those
+values in acts and guards. The compiler checks the declared names and
+returns per-act `refusals` beside the definition. Write an inline `rule`
+where the guard uses it. `define` collects its expression in `rules`.
+
+Act fields that contain record lists expose their declared members inside
+list callbacks. For a list read from a fetched fact, declare its members
+with `elements(list, "memberName")`. An unannotated list exposes only
+`self`. Keep ordinary operands as plain data and modules as functions.
+Use `elementMember(row, "self")` to read a declared member named `self`;
+`row.self` reads the whole element.
+
+Keep these four forms distinct:
+
+- **Builders:** author item, act, handler, and module values that compile
+  into the pinned declaration.
+- **Derivations:** compute the pin, field types, available acts, and input
+  schemas from the declaration. Do not author copies of these results.
+- **Annotations:** keep labels, units, refusal words, and view descriptions
+  in typed sidecars keyed by the definition's names, outside the pin.
+- **Code:** type implementations such as a shelf fold or voice controller
+  from the definition's values.
+
+Reference platform definitions by their types. Do not author platform
+membership, destination, or rules definitions through these helpers.
+
+The compiled declaration remains the data that a scope pins and judges.
+Importing authored code gives that code no authority over the scope.
+Use the [generated vocabulary](../spikes/typed-surface/VOCABULARY.md) to
+find helper names and forms. The
+[Lending definition](../examples/lending/definition.ts) and
+[Counter commitments](../apps/counter/commitments.ts) show complete values.
+
+When an effect attributes authorship, name both subjects. In
+`target.attribute("authors", work)`, the effect writes the `authors` party
+slot on `target`. Its nested `attribute.of` names `work`, whose author
+slots supply those authors. The effect's outer `of` names `target`.
+
+To check the retained Lending and Counter JSON and pin files, run:
+
+```sh
+node --import tsx scripts/check-definition-pins.mjs
+```
+
+The gate runs this check without changing the retained files. If a file
+differs, inspect the authored change before you regenerate and review its
+new pin.
+
+### Release status
+
+`@generalbusiness/dap-define` is in the release plan, and its
+compiled-output check and publication have not run.
+
 ## Declare the item types
 
 Write the item types first, in the definition's `items`.
@@ -110,8 +207,9 @@ supported yet. The validator refuses their declarations as
 An archive is a binding of the room, not of a definition. A signed
 package can require it with `host.requires: ["archive"]`, and
 installation in a room without the binding ends with
-`archive-unavailable`. An admin binds an archive when the room is created or later
-with `bind-archive`. A binding does not prove that any journal has been
+`archive-unavailable`. An admin binds an archive when the room is
+created or later with `bind-archive`.
+A binding does not prove that any journal has been
 exported. [The dap command](cli.md) lists the creation cohorts that can
 bind one.
 
@@ -428,7 +526,8 @@ installed grant, target acts open no command. See the
 Local `dap check` scenarios may name a public TEST actor with
 `deviceOwner` and use `prepare` steps for native answers. `$position`
 resolves a saved accepted receipt's position, and `$fact` resolves its
-full fact. The [Grow fault scenario](../examples/grow/check/fault-scenario.json)
+full fact. The
+[Grow fault scenario](../examples/grow/check/fault-scenario.json)
 uses these references and checks native command records. The scenario
 proves no production grant or physical device action.
 
@@ -445,4 +544,5 @@ pin commands on this page ran on 12 October 2026 at main `d309b6b9`, and
 the printed digests are from that run. The scope-creation commands were
 not run for this revision. The text about consuming the published Grow
 release that an earlier revision carried is kept in
-[the relocated text of the 30 October review](../notes/implementation/2026-10-30-docs-relocated-text.md).
+[the relocated text of the 30 October
+review](../notes/implementation/2026-10-30-docs-relocated-text.md).

@@ -1,0 +1,266 @@
+{
+  "qualification": "Independent metadata-only audit of the ACT_NAME-only repair focus. All prior failed gates and attempts remain separately sealed at their actual checkpoints. No compiler, test, build, control or application import ran in this audit. Raw generated fixtures and output stay owner-private.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus-audit",
+  "checkpoint": {
+    "commit": "623944abbb3d7feba56e97958423d346bc8449d1",
+    "tree": "2a9016a43e65915150f30e47ad1a6769f705213b"
+  },
+  "fileCount": 6,
+  "sha256Sums": "20080d225e0e159ecd54fc56dcbea5ce8eaac97e9ca4998bd3324f6b3c0a3d80",
+  "files": [
+    {
+      "path": "case-identities.json",
+      "bytes": 21120,
+      "sha256": "91296693f5285b0e2943f74e05a8b40d4ae8a66c7be302a7b4128b7ecdeb95a6"
+    },
+    {
+      "path": "focus-reconciliation.json",
+      "bytes": 11596,
+      "sha256": "a15e9738c0a17793e99e26fb530f91629edc6a79d95fcc70aeacfaf281d06469"
+    },
+    {
+      "path": "plan.json",
+      "bytes": 1091645,
+      "sha256": "d76ccae35201faa48f934253e7d8465364ba86403b95e15aa27c7ea278ea6dfa"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 9358,
+      "sha256": "3ea7815d69817d49353456d4b7f4eba60460d6b6ecfcba59d64e8cdd455fe397"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 584,
+      "sha256": "f5398d3e63cd622fc2e9a5a9060ee21c966b5e36807a75d4d59cf4ffe7053a31"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus",
+      "payloadFileCount": 52,
+      "fileCount": 53,
+      "payloadBytes": 3629783,
+      "sha256Sums": "3196fa93addcfa87c6b19d0df086fffab454ae974f636a22ce4c3f98bab689db",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 1843,
+      "sha256Sums": "6e5ed163a01772c8779d427960ac3248a7ca46aafb174502670f513c7b1433fc",
+      "ownerPrivate": true
+    }
+  ],
+  "withheldOutputs": [
+    {
+      "name": "context-00",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/apps/counter/browser/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-00.log",
+      "bytes": 29,
+      "sha256": "cc3900f6a9e89b927c3dc1c0479541579dd61cb2277efe262d0e02ea2a42bf70"
+    },
+    {
+      "name": "context-01",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/apps/counter/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-01.log",
+      "bytes": 29,
+      "sha256": "cae31ffb2667e555724c5b92535076b8411e62e51424cd09d90068ec7be33c14"
+    },
+    {
+      "name": "context-02",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/apps/room/lanes/tsconfig.scope.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-02.log",
+      "bytes": 29,
+      "sha256": "beeb666f34021bfa89a6b8c9f81c2805ff18a8cd4e0a2ceba3cac5aaf8a2559e"
+    },
+    {
+      "name": "context-03",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/examples/lending/browser/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-03.log",
+      "bytes": 29,
+      "sha256": "9bf2abfd019e106ee6f00f7905eb656c07649979fc54c85fc12d4939092a17e1"
+    },
+    {
+      "name": "context-04",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/examples/lending/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-04.log",
+      "bytes": 29,
+      "sha256": "21bb6d0b55a3a69c2e81696cd66c63c3661c488be7fdca9ff1e126a8c1d47a88"
+    },
+    {
+      "name": "context-05",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/cli/tsconfig.scope.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-05.log",
+      "bytes": 29,
+      "sha256": "ab6fb332ef0a4c46afa5e2c4fe99fb8689a03510108410fcf6508a691e991c7b"
+    },
+    {
+      "name": "context-06",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/define/tsconfig.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-06.log",
+      "bytes": 29,
+      "sha256": "746c31fe28d533297bc0d7d39ce33ac747fa3ffd253f6bcd151625a7db59edd7"
+    },
+    {
+      "name": "context-07",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/define/tsconfig.test.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-07.log",
+      "bytes": 29,
+      "sha256": "0d7883af0355d08a711a7dab67b29ba09a9d1f219504d064a956466a6a13f5a0"
+    },
+    {
+      "name": "context-08",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/derive/tsconfig.test.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-08.log",
+      "bytes": 29,
+      "sha256": "851281a861c6689cc5f4bb9863b08eeb67dc82949edbd089e2e9257bda625b3d"
+    },
+    {
+      "name": "context-09",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/mcp/tsconfig.scope.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-09.log",
+      "bytes": 29,
+      "sha256": "9c8236c8d07209cf6f0518c54ae727c0097149d6ac48be46c87496df327fec19"
+    },
+    {
+      "name": "context-10",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/mcp/tsconfig.test.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-10.log",
+      "bytes": 29,
+      "sha256": "a0f077f96db9353388a8f5a153aeb5e33adb2135a7e50426360dc79697ba7229"
+    },
+    {
+      "name": "context-11",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/platform/tsconfig.test.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-11.log",
+      "bytes": 29,
+      "sha256": "5592fb115e38036540836a77f4da03151d16f6c65349942dcf1cb1b12d0dfe61"
+    },
+    {
+      "name": "context-12",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/typescript/bin/tsc",
+        "-p",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/scope/tsconfig.test.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/context-12.log",
+      "bytes": 29,
+      "sha256": "f2bea2fba14a298cd7e1d4a81df1307b47546a46c1be0681730c52e47c6d89b4"
+    },
+    {
+      "name": "body",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/vitest/vitest.mjs",
+        "run",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/define/test/authoring.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/define/test/pins.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/examples/lending/definition.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/apps/counter/commitments.test.ts",
+        "--config",
+        "/private/tmp/artroom-t1-act-metadata-focus-20261109.config.mts",
+        "--bail=1",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=verbose",
+        "--reporter=json",
+        "--reporter=/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/scripts/focused-check.mjs",
+        "--outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/vitest.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/body.log",
+      "bytes": 3897,
+      "sha256": "78a02f73893a5a181e1eefffff486facce22b9d5e78cbf94f87f02557ed2da31"
+    },
+    {
+      "name": "counting",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/apps/counter/scripts/test-browser.mjs"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/counting.stdout",
+      "bytes": 6893,
+      "sha256": "20d07072ba6d777f106e799ce95fa0c1e604810f13f51cc29f7322b010a7c630"
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}
