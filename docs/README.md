@@ -114,8 +114,8 @@ The applications built on dap are examples to read:
 
 To report a vulnerability, follow [the security policy](../SECURITY.md).
 
-1. [Security invariants and witnesses](security/threat-model.md): the
-   threat model, its invariants and the tests that check them.
+1. [Threat model](security/threat-model.md): what dap protects, what an
+   attacker can do, the invariants and the tests that check them.
 2. [Deployment trust boundaries](security/trust-boundaries.md): resource
    authority and sharing across deployment configurations.
 3. [Definition-author security reference](security/definition-authors.md):
