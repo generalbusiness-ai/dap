@@ -118,24 +118,29 @@ function emptyExceptPaths(value: unknown, path = ""): string[] {
 interface RecordedExclusion {
   digest: Digest;
   reason: string;
+  canonicalAdmission: boolean;
   emptyExceptPaths?: readonly string[];
 }
 const recordedExclusions = new Map<string, RecordedExclusion>([
   ["retained Grow demo packet/Room", {
     digest: "sha256:b89e7f84740dfd8b24f78e8b52aff5aa8d4181750a7b5f385c1ef6f993846787",
+    canonicalAdmission: false,
     reason: "The signed deployed Room declaration and its archive/simulator histories retain b89e7f84 until the identifier cutover.",
   }],
   ["retained Grow demo packet/Site", {
     digest: "sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea",
-    reason: "The signed deployed Site declaration retains d2bc830e and its old Room dependency until the identifier cutover.",
+    canonicalAdmission: true,
+    reason: "The signed Site declaration is already canonical; its old Room dependency keeps d2bc830e until the identifier cutover.",
   }],
   ["shipped/Counting", {
     digest: "sha256:435d9f5745048183d3cf0392ce909cd76909fd69ee368dfc57e142ba96af1d09",
+    canonicalAdmission: false,
     reason: "The first Counting TypeScript declaration is retained historical data until the identifiers cutover.",
     emptyExceptPaths: RETAINED_COUNTING_EMPTY_EXCEPT_PATHS,
   }],
   ["pinned/apps/counter/definition.json", {
     digest: "sha256:435d9f5745048183d3cf0392ce909cd76909fd69ee368dfc57e142ba96af1d09",
+    canonicalAdmission: false,
     reason: "The first Counting JSON declaration is retained historical data until the identifiers cutover.",
     emptyExceptPaths: RETAINED_COUNTING_EMPTY_EXCEPT_PATHS,
   }],
@@ -172,7 +177,13 @@ test("every pinned and generated application and native declaration has canonica
       }
       expect(checked.definition.digest).toBe(definitionDigest(declaration as DeclaredDefinition));
       expect(canonicalize(checked.definition.declared)).toBe(raw);
-      expect(validateDefinition(declaration, row.bounds, row.profiles, { ...row.options, canonical: true }).ok, row.name).toBe(false);
+      const canonical = validateDefinition(declaration, row.bounds, row.profiles, { ...row.options, canonical: true });
+      expect(canonical.ok, row.name).toBe(exclusion.canonicalAdmission);
+      if (exclusion.canonicalAdmission) {
+        const normalized = normalizeDefinition(checked.definition.declared);
+        expect(canonicalize(normalized), row.name).toBe(raw);
+        expect(definitionDigest(normalized), row.name).toBe(exclusion.digest);
+      }
       continue;
     }
     const canonical = validateDefinition(declaration, row.bounds, row.profiles, { ...row.options, canonical: true });
