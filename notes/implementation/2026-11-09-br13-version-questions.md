@@ -448,7 +448,6 @@ Page and Card workflows must use this new production checkpoint. The
 repaired full maintained gate and review remain due. No browser,
 deployment or live acceptance follows from these local checks.
 
-
 ## Repair maintained project aliases after gate v4
 
 Booking `25c83967` runs gate v4 at fb98. END `759fd8e2` closes its failed
