@@ -1,0 +1,84 @@
+{
+  "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
+  "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-source-metadata/unit",
+  "qualification": "Curated public-safe source/setup metadata and exact pre-edit document bytes only. The original setup failure remains recorded. Parser execution was a separate root-owned metadata operation, not application validation. Original temporary receipts remain untouched.",
+  "rawReadonlyScope": "Only this curated unit, after all files and manifest were written. Original temporary receipts and checkout remain writable.",
+  "files": [
+    {
+      "path": "dependency-copy.py",
+      "bytes": 6677,
+      "sha256": "7ea20261f9a8303ce52c0d2b813dd9642334ad90b701192dce39a7f5d3a1e01f"
+    },
+    {
+      "path": "dependency-followup.py",
+      "bytes": 7554,
+      "sha256": "0fbc624033220dd77ac7e0b57ad9f484533250b002121c0f40a98285141095c3"
+    },
+    {
+      "path": "dependency-copy.json",
+      "bytes": 117982,
+      "sha256": "e405d7303581dde83246cfd5a4d3a987496b77a35740e75f0c15c671c9604b18"
+    },
+    {
+      "path": "dependency-followup.json",
+      "bytes": 1372,
+      "sha256": "3571757ae339a0a0a18c6234b093d2ab86ee1714b276ef88078347249a73bbe0"
+    },
+    {
+      "path": "source-seal-producer.mjs",
+      "bytes": 6134,
+      "sha256": "ed685ea7537775246c90e4905753705b5444fbb368644763f056ba64748e10f6"
+    },
+    {
+      "path": "source-seal-plan.json",
+      "bytes": 31602,
+      "sha256": "e24a8d81a7ec88fe6aa62ebd281309f5e3a061f1c305ccb0d074353430fa8af5"
+    },
+    {
+      "path": "reviewed-seal-wrapper.mjs",
+      "bytes": 3675,
+      "sha256": "49a94dc24d063471c69fa529584829817a0dfc0fdb680d6fe9226b2e40adaf12"
+    },
+    {
+      "path": "baseline-seal-verification.json",
+      "bytes": 719,
+      "sha256": "3f21327fd6ce44052d0f162723604b7e403b1a5fa31c73ff98a2200f3bdbf185"
+    },
+    {
+      "path": "seal-adoption.json",
+      "bytes": 996,
+      "sha256": "c868258825b874fcd190f62ad4757ef1fa8493f05d072de85de47af7bd1bade8"
+    },
+    {
+      "path": "actual-source-seals.json",
+      "bytes": 2128,
+      "sha256": "e420645b752b1beb4b543999a67da0d807325732438b1af16ae0a2c9d88f21d2"
+    },
+    {
+      "path": "proposed-table.txt",
+      "bytes": 67381,
+      "sha256": "a860d2ac3be231cd5caf29dfc8af931fa46c8d030373c95339d76aa068c957f7"
+    },
+    {
+      "path": "document-baseline.json",
+      "bytes": 750,
+      "sha256": "be94ee1695facd999cfdbfc9cd7314f624347a26317d3862bc22be8eb5ff8c20"
+    },
+    {
+      "path": "baseline/lanes-reference.md",
+      "bytes": 139830,
+      "sha256": "1b1272ba17778b79cac8e351196e206e6473594fb8da36d064ccde11a2a79b04"
+    },
+    {
+      "path": "baseline/mcp-tools.json",
+      "bytes": 262660,
+      "sha256": "4e18d71826d10cd3d8ab64f507ee59e5a69dc740185348988143488098659b64"
+    },
+    {
+      "path": "independent-audit.json",
+      "bytes": 845,
+      "sha256": "88831184e163a78b62cc82ab4032803ca5911d427283fd5d05e2e1345f3c22d8"
+    }
+  ]
+}
