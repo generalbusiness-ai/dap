@@ -66,10 +66,10 @@ files and recorded their byte counts and hashes:
 | docs/lanes-reference.md | 139830 | 1b1272ba17778b79cac8e351196e206e6473594fb8da36d064ccde11a2a79b04 |
 | docs/mcp-tools.json | 262660 | 4e18d71826d10cd3d8ab64f507ee59e5a69dc740185348988143488098659b64 |
 
-The temporary baseline is
-/private/tmp/artroom-t0b-document-baseline-20261109. The final evidence
-must retain those exact bytes in durable custody. Neither document has
-changed. No regeneration has run, so this source checkpoint makes no
+The durable baseline is
+/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-source-metadata/unit/baseline.
+Its manifest retains both exact pre-edit files. Neither document has
+changed. No regeneration has run, so this checkpoint makes no
 regeneration or byte-equality witness claim.
 
 The MCP inventory case currently compares canonical JSON. That protects
@@ -81,16 +81,34 @@ and the same exact comparison. A differing generated file fails the
 witness. Rewriting the committed document does not repair it.
 
 The CLI browser helper already has a whole-file source seal. Its moved
-algorithm needs protection in the new shared owner as well. The source
-checkpoint leaves the existing seal table untouched. Root must run the
-maintained source-seal producer at the frozen candidate and review the
-actual existing-owner and new-owner rows before validation. No guessed
-hash belongs in the table.
+algorithm needs protection in the new shared owner as well. Root ran
+the maintained sourceSeal with the pinned Rolldown parser
+after checking its result against the exact landed A/main CLI blob.
+The candidate table changes the CLI row and adds the two portable
+owners. An independent line comparison confirms that every other
+table byte and assertion remains unchanged. Commit 0ee5b70a adopts
+the actual output. No guessed hash enters the table.
 
 ## Final evidence
 
-Source preparation only. No compiler, test, parser, seal producer,
-regeneration, browser, build, control or gate has run for this head.
+Source and metadata preparation only. The APFS dependency copy returned
+0. Its original setup returned 1 because the bin guard wrongly excluded
+owned workspace commands under packages. A separate metadata follow-up
+returned 0 without repeating the copy. The owned checkout has 14
+workspace links, 48 export aliases, 17 bin entries, and 162 verified
+copied tool files.
+
+Root's source-seal metadata producer returned 0. The independent audit
+returned 0 and preserves every setup outcome. The curated unit contains
+only public-safe metadata and the original document bytes. Only that
+new unit is read-only; the original temporary receipts remain untouched.
+
+No application compiler, test, document regeneration, browser, build,
+control or gate has run for this head. The source-seal parser is a
+metadata operation, not an application validation result.
+
+[Source metadata manifest](evidence/2026-11-09-t0b-source-metadata.manifest.json)
+records the exact receipts, sources, and hashes.
 
 | Check | Command or boundary | Exit | Output digest |
 |---|---|---|---|
@@ -99,7 +117,7 @@ regeneration, browser, build, control or gate has run for this head.
 | Browser API boundary | Complete CLI browser-boundary owner | Not run | Pending |
 | Existing CLI wording | Retained Native CLI story assertions | Not run | Pending |
 | Document generation | Actual lane reference and formatted MCP tool-list bytes against saved originals | Not run | Pending |
-| Source seals | Actual maintained producer; preserve all existing assertions | Not run | Pending |
+| Source seals | Actual maintained producer; all other table and assertion bytes unchanged | 0 | See source metadata manifest |
 | Page production asset | Maintained build if the moved dependency changes the served module | Not run | Pending |
 | Final gate | One npm run gate at the final source | Not run | Pending |
 
@@ -107,9 +125,9 @@ regeneration, browser, build, control or gate has run for this head.
 
 Request 260991d8 owns validation, the byte-identity witnesses, source
 seals, review and landing. Before its final gate, merge current main and
-retain the shared seal table exactly as main has it. The current
-candidate starts from A's frozen review head, not an unreviewed
-approximation.
+retain the shared seal table exactly as main has it. The candidate
+starts from A's frozen review head and merges its
+landed main commit 64be0cab in ordinary merge 9256f2de.
 
 The moved browser dependency may change the generated Page module even
 when its visible words stay the same. Root owns the booked maintained
