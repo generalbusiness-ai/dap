@@ -53,23 +53,26 @@ yet.
 3. [Run your app](run-your-app.md): run a tutorial's definition in a room
    on your own service.
 4. [Write an application](write-an-application.md): declare, validate and
-   pin a definition, create scopes under it, and package several
-   definitions.
-5. [Declared application views](application-views.md): the cards,
+   pin a definition, and create scopes under it.
+5. [Check and preview a package](check-and-preview-a-package.md): make a
+   starter, check it, read a refusal and preview it on your computer.
+6. [Package reference](package-reference.md): package composition, its
+   checks and device commands.
+7. [Declared application views](application-views.md): the cards,
    carousels, records and logs that a package declares for an AI app.
-6. [Definition-author security reference](security/definition-authors.md):
+8. [Definition-author security reference](security/definition-authors.md):
    the validator's refusals and the forms that allow more than they seem
    to.
-7. [The ten terms](manual/ten-terms.md): the word list that every other
+9. [The ten terms](manual/ten-terms.md): the word list that every other
    page uses.
-8. [The life of an act](manual/life-of-an-act.md): a request, from the
-   definition to the receipt.
-9. [The record](manual/record.md): what a receipt proves and what a
-   consistency report leaves open.
-10. [The architecture of a dap application](architecture.md): scopes,
+10. [The life of an act](manual/life-of-an-act.md): a request, from the
+    definition to the receipt.
+11. [The record](manual/record.md): what a receipt proves and what a
+    consistency report leaves open.
+12. [The architecture of a dap application](architecture.md): scopes,
     acts, entries, delivery, authority and where the record is kept.
-11. [Scopes](scopes.md): the runtime reference.
-12. [Lanes](../apps/room/docs/lanes.md) and the generated
+13. [Scopes](scopes.md): the runtime reference.
+14. [Lanes](../apps/room/docs/lanes.md) and the generated
     [lane reference](lanes-reference.md): the room's issue and change
     definitions.
 
@@ -87,35 +90,39 @@ The applications built on dap are examples to read:
 
 ## Run a service
 
-1. [Run your own service](self-host.md): deploy the Worker on your own
-   Cloudflare account, create a room, and invite another device. Or run
-   it on a Mac.
-2. [Deploy the scope Worker](deploy.md): the order of steps, the creation
+1. [Run your own service](self-host.md): choose a Cloudflare account or
+   one Mac.
+2. [Run your own service on Cloudflare](self-host-cloudflare.md): deploy
+   the Worker on your own Cloudflare account, create a room, and invite
+   another device.
+3. [Run your own service on a Mac](self-host-mac.md): run the service
+   with HTTPS on one Mac.
+4. [Deploy the scope Worker](deploy.md): the order of steps, the creation
    credential, and what is never written down.
-3. [Configure a Git host](hosts.md): no host, Cloudflare Artifacts or
+5. [Configure a Git host](hosts.md): no host, Cloudflare Artifacts or
    GitHub.
-4. [Operate a service](operate-a-service.md): health and logs, new
-   source, rollback, copies of the record, secret rotation and
-   retirement.
-5. [Observe a deployment](operations.md): the health route, `dap status`,
+6. [Operate a service](operate-a-service.md): health and logs, new
+   source, rollback, copies of the record, secret rotation, a change of
+   register and retirement.
+7. [Observe a deployment](operations.md): the health route, `dap status`,
    the metric slots and the deploy check.
-6. [Report observed use](usage-report.md): a 30-day report of a Worker's
+8. [Report observed use](usage-report.md): a 30-day report of a Worker's
    use before you retire it.
-7. [Run the local Worker](celld.md): the production Worker on celld,
+9. [Run the local Worker](celld.md): the production Worker on celld,
    behind a proxy.
-8. [The hosted endpoint](mcp.md#the-hosted-endpoint): turn on `/mcp` and
-   OAuth for AI apps.
-9. [Run the hosted connector test](o4-connect.md): a test window for
-   Claude and ChatGPT on a separate Worker.
-10. [Rehearse the demo](demo.md): run and record the repository story
+10. [The hosted endpoint](mcp.md#the-hosted-endpoint): turn on `/mcp` and
+    OAuth for AI apps.
+11. [Test a hosted connector](o4-connect.md): connect Claude and ChatGPT
+    to a separate Worker, then revoke each connection.
+12. [Rehearse the demo](demo.md): run and record the repository story
     against a deployment.
 
 ## Check the security
 
 To report a vulnerability, follow [the security policy](../SECURITY.md).
 
-1. [Security invariants and witnesses](security/threat-model.md): the
-   threat model, its invariants and the tests that check them.
+1. [Threat model](security/threat-model.md): what dap protects, what an
+   attacker can do, the invariants and the tests that check them.
 2. [Deployment trust boundaries](security/trust-boundaries.md): resource
    authority and sharing across deployment configurations.
 3. [Definition-author security reference](security/definition-authors.md):
@@ -135,11 +142,15 @@ To report a vulnerability, follow [the security policy](../SECURITY.md).
    the gate, and send a pull request.
 2. [Test dap](testing.md): where a test goes, focused tests while you
    work, and the gate before review.
-3. [Kernel boundary](kernel.md): which parts are kernel, and the rule for
+3. [File test evidence](evidence-filing.md): the follow-up rule after a
+   gate, the evidence directory and manifest, and review.
+4. [Testing reference](testing-reference.md): the stand-ins, what the
+   gate runs, and the test inventories.
+5. [Kernel boundary](kernel.md): which parts are kernel, and the rule for
    adding to the kernel.
-4. [Produce the public SDK](public-sdk-release.md): build and check the
+6. [Produce the public SDK](public-sdk-release.md): build and check the
    published packages.
-5. [Agent instructions](../AGENTS.md): the rules for agents that work in
+7. [Agent instructions](../AGENTS.md): the rules for agents that work in
    this repository.
 
 ## Design history

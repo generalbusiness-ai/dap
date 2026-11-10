@@ -893,8 +893,8 @@ authority to restart an archive.
 
 ## Member read-token reservations
 
-Under ruling `67b1fb7f`, a Destination object admits at most eight open
-read-token reservations per authenticated member. The already judged
+A Destination object admits at most eight open read-token reservations per
+authenticated member. The already judged
 grant's subject supplies the full Membership ScopeRef and member identity.
 Several keys of one member share the bucket. Neither a caller key nor a
 principal or handle prefix chooses it. The full Destination ScopeRef also

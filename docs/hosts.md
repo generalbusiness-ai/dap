@@ -7,7 +7,8 @@ that a person sees.
 
 ## How a register chooses its host
 
-The operator names the host when installing the register:
+The operator names the host when installing the register with the `dap`
+command, which [Get the dap command](get-dap.md) sets up:
 
 ```
 dap install --plan <base-url> --host artifacts --namespace <namespace>
@@ -32,7 +33,7 @@ destination records the attachment. The operator must authorize that exact
 destination incarnation, repository, and branch in
 `GITHUB_REPOSITORY_BINDINGS`. An administrator's binding grant alone gives
 no GitHub access. Earlier cohorts cannot bind a repository. Follow
-[Bind a new room to GitHub](self-host.md#bind-a-new-room-to-github) for the
+[Bind a new room to GitHub](self-host-mac.md#bind-a-new-room-to-github) for the
 celld configuration path.
 
 `REGISTER_SCOPE` pins the one register that the Worker accepts for new
@@ -45,7 +46,8 @@ each value.
 ## No host (host `none`)
 
 `--host none` takes no namespace. The CLI plans the register under the
-unpublished cohort, `platform:register@21`, and a deployed Worker refuses a
+unpublished cohort, `platform:register@21`, unless `--cohort` names the
+repository-binding, own-agent or commons cohort. A deployed Worker refuses a
 `none` install under any other register definition. The room publishes no
 repository and keeps no journal archive. Its entries stay in the service,
 within the service's bounds, so the operator must back up the service.
@@ -78,10 +80,9 @@ What it needs:
   | `credentialIdentity` | `adapter-attempt`. |
 
   A missing, malformed or extra field turns the port off. If the
-  namespace differs from `ARTIFACTS_NAMESPACE` or from the binding's
-  namespace, the port turns off before any service call. When
-  `REGISTER_SCOPE` is absent, the Worker reads the pin from
-  `registerScope`, as older deployments do.
+  namespace differs from `ARTIFACTS_NAMESPACE`, the port turns off before
+  any service call. When `REGISTER_SCOPE` is absent, the Worker reads the
+  pin from `registerScope`, as older deployments do.
 
 With `INSTALLED_REGISTER_SCOPES`, both Native Git host adapters also serve
 the validated historical roots. The list must include the configured current
@@ -302,4 +303,4 @@ or optional evidence-host permission.
 
 ## Source
 
-Checked against main `b0af01d2` on 1 November 2026. Sources: [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [packages/platform/src/archive-binding-wire.ts](../packages/platform/src/archive-binding-wire.ts), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/artifacts-wiring.ts](../packages/scope/src/artifacts-wiring.ts), [packages/scope/src/artifacts-host.ts](../packages/scope/src/artifacts-host.ts), [packages/scope/src/github-wiring.ts](../packages/scope/src/github-wiring.ts).
+Checked against main `6bfb6e16` on 10 November 2026. Sources: [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [packages/platform/src/archive-binding-wire.ts](../packages/platform/src/archive-binding-wire.ts), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/artifacts-wiring.ts](../packages/scope/src/artifacts-wiring.ts), [packages/scope/src/artifacts-host.ts](../packages/scope/src/artifacts-host.ts), [packages/scope/src/github-wiring.ts](../packages/scope/src/github-wiring.ts).

@@ -82,8 +82,9 @@ prevent that receipt from being returned on a given turn. A read that says
 
 Keep the signed intent yourself. The native API can settle a lost reply
 only from the original intent. The command line keeps a saved-request
-journal for `join`. Its `act`, `edit` and `merge` commands do not keep
-one. Browser memory does not survive a reload or the loss of a device.
+journal for `create` and `join`. Its `act`, `edit` and `merge` commands do
+not keep one. Browser memory does not survive a reload or the loss of a
+device.
 
 ## Follow effects to their own outcomes
 
@@ -102,7 +103,7 @@ judged with its pinned meaning.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+Checked against main `6bfb6e16` on 10 November 2026. Sources:
 [intent](../../packages/contract/src/intent.ts),
 [submission and settlement](../../packages/scope/src/core.ts),
 [the turn](../../packages/scope/src/turn.ts),

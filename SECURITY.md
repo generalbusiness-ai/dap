@@ -11,17 +11,27 @@ channel before sharing the reproduction.
 
 ## Security references
 
-| Reference | Contents |
-|---|---|
-| [D1: Worker entry points and gates](docs/security/entry-points.md) | Routes, caller gates, pre-gate work, stored state, bounds and outside calls |
-| [D2: Scope and replay contract](notes/2026-10-04-scope-and-replay-contract.md) and [authority, effects and publication](notes/2026-10-04-authority-effects-and-publication.md) | Normative references and their stable section numbers |
-| [D3: Worker settings and bindings](docs/security/settings.md) | Setting readers, parsers, failure modes and health meanings |
-| [D4: Deployment trust boundaries](docs/security/trust-boundaries.md) | Secret custody, shared resources and revocation limits |
-| [D5: Definition-author security reference](docs/security/definition-authors.md) | Validation refusals and valid permissive policy forms |
-| [D6: Security invariants and witnesses](docs/security/threat-model.md) | Qualified invariants and named executable tests |
+Read the references in this order. The first three explain the model.
+The next two are inventories for lookup. The last item holds the normative
+contracts.
 
-[Testing guidance](docs/testing.md) describes the evidence required for a
-change. The inventories describe checked-in source. They establish no
+1. [Threat model](docs/security/threat-model.md): what dap protects, what
+   an attacker can do, the invariants and the tests that check them.
+2. [Deployment trust boundaries](docs/security/trust-boundaries.md): secret
+   custody, shared resources and revocation limits.
+3. [Definition-author security reference](docs/security/definition-authors.md):
+   validation refusals and valid permissive policy forms.
+4. [Worker entry points and gates](docs/security/entry-points.md): routes,
+   caller gates, pre-gate work, stored state, bounds and outside calls.
+5. [Worker settings and bindings](docs/security/settings.md): setting
+   readers, parsers, failure modes and health meanings.
+6. The normative contracts:
+   [the scope and replay contract](notes/2026-10-04-scope-and-replay-contract.md)
+   and [authority, effects and publication](notes/2026-10-04-authority-effects-and-publication.md).
+   Their section numbers are stable.
+
+[Testing guidance](docs/evidence-filing.md) describes the evidence required
+for a change. The inventories describe checked-in source. They establish no
 current deployed setting, provider access control or completed live scene.
 
 ## Reviews
@@ -32,10 +42,10 @@ evidence and does not assess the current implementation. The
 [5 October dispositions](notes/reviews/2026-10-05-review-dispositions.md)
 record the treatment of that review period's findings.
 
-Planner review `6dd06d03` records the 21 October attack-surface findings at
-`603220b9`. Its remediation requests and later exact-head checker reviews
-live in the repository's gitseq workroom. The
-[D3–D5 delivery note](notes/implementation/2026-10-24-security-docs-partial.md)
-and [D6 completion note](notes/implementation/2026-11-09-security-docs-d6.md)
+The attack-surface review of 21 October 2026 records its findings at
+commit `603220b9`. The repository's gitseq workroom holds that review, its
+remediation requests and the later review of each fix. The
+[delivery note for the settings, trust-boundary and definition-author pages](notes/implementation/2026-10-24-security-docs-partial.md)
+and the [completion note for the threat model](notes/implementation/2026-11-09-security-docs-d6.md)
 name the documentation evidence. A review of one commit proves no later
 commit or deployed configuration.

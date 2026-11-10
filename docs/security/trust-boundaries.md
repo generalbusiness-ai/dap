@@ -156,7 +156,7 @@ On Cloudflare Artifacts, an operator can also end the repository's read tokens t
 
 Revoking by ID has run twice through this REST route, on 1 November 2026. In the first run, an operator revoked one `read` token on a new empty repository. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with `Invalid or expired token`. Five later tries over 10 seconds answered the same. Listing a repository's tokens has not run, because that run's list command failed with a usage error.
 
-A revocation stops new requests and does not stop a download under way, in one run at 30 MB. In that second run, the operator revoked a 3600-second token 31 seconds into a throttled `git clone`. `git ls-remote` with that token exited 128, and the clone finished about 178 seconds later with the right head. In the same run's other case, a clone finished about 149 seconds after the end of its 60-second token, by arithmetic from the lifetime that the operator asked for. So treat a clone under way as having everything it reached. A buffer between the host and the planner's proxy could hold part of the reply, and nobody measured one.
+A revocation stops new requests and does not stop a download under way, in one run at 30 MB. In that second run, the operator revoked a 3600-second token 31 seconds into a throttled `git clone`. `git ls-remote` with that token exited 128, and the clone finished about 178 seconds later with the right head. In the same run's other case, a clone finished about 149 seconds after the end of its 60-second token, by arithmetic from the lifetime that the operator asked for. So treat a clone under way as having everything it reached. A buffer between the host and the proxy that took the measurement could hold part of the reply, and nobody measured one.
 
 These cases have not run: a download larger than 30 MB, a longer gap between a token's end and the last byte, a commit published during a download, a download under way on GitHub, and the binding's `revokeToken(id)`.
 
@@ -207,8 +207,8 @@ session secret or application trust.
 
 The operator copies it to `wrangler.self-host.jsonc`, provisions distinct
 resources and supplies the register and session settings described in
-[Self-host dap](../self-host.md). The placeholder namespace name alone
-neither provisions a provider namespace nor proves its isolation. MCP opt-in
+[Run your own service on Cloudflare](../self-host-cloudflare.md). The
+placeholder namespace name alone neither provisions a provider namespace nor proves its isolation. MCP opt-in
 is absent, and `APPLICATION_SCREEN_HOSTS` is empty.
 
 ## artroom-scope
@@ -281,10 +281,10 @@ and actual hosted routes still require their own evidence.
 
 The checked-in `DEMO_START_CONFIG` is not a Commons provisioning interface.
 The maintained Demo parser recognizes Registers 17 and 26, not this
-Register 23 cohort. Follow the
-[Commons CLI order](../deploy.md#provision-the-commons-worker) and bind only
-the two operational register fields. This source describes
-no deployment, activation, namespace creation, or hosted W1 result.
+Register 23 cohort. Follow [the order](../deploy.md#the-order) with
+`--cohort commons` and bind only the two operational register fields.
+This source describes no deployment, activation, namespace creation, or
+hosted W1 result.
 
 ## dap-connect
 
@@ -295,17 +295,19 @@ R2 bucket and no Artifacts binding or metrics dataset. These checked-in
 names differ from the other Workers' resources.
 
 The file sets `DEPLOYMENT` to `dap-connect` and the index to enforce.
-`REGISTER_SCOPE` remains `PLANNED_O4_REGISTER_SCOPE`; the planner replaces
-it from the own-agent plan. The operator supplies a fresh `SESSION_SECRET`.
+`REGISTER_SCOPE` holds the placeholder `PLANNED_O4_REGISTER_SCOPE`. The
+operator replaces it with the ID from an own-agent install plan. The
+operator supplies a fresh `SESSION_SECRET`.
 The explicit creation cohort is Register 27, Directory 26, Membership 13,
 Rules 10, Destination 20 and Inbox 1.
 
 `MCP_ENABLED` is explicitly false. The MCP resource URLs, card origins and
 application trust row configure the intended O4 surface but do not open it.
 `APPLICATION_SCREEN_HOSTS` is empty. Hosted grants and agent seeds live in
-this Worker's MCP objects, not the content bucket. The
-[O4 runbook](../o4-connect.md) owns deployment and the live test window;
-this file proves neither a live route nor a completed host test.
+this Worker's MCP objects, not the content bucket.
+[Test a hosted connector](../o4-connect.md) gives the deployment and
+live-window steps. This file proves neither a live route nor a completed
+host test.
 
 ## dap-grow-simulator
 
