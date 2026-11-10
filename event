@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at skills/dap-application/references/authoring.md","body":{"commit":"ca6afe2ba2f1758ee67b7d9a8148c7353261c5ff","path":"skills/dap-application/references/authoring.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:131025b7d994f34444b55a916fc86459cf146f85","text":"Merge retired a covered predecessor; the successor is at docs/o4-connect.md."}
