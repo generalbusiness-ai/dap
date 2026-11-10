@@ -1,65 +1,133 @@
 # Choose a role and manage membership
 
-For a room admin and a person joining that room, this page explains the source CLI invitation path, the actions a role permits, and why a member, a device key and an agent controller are different identities.
+You invite people to a room, give each one a role and add or retire their
+devices. Most of these tasks need a role that holds `membership.invite` or
+`membership.manage`. By default, only an admin holds them.
 
-**Status. This guide cites the code at `0e5954ecfca23f531cfa2ec42be1524bef3bc9a8`, which is incorporated in main `a1277d9c43bdaff1873e61f0a3d2444fc5f72b53`. Its commands have not been run for this page.** It assumes a supplied, configured source CLI; it supplies no public installation, hosted bootstrap or recovery wizard.
+## Choose a role
 
-In the admin's existing room context:
+A role is a list of actions. Every member with that role can do the same
+things. A job name such as "reviewer" or "writer" grants nothing.
 
-```sh
-dap invite @rita --role member --hours 24
-```
-
-Pass the printed invitation only to its intended recipient. In the recipient's fresh CLI context:
-
-```sh
-dap join '<original invitation link>'
-dap acts membership
-```
-
-The invitation carries a one-time secret, not the member's private signing key. Keep it out of shared notes, screenshots and logs. The CLI makes and privately keeps the device key. Do not paste a private signing key into the invitation or documentation. [Invitation and Join source](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/cli/src/commands.ts#L691)
-
-## Choose actions, not a job label
-
-A roster role names its action list. Builder, planner and reviewer are jobs, not automatic roles. These are relevant default actions; the actual pinned roster and current authority decide:
-
-| Role | Relevant default actions |
+| Role | What it can do by default |
 |---|---|
-| admin | Propose, review and merge; manage membership; publish/activate rules |
-| maintainer | Propose, review and merge; triage work |
-| member | Propose and review; no merge or membership management |
-| agent | Propose and operate work; no default review or merge |
-| checker | Submit configured check results; this is not a review verdict |
+| admin | Everything a maintainer can do, plus invite and manage members and publish the rules |
+| maintainer | File and triage issues, propose, review and merge changes |
+| member | File issues, propose and review changes. It cannot merge. |
+| agent | File issues and propose changes. It cannot review or merge. |
+| checker | Record check results. A check result is not a review. |
 
-An offered act can still be refused by its state, guards or current authority. Rules and checks also qualify who may count as an independent reviewer/checker. Changing a role's list is an administrator policy operation affecting that role, not a per-member grant. `invite --acts` is unsupported. [Role lists](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/membership.ts#L115), [Role/list changes](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/membership.ts#L467)
+The room can still refuse an act that your role allows, for example when a
+review requirement lacks approvals. To see the acts that your role allows
+on a scope, run `dap acts <scope>`, such as `dap acts membership`.
 
-The person invitation path creates a member of kind person. It does not register a controlled native agent merely because the handle or role is called agent. Native `add-member` has a separate agent/checker path: an agent names an active person controller; a checker names none. `set-role` is limited to active person members and protects the last admin. This guide supplies no shortcut that relabels an agent or borrows a person's key to satisfy independent review. [Registration and role guards](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/membership.ts#L430)
+## Invite a person
 
-## Keep member and key lifetimes separate
+### In the browser
 
-A member is a roster identity. Its enrolled keys are the devices or processes allowed to act for it. A new device should use the existing member's actual `invite-key`/`enrol` mechanism; a new person invitation is not same-member recovery. This manuscript does not claim that the person `join` CLI is a complete multi-device enrollment workflow. [Key enrollment declarations](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/membership.ts#L375)
+After you start a room in the browser, the screen **Your room is ready**
+offers **Invite people**.
 
-Join saves its exact signed request privately before sending. After a lost reply or interrupted wait, use the original link and private record; it reuses the key, signature and deadline. A different link, missing private request/key or already configured unrelated context cannot silently replace the pending Join. Successful exact settlement is distinct from a new enrollment. [Join context guards](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/cli/src/commands.ts#L734)
+1. Choose **Create invitation**.
+2. In **Handle**, type the person's handle, such as `@rita`.
+3. Choose **Create invitation**. The page shows a private link.
+4. Choose **Copy invitation link** and send the link to that person only.
 
-For an active key item you have identified in the actual membership record, an actor holding `membership.manage` can deliberately retire it through the declared generic act:
+The browser invitation gives the role `member` and lasts 24 hours. The room
+screens do not invite people yet. To invite later or with another role, use
+the `dap` command.
+
+### With the dap command
+
+1. Invite the person with a role.
+
+   ```sh
+   dap invite @rita --role member --hours 24
+   ```
+
+   You see the invitation and a private link:
+
+   ```
+   Invited @rita as member: invitation sc_p6xp2lmd...:5, until 2099-01-02T00:00:00Z.
+   Link for @rita only (it holds the invitation's secret): artroom-invite:eyJ2Ijox...
+   ```
+
+2. Send the link to that person only. They follow
+   [Join a room and publish one text change](first-change.md).
+
+The role can be `admin`, `maintainer`, `member`, `agent` or `checker`. A
+handle that the room already uses is refused. The command refuses
+`--acts`, because a role's actions apply to every member with that role.
+
+If the reply might be lost, add `--keep`. The command saves the invitation
+before it sends it. Then `dap invite --check` reads the outcome without
+sending, and `dap invite --continue` sends the original request again.
+
+## Add a device for a member
+
+Each device has its own key. A new device keeps the member's role. You need
+`membership.invite` to make a device link. Without it, the **Devices**
+screen asks you to ask an admin.
+
+### In the browser
+
+1. Choose your handle at the top of the page, then choose **Devices**.
+2. In **Member**, type the member's handle.
+3. Choose **Create device link**. The page shows a private link.
+4. Send the link to that member only.
+
+### With the dap command
+
+1. Make the device link.
+
+   ```sh
+   dap invite @rita --device
+   ```
+
+2. Send the private `artroom-device-key:` link to that member only.
+
+On the new device, the member joins with the link. In a browser, they
+choose **Join with an invitation link** and paste it. With the command,
+they run `dap join '<link>'` in an empty config directory.
+
+## Change a role or retire a key
+
+These tasks use the generic `dap act` command on the membership scope.
+`--target` takes the item number from the membership record. A handle is
+refused there.
+
+To change a person's role:
 
 ```sh
-dap act revoke-key --on membership \
-  --target <key-item> --set as=retired
+dap act set-role --on membership --target <member> --set role=maintainer
 ```
 
-Use `compromised` only when that is the intended recorded revocation. It also creates a notice to the directory. This command is a new management act, not a lost-key recovery command; do not guess the item from a handle or a key ID. [Revocation declaration](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/membership.ts#L513)
+`set-role` takes `admin`, `maintainer` or `member`. It applies only to an
+active person. The room refuses to change the role of its last admin with
+`last-admin`.
 
-Revoking one key differs from losing the member's last usable key. Removing a member changes its membership state and the authority observations for all its keys, even though the key items are not rewritten. Current rules protect the last admin and its last active key; the declared recovery-key path is the specific exception. A fresh key or readable session cannot stand in for that recovery key. Existing token/read lifetimes and settlement are operation-specific; no universal privilege survives revocation. [Removal and recovery](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/membership.ts#L497)
+To retire a device key:
 
-## If enrollment or management is refused
+```sh
+dap act revoke-key --on membership --target <key> --set as=retired
+```
 
-- **Wrong, used or expired invitation:** preserve the original pending request and ask the actual admin to inspect the invitation.
-- **Handle already in use:** do not create a lookalike identity to replace the old member or its history.
-- **Key already used or a recovery key:** use the proper explicit enrollment path; invitation authority does not override those guards.
-- **Founder key is the recovery key:** a room on `platform:register@24` refuses this with the name `recovery-key`, at both `found` and `first-key`. Claim the room with a founder key and a different recovery key. An older room keeps its keys until its recovery key rotates.
-- **No management action or last-admin guard:** use the qualified admin/recovery owner; do not remove the protection by editing local config.
-- **Member removed or no active key:** resolve its recorded lifetime and recovery path before asking for new authority.
-- **Reply unavailable:** keep the exact original where its workflow supports that; generic management acts do not gain a durable retry journal from this page.
+If the key was stolen, set `as=compromised` instead. The room then also
+tells the directory.
+[What a revoked key keeps][revoked] lists what a revoked key can still
+read, and for how long.
 
-This is source prose for manual outcome 21. Initial source publication receipt `732ca210b84469513b3a53b618b2867ca92a71e0` does not approve this new guide. It proves no credential operation, hosted enrollment, physical device continuity, complete agent setup or cold-reader result. Its sample CI, style and exact page review remain owed. Full manual and I5/I6 authority/device acceptance remain separate.
+[revoked]: ../../../docs/security/trust-boundaries.md#what-a-revoked-key-keeps
+
+The room does not let you revoke the last active key of its last admin.
+
+## Connect an agent
+
+An agent is a separate member with its own key. A person invitation with
+the role `agent` still makes a person.
+
+- In the browser, the screen **Your room is ready** offers
+  **Create agent invitation**.
+- With the command, an admin adds the agent with `add-member` and invites
+  its key with `invite-key`. [`dap join`](../../../docs/cli.md#dap-join)
+  describes how the agent enrolls its key.
