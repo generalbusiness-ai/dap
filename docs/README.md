@@ -112,8 +112,8 @@ The applications built on dap are examples to read:
    behind a proxy.
 10. [The hosted endpoint](mcp.md#the-hosted-endpoint): turn on `/mcp` and
     OAuth for AI apps.
-11. [Run the hosted connector test](o4-connect.md): a test window for
-    Claude and ChatGPT on a separate Worker.
+11. [Test a hosted connector](o4-connect.md): connect Claude and ChatGPT
+    to a separate Worker, then revoke each connection.
 12. [Rehearse the demo](demo.md): run and record the repository story
     against a deployment.
 

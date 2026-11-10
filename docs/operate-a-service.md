@@ -267,7 +267,9 @@ Native lineage and authority checks still apply. A separate Worker with
 its own namespaces remains an option when you need a separate service.
 
 On a maintained Mac host, put the reviewed list in the new prepared project
-before GitHub staging. Both Mac project validators check it. After any
+before GitHub staging, as
+[Run your own service on a Mac](self-host-mac.md#bind-a-new-room-to-github)
+describes. Both Mac project validators check it. After any
 register change, prove an actual child birth in an earlier room; a setting
 or existing-room read alone proves no deployed continuity.
 

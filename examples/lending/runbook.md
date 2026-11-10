@@ -1,29 +1,15 @@
 # Provision and run the lending library
 
-**Run status: the final room completed the exact-script automated browser
-story and all seven publications.** The curated public Git history is now published and anonymously verified.
-Homepage publication completed; the original f33 gate and later receiving
-MCP correspondence remain separate, as recorded below. Two earlier rehearsals are retained.
+Follow this runbook to provision the lending library on its own Worker,
+install the lending application, play the story in a browser and publish
+each lending act. The [library design](../../notes/2026-10-13-lending-library.md)
+and the [publication design](../../notes/2026-10-13-fold-publication.md)
+describe the room.
+
 The member interface offers **Cancel this thing** and its reason box only
 after membership confirms that the signer's role holds `lending.staff`.
 The control is hidden while that read is loading or unavailable. The scope
 still refuses an unauthorized cancel if the observed role is stale.
-
-The publication rehearsal produced real browser acts, written receipts, and
-anonymous immutable pages. Its Small pot description differed from the
-approved script, so its mechanical completion is not final story acceptance.
-The [earlier rehearsal](#the-rehearsal-run-14-october-2026) remains a separate,
-nonpublishing room. The fresh final room has been created and inspected. The Library, browser story, and per-step publication results now have their
-own original evidence. Final public-history and homepage results remain separate.
-
-The approved [library design](../../notes/2026-10-13-lending-library.md)
-remains unchanged. Amendment `19264feb21b49756fb3e9913b0ba11b2520e1e3a`
-requires all six outputs and replaces browser page edits with publication
-from the lending fold. The [publication design](../../notes/2026-10-13-fold-publication.md)
-is approved. Its implementation landed at
-`5e11ca0300cc0a538f7c59b36d490f5cf14be15f`, from reviewed code
-`7335aa27d3b5b42026ba1f6b3192692918d5e59e`. The full six-output request
-remains open until its deployed and public witnesses are complete.
 
 ## Bind the service and room
 
