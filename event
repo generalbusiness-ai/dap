@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ce4ef2c375b174031138b3f002541f430ee3afaf","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0e-control2-baseline-reconciled.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc57ec03de9b0cf61aae350f10762933644ece56","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/catalogue.ts."}
