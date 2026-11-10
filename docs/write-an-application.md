@@ -83,6 +83,7 @@ Act fields that contain record lists expose their declared members inside
 list callbacks. For a list read from a fetched fact, declare its members
 with `elements(list, "memberName")`. An unannotated list exposes only
 `self`. Keep ordinary operands as plain data and modules as functions.
+Use `elementMember(row, "self")` to read a declared member named `self`; `row.self` reads the whole element.
 
 Keep these four forms distinct:
 

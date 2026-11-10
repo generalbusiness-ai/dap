@@ -54,13 +54,14 @@ belong to the five-case public release owner: the actual Git source exports
 adds that path to both exclusion tables. Git's two public exports, five
 portable source inputs, dependencies, and existing assertions stay intact.
 
-The next continuation reruns the whole five-case release owner and the
-six-case runner owner, then runs the still-unrun pin check. The runner
+Selective continuation 2 reran the whole five-case release owner and the
+six-case runner owner, then ran the pin check. All three actual exits were
+0 at `9f9dacf591df07195d78b147bd729ee781736a34`. The runner
 registers the existing release owner once in the fixed Node stage; its
 existing first test checks the actual argv entry. The partition and
 summary owners' four passing cases retain their unchanged evidence.
-The Node-only repair does not change the passed C compiler or plain-owner
-inputs. Main integration still receives the full typecheck and test gate.
+The 13 compiler and 25 plain passes remain at `97b82970`: merged B changes
+some Scope/MCP compiler inputs. The final gate must check that integration.
 
 Raw evidence remains under `~/play/artroom-evidence/` in
 `2026-11-09-t1-focused/`, `2026-11-09-t1-focused-launch/`,
@@ -69,17 +70,57 @@ Raw evidence remains under `~/play/artroom-evidence/` in
 owned groups closed. Failed attempts and raw artifacts stay unchanged;
 each continuation uses new evidence paths.
 
-A meaningful compiler refusal control and the final gate remain owed.
-Read `gate.exit` before reporting the gate result. Exact retained JSON and
-pin-source byte equality remains unproved until the pin check runs.
+The pin check confirmed exact retained JSON and pin-source byte equality.
+One named refusal control then ran at clean `9f9dacf5`: the existing
+missing-genesis witness passed, and bypassing only the final diagnostic
+throw made that witness fail with the expected assertion. Each invocation
+collected all ten owner titles and skipped the nine unselected titles.
+The control restored source SHA-256
+`75530d52ea14d3a8e5710d9bf9cf9cce3adb21430c01397207937433147ef463`,
+closed its owned groups, and exited 0. It proves this final refusal
+boundary; it does not prove every diagnostic correct.
+
+Separate owner-private metadata audits retain the three attempts and the
+control under `2026-11-09-t1-pre-gate-audit/` and
+`2026-11-09-t1-control-audit/`. They preserve failed attempts, exact case
+identities, source/tool/dependency proofs, restoration and raw-output
+hashes. Raw reports and fixture payloads stay in the original private
+units. The control audit leaves the earlier audit's time-specific UNRUN
+statement intact.
+
+## Authoring corrections
+
+Planner ruling `75cea6c4db735df25ad1eb62de0e46c844f4a4d7` requires three
+source corrections before review. `row.self` keeps its whole-element
+meaning. The exported `elementMember(row, name)` reads every declared
+record member, including `self`, without reserving a callback method.
+A required phantom carries declared keys only on record element types.
+Scalar and unannotated elements cannot use this helper.
+
+The rule package exports `ruleReferences(source)`, which returns plain
+field and value-slot name arrays from the existing parser's checked AST.
+It evaluates no expression and preserves admission refusals. Findings
+use these names instead of scanning quoted text; validator diagnostics
+still report profile refusals. A dotted validator index now selects the
+complete offending form, just as a bracket index does.
+
+Exactly three new authoring cases cover these counterexamples. Existing
+strict type witnesses check member spelling and reject non-record uses.
+The existing derive profile case also checks plain reference results and
+unchanged refusals. The future compiled public SDK witness imports the
+new rule helper. These repairs have no compiler or test result yet. The
+final gate remains owed; read `gate.exit` before reporting its result.
 
 ## Generated assets
 
-Static literal-import and re-export tracing from Page, OAuth, and Card
-production entries reaches no C-authored Lending, Counter, or `define`
-source. C alone therefore identifies no Page or Card module to regenerate.
-This inspection does not establish built byte equality. C inherits any
-regenerated shared-client assets that A lands before the final gate.
+The initial static trace from Page, OAuth, and Card production entries
+reached no C-authored Lending, Counter, or `define` source. The later
+rule-reference repair changes a shared derive module that those clients
+can reach, so that trace no longer settles their generated outputs.
+Their builds may remove the unused helper export; source inspection
+cannot establish exact bundled byte equality. C inherits A's rebuilt
+shared-client assets, then checks whether this repair needs regeneration
+before its final gate.
 Counter's browser and maintained Counting witnesses read the new authored
 value; their build outputs are transient, with no tracked canonical module
 to refresh here. No generator ran for this inspection.

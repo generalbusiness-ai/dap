@@ -140,14 +140,16 @@ import { readApplicationPackage as readClientApplicationPackage } from '@general
 import { canonicalBytes, definitionDigest, keyIdOfSecret, sign, verify, verifySignedIntent } from '@generalbusiness/dap-bytes';
 import { secretSigner, signedIntent, shapeDeclaredAct } from '@generalbusiness/dap-client';
 import { validateDefinition } from '@generalbusiness/dap-derive';
-import { RULE_PROFILES, evaluate, assertEngine } from '@generalbusiness/dap-derive/rule';
+import { RULE_PROFILES, evaluate, assertEngine, ruleReferences } from '@generalbusiness/dap-derive/rule';
 import { small, variant } from '@generalbusiness/dap-derive/testing';
 const authored = authoringWitness();
 assert.equal(authored.definition.name,'release-authoring');
-assert.deepEqual(authored.definition.acts.establish.effects,[{of:'on',value:{slot:'label',from:{field:'label'}}}]);
+assert.deepEqual(authored.definition.acts.establish.effects,[{value:{slot:'label',from:{field:'label'}}}]);
 assert.equal(authored.digest,definitionDigest(authored.definition));
 assert.equal(authored.validation.ok,true);
 assert.deepEqual(authored.findings,[]);
+assert.deepEqual(ruleReferences('fields.label = subjects.on.values.label'),{fields:['label'],values:['label']});
+assert.deepEqual(ruleReferences('"fields.absent" = "fields.absent"'),{fields:[],values:[]});
 assert.deepEqual(authored.refusals,{establish:['label-not-ready']});
 assert.equal(Object.hasOwn(authored.definition,'grants'),false);
 assert.equal(Object.hasOwn(authored.definition,'reasons'),false);

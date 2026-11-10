@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import {
-  anyOf, by, compile, CompileError, constant, define, differs, each, elements, equals, fact, grants, item, itemOf, live, none,
+  anyOf, by, compile, CompileError, constant, define, differs, each, elementMember, elements, equals, fact, grants, item, itemOf, live, none,
   one, open, optional, part, party, reasons, ref, require, required, roles, rule, sameSet, siblings, subject,
   text, transition, value, via, when,
 } from "../src/index.ts";
@@ -129,4 +129,40 @@ test("annotated record elements produce plain reads in list and set forms", () =
       match: [{ equals: { a: { slot: "label" }, b: { element: "row.label" } } }],
     },
   });
+});
+
+test("a record member named self stays distinct from the whole element", () => {
+  const rows = elements({ field: "rows" }, "self", "member");
+  expect(each(rows, "row", row => ({ guards: [
+    equals(row.self, constant({ self: "ready", member: "reader" })),
+    equals(elementMember(row, "self"), "ready"),
+    equals(elementMember(row, "member"), "reader"),
+  ] }))).toEqual({ each: { list: { field: "rows" }, as: "row", guards: [
+    { equals: { a: { element: "row" }, b: { const: { self: "ready", member: "reader" } } } },
+    { equals: { a: { element: "row.self" }, b: { const: "ready" } } },
+    { equals: { a: { element: "row.member" }, b: { const: "reader" } } },
+  ] } });
+});
+
+test("quoted rule text contributes no field read or compilation finding", () => {
+  const quoted = define({ name: "example", genesis: "establish", items: [root], acts: {
+    establish: { ...establish, guards: [rule("quoted", '"fields.absent" = "fields.absent"')] },
+  } });
+  expect(compile(quoted).findings).toEqual([]);
+});
+
+test("a dotted validator path retains the complete offending effect", () => {
+  const wrong = open(root, grant.establish, {}, ({ on }) => ({ effects: [on.value("label", constant(42))] }));
+  const invalid = define({ name: "example", genesis: "establish", items: [root], acts: { establish: wrong } });
+  let diagnostics: CompileError["diagnostics"] | undefined;
+  try { compile(invalid); }
+  catch (error) {
+    expect(error).toBeInstanceOf(CompileError);
+    if (!(error instanceof CompileError)) throw error;
+    diagnostics = error.diagnostics;
+  }
+  expect(diagnostics).toContainEqual(expect.objectContaining({
+    stage: "validator", act: "establish", form: "acts.establish.effects.0",
+    offending: { value: { slot: "label", from: { const: 42 } } },
+  }));
 });

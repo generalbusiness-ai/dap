@@ -25,7 +25,7 @@ import type {
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
-import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { RULE_PROFILES, RuleEvalError, ruleReferences } from "@generalbusiness/dap-derive/rule";
 
 const ACT_NAME: unique symbol = Symbol("act name");
 const INLINE_RULE: unique symbol = Symbol("inline rule");
@@ -313,11 +313,18 @@ export function sameSet<L extends Operand, I extends ItemDef>(list: L, as: strin
 }
 /** A scalar or an unannotated list element exposes only its complete value. */
 export type Elem = { readonly self: Operand };
+declare const RECORD_ELEMENT_KEYS: unique symbol;
+/** The declared keys of a record element, carried only by the type checker. */
+export type RecordElement<K extends string> = Elem & { readonly [RECORD_ELEMENT_KEYS]: K };
 /** Record list fields expose their declared members. Annotate fetched lists with elements. */
 export type ElemOf<L> = L extends Typed<infer T>
-  ? T extends { of: { type: "record"; of: infer R } } ? { readonly self: Operand } & { readonly [M in keyof R & string]: Operand }
+  ? T extends { of: { type: "record"; of: infer R } } ? RecordElement<keyof R & string> & { readonly [M in Exclude<keyof R & string, "self">]: Operand }
   : T extends { type: "list" } ? { readonly self: Operand } : Elem
   : Elem;
+/** Read any declared record member, including self; row.self reads the whole element. */
+export function elementMember<K extends string>(row: RecordElement<K>, name: NoInfer<K>): Operand {
+  return el((row.self as { element: string }).element, name);
+}
 /** A list whose elements are records with these members, declared by the author because the record is defined elsewhere (a part of a fetched fact). */
 export const elements = <O extends Operand, const M extends readonly string[]>(list: O, ..._members: M): O & Typed<{ type: "list"; of: { type: "record"; of: { [K in M[number]]: true } } }> => list as never;
 const elem = (as: string): Elem => new Proxy({} as Elem, { get: (_, member) => typeof member === "string" ? (member === "self" ? { element: as } : { element: `${as}.${member}` }) : undefined });
@@ -605,8 +612,14 @@ export function findings(definition: DeclaredDefinition): Finding[] {
       const rule = g.rule;
       const expression = definition.rules[rule];
       if (expression === undefined) { found.push({ act: kind, rule, names: "", message: "names no rule", form }); return; }
-      const fields = [...expression.matchAll(/\bfields\.([A-Za-z_][\w]*)/g)].map((m) => m[1]!).filter((n) => !Object.hasOwn(a.fields, n));
-      const slots = [...expression.matchAll(/\.values\.([A-Za-z_][\w]*)/g)].map((m) => m[1]!).filter((n) => !values.has(n));
+      let reads: ReturnType<typeof ruleReferences>;
+      try { reads = ruleReferences(expression); }
+      catch (error) {
+        if (error instanceof RuleEvalError) return; // The validator reports the unchanged profile refusal.
+        throw error;
+      }
+      const fields = reads.fields.filter((n) => !Object.hasOwn(a.fields, n));
+      const slots = reads.values.filter((n) => !values.has(n));
       if (fields.length) found.push({ act: kind, rule, names: fields.join(", "), message: "reads a field the act does not declare", form });
       if (slots.length) found.push({ act: kind, rule, names: slots.join(", "), message: "reads a value slot none of the act's items declares", form });
     });
@@ -650,7 +663,7 @@ export function compile<D extends DeclaredDefinition>(definition: D) {
   });
   const validation = validateDefinition(canonical, PROPOSED_BOUNDS, RULE_PROFILES);
   if (!validation.ok) for (const problem of validation.problems) {
-    const form = /^(?:acts|receives|timed)\.[^.]+\.(?:guards|effects|sends|attention)\[\d+\]/.exec(problem.path)?.[0] ?? problem.path;
+    const form = /^(?:acts|receives|timed)\.[^.]+\.(?:guards|effects|sends|attention)(?:\[\d+\]|\.\d+)/.exec(problem.path)?.[0] ?? problem.path;
     diagnostics.push(diagnostic("validator", form, valueAt(canonical, form), problem.message, problem.code));
   }
   if (diagnostics.length) throw new CompileError(diagnostics);
