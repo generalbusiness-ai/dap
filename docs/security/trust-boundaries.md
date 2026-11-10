@@ -207,8 +207,8 @@ session secret or application trust.
 
 The operator copies it to `wrangler.self-host.jsonc`, provisions distinct
 resources and supplies the register and session settings described in
-[Self-host dap](../self-host.md). The placeholder namespace name alone
-neither provisions a provider namespace nor proves its isolation. MCP opt-in
+[Run your own service on Cloudflare](../self-host-cloudflare.md). The
+placeholder namespace name alone neither provisions a provider namespace nor proves its isolation. MCP opt-in
 is absent, and `APPLICATION_SCREEN_HOSTS` is empty.
 
 ## artroom-scope

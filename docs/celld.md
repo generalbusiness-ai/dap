@@ -12,7 +12,7 @@ the room configuration. It has no Git host, no application content bucket
 and no committed secret.
 
 To run persistent services with HTTPS on one Mac, follow
-[Run on a Mac](self-host.md#run-on-a-mac).
+[Run your own service on a Mac](self-host-mac.md).
 
 1. Obtain the release named in
    [`celld.version`](../apps/room/celld/celld.version). Verify its GitHub

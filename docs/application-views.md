@@ -8,7 +8,8 @@ Four terms recur:
 
 - **Package v2.** The version 2 application package that `dap pack`
   builds from `dap.application.json`. Its `presentation.views` holds the
-  views, and [Package several definitions](write-an-application.md#package-several-definitions)
+  views, and
+  [Composition of several definitions](package-reference.md#composition-of-several-definitions)
   describes the rest of it.
 - **Projection.** A named read that the package declares in its
   `projections` over one of its definitions. Each projection has sources
@@ -23,6 +24,132 @@ Four terms recur:
   sessions. A view only declares how to show native data. It grants no
   authority, and every read uses the installed package's native read
   session.
+
+## A minimal view
+
+The smallest view is one projection and one `card` over it. The example
+below fits the notes starter that `dap new` writes, which
+[Check and preview a package](check-and-preview-a-package.md) uses.
+Views exist only in a version 2 package. Its `presentation` holds
+`resources` and `views` beside `entry`, `assets` and `descriptions`. The
+package also lists all seven places of
+[Composition of several definitions](package-reference.md#composition-of-several-definitions).
+
+The projection reads the starter's `note` items and two of their slots:
+
+```json
+"projections": {
+  "notes": {
+    "v": 1,
+    "definition": "definition.json",
+    "revision": "revision",
+    "sources": {
+      "note": {
+        "item": "note",
+        "read": "many",
+        "states": ["done", "open"],
+        "limit": 32,
+        "fields": {
+          "text": {
+            "from": { "kind": "value", "name": "text" },
+            "of": { "type": "text", "max": 280 },
+            "nullable": false
+          },
+          "writer": {
+            "from": { "kind": "party", "name": "writer" },
+            "of": { "type": "member" },
+            "nullable": false
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+The card binds to that projection's `note` source, in
+`presentation.views`:
+
+```json
+"views": {
+  "note": {
+    "kind": "card",
+    "projection": "notes",
+    "item": "note",
+    "revision": "revision",
+    "title": "text",
+    "summary": null,
+    "actor": "writer",
+    "facts": ["state"],
+    "acts": [],
+    "context": "Note {id}: {state}",
+    "fallback": "Note {id}",
+    "waiting": {},
+    "refresh": 5000,
+    "display": "inline",
+    "back": null
+  }
+}
+```
+
+A projection has four members:
+
+| Member | Rule |
+|---|---|
+| `v` | `1` |
+| `definition` | A path that the package lists in `definitions`. Packing replaces it with that definition's digest. |
+| `revision` | `"revision"` |
+| `sources` | One to eight named sources |
+
+An item source has five members:
+
+| Member | Rule |
+|---|---|
+| `item` | An item type of the definition |
+| `read` | `item`, `one` or `many` |
+| `states` | 1 to 16 states of that item type, each named once, in sorted order |
+| `limit` | 1 for `item` and `one`, and 1 to 100 for `many` |
+| `fields` | At most 32 named fields. No field is named `id`, `type`, `state` or `revision`. |
+
+Each field has three members:
+
+| Member | Rule |
+|---|---|
+| `from` | The slot's `kind`, which is `value`, `party`, `ref`, `fact-time` or `fact-signer`, and its `name` |
+| `of` | Exactly the slot's native type. A party slot that holds one member has the type `{ "type": "member" }`. |
+| `nullable` | `true` exactly when the native slot is not required |
+
+A `card`, `carousel`, `record` or `log` view has these members:
+
+| Member | Rule |
+|---|---|
+| `kind` | `card`, `carousel`, `record` or `log`. A `surface` has other members, as [Surface resources](#surface-resources) describes. |
+| `projection` | A projection that the package declares |
+| `item` | A source of that projection. Its rows supply the item identity and the template fields. |
+| `revision` | `"revision"` |
+| `title` | A field of the source, or `id`, `type`, `state` or `revision` |
+| `summary` | Such a field, or `null` |
+| `actor` | A source field of type `member`, or `null` |
+| `facts` | At most 16 such fields, each named once |
+| `acts` | At most two acts. A card with no acts signs nothing. [Typed acts from chat](#typed-acts-from-chat) describes an act. |
+| `context`, `fallback` | Text of at most 4,096 bytes. `{name}` inserts a field of the source or `id`, `type`, `state` or `revision`. |
+| `waiting` | At most 16 templates, each keyed by a state of the item type |
+| `refresh` | The refresh interval in milliseconds, 1,000 to 60,000 |
+| `display` | `inline` or `fullscreen` |
+| `back` | Another view of the package, or `null` |
+
+`dap check` binds each projection and view to the definition it names. A
+view that names a missing field refuses the package with
+`application-package-invalid` and exit 1. So does a projection field whose
+`of` or `nullable` differs from the native slot. A scenario step can state
+the rows that a projection reads. The row count and each stated value must
+match:
+
+```json
+{ "projection": { "name": "notes", "sources": { "note": [
+  { "id": 1, "state": "done", "fields": { "text": "A first note." } }
+] } } }
+```
 
 ## Typed acts from chat
 

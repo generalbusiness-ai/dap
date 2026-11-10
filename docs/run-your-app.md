@@ -24,15 +24,15 @@ records.
 
 You need the `my-counter` directory from the tutorial, a Cloudflare
 account that can deploy Workers, and a checkout of the dap repository.
-[Run your own service](self-host.md) lists the details. On this page,
-`dap` means `node packages/cli/bin/dap.js`, run from the root of the
-checkout. The command is not published to a registry yet.
+[Run your own service on Cloudflare](self-host-cloudflare.md) lists the
+details. On this page, `dap` means `node packages/cli/bin/dap.js`, run from
+the root of the checkout. The command is not published to a registry yet.
 
 ## Step 1: Deploy the service
 
-Follow [Run your own service](self-host.md) through the deployment of the
-Worker. Stop before you create a room. You now have a service at
-`https://<name>.<subdomain>.workers.dev`.
+Follow [Run your own service on Cloudflare](self-host-cloudflare.md) through
+the deployment of the Worker. Stop before you create a room. You now have a
+service at `https://<name>.<subdomain>.workers.dev`.
 
 ## Step 2: Pin the definition
 
@@ -98,8 +98,8 @@ dap install --plan https://<name>.<subdomain>.workers.dev --cohort application -
 
 The plan lasts 14 minutes. Finish this step within that time. Set the
 Worker's `REGISTER_SCOPE` setting to the planned register ID the command
-prints, as [Run your own service](self-host.md) describes, then install
-the plan and create the room:
+prints, as [Run your own service on Cloudflare](self-host-cloudflare.md)
+describes, then install the plan and create the room:
 
 ```sh
 dap install --planned --cohort application
