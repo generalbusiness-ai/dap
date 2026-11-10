@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0a4e1ee716e6be5c3ed90e271fac07598683cfd0","text":"Merge retired a covered predecessor; the successor is at packages/client/src/index.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0c91592d8ee5527b415dad027bf90b6f34e4b280","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0e-node-positive-reconciled.manifest.json."}
