@@ -1,9 +1,8 @@
 /** Portable CLI views and codecs shared with the browser. */
 import type { FieldValue } from "@generalbusiness/dap-contract";
-import { unb64url } from "@generalbusiness/dap-bytes";
 import { grantAction } from "@generalbusiness/dap-client";
 import type { Role } from "@generalbusiness/dap-platform";
-import type { Config, Repository } from "./store.ts";
+import type { Config } from "./store.ts";
 
 
 // ---------------------------------------------------------------- a definition, as this command reads it
@@ -43,23 +42,9 @@ export function valueOf(config: Pick<Config, "repository">, field: { type?: stri
   }
 }
 
-/** What an invitation link carries. Its secret is the invitation's, which `join` presents once; it is no signing key. */
-/** `definition`: the version of membership that the invitation is in. A link made before it was carried names none. */
-/** What an invitation link holds: the service, the repository's scopes, the invitation and its secret, the handle, and membership's version. */
-export interface Link { v: 1; service: string; repository: Omit<Repository, "inbox">; invitation: number; secret: string; handle: string; definition?: string }
-export const LINK = "artroom-invite:";
-
-/** The invitation that a link from `dap invite` holds, or null when the text is no such link. */
-export function linkOf(text: string): Link | null {
-  if (!text.startsWith(LINK)) return null;
-  try {
-    const bytes = unb64url(text.slice(LINK.length));
-    const link = bytes && (JSON.parse(new TextDecoder().decode(bytes)) as Link);
-    return link && link.v === 1 && typeof link.secret === "string" && Number.isSafeInteger(link.invitation) ? link : null;
-  } catch {
-    return null;
-  }
-}
+/** Compatibility names for the public client's sole person-invitation parser. */
+export { INVITATION_LINK as LINK, invitationOf as linkOf } from "@generalbusiness/dap-client";
+export type { InvitationLink as Link } from "@generalbusiness/dap-client";
 
 /** A caller's role in membership, the actions that role holds, and the caller's handle. */
 export interface Standing { role: Role; actions: readonly string[]; handle: string }

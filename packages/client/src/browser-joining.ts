@@ -50,7 +50,7 @@ function offered(link: InvitationLink, context: InvitationContext): Invited {
 export function readBrowserInvitation(text: string, context: InvitationContext): Invited {
   const typed = text.trim();
   if (typed.length > 16384) return { ok: false, reason: "That is too long to be an invitation." };
-  const link = invitationOf(typed);
+  const link = invitationOf(typed, context.origin);
   return link ? offered(link, context) : { ok: false, reason: "That is not an invitation link." };
 }
 const joinBinding = (seat: Seat, key: KeyId): Binding => ({ scope: seat.membership, publicKey: key, kinds: ["join"] });

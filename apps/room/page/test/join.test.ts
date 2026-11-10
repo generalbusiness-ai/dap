@@ -6,6 +6,7 @@ import { b64url, definitionDigest, intentDigest, keyIdOfSecret, newIncarnation, 
 import { changeDemo } from "@generalbusiness/dap-lanes";
 import { INVITATION_MEMBERSHIPS, Session as ReadSession, type Fetch } from "@generalbusiness/dap-client";
 import { sessionKey, invitationTarget, prepareJoin, joinAssociation, joinRoom, placeOf, type Session } from "../src/index.ts";
+import { PERSON_INVITATION, PERSON_INVITATION_CASES, PERSON_SERVICE } from "../../../../packages/client/test/support/person-invitation-table.ts";
 
 // One client boundary, with a SCRIPTED service acknowledgment. No scope,
 // membership judgment, provider or durable enrollment/recovery runs.
@@ -52,6 +53,17 @@ test("page join refuses mismatched encoding before submission and accepts script
     malformed,
   ]) {
     await expect(joinRoom(session, encode(changed))).rejects.toThrow("The invitation does not match this configured service");
+  }
+  expect(submissions).toEqual([]);
+  for (const row of PERSON_INVITATION_CASES) {
+    if (row.surface !== "all") continue;
+    if (row.admitted) {
+      const target = invitationTarget(PERSON_SERVICE, row.text);
+      expect([target.place, target.definition, target.handle, target.link], row.name).toEqual([
+        { directory: PERSON_INVITATION.repository.directory.scope, membership: PERSON_INVITATION.repository.membership },
+        PERSON_INVITATION.definition, PERSON_INVITATION.handle, textDigest(bytes.canonicalize(PERSON_INVITATION)),
+      ]);
+    } else expect(() => invitationTarget(PERSON_SERVICE, row.text), row.name).toThrow();
   }
   expect(submissions).toEqual([]);
   const target = invitationTarget(session.service, encode(original));

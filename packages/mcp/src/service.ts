@@ -1490,13 +1490,12 @@ export class McpService {
   async #join(args: Args): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes of UTF-8", declared: "a key you choose and keep" });
-    const link = typeof args["link"] === "string" ? invitationOf(args["link"].trim()) : null;
+    const link = typeof args["link"] === "string" ? invitationOf(args["link"].trim(), this.#service || undefined) : null;
     if (!link || !wellFormedInvitation(link)) return failed({ error: "shape", field: "link", what: "is no invitation link from dap invite, or its repository references are not well formed", declared: "artroom-invite:..." });
     const config = await this.#port.config.read();
     if (config.repository && config.repository.membership.scope !== link.repository.membership.scope) return failed({ error: "target", what: `this configuration has a room already (directory ${config.repository.directory.scope}); use another ARTROOM_HOME to join another` });
-    if (this.#service !== "" && this.#service !== link.service) return failed({ error: "target", what: `the link names the service ${clip(link.service)}, and this server serves ${this.#service}` });
     if (this.#service === "") { this.#service = link.service; this.#reads = this.#readsOf(link.service); }
-    const named = (link.definition ?? "platform:membership@1") as PlatformDefinition;
+    const named = link.definition as PlatformDefinition;
     const membershipData = platform(named)?.data as unknown as DefinitionLike | undefined;
     const act = membershipData?.name === "platform:membership" ? membershipData.acts["join"] : undefined;
     if (!act) return failed({ error: "target", what: `the invitation is in ${clip(named)}, which this server does not know as membership` });
