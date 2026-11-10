@@ -81,7 +81,7 @@ and the same exact comparison. A differing generated file fails the
 witness. Rewriting the committed document does not repair it.
 
 The CLI browser helper already has a whole-file source seal. Its moved
-algorithm needs protection in the new shared owner as well. Root ran
+algorithm needs protection in the new shared owner as well. The builder ran
 the maintained sourceSeal with the pinned Rolldown parser
 after checking its result against the exact landed A/main CLI blob.
 The candidate table changes the CLI row and adds the two portable
@@ -132,8 +132,8 @@ Producer END 9e7e1275625b2cd4957897c7e53046f44fcc0fed records actual exit
 private MCP adapter value. The independent audit confirms that every
 other table byte and assertion stays exact.
 [Binding source-seal manifest](evidence/2026-11-10-t0b-explicit-catalogue-seals.manifest.json)
-records those results. Root adopted the exact proposed table in normal
-commit d25554e49358cb1a399a532c512c44d20d645b80. Every other production
+records those results. The builder committed the exact proposed table at
+d25554e49358cb1a399a532c512c44d20d645b80. Every other production
 and test blob remains identical to 6869a035.
 
 Control END d043dfa8bdc15f9b058aa49ae3554b42ea11ff2a records the one
@@ -162,6 +162,44 @@ archives are read-only. All original raw evidence remains untouched.
 The earlier a52690e7 and 0ee5b70a witnesses below remain historical.
 They do not establish the explicit-catalogue repair's integrated results.
 
+A later static type review found that PlatformRule exposes refusals only
+on its grant and guard variants. The builder committed the one-line
+property narrowing at b4d35c53, preserving absent and undefined metadata,
+the same readonly refusal arrays, and every Client module and assertion.
+No actual compiler failure preceded that source repair.
+
+Producer END be3c3bda039c204c468b04769d8df348adc5170a records actual exit
+0 for the single adapter owner. The maintained parser matched immutable
+c0a4ace7 source against its admitted d8ef725f seal before deriving the
+narrowed d249472e value. The builder committed the exact one-literal
+replacement at 2461231a84ff0de1b2307ccb3642937f7513ac20. Every other
+security-table byte and assertion remains exact.
+[Adapter narrowing seal manifest](evidence/2026-11-10-t0b-rule-refusal-seal.manifest.json)
+retains the actual metadata and independent audit.
+
+Focus END ba76184617785f66d49622cdcc08799e82f65569 records the bounded
+run at 2461231a, tree 5fd43395e626234bd3e49afafdb79d9d5e9f588b.
+All four actual exit files read 0. The two Client compiler contexts and
+four MCP compiler contexts passed, followed by the whole eight-case MCP
+describe owner. All seven maintained commands returned 0. The static
+ledger, public reporter and built-in JSON agree on eight cases passed
+exactly once, with no skipped cases, retries or unhandled errors.
+All 4491 tracked source fences stayed exact and all owned process groups
+closed naturally. The Client test owner did not run, and the completed
+BY_NAME control did not repeat.
+[Bounded adapter focus manifest](evidence/2026-11-10-t0b-rule-refusal-focused.manifest.json)
+retains those actual results and their complete case identities.
+
+The raw slot receipt retains its frozen preparation sentence, "no focused
+body has run". That sentence predates execution. The actual completed
+commands, case records and exit files supersede it. The raw archive
+remains unchanged, and the public audit states this qualification.
+
+This bounded run does not cover the final BR13 integration. The whole
+active-source owner, integrated Page build and browser workflow, strict
+original document and Lending catalogue bytes, and the final gate still
+remain due. The retained Native CLI story belongs in that final gate.
+
 Before the final gate, check the format step on every touched JSON file
 and check every added package subpath against the Counter and Lending
 alias maps. Integrate actual BR13 main with preserved history, refresh
@@ -177,7 +215,7 @@ returned 0 without repeating the copy. The original dependency view had 14
 workspace links, 48 export aliases, 17 bin entries, and 162 verified
 copied tool files.
 
-Root's source-seal metadata producer returned 0. The independent audit
+The builder's source-seal metadata producer returned 0. The independent audit
 returned 0 and preserves every setup outcome. The curated unit contains
 only public-safe metadata and the original document bytes. Only that
 new unit is read-only; the original temporary receipts remain untouched.
