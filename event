@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:26ced44432695b4133e4f23ff93d1aef04341a3e","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/rule.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2b8c292936f351857901f7e88b442229d380a85f","text":"Merge retired a covered predecessor; the successor is at apps/counter/scripts/pin-commitments.mjs."}
