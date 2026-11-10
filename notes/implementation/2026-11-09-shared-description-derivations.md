@@ -158,11 +158,11 @@ commit objects change only mapped parent IDs and that one authorized
 subject. Every other header, author, committer, message body and tree
 stays exact. The final source diff is empty.
 
-Before-and-after ref snapshots alone do not prove the absence of
-transient writes. The retained process receipts bind the reconstruction
-to the reviewed driver. No reset, amend or force operation formed part
-of that driver. The failed original gate stays failed; tree equality
-carries earlier evidence without relabeling its execution head.
+The original publication at ed669893 included a skip marker before the
+builder read ruling 1d803a38. This ordinary-message documentation follow-up
+corrects publication and preserves the original commit. The carried
+browser runs remain the evidence. A push-started browser failure blocks
+landing; a cancelled install step does not. No history was rewritten.
 
 The actual prechecks at 3cf87cb5 then passed. The unchanged message
 checker checked 15 commits and flagged none, and format reported that
