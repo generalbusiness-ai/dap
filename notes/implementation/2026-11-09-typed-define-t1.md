@@ -109,9 +109,23 @@ registers copied acts, `normalize` transfers the external lookup, and
 case checks recursive symbol absence and actual bounded JSON admission
 for normalized and compiled declarations, retaining named-fact checks.
 No new case or admission change accompanies this repair. Its focused
-compiler/plain/Counting validation remains pending.
+compiler/plain/Counting validation passed at `623944ab`.
 
-The five manifests below adopt separate sealed metadata units; they keep
+The ACT_NAME-only repair focus at `623944ab`, tree
+`2a9016a43e65915150f30e47ad1a6769f705213b`, passed all 13 affected
+compiler contexts, all 28 plain cases in four complete owners, and one
+complete maintained Counting run with 56 passes. Its twelve wrapper
+observations stay unknown. The strengthened existing metadata case passed
+strict JSON admission and retained named-fact behavior. The earlier
+Node150 result stays at `e5c5f353`; this focus did not repeat it.
+
+[Page browser run 42731853327](https://github.com/generalbusiness-ai/dap/actions/runs/42731853327)
+succeeded at `8178fe63`, with its job and all steps completed successfully.
+Ten explicit browser, recorder and Worker input closures have no changed
+input through `623944ab` and exclude Define. That source-only equivalence
+carries the actual prior run; it claims no new CI run or live acceptance.
+
+The seven manifests below adopt separate sealed metadata units; they keep
 the earlier failures and time-specific UNRUN statements intact. Raw logs,
 reports, fixture payloads and custody stay withheld in their original
 owner-private units. Table output digests appear in each manifest's
@@ -127,6 +141,9 @@ run and does not relabel earlier failures.
 - [2026-11-09-t1-gate1-failure.manifest.json](evidence/2026-11-09-t1-gate1-failure.manifest.json): `498abb1a573ad1626a7903af641ea6784d39926101390d3195c0a857a268881c`.
 
 - [2026-11-09-t1-gate2-partial.manifest.json](evidence/2026-11-09-t1-gate2-partial.manifest.json): `4ee4415ab8550f4d8f87de542957134e08b40efba044b7de4082c721f28cc1f6`.
+
+- [2026-11-09-t1-act-metadata-focus.manifest.json](evidence/2026-11-09-t1-act-metadata-focus.manifest.json): `93b7b8cc9f719e519348a7f47e74d52b64b67c1272ac5aa3e68bb1e7da26f4b9`.
+- [2026-11-09-t1-page-ci-carry.manifest.json](evidence/2026-11-09-t1-page-ci-carry.manifest.json): `69d66263dca024e63300e276f432706fefdb7f723f789fef7d7865aa2b5a528f`.
 
 The table uses these fixed path abbreviations. Expanding them gives the
 exact argv retained in the audit metadata; each row keeps its actual
@@ -213,14 +230,30 @@ taskVitest="$taskSource/node_modules/vitest/vitest.mjs"
 | gate2/def-pins | `e5c5f353` | `node --import tsx scripts/check-definition-pins.mjs` | 0 | `78ad0225c45746e30851ab95df9d8da1dee29384189e9864650b507a4f6d60ae` |
 | gate2/test | `e5c5f353` | `npm test -- --gate --defer-summary --evidence /Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate2/stage.rMbGOFFM/test-evidence` | 1 | `fcca5d6c4d259598e4c4f6227751436f0f27938c47562f90c55ef65759bfbd03` |
 | gate2/gate | `e5c5f353` | `npm run gate` | 1 | `91e9fa2abd234b7325a10f4e41d0bd6b1d4bf726f581dd4946e5e6de634abb86` |
+| act-metadata/context-00 | `623944ab` | `$taskNode $taskTsc -p $taskSource/apps/counter/browser/tsconfig.json` | 0 | `cc3900f6a9e89b927c3dc1c0479541579dd61cb2277efe262d0e02ea2a42bf70` |
+| act-metadata/context-01 | `623944ab` | `$taskNode $taskTsc -p $taskSource/apps/counter/tsconfig.json` | 0 | `cae31ffb2667e555724c5b92535076b8411e62e51424cd09d90068ec7be33c14` |
+| act-metadata/context-02 | `623944ab` | `$taskNode $taskTsc -p $taskSource/apps/room/lanes/tsconfig.scope.json` | 0 | `beeb666f34021bfa89a6b8c9f81c2805ff18a8cd4e0a2ceba3cac5aaf8a2559e` |
+| act-metadata/context-03 | `623944ab` | `$taskNode $taskTsc -p $taskSource/examples/lending/browser/tsconfig.json` | 0 | `9bf2abfd019e106ee6f00f7905eb656c07649979fc54c85fc12d4939092a17e1` |
+| act-metadata/context-04 | `623944ab` | `$taskNode $taskTsc -p $taskSource/examples/lending/tsconfig.json` | 0 | `21bb6d0b55a3a69c2e81696cd66c63c3661c488be7fdca9ff1e126a8c1d47a88` |
+| act-metadata/context-05 | `623944ab` | `$taskNode $taskTsc -p $taskSource/packages/cli/tsconfig.scope.json` | 0 | `ab6fb332ef0a4c46afa5e2c4fe99fb8689a03510108410fcf6508a691e991c7b` |
+| act-metadata/context-06 | `623944ab` | `$taskNode $taskTsc -p $taskSource/packages/define/tsconfig.json` | 0 | `746c31fe28d533297bc0d7d39ce33ac747fa3ffd253f6bcd151625a7db59edd7` |
+| act-metadata/context-07 | `623944ab` | `$taskNode $taskTsc -p $taskSource/packages/define/tsconfig.test.json` | 0 | `0d7883af0355d08a711a7dab67b29ba09a9d1f219504d064a956466a6a13f5a0` |
+| act-metadata/context-08 | `623944ab` | `$taskNode $taskTsc -p $taskSource/packages/derive/tsconfig.test.json` | 0 | `851281a861c6689cc5f4bb9863b08eeb67dc82949edbd089e2e9257bda625b3d` |
+| act-metadata/context-09 | `623944ab` | `$taskNode $taskTsc -p $taskSource/packages/mcp/tsconfig.scope.json` | 0 | `9c8236c8d07209cf6f0518c54ae727c0097149d6ac48be46c87496df327fec19` |
+| act-metadata/context-10 | `623944ab` | `$taskNode $taskTsc -p $taskSource/packages/mcp/tsconfig.test.json` | 0 | `a0f077f96db9353388a8f5a153aeb5e33adb2135a7e50426360dc79697ba7229` |
+| act-metadata/context-11 | `623944ab` | `$taskNode $taskTsc -p $taskSource/packages/platform/tsconfig.test.json` | 0 | `5592fb115e38036540836a77f4da03151d16f6c65349942dcf1cb1b12d0dfe61` |
+| act-metadata/context-12 | `623944ab` | `$taskNode $taskTsc -p $taskSource/packages/scope/tsconfig.test.json` | 0 | `f2bea2fba14a298cd7e1d4a81df1307b47546a46c1be0681730c52e47c6d89b4` |
+| act-metadata/body | `623944ab` | `$taskNode $taskVitest run $taskSource/packages/define/test/authoring.test.ts $taskSource/packages/define/test/pins.test.ts $taskSource/examples/lending/definition.test.ts $taskSource/apps/counter/commitments.test.ts --config /private/tmp/artroom-t1-act-metadata-focus-20261109.config.mts --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter=$taskSource/scripts/focused-check.mjs --outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-act-metadata-focus/pipeline/vitest.json` | 0 | `78a02f73893a5a181e1eefffff486facce22b9d5e78cbf94f87f02557ed2da31` |
+| act-metadata/counting | `623944ab` | `$taskNode $taskSource/apps/counter/scripts/test-browser.mjs` | 0 | `20d07072ba6d777f106e799ce95fa0c1e604810f13f51cc29f7322b010a7c630` |
+| Page browser CI | `8178fe63` | GitHub Actions `.github/workflows/page-browser.yml`, run 42731853327 | 0 | `ce872cbcec5d7c6673130259a4f39a3b96d27cdd538ee087fe5d0c2869b2b162` |
 
 The independent audits read terminal receipts, same-run case identities,
 source/tool/dependency hashes, exact retained pins and owned-group
 cleanup. Each metadata audit exited 0 and sealed its new unit without
 running an application or validation body. The repair audit records the
-Page asset pass. A's Page browser citation covers its inherited assets;
-C's own main-to-head paths match neither Page nor Card workflow filter.
-Any workflow created by the branch push still needs its actual result.
+Page asset pass. The public CI carry unit records the actual successful Page run and its
+source-equivalence limit. C's own main-to-head paths match neither Page nor
+Card workflow filter; branch creation nevertheless scheduled that run.
 
 Outer elapsed time uses each launcher's monotonic clock; CPU uses its
 self and waited-child getrusage deltas. Separate command times and
