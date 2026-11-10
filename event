@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e76ab781a340c04499fc0dae7dfebd8cd2e38dcb","text":"Merge retired a covered predecessor; the successor is at packages/define/src/expression.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ec584eaa5a41f191fc15f33a302dce0e4434361c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0e-compiler-first.manifest.json."}
