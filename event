@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cc06d9946b969562162c5edbbdef611d40d66b4f","text":"Merge retired a covered predecessor; the successor is at packages/client/src/describe.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cf35ecc03f8b85a3cea82bdc68a56f51029b3c20","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0b-rebuilt-static-preflight.manifest.json."}
