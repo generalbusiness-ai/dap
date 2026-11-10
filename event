@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c1e91b80933a3aa2a97a42565c1d55de2ef4638c","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/index.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c2c5ea90f231303dfe371ba42f4514ae8f8cb0a2","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/vite.config.ts."}
