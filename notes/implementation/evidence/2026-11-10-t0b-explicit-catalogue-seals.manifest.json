@@ -1,0 +1,31 @@
+{
+  "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
+  "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-explicit-catalogue-seals/unit",
+  "sourceHead": "6869a035158af79ae4a4c34808d2849b23b839de",
+  "sourceTree": "769324fbbaa4c6b575509776687687fcfe116a53",
+  "qualification": "Actual maintained AST sourceSeal metadata only; no application import/test/compiler/build. Both immutable374 old AST seals match their admitted literals. Candidate values remain proposed until root adopts them.",
+  "files": [
+    {
+      "path": "audit.json",
+      "bytes": 3088,
+      "sha256": "70eab5190d24fb8f5c5d8661df313fb0b5f7ea04cf87e0d0778849b5afea8b19"
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-explicit-catalogue-seals/private",
+    "manifestSha256": "b0cd5a705d17a24015a8d5cb2b106e91afdb92c2ccfc8702422f174a3554539b",
+    "files": 28,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T06:01:10.583378+00:00",
+      "action": "Retain private raw archives and original runs; no cleanup scheduled or performed by this sealer.",
+      "qualification": "The maintained control already removed its own conclusive scratch. The observed original returned buffers, copied original report bytes, original/mutant source copies and all remaining temporary/cache files stay in private durable custody. No removed scratch content is fabricated."
+    }
+  },
+  "withheld": [
+    "Original returned stdout/stderr buffers, full reports and failure stacks.",
+    "Original/mutant source copies, complete source/tool plans and remaining temporary/cache files."
+  ],
+  "readonlyScope": "Only the new curated public unit (0444 files/0555 directories) and new private archive (0400 files/0500 directories). Original raw runs, temporary originals and checkout remain untouched."
+}
