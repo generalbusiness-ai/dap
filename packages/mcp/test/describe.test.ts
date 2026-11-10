@@ -152,8 +152,19 @@ describe("descriptions are derived from the whole declaration", () => {
     expect([presented["additionalProperties"], presented["required"], Object.keys(presented["properties"] as object)]).toEqual([false, [], ["pin"]]);
     const pin = (presented["properties"] as Record<string, Record<string, unknown>>)["pin"]!;
     expect([pin["required"], pin["additionalProperties"], pin["description"]]).toEqual([["at", "seq", "hash"], false, "an entry of kind hold@1:check under issue; optional"]);
-    const required: ActLike = { ...manifest.act, presents: { pin: { kind: ["k"], under: "d", required: true } } };
-    const schema = actTool({ ...manifest, act: required }, changeInventory, "default").inputSchema;
+    const requiredDefinition = {
+      ...change,
+      acts: { ...change.acts, "propose-manifest": {
+        ...change.acts["propose-manifest"],
+        presents: { ...change.acts["propose-manifest"].presents,
+          pin: { ...change.acts["propose-manifest"].presents.pin, required: true },
+        },
+      } },
+    } as const;
+    const requiredPin = definitionDigest(requiredDefinition);
+    const requiredInventory = room([["sc_ch_required", "lane", requiredPin, declared(requiredDefinition)]], "member", ["change.propose"]);
+    const requiredManifest = bindingsOf(requiredInventory, WORDS).find((x) => x.definition === "change" && x.kind === "propose-manifest" && x.digests.includes(requiredPin))!;
+    const schema = actTool(requiredManifest, requiredInventory, "default").inputSchema;
     expect([(schema["required"] as string[]).includes("presented"), ((schema["properties"] as Record<string, Record<string, unknown>>)["presented"]!["required"])]).toEqual([true, ["pin"]]);
     // A capability argument over an item range keeps the range's exception.
     const range = { type: "t", states: ["a"], except: ["also.x"] };
