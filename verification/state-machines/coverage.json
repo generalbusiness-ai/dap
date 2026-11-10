@@ -54,10 +54,10 @@
     "rules": {
       "EvidenceBeforeProgress": "advanced => accepted /\\ verified"
     },
-    "syncCommit": "c9f4dff6267d12d89d1215a0d894e7ec2f5f2435",
+    "syncCommit": "8dc1381c732132be8a6d378697e0b87191bd2801",
     "sha256": {
       "apps/room/page/src/retained-editor-state.ts": "159a82608a78b04f3849d10bcb5a5f2f8a7c6c0dcae69f932636cf3e0b688141",
-      "apps/room/page/src/retained-editor-data.ts": "e29c48c2359278ec87fbbacdf11bfa330d2748b6946091921f2d03dcff31d20d"
+      "apps/room/page/src/retained-editor-data.ts": "9536e24dbb79de4e543d5c0cface52072fa63bdf196129a7bab88900d7452d83"
     }
   },
   "Effects": {

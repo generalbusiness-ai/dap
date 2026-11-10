@@ -64,7 +64,7 @@
             "fields": {},
             "message": "rules-wanted",
             "result": {},
-            "to": { "of": "on", "slot": "rulesScope" }
+            "to": { "slot": "rulesScope" }
           }
         }
       ],
@@ -1066,16 +1066,13 @@
         { "of": "also.manifest", "state": ["current"] },
         {
           "equals": {
-            "a": { "of": "also.earlier", "slot": "manifest" },
+            "a": { "slot": "manifest" },
             "b": { "item": "also.manifest" }
           },
           "of": "also.earlier"
         },
         {
-          "equals": {
-            "a": { "of": "also.earlier", "slot": "name" },
-            "b": { "field": "name" }
-          },
+          "equals": { "a": { "slot": "name" }, "b": { "field": "name" } },
           "of": "also.earlier"
         },
         {
@@ -1258,7 +1255,7 @@
         { "of": "also.earlier", "signer": ["reviewer"] },
         {
           "equals": {
-            "a": { "of": "also.earlier", "slot": "manifest" },
+            "a": { "slot": "manifest" },
             "b": { "item": "also.manifest" }
           },
           "of": "also.earlier"

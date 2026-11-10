@@ -8,12 +8,12 @@ The stamp: the definitions this file was generated from, by their pinned digests
 | Definition | Digest | Canonical bytes |
 |---|---|---|
 | `issue` | `sha256:325cb4f33da9deb1a31d85ba0f1456068d4d9d08009978b779aed70cb08e00ad` | 46160 |
-| `change` | `sha256:3f0389ba644e6d58e96a352debcc77d01661ffcf349c6db53d0645c2513eae70` | 59715 |
+| `change` | `sha256:bdeba17b698c5c56b8ab9255ce190d69df146e7b2784d2a636de832c86c2ba60` | 59635 |
 | `issue-evidence4` | `sha256:25a65ff7053c923ec7928c17a5e88a1772d9d476483bd28ee246547ca184be25` | 69834 |
-| `change-evidence4` | `sha256:fe3cfa584ef4beb697ffd43cbd99391626e2b5dcd863f7aee2cdbf4fac3849d1` | 76833 |
+| `change-evidence4` | `sha256:ea0a57d0341b3f5077fe0226a95486f51e128ccf0a4984bf93a8b1ffeb83b247` | 76763 |
 | `issue-questions` | `sha256:88e763abc263caf65397ba2d87ba629d90d3f09e472ce646ea744034e6909174` | 52161 |
 | `issue-questions-brief` | `sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3` | 52508 |
-| `change-finding` | `sha256:aaf68c3bd82c217312acd7784dfe06bcb7ba6a30a066d0475a7728c62c43a7e7` | 48698 |
+| `change-finding` | `sha256:16b1ff90f0a7b04ad1b6d3bc0d3052f6d0638d0c52f36571772a7e0a20f8e3ab` | 48618 |
 
 The original issue and change rows were written from Lane forms and browser flow, revision 14, at `4b3bf5da`. Successor profiles have separate pins.
 
