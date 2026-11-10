@@ -128,3 +128,40 @@ live-room outcome or deployment acceptance. The frozen question fixtures,
 other affected consumers, release metadata and maintained gate still need
 BR13 validation after main integration. Unchanged protected source needs
 no repeated formal body after that integration.
+
+
+## Rebuild the served Page module
+
+The static input graph finds 28 changed BR13 modules under the Page's room
+and OAuth entries. The maintained command
+`npm run build --workspace @generalbusiness/dap-page` runs once at
+`b5deebe1fe74f5538ec01c2ff0e37a4abad96ded`, in booking `ede2b783`.
+END `77af624f` closes that build. The audit reads `build.exit` and
+`actualrunner.exit`; both contain zero.
+
+Only `apps/room/page/assets.ts` changes among 4,467 tracked files. Its
+SHA-256 changes from
+`6e81a5fde77a68f1e58b06a6034b387ad9e067f99813e137e038b1578ef54461`
+to `ad040a6d3f8a74b1194d01312d3aaa1a20b48b4d139a9029fa2437485ba94efd`.
+The four exact `dist` leaves match the module's decoded string exports.
+All 1,978 pinned tool files, workspace links, lock and stamp stay fixed.
+The original NUL-separated Git status records only the unstaged asset
+change. The process guard and cleanup receipts are empty.
+
+Root fixes one missing newline in the prepared launcher before the build.
+The corrected launcher `304def7367` runs once. The earlier `98045e5d`
+launcher never runs, so that setup correction records no failed build.
+The [Page build manifest](evidence/2026-11-09-br13-page-build.manifest.json)
+hashes to
+`5cbfb6c4f3202084c56f67d173de93ffc2c4a50c2252dfbe82fe5cb2c0cc24d8`.
+It inventories 16 safe metadata files and 120 retained original files,
+read-only through 9 December. No private fixture enters the curated unit.
+
+The Card browser entry reaches no changed BR13 module, even when the
+static graph includes type-only edges. No Card build runs. The Page build
+changes no Editor or Effects protected source and needs no repeated formal
+check. Focused validation will use the committed Page output. Its selective
+scope covers 38 compiler contexts, 454 plain cases and eight host Node
+cases. The complete existing five-case SDK module owner remains unrun
+until C lands its Git `./diff` source-export repair. That deferred owner,
+the full maintained gate and affected workflow citations remain due.
