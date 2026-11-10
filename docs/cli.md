@@ -432,8 +432,8 @@ requirements.
 - A source or scenario file is missing, inaccessible or a symbolic link.
   Exit 1.
 
-[Write an application](write-an-application.md) describes the package
-and what the validation checks.
+[Package reference](package-reference.md) describes the package and what
+the validation checks.
 
 ### `dap dev`
 

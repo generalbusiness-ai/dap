@@ -132,7 +132,7 @@ The session witness runs real native room scopes. The index witnesses use
 trap namespaces for absence and real ScopeObject genesis checks for
 registration. The read-token witness runs native scopes with its scripted
 outside host. The workspace credential witness checks real SQL custody with
-scripted recorded state. See [stand-ins and what they show](../testing.md#stand-ins-and-what-they-show).
+scripted recorded state. See [stand-ins and what they show](../testing-reference.md#stand-ins-and-what-they-show).
 
 ```dap-security-witnesses
 [

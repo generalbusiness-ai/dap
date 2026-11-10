@@ -22,10 +22,11 @@ none names another Worker's script. Its private content bucket is
    `DAP_HOME` on this laptop for O4's register and founder. Keep it separate
    from every existing room's home. Use a fresh browser identity for the
    ordinary member at the O4 origin.
-2. Provision the private content bucket. Set a fresh `SESSION_SECRET` of
-   at least 32 cryptographically random bytes through standard input or a
-   private file, as [Run your own service](self-host.md) describes. Never
-   put the secret in an argument, source file or public evidence.
+2. Provision the private content bucket. Set a fresh `SESSION_SECRET` of at
+   least 32 cryptographically random bytes through standard input or a private
+   file, as [Run your own service on Cloudflare](self-host-cloudflare.md)
+   describes. Never put the secret in an argument, source file or public
+   evidence.
 3. Plan the register from the new founder home:
 
    ```sh

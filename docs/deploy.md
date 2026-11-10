@@ -8,8 +8,8 @@ stored one. The command sets no missing setting and changes no secret.
 
 Deploy only from a checkout of the reviewed commit, after a review of that
 exact head. Copy and configure the neutral template as described in
-[Run your own service](self-host.md) before the first deployment. From that
-checkout, run:
+[Run your own service on Cloudflare](self-host-cloudflare.md) before the first
+deployment. From that checkout, run:
 
 ```sh
 npm run deploy:scope
@@ -29,17 +29,94 @@ in the file or in `--var` needs review, because it replaces what the Worker
 holds. `--keep-vars` does not establish that a kept value is correct.
 
 To deploy on your own Cloudflare account for the first time, follow
-[Run your own service](self-host.md). To run the Worker on your machine,
-follow [Run the local Worker](celld.md).
+[Run your own service on Cloudflare](self-host-cloudflare.md). To run the
+Worker on your machine, follow [Run the local Worker](celld.md).
 
 A deployment serves rooms of every definition version that its platform
 package has shipped. Each room runs the version that its genesis pinned
 (see [Scopes](scopes.md)).
 
+## The order
+
+A register's ID follows from its install's signed intent, so the command
+line computes the ID before the register exists. The Worker accepts only
+the register that `REGISTER_SCOPE` names. Plan first, set the pin, then
+install:
+
+1. **Deploy** the Worker. Set `DEPLOYMENT` and `SESSION_SECRET` from
+   standard input, as
+   [Run your own service on Cloudflare](self-host-cloudflare.md) shows.
+2. **Plan.** Run `dap install --plan <base-url> --host <host>` with the
+   host's namespace:
+
+   - `--host github.com --namespace <login>`, where `<login>` is the
+     account's `login` in `GITHUB_APP_CONFIG`.
+   - `--host artifacts --namespace <namespace>`, where `<namespace>` is
+     the Worker's Artifacts namespace.
+   - `--host none`, with no namespace. The room has no Git host.
+
+   The plan creates nothing. It prints `Planned: register sc_...` and the
+   seed's time, then `Set REGISTER_SCOPE to sc_...`. The CLI keeps the
+   plan in its config directory. You can install it until the seed's
+   time, 14 minutes after the plan.
+3. **Set the pin.** Set `REGISTER_SCOPE` to the planned register ID. Set
+   the host's settings with the same ID: `registerScope` in
+   `GITHUB_APP_CONFIG` with the GitHub secrets, or `registerScope` in
+   `ARTIFACTS_CONFIG`. `--host none` needs no host setting. Deploy again.
+   If the host or namespace of a register differs from the host setting,
+   the Worker sends nothing for it.
+4. **Install.** Run `dap install --planned`. The CLI checks that the plan
+   still makes the same ID, creates the register, and prints
+   `Installed: register sc_..., ..., as planned.`
+5. **Create the room.** Run `dap create <name> --handle @you`. The
+   register sends the repository creation at once. If the command stops
+   waiting, run the same command again. It continues the pending creation
+   and signs nothing new. `--again` signs a second creation, which makes a
+   second repository.
+
+   Under policy `keys`, the command reads the register's summary before it
+   signs `found`. A key with no entry at the register in the last 900
+   seconds gets `forbidden`. The command prints
+   `Cannot read <register>: forbidden.` and signs nothing. So run the first
+   creation within 900 seconds of the install. Each accepted `found` restarts
+   those 900 seconds for the key that signed it.
+
+If the seed's time passes before the CLI sends the install, the CLI
+refuses it as `plan-expired`:
+
+- For a plan with neither `--cohort` nor `--host none`, plan again and
+  set the new ID.
+- For a plan with `--cohort` or `--host none`, keep the original
+  directory. Make the new plan, its host settings and every later command
+  in a new empty `DAP_HOME` ([CLI](cli.md)).
+
+If the CLI sent the install, or the service acknowledged it, run
+`install --planned` again from the original directory. An expired
+deadline does not allow a replacement.
+
+Finish the first room while the install is inside its 900-second read
+window. Before enrollment, the creation's read window also lasts 900
+seconds. The Worker does not renew an expired window. Do not sign a new
+creation to replace one whose window expired.
+
+### Install without a plan
+
+`dap install <base-url> --host ... --namespace ...` with no plan creates
+the register at once and prints its ID. A Worker accepts it only in two
+cases:
+
+- `DEPLOYMENT` is unset, as on a local Worker.
+- A test deployment sets `ALLOW_OPEN_CREATION` to `true` and also has a
+  valid register pin.
+
+When you set the pin after the install, the register's object can start
+before the setting takes effect. A creation then waits until the object
+sees the setting. Plan first to avoid that wait.
+
 ## Settings the order uses
 
 [Worker settings and bindings](security/settings.md) lists every setting
-with its reader, parser and failure behavior. The order below uses these:
+with its reader, parser and failure behavior. The order uses these:
 
 - `DEPLOYMENT`: the deployment's name, 1 to 128 UTF-8 bytes. Every read
   session names it.
@@ -199,82 +276,6 @@ Rooms and registers on older pins keep their rules and their acts. An
 older room whose founder key is also its recovery key stays that way until
 the recovery key rotates.
 
-## The order
-
-A register's ID follows from its install's signed intent, so the command
-line computes the ID before the register exists. The Worker accepts only
-the register that `REGISTER_SCOPE` names. Plan first, set the pin, then
-install:
-
-1. **Deploy** the Worker. Set `DEPLOYMENT` and `SESSION_SECRET` from
-   standard input, as [Run your own service](self-host.md) shows.
-2. **Plan.** Run `dap install --plan <base-url> --host <host>` with the
-   host's namespace:
-
-   - `--host github.com --namespace <login>`, where `<login>` is the
-     account's `login` in `GITHUB_APP_CONFIG`.
-   - `--host artifacts --namespace <namespace>`, where `<namespace>` is
-     the Worker's Artifacts namespace.
-   - `--host none`, with no namespace. The room has no Git host.
-
-   The plan creates nothing. It prints `Planned: register sc_...` and the
-   seed's time, then `Set REGISTER_SCOPE to sc_...`. The CLI keeps the
-   plan in its config directory. You can install it until the seed's
-   time, 14 minutes after the plan.
-3. **Set the pin.** Set `REGISTER_SCOPE` to the planned register ID. Set
-   the host's settings with the same ID: `registerScope` in
-   `GITHUB_APP_CONFIG` with the GitHub secrets, or `registerScope` in
-   `ARTIFACTS_CONFIG`. `--host none` needs no host setting. Deploy again.
-   If the host or namespace of a register differs from the host setting,
-   the Worker sends nothing for it.
-4. **Install.** Run `dap install --planned`. The CLI checks that the plan
-   still makes the same ID, creates the register, and prints
-   `Installed: register sc_..., ..., as planned.`
-5. **Create the room.** Run `dap create <name> --handle @you`. The
-   register sends the repository creation at once. If the command stops
-   waiting, run the same command again. It continues the pending creation
-   and signs nothing new. `--again` signs a second creation, which makes a
-   second repository.
-
-   Under policy `keys`, the command reads the register's summary before it
-   signs `found`. A key with no entry at the register in the last 900
-   seconds gets `forbidden`. The command prints
-   `Cannot read <register>: forbidden.` and signs nothing. So run the first
-   creation within 900 seconds of the install. Each accepted `found` restarts
-   those 900 seconds for the key that signed it.
-
-If the seed's time passes before the CLI sends the install, the CLI
-refuses it as `plan-expired`:
-
-- For a plan with neither `--cohort` nor `--host none`, plan again and
-  set the new ID.
-- For a plan with `--cohort` or `--host none`, keep the original
-  directory. Make the new plan, its host settings and every later command
-  in a new empty `DAP_HOME` ([CLI](cli.md)).
-
-If the CLI sent the install, or the service acknowledged it, run
-`install --planned` again from the original directory. An expired
-deadline does not allow a replacement.
-
-Finish the first room while the install is inside its 900-second read
-window. Before enrollment, the creation's read window also lasts 900
-seconds. The Worker does not renew an expired window. Do not sign a new
-creation to replace one whose window expired.
-
-### Install without a plan
-
-`dap install <base-url> --host ... --namespace ...` with no plan creates
-the register at once and prints its ID. A Worker accepts it only in two
-cases:
-
-- `DEPLOYMENT` is unset, as on a local Worker.
-- A test deployment sets `ALLOW_OPEN_CREATION` to `true` and also has a
-  valid register pin.
-
-When you set the pin after the install, the register's object can start
-before the setting takes effect. A creation then waits until the object
-sees the setting. Plan first to avoid that wait.
-
 ## The creation credential
 
 `GITHUB_CREATION_TOKEN` is one of these:
@@ -339,6 +340,41 @@ This historical procedure describes Register 17, whose failed attempts leave cla
    Each row's effect names the claim and the result: `{"attempt":3,"effect":"attempt","operation":"<found row>:0","result":"unknown","selected":null}`. A claim with no `selected` value and a result for attempt 3 has used its attempts.
 
 A test ran this count once, against 64 stuck claims and 2 finished ones (`packages/cli/test/failed-claims-close-register.defect.scope.test.ts`). The count gave the same 64 claim IDs as a direct read of the items. It ran on real scopes with a scripted host, and it has not run on a deployed Worker.
+
+## Keep existing rooms able to create children
+
+Before you change a Worker's current register, retain every earlier
+register whose rooms still need new Inboxes, lanes, other children, or Git access.
+Record those scope IDs and the new current register in
+`INSTALLED_REGISTER_SCOPES`. Keep `REGISTER_SCOPE` as the current register
+for new rooms. A listed register still needs its own checked Native birth
+in this Worker's index. Both Git host adapters accept the listed roots while
+preserving the exact host, namespace, pinned owner and destination birth
+at its own register. GitHub also keeps its repository binding checks.
+The list supplies no birth, credential, or repository binding.
+
+For hosted Workers, commit the array beside `REGISTER_SCOPE` in the
+Worker's Wrangler file: `apps/room/wrangler.grow.jsonc`,
+`apps/room/wrangler.lending.jsonc`, or `apps/room/wrangler.demo.jsonc`.
+Name that configuration commit in the deployment receipt. The operator
+alone changes the list. A request, readable scope, or index row cannot add
+a root. Existing single-register configurations need no new setting.
+
+A `dap-grow` register switch also needs its archive bridge fixed first.
+The installed list does not update the single-root checks in
+[`archive-host-item.ts`](../packages/scope/src/archive-host-item.ts), supplied
+through [`apps/room/archive.ts`](../apps/room/archive.ts). Fix and review
+that bridge before switching Grow. The demo register packet switches only
+`dap-demo`.
+
+For a self-hosted Worker, record the array in its operator configuration
+and name that record in the deployment receipt. Install the new register
+with its retained signed plan after the configuration change. Existing
+rooms continue to use their own register and ordinary Native authority.
+
+To remove a register, first record the affected rooms and the decision to
+stop their future child creation. Keep that record with the configuration
+change. No capacity rule or automatic expiry removes a register.
 
 ## Browser Start configuration
 
@@ -468,38 +504,3 @@ which only you can read. Its config file holds no secret.
 
 Checked against main `b0af01d2` on 1 November 2026. Sources: [package.json](../package.json), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [apps/room/demo-creation.ts](../apps/room/demo-creation.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts).
 The commands on this page were not run for this revision.
-
-## Keep existing rooms able to create children
-
-Before you change a Worker's current register, retain every earlier
-register whose rooms still need new Inboxes, lanes, other children, or Git access.
-Record those scope IDs and the new current register in
-`INSTALLED_REGISTER_SCOPES`. Keep `REGISTER_SCOPE` as the current register
-for new rooms. A listed register still needs its own checked Native birth
-in this Worker's index. Both Git host adapters accept the listed roots while
-preserving the exact host, namespace, pinned owner and destination birth
-at its own register. GitHub also keeps its repository binding checks.
-The list supplies no birth, credential, or repository binding.
-
-For hosted Workers, commit the array beside `REGISTER_SCOPE` in the
-Worker's Wrangler file: `apps/room/wrangler.grow.jsonc`,
-`apps/room/wrangler.lending.jsonc`, or `apps/room/wrangler.demo.jsonc`.
-Name that configuration commit in the deployment receipt. The operator
-alone changes the list. A request, readable scope, or index row cannot add
-a root. Existing single-register configurations need no new setting.
-
-A `dap-grow` register switch also needs its archive bridge fixed first.
-The installed list does not update the single-root checks in
-[`archive-host-item.ts`](../packages/scope/src/archive-host-item.ts), supplied
-through [`apps/room/archive.ts`](../apps/room/archive.ts). Fix and review
-that bridge before switching Grow. The demo register packet switches only
-`dap-demo`.
-
-For a self-hosted Worker, record the array in its operator configuration
-and name that record in the deployment receipt. Install the new register
-with its retained signed plan after the configuration change. Existing
-rooms continue to use their own register and ordinary Native authority.
-
-To remove a register, first record the affected rooms and the decision to
-stop their future child creation. Keep that record with the configuration
-change. No capacity rule or automatic expiry removes a register.

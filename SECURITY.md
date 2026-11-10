@@ -30,8 +30,8 @@ contracts.
    and [authority, effects and publication](notes/2026-10-04-authority-effects-and-publication.md).
    Their section numbers are stable.
 
-[Testing guidance](docs/testing.md) describes the evidence required for a
-change. The inventories describe checked-in source. They establish no
+[Testing guidance](docs/evidence-filing.md) describes the evidence required
+for a change. The inventories describe checked-in source. They establish no
 current deployed setting, provider access control or completed live scene.
 
 ## Reviews

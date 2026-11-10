@@ -32,7 +32,7 @@ destination records the attachment. The operator must authorize that exact
 destination incarnation, repository, and branch in
 `GITHUB_REPOSITORY_BINDINGS`. An administrator's binding grant alone gives
 no GitHub access. Earlier cohorts cannot bind a repository. Follow
-[Bind a new room to GitHub](self-host.md#bind-a-new-room-to-github) for the
+[Bind a new room to GitHub](self-host-mac.md#bind-a-new-room-to-github) for the
 celld configuration path.
 
 `REGISTER_SCOPE` pins the one register that the Worker accepts for new
