@@ -43,12 +43,52 @@ planner owns the deployment and the inventory that must precede it.
 
 ## Final evidence
 
-Validation has not run for this draft. The single local slot belongs to
-R3a. The identifiers request requires a gate before this head's review.
+The three static checks and the full gate passed at commit
+`126c6c90f929eb13ec5e6dd1a725d71f75266482`, tree
+`7639a53714c8d429abb96db48a3d29858aa0c271`, after the ordinary merge of
+landed D main `f5d59983`. The gate's own exit, driver exit, launcher exit
+and complete analyzer exit each read 0. END `cfd1640e` records the run;
+`0dfeb69a` records the full reconciliation.
 
-| Check | Command | Exit | Output digest |
+The [static manifest](evidence/2026-11-10-identifiers-static-preflight.manifest.json)
+retains the three command receipts and their stdout digests in `steps.json`.
+The [gate manifest](evidence/2026-11-10-identifiers-final-gate.manifest.json)
+retains the gate log digest and the complete report custody. The table
+uses the same checkpoint for every row. The first three digests cover
+stdout. The gate digest covers its combined stdout and stderr log.
+
+| Check | Command | Exit | Output or log SHA-256 |
 |---|---|---|---|
-| Gate before review | `npm run gate` | Not run | Pending |
+| Whitespace | `git diff --check f5d59983 126c6c90` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Commit messages | `node scripts/check-commit-messages.mjs f5d59983 126c6c90` | 0 | `8b64c7a412d0921e8f3c08e1c23ecbb1ca1092bff45a46a1aeeb30d2d35a0c5a` |
+| JSON formatting | `npm run format:check` | 0 | `6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79` |
+| Gate before review | `npm run gate` | 0 | `fbfb436d260055bc5ba7c283870150997ce1b2db882f671abac0e51bebd28493` |
+
+The commit-message check read two commits and flagged none. The gate
+matched all 5,841 unique case obligations: 5,838 passed and three skipped.
+It ran 45 compiler contexts through 16 typecheck scripts. The reports
+retained 111 unknown wrapper observations separately from the cases, with
+no reconciliation issue, report error, unexpected case, failure or deadline
+diagnostic. The maintained selector omitted six Scale cases because only
+two notes differed from main. The skipped Page Recorder module
+`apps/room/page/test/record.scope.test.ts` has no reported module duration;
+that duration stays unknown.
+
+The before and after records match for all 4,539 tracked paths, 7,534 tool
+pins and 29 gate inputs. The static checks separately fixed the same
+source and tools and eight inputs. Both runs left no owned process group.
+Python measured 980.048029875 seconds around the inner gate pipeline and
+982.358135833 seconds around its launcher, including guards and teardown.
+These are separate measured boundaries. The 99 passive samples observed
+maximum single-process RSS of 2,651,472 KiB for Node and 3,421,184 KiB for
+workerd. These observations measure sampled resident memory, not heap,
+a process sum, an instantaneous maximum or a threshold.
+
+This evidence follow-up changes this implementation note and adds the two
+manifests. Source and tests stay unchanged. The identifiers design note
+keeps its gated bytes. The sealed public metadata and separate private raw
+units retain their output for at least 30 days after landing. Raw logs,
+generated fixtures, signing keys and private payloads stay withheld.
 
 ## Open limits
 
