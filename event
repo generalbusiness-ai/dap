@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d69e508e13c2adc881231377e25193d30300821f","text":"Merge retired a covered predecessor; the successor is at packages/define/test/authoring.types.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d90df737cebf3b6efe7a3ff72cd16312a60ca624","text":"Merge retired a covered predecessor; the successor is at apps/counter/scripts/pin-commitments.mjs."}
