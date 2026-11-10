@@ -1,5 +1,5 @@
 /** Explicit private agent-key handoff. Encoding is not native authority. */
-import { answersVersionQuestion } from "@generalbusiness/dap-platform";
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import { same } from "@generalbusiness/dap-bytes";
 import { invitationServiceUrl } from "./invitation-service.ts";
 import { INVITATION_KEY_MEMBERSHIPS } from "@generalbusiness/dap-contract";
@@ -9,7 +9,7 @@ export const AGENT_KEY_LINK = "artroom-agent-key:";
 /** The membership definitions an agent-key invitation may name: each is the exact pin of the membership scope it was issued at. */
 export const AGENT_KEY_MEMBERSHIPS = ["platform:membership@2", "platform:membership@4", "platform:membership@5", ...INVITATION_KEY_MEMBERSHIPS] as const;
 export type AgentKeyMembership = (typeof AGENT_KEY_MEMBERSHIPS)[number];
-export const isAgentKeyMembership = (value: unknown): value is AgentKeyMembership => typeof value === "string" && answersVersionQuestion(value, "clientAgentKeyInvitationMembership");
+export const isAgentKeyMembership = (value: unknown): value is AgentKeyMembership => typeof value === "string" && answersCatalogVocabularyQuestion(value, "clientAgentKeyInvitationMembership");
 export interface AgentKeyInvitation {
   v: 1; kind: "agent-key"; service: string;
   repository: { directory: ScopeRef; membership: ScopeRef; rules: ScopeId; destination: ScopeId };

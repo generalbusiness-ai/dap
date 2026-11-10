@@ -24,10 +24,6 @@ const QUESTION_PINS = {
     "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",
     "platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9",
   ],
-  applicationScreenMembership: [
-    "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",
-    "platform:membership@7", "platform:membership@8", "platform:membership@9",
-  ],
   applicationProjectionMembership: [
     "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",
   ],
@@ -36,9 +32,6 @@ const QUESTION_PINS = {
   ],
   pageRetainedCreationRegister: [
     "platform:register@17", "platform:register@26", "platform:register@7", "platform:register@8",
-  ],
-  clientCreationOfferRegister: [
-    "platform:register@17", "platform:register@26",
   ],
   cliRetainedInstallRegister: [
     "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20",
@@ -76,34 +69,8 @@ const QUESTION_PINS = {
     "platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7",
     "platform:destination@8",
   ],
-  clientAgentKeyInvitationMembership: [
-    "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",
-    "platform:membership@2", "platform:membership@4", "platform:membership@5", "platform:membership@6",
-    "platform:membership@7", "platform:membership@8", "platform:membership@9",
-  ],
-  clientCheckerKeyInvitationMembership: [
-    "platform:membership@12", "platform:membership@8",
-  ],
-  clientPersonInvitationMembership: [
-    "platform:membership@1", "platform:membership@10", "platform:membership@11", "platform:membership@12",
-    "platform:membership@13", "platform:membership@2", "platform:membership@4", "platform:membership@5",
-    "platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9",
-  ],
-  clientInvitationSignatureCredential: [
-    "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13",
-    "platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9",
-  ],
   clientSettlementClaimProjectionRegister: [
     "platform:register@26",
-  ],
-  clientCommonsReadDefinition: [
-    "platform:commons@1",
-  ],
-  clientPartitionRootDirectory: [
-    "platform:directory@10",
-  ],
-  clientPartitionChildDirectory: [
-    "platform:directory-partition@1",
   ],
   cliRetainedBindingFounderRegister: [
     "platform:register@25",

@@ -1,6 +1,6 @@
 /** Bounded advisory navigation for the explicit partition cohort. These
  * reads locate indexes; they do not attest Native provenance or grant acts. */
-import { answersVersionQuestion } from "@generalbusiness/dap-platform";
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import { same } from "@generalbusiness/dap-bytes";
 import type { Head, Item, ItemQuery, ItemQueryRead, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeRef, itemQueryReadFor, utf8, within, LATE } from "@generalbusiness/dap-bytes";
@@ -61,7 +61,7 @@ async function summary(reader: DirectoryReader, read: BoundedRead, ref: ScopeRef
   // Summary's bounded prefix must contain the singleton control; no lane
   // inventory is inferred from that prefix or its completeness flag.
   const control = result.value.items.find(item => item.id === 0 && item.type === "repository" && item.state === "open");
-  if (!same(result.value.scope, ref) || result.value.status !== "active" || !answersVersionQuestion(result.value.definition, question) || !control) throw new Incomplete("directory-mismatch");
+  if (!same(result.value.scope, ref) || result.value.status !== "active" || !answersCatalogVocabularyQuestion(result.value.definition, question) || !control) throw new Incomplete("directory-mismatch");
   return { value: result.value, at: result.at, control };
 }
 async function selection(reader: DirectoryReader, read: BoundedRead, ref: ScopeRef, type: string, states: readonly string[], at?: Head, limit = 100): Promise<{ items: Item[]; at: Head }> {

@@ -1,5 +1,5 @@
 /** Explicit private checker-key handoff. Encoding is not native authority. */
-import { answersVersionQuestion } from "@generalbusiness/dap-platform";
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import { same } from "@generalbusiness/dap-bytes";
 import { invitationServiceUrl } from "./invitation-service.ts";
 import type { FactRef, ScopeRef, ScopeId } from "@generalbusiness/dap-contract";
@@ -9,7 +9,7 @@ export const CHECKER_KEY_LINK = "artroom-checker-key:";
 export const CHECKER_KEY_MEMBERSHIP = "platform:membership@8";
 export const CHECKER_KEY_MEMBERSHIPS = [CHECKER_KEY_MEMBERSHIP, "platform:membership@12"] as const;
 export type CheckerKeyMembership = typeof CHECKER_KEY_MEMBERSHIPS[number];
-export const isCheckerKeyMembership = (value: unknown): value is CheckerKeyMembership => typeof value === "string" && answersVersionQuestion(value, "clientCheckerKeyInvitationMembership");
+export const isCheckerKeyMembership = (value: unknown): value is CheckerKeyMembership => typeof value === "string" && answersCatalogVocabularyQuestion(value, "clientCheckerKeyInvitationMembership");
 export interface CheckerKeyInvitation {
   v: 1; kind: "checker-key"; service: string;
   repository: { directory: ScopeRef; membership: ScopeRef; rules: ScopeId; destination: ScopeId };

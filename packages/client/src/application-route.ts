@@ -1,6 +1,6 @@
 /** Canonical screen addresses and owned routing metadata. A context is not
  * authority: read sessions and acts still use the native membership checks. */
-import { answersVersionQuestion } from "@generalbusiness/dap-platform";
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import type { Digest, ScopeId } from "@generalbusiness/dap-contract";
 import { isDigest, isRecord, isScopeId, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "./application-json.ts";
@@ -28,7 +28,7 @@ export function readApplicationScreenContext(value: unknown, address: Pick<Appli
   let body: unknown;
   try { body = parseStrict(applicationJson(value, 16 * 1024)); } catch { return invalid(); }
   if (!isRecord(body) || Object.keys(body).sort().join() !== "definition,deployment,destination,directory,ids,item,membership,membershipDefinition,origin,rules,scope,v" || body["v"] !== 1 || body["origin"] !== origin
-    || typeof body["deployment"] !== "string" || !body["deployment"] || body["deployment"].length > 128 || !answersVersionQuestion(body["membershipDefinition"], "applicationScreenMembership")
+    || typeof body["deployment"] !== "string" || !body["deployment"] || body["deployment"].length > 128 || !answersCatalogVocabularyQuestion(body["membershipDefinition"], "applicationScreenMembership")
 
     || body["item"] !== address.item || !isDigest(body["definition"])) return invalid();
   for (const [field, kind] of Object.entries({ directory: "directory", rules: "rules", membership: "membership", destination: "destination", scope: "lane" })) {
