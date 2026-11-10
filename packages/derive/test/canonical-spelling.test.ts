@@ -1,13 +1,14 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { expect, test } from "vitest";
 import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
-import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
 import { validateDefinition } from "../src/validate/index.ts";
 import { normalizeDefinition } from "../src/validate/spelling.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
 import { notes } from "./definition-corpus/fixture-data.ts";
 import { shippedDefinitions } from "./definition-corpus/shipped.ts";
 import { nativeDefinitions } from "./definition-corpus/native.ts";
+import { freshCountingSource, RETAINED_COUNTING_EMPTY_EXCEPT_PATHS } from "./support/fresh-counting-source.ts";
 import type { DefinitionCorpusRow } from "./definition-corpus/row.ts";
 import { change, changeDemo, change3, changeDemo3, changeEvidence4, issueEvidence4 } from "../../../apps/room/lanes/src/index.ts";
 import { changeJ4 } from "../../../apps/room/lanes/src/j4.ts";
@@ -105,14 +106,42 @@ test("nested guards keep distinct subjects while optional list and fact filters 
   expect(normalizeDefinition(after)).toEqual(after);
 });
 
-// These exact signed declarations are recorded inputs, not current generators.
-// Their original spelling, bytes, signatures and raw digests remain authoritative.
-const recordedExclusions = new Map([
-  ["retained Grow demo packet/Room", "The signed deployed Room declaration and its archive/simulator histories retain b89e7f84 until the identifier cutover."],
-  ["retained Grow demo packet/Site", "The signed deployed Site declaration retains d2bc830e and its old Room dependency until the identifier cutover."],
+// Exact retained inputs keep their spelling, bytes and raw digests.
+// Each Counting row permits only its five listed empty range exceptions.
+function emptyExceptPaths(value: unknown, path = ""): string[] {
+  if (Array.isArray(value)) return value.flatMap((part, i) => emptyExceptPaths(part, `${path}/${i}`));
+  if (value === null || typeof value !== "object") return [];
+  return Object.entries(value).flatMap(([name, part]) =>
+    name === "except" && Array.isArray(part) && part.length === 0
+      ? [`${path}/${name}`] : emptyExceptPaths(part, `${path}/${name}`));
+}
+interface RecordedExclusion {
+  digest: Digest;
+  reason: string;
+  emptyExceptPaths?: readonly string[];
+}
+const recordedExclusions = new Map<string, RecordedExclusion>([
+  ["retained Grow demo packet/Room", {
+    digest: "sha256:b89e7f84740dfd8b24f78e8b52aff5aa8d4181750a7b5f385c1ef6f993846787",
+    reason: "The signed deployed Room declaration and its archive/simulator histories retain b89e7f84 until the identifier cutover.",
+  }],
+  ["retained Grow demo packet/Site", {
+    digest: "sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea",
+    reason: "The signed deployed Site declaration retains d2bc830e and its old Room dependency until the identifier cutover.",
+  }],
+  ["shipped/Counting", {
+    digest: "sha256:435d9f5745048183d3cf0392ce909cd76909fd69ee368dfc57e142ba96af1d09",
+    reason: "The first Counting TypeScript declaration is retained historical data until the identifiers cutover.",
+    emptyExceptPaths: RETAINED_COUNTING_EMPTY_EXCEPT_PATHS,
+  }],
+  ["pinned/apps/counter/definition.json", {
+    digest: "sha256:435d9f5745048183d3cf0392ce909cd76909fd69ee368dfc57e142ba96af1d09",
+    reason: "The first Counting JSON declaration is retained historical data until the identifiers cutover.",
+    emptyExceptPaths: RETAINED_COUNTING_EMPTY_EXCEPT_PATHS,
+  }],
 ]);
 
-test("every pinned and generated application and native declaration has canonical spelling except the two recorded Grow packet declarations", async () => {
+test("every pinned and generated application and native declaration has canonical spelling except the exact retained Counting and Grow declarations", async () => {
   const demo = demoDefinitions();
   const current = { change, changeDemo, change3, changeDemo3, changeEvidence4: changeEvidence4(definitionDigest(issueEvidence4)), changeJ4, changeFinding, room, site, demoRoom: demo.room, demoSite: demo.site };
   expect(Object.keys(current)).toHaveLength(11);
@@ -134,7 +163,13 @@ test("every pinned and generated application and native declaration has canonica
     const exclusion = recordedExclusions.get(row.name);
     if (exclusion !== undefined) {
       excluded.push(row.name);
-      expect(exclusion).not.toBe("");
+      expect(exclusion.reason).not.toBe("");
+      expect(checked.definition.digest, row.name).toBe(exclusion.digest);
+      if (exclusion.emptyExceptPaths !== undefined) {
+        expect(emptyExceptPaths(declaration).sort(), row.name).toEqual([...exclusion.emptyExceptPaths].sort());
+        expect(canonicalize(normalizeDefinition(checked.definition.declared)), row.name)
+          .toBe(canonicalize(freshCountingSource(checked.definition.declared)));
+      }
       expect(checked.definition.digest).toBe(definitionDigest(declaration as DeclaredDefinition));
       expect(canonicalize(checked.definition.declared)).toBe(raw);
       expect(validateDefinition(declaration, row.bounds, row.profiles, { ...row.options, canonical: true }).ok, row.name).toBe(false);
@@ -147,5 +182,9 @@ test("every pinned and generated application and native declaration has canonica
     expect(definitionDigest(normalized), row.name).toBe(checked.definition.digest);
   }
   expect(excluded.sort()).toEqual([...recordedExclusions.keys()].sort());
+  expect(excluded).toEqual([
+    "pinned/apps/counter/definition.json", "retained Grow demo packet/Room",
+    "retained Grow demo packet/Site", "shipped/Counting",
+  ].sort());
   expect(failures).toEqual([]);
 });
