@@ -8,6 +8,11 @@ each definition.
 [Check and preview a package](check-and-preview-a-package.md) gives the
 steps to check a package and run it on your computer.
 
+No room that a current Worker creates installs an ordinary package, one
+that requires no host capability. A current cohort that installs
+packages accepts only a version 2 package that requires
+`device-command@1`, as [Device commands](#device-commands) describes.
+
 ## Composition of several definitions
 
 A version 2 package describes how its definitions fit together. Each

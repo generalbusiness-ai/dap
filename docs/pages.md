@@ -52,7 +52,7 @@ Two more addresses:
 ## What every page shows
 
 - **A header.** "Repository:" and the repository's name as the directory
-  records it, linking to the root of the same published branch. Then the
+  records it, linking to the root at the same ref. Then the
   branch shown, such as "branch main (HEAD)" or "branch main", and a link
   to the versions page. The name is the one that the register gave the
   repository at the Git host, not the room's label.
@@ -191,7 +191,7 @@ value and URL query replaced by `[redacted]`.
 | `bad-request` | 400 | The address is not a site address, a path segment is empty, `.` or `..` or holds a `/`, or the address holds a credential. |
 | `not-found` | 404 | No room has that directory, or no file or folder is at that path. |
 | `not-published` | 404 | The room has no confirmed publication, or has not published the requested ref or commit. |
-| `no-repository` | 404 | The room was created with `--host none` and has no repository. |
+| `no-repository` | 404 | The room's register was installed with `--host none`, and the room has no repository. |
 | `method-not-allowed` | 405 | The request is not a `GET`. |
 | `too-large` | 413 | The file is more than 1 MiB. |
 | `rate-limited` | 429 | The deployment refused the read under its rate limit. The answer has `Retry-After: 60`. |
@@ -211,7 +211,9 @@ private repository's other branches.
 
 The Worker reads only the selected commit, with its own host
 credentials: a read token on Artifacts, or the deployment's GitHub read
-token. On GitHub, the repository's ID must match the room's record before
+token. When the GitHub setting `publicReads` is true, the Worker reads
+with no token. On GitHub, the repository's ID must match the room's
+record before
 the Worker fetches anything. The Worker finds the published commit in the
 directory's and destination's records. That read records no entry, starts
 no operation and changes no credential. A change of branch at the Git
@@ -226,4 +228,4 @@ To change a page, use [`dap edit`](cli.md#dap-edit).
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [route.ts](../packages/scope/src/site/route.ts), [host.ts](../packages/scope/src/site/host.ts), [publication.ts](../packages/scope/src/site/publication.ts), [token-reuse.ts](../packages/scope/src/site/token-reuse.ts), [site-route.test.ts](../packages/scope/test/site-route.test.ts).
+Checked against main `6bfb6e16` on 10 November 2026. Sources: [route.ts](../packages/scope/src/site/route.ts), [host.ts](../packages/scope/src/site/host.ts), [publication.ts](../packages/scope/src/site/publication.ts), [token-reuse.ts](../packages/scope/src/site/token-reuse.ts), [site-route.test.ts](../packages/scope/test/site-route.test.ts).

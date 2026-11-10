@@ -4,6 +4,12 @@ This reference is for an author who writes an application package and
 wants members to see its items and take its acts from an AI app. It
 describes each field you can declare in a view, and what the host checks.
 
+An AI app shows a package's views only after a room installs the package.
+No room that a current Worker creates installs an ordinary package, one
+that requires no host capability. A room of a current device cohort
+installs a package that requires `device-command@1`, such as Grow, as
+[Device commands](package-reference.md#device-commands) describes.
+
 Four terms recur:
 
 - **Package v2.** The version 2 application package that `dap pack`
@@ -549,7 +555,10 @@ states. No new package declaration or setting is required today.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+The field tables, limits, examples, browser API, member table and file
+publication were checked against main `6bfb6e16` on 10 November 2026. The
+statements about routing, fact time, fact signers and surface lifetime
+keep their check against main `5dc9765f` on 30 October 2026. Sources:
 [`application-view.ts`](../packages/platform/src/application-codec/application-view.ts),
 [`application-view-binding.ts`](../packages/platform/src/application-codec/application-view-binding.ts),
 [`application-view-parameters.ts`](../packages/platform/src/application-codec/application-view-parameters.ts),

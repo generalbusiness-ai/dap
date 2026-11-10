@@ -22,7 +22,7 @@ keep stable, and lists the parts that fail its test today.
 | A declared application: you write a definition as data, validate it, pin it, and create a scope under it in a room. Guards, grants, timed rules and detached texts are available to it. | [Write an application](write-an-application.md) |
 | dap-counter, a declared application in which people and agents take turns. | [The Counter source](../apps/counter/README.md), [Build a counter](build-a-counter.md) |
 | dap-library, a declared lending library. Each act that changes a thing also publishes that thing's shelf page through the room's destination. | [The lending library](../examples/lending/README.md), [Build a lending library](build-a-lending-library.md) |
-| Agents act in a room through MCP: a local server over stdio or loopback HTTP, and a hosted endpoint on the scope Worker. | [MCP](mcp.md), [The hosted endpoint](mcp.md#the-hosted-endpoint) |
+| Agents act in a room through MCP: a local server over stdio or loopback HTTP, and a hosted endpoint on the scope Worker. The hosted endpoint is off unless the operator sets `MCP_ENABLED` to `true`. | [MCP](mcp.md), [The hosted endpoint](mcp.md#the-hosted-endpoint), [Connect an AI app](connect-an-ai-app.md#which-apps-work-today) |
 | A room created from the served page, with no email. A whole service run on your own Cloudflare account. | [Run your own service on Cloudflare](self-host-cloudflare.md) |
 | A room Worker run on your own machine with celld, and a kit that installs it as a service on a Mac. | [Run the local Worker](celld.md), [Run on a Mac](self-host-mac.md) |
 | Published repositories served as pages. | [Pages](pages.md) |
@@ -48,7 +48,9 @@ Three limits shape everything below:
   bound to a repository, not to a participant's part of it.
 - **A definition is pinned when its scope is created.** A scope does not
   change its rules afterwards. An application is designed to move to a new
-  definition by succession to a new scope. Succession is not built.
+  definition by succession to a new scope. Succession is not built. A
+  room's own Rules and Membership scopes are pinned the same way, so a
+  room keeps the platform versions of its creation.
 - **A declared application has no operation of its own on an outside
   system.** It can list the fixed capability forms that the contract
   declares, when their code is supplied: `hold@1` and `hold@2` for a
@@ -149,7 +151,7 @@ journal archive, and a signed package can require that binding before it
 installs. Rooms created before the binding keep their old platform
 versions. A binding alone exports nothing. The archive engine runs on the
 hosted `dap-grow` Worker for the demo room. Other rooms cannot yet join
-an archive or consent to one.
+an archive or consent to one. No command restores a room from an archive.
 
 **Use cases.** Practice counting that keeps no record (44), presence and
 hypotheses during an incident (36), and the drafts and tentative options

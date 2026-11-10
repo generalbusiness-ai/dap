@@ -46,6 +46,7 @@ review that version with the `dap` command.
 
 ## Review with the dap command
 
+[Get the dap command](../../../docs/get-dap.md) sets up the command.
 In the commands below, `<change>` is the change's scope ID, such as
 `sc_q3xk...`. `<version>` is the version number that `dap edit`,
 `dap propose` or the page printed.

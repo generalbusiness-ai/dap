@@ -6,10 +6,16 @@ read a refusal in its scenario, and preview it with `dap dev`. Each
 command runs on your computer with public TEST actors. No room or
 service is involved.
 
+No room that a current Worker creates installs an ordinary package such
+as this starter. `dap check` and `dap dev` are the way to run it today.
+To run a definition in a room, activate it on its own, as
+[Run your app](run-your-app.md) shows.
+
 ## Before you start
 
 You need a checkout of the dap repository with its locked dependencies
-installed by `npm ci`. [The dap command](cli.md) gives the Node version.
+installed by `npm ci`, as [Get the dap command](get-dap.md) describes.
+[The dap command](cli.md) gives the Node version.
 No registry publishes the command, so make an alias for the launcher in
 the checkout:
 
