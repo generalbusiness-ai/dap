@@ -120,6 +120,10 @@ deploy check.
    `200`. `dap verify --all` replays every scope of the room. Its last
    line is `All consistent: <n> scopes.`
 
+New source does not move an existing room to newer platform versions.
+Each room keeps the Rules, Membership and other platform versions that it
+pinned at creation. To use newer versions, create a new room.
+
 [Deploy the scope Worker](deploy.md) gives the rules for settings that
 the file holds and settings that `--keep-vars` keeps.
 

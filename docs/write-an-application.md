@@ -228,7 +228,7 @@ commits its journal before it answers with a receipt. You can declare
 that requirement explicitly with `level: { name: "recorded", version: 1 }`.
 The explicit member changes the definition's bytes and digest. It does not
 change an existing scope's pin. The Live and Sequenced levels are not
-supported yet. The validator refuses their declarations as
+built. The validator refuses their declarations as
 `unsupported-definition`.
 
 An archive is a binding of the room, not of a definition. A signed
@@ -301,8 +301,8 @@ Keep the declaration, its canonical bytes and its digest together. The
 Counter keeps them in [definition.ts](../apps/counter/definition.ts),
 [definition.json](../apps/counter/definition.json) and
 [pin.ts](../apps/counter/pin.ts), and its test checks that the three
-agree. The room's lane package keeps its declarations in `src`, canonical
-bytes in `definitions` and digests in `src/digests.ts`. Its
+agree. The room's lane package keeps its declarations in `src`, readable
+JSON in `definitions` and digests in `src/digests.ts`. Its
 [pin script](../apps/room/lanes/scripts/pin.mjs) writes every lane
 definition and its digest. Its
 [reference script](../apps/room/lanes/scripts/reference.mjs) writes the
@@ -317,7 +317,7 @@ node apps/room/lanes/scripts/reference.mjs --check
 ```
 
 The pin script prints one line per definition, with its digest and the
-size of its canonical bytes. The reference check prints
+size of its formatted JSON. The reference check prints
 `docs/lanes-reference.md is current` when the page matches the
 declarations. After you edit a lane declaration, the pin script writes
 its new bytes and digest. Generate the reference from the same
@@ -393,14 +393,18 @@ journey works. A live run is separate evidence.
 
 To put several definitions in one signed package, read
 [Package reference](package-reference.md) and
-[Check and preview a package](check-and-preview-a-package.md).
+[Check and preview a package](check-and-preview-a-package.md). No room
+that a current Worker creates installs an ordinary package, one that
+requires no host capability. A definition on its own, activated as above,
+is the path that runs in a new room.
 
 ## Publish a file from an act
 
 A room of the `application-publication` cohort has a destination that
 publishes a file when an application's act asks it to. That cohort is not
-among the cohorts a new room can be created with today, so a new room
-cannot publish files from an act. The lending library's rehearsal room is
+among the cohorts a new room can be created with today, so a new
+`application` room cannot publish files from an act. The lending
+library's rehearsal room is
 one that can. [The dap command](cli.md) lists the current cohorts.
 
 Declare a genesis field named `destination`, with type `scope` and kind
@@ -416,8 +420,10 @@ The [lending definition](../examples/lending/definition.ts) shows this
 form. Its guards further restrict paths to the shelf and keep each path
 owned by one thing, including after that thing is gone.
 
-An application of the room can overwrite any repository path, including
-files in the rules extent. The room's change-review rules do not govern
+An application of the room can overwrite any ordinary repository path.
+The host refuses reserved paths and the rules control extents, as
+[Application file publication](application-views.md#application-file-publication)
+describes. The room's change-review rules do not govern
 `publish-file`. Control remains at activation and creation: a member needs
 `rules.activate` to activate the definition and `application.establish` to
 create its scope. Activate only definitions whose writes you trust. The
@@ -434,7 +440,7 @@ waits behind it.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+Checked against main `6bfb6e16` on 10 November 2026. Sources:
 [the definition forms](../packages/contract/src/definition.ts),
 [the validator](../packages/derive/src/validate/index.ts),
 [the package validation](../packages/platform/src/validate-package.ts),
@@ -442,7 +448,8 @@ Checked against main `5dc9765f` on 30 October 2026. Sources:
 [the lending definition](../examples/lending/definition.ts), and
 [the Grow device forms](../examples/grow/device.ts). The validation and
 pin commands on this page ran on 12 October 2026 at main `d309b6b9`, and
-the printed digests are from that run. The scope-creation commands were
+the printed digests are from that run. The same validation at main
+`6bfb6e16` prints the same digests. The scope-creation commands were
 not run for this revision. The text about consuming the published Grow
 release that an earlier revision carried is kept in
 [the relocated text of the 30 October

@@ -164,4 +164,4 @@ individual features stay unobservable until the metric writer records them.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [usage-report.mjs](../scripts/usage-report.mjs), [usage-report-mapping.schema.json](../scripts/usage-report-mapping.schema.json), [usage-report-mapping.example.json](../scripts/usage-report-mapping.example.json). The commands on this page were not run for this revision.
+Checked against main `6bfb6e16` on 10 November 2026. Sources: [usage-report.mjs](../scripts/usage-report.mjs), [usage-report-mapping.schema.json](../scripts/usage-report-mapping.schema.json), [usage-report-mapping.example.json](../scripts/usage-report-mapping.example.json). The commands on this page were not run for this revision.
