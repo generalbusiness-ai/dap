@@ -78,7 +78,18 @@ A's inherited generated module, so no additional regeneration ran.
 All 90 retained Card module inputs stayed byte-identical and include no
 changed derive/rule input. That source trace proves no browser acceptance.
 
-The three manifests below adopt separate sealed metadata units; they keep
+The first full gate at `8178fe63` exited 2 on the baseline whitespace
+check: `pins.test.ts` ended with one extra newline. The driver and launcher
+also exited 2 and closed their groups. Every compiler, pin check and test
+stage stayed unreached; the final summary contains zero case or wrapper
+observations. The separate failure manifest retains that outcome.
+The repair removes only the last LF byte: the preceding 6,982 bytes,
+assertions, titles, imports and runtime inputs stay identical. No focused
+body repeats for that EOF-only edit; the next complete gate covers it.
+The earlier working-diff preflight missed committed whitespace; readiness
+now checks the full main-to-candidate diff.
+
+The four manifests below adopt separate sealed metadata units; they keep
 the earlier failures and time-specific UNRUN statements intact. Raw logs,
 reports, fixture payloads and custody stay withheld in their original
 owner-private units. Table output digests appear in each manifest's
@@ -90,6 +101,8 @@ run and does not relabel earlier failures.
 - [2026-11-09-t1-pre-gate-audit.manifest.json](evidence/2026-11-09-t1-pre-gate-audit.manifest.json): `91ea63c61ca50108510ee5e3498967c0613ba3a03f916af912f471e345b29938`.
 - [2026-11-09-t1-control-audit.manifest.json](evidence/2026-11-09-t1-control-audit.manifest.json): `089eb232b4a1611f239e725fcf70f51c6e7042270ea29142779dd58fb779c46c`.
 - [2026-11-09-t1-focused-repair-3-audit.manifest.json](evidence/2026-11-09-t1-focused-repair-3-audit.manifest.json): `f268561afd6d1df993b3493cf59268a0b4e386095ecdad695f667a3f73b2cfe7`.
+
+- [2026-11-09-t1-gate1-failure.manifest.json](evidence/2026-11-09-t1-gate1-failure.manifest.json): `498abb1a573ad1626a7903af641ea6784d39926101390d3195c0a857a268881c`.
 
 | Check | Source | Command | Exit | Withheld output SHA-256 |
 |---|---|---|---:|---|
@@ -150,6 +163,8 @@ run and does not relabel earlier failures.
 | repair3/body | `8ae77528` | `/opt/homebrew/Cellar/node/26.13.0_2/bin/node /Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/node_modules/vitest/vitest.mjs run /Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/define/test/authoring.test.ts /Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/define/test/pins.test.ts /Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/examples/lending/definition.test.ts /Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/apps/counter/commitments.test.ts /Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/packages/derive/test/rule.test.ts /Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/apps/room/page/test/assets.test.ts --config /private/tmp/artroom-t1-focused-repair-3-20261109.config.mts --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter=/Users/hughpyle/play/artroom/.builder-worktrees/typed-define-t1-20261109/scripts/focused-check.mjs --outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-repair-3/pipeline/vitest.json` | 0 | `9b7bea8393256455d45a056b6f3f9083be708d82034688b5e644187ede80f337` |
 | repair3/node | `8ae77528` | `/opt/homebrew/Cellar/node/26.13.0_2/bin/node --test --test-reporter=tap scripts/public-release-modules.test.mjs` | 0 | `b01fc0d482b1c05bb27762016b3b3c27b3a50eb3e3ac4e4a282de02e26a1bd20` |
 | repair3/pin-check | `8ae77528` | `/opt/homebrew/Cellar/node/26.13.0_2/bin/node --import tsx scripts/check-definition-pins.mjs` | 0 | `548c4e7e38b9da798685a82481eb0e6a21228ff2ecca60753efea1dbdb472544` |
+| gate1 | `8178fe63` | `npm run gate` | 2 | `4cef11bff5f0c0ae119fa5d383d82d325108ed052fe2e7317e04348ad92ad82f` |
+| gate1-whitespace | `8178fe63` | `git diff --check -B 64be0cabd1e5a156d260e0c6ac9520be09afc7bf` | 2 | `c72960c1f297a5417befcbc646e539ed4926e3e71984ceab8a9099c0a88d46f9` |
 
 The independent audits read terminal receipts, same-run case identities,
 source/tool/dependency hashes, exact retained pins and owned-group
@@ -163,7 +178,7 @@ Outer elapsed time uses each launcher's monotonic clock; CPU uses its
 self and waited-child getrusage deltas. Separate command times and
 concurrent case/module durations are distinct observations, not whole-run
 wall time. No deadline, pool, worker count, retry or scale factor changed.
-The full gate remains UNRUN. A later document-only evidence commit must
+The next full gate remains UNRUN; the first stays failed. A later document-only evidence commit must
 cite the actual gate source/tree and preserve the source and test bytes.
 
 ## Open limits
