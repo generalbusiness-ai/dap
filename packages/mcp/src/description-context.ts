@@ -4,7 +4,7 @@ import { VERSIONS } from "@generalbusiness/dap-platform";
 
 const catalogue = Object.fromEntries(Object.entries(VERSIONS).map(([pin, native]) => [pin, {
   rules: Object.fromEntries(Object.entries(native.rules).map(([code, rule]) => [code,
-    rule.refusals === undefined ? {} : { refusals: rule.refusals },
+    "refusals" in rule && rule.refusals !== undefined ? { refusals: rule.refusals } : {},
   ])),
 }]));
 
