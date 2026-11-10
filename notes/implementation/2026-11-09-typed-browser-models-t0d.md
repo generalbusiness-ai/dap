@@ -59,8 +59,20 @@ No runtime case was added.
 
 ## Evidence pending
 
-No compiler, test, browser, build, control, or gate has run for D. The
-dependency view is an owned APFS copy of completed C at the same lock,
+The first focused run at `8292fe9a` failed in the first compiler context.
+Lending's test helper could not pass the proposal fields to the fold's
+wire-data input. `Members` retains an optional string index from the
+authored field map, so returning that broad type added `undefined` to
+the index values. The local helpers now infer a separate field parameter
+and return that exact selected type. Their authored input constraints,
+shape checks, and revision capture remain.
+
+The failed unit remains at `2026-11-09-t0d-focused`. Its driver, launcher,
+and first compiler exited 1. The other three compiler contexts and all
+63 runtime cases remained unreached. Repair validation, both browser
+scenarios, and the final gate remain pending.
+
+The dependency view is an owned APFS copy of completed C at the same lock,
 with 15 relative workspace links, 49 source aliases, and fresh Vite state.
 No package manager ran.
 

@@ -151,13 +151,14 @@ export function offeredActs(thing: ShownThing, actions: readonly string[] | null
 }
 
 /** Validate the selected fields once against the authored act, then derive its bound revisions. */
-function proposed<K extends LendingAct>(view:LendingView,kind:K,asked:AskedOf<Definition,NoInfer<K>> & {fields:Fields<NoInfer<K>>}) {
+function proposed<K extends LendingAct,F extends Fields<NoInfer<K>>>(view:LendingView,kind:K,asked:AskedOf<Definition,NoInfer<K>> & {fields:F}) {
+  const fields:F=asked.fields;
   const shaped = shapeDeclaredAct(lending, kind, asked);
   const items = [
     ...(view.library ? [{ ...view.library, type: declaredLibrary.name, refs: {} }] : []),
     ...view.things.map(thing => ({ id: thing.id, revision: thing.revision, type: declaredThing.name, refs: {} })),
   ];
-  return { ok: true, proposal: { kind, on: shaped.on, expected: expectedOf(lending.acts[kind], items, shaped.on, shaped.fields), fields: asked.fields } } as const;
+  return { ok: true, proposal: { kind, on: shaped.on, expected: expectedOf(lending.acts[kind], items, shaped.on, shaped.fields), fields } } as const;
 }
 const no = (reason: string) => ({ ok: false, reason }) as const;
 

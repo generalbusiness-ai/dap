@@ -107,12 +107,13 @@ export function assignedTurn(view:CountingView,actor:ActorIdentity):TurnToken|un
 }
 const basis=(roster:Participant[]):Fields<"commit">["basis"]=>roster.filter(p=>p.state==="active").sort((a,b)=>a.id-b.id).map(p=>({id:p.id,member:p.member}));
 /** Current fields are ordinary required values. The signing client retains the shaper's beside data. */
-function proposed<K extends Control>(view:CountingView,kind:K,asked:AskedOf<Definition,NoInfer<K>> & {fields:Fields<NoInfer<K>>}) {
+function proposed<K extends Control,F extends Fields<NoInfer<K>>>(view:CountingView,kind:K,asked:AskedOf<Definition,NoInfer<K>> & {fields:F}) {
+  const fields:F=asked.fields;
   const shaped=shapeDeclaredAct(countingCommitments,kind,asked),act=countingCommitments.acts[kind];
   const expected=expectedOf(act,view.snapshot.items,shaped.on,shaped.fields);
   if(act.step==="transition"&&shaped.on!==null&&!Object.hasOwn(expected,"on"))refuseProposal(kind,"item-unavailable");
   for(const name of Object.keys(act.also)) if(!Object.hasOwn(expected,name))refuseProposal(kind,"required-item-unavailable");
-  return{kind,on:shaped.on,fields:asked.fields,expected};
+  return{kind,on:shaped.on,fields,expected};
 }
 /** No proposal mutates this snapshot or grants permission to the signing device. */
 export function proposal(view:CountingView,actor:ActorIdentity,kind:Control,completion?:Completion,options:ProposalOptions={}) {
