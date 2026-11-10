@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd883c63bab90935653f7ecc894f8c221cc8fa0a","text":"Merge retired a covered predecessor; the successor is at examples/lending/vitest.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ffb1eecb61c0cbb751194eec40e17e71477a113d","text":"Merge retired a covered predecessor; the successor is at packages/client/src/answers.ts."}
