@@ -121,10 +121,46 @@ an inherited BY_NAME row would change those expected answers.
 The pure totality title and assertions remain unchanged, bound to an
 empty catalogue. All existing MCP and CLI assertions remain unchanged.
 The next booked focus must include the whole active-source owner.
-Current binding-repair source has no compiler, test, parser, build, or
-gate result. Its changed Client owners need actual maintained source
-seals; the new MCP adapter needs an explicit owner decision. The evidence
-below belongs to the earlier a52690e7 and 0ee5b70a checkpoints.
+The binding repair now has actual source-seal metadata and one bounded
+guard control at 6869a035, tree 769324fbbaa4c6b575509776687687fcfe116a53.
+Full integrated compiler, focused-test, document, Page and gate witnesses
+remain due after actual BR13 main integration.
+
+Producer END 9e7e1275625b2cd4957897c7e53046f44fcc0fed records actual exit
+0. The maintained parser matched both old Client seals against immutable
+374ab615 source before deriving two changed Client values and one new
+private MCP adapter value. The independent audit confirms that every
+other table byte and assertion stays exact.
+[Binding source-seal manifest](evidence/2026-11-10-t0b-explicit-catalogue-seals.manifest.json)
+records those results. Root adopted the exact proposed table in normal
+commit d25554e49358cb1a399a532c512c44d20d645b80. Every other production
+and test blob remains identical to 6869a035.
+
+Control END d043dfa8bdc15f9b058aa49ae3554b42ea11ff2a records the one
+maintained BY_NAME control. The whole three-case owner passed unchanged:
+actual child exit 0, three passed. Replacing the single own-row condition
+with true produced actual child exit 1: two passed and the named case
+failed by the intended AssertionError. The inherited Object name differed
+from the literal unknown-mark fallback. The maintained control, driver
+and launcher each returned 0. The maintained control restored the exact
+source bytes, and the outer runner rewrote nothing. All source/tool
+fences passed and all owned process groups closed naturally.
+[Own-row control manifest](evidence/2026-11-10-t0b-by-name-control.manifest.json)
+retains every case identity, status and actual exit.
+
+The first metadata sealer returned 1 because it compared the original
+relative cwd, packages/client, with an absolute path. Its separate
+metadata follow-up resolved that unchanged cwd under the frozen root
+and returned 0. No test or control body reran. The audit history retains
+both metadata outcomes.
+
+The public units expose safe summaries and hashes. Private archives keep
+the complete original buffers, reports, source copies and remaining
+cache files through at least 2026-12-10. The curated units and private
+archives are read-only. All original raw evidence remains untouched.
+
+The earlier a52690e7 and 0ee5b70a witnesses below remain historical.
+They do not establish the explicit-catalogue repair's integrated results.
 
 Before the final gate, check the format step on every touched JSON file
 and check every added package subpath against the Counter and Lending
@@ -134,10 +170,10 @@ original document and Lending catalogue bytes without accepting rewrites.
 
 ## Final evidence
 
-Source and metadata preparation only. The APFS dependency copy returned
+The original source preparation used an APFS dependency copy that returned
 0. Its original setup returned 1 because the bin guard wrongly excluded
 owned workspace commands under packages. A separate metadata follow-up
-returned 0 without repeating the copy. The owned checkout has 14
+returned 0 without repeating the copy. The original dependency view had 14
 workspace links, 48 export aliases, 17 bin entries, and 162 verified
 copied tool files.
 
@@ -149,8 +185,8 @@ new unit is read-only; the original temporary receipts remain untouched.
 The focused compiler, test, and document results below cover exact
 source a52690e7, tree a0a63c0e997d7b412fb503291dac4cb084763bec.
 The source-seal parser remains a separate metadata operation. The
-Native CLI story, own-source Page browser workflow, and final gate
-remain pending.
+retained Native CLI story, Page browser workflow for the final integrated
+source, and final gate remain pending.
 
 [Source metadata manifest](evidence/2026-11-09-t0b-source-metadata.manifest.json)
 records the exact receipts, sources, and hashes.
@@ -203,8 +239,8 @@ retains the actual exits, all 27 pipeline commands, full case records,
 source fences, and both generated documents. All 4463 tracked paths
 stayed fixed throughout the body, and every owned process group closed.
 Only the new curated unit is read-only. The original raw run and its
-temporary files remain untouched. This follow-up changes only the note
-and evidence manifest, so the validated runtime source stays exact.
+temporary files remain untouched. The original 9d2e5fa4 follow-up changed only the note
+and evidence manifest. Its runtime source stayed at a52690e7.
 
 ## Open limits
 
@@ -215,8 +251,8 @@ starts from A's frozen review head and merges its
 landed main commit 64be0cab in ordinary merge 9256f2de.
 
 The moved browser dependency changed the generated Page module.
-This commit adopts the maintained output. The head still needs the
-Page browser workflow at its own source commit and the final gate.
+The earlier a52690e7 commit adopted the maintained output. The final
+integrated source still needs its Page browser workflow and final gate.
 
 The DX-T0 parent 6f87a4e3 stays open for its typed browser-model head.
 Request d5fa31c9 later reuses these shared derivations for its typed
