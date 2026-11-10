@@ -148,10 +148,12 @@ no existing scope's pin. Follow these steps for each Worker that changes.
    `ARTIFACTS_CONFIG.registerScope` and `REGISTER_SCOPE` equal to the exact
    planned signed install. Keep attempted plans with their original pins
    and IDs. Do not replan an attempted or acknowledged install to make it
-   fit the new defaults. A Worker accepts one configured register root.
-   Allowing both sets of version pins does not accept two roots. Use a
-   separate Worker or an explicitly planned root cutover for a new register,
-   and keep the old root on a Worker that serves a fixed public offer.
+   fit the new defaults. A Worker creates new rooms under one current
+   register, `REGISTER_SCOPE`. Allowing both sets of version pins does not
+   add a second current register. For a new register, use a separate
+   Worker, or list the old and new roots in `INSTALLED_REGISTER_SCOPES`
+   before the switch. See
+   [Keep existing rooms able to create children](#keep-existing-rooms-able-to-create-children).
 4. Deploy the exact reviewed source and nonsecret policy, for each Worker
    separately. Keep its bindings, secrets, register pins and reviewed
    `--var` overrides. `--keep-vars` keeps omitted values, and it does not
@@ -175,8 +177,8 @@ or readiness for every creation path.
 The `separate-recovery` cohort refuses a room whose founder key is also its
 recovery key: register 24, directory 23, membership 10, rules 10,
 destination 13 and inbox 1. The cohort is explicit. Unqualified installs
-keep register 18, and the newest cohort holds only rules 10, destination 13
-and inbox 1 of these pins. The Worker needs no Durable Object migration,
+use register 26, and the newest cohort holds only rules 10 and inbox 1 of
+these pins. The Worker needs no Durable Object migration,
 because the cohort adds no class.
 
 To create new rooms on this cohort:
@@ -189,11 +191,13 @@ To create new rooms on this cohort:
    to the planned ID, and deploy.
 4. Run `dap install --planned --cohort separate-recovery` with the same `DAP_HOME`.
 
-One Worker admits child creation from one configured register. Moving that
-setting closes new rooms under the old register, so use a separate Worker
-if the old register must keep creating rooms. Rooms and registers on older
-pins keep their rules and their acts. An older room whose founder key is
-also its recovery key stays that way until the recovery key rotates.
+One Worker creates new rooms under one current register. Before you move
+that setting, list the old register in `INSTALLED_REGISTER_SCOPES`, so its
+rooms keep creating children. See
+[Keep existing rooms able to create children](#keep-existing-rooms-able-to-create-children).
+Rooms and registers on older pins keep their rules and their acts. An
+older room whose founder key is also its recovery key stays that way until
+the recovery key rotates.
 
 ## The order
 

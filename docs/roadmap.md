@@ -78,7 +78,7 @@ In order, nearest first.
 | [Split and join](#split-and-join) | Not designed. The dap-spike sketches a protocol | A merger of two records |
 | [An authoring language](#an-authoring-language) | Not designed. One attempt in the dap-spike stopped | Every case, for its author |
 | [Hosted agent teams](../notes/2026-10-21-roles-flow-and-instances.md) | Designed, not built | Every case with agents in a team |
-| [OAuth on the hosted MCP endpoint](../notes/plans/031-2026-10-12-generic-mcp-service.md) | Designed, not built. The [hosted endpoint](mcp.md#the-hosted-endpoint) takes a bearer token today | 47, 51, and every person who reaches a room from their own AI app |
+| [OAuth on the hosted MCP endpoint](../notes/plans/031-2026-10-12-generic-mcp-service.md) | Built. The [hosted endpoint](mcp.md#oauth-authorization-and-consent) takes an OAuth grant after consent, or a bearer token. No acceptance run with hosted Claude or ChatGPT is recorded | 47, 51, and every person who reaches a room from their own AI app |
 | [Running dap off Cloudflare](../notes/2026-10-19-self-hosting-on-celld.md) | The [local Worker](celld.md) and the [Mac kit](self-host.md#run-on-a-mac) run. The rest of the self-hosting design is not built | Self-hosting |
 | [Sequence and event identifiers](../notes/2026-10-19-record-and-event-identifiers.md) | Designed, not built | Records read outside dap |
 | [Charts composed in chat](../notes/2026-10-20-chat-composed-views.md) | Not built. Superseded by views as notes in [boundary objects in use](../notes/2026-10-28-boundary-objects-in-use.md) | Every case with measurements |
