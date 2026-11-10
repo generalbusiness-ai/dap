@@ -1,0 +1,129 @@
+{
+  "qualification": "Independent metadata-only reconciliation of the second C full gate as a real partial failure. Earlier gate1 whitespace failure and successful source/control focus stay separate. No validation body or application import ran in this audit. All raw payloads, generated TEST fixtures and signing custody stay private.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate2-partial-audit",
+  "checkpoint": "e5c5f35367a345e9b53b3148a6088e8a6d0e14d0",
+  "tree": "9461ab2bf637a2a62e8fdcdd6dc32976518e93ea",
+  "fileCount": 7,
+  "sha256Sums": "ef2e3f7d442a5eb61ce0cb4e494e2c786fe0ebadb78deedf991b71cc4afb591d",
+  "files": [
+    {
+      "path": "case-obligations.json",
+      "bytes": 2653465,
+      "sha256": "e68b8d2fc552c02cb2f18a22a0215aceb571188b06545277e862b6ffccbcfcf6"
+    },
+    {
+      "path": "partial-reconciliation.json",
+      "bytes": 9019,
+      "sha256": "812e7d86b70a86db1e670185ff1e0ff3597af01a22e0b1c3e6d2f658392ec2c1"
+    },
+    {
+      "path": "scope-custody.json",
+      "bytes": 12398,
+      "sha256": "8902d9363d832504c9f008374e2c275cf7dcc957b231b0a949a3843557ed245f"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 14007,
+      "sha256": "c8cea22765adcc41ac7add1d8e47e44e7a7c4c7911801766bb0b8720a36f02a6"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 564,
+      "sha256": "a7c5670895704575b39662b53c43217726ec65577cced2557830bd0764621af0"
+    },
+    {
+      "path": "withheld-outputs.json",
+      "bytes": 1724,
+      "sha256": "d60e0bda153cc489e8bdf7a6056eb849fb851aa0fca215dc52fa9f0b231dde2f"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate2",
+      "fileCount": 1104,
+      "payloadFileCount": 1103,
+      "payloadBytes": 38791443,
+      "sha256Sums": "c323405339b6577ace917fff666966dc140397aca0855841f84a563e56f71423",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate2-launch",
+      "fileCount": 10,
+      "payloadFileCount": 9,
+      "payloadBytes": 12822,
+      "sha256Sums": "ef62fcefa583b63e244d73dbc523fff8f7fbdb2a894dffd630c9e140964885f1",
+      "ownerPrivate": true
+    }
+  ],
+  "withheldOutputs": [
+    {
+      "name": "whitespace",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "commit-messages",
+      "bytes": 39,
+      "sha256": "bb30d6a48801b9e7f900896a81049699999b1ec1f6377b69667eb901ebfd45c5"
+    },
+    {
+      "name": "commit-test",
+      "bytes": 590,
+      "sha256": "a4da3b472fe25a3e9fff61a812052868d9714eed0f67b873b9e19512a89aa291"
+    },
+    {
+      "name": "helpers",
+      "bytes": 68,
+      "sha256": "fe16de4eb8af93a344a7934b996a75e8028456a5325271764cbcc42b5fc3ea43"
+    },
+    {
+      "name": "citations",
+      "bytes": 1570370,
+      "sha256": "5ab8ae8872b43f8bcff2e03d535b6df6c30c9615cafe27a6baa0a836c8284b5d"
+    },
+    {
+      "name": "cite-test",
+      "bytes": 756,
+      "sha256": "bc84370ca3542fade8a90af0b821dffb49ab211e7a5dc3a7761133ecb11d55d1"
+    },
+    {
+      "name": "doc-links",
+      "bytes": 36,
+      "sha256": "6e3a711d14bb393ffcb48de01bc2ca244de49f2cacb5bb3d0f8519ee3e8cf710"
+    },
+    {
+      "name": "notes",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "name": "format",
+      "bytes": 114,
+      "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79"
+    },
+    {
+      "name": "typecheck",
+      "bytes": 2218,
+      "sha256": "808c1cacdb754403a1470d046090f319f2a65157619d867b7423c4788c4cbe15"
+    },
+    {
+      "name": "def-pins",
+      "bytes": 353,
+      "sha256": "78ad0225c45746e30851ab95df9d8da1dee29384189e9864650b507a4f6d60ae"
+    },
+    {
+      "name": "test",
+      "bytes": 42363,
+      "sha256": "fcca5d6c4d259598e4c4f6227751436f0f27938c47562f90c55ef65759bfbd03"
+    },
+    {
+      "name": "gate",
+      "bytes": 11403,
+      "sha256": "91e9fa2abd234b7325a10f4e41d0bd6b1d4bf726f581dd4946e5e6de634abb86"
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}

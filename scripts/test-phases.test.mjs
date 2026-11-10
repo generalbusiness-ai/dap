@@ -4,9 +4,9 @@ import { scopeScaleFiles, testOptions } from "../vitest.projects.mjs";
 
 test("the canonical partition keeps inherited native configs out of the plain phase and refuses inconsistent selection", () => {
   const all = testOptions(), plain = testOptions("plain"), native = testOptions("native");
-  assert.deepEqual(plain.projects.map(project => project.test.name), ["bytes", "derive", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow", "repo-in-ai"]);
+  assert.deepEqual(plain.projects.map(project => project.test.name), ["bytes", "derive", "define", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow", "repo-in-ai"]);
   assert.deepEqual(native.projects.map(project => project.test.name), ["scope", "scope-lending", "scope-denial", "scope-scale"]);
-  assert.equal(all.projects.length, 19);
+  assert.equal(all.projects.length, 20);
   assert.deepEqual(testOptions("native", "omit").projects.map(project => project.test.name), ["scope", "scope-lending", "scope-denial"]);
   assert.deepEqual(testOptions("scale").projects.map(project => project.test.name), ["scope-scale"]);
   assert.deepEqual(scopeScaleFiles, ["test/floor-archive.test.ts", "test/archive-one-entry-scale.test.ts", "test/archive-cadence.test.ts",
@@ -26,5 +26,5 @@ test("the canonical partition keeps inherited native configs out of the plain ph
     assert.throws(() => testOptions("plain"), /canonical test projects/);
     assert.throws(() => testOptions("native"), /canonical test projects/);
   } finally { selected.test.sequence.groupOrder = original; }
-  assert.equal(testOptions("plain").projects.length, 15);
+  assert.equal(testOptions("plain").projects.length, 16);
 });

@@ -110,7 +110,7 @@ you call a package's tests or Vitest directly, run
 changes.
 
 The names on this page match the repository workspace manifests.
-Internal workspace test exports are not part of the public eight-package
+Internal workspace test exports are not part of the public nine-package
 SDK. In particular, `@generalbusiness/dap-platform/testing` is available
 only in this checkout.
 
@@ -654,7 +654,7 @@ files and excludes test fixtures. Its two Node cases run in `npm test`.
 It installs only if `package-lock.json` changed since the last install,
 typechecks every workspace, and runs the fixed stages of `scripts/test.mjs`
 in order: the kernel boundary check, the maintained Node checks, the
-Counting build and generated Node witnesses, the fifteen plain Vitest
+Counting build and generated Node witnesses, the sixteen plain Vitest
 projects, then the native Vitest projects selected below. Any failed stage stops the
 later stages. The plain phase selects its project data before Vitest
 resolves inherited configs, so an early failure starts no Worker project.
@@ -667,7 +667,7 @@ platform package depends on the lanes package or imports from it. It prints the 
 each step's elapsed and CPU time. It also fails on a whitespace error in
 what the branch changed.
 
-The fifteen plain projects share one group with at most four active file
+The sixteen plain projects share one group with at most four active file
 tasks in total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
 The `scope` project follows in the workerd pool, against real Durable
 Objects with SQLite storage, with an explicit limit of two workers.

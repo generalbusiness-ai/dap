@@ -1,0 +1,217 @@
+{
+  "qualification": "Independent metadata-only reconciliation of the third complete C gate at the verified ACT_NAME-repaired and document-adopted source. Both earlier full gates remain separately failed at their actual checkpoints. Earlier failed attempts and the successful named control remain separate at their actual checkpoints. Original pools, workers and deadlines remain. Unknown wrappers remain unknown. No deployment, live acceptance or SDK compiled-output/publication claim.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3-review",
+  "checkpoint": "8b7de735354595b048508a518eb4b2ff08990035",
+  "tree": "40556767cc554e2ccc5733ed3a18ea45993921ef",
+  "fileCount": 6,
+  "sha256Sums": "a6120bf0e53549138a55199310280de7e1b2181f37e2dae186ee4cdb7cff5a26",
+  "files": [
+    {
+      "path": "gate-reconciliation.json",
+      "bytes": 4591709,
+      "sha256": "197131f3ff9eb0e17b8b262247095b0e21828c52d8f10283e077a0506b1fba52"
+    },
+    {
+      "path": "raw-inputs.json",
+      "bytes": 60658,
+      "sha256": "cedeb450df77e8b4d61c02b78bec905f207ff9799420d1f4605e769c0e81dd38"
+    },
+    {
+      "path": "scope-custody.json",
+      "bytes": 15443,
+      "sha256": "8ce0f6510c36abc6dee369b5ff15ffd16d8eae67dd8ae31e941f9c924bdd640a"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 25984,
+      "sha256": "4febb1bc9d4d47834144d463447ef78740069bc8acbf11ded1bb5cb642f4435b"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 565,
+      "sha256": "38ce4d9ce4addfe6b8fb0d425a9901d44e5b3cbc3cda96d103e065a1589213d4"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3",
+      "payloadFileCount": 2423,
+      "fileCount": 2424,
+      "payloadBytes": 101920080,
+      "sha256Sums": "bf74435f5971a03c76c8619731d67776d81a63e045b2b00084ae311bc332bfd2",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 13851,
+      "sha256Sums": "797845310ec9973102bd24f9eac9f32762a92ac4c58ca3c27f0e0f498d47b893",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3-analysis-private",
+      "fileCount": 2,
+      "payloadFileCount": 1,
+      "payloadBytes": 14171298,
+      "sha256Sums": "b04834665b74e1940eca36aeb69e818af3aea83caa0b5fb8ce4c31e899faacd0",
+      "ownerPrivate": true,
+      "qualification": "Original full private terminal analysis copied byte-for-byte from scratch for restart retention. No new analysis, application import or body ran; public gate metadata stays unchanged."
+    }
+  ],
+  "priorAudits": [
+    {
+      "slug": "pre-gate-audit",
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-pre-gate-audit",
+      "sha256Sums": "057944d39ca155e29a26a9b71809752527340d0a2e2020b65617e323232ca5fe",
+      "manifest": "notes/implementation/evidence/2026-11-09-t1-pre-gate-audit.manifest.json",
+      "manifestSha256": "91ea63c61ca50108510ee5e3498967c0613ba3a03f916af912f471e345b29938",
+      "checkpoint": {
+        "commit": "9f9dacf591df07195d78b147bd729ee781736a34",
+        "tree": "267261fc3921d63c0e0fd8d65f7f93ac7eb884e2"
+      },
+      "qualification": "Earlier outcomes and time-specific limits remain unchanged; final gate does not relabel those attempts."
+    },
+    {
+      "slug": "control-audit",
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-control-audit",
+      "sha256Sums": "9b6da1f720b0cc3b6ce70d4d723f6401ab3178e83a1d03e8207143a481de5d50",
+      "manifest": "notes/implementation/evidence/2026-11-09-t1-control-audit.manifest.json",
+      "manifestSha256": "089eb232b4a1611f239e725fcf70f51c6e7042270ea29142779dd58fb779c46c",
+      "checkpoint": {
+        "commit": "9f9dacf591df07195d78b147bd729ee781736a34",
+        "tree": "267261fc3921d63c0e0fd8d65f7f93ac7eb884e2"
+      },
+      "qualification": "Earlier outcomes and time-specific limits remain unchanged; final gate does not relabel those attempts."
+    },
+    {
+      "slug": "focused-repair-3-audit",
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-focused-repair-3-audit",
+      "sha256Sums": "14c3d5a541d112af4c252121f8c4d1851ab25011248afcf37a929cb7911f7224",
+      "manifest": "notes/implementation/evidence/2026-11-09-t1-focused-repair-3-audit.manifest.json",
+      "manifestSha256": "f268561afd6d1df993b3493cf59268a0b4e386095ecdad695f667a3f73b2cfe7",
+      "checkpoint": {
+        "commit": "8ae77528f483dee4fe76b022d3a1fa6cd8352a20",
+        "tree": "e41c12fb3e2b1d7e74220a62e5cc50593258e1ad"
+      },
+      "qualification": "Earlier outcomes and time-specific limits remain unchanged; final gate does not relabel those attempts."
+    },
+    {
+      "slug": "gate1-failure",
+      "manifest": "notes/implementation/evidence/2026-11-09-t1-gate1-failure.manifest.json",
+      "manifestSha256": "498abb1a573ad1626a7903af641ea6784d39926101390d3195c0a857a268881c",
+      "checkpoint": "8178fe63dca58e27d720e723fc1d1b9776405ec5",
+      "qualification": "Separate actual outcome; this third gate does not relabel prior failures or focus checkpoints."
+    },
+    {
+      "slug": "gate2-partial",
+      "manifest": "notes/implementation/evidence/2026-11-09-t1-gate2-partial.manifest.json",
+      "manifestSha256": "4ee4415ab8550f4d8f87de542957134e08b40efba044b7de4082c721f28cc1f6",
+      "checkpoint": "e5c5f35367a345e9b53b3148a6088e8a6d0e14d0",
+      "qualification": "Separate actual outcome; this third gate does not relabel prior failures or focus checkpoints."
+    },
+    {
+      "slug": "act-metadata-focus",
+      "manifest": "notes/implementation/evidence/2026-11-09-t1-act-metadata-focus.manifest.json",
+      "manifestSha256": "93b7b8cc9f719e519348a7f47e74d52b64b67c1272ac5aa3e68bb1e7da26f4b9",
+      "checkpoint": {
+        "commit": "623944abbb3d7feba56e97958423d346bc8449d1",
+        "tree": "2a9016a43e65915150f30e47ad1a6769f705213b"
+      },
+      "qualification": "Separate actual outcome; this third gate does not relabel prior failures or focus checkpoints."
+    }
+  ],
+  "withheldOutputs": [
+    {
+      "name": "whitespace",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "commit-messages",
+      "bytes": 39,
+      "sha256": "6dce18de89c6416d2a318232f10094302db7a025bf21ae2601db21f6ca6ca4c7",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "commit-test",
+      "bytes": 590,
+      "sha256": "2bd76ff4b2b26f3ad2d3fbf94ab0be43163e5572d406b1804699925d076819c4",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "helpers",
+      "bytes": 68,
+      "sha256": "fe16de4eb8af93a344a7934b996a75e8028456a5325271764cbcc42b5fc3ea43",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "citations",
+      "bytes": 1570370,
+      "sha256": "c4951c8692a3b0765a7aad642735fc753e7b9b2d9df3bab872144820c515001b",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "cite-test",
+      "bytes": 763,
+      "sha256": "42f49ca56b59e38c0ca91b614e92e7b9d0dd3bafab3a8885f66c2405f02e5abf",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "doc-links",
+      "bytes": 36,
+      "sha256": "6e3a711d14bb393ffcb48de01bc2ca244de49f2cacb5bb3d0f8519ee3e8cf710",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "notes",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "format",
+      "bytes": 114,
+      "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "typecheck",
+      "bytes": 2218,
+      "sha256": "808c1cacdb754403a1470d046090f319f2a65157619d867b7423c4788c4cbe15",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "def-pins",
+      "bytes": 353,
+      "sha256": "eff23402479b52ad9d6b7ad093d9d3e843b60fcb00d8f6c78d9b77245e9aec03",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "test",
+      "bytes": 42792467,
+      "sha256": "ee430b758910b16a15c88f7ea1b5afd90aa755502889e65c2aea41dbe4be3e42",
+      "qualification": "Original output stays owner-private; this is metadata only."
+    },
+    {
+      "name": "gate",
+      "bytes": 7269,
+      "sha256": "90ef0f4e3f98f8c8b909b1840b748b894ac3d456fd2647f6ed6530c9945cbf26",
+      "qualification": "Original output stays owner-private."
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  },
+  "privateAnalysisCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-gate3-analysis-private",
+    "fileCount": 2,
+    "payloadFileCount": 1,
+    "payloadBytes": 14171298,
+    "sha256Sums": "b04834665b74e1940eca36aeb69e818af3aea83caa0b5fb8ce4c31e899faacd0",
+    "ownerPrivate": true,
+    "qualification": "Original full private terminal analysis copied byte-for-byte from scratch for restart retention. No new analysis, application import or body ran; public gate metadata stays unchanged."
+  }
+}

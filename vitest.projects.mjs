@@ -1,6 +1,6 @@
 /**
  * Canonical projects for the root suite and its plain/native phase views.
- * Each project keeps its package's own config. The fifteen plain projects share a
+ * Each project keeps its package's own config. The sixteen plain projects share a
  * group with at most four active file tasks in total. The `scope`,
  * `scope-lending`, `scope-denial` and `scope-scale` groups follow in order,
  * with worker limits of two, one, one and two in separate runtimes.
@@ -33,6 +33,7 @@ export { scopeScaleFiles } from "./packages/scope/vitest.scale-files.ts";
 const projects = [
       project("bytes", "packages/bytes", "vitest.config.ts", 0),
       project("derive", "packages/derive", "vitest.config.ts", 0),
+      project("define", "packages/define", "vitest.config.ts", 0),
       project("platform", "packages/platform", "vitest.config.ts", 0),
       project("git", "packages/git", "vitest.config.ts", 0),
       project("checkers", "packages/checkers", "vitest.config.ts", 0),
@@ -68,7 +69,7 @@ const projects = [
       },
 ];
 
-const plainNames = ["bytes", "derive", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow", "repo-in-ai"];
+const plainNames = ["bytes", "derive", "define", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow", "repo-in-ai"];
 const nativeNames = ["scope", "scope-lending", "scope-denial", "scope-scale"];
 const namesEqual = (actual, expected) => actual.length === expected.length && actual.every((name, index) => name === expected[index]);
 
@@ -84,7 +85,7 @@ export function testOptions(phase = "all", scale = "run") {
   if (!namesEqual(plain.map(project => project.test.name), plainNames)
     || !namesEqual(native.map(project => project.test.name), nativeNames)
     || native.some((project, index) => project.test.sequence.groupOrder !== index + 1)) {
-    throw new Error("The canonical test projects do not match the fifteen/plain four/native partition.");
+    throw new Error("The canonical test projects do not match the sixteen/plain four/native partition.");
   }
   return {
     maxWorkers: 4,
