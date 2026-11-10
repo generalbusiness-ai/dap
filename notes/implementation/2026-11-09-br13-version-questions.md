@@ -54,16 +54,17 @@ patch changes 45 hash literals across 33 existing owners and adds the three
 new table owners. An independent comparison confirms that every other
 security assertion and byte stays unchanged.
 
-The prepared focused ledger at `913eff93a1` lists 454 Vitest cases and
-13 Node cases, including the existing public-release module owner. Its
-source analysis selects 38 compiler contexts. The merged source needs a
-fresh ledger and source hashes. C owns the separate Git `./diff` release
-metadata repair; BR13 must inherit it before running the SDK owner.
+The initial ledger at `913eff93a1` lists 454 Vitest cases and 13 Node
+cases. The c35 ledger retains the 454 plain cases and 38 compiler contexts,
+runs the eight complete host Node cases, and defers the whole five-case SDK
+module owner. C owns the separate Git `./diff` release metadata repair;
+BR13 must inherit it before running that owner.
 
 The owned APFS dependency copy retains the matching lock stamp, real
 namespace and cache directories, and relative workspace links. No package
-installation ran. The BR13 compiler, question-fixture, consumer, SDK and
-full gate checks still need a reserved validation slot.
+installation ran. The selective focused pass below covers the reviewed
+compiler closure, exact query fixtures and named consumer owners. The SDK
+owner, remaining consumer evidence and full gate still need validation.
 
 
 ## Editor and Effects correspondence
@@ -160,8 +161,42 @@ read-only through 9 December. No private fixture enters the curated unit.
 The Card browser entry reaches no changed BR13 module, even when the
 static graph includes type-only edges. No Card build runs. The Page build
 changes no Editor or Effects protected source and needs no repeated formal
-check. Focused validation will use the committed Page output. Its selective
+check. Focused validation below uses the committed Page output. Its selective
 scope covers 38 compiler contexts, 454 plain cases and eight host Node
 cases. The complete existing five-case SDK module owner remains unrun
 until C lands its Git `./diff` source-export repair. That deferred owner,
 the full maintained gate and affected workflow citations remain due.
+
+
+## Selective focused checks pass at c35
+
+Booking `8ba5341f` runs the selective plan once at
+`c35f01a570d0c9a63da9eaf06be18dc80a2e457f`; END `07d8d46c` closes the slot.
+The audit reads `actualrunner.exit`, `compat.exit`, `focused.exit` and
+`node.exit`: all contain zero. The maintained driver waits for 38 unique
+compiler contexts and one plain body. All 39 commands pass. The same-run
+structured ledger and built-in JSON agree on all 454 cases in five files,
+with no skips, errors, retries or repeats. The two complete host Node
+owners pass eight exact TAP titles with no skips.
+
+All 40 source guards retain the tested head and tree, 2,238 active inputs,
+seven external inputs, 14 workspace bindings and 49 aliases. All pinned
+source, tool and provenance bytes still match after the run. The process
+guards and every phase and final cleanup report no remaining owned group.
+The eight formal-covered whole-file hashes also match, so these focused
+results require no repeated Editor or Effects check.
+
+The [focused manifest](evidence/2026-11-09-br13-focused.manifest.json)
+hashes to
+`abfbd15cbf39f35c835f0ed6bb814a2925ad1c1eef921610036a1f0c9ae4dc47`.
+It inventories 25 safe case-status and source metadata files and 66
+retained original files, read-only through 9 December. Complete raw test
+reports remain outside the checkout. This evidence commit changes only
+this note and its manifest after the tested c35 checkpoint.
+
+The entire five-case `scripts/public-release-modules.test.mjs` owner stays
+unrun. Its two actual-Git manifest cases encounter the existing missing
+`./diff` exclusion; C owns that repair. The selective pass makes no SDK,
+live-room, browser or deployment acceptance claim. The prepared guard
+controls have not run. BR13 still needs C/main integration, the complete
+SDK owner, affected workflow citations, the maintained gate and review.
