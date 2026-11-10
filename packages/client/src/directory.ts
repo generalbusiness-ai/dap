@@ -1,10 +1,10 @@
 /** Bounded advisory navigation for the explicit partition cohort. These
  * reads locate indexes; they do not attest Native provenance or grant acts. */
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import { same } from "@generalbusiness/dap-bytes";
 import type { Head, Item, ItemQuery, ItemQueryRead, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeRef, itemQueryReadFor, utf8, within, LATE } from "@generalbusiness/dap-bytes";
 
-const ROOT = "platform:directory@10", PARTITION = "platform:directory-partition@1";
 /** Logical data calls and admitted decoded reply bytes. Session acquisition,
  * transport retries and parser residency are not a wire or heap claim. */
 export const DIRECTORY_READ_BOUNDS = Object.freeze({ calls: 32, bytes: 8 * 1024 * 1024, milliseconds: 10_000, pagesPerSelection: 4 });
@@ -55,13 +55,13 @@ async function operation<T>(work: (read: <V>(task: () => Promise<V>) => Promise<
 }
 type BoundedRead = Parameters<Parameters<typeof operation>[0]>[0];
 
-async function summary(reader: DirectoryReader, read: BoundedRead, ref: ScopeRef, pin: string): Promise<{ value: Summary; at: Head; control: Item }> {
+async function summary(reader: DirectoryReader, read: BoundedRead, ref: ScopeRef, question: "clientPartitionRootDirectory" | "clientPartitionChildDirectory"): Promise<{ value: Summary; at: Head; control: Item }> {
   const result = await read(() => reader.summary(ref.scope));
   if (!result.ok) throw new Incomplete(result.reason);
   // Summary's bounded prefix must contain the singleton control; no lane
   // inventory is inferred from that prefix or its completeness flag.
   const control = result.value.items.find(item => item.id === 0 && item.type === "repository" && item.state === "open");
-  if (!same(result.value.scope, ref) || result.value.status !== "active" || result.value.definition !== pin || !control) throw new Incomplete("directory-mismatch");
+  if (!same(result.value.scope, ref) || result.value.status !== "active" || !answersCatalogVocabularyQuestion(result.value.definition, question) || !control) throw new Incomplete("directory-mismatch");
   return { value: result.value, at: result.at, control };
 }
 async function selection(reader: DirectoryReader, read: BoundedRead, ref: ScopeRef, type: string, states: readonly string[], at?: Head, limit = 100): Promise<{ items: Item[]; at: Head }> {
@@ -92,13 +92,13 @@ function affiliated(control: Item, root: ScopeRef, membership: ScopeRef): void {
  * pending, exhaustion and native refusal remain explicit caller outcomes. */
 export async function activeDirectory(reader: DirectoryReader, root: ScopeRef, membership: ScopeRef): Promise<{ ref?: ScopeRef; at?: Head; reason: string | null }> {
   const result = await operation(async read => {
-    const held = await summary(reader, read, root, ROOT);
+    const held = await summary(reader, read, root, "clientPartitionRootDirectory");
     if (!same(held.control.refs["membership"], membership)) throw new Incomplete("membership-mismatch");
     const rows = await selection(reader, read, root, "partition", ["active", "creating"], held.at, 2);
     if (rows.items.length !== 1 || rows.items[0]!.state !== "active") throw new Incomplete(rows.items.some(row => row.state === "creating") ? "partition-pending" : rows.items.length > 1 ? "partition-conflict" : "no-active-partition");
     const ref = rows.items[0]!.refs["scope"];
     if (!isScopeRef(ref) || ref.kind !== "directory") throw new Incomplete("partition-mismatch");
-    const part = await summary(reader, read, ref, PARTITION);
+    const part = await summary(reader, read, ref, "clientPartitionChildDirectory");
     affiliated(part.control, root, membership);
     if (part.control.values["sealed"] !== false) throw new Incomplete("partition-sealed");
     return { ref, at: part.at };
@@ -113,7 +113,7 @@ export async function partitionIndexes(reader: DirectoryReader, root: ScopeRef, 
   const indexes: DirectoryIndex[] = [];
   let rootAt: Head | null = null;
   const result = await operation(async read => {
-    const held = await summary(reader, read, root, ROOT); rootAt = held.at;
+    const held = await summary(reader, read, root, "clientPartitionRootDirectory"); rootAt = held.at;
     if (!same(held.control.refs["membership"], membership)) throw new Incomplete("membership-mismatch");
     const rows = await selection(reader, read, root, "partition", ["active", "sealed"], held.at);
     const seen = new Set<ScopeId>();
@@ -121,7 +121,7 @@ export async function partitionIndexes(reader: DirectoryReader, root: ScopeRef, 
       const ref = row.refs["scope"];
       if (!isScopeRef(ref) || ref.kind !== "directory" || seen.has(ref.scope)) throw new Incomplete("partition-mismatch");
       seen.add(ref.scope);
-      const part = await summary(reader, read, ref, PARTITION);
+      const part = await summary(reader, read, ref, "clientPartitionChildDirectory");
       affiliated(part.control, root, membership);
       const lanes = await selection(reader, read, ref, "lane", ["listed"], part.at);
       const applications = await selection(reader, read, ref, "application", ["conflict", "created", "creating", "refused"], part.at);

@@ -1,7 +1,8 @@
+import { answersVersionQuestion, evidenceBindingDigest, readEvidenceBinding, readEvidenceBatchWireV17, type EvidenceBatchRecordV17, type EvidenceBinding, type StageSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-platform";
 /** Successor job origin: an actual G17 admission, never a synthetic legacy manifest. */
 import type { Digest, Effect, FactRef, KeyId, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalBytes, canonicalize, entryHash, isDigest, isEntry, isFactRef, isLocalId, isOperationId, isRecord, parseStrict, same, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { evidenceBindingDigest, readEvidenceBinding, readEvidenceBatchWireV17, type EvidenceBatchRecordV17, type EvidenceBinding, type StageSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-platform";
+
 import { isObjectId, readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS } from "@generalbusiness/dap-git";
 import type { Job, Notice, Origin, OriginRead } from "./job.ts";
 
@@ -27,7 +28,7 @@ function admissionOpening(source: Sealed, admission: Sealed, holder: number): bo
   const input = admission.entry.input;
   if (input.type !== "outcome" || !isOperationId(input.operation)) return false;
   const [seq, k] = input.operation.split(":").map(Number);
-  const openings = source.entry.effects.filter(effect => effect.effect === "operation" && effect.owner === "platform:destination@17" && effect.kind === "evidence-admit");
+  const openings = source.entry.effects.filter(effect => effect.effect === "operation" && answersVersionQuestion(effect.owner, "evidenceStageOrigin") && effect.kind === "evidence-admit");
   if (seq !== source.entry.seq || openings.length !== 1 || openings[0]!.effect !== "operation") return false;
   const opened = openings[0]!;
   const attempts = source.entry.effects.filter(effect => effect.effect === "attempt"
@@ -86,7 +87,7 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
       || jobEntry.effects.filter(effect => effect.effect === "open").length !== 1 || !jobEntry.effects.some(effect => effect.effect === "open" && effect.item === jobEntry.seq && effect.type === "job")) return no();
     if (binding.source === "room" && (!binding.roomService || binding.roomService.key !== signer || !same(binding.roomService.checker, binding.checker))) return no();
     const input = admitted.input;
-    if (input.type !== "outcome" || input.owner !== "platform:destination@17" || input.kind !== "evidence-admit" || input.attempt !== 1 || input.result !== "confirmed"
+    if (input.type !== "outcome" || !answersVersionQuestion(input.owner, "evidenceStageOrigin") || input.kind !== "evidence-admit" || input.attempt !== 1 || input.result !== "confirmed"
       || input.evidence.basis !== "own-answer" || !isRecord(input.evidence.body) || Object.keys(input.evidence.body).join() !== "job" || !same(input.evidence.body["job"], notice.job)
       || !admitted.effects.some(effect => effect.effect === "attempt" && effect.operation === input.operation && effect.attempt === 1
         && effect.result === "confirmed" && effect.selected === true)) return no();
@@ -100,7 +101,7 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
     const sources = new Map(sourceEntries.map(source => [canonicalize(factOf(source)), source]));
     if (sources.size !== sourceEntries.length || record["sourceFacts"].length !== sources.size || record["sourceFacts"].some(fact => !sources.has(canonicalize(fact)))) return no();
     const genesis = sourceEntries.find(source => source.entry.at.kind === "destination" && same(source.entry.at, snapshot.destination) && source.entry.input.type === "genesis");
-    if (!genesis || genesis.entry.input.type !== "genesis" || genesis.entry.input.seed.definition !== "platform:destination@17") return no();
+    if (!genesis || genesis.entry.input.type !== "genesis" || !answersVersionQuestion(genesis.entry.input.seed.definition, "evidenceStageOrigin")) return no();
     const pendingRows = sourceEntries.filter(source => same(source.entry.at, snapshot.destination) && sent(snapshot.job, source));
     const pending = pendingRows.length === 1 ? pendingRows[0] : null;
     if (!pending || pending.entry.input.type !== "delivery" || pending.entry.input.message.class !== "request" || !("decision" in pending.entry.input) || pending.entry.input.decision !== "applied" || !sent(snapshot.job, pending)
@@ -146,7 +147,7 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
       if (binding.subject.kind === "published") {
         const written = sources.get(canonicalize(binding.subject.written))!;
         if (!same(binding.subject.receipt.at, snapshot.destination) || !same(binding.subject.written.at, snapshot.destination)
-          || written.entry.input.type !== "outcome" || written.entry.input.owner !== "platform:destination@17" || !["receipt", "read"].includes(written.entry.input.kind)
+          || written.entry.input.type !== "outcome" || !answersVersionQuestion(written.entry.input.owner, "evidenceStageOrigin") || !["receipt", "read"].includes(written.entry.input.kind)
           || written.entry.input.result !== "confirmed") return no();
       }
     }

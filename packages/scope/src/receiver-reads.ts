@@ -1,8 +1,9 @@
+import { answersVersionQuestion, partitionPublicationOrigin, type PartitionCreation } from "@generalbusiness/dap-platform";
 /** One receiver's read interpretation. The receiver's checked native birth
  * selects its policy, and all promotion proofs share that operation's budget. */
 import type { DeclaredDefinition, Digest, Entry, FactRef, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition, isScopeRef, scopeIdOf } from "@generalbusiness/dap-bytes";
-import { PARTITION_COHORT as C, partitionPublicationOrigin, type PartitionCreation } from "@generalbusiness/dap-platform";
+
 import { isEntryOf, isFactRef, isLocalId, isObject, same, sentBy, type Delivered, type Fetched } from "@generalbusiness/dap-derive";
 import { PartitionProofOperation, type PartitionProofPorts } from "./partition-proof.ts";
 import type { Foreign, Ports, Resolver } from "./ports.ts";
@@ -22,7 +23,7 @@ export class ReceiverReads implements Resolver {
   static async forReceiver(ports: Pick<Ports, "resolver" | "proofs" | "births">, at: ScopeRef, named: Digest | PlatformDefinition, birth: Extract<Input, { type: "genesis" }>): Promise<ReceiverReads | null> {
     if (birth.decision !== "applied" || birth.inc !== at.inc || birth.seed.definition !== named || scopeIdOf(birth.seed) !== at.scope) return null;
     const candidate = isPlatformDefinition(named)
-      ? [C.directory, C.partition, C.membership, C.rules, C.destination, C.inbox].some(pin => pin === named)
+      ? answersVersionQuestion(named, "partitionReceiverCandidate")
       : isObject(birth.message?.body) && isScopeRef(birth.message.body["directory"]);
     if (!candidate) return new ReceiverReads(ports.resolver, null, "legacy", at);
     if (!ports.births || !ports.proofs) return null;
@@ -31,7 +32,7 @@ export class ReceiverReads implements Resolver {
   static async probeCreation(ports: Pick<Ports, "resolver" | "proofs" | "births">, creation: PartitionCreation): Promise<{ operation?: PartitionProofOperation; source?: Entry } | null> {
     const named = creation.seed.definition;
     const possible = isPlatformDefinition(named)
-      ? [C.directory, C.partition, C.membership, C.rules, C.destination, C.inbox].some(pin => pin === named)
+      ? answersVersionQuestion(named, "partitionCreationProbeCandidate")
       : isObject(creation.message.body) && isScopeRef(creation.message.body["directory"]);
     if (!possible) return {};
     if (!ports.births || !ports.proofs) return null;
@@ -44,7 +45,7 @@ export class ReceiverReads implements Resolver {
   }
   static async forCreation(ports: Pick<Ports, "resolver" | "proofs" | "births">, creation: PartitionCreation, definition: DeclaredDefinition | PlatformDefinition, operation?: PartitionProofOperation): Promise<ReceiverReads | null> {
     const candidate = typeof definition === "string"
-      ? [C.directory, C.partition, C.membership, C.rules, C.destination, C.inbox].some(pin => pin === definition)
+      ? answersVersionQuestion(definition, "partitionCreationCandidate")
       : isObject(creation.message.body) && isScopeRef(creation.message.body["directory"]);
     if (!candidate) return new ReceiverReads(ports.resolver, null, "legacy");
     if (!ports.births || !ports.proofs) return null;

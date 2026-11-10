@@ -1,5 +1,6 @@
 /** Fixed same-origin discovery for an explicitly configured demo register.
  * This projection grants nothing. The native signed found is still judged. */
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { LATE, isHead, isLocalId, isRecord, isScopeRef, parseStrict, takeBytes, utf8, within, type ByteStream } from "@generalbusiness/dap-bytes";
 import { TransportError } from "./handle.ts";
@@ -41,7 +42,7 @@ function exactOrigin(value: string): string {
 export function isCreationOffer(value: unknown, origin: string, register?: ScopeRef): value is CreationOffer {
   try {
     const expectedOrigin = exactOrigin(origin);
-    if (!closed(value, ["v", "origin", "register", "definition", "at", "registerItem"]) || value["origin"] !== expectedOrigin || (value["v"] !== 2 || !["platform:register@17", "platform:register@26"].includes(value["definition"] as string))
+    if (!closed(value, ["v", "origin", "register", "definition", "at", "registerItem"]) || value["origin"] !== expectedOrigin || (value["v"] !== 2 || !answersCatalogVocabularyQuestion(value["definition"], "clientCreationOfferRegister"))
       || !closed(value["register"], ["scope", "kind", "inc"]) || !isScopeRef(value["register"]) || value["register"].kind !== "register"
       || !closed(value["at"], ["seq", "hash"]) || !isHead(value["at"])) return false;
     const ref = value["register"], at = value["at"], item = value["registerItem"];

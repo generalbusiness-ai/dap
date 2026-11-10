@@ -6,7 +6,7 @@ import type { Config } from "./store.ts";
 import { canonicalize, definitionDigest, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { activeDirectory, declaredHandle, ScopeHandle } from "@generalbusiness/dap-client";
 import type { DeclaredDefinition, Digest, PlatformDefinition, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { platform } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, platform } from "@generalbusiness/dap-platform";
 
 export const short = (text: string): string => (text.length > 16 ? `${text.slice(0, 12)}...` : text);
 
@@ -22,13 +22,13 @@ export async function openingDirectory(ctx: Context, config: Config, reader: str
   let target = repository.directory;
   let D = await handleOf(ctx, config, repository.directory.scope, reader);
   let summary = await summaryOf(D);
-  if (summary.definition === "platform:directory@10") {
+  if (answersVersionQuestion(summary.definition, "cliTargetsPartitionRootDirectory")) {
     const selected = await activeDirectory(directoryReader(ctx, config, reader), repository.directory, repository.membership);
     if (!selected.ref) return stopCommand(failed(`Cannot open work: ${selected.reason}. Inspect the directory and its pending partition; no mutation was submitted.`));
     target = selected.ref;
     D = await handleOf(ctx, config, selected.ref.scope, reader);
     summary = await summaryOf(D);
-    if (canonicalize(summary.scope) !== canonicalize(selected.ref) || summary.definition !== "platform:directory-partition@1") return stopCommand(failed("The opening partition changed. No mutation was submitted."));
+    if (canonicalize(summary.scope) !== canonicalize(selected.ref) || !answersVersionQuestion(summary.definition, "cliOpeningPartitionDirectory")) return stopCommand(failed("The opening partition changed. No mutation was submitted."));
   }
   return { D, summary, target };
 }

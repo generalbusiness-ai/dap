@@ -1,0 +1,70 @@
+{
+  "qualification": "Bounded Native/reporting-failure audit after actual passed early stages. Actual command and reporting exits remain distinct. Complete observed/unobserved case ledger, diagnostics and raw tails stay owner-private. No case, compiler, application, test, control, build or capture body ran in this audit. All earlier failures remain separately failed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v5b-native-failure-audit",
+  "checkpoint": {
+    "commit": "ff0eee7d1a047ce1e94bc9040c1e6c96e5bf6d3a",
+    "tree": "f17cb1507a81614a37d56ac84a156451a01aa820"
+  },
+  "fileCount": 5,
+  "sha256Sums": "79b8c1ac1ec0507c58ceb7bedb54b573ddc4c88bab2764944f2a705fe51cd468",
+  "files": [
+    {
+      "path": "failure-summary.json",
+      "bytes": 9889,
+      "sha256": "87759e0a61ddaf14fdcbae3bd2d23993023a9c396fa781606e914e0a1ec7c996"
+    },
+    {
+      "path": "raw-custody.json",
+      "bytes": 1854,
+      "sha256": "5a60a24fcf4a19636bf552375dd53420efb84a58989b6195a6d055d50dc78df0"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 21116,
+      "sha256": "0c2cb10c63828b51fd904de2645544d0067153ab3fef800d1a6380a2cbd10002"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 966,
+      "sha256": "a39a178f8c14eedc3f6a34d23fefdfe906b319ffe14cbf9614ea757d76e471d0"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v5b",
+      "payloadFileCount": 2440,
+      "fileCount": 2441,
+      "payloadBytes": 115007563,
+      "sha256Sums": "18377e78d15a8c23bcfe6dacafe62964fbd342985582365ce19944171cbce6a1",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v5b-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 27812,
+      "sha256Sums": "c51e29a93f9e9477e5cbdc0882d0af0b5b28dfa79bc571840e67f937ceeb3b45",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v5b-native-failure-private",
+      "payloadFileCount": 12,
+      "fileCount": 13,
+      "payloadBytes": 6465984,
+      "sha256Sums": "4fb067efa5a6355fe2656ddc42feec57c8f42d9c3e1f998236ddb92b60fe8129",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    }
+  ],
+  "privateReconciliation": {
+    "file": "independent-failure.private.json",
+    "bytes": 6377045,
+    "sha256": "06916eefc054a735bbdd5e4ea2ea6b432c9d84d918390faf91a3ed86787abd1b"
+  },
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}

@@ -14,6 +14,7 @@
  * and it computes the hash itself.
  */
 
+import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 import type { Answer, DeliveryRefusal, Created, CreationUnavailableReason, MismatchReason, RefusalReason, Read, Settlement, ScopeApi, UnavailableReason } from "@generalbusiness/dap-contract";
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
 import { REFUSAL_REASONS, canonicalize, isItemQueryRead, among, isOutboxItem, isFactRef, isHead, isItem, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/dap-bytes";
@@ -44,7 +45,7 @@ function isSettlement(value: unknown): value is Settlement {
   if (!isRecord(value) || !Object.hasOwn(value, "claim")) return false;
   const { claim, ...read } = value;
   if (!ordinary(read) || !read.ok || read.complete !== true || read.next !== undefined
-    || read.value.definition !== "platform:register@26" || read.value.fact.at.kind !== "register" || read.at.seq < read.value.fact.seq
+    || !answersVersionQuestion(read.value.definition, "clientSettlementClaimProjectionRegister") || read.value.fact.at.kind !== "register" || read.at.seq < read.value.fact.seq
     || !isRecord(claim) || !only(claim, "fact", "state") || !isFactRef(claim["fact"])
     || !["pending", "failed", "active"].includes(claim["state"] as string)) return false;
   return canonicalize(claim["fact"]) === canonicalize(read.value.fact);

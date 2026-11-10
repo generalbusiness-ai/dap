@@ -4,7 +4,7 @@ import { readFields } from "@generalbusiness/dap-derive";
 import type { ActType, Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Settlement, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, isDigest, isFactRef, isHead, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isIncarnation, isScopeId, parseStrict, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, creationOffer, isCreationOffer, isCurrentCreationOffer, signedIntent, signedReads, type CreationOffer } from "@generalbusiness/dap-client";
-import { FAILED_CLAIM_COHORT, DIRECTORY_OF, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, DIRECTORY_OF, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
 import type { Context, Outcome } from "./commands.ts";
 import type { ClaimStep, Config, PendingClaim, Repository } from "./store.ts";
 import { expectedOf, type DefinitionShape } from "./browser-helpers.ts";
@@ -15,8 +15,6 @@ import { REGISTER_FULL, validStep, accepted, active, configOf, createdBy, done, 
 /** Saved envelopes are checked against their actual caller and destination,
  * never re-signed from metadata. An accepted marker belongs to that scope. */
 
-const RETAINED_INSTALL_REGISTERS = new Set<PlatformDefinition>(["platform:register@5", "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20", "platform:register@21", "platform:register@24", "platform:register@25", "platform:register@26"]);
-
 /** Local revision selector from retained configured-service install custody.
  * These exact native pins open singleton item 0 at revision 1 and never
  * change it. This is neither a Summary nor proof of history or authority.
@@ -25,12 +23,12 @@ const RETAINED_INSTALL_REGISTERS = new Set<PlatformDefinition>(["platform:regist
 function retainedRegisterSelector(config: Config, register: ScopeRef, key: KeyId): { definition: PlatformDefinition; expected: { register: 1 } } | null {
   try {
     const plan = config.plan;
-    if (!plan || !RETAINED_INSTALL_REGISTERS.has(plan.definition) || !DIRECTORY_OF[plan.definition] || config.key !== "operator"
+    if (!plan || !answersVersionQuestion(plan.definition, "cliRetainedInstallRegister") || !DIRECTORY_OF[plan.definition] || config.key !== "operator"
       || plan.service !== config.service || !isSignedIntentShape(plan.founding) || !verifySignedIntent(plan.founding)) return null;
     const intent = plan.founding.intent, definition = platform(plan.definition);
     // The binding cohort keeps the same immutable register selector. Its
     // original keys-policy operator must also occur in the signed founders.
-    const bindingFounder = plan.definition === "platform:register@25" && intent.fields["policy"] === "keys"
+    const bindingFounder = answersVersionQuestion(plan.definition, "cliRetainedBindingFounderRegister") && intent.fields["policy"] === "keys"
       && intent.fields["host"] === "none" && intent.fields["namespace"] === ""
       && Array.isArray(intent.fields["founders"]) && intent.fields["founders"].includes(key);
     if (!definition || definition.data.name !== "platform:register" || intent.actor !== key || intent.kind !== "install" || intent.to !== null || intent.on !== null
@@ -39,7 +37,7 @@ function retainedRegisterSelector(config: Config, register: ScopeRef, key: KeyId
     // PlatformAct's wider type also allows marks, which these fields omit.
     const shaped = readFields(definition.data.acts["install"]!.fields as ActType["fields"], intent.fields, PROPOSED_BOUNDS);
     if (!shaped.ok || canonicalize(shaped.fields) !== canonicalize(intent.fields)) return null;
-    if (plan.definition === "platform:register@21" && intent.fields["host"] === "none" && intent.fields["namespace"] !== "") return null;
+    if (answersVersionQuestion(plan.definition, "cliRetainedUnpublishedNamespaceRegister") && intent.fields["host"] === "none" && intent.fields["namespace"] !== "") return null;
     const seed: Seed = { v: 1, kind: "register", definition: plan.definition, creator: null, cause: intentDigest(intent), ordinal: 0 };
     if (scopeIdOf(seed) !== plan.register || plan.register !== register.scope || register.kind !== "register" || !isIncarnation(register.inc)) return null;
     const attempted = textDigest(canonicalize({ service: plan.service, operator: intent.actor, founding: plan.founding, definition: plan.definition, register: plan.register }));
@@ -243,7 +241,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
     }
     let observedFailure: PendingClaim["failure"] | null = null;
     const failureProof = (settled: Settlement, fact: FactRef): PendingClaim["failure"] | null => {
-      if (!settled.ok || settled.complete !== true || settled.next !== undefined || settled.value.definition !== FAILED_CLAIM_COHORT.register
+      if (!settled.ok || settled.complete !== true || settled.next !== undefined || !answersVersionQuestion(settled.value.definition, "cliFailedClaimRegister")
         || settled.value.intent !== pending.intent || canonicalize(settled.value.fact) !== canonicalize(fact)
         || !isHead(settled.at) || settled.at.seq < fact.seq || settled.claim?.state !== "failed" || !isFactRef(settled.claim.fact)
         || canonicalize(settled.claim.fact) !== canonicalize(fact)) return null;
@@ -308,7 +306,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       const finalFailure = (): Outcome => ({ ...failed(steps.failed?.(name) ?? "This claim failed and freed its place in the register. It cannot create a room. Start a new creation when the Git host is available."), claimState: "failed" });
       if (observedFailure) { await keep({ ...pending, failure: observedFailure }); return finalFailure(); }
       const readFailure = async (): Promise<PendingClaim["failure"] | null> => {
-        if (registerDefinition !== FAILED_CLAIM_COHORT.register) return null;
+        if (!answersVersionQuestion(registerDefinition, "cliFailedClaimRegister")) return null;
         try { return failureProof(await R.settle(pending["found"]!.signed), creationFact); }
         catch { return null; } // An unreadable or incomplete original remains unknown.
       };

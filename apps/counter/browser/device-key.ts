@@ -1,4 +1,5 @@
 /** Demo import and browser-held signing capability. Enrollment remains native. */
+import { answersVersionRelation } from "@generalbusiness/dap-platform";
 import { b64url, canonicalize, isKeyId, isMemberRef, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/dap-bytes";
 import { storedWebCryptoSigner, type Signer } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
@@ -16,7 +17,7 @@ function binding(value: unknown, origin: string, cohort = true, strict = true): 
   if (value["definition"] !== COUNTING_COMMITMENTS_DEFINITION || typeof value["deployment"] !== "string" || !value["deployment"] || value["deployment"].length > 128 || !isScopeRef(value["scope"]) || !isScopeRef(value["membership"]) || !isMemberRef(value["member"]) || !isKeyId(value["publicKey"]) || canonicalize(value["member"].membership) !== canonicalize(value["membership"])) throw new Error("The supported device binding is invalid.");
   if (cohort) {
     const c = value["cohort"];
-    if (!isRecord(c) || (strict && !closed(c, ["directory", "membership", "rules", "destination"])) || c["directory"] !== "platform:directory@6" || c["membership"] !== "platform:membership@5" || c["rules"] !== "platform:rules@3" || c["destination"] !== "platform:destination@2") throw new Error("The counting cohort is unsupported.");
+    if (!isRecord(c) || (strict && !closed(c, ["directory", "membership", "rules", "destination"])) || !answersVersionRelation("counterImportedCountingCohort", c["directory"], c["membership"], c["rules"], c["destination"])) throw new Error("The counting cohort is unsupported.");
   }
   return { origin: url.origin, deployment: value["deployment"], scope: structuredClone(value["scope"]), definition: COUNTING_COMMITMENTS_DEFINITION, membership: structuredClone(value["membership"]), member: structuredClone(value["member"]), publicKey: value["publicKey"] };
 }

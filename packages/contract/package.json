@@ -1,12 +1,13 @@
 {
   "name": "@generalbusiness/dap-contract",
   "version": "0.1.0-dev.1",
-  "description": "dap's scope contract: the types and constants every other package shares. No runtime logic.",
+  "description": "dap's scope contract: shared types, constants and pure native catalog vocabulary.",
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./catalog-vocabulary": "./src/catalog-vocabulary.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"

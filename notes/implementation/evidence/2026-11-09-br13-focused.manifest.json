@@ -1,0 +1,486 @@
+{
+  "version": 1,
+  "request": "487496f5ad73675926a070808188cd2a228334c1",
+  "promise": "4b0e1a79fc0054ca2e330c22f1282f542bdce9fe",
+  "sourceHead": "c35f01a570d0c9a63da9eaf06be18dc80a2e457f",
+  "sourceTree": "c563d2d86255d05c079dc35f2d891c1de5e788ae",
+  "booking": "8ba5341f516b005324b7d79d7b61ddc91b681f37",
+  "end": "07d8d46c21877f8a8987f35d75ee28bcfb9419d0",
+  "qualification": "The selective focused run passes at actual c35. Read actualrunner, compatibility, focused and Node exit files all contain0. The maintained driver waits38 unique compiler contexts and one454-case plain body; all39 commands pass. Same-run structured identities and built-in JSON agree on454 passes,5 files,no errors/skips/retries/repeats. Two complete Node host owners pass8 exact TAP titles with no skips. All40 fences retain2238 active inputs,7 external provenance inputs,14 current workspace bindings and49 export aliases. Every child and final guard/cleanup is empty. The entire existing five-case SDK module owner remains unrun pending C main, including the actual-Git manifest baseline deficiency. This run changes no production source and runs no fault control, maintained gate, browser or live deployment acceptance.",
+  "retention": {
+    "readOnly": true,
+    "retainUntil": "2026-12-09",
+    "privateFixturesCopied": false
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-focused-curated-c35f01a570",
+      "classification": "safe source/tool/process and complete case-status metadata",
+      "fileCount": 25,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2065,
+          "sha256": "9a64123d58c32698f1c2bf05b4c4ba823a9617b28a18acf08692bf5e5f48a5b3"
+        },
+        {
+          "path": "actualrunner.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "builtin-summary.json",
+          "bytes": 196,
+          "sha256": "5af8a034c6a039571538b8e60bb721c996784d2a273322398710a0b6871f66ab"
+        },
+        {
+          "path": "cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "compat-process-guard.json",
+          "bytes": 642,
+          "sha256": "91e5369395afeee97c2638a7a657b86ad96c12607eeb2f119f12470500bf1f63"
+        },
+        {
+          "path": "compat.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "compat.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "compat.started.json",
+          "bytes": 186,
+          "sha256": "fd57bc467e5defec77fb380a63714de8e6c5f684477ab6d1a3bd741fd0b64598"
+        },
+        {
+          "path": "compiler-contexts.json",
+          "bytes": 36857,
+          "sha256": "4334202d7dee5a9b757cb206a0837c67bd5ec2df8e9361c2f2369a60e0376884"
+        },
+        {
+          "path": "focused-process-guard.json",
+          "bytes": 642,
+          "sha256": "91e5369395afeee97c2638a7a657b86ad96c12607eeb2f119f12470500bf1f63"
+        },
+        {
+          "path": "focused.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "focused.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "focused.started.json",
+          "bytes": 337,
+          "sha256": "9b9e72fbff47d304b534aad0fcba8f792c35a3cdf7ff6735c21c49cc2447df98"
+        },
+        {
+          "path": "independent-audit.json",
+          "bytes": 2551,
+          "sha256": "272b42c2ff6b099ac96c975195b921eab07407d52e09a77b4633674b1cc634a7"
+        },
+        {
+          "path": "maintained-result.json",
+          "bytes": 81014,
+          "sha256": "7b3455cb7ee7a703e4ac30b11aae5b878c6fa284190ca8ac96e8bb5878baf417"
+        },
+        {
+          "path": "node-coverage.json",
+          "bytes": 1858,
+          "sha256": "94ff3e910c3743e07c32a32ba3fd111b917c10aa927b24129ccea4b609172535"
+        },
+        {
+          "path": "node-process-guard.json",
+          "bytes": 642,
+          "sha256": "91e5369395afeee97c2638a7a657b86ad96c12607eeb2f119f12470500bf1f63"
+        },
+        {
+          "path": "node.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "node.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "node.started.json",
+          "bytes": 278,
+          "sha256": "546901ac94652226499a07bf891030b288d93ea93b0ebafc3f2f6428568ceded"
+        },
+        {
+          "path": "raw-unit-inventory.json",
+          "bytes": 10416,
+          "sha256": "245d731129c8cefdc45aaa61a57a98dac4321b5fa90c25262d7494f84599d2be"
+        },
+        {
+          "path": "retention.json",
+          "bytes": 259,
+          "sha256": "1f14d3a9850d4d4380829e5341eec2b5c4de6538056ebec1fff63e0d9f3dc2c8"
+        },
+        {
+          "path": "same-run-case-status.json",
+          "bytes": 177093,
+          "sha256": "ab976904cd5edba5cc2fd1e1c7e313e55385f677b0a862371fe63a98b825b104"
+        },
+        {
+          "path": "slot-receipt.json",
+          "bytes": 4056,
+          "sha256": "09e518283a20c7b29fa222902fd14c6b2ca958f70146b87c4e87131004da26b4"
+        },
+        {
+          "path": "source-tool-provenance.json",
+          "bytes": 21737,
+          "sha256": "afaf9ebe18ae044ec955297046111e953d2da286a5ead61779999ae1a16179de"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-focused-c35f01a570",
+      "classification": "retained original compiler/test output and same-run raw reports",
+      "fileCount": 66,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 5667,
+          "sha256": "80167f2b8978908e36eb1fa013c7f541161a1ca2e8b08802ca628cf93fe3f5ba"
+        },
+        {
+          "path": "actualrunner.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "compat-process-guard.json",
+          "bytes": 642,
+          "sha256": "91e5369395afeee97c2638a7a657b86ad96c12607eeb2f119f12470500bf1f63"
+        },
+        {
+          "path": "compat.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "compat.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "compat.log",
+          "bytes": 372,
+          "sha256": "bdc272a94769e47b902365abe2e0a43a8ae074501c922b1d3e669ca51576beab"
+        },
+        {
+          "path": "compat.started.json",
+          "bytes": 186,
+          "sha256": "fd57bc467e5defec77fb380a63714de8e6c5f684477ab6d1a3bd741fd0b64598"
+        },
+        {
+          "path": "focused/body.log",
+          "bytes": 56742,
+          "sha256": "254019452b70504a67f31b6070046604434d9cb1db61f07862520b546877ba5d"
+        },
+        {
+          "path": "focused/context-00.log",
+          "bytes": 29,
+          "sha256": "c6283ddc5cb4a5864ee5689fd734fd2bb3d2b65b51c964ce1fc9167b999d46cc"
+        },
+        {
+          "path": "focused/context-01.log",
+          "bytes": 29,
+          "sha256": "f09862c59f8252130eec2af1aa7d78382ddc96c34a1e0417ad5b4b3011027a63"
+        },
+        {
+          "path": "focused/context-02.log",
+          "bytes": 29,
+          "sha256": "0c6251558e399404dc57c84f061c059ddeeff7407a1cf87eb5ffffc8736174a1"
+        },
+        {
+          "path": "focused/context-03.log",
+          "bytes": 29,
+          "sha256": "0c15c45482b382f2da9047462186ff079e3d769f500f3b3f83986b816a4b27d2"
+        },
+        {
+          "path": "focused/context-04.log",
+          "bytes": 29,
+          "sha256": "0d0d52aab1169bab72dd3cb45373f8bc6b52f7b8d9605c7db26fc47fe42c3a45"
+        },
+        {
+          "path": "focused/context-05.log",
+          "bytes": 29,
+          "sha256": "bc0fba4cba7df5f63a2beddb6044a807bacd3d683b51c6710bcfd12b1bb49b8c"
+        },
+        {
+          "path": "focused/context-06.log",
+          "bytes": 29,
+          "sha256": "fc871830d6ee66d177f4c4c9662b3194a587b12a988de416eeaa1a831c10cce0"
+        },
+        {
+          "path": "focused/context-07.log",
+          "bytes": 29,
+          "sha256": "7bbe54cbfb3651f1eeaa3817421936ed0792db57afc591bdef3b296b3080c14d"
+        },
+        {
+          "path": "focused/context-08.log",
+          "bytes": 29,
+          "sha256": "fb6e5861a8d98471755a02e636a2ec7c292bd7657e3f0dd4db68fe9a922119d4"
+        },
+        {
+          "path": "focused/context-09.log",
+          "bytes": 29,
+          "sha256": "6da06bb24b2877c5411ee34519fb29ce9564c5e67fb228c6753d2317eeeb6882"
+        },
+        {
+          "path": "focused/context-10.log",
+          "bytes": 29,
+          "sha256": "ede31d28d575caab745fa860f5e6ee064058324608a30394cc6262b4d7e5e914"
+        },
+        {
+          "path": "focused/context-11.log",
+          "bytes": 29,
+          "sha256": "2061b2982aa9e0724ea58bbd3a95641172fc619206a2567aa7ce0f04030dce9d"
+        },
+        {
+          "path": "focused/context-12.log",
+          "bytes": 29,
+          "sha256": "1bf2b9925a28d8d22ac68ca747e8d60a30d1db54c6e5c72f4a4300ea91a72e7d"
+        },
+        {
+          "path": "focused/context-13.log",
+          "bytes": 29,
+          "sha256": "651061efd993131ab3b4cd4a3aec7ed88bc31f11bbd5db3513e5e2927f820759"
+        },
+        {
+          "path": "focused/context-14.log",
+          "bytes": 29,
+          "sha256": "e0256b00377787986cf2f984412826e5d08a32740a574f55ee3552b9f1946989"
+        },
+        {
+          "path": "focused/context-15.log",
+          "bytes": 29,
+          "sha256": "48c346aa2775fa90fbd1b11f8f4b8813f8bf25392604a113c3bd599051189e5f"
+        },
+        {
+          "path": "focused/context-16.log",
+          "bytes": 29,
+          "sha256": "8aaa9fb3cb6f4b33f2d7fe56765623d13cb37213aed35f8ae81bc66b6f5cc037"
+        },
+        {
+          "path": "focused/context-17.log",
+          "bytes": 29,
+          "sha256": "ae32d4e219253457bfd59e1711f8eeb0ba955053ffe845cab3eef10dc4e45e8d"
+        },
+        {
+          "path": "focused/context-18.log",
+          "bytes": 29,
+          "sha256": "9d0e47279216872460223dbbdf779336254e0b5ddad9552f5bc47ebd446bea99"
+        },
+        {
+          "path": "focused/context-19.log",
+          "bytes": 29,
+          "sha256": "88818d6d325223ad9613ac652ac2cf32373f23ee1d0f9fb1367f18b25868e609"
+        },
+        {
+          "path": "focused/context-20.log",
+          "bytes": 29,
+          "sha256": "f4586986613efb34ec99b858ac148af689de1a4f60342bdfd0146159eb74ccac"
+        },
+        {
+          "path": "focused/context-21.log",
+          "bytes": 29,
+          "sha256": "a7c8dfe00f8799bc545d44fe58688dbf439479c84c0a086127684815fe360cf1"
+        },
+        {
+          "path": "focused/context-22.log",
+          "bytes": 29,
+          "sha256": "0ebc40c682aef53f8f61ab7050a77ce8abacf390bd4297315bc55f789b17490b"
+        },
+        {
+          "path": "focused/context-23.log",
+          "bytes": 29,
+          "sha256": "ae0f8cfb8bd0339dd90c37d69cbd8946c9268e6bb2b7981416f98379eb255278"
+        },
+        {
+          "path": "focused/context-24.log",
+          "bytes": 29,
+          "sha256": "b2a64150366e31b27c24fecbc9456b25683359f0a28999dc3b3364ad142d088a"
+        },
+        {
+          "path": "focused/context-25.log",
+          "bytes": 29,
+          "sha256": "e369c348d4c6a9118fecb1d2fdbd8c39244aa9b7e8eb1c3edbfc3cdc4976251d"
+        },
+        {
+          "path": "focused/context-26.log",
+          "bytes": 29,
+          "sha256": "1910353afd67ab2e2980c070362aa36f8b4a2ef087046869d5f9995a457fe94f"
+        },
+        {
+          "path": "focused/context-27.log",
+          "bytes": 29,
+          "sha256": "a60d6dcbb6641cac6da25d0b5c46dbd9f82da68de93c70749ed9445192685ab9"
+        },
+        {
+          "path": "focused/context-28.log",
+          "bytes": 29,
+          "sha256": "9fd84cc1a7d71a2c413065b79fdc56d855a1e08a807b9f5291e7a5f78c24b068"
+        },
+        {
+          "path": "focused/context-29.log",
+          "bytes": 29,
+          "sha256": "c9a24f3363035988c3b18f792d547cf1fc03d25d572d99511a6ff580750a017d"
+        },
+        {
+          "path": "focused/context-30.log",
+          "bytes": 29,
+          "sha256": "c28de960a8bcaaa99ddd30334d2284ab193b7871e7c79d30291679dc398c3ce0"
+        },
+        {
+          "path": "focused/context-31.log",
+          "bytes": 29,
+          "sha256": "675677ed0e703a5c348b49029490185b9cc3baa60dc7748cc7a0e97f11d5e16c"
+        },
+        {
+          "path": "focused/context-32.log",
+          "bytes": 29,
+          "sha256": "dcb707a2cf175966435a827762797b30752170fe6815e06f40c5dd21d7d793e7"
+        },
+        {
+          "path": "focused/context-33.log",
+          "bytes": 29,
+          "sha256": "012a9149d44daaa37854dd7510d4f82afce860256377bf4a9c3c576e744aebee"
+        },
+        {
+          "path": "focused/context-34.log",
+          "bytes": 29,
+          "sha256": "2b015b4632a945fbea2738f84b41d5e8bb368b88b761a02954e47c0964004e23"
+        },
+        {
+          "path": "focused/context-35.log",
+          "bytes": 29,
+          "sha256": "7f7d114eb31db386bc562d7a6b4d5cc93ae8e74f64da2d020f85925098e80625"
+        },
+        {
+          "path": "focused/context-36.log",
+          "bytes": 29,
+          "sha256": "d31256f5285ccdc0b62dcb51f8ddf48f42ee0685713ff38aa0e700825255253e"
+        },
+        {
+          "path": "focused/context-37.log",
+          "bytes": 29,
+          "sha256": "d204d9b2bbb9804b9e9ce24289ec99f200a3f52c656b110e5bdb7e8331bd137c"
+        },
+        {
+          "path": "focused/coverage-ledger.json",
+          "bytes": 509146,
+          "sha256": "9a71a92e4c30989829b3d209fcf7aaba91ac55061b39abaf15b71d09d9b6949c"
+        },
+        {
+          "path": "focused/coverage.jsonl",
+          "bytes": 564563,
+          "sha256": "8e1d8f846e55c0e8828dbbd483212a296dae91245442b627b38c4fbf146ff751"
+        },
+        {
+          "path": "focused/manifest.json",
+          "bytes": 5157,
+          "sha256": "105e00b0e838d5985d48db7a85b758fe7c92de9e4bd527eb7fe1c8d0cef428df"
+        },
+        {
+          "path": "focused/plan.json",
+          "bytes": 412611,
+          "sha256": "e535988366cbfe35b52f03dca192f3afe2c40187dd61d10dec8e8376c48db893"
+        },
+        {
+          "path": "focused/result.json",
+          "bytes": 81014,
+          "sha256": "7b3455cb7ee7a703e4ac30b11aae5b878c6fa284190ca8ac96e8bb5878baf417"
+        },
+        {
+          "path": "focused/vitest.json",
+          "bytes": 128021,
+          "sha256": "1b56e253ebd229eb795f96a43896bc99be2a9f4bcbfb8f148251752526577d23"
+        },
+        {
+          "path": "focused-process-guard.json",
+          "bytes": 642,
+          "sha256": "91e5369395afeee97c2638a7a657b86ad96c12607eeb2f119f12470500bf1f63"
+        },
+        {
+          "path": "focused.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "focused.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "focused.log",
+          "bytes": 3619,
+          "sha256": "55abf8ac5b24eb3d3e3e34e2e49dacf6279b20cd420c02f9d56bd8c58350e896"
+        },
+        {
+          "path": "focused.started.json",
+          "bytes": 337,
+          "sha256": "9b9e72fbff47d304b534aad0fcba8f792c35a3cdf7ff6735c21c49cc2447df98"
+        },
+        {
+          "path": "node-coverage.json",
+          "bytes": 1858,
+          "sha256": "94ff3e910c3743e07c32a32ba3fd111b917c10aa927b24129ccea4b609172535"
+        },
+        {
+          "path": "node-process-guard.json",
+          "bytes": 642,
+          "sha256": "91e5369395afeee97c2638a7a657b86ad96c12607eeb2f119f12470500bf1f63"
+        },
+        {
+          "path": "node.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "node.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "node.log",
+          "bytes": 2588,
+          "sha256": "e96fa0c9f69437e9b04e044c5fabd73029e219f7a83513c7a5366d19c8cb5b6c"
+        },
+        {
+          "path": "node.started.json",
+          "bytes": 278,
+          "sha256": "546901ac94652226499a07bf891030b288d93ea93b0ebafc3f2f6428568ceded"
+        },
+        {
+          "path": "owned-descendants.jsonl",
+          "bytes": 36235,
+          "sha256": "44dc9664a4d52b837b30f8b3b0f6f9f2138359d292dc596460fd2b8635756ad8"
+        },
+        {
+          "path": "slot-receipt.json",
+          "bytes": 4056,
+          "sha256": "09e518283a20c7b29fa222902fd14c6b2ca958f70146b87c4e87131004da26b4"
+        }
+      ]
+    }
+  ]
+}

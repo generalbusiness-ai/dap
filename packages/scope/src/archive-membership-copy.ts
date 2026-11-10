@@ -1,9 +1,10 @@
+import { allowsArchiveMembershipCopy } from "@generalbusiness/dap-platform";
 /** Decision 3e2761e6: two public Membership8 entry kinds may be retained
  * inside admitted native producer journals. The new default admits the same
  * two public entry kinds from Membership12 only in its own public producers. This never admits a
  * Membership journal, a credential entry or another consumer cohort. */
 import type { Digest, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { FAILED_CLAIM_COHORT } from "@generalbusiness/dap-platform";
+
 import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/dap-git/archive-policy";
 import { ARCHIVE_MEMBERSHIP_COPY_METADATA, archiveMembershipCopyWork } from "./archive-foreign-cost.ts";
 import type { ArchiveBudget } from "./archive-budget.ts";
@@ -17,10 +18,7 @@ export const membershipCopyConsumer = (pin: Digest | PlatformDefinition | undefi
 /** Exact public-copy sources. Distinct new producers require M12; shared
  * Rules10 serves both histories. Full privacy scans still run for each copy. */
 export const membershipCopySource = (pin: Digest | PlatformDefinition, consumer: Digest | PlatformDefinition | undefined): boolean =>
-  pin === "platform:membership@8" && consumer !== FAILED_CLAIM_COHORT.directory && consumer !== FAILED_CLAIM_COHORT.destination
-    && membershipCopyConsumer(consumer)
-  || pin === FAILED_CLAIM_COHORT.membership && consumer !== undefined
-    && [FAILED_CLAIM_COHORT.directory, FAILED_CLAIM_COHORT.rules, FAILED_CLAIM_COHORT.destination].some(named => named === consumer);
+  allowsArchiveMembershipCopy(pin, consumer);
 
 /** Exact code list and declaration citations:
  * - genesis/establish: membership.ts, membership.acts.establish. Fields are
