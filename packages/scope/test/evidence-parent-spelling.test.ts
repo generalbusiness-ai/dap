@@ -11,8 +11,8 @@ test("real old and canonical evidence parents keep native incident identity whil
   const current = changeEvidence4(definitionDigest(issueEvidence4)), earlier = structuredClone(current);
   let restored = 0;
   const ask = earlier.acts["ask-rules"]!.sends[0]!;
-  if (!("tell" in ask) || !isRecord(ask.tell.to) || ask.tell.to["slot"] !== "destination") throw Error("The retained ask-rules send must name the destination slot");
-  ask.tell.to = { slot: "destination", of: "on" }; restored++;
+  if (!("tell" in ask) || !isRecord(ask.tell.to) || ask.tell.to["slot"] !== "rulesScope") throw Error("The retained ask-rules send must name rulesScope");
+  ask.tell.to = { ...ask.tell.to, of: "on" }; restored++;
   for (const kind of ["request-check", "review-verdict"]) {
     for (const guard of earlier.acts[kind]!.guards) {
       if (guard.of !== "also.earlier" || !("equals" in guard) || !isRecord(guard.equals.a) || typeof guard.equals.a["slot"] !== "string") continue;
