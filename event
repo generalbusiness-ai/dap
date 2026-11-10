@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-11-10-runbook-run-status-record.md","body":{"commit":"810905c969f57ddde611c7cfccd442aa2f25daa0","path":"notes/implementation/2026-11-10-runbook-run-status-record.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:03e832f8ac63d6a74f64c2735430c73b37f0ad36","text":"Merge retired a covered predecessor; the successor is at docs/security/trust-boundaries.md."}
