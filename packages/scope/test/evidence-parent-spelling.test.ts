@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
-import { definitionDigest, isRecord, isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { definitionDigest, isRecord, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { Fetched } from "@generalbusiness/dap-derive";
+import type { Sourced } from "../src/namespace.ts";
 import { changeEvidence4 } from "../../../apps/room/lanes/src/change4.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
 import { EVIDENCE_INCIDENT_PINS_V17, evidenceIncidentOriginV17 } from "../../platform/src/evidence-incident-origin-v17.ts";
@@ -36,17 +37,18 @@ test("real old and canonical evidence parents keep native incident identity whil
       const made = creator.sends.find(send => isSeed(send.to) && send.to.definition === setup.definitions.issue);
       if (!made || !isSeed(made.to)) throw Error("Actual native incident child creation required");
       const child = room.life.platform(scopeIdOf(made.to)); room.nodes.push(child); await room.pause(room.nodes);
-      const source = await (child.stub as unknown as { source(seq: number, origin: boolean): Promise<{ under: string; origin?: readonly Fetched[] } | null> }).source(0, true);
+      const source = await (child.stub as unknown as { source(seq: number, origin: boolean): Promise<Sourced | null> }).source(0, true);
       expect(source?.under).toBe("issue");
       expect(source?.origin).toHaveLength(9);
       if (!source?.origin) throw Error("Actual full nine-fact origin required");
-      expect(evidenceIncidentOriginV17(setup.definitions.issue, source.origin)).toBe(true);
+      const facts: Fetched[] = source.origin.map(copy => ({ fact: copy.fact, entry: parseStrict(copy.bytes) as Fetched["entry"], under: copy.under }));
+      expect(evidenceIncidentOriginV17(setup.definitions.issue, facts)).toBe(true);
       // Both transformed proofs retain coherent signatures, hashes, causes,
       // sends and binding metadata. The same-pin control rebases nontrivially
       // and must pass the full checker before the mixed relationship refuses.
-      const matching = evidenceFactoryProof(source.origin, selected);
+      const matching = evidenceFactoryProof(facts, selected);
       expect(evidenceIncidentOriginV17(setup.definitions.issue, matching)).toBe(true);
-      const mixed = evidenceFactoryProof(source.origin, other);
+      const mixed = evidenceFactoryProof(facts, other);
       expect(evidenceIncidentOriginV17(setup.definitions.issue, mixed)).toBe(false);
     } finally { room.life.release(); }
   }
