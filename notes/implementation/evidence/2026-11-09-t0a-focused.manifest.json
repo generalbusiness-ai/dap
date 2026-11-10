@@ -1,0 +1,19 @@
+{
+  "qualification": "Two distinct attempts. Initial attempt failed. The targeted continuation passed only its declared checks. Retained Node12 and unchanged compiler receipts keep their original checkpoint. Production catalogue captures use identical explicit in-memory Lending inventories. No Native authority, live acceptance, deployment or final-gate claim.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0a-focused-review",
+  "checkpoint": "2fc5f712644bf23e4192ed4fb53f792912f9a056",
+  "tree": "a21ff20a669dea169e3ec946748e21c7ad81d190",
+  "fileCount": 2,
+  "files": [
+    {
+      "path": "raw-inputs.json",
+      "bytes": 19709,
+      "sha256": "935f4389b63fc86344dca10229c0e8646fc782c94cb2703d5efb5a5cd7266d7f"
+    },
+    {
+      "path": "reconciliation.json",
+      "bytes": 26313,
+      "sha256": "d28aab46a0eef0b38e2f1fcfbcc27702f76bdfb7adb0ac80202c9ac92a30004d"
+    }
+  ]
+}

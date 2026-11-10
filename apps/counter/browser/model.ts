@@ -2,7 +2,7 @@
 import { same } from "@generalbusiness/dap-bytes";
 import type { FieldValue, MemberRef, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef, timeMs } from "@generalbusiness/dap-bytes";
-import type { ProjectedItem } from "@generalbusiness/dap-client";
+import { expectedOf, type ProjectedItem } from "@generalbusiness/dap-client";
 import { countingCommitments } from "../commitments.ts";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import type { ActorIdentity, Completion, TurnToken } from "./voice-controller.ts";
@@ -138,11 +138,10 @@ export function proposal(view:CountingView,actor:ActorIdentity,kind:Control,comp
       }
     }
   }
-  const expected:Record<string,number>={},act=countingCommitments.acts[kind]!;
-  if(act.step==="transition"&&on!==null){const i=view.snapshot.items.find(i=>i.id===on);if(!i)unavailable("The selected item is unavailable.");expected["on"]=i.revision;}
-  for(const [name,rule]of Object.entries(act.also)){
-    const selected="one"in rule?view.snapshot.items.find(i=>i.type===rule.item):"by"in rule?view.snapshot.items.find(i=>i.id===fields[rule.by]):undefined;
-    if(!selected)unavailable("A required counting item is unavailable.");expected[name]=selected.revision;
+  const act=countingCommitments.acts[kind]!,expected=expectedOf(act,view.snapshot.items,on,fields);
+  if(act.step==="transition"&&on!==null&&!Object.hasOwn(expected,"on"))unavailable("The selected item is unavailable.");
+  for(const name of Object.keys(act.also)){
+    if(!Object.hasOwn(expected,name))unavailable("A required counting item is unavailable.");
   }
   return{kind,on,fields,expected};
 }

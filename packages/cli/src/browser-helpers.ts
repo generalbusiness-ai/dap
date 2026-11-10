@@ -1,5 +1,5 @@
 /** Portable CLI views and codecs shared with the browser. */
-import type { FactRef, FieldValue, Item } from "@generalbusiness/dap-contract";
+import type { FieldValue } from "@generalbusiness/dap-contract";
 import { unb64url } from "@generalbusiness/dap-bytes";
 import type { Role } from "@generalbusiness/dap-platform";
 import type { Config, Repository } from "./store.ts";
@@ -32,38 +32,7 @@ export function describe(kind: string, act: ActShape): string {
   return `${kind}: ${what}; ${who}. Fields: ${fieldsLine(act)}.`;
 }
 
-/**
- * The revision of each item the act names, as the scope's summary has them
- * now: the target for a transition, the one item of a type, and an item a
- * field names. A name that a rule selects has no key: the scope resolves it.
- * The scope checks every revision again and refuses one that moved.
- */
-export function expectedOf(act: ActShape, items: readonly Item[], target: number | null, fields: Record<string, FieldValue>): Record<string, number> {
-  const expected: Record<string, number> = {};
-  const revision = (id: number | null | undefined) => items.find((item) => item.id === id)?.revision;
-  if (act.step === "transition" && target !== null) {
-    const at = revision(target);
-    if (at !== undefined) expected["on"] = at;
-  }
-  const bound = new Map<string, Item | null>();
-  const subject = (name: string): Item | null => {
-    if (bound.has(name)) return bound.get(name)!;
-    if (name === "on") return items.find((item) => item.id === target) ?? null;
-    const rule = act.also[name.replace(/^also\./, "")];
-    if (!rule || rule.code !== undefined) return null;
-    bound.set(name, null);
-    const via = rule.via ? subject(rule.via.of)?.refs[rule.via.slot] : undefined;
-    const id = typeof via === "number" ? via : via && typeof via === "object" && "seq" in via ? (via as FactRef).seq : undefined;
-    const item = rule.one ? items.find((item) => item.type === rule.item) : rule.by !== undefined && typeof fields[rule.by] === "number" ? items.find((item) => item.id === fields[rule.by!]) : items.find((item) => item.id === id);
-    bound.set(name, item ?? null); return item ?? null;
-  };
-  for (const [name, rule] of Object.entries(act.also)) {
-    if (rule.code !== undefined) continue;
-    const item = subject(name);
-    if (item) expected[name] = item.revision;
-  }
-  return expected;
-}
+export { expectedOf } from "@generalbusiness/dap-client";
 
 /**
  * A value given as `name=value`, read by the field's declared type. A list,
