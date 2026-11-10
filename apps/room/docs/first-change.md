@@ -59,9 +59,10 @@ version. It does not mean published. A missing approval, unauthorized merger
 or invalid path can leave a recorded proposal unpublished. Keep the change
 and version shown in that output for review and later merge.
 
-This source has no `dap propose <branch>`, application preset or ordinary
-browser editor. The branch/manifest-list workflow is separate unlanded work;
-it is not an alternative command in this guide. A clone is optional for this
+This source has no application preset. To propose the committed files of
+a local branch, use [`dap propose <branch>`](../../../docs/cli.md#dap-propose).
+In the browser, **Propose an edit** on [the page](page.md#what-it-shows)
+changes one text file. A clone is optional for this
 one-file path. [Clone and host credentials](../../../docs/hosts.md) explain the separate
 read-token path and its limits.
 
