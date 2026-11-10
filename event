@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d3b24349b7c630939af0b7344f8845b5cbfb715c","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:db98bc2dc756360b53b5c51986072e44d46515fb","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-t0a-asset-repair.manifest.json."}
