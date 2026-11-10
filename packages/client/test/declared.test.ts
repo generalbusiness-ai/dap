@@ -87,3 +87,21 @@ test("a declared handle is refused for a scope that publishes another definition
     ["definition-mismatch", definitionDigest(other)], ["definition-mismatch", digest], ["definition-mismatch", "platform:directory@1"], ["forbidden", undefined], [true, digest],
   ]);
 });
+
+test("a typed intent returns a failed fresh read before asking the signer, even with captured revisions", async () => {
+  const digest = definitionDigest(notes);
+  let reads = 0, signatures = 0;
+  const transport = { summary: () => {
+    reads++;
+    return Promise.resolve(reads === 1
+      ? { ok: true, at: head, complete: true, value: { scope: at, status: "active", definition: digest, time: "2026-10-04T12:00:00Z", items: [], counts: [] } }
+      : { ok: false, reason: "forbidden" });
+  } } as unknown as Transport;
+  const opened = await declaredHandle(new ScopeHandle(transport, at.scope), notes);
+  if (!opened.ok) throw new Error(`no handle: ${opened.reason}`);
+  const secret = secretSigner(new Uint8Array(32).fill(1));
+  const signer: Signer = { key: secret.key, sign: (bytes) => { signatures++; return secret.sign(bytes); } };
+  expect(await opened.handle.intents.write(signer, { on: 3, expected: { on: 1 }, fields: { body: "A retained body." } }))
+    .toEqual({ ok: false, reason: "read", read: { ok: false, reason: "forbidden" } });
+  expect([reads, signatures]).toEqual([2, 0]);
+});

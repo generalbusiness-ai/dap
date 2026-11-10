@@ -1,0 +1,3042 @@
+{
+  "kind": "E strict original three-output byte capture",
+  "request": "d5fa31c9c36fc1afb93f401b61e3b3f3b31d92f9",
+  "promise": "230f5474cedda62059b5c9f4f89d11bb61a6f638",
+  "head": "01337382fea93f13612c83a1396bd2a34a1b3e36",
+  "tree": "aaa02f944b9e0173ea5391eef13664c359d0caad",
+  "booking": "e0140e0aa13cf54aeebf2c0a183ca1f8af2d1f41",
+  "end": "a7fee030f6134e3b9f865901882d562a1cce82c2",
+  "actualExits": {
+    "actualdriver.exit": 0,
+    "launcher.exit": 0,
+    "body/actualrunner.exit": 0,
+    "body/capture.exit": 0
+  },
+  "strictOutputFiles": 3,
+  "actualByteEqualityAgainstOriginals": true,
+  "lendingModes": [
+    "default",
+    "generic",
+    "add"
+  ],
+  "comparisonRows": [
+    {
+      "path": "docs/lanes-reference.md",
+      "bytes": 139830,
+      "sha256": "1b1272ba17778b79cac8e351196e206e6473594fb8da36d064ccde11a2a79b04",
+      "baselineBytes": 139830,
+      "baselineSha256": "1b1272ba17778b79cac8e351196e206e6473594fb8da36d064ccde11a2a79b04",
+      "identical": true
+    },
+    {
+      "path": "docs/mcp-tools.json",
+      "bytes": 262660,
+      "sha256": "4e18d71826d10cd3d8ab64f507ee59e5a69dc740185348988143488098659b64",
+      "baselineBytes": 262660,
+      "baselineSha256": "4e18d71826d10cd3d8ab64f507ee59e5a69dc740185348988143488098659b64",
+      "identical": true
+    },
+    {
+      "path": "lending-catalogue.json",
+      "bytes": 298441,
+      "sha256": "7f4bd447c30a078dd68ce1f2ed57decdf3652ccbb1caf9efacd950bc0969f468",
+      "baselineBytes": 298441,
+      "baselineSha256": "7f4bd447c30a078dd68ce1f2ed57decdf3652ccbb1caf9efacd950bc0969f468",
+      "identical": true
+    }
+  ],
+  "sourceFiles": 4547,
+  "canonicalTools": 7525,
+  "frozenInputs": 598,
+  "pageManifest": {
+    "path": "/private/tmp/artroom-r3b-evidence-t0e-page-build-20261110.manifest.json",
+    "sha256": "ed65659815fd16424c5cf5f9f1ab516ea27b667e0cdaf5b59c4f4def1a564879"
+  },
+  "pageAdoptionProof": {
+    "path": "/private/tmp/artroom-r3b-evidence-t0e-strict-capture-final-013373-20261110/page-adoption-root-readback.json",
+    "sha256": "7b2cd1bc4c314b0a0b65929251bff2527fbbe6f484a229be42451c4a54205efe"
+  },
+  "safeFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output-review/SHA256SUMS",
+      "sha256": "2c65bd24dfee87d67114a1707a714847ba78f7cceef9e0e875012165da7ae373",
+      "bytes": 342,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output-review/capture-summary.json",
+      "sha256": "be622f9d79b95b82f83b401e3dfad8fd289baf15fb0e86781edde78b2d16eaaa",
+      "bytes": 2633,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output-review/comparison.json",
+      "sha256": "5016a75790522418af941b7ab822d7066acce099fc184bd8de8c4b9d90db6b0c",
+      "bytes": 1723,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output-review/raw-input-index.json",
+      "sha256": "f541717a601f157a2c5cb98a91c749f059865a63cb0f9a4db37e756acd24d589",
+      "bytes": 134924,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output-review/source-custody.json",
+      "sha256": "46ab7e4d6ac8d4e0d85aa305e289925d5cb0db7de4a79468b28302acdc60d8ca",
+      "bytes": 2695,
+      "sealedMode": 256
+    }
+  ],
+  "rawFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/actualdriver.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/actualrunner.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/after.json",
+      "sha256": "7eb68fcb045e294c162774d27cc15fe3563ec11a46bad775dcb75ade00f39b2b",
+      "bytes": 585799,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/before.json",
+      "sha256": "7eb68fcb045e294c162774d27cc15fe3563ec11a46bad775dcb75ade00f39b2b",
+      "bytes": 585799,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/candidate/comparison.json",
+      "sha256": "5016a75790522418af941b7ab822d7066acce099fc184bd8de8c4b9d90db6b0c",
+      "bytes": 1723,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/candidate/lanes-reference.md",
+      "sha256": "1b1272ba17778b79cac8e351196e206e6473594fb8da36d064ccde11a2a79b04",
+      "bytes": 139830,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/candidate/lending-catalogue.json",
+      "sha256": "7f4bd447c30a078dd68ce1f2ed57decdf3652ccbb1caf9efacd950bc0969f468",
+      "bytes": 298441,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/candidate/mcp-tools.json",
+      "sha256": "4e18d71826d10cd3d8ab64f507ee59e5a69dc740185348988143488098659b64",
+      "bytes": 262660,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/capture.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/capture.time",
+      "sha256": "819c35c314588d0f954783d0fa3254a109adb72b0c62f24ed1b24249cd775224",
+      "bytes": 29,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/cleanup.json",
+      "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+      "bytes": 109,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/owned-descendants.jsonl",
+      "sha256": "1bae22073f76627045d2aa21344fc677c6b8a4669f1349fd5b52c9b1958fb960",
+      "bytes": 2076,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/plan.json",
+      "sha256": "457083c95e02c287540ad7e60b34dfa6e313ff0619ccae60be947ac9dcaef395",
+      "bytes": 3839314,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/reconciliation.json",
+      "sha256": "7598dfd0ea01c6359841562e95d130c7e0677f20e208b0522e72bd228af22b9a",
+      "bytes": 2133,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/slot-receipt.json",
+      "sha256": "6df1d937397ed84d045336281988f1818f43712dd3d8879d9d671df7d7f3e366",
+      "bytes": 2197,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/started.json",
+      "sha256": "8b2da547cc408b415599dcea5a640b85e9bd7b75183705488c37a16821a7a432",
+      "bytes": 978,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/stderr",
+      "sha256": "f26e312220317e44e3a0cfc8ca31ba78296c093a2eb1be63a6faa10462ab907d",
+      "bytes": 191,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/stdout",
+      "sha256": "6587ede526d16cb57d9964a8f676fea1c03d3f8362e6a65c441bf2bb1e7b57f4",
+      "bytes": 856,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/strict-three-output-capture-process-guard.json",
+      "sha256": "5fd0bbfa744b5446008fa04ce435de8f9f735fb7d0cb159afa1108b9629ff71d",
+      "bytes": 653,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/task.json",
+      "sha256": "461cc40ec7d711ec1b8ba542336dd260303cfcfb3453b99d76a9e17f69feaccd",
+      "bytes": 1211,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-00d5d9875bc34bf38705c59a05e23be3a860b408",
+      "sha256": "8d4d193f8aa9af48120dc24bc9e24d2f3a29bc41ce08bc8e07e7c098786c9b3d",
+      "bytes": 1125,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-026618db18062fad194bdec07b9d37fa139b0e3d",
+      "sha256": "94ff19125fa46ec0265ca60b7dffc4f6d2df7b6abfbfee0ab4dc77675d17785e",
+      "bytes": 6143,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0413f8977eccb58e19cff0f0ea67700eb686a132",
+      "sha256": "51572e4667036621a827f8e2298ceac985f7d76e4d2ccea73ee190d51bdfa488",
+      "bytes": 13645,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0451db77881fac22eb997f4457048e10b825d23b",
+      "sha256": "5923cbd80a61931a8f8714b42ce51da97967076bd9cd77c45a30d78dc380c384",
+      "bytes": 4345,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-053f20ddfaefe2b40a91bb5da4420f5f00ee3fa2",
+      "sha256": "a823f51677024a87741e08ad3cd02ea8d0ee8d9a2456753724e6393b003e8aca",
+      "bytes": 10123,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-054f18a1631fe1b334b5baab4923f91c24ad72ce",
+      "sha256": "6ed2eb9dfda61d325e13698638b519dae71eaa4b6fbd938f5b8e71680ee4a22a",
+      "bytes": 29034,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-05675e841be92f6f404c70b76ea1abc87ab8c112",
+      "sha256": "50e4562c594b284c7ce5b8cc551fddb7d677079507887701f116ccb9bedba68b",
+      "bytes": 1856,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-066040f5f1e8ed30ffcbae8edcfdcfcaf559d243",
+      "sha256": "087ec19123a889e65ba6db9f76e5ce6bcdc8bfa6af6a3a199e114380ed364914",
+      "bytes": 21977,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-09850354706823af983071e38ca92d4bd39fcb0d",
+      "sha256": "489a98cef1bd3140c34bf895af2ac6d6661f4ea4641ab7657c85fbf6295de660",
+      "bytes": 1605,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0b4d8b204d2be5bc0a30b1226cde41823f5e014d",
+      "sha256": "eef8054aaa00a6469f4b28e58e0f3604aef5972a0a7ac99013c3865d6649a9b6",
+      "bytes": 10568,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0b9fdd7d99c30964ca684ea5438071f6aaab04df",
+      "sha256": "7ac1f46878161cb97c88c54bd2bcd7306dbfde03950df4679cb2ae0e9300f962",
+      "bytes": 1528,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0c291e3d1467a32d48dc18eb4c59795148d429c5",
+      "sha256": "2b1f41370d281902f05a702fac2a68fe87c37ca7a8b56a95492c15ced21cfdd5",
+      "bytes": 14962,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0c5ae6b4f10b49d90225296a943c9f6571aa88cc",
+      "sha256": "0ec0a1b7d4b55c68b15a3933060177fe9042e1dc0372101b2992b9c8d0826ad3",
+      "bytes": 2900,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0cbd36a146b5fe4bc68c82f0f60bfaf1d7fa3960",
+      "sha256": "cea071c6551178cb63dcb81944f52484f2d52f324dac1c6810509cf01f7e566f",
+      "bytes": 1701,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0da85d74a0ed589880dd842e7bed5407f4957ff7",
+      "sha256": "f44017fd73c2764b754006636a974b0a293a0663c2959d53efa6019fed8a0bf0",
+      "bytes": 3219,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0e6ac3ea177382211f1b85b70fd385e88426c54e",
+      "sha256": "4180c7ad144c03cb6b506cfe479ba2ccb1bf8784ab89b38d1203c6a39f2eda97",
+      "bytes": 1817,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0ed8883b835df1575eb41eb869d46bc74b7b0c0c",
+      "sha256": "88d01a9f32ceab5ec39183e7de0832497f7fac20efea5d27d80aeb7060c023dc",
+      "bytes": 30775,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0f337a60290bcac66b85f9e812db36efda789e13",
+      "sha256": "100d3696f9a2778fd3d5a70d423926931bdf96b2288e705e174f9ab186113041",
+      "bytes": 4257,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-0f59be6879c8c63a21d720688ee4469cfd11fe9b",
+      "sha256": "f8af87e6fd7fa3a01e278afe6b2fbf4476de157306063a2606449e82dfc8850a",
+      "bytes": 2520,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-10e4f927c1195c07bd624db3afd16caafeb5b625",
+      "sha256": "4399f9c53caeda9b800ad975cbc84080a58c44bf204accb11c5ec8d7ab11bc82",
+      "bytes": 4360,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1143be2be5aada64d65481a3cd43e4d2b44792bb",
+      "sha256": "e5764b059e9ec0c40cbc18598102323a0fc6436d00bc2e944f0ea9f35f779f90",
+      "bytes": 12073,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-11b9ec4f98ea6f3073bd859cd0654246645a1600",
+      "sha256": "724ce7f7c4a4f8e8d1d411c947b14824d0c4da429b7d422a74d2506c823fe00a",
+      "bytes": 3328,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-139f9175e8096d34be1cce264adc27f7ca0c8cb3",
+      "sha256": "bbb179a28d832e5741ae4f04c2f713ab31c6557e38e69c4cded9bf8739fa76ff",
+      "bytes": 15725,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-13c063404f537a85f73bf4132303d20c1fe155c5",
+      "sha256": "f3e32d94527d35dd902af65c53dd2e47ae3f0765047190573c169cef6cf42a71",
+      "bytes": 23989,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-13ca90dd82b139983b35fe6edfcd05ad02b5581c",
+      "sha256": "79564140c9927fd4f086838706996ee6c2896d9ebded3143a1f4a60b00187cdc",
+      "bytes": 5009,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1419a1afac9fb1138b3e0ace9d5694c33119221c",
+      "sha256": "e837094717c8683e43725d6a072c83e20f06dd669283e3efa1aed004d01bdee1",
+      "bytes": 3932,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1497db02fffe81fd489fad2c9a0eb52558cf9cb3",
+      "sha256": "52eacc1410e7a9c7e76e483790fec2e89c73b7373c6306d0c5dc9d1e8bb0abaf",
+      "bytes": 6551,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-14ca4c5f540e2dc7a9267520b75de5cb4547b01b",
+      "sha256": "8b0277854e5bac3b05d35d42f9405d08f6325a08aa4266e11e5ec99464e13551",
+      "bytes": 5557,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-16dd778be99974977c8fd89b84b239b5acfa1d9f",
+      "sha256": "3f2ada22dca8d0318a27432fc50a8bb72b666a687f2e6416fb7e0df17449cfe7",
+      "bytes": 25750,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-16f1d8678ae5d5f0da7d7518c98ba42dc87cc8ef",
+      "sha256": "1d33900e6e32f13d6f813194f2a5bdddea9c30c18047cca8cae7be701238e1d7",
+      "bytes": 22165,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1745a9eef506c3d0aeebbabddcd77e48eb155a19",
+      "sha256": "ef310d25a4282002f458d0978598d0a4e345a449d785a045ac48c79b2be4f636",
+      "bytes": 1327,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1765af262398db2a6b10c9e5e5c2cc2084ab9fd0",
+      "sha256": "44c8a3bf8b5d93cfb4020be561648f8c4506888c10aa0e1e3e9a9a039d31a4bf",
+      "bytes": 4916,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-17a2621a75d4765f980a2651557e9b1c18c114cc",
+      "sha256": "41c608d17f08a02915617ee541315972c928f920377d3745ee042f87e64478d6",
+      "bytes": 16540,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-17ba0eb466dc5537b725efd650e53ba63db65f2f",
+      "sha256": "52b6d8d1c8ca00597ab828ab22ca43c77e525c4e37481add4c2d02a6400cf1cd",
+      "bytes": 17052,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-18b1fe4ab02f371d88f8b065fac040c9bc67ae58",
+      "sha256": "24034a73647e19eadb29f8a47b1f261b1cc6259cb8bd522149e3263c633cc569",
+      "bytes": 6756,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-18bc13c4066390c1e9ec9bee0e7318940f6fda9b",
+      "sha256": "5e8a8d201fd87dea462c24d67af30701a1d8a1ec0a565da37409337abf677a32",
+      "bytes": 643,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-18f42f555f0ab2f68b2a5451157ef4a0d717375c",
+      "sha256": "3167282f4b3449b18221641b4d9655d4ea3e6ba77dec5ff1ec097cf4b51cc6e7",
+      "bytes": 12118,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-190d5529ef0e7772fcf7484859773b70dbcd560b",
+      "sha256": "7882f365edbb14110bd807e36502c2243d9111e1ca2e5ae54adead0a715df838",
+      "bytes": 923,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1af7a4b35f0dcae79dbfd5538907edbdf3674d2a",
+      "sha256": "185a039bbaf335dc7465a1fdc1bd0f9389fc7278a44659d7df6f73537e5d812b",
+      "bytes": 5078,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1b40c9cb1c200364728daf775722e648c12e5120",
+      "sha256": "e8c0b1dba3efe89fe1ec9511216292b0ba765c9c40603b2767e29fb5758afe66",
+      "bytes": 39457,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1bc8d3a0b4e9ff10659b40d549c984708a09207d",
+      "sha256": "0ec2461bf16d285813592d53fcab3ff77681555a6d2660aed8167dcdec36e5c5",
+      "bytes": 1316,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1c7813a04032f018d2d4f0a61242834dfc71cf51",
+      "sha256": "31f7f0e04a2a2af106b7c9a879d790e49059ed662004ccc31a7db089de39a185",
+      "bytes": 3426,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1ded7a6caab3c9d74364df6d313142a7d1d2b34b",
+      "sha256": "c77a6f3aba375568de94b34718317cbe874d62bf54e33fd5180d6aee12fe16b1",
+      "bytes": 5929,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1dfd26f316eb813b00bd643d27e0cc778b52ade0",
+      "sha256": "119c03bcfbcd8aff40fcfb9ad0766cb7d08ff85fd196fb529c9cfcdea0189bfc",
+      "bytes": 3349,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1e265e6964c1a87930ac0ec954e10a30c6698f04",
+      "sha256": "5fd587ab139d23e5f131564a5d3c51bbaeeeb98c2b14c2117d462a964194cffa",
+      "bytes": 446,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-1eb70094eb1f41486be6a4a68bcb99d1ef578c03",
+      "sha256": "a2c7daf46a59b040fb491b8ea3405d18806fa5625fd67f36df4b82e23954b69c",
+      "bytes": 18690,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-2009e45153136cd6c37decb1a9634112c3f0ae72",
+      "sha256": "f4e719cfe3df1d49c985d64f75ea4b7a3324764d03fab5f4f1b3ed0584aa2af9",
+      "bytes": 38150,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-2074d29648d61055d673f8878cc4545d2ec120de",
+      "sha256": "baa681d62490fa16102b983b242e343f6b86a48f9fdc13be43635bcf17a31495",
+      "bytes": 10579,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-20916069f36f979c42e9db1a6f5509ece715391a",
+      "sha256": "46fa092139d4846a7ac7064cb4eda28e3f39ef4170ba7138466cba87b09dff1f",
+      "bytes": 76705,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-20ea2d71cbec8274d29bfa166ad26b194e9881a8",
+      "sha256": "ac8990fa85f0839ce3d0aeee5726566a4699dc96db61176e185c7fcdb1ddab62",
+      "bytes": 10985,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-2192603e3f9c8d0867f4f27f002ca4d34b850fce",
+      "sha256": "cec1f0e0e987b4fbd85aceeb15a60277af39ce222041f659aa364cfddd89727a",
+      "bytes": 3309,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-21bac531b226b2ee927ad9fb895ebc140d94a7ec",
+      "sha256": "df21823927c2e8e9cd49247844f5470ddafd668d0c49e08cb965fc3774af67f4",
+      "bytes": 22305,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-2321a7b716d0d63a2d924f4d47e6a63bc52a6904",
+      "sha256": "eb2c25b02f0731078169af4f6666cd0a4644c068d474a4363de732e994ef7cec",
+      "bytes": 2809,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-2340f36de098c5cdd3d16937ada53a38556f9b61",
+      "sha256": "1356cd6c02a034d3ba8cd6dba66aa3af510d5e0e6c3b44a15a4b790e77a9902f",
+      "bytes": 3342,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-23657c702aeef9290e6845ecc34bc0551603ef7a",
+      "sha256": "feeb502e539355cafc67fd7e5d4d6236a69d85ca9822295b1f72e0b6435e0864",
+      "bytes": 11304,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-237561d497f7d93b8b2b6df7777c925fc41b1b24",
+      "sha256": "a69323bfccc976a727cc3bb1a054de9794b9e24aeead2b69d8c93cc954755acb",
+      "bytes": 2768,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-23af64518550c8d494824a6d68a9cbafded0c7ae",
+      "sha256": "ea22f75060e9d47082168417220f25d91d04c2e380c79b460410f7b745336605",
+      "bytes": 2987,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-23bc4ba74f3f019b9173252993bd507de33a4bfb",
+      "sha256": "f9b1c884a5989198c613f77c1a151a2878216f5e24837203c80f4fbab1f20d79",
+      "bytes": 10334,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-259cab4cf6c8edc3a94366ac457f034a9eeca850",
+      "sha256": "782a390f8a53e481ea906670d509329c605e95235b80d9f7f4411361c0c224da",
+      "bytes": 3177,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-26feb93e29b8e66d3b40e3b81e57f74fafaea4ea",
+      "sha256": "3a9c38af95c87ca978c6d2e64bae84ebd07ed13731850cc855fb9632a93082df",
+      "bytes": 5190,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-270b1fde5a1d5b2de8829b0b5647828c701fe2cd",
+      "sha256": "dc3be27e399bcd61f75dfca89c70a4d022771bed30a9809a0b3ef395bea9474e",
+      "bytes": 431,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-277da960f6bcf586a0061eda56be965cbf30d559",
+      "sha256": "98c0510a58a7c6233d82e3621308c0fba81a82b9f460441c82965daacf9304d2",
+      "bytes": 1027,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-277dabcb760da2433acb92a3756083b7e14d1cf9",
+      "sha256": "428c55aa773018945c18f2eea0c14138223830763bcc0c22c8ccf06c713f825d",
+      "bytes": 11878,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-27f6d5c19061fcef6739e51ecccc506bd3b69891",
+      "sha256": "efebf61fccf79938e844981cac19af22f92f2d208cec4e73d7facb3ae7c464e4",
+      "bytes": 264087,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-281fbc957bf9e0172746542cc5bb80f7a7be9a3a",
+      "sha256": "878e2314b8a62f6955f87bfff78eb31dbc7a978fc828e2b552c7e69de9178ce0",
+      "bytes": 1844,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-28ff5158f3f4dfa42d38eb97c618d6b4ef7df4cc",
+      "sha256": "5ad961d326b28c513f9840860a7332163b5b3b351f6ab70bf84077edc31666ca",
+      "bytes": 7466,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-2b01b9dc14b063f1686d288fdb04235d138a625d",
+      "sha256": "ce31465fd9a1e38f5739f79ea4284eb28391e2868253378ae9c0bd697085ab57",
+      "bytes": 1297,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-2cba65d9034859ef730bdbf02c24149311e3f60a",
+      "sha256": "b1984ae16a7dc435e5ed9fd419ccf348a143bf9f358e19939aa009052d9fb6a1",
+      "bytes": 10520,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-2e3b25221ac2c93254ad2363e001b814c314391e",
+      "sha256": "b6bd548eecb994e9240509505d45c0db2f3b3d39615576387eb37323a5a10166",
+      "bytes": 3309,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-2e445551aad87b11569498990110c6eb69671d3b",
+      "sha256": "4506ce8de68f8b12d1cc379d3df0c15c6e77014089d4c186e16b7f46d2c62034",
+      "bytes": 11805,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-301905836f76cc0bb638afa03c5f240f5ec806a3",
+      "sha256": "79578591c9206d398615869e76c66e354bab7b01c81ffd4fc04e649ac2b6fe8a",
+      "bytes": 321,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3045d12f7199f2c732c6ccab9dfd1ba283bcec12",
+      "sha256": "21fe2f1722f9b942ee4c86aa9cebc079688226c3207227ff53cabc6bac53b527",
+      "bytes": 10326,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-31783934a20f18e8d66149764b4a200b63e506e4",
+      "sha256": "b9e24a9e7154739b8902d3410482e6a3c337d8126cb716b8b30293a69298f058",
+      "bytes": 6001,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3178c0ae7e38ae29291b43d560e11bfc20cd2d72",
+      "sha256": "c572ba4f8fb65652af30662ad162e7defe162604595f267388b79eb727edf770",
+      "bytes": 13762,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-328ab756385ab440a7a26bbf4d4f13162b36e1cb",
+      "sha256": "cf1ae4ea8914f0487bf8663c197f497f326ebea1f3343869ee250e8154d93072",
+      "bytes": 18288,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-330c6718f71587702d73ecf3a78dcfae98d99fd0",
+      "sha256": "3ccd410bba46dce0ebf099db91c8f7e32aee480405a59e21789b18eb3bca373a",
+      "bytes": 8124,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3360ca84d472e68a4f677fff84221e60fb6b6a58",
+      "sha256": "00b676462d300a98df72276ea993ac1e0ffa35c401267720355227f59457f19c",
+      "bytes": 1100,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-33849e5476d535701674f8174937548d8036cf2f",
+      "sha256": "5b781c4495ab1ded411fcfbc175e2eab8b0a8d096a32ec5053f1e23bfaa221bd",
+      "bytes": 33354,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-33b3592f1a9f8725ba856395db5e99e952e768a2",
+      "sha256": "156a0e32ced895b74247da561ee2ff3dae6ef4f93986b0e03ddc256adc165ace",
+      "bytes": 6782,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-359ad75a22242053bcf3901e2477d99b1b6ae5b3",
+      "sha256": "4f5e74d6e0e4985c1250fe8335cf0351ebd7f5355a3e4b158da1885cced29a26",
+      "bytes": 817,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-35e1595a2134df9133874171811876c41a2677d7",
+      "sha256": "714d6f9658ad6a3809fefaa426af38236025a7b82fe17a3f7b9c5d1860c3eccb",
+      "bytes": 4148,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-368614b31d7f452db71a3858aae1627f50204590",
+      "sha256": "50eff745ec7be623162986df089c90b4df78f21605df23bc99c920fc07502b4d",
+      "bytes": 19062,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3843b97ec9125765945b7b3e4e0db9f94c49bbd5",
+      "sha256": "695c75e09283261bb32fa7b8b92d36d551b9c37badabcfa85e985982145fb41d",
+      "bytes": 4500,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-384cb943e00a39c43ca7519551d7d8b813920d97",
+      "sha256": "859cf8a274d1397bc4f2661707bb3ee053cb6611ae65668e3d95eaa204aa08ff",
+      "bytes": 4913,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-38742b6817e34bde394e580fa901cc5142810659",
+      "sha256": "36a2fb5d32b457dd4380512eba2ea2503aa520fe63f1ebed14dba2e32d492b56",
+      "bytes": 28280,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-39a3c2f22c0a4a770c998b887e25986f2785c937",
+      "sha256": "a82c49e7e8627f8638bde57d7b0fc8798d235d436c8ab5cd5e67432361c42908",
+      "bytes": 22011,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-39f447f0d1f75cb7d9a60d78ec7779fc3487a233",
+      "sha256": "d0da6cb69615e89e89240a1b649263f9039b624573c0a0f8e8b5e45cf7d3b10e",
+      "bytes": 8437,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3a09e6c7135f5ef303f9972bf5696da25a2c9246",
+      "sha256": "93a5fe6c41643b62bf6322c01c105d55505121bf0869eb4c979bd29541c83cad",
+      "bytes": 26791,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3ab33343f00cc5f32a5c8818f4a1aad7213fb238",
+      "sha256": "0c085988c6f8cbd18a57109e58202fb7b299ff8e9ffc28df7bb8056e04d6d1d8",
+      "bytes": 353,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3aca250bf42156e4d066198dbb5bde4b582c053d",
+      "sha256": "d70e7043dbb1409a7ef0bfb9f5c851ffaf9d23e36f444d1e477569223211d8f6",
+      "bytes": 17254,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3ad4caafb2ebf131573c473f220e8ea2cbc51c3a",
+      "sha256": "c036e16b5dcacc5fffa7b2dfd3d905a9f058ff711c7d8f24deeadd1f52fcbdd6",
+      "bytes": 17772,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3bf3193e273aeafeef292826501c0e15540ef9e4",
+      "sha256": "319853973494646964d9dd0284b122dd47871b4c0caff5ee3cf82f193e488c77",
+      "bytes": 103622,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3c566b1a706ac7c99f141700a3920474a636c239",
+      "sha256": "d82acc94acd547f6a9c997b048968aafcbc95b50bb80f929d38630200553f9a6",
+      "bytes": 4089,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3e57a94f2a640cd2f8c946289617c0e0e2b4910a",
+      "sha256": "1ea70aca39d15b465ba68bc5ea8a0f2e1c5188ac6756c8ed95136bbf432bfeba",
+      "bytes": 26495,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3eb86bc85deb8fcdda99d175d74b828fd842a638",
+      "sha256": "1129a8c28753e438091c9200be28b9a76fb157624eee51aa1d2cfe01985fe8d0",
+      "bytes": 29592,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-3fab5815c459774d2502591fa8679f78865532f3",
+      "sha256": "53ade2c18855784cdebdaf05df65f2535b4d09e739a65a1fdd0c11b3dc2b654f",
+      "bytes": 13996,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-43a4b83eb1bac0ef948cc10e0f519609a597c705",
+      "sha256": "4a43bd661a56b216973de784a934e4850c56998fc8ba9f2ec9c79fd661c8ca69",
+      "bytes": 8488,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-43f754dc8f8137966e37dbb8987fb1c1604364aa",
+      "sha256": "c624a9d35af7cd057967fafb7e40f7569345fe9e5c83661990fd757a81d8e3ed",
+      "bytes": 1328,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-44947134833c88a68a05ecbcf25ce56cb5e2f084",
+      "sha256": "c8c78edd7fc868859c446a31e12447dcaf0f1e53433c8721bbc4ae896378daae",
+      "bytes": 755,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-44e86b7505364a10602ef7e6d0bed83c0b69722e",
+      "sha256": "68e3bef69c5fe3b2ed8932181306e2a4f7694f99d83adeac7508c4fe1d0e6c34",
+      "bytes": 4074,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-45c4206e68f930783e933c12172e502770db9f6c",
+      "sha256": "70834022aca4363355b5277f35120021573ece38a53498e27d4ddc91f406aabc",
+      "bytes": 326,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-460c36747e099d9ee1d8451644e9cd23b9e80092",
+      "sha256": "ba58193dca9289286a84418e5bca9c3e9587042dd48d963d8b30a9757085b5b8",
+      "bytes": 10103,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-46fad94689f461c4fe7d01a4317aa06890033942",
+      "sha256": "b532ed28a5e8f6ed8f267b3d0b384d325dea6198c064036b1ccae115573866ad",
+      "bytes": 10275,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-4784dd1e233c1daa6994f80bbe01d822d6541bf5",
+      "sha256": "5d6fe0856397560501c1e437bdc7dc2e75e39e5803d49d4fc403567f49070f01",
+      "bytes": 1440,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-483537452f7ee1164a2a4741aeb9e68de5f19ec4",
+      "sha256": "93caa43e587618038a13862a30cb2f151b9e4be824aab46da3569663c2d7f8a4",
+      "bytes": 14148,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-48d026a8d2345f51b4aec8a4a25c52f407753903",
+      "sha256": "feb2819ec3d6aa480a8fc7fbbe7f90159fbcd2b8e45a4bcbece952a407d6a77b",
+      "bytes": 11989,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-4ae989e9a1ef5cb2f6b6e851cf06044b05ab5830",
+      "sha256": "22b69ff833fe7f0f4b3c20a0a40ea0486d8f9a7a8e61172d59e75f8407e76526",
+      "bytes": 8050,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-4b54325773377c0b666a160f5c30cf0f553419a0",
+      "sha256": "0bfc10019a9b38b6b6b6226d6642efd72189adff4f41b131c3a93972467fc64d",
+      "bytes": 6927,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-4cc265b6c2cf075640160b891f99d9fbb91ed8a8",
+      "sha256": "25edc74573eb699594906758557d556ac43101eb7259365886c5a2830625eb9d",
+      "bytes": 119,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-4d5bc0cfb16bb60d089b98f56e92ad0f95e78ceb",
+      "sha256": "f18cbd8aefa0a337ad8cfdabd77e67113fdf86cd6d19a38c2225de49d4f9d318",
+      "bytes": 104827,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-4e1771d9e23f2b9b7feacbc62210145d80a23a77",
+      "sha256": "b5db3b8b9804cdd5df4597756047654f88a0d77e459e93cddb3dfac842c003c1",
+      "bytes": 4481,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-4f896ca4652e4c6c627617d377c9566175c7dabf",
+      "sha256": "4c31de05623cb5bf9013a8dae76f2ada3dc56f49d10020e82cfe1d6c999dbe8e",
+      "bytes": 12643,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-4fa968cdb7b24f4eb0cff50426a985a042aa72a1",
+      "sha256": "597d10ef12e84ad463cda8ff5ae5c75a9e25c5f67e9cf1950edcfd18eab1bf51",
+      "bytes": 12599,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-50c412aeed64e78198a0f43b6c6ed2539a7a66fe",
+      "sha256": "262bd3677b9d8a491155e5d64808e96e948c88af12eac0fab736aa5875c64439",
+      "bytes": 4689,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-517f420e6d008c70282414c9b1859d89b2c1356f",
+      "sha256": "883063e562357dbb6756946df3c58b1b215d2eb766beed1abf8b3235c14b9176",
+      "bytes": 3474,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-51bc1985ef571ed4423e4ca1835e42f855ce3afc",
+      "sha256": "3ee618ac1d1cd9469c39721e2a452ae07781ed488f06d9d51242f188016ddcc6",
+      "bytes": 1133,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-522394a97aadb1da709f109d7963429ca224f6ee",
+      "sha256": "f11131c0903455a35b947ee52da49f0be214952e124d348407ebb535b2102b02",
+      "bytes": 3531,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-53ad565c61a206d3b83b41d32c08c2912779ac4a",
+      "sha256": "b901825dffe228bde06de43ddc12df590cf72f9d3a664750b4b285f6d1bc3a20",
+      "bytes": 4159,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-53cbc8ea73a0fa15b13ca348dc0b32ded1b6749b",
+      "sha256": "c9a004b32be2c6aa1e3cc88cf61b80d30b4463a5500c435b59ba213505cb815d",
+      "bytes": 3867,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-53e1c70b4c154db85081bd295d25d3cba5d83639",
+      "sha256": "15a7f123649d6ab83032f043924753baa52c0b7e03093f60b1022935544c976c",
+      "bytes": 3005,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-55b280b3b6040d245b215da5f3cc87e00430c370",
+      "sha256": "795fbc98199a4344ed04848cf633e751ea35bffe6bc6937084cba46945a754e6",
+      "bytes": 2293,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-56117766dfaf192c483fb92e06e05f48d3b5f2a7",
+      "sha256": "267c6e0fbee1b8160f0ceb46d3be6ce5775268b177fd2f6dc82f6e065cfa9f9e",
+      "bytes": 2820,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-56b2b5489e9c29acc394e62c49304f1d5cac7f41",
+      "sha256": "19b9b1b920446b26708977d8f0d85ad3182a7690ce4443ff716066a0b740964a",
+      "bytes": 34691,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-57946972b7462340df37ad9ab9f96ace66694913",
+      "sha256": "0993cd61e18daa241ec84f5e0ca95c6b3c79d43bdbe91de651a698c449a6c445",
+      "bytes": 4492,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-5804a2b5ba4b76d54775a1a39d648311e5aef30d",
+      "sha256": "fe8192541c3d0e68f5429511858fe4eafa311992efab803c341d6a06bee676ae",
+      "bytes": 419,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-58cd6410e9811b6192f700a74cf08af18f8952e7",
+      "sha256": "0d7be89ab84776252597bcc261cafc9e73ccbf32a58017e19cc64914c7d92781",
+      "bytes": 442,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-5911f27d3a99d2973522190310975bbb195209c0",
+      "sha256": "e16b1e8b45fafdf2f68fb40936b30c8e13f922e79c2e55d1f519b68fd7108ff4",
+      "bytes": 1016,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-5a153468ef3815ead81af68af6b010e33de11b32",
+      "sha256": "f3bae18cf611df6094fa11d08d5e6aba0955cd1c73e39e0789312e598e6e3dae",
+      "bytes": 4175,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-5a1ef8517fdd86ae0e406e156261844c90627e0e",
+      "sha256": "31c3b9a399909abb9d5709fc7b2ec92610c8b48e7840251095fe90ad57c21863",
+      "bytes": 16848,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-5b00bb1153342b77f4e9c4f54920f590200648ba",
+      "sha256": "d2d0620a1a878d34ac6bba6d636e278ec8cd74f4337f6ed27810b8c87a7b02ef",
+      "bytes": 4225,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-5b4502a510c678007c7652984cb1af69aeea1425",
+      "sha256": "a1b1ed2dbcf62f0aabe771fe0a9aebefbd80360c5f7e891d83c9480e437b7e7b",
+      "bytes": 4520,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-5d74ecd6e3a8ed5838058c9c32d1f20dc2a8841b",
+      "sha256": "85700eb04f66b0271927af9139eebff073c5ed3a5651f51d94f4963685298509",
+      "bytes": 2624,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-5e9df22148e3f9bf387c9eff45890a8de49fb0a1",
+      "sha256": "2710d1123c51f6023c23182445f20cd1385d6ebfdcab244cf2b40c9b25cacfaf",
+      "bytes": 17194,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-5efd51e8a77faad9ef9c4d709f1eab1a58806980",
+      "sha256": "2ddde395234270ba51a0c3b5442de148e6a4125df10ff52df187cc5ab935803b",
+      "bytes": 6919,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-600dfb5c348b0f30b1a76b4e906ae7444698e14e",
+      "sha256": "8cf1ce2bfc248fc1c595cabbe4a237972cb4b7afcb8f2496e8ad392ec730e92f",
+      "bytes": 16848,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-607a19db5a20f9b3386e9153fcacd4226fee9000",
+      "sha256": "fac3cd464ccffc88028b0e70583150e80aa9cedec3d1a0bda7ebcea75d103e09",
+      "bytes": 7065,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-615fcfa55ecfe4202bb686dcd162742701e48440",
+      "sha256": "509bba3028c3bbc8063a1bf3a94578fc618aa125be391c6485881bdb3d653c67",
+      "bytes": 15185,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-623c8263321f84d4bdb604df6053c44c5bff494d",
+      "sha256": "fd8a1c2f3ec46b62a2f7ecabe50f099559edffa9b3f3f7c5edca03188af3caf6",
+      "bytes": 2197,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-631e677c1ac2ce540f5c6b29266f4280c21e02c6",
+      "sha256": "1989d777507d0cfd500beb22aa769900ad2d87b1e04e5aaf8862e60fae656b8c",
+      "bytes": 2429,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6328fd159b579cac766d87c537a4b1f8227dac5f",
+      "sha256": "20759e1f89d693e922c3c051663f0e7d4ec8794b1f9737ab969b710183d18341",
+      "bytes": 8506,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-63a08ee13599fc2efe8b728459455fb45ac7e668",
+      "sha256": "e911a57bedd914e81f1a31745de8994ef16befa34fa69fc0595f3473001ca2ed",
+      "bytes": 18356,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-64c7f63950e5ecf794734ad019243badad04d156",
+      "sha256": "89046dcf0237fd1d09c4d32876d0506b0af0191d1b52347a2bdacb696d58654c",
+      "bytes": 6779,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-659a5b5c2d6096fd050cb0b38f08cc22a15eae4f",
+      "sha256": "5a5bdf286f42ab59dfcc85e834a1ad623d0e39314f22a029775c74b7561d2f9d",
+      "bytes": 406,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-668095b20c160eac4d322fbdae5a0b681a22aaab",
+      "sha256": "1bd4f2601f0f54d0024544eb0ebeb31cf76bf6ceaa699d92f143e43c3e9123bd",
+      "bytes": 3037,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-67a79ef6000b367f77e2d14b1a7439d40d1f659b",
+      "sha256": "45b954905c70b3433010e666452a1e7e4709702d39757989d6df80b855b8ca65",
+      "bytes": 15926,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-67e3bd152a69e5dec56c62f75d13e37eaca0fe22",
+      "sha256": "a146b0747b4e7d6b2c670fdbe6964d801560ad731ef1aac75d89ba19f0ba30a5",
+      "bytes": 6871,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6843885ed15e727bc99f89369f921100e2b73f28",
+      "sha256": "f91c15ea745507bbeb05ecf10a80fa2ed529d7f1fc80c6c30d93a308b92c3d4c",
+      "bytes": 16501,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6889c745fd77bb692612f23b3e946e3511c203c3",
+      "sha256": "9c853627a1d69e72a81a3c0680cb6e345ffb7ed383b88ce756ec0b864cda7ba9",
+      "bytes": 7461,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-69b5f5b1175b4db208f830506ee68418520f3af4",
+      "sha256": "821354c8a11ab5c9b0303dee23a97d01cdf1d23117e2c6d3082a10a9da50b278",
+      "bytes": 23007,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-69b701413abc47c6f9df724ee4bccd42c1799ad0",
+      "sha256": "0d14bef0ffed16a43d324e5517c1367c166aed36f1664ae9da24debca9372a1a",
+      "bytes": 4011,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6a00020c32ad637191b1f58c6cb53553c5ed262f",
+      "sha256": "21523471581e03c4cf878d00fbcb668c72854dcec298946e0fc97455732b5a0a",
+      "bytes": 1921,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6b9abd0a1403affa06d24936cfb8b253f515c752",
+      "sha256": "14e0f0c80a2b4c38f2819b778779b55782513bd3019f257c9bc90a128b4dea61",
+      "bytes": 19297,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6c25b15914dfbb73792f6b3afb0a69cabcfe4c8b",
+      "sha256": "680f07e2601ac1cb01bb91ce541bbb8d3ba9d8c4d2408b97f718ed9f3e7c1e5a",
+      "bytes": 1271,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6ca245e3fad91d53211a903e0e2082a5b16284fc",
+      "sha256": "73753725123b7393f6a1f3052b5c3db80a8c702ec38cf4b86f0a1e9cf1c7a40e",
+      "bytes": 15173,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6d4e557c047c805c0c9e2364c16764b65d8e1110",
+      "sha256": "b5934251e4b73eeab407654906a0ac7c3ab753b1e5b5468f739189c8036c9468",
+      "bytes": 15350,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6d87d355af66369a6b44831015aee9e54b6f00f1",
+      "sha256": "09217abb550335bd273290c717f982415ade331ca4f6e26d288e7cf7d825984a",
+      "bytes": 522,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6db1ed7c527b8b9eeb5ac2661a48f1917bc2eac6",
+      "sha256": "bb46fec854408f23960efa6b4f9d6297beb6c5928b6d3a46f52f05feffd4436a",
+      "bytes": 368,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6e4726379f5af16e773c9ca0517fef9839a2d1c4",
+      "sha256": "43607c1fb8effdb026ab7aa71b94455f1742e62b0f1c34912fc71609cea032b4",
+      "bytes": 426,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6ef18524b2e5ec0b06a98bdfb6f51b5a26fea38b",
+      "sha256": "fd34ac98b2350b7dc08ffee1210b8e4b8ce58204ca0dafd0f46833d90d948f31",
+      "bytes": 5560,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6ef4b1d61b174836f471f05b542421ae2fae87c7",
+      "sha256": "79823387e9f37c4c4019a01b6f6cd45fd84867d36d5bbea230ca9ae9368dddb7",
+      "bytes": 45099,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6f23282c89280f599dc573046c95000809e3e486",
+      "sha256": "a4212ef3e83bdbee3f69aaf0d54d504005e8b027d616534590af4821fd1fd7e8",
+      "bytes": 1774,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6f7c63d0d27b484948a4e87c0f3f22f93b8c8ff7",
+      "sha256": "810ab44f04fe049ceb8a526f9b9336b4a380edfc76a5827b873baef53a56e820",
+      "bytes": 188584,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-6fd0f963f9c574bdb68ad3bbe0b62dffeb01b4db",
+      "sha256": "7fd4d8cc3775b3b17ad55b6d99c6b8fc0e27fc6a0ec9cf3b58a560d55b619ded",
+      "bytes": 8196,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-70656834db93e365295c4185c727868c989ef939",
+      "sha256": "b91c7d0edd14efb199e074651f0e97a89c672047988dc552d105281beb6a1cef",
+      "bytes": 19758,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7107ae004cad4d7a9a3adbd582ddc680967e1bd4",
+      "sha256": "dce2bc13bc608e782d3861feacbc9ad6c39b216c25f4cd8c0f653c8468772870",
+      "bytes": 7094,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-72642dc0f657b1e5b7173385247e0c4ade60e4a7",
+      "sha256": "8a57b2e8c9ce7f3ab7ba57ebf183fbaee0176801c02cad520fe52bfe870b6814",
+      "bytes": 13661,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-72ca75ebef9f8377302dfd147ffb32a786036c49",
+      "sha256": "5dbaa59ba56aaa914af49613acf7eb1d8eeb1caf8ab25666102a932b9a2f0c7f",
+      "bytes": 5880,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-73f05e708cfe28ab56a289e24af5ffa2a7fbb545",
+      "sha256": "f686aad9c090bda679728aeac8f0056b498b9f02082416799fcda8a779462b76",
+      "bytes": 4244,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-74958631600de4e402c21707c84461c2e3536250",
+      "sha256": "976b3a2d95a53edef902e5a686e96d20b910111fdb023c2449e9b9745126240d",
+      "bytes": 628,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-74f53dc825fc8c5e53afcfec26faa360bcb2c4f0",
+      "sha256": "d3eaa0d2eb5d19f9d0a120bd30421c81c6185c5ab8e86505f97856ef8b8c24f8",
+      "bytes": 2396,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-75b7d3adc3223a36eabce9d0f3c423f09f83e88c",
+      "sha256": "35d5f01843abf3645d14851e49caf0e354ee21b7f912a94a3e7c3bcf8d540835",
+      "bytes": 21832,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7872699ba48a0b9d6715604d64b5adf1eb3f5c83",
+      "sha256": "f7aac853683e72f8696c6b07dd48ccf4f2e19c49421470bd19541e76c8ea4070",
+      "bytes": 8316,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-787a3c8c92f89c49964042b725a46ff90e00f6ef",
+      "sha256": "7989a5bc9fc65e70f964985c811dc6b02f481fcaca1a4c4293ff62d5ce8b1bdf",
+      "bytes": 1069,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-794fc6aea110c6ad88112e970331d4b1b0ef5269",
+      "sha256": "57893d66f182beb289eba2eb5140573d1d5db84acb03d09210a9766922456dda",
+      "bytes": 12813,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-798349dd6352b5f14145ff7193971edb747d4d4e",
+      "sha256": "75caea61b21853d8f2cf061895b50b0c1b284d45138c750ddd34e4bc731f7a71",
+      "bytes": 2415,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7a30ad5ee49e6e3b894ebdd0b9e90ee82b33185b",
+      "sha256": "c0d0a6be476fa4fb4e252aeff973c1e5146728d06e0ba4459f1201fe3f483e1e",
+      "bytes": 11668,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7ae012387986f1b1e14d66920a4b8a100efedad0",
+      "sha256": "1ce910ea2d602f408be5010da74f0c565110304d2ee91b03e41505ed6f8d8179",
+      "bytes": 18463,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7aed623e4bcefaff258991ba0b699c9d32c7d6e7",
+      "sha256": "cfe6546c8ea5dc6e096ab90a9eb6744630a47694b2c7876616588ffb38831b6f",
+      "bytes": 3141,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7b02f05541d4f268955446c9dc67ba309ddf7bcc",
+      "sha256": "09b04e1d2e463c305f90376d12be8dcb5ae42ac0f834d89030ba0d6a959e01ca",
+      "bytes": 9192,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7bb5a9cc83304690037acf662ddebffdcb561194",
+      "sha256": "5b9359d6487277c3dcf4538faba021033f3b97717e6830ac14783965a6fa8209",
+      "bytes": 14975,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7c1f014ed277b46dd51a120a146ed6085955c5a1",
+      "sha256": "3a675b1bace5a536f52d0a4a174b747d366a66bd77b0418684e9ef912fff5f23",
+      "bytes": 3397,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7cd0049d7b16f14991b241fe32058ff0edf24b8c",
+      "sha256": "01d64a6243e2b4c655faa87ce8685d70e2a1e49ef71fe4d58e2f94a1088941ae",
+      "bytes": 4286,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7e0ecb205ebec88129edf2a162f8ef31d842c423",
+      "sha256": "a9535ea1377779af0fa7dd5b6e38a48c5918c8c24e6e7747d5cf0540245b34ff",
+      "bytes": 5647,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-7e5ef5da454e3888a12ea469b83b4d38853a0d9a",
+      "sha256": "0588d9dd43b581cc8da8f3539c2fad36a0595cf9896a7a9fb92d283b5f4a457c",
+      "bytes": 28664,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-809c95f470f90ba3979acec22ea01f9c0bfee310",
+      "sha256": "9dd78126f0f5b363d429c0cc0c19f40e14dd7e13c9ed3dcd7181de1a2a132b7c",
+      "bytes": 1274,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-80b026e0fbfa122266f972833ffeaca275775ae7",
+      "sha256": "6f66779087f73e45a9178364ddbccb857e3f13f7281c7da97f9a29a1dd02c31c",
+      "bytes": 1743,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-814c41ee8e28b6b32643f7a36d52d02ac30de7a7",
+      "sha256": "65c26aab34ac36b2eb5516b354b9f3335f87c1826330ad49160152c149eb2dee",
+      "bytes": 1139,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-820a356df0892b3497cc6817875fd8d5254e4199",
+      "sha256": "370faa45a8f81e50c9addc6862415019240279b6ec1502f1b9d3d23833527d6d",
+      "bytes": 7953,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8213b20b393fa61a0acc7b0a18243dea7a481148",
+      "sha256": "89a5dbe3c6de1efe6664e71fc9761c9b88f7047ecc8d00cebeb863c259800481",
+      "bytes": 10044,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8215c3de289dc6f89706930e292bcdf35063408c",
+      "sha256": "ae9e09f51427bc1e0f1ad7744c3d197c634399115a91f6aa36a39db4bdec1368",
+      "bytes": 723,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-82845e468529006ba5545938d661cbd53fe42fd3",
+      "sha256": "4f26053c31ebf6fb07d4faf69afff6340cae9038ef6d38ec1bc3aa13c45a2655",
+      "bytes": 16867,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-82a40ff0cf3532ccef2e8ab83f63c0c05d3c1f66",
+      "sha256": "b7437e2220327afe33b81a5393e4bc802ade3c84da13412996ae61899fe3be24",
+      "bytes": 787,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-832c02a6284e7105659935d46ef62b404eb6a7a6",
+      "sha256": "fd2b709622f29679ef2ce19dcab14e3525e976856ea73dab8a6dda327c687d6f",
+      "bytes": 14258,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-83a7b4ef6eeab3ef96eaddb3e894dea8ac583bbc",
+      "sha256": "d7627f45bf726acdf4e06f8351135e5fc89415e00c963e3f6dc2289f020b5008",
+      "bytes": 5216,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-84de2dc23de22ee7cab0f51343a2ba5a616dd485",
+      "sha256": "c2b4cf1e6d2a61ce18db41eb83ad0ae98c700d8f8f7987f537ac52293e2b5f0e",
+      "bytes": 18807,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-84f8d09ed9191eff10d0def9a8dd4b73f48322aa",
+      "sha256": "bfc1afa2edd1ae7fdcd8fc0252d4ff561a695d2776021fcb8e0f05d423506244",
+      "bytes": 14274,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-85ff2ecbb9093dadf9f373f40d0c8794f308eebe",
+      "sha256": "7bd98cbc3ff5c79957a1611572461a0eaad4dbba3d3577e2aaa6853163a5d029",
+      "bytes": 15651,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-864c441c44bb97fe9cd93d33af327dd82688fb17",
+      "sha256": "cb6b568e45a0b4423db4219e43a0cc98d6462cb712fb8e24ffd212321189329e",
+      "bytes": 3510,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-86f47be5af33ff5ce6006f708ebd3b6177caa75e",
+      "sha256": "5330d0948a06efd9ec93e26420a7260e9bb693d72438126006a368e454aded76",
+      "bytes": 3940,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-87568a5defa06e9a3c36e42501d3d8f2c1256d0d",
+      "sha256": "aca0be8d84a0a31d6037c954157cdb1bba31f00bdc0deba5e300b3c0caf92e42",
+      "bytes": 3097,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-876c563cd1664b32c1c2def689bcc9083287b57b",
+      "sha256": "7238daeecd2fb9e6a9e2e279ad95b05d8966727c114c3116791a7596b2f36e31",
+      "bytes": 15364,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8808cd2d3ec98b6696e87746f1543c489598cb50",
+      "sha256": "b4ede9a2a5c43609408249d3a78d647138ef39894842e88824f8e206f560c06b",
+      "bytes": 12667,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-88c82428464f07bbe7c2d153f0bdfd6f569f3afc",
+      "sha256": "02458a550ba1d80bbb914a1b44de0d529b93a93224e02b6d056a1df172274fe9",
+      "bytes": 3578,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8970e990a95ce99d5dd96e51714bf597d89b0830",
+      "sha256": "2ea9b1ce5b5aaa9020913b53e7ad2867e63810ddf2b46a4e6bbb5d39bc5c2eb1",
+      "bytes": 16243,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8abb0fa37f06b7ace0bc903b0425390410bfcc76",
+      "sha256": "4d13f3e6a212a0111e7b27f2be5904a2dd6c85c85cedf0ebf5cf8b4a5e60861f",
+      "bytes": 18973,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8b01879dd0a8c727203a3288be8229aa7e8a7152",
+      "sha256": "bc66fdcbd62ec8164b12e2405c8b279d5843f63d4f89ee17b78551e845fdfcbc",
+      "bytes": 1937,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8bdc782edd3157618ec93c34fcfd1c2c551cc891",
+      "sha256": "0c293d97be65ce6fa6a9540248a39d21204fdf14ab35234a121a428e5aa38f02",
+      "bytes": 2190,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8c62f0da647d9041467dd0d1e11403bb8d990685",
+      "sha256": "6dac9f12124f96a8648df6bc2b12705e28f93b266fedafcdbd870aa8c94aec2c",
+      "bytes": 1746,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8d863f6360f8f9eca3256b1b7a9eb0f499dbd106",
+      "sha256": "398bf8ffe9bb2723759e9285f953b5f0b9627941845b61b94783a150db3d6772",
+      "bytes": 5595,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8d9e088be8511efea2555d5eb2949ca3253d08b3",
+      "sha256": "1a89c8a47b14c28f5c32370db17082e97ca5e5d613658be73548cfb8cf4d8680",
+      "bytes": 28094,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-8f10f3acbeda8193342565b81f83b116d5afd62f",
+      "sha256": "d16bb6b5e519c25cfa466af444013ea7f1646871bf4202f390d76e063393ad22",
+      "bytes": 2406,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-904e95bcb674f6be801f2b03cded767427006751",
+      "sha256": "c22ce21ad5d855064678060b62fe88be33a83c637193f57164e01e115c7d0991",
+      "bytes": 48094,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-909cb6afea353e20edc3d974b4dc0bf76cde6de1",
+      "sha256": "5c283c77979ec042eb1636b21898d06f60a84c1eea93daba5ce102da81ffae27",
+      "bytes": 3275,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9135debf5931b5772ec011b994ddd906b318871b",
+      "sha256": "d1c41b57340d3e405761555c94f8c65913ac7a1f70977fe0c3538c92caa21cb8",
+      "bytes": 12967,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-930165dc8988a3aa38394e13571405121cd9c820",
+      "sha256": "85cf479cb8414d3277ea72049c42e7d194c180ece27bd23669cbc5a5ffee74cd",
+      "bytes": 653,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-932ea1310d7dde681a2d4b087dd6cc3b8b815508",
+      "sha256": "fad534043d08d869b3a4ee831a6816e9bccace233fb536e8c56fbc17dd009ddf",
+      "bytes": 6591,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-93c6642eda935902b96c4baec15f464ed2c5c5cb",
+      "sha256": "9dcbf3f16f3231c228bb5d25b2da5d471bfd343f4ad2eba352d2c94f07fae4c4",
+      "bytes": 54350,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-942503e1f3174d874f8419cf209d18cd15aef432",
+      "sha256": "e2e95df2287a9fea7e67c6f543e82b1b00bb85bc04f6ebb4389ba555165c3422",
+      "bytes": 1724,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-945ef699160f90293ebce2e21178e0c4bde224e9",
+      "sha256": "c1d4cecee67ef537ee46915bba9dfe8945175aac77ae262f00a4e7d3e590d91f",
+      "bytes": 8149,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-94ced487953f2753c04806ff84e4d52bcd595fbf",
+      "sha256": "3418f274903360c0513d3b148def4756db7eaffdaed5b45452db2001ee3a362e",
+      "bytes": 802,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-950ead2d3dbd2b7d0628a3db92330a2abd9c32d3",
+      "sha256": "3e61fd26e3869051476b240be968ed09d0e76c7de690a06b3ad700e6fa0125ac",
+      "bytes": 19160,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9603e84a997f5a587ad5fd201493cb1093bf938b",
+      "sha256": "a96e7ebceaf9ac800725c23c742c6fd4b81f7a21a67f550b9417951b04ddd18f",
+      "bytes": 9857,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-971a580e0ed1f3d4baafe724caaaa5d73323363c",
+      "sha256": "b419d651ce1923994fbb6cb736c5e5eabe78c09b968588bf82a0bdc8c8a88353",
+      "bytes": 2567,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-97d1379898414e700262c944c9b1732f4368fcfd",
+      "sha256": "b0d929d74ac4ece652283b7af87c78132378f0a564e329964c6485dd6aac9465",
+      "bytes": 604,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-97e71b1a22b78b4412cf7895436aa9d36638e006",
+      "sha256": "80418ebf5cd1cd836374e968c39065a7104345e91d143a978595e58ec5562357",
+      "bytes": 12601,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-97f9550bbad9d86a3f6e2fa2993d7a7d68fad1d4",
+      "sha256": "b88ddb40693cdd5561292e910387871df76451a172c2523b2ed31f7d72ea353f",
+      "bytes": 42534,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-985eb55ac67c966c3ac9917d2bf799148dfb714f",
+      "sha256": "c619f28e57e73e6e7c6915419f85150b33cf3b9edcdf2aeba11db11b4b452b9b",
+      "bytes": 11671,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-987306b4e79e6c687a14fad2f51ea97ebd1c55a0",
+      "sha256": "22128683db87e301d760e08cf6abc1490ad3a7eccf6e6e118ef12381621251f7",
+      "bytes": 6052,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9b11006af5e9d82d46441a7e2b8cbc279064608b",
+      "sha256": "bcfae7dcf8eaffd7ffcf8a3283d7b53482038247dcae890e3c52c54c575a6e1e",
+      "bytes": 3941,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9b3410ddc7a6a997d5e25e1eb98f2b89d41bfc4b",
+      "sha256": "5a0b4ff53f07029bf6b6002425be347362bc3a3bdfc23456b62c79e104b51d8c",
+      "bytes": 4767,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9b877e256508a547fb4d7520d8d54a250c6621f0",
+      "sha256": "f9a1f3a60cc09e7415918cc51fcbea93b813e732045ee44a063ea70ca38936e9",
+      "bytes": 11989,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9e4bda6f8bd5592656273dd62f3e7e4c68991c04",
+      "sha256": "ddbc4eeb4cc0b403d4667ba97ca39be405cf2b70eb2dea6ac6341bafda7c333f",
+      "bytes": 5087,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9f029348353cc7301e489dd51d1a82009b440b09",
+      "sha256": "f27cc13d5a9c35c48e6cbf14ee03488e6195b0fa2931fe82163bb5dbb315f014",
+      "bytes": 627,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9f28f995423eec3db38cacda44b7737a5c6c833d",
+      "sha256": "df7a57615f3bdc27df13a95d9cc75dab1185bf2ce1052fc83d26e7e4d5a43b42",
+      "bytes": 1023,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9f5560710e5d78dd1903b0cfcff89f6d7327094c",
+      "sha256": "02ae970c12f745a25f1897330c6d8075a1b14094b68a9da33643a8fe1151c90a",
+      "bytes": 33544,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9fa984f461d98dec5d6a56ec07515ac712189525",
+      "sha256": "e117b69b4a9dc61ec07822ce94cd1a68142f87440ffe0231c22a4b07e85a5fa8",
+      "bytes": 17807,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-9fbf4b3bbe95217c8f3b1b615aca2c9bc768ee01",
+      "sha256": "51c7631f0168313c3b9ab21e6ee97230f02a39a85261bc46001a2c4766ff44b0",
+      "bytes": 18768,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a12d2d6bfca528853b9f265f71a03b557249b588",
+      "sha256": "680298d989113098be495f6306669ec67ae0e0859930e0cc73f5669e642f144f",
+      "bytes": 13771,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a176d8b43ca58d2d90d5aee12dcab0969e0a0b8b",
+      "sha256": "585f89644356957c50dd62f203b64784d0c898a18b4ada586ec3f16f804af152",
+      "bytes": 4120,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a257b80cb7132906c67845aedbd215bb872b4640",
+      "sha256": "79c1c0cb2b4ee834fa2c6ca3a0252463709e98fbcd8957dd1419335b86248ce3",
+      "bytes": 3480,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a279ec311fb679e2bf4ede2b1df165cb3cf46dff",
+      "sha256": "43c3fca565f7f1211920d3699fb357c9a18748565cdcd3f0fa6a624e9eb377be",
+      "bytes": 22931,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a2c2a572d6bb9da703e3c5f3e4abe53a6757089a",
+      "sha256": "dabfb516f57f122b97f98589a3911ed95480786cfd2e70506002b5a8108cf805",
+      "bytes": 16727,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a35a272357bdf86ed40c0efa28d8aa1ba6e8cf7c",
+      "sha256": "e14b46cf7e0e81f45991c269cf1ae36a659d1d61db0f4c0411aeb84f9a2f183f",
+      "bytes": 1070,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a3836c486e1b8305da64887e78e5e253f6df6277",
+      "sha256": "a4a01cce6842ef0e548081564e23d7efef44fbf81000367c96f40c07f5095404",
+      "bytes": 2365,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a3fa40cec95136a546736cb65e37f9eb8bfce259",
+      "sha256": "355978b43b679ea73dd2d39227eb860b8738b9c91ca6948a872d173450c6b6fd",
+      "bytes": 2140,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a4427e8d5b6b3097927f0a81c1c36731a0b6b470",
+      "sha256": "44b30f6210e56169a28b8e7e94d61e70f5743335618acc3e44e8e2c93af265b6",
+      "bytes": 3695,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a457f133233fd5e234720d7fb03e059a0778e754",
+      "sha256": "363ddb5b44d1cc587b5ab1cfed92f93e383f7055072b8cfb9b8fb85bd8625dd2",
+      "bytes": 17497,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a6baab8e0f1ecda1683b2a93ef6ffc722d742e34",
+      "sha256": "5f045a9a59639868bd2bec49ea85089c9ac6ed3eee21eb8032a6f99c77097aa6",
+      "bytes": 4284,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a6c01b2e71f7cdfd6c79f32460cfcba31dd9dce0",
+      "sha256": "2beb8d522bd73435edb3006e99627c0cd1f8247ac41749822ac39f3fa95943d1",
+      "bytes": 5635,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a6e336a2b69713be24c94195a2bb4133c4078e51",
+      "sha256": "ca476507166f542732db4844c60be378f01fca3a87c9e647a3b4cb58dc09955b",
+      "bytes": 639,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a7d460ac2609c8699d51509a8b0d309fbcf62fb2",
+      "sha256": "27e82a95bde8bf1573b0705d1c2eff1aac432583df26447db69f09051ef33160",
+      "bytes": 3561,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a7e93c55453153c50e00892e607a97db519c265c",
+      "sha256": "c4672a878840a4d3e90a43388488410583f0e2dfdaa76ae6ba4760c12c8af059",
+      "bytes": 2806,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a8c29c55c5e7a3b82321d470f80ab683b65b71cb",
+      "sha256": "58a91751c01a09a153ac1f67f8feba72931c12e2fc46ed96e7cab86e2ca3a636",
+      "bytes": 3016,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a905c32bda79dc76091efe6dec89e2dc025f3a9a",
+      "sha256": "174301707167fe26d4ade904dc0fca79e12dea7a22e7fa8a6697b3cfbcdac5f0",
+      "bytes": 2254,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-a939b6de467946d19ceb6742313c5388685c6885",
+      "sha256": "e7fba53d4b057b3c69b1aef0f468e33129b0a6f04c5e7555692e363cc68252f5",
+      "bytes": 1505,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-aa5264e0a27936ee2b1f0629e4b5757b506e8c2d",
+      "sha256": "2483ffc79e36bc7dbf0bd90f8553e546d21a5759768b157eaf43aaca4e526012",
+      "bytes": 4595,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-aa6ca6558e9a69f29472af3b5432cfb13247b202",
+      "sha256": "776975ae7bfda647fa900f769c89e64ad6257df5e9011f40f8dfd372d61d47ea",
+      "bytes": 986,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-aaa674f2c956280ce3365b88709e632a43b62c97",
+      "sha256": "48e7e9b88fa7d88fbc0d45f09815f1fee873675c402f37a3d1de9bc35e3d0a9d",
+      "bytes": 9406,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ab546ebf05106940e5793921e37189a63e8c3498",
+      "sha256": "0cc92bacf1f2839d815a95279566eb6211ffb5e98fca9d349d304d9715a3c115",
+      "bytes": 18381,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-aba36382ffe946e5474fe9d17005fd4c3b938531",
+      "sha256": "bba16154c4de2367cae21486f090825f647d00a168dd40f66eb80a3a02dd3501",
+      "bytes": 13339,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ac35e15ddb668e1dd31bd9c2c6e97c2477797adb",
+      "sha256": "863d1fd20bd60694b03ae6d2490e4215e3740de968b6217db3ab64f5156d96c0",
+      "bytes": 7064,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ac4711a4fbca92f2a36ec572cae07e64e10f8ea1",
+      "sha256": "1a7f640c02b51994f10f0b2a2d87862173e1d38aa215bfb3735adb8676f11f3b",
+      "bytes": 12772,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ac9420e177a7d4bb1d6ae624e58e85f52613a086",
+      "sha256": "c23cd982a80e054f9f46fce8fa24b8440d530c2150d256a676746ed933f207a9",
+      "bytes": 491,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-adf68f62290c129cb8cc369af8a043f8bc520338",
+      "sha256": "6d378cea8e4540b6db8229caa794585b4f83ccab6ad3fc861729d6a828188acd",
+      "bytes": 2788,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ae5f32e8ea944eae5ce83fa88e16b7d506d65cd4",
+      "sha256": "7bb20f2743a754044949f5daaa7a32a054631a3ceacacc0630c14eceff318e46",
+      "bytes": 3794,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-aee044a4db4d421cae50ddf34b091fae25ec0475",
+      "sha256": "67dee7f2a92cfb56d81fe087c5f032a38ed64065559f010feb3a9427650f62fd",
+      "bytes": 2235,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-afabdc38bdbd1d45cf0a54c5b909c228a79dfe28",
+      "sha256": "01d81f2523e1b233d3d890f2acd7a7fbdb5667448824bbaa1d3f5cda717b224a",
+      "bytes": 403,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-afb4833ed3d904e37655bdaff0626c4c76daf39d",
+      "sha256": "f25aa0ba973b85e31194856c6d1df4ba297ffa4f7792fe5d1acc274533e4250c",
+      "bytes": 7015,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-afd80b143e5246750b303afbc71b003e45558859",
+      "sha256": "3cd4c2e1f3cd5db29c17749e4f8f4686ac7c8ed9e676c6717382d659ecdaa19f",
+      "bytes": 9394,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b0630ed9aa48399e22c60b1bbf7ac2dda4e6bf10",
+      "sha256": "2e6e19caaa7ea5dbaabce47f4e74bfbb32791e38bcf581806926fa67ada016ed",
+      "bytes": 454,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b15a57f1695ef13ab678a66b0347fab41154af9a",
+      "sha256": "e918ec79a373fe00719d54e46d13261c9dea454d78b60c65484deb436cdb288f",
+      "bytes": 16156,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b15bbc70bfa52d8c12e8b71032db9040f113ded7",
+      "sha256": "84e3f0858fdef85319d227b58375f949066785d109d27de05e445deb15da09be",
+      "bytes": 6478,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b21da58306d7ce024d6e3a30b27f93d101dd40b7",
+      "sha256": "8413fc4126233ee2c67d324b68dd7014cb6d6d0244956ace9e7f152b8ee7a863",
+      "bytes": 14924,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b2635c4e85a80b7b97cb941e30e4b017a948faef",
+      "sha256": "aae3624e0bb6939fc6e9b1267e07b82eacd5239cb8bb6774f57e5ba29d20a698",
+      "bytes": 10937,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b45a17ae4c1e21a7b5bd7a033618f6bb6797a39c",
+      "sha256": "f7e325e0941c0dbb41cd573b52f3f677239bc6467ad11689cc2575a7fb78c0c2",
+      "bytes": 22021,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b46e01fd0373fc9a315dcdee8fd7bdf0b8848101",
+      "sha256": "c1daf140f8d3459c3f2117e155e1595fa971b23bcc9ee6a3ae6ad52d78aa0c26",
+      "bytes": 619,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b475d59bf5034b34784b1eb0dbe3054862bb99db",
+      "sha256": "0bc240f38960f31c20be3f9d919a5dbeb92bfe58c77dfc4b792d6c98f9a1c725",
+      "bytes": 1243,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b505e66a9194d4f66488934c269f22c4bd0bf08a",
+      "sha256": "8428383673c155c721ff04a46f87517442536bd83b1dc8655f42d53a66521881",
+      "bytes": 4542,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b64a2728ea67c5615da064d8e3cd3b85f343bf81",
+      "sha256": "961d3002030e4ec0f678119255cf15d6fbbc92830a715562eac8f114962a92b0",
+      "bytes": 15926,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b6fead4707c2c6f63985ed99deb923098af99c3a",
+      "sha256": "feedecadecfad76496d1b4d05afa95f33f17f06cbfaa1d21521098eba200576a",
+      "bytes": 562,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b8f8164dc1975c46bf3fd31ac02474bde2efb10c",
+      "sha256": "fe7713bec4f47a492083b875b4e4b281921e40e60ad9c187ccf67d3e594b231b",
+      "bytes": 6752,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-b99b0656e863c893dc56c7ce90ac9f54b772d699",
+      "sha256": "38a90552cdbb360b45eeb13dadcc69bd25b757bc494d6c6679ebe1636d71a56e",
+      "bytes": 12708,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ba1cc79baf6f1c33eb653245f0c6d3ba0c776d6c",
+      "sha256": "846dd024b8abd4f3f66fa089ed05d2af65f39d2a000165d94c1a9fb4cae95c85",
+      "bytes": 2335,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ba47c9b3c6bb687994bd200e7a2e805289ffc89d",
+      "sha256": "39d90f9b20b36558c6f10258dcca003627391b286a4f4576f70f1cd19b5f204f",
+      "bytes": 12548,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ba4a586521459bed3c343cb490c7ac7fa2bd10fe",
+      "sha256": "6d5f94b7a9f3e8b236188ab5f6d17519e1a800ec61f586b8550a9a3b15783a4d",
+      "bytes": 13481,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-bb6c70097eeba58809b19cc0c6909c6c40bdd166",
+      "sha256": "ff447cf28e853b5b7d60f94fe012d1737b9468dac1d6e33f7e4bb8d76068bff3",
+      "bytes": 1623,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-bc025c4c10d67f363a1d8e92fdd23ac42bbec1b6",
+      "sha256": "4f7b0d0f487fd4b2c663b50aa3ffcd21b9ccd19d45175c15ddf623350ed8331f",
+      "bytes": 8828,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-be30c013762b43c1ed29083f1bfade05f8db713d",
+      "sha256": "60630d8d5db2e53b288ae70d618476a8c402739a5e4337189c17998359468494",
+      "bytes": 35546,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-be8c6e257c55cd12e75266725c73ebe46106db34",
+      "sha256": "babeaa618119cc6256c22c237d452a169b12f9a1d993910e4f230aec6b9c2904",
+      "bytes": 15028,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-bf7d75b3aba7566c55c57781c017b16f05eb6279",
+      "sha256": "6d77cbfd5e0052415a2c2cc4aeb3f124ad5560aa72aa128edaa595076af0218e",
+      "bytes": 2644,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c01afb562e0d2803734ceea691868c8b857f9a25",
+      "sha256": "752bf07107e5ebba11cb7315548866f9f9ec9a0431b30a79b827d6db089e2b68",
+      "bytes": 13828,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c0aa14e642c2f3f96796cbd0f6355f721d854a4e",
+      "sha256": "87ce6211a8f901202b2ffd1b7065bbce927b3ef947f333397a550cf8c25c19f0",
+      "bytes": 47069,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c11e2749b352be78489a5f31e202eceba3696f13",
+      "sha256": "3c908c94eea57164481dbc4380e033c334d60f606b01b6d38f17dbe6b6d6de94",
+      "bytes": 3250,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c3131919a5dd14887f646580f3b8c5dc7f82658a",
+      "sha256": "06a9b4b470e48e10a6397d2e7c7812e9dff064a2e06df10282e174fe7fedb6f8",
+      "bytes": 12903,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c356af1dda8824b873ca576299c783220a7c4b7b",
+      "sha256": "8eb6abac6bfcbe7fe42ac10dbcca8ca2c86979905dfb663419cda87f9cee9e5c",
+      "bytes": 990,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c4b7908099bd1b83fa6e9017065d46aac4f68c94",
+      "sha256": "d2cf4d649e3bfe6680c65215542cf6e9fb292f81f6fb7362377d3eec392f651d",
+      "bytes": 45040,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c69496e41839378bc8fb476643c929969403727b",
+      "sha256": "33040f998306ec3099337300f1752e5832a6faa3b6f00720b9bef5172c13dca9",
+      "bytes": 2959,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c6e29255370a568d2dca394514add046fbdbde42",
+      "sha256": "7da3a6c025f7eaeacdd5ed1408cdc0d1cc775b22eef6b1d51b0cfa6a1742e620",
+      "bytes": 815,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c72c8c22add74bbf6b71613772de6ab3b02c58fd",
+      "sha256": "09ab3b411348919e6318a05df26dd9f8e271c3ce043de868c4cbfce05993ceb2",
+      "bytes": 11609,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c79f87400591822b05948669ec01886f1b779fb3",
+      "sha256": "63aa9e4c35a3700f86ccc0cc1c6ff580dac9e7b73ff4990c310b43539d9f7c67",
+      "bytes": 6758,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c7c673366b1ece5015dbf91b60e8b0e80a9eaa45",
+      "sha256": "824196ddc7ebf7378477e1b80dfd4d0ac2bed7b0f66ab9b148e0146c018faaaf",
+      "bytes": 6389,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c7ddd7fbf89874b5fd9a834b9dbcefdc5a86a44d",
+      "sha256": "612385784b54c41607fc7899cc0077359679f978a5bfd265eab4e519cafae975",
+      "bytes": 2251,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c87123828a5aaa4d7268fdda139edfff2314be2e",
+      "sha256": "63a7de1b6b74e3be14beb465802f4a82d52ca8bb8cfb7ab6b0f2221f6bbce8a5",
+      "bytes": 42928,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c89123dd4a00604f2d7d458a7fa425729198681c",
+      "sha256": "3d93bbd087012a4fa4a178b0174d002161a4afc99f6e61493e92f6f33af2e52e",
+      "bytes": 5769,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c8d22773f02419c46046bbdd9a63f30d483e4b62",
+      "sha256": "fbfc6b56189c2309ff5f31304e9d97c76d064334e84f3517177cb8a39a6b1a36",
+      "bytes": 35545,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-c9dcd04ebeb9ccf341bbf061178dc04c01a9832c",
+      "sha256": "9f6551ac8f050648f4152b17872d33845128224a433123cf9f4979d5acbedf03",
+      "bytes": 3466,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-cb138b1c09665218072a58ba9a4b3f8154b38e7c",
+      "sha256": "50cca9b9a9e7fe21607ba9d28a19126a6ae0f23a6011f8f7db82f4bb389f3edb",
+      "bytes": 13663,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-cb41d3e547eb6b64fd43ebb184daf7077ea65bc8",
+      "sha256": "4dc0393fe75319a581502473b51200d22f9c890a063ad5f2e650ca5c7ea70a5a",
+      "bytes": 23597,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-cbc7e726b5b797e6f42e1c12047bba5651e2f358",
+      "sha256": "af8add809078bc54ef5d9e5431dfcb11717aaa8561d56d41326fce753e090094",
+      "bytes": 6219,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-cc4b09f7036f52a394717336d0741e8744f432c9",
+      "sha256": "8bdb1410a8229a65da6b9264b2c16e396c825bd3db7e8cd02ccb7b2f5cb45367",
+      "bytes": 39513,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-cd18296bec43248fa40ac85be8db8d3f92db5c98",
+      "sha256": "cc14cb14895129eeb538b84a14a553c32e7ad1745243ccff85bdacac00103e3c",
+      "bytes": 19095,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-cd2245f3d98d2a775b953f81b775b56ca95a9009",
+      "sha256": "6f01b83712e6525746ef3af2d1feaab1e6cccdcd9f73223b85583a49364d02e2",
+      "bytes": 7671,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ce1433540af99e883a2633551ae679120d7243d1",
+      "sha256": "c1840b4adb2b6c4b2b7d352a653147c916c59f26cd939a585d1df0ddf680c93a",
+      "bytes": 784,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ce5da8d17cd4389c7fdc643c9bd4080f4b067937",
+      "sha256": "b955e9fa87a993ab70ee0ad106d9d178009f726df5b5f141c1566d378699348b",
+      "bytes": 4652,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-cea8fd41170bbcffa3f6f361a53007d700e6c25f",
+      "sha256": "0bfe96ce39864366ea15f36b0cccc440a6094068132aa1af76f699eaeecc5e1a",
+      "bytes": 5815,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d0d0475189b63b3334ec644951ab044ee23eabe9",
+      "sha256": "e1a0cb06a2110d07ed9751bc6e063335d4d8fe45c9bbeaa7023f52e57516abb9",
+      "bytes": 201397,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d12863225252c653bdae8358dcae8a2a8522d9fa",
+      "sha256": "9beb41882176e4e49a4705926135193137b6a317792046dcccb7755b16b2f9ff",
+      "bytes": 1980,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d294893ff549e1d735dfb9fd29ed7ddd119e5c05",
+      "sha256": "c117f9acb3973f84a1ac91d28fe38908d647126fbd05780c97b212d2acab8208",
+      "bytes": 807,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d41c525c0d9cf2bfee5c97ee7faccae3d12fa0f7",
+      "sha256": "ac928341ba1f4f882d82c935a4cab6cd20df98564c95a4e0dd6f140379a9217e",
+      "bytes": 7799,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d44a80edf3e8f5c691a4e4ece86124e8cb4cbc79",
+      "sha256": "087543c89b92670a020c4900272356c4740347885f009ade39bca7646f7de033",
+      "bytes": 424,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d47fc0db220eb004f790d28af442bd2b667467b1",
+      "sha256": "b75fcecb51e98807a727ec7169b60ad85b14f24ab37616c96d56eeaecb3529a0",
+      "bytes": 2813,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d4b2ffb870a81deed73cb3f2764dfbfbdf84e58f",
+      "sha256": "a06e5676afca9b20a1ef41f6fcebeffcfa79a94906180dacc3bbaa415924c3f3",
+      "bytes": 4444,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d4dc973b6e8ff3c3524f5d410f0ec2e03ecaaf82",
+      "sha256": "66facbb1d3fdd6201ec61c44fe7e3db06b4684c0ec61ee1c8479509c7c2ee252",
+      "bytes": 19431,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d53e78b21ea2c441f8cc07a52f2e23b85deb1973",
+      "sha256": "fc45969a0627fdeaaba7e5682c2d6cf1458230facb235946ba3f5603df645e90",
+      "bytes": 4292,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d7b99ec1e18e00bdb88f9313c2cff178ac278098",
+      "sha256": "4f0f8b4402633cc410f47e5ee6bf4563fb5be7a2859e6776f2088a5839004ba4",
+      "bytes": 4392,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d877e4567c4bd003e500158fe094c165bc7afae5",
+      "sha256": "f01353908a9d8e1174da49b6598ec1a9b36967b987d8d09dea52491e2776f121",
+      "bytes": 37358,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d8f72c2b0054cdb27657f614b9a39c7ff03412ba",
+      "sha256": "c96f13a72ddcf94e14b138563cbfc9b838255d2aa06e3c02530317e444a7d7e9",
+      "bytes": 7569,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d9e4e67f9fca6ac75365f5ab3d3b6105d3003fdf",
+      "sha256": "bfd7d956acbc5312c91ae8dd96bf5be32fc7d4dae855172dce0d40d3dad37cdd",
+      "bytes": 3054,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d9e898a49656f9ca89c9b5f3d3ce1c3bcf2d31bc",
+      "sha256": "52ecb3662fef552ebbef1165ed8bd591e0976e3a4859a932178d78faa279077b",
+      "bytes": 205631,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-d9fa275d546b81fe2c62d1a6ed7e752104af1c92",
+      "sha256": "2e1ce2394b968818953731716bdbedf3de5e7a8d71a572f37672ed7660ce809c",
+      "bytes": 3060,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-da25d927cc10a2c5c9057b32374405284373e20d",
+      "sha256": "687b2b6aa68e28e80eea3e779fb2095c2c375d69f8bef43d17f1880e48bdadbe",
+      "bytes": 958571,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-da8b748cb2046d45e23f521e6b48b1488a9a3890",
+      "sha256": "2923c1ea8f6b873f30c3a86e694596d1b8e79409f8c2d5c5be8305620ba1a6ee",
+      "bytes": 518,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-db9b90f4a45edf01fa9d983b8ed65f394e93c837",
+      "sha256": "e97e34751298fb949ea5862c993b41944afe1b7d5addf35c3d04af172fd9bedf",
+      "bytes": 765,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-dd5c8181071dd245b352c219accc03c25be37093",
+      "sha256": "5dbe64f929a3c5b4001640de70213c2c13f2d33a58cb6848dbbb26eef63f0e2f",
+      "bytes": 2340,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-de5d5ec6aa613f76717c5a7ece73f7963a65ebba",
+      "sha256": "dbf158614b1419f13c1e7c9c8860b5e69d3afb7cc189721d62a88a36c6b9df9a",
+      "bytes": 4598,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-de7b989ee061df0b5d4e3f8e5e4904673fb79dd6",
+      "sha256": "444a321400b7588591332b2821db62d9b1c87f2a3a92eb4b5fe5d7f49d02efa3",
+      "bytes": 16362,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-debd36e01cede52bf86a179423f4598432c9acb2",
+      "sha256": "0ed52af70545ff1759b22251bd588382caf0e22a844cfb11da8629997b5e645a",
+      "bytes": 3508,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-deef3826251f3381f6ba92ca60ad356dc3e5dd2c",
+      "sha256": "a7ecc600e41a215cbeeaa62a978d0be01d131f26858656247ac6949e268b745d",
+      "bytes": 700,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-df22c09c14482915919ccb4c0893155981ac8e08",
+      "sha256": "099ada4c8519f2682d21e715e5350146f496c4094e015dde2a2e4fd90b78dca7",
+      "bytes": 28455,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-dff5c664a01e28e08d319212cddbf8215662e1bc",
+      "sha256": "1a16fa95e1d95ea9182802b424e6deed98e53408f455553df5e4ca348ae10b8e",
+      "bytes": 492,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-dff9584ee6c7d76d630fc613e0242f7605b0c67f",
+      "sha256": "d5b1709900f646df66e9fcbdedf442760213a49991f272d5d974517819cdd5b7",
+      "bytes": 10595,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e063e19d2cbcbca5d32651ec629731826cb0f016",
+      "sha256": "f84530998a5d5a38292948a3f8b0718972c18d156d481ad79c44d6c722eff822",
+      "bytes": 32739,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e0802c5c53437f15dac0f24b676b28d56df8eb89",
+      "sha256": "e5e82d366a52c9b548c16826a31db01cd61febc3ab36b36f7718cb4c225dde85",
+      "bytes": 14383,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e3e72fe0dc263815281e9a3f35150a8e69c729f4",
+      "sha256": "00c45056c86e2898d9bbc5681548ed8128fa0b09600cfb7cb08e33b123fbcda8",
+      "bytes": 70047,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e63db6278ab170fc4cf0cf944cf0361101e55e81",
+      "sha256": "3fed739ddac3548869a257cf240f231a3715c4b3fd0a40edf0d81ef93878d48e",
+      "bytes": 2622,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e6a5fc041c7d1261b40ef9e8a6eda755ad4ceb1f",
+      "sha256": "02cbc2db0c63c29abb3f6ab9bf17bd661f083a68ee408b2f92eb51f884dfbb36",
+      "bytes": 9499,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e6e4730f0f0469b88aafe1549800a4e9b56cae9b",
+      "sha256": "ebf8af1548ad3e786f54289b9b65e6257e1c7e8cd43f1271310e0d14d9e51859",
+      "bytes": 2615,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e738c9c9dc621c2acbfac986213b869f0c8accd2",
+      "sha256": "cb645929379a02d5ef9b46eb19c93a16a34a5f159ac222b11b2ffc675396ea20",
+      "bytes": 24269,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e7c3111932c907305dc5b5af315c068ef867854c",
+      "sha256": "ea9f35df9a4b38b7b3297b0ba5b4663be624c516e61668e2d24ee9b14b8bc0a3",
+      "bytes": 6198,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e7e3dd28370e6374a9a71bc34e8012e3a3ef918f",
+      "sha256": "77ea5dbede50ff3f005976a168512657c4d3bee7d6dfc147a401747bf32ddf4e",
+      "bytes": 517,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e86d2ba909c2fe7a09582cfd93913c9d16c1be6c",
+      "sha256": "985068b3c706fa78ba806265951a10b5823c9d03990ca692351b2959dd92082f",
+      "bytes": 26604,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e878a861a95aa7b9c58bc1bf9ca08ed47fd2033b",
+      "sha256": "f3690ba3ef568ee15ee596526200bd863fc5dbb093fc5cc2500b92dd21fc4174",
+      "bytes": 1542,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e8f111c09a69c79b62eb31323c5fec9343c99957",
+      "sha256": "701eaa95e0719cc0980d3ced82c4e0fd4fe04aef1fd35c8d5a8292495db727fc",
+      "bytes": 6681,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-e8f3f0ce5bf5a6482e5d927a17f346eab15f2951",
+      "sha256": "2a973b5f949049df41cee2c209b7c6889eaf7a675e58f4f90d41a02c67119b2c",
+      "bytes": 3537,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ead2f52d45a390af08bcb9ca00c4df7a3e642b46",
+      "sha256": "b34dbfe6c609fa710321d69a4a378d2685b4aa333296bf3df4bf657e59605f9b",
+      "bytes": 97634,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-eaf598096d4394153e44aa5801d7e2f3e41edaa9",
+      "sha256": "f0da3beeb2a234c9238d06687e22f57bac168ef878ae77b2272d303251540f6d",
+      "bytes": 7978,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ec1ae223f4eb44d277b1e6daea1d35388ab111a9",
+      "sha256": "d90c205bd26c28789af117285944ac3f87767fc252a9b16c5225b078758c22a4",
+      "bytes": 10548,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ec3a2f6a736e13d9ae4dc4b094081393d895ca6e",
+      "sha256": "101016a3c8cc44c15d6ec3ae7e0ccb38351fa35a0ca8af5e192424b697ffe66a",
+      "bytes": 12811,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ec93d8f02d3d907ec4d5ee54e0b59bea57c1134c",
+      "sha256": "b8c471553d6378061dd6951365d30f89c7bf2f1172acadda5fc15ab8e4d5be13",
+      "bytes": 2628,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ecb8355756d2d3a88c9a188a533576073d681c90",
+      "sha256": "cbdc7831b045958abf242ba52101893772f94e72caffeeed51c96d845a094986",
+      "bytes": 4769,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ecb9456e5c0697a4eb2d4a45793024df183b15c1",
+      "sha256": "adbd1bf9452ac32c1b4e2bf6154a9805f020e0bc7bd59cd8c4e7d4809a4a74ce",
+      "bytes": 16979,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ece2dc39ad8a6c7df4eafcb4d559b0e6075f1999",
+      "sha256": "6a24dfc7e491f14280de708a77b09c5ecad709de031b3ec1adddde004ffef8e5",
+      "bytes": 14777,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ed0975a850ae1c7087c2a330637515466238b9d1",
+      "sha256": "8990adde0df2e7a6fc326b812c59be3429adda10cc4b4869d12666ad05817449",
+      "bytes": 1952,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ed9a3914c09e1a5fe5e26d907fa4969e1096e9ea",
+      "sha256": "56d7f61f7492f2da924c316c3920707c57a1011eae094c18a4a49f045102dade",
+      "bytes": 32661,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-ef9f8b5513c1dac76e7e07ba72d7c42c54ee2b0f",
+      "sha256": "739c5e7c617c942e532ae7cd5e99833a8f244dcdfc424ddd21e265aaf2fe0cb9",
+      "bytes": 5546,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f067fa9610789c7d14f59d9d9e988043960e4008",
+      "sha256": "b0e9f4ccaf15c0ce9b6d99cc9f686a51cd2d8f6a99d16c3a38bb942aad2919a9",
+      "bytes": 3285,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f22909389292b339b7658b87671e0d89b4b02f22",
+      "sha256": "9b05d57750a782e05330ed9095e6053b1893d2399df88e62f8c8839fddc43662",
+      "bytes": 965,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f24c6cc7edc38e993de7504abc8bc123a5f1732e",
+      "sha256": "2539b1b4414cacb6cf8f401ca2c2df93446acb4edf93ca59621aced3575b1bd1",
+      "bytes": 53336,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f2e4a36cb5e3e8fb579f36475df3602cbc92fd31",
+      "sha256": "dc3e4009e298db61a7335400210f5cdafab18c96d69bb8dfcd981f3de0afa3ba",
+      "bytes": 3477,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f371646b5cc23c21f79b8fbf919293a99c931ee0",
+      "sha256": "57dfa98f7bae86c70323aa2a3ebc60f37982329116fa0b3f8af20834e95b0643",
+      "bytes": 1385,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f37a02de8154f7c54288c8dd5d60bf3cca9acd38",
+      "sha256": "dcdf59d5b4f846d8ecdd64ca4dba08ca6d2bffe3b0b89128282684c29a3f6088",
+      "bytes": 3677,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f37e3b03a25e74dea96e64222e5d1cfacaccb932",
+      "sha256": "fe52ff2e2c59b3088bbe95ddd687adfb8591fa60b2834cbc8e5313215966b056",
+      "bytes": 2254,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f4abfad4ec0180a49a06b7b892e36dafecdbb856",
+      "sha256": "d3e6afca65969d01f4aafb3be8577ec5ce26f52965984baef66db16af0f207e1",
+      "bytes": 8893,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f6bc9d062914acc9c0fddb19d02df9c10f720290",
+      "sha256": "45d891b0875a418197a70d09375d1b2e16c684168d13a33c6d48b48a3462d2a6",
+      "bytes": 4387,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f6e54a02f00321f382661e820be0fed27fe45b5c",
+      "sha256": "468d1796dabdbc620de0376bfdec3302ff6367e17afb8a1593e16aa425ab54f5",
+      "bytes": 26020,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f8c81c58fb6c9ae9069a8275b479d010a90ac183",
+      "sha256": "08955899f47795504e089713a46bf76fa5d32d9e8e19bb22ffe76e07af49daf8",
+      "bytes": 583,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-f8f6e221a264a28e21c2d5404c65b3a10bb032e6",
+      "sha256": "0925d64a615f3656873108722ae1366ce8fc63e3f7e59da9da7e424613d69513",
+      "bytes": 1625,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-faa40dfd4c5e7e04d2eaf286b60a9a9b1814ee5c",
+      "sha256": "12634d45d325358ececde2ea673912292b90792a47771eab3ae9028d56e4876b",
+      "bytes": 1363,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fb0443a038b3f3df19a7a8c9c9df6d58cd48201f",
+      "sha256": "bfe65236e11f604d7dabda48d63d7d6902bc9b6e8286701de95f82267c2e450d",
+      "bytes": 1252,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fb08ec599ec761c36c661b36243ad0e50b88ad6a",
+      "sha256": "a8643e9121acc7eb87153e85d3a2d6bcc3f5b623e0bda98e9cdb4bd8b7a331f6",
+      "bytes": 6817,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fb730ea10a8ad2fec12d196b77bdf28646a866e4",
+      "sha256": "eb21cf2457c5b0a37d5773268bf7ce2cdd23fa17bd1666ed2671ea999386304b",
+      "bytes": 14532,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fb832f37de68a7df54561191fe54cc41b911afc7",
+      "sha256": "58c299f4a8d9fcac60f4fd674b61c200b1753bc44937794da4bba52cfbc1405c",
+      "bytes": 3906,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fb896830b781d0ee59168744b20731eedb0c3c22",
+      "sha256": "012905071bbc1eb0cedb0080745f015487a8bce86bb62f72e09859962bbc958b",
+      "bytes": 17383,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fb91ebbd5adecaeb74f606d6de055cf7d9de2dea",
+      "sha256": "c96996a0f5766d5f242017a20a54e172c9e3245539b0363e526279cff802f9e7",
+      "bytes": 4194,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fbd701b4ff3dec6cd220e00551601d79650fdfeb",
+      "sha256": "41586eed16bc29d98b4b89e06d4fbcdeef4879785a049d6a255af96c9bb201ec",
+      "bytes": 479,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fc1015edaede9cb3fa3e9ea9f49b38fd3a1bfdfb",
+      "sha256": "f107c5a99121d0f5ca018a6e19827d556a5ae384e14ab533d3b9b15b49a4ca93",
+      "bytes": 8634,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fc9296a251359bc8294fde83e3ba9db44c46d79e",
+      "sha256": "4f1ff63fbde11449d59b98cfd99c4b6a01a44f03e7eeef39ef19aa670db31de0",
+      "bytes": 1071,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fcd7e9797a2110dcdacb67d1ec84af5d76004245",
+      "sha256": "10bebecd28eacd7e26228cef3b6ae03f51b788e90738d4421f24ed10289f562a",
+      "bytes": 65916,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fdd94df59b23e9750ef6823695953fa33dc6ef00",
+      "sha256": "dad0ab27c1daeb4ca67f7b790d935f49dda990fe9c6e565728506392df3be877",
+      "bytes": 14956,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501/17943-fe4125f44fce9452d776a0ce38069f756c92ae5d",
+      "sha256": "0051ac524490f582ed6a49fcb371c71da89fbdd5244900ba5258fbef6cb000be",
+      "bytes": 10932,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/cleanup.json",
+      "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+      "bytes": 109,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/driver.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/driver.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/launcher.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/launcher.json",
+      "sha256": "3932895b9bd9900b0089255d23cd65e8a7119576d53e31105c39abb08392b588",
+      "bytes": 1057,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/outer-timing.json",
+      "sha256": "acef39ba70bbc1293b4cf2764fee1da14f24916738f845ea5beaf25c20d07667",
+      "bytes": 543,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/result.json",
+      "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55",
+      "bytes": 250,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/started.json",
+      "sha256": "733c969b29768c5504df5684688a305ecd98c296dc8ac4408b5a4e8978f61c76",
+      "bytes": 44,
+      "capturedMode": 420,
+      "sealedMode": 256
+    }
+  ],
+  "rawDirectories": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/candidate",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-strict-three-output/body/tmp/tsx-501",
+      "sealedMode": 320
+    }
+  ],
+  "qualification": "Actual one-capture evidence at adopted0133. All three original literal byte baselines agree, including complete Lending modes default/generic/add. Source/tool/input/group fences hold. Exact kept fixtures limit this claim to derived output bytes; no gate/browser/live/deployment acceptance follows."
+}

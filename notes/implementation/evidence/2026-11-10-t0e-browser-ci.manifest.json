@@ -1,0 +1,168 @@
+{
+  "kind": "E exact-source Page browser CI terminal copy",
+  "head": "01337382fea93f13612c83a1396bd2a34a1b3e36",
+  "tree": "aaa02f944b9e0173ea5391eef13664c359d0caad",
+  "branch": "builder/typed-client-t0e-20261110",
+  "run": 42846059399,
+  "attempt": 1,
+  "event": "push",
+  "job": 129933701639,
+  "jobSteps": 12,
+  "allStepsSuccess": true,
+  "actualGetExits": [
+    0,
+    0,
+    0
+  ],
+  "terminalSourceConfirmed": true,
+  "cardWorkflowApplicable": false,
+  "noDispatchOrRerun": true,
+  "originalsUnchanged": true,
+  "safeFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-review/SHA256SUMS",
+      "sha256": "4ef6459f089f82d5de0946e25ac44a54fe496337b44b86101e634ecc851d22b7",
+      "bytes": 425,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-review/ci-summary.json",
+      "sha256": "f92794efa1135cbae166db63c305b00c8aab8fd724838b01d58209de7b822c65",
+      "bytes": 2496,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-review/path-filter-proof.json",
+      "sha256": "c2f2b3684a64d3dcd0e73f8635c9d415fdbb2f5ffd0ef57d226ea2b2ee1314b7",
+      "bytes": 4172,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-review/root-readback.json",
+      "sha256": "570af7522e997c61a5c3ff896a8c496794c167b04a9a62f969272a9ec120ca64",
+      "bytes": 660,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-review/terminal-input-index.json",
+      "sha256": "a375f20675c348ed1bd3479a48c002b2c99db59e1f4469434ee3a7e19d518709",
+      "bytes": 8568,
+      "sealedMode": 256
+    }
+  ],
+  "rawFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/jobs.actual.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/jobs.receipt.json",
+      "sha256": "586130b01fdc2be3e346af29992cc03df12facf7b97e644c04f0a0e15eb2ee7a",
+      "bytes": 348,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/jobs.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/jobs.stdout.json",
+      "sha256": "0bf96b2927116d0093956d0f07f8a22c50fb16fd8c18fae14dc205c9c8b26a1a",
+      "bytes": 3118,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/run-after.actual.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/run-after.receipt.json",
+      "sha256": "ccebb85fa4701b6ae7a8b2426664b2f24136882f01f67575e4c0e8aba9f098ff",
+      "bytes": 319,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/run-after.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/run-after.stdout.json",
+      "sha256": "2994ba76db6c205c1bcb92172c79a2b92077712dce33f58ba41309a40403781e",
+      "bytes": 12774,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/run.actual.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/run.receipt.json",
+      "sha256": "ccebb85fa4701b6ae7a8b2426664b2f24136882f01f67575e4c0e8aba9f098ff",
+      "bytes": 319,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/run.stdout.json",
+      "sha256": "2994ba76db6c205c1bcb92172c79a2b92077712dce33f58ba41309a40403781e",
+      "bytes": 12774,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation/summary.json",
+      "sha256": "e8156e3ad362ab3734a36ac34a94f123407ef6848e8badce0026564da0fc55d7",
+      "bytes": 4218,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observer.py",
+      "sha256": "3eaa405c97868e4a9b0d49e4fd2da223852326161d45de195072a7e4b8a53471",
+      "bytes": 3102,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/sealer-plan.json",
+      "sha256": "bf6856f73c00bc29a85af59ff58544c7ee0deecf8b68a1dafb68906ad52a42a5",
+      "bytes": 6769,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/sealer.py",
+      "sha256": "ba4bcceefc8d8d2630e5c23742933cfe2f02fa2eb24eccc5970e15c8c31a7625",
+      "bytes": 10831,
+      "sealedMode": 256
+    }
+  ],
+  "rawDirectories": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-terminal-raw/observation",
+      "sealedMode": 320
+    }
+  ],
+  "publicDirectory": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-page-browser-ci-review",
+    "sealedMode": 320
+  },
+  "sealerSha256": "ba4bcceefc8d8d2630e5c23742933cfe2f02fa2eb24eccc5970e15c8c31a7625",
+  "planSha256": "bf6856f73c00bc29a85af59ff58544c7ee0deecf8b68a1dafb68906ad52a42a5",
+  "qualification": "Fresh terminal branch-CI metadata copies only; original observation folders remain untouched. No network or validation body ran in this sealer."
+}
