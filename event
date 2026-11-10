@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/contract/package.json","body":{"commit":"c905518409e4449f35e1b9423c4aa226bce5c2ce","path":"packages/contract/package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/contract/src/catalog-vocabulary.ts","body":{"commit":"c905518409e4449f35e1b9423c4aa226bce5c2ce","path":"packages/contract/src/catalog-vocabulary.ts"}}
