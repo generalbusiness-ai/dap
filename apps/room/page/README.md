@@ -222,8 +222,6 @@ that the room's records show, with the record it comes from:
 - **The infrastructure effect of plan 016.** No definition opens a
   separate effect for an extent. The effect states are those of the Git
   publication's own outside operations.
-- **Live updates.** The page reads when a screen is drawn and after an
-  act. It does not follow the scopes' streams.
 
 ## Tests
 

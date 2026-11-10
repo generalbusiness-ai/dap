@@ -95,10 +95,11 @@ Treat each link as private. Anyone who holds it can use it.
    Claude shows the room's scopes, its issues and changes, your standing,
    and the acts that your role does not hold.
 
-Instead of step 2, you can start with the empty config directory and ask
-Claude to call the `join` tool with the link. The `join` tool records the
-room in that directory, as `dap join` does. Its result never repeats the
-link's secret.
+With an `artroom-invite:` link, you can skip step 2. Start with the empty
+config directory and ask Claude to call the `join` tool with the link. The
+`join` tool records the room in that directory, as `dap join` does. Its
+result never repeats the link's secret. The `join` tool does not take an
+`artroom-device-key:` link. Use `dap join` for that link.
 
 To list fewer tools, add `--generic` or `--tools issue,change` after
 `"mcp"` in `args`. [Options](mcp.md#options) describes each option.

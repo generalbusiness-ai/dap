@@ -12,8 +12,8 @@ deployment from [Run your own service](self-host.md). You need:
 - The pinned Wrangler, which you run as `npx -y wrangler@4.147.0`.
 
 The examples use `https://dap-my-room.example.workers.dev` as the Worker's
-address. Replace it with your own. Run each `wrangler` command from
-`apps/room`, so that `--config wrangler.self-host.jsonc` finds the file.
+address. Replace it with your own. Run every command on this page from
+the root of the checkout.
 
 For the Mac host, [Maintain the host](self-host.md#maintain-the-host)
 gives the stop, restart and verify steps.
@@ -44,8 +44,7 @@ gives the stop, restart and verify steps.
 3. Follow the Worker's logs as requests arrive.
 
    ```sh
-   cd apps/room
-   npx -y wrangler@4.147.0 tail --config wrangler.self-host.jsonc --format pretty
+   npx -y wrangler@4.147.0 tail --config apps/room/wrangler.self-host.jsonc --format pretty
    ```
 
    Wrangler prints each request and its console lines until you stop it.
@@ -63,7 +62,9 @@ gives the stop, restart and verify steps.
 
 The template declares no `METRICS` binding, so `scripts/deploy-check.mjs`
 has no metrics to read. To collect metrics, add the binding as
-[Run your own service](self-host.md#deploy-a-room) describes in step 3.
+[Run your own service](self-host.md#deploy-a-room) describes in step 3,
+and name its dataset `artroom_metrics_v1`. The deploy check reads only
+that dataset.
 [Observe a deployment](operations.md) describes the metrics and the
 deploy check.
 
@@ -126,8 +127,7 @@ the file holds and settings that `--keep-vars` keeps.
 1. List the recent deployments and their versions.
 
    ```sh
-   cd apps/room
-   npx -y wrangler@4.147.0 deployments list --config wrangler.self-host.jsonc
+   npx -y wrangler@4.147.0 deployments list --config apps/room/wrangler.self-host.jsonc
    ```
 
    Wrangler lists the 10 most recent deployments with their version IDs.
@@ -135,7 +135,7 @@ the file holds and settings that `--keep-vars` keeps.
 2. Roll back to the version that you recorded before the deployment.
 
    ```sh
-   npx -y wrangler@4.147.0 rollback <version-id> --config wrangler.self-host.jsonc --message "<reason>"
+   npx -y wrangler@4.147.0 rollback <version-id> --config apps/room/wrangler.self-host.jsonc --message "<reason>"
    ```
 
 3. Read `/health` again. Its `version` equals the version that you chose.
@@ -169,9 +169,10 @@ To keep a copy of a room's repository:
    dap clone /absolute/path/to/room-copy
    ```
 
-   The command prints the read token's handle, the remote URL and
-   `Cloned into`. A room under host `none` answers `no-repository` and has
-   nothing to clone.
+   The command prints a `Read token:` line that names the act which
+   issued the token and when the token ends. It then prints the remote
+   URL and `Cloned into`. A room under host `none` answers
+   `no-repository` and has nothing to clone.
 
    For a room that has an archive, add `--archive` to the same command.
    The clone then also fetches the journal refs.
@@ -180,8 +181,11 @@ To keep a copy of a room's repository:
    dap clone /absolute/path/to/room-copy --archive
    ```
 
-   The command then also prints
-   `Fetched refs/artroom/journal/* with the same read token.`
+   The command then also prints this line:
+
+   ```
+   Fetched refs/artroom/journal/* with the same read token. Verify the expected journal set offline before accepting the archive.
+   ```
 
 2. Check the room's scopes against the service.
 
@@ -204,8 +208,7 @@ a command argument or a file in the checkout. Keep `DEPLOYMENT` set.
 1. Send a new `SESSION_SECRET`.
 
    ```sh
-   cd apps/room
-   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.147.0 secret bulk --config wrangler.self-host.jsonc
+   node --input-type=module -e 'import { randomBytes } from "node:crypto"; process.stdout.write(JSON.stringify({SESSION_SECRET:randomBytes(32).toString("base64url")}));' | npx -y wrangler@4.147.0 secret bulk --config apps/room/wrangler.self-host.jsonc
    ```
 
    Wrangler reports success and does not print the value.
@@ -229,8 +232,7 @@ client asks for a new session. Signed reads keep working.
 3. Send it to the Worker.
 
    ```sh
-   cd apps/room
-   node -e 'process.stdout.write(JSON.stringify({GITHUB_APP_PRIVATE_KEY: require("node:fs").readFileSync(0, "utf8")}))' < /absolute/path/to/new-app-key.pkcs8.pem | npx -y wrangler@4.147.0 secret bulk --config wrangler.self-host.jsonc
+   node -e 'process.stdout.write(JSON.stringify({GITHUB_APP_PRIVATE_KEY: require("node:fs").readFileSync(0, "utf8")}))' < /absolute/path/to/new-app-key.pkcs8.pem | npx -y wrangler@4.147.0 secret bulk --config apps/room/wrangler.self-host.jsonc
    ```
 
 4. Read `/health`. `wiring.github` is `{"state": "wired"}`. Then delete

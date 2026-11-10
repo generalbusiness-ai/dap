@@ -60,8 +60,12 @@ The top of the page names the room and your handle. The navigation has
 - **Issues** has a search box and the filters **Open**, **Closed** and
   **All**. **Changes** has a search box and the filters **Open**,
   **Merged** and **All**.
-- Each change shows its state, such as **Waiting for review**,
-  **Needs review**, **Awaiting confirmation** or **Merged**.
+- The **Changes** list marks a change **Merged** or **Closed**, or shows
+  its state in the lane. The change's own page shows where it stands,
+  such as **Waiting for review**, **Needs review**,
+  **Awaiting confirmation** or **Merged**.
+- Each screen follows the room and redraws when the room changes. When
+  the stream is unavailable, the page polls instead.
 - **Rules** shows the room's review requirements, how many approvals each
   one needs and who can change them.
 
@@ -95,14 +99,12 @@ first one.
   `dap edit` for the first change.
 - It edits one text file at a time. It does not delete, rename or upload
   binary files.
-- It has no review task and no source preview for a version with several
-  files.
+- It has no guided review task and no source preview for a version with
+  several files. **Advanced** still offers the review form.
 - It does not invite people from the room screens. Use `dap invite`.
 - It keeps an editor draft only while the page stays open.
 - It does not activate a definition in the rules. Use
   `dap act activate --value`.
-- It does not update on its own. It reads the room when it draws a screen
-  and after each act. Reload the page to see other people's new work.
 
 To build or test the page itself, read
 [The room page: build, behaviour and tests](../page/README.md).

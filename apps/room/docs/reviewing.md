@@ -39,8 +39,10 @@ two requirements needs a verdict for each.
 If someone asked you for the review, the page names that request in the
 dialog.
 
-For a version with several files, the page has no **Review change** task
-and no source preview. Review that version with the `dap` command.
+For a version with several files, the page has no guided
+**Review change** task and no source preview. **Advanced** still offers
+the review form, with the version filled in. To read each file first,
+review that version with the `dap` command.
 
 ## Review with the dap command
 

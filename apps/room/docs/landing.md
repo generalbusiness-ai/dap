@@ -52,7 +52,7 @@ replace what it shows.
    arrive, run `dap merge` again.
 
 To close an issue when the change is published, add `--closes <issue>`.
-Only the change's author can link it to an issue.
+`--closes` links the change as its author, so only the author can use it.
 
 ## If you do not know whether the merge took effect
 
