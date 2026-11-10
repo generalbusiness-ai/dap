@@ -2,6 +2,14 @@
 
 Request `487496f5`, promise `4b0e1a79`.
 
+BR13 is ready for review. The complete sampled gate passes at unchanged
+source `ff0eee7d`, with 5,842 passes and three expected skips across all
+5,845 frozen case identities. Actual Page attempt 1 and Card attempt 3
+workflows pass at source `a591595e`; the later changes contain only this
+note and evidence manifests. The final sections record these results.
+Earlier sections retain each checkpoint's historical status, including
+its pending checks at that time. Four earlier gates remain separately failed.
+
 The platform query owner retains 105 distinct questions. Each question keeps
 its original positive set, including disagreements between publication,
 certificate, membership, creation and archive readers. Unknown pins answer
@@ -69,7 +77,7 @@ installation ran. The selective focused pass below covers the reviewed
 compiler closure, exact query fixtures and named consumer owners. Post-C
 integration checks the complete SDK owner below. The remaining combined
 compiler and consumer checks and both query controls pass below. The full
-maintained gate remains due.
+maintained gate was still due at that checkpoint.
 
 
 ## Editor and Effects correspondence
@@ -132,8 +140,9 @@ fixture or raw checker log enters the repository.
 These bounded safety checks prove no implementation refinement, liveness,
 live-room outcome or deployment acceptance. The combined-source checks
 below cover the frozen question fixtures, affected consumers and release
-metadata. The maintained gate remains due. Unchanged protected source
-needs no repeated formal body after that integration.
+metadata. At that correspondence checkpoint, the maintained gate remains
+due. Unchanged protected source needs no repeated formal body after that
+integration.
 
 
 ## Rebuild the served Page module
@@ -170,8 +179,8 @@ check. Focused validation below uses the committed Page output. Its selective
 scope covers 38 compiler contexts, 454 plain cases and eight host Node
 cases. At that build checkpoint, the complete five-case SDK module owner
 remains unrun until C lands its Git `./diff` source-export repair. The
-post-C integration below discharges that owner; the full maintained gate
-and final-source workflow evidence remain due.
+post-C integration below discharges that owner. At the build checkpoint,
+the full gate and final-source workflow evidence still remain due.
 
 
 ## Selective focused checks pass at c35
@@ -197,8 +206,8 @@ hashes to
 `abfbd15cbf39f35c835f0ed6bb814a2925ad1c1eef921610036a1f0c9ae4dc47`.
 It inventories 25 safe case-status and source metadata files and 66
 retained original files, read-only through 9 December. Complete raw test
-reports remain outside the checkout. This evidence commit changes only
-this note and its manifest after the tested c35 checkpoint.
+reports remain outside the checkout. The evidence adoption at c57 changes
+only this note and its manifest after the tested c35 checkpoint.
 
 At c35, the entire five-case `scripts/public-release-modules.test.mjs`
 owner remains unrun. Its two actual-Git manifest cases encounter the missing
@@ -206,7 +215,7 @@ owner remains unrun. Its two actual-Git manifest cases encounter the missing
 live-room, browser or deployment acceptance claim. At c35, the prepared guard
 controls have not run. The later C/main integration and complete SDK
 owner results follow below; affected final-source workflow citations, the
-maintained gate and review remain due.
+maintained gate and review remain due at that checkpoint.
 
 
 ## C integration passes the Page and SDK owners
@@ -237,8 +246,8 @@ The [C integration manifest](evidence/2026-11-09-br13-c-integration.manifest.jso
 hashes to
 `37c75302b49024a1a23e665c1ca9000c5edb75f5be4ec9a315a22db2548936e0`.
 It inventories 28 safe metadata files and 33 retained originals,
-read-only through 9 December. This evidence commit changes only this
-note and its manifest after tested c780.
+read-only through 9 December. The evidence adoption at `6cbc96f05b` changes
+only this note and its manifest after tested c780.
 
 The complete SDK5 deferment ends at this actual source. These Node
 witnesses check supported manifests and scripted release-output guards;
@@ -266,8 +275,8 @@ It inventories six safe metadata files and 63 retained originals. The
 separate carry receipts compare the three unchanged compiler contexts
 and the Git archive-policy owner's exact source, configuration and tools
 against the earlier actual pass. Those four obligations do not rerun in
-this slot. The old eight host Node cases remain historical until the
-current maintained gate runs its Node stage.
+this slot. The old eight host Node cases remain historical at that checkpoint;
+the later complete gate runs its current Node stage.
 
 ## Both query controls distinguish the intended failures
 
@@ -309,10 +318,10 @@ files, including Node compile-cache files. The cache files add
 no test claim. The units remain read-only through 10 December. No raw
 report, output buffer or private fixture enters the repository.
 
-The controls-evidence adoption at `a40adbee7e` changes only this note and
-the two manifests after the tested 6cbc checkpoint. The current maintained full gate and review
-remain due. These checks establish no browser, deployment, SDK
-publication or live-room acceptance.
+The controls-evidence adoption at `a40adbee7e` changes only this note and the
+two manifests after the tested 6cbc checkpoint. At that checkpoint, the
+complete maintained gate and review remain due. These checks establish no
+browser, deployment, SDK publication or live-room acceptance.
 
 
 ## Preserve the format failure and original fixture data
@@ -364,7 +373,7 @@ directory is nonwritable for at least 30 days after landing. Its complete
 JSON and token-equality proof hashes to
 `26f15fdb161a11b20afcf43c84f4ce6d4c6aa08c5c5b110cdfba839f82377d37`.
 No test, compiler or build reruns for this whitespace-only repair. The
-repaired maintained gate remains due.
+repaired maintained gate remains due at that repair checkpoint.
 
 
 ## Retain the architecture failure and repair the lower client imports
@@ -445,8 +454,8 @@ leaves, and four safe metadata files. Every original and curated file
 and directory stays nonwritable for at least 30 days after landing. The
 asset-and-evidence adoption changes no other production source. Fresh
 Page and Card workflows must use this new production checkpoint. The
-repaired full maintained gate and review remain due. No browser,
-deployment or live acceptance follows from these local checks.
+repaired full gate and review remain due at that source checkpoint. No
+browser, deployment or live acceptance follows from those local checks.
 
 ## Repair maintained project aliases after gate v4
 
@@ -500,7 +509,122 @@ the separately sealed actual runs and raw reports.
 The earlier successful fb98 Page and Card workflows remain historical.
 Both recorders load the changed maintained project configs before project
 filtering, so their whole-witness inputs differ after the alias repairs.
-Fresh a591 workflow evidence remains pending. This follow-up changes only
-this note and the two result manifests after the actual a591 witness.
-The repaired complete maintained gate and review remain due. No browser,
-deployment or live acceptance follows from these results.
+At the alias-witness adoption, fresh a591 workflow evidence and the
+repaired complete gate remain pending. That adoption adds the two result
+manifests and updates this note after the actual a591 witness. The final
+sections below record the later complete gate and workflows. Those
+focused results alone establish no deployment or live acceptance.
+
+## Keep v5b failed and the isolated Native result separate
+
+Booking `499aee56` runs v5b at unchanged ff0eee7d. END `3d7d434a` closes
+the failed gate. All earlier stages pass; Native finishes with 1,132
+passes, two skips and one pending obligation. LIST1 is that final pending
+identity, with suffix 0. The actual gate, driver and launcher exits stay
+1. The [v5b failure manifest](evidence/2026-11-10-br13-final-gate-v5b-native-failure.manifest.json)
+hashes to
+`211b1b6e2b210010b248a7ae0ca4941bdfd167620d7a5e0888444ef540266940`.
+It preserves the V8 heap abort, runtime restart and pool-close errors.
+V2's format failure, v3's architecture failures, v4's module collection
+failures and v5b's heap abort remain four separate failed gates.
+
+The retained GC/OOM prefix names PID 74991. The pinned Miniflare child
+spawn, stderr and unexpected-exit path supports attribution to a workerd
+runtime child. No retained OS PID receipt or exclusive PID-to-test-owner
+mapping establishes which owner ran in that process at the abort. That
+owner remains unknown. The nearby LIST1 context and its final pending
+status do not prove exclusive ownership. The separate attribution record
+`4ed10089` retains this limit.
+
+Planner ruling `a2e43e02` authorizes one isolated LIST1 run at the same
+source and original settings, followed by one complete sampled gate if
+the owner passes. Booking `6fad1152` runs that whole existing Native
+owner once; END `1e0ff86e` closes it. Its maintained scope project and
+`cloudflare-pool` keep the original 120,000 ms case limit. The one case
+and module pass, and structured and built-in JSON ledgers agree with
+zero errors, retries, repeats or unexpected cases. Focused, runner,
+outer-driver and launcher exits are zero. No compiler or Node test phase
+runs, and process guards and cleanup are empty.
+
+The [isolated LIST1 manifest](evidence/2026-11-10-br13-list1-native-diagnosis.manifest.json)
+hashes to
+`91e52099725e684d78ce507a5d381a3d6de339bfc328b856685cc56ef4a4a783`.
+Its original attribution-pending field records the audit's status before
+the separate workerd source-channel review. This passing owner result
+provides no waiver or replacement pass for v5b.
+
+## The complete sampled gate passes at unchanged ff0eee7d
+
+Booking `8c454e94` runs the one further complete gate at unchanged source
+`ff0eee7d1a047ce1e94bc9040c1e6c96e5bf6d3a`. END `466ddec9` closes it.
+The actual gate, driver, launcher and pinned analyzer exits are zero.
+All 45 compiler contexts and 16 typecheck scripts pass. The independent
+ledger matches all 5,845 frozen identities with no unexpected known case
+or reconciliation issue.
+
+| Stage | Passes | Expected skips |
+| --- | ---: | ---: |
+| Node | 150 | 0 |
+| Counting | 56 | 0 |
+| Plain | 4,503 | 1 |
+| Native | 1,133 | 2 |
+| Total | 5,842 | 3 |
+
+All six Scale cases pass within the Native stage. The three skips match
+the existing frozen ledger. The 111 wrapper observations remain unknown
+and separate from those case identities. Formatting, retained pins and
+source guards pass; the tested source stays fixed and cleanup is empty.
+
+The passive sampler reads RSS for the run's owned Node and workerd PIDs
+every ten seconds, outside the checkout. It records 127 samples, zero
+sampling errors and 733 identified Node/workerd rows. Another 788 other
+or unresolved rows and 14 explicit races stay separate. The
+maximum sampled single-process RSS for each kind becomes the baseline
+for later heads under ruling `a2e43e02`.
+
+| Process kind | Peak sampled RSS, KiB | PID |
+| --- | ---: | ---: |
+| Node | 2,602,256 | 66180 |
+| workerd | 3,318,784 | 26657 |
+
+These observations measure RSS, not V8 heap, a sum across processes or
+an instantaneous maximum. Ten-second sampling can miss transient peaks
+and short-lived processes. No heap flag, worker limit or deadline
+changes. The [sampled gate manifest](evidence/2026-11-10-br13-final-gate-v6b.manifest.json)
+hashes to
+`826f521a9c5c16839a969ca8ed9f714242f8bebf30002aa57bce2169188bfe4c`.
+It inventories seven safe audit files and separately sealed private
+outputs. The complete private reconciliation stays outside the checkout.
+
+## Actual Page and Card workflows pass at a591595e
+
+[Page run 42761381020](https://github.com/generalbusiness-ai/dap/actions/runs/42761381020),
+attempt 1, succeeds at exact source a591595e with all 12 steps. The
+screenshot script, recorded demo captures, create-room witness and local
+label witness complete.
+
+[Card run 42761385370](https://github.com/generalbusiness-ai/dap/actions/runs/42761385370),
+attempt 3, succeeds at the same source from 07:00:23 to 07:03:32 UTC on
+10 November. All 13 steps pass, including the card browser, Grow room
+and Grow routing witnesses. The first two attempts remain cancelled at
+the pinned browser-tool installation step. Their cancellation evidence
+stays separate. No workflow source changes or further retries follow.
+
+These are actual successful Page and Card outcomes, with no fallback
+carry needed for either workflow. Durable workroom record `b37cc5a0`
+cites both runs. The [terminal CI manifest](evidence/2026-11-10-br13-browser-ci.manifest.json)
+hashes to
+`330676af0231e9f46dc7e48ff82bbbce49527f16fd0ee7a35723dced2d535d23`.
+Its API audit records all 25 successful step states. The manifest's mode
+fields describe its pre-seal metadata capture; the current terminal
+audit files and directory are owner-private and nonwritable. Original
+API and browser-log payloads remain outside the repository.
+
+CI executes at a591595e, and the complete local gate executes at
+ff0eee7d. Changes between those sources contain only the implementation
+note and two result manifests. The final evidence adoption adds four
+manifest copies and updates this note after tested ff0eee7d. Every other
+tracked blob and mode, including workflow, configuration, runtime, test
+and build inputs, stays equal. The final peer comparison records that
+relationship before review. These results support repository review;
+they make no deployment or live-room acceptance claim.
