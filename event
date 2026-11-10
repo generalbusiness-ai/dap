@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f089526423aafbde6a235ce23168b200aeab8af6","text":"Merge retired a covered predecessor; the successor is at apps/room/page/assets.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f3d9c5da7b2db0e56a162798c66706067537373b","text":"Merge retired a covered predecessor; the successor is at packages/client/src/invitation-fields.ts."}
