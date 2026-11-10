@@ -4,10 +4,7 @@
   "owner": "packages/platform/src/versions.ts",
   "sourceText": "export const isStandingDestination = (named: unknown): named is \"platform:destination@5\" | \"platform:destination@6\" => named === \"platform:destination@5\" || named === \"platform:destination@6\";",
   "sourceSha256": "6ee269a29932694bb0ac48cae1313705161994a8814d9266a85e56932ad0625b",
-  "positivePins": [
-    "platform:destination@5",
-    "platform:destination@6"
-  ],
+  "positivePins": ["platform:destination@5", "platform:destination@6"],
   "rows": [
     {
       "pin": "platform:commons@1",

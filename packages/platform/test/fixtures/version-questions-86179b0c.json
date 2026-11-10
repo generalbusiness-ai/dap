@@ -131,10 +131,7 @@
           "sourceTextSha256": "7a417ce5749016e3957ec9c6f06b26d132df31d70ad9aefd82ae9ab9c3ffa87c"
         }
       ],
-      "origins": [
-        "core",
-        "client"
-      ],
+      "origins": ["core", "client"],
       "answerType": "boolean"
     },
     {
@@ -163,9 +160,7 @@
           "sourceTextSha256": "98535fe34299c92c01bbdb1d1e798f00f708f5fa9c9ddd5acd54b9282d3a885f"
         }
       ],
-      "origins": [
-        "core"
-      ],
+      "origins": ["core"],
       "answerType": "boolean"
     },
     {
@@ -194,10 +189,7 @@
           "sourceTextSha256": "6aa10547764438ca0b19f9fd3e3ee6c47fdaeb1a81c2168fb7771e41ced4f4bf"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
@@ -222,10 +214,7 @@
           "sourceTextSha256": "2927bebff35a79c99016a3e95b1f43951326e5d12b9e44fa63e334aaa8b1731a"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
@@ -249,10 +238,7 @@
           "sourceTextSha256": "46b2c7df3e5bd7efff86f1c097c0dd5d69edb2b70f117130d3d6b425ce5ff22b"
         }
       ],
-      "origins": [
-        "core",
-        "client"
-      ],
+      "origins": ["core", "client"],
       "answerType": "boolean"
     },
     {
@@ -273,10 +259,7 @@
           "sourceTextSha256": "f5806d262132d931c8b026f003c4992ad876922868d4bd25e8bdd39d105abec5"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
@@ -296,10 +279,7 @@
           "sourceTextSha256": "a3ea2996d81f64611085a2bcc9d3a4439240c0b1ff6d7895572b229fcff920bf"
         }
       ],
-      "origins": [
-        "core",
-        "client"
-      ],
+      "origins": ["core", "client"],
       "answerType": "boolean"
     },
     {
@@ -320,18 +300,12 @@
           "sourceTextSha256": "934d83d1c98c1a952f2c405cf7e1408bb5f4c66887d654d7355ea0ee04527bd5"
         }
       ],
-      "origins": [
-        "core",
-        "client"
-      ],
+      "origins": ["core", "client"],
       "answerType": "boolean"
     },
     {
       "name": "clientCreationOfferRegister",
-      "positivePins": [
-        "platform:register@17",
-        "platform:register@26"
-      ],
+      "positivePins": ["platform:register@17", "platform:register@26"],
       "sources": [
         {
           "owner": "packages/client/src/creation-offer.ts",
@@ -342,10 +316,7 @@
           "sourceTextSha256": "c343ad361b3ac2c7ee1b0dc89f318a691a3bbc12548e878e24d67346ec3148bd"
         }
       ],
-      "origins": [
-        "core",
-        "client"
-      ],
+      "origins": ["core", "client"],
       "answerType": "boolean"
     },
     {
@@ -371,10 +342,7 @@
           "sourceTextSha256": "406e461370929c2879c6190a47710316b4367bc23316385590beee24f3854a3c"
         }
       ],
-      "origins": [
-        "core",
-        "client"
-      ],
+      "origins": ["core", "client"],
       "answerType": "boolean"
     },
     {
@@ -395,10 +363,7 @@
           "sourceTextSha256": "38aa889b16d9164146248412385454e6879898af9300d76fcc916376957c88f8"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
@@ -419,17 +384,12 @@
           "sourceTextSha256": "40e704d606f41badeac255ee42facdb600354204517e4f18d754e56754e4f582"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
       "name": "replayPartitionChangeOrigin",
-      "positivePins": [
-        "platform:destination@6"
-      ],
+      "positivePins": ["platform:destination@6"],
       "sources": [
         {
           "owner": "packages/replay/src/verify.ts",
@@ -440,10 +400,7 @@
           "sourceTextSha256": "464d1d2314a705e2ce17268c2a494343836bbcf3b03ea3929a7ccf673dbcbc50"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
@@ -465,10 +422,7 @@
           "sourceTextSha256": "8df09b152d1b2b879dd81b45331e8edc10f6dd659bea539a8fd0831893123487"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
@@ -496,17 +450,12 @@
           "sourceTextSha256": "23ba6e824f7243347765caa5c25595467744144b95a063df64c63223add1cbbc"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
       "name": "evidenceStageOrigin",
-      "positivePins": [
-        "platform:destination@17"
-      ],
+      "positivePins": ["platform:destination@17"],
       "sources": [
         {
           "owner": "packages/checkers/src/stage-origin.ts",
@@ -541,17 +490,12 @@
           "sourceTextSha256": "87d7dce61687d0bbba55221c57f14265a593a4125f682c8dfb58dcbdff472537"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
       "name": "evidenceStageSnapshot",
-      "positivePins": [
-        "platform:destination@17"
-      ],
+      "positivePins": ["platform:destination@17"],
       "sources": [
         {
           "owner": "packages/scope/src/stage-snapshot.ts",
@@ -562,18 +506,12 @@
           "sourceTextSha256": "f5910d8ecf7c619cd351fc7506bde20ef7ec8afe680bdf1cdf09f074a8bfe492"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
       "name": "archiveMembershipForeignCopy",
-      "positivePins": [
-        "platform:membership@12",
-        "platform:membership@8"
-      ],
+      "positivePins": ["platform:membership@12", "platform:membership@8"],
       "sources": [
         {
           "owner": "packages/replay/src/archive.ts",
@@ -584,10 +522,7 @@
           "sourceTextSha256": "f3d9ac52879d1cbef1b8ca2590899d3f9f4f3e27fa0753633d66b8564f336de1"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
@@ -609,10 +544,7 @@
           "sourceTextSha256": "f4ce683208633e9784c595ab4216284b31e1cbdb78abf0610d325e793b3e028b"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
@@ -639,10 +571,7 @@
           "sourceTextSha256": "4d6f1e72555fe5a82c64059cc28a1a4801823ba336e37ac0c6cdc0824b0ed3a8"
         }
       ],
-      "origins": [
-        "core",
-        "runtime"
-      ],
+      "origins": ["core", "runtime"],
       "answerType": "boolean"
     },
     {
@@ -671,10 +600,7 @@
           "sourceTextSha256": "ce27ce00b47460e081cd2e6b1b03c319bdf3ae72e01b4991b7b92f1688d0e945"
         }
       ],
-      "origins": [
-        "core",
-        "client"
-      ],
+      "origins": ["core", "client"],
       "answerType": "boolean"
     },
     {
@@ -705,9 +631,7 @@
           "sourceTextSha256": "00125489ace1799c65b75f746e1265bc4ae514179b9891553e2f4cbf55f6f6a7"
         }
       ],
-      "origins": [
-        "core"
-      ],
+      "origins": ["core"],
       "answerType": "boolean"
     },
     {
@@ -737,9 +661,7 @@
           "sourceTextSha256": "2841f4f28decc674cddb43b1c131e1c23ce69fdf9c243af90f21f52d9ed118d8"
         }
       ],
-      "origins": [
-        "core"
-      ],
+      "origins": ["core"],
       "answerType": "boolean"
     },
     {
@@ -767,17 +689,12 @@
           "sourceTextSha256": "1f29dd44add707edfe64daf8ad4fd404f99bb4ab4bee2779df60825342432fe8"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "clientCheckerKeyInvitationMembership",
-      "positivePins": [
-        "platform:membership@12",
-        "platform:membership@8"
-      ],
+      "positivePins": ["platform:membership@12", "platform:membership@8"],
       "sources": [
         {
           "owner": "packages/client/src/checker-key-invitation.ts",
@@ -788,9 +705,7 @@
           "sourceTextSha256": "93bb1888622686aea1588407b23ef88056343a84f18a8d8d52ac5b09d9ee0a7c"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -819,9 +734,7 @@
           "sourceTextSha256": "36b8d5600ec887578e7f83810a5925976b4636727494a2cd6e2f904a9cc63db9"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -846,16 +759,12 @@
           "sourceTextSha256": "492b00f08814c463067c46d99990094dc607449844884c4d57c2fcc9f4247629"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "clientSettlementClaimProjectionRegister",
-      "positivePins": [
-        "platform:register@26"
-      ],
+      "positivePins": ["platform:register@26"],
       "sources": [
         {
           "owner": "packages/client/src/answers.ts",
@@ -866,16 +775,12 @@
           "sourceTextSha256": "7346fb57ab502da17ea3f726455f98ddf3dfbff77da80bfc4305c0792f2edcd9"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "clientCommonsReadDefinition",
-      "positivePins": [
-        "platform:commons@1"
-      ],
+      "positivePins": ["platform:commons@1"],
       "sources": [
         {
           "owner": "packages/client/src/commons.ts",
@@ -886,16 +791,12 @@
           "sourceTextSha256": "6f16cc6bae973112242ba3903c6cf4cae97571993fac9b570e59c46ab9d317e3"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "clientPartitionRootDirectory",
-      "positivePins": [
-        "platform:directory@10"
-      ],
+      "positivePins": ["platform:directory@10"],
       "sources": [
         {
           "owner": "packages/client/src/directory.ts",
@@ -906,16 +807,12 @@
           "sourceTextSha256": "7bc4a9e916472d742abcdf2abd4d664d9b8437a7b2cedb380b5dadfbf2fe14db"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "clientPartitionChildDirectory",
-      "positivePins": [
-        "platform:directory-partition@1"
-      ],
+      "positivePins": ["platform:directory-partition@1"],
       "sources": [
         {
           "owner": "packages/client/src/directory.ts",
@@ -926,16 +823,12 @@
           "sourceTextSha256": "7bc4a9e916472d742abcdf2abd4d664d9b8437a7b2cedb380b5dadfbf2fe14db"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliRetainedBindingFounderRegister",
-      "positivePins": [
-        "platform:register@25"
-      ],
+      "positivePins": ["platform:register@25"],
       "sources": [
         {
           "owner": "packages/cli/src/claim.ts",
@@ -946,16 +839,12 @@
           "sourceTextSha256": "e08be8515766eb16c5fa4085c2a67091142e9339031300b4413d0dcf813b2753"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliRetainedUnpublishedNamespaceRegister",
-      "positivePins": [
-        "platform:register@21"
-      ],
+      "positivePins": ["platform:register@21"],
       "sources": [
         {
           "owner": "packages/cli/src/claim.ts",
@@ -966,16 +855,12 @@
           "sourceTextSha256": "fe4c579351d4c781a2ea1911487890be4b6f8912bec1fd8cf47e79a05daa4617"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliFailedClaimRegister",
-      "positivePins": [
-        "platform:register@26"
-      ],
+      "positivePins": ["platform:register@26"],
       "sources": [
         {
           "owner": "packages/cli/src/claim.ts",
@@ -986,9 +871,7 @@
           "sourceTextSha256": "a54affa0a0de13e9aa5010befa3f2b8fcbb17bb7c741d2fc358909287786c82f"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1009,9 +892,7 @@
           "sourceTextSha256": "dc2081310067e89122479a54d9bec9814f01b3f675f9bca812582e6dc59343fe"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1033,16 +914,12 @@
           "sourceTextSha256": "e3ab7ba0857c2ff4e07005991ee8e20f919b4e365c783a3e3b839dc4032d0f09"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliLegacyOpenPolicyRegister",
-      "positivePins": [
-        "platform:register@17"
-      ],
+      "positivePins": ["platform:register@17"],
       "sources": [
         {
           "owner": "packages/cli/src/command-install.ts",
@@ -1053,9 +930,7 @@
           "sourceTextSha256": "456bc058ab8317d665357ba0e472f2156fa057202a6ff167a3c89367f1619713"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1090,9 +965,7 @@
           "sourceTextSha256": "f952cc429209740f2de666f9dfc2093d48b98050a72c1a33fd2a9f03da333c73"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1120,9 +993,7 @@
           "sourceTextSha256": "e6c357bdf1f1a7ac037723d3e310cc2795c1e50923197e986fd0386d52da0926"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1142,16 +1013,12 @@
           "sourceTextSha256": "7ecf4ba4fa383faf7fc86e115ded6600c0d9339af0a321df49f81665c785f426"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliRetiredCountingInstallRegister",
-      "positivePins": [
-        "platform:register@6"
-      ],
+      "positivePins": ["platform:register@6"],
       "sources": [
         {
           "owner": "packages/cli/src/command-install.ts",
@@ -1162,9 +1029,7 @@
           "sourceTextSha256": "39b16c35201396364000ab8dd9ab4df81534e59ec8f4d9e7de51c8d5172a4bf5"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1184,9 +1049,7 @@
           "sourceTextSha256": "b170642016bc0acb809081c498eb130f0167ec0db6b8f2ddb370a717e653bd0f"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1206,16 +1069,12 @@
           "sourceTextSha256": "996dad842f5b2ff4e8d1cd28c7d2bb82aa97a3c17bb94a5297a73a0b1d405b4a"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliFixedReadTokenLifetimeDestination",
-      "positivePins": [
-        "platform:destination@19"
-      ],
+      "positivePins": ["platform:destination@19"],
       "sources": [
         {
           "owner": "packages/cli/src/command-repository.ts",
@@ -1226,16 +1085,12 @@
           "sourceTextSha256": "6fa60fd555372b6f9dc6fa87ee425279355ac5c4f46cdbcd6683749e774cd9b0"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliIssuesPartitionRootDirectory",
-      "positivePins": [
-        "platform:directory@10"
-      ],
+      "positivePins": ["platform:directory@10"],
       "sources": [
         {
           "owner": "packages/cli/src/command-issues.ts",
@@ -1246,16 +1101,12 @@
           "sourceTextSha256": "1673601c71421bbaf5dea079a135c2ff291b3ca89d07a53febb342eee1562261"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliTargetsPartitionRootDirectory",
-      "positivePins": [
-        "platform:directory@10"
-      ],
+      "positivePins": ["platform:directory@10"],
       "sources": [
         {
           "owner": "packages/cli/src/command-targets.ts",
@@ -1266,16 +1117,12 @@
           "sourceTextSha256": "1673601c71421bbaf5dea079a135c2ff291b3ca89d07a53febb342eee1562261"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliOpeningPartitionDirectory",
-      "positivePins": [
-        "platform:directory-partition@1"
-      ],
+      "positivePins": ["platform:directory-partition@1"],
       "sources": [
         {
           "owner": "packages/cli/src/command-targets.ts",
@@ -1286,16 +1133,12 @@
           "sourceTextSha256": "0b5189f9a33e5b6b6e22199c314a3c9a5758d8422916a9ba3be36ebfecc16ee2"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliOwnAgentInvitationMembership",
-      "positivePins": [
-        "platform:membership@13"
-      ],
+      "positivePins": ["platform:membership@13"],
       "sources": [
         {
           "owner": "packages/cli/src/invitations.ts",
@@ -1306,16 +1149,12 @@
           "sourceTextSha256": "0d2204c0baead061454a45e11c13cc4bbd0edf9eac0f7c7a78cab766e3e9b6fe"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "cliInvitationInboxDefinition",
-      "positivePins": [
-        "platform:inbox@1"
-      ],
+      "positivePins": ["platform:inbox@1"],
       "sources": [
         {
           "owner": "packages/cli/src/invitations.ts",
@@ -1326,9 +1165,7 @@
           "sourceTextSha256": "efa5a1f0e845aa087a47189c3f7ac0eaeadcd6bf05ee5d0779887d5c150260ff"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1354,9 +1191,7 @@
           "sourceTextSha256": "d3538ed37efa930214a681cc7ee63182aa13401e9038068d6dd45b2d0880ea61"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1376,16 +1211,12 @@
           "sourceTextSha256": "d92ca2ca0eeed3b3f93afd77c6d3f2437f8b7a3662fa0265cdb47958a1f43023"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "pagePartitionRootDirectory",
-      "positivePins": [
-        "platform:directory@10"
-      ],
+      "positivePins": ["platform:directory@10"],
       "sources": [
         {
           "owner": "apps/room/page/src/data.ts",
@@ -1396,9 +1227,7 @@
           "sourceTextSha256": "cdf2b856a5635c46cd21dc7e261cb400999714c17dfd53e16bb63a57557bfb5c"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1420,9 +1249,7 @@
           "sourceTextSha256": "a882fc7c7e7d24b64cd279335447125abd61382f9e78664c56747a5af1904ed2"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1444,16 +1271,12 @@
           "sourceTextSha256": "7911d9423b97e77c77e22f072b3565e67c741e7ac82e893c280f7e15d6678331"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "pageInitialOwnerMayReviewRules",
-      "positivePins": [
-        "platform:rules@4"
-      ],
+      "positivePins": ["platform:rules@4"],
       "sources": [
         {
           "owner": "apps/room/page/src/data.ts",
@@ -1464,17 +1287,12 @@
           "sourceTextSha256": "95a7a87f72de599e4d8ebd58bb29677c1d2028ad3de05d7842978cee8e6cfdcc"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
       "name": "pageCertifiedRulesReadOnly",
-      "positivePins": [
-        "platform:rules@11",
-        "platform:rules@12"
-      ],
+      "positivePins": ["platform:rules@11", "platform:rules@12"],
       "sources": [
         {
           "owner": "apps/room/page/src/data.ts",
@@ -1485,9 +1303,7 @@
           "sourceTextSha256": "d8ebf1e8e36a9397aaa3c468124e831d849c523e92d86e5de8b3a5c9be623d95"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1511,9 +1327,7 @@
           "sourceTextSha256": "30750728b867acedcc99cdb75f275465216dbdcdb34ab9fc64456fb4e0a8a674"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1536,9 +1350,7 @@
           "sourceTextSha256": "30750728b867acedcc99cdb75f275465216dbdcdb34ab9fc64456fb4e0a8a674"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1561,9 +1373,7 @@
           "sourceTextSha256": "b6126366960053daa833cd39c33730d9d145e6ab8a72aa7d35ecf273ea717701"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1623,9 +1433,7 @@
           "sourceTextSha256": "15cfda736874cc267ba911bfab66ebd245a8c21e2e21269145b5691a2bb99972"
         }
       ],
-      "origins": [
-        "client"
-      ],
+      "origins": ["client"],
       "answerType": "boolean"
     },
     {
@@ -1657,9 +1465,7 @@
           "sourceTextSha256": "8c176218251f2bc349cec6e6192b2de4a206fae40be5f0a4e410538ac758e52e"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1685,9 +1491,7 @@
           "sourceTextSha256": "d8d7ce96a493eb4b9d6d2227a4597494fa98758a30821cf3dbec4fb2e68ff28c"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1708,9 +1512,7 @@
           "sourceTextSha256": "02d679ab05aff86f3c5cc74ad5b56c34868ad5747a21db68d56e3bd4ff77a5bf"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1738,17 +1540,12 @@
           "sourceTextSha256": "0cab45bfc7a075806a1b5c68977a4565315c0cb5792f1a8a6394168e76b18be7"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeDemoCreationRegister",
-      "positivePins": [
-        "platform:register@17",
-        "platform:register@26"
-      ],
+      "positivePins": ["platform:register@17", "platform:register@26"],
       "sources": [
         {
           "owner": "packages/scope/src/demo-creation.ts",
@@ -1759,9 +1556,7 @@
           "sourceTextSha256": "2d47d5e3f8dac6322f9e31a083a8a47cb755e19827b4b1a2d13134e30e6308b5"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1781,9 +1576,7 @@
           "sourceTextSha256": "987e48e2c57c6ee021ac5f64db6ad4e66c16a1579bc5b60509d24b8ed03d495d"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1810,9 +1603,7 @@
           "sourceTextSha256": "1d94ee4973f853c0557e1f7cf12204b0f6e9fe2671311f9a854d01e5994f82b0"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1839,9 +1630,7 @@
           "sourceTextSha256": "cebd551297039dde15d67cd09a146eebb8f92735f4877dfc7a18875cf8dfb7eb"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1861,9 +1650,7 @@
           "sourceTextSha256": "bc33827c18b37259566f7d502cccb60ffd2aa8fa23acf6f683ded137af444ffe"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1883,9 +1670,7 @@
           "sourceTextSha256": "d2dc855f127f26402cb0ea0c7309158e603a5925b67e6710049784d755219e2c"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1905,16 +1690,12 @@
           "sourceTextSha256": "e2594451d65e787343321b46dd52cf66b46515a25dd18e2654b223b1df0cd289"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeSettlementClaimRegister",
-      "positivePins": [
-        "platform:register@26"
-      ],
+      "positivePins": ["platform:register@26"],
       "sources": [
         {
           "owner": "packages/scope/src/object.ts",
@@ -1925,9 +1706,7 @@
           "sourceTextSha256": "4dfe58367bd4e493975a35b38589bccfd5b2036e9aba27dc42274b964cf26f9c"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1948,16 +1727,12 @@
           "sourceTextSha256": "408a384bc2e529f081c98a8cc35904e6689fa7f38c273de566fa8c12fbf67411"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeReadTokenFixedHourDestination",
-      "positivePins": [
-        "platform:destination@19"
-      ],
+      "positivePins": ["platform:destination@19"],
       "sources": [
         {
           "owner": "packages/scope/src/read-token-quota.ts",
@@ -1968,9 +1743,7 @@
           "sourceTextSha256": "609134f502893442862b83cd4696f9da0b156708e66e5ea6f601d8c27d577e6f"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -1992,9 +1765,7 @@
           "sourceTextSha256": "6856ab7081fd9388f2537599cfd8c58fd0d4196ee983844527b489326c238670"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -2016,17 +1787,12 @@
           "sourceTextSha256": "13a3a31d0d0fa10c6ef0031d6e8046d769f8070bea48da431d8e0dfffd7c8496"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeArchiveCertificateValueDestination",
-      "positivePins": [
-        "platform:destination@14",
-        "platform:destination@15"
-      ],
+      "positivePins": ["platform:destination@14", "platform:destination@15"],
       "sources": [
         {
           "owner": "packages/scope/src/archive-outcome-values.ts",
@@ -2037,16 +1803,12 @@
           "sourceTextSha256": "0480ab38cff83c79a8fe17da3be3622522a7e0512b8fb441ce1358a0570b48a2"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeDestinationEvidenceOperation",
-      "positivePins": [
-        "platform:destination@17"
-      ],
+      "positivePins": ["platform:destination@17"],
       "sources": [
         {
           "owner": "packages/scope/src/destination-host.ts",
@@ -2073,16 +1835,12 @@
           "sourceTextSha256": "aac4d1a7e81f06f371f76ff1bd40791b13f2afe20c4598d648140cb17fd4ed4b"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeArtifactEvidenceOperation",
-      "positivePins": [
-        "platform:destination@17"
-      ],
+      "positivePins": ["platform:destination@17"],
       "sources": [
         {
           "owner": "packages/scope/src/artifacts-wiring.ts",
@@ -2101,16 +1859,12 @@
           "sourceTextSha256": "e9948c927dd3b112b30ab86e1dea1f8daa3eb09936c6b8999bfda5d80d71ea70"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeCertificateEvidenceProfile",
-      "positivePins": [
-        "platform:destination@17"
-      ],
+      "positivePins": ["platform:destination@17"],
       "sources": [
         {
           "owner": "packages/scope/src/destination-host.ts",
@@ -2121,17 +1875,12 @@
           "sourceTextSha256": "c3a0feed01040a97c3b1441659e563385adf50364f34674d4e8c1a3896be0bd5"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeCertificateHardenedProfile",
-      "positivePins": [
-        "platform:destination@15",
-        "platform:destination@17"
-      ],
+      "positivePins": ["platform:destination@15", "platform:destination@17"],
       "sources": [
         {
           "owner": "packages/scope/src/destination-host.ts",
@@ -2142,16 +1891,12 @@
           "sourceTextSha256": "6c4b29c955a8efc7ca472291dde100a3b7e241f0c373db730c40a5fc092ba280"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeCheckGenerationV15",
-      "positivePins": [
-        "platform:destination@15"
-      ],
+      "positivePins": ["platform:destination@15"],
       "sources": [
         {
           "owner": "packages/scope/src/destination-host.ts",
@@ -2162,16 +1907,12 @@
           "sourceTextSha256": "3efc16cb4f2d5e296b1f1d167459511c582c181e80d9ccdb89e3f9fd2bf86814"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeCheckGenerationV14",
-      "positivePins": [
-        "platform:destination@14"
-      ],
+      "positivePins": ["platform:destination@14"],
       "sources": [
         {
           "owner": "packages/scope/src/destination-host.ts",
@@ -2182,9 +1923,7 @@
           "sourceTextSha256": "7d578480065cf41c3de260b8a3766d197272b31800cd7db465f73b21b05650ad"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -2208,9 +1947,7 @@
           "sourceTextSha256": "adbb9b25d3819839dfc359dbf9c5e32f03d15c6c7e4f8dd88ff52af9310a1c29"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -2233,9 +1970,7 @@
           "sourceTextSha256": "e0b5c96302a901bdb16adafae835101af8671ab48551a46b98b3769c7e62a65a"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -2258,9 +1993,7 @@
           "sourceTextSha256": "e0b5c96302a901bdb16adafae835101af8671ab48551a46b98b3769c7e62a65a"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
@@ -2283,16 +2016,12 @@
           "sourceTextSha256": "a52401dea1c7dc72bcc18274cac7ce5a7a6751172c188817813da806c695cdb5"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "gitArchiveDirectMembership",
-      "positivePins": [
-        "platform:membership@6"
-      ],
+      "positivePins": ["platform:membership@6"],
       "sources": [
         {
           "owner": "packages/git/src/archive-policy.ts",
@@ -2303,16 +2032,12 @@
           "sourceTextSha256": "f2ac9403da82c72abc427dd814ced804b3d99a158ed105d00f42d1e0291c629e"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "scopeArchiveForeignLegacyMembership",
-      "positivePins": [
-        "platform:membership@6"
-      ],
+      "positivePins": ["platform:membership@6"],
       "sources": [
         {
           "owner": "packages/scope/src/archive-foreign.ts",
@@ -2323,16 +2048,12 @@
           "sourceTextSha256": "8ea8cc9a92a32f3172b0210e0d568a89f79195f7995965030345f902a7d96dd9"
         }
       ],
-      "origins": [
-        "runtime"
-      ],
+      "origins": ["runtime"],
       "answerType": "boolean"
     },
     {
       "name": "authoritySessionBirthCommons",
-      "positivePins": [
-        "platform:commons@1"
-      ],
+      "positivePins": ["platform:commons@1"],
       "sources": [
         {
           "owner": "packages/scope/src/authority.ts",
@@ -2343,9 +2064,7 @@
           "sourceTextSha256": "c0fec122779f6bdc81ec3127e23202f37b9e3717457c060e9865f8bb94d25cd5"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
@@ -2365,17 +2084,12 @@
           "sourceTextSha256": "2fffaec43fa97807c306292ff510580c3a8fb0648a9db67fd52aec89f182ba97"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "celldPreparedNoHostRegister",
-      "positivePins": [
-        "platform:register@21",
-        "platform:register@25"
-      ],
+      "positivePins": ["platform:register@21", "platform:register@25"],
       "sources": [
         {
           "owner": "apps/room/celld/mac/prepare-project.mjs",
@@ -2386,16 +2100,12 @@
           "sourceTextSha256": "5353177f17ce154252e2c51328adc4d0fa5171d13753bf653acafb749c86f5fa"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "celldPreparedBindingPolicyRegister",
-      "positivePins": [
-        "platform:register@25"
-      ],
+      "positivePins": ["platform:register@25"],
       "sources": [
         {
           "owner": "apps/room/celld/mac/prepare-project.mjs",
@@ -2406,16 +2116,12 @@
           "sourceTextSha256": "79d0ae00ad8b763aeb1f84e61f0176a04a78e9d9a05a24235b1046a3e2996b65"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "celldSmokeOwnedPlanRegister",
-      "positivePins": [
-        "platform:register@21"
-      ],
+      "positivePins": ["platform:register@21"],
       "sources": [
         {
           "owner": "scripts/celld-smoke.mjs",
@@ -2426,16 +2132,12 @@
           "sourceTextSha256": "be40b7cdb47348baf9262d4537ad69dc784391e2e3a1dc7708f14f9f3aeb3b05"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "mcpInventoryPartitionDirectory",
-      "positivePins": [
-        "platform:directory@10"
-      ],
+      "positivePins": ["platform:directory@10"],
       "sources": [
         {
           "owner": "packages/mcp/src/inventory.ts",
@@ -2446,16 +2148,12 @@
           "sourceTextSha256": "be2be2d6caa9c38d70a552a79d451d4bd46c422e0ab8d1c303c79ae47bae4e33"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "mcpReadTokenFixedHourDestination",
-      "positivePins": [
-        "platform:destination@19"
-      ],
+      "positivePins": ["platform:destination@19"],
       "sources": [
         {
           "owner": "packages/mcp/src/service.ts",
@@ -2466,16 +2164,12 @@
           "sourceTextSha256": "5427b33d88c656a7b604faba9411d943f14ca0c5c4bab39176d5869771c7411c"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "mcpCurrentRoomPartitionDirectory",
-      "positivePins": [
-        "platform:directory@10"
-      ],
+      "positivePins": ["platform:directory@10"],
       "sources": [
         {
           "owner": "packages/mcp/src/service.ts",
@@ -2486,16 +2180,12 @@
           "sourceTextSha256": "8850909eaae9c4668a4eaef8ec82b7c8652f04beaaab42ccc9bc562d3eba7b43"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "mcpCommonsReadDefinition",
-      "positivePins": [
-        "platform:commons@1"
-      ],
+      "positivePins": ["platform:commons@1"],
       "sources": [
         {
           "owner": "packages/mcp/src/service.ts",
@@ -2506,16 +2196,12 @@
           "sourceTextSha256": "154336fdbfc4196d929f64d60e5bf170b7d6f74139bfb821ef7f0e8ed32ec962"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "mcpCommonsRoomDirectory",
-      "positivePins": [
-        "platform:directory@22"
-      ],
+      "positivePins": ["platform:directory@22"],
       "sources": [
         {
           "owner": "packages/mcp/src/service.ts",
@@ -2526,9 +2212,7 @@
           "sourceTextSha256": "576d57692e0a86445d24bad5ec57f370f1a531925ae3f8ffcc455f9727a60287"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
@@ -2550,9 +2234,7 @@
           "sourceTextSha256": "29852e011e5bf2112f6853374b05019307e3d2805c0428b4f72e848e40c3156b"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
@@ -2572,9 +2254,7 @@
           "sourceTextSha256": "6554f0f78a512a48078ee657fb1689e48b279a37322b4b180b52bbb03a0edd0d"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
@@ -2594,17 +2274,12 @@
           "sourceTextSha256": "2d4276a3ac2cd733ec24058ad28431cbf03221d74ff0cc8dbe138c8f70c30f3a"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "mcpSemanticInstallSignatureRules",
-      "positivePins": [
-        "platform:rules@6",
-        "platform:rules@8"
-      ],
+      "positivePins": ["platform:rules@6", "platform:rules@8"],
       "sources": [
         {
           "owner": "packages/mcp/src/service.ts",
@@ -2615,16 +2290,12 @@
           "sourceTextSha256": "5b0b42d04488e063c456eb6ca57c6fe398a712f87955c80280fc9e367d259d0a"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     },
     {
       "name": "mcpVerifyEmptyDestination",
-      "positivePins": [
-        "platform:destination@16"
-      ],
+      "positivePins": ["platform:destination@16"],
       "sources": [
         {
           "owner": "packages/mcp/src/service.ts",
@@ -2635,9 +2306,7 @@
           "sourceTextSha256": "94d40f3b8286de827c7dbc71b80a099f73c760265deac016d3fe2b58c2d4c8e9"
         }
       ],
-      "origins": [
-        "parent inspection"
-      ],
+      "origins": ["parent inspection"],
       "answerType": "boolean"
     }
   ],
@@ -14197,39 +13866,24 @@
     {
       "name": "cliInvitationDirectoriesForMembership",
       "owner": "packages/cli/src/invitations.ts",
-      "lineRange": [
-        74,
-        87
-      ],
-      "inputDimensions": [
-        "membershipDefinition"
-      ],
+      "lineRange": [74, 87],
+      "inputDimensions": ["membershipDefinition"],
       "answerRows": [
         {
           "input": "platform:membership@2",
-          "answer": [
-            "platform:directory@3",
-            "platform:directory@7"
-          ]
+          "answer": ["platform:directory@3", "platform:directory@7"]
         },
         {
           "input": "platform:membership@4",
-          "answer": [
-            "platform:directory@5",
-            "platform:directory@8"
-          ]
+          "answer": ["platform:directory@5", "platform:directory@8"]
         },
         {
           "input": "platform:membership@5",
-          "answer": [
-            "platform:directory@6"
-          ]
+          "answer": ["platform:directory@6"]
         },
         {
           "input": "platform:membership@6",
-          "answer": [
-            "platform:directory@9"
-          ]
+          "answer": ["platform:directory@9"]
         },
         {
           "input": "platform:membership@7",
@@ -14253,33 +13907,23 @@
         },
         {
           "input": "platform:membership@9",
-          "answer": [
-            "platform:directory@22"
-          ]
+          "answer": ["platform:directory@22"]
         },
         {
           "input": "platform:membership@10",
-          "answer": [
-            "platform:directory@23"
-          ]
+          "answer": ["platform:directory@23"]
         },
         {
           "input": "platform:membership@11",
-          "answer": [
-            "platform:directory@24"
-          ]
+          "answer": ["platform:directory@24"]
         },
         {
           "input": "platform:membership@12",
-          "answer": [
-            "platform:directory@25"
-          ]
+          "answer": ["platform:directory@25"]
         },
         {
           "input": "platform:membership@13",
-          "answer": [
-            "platform:directory@26"
-          ]
+          "answer": ["platform:directory@26"]
         }
       ],
       "pinOrigin": "literal rows plus statically expanded cohort aliases; M2 uses DIRECTORY_OF[DEMO_REGISTER] = D3"
@@ -14287,31 +13931,20 @@
     {
       "name": "viewsEvidenceDirectoryForMembership",
       "owner": "apps/views/src/reads.ts",
-      "lineRange": [
-        151,
-        153
-      ],
-      "inputDimensions": [
-        "membershipDefinition"
-      ],
+      "lineRange": [151, 153],
+      "inputDimensions": ["membershipDefinition"],
       "answerRows": [
         {
           "input": "platform:membership@8",
-          "answer": [
-            "platform:directory@16"
-          ]
+          "answer": ["platform:directory@16"]
         },
         {
           "input": "platform:membership@9",
-          "answer": [
-            "platform:directory@22"
-          ]
+          "answer": ["platform:directory@22"]
         },
         {
           "input": "platform:membership@12",
-          "answer": [
-            "platform:directory@25"
-          ]
+          "answer": ["platform:directory@25"]
         }
       ],
       "defaultAnswer": []
@@ -14319,20 +13952,11 @@
     {
       "name": "pageOpeningPartitionPair",
       "owner": "apps/room/page/src/data.ts",
-      "lineRange": [
-        1270,
-        1270
-      ],
-      "inputDimensions": [
-        "rootDefinition",
-        "childDefinition"
-      ],
+      "lineRange": [1270, 1270],
+      "inputDimensions": ["rootDefinition", "childDefinition"],
       "answerRows": [
         {
-          "input": [
-            "platform:directory@10",
-            "platform:directory-partition@1"
-          ],
+          "input": ["platform:directory@10", "platform:directory-partition@1"],
           "answer": true
         }
       ],
@@ -14341,20 +13965,11 @@
     {
       "name": "pageRetainedOpeningPartitionPair",
       "owner": "apps/room/page/src/retained-editor-data.ts",
-      "lineRange": [
-        114,
-        114
-      ],
-      "inputDimensions": [
-        "rootDefinition",
-        "childDefinition"
-      ],
+      "lineRange": [114, 114],
+      "inputDimensions": ["rootDefinition", "childDefinition"],
       "answerRows": [
         {
-          "input": [
-            "platform:directory@10",
-            "platform:directory-partition@1"
-          ],
+          "input": ["platform:directory@10", "platform:directory-partition@1"],
           "answer": true
         }
       ],
@@ -14363,20 +13978,11 @@
     {
       "name": "clientPartitionDirectoryPair",
       "owner": "packages/client/src/directory.ts",
-      "lineRange": [
-        95,
-        124
-      ],
-      "inputDimensions": [
-        "rootDefinition",
-        "childDefinition"
-      ],
+      "lineRange": [95, 124],
+      "inputDimensions": ["rootDefinition", "childDefinition"],
       "answerRows": [
         {
-          "input": [
-            "platform:directory@10",
-            "platform:directory-partition@1"
-          ],
+          "input": ["platform:directory@10", "platform:directory-partition@1"],
           "answer": true
         }
       ],
@@ -14385,16 +13991,8 @@
     {
       "name": "counterImportedCountingCohort",
       "owner": "apps/counter/browser/device-key.ts",
-      "lineRange": [
-        19,
-        19
-      ],
-      "inputDimensions": [
-        "directory",
-        "membership",
-        "rules",
-        "destination"
-      ],
+      "lineRange": [19, 19],
+      "inputDimensions": ["directory", "membership", "rules", "destination"],
       "answerRows": [
         {
           "input": [
@@ -14412,10 +14010,7 @@
     {
       "name": "pagePartitionOpeningDeclaration",
       "owner": "apps/room/page/src/data.ts",
-      "lineRange": [
-        1214,
-        1214
-      ],
+      "lineRange": [1214, 1214],
       "inputDimensions": [],
       "answerRows": [
         {
@@ -14430,13 +14025,8 @@
     {
       "name": "cliInstallRegisterForCohort",
       "owner": "packages/cli/src/command-install.ts",
-      "lineRange": [
-        22,
-        42
-      ],
-      "inputDimensions": [
-        "cohortName"
-      ],
+      "lineRange": [22, 42],
+      "inputDimensions": ["cohortName"],
       "answerRows": [
         {
           "input": "failed-claim",
@@ -14520,10 +14110,7 @@
     {
       "name": "cliDefaultInstallRegister",
       "owner": "packages/cli/src/command-install.ts",
-      "lineRange": [
-        11,
-        11
-      ],
+      "lineRange": [11, 11],
       "inputDimensions": [],
       "answerRows": [
         {
@@ -14536,10 +14123,7 @@
     {
       "name": "cliScopeIndexCreationCohorts",
       "owner": "packages/cli/src/scope-index-manifest.ts",
-      "lineRange": [
-        165,
-        175
-      ],
+      "lineRange": [165, 175],
       "inputDimensions": [],
       "answerRows": [
         {
@@ -14664,13 +14248,8 @@
     {
       "name": "claimDirectoryDefinitionForRegister",
       "owner": "packages/platform/src/register.ts",
-      "lineRange": [
-        57,
-        57
-      ],
-      "inputDimensions": [
-        "registerDefinition"
-      ],
+      "lineRange": [57, 57],
+      "inputDimensions": ["registerDefinition"],
       "answerRows": [
         {
           "input": "platform:register@26",
@@ -14780,34 +14359,19 @@
       "consumers": [
         {
           "owner": "packages/cli/src/claim.ts",
-          "lines": [
-            28,
-            184,
-            203,
-            221,
-            300
-          ]
+          "lines": [28, 184, 203, 221, 300]
         },
         {
           "owner": "apps/room/page/src/claim.ts",
-          "lines": [
-            71,
-            170,
-            229
-          ]
+          "lines": [71, 170, 229]
         }
       ]
     },
     {
       "name": "claimSiblingDefinitionsForDirectory",
       "owner": "packages/platform/src/directory.ts",
-      "lineRange": [
-        79,
-        105
-      ],
-      "inputDimensions": [
-        "directoryDefinition"
-      ],
+      "lineRange": [79, 105],
+      "inputDimensions": ["directoryDefinition"],
       "answerRows": [
         {
           "input": "platform:directory@26",
@@ -15038,19 +14602,13 @@
       "consumers": [
         {
           "owner": "packages/cli/src/claim.ts",
-          "lines": [
-            59,
-            302
-          ]
+          "lines": [59, 302]
         }
       ]
     },
     {
       "name": "archiveMembershipCopy",
-      "inputDimensions": [
-        "sourcePin",
-        "consumerPin"
-      ],
+      "inputDimensions": ["sourcePin", "consumerPin"],
       "sources": [
         {
           "owner": "packages/scope/src/archive-membership-copy.ts",
@@ -15090,9 +14648,7 @@
     },
     {
       "name": "archiveTargetCohort",
-      "inputDimensions": [
-        "directoryPin"
-      ],
+      "inputDimensions": ["directoryPin"],
       "sources": [
         {
           "owner": "packages/scope/src/archive-target.ts",
@@ -15151,9 +14707,7 @@
     },
     {
       "name": "creationLineageCohort",
-      "inputDimensions": [
-        "registerPin"
-      ],
+      "inputDimensions": ["registerPin"],
       "sources": [
         {
           "owner": "packages/scope/src/creation-lineage.ts",
@@ -15273,9 +14827,7 @@
     },
     {
       "name": "applicationAdmissionCohort",
-      "inputDimensions": [
-        "directoryPin"
-      ],
+      "inputDimensions": ["directoryPin"],
       "sources": [
         {
           "owner": "packages/scope/src/applications/act-admission.ts",
@@ -15431,9 +14983,7 @@
     },
     {
       "name": "partitionRole",
-      "inputDimensions": [
-        "nativePin"
-      ],
+      "inputDimensions": ["nativePin"],
       "sources": [
         {
           "owner": "packages/scope/src/partition-proof.ts",
@@ -15472,10 +15022,7 @@
     },
     {
       "name": "scopeArchiveAnchorForeignSource",
-      "inputDimensions": [
-        "pin",
-        "scopeKind"
-      ],
+      "inputDimensions": ["pin", "scopeKind"],
       "sources": [
         {
           "owner": "packages/scope/src/archive-anchors.ts",
@@ -15498,27 +15045,19 @@
         },
         {
           "pin": "platform:membership@12",
-          "scopeKinds": [
-            "membership"
-          ]
+          "scopeKinds": ["membership"]
         },
         {
           "pin": "platform:register@19",
-          "scopeKinds": [
-            "register"
-          ]
+          "scopeKinds": ["register"]
         },
         {
           "pin": "platform:register@20",
-          "scopeKinds": [
-            "register"
-          ]
+          "scopeKinds": ["register"]
         },
         {
           "pin": "platform:register@26",
-          "scopeKinds": [
-            "register"
-          ]
+          "scopeKinds": ["register"]
         }
       ],
       "defaultAnswer": false,
@@ -15526,10 +15065,7 @@
     },
     {
       "name": "deploymentCreationDefaults",
-      "inputDimensions": [
-        "injectedSettings",
-        "configuredPins"
-      ],
+      "inputDimensions": ["injectedSettings", "configuredPins"],
       "sources": [
         {
           "owner": "packages/scope/src/creation-versions.ts",
@@ -15565,10 +15101,7 @@
     },
     {
       "name": "authoritySessionBirthDirectories",
-      "inputDimensions": [
-        "scopeKind",
-        "genesisPin"
-      ],
+      "inputDimensions": ["scopeKind", "genesisPin"],
       "sources": [
         {
           "owner": "packages/scope/src/authority.ts",
@@ -15596,81 +15129,57 @@
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@1",
-          "answer": [
-            "platform:directory@1"
-          ]
+          "answer": ["platform:directory@1"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@10",
-          "answer": [
-            "platform:directory@14"
-          ]
+          "answer": ["platform:directory@14"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@11",
-          "answer": [
-            "platform:directory@15"
-          ]
+          "answer": ["platform:directory@15"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@12",
-          "answer": [
-            "platform:directory@16"
-          ]
+          "answer": ["platform:directory@16"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@13",
-          "answer": [
-            "platform:directory@23",
-            "platform:directory@17"
-          ]
+          "answer": ["platform:directory@23", "platform:directory@17"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@14",
-          "answer": [
-            "platform:directory@18"
-          ]
+          "answer": ["platform:directory@18"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@15",
-          "answer": [
-            "platform:directory@19"
-          ]
+          "answer": ["platform:directory@19"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@16",
-          "answer": [
-            "platform:directory@22",
-            "platform:directory@20"
-          ]
+          "answer": ["platform:directory@22", "platform:directory@20"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@17",
-          "answer": [
-            "platform:directory@21"
-          ]
+          "answer": ["platform:directory@21"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@18",
-          "answer": [
-            "platform:directory@24"
-          ]
+          "answer": ["platform:directory@24"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@19",
-          "answer": [
-            "platform:directory@25"
-          ]
+          "answer": ["platform:directory@25"]
         },
         {
           "scopeKind": "destination",
@@ -15685,24 +15194,17 @@
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@20",
-          "answer": [
-            "platform:directory@26"
-          ]
+          "answer": ["platform:directory@26"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@3",
-          "answer": [
-            "platform:directory@3",
-            "platform:directory@7"
-          ]
+          "answer": ["platform:directory@3", "platform:directory@7"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@4",
-          "answer": [
-            "platform:directory@8"
-          ]
+          "answer": ["platform:directory@8"]
         },
         {
           "scopeKind": "destination",
@@ -15712,30 +15214,22 @@
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@6",
-          "answer": [
-            "platform:directory@10"
-          ]
+          "answer": ["platform:directory@10"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@7",
-          "answer": [
-            "platform:directory@11"
-          ]
+          "answer": ["platform:directory@11"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@8",
-          "answer": [
-            "platform:directory@12"
-          ]
+          "answer": ["platform:directory@12"]
         },
         {
           "scopeKind": "destination",
           "genesisPin": "platform:destination@9",
-          "answer": [
-            "platform:directory@13"
-          ]
+          "answer": ["platform:directory@13"]
         },
         {
           "scopeKind": "destination",
@@ -16565,9 +16059,7 @@
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@1",
-          "answer": [
-            "platform:directory@1"
-          ]
+          "answer": ["platform:directory@1"]
         },
         {
           "scopeKind": "rules",
@@ -16585,38 +16077,27 @@
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@11",
-          "answer": [
-            "platform:directory@18"
-          ]
+          "answer": ["platform:directory@18"]
         },
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@12",
-          "answer": [
-            "platform:directory@19"
-          ]
+          "answer": ["platform:directory@19"]
         },
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@13",
-          "answer": [
-            "platform:directory@21"
-          ]
+          "answer": ["platform:directory@21"]
         },
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@14",
-          "answer": [
-            "platform:directory@22"
-          ]
+          "answer": ["platform:directory@22"]
         },
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@2",
-          "answer": [
-            "platform:directory@2",
-            "platform:directory@3"
-          ]
+          "answer": ["platform:directory@2", "platform:directory@3"]
         },
         {
           "scopeKind": "rules",
@@ -16632,51 +16113,37 @@
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@4",
-          "answer": [
-            "platform:directory@7"
-          ]
+          "answer": ["platform:directory@7"]
         },
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@5",
-          "answer": [
-            "platform:directory@11"
-          ]
+          "answer": ["platform:directory@11"]
         },
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@6",
-          "answer": [
-            "platform:directory@12"
-          ]
+          "answer": ["platform:directory@12"]
         },
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@7",
-          "answer": [
-            "platform:directory@13"
-          ]
+          "answer": ["platform:directory@13"]
         },
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@8",
-          "answer": [
-            "platform:directory@14"
-          ]
+          "answer": ["platform:directory@14"]
         },
         {
           "scopeKind": "rules",
           "genesisPin": "platform:rules@9",
-          "answer": [
-            "platform:directory@15"
-          ]
+          "answer": ["platform:directory@15"]
         },
         {
           "scopeKind": "commons",
           "genesisPin": "platform:commons@1",
-          "answer": [
-            "platform:directory@22"
-          ]
+          "answer": ["platform:directory@22"]
         },
         {
           "scopeKind": "commons",
@@ -17179,9 +16646,7 @@
     },
     {
       "name": "mcpApplicationRoomCohort",
-      "inputDimensions": [
-        "directoryPin"
-      ],
+      "inputDimensions": ["directoryPin"],
       "sources": [
         {
           "owner": "packages/mcp/src/service.ts",
@@ -17345,98 +16810,67 @@
   "nonquestionLiterals": [
     {
       "path": "packages/client/src/creation-offer.ts",
-      "lines": [
-        19
-      ],
+      "lines": [19],
       "reason": "Public wire type R17 | R26; runtime guard is separate."
     },
     {
       "path": "packages/client/src/checker-key-invitation.ts",
-      "lines": [
-        8
-      ],
+      "lines": [8],
       "reason": "Public historical M8 single-pin export remains M8 while runtime array admits M8 and M12."
     },
     {
       "path": "packages/client/src/agent-key-invitation.ts",
-      "lines": [
-        10
-      ],
+      "lines": [10],
       "reason": "Public TypeScript union derived from wire array; preserve lower-level ownership."
     },
     {
       "path": "packages/client/src/checker-key-invitation.ts",
-      "lines": [
-        10
-      ],
+      "lines": [10],
       "reason": "Public TypeScript union derived from wire array; preserve lower-level ownership."
     },
     {
       "path": "packages/client/src/invitation-fields.ts",
-      "lines": [
-        11
-      ],
+      "lines": [11],
       "reason": "Public TypeScript union derived from wire array; preserve lower-level ownership."
     },
     {
       "path": "packages/contract/src/invitation.ts",
-      "lines": [
-        3,
-        7
-      ],
+      "lines": [3, 7],
       "reason": "Public wire constants own M6 and M6..13 signature credential pins; no contract-to-platform import."
     },
     {
       "path": "packages/cli/src/command-membership.ts",
-      "lines": [
-        113,
-        132
-      ],
+      "lines": [113, 132],
       "reason": "Absent definition in historical person invitation defaults to M1; data compatibility default."
     },
     {
       "path": "packages/cli/src/invitations.ts",
-      "lines": [
-        88
-      ],
+      "lines": [88],
       "reason": "Absent definition in historical retained issuance defaults to M2; differs intentionally from person-link M1."
     },
     {
       "path": "packages/cli/src/claim.ts",
-      "lines": [
-        221
-      ],
+      "lines": [221],
       "reason": "Legacy failed register read supplies D1 in seed construction."
     },
     {
       "path": "packages/cli/src/command-install.ts",
-      "lines": [
-        30
-      ],
+      "lines": [30],
       "reason": "Historical selector data file-publication -> literal R3; other selectors use cohort aliases."
     },
     {
       "path": "packages/cli/src/command-install.ts",
-      "lines": [
-        44,
-        45,
-        46
-      ],
+      "lines": [44, 45, 46],
       "reason": "Comment and public CLI names for new-plan selectors; register predicate occurs at line 212."
     },
     {
       "path": "apps/counter/browser/device-key.test.ts",
-      "lines": [
-        17,
-        48
-      ],
+      "lines": [17, 48],
       "reason": "Test fixture and legacy extra metadata; no production question."
     },
     {
       "path": "apps/counter/browser/storage.browser.test.ts",
-      "lines": [
-        18
-      ],
+      "lines": [18],
       "reason": "Test fixture; no production question."
     },
     {
@@ -17497,59 +16931,37 @@
     },
     {
       "path": "packages/contract/src/invitation.ts",
-      "lines": [
-        3,
-        4,
-        7
-      ],
+      "lines": [3, 4, 7],
       "reason": "Public literal pin and proof-domain declarations. Contract has no runtime dependency. Runtime client questions have separate frozen answers; do not add a contract-to-platform cycle."
     },
     {
       "path": "apps/room/archive-policy.ts",
-      "lines": [
-        8,
-        25
-      ],
+      "lines": [8, 25],
       "reason": "Reviewed exact Grow archive coverage and exact deployment family data, not an extensible Boolean feature list."
     },
     {
       "path": "apps/room/lanes/src/evidence-fields.ts",
-      "lines": [
-        11,
-        89
-      ],
+      "lines": [11, 89],
       "reason": "Pinned definition data names exact evidence operation kinds. Those bytes stay unchanged."
     },
     {
       "path": "scripts/demo/rehearse.ts",
-      "lines": [
-        312
-      ],
+      "lines": [312],
       "reason": "Independent expected-output fixture for the concrete demo scene; preserve its explicit register3/18/26 set rather than deriving the witness from the refactored production capability."
     },
     {
       "path": "scripts/demo-git-host.mjs",
-      "lines": [
-        153,
-        164
-      ],
+      "lines": [153, 164],
       "reason": "Concrete prepared-and-signed register2 plan and receipt identity, via imported REGISTER. This fixed witness target is not a generic version support question."
     },
     {
       "path": "packages/mcp/src/service.ts",
-      "lines": [
-        937,
-        1374,
-        1390,
-        1499
-      ],
+      "lines": [937, 1374, 1390, 1499],
       "reason": "Help example, static TypeScript cohort return union, exact Commons sibling proof data, and historical membership1 fallback. Runtime pin-choice questions remain separate."
     },
     {
       "path": "packages/mcp/src/describe.ts",
-      "lines": [
-        56
-      ],
+      "lines": [56],
       "reason": "Documentation example in a type comment; no runtime question."
     }
   ],

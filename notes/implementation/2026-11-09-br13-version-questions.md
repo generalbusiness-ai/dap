@@ -10,12 +10,14 @@ ordering and defaults. The inventory records 34 groups of fixed wire, type,
 declaration, compatibility-default and evidence data separately.
 
 The original fixture contains 10,920 answers from 104 old predicates over
-100 catalog pins and five unknown strings. Its SHA-256 remains
+100 catalog pins and five unknown strings. Its retained original bytes hash to
 `1dc69765e7132dcaeea59b984d7cd843fb03db16dd39dc6e56d162e1f53cd86c`.
 The separately frozen `isStandingDestination` predicate adds 105 answers;
-its fixture hashes to
+its retained original fixture bytes hash to
 `b1c40922d79b71ce1ce6ed202ab7fb1de7dd0324557f55539eb5d9979222188a`.
-Both fixtures predate the corresponding new question tables.
+The frozen data and retained original bytes predate the corresponding new
+question tables. The formatting repair below records the current tracked
+file hashes separately and preserves every JSON value and token.
 
 ## Shared vocabulary and portable Replay
 
@@ -310,3 +312,55 @@ This evidence commit changes only this note and the two manifests after
 the tested 6cbc checkpoint. The current maintained full gate and review
 remain due. These checks establish no browser, deployment, SDK
 publication or live-room acceptance.
+
+
+## Preserve the format failure and original fixture data
+
+Booking `e4c94916` runs gate v2 at
+`538670bbb1a3bf276f9b5f49ef32c21ae347dd48`. END `03e1a2d6` closes the
+failed slot. The actual gate, driver and launcher each exit 1. Eight early
+stages pass; format alone fails on the two frozen fixture JSON files and
+`scripts/public-release.json`. The manifest-size warning remains nonfatal.
+The gate reaches no compiler, pin check or case. All 5,845 frozen case
+obligations remain unobserved in this failed run. The earlier successful
+focused checks and query controls retain their actual checkpoints.
+
+The [failed gate-v2 manifest](evidence/2026-11-10-br13-final-gate-v2-failure.manifest.json)
+hashes to
+`ddb89975ec35146a981632d359d61dd288670fe190cde58c1d8cd79464f01bea`.
+It retains the six-file safe failure reconciliation and identifies the
+separately sealed original gate and launch units. No pass analyzer or
+pass sealer runs against this failed gate.
+
+Booking `63fb4654` runs one pinned Prettier 3.9.10 command on exactly those
+three files. END `00409331` closes the repair. The command uses the
+maintained formatter's `--no-config`, `--no-editorconfig` and
+`--ignore-path /dev/null` flags. The actual formatter, driver and launcher
+exits are zero; cleanup is empty and closed. No formatter exemption,
+assertion, expected answer or runtime code changes.
+
+External custody retains all three original byte files and the formatted
+copies. The complete parsed JSON values match, and the parser rejects duplicate
+keys. A separate string-aware comparison removes only whitespace
+outside strings and finds identical tokens. Every literal, string escape,
+number token and array order stays unchanged. The proof also confirms
+4,493 other source hashes, 7,529 tool hashes, 12 external inputs and
+33 dependency links. These checks regenerate no golden from new tables.
+
+The current tracked question fixture hashes to
+`338c39c4d7d2093e67987c97484591f50f9c48624518add1efab5fc46dda501f`;
+the current standing fixture hashes to
+`c3d15c30a770587a44a1598da67455546cbc3826d904a9e5ab632800366b026b`.
+Their original frozen byte hashes remain the historical values above.
+The formatted release plan hashes to
+`58aadf84a19d6b81dfc9ab600783444bb35135baca644eb6724bfa531195192d`.
+
+The [format-repair manifest](evidence/2026-11-10-br13-format-repair.manifest.json)
+hashes to
+`d7b820ec74ae81628a05de4023678ee5573a584175af9915ec16a562da81afe9`.
+It inventories 22 original and five safe metadata files. Every file and
+directory is nonwritable for at least 30 days after landing. Its complete
+JSON and token-equality proof hashes to
+`26f15fdb161a11b20afcf43c84f4ce6d4c6aa08c5c5b110cdfba839f82377d37`.
+No test, compiler or build reruns for this whitespace-only repair. The
+repaired maintained gate remains due.
