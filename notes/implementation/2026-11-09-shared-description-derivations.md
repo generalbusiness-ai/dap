@@ -103,7 +103,7 @@ returned 0 and preserves every setup outcome. The curated unit contains
 only public-safe metadata and the original document bytes. Only that
 new unit is read-only; the original temporary receipts remain untouched.
 
-No application compiler, test, document regeneration, browser, build,
+No application compiler, test, document regeneration, browser,
 control or gate has run for this head. The source-seal parser is a
 metadata operation, not an application validation result.
 
@@ -118,8 +118,24 @@ records the exact receipts, sources, and hashes.
 | Existing CLI wording | Retained Native CLI story assertions | Not run | Pending |
 | Document generation | Actual lane reference and formatted MCP tool-list bytes against saved originals | Not run | Pending |
 | Source seals | Actual maintained producer; all other table and assertion bytes unchanged | 0 | See source metadata manifest |
-| Page production asset | Maintained build if the moved dependency changes the served module | Not run | Pending |
+| Page production asset | One maintained npm run build --workspace @generalbusiness/dap-page | 0 | See Page build manifest |
 | Final gate | One npm run gate at the final source | Not run | Pending |
+
+The maintained Page build ran once at bbbadc4080, tree
+6d92cc072623cd7f77c84e8f3ac183b6d9d2167a, under booking ea2f6439.
+The actual build, inner runner, outer driver, and launcher exits each
+read 0. The independent metadata audit returned 0 and confirms that
+only apps/room/page/assets.ts changed among tracked files. All other
+source, tools, and lock bytes stayed fixed, the four required dist
+leaves matched their receipts, and the owned process group closed.
+
+The generated asset has 2377462 bytes and SHA-256
+bf8f50411467d86d35142f36f31a9fe63ae7535bc4b636b2e9d49b66eab0f80a.
+[Page build manifest](evidence/2026-11-09-t0b-page-build.manifest.json)
+retains the actual exits, output hashes, guards, and source receipts.
+Only the curated unit is read-only. The original raw run and its
+unpublished temporary Node compile cache remain untouched. This build
+provides no browser workflow or gate result.
 
 ## Open limits
 
@@ -129,11 +145,10 @@ retain the shared seal table exactly as main has it. The candidate
 starts from A's frozen review head and merges its
 landed main commit 64be0cab in ordinary merge 9256f2de.
 
-The moved browser dependency may change the generated Page module even
-when its visible words stay the same. Root owns the booked maintained
-Page build and any resulting generated-asset path. If that asset changes,
-the head also needs the Page browser workflow at its own source commit.
-No Page asset is rebuilt in this source checkpoint.
+The moved browser dependency changed the generated Page module.
+This commit adopts the maintained output. The head still needs the
+Page browser workflow at its own source commit, the document byte
+witnesses, focused validation, and the final gate.
 
 The DX-T0 parent 6f87a4e3 stays open for its typed browser-model head.
 Request d5fa31c9 later reuses these shared derivations for its typed
