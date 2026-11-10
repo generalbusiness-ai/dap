@@ -27,6 +27,12 @@ missing subjects, lawful prototype-like aliases, inherited fields, and
 the shared resolution used by `viaLeft`. Its fixtures are plain item
 records. They prove no read, signature, authority or Native outcome.
 
+The committed Page asset module now contains the current shared helper.
+The unchanged Page build regenerated that production output after the
+first full gate detected stale bytes. No Page test or source assertion
+changed. The new asset still needs a full gate and a Page browser
+workflow run at the branch head.
+
 ## Decisions and why
 
 The portable module keeps MCP's own-property checks and enumerable own
@@ -140,14 +146,14 @@ Run commands:
 
 The public evidence manifest is
 [evidence/2026-11-09-t0a-focused.manifest.json](evidence/2026-11-09-t0a-focused.manifest.json).
-Every check below cites its curated `reconciliation.json`, SHA-256
+The focused check rows below cite its curated `reconciliation.json`, SHA-256
 `d28aab46a0eef0b38e2f1fcfbcc27702f76bdfb7adb0ac80202c9ac92a30004d`.
 The manifest also retains `raw-inputs.json`, which names and hashes all
 raw inputs used to reconcile the two attempts. Temporary generated
 fixtures stay private in their original raw directories. The public unit
 copies no signing key, temporary fixture or raw comparison payload.
-Each raw unit and the curated unit has `SHA256SUMS` and read-only
-permissions after its final metadata write.
+Those focused raw units and their curated unit have `SHA256SUMS` and
+read-only permissions after their final metadata writes.
 
 | Check | Command or boundary | Exit | Output |
 |---|---|---|---|
@@ -157,7 +163,50 @@ permissions after its final metadata write.
 | Fixture compiler and complete plain owners | Client test compiler, then all four owners at `2fc5f712` | 0. All 12 cases passed once | `reconciliation.json`, continuation compiler and case rows |
 | Counter proposal and browser behavior | Unchanged `apps/counter/scripts/test-browser.mjs` at `2fc5f712` | 0. All 56 cases passed | `reconciliation.json`, Counting source and case rows |
 | Lending catalogue and MCP tool-document bytes | Exact baseline `86179b0c` and candidate `2fc5f712` outputs | Both captures 0. Bytes identical | `reconciliation.json`, byte comparison |
-| Final gate | `npm run gate` after merging current main | Not run | Pending |
+| First full gate | `npm run gate` at `a7af51bb` | 1. Node 144 and Counting 56 passed. Plain had 4,030 passed, one failed and one skipped. Native did not run | `failed-gate-reconciliation.json`, SHA-256 `9726d079d93802f99b298ecedac9e0ae567000e14baa48d8f1b8671a4c352840` |
+| Production Page asset repair | `npm run build --workspace @generalbusiness/dap-page` at `6a5d6ace` | Build 0. Original wrapper 2. Separate metadata audit 0 | `build-reconciliation.json`, SHA-256 `306ff7aaa72fc7c742655d6373eb3f026030538bad9b0acf2c8ac071fb89d531` |
+| Second full gate | `npm run gate` at the committed repaired source | Not run | Pending |
+| Page browser workflow | `.github/workflows/page-browser.yml` at the branch's own head | Not run | Pending |
+
+The first full gate remains failed. Its sole failure was
+`apps/room/page/test/assets.test.ts`. The stored module contained
+2,371,545 bytes with SHA-256
+`e3e922c73aeb33214d5af1e0ea7d26f851021aab86fd1b89f14f5fca40d0af02`.
+The unchanged asset owner derived 2,372,067 bytes with SHA-256
+`6e81a5fde77a68f1e58b06a6034b387ad9e067f99813e137e038b1578ef54461`.
+All 1,128 planned Native obligations stayed unreached. The audit retains
+all reached public case identities and all 105 wrapper observations.
+Those wrappers remain unknown and never become case passes.
+
+After B landed on main `f3ddcc06`, ordinary merge `6a5d6ace` brought it
+into A. One maintained Page build then ran at that source, tree
+`ee3a32bc43424f620e683a9f48eb7ae58fb90673`. It regenerated
+`apps/room/page/assets.ts` and the four declared files under
+`apps/room/page/dist`. Its generated module output matches the
+failed owner's derived byte count and SHA-256 above. That equality
+does not retroactively pass the failed gate.
+
+The build returned 0. Its original wrapper returned 2 because the
+wrapper's `strip()` removed the leading porcelain status space before
+it sliced the path. It misread `apps/room/page/assets.ts` as
+`pps/room/page/assets.ts`. A separate metadata-only follow-up parsed
+raw `--porcelain=v1 -z` records with their XY columns and NUL boundaries
+intact. The follow-up changed no source and repeated no build.
+
+The follow-up verified all 4,454 other tracked inputs, the exact four
+new dist leaves, the build checkpoint and tree, the lock and dependency
+stamp, and the five recorded Node, npm and esbuild tool files. It also
+confirmed that owned process group 85397 had closed. The original
+build exit 0 and wrapper exit 2 remain intact in their original unit.
+This is a production asset repair, so it requires a second full gate.
+No isolated-test exception applies.
+
+The repair evidence manifest is
+[evidence/2026-11-09-t0a-asset-repair.manifest.json](evidence/2026-11-09-t0a-asset-repair.manifest.json).
+Its separate unit is read-only and contains only curated failure,
+output and custody metadata. It binds the original raw inputs by hash
+and copies no raw payload, generated fixture or signing key. The audit
+left both original raw units untouched.
 
 The Vitest owners retain the repository's thread pools and four-worker
 limit. MCP retains its 60-second case deadline. The other selected owners
@@ -168,14 +217,17 @@ acceptance.
 
 ## Open limits
 
-Request `b9f85b9a` still owns the final gate and this head's landing.
-The focused continuation retains its named source checkpoint. Merge
-current main before the final gate so R3a, R3b and any BR-13 seal changes
-remain. The focused result does not validate that later merge
-automatically. No package installation in the checkout is needed.
+Request `b9f85b9a` owns the second full gate, the Page browser workflow
+citation and this head's landing. The current source includes main
+`f3ddcc06` through merge `6a5d6ace`. The second gate must freeze the
+actual repaired commit, compiler closure, case ledger and maintained
+scale decision. The first gate's A-only counts do not describe this
+B-merged candidate. The Page workflow must run at this branch's own
+head because `apps/room/page/assets.ts` matches its trigger paths.
+No package installation in the checkout is needed.
 
 Request `260991d8` owns the shared descriptions and starts from this
 head's frozen source only after its review request. The DX-T0 parent
 `6f87a4e3` stays open for that head and the later typed browser models.
-The focused results make no final-gate, deployment or live acceptance
-claim.
+The failed gate and the rebuilt output make no final-gate, deployment
+or live acceptance claim.
