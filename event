@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6a17f5007ae09819881fd2bb648c43342dd7943b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0b-rule-refusal-seal.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6ca08cad436fe142edd64ba08cd95c5a5aa650e3","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/describe.test.ts."}
