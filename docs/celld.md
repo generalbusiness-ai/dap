@@ -5,8 +5,8 @@ release named in [`celld.version`](../apps/room/celld/celld.version). You
 need Node 26 and the checkout's locked dependencies.
 [`apps/room/celld/wrangler.json`](../apps/room/celld/wrangler.json)
 configures the local Worker `dap-celld-local`, separate from
-`dap-self-host`, the Worker that
-[`apps/room/wrangler.jsonc`](../apps/room/wrangler.jsonc) deploys.
+`dap-self-host`, the Worker that the self-host template
+[`apps/room/wrangler.jsonc`](../apps/room/wrangler.jsonc) names.
 It keeps the four Durable Object bindings and all three migration tags of
 the room configuration. It has no Git host, no application content bucket
 and no committed secret.
@@ -86,5 +86,5 @@ release, verifies its attestation and runs the same script.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [apps/room/celld/wrangler.json](../apps/room/celld/wrangler.json), [apps/room/celld/celld.version](../apps/room/celld/celld.version), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs), [scripts/test-celld-proxy.mjs](../scripts/test-celld-proxy.mjs), [packages/scope/src/public-origin.ts](../packages/scope/src/public-origin.ts).
+Checked against main `6bfb6e16` on 10 November 2026. Sources: [apps/room/celld/wrangler.json](../apps/room/celld/wrangler.json), [apps/room/celld/celld.version](../apps/room/celld/celld.version), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs), [scripts/test-celld-proxy.mjs](../scripts/test-celld-proxy.mjs), [packages/scope/src/public-origin.ts](../packages/scope/src/public-origin.ts).
 The commands on this page were not run for this revision.

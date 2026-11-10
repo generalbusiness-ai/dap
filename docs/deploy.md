@@ -34,7 +34,9 @@ Worker on your machine, follow [Run the local Worker](celld.md).
 
 A deployment serves rooms of every definition version that its platform
 package has shipped. Each room runs the version that its genesis pinned
-(see [Scopes](scopes.md)).
+(see [Scopes](scopes.md)). No act moves an existing room to a newer
+Rules, Membership or other platform version. To use newer versions,
+create a new room.
 
 ## The order
 
@@ -84,9 +86,10 @@ install:
 If the seed's time passes before the CLI sends the install, the CLI
 refuses it as `plan-expired`:
 
-- For a plan with neither `--cohort` nor `--host none`, plan again and
-  set the new ID.
-- For a plan with `--cohort` or `--host none`, keep the original
+- For a plan with none of `--cohort`, `--host none` or
+  `--register-policy open`, plan again and set the new ID.
+- For a plan with `--cohort`, `--host none` or `--register-policy open`,
+  keep the original
   directory. Make the new plan, its host settings and every later command
   in a new empty `DAP_HOME` ([CLI](cli.md)).
 
@@ -152,7 +155,8 @@ with its reader, parser and failure behavior. The order uses these:
 for new scopes. Historical loading and replay do not read it, and it changes
 no existing scope's pin. Follow these steps for each Worker that changes.
 
-1. Keep that deployment's saved R2 manifest and its original CLI directory.
+1. Keep that deployment's saved scope-index manifest file and its original
+   CLI directory.
    Confirm the service, the namespace and the register's identity from
    operator records. Do not treat the manifest or the fixed index as a
    global live-scope inventory.
@@ -367,7 +371,11 @@ The Worker serves installed application packages at
 Counter and Lending are maintained packages. The Worker holds neither
 app's routes nor its compiled assets. To add a release that you trust,
 commit its packet and install it in the room. The Worker needs no new
-deployment.
+deployment. No room that a current Worker creates installs an ordinary
+package such as Counter or Lending. Only an existing historical room of an
+ordinary-package cohort installs one, as
+[Install an application package](cli.md#install-an-application-package)
+lists.
 
 1. Create a private R2 bucket and bind it as `APPLICATION_CONTENT`.
    `apps/room/wrangler.artroom-scope.jsonc` binds the project's bucket
@@ -438,5 +446,7 @@ which only you can read. Its config file holds no secret.
 
 ## Source
 
-Checked against main `b0af01d2` on 1 November 2026. Sources: [package.json](../package.json), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [apps/room/demo-creation.ts](../apps/room/demo-creation.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts).
+Checked against main `6bfb6e16` on 10 November 2026. Statements about the
+project's own Workers are checked against the Wrangler files in
+`apps/room/` only. Sources: [package.json](../package.json), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [apps/room/demo-creation.ts](../apps/room/demo-creation.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts).
 The commands on this page were not run for this revision.

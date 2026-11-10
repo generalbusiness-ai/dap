@@ -97,7 +97,7 @@ separately.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+Checked against main `6bfb6e16` on 10 November 2026. Sources:
 [entries and receipts](../../packages/contract/src/entry.ts),
 [the report shape](../../packages/contract/src/report.ts),
 [the CLI verifier](../../packages/cli/src/commands.ts),
