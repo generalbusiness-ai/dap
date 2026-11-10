@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:df78e4d38fcc68eb86d4af3bd6cd49b166455233","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/browser-helpers.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:efad4963987642b61cc3a9f63a73fc647d7ff459","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0b-final-gate-2.manifest.json."}
