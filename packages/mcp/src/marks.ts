@@ -1,2 +1,3 @@
-/** Shared platform-mark descriptions; retain the existing MCP module exports. */
-export { MARK_TEXTS, markText, markRefusals } from "@generalbusiness/dap-client";
+/** Native mark descriptions, bound once above the portable Client. */
+import { descriptions } from "./description-context.ts";
+export const { MARK_TEXTS, markText, markRefusals } = descriptions;

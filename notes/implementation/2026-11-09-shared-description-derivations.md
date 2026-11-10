@@ -89,6 +89,49 @@ owners. An independent line comparison confirms that every other
 table byte and assertion remains unchanged. Commit 0ee5b70a adopts
 the actual output. No guessed hash enters the table.
 
+## Bind catalogue data below the Platform boundary
+
+Ruling f917e28d accepts the explicit-catalogue repair. The active-source
+boundary permits only exact Client application wrappers to import
+Platform. The first moved mark module fell outside that boundary.
+Its successful focused run did not include the active-source owner.
+
+Client now exports descriptionsOf(catalogue) and the structural
+MarkCatalogue type. Seven description helpers and the three mark
+members close over that supplied metadata. Nested guard and schema
+recursion retain the same binding. Client holds no native catalogue,
+registration, setter, shipped-pin copy, or refusal snapshot.
+
+The private MCP description-context.ts adapter reads actual VERSIONS
+once. Object.entries/fromEntries projects only own pin/rule records and
+their existing readonly refusal values. It passes no callable rule to
+Client and invokes no rule callback. The two legacy MCP modules expose
+the same 27 description names and three mark names through direct bound
+members and independent forwards. The MCP barrel does not export the
+adapter. CLI compact wording uses one empty catalogue inside Client.
+
+The existing own-definition and own-rule checks remain. BY_NAME now
+also requires an own wording row because an explicit catalogue may
+contain prototype-like names. Exactly one new case binds two distinct
+catalogues side by side, checks each through a nested sentence, and
+requires the unknown fallback for an own constructor@1 entry and the
+Object constructor's own name key. A shared last-binding variable or
+an inherited BY_NAME row would change those expected answers.
+
+The pure totality title and assertions remain unchanged, bound to an
+empty catalogue. All existing MCP and CLI assertions remain unchanged.
+The next booked focus must include the whole active-source owner.
+Current binding-repair source has no compiler, test, parser, build, or
+gate result. Its changed Client owners need actual maintained source
+seals; the new MCP adapter needs an explicit owner decision. The evidence
+below belongs to the earlier a52690e7 and 0ee5b70a checkpoints.
+
+Before the final gate, check the format step on every touched JSON file
+and check every added package subpath against the Counter and Lending
+alias maps. Integrate actual BR13 main with preserved history, refresh
+the owned dependency and runtime-package inputs, and regenerate the
+original document and Lending catalogue bytes without accepting rewrites.
+
 ## Final evidence
 
 Source and metadata preparation only. The APFS dependency copy returned

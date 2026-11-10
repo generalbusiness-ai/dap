@@ -13,7 +13,10 @@
  * row renders as "the platform rule <code> (row <row>) holds".
  */
 
-import { VERSIONS } from "@generalbusiness/dap-platform";
+/** Plain catalogue metadata; no executable rule or Platform type enters Client. */
+export type MarkCatalogue = Readonly<Record<string, {
+  readonly rules: Readonly<Record<string, { readonly refusals?: readonly string[] }>>;
+}>>;
 
 const BY_NAME: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   "platform:register": {
@@ -48,19 +51,27 @@ const BY_NAME: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   },
 };
 
-/** The rows, by `platform:<name>@<n>` and code, for every version the platform package ships. */
-export const MARK_TEXTS: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.fromEntries(
-  Object.keys(VERSIONS).map((version) => [version, BY_NAME[version.slice(0, version.lastIndexOf("@"))] ?? {}]),
-);
+/** Bind wording and refusals to the supplied catalogue without running a rule. */
+export function markDescriptionsOf(catalogue: MarkCatalogue) {
+  /** The rows, by `platform:<name>@<n>` and code, for every version the platform package ships. */
+  const MARK_TEXTS: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.fromEntries(
+    Object.keys(catalogue).map((version) => {
+      const name = version.slice(0, version.lastIndexOf("@"));
+      return [version, Object.hasOwn(BY_NAME, name) ? BY_NAME[name]! : {}];
+    }),
+  );
 
-/** The text of one mark, or the fallback that names its rule and row. */
-export function markText(definition: string, mark: { code: string; row: string }): string {
-  const row = Object.hasOwn(MARK_TEXTS, definition) ? MARK_TEXTS[definition]! : {};
-  return Object.hasOwn(row, mark.code) ? row[mark.code]! : `the platform rule ${mark.code} (row ${mark.row}) holds`;
-}
+  /** The text of one mark, or the fallback that names its rule and row. */
+  function markText(definition: string, mark: { code: string; row: string }): string {
+    const row = Object.hasOwn(MARK_TEXTS, definition) ? MARK_TEXTS[definition]! : {};
+    return Object.hasOwn(row, mark.code) ? row[mark.code]! : `the platform rule ${mark.code} (row ${mark.row}) holds`;
+  }
 
-/** The refusal names that a mark's rule may give, as the platform's rule table declares them. */
-export function markRefusals(definition: string, code: string): readonly string[] {
-  const rules = (Object.hasOwn(VERSIONS, definition) ? VERSIONS[definition]!.rules : {}) as Record<string, { refusals?: readonly string[] }>;
-  return Object.hasOwn(rules, code) ? rules[code]!.refusals ?? [] : [];
+  /** The refusal names that a mark's rule may give, as the platform's rule table declares them. */
+  function markRefusals(definition: string, code: string): readonly string[] {
+    const rules: MarkCatalogue[string]["rules"] = Object.hasOwn(catalogue, definition) ? catalogue[definition]!.rules : {};
+    return Object.hasOwn(rules, code) ? rules[code]!.refusals ?? [] : [];
+  }
+
+  return { MARK_TEXTS, markText, markRefusals };
 }
