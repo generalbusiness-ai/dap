@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0d5e7546dc78ecb2ea969726ac60a2d0408fb5dc","text":"Merge retired a covered predecessor; the successor is at .agents/skills/verify-outside-effects/SKILL.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0e738d05e8c2cfbf33cb49c5d8005e3b0d1616c1","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/authority.ts."}
