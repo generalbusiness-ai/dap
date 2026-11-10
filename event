@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at apps/counter/commitments.ts","body":{"commit":"19ddc868b0056df612f2c976968684d2cd08c8e5","path":"apps/counter/commitments.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/counter/scripts/pin-commitments.mjs","body":{"commit":"19ddc868b0056df612f2c976968684d2cd08c8e5","path":"apps/counter/scripts/pin-commitments.mjs"}}
