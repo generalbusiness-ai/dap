@@ -98,6 +98,13 @@ requires a matching item. To send a bounded report, put
 `collect(range(...), members)` in a send field. Use `authorsOf(range(...),
 partySlot)` as an additional source of an attribution effect.
 
+To compare a fetched field fact with the current input, use
+`isFact(f.report, [equals({ field: "label" }, f.label)])`. The left read
+names a field in the fetched entry; the right read names the current
+input. Only a field fact accepts these comparisons. Pass `where` and
+`except` in `sameSet` options to filter its item range before it matches
+the list's keys. The filter reads the scanned item, not a list element.
+
 Redact a detached text with `on.redact(slot)`. Declare a settlement mark
 with `value.required(bool, false)` and `on.settlesBy(mark, ...states)`.
 Set that mark only to `constant(true)`. In a `relate` handler, use

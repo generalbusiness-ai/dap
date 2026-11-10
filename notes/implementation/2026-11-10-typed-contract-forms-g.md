@@ -7,13 +7,20 @@ covers this builder work. Planner ruling
 `88cf23c309a7fc7085cc0590d47f6bdf051f637b` opens items 2 and 3 for source
 work before F lands. Item 1 waits for F's canonical spelling changes.
 
-## Missing form
+## Missing forms
 
 `reference(fragment)` emits `{ type: "reference", fragment }` as plain
 contract data. The helper preserves the literal numeric bound. The real
 validator checks that bound; the helper adds no admission policy.
 `field-types.ts` holds the helper, and the existing package root exports
 it. This change adds no package subpath or alias requirement.
+
+Two existing builders now expose the remaining optional forms. A second
+`isFact` argument supplies the comparisons of a field fact. Its overload
+rejects that argument for presented facts and bound elements. `sameSet`
+accepts `where` and `except` in its options and passes them to `range`.
+The typed filter exposes the scanned item's declared slot names. Calls
+that omit these options retain their previous output shapes.
 
 ## PD-2 form mapping
 
@@ -43,8 +50,8 @@ invalid bound. Platform-only definitions remain outside the authoring API.
 | Every entry part and compound reference part | `part` and `source` accept the contract's `Part` and `EntryPart` arguments |
 | Ranges and comparisons | `range` with `where` and `except`; `equals`, `differs` |
 | State, signer, signer exclusion, presence, and clock guards | Subject `in`, `signer`, `notSigner`, `set`, `unset`, `before`, `after` |
-| Range and list quantifiers | `some`, `none`, `count`, subject `every`, `each`, `has`, `distinct`, `sameSet` |
-| Fact and rule guards | `isFact`, `rule` |
+| Range and list quantifiers | `some`, `none`, `count`, subject `every`, `each`, `has`, `distinct`, `sameSet` including range `where` and `except` |
+| Fact and rule guards | `isFact` including field-fact comparisons, `rule` |
 | Alternatives, optional guards, refusal names | `anyOf`, `ifPresent`, `require` |
 | Conditional effects and sends | `when`, and send `if` arguments |
 | State, party, reference, value, and clock effects | Subject `to`, `party`, `add`, `remove`, `ref`, `value`, `take`; `self`, `now`, `plusSeconds` |
@@ -61,7 +68,7 @@ their regeneration check still wait for item 1 after F lands.
 ## Validator witnesses
 
 The new whole owner `packages/define/test/contract-forms.test.ts` declares
-ten cases. Each compiles a small made-up definition through the existing
+twelve cases. Each compiles a small made-up definition through the existing
 validator and checks a plausible invalid counterpart at that same boundary.
 
 | Invariant | Refusal counterpart |
@@ -76,9 +83,13 @@ validator and checks a plausible invalid counterpart at that same boundary.
 | Timed attention accompanies a total exit | A timed notice cannot have a condition |
 | Explicit level and capacity retain their own bytes | Unsupported durability refuses |
 | Citation fragments retain a bounded type | A fragment bound above 65,536 bytes refuses |
+| Field facts can match foreign input fields | A non-field left read refuses |
+| `sameSet` filters and excludes its range before matching keys | An undeclared excluded subject refuses |
 
 The separate type fixture preserves the literal citation bound and rejects
-a text argument. Existing suites retain their cases and assertions.
+a text argument. It also rejects comparisons on non-field facts and an
+undeclared slot in a set's filter. Existing suites retain their cases and
+assertions.
 
 ## Validation status
 

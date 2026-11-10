@@ -4,9 +4,9 @@ import type {
 } from "@generalbusiness/dap-contract";
 import {
   author, authorsOf, bool, by, collect, compile, CompileError, constant,
-  create, define, detached, final, grants, int, item, itemOf, list, live,
+  create, define, detached, equals, fact, final, grants, int, isFact, item, itemOf, list, live,
   open, optional, party, range, receive, reference, required,
-  resultReason, some, text, timed, time, transition, update, value,
+  resultReason, sameSet, some, text, timed, time, transition, update, value,
   withDefault, type ItemDef,
 } from "../src/index.ts";
 
@@ -199,4 +199,45 @@ test("reference fragments retain their byte bound and refuse oversized bounds", 
   expect(built.definition.acts["cite"]?.fields["source"]).toEqual({ type: "reference", fragment: 64, required: false });
   const oversized = transition(root, grant.edit, { fields: { source: optional(reference(65_537)) } });
   refuses(declaration([], { oversized }), /at most 65536 bytes/);
+});
+
+test("a field fact can match foreign input fields while other fact reads keep their shape", () => {
+  const matched = (equal: boolean) => transition(root, grant.edit, {
+    fields: { report: required(fact("foreign", "report")), label: required(text(20)) },
+  }, ({ f }) => ({ guards: [isFact(f.report, [
+    equals(equal ? { field: "label" } : constant("label"), f.label),
+  ])] }));
+  const built = compile(declaration([], { matched: matched(true) }));
+  expect(built.validation.ok).toBe(true);
+  expect(built.definition.acts["matched"]?.guards).toEqual([{ fact: {
+    field: "report", where: [{ equals: { a: { field: "label" }, b: { field: "label" } } }],
+  } }]);
+  refuses(declaration([], { matched: matched(false) }), /must be a field of the entry's intent or message/);
+  expect(isFact({ field: "report" })).toEqual({ fact: { field: "report" } });
+  expect(isFact({ presented: "report" })).toEqual({ fact: { presented: "report" } });
+  expect(isFact({ element: "row" })).toEqual({ fact: { element: "row" } });
+});
+
+test("sameSet applies its range filter and exclusions before matching list keys", () => {
+  const task = item("task", {
+    many: 3, states: { open: live }, values: { label: value.optional(text(20)) },
+  });
+  const check = (except: "on" | "also.missing") => transition(task, grant.edit, {
+    fields: { selected: required(list(itemOf(task), 3)), label: required(text(20)) },
+  }, ({ f }) => ({ guards: [sameSet(f.selected, "selected", row => row.self, task, ["open"], {
+    where: it => [equals(it.slot("label"), f.label)], except: [except],
+  })] }));
+  const built = compile(declaration([task], { check: check("on") }));
+  expect(built.validation.ok).toBe(true);
+  expect(built.definition.acts["check"]?.guards).toEqual([{ sameSet: {
+    list: { field: "selected" }, as: "selected", key: { element: "selected" },
+    items: { type: "task", states: ["open"], where: [{ equals: {
+      a: { slot: "label" }, b: { field: "label" },
+    } }], except: ["on"] },
+  } }]);
+  refuses(declaration([task], { check: check("also.missing") }), /names no subject/);
+  expect(sameSet({ field: "selected" }, "row", row => row.self, task, ["open"])).toEqual({ sameSet: {
+    list: { field: "selected" }, as: "row", key: { element: "row" },
+    items: { type: "task", states: ["open"] },
+  } });
 });

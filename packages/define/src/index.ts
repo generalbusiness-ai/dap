@@ -310,9 +310,9 @@ export function none(item: ItemDef | Range, states?: readonly string[], where?: 
 export const some = (items: Range): Guard => ({ some: items });
 export const count = (items: Range, bounds: { min?: number | Operand; max?: number | Operand }): Guard => ({ count: { ...items, ...bounds } });
 /** The list's elements, keyed, are the same set as the range's items; `match` pairs an element with its item. */
-export function sameSet<L extends Operand, I extends ItemDef>(list: L, as: string, key: (element: ElemOf<L>) => Operand, item: I, states: readonly States<I>[], more: { match?: (it: Of<I>, element: ElemOf<L>) => readonly Where[]; ordered?: boolean } = {}): Guard {
+export function sameSet<L extends Operand, I extends ItemDef>(list: L, as: string, key: (element: ElemOf<L>) => Operand, item: I, states: readonly States<I>[], more: { where?: (it: Of<I>) => readonly Where[]; except?: readonly Subject[]; match?: (it: Of<I>, element: ElemOf<L>) => readonly Where[]; ordered?: boolean } = {}): Guard {
   const element = elem(as) as ElemOf<L>;
-  return { sameSet: { list, as, key: key(element), items: range(item, states), ...(more.match ? { match: more.match(of(item), element) } : {}), ...(more.ordered !== undefined ? { ordered: more.ordered } : {}) } };
+  return { sameSet: { list, as, key: key(element), items: range(item, states, more), ...(more.match ? { match: more.match(of(item), element) } : {}), ...(more.ordered !== undefined ? { ordered: more.ordered } : {}) } };
 }
 /** A scalar or an unannotated list element exposes only its complete value. */
 export type Elem = { readonly self: Operand };
@@ -364,7 +364,12 @@ function keepInline<F extends object>(from: object, into: F): F {
   return into;
 }
 /** The fact an operand names (a field, a presented fact or a bound element) is fetched and verified. */
-export const isFact = (o: Operand): Guard => ({ fact: o as { field: string } | { presented: string } | { element: string } });
+export function isFact(o: Operand): Guard;
+export function isFact(o: { field: string }, where: readonly Where[]): Guard;
+export function isFact(o: Operand, where?: readonly Where[]): Guard {
+  const fact = o as { field: string } | { presented: string } | { element: string };
+  return { fact: where === undefined ? fact : { ...fact, where } };
+}
 /** A capability's code runs `action` for the act, with no subject. */
 export const invoke = (name: "hold" | "git-read" | "device-command", action: string, args: Record<string, Operand>): EffectForm => ({ capability: { name, do: action, with: args } });
 /** The capability's rule `guard` holds for `with`. */
