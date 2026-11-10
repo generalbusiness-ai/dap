@@ -23,6 +23,14 @@ Runtime checks also reject forged structural inputs, extra fields,
 wrong source types, and missing or incompatible act inputs. These
 helpers emit the existing presentation schema and property order.
 
+The item 3 review found five boundary gaps. Views and stories now share
+one private input type mapper, including numeric local items and nested
+native references. The view boundary rejects arrays and closes selected
+projection source, field and origin shapes. Row condition types reject
+computed parts supplied through stored variables. The shared expression
+serializer gives act contexts priority over an ordinary extra `row`
+property, preserving E's existing act reference output.
+
 The story subpath uses the maintained judges, rule preparation and fold.
 Each queued step checks the author's expected answer and its complete
 entry, effect, send and timed-firing assertion before it emits scenario

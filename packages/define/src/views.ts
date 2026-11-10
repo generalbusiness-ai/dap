@@ -2,6 +2,7 @@
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type FieldType, type FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize, fitsFieldType, isRecord, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { expression } from "./expression.ts";
+import type { NativeInputValue } from "./field-input.ts";
 import type { Projection, ProjectionSource } from "./package.ts";
 
 type Roles = Readonly<Record<string, readonly string[]>>;
@@ -13,7 +14,7 @@ type Selected<S extends ProjectionSource, T extends FieldType["type"]> = {
   [K in keyof S["fields"] & string]: S["fields"][K]["of"]["type"] extends T ? K : never
 }[Exclude<keyof S["fields"] & string, Metadata<S>>];
 type Row<S extends ProjectionSource> = { readonly [N in Names<S>]: { readonly row: N } };
-type Reference<S extends ProjectionSource> = Row<S>[Names<S>];
+type Reference<S extends ProjectionSource> = Row<S>[Names<S>] & { readonly part?: never };
 type Template<S extends ProjectionSource> = (parts: TemplateStringsArray, ...holes: (Reference<S> | { readonly row: "waiting" })[]) => string;
 export type ViewFact<N extends string = string, I extends string = string, T extends string = string> = N
   | { readonly field: I; readonly label: string; readonly scale: number; readonly unit: string }
@@ -54,15 +55,9 @@ type ParameterFor<F extends FieldType> = F extends { type: "text" } ? Extract<Vi
   : F extends { type: "enum"; of: infer O extends readonly string[] } ? Omit<Extract<ViewParameter, { kind: "enum" }>, "of"> & { readonly of: readonly O[number][] }
   : F extends { type: "int" } ? Extract<ViewParameter, { kind: "int" | "decimal" }> : never;
 type ControlOptions<D extends DeclaredDefinition, A extends keyof D["acts"]> = {
-  readonly args?: Partial<{ readonly [K in keyof D["acts"][A]["fields"]]: Literal<D["acts"][A]["fields"][K]> }>;
+  readonly args?: Partial<{ readonly [K in keyof D["acts"][A]["fields"]]: NativeInputValue<D["acts"][A]["fields"][K]> }>;
   readonly parameters?: Partial<{ readonly [K in keyof D["acts"][A]["fields"]]: ParameterFor<D["acts"][A]["fields"][K]> }>;
 };
-type Literal<F extends FieldType> = F extends { type: "int" } ? number : F extends { type: "bool" } ? boolean
-  : F extends { type: "enum"; of: infer O extends readonly string[] } ? O[number]
-  : F extends { type: "member" } ? Extract<FieldValue, { member: string }>
-  : F extends { type: "list" } ? readonly FieldValue[]
-  : F extends { type: "record" } ? Readonly<Record<string, FieldValue>>
-  : F extends { type: "text" | "time" | "item" | "digest" | "commit" | "tree" } ? string : FieldValue;
 type Context<D extends DeclaredDefinition, S extends ProjectionSource, R extends Roles> = {
   readonly row: Row<S>; readonly waiting: { readonly row: "waiting" }; readonly text: Template<S>;
   readonly when: (parts: TemplateStringsArray, ...holes: Reference<S>[]) => string;
@@ -105,10 +100,15 @@ function sourceBinding(definition: DeclaredDefinition, source: ProjectionSource)
   const typeOnly = (field: FieldType & { required: boolean; default?: FieldValue }): FieldType => {
     const { required: _required, default: _default, ...type } = field; return type as FieldType;
   };
+  if (source.read !== "entries" && source.read !== "many") fail("source has an invalid read mode");
+  closed(source, source.read === "entries" ? ["acts", "fields", "latestBy", "limit", "read", "window"] : ["fields", "item", "limit", "read", "states"]);
+  if (!isRecord(source.fields)) fail("source fields must be a map");
   if (source.read === "entries") {
     if (!source.acts?.length || source.acts.some(kind => kind === definition.genesis || !own(definition.acts, kind))) fail("journal names no ordinary act");
   } else if (!source.item || !own(definition.items, source.item)) fail("names no declared item");
   for (const field of Object.values(source.fields)) {
+    closed(field, ["from", "nullable", "of"]);
+    closed(field.from, ["kind", "name"]);
     const from = field.from;
     if (source.read === "entries") {
       const acts = source.acts;
@@ -204,6 +204,7 @@ function control(definition: DeclaredDefinition, source: ProjectionSource, roles
 
 /** Check ordinary structural inputs too; TypeScript does not close object shapes. */
 export function checkViews(definition: DeclaredDefinition, projections: Projections, roles: Roles, views: Readonly<Record<string, ViewData>>): void {
+  if (!isRecord(views)) fail("map must be an object");
   canonicalize(views);
   if (Object.keys(views).length > 32 || utf8(JSON.stringify(views)).length > 65536) fail("exceeds presentation bounds");
   for (const [key, view] of Object.entries(views)) {

@@ -20,9 +20,10 @@ type SlotReference<S> = S extends { readonly item: infer I extends ItemDef; read
   : never;
 type Reference<C extends ExpressionContext | RowContext> = C extends ExpressionContext
   ? FieldReference<C> | SlotReference<C["on"]> | SlotReference<C["also"][keyof C["also"] & string]>
-  : C extends RowContext ? C["row"][keyof C["row"] & string] : never;
+  : C extends RowContext ? C["row"][keyof C["row"] & string] & { readonly part?: never } : never;
 
 const keywords = new Set(["and", "or", "in", "true", "false", "null", "function"]);
+const actContext = (ctx: ExpressionContext | RowContext): ctx is ExpressionContext => "f" in ctx && "on" in ctx && "also" in ctx;
 
 /** A quoted name is one path member, including an alias such as also.library. */
 function member(base: string, name: string): string {
@@ -37,7 +38,7 @@ function path(ctx: ExpressionContext | RowContext, reference: unknown): string {
   if (typeof reference !== "object" || reference === null || Array.isArray(reference)) throw new TypeError("expression requires a field or slot reference");
   const value = reference as Record<string, unknown>;
   const keys = Object.keys(value);
-  if ("row" in ctx) {
+  if (!actContext(ctx)) {
     if (keys.length !== 1 || keys[0] !== "row" || typeof value["row"] !== "string" || !Object.hasOwn(ctx.row, value["row"]) || ctx.row[value["row"]]!.row !== value["row"]) throw new TypeError("expression names no projected row field");
     return member("", value["row"]);
   }

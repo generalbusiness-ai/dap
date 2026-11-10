@@ -6,24 +6,14 @@ import { alsoItems, applyEntry, clockOf, entryOf, judgeAct, judgeGenesis, judgeT
 import type { ActJudgment, Draft, JudgeContext, ValidDefinition } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import type { Projection } from "./package.ts";
+import type { NativeInputFields } from "./field-input.ts";
 
 export const member = <const A extends string>(actor: A) => ({ $member: actor }) as const;
 export const reference = <const K extends "membership" | "destination">(kind: K) => ({ $reference: kind }) as const;
 type StoryMember = ReturnType<typeof member>;
 type StoryReference = ReturnType<typeof reference>;
 type Json = null | string | number | boolean | StoryMember | StoryReference | readonly Json[] | { readonly [key: string]: Json };
-type InputValue<T> = T extends { type: "text" | "digest" | "commit" | "tree" | "time" } ? string
-  : T extends { type: "int" } ? number : T extends { type: "bool" } ? boolean
-  : T extends { type: "member" } ? StoryMember | MemberRef
-  : T extends { type: "scope" } ? StoryReference | ScopeRef
-  : T extends { type: "item" } ? number
-  : T extends { type: "enum"; of: readonly (infer E)[] } ? E
-  : T extends { type: "list"; of: infer E } ? readonly InputValue<E>[]
-  : T extends { type: "record"; of: infer R extends Record<string, FieldType & { required: boolean }> } ? Fields<R>
-  : FieldValue;
-type Fields<F extends Record<string, FieldType & { required: boolean }>> = {
-  readonly [K in keyof F as F[K]["required"] extends true ? F[K] extends { default: FieldValue } ? never : K : never]: InputValue<F[K]>
-} & { readonly [K in keyof F as F[K]["required"] extends true ? F[K] extends { default: FieldValue } ? K : never : K]?: InputValue<F[K]> };
+type Fields<F extends Record<string, FieldType & { required: boolean }>> = NativeInputFields<F, StoryMember, StoryReference>;
 type Kind<D extends DeclaredDefinition> = keyof D["acts"] & string;
 type Asked<D extends DeclaredDefinition, K extends Kind<D>> = {
   readonly on?: number;

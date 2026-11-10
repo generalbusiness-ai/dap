@@ -1,12 +1,16 @@
 /** The manifest consumes the literal action and field types, not a copied schema. */
 import { declareRoles, entries, fieldOf, items, manifest, projection, views } from "../src/package.ts";
-import { define, int, item, live, open, party, required, text, time, transition, value } from "../src/index.ts";
+import { define, fact, int, item, itemOf, list, live, member, open, optional, party, record, required, scope, text, time, transition, value } from "../src/index.ts";
 
 const permits = declareRoles({ admin: ["typed.create"], writer: ["typed.edit"] });
 const root = item("root", { states: { ready: live }, parties: { owner: party.required }, values: { title: value.fixed(text(20)), count: value.optional(int(0, 20)), at: value.optional(time) } });
 const definition = define({ name: "typed-package", genesis: "establish", items: [root], acts: {
   establish: open(root, permits.grant("typed.create"), { fields: { title: required(text(20)) } }, ({ on, f }) => ({ effects: [on.value("title", f.title)] })),
-  edit: transition(root, permits.grant("typed.edit"), { fields: { title: required(text(20)) } }, ({ on, f }) => ({ effects: [on.value("title", f.title)] })),
+  edit: transition(root, permits.grant("typed.edit"), { fields: {
+    title: required(text(20)), target: optional(itemOf(root)), destination: optional(scope("destination")),
+    evidence: optional(fact("typed-package", "edit")), citation: optional({ type: "reference", fragment: 64 }),
+    nested: optional(record({ targets: required(list(itemOf(root), 3)), signer: required(member), destination: optional(scope("destination")) })),
+  } }, ({ on, f }) => ({ effects: [on.value("title", f.title)] })),
 } });
 const state = projection(definition, "definition.json", { roots: items(root, ["title", "owner", "count", "at"]) });
 const spec = { name: "typed.package", version: "1.0.0", definition: { path: "definition.json", value: definition }, projections: { state }, views: {}, roles: permits.roles, scenarios: ["basic.json"], browser: { entry: "main.ts", html: "index.html", script: "main.js" } } as const;
@@ -51,8 +55,26 @@ export function typedViewBindings() {
     act("remove", "Remove", "true");
     // @ts-expect-error The native title field takes text, not an integer.
     act("edit", "Edit", "true", { args: { title: 3 } });
+    const destination = { scope: "sc_test", inc: "in_test", kind: "destination" } as const;
+    const signer = { membership: { ...destination, kind: "membership" }, member: "@tester" } as const;
+    act("edit", "Edit", "true", { args: { title: "Title", target: 1, destination, evidence: { at: destination, seq: 0, hash: "sha256:test" }, citation: { document: "sha256:test" }, nested: { targets: [1], signer, destination } } });
+    // @ts-expect-error A native local item is a number, not its string spelling.
+    act("edit", "Edit", "true", { args: { target: "1" } });
+    // @ts-expect-error A scope field requires its declared native scope reference.
+    act("edit", "Edit", "true", { args: { destination: { ...destination, kind: "membership" } } });
+    // @ts-expect-error A fact field requires a native entry reference.
+    act("edit", "Edit", "true", { args: { evidence: 1 } });
+    // @ts-expect-error A citation requires a document or entry reference.
+    act("edit", "Edit", "true", { args: { citation: "sha256:test" } });
+    // @ts-expect-error Nested native item lists retain their numeric element type.
+    act("edit", "Edit", "true", { args: { nested: { targets: ["1"], signer } } });
+    // @ts-expect-error A nested record retains its required native members.
+    act("edit", "Edit", "true", { args: { nested: { targets: [1] } } });
     // @ts-expect-error The human title input must fit its native text field.
     act("edit", "Edit", "true", { parameters: { title: { kind: "int", label: "Title", required: true, min: 0, max: 20, unit: "" } } });
+    const computed = { row: "count", part: "nested" } as const;
+    // @ts-expect-error The bound view condition also refuses stored computed-part references.
+    when`${computed}`;
     return layout;
   });
   const limited = views(definition, { state }, { reader: ["typed.create"] });

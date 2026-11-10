@@ -30,6 +30,9 @@ export function typedRowExpressionNames() {
   const badKind = () => e`${{ field: "state" }}`;
   // @ts-expect-error Rows do not add computed parts to a reference.
   const badPart = () => e`${{ row: "state", part: "nested" }}`;
-  void [badName, badKind, badPart];
+  const computed = { row: "state", part: "nested" } as const;
+  // @ts-expect-error A stored structural reference also cannot select a computed part.
+  const badStoredPart = () => e`${computed}`;
+  void [badName, badKind, badPart, badStoredPart];
   return source;
 }
