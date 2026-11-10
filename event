@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b11a73beec235eb45188aff5f805d754b55db994","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-09-typed-define-t1.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b1f792249bb61d08311f4611f6fa21fa30e5b99f","text":"Merge retired a covered predecessor; the successor is at packages/define/src/index.ts."}
