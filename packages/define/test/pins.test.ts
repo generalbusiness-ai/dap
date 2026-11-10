@@ -49,6 +49,17 @@ function differences(a: unknown, b: unknown, at = ""): string[] {
   return JSON.stringify(a) === JSON.stringify(b) ? [] : [`${at}: ${JSON.stringify(a)} vs ${JSON.stringify(b)}`];
 }
 
+/** Reintroduce the exact old subject spellings without changing the current generator. */
+function repeatedSubjects(definition: DeclaredDefinition, rows: readonly (readonly [string, string])[]): DeclaredDefinition {
+  const copy = structuredClone(definition);
+  for (const [path, subject] of rows) {
+    let value: unknown = copy;
+    for (const key of path.replace(/\[(\d+)\]/g, ".$1").split(".")) value = (value as Record<string, unknown>)[key];
+    (value as Record<string, unknown>)["of"] = subject;
+  }
+  return copy;
+}
+
 test("the grow room compiles to the pinned definition in canonical spelling", () => {
   const { definition, findings } = compile(room);
   expect(findings).toEqual([]);
@@ -57,19 +68,22 @@ test("the grow room compiles to the pinned definition in canonical spelling", ()
   expect(checked.ok ? [] : checked.problems).toEqual([]);
 });
 
-test("the pinned grow room spells `of: \"on\"` where canonical form leaves it out, and nowhere else differs", () => {
-  const diffs = differences(roomData, normalize(roomData));
-  // Each difference is one `of: "on"` on a guard whose subject is the act's item.
-  expect(diffs.every((d) => d.endsWith('.of: "on" vs undefined'))).toBe(true);
-  expect(diffs.map((d) => d.replace(/^acts\./, "").replace(/\.of: "on" vs undefined$/, ""))).toEqual([
+test("the pinned grow room is canonical and the earlier spelling adds only twelve repeated subjects", () => {
+  const paths = [
     "report-site.guards[0]",
     "set-vent.guards[2].anyOf[0][0]", "set-vent.guards[2].anyOf[1][0]",
     "set-fan.guards[2].anyOf[0][0]", "set-fan.guards[2].anyOf[1][0]",
     "set-heater.guards[2].anyOf[0][0]", "set-heater.guards[2].anyOf[1][0]",
     "bind-zone-devices.guards[0]", "hold.guards[0]", "authorize.guards[0]", "propose-restoration.guards[0]", "close-incident.guards[0]",
-  ]);
-  // The kernel reads both spellings alike, so only the digest differs.
-  expect(definitionDigest(normalize(roomData))).not.toBe(definitionDigest(roomData));
+  ];
+  const earlier = repeatedSubjects(roomData, paths.map(path => [`acts.${path}`, "on"] as const));
+  const diffs = differences(earlier, normalize(earlier));
+  expect(diffs.every((d) => d.endsWith('.of: "on" vs undefined'))).toBe(true);
+  expect(diffs.map((d) => d.replace(/^acts\./, "").replace(/\.of: "on" vs undefined$/, ""))).toEqual(paths);
+  expect(normalize(earlier)).toEqual(roomData);
+  expect(normalize(roomData)).toEqual(roomData);
+  expect(definitionDigest(normalize(earlier))).not.toBe(definitionDigest(earlier));
+  expect(definitionDigest(normalize(roomData))).toBe(definitionDigest(roomData));
 });
 
 test("the grow site compiles to the exact pinned definition, given the room's pinned digest", () => {
@@ -105,8 +119,15 @@ test("the rewritten change-lane rows preserve the complete pinned definition in 
   for (const name of Object.keys(laneReceives)) expect(definition.receives[name], name).toEqual(canonical.receives[name]);
 });
 
-test("the pinned change lane's spelling differs from canonical form in five places, each a subject named twice", () => {
-  const diffs = differences(change, normalize(change));
+test("the pinned change lane is canonical and the earlier spelling adds only five repeated subjects", () => {
+  const earlier = repeatedSubjects(change, [
+    ["acts.ask-rules.sends[0].tell.to", "on"],
+    ["acts.propose-manifest.sends[0].tell.to", "on"],
+    ["acts.request-check.guards[2].equals.a", "also.earlier"],
+    ["acts.request-check.guards[3].equals.a", "also.earlier"],
+    ["acts.review-verdict.guards[4].equals.a", "also.earlier"],
+  ]);
+  const diffs = differences(earlier, normalize(earlier));
   expect(diffs).toEqual([
     'acts.ask-rules.sends[0].tell.to.of: "on" vs undefined',
     'acts.propose-manifest.sends[0].tell.to.of: "on" vs undefined',
@@ -114,4 +135,7 @@ test("the pinned change lane's spelling differs from canonical form in five plac
     'acts.request-check.guards[3].equals.a.of: "also.earlier" vs undefined',
     'acts.review-verdict.guards[4].equals.a.of: "also.earlier" vs undefined',
   ]);
+  expect(normalize(earlier)).toEqual(change);
+  expect(normalize(change)).toEqual(change);
+  expect(definitionDigest(normalize(change))).toBe(definitionDigest(change));
 });

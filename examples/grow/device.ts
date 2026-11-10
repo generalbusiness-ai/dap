@@ -15,7 +15,7 @@ function validTarget(kind: string, minimum: string, maximum: string): string {
   return `(((${kind} = 'vent') and fields.target in ['open', 'closed']) or ((${kind} in ['fan', 'heater']) and fields.target in ['on', 'off'])) and ((fields.target in ['closed', 'off'] and fields.level = 0) or (fields.target in ['open', 'on'] and fields.level >= 1 and fields.level >= ${minimum} and fields.level <= ${maximum} and (${kind} != 'heater' or fields.level = 100)))`;
 }
 
-export const deviceNotFailed = (of: Subject): Guard => ({ reason: "device-error", anyOf: [[{ of, unset: "reported" }], [{ of, differs: { a: { slot: "reported" }, b: { const: "error" } } }]] });
+export const deviceNotFailed = (of: Subject): Guard => ({ reason: "device-error", anyOf: [[{ ...(of === "on" ? {} : { of }), unset: "reported" }], [{ ...(of === "on" ? {} : { of }), differs: { a: { slot: "reported" }, b: { const: "error" } } }]] });
 export function deviceForms(under: string, additionalTargetActs: readonly string[] = []): { item: ItemType; acts: Record<string, ActType>; rules: Record<string, string> } {
   const notFailed = deviceNotFailed("on");
   const command = (kind: "vent" | "fan" | "heater", grant: string): ActType => act({
