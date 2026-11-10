@@ -10,8 +10,8 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "2630df1b79c276cbb7f0118fd37ba18b0b05e4125013cd965ffdd3d7e6adc35b",
-    "packages/scope/src/object.ts:ScopeObject": "a02f8a1d0a21a59f1ade3bae86efc973e3e744655d174f6dde69a5192d5a46b2"
+    "packages/scope/src/object.ts:$module": "3e0e409514b37e7494fad437d8ea07d69bb228a6541df0fd1db4575f7c9d1f3a",
+    "packages/scope/src/object.ts:ScopeObject": "ac4e9a78407012a4c49d9ac4ff4ef35a249830caa08b3c7467ef58260fe2b9d5"
   },
   "packages/scope/src/object-archive.ts": {
     "packages/scope/src/object-archive.ts:$module": "7d7c0da57c8b69bc953c19a59e3bd6af25a5f02863bac10ef6fd839fc9dd5adc",
@@ -231,6 +231,9 @@ const namedOwners = {
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
+  "packages/derive/src/validate/index.ts": "d6b90a6b4e6e8319cb0a73e50d2864751cab6fb1974bc578d5937d9ee99f1efa", // F canonical identity/retained-origin boundary; actual maintained parser output.
+  "packages/derive/src/validate/spelling.ts": "1c53e1ec4503e15be23d409b4862162a52f24f9e7e504a96922db90845a31a11", // F canonical identity/retained-origin boundary; actual maintained parser output.
+  "packages/platform/src/evidence-incident-origin-v17.ts": "bbafa17fca7c592f03c2109301ec2cc7bcf100ef469dec8eb96efd11bb68dc93", // F canonical identity/retained-origin boundary; actual maintained parser output.
   "packages/contract/src/catalog-vocabulary.ts": "87e8a51c86fa079adde3f08f0be6dadfd17c731d1b3ee7f9d94e6fe1a8e6592c", // BR13 exact native question/relation owner; actual maintained parser output.
   "packages/platform/src/version-questions.ts": "eefb44287cc13e9dbd11702efc7c6fd5af121bec6802bc361f35bd34efa7aded", // BR13 exact native question/relation owner; actual maintained parser output.
   "packages/platform/src/version-relations.ts": "245685492d713c42be17181a62cf9436dbe12eeffa902741c31c19640de67416", // BR13 exact native question/relation owner; actual maintained parser output.
