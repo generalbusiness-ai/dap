@@ -16,7 +16,7 @@ parts.
 
 ## Packages
 
-Twelve packages live under `packages/`. A thirteenth, `@generalbusiness/dap-lanes`,
+Thirteen packages live under `packages/`. A fourteenth, `@generalbusiness/dap-lanes`,
 lives in `apps/room/lanes` and holds the two lane definitions as data
 ([lanes.md](../apps/room/docs/lanes.md)). No package under `packages/`
 imports it.
@@ -26,6 +26,7 @@ imports it.
 | `@generalbusiness/dap-contract` | Types and constant tables. No logic. | Nothing |
 | `@generalbusiness/dap-bytes` | Canonical JSON, SHA-256, SHA-1 for Git object names, encodings, Ed25519, the byte domains, and the guard of each identifier. | contract |
 | `@generalbusiness/dap-derive` | The definition validator, the fold, the judges, the rule evaluator and the capability code. Pure functions. | contract, bytes |
+| `@generalbusiness/dap-define` | Typed helpers that compose declared definitions as plain data and validate them. | contract, bytes, derive |
 | `@generalbusiness/dap-package-graph` | Readers and bounded checks for application package composition. | contract, derive |
 | `@generalbusiness/dap-platform` | The platform definitions as data and rules, every shipped version of each, and the application package codecs and validation. | contract, bytes, derive, git, package-graph |
 | `@generalbusiness/dap-git` | The Git object reader, commands, push evidence, token gateway and snapshot builder, with Web API modules for smart HTTP and GitHub App requests. It runs outside a scope's commit. | contract, bytes |
