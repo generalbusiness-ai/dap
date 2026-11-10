@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f6baa0c5163b450ec17eea938f7326fbeab12a6b","text":"Merge retired a covered predecessor; the successor is at packages/replay/README.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f7d45398f3c7c20262357a3dcef91adaad526e14","text":"Merge retired a covered predecessor; the successor is at docs/security/trust-boundaries.md."}
