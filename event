@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7781c6bd33126d3ac51d7f71fa1b216e737723d6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0b-explicit-catalogue-seals.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7b2666b5d2a6c7a1071c69672cb72c299b147291","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/browser-helpers.ts."}
