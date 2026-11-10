@@ -1,8 +1,10 @@
 import { expect, test } from "vitest";
 import { canonicalize } from "@generalbusiness/dap-bytes";
+import { applicationJson } from "../../platform/src/application-codec/application-json.ts";
+import { APPLICATION_PACKAGE_LIMITS } from "../../platform/src/application-codec/application-types.ts";
 import {
   anyOf, by, compile, CompileError, constant, define, differs, each, elementMember, elements, equals, fact, grants, item, itemOf, live, none,
-  one, open, optional, part, party, reasons, ref, require, required, roles, rule, sameSet, siblings, subject,
+  normalize, one, open, optional, part, party, reasons, ref, require, required, roles, rule, sameSet, siblings, subject,
   text, transition, value, via, when,
 } from "../src/index.ts";
 
@@ -66,6 +68,16 @@ test("definition metadata is absent from canonical bytes and facts use available
   expect(built.validation.ok).toBe(true);
   expect(Object.keys(built.definition)).not.toContain("grants");
   expect(canonicalize(built.definition)).not.toContain("declarations");
+  const noSymbols = (value: unknown): void => {
+    if (typeof value !== "object" || value === null) return;
+    expect(Object.getOwnPropertySymbols(value)).toEqual([]);
+    Object.values(value).forEach(noSymbols);
+  };
+  for (const value of [normalize(declared), built.definition]) {
+    noSymbols(value);
+    expect(applicationJson(value, APPLICATION_PACKAGE_LIMITS.definitionBytes)).toBe(canonicalize(value));
+    expect(fact(value.acts.establish)).toEqual(fact(declared.acts.establish));
+  }
   expect(fact("foreign", "offer")).toEqual({ type: "fact", under: "foreign", kind: ["offer"] });
 });
 

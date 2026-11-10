@@ -27,7 +27,8 @@ import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, RuleEvalError, ruleReferences } from "@generalbusiness/dap-derive/rule";
 
-const ACT_NAME: unique symbol = Symbol("act name");
+declare const ACT_NAME: unique symbol;
+const actNames = new WeakMap<object, { readonly under: string; readonly kind: string }>();
 const INLINE_RULE: unique symbol = Symbol("inline rule");
 const DECLARATIONS: unique symbol = Symbol("definition declarations");
 declare const GRANT: unique symbol;
@@ -78,7 +79,7 @@ export function fact<const A extends NamedAct>(act: A): { readonly type: "fact";
 export function fact<const U extends string, const K extends readonly string[]>(under: U, ...kinds: K): { readonly type: "fact"; readonly kind: K; readonly under: U };
 export function fact(under: string | NamedAct, ...kinds: readonly string[]) {
   if (typeof under === "string") return { type: "fact", kind: kinds, under } as const;
-  const name = under[ACT_NAME];
+  const name = actNames.get(under);
   if (!name) throw new Error("fact(act) needs an act returned by define; use fact(under, kind) for a forward reference");
   return { type: "fact", kind: [name.kind], under: name.under } as const;
 }
@@ -579,7 +580,11 @@ export function define<const N extends string, const L extends readonly ItemDef[
     if (Object.hasOwn(hoisted, name) && hoisted[name] !== expression) diagnostics.push(diagnostic("findings", path, guard, `rule ${name} has different expressions`));
     else hoisted[name] = expression;
   });
-  const named = Object.fromEntries(Object.entries(spec.acts).map(([kind, act]) => [kind, Object.defineProperty({ ...act }, ACT_NAME, { value: { under: spec.name, kind }, enumerable: false })])) as NamedActs<N, A>;
+  const named = Object.fromEntries(Object.entries(spec.acts).map(([kind, act]) => {
+    const row = { ...act };
+    actNames.set(row, { under: spec.name, kind });
+    return [kind, row];
+  })) as NamedActs<N, A>;
   const definition = {
     format: "artroom-definition-1", ...(spec.level ? { level: spec.level } : {}), ...(spec.capacity ? { capacity: spec.capacity } : {}),
     name: spec.name, profile: { name: "restricted", version: 1 }, capabilities: spec.capabilities ?? [], genesis: spec.genesis,
@@ -761,7 +766,8 @@ export function normalize<D extends DeclaredDefinition>(definition: D): D {
       ...(Array.isArray(row["sends"]) ? { sends: row["sends"].map(sendN) } : {}),
       ...(Array.isArray(row["attention"]) ? { attention: row["attention"].map(noticeN) } : {}),
     };
-    if (ACT_NAME in row) Object.defineProperty(normalized, ACT_NAME, { value: row[ACT_NAME], enumerable: false });
+    const name = actNames.get(row);
+    if (name) actNames.set(normalized, name);
     return normalized;
   };
   return {
