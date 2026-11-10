@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bd0bf924c9f7fb142d9abf2db5fe91b326d0f119","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-t0b-source-metadata.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c00a036f8b8196b40f007c010937819ebe063ab2","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/description-context.ts."}
