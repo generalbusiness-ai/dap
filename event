@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5ebf093ab0ddce8bb667c624264ce53028dad85a","text":"Merge retired a covered predecessor; the successor is at packages/replay/src/verify.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5f04bfb686bca36a13d5f5bfebf47746fdd7f3bb","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br13-c-integration.manifest.json."}
