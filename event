@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:06d0de276134dbd20b8d641cbc037ebd1a19001a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-identifiers-static-preflight.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:20e42084acf574ad9523f1d14a84a8e36dca305f","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-19-record-and-event-identifiers.md."}
