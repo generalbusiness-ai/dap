@@ -78,7 +78,7 @@ type BoundView<S extends ProjectionSource, K extends string, N extends string> =
   readonly actor: Selected<S, "member"> | null; readonly facts: Facts<S>;
 };
 
-const fail = (message: string): never => { throw new TypeError(`view ${message}`); };
+const fail: (message: string) => never = (message) => { throw new TypeError(`view ${message}`); };
 const own = (value: object, key: string): boolean => Object.hasOwn(value, key);
 const closed = (value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> => {
   if (!isRecord(value) || required.some(key => !own(value, key)) || Reflect.ownKeys(value).some(key => typeof key !== "string" || !required.includes(key) && !optional.includes(key))) return fail("has unsupported fields");
