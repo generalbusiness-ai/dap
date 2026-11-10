@@ -184,44 +184,32 @@ connects to the host.
 ## Bind a new room to GitHub
 
 Use the explicit `repository-binding` cohort. Its pins are Register 25,
-Directory 24, Membership 11, Rules 10, Destination 18, and Inbox 1. The
-reviewed [creation policy](../apps/room/celld/mac/repository-binding-policy.json)
-admits that cohort on the mini. The default creation policy does not.
+Directory 24, Membership 11, Rules 10, Destination 18, and Inbox 1.
+`prepare-project.mjs` adds the
+[creation policy](../apps/room/celld/mac/repository-binding-policy.json)
+that admits this cohort when the retained plan uses it. The default
+creation policy does not admit it.
 
-Earlier rooms, including the original H3 room, cannot bind a repository.
-Their pins keep their original meaning. To move, create a new room with
-this cohort, choose the content and members to bring across, and retain
-the old room for its history. This procedure does not migrate a room or
-rewrite its journal. Within the new cohort, a room can contain issues
-before binding; binding preserves those issues and their journals.
+Earlier rooms cannot bind a repository. Their pins keep their original
+meaning. To move, create a new room with this cohort, choose the content
+and members to bring across, and retain the old room for its history.
+This procedure does not migrate a room or rewrite its journal. Within the
+new cohort, a room can contain issues before binding. Binding preserves
+those issues and their journals.
 
-Before the real G3 witness, the planner approves the repository and the
-person's GitHub steps. The witness repository is the private,
-empty `generalbusiness-ai/dap-g3-binding-witness-20261102`, with branch
-`main`. Hugh created the empty repository; its branch does not exist until
-first publication. The planner controls the later key transfer and deployment.
-The source review covers the configuration procedure and cohort policy.
-Review the filled account, installation, register, and repository bindings
-before the planner applies them.
+The App installation decides which repositories the App key can mint
+tokens for. dap restricts each publication token to one recorded
+repository ID and Contents write. That software check does not narrow the
+App key itself. When your other rooms do not need the same App, select
+only the one repository in the installation.
 
-The G3 witness uses the existing **Artroom Demo** App. Its installation
-selects all 26 repositories in `generalbusiness-ai`, with Administration
-write, Contents write, and Metadata read. The App key on the mini can mint
-tokens for every repository in that installation. dap restricts each
-publication token to one recorded repository ID and Contents write, but
-that software check does not narrow the App key itself. Selecting only
-one repository limits what the key can mint for that installation. Use
-that stronger choice when your other rooms do not need the same App.
-
-1. Use the approved repository and App installation. G3 keeps the existing
-   **Artroom Demo** installation's repository selection. For a separate
-   installation, select the one repository and grant **Contents: read and
-   write** plus **Metadata: read**. Record the App client ID, installation ID, account
-   ID and login, and repository's numeric stable ID.
+1. Install the GitHub App. For a separate installation, select the one
+   repository and grant **Contents: read and write** plus **Metadata:
+   read**. Record the App client ID, installation ID, account ID and login,
+   and the repository's numeric stable ID.
 2. Choose a private input path for the App's PKCS #8 key, owned by the
-   service user at mode `0600` or `0400`. The planner supplies that key
-   only after source and nonsecret configuration review. This App-only
-   procedure supplies no static read token. See
+   service user at mode `0600` or `0400`. This App-only procedure supplies
+   no static read token. See
    [GitHub host requirements](hosts.md#github-host-githubcom).
    Keep credentials in private files, never in chat or command arguments.
 3. Plan a new register from a new persistent client home. Set the trusted
@@ -244,30 +232,28 @@ that stronger choice when your other rooms do not need the same App.
      --origin "$BASE" --home "$DAP_HOME" --out "$HOME/dap-binding-project"
    ```
 
-   `prepare-project.mjs` includes the reviewed creation policy for this
-   retained plan. It keeps the production Worker and bindings and creates
-   private session custody. It also continues to accept the earlier
-   host-none plan without changing its pins.
+   `prepare-project.mjs` includes the creation policy for this retained
+   plan. It keeps the production Worker and bindings and creates private
+   session custody. It also continues to accept the earlier host-none plan
+   without changing its pins.
 
    To preserve child creation under earlier installed registers, add the
-   reviewed `INSTALLED_REGISTER_SCOPES` string to this new prepared
-   project's `vars` before GitHub staging. Include the new `REGISTER_SCOPE`
-   and every earlier root that must keep creating children. The list needs
-   1 to 32 distinct canonical Scope IDs and at most 4,096 UTF-8 bytes.
-   Both staging and deployment validate it and preserve its exact bytes.
-   Omitting it keeps the single-register behavior. The setting changes no
-   Native authority or GitHub binding; see
+   `INSTALLED_REGISTER_SCOPES` string to this new prepared project's `vars`
+   before GitHub staging. Include the new `REGISTER_SCOPE` and every
+   earlier root that must keep creating children. The list needs 1 to 32
+   distinct canonical Scope IDs and at most 4,096 UTF-8 bytes. Both staging
+   and deployment validate it and preserve its exact bytes. Omitting it
+   keeps the single-register behavior. The setting changes no Native
+   authority or GitHub binding. See
    [Keep existing rooms able to create children](deploy.md#keep-existing-rooms-able-to-create-children).
 4. Fill a nonsecret `github-app.json` with every
    [GitHub configuration field](hosts.md#github-host-githubcom). Set
-   `registerScope` to the planned register. For the private witness, use
-   `privateRepositories: true`, `publicReads: false`, `installationReads: true`, and
-   `credentialIdentity: "adapter-attempt"`. Set a deliberate `maxBytes`
-   allowance. Have the checker and planner review these values and the
-   private key's input path.
-5. After that review, the planner supplies the App key and stages a new
-   private project from the original prepared project. These example
-   input paths name the reviewed files:
+   `registerScope` to the planned register. For a private repository, use
+   `privateRepositories: true`, `publicReads: false`,
+   `installationReads: true`, and `credentialIdentity: "adapter-attempt"`.
+   Set a deliberate `maxBytes` allowance.
+5. Put the App key at its private input path. Stage a new private project
+   from the original prepared project:
 
    ```sh
    node apps/room/celld/mac/prepare-github.mjs \
@@ -281,17 +267,16 @@ that stronger choice when your other rooms do not need the same App.
    foreign register, unsafe input paths or file modes, invalid settings,
    and existing output. It preserves the original project, session secret,
    Worker entry, and unrelated settings. It prints only nonsecret metadata.
-   Readiness validates syntax and configuration; it does not authenticate
+   Readiness validates syntax and configuration. It does not authenticate
    the App at GitHub. No network or deployment runs in this helper.
-6. After source and configuration review, the planner deploys the staged
-   project through the normal `deploy.py` path. The planner supplies the
-   private files on the mini. Keep both projects and private deployment
-   logs after any uncertain result. Once health reports sessions ready,
-   install the retained plan and create the room:
+6. Deploy the staged project with `deploy.py`, as in the first-room
+   procedure. Keep both projects and private deployment logs after any
+   uncertain result. Once health reports sessions ready, install the
+   retained plan and create the room:
 
    ```sh
    node packages/cli/bin/dap.js install --planned
-   node packages/cli/bin/dap.js create "G3 binding witness" --handle @owner
+   node packages/cli/bin/dap.js create "Bound room" --handle @owner
    ```
 
 7. Activate the room's issue and change definitions through the
@@ -309,12 +294,12 @@ that stronger choice when your other rooms do not need the same App.
 8. Write the exact authorization pair in a nonsecret `bindings.json`, in
    the [binding format](hosts.md#github-host-githubcom). Use the actual
    destination reference, GitHub account, repository name and stable ID,
-   and branch. Have the planner review that filled file. Stage another
-   new project from the same original project, with the same inputs and
-   `--bindings-file "$HOME/dap-github/bindings.json"`; use a fresh output
-   directory. The planner deploys that reviewed project.
-9. With the room administrator's client home, bind the reviewed repository.
-   Replace the account, name, and ID below with the approved values:
+   and branch. Stage another new project from the same original project,
+   with the same inputs and
+   `--bindings-file "$HOME/dap-github/bindings.json"`. Use a fresh output
+   directory. Deploy that project.
+9. With the room administrator's client home, bind the repository.
+   Replace the account, name, and ID below with your values:
 
    ```sh
    node packages/cli/bin/dap.js act bind-repository --on destination --target 0 \
@@ -334,13 +319,12 @@ that stronger choice when your other rooms do not need the same App.
    restricted to the recorded repository ID with Contents read, then checks
    the repository name and stable ID. A mismatch permits no Git read or
    publication-token mint. Publication tokens carry that one ID and Contents
-   write. Choose an empty branch for the witness: first-head
-   publication uses compare-and-swap and does not overwrite existing history.
-10. Enrol the agent through the room's normal agent-key invitation. Have
-    the agent propose a head from a branch, then have the owner review and
-    merge it. Compare the destination's recorded commit with GitHub's
-    branch head. That real mini scene and its reviewed record close G3's
-    acceptance. Source tests and configuration preparation alone do not.
+   write. Choose an empty branch: first-head publication uses
+   compare-and-swap and does not overwrite existing history.
+10. To check the binding, enrol an agent through the room's normal
+    agent-key invitation. Have the agent propose a head from a branch,
+    then have the owner review and merge it. Compare the destination's
+    recorded commit with GitHub's branch head.
 
 The binding enables repository commands. The public Site route does not
 select repositories attached after creation. Archive export admission also

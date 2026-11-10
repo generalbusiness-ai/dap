@@ -117,7 +117,7 @@ Each field has three members:
 |---|---|
 | `from` | The slot's `kind`, which is `value`, `party`, `ref`, `fact-time` or `fact-signer`, and its `name` |
 | `of` | Exactly the slot's native type. A party slot that holds one member has the type `{ "type": "member" }`. |
-| `nullable` | `true` exactly when the native slot is not required |
+| `nullable` | `true` exactly when the native slot is not required. A `fact-signer` field is never required, so its `nullable` is `true`. |
 
 A `card`, `carousel`, `record` or `log` view has these members:
 

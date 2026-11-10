@@ -12,7 +12,7 @@ channel before sharing the reproduction.
 ## Security references
 
 Read the references in this order. The first three explain the model.
-The next two are inventories for lookup. The last row holds the normative
+The next two are inventories for lookup. The last item holds the normative
 contracts.
 
 1. [Threat model](docs/security/threat-model.md): what dap protects, what
@@ -42,9 +42,9 @@ evidence and does not assess the current implementation. The
 [5 October dispositions](notes/reviews/2026-10-05-review-dispositions.md)
 record the treatment of that review period's findings.
 
-Planner review `6dd06d03` records the 21 October attack-surface findings at
-`603220b9`. Its remediation requests and later exact-head checker reviews
-live in the repository's gitseq workroom. The
+The attack-surface review of 21 October 2026 records its findings at
+commit `603220b9`. The repository's gitseq workroom holds that review, its
+remediation requests and the later review of each fix. The
 [delivery note for the settings, trust-boundary and definition-author pages](notes/implementation/2026-10-24-security-docs-partial.md)
 and the [completion note for the threat model](notes/implementation/2026-11-09-security-docs-d6.md)
 name the documentation evidence. A review of one commit proves no later
