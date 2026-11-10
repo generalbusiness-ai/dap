@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:916d65fe2ae3b056d4e94b22ddefec6a8d08db50","text":"Merge retired a covered predecessor; the successor is at packages/client/src/agent-key-invitation.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9235115747733bedbbaf3b0c85923322493fee04","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-09-br13-page-build.manifest.json."}
