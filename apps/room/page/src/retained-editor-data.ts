@@ -4,7 +4,7 @@ import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldValue, H
 import { canonicalize, definitionDigest, digestBytes, entryHash, intentDigest, isFactRef, scopeIdOf, utf8, verifySignedIntent, wellFormed } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, declaredHandle, httpTransport, shapeDeclaredAct, signedIntent, signedReads } from "@generalbusiness/dap-client";
 import { expectedOf, heldActs, type DefinitionShape } from "@generalbusiness/dap-cli/browser";
-import { FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, editPath, fileSound, platform } from "@generalbusiness/dap-platform";
+import { answersVersionRelation, answersVersionQuestion, editPath, fileSound, platform } from "@generalbusiness/dap-platform";
 import { knownLIST1 } from "./source-support.ts";
 import { editProgress, preparedEditStage, transitionEdit, type EditKind, type EditRequest, type EditResult, type EditStage, type UnsentEditStep, type VerifiedEditStep } from "./retained-editor-state.ts";
 import { actAssociation, CopyNotKept, endOriginal, keepToSend, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";
@@ -79,7 +79,7 @@ function supports(declared: DeclaredDefinition, fields: Record<string, FieldValu
   } catch { return false; }
 }
 async function currentRoom(room: Room, options: EditOptions): Promise<Room> { check(options); const fresh = await openRoom(room.session, { directory: room.directory, membership: room.membership }); check(options); if (fresh.rules !== room.rules || fresh.destination !== room.destination || fresh.me?.handle !== room.me?.handle || fresh.key !== room.key) throw new Unreadable("The room identity changed. Nothing new was sent."); return fresh; }
-async function head(room: Room, list1 = false): Promise<string> { const s = await summary(handle(room, room.destination)); if (!["platform:destination@2", "platform:destination@3", "platform:destination@4", "platform:destination@5", "platform:destination@6", ARCHIVE_DEVICE_PUBLICATION_COHORT.destination, FAILED_CLAIM_COHORT.destination].includes(s.value.definition) || list1 && !["platform:destination@3", "platform:destination@4", "platform:destination@5", "platform:destination@6", ARCHIVE_DEVICE_PUBLICATION_COHORT.destination, FAILED_CLAIM_COHORT.destination].includes(s.value.definition)) throw new Unreadable("This destination does not support the one-file text workflow."); const h = s.value.items.find(i => i.type === "branch")?.values["head"]; if (typeof h !== "string") throw new Unreadable("The room has no recorded published head."); return h; }
+async function head(room: Room, list1 = false): Promise<string> { const s = await summary(handle(room, room.destination)); if (!answersVersionQuestion(s.value.definition, "pageRetainedOneFileDestination") || list1 && !answersVersionQuestion(s.value.definition, "pageRetainedManifestListDestination")) throw new Unreadable("This destination does not support the one-file text workflow."); const h = s.value.items.find(i => i.type === "branch")?.values["head"]; if (typeof h !== "string") throw new Unreadable("The room has no recorded published head."); return h; }
 export async function prepareEdit(room: Room, change: ChangeView, manifest: number, draft: EditDraft, options: EditOptions): Promise<EditTask> {
   const captured = Object.freeze({ ...draft });
   editFields(captured, "0".repeat(40)); const fresh = await currentRoom(room, options);
@@ -111,7 +111,7 @@ async function taskRoom(room: Room, task: EditTask, options: EditOptions): Promi
   if (task.directory.scope !== fresh.directory) {
     const part = await summary(handle(fresh, task.directory.scope)); check(options);
     const control = part.value.items.find(item => item.id === 0 && item.type === "repository" && item.state === "open");
-    if (directory.value.definition !== "platform:directory@10" || part.value.definition !== "platform:directory-partition@1" || canonicalize(part.value.scope) !== canonicalize(task.directory)
+    if (!answersVersionRelation("pageRetainedOpeningPartitionPair", directory.value.definition, part.value.definition) || canonicalize(part.value.scope) !== canonicalize(task.directory)
       || !control || canonicalize(control.refs["root"]) !== canonicalize(task.context.directory) || canonicalize(control.refs["membership"]) !== canonicalize(task.context.membership)) throw new Unreadable("The original opening partition changed. Nothing new was sent.");
   }
   const rules = await summary(handle(fresh, fresh.rules)); check(options);

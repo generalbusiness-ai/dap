@@ -1,3 +1,4 @@
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 /** Execute the instructions of one actual admitted body, including its finalization. */
 import type { Digest, Effect, PlatformTimedRule, Prepared, RefusalReason, ScopeRef, Send, UnavailableReason } from "@generalbusiness/dap-contract";
 import { evaluateEffects } from "../effects.ts";
@@ -67,9 +68,10 @@ export function executeBody(j: Judging, structure: BodyStructure | null, cause: 
   if (structure.frame.kind === "timed") {
     // Final admission ties this frame to its immutable timed declaration.
     const opens = (row.declaration as PlatformTimedRule).opens ?? [], opened: Effect[] = [];
-    if (opens.length && ((timed?.platform?.named !== "platform:destination@3" && timed?.platform?.named !== "platform:destination@13" && timed?.platform?.named !== "platform:destination@14" && timed?.platform?.named !== "platform:destination@15" && timed?.platform?.named !== "platform:destination@19") || j.scope.at.kind !== "destination")) return { result: "unavailable", reason: "unavailable" };
+    const nativeOwner = timed?.platform?.named;
+    if (opens.length && (!answersCatalogVocabularyQuestion(nativeOwner, "nativeTimedOperationOpen") || j.scope.at.kind !== "destination")) return { result: "unavailable", reason: "unavailable" };
     for (const [k, open] of opens.entries()) opened.push(
-      { effect: "operation", k, owner: timed?.platform?.named === "platform:destination@19" ? "platform:destination@19" : timed?.platform?.named === "platform:destination@15" ? "platform:destination@15" : timed?.platform?.named === "platform:destination@14" ? "platform:destination@14" : timed?.platform?.named === "platform:destination@13" ? "platform:destination@13" : "platform:destination@3", kind: open.kind, attempts: open.attempts, for: timedItem! },
+      { effect: "operation", k, owner: nativeOwner!, kind: open.kind, attempts: open.attempts, for: timedItem! },
       { effect: "attempt", operation: { k }, attempt: 1, result: "opened", selected: null },
     );
     return { result: "ran", effects: [...effects.effects, ...opened], sends: [], prepared: j.used, judgesTime: true, settles: false };

@@ -6,7 +6,7 @@ import type { Config, PlannedInstall } from "./store.ts";
 import { canonicalize, intentDigest, isReceipt, isScopeId, isSignedIntentShape, parseStrict, scopeIdOf, textDigest, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { create, signedIntent, type Signing } from "@generalbusiness/dap-client";
 import { type Digest, type KeyId, type PlatformDefinition, PROPOSED_BOUNDS, type ScopeId, type SignedIntent } from "@generalbusiness/dap-contract";
-import { APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, COMMONS_COHORT, COUNTING_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, FAILED_CLAIM_COHORT, FILE_PUBLICATION_COHORT, HARDENED_CERTIFIED_RULES_COHORT, INVITATION_KEY_COHORT, NEWEST, OWN_AGENT_COHORT, platform, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { CLI_INSTALL_REGISTERS, answersVersionQuestion, ARCHIVE_DEVICE_APPLICATION_COHORT, NEWEST, platform, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 
 const NEW_REGISTER = NEWEST["platform:register"]!;
 
@@ -19,27 +19,7 @@ export type RegisterPolicy = "keys" | "open";
 
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort; registerPolicy?: RegisterPolicy }
 
-const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
-  "failed-claim": FAILED_CLAIM_COHORT.register,
-  "repository-binding": REPOSITORY_BINDING_COHORT.register,
-  "own-agent": OWN_AGENT_COHORT.register,
-  "separate-recovery": SEPARATE_RECOVERY_COHORT.register,
-  commons: COMMONS_COHORT.register,
-  unpublished: UNPUBLISHED_COHORT.register,
-  "invitation-key": INVITATION_KEY_COHORT.register,
-  "file-publication": "platform:register@3",
-  application: APPLICATION_COHORT.register,
-  "application-publication": FILE_PUBLICATION_COHORT.register,
-  "trusted-application": TRUSTED_APPLICATION_COHORT.register,
-  "declared-application": DECLARED_APPLICATION_COHORT.register,
-  "archive-application": ARCHIVE_APPLICATION_COHORT.register,
-  "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT.register,
-  "archive-device-application": ARCHIVE_DEVICE_APPLICATION_COHORT.register,
-  "archive-device-publication": ARCHIVE_DEVICE_PUBLICATION_COHORT.register,
-  "archive-certified-rules": ARCHIVE_CERTIFIED_RULES_COHORT.register,
-  "hardened-certified-rules": HARDENED_CERTIFIED_RULES_COHORT.register,
-  "device-application": DEVICE_APPLICATION_COHORT.register,
-};
+const INSTALL_COHORTS = CLI_INSTALL_REGISTERS;
 
 /** New plans only. Historical selectors remain in INSTALL_COHORTS for retained custody.
  * The owning test pins these register versions to Scope's CREATION_COHORTS. */
@@ -86,13 +66,13 @@ function installSelection(options: InstallOptions, retained = false): PlatformDe
   }
   const selected = selectedRegister(options.cohort);
   if (options.host === "none") {
-    if (selected !== undefined && selected !== OWN_AGENT_COHORT.register && selected !== REPOSITORY_BINDING_COHORT.register && selected !== UNPUBLISHED_COHORT.register && selected !== COMMONS_COHORT.register) return stopCommand(usage("--host none requires the unpublished, repository-binding, own-agent or commons cohort; this run signed and sent nothing."));
+    if (selected !== undefined && !answersVersionQuestion(selected, "cliNoHostInstallRegister")) return stopCommand(usage("--host none requires the unpublished, repository-binding, own-agent or commons cohort; this run signed and sent nothing."));
     return selected ?? UNPUBLISHED_COHORT.register;
   }
-  if (options.registerPolicy !== "open" || selected === OWN_AGENT_COHORT.register || selected === FAILED_CLAIM_COHORT.register || selected === REPOSITORY_BINDING_COHORT.register || selected === UNPUBLISHED_COHORT.register || selected === COMMONS_COHORT.register) return selected;
+  if (options.registerPolicy !== "open" || answersVersionQuestion(selected, "cliOpenPolicyExplicitRegister")) return selected;
   if (selected === undefined) return retained ? undefined : NEW_REGISTER;
 
-  if (selected !== undefined && selected !== ARCHIVE_DEVICE_APPLICATION_COHORT.register) {
+  if (selected !== undefined && !answersVersionQuestion(selected, "cliLegacyOpenPolicyRegister")) {
     return stopCommand(usage("--register-policy open requires a cohort with an open register policy; this run signed and sent nothing."));
   }
   return ARCHIVE_DEVICE_APPLICATION_COHORT.register;
@@ -104,7 +84,7 @@ const selectedPlan = (plan: PlannedInstall): boolean => {
   }
   // Register3 also names old unselected plans; the local marker distinguishes
   // new explicit selection without changing the signed or attempted identity.
-  return plan.selected === true || Object.entries(INSTALL_COHORTS).some(([name, pin]) => name !== "file-publication" && pin === plan.definition);
+  return plan.selected === true || answersVersionQuestion(plan.definition, "cliImplicitSelectedPlanRegister");
 };
 
 /** Ordinary installs keep their legacy path; selected installs use exact planned custody. */
@@ -209,7 +189,7 @@ async function cohortPlan(ctx: Context, service: string, options: InstallOptions
   if (before && (before.key !== "operator" || before.repository || before.claim || before.join)) {
     stopCommand(usage("This config directory already holds another setup or pending request. Use a separate config directory for the selected install."));
   }
-  if (!CREATION_INSTALL_COHORTS.some(name => INSTALL_COHORTS[name] === definition)) {
+  if (!answersVersionQuestion(definition, "cliNewInstallRegister")) {
     stopCommand(usage(`This cohort is retained for historical install plans only. For a new plan, --cohort takes ${CREATION_INSTALL_COHORTS.join(", ")}. Nothing was signed or sent.`));
   }
   const { signed } = await installing(ctx, options, { ...signing(ctx), lifetimeSeconds: PROPOSED_BOUNDS.intentLifetimeSeconds - 60 });
@@ -269,8 +249,8 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   const before = await ctx.store.config();
   if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
   const kept = before?.plan ?? stopCommand(usage("No install is planned here. Run: dap install --plan <base-url>."));
-  if (cohort === undefined && (kept.definition === UNPUBLISHED_COHORT.register || kept.definition === REPOSITORY_BINDING_COHORT.register || kept.definition === OWN_AGENT_COHORT.register)) selected = kept.definition;
-  if (kept.definition === COUNTING_COHORT.register) return failed(`Refused: retired-cohort. Choose a currently admitted cohort for a new room. The old plan is kept. ${planSent(kept)}`);
+  if (cohort === undefined && answersVersionQuestion(kept.definition, "cliRetainedUnpublishedSelectionRegister")) selected = kept.definition;
+  if (answersVersionQuestion(kept.definition, "cliRetiredCountingInstallRegister")) return failed(`Refused: retired-cohort. Choose a currently admitted cohort for a new room. The old plan is kept. ${planSent(kept)}`);
   if (selected && kept.definition !== selected) return failed(`Refused: plan-mismatch. The selected cohort conflicts with the original install plan. The plan is kept. ${planSent(kept)}`);
   if (registerPolicy !== undefined && (!isSignedIntentShape(kept["founding"]) || kept["founding"].intent.fields["policy"] !== registerPolicy)) return failed(`Refused: plan-mismatch. The register policy conflicts with the original install plan. The plan is kept. ${planSent(kept)}`);
   if (expected && canonicalize(kept) !== canonicalize(expected)) return failed(`Held: the selected install plan changed before delivery. Restore the original request. ${planSent(kept)}`);

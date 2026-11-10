@@ -1,4 +1,4 @@
-import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, applicationPublicationOrigin, publishingLaneAffiliation, usesFilePublicationProtocol } from "@generalbusiness/dap-platform";
 import { countedEntries } from "@generalbusiness/dap-derive";
 /**
  * Receiving (scope contract, sections 7.2 and 7.4): one delivered message,
@@ -26,7 +26,7 @@ import { countedEntries } from "@generalbusiness/dap-derive";
 
 import type { Bounds, Digest, Entry, FactRef, Incarnation, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isPlatformDefinition, newIncarnation, isSeed, parseStrict, platformName } from "@generalbusiness/dap-bytes";
-import { UNPUBLISHED_COHORT, applicationPublicationOrigin, publishingLaneAffiliation, usesFilePublicationProtocol } from "@generalbusiness/dap-platform";
+
 import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, textsNamed } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Creation, Delivered, DeliveryContext, Fetched, Judgment, PlatformRules, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { NO_INCARNATION, Observes, Received, ownOf, retainedFacts, snapshotsOf, used, valuesOf, type Scope } from "./core.ts";
@@ -194,12 +194,12 @@ export class Deliveries {
     }
     const resolver = reader ?? this.#ports.resolver;
     const destinationPin = pinned?.platform?.named;
-    const publicationStates = (destinationPin === UNPUBLISHED_COHORT.destination || destinationPin === REPOSITORY_BINDING_COHORT.destination || destinationPin === OWN_AGENT_COHORT.destination) ? ["unpublished", "empty", "ready"] : ["empty", "ready"];
+    const publicationStates = (answersVersionQuestion(destinationPin, "scopeDeliveryUnpublishedBranch")) ? ["unpublished", "empty", "ready"] : ["empty", "ready"];
     if (file && !known) {
       const directory = store.page("branch", publicationStates, null, 1).items[0]?.refs["directory"];
       const destination = store.scope()?.at;
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
-      const policy = destinationPin === "platform:destination@7" || destinationPin === "platform:destination@8" || destinationPin === "platform:destination@13" || destinationPin === "platform:destination@14" || destinationPin === "platform:destination@15" || destinationPin === "platform:destination@17" || destinationPin === "platform:destination@19" || (destinationPin === UNPUBLISHED_COHORT.destination || destinationPin === REPOSITORY_BINDING_COHORT.destination || destinationPin === OWN_AGENT_COHORT.destination)
+      const policy = answersVersionQuestion(destinationPin, "scopeDeliveryNativeApplicationOrigin")
         ? this.#ports.definitions.platform(destinationPin)?.applicationPublicationOrigin : applicationPublicationOrigin;
       const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, read.origin ?? []) ?? null;
       if (native === null) return retry("dependency-unavailable");

@@ -1,3 +1,4 @@
+import { answersVersionQuestion, destinationBranch, isOf } from "@generalbusiness/dap-platform";
 /**
  * Opt-in wiring of Cloudflare Artifacts. It takes effect only with
  * the `ARTIFACTS` binding and the explicit setting `ARTIFACTS_CONFIG`, and
@@ -10,7 +11,7 @@
 import type { Sql } from "./sqlite.ts";
 import type { ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/dap-bytes";
-import { destinationBranch, isOf } from "@generalbusiness/dap-platform";
+
 import { ArtifactsProvider, artifactsService, type ArtifactsNamespace, type CreationCustody } from "./artifacts-host.ts";
 import { CredentialStore } from "./credential-store.ts";
 import { DestinationHost, type SnapshotReader, type DestinationRepository } from "./destination-host.ts";
@@ -126,9 +127,9 @@ export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, en
       accepts, send,
       recovery: {
         accepts: (owner, kind) => accepts(owner, kind) && (kind === "check-judge"
-          || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind)),
+          || answersVersionQuestion(owner, "scopeArtifactEvidenceOperation") && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind)),
         read: request => accepts(request.owner, request.kind) && (request.kind === "check-judge"
-          || request.owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(request.kind))
+          || answersVersionQuestion(request.owner, "scopeArtifactEvidenceOperation") && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(request.kind))
           ? destination.recovery.read(request) : Promise.resolve(null),
       },
       snapshot: (asked) => bound(given.genesis()?.seed.definition ?? "") ? destination.snapshot(asked) : Promise.resolve(null),

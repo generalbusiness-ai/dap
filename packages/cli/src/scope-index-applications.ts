@@ -3,7 +3,7 @@
 import type { Digest, KeyId, PlatformData, ReadRefusal, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { isDigest, isKeyId, isRead, isScopeRef, isSummary } from "@generalbusiness/dap-bytes";
 import { readApplicationReleaseUri } from "@generalbusiness/dap-client";
-import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, COMMONS_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, HARDENED_CERTIFIED_RULES_COHORT, TRUSTED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, platform } from "@generalbusiness/dap-platform";
 
 export interface InstalledApplicationRow {
   readonly scope: ScopeRef;
@@ -20,13 +20,6 @@ export interface ScopeApplicationListing {
 }
 
 const summaryRead = isRead(isSummary);
-const installationRules: ReadonlySet<string> = new Set([
-  TRUSTED_APPLICATION_COHORT.rules, DECLARED_APPLICATION_COHORT.rules,
-  ARCHIVE_APPLICATION_COHORT.rules, ARCHIVE_DECLARED_APPLICATION_COHORT.rules,
-  DEVICE_APPLICATION_COHORT.rules, ARCHIVE_DEVICE_APPLICATION_COHORT.rules,
-  ARCHIVE_CERTIFIED_RULES_COHORT.rules, HARDENED_CERTIFIED_RULES_COHORT.rules,
-  COMMONS_COHORT.rules,
-]);
 const sameScope = (left: ScopeRef, right: ScopeRef): boolean => left.scope === right.scope && left.inc === right.inc && left.kind === right.kind;
 
 /** Counts name every native type/state, including unbounded retained finals.
@@ -90,7 +83,7 @@ export function projectScopeApplications(listed: ScopeRef, reply: unknown): Scop
   if (!nativeItemsAgree(summary, code.data, reply.at.seq)) return fail("malformed-summary");
   if (listed.kind !== "rules") return { applications: [], errors: [] };
   if (!Object.hasOwn(code.data.items, "installation")) return { applications: [], errors: [] };
-  if (!installationRules.has(summary.definition)) return fail("unsupported-definition");
+  if (!answersVersionQuestion(summary.definition, "cliApplicationInstallationRules")) return fail("unsupported-definition");
 
   const applications: InstalledApplicationRow[] = [];
   const seen = new Set<string>();
