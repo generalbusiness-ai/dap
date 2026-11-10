@@ -1,0 +1,50 @@
+{
+  "qualification": "Sealed metadata-only reconciliation of exact90c7 Page/Card workflow_dispatch attempt1 actual successes. No raw fixture/log payload copied into safe unit; later candidate needs fresh source comparison.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-90c7-browser-ci/terminal-audit",
+  "checkpoint": "90c7dd9b9614ca61a4d31448088608ec0e3621e6",
+  "tree": "c278e41675ec1db20f694bb04c4caf4e96c02aa3",
+  "fileCount": 5,
+  "sha256Sums": "16da65a0b479792d2676df5bf1c3673bbb35083392da0174cf4637754795cbab",
+  "files": [
+    {
+      "path": "check-annotations.json",
+      "bytes": 31,
+      "sha256": "bd828430894a99be9879b4ab2e319ddb07da45994868ac798467fb85aeb483e9"
+    },
+    {
+      "path": "proposed-record.txt",
+      "bytes": 1225,
+      "sha256": "0ec9f37d0e36a876b45882a9f9f003620b4ed1cb523a57bd9391194496089218"
+    },
+    {
+      "path": "raw-input-index.json",
+      "bytes": 27467,
+      "sha256": "029e1047347bd8ad298aa0c755ae54a058f45231f77ec46300381d008f845fda"
+    },
+    {
+      "path": "terminal-reconciliation.json",
+      "bytes": 10228,
+      "sha256": "b4f0db6dc501c37922f5c5cd853aa587de98aee20be6a11185359a43e2a51a8f"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-90c7-browser-ci/20261110T084823087122Z",
+      "fileCount": 47,
+      "sha256Sums": "79ec8923c5a0540dfa402ead3fe46141d79f6fdecbd2e0e6418f68164eafbfac",
+      "ownerPrivate": true,
+      "nonwritable": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0b-90c7-browser-ci/dispatch-receipts",
+      "fileCount": 53,
+      "sha256Sums": "52b784286c300396f84e66ca0faee8af939f47c188b7e69fc46c9feb042e524a",
+      "ownerPrivate": true,
+      "nonwritable": true
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming the adopted manifest"
+  }
+}

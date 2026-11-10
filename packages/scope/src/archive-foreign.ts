@@ -1,10 +1,11 @@
+import { answersVersionQuestion, platform } from "@generalbusiness/dap-platform";
 /** Direct retained-copy metadata only. No payload body, recursive source
  * history, policy certificate or production admission is supplied here. */
 import { natural, same } from "@generalbusiness/dap-bytes";
-import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
+
 import type { Bounds, Digest, FactRef, Input, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusiness/dap-bytes";
-import { platform } from "@generalbusiness/dap-platform";
+
 import { forecastArchiveSourceLookup } from "./archive-source-cost.ts";
 import { derivable } from "@generalbusiness/dap-derive";
 import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, ARCHIVE_FOREIGN_COPY_REQUEST_WORK, ARCHIVE_FOREIGN_COPY_SIZE_METADATA, ARCHIVE_FOREIGN_GENESIS_METADATA, archiveForeignRepeatWork, archiveForeignUseMetadata, type ArchiveForeignColdFootprint } from "./archive-foreign-cost.ts";
@@ -59,7 +60,7 @@ export class ArchiveForeignMetadata {
   }
   #policy(source: ArchiveSourcePin): { readonly policy: ReviewedArchivePolicy; readonly support?: Readonly<ArchiveSupportFootprint> } {
     const pin = source.pin;
-    if (!isDigest(pin) && pin.startsWith("platform:membership@") && pin !== INVITATION_KEY_MEMBERSHIP
+    if (!isDigest(pin) && pin.startsWith("platform:membership@") && !answersVersionQuestion(pin, "scopeArchiveForeignLegacyMembership")
       && !membershipCopySource(pin, this.consumer)) return stop("unsupported-credential-cohort");
     if (source.staticNative) this.budget.spend(forecastArchiveSourceLookup(null));
     const policy = this.policies.get(pin);

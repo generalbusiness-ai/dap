@@ -1,12 +1,13 @@
-import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, applicationAnnouncement } from "@generalbusiness/dap-platform";
+
 /** A safe read of this Directory's own recorded child result. Its native
  * outcome sends the final install notice. No network or storage write here. */
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { FAILED_CLAIM_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, APPLICATION_ANNOUNCEMENT_OWNER, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2, applicationAnnouncement, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+
 import type { OutsideGiven } from "../object.ts";
 import type { EffectRequest, Outside } from "../operations.ts";
 export function applicationAnnouncementOutside(given: Pick<OutsideGiven, "state" | "own" | "scope">): Outside {
-  const accepts: Outside["accepts"] = (owner, kind) => (owner === OWN_AGENT_COHORT.directory || owner === FAILED_CLAIM_COHORT.directory || owner === REPOSITORY_BINDING_COHORT.directory || owner === SEPARATE_RECOVERY_COHORT.directory || owner === COMMONS_COHORT.directory || owner === APPLICATION_ANNOUNCEMENT_OWNER || owner === DECLARED_APPLICATION_COHORT.directory || owner === DEVICE_APPLICATION_COHORT.directory || owner === AC.directory || owner === AC2.directory || owner === ARCHIVE_DEVICE_APPLICATION_COHORT.directory || owner === ARCHIVE_DEVICE_PUBLICATION_COHORT.directory || owner === ARCHIVE_CERTIFIED_RULES_COHORT.directory || owner === HARDENED_CERTIFIED_RULES_COHORT.directory || owner === UNPUBLISHED_COHORT.directory) && kind === "announce-application";
+  const accepts: Outside["accepts"] = (owner, kind) => (answersVersionQuestion(owner, "scopeApplicationAnnouncementDirectory")) && kind === "announce-application";
 
   const read = async (request: EffectRequest) => {
     const current = given.scope();

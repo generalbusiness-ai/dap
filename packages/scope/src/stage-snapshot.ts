@@ -1,8 +1,9 @@
+import { answersVersionQuestion, destinationBranch, destinationEvidenceAdmissionCurrent, destinationEvidenceJob, readRulesPolicyReplyV17, type StageSnapshotReply } from "@generalbusiness/dap-platform";
 /** Signed stage read. Native admission owns authority; this port only supplies immutable execution bytes. */
 import type { FactRef, KeyId, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalBytes, canonicalize, entryHash, isFactRef, isRecord, isScopeRef, same, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isEntryOf } from "@generalbusiness/dap-derive";
-import { destinationBranch, destinationEvidenceAdmissionCurrent, destinationEvidenceJob, readRulesPolicyReplyV17, type StageSnapshotReply } from "@generalbusiness/dap-platform";
+
 import { readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS, verifyOwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 import type { DestinationHostOptions, DestinationRepository } from "./destination-host.ts";
 import type { OutsideGiven } from "./given.ts";
@@ -35,7 +36,7 @@ function currentRoomRules(value: unknown, admitted: NonNullable<ReturnType<typeo
 export async function readStageSnapshot(given: OutsideGiven, options: DestinationHostOptions, asked: SignedIntent): Promise<StageSnapshotReply> {
   try {
     const reader = options.snapshotReader, scope = given.scope(), intent = asked?.intent;
-    if (!reader?.source || scope?.at.kind !== "destination" || given.genesis()?.seed.definition !== "platform:destination@17" || !verifySignedIntent(asked)
+    if (!reader?.source || scope?.at.kind !== "destination" || !answersVersionQuestion(given.genesis()?.seed.definition, "evidenceStageSnapshot") || !verifySignedIntent(asked)
       || intent.kind !== "git-read@1:job-read" || intent.on !== null || Object.keys(intent.expected).length !== 0 || Object.keys(intent.fields).join() !== "job" || !isFactRef(intent.fields["job"])
       || !same(intent.to, intent.fields["job"].at)) return null;
     const jobFact = intent.fields["job"], now = timeMs(given.clock.read()), retained = timeMs(scope.time), until = timeMs(intent.notAfter);

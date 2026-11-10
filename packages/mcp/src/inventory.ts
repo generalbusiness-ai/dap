@@ -1,3 +1,4 @@
+import { answersVersionQuestion, ROLE_LISTS, SIBLINGS_OF, platform, type Role } from "@generalbusiness/dap-platform";
 /**
  * The inventory: which scopes the server lists acts for, and the caller's
  * standing on each membership they use (plan 031, section 6). It is durable
@@ -21,7 +22,7 @@
 
 import type { DeclaredDefinition, Digest, Head, Item, PlatformDefinition, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { definitionDigest, isDigest, isPlatformDefinition, parseStrict } from "@generalbusiness/dap-bytes";
-import { ROLE_LISTS, SIBLINGS_OF, platform, type Role } from "@generalbusiness/dap-platform";
+
 import { ScopeHandle, partitionIndexes } from "@generalbusiness/dap-client";
 import type { Held, Inventory, Place, Standing } from "./catalogue.ts";
 import type { DefinitionLike } from "./describe.ts";
@@ -185,7 +186,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig,
       const repo = d.items.find((item) => item.type === "repository");
       const ref = (name: string): ScopeRef | null => (isRef(repo?.refs[name]) ? repo!.refs[name] as ScopeRef : null);
       let rows = d.items;
-      if (d.definition === "platform:directory@10") {
+      if (answersVersionQuestion(d.definition, "mcpInventoryPartitionDirectory")) {
         const coverage = await readPartitionIndexes(reads, repository.directory, M);
         if (!coverage.complete) unread.push({ scope: repository.directory.scope, reason: `directory-index-incomplete:${coverage.reason}` });
         rows = coverage.indexes.flatMap(index => [...index.lanes, ...index.applications]);

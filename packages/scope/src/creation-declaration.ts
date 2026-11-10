@@ -1,10 +1,10 @@
-import { OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, platform } from "@generalbusiness/dap-platform";
 
 /** Bounded immutable declaration custody for serving lineage, not authority.
  * The caller separately authenticates the Directory's birth and exact send. */
 import { canonicalize, definitionDigest, isDigest, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { same } from "@generalbusiness/dap-derive";
-import { SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
+
 import type { Pinned } from "./core.ts";
 import type { Store } from "./store.ts";
 import { PROOF_BYTE_BOUNDS } from "./proof-bytes.ts";
@@ -13,7 +13,7 @@ export function creationDeclaration(store: Store, pinned: Pinned | null, at: unk
   if (!active() || !isScopeRef(at) || at.kind !== "directory" || !isDigest(digest) || !Number.isSafeInteger(maxBytes) || maxBytes <= 0 || maxBytes > PROOF_BYTE_BOUNDS.body) return null;
   const scope = store.scope();
   if (!active() || !scope || scope.status !== "active" || !same(scope.at, at) || !pinned?.platform
-    || ![OWN_AGENT_COHORT.directory, FAILED_CLAIM_COHORT.directory, REPOSITORY_BINDING_COHORT.directory, SEPARATE_RECOVERY_COHORT.directory, COMMONS_COHORT.directory, APPLICATION_COHORT.directory, ARCHIVE_DEVICE_APPLICATION_COHORT.directory, ARCHIVE_DEVICE_PUBLICATION_COHORT.directory, ARCHIVE_CERTIFIED_RULES_COHORT.directory, HARDENED_CERTIFIED_RULES_COHORT.directory, UNPUBLISHED_COHORT.directory].some(named => named === pinned.named)) return null;
+    || !answersVersionQuestion(pinned.named, "scopeCreationDeclarationDirectory")) return null;
 
   const directSize = store.retainedSize("definition", digest);
   let raw: string;

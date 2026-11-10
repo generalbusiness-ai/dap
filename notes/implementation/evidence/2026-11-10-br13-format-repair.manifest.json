@@ -1,0 +1,316 @@
+{
+  "version": 1,
+  "request": "487496f5ad73675926a070808188cd2a228334c1",
+  "promise": "4b0e1a79fc0054ca2e330c22f1282f542bdce9fe",
+  "sourceHead": "538670bbb1a3bf276f9b5f49ef32c21ae347dd48",
+  "sourceTree": "53c3dd51994d132a0b0e4789a7810d5f69d7b786",
+  "booking": "63fb4654d63b2bb11178da41094308b4c531a3cf",
+  "end": "004093316191942ab5efa0c0edfe5ad215722a67",
+  "actualExits": {
+    "formatter": 0,
+    "driver": 0,
+    "launcher": 0
+  },
+  "proofSha256": "26f15fdb161a11b20afcf43c84f4ce6d4c6aa08c5c5b110cdfba839f82377d37",
+  "rows": [
+    {
+      "path": "packages/platform/test/fixtures/version-questions-86179b0c.json",
+      "originalBytes": 752201,
+      "originalSha256": "1dc69765e7132dcaeea59b984d7cd843fb03db16dd39dc6e56d162e1f53cd86c",
+      "parsedCanonicalSha256": "68379e4f90e24d9b2b5b0e0533efc5610491d19ebeb5a99fac3b6f86f5d19547",
+      "nonWhitespaceTokenSha256": "095caef8c51711983f3ac05a443c4703de80eda23b398875eaa879b5e64ca213",
+      "retainedOriginal": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/originals/packages/platform/test/fixtures/version-questions-86179b0c.json",
+      "formattedBytes": 747009,
+      "formattedSha256": "338c39c4d7d2093e67987c97484591f50f9c48624518add1efab5fc46dda501f",
+      "completeParsedValueEquality": true,
+      "stringAwareNonWhitespaceTokenEquality": true,
+      "retainedFormatted": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/after-proof/formatted/packages/platform/test/fixtures/version-questions-86179b0c.json"
+    },
+    {
+      "path": "packages/platform/test/fixtures/version-standing-86179b0c.json",
+      "originalBytes": 8339,
+      "originalSha256": "b1c40922d79b71ce1ce6ed202ab7fb1de7dd0324557f55539eb5d9979222188a",
+      "parsedCanonicalSha256": "a7e7dc84c6b0ba1ae9e6b47338d4ed756c4b943fc8edf4aee67c763b782c1fe0",
+      "nonWhitespaceTokenSha256": "0c41ac8f645d6421b090627a68bd4693c110a9d1c0018e1b5f8739d8cdac52de",
+      "retainedOriginal": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/originals/packages/platform/test/fixtures/version-standing-86179b0c.json",
+      "formattedBytes": 8327,
+      "formattedSha256": "c3d15c30a770587a44a1598da67455546cbc3826d904a9e5ab632800366b026b",
+      "completeParsedValueEquality": true,
+      "stringAwareNonWhitespaceTokenEquality": true,
+      "retainedFormatted": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/after-proof/formatted/packages/platform/test/fixtures/version-standing-86179b0c.json"
+    },
+    {
+      "path": "scripts/public-release.json",
+      "originalBytes": 4059,
+      "originalSha256": "5b358e78d8094ac1d56c87d888aef366a10085899375d9f361a7a0be11c403d3",
+      "parsedCanonicalSha256": "2f1415f4db11279b04f0703c9478f2a0dc1dcae12ccb6beeaf50cc12eefe2027",
+      "nonWhitespaceTokenSha256": "12b149613e82685d1db76a0a5bc23e24befc87501c2898786e74123c5aff34ac",
+      "retainedOriginal": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/originals/scripts/public-release.json",
+      "formattedBytes": 4103,
+      "formattedSha256": "58aadf84a19d6b81dfc9ab600783444bb35135baca644eb6724bfa531195192d",
+      "completeParsedValueEquality": true,
+      "stringAwareNonWhitespaceTokenEquality": true,
+      "retainedFormatted": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1/after-proof/formatted/scripts/public-release.json"
+    }
+  ],
+  "unchangedFences": {
+    "unchangedSourceRows": 4493,
+    "unchangedToolRows": 7529,
+    "unchangedInputRows": 12,
+    "unchangedDependencyLinks": 33
+  },
+  "qualification": "One pinned Prettier3.9.10 invocation; parsed JSON values and stronger non-whitespace token equality preserve all old answers and release metadata. No validation/test/compiler/build rerun or exemption. Failed gate-v2 retained separately; repaired gate remains due.",
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "mode": "Every original, formatted, process and curated file and directory is nonwritable.",
+    "removalRequires": "recorded planner act naming adopted manifest"
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1",
+      "fileCount": 22,
+      "files": [
+        {
+          "path": "after-proof/formatted/packages/platform/test/fixtures/version-questions-86179b0c.json",
+          "bytes": 747009,
+          "sha256": "338c39c4d7d2093e67987c97484591f50f9c48624518add1efab5fc46dda501f",
+          "mode": "0o444"
+        },
+        {
+          "path": "after-proof/formatted/packages/platform/test/fixtures/version-standing-86179b0c.json",
+          "bytes": 8327,
+          "sha256": "c3d15c30a770587a44a1598da67455546cbc3826d904a9e5ab632800366b026b",
+          "mode": "0o444"
+        },
+        {
+          "path": "after-proof/formatted/scripts/public-release.json",
+          "bytes": 4103,
+          "sha256": "58aadf84a19d6b81dfc9ab600783444bb35135baca644eb6724bfa531195192d",
+          "mode": "0o444"
+        },
+        {
+          "path": "after-proof/proof.json",
+          "bytes": 4125,
+          "sha256": "26f15fdb161a11b20afcf43c84f4ce6d4c6aa08c5c5b110cdfba839f82377d37",
+          "mode": "0o444"
+        },
+        {
+          "path": "before.json",
+          "bytes": 4259,
+          "sha256": "c2e03cca7d352d6114123885223114be8bbb1a3ff0bb7313c963f5c10927c747",
+          "mode": "0o444"
+        },
+        {
+          "path": "originals/packages/platform/test/fixtures/version-questions-86179b0c.json",
+          "bytes": 752201,
+          "sha256": "1dc69765e7132dcaeea59b984d7cd843fb03db16dd39dc6e56d162e1f53cd86c",
+          "mode": "0o444"
+        },
+        {
+          "path": "originals/packages/platform/test/fixtures/version-standing-86179b0c.json",
+          "bytes": 8339,
+          "sha256": "b1c40922d79b71ce1ce6ed202ab7fb1de7dd0324557f55539eb5d9979222188a",
+          "mode": "0o444"
+        },
+        {
+          "path": "originals/scripts/public-release.json",
+          "bytes": 4059,
+          "sha256": "5b358e78d8094ac1d56c87d888aef366a10085899375d9f361a7a0be11c403d3",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/actualdriver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/body/formatter.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/body/formatter.started.json",
+          "bytes": 38,
+          "sha256": "3c3357e4011b05ded2f2e1d5ab20e4803ef8f59810d726fc47f3a49a3d3de293",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/body/formatter.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/body/formatter.stdout",
+          "bytes": 168,
+          "sha256": "9986851198e8bd3dfe51815ac8c3a857924196bfdaeeb03440eedc617e69fe8e",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/body/invocation.json",
+          "bytes": 713,
+          "sha256": "02ac87fa5204554217a2e683c159c4a4ea86200dba4d46312383646d072df7c5",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/driver.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/driver.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/launcher.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/launcher.json",
+          "bytes": 821,
+          "sha256": "b2d1bf376bc479362977726a6723063a1e3c204b1d947b1750a9a403648957a8",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/outer-timing.json",
+          "bytes": 571,
+          "sha256": "bd40d0af71f79d7f7ae560c25e3f0ce83e731791001d5246252954dcda5d636c",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/result.json",
+          "bytes": 250,
+          "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55",
+          "mode": "0o444"
+        },
+        {
+          "path": "run/started.json",
+          "bytes": 44,
+          "sha256": "22ad99ca07b6cef5966c087f0f513368f60b247c034774be578dbe9a37531fe2",
+          "mode": "0o444"
+        }
+      ],
+      "directories": [
+        {
+          "path": ".",
+          "mode": "0o555"
+        },
+        {
+          "path": "after-proof",
+          "mode": "0o555"
+        },
+        {
+          "path": "after-proof/formatted",
+          "mode": "0o555"
+        },
+        {
+          "path": "after-proof/formatted/packages",
+          "mode": "0o555"
+        },
+        {
+          "path": "after-proof/formatted/packages/platform",
+          "mode": "0o555"
+        },
+        {
+          "path": "after-proof/formatted/packages/platform/test",
+          "mode": "0o555"
+        },
+        {
+          "path": "after-proof/formatted/packages/platform/test/fixtures",
+          "mode": "0o555"
+        },
+        {
+          "path": "after-proof/formatted/scripts",
+          "mode": "0o555"
+        },
+        {
+          "path": "originals",
+          "mode": "0o555"
+        },
+        {
+          "path": "originals/packages",
+          "mode": "0o555"
+        },
+        {
+          "path": "originals/packages/platform",
+          "mode": "0o555"
+        },
+        {
+          "path": "originals/packages/platform/test",
+          "mode": "0o555"
+        },
+        {
+          "path": "originals/packages/platform/test/fixtures",
+          "mode": "0o555"
+        },
+        {
+          "path": "originals/scripts",
+          "mode": "0o555"
+        },
+        {
+          "path": "run",
+          "mode": "0o555"
+        },
+        {
+          "path": "run/body",
+          "mode": "0o555"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-format-repair-538670bbb1-review",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "audit.json",
+          "bytes": 1100,
+          "sha256": "8558a0bf87851ed17be467f62c680c5c18f7dceeb4a9949c6bae3c1df40108b0",
+          "mode": "0o444"
+        },
+        {
+          "path": "before.json",
+          "bytes": 4259,
+          "sha256": "c2e03cca7d352d6114123885223114be8bbb1a3ff0bb7313c963f5c10927c747",
+          "mode": "0o444"
+        },
+        {
+          "path": "outer-result.json",
+          "bytes": 250,
+          "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55",
+          "mode": "0o444"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 571,
+          "sha256": "bd40d0af71f79d7f7ae560c25e3f0ce83e731791001d5246252954dcda5d636c",
+          "mode": "0o444"
+        },
+        {
+          "path": "proof.json",
+          "bytes": 4125,
+          "sha256": "26f15fdb161a11b20afcf43c84f4ce6d4c6aa08c5c5b110cdfba839f82377d37",
+          "mode": "0o444"
+        }
+      ],
+      "directories": [
+        {
+          "path": ".",
+          "mode": "0o555"
+        }
+      ]
+    }
+  ]
+}

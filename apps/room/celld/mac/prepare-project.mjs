@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { chmod, lstat, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { contextForCelldSmoke } from '../../../../scripts/celld-smoke.mjs';
+import { contextForCelldSmoke, celldAnswersVersionQuestion } from '../../../../scripts/celld-smoke.mjs';
 
 const maintained = new URL('../wrangler.json', import.meta.url);
 const worker = fileURLToPath(new URL('../../worker.ts', import.meta.url));
@@ -31,7 +31,7 @@ export async function prepareProject(options) {
     const context = await contextForCelldSmoke({ base: origin, home, fetch: () => { throw Error('HTTP is disabled during preparation'); } });
     const config = await context.store.config();
     if (config?.v !== 1 || config.service !== origin || config.plan?.service !== origin
-      || !['platform:register@21', 'platform:register@25'].includes(config.plan.definition) || typeof config.plan.register !== 'string'
+      || !await celldAnswersVersionQuestion(config.plan.definition, "celldPreparedNoHostRegister") || typeof config.plan.register !== 'string'
       || !/^sc_[a-z2-7]{52}$/.test(config.plan.register)
       || config.plan.founding?.intent?.fields?.host !== 'none' || config.plan.founding.intent.fields.namespace !== '') throw Error();
     const project = JSON.parse(await readFile(maintained, 'utf8'));
@@ -40,7 +40,7 @@ export async function prepareProject(options) {
     await chmod(out, 0o700);
     project.vars = { ...project.vars, REGISTER_SCOPE: config.plan.register, PUBLIC_ORIGIN: origin,
       MCP_ENABLED: 'true', MCP_TOOL_ADDITIONS: '[]', SESSION_SECRET: randomBytes(32).toString('base64url') };
-    if (config.plan.definition === 'platform:register@25') {
+    if (await celldAnswersVersionQuestion(config.plan.definition, "celldPreparedBindingPolicyRegister")) {
       const policy = JSON.parse(await readFile(new URL('./repository-binding-policy.json', import.meta.url), 'utf8'));
       project.vars.PLATFORM_CREATION_PINS = JSON.stringify(policy.PLATFORM_CREATION_PINS);
     }

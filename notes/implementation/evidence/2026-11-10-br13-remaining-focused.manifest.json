@@ -1,0 +1,405 @@
+{
+  "version": 1,
+  "request": "487496f5ad73675926a070808188cd2a228334c1",
+  "promise": "4b0e1a79fc0054ca2e330c22f1282f542bdce9fe",
+  "sourceHead": "6cbc96f05bf9de0cae3cfc8270e530b2e5ea9c8f",
+  "sourceTree": "23e73dcb4caf05afb0715a1ded83607f14dfffa1",
+  "booking": "d082a7ec2c5f9d22e3f4bfef28720bce73866af5",
+  "end": "94b12f73c77750d99e99bff9f850b161c8b8fe74",
+  "qualification": "Actual outerdriver, launcher, inner runner and focused exits all0 read. The maintained focused driver completes37 unique compiler contexts and347 exact cases across two whole threads owners (323 questions,24 relations). Structured ledger, same-run JSONL and built-in JSON agree; no skips, failures, retries, repeats, unknown selected cases or unhandled errors. All39 fences retain2253 active sources,8 external inputs,15 workspace bindings and50 export aliases. Immutable checkpoint Git bytes independently match all2253 source hashes. Owned groups closed. This does not run controls or replace the final maintained gate.",
+  "counts": {
+    "compilerContexts": 37,
+    "compilerCommandsPassed": 37,
+    "bodyCommandsPassed": 1,
+    "plainCasesPassed": 347,
+    "plainCasesSkipped": 0,
+    "plainCasesFailed": 0,
+    "completeOwners": 2,
+    "sameRunUniqueCaseIdentities": 347,
+    "sourceFences": 39,
+    "activeSourceIdentitiesPerFence": 2253,
+    "externalInputsPerFence": 8,
+    "workspaceBindingsPerFence": 15,
+    "exportAliasesPerFence": 50,
+    "NodeCasesExecuted": 0,
+    "faultControlsExecuted": 0,
+    "unhandledErrors": 0,
+    "retries": 0,
+    "repeats": 0
+  },
+  "retention": {
+    "retainUntil": "2026-12-10",
+    "rawUnitsReadOnlyAfterSeal": true,
+    "privateFixturesCopied": false
+  },
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-remaining-focused-6cbc96f05b-review",
+      "classification": "Only curated status/count/identity metadata. No original logs, assertion payloads, fixture bytes, signing keys or requests copied.",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 438,
+          "sha256": "ddac5d1ce30c54725f2f049e6394a70cfd67fbb9cfee87b3e169eb74eb8f96f1"
+        },
+        {
+          "path": "compiler-contexts.json",
+          "bytes": 9793,
+          "sha256": "c06830bc5e19956736c4a735237fc16b502de9bfa7116aeb77b79f04dbac3c54"
+        },
+        {
+          "path": "independent-audit.json",
+          "bytes": 3657,
+          "sha256": "aeb2fbf4fb345334fad694a35887d4096425fa9042a0f61a5da7da25c5826e45"
+        },
+        {
+          "path": "raw-input-index.json",
+          "bytes": 18600,
+          "sha256": "c4d04639894e1318927c9a2c9eccf9736454fbe739072bfc1f26862a77354b85"
+        },
+        {
+          "path": "retention.json",
+          "bytes": 105,
+          "sha256": "0ab3ce2d93c4ce127162fdd2867493c6036152c46036fbd8adfebcac77f6e8e8"
+        },
+        {
+          "path": "same-run-case-status.json",
+          "bytes": 125262,
+          "sha256": "742983cc896356370d4c4802c7fd6666aa6673794cdb976b26afe96f07616b26"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-remaining-focused-6cbc96f05b/run",
+      "classification": "Opaque retained originals; original bytes remain in place, not public copies. Paths, sizes and hashes only.",
+      "fileCount": 63,
+      "files": [
+        {
+          "path": "actualdriver.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "body/actualrunner.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "body/cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "body/compatibility-reuse.json",
+          "bytes": 2246,
+          "sha256": "873d9910632006448da6309a927cceb0e371cb0bbeabdafb63a6116fb9a4f674"
+        },
+        {
+          "path": "body/focused/body.log",
+          "bytes": 43072,
+          "sha256": "4175eb60229652e74352bd870fefd9d8c16d70b89e7e9bba0d71824cc824d82d"
+        },
+        {
+          "path": "body/focused/context-00.log",
+          "bytes": 29,
+          "sha256": "c06c44c0610bdbeeb95e44fe2b491b7d60ba1b75ae71adcdafbcc4aa32992461"
+        },
+        {
+          "path": "body/focused/context-01.log",
+          "bytes": 29,
+          "sha256": "377b5a1942065557b9794baa12416beb90443a97e12100733ed380d8505b4f79"
+        },
+        {
+          "path": "body/focused/context-02.log",
+          "bytes": 29,
+          "sha256": "ad9d27dcf84586a04dfe49dd34b3bb99b45c2e4b4f432bfc74962571476c0218"
+        },
+        {
+          "path": "body/focused/context-03.log",
+          "bytes": 29,
+          "sha256": "adc31d8d4234dc70d7095f4182c83da07a250ed31b0ecb2a60d7b88164416414"
+        },
+        {
+          "path": "body/focused/context-04.log",
+          "bytes": 29,
+          "sha256": "0b22d9d3ab90c2681dc01e09b4af84f874e257564dfa220c2e41525084680939"
+        },
+        {
+          "path": "body/focused/context-05.log",
+          "bytes": 29,
+          "sha256": "6470b85bc9b5e8a54d2faf742c8fd65b3caf89c20bd83a4b40fdd4c81a48dcbb"
+        },
+        {
+          "path": "body/focused/context-06.log",
+          "bytes": 29,
+          "sha256": "7a71a9890e173021709bea43fa51d58ccb1c6a6890ccc432057c6af567dc9ba6"
+        },
+        {
+          "path": "body/focused/context-07.log",
+          "bytes": 29,
+          "sha256": "426bc4a85643c245b13bcb40c9c6246a6c135703715e9a819d7a6c3b1396777b"
+        },
+        {
+          "path": "body/focused/context-08.log",
+          "bytes": 29,
+          "sha256": "67e37d4c903e63e258c76a4726b1492ebbefcc373cdcceb925ba054408446347"
+        },
+        {
+          "path": "body/focused/context-09.log",
+          "bytes": 29,
+          "sha256": "e77b91908b44f172f1914a4e4ced761e2b6e984a7ab167570fae69a36573f5b0"
+        },
+        {
+          "path": "body/focused/context-10.log",
+          "bytes": 29,
+          "sha256": "7ba152f8c386bf6d674dceb146c3bec6fe5cf3b202d7835958b732258f103567"
+        },
+        {
+          "path": "body/focused/context-11.log",
+          "bytes": 29,
+          "sha256": "4a23f0cbd4adc0ee945bd140cc6ffecc24e7c2dad9b7a707f06bf3587a4dc57c"
+        },
+        {
+          "path": "body/focused/context-12.log",
+          "bytes": 29,
+          "sha256": "8579872bd1dab7477b931c99f42ae5b23e6e46074bec1a49bdc191159d6a3b7d"
+        },
+        {
+          "path": "body/focused/context-13.log",
+          "bytes": 29,
+          "sha256": "d03691cbcc16ed7ae4e5a23acfb875698acffa1198b57874f4539ac0f1a39313"
+        },
+        {
+          "path": "body/focused/context-14.log",
+          "bytes": 29,
+          "sha256": "a67664eada3b70ce66ffd6fe07fe5a330136f7cea3af605471270b67b0a93de2"
+        },
+        {
+          "path": "body/focused/context-15.log",
+          "bytes": 29,
+          "sha256": "4a23f0cbd4adc0ee945bd140cc6ffecc24e7c2dad9b7a707f06bf3587a4dc57c"
+        },
+        {
+          "path": "body/focused/context-16.log",
+          "bytes": 29,
+          "sha256": "71066eb86fd91166a16b3111344ed7633aa935ebb2ec469fd783f5bf77104e2b"
+        },
+        {
+          "path": "body/focused/context-17.log",
+          "bytes": 29,
+          "sha256": "42ba15b0f5465b77d7d6bef3270db4d5b4db17025ef759663759ea4831e7ce41"
+        },
+        {
+          "path": "body/focused/context-18.log",
+          "bytes": 29,
+          "sha256": "22db901ec6a9e8fb3fd38a0897a15068a45ef312db6459572080e58f9a57d361"
+        },
+        {
+          "path": "body/focused/context-19.log",
+          "bytes": 29,
+          "sha256": "426bc4a85643c245b13bcb40c9c6246a6c135703715e9a819d7a6c3b1396777b"
+        },
+        {
+          "path": "body/focused/context-20.log",
+          "bytes": 29,
+          "sha256": "ae53a33e8682f043608d56e2f8970e53a95226dd87f9b66772646635c7df5a53"
+        },
+        {
+          "path": "body/focused/context-21.log",
+          "bytes": 29,
+          "sha256": "31f3fccd7911efe37ccc405efc9f09956419dacbecffcbd01333d51ed9da04ab"
+        },
+        {
+          "path": "body/focused/context-22.log",
+          "bytes": 29,
+          "sha256": "cf37cd15a884465831c53b5f8a4a315f40e99b61f00aed34aee6e617c8a78d54"
+        },
+        {
+          "path": "body/focused/context-23.log",
+          "bytes": 29,
+          "sha256": "31f3fccd7911efe37ccc405efc9f09956419dacbecffcbd01333d51ed9da04ab"
+        },
+        {
+          "path": "body/focused/context-24.log",
+          "bytes": 29,
+          "sha256": "f02d5c8c1e06e6ac46449be74384a9d606e6147220246f130e091c2889d6f6d4"
+        },
+        {
+          "path": "body/focused/context-25.log",
+          "bytes": 29,
+          "sha256": "41af97e1aa193d166cfc1aed7e728c923a1bd556d525244b833867631bc838a4"
+        },
+        {
+          "path": "body/focused/context-26.log",
+          "bytes": 29,
+          "sha256": "63a9917644930443effadf1c4de99ee18dc673f618fedeaff4944dbc85f293f4"
+        },
+        {
+          "path": "body/focused/context-27.log",
+          "bytes": 29,
+          "sha256": "24f2d303d9e2fb6f37d09220eabdcff604f1974639ee0b97d541504407854b52"
+        },
+        {
+          "path": "body/focused/context-28.log",
+          "bytes": 29,
+          "sha256": "8c1e0c50e729f6b5fd5eebf2c6ff7599cd88e25f3df7959bebf55bf4b70f0062"
+        },
+        {
+          "path": "body/focused/context-29.log",
+          "bytes": 29,
+          "sha256": "91505acb2f5b4c8a6c8c8f10ea1c8b46cfe50bac3a5c8c58fb90b280d099364f"
+        },
+        {
+          "path": "body/focused/context-30.log",
+          "bytes": 29,
+          "sha256": "2d2a6f4b1d8362aaea524bdc0014abc55abacaebe6825346e8c3240a37e73c6f"
+        },
+        {
+          "path": "body/focused/context-31.log",
+          "bytes": 29,
+          "sha256": "b9bcea3e68bf496d7d77a7f033c8e017e3021cb6ccf0c31a4e3224877949458e"
+        },
+        {
+          "path": "body/focused/context-32.log",
+          "bytes": 29,
+          "sha256": "bf6152720f53a4ac5598eaefe86042592740aa5ddfba50771b806eb5580c44f7"
+        },
+        {
+          "path": "body/focused/context-33.log",
+          "bytes": 29,
+          "sha256": "773322fb51ae451f7e1a342baa26763fde3e1bc72e1e10ee987f160da7596bed"
+        },
+        {
+          "path": "body/focused/context-34.log",
+          "bytes": 29,
+          "sha256": "d0b76eafcc8e4947b853677e68ab49195f34f8bd917b8d3bc84a69984fea5ef8"
+        },
+        {
+          "path": "body/focused/context-35.log",
+          "bytes": 29,
+          "sha256": "15b19269fab5afd3b9749dc46411f9cbf9e0e7278c0369de31c76b63c660bac4"
+        },
+        {
+          "path": "body/focused/context-36.log",
+          "bytes": 29,
+          "sha256": "2d7cfa9d0e8ccaea54e3e3561738c7b4814fa6da44af008b83d52b35e8e394c2"
+        },
+        {
+          "path": "body/focused/coverage-ledger.json",
+          "bytes": 388754,
+          "sha256": "ec2df54173ed256fc0716714233920b9702d473e034922d36c8040b03b67a49f"
+        },
+        {
+          "path": "body/focused/coverage.jsonl",
+          "bytes": 430282,
+          "sha256": "ba4e52b2f737789faafe9c91750b9cbaef21110a27ded469944ed78787207a2b"
+        },
+        {
+          "path": "body/focused/manifest.json",
+          "bytes": 5043,
+          "sha256": "9366162f699064f82514c322f00ddde77e43c0efea0f2ff9f288af8fb0928403"
+        },
+        {
+          "path": "body/focused/plan.json",
+          "bytes": 403567,
+          "sha256": "ed3ec5a78880972b1affbea6a1aefd03b64522db5e234dafb795c58815fcdc40"
+        },
+        {
+          "path": "body/focused/result.json",
+          "bytes": 78034,
+          "sha256": "f4878d1cba98c8feab27029ea32288c7066c31521992b7f32f312823f72f0625"
+        },
+        {
+          "path": "body/focused/vitest.json",
+          "bytes": 96354,
+          "sha256": "3781b4824f0d8253b3aa27b717fad5fd6386ff3223539d924c75932874b9bf53"
+        },
+        {
+          "path": "body/focused-process-guard.json",
+          "bytes": 653,
+          "sha256": "ab1dac1c619f3d25a067c12e376fcfcbc536a1db48de3c5d9f11ab0db82d90c9"
+        },
+        {
+          "path": "body/focused.cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "body/focused.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "body/focused.log",
+          "bytes": 3548,
+          "sha256": "68b3534735be8b2882855569d53aaead69aff5587536d57018671919a2011658"
+        },
+        {
+          "path": "body/focused.started.json",
+          "bytes": 365,
+          "sha256": "a830d9d3adb0d8c81b8bc56ebb0a1fd57fc29eecf6d0b68ffa52a8a75a9a1bc9"
+        },
+        {
+          "path": "body/owned-descendants.jsonl",
+          "bytes": 31204,
+          "sha256": "5e4e40aba0251b4d502d1ba785ae6bd429baeb42884f3b3e17fde9157ebe9814"
+        },
+        {
+          "path": "body/slot-receipt.json",
+          "bytes": 2147,
+          "sha256": "b8a4f675a88f8dfb81500d7c15348a736987560e6d8a9e28de973664c57faa7e"
+        },
+        {
+          "path": "cleanup.json",
+          "bytes": 109,
+          "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e"
+        },
+        {
+          "path": "driver.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "driver.stdout",
+          "bytes": 60,
+          "sha256": "ab85419bc4f8b298ff38fdfed8f83bd023d25b32fcedf11566427ac9b05d79ed"
+        },
+        {
+          "path": "launcher.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "launcher.json",
+          "bytes": 840,
+          "sha256": "a798d831a1345176fa62c6b1e9d05bba82e4c6fd15f7041f54ba11daf45ae820"
+        },
+        {
+          "path": "outer-timing.json",
+          "bytes": 555,
+          "sha256": "933caad0c643c04d989eb7183261cb6a823a81a2a41d9c6bbea79c1dabbab744"
+        },
+        {
+          "path": "result.json",
+          "bytes": 250,
+          "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55"
+        },
+        {
+          "path": "started.json",
+          "bytes": 44,
+          "sha256": "72a41a4b7a8deedc87b4c326d53e670b8072cf4fded334e7a9d4d0c86704a6a8"
+        }
+      ]
+    }
+  ],
+  "scopeLimits": [
+    "This is one focused run, not a maintained final gate.",
+    "CLI105 and timer1 query-control baselines/mutants are separate pending evidence.",
+    "Three compiler contexts and GitArchive1 use separate carry proofs, not this run.",
+    "Node8 remains historical here and awaits the current maintained final gate.",
+    "The separate c780 Page1 and SDK5 results are not executions in this slot.",
+    "No Native, Counting, Scale, browser, deployment, live-acceptance or SDK-publication claim follows from this run.",
+    "Source checks use recorded fences plus immutable Git blobs; this audit makes no current working-tree cleanliness claim."
+  ]
+}

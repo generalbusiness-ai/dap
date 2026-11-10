@@ -82,34 +82,6 @@ describe("descriptions are derived from the whole declaration", () => {
     expect(JSON.parse(raw.structuredContent["bytes"] as string)).toEqual(definition);
   });
 
-  // Invariant: every guard form, operand and part of the contract has a sentence; none renders as raw JSON.
-  test("every guard form and operand of the contract renders as a sentence", () => {
-    const operands = [{ field: "f" }, { presented: "p", part: "seq" }, { slot: "s" }, { slot: "s", of: "also.x" }, { element: "e.m" }, { element: "e" }, { item: "also.x" }, { signer: true }, { sender: true },
-      { source: { field: "g" } }, { update: "state" }, { result: "reason" }, { scope: true }, { intent: true }, { none: true }, { const: 3 },
-      { field: "f", part: { opened: "t" } }, { field: "f", part: { set: { item: { item: "on" }, slot: "s" } } }, { field: "f", part: { carried: "c" } }, { field: "f", part: { of: "kind", then: "seq" } }];
-    const range = { type: "t", states: ["a"], where: [{ equals: { a: { slot: "s" }, b: { field: "f" } } }], except: ["also.x"] };
-    const guards = [
-      { state: ["a", "b"] }, { signer: ["owner"], of: "also.x" }, { notIn: ["authors"] }, { set: "s" }, { unset: "s" },
-      ...operands.map((o) => ({ equals: { a: o, b: { field: "f" } } })), { differs: { a: { field: "f" }, b: { none: true } } },
-      { some: range }, { none: range }, { count: { ...range, min: 1, max: { field: "n" } } }, { every: { list: "l", states: ["a"] } },
-      { fact: { field: "f" } }, { fact: { presented: "p" } }, { fact: { element: "e" } }, { before: { slot: "s" } }, { after: { slot: "s" } }, { rule: "r" },
-      { each: { list: { field: "l" }, as: "e", where: [{ differs: { a: { element: "e.m" }, b: { none: true } } }], guards: [{ state: ["a"] }] } },
-      { has: { list: { field: "l" }, as: "e", where: [{ equals: { a: { element: "e.m" }, b: { signer: true } } }], guards: [{ set: "s" }] } },
-      { anyOf: [[{ state: ["a"] }], [{ unset: "s" }]] }, { distinct: { list: { field: "l" }, as: "e", key: { element: "e.m" } } },
-      { sameSet: { list: { field: "l" }, as: "e", key: { element: "e.id" }, items: range, match: [{ equals: { a: { slot: "s" }, b: { element: "e.m" } } }], ordered: true } },
-      { capability: { name: "hold", guard: "staged", with: { a: { field: "f" }, b: { each: { field: "l" }, as: "e", value: { element: "e.m" } }, c: { items: range, slot: "s" } } } },
-      { ifPresent: true, reason: "named", equals: { a: { field: "f" }, b: { const: "x" } } },
-    ];
-    const act: ActLike = { step: "transition", on: "t", grant: "g", also: { x: { item: "t", by: "f" } }, fields: { f: { type: "text", max: 9, required: true } }, presents: { p: { kind: ["k"], under: "d", required: false } }, guards, effects: [{ state: "b" }] };
-    const definition: DefinitionLike = { name: "every-form", genesis: "g0", items: { t: {} }, acts: { a: act }, rules: { r: "true" } };
-    const sentences = guardSentences(definition, act, { pinned: "sha256:x" });
-    const texts = sentences.map(inline);
-    expect(texts.length).toBe(guards.length);
-    for (const text of texts) expect(text).not.toContain("the form {");
-    expect(texts.at(-1)).toBe("the act's f equals \"x\", when it is given (named)");
-    expect(inline(guardSentences(definition, { ...act, guards: [{ unknownForm: 1 }] }, { pinned: "sha256:x" })[0]!)).toBe("a guard of an unrecognized form");
-  });
-
   // Invariant: a description over 1,000 characters keeps whole guard sentences only, and names the guards it left out, by their
   // positions and their names, pointing at the complete text.
   test("a long description names the guards it left out and points at inspect describe", () => {

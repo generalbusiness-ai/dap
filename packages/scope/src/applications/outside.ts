@@ -1,3 +1,4 @@
+import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 /** Native fetch prepares the private immutable cache, with explicit host-only
  * resumption. The separate admission phase and its recovery are safe reads.
  * Neither phase repeats an application or provider mutation. */
@@ -6,8 +7,7 @@ import type { Bounds, Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isDigest, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { ApplicationPackageError } from "@generalbusiness/dap-client/application";
 import { ApplicationGitError } from "@generalbusiness/dap-git";
-import { APPLICATION_INSTALL_RULES } from "@generalbusiness/dap-platform/application-install";
-import { COMMONS_COHORT, DECLARED_APPLICATION_RULES, ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+
 import type { EffectAnswer, EffectRequest, Outside } from "../operations.ts";
 import { ApplicationAdmissionError, type ApplicationTrust } from "./admission.ts";
 import { ApplicationContentError, type ApplicationContentStore } from "./content.ts";
@@ -22,7 +22,7 @@ function reason(error: unknown): Refusal | null {
   if (error instanceof ApplicationContentError) return error.reason === "unavailable" ? null : error.reason === "too-large" ? "package-too-large" : "package-invalid";
   return null;
 }
-export const acceptsApplicationOperation: Outside["accepts"] = (owner, kind) => (owner === COMMONS_COHORT.rules || owner === APPLICATION_INSTALL_RULES || owner === DECLARED_APPLICATION_RULES || owner === DEVICE_APPLICATION_COHORT.rules || owner === AC.rules || owner === AC2.rules || owner === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || owner === ARCHIVE_CERTIFIED_RULES_COHORT.rules || owner === HARDENED_CERTIFIED_RULES_COHORT.rules) && ["fetch-application", "admit-application"].includes(kind);
+export const acceptsApplicationOperation: Outside["accepts"] = (owner, kind) => (answersVersionQuestion(owner, "scopeApplicationOutsideRules")) && ["fetch-application", "admit-application"].includes(kind);
 const prepares: Outside["accepts"] = (owner, kind) => acceptsApplicationOperation(owner, kind) && kind === "fetch-application";
 const admits: Outside["accepts"] = (owner, kind) => acceptsApplicationOperation(owner, kind) && kind === "admit-application";
 export function applicationOperationRequest(request: EffectRequest): { uri: string; release: Digest } | null {

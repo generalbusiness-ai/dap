@@ -1,0 +1,40 @@
+{
+  "head": "a591595eda340db589a5db776b0a78741bbd4c89",
+  "pageRunId": 42761381020,
+  "pageAttempt": 1,
+  "cardRunId": 42761385370,
+  "cardAttempt": 3,
+  "actualSuccessfulSteps": 25,
+  "files": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-a591-card-attempt3-ci/terminal-audit/check-annotations.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "mode": "0o644"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-a591-card-attempt3-ci/terminal-audit/input-index.json",
+      "bytes": 17036,
+      "sha256": "ab169bd7e0d2a35c3e3d560c5ea4ce3434e30081ee1bb15f1bf2506a0e9151f4",
+      "mode": "0o644"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-a591-card-attempt3-ci/terminal-audit/proposed-record.txt",
+      "bytes": 1047,
+      "sha256": "47af96a278d8c98b0bd4b12e0c9f7f19d5a3b3a407964141fe649d08863ad56e",
+      "mode": "0o644"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-a591-card-attempt3-ci/terminal-audit/source-equivalence-a591-ff0eee.json",
+      "bytes": 2354,
+      "sha256": "1a5f7935342271b9142b9390637f55ddad6b38bfa31ce25d82ac4155a36c3879",
+      "mode": "0o644"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-a591-card-attempt3-ci/terminal-audit/terminal-reconciliation.json",
+      "bytes": 10067,
+      "sha256": "b0393d2a7f8a782e309a8beeb3c9c7a47b9bf39198ded80b76e8271256901630",
+      "mode": "0o644"
+    }
+  ]
+}

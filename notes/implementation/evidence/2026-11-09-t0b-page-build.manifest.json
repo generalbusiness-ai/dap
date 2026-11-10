@@ -1,0 +1,194 @@
+{
+  "request": "260991d8d29bc2dd58a039062572f56c30b7735f",
+  "promise": "b153688569e2a6c32e95e32d3c5c0a22c9a01f3c",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/unit",
+  "qualification": "Independent metadata readback of one completed maintained Page build. No rebuild or application validation ran during this audit.",
+  "readonlyScope": "Only this curated unit after manifest completion. Original raw run, its temporary cache and checkout remain writable.",
+  "files": [
+    {
+      "path": "raw/launcher.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/launcher.exit"
+    },
+    {
+      "path": "raw/stdout",
+      "bytes": 155,
+      "sha256": "287f0aae9c2e8f53ec42735731e9ea2eed38b0f97ed5e0887e25a1c0423dc856",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/stdout"
+    },
+    {
+      "path": "raw/launcher-receipt.json",
+      "bytes": 567,
+      "sha256": "56d3c257116d87f3601bc082393fa0b883f13623fc1b8f7f8097ee8cc92b86ee",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/launcher-receipt.json"
+    },
+    {
+      "path": "raw/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/stderr"
+    },
+    {
+      "path": "raw/actualdriver.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/actualdriver.exit"
+    },
+    {
+      "path": "raw/started.json",
+      "bytes": 299,
+      "sha256": "8288d36c9624840ddb5a543c697194eb7fce4b0628ef5805d4f34ba995226677",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/started.json"
+    },
+    {
+      "path": "raw/body/before.json",
+      "bytes": 573562,
+      "sha256": "7125029e982dcdd23accb6d1c8eabb8177c061598351883a414b0496cba88752",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/before.json"
+    },
+    {
+      "path": "raw/body/plan.json",
+      "bytes": 1070349,
+      "sha256": "7cf803a554dd79d3d4f819ad23edb906a716ca6a930cbaf5c7fcd4c9eb3eb19a",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/plan.json"
+    },
+    {
+      "path": "raw/body/stdout",
+      "bytes": 219,
+      "sha256": "4b2c96009d0562a27789c3f0651f73cbed803c939d82e204870aeb9ba27978a5",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/stdout"
+    },
+    {
+      "path": "raw/body/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/stderr"
+    },
+    {
+      "path": "raw/body/task.json",
+      "bytes": 553,
+      "sha256": "606116c880d800efcec2ece26b1d53fda9aa379752d6dbe9d35363e3ff04255b",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/task.json"
+    },
+    {
+      "path": "raw/body/actualrunner.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/actualrunner.exit"
+    },
+    {
+      "path": "raw/body/after.json",
+      "bytes": 574248,
+      "sha256": "68e04e51f6d193f965ab552aeb116ebbe585e31172a7a10a57c7210c7b00f99c",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/after.json"
+    },
+    {
+      "path": "raw/body/cleanup.json",
+      "bytes": 109,
+      "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/cleanup.json"
+    },
+    {
+      "path": "raw/body/started.json",
+      "bytes": 348,
+      "sha256": "3a1f6e955e28b294f5ae344475da51af110fe86cd8bdab46ba0873e3367d0ec2",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/started.json"
+    },
+    {
+      "path": "raw/body/Page-build-process-guard.json",
+      "bytes": 653,
+      "sha256": "adffa0e1eb408871b1cc9765df29d05811201d01b53e61febc76f8551af51fb6",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/Page-build-process-guard.json"
+    },
+    {
+      "path": "raw/body/owned-descendants.jsonl",
+      "bytes": 814,
+      "sha256": "010622ec005788723adb05b9472b504803820712468b2083fe8a201289412829",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/owned-descendants.jsonl"
+    },
+    {
+      "path": "raw/body/slot-receipt.json",
+      "bytes": 1641,
+      "sha256": "697faf04dbaf97bf9940b9790ac9243d85155038c05d92ba36bcc045d82885ca",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/slot-receipt.json"
+    },
+    {
+      "path": "raw/body/build.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/build.exit"
+    },
+    {
+      "path": "raw/body/build.time",
+      "bytes": 29,
+      "sha256": "9125422088ba975378048b5f3cc55e01711a4c32f09f37d9d1888ec4622fdd78",
+      "source": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0b-page-build/run/body/build.time"
+    },
+    {
+      "path": "inputs/artroom-t0b-page-build-20261109.py",
+      "bytes": 13421,
+      "sha256": "fa67aec369f87c1c4278bdd9bc70cfa0d3dd92a24d25d0c91642342a32478c17",
+      "source": "/private/tmp/artroom-t0b-page-build-20261109.py"
+    },
+    {
+      "path": "inputs/artroom-t0b-page-build-20261109.launcher.py",
+      "bytes": 3387,
+      "sha256": "85524802f48618c18bfa8eb5fd4faffaeee115012dfa87ae5e67ddca91b0de7b",
+      "source": "/private/tmp/artroom-t0b-page-build-20261109.launcher.py"
+    },
+    {
+      "path": "inputs/artroom-t0b-page-build-20261109.plan.json",
+      "bytes": 1070349,
+      "sha256": "7cf803a554dd79d3d4f819ad23edb906a716ca6a930cbaf5c7fcd4c9eb3eb19a",
+      "source": "/private/tmp/artroom-t0b-page-build-20261109.plan.json"
+    },
+    {
+      "path": "inputs/artroom-t0b-page-build-20261109.ready.json",
+      "bytes": 1859,
+      "sha256": "d9585cb20aca8ebef5dac6948925da42d5f036c842624f22ba5e4e16755957f3",
+      "source": "/private/tmp/artroom-t0b-page-build-20261109.ready.json"
+    },
+    {
+      "path": "outputs/dist/index.html",
+      "bytes": 26259,
+      "sha256": "62339a1ea0bcea8af96184debab781bb20f679b51116a88551c94701a7a9a754",
+      "source": "/Users/hughpyle/play/artroom/.builder-worktrees/shared-descriptions-t0b-20261109/apps/room/page/dist/index.html"
+    },
+    {
+      "path": "outputs/dist/page.js",
+      "bytes": 1268829,
+      "sha256": "5ff6b225aeab811d724b3d8ebee38dbb84c49a02c2bbf85521dc636ef2e76b98",
+      "source": "/Users/hughpyle/play/artroom/.builder-worktrees/shared-descriptions-t0b-20261109/apps/room/page/dist/page.js"
+    },
+    {
+      "path": "outputs/dist/oauth.html",
+      "bytes": 3435,
+      "sha256": "87e3ea59858b3221b250910eaa6d5c2189e6185ace47a930f1c06479f73feb0a",
+      "source": "/Users/hughpyle/play/artroom/.builder-worktrees/shared-descriptions-t0b-20261109/apps/room/page/dist/oauth.html"
+    },
+    {
+      "path": "outputs/dist/oauth.js",
+      "bytes": 1002966,
+      "sha256": "cb6547d7ce6c86ea512d9aaa8f4062e9e206bd06de14ddbde46e19ad50617c8e",
+      "source": "/Users/hughpyle/play/artroom/.builder-worktrees/shared-descriptions-t0b-20261109/apps/room/page/dist/oauth.js"
+    },
+    {
+      "path": "outputs/assets.ts",
+      "bytes": 2377462,
+      "sha256": "bf8f50411467d86d35142f36f31a9fe63ae7535bc4b636b2e9d49b66eab0f80a",
+      "source": "/Users/hughpyle/play/artroom/.builder-worktrees/shared-descriptions-t0b-20261109/apps/room/page/assets.ts"
+    },
+    {
+      "path": "independent-audit.json",
+      "bytes": 1693,
+      "sha256": "c725b19b556ca9129e920c258789513a608dae920906edb86c10850fadcb5d97"
+    }
+  ],
+  "withheld": [
+    {
+      "path": "raw/body/tmp",
+      "reason": "Ephemeral Node compile cache; no public evidence claim depends on its contents."
+    }
+  ]
+}

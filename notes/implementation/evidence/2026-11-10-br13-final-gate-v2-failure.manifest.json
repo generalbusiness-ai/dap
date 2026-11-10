@@ -1,0 +1,133 @@
+{
+  "qualification": "Independent metadata-only failed-gate reconciliation. No pass analyzer or pass sealer ran. No compiler, pin check or test phase ran; every5845 frozen case obligation remains unreached. The notes manifest size warning was nonfatal; format alone failed. Earlier focused/control outcomes retain their own checkpoints. No application/compiler/test/build/browser body ran in this audit.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2-failure-audit",
+  "checkpoint": {
+    "commit": "538670bbb1a3bf276f9b5f49ef32c21ae347dd48",
+    "tree": "53c3dd51994d132a0b0e4789a7810d5f69d7b786"
+  },
+  "fileCount": 6,
+  "sha256Sums": "f55a96e47ed1077649ecaa55dff1efd66f7b848f98013369dbcc2af917688b22",
+  "files": [
+    {
+      "path": "failure-reconciliation.json",
+      "bytes": 6120,
+      "sha256": "5278ba88fae1c56032e2cc52c45065af593000d63cc8e05f1aba0fd4ace3d809"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 10341,
+      "sha256": "e0f9d47e3f4560a1f2ab6b3a5b5dc32d9f1d04d597914fa3de43311fce06ac0a"
+    },
+    {
+      "path": "source-custody.json",
+      "bytes": 18825,
+      "sha256": "cb204ab1df6b18df043f84caed84bdb65fa33d714904afe5013ced4dadd2f9b4"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 628,
+      "sha256": "642c4d54c3d8d7b2c7a4b124091807125197bb7945467bd79964a6d0a27acbf7"
+    },
+    {
+      "path": "unreached-obligations.json",
+      "bytes": 2897753,
+      "sha256": "60697f412a18eb0e73fadc2c5bd552951c5f712e6018bb872cf299db40550567"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2",
+      "payloadFileCount": 156,
+      "fileCount": 157,
+      "payloadBytes": 18076510,
+      "sha256Sums": "33b6277426011f1e9f180ec7405c2b1973402ea755d11c82bc3ca64c4ac55614",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2-launch",
+      "payloadFileCount": 9,
+      "fileCount": 10,
+      "payloadBytes": 19011,
+      "sha256Sums": "9f1c9dc987a9a0865acb05350bf889bd14457c11dce5ef6336f2fb141e6690a8",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    }
+  ],
+  "withheldOutputs": [
+    {
+      "name": "whitespace",
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/stage.whxyTdoX/whitespace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "commit-messages",
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/stage.whxyTdoX/commit-messages.log",
+      "bytes": 39,
+      "sha256": "4444466e8b15a91bb14a83c987a807c9fd40e5c3a788a23db225866d21aa0e94"
+    },
+    {
+      "name": "commit-test",
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/stage.whxyTdoX/commit-test.log",
+      "bytes": 594,
+      "sha256": "fa078216264de2edb1751b5e7b0627c4305b475a16d2a1294a82c768899e662b"
+    },
+    {
+      "name": "helpers",
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/stage.whxyTdoX/helpers.log",
+      "bytes": 68,
+      "sha256": "a5597c033cce01875023e74c11eb631178c0ee9be1fadeb043c2b2a9b0bc438b"
+    },
+    {
+      "name": "citations",
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/stage.whxyTdoX/citations.log",
+      "bytes": 1570370,
+      "sha256": "539047a6cde066473c3cf56078ce53af089339ad49d30f740658b98dfaa84e42"
+    },
+    {
+      "name": "cite-test",
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/stage.whxyTdoX/cite-test.log",
+      "bytes": 763,
+      "sha256": "1e2a08ec4ea2ea7de0aefa818ea166d3c21238a5953ecad71d9ef9ffa3f7681a"
+    },
+    {
+      "name": "doc-links",
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/stage.whxyTdoX/doc-links.log",
+      "bytes": 36,
+      "sha256": "40d07cb44f51e6b8126957e91832efabb0a87160865396cb64fa9a1792f914e2"
+    },
+    {
+      "name": "notes",
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/stage.whxyTdoX/notes.log",
+      "bytes": 141,
+      "sha256": "c693916a884edb98953f2631e1f3c3509561ea8f1a55fed87047d97d7e40f274"
+    },
+    {
+      "name": "format",
+      "exitCode": 1,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/stage.whxyTdoX/format.log",
+      "bytes": 324,
+      "sha256": "a130e593ece386e7c677ed96a2acdbcd09735502f2855d9534da35afa228b60b"
+    },
+    {
+      "name": "gate",
+      "exitCode": 1,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-09-br13-final-gate-v2/gate.log",
+      "bytes": 3903,
+      "sha256": "272a3438749750ef9426c955694321b649dcda18bf3719f6d5c7f2dd9ecfcb55"
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}
