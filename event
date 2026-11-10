@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Accept request git:sha1…2ff5db5: Docs reading paths, group D: move the project's own records out of reader pages (item D of request 044311b0), with five small corrections from the reviews of gr…"}
+{"kind":"artifact","text":"SECURITY.md at exact 8631e20989220beaa47b3a4ae78db639e2b6fd5a on planner/docs-paths-d-20261110, under promise git:sha1…850f2fd on request git:sha1…2ff5db5","body":{"commit":"8631e20989220beaa47b3a4ae78db639e2b6fd5a","path":"SECURITY.md"}}
