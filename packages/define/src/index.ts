@@ -27,6 +27,8 @@ import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, RuleEvalError, ruleReferences } from "@generalbusiness/dap-derive/rule";
 
+export { reference } from "./field-types.ts";
+
 declare const ACT_NAME: unique symbol;
 const actNames = new WeakMap<object, { readonly under: string; readonly kind: string }>();
 const INLINE_RULE: unique symbol = Symbol("inline rule");

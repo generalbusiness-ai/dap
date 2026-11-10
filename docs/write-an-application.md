@@ -86,6 +86,33 @@ with `elements(list, "memberName")`. An unannotated list exposes only
 Use `elementMember(row, "self")` to read a declared member named `self`;
 `row.self` reads the whole element.
 
+Use `reference(fragmentBytes)` for a document or entry citation. The bound
+limits its optional UTF-8 fragment. A citation grants no authority and
+retains no dependency. Wrap the type in `required` or `optional`, as for
+other fields, and let `compile` check the bound.
+
+Use `withDefault(optional(type), start)` for an act field with a default.
+Use `on.every(fieldOrSlot, ...states)` for a list of local items and
+`on.notSigner(...partySlots)` to exclude the signer. `some(range(...))`
+requires a matching item. To send a bounded report, put
+`collect(range(...), members)` in a send field. Use `authorsOf(range(...),
+partySlot)` as an additional source of an attribution effect.
+
+Redact a detached text with `on.redact(slot)`. Declare a settlement mark
+with `value.required(bool, false)` and `on.settlesBy(mark, ...states)`.
+Set that mark only to `constant(true)`. In a `relate` handler, use
+`update("state")`, `update("item")`, or `update("revision")`. Use
+`resultReason` only in a send's result effects. A timed rule can notify
+a party slot through `attention`; its notice takes no condition.
+
+Pass durability and capacity as `define` options, for example
+`level: { name: "recorded", version: 1 }` and
+`capacity: { name: "whole-scope", version: 1 }`. Omit either option to keep
+it out of the pinned bytes. Pass handler `late`, `order`, and `copies`
+options directly to `receive`, and result clauses directly to the send
+helper. Use `part(read, { of: entryPart, then: "scope" })` for a compound
+entry part. These existing options need no separate constructors.
+
 Keep these four forms distinct:
 
 - **Builders:** author item, act, handler, and module values that compile
