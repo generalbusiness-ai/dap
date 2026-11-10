@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a57ff48215c1fef0dab36e0a17468c6166903494","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0e-source-seal-producer.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b924f7db2546d90889a94e25082fdaaaa7b0a645","text":"Merge retired a covered predecessor; the successor is at packages/client/src/expected.ts."}
