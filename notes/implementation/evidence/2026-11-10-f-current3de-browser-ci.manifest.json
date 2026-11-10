@@ -1,0 +1,50 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "head": "3de5bb68b3deac34267f42187c8065454211e530",
+  "tree": "35d0e22790fef2d6f31c20758b6bd3cd3c04efdd",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-current3de-browser-ci/sealed/unit",
+  "files": [
+    {
+      "path": "actual-exits.json",
+      "sha256": "c1a8d584f1ebfa6e92212b835890b9d01c53e52665fc1757c1640f9bc9f11390",
+      "bytes": 4197
+    },
+    {
+      "path": "raw-input-index.json",
+      "sha256": "73ea9d54b791257e84600628c9535a3499c06f38ad9d5ebf34e5764deb91b260",
+      "bytes": 19095
+    },
+    {
+      "path": "source-custody.json",
+      "sha256": "a717f834b6f4e5310e8ca5c8c4d7ac0a243edb2e628738972a94d7d305a525c5",
+      "bytes": 1448
+    },
+    {
+      "path": "step-outcomes.json",
+      "sha256": "499e93b3980fb4cca05260c033d4c37845fc00b2fe1b83ed7b333295a1803112",
+      "bytes": 7882
+    },
+    {
+      "path": "summary.json",
+      "sha256": "911798f093462a1a2bad2750930f9f2e783d169ddb261f7cd06319d2ff16a9b3",
+      "bytes": 1982
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-current3de-browser-ci/sealed/private",
+    "manifestSha256": "d34c2804bb253830cd2f7fef4d19c0cdc433237e3ea5fb72a85cb13c928dbb11",
+    "files": 44,
+    "directories": 12,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T20:52:52.403550+00:00"
+    }
+  },
+  "priorCIManifest": {
+    "path": "/private/tmp/artroom-f-browser-ci-20261110.manifest.json",
+    "sha256": "e3bd8ea060e75436b0535d2d15286975f5c78ea8d2ba90931a90e1ea5b7be5ad",
+    "bytes": 1764
+  },
+  "qualification": "Page42893173451 automatic push and Card42895299526 manual workflow_dispatch, exact3de/attempt1,25 successful steps. Older d1/6f outcomes remain historical and untouched. No full-gate/deployment/live acceptance claim. Only new copies become read-only."
+}

@@ -1,0 +1,31 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-canonical-source-seals/unit",
+  "head": "93a87a7b9808d9eb7d5873d4005de8216d05b791",
+  "tree": "1856dc5b5308ffa63ff33e4f8fbc64d7855798e2",
+  "booking": "dc19c6cbe45f824e9e6edc70824643a89cc95d77",
+  "end": "769d91c28da697d5fecea1c8f5a5eea73074fc44",
+  "qualification": "Actual AST metadata at93a87 only. Exact three new/two changed seals proposed; source and original assertions unchanged during the body. No source/table adoption or F application/validation success is claimed.",
+  "files": [
+    {
+      "path": "audit.json",
+      "bytes": 3445,
+      "sha256": "59217ae5ac4070ab03c9605c37fa02c5550e5da84adebe7fca4ef9f934c12a24"
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-canonical-source-seals/private",
+    "manifestSha256": "18a2840a3515567774f500619359e7e27f589605d31ce1d4800b9bc24fd33b33",
+    "files": 37,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T15:44:02.963404+00:00",
+      "action": "Retain original buffers, source/frozen inputs and owner-only archive; no cleanup scheduled or executed."
+    }
+  },
+  "withheld": [
+    "Complete original raw logs/receipts, proposed table, exact source copies, frozen tool/input plans and root readback; all retained in the owner-only archive."
+  ],
+  "readonlyScope": "Only new public payloads0400/0500 and private archive0400/0500. Original source, raw process/producer outputs and frozen inputs remain untouched."
+}
