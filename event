@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7e2d148f2d6961e2357ada2b214d6a7e00e52783","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/stage-snapshot.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7fb16a54c396fab6e5948083c62f924f8b6b421b","text":"Merge retired a covered predecessor; the successor is at docs/public-sdk-release.md."}
