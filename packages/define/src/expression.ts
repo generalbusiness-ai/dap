@@ -12,7 +12,10 @@ interface ExpressionContext {
   readonly on: NamedSubject | undefined;
   readonly also: Readonly<Record<string, NamedSubject>>;
 }
-interface RowContext { readonly row: Readonly<Record<string, { readonly row: string }>> }
+interface RowContext {
+  readonly row: Readonly<Record<string, { readonly row: string }>>;
+  readonly f?: never; readonly on?: never; readonly also?: never;
+}
 
 type FieldReference<C extends ExpressionContext> = C["f"][keyof C["f"] & string] & { readonly part?: never };
 type SlotReference<S> = S extends { readonly item: infer I extends ItemDef; readonly subject: infer N extends Subject }

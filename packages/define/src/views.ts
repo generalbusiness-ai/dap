@@ -15,7 +15,7 @@ type Selected<S extends ProjectionSource, T extends FieldType["type"]> = {
 }[Exclude<keyof S["fields"] & string, Metadata<S>>];
 type Row<S extends ProjectionSource> = { readonly [N in Names<S>]: { readonly row: N } };
 type Reference<S extends ProjectionSource> = Row<S>[Names<S>] & { readonly part?: never };
-type Template<S extends ProjectionSource> = (parts: TemplateStringsArray, ...holes: (Reference<S> | { readonly row: "waiting" })[]) => string;
+type Template<S extends ProjectionSource> = (parts: TemplateStringsArray, ...holes: (Reference<S> | { readonly row: "waiting"; readonly part?: never })[]) => string;
 export type ViewFact<N extends string = string, I extends string = string, T extends string = string> = N
   | { readonly field: I; readonly label: string; readonly scale: number; readonly unit: string }
   | { readonly field: T; readonly label: string; readonly format: "age" };

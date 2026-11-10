@@ -75,6 +75,9 @@ export function typedViewBindings() {
     const computed = { row: "count", part: "nested" } as const;
     // @ts-expect-error The bound view condition also refuses stored computed-part references.
     when`${computed}`;
+    const computedWaiting = { row: "waiting", part: "nested" } as const;
+    // @ts-expect-error The special waiting token also refuses stored computed-part references.
+    text`${computedWaiting}`;
     return layout;
   });
   const limited = views(definition, { state }, { reader: ["typed.create"] });

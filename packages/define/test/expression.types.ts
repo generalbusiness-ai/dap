@@ -23,6 +23,8 @@ export function typedExpressionNames() {
 export function typedRowExpressionNames() {
   const row = { state: { row: "state" }, "queue length": { row: "queue length" } } as const;
   const e = expression({ row });
+  // @ts-expect-error A row context cannot carry conflicting act-context members.
+  const badContext = () => expression({ row, f: 1, on: 2, also: 3 });
   const source = e`${row.state} = 'ready' and ${row["queue length"]} >= 0`;
   // @ts-expect-error The bound row has state, not status.
   const badName = () => e`${{ row: "status" }}`;
@@ -33,6 +35,6 @@ export function typedRowExpressionNames() {
   const computed = { row: "state", part: "nested" } as const;
   // @ts-expect-error A stored structural reference also cannot select a computed part.
   const badStoredPart = () => e`${computed}`;
-  void [badName, badKind, badPart, badStoredPart];
+  void [badContext, badName, badKind, badPart, badStoredPart];
   return source;
 }
