@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1d85665706325255795448b9ff09f82bde7ac474","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0d-static-preflight.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2d87c6b62027b719e495d831b3242e2311b1be81","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/annotations.ts."}
