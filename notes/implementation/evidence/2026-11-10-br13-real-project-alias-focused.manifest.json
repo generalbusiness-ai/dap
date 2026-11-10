@@ -1,0 +1,100 @@
+{
+  "qualification": "Independent metadata-only alias repair witness audit. All26 existing cases passed through the real maintained counting/lending project configs and all7 owners, with no scratch resolve/include override. The subsequent actual Counter-browser Vite probe resolved2 exact supported paths; these observations are not test cases. No compiler rerun, new case, mutant, server, application bundle, install or live acceptance. This audit ran no application/test/resolver body. Earlier v4 module failures remain separate atfb98; no current checkout equality claim.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused-audit",
+  "checkpoint": {
+    "commit": "a591595eda340db589a5db776b0a78741bbd4c89",
+    "tree": "3bbc916a64e0b4c52b278099cc924280fab3732e"
+  },
+  "fileCount": 7,
+  "sha256Sums": "e390d38288c5d78a0bce542a96462385c10b139ef8f2405703d62a4fe654d18f",
+  "files": [
+    {
+      "path": "case-identities.json",
+      "bytes": 6336,
+      "sha256": "5dec7af09af615d9c5bd22bb52da48f1301310520e9770dec6909fb07c569fa5"
+    },
+    {
+      "path": "focus-reconciliation.json",
+      "bytes": 5030,
+      "sha256": "ac91ff41ea47480f0b18671331e2b18785da470ba3a83d03890a3c47db45a0bd"
+    },
+    {
+      "path": "resolver-observations.json",
+      "bytes": 2048,
+      "sha256": "c5c400b3e3350d7f72608d366ff25daaa59ced9ff41ba3cb3254613a5bc11d36"
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 12397,
+      "sha256": "701bbd1f635ae570ddc9dd46d999d088c83b16a59a0b38acdb9c71aed4489ce3"
+    },
+    {
+      "path": "source-tool-custody.json",
+      "bytes": 1173,
+      "sha256": "dce1247b157f1ed6c167daffa2f494232d4a53d6311cf6bcd1db5fb65250d067"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 329,
+      "sha256": "c529624b2088d892f050fa57382b707d07bd6df8be8e9230031f1fe8de962d35"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run",
+      "payloadFileCount": 42,
+      "fileCount": 43,
+      "payloadBytes": 7629344,
+      "sha256Sums": "b70e70b80b92787561e42ef8e79b11ea43083f6de939f5de003b0af7b1c77b51",
+      "ownerPrivate": true,
+      "symlinkCount": 0
+    }
+  ],
+  "withheldOutputs": [
+    {
+      "name": "real-project-cases",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/node_modules/vitest/vitest.mjs",
+        "run",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/apps/counter/commitments.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/apps/counter/definition.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/browser/custody.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/browser/model.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/browser/publication.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/definition.test.ts",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/examples/lending/shelf.test.ts",
+        "--config",
+        "/private/tmp/artroom-br13-real-project-alias-focused-20261110.config.mts",
+        "--bail=1",
+        "--allowOnly=false",
+        "--passWithNoTests=false",
+        "--reporter=verbose",
+        "--reporter=json",
+        "--reporter=/Users/hughpyle/play/artroom/.builder-worktrees/version-questions-br13-20261109/scripts/focused-check.mjs",
+        "--outputFile.json=/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/focused/vitest.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/focused/body.log",
+      "bytes": 4160,
+      "sha256": "5849f363c1bfcc69f92071d447e21f04290e7b1d0105db7f476bc0eb89cb39f3"
+    },
+    {
+      "name": "actual-vite-resolver",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/private/tmp/artroom-br13-real-project-alias-focused-20261110.resolver.mjs",
+        "/private/tmp/artroom-br13-real-project-alias-focused-20261110.plan.json",
+        "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/resolver-observations.json"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-br13-real-project-alias-focused/run/body/resolver.log",
+      "bytes": 2048,
+      "sha256": "c5c400b3e3350d7f72608d366ff25daaa59ced9ff41ba3cb3254613a5bc11d36"
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}

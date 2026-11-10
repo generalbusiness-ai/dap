@@ -447,3 +447,61 @@ asset-and-evidence adoption changes no other production source. Fresh
 Page and Card workflows must use this new production checkpoint. The
 repaired full maintained gate and review remain due. No browser,
 deployment or live acceptance follows from these local checks.
+
+
+## Repair maintained project aliases after gate v4
+
+Booking `25c83967` runs gate v4 at fb98. END `759fd8e2` closes its failed
+slot. Formatting, 45 compiler contexts, 16 typecheck scripts and pins pass.
+Node passes 150 cases and Counting passes 56. Plain records 4,478 passes
+and one skip, with no failed case assertion. Six modules fail to collect
+because Counter and Lending's local Contract prefix aliases append
+`/catalog-vocabulary` to `index.ts`, producing `ENOTDIR`. The run observes
+4,685 cases. Another 25 Plain obligations remain uncollected and all
+1,135 Native obligations remain unreached. Its 111 wrapper observations
+remain unknown.
+
+The [partial gate-v4 manifest](evidence/2026-11-10-br13-final-gate-v4-partial.manifest.json)
+hashes to
+`522dab6d26ed6e1d1d599d581a68ca9482b09f4cc2bb8df996cd4a8cf111a2f1`.
+It preserves the six module collection failures and both raw error groups.
+V2's formatting failure, v3's architecture failures and v4's collection
+failures retain their separate outcomes. No passing gate follows from
+combining their partial observations.
+
+The configuration-only repair at `d4f35c94cf` adds the explicit supported
+Contract vocabulary mapping before an anchored exact bare Contract alias
+in Counter and Lending's maintained Vitest configs. A static review of
+30 active configuration and project source files finds no additional
+Contract prefix hazard in the 16 Plain or four Native projects. The
+matching active Counter browser alias receives the same repair at
+`a591595eda`; inactive spike configs stay unchanged. Every other alias,
+project selection, pool, worker limit, timeout, server and build option
+stays fixed. Runtime sources, exports, fixtures and served Page bytes
+stay unchanged, so no Page rebuild runs for these configuration repairs.
+
+Booking `65f80332` runs the real-project witness at
+`a591595eda340db589a5db776b0a78741bbd4c89`. END `e2e2d716` closes the slot.
+All 26 existing cases pass across the seven complete Counter and Lending
+owners, using their actual maintained project configs and aliases. The
+following Counter browser Vite probe separately resolves two supported
+paths: the bare Contract export and `catalog-vocabulary`. These two
+resolver observations are not test cases. The probe imports no target
+application module, starts no server and produces no application bundle.
+No compiler, new case or mutant runs in this repair witness.
+
+The [real-project alias manifest](evidence/2026-11-10-br13-real-project-alias-focused.manifest.json)
+hashes to
+`65c56a2d2b168ef2c18c72137e12dd2e7c8381058e014b064ee8a37896bb96f2`.
+The audit reads focused, resolver, inner-runner, outer-driver and launcher
+exit files: all contain zero. All owned groups close. Both new safe
+metadata units contain seven read-only files; their manifests also name
+the separately sealed actual runs and raw reports.
+
+The earlier successful fb98 Page and Card workflows remain historical.
+Both recorders load the changed maintained project configs before project
+filtering, so their whole-witness inputs differ after the alias repairs.
+Fresh a591 workflow evidence remains pending. This follow-up changes only
+this note and the two result manifests after the actual a591 witness.
+The repaired complete maintained gate and review remain due. No browser,
+deployment or live acceptance follows from these results.
