@@ -54,7 +54,7 @@
     "rules": {
       "EvidenceBeforeProgress": "advanced => accepted /\\ verified"
     },
-    "syncCommit": "8faa38dcf31855a0a6264e5912b58061b5eda223",
+    "syncCommit": "c9f4dff6267d12d89d1215a0d894e7ec2f5f2435",
     "sha256": {
       "apps/room/page/src/retained-editor-state.ts": "159a82608a78b04f3849d10bcb5a5f2f8a7c6c0dcae69f932636cf3e0b688141",
       "apps/room/page/src/retained-editor-data.ts": "e29c48c2359278ec87fbbacdf11bfa330d2748b6946091921f2d03dcff31d20d"
@@ -76,7 +76,7 @@
       "AtMostOneSend": "sends <= 1",
       "MarkBeforeEffect": "sends > 0 => marked"
     },
-    "syncCommit": "ce69f61a642ebec3c59be04e6f96e10122bc1bce",
+    "syncCommit": "c9f4dff6267d12d89d1215a0d894e7ec2f5f2435",
     "sha256": {
       "packages/scope/src/operations.ts": "3df3718ffd040579435228b9809dbddd6d27de3db2272fb1d429c2030a9c8808",
       "packages/scope/src/sqlite.ts": "aed4f145d7cc3d8f101ff24bd787ba9dc9e62a8534aade31d94761ceca6a6acd"
