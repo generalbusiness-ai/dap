@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:92bfd14d4fb4c7276ef6c58dbfd66ecd5b61ab84","text":"Merge retired a covered predecessor; the successor is at packages/define/test/expression.types.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9370bacab0186252aa8d7220f7fc901b2b4f07fa","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-t0e-strict-three-output.manifest.json."}
