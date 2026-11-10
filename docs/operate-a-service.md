@@ -123,6 +123,126 @@ deploy check.
 [Deploy the scope Worker](deploy.md) gives the rules for settings that
 the file holds and settings that `--keep-vars` keeps.
 
+## Deploy the hosted Workers
+
+1. Check out the reviewed commit and confirm that the checkout is clean.
+
+   ```sh
+   git rev-parse HEAD
+   git status --short
+   ```
+
+   Use the deployed commit recorded for each Worker, or its previous
+   successful receipt. A Worker version ID is not a source commit. Do not
+   choose a commit from a branch tip or guess from a deployment time.
+
+2. Select an existing room on each Worker with its own `DAP_HOME`. Set
+   `ROOM_SCOPE` to a scope in that room, then record the reads before
+   deployment. Repeat these commands for each room.
+
+   ```sh
+   dap log "$ROOM_SCOPE"
+   dap verify --all
+   ```
+
+3. Keep the existing secrets and review the tracked configuration.
+
+   - `grow` needs `SESSION_SECRET`. Its file sets `DEPLOYMENT` to
+     `dap-grow-v1` and supplies its Artifacts configuration.
+   - `lending` and `demo` need `SESSION_SECRET` and an existing
+     `DEPLOYMENT` setting. Their files supply their Artifacts configuration.
+   - `artroom-scope` needs `SESSION_SECRET` and its existing `DEPLOYMENT`,
+     register and host settings. Its tracked index mode is `register`.
+   - On any Worker whose retained host uses `GITHUB_APP_CONFIG`, keep
+     `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN` and
+     `GITHUB_READ_TOKEN`. Keep `GITHUB_CLEANUP_TOKENS` if that host uses
+     cleanup tokens. An Artifacts host needs none of these GitHub secrets.
+
+   The command changes no secret. Send a missing or replacement secret
+   through standard input, as [Rotate secrets](#rotate-secrets) describes.
+   The tracked configuration states each nonsecret variable that this
+   command sets. `--keep-vars` preserves only variables that the file omits.
+   The command accepts no variable override.
+
+4. Set `GROW_DEPLOYED`, `LENDING_DEPLOYED`, `DEMO_DEPLOYED` and
+   `LEGACY_DEPLOYED` to their known full source commits. Choose an absolute
+   receipt directory outside every checkout. Build the dry-run bundles.
+
+   ```sh
+   RECEIPTS=/absolute/operator/deploy-receipts
+   node scripts/deploy.mjs grow lending demo artroom-scope \
+     --deployed "grow=$GROW_DEPLOYED" \
+     --deployed "lending=$LENDING_DEPLOYED" \
+     --deployed "demo=$DEMO_DEPLOYED" \
+     --deployed "artroom-scope=$LEGACY_DEPLOYED" \
+     --receipt-dir "$RECEIPTS" --dry-run
+   ```
+
+   The command prints HEAD, its external scratch directory and the SHA-256
+   of each sorted module manifest. It hashes exact emitted bytes and names,
+   excluding the generated README and source maps. These hashes describe
+   dry-run output, not uploaded bytes or kept live variables. Compare the
+   hashes at two reviewed commits to see whether their bundles differ.
+   A dry run uploads nothing and writes no deployment receipt.
+
+   A new migration tag stops the command. Review its one-way effect before
+   adding `--accept-migration name=tag` to both commands. Name each new tag.
+   The command refuses a changed historical migration or an unused
+   acceptance. [Roll back](#roll-back) gives the migration limit.
+
+5. Deploy in order: Grow, Lending, demo, then the legacy Worker.
+
+   ```sh
+   node scripts/deploy.mjs grow lending demo artroom-scope \
+     --deployed "grow=$GROW_DEPLOYED" \
+     --deployed "lending=$LENDING_DEPLOYED" \
+     --deployed "demo=$DEMO_DEPLOYED" \
+     --deployed "artroom-scope=$LEGACY_DEPLOYED" \
+     --receipt-dir "$RECEIPTS"
+   ```
+
+   Both commands run Wrangler 4.147.0 from an external scratch directory.
+   They install nothing in the checkout. The deployment uses `--keep-vars`.
+   Each completed Worker gets a receipt with its commit, configuration,
+   dry-run bundle hash, Worker version ID and time. Keep those receipts.
+   On the next run, `--previous-receipt "grow=/absolute/receipt.json"`
+   replaces `--deployed "grow=$GROW_DEPLOYED"`, and likewise for each name.
+
+   Exit 3 means a partial result. Read its external partial record and
+   reconcile the reported Worker version before another run. A failed
+   output, hash or receipt check can follow a completed upload. The command
+   stops later Workers, never retries and never rolls back automatically.
+   Exit 1 means another command failure. Keep the external scratch output.
+
+6. Run the read-only smoke checks.
+
+   ```sh
+   node scripts/deploy-smoke.mjs grow --url https://dap-grow.inguz.workers.dev
+   node scripts/deploy-smoke.mjs lending --url https://dap-lending.inguz.workers.dev
+   node scripts/deploy-smoke.mjs demo --url https://dap-demo.inguz.workers.dev
+   node scripts/deploy-smoke.mjs artroom-scope --url https://artroom-scope.inguz.workers.dev
+   ```
+
+   Each command uses a browser User-Agent. Health must answer 200 three
+   times. Only a first 503 gets one cold-start retry. The page must answer 200
+   and closed MCP must answer 404. A declared creation offer must answer 200
+   and name the exact configured register. An omitted offer must answer 404.
+   A kept live offer that the tracked file omits fails this check.
+
+   A smoke failure leaves every deployment receipt intact and exits 1.
+   Investigate before another deployment. The optional analytics check in
+   [Observe a deployment](operations.md) does not replace smoke.
+   Lending has no analytics dataset.
+
+7. Repeat `dap log` and `dap verify --all` on the same existing rooms.
+   Compare the records with step 2. Keep the smoke results with the receipts.
+   A health check alone proves no room or Git continuity.
+
+To roll back, run the version-list and rollback commands in
+[Roll back](#roll-back) from an external scratch directory. Give Wrangler
+an absolute path to the hosted configuration. A rollback cannot undo a
+Durable Object migration or remove records that the newer version wrote.
+
 ## Roll back
 
 1. List the recent deployments and their versions.
