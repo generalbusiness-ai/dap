@@ -31,6 +31,18 @@ Dap was built with the help of several concurrent coding agents, using
 Dap runs on Cloudflare Workers, Durable Objects and Artifacts. It can also
 be self-hosted on other services using workerd and celld.
 
+## Start here
+
+- **Take part in a room:** [Join a room and publish one text change](apps/room/docs/first-change.md).
+- **Connect an AI app:** [Connect an AI app to a room](docs/connect-an-ai-app.md).
+- **Build an application:** [Build a counter](docs/build-a-counter.md).
+- **Run a service:** [Run your own service](docs/self-host.md).
+- **Check the security:** [Security invariants and witnesses](docs/security/threat-model.md).
+- **Contribute:** [Contribute to dap](docs/contribute.md).
+
+[The documentation index](docs/README.md) lists every page in reading
+order. [What is dap?](docs/what-is-dap.md) explains the framework.
+
 ## What is dap, technically?
 
 dap is a framework for building collaborative applications for people and
@@ -74,20 +86,10 @@ My hope is that dap-style applications are useful for a [very broad](docs/use-ca
 
 You can [try them out](https://dap.generalbusiness.ai/) on the hosted service.
 
-## Where to read next
+## Get the command
 
-- [Run your own service](docs/self-host.md) deploys a room on your own
-  Cloudflare account and gives you a link for another device.
-
-- [What is dap?](docs/what-is-dap.md) explains the framework, the actor
-  model and the applications.
-- [The architecture of a dap application](docs/architecture.md) explains
-  scopes, acts, entries, delivery and where the record is kept.
-- [Write an application](docs/write-an-application.md) shows how to
-  declare item types, acts and invariants, then validate and pin them.
-- [The roadmap](docs/roadmap.md) says what runs today and what is not
-  yet built, and [Use cases](docs/use-cases.md) is the catalogue behind
-  it.
-- [The documentation index](docs/README.md) lists every page.
+No package registry publishes the `dap` command yet. Clone this repository,
+run `npm ci`, and run `node packages/cli/bin/dap.js`. You need Node.js
+22.18 or later. [Get the dap command](docs/get-dap.md) gives the steps.
 
 dap is licensed under the Apache License 2.0. See [LICENSE](LICENSE).

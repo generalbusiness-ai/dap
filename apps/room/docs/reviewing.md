@@ -1,77 +1,111 @@
 # Review an exact change version
 
-For a reviewer using an already configured dap source CLI, this page helps you record a judgment about the exact content you read and the repository requirement it satisfies.
+You read one version of a change and record a verdict on it for one review
+requirement. You need a role that holds `change.review`. By default, an
+admin, a maintainer and a member hold it. You cannot review a version that
+you wrote.
 
-**Status. This guide cites the code at `0e5954ecfca23f531cfa2ec42be1524bef3bc9a8`, which is incorporated in main `a1277d9c43bdaff1873e61f0a3d2444fc5f72b53`. Its commands have not been run for this page.** No public package installation or completed browser review is established here. Use only a CLI already supplied for that source and a room whose actual declaration supports these acts.
+## Know the review requirements
 
-First read the change and the actual entries that hold its content:
+The room's rules split the repository into review requirements. Each one
+names paths, how many approvals a version needs and who may give them. The
+default rules have three:
+
+| Requirement | Paths | Who may approve |
+|---|---|---|
+| `rules` | `AGENTS.md` and `CLAUDE.md` in any folder, `.github/workflows/`, `.github/actions/` | A role with `rules.publish`: an admin |
+| `infrastructure` | `.gitignore` and `.gitattributes` in any folder, `.github/` | A role with `change.merge`: an admin or a maintainer |
+| `source` | Every path that no other requirement names | A role with `change.review` |
+
+A room can change these. Open **Rules** in the page to read your room's
+requirements. One verdict counts for one requirement. A change that touches
+two requirements needs a verdict for each.
+
+## Review in the browser
+
+1. Open **Changes** and choose the change. The heading shows its state and
+   **Version** with its number.
+2. Open **Preview source**. It shows the exact text of this version.
+3. Read **Review requirements**. It shows how many approvals each
+   requirement has and how many it needs.
+4. Choose **Review change**. The dialog **Review version** opens with the
+   version number.
+5. In **Decision**, choose **approve** or **request changes**.
+6. In **Review requirement**, choose the requirement that you judge. The
+   list shows only the requirements that you may review for this file.
+7. Optionally, write a **Review comment**.
+8. Choose **Review change**. The page shows the room's answer.
+
+If someone asked you for the review, the page names that request in the
+dialog.
+
+For a version with several files, the page has no guided
+**Review change** task and no source preview. **Advanced** still offers
+the review form, with the version filled in. To read each file first,
+review that version with the `dap` command.
+
+## Review with the dap command
+
+In the commands below, `<change>` is the change's scope ID, such as
+`sc_q3xk...`. `<version>` is the version number that `dap edit`,
+`dap propose` or the page printed.
+
+1. Read the change's journal.
+
+   ```sh
+   dap log <change>
+   ```
+
+2. Read the entry that proposed the version.
+
+   ```sh
+   dap show <change>:<version>
+   ```
+
+   The line `Fields:` shows what the author signed. For one file, the
+   fields hold the file's path, digest, size and text. For several files,
+   they list one source entry for each file. Read each source entry with
+   `dap show`.
+
+3. Record your verdict for one requirement.
+
+   ```sh
+   dap act review-verdict --on <change> \
+     --set manifest=<version> --set verdict=approve --set extent=source
+   ```
+
+   You see the entry that recorded it:
+
+   ```
+   Took effect: entry sc_q3xk...:9, hash sha256:2cd70f9ada97.
+   ```
+
+The field `manifest` takes the version number. To ask for changes, set
+`verdict=request-changes`. A `request-changes` verdict is not an approval.
+
+## Change your verdict
+
+You can record one verdict for each version. To replace it, name your
+earlier review's item number in `earlier`. The change record lists it under
+**Reviews**.
 
 ```sh
-dap acts <change-scope>
-dap log <change-scope>
-dap show <change-scope>:<manifest-entry>
-dap show <change-scope>:<source-entry>
-```
-
-Replace placeholders with recorded identities. A manifest is a recorded version of the proposed change. A manifest list names its frozen source entries and digests; read every relevant source entry. Reading only a title, a task transcript or the latest published page is not reviewing that version. General immutable diff/interdiff access and cold-review acceptance remain separate work.
-
-## Record one verdict for one requirement
-
-An extent is a named part of the repository with its own reviews and checks. Read the room's actual rules and touched paths before choosing one. The default source requirement uses `change.review`; infrastructure uses `change.merge`; authority files such as `AGENTS.md` use `rules.publish`. A repository may add patterns and requirements. [Extent definitions](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/extents.ts#L48)
-
-For an extent actually named `source`, an eligible independent reviewer can record:
-
-```sh
-dap act review-verdict --on <change-scope> \
-  --set manifest=<manifest-item> --set verdict=approve --set extent=source
-```
-
-Use `request-changes` instead of `approve` to record that judgment. It is not an approval and does not supply a universal veto independent of the room's rules. A comment or a passed machine check is not a review verdict.
-
-The current declaration needs `change.review` to record the act. The destination also checks the action required by the named extent when deciding whether an approval counts. A wrong or omitted extent counts for no extent. Mixed changes need the union of their touched requirements; one verdict names one extent. [Verdict declaration](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/lanes/src/change.ts#L907), [Native counting](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/extents.ts#L429)
-
-## Keep the subject and reviewer independent
-
-The manifest must still be current when the verdict takes effect. The lane refuses an author reviewing their own manifest. The destination judges the current reviewer and controller relationship as well as the required action. Under the originally cited Rules policy, an authoring agent's controller is not independent of that author. An explicitly permitted content policy may allow that controller's review; the author remains excluded, and the `rules` extent keeps its stricter requirement.
-
-An explicitly selected `platform:rules@4` scope starts with agent-controller
-review enabled. Versions 1, 2 and 3 keep their prior defaults. Existing rooms
-are not migrated. The author remains excluded, the `rules` extent keeps its
-stricter requirement, and approvals and checks still follow the recorded policy.
-The approval default remains 1. This setting grants no new role or action.
-
-The prospective web founding cohort selects `platform:register@8`,
-`platform:directory@7`, `platform:membership@2`, `platform:rules@4` and
-`platform:destination@3`. The code supports it. Its actual installation,
-deployed configuration and Start integration remain pending. These added
-versions do not change the existing ordinary CLI founding default or old pins.
-
-
-A declared single-controller exception is a separate merge rule. It applies only when the actual observed rules, controller count and author/controller relationship meet all its conditions. It does not turn an author's verdict into independent review or remove checks. Missing relationship/count evidence cannot justify assuming the exception. [Independence and exception](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/platform/src/extents.ts#L436)
-
-A job label such as reviewer grants no authority. The default native `agent` role cannot review or merge. Use the independently authorized member and actual role/policy setup, with its own key; never borrow someone else's identity to make the judgment count.
-
-## Change your judgment deliberately
-
-This declaration allows one submitted verdict per reviewer for a manifest. To replace your own submitted verdict for that same manifest, supply its exact review item:
-
-```sh
-dap act review-verdict --on <change-scope> \
-  --set manifest=<same-manifest-item> --set earlier=<your-review-item> \
+dap act review-verdict --on <change> \
+  --set manifest=<version> --set earlier=<review> \
   --set verdict=request-changes --set extent=source
 ```
 
-The replacement supersedes the earlier review. It does not preserve both extent approvals. Do not expect one reviewer to fill several required extents by making duplicate submissions; plan the qualified reviewers or an explicitly adopted policy. A review of another manifest cannot be silently replaced through this field. No approval carries automatically to a new version merely because its title is the same. The current `review-verdict` declaration has no `scope`, `dependsOn` or `carry` field. Earlier workroom vocabulary is not an extra argument to this act; use its actual declared subjects and retain older review evidence at its original version. [Duplicate and replacement guards](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/lanes/src/change.ts#L926)
+The new verdict replaces the earlier one. An approval does not carry over to
+a new version of the same change. Read the new version and review it again.
 
-An anchored question can name the exact manifest, path, optional line and side through the declared `open-thread` act. Its reference stays with that version; a later version needs deliberate reading and judgment. This manuscript supplies no browser annotation or rendered-diff proof. [Thread declaration](https://github.com/generalbusiness-ai/dap/blob/0e5954ecfca23f531cfa2ec42be1524bef3bc9a8/packages/lanes/src/change.ts#L1139)
+## If the room refuses your verdict
 
-## If the review cannot proceed
-
-- **Author or authority refusal:** use a genuinely qualified independent reviewer; do not change the stated author or reuse another key.
-- **Version no longer current:** preserve the old subject, read the new version and decide deliberately.
-- **Verdict already exists:** inspect your recorded review and use its exact `earlier` reference if replacement is intended.
-- **Merge in progress:** inspect that operation before creating another review or mutation.
-- **Content unavailable or incomplete:** stop the review; absence of readable evidence is not approval.
-- **Reply lost or unavailable:** inspect the original records. Generic `act` may sign a fresh request if rerun; exact recovery requires the retained original envelope and its owning mechanism.
-
-This is source prose for manual outcome 16. Initial source publication is recorded by receipt `732ca210b84469513b3a53b618b2867ca92a71e0`; that receipt does not approve this new guide. All samples, style checks, independent page approval, public release and real browser/cold-review evidence remain owed. It does not complete the full manual or its unfamiliar-application acceptance.
+- **`author-cannot-review`:** you wrote this version. Ask another member to
+  review it.
+- **`verdict-exists`:** you already reviewed this version. Replace your
+  verdict as described above.
+- **`unauthorized`:** your role does not hold `change.review`. Ask an admin.
+- **The version is no longer current:** the author proposed a newer
+  version. Read the new version and review it.
+- **A wrong requirement name:** a verdict for a requirement that the rules
+  do not hold counts for none. Check **Rules** and record it again.
