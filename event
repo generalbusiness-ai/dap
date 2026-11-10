@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8ca8e627e27d1a966e43a78c06a24400df2f8b31","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-br13-client-seals.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8db04bea7e4331bc4556edc77e62a71c55cab724","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/receiver-reads.ts."}
