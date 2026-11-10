@@ -1,0 +1,79 @@
+{
+  "qualification": "Independent metadata audit only: Python stdlib, immutable Git metadata and file readback; no application imports or validation body.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-control-audit",
+  "checkpoint": {
+    "commit": "9f9dacf591df07195d78b147bd729ee781736a34",
+    "tree": "267261fc3921d63c0e0fd8d65f7f93ac7eb884e2"
+  },
+  "fileCount": 6,
+  "sha256Sums": "9b6da1f720b0cc3b6ce70d4d723f6401ab3178e83a1d03e8207143a481de5d50",
+  "files": [
+    {
+      "path": "audit-report.json",
+      "bytes": 6352,
+      "sha256": "4e80a366d348b832fc751dde7b5df7f0196128883fc4b4d29ce21804d57a8909"
+    },
+    {
+      "path": "case-identities.json",
+      "bytes": 3911,
+      "sha256": "4d75984df009350a63cc1554ed2a41fec6647ed5b58998e9c5ce45714605055f"
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 600,
+      "sha256": "2fa8957393aab41a82f58a1432d04f2ff5d487c1423013e0d74ffa4e83d9b860"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-compile-refusal-control-v2",
+      "payloadFileCount": 26,
+      "fileCount": 27,
+      "payloadBytes": 807368,
+      "sha256Sums": "c25bb52d0513a8a3241f64dc9daa69c5af66f12aa47d691cd3c51775f7be4e6a",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-compile-refusal-control-v2-launch",
+      "payloadFileCount": 10,
+      "fileCount": 11,
+      "payloadBytes": 2344,
+      "sha256Sums": "86beff1d0b46ceda39e18cfe3712e89efbca5dc80c59a2bbad58eb0f753636a3",
+      "ownerPrivate": true
+    }
+  ],
+  "previousAudit": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t1-pre-gate-audit",
+    "sha256Sums": "057944d39ca155e29a26a9b71809752527340d0a2e2020b65617e323232ca5fe",
+    "qualification": "Earlier audit remains unchanged and correctly records control UNRUN as of that audit."
+  },
+  "limits": [
+    "Three source counterexamples remain unrepaired and unvalidated.",
+    "The control proves final compile refusal for one missing-genesis witness; it does not prove all diagnostics correct.",
+    "Thirteen compiler and 25 plain passes remain at actual 97b82970; merged B compiler inputs await final gate.",
+    "Full C gate UNRUN.",
+    "Compiled SDK output check and publication UNRUN under planner 0a797a2e; no private capture accessed."
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  },
+  "withheldOutputs": [
+    {
+      "check": "control/before",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 0,
+      "bytes": 1500,
+      "sha256": "16010afad6c6208ff73dcb6196811c1119f5d0baed24db14303450501638ebd1",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    },
+    {
+      "check": "control/after",
+      "metadataFile": "audit-report.json",
+      "metadataRow": 1,
+      "bytes": 1556,
+      "sha256": "693c0a9110f0aafe7885928e8e028668db66010affb4e77da8f1cf8de76fb357",
+      "qualification": "Original raw output stays owner-private in the sealed source unit; no raw payload is copied."
+    }
+  ]
+}
