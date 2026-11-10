@@ -65,7 +65,8 @@ namespace and cache directories, and relative workspace links. No package
 installation ran. The selective focused pass below covers the reviewed
 compiler closure, exact query fixtures and named consumer owners. Post-C
 integration checks the complete SDK owner below. The remaining combined
-compiler/consumer scope, query controls and full gate still need validation.
+compiler and consumer checks and both query controls pass below. The full
+maintained gate remains due.
 
 
 ## Editor and Effects correspondence
@@ -126,9 +127,9 @@ its model checking and cancellation logic stay unchanged. No private
 fixture or raw checker log enters the repository.
 
 These bounded safety checks prove no implementation refinement, liveness,
-live-room outcome or deployment acceptance. The frozen question fixtures,
-other affected consumers, release metadata and maintained gate still need
-BR13 validation after main integration. Unchanged protected source needs
+live-room outcome or deployment acceptance. The combined-source checks below cover the frozen question fixtures,
+affected consumers and release metadata. The maintained gate remains due.
+Unchanged protected source needs
 no repeated formal body after that integration.
 
 
@@ -199,7 +200,7 @@ this note and its manifest after the tested c35 checkpoint.
 At c35, the entire five-case `scripts/public-release-modules.test.mjs`
 owner remains unrun. Its two actual-Git manifest cases encounter the missing
 `./diff` exclusion; C owns that repair. The selective pass makes no SDK,
-live-room, browser or deployment acceptance claim. The prepared guard
+live-room, browser or deployment acceptance claim. At c35, the prepared guard
 controls have not run. The later C/main integration and complete SDK
 owner results follow below; affected final-source workflow citations, the
 maintained gate and review remain due.
@@ -243,17 +244,69 @@ The Page asset comparison provides no browser or live-room acceptance.
 The earlier c35 Page/Card workflow results do not establish equivalence
 through C; the final-source workflow outcomes need their own review.
 
-The new closure comparison identifies 37 compiler contexts with changed
-inputs and 347 cases in the two whole pure question/relation owners.
-Those checks and both query controls still need booked slots. The three
-unchanged compiler contexts and Git archive-policy owner need their exact
-carry receipts. The old eight host Node cases remain historical until the
-final maintained gate runs its current Node stage.
+## Combined-source compiler and pure-owner checks pass
 
-Both query-control baselines cover their complete files: 105 CLI cases
-and one timed-opener case. The independent frozen rows predict three CLI
-mutant failures, at destination17, destination7 and destination8, with
-102 passes; the named destination7 assertion remains required. The timer
-mutant predicts its one destination3 write assertion failure. Those
-predictions remain unobserved. No filter, early bail, retry or restored
-source test rerun forms part of these prepared controls.
+START `d082a7ec`, END `94b12f73`, runs the fresh affected closure at
+`6cbc96f05bf9de0cae3cfc8270e530b2e5ea9c8f`. All 37 unique compiler
+contexts and the complete two pure owners pass. Their structured ledger
+and actual Vitest report agree on 347 unique cases: 323 question cases
+and 24 relation cases, with no skips, errors, retries or repeats.
+The audit reads all four actual exit files as zero. Every one of the 39
+source fences retains the exact 2,253 inputs, eight external inputs,
+15 workspace bindings and 50 aliases. The process and cleanup receipts
+contain no remaining owned group.
+
+The [combined focused manifest](evidence/2026-11-10-br13-remaining-focused.manifest.json)
+hashes to
+`42e723cd15f96f44ca6d7662dd3be02ccfe321fd120a89c544494cf5760b59ec`.
+It inventories six safe metadata files and 63 retained originals. The
+separate carry receipts compare the three unchanged compiler contexts
+and the Git archive-policy owner's exact source, configuration and tools
+against the earlier actual pass. Those four obligations do not rerun in
+this slot. The old eight host Node cases remain historical until the
+current maintained gate runs its Node stage.
+
+## Both query controls distinguish the intended failures
+
+START `7d3daa8c`, END `56dfc3d5`, runs both maintained query controls once
+at the same 6cbc source. Each control runs its whole baseline file and
+one exact mutant. The CLI baseline passes all 105 cases. Replacing
+`cliManifestListDestination` with `nativeStagedPublication` then yields
+102 passes and three `AssertionError` failures at destination17,
+destination7 and destination8. All 105 identities match the independent
+frozen ledger, including the required named destination7 assertion.
+
+The ordinary timed-opener baseline passes its one case. Replacing
+destination3 with destination4 in `nativeTimedOperationOpen` makes the
+same case fail its destination3 assertion: expected `write`, received
+`unavailable`. This witness exercises the actual judge with scripted
+state and ordinary named-pin stand-ins. It makes no Native dispatch or
+live timer claim.
+
+Both actual baseline child exits are zero; both actual mutant child exits
+remain 1. The two maintained control exits, inner runner, outer driver
+and launcher all return zero. A transparent observer retains the four
+actual JSON reports and eight exact returned `Buffer` streams before
+maintained cleanup, while preserving the original `spawnSync` result
+objects, arguments and settings. No test filter, early bail, retry,
+worker override or restored-source test rerun occurs.
+
+The maintained runner restores both original source hashes. All 4,494
+tracked source hashes match the immutable tested Git blobs and restored
+checkout; all 7,526 tool hashes and 33 dependency links match their pins.
+Every process guard and cleanup receipt is empty. The outer elapsed
+time is 12.722583333 seconds. These query controls remain separate from
+the formal ruling's decision to omit repeated formal fault controls.
+
+The [query-control manifest](evidence/2026-11-10-br13-query-controls.manifest.json)
+hashes to
+`e4f7dd262c26a5d5a596ed2e8501f005b4e9ae5123c2c5c513b0af0f8025838e`.
+It inventories five safe metadata files and 1,135 retained original
+files, including harmless Node compile-cache files. The cache files add
+no test claim. The units remain read-only through 10 December. No raw
+report, output buffer or private fixture enters the repository.
+
+This evidence commit changes only this note and the two manifests after
+the tested 6cbc checkpoint. The current maintained full gate and review
+remain due. These checks establish no browser, deployment, SDK
+publication or live-room acceptance.
