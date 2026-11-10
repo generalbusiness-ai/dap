@@ -1,0 +1,354 @@
+{
+  "request": "d5fa31c9c36fc1afb93f401b61e3b3f3b31d92f9",
+  "promise": "230f5474cedda62059b5c9f4f89d11bb61a6f638",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review",
+  "sourceHead": "c370fcbb21b68318fbd298474d143712fe780881",
+  "sourceTree": "aa3fccf5228ef69bfb95e4ddb456015489f706c3",
+  "checkpoint": "c370fcbb21b68318fbd298474d143712fe780881",
+  "tree": "aa3fccf5228ef69bfb95e4ddb456015489f706c3",
+  "booking": "03b55c974d03e842414f27b01c561956337261a1",
+  "end": "b89ed8b079e61a358a9685c6f5bba51bdeec46a8",
+  "qualification": "Actual complete E gate at c370fcbb/tree aa3fccf5. All5842 obligations reconcile as5839 passed and3 skipped. All111 wrapper observations remain UNKNOWN; the6 omitted Scale obligations have no pass or skip result. The first analyzer launcher syntax refusal started no analyzer; the corrected launcher ran the unchanged analyzer once with actual exit0. Earlier failed controllers and their retained-positive reconciliations keep their original outcomes. This gate grants no deployment, live acceptance or new remote CI result.",
+  "outcome": {
+    "actualGateExit": 0,
+    "actualDriverExit": 0,
+    "actualLauncherExit": 0,
+    "actualAnalyzerExit": 0,
+    "counts": {
+      "node": {
+        "passed": 150
+      },
+      "counting": {
+        "passed": 56
+      },
+      "plain": {
+        "passed": 4506,
+        "skipped": 1
+      },
+      "native": {
+        "passed": 1127,
+        "skipped": 2
+      }
+    },
+    "caseIdentities": 5842,
+    "passed": 5839,
+    "skipped": 3,
+    "compilerContexts": 45,
+    "typecheckScripts": 16,
+    "unknownWrappers": 111,
+    "scaleCases": 0,
+    "omittedScaleObligations": 6,
+    "noteSizeWarnings": 6
+  },
+  "files": [
+    {
+      "path": "gate-reconciliation.json",
+      "bytes": 9785,
+      "sha256": "5c3f4b72f683eb7e89e2408b02c1ae3d6d4ebe74075060ff8d2ab3ad40598905",
+      "mode": 256
+    },
+    {
+      "path": "raw-inputs.json",
+      "bytes": 4257,
+      "sha256": "1fc85053a675651fad65c7a94f462c51f91ee267a0a21ea4b3668c09267d0534",
+      "mode": 256
+    },
+    {
+      "path": "rss-baseline.json",
+      "bytes": 2540,
+      "sha256": "26f8377d2e82c108f10a1b8d1981b8535673009b66db4914edd53cfc179e190c",
+      "mode": 256
+    },
+    {
+      "path": "scope-custody.json",
+      "bytes": 2059,
+      "sha256": "4abb5206a60b6152b1a14131f75e802d0f7fb2c669b0d9af745a3695289a1109",
+      "mode": 256
+    },
+    {
+      "path": "sealer.py",
+      "bytes": 46995,
+      "sha256": "da29ce8618dbd7da0c8a85b18c410b222bdfcd5fb2e30271076f527b7d1510c3",
+      "mode": 256
+    },
+    {
+      "path": "source-unit-seals.json",
+      "bytes": 920,
+      "sha256": "6c8570d5e720593731e9f3a1f63e34464f06a7d2b0fa7501c64bb07aa29ff9b3",
+      "mode": 256
+    }
+  ],
+  "safeFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/SHA256SUMS",
+      "bytes": 507,
+      "sha256": "2db7e4fe13285c7926432497a1cab21c21683bdd0306f8a1f06edd6ac9395561",
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/gate-reconciliation.json",
+      "bytes": 9785,
+      "sha256": "5c3f4b72f683eb7e89e2408b02c1ae3d6d4ebe74075060ff8d2ab3ad40598905",
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/raw-inputs.json",
+      "bytes": 4257,
+      "sha256": "1fc85053a675651fad65c7a94f462c51f91ee267a0a21ea4b3668c09267d0534",
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/rss-baseline.json",
+      "bytes": 2540,
+      "sha256": "26f8377d2e82c108f10a1b8d1981b8535673009b66db4914edd53cfc179e190c",
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/scope-custody.json",
+      "bytes": 2059,
+      "sha256": "4abb5206a60b6152b1a14131f75e802d0f7fb2c669b0d9af745a3695289a1109",
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/sealer.py",
+      "bytes": 46995,
+      "sha256": "da29ce8618dbd7da0c8a85b18c410b222bdfcd5fb2e30271076f527b7d1510c3",
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review/source-unit-seals.json",
+      "bytes": 920,
+      "sha256": "6c8570d5e720593731e9f3a1f63e34464f06a7d2b0fa7501c64bb07aa29ff9b3",
+      "sealedMode": 256
+    }
+  ],
+  "safeDirectories": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-review",
+      "sealedMode": 320
+    }
+  ],
+  "fileCount": 7,
+  "sha256Sums": "2db7e4fe13285c7926432497a1cab21c21683bdd0306f8a1f06edd6ac9395561",
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate",
+      "fileCount": 2427,
+      "directoryCount": 211,
+      "links": [],
+      "payloadBytes": 73833512,
+      "sha256Sums": "ec4a420d7dccb189cda46565bcd6e461855a966d5a59ab4f65858035e153b283",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-launch",
+      "fileCount": 13,
+      "directoryCount": 2,
+      "links": [],
+      "payloadBytes": 623820,
+      "sha256Sums": "2d734da8eed68f2fb64b27c3ca3c4f6391ace008029069dc372501b4aa8dc950",
+      "ownerPrivate": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-analysis-private",
+      "fileCount": 50,
+      "directoryCount": 3,
+      "links": [],
+      "payloadBytes": 39292694,
+      "sha256Sums": "f287a8539953462dcbe073451065d1cff45cbe95e0288585aca1606f97d50380",
+      "ownerPrivate": true
+    }
+  ],
+  "rawMembership": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-analysis-private/original-raw-membership.private.json",
+    "bytes": 783207,
+    "sha256": "2b2157cc2025f1cd2cc5f09ebdbb6d13e35a83b3d6432b36e97ba9c3ba3975ed",
+    "sealedMode": 256,
+    "qualification": "Complete file hashes, exact directory membership and final400/500 modes for original gate+launcher. SHA256SUMS binds all payload leaves; no private member is copied into the public unit."
+  },
+  "privateAnalysisCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-analysis-private",
+    "file": "full-reconciliation.private.json",
+    "bytes": 15620780,
+    "sha256": "084344015a22de0639dafcb427aa937c96f02abd648cd96ea788174144cd1d9f",
+    "independentReconciliation": {
+      "file": "independent-reconciliation.private.json",
+      "sha256": "d7afaed64a1da8223749ba8895cb2a4a1d5a3fb61debc75afb514803573b87d4"
+    },
+    "rootProof": {
+      "path": "/private/tmp/artroom-t0e-final-gate-root-readback-20261110.json",
+      "sha256": "716d5c0ea0bf31ff4780f44bc6cc301355de3a941d80d07acf55b64a7a924d2c"
+    },
+    "firstLauncherRefusal": {
+      "path": "/private/tmp/artroom-t0e-gate-analysis-first-launch-refusal-root-20261110.json",
+      "sha256": "7d28167f4734abc36a2e819b9270eb64594ef79aee8ef5e97ba65cf953a64f1f"
+    }
+  },
+  "externalReceiptFiles": [
+    {
+      "path": "/private/tmp/artroom-t0e-final-gate-root-readback-20261110.json",
+      "bytes": 2758,
+      "sha256": "716d5c0ea0bf31ff4780f44bc6cc301355de3a941d80d07acf55b64a7a924d2c",
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-gate-analysis-first-launch-refusal-root-20261110.json",
+      "bytes": 371,
+      "sha256": "7d28167f4734abc36a2e819b9270eb64594ef79aee8ef5e97ba65cf953a64f1f",
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-final-gate-analysis-20261110",
+      "bytes": 15620780,
+      "sha256": "084344015a22de0639dafcb427aa937c96f02abd648cd96ea788174144cd1d9f",
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-final-gate-analysis-20261110.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-final-gate-analysis-20261110.stdout",
+      "bytes": 15116,
+      "sha256": "e0817508fcd48543aa711d4a9ab595c4f53703f34eb213763687e57171fd1431",
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-final-gate-analysis-20261110.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-final-gate-sealer-v2-run-20261110.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-final-gate-sealer-v2-run-20261110.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-final-gate-sealer-v2-run-20261110.stderr",
+      "bytes": 437,
+      "sha256": "5047bec24bfd552682580d0cccf8b3d44994b2d8acc8c9fc807e4d8615707158",
+      "sealedMode": 256
+    }
+  ],
+  "actualExitFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "actualExit": 0,
+      "mode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-launch/actualdriver.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "actualExit": 0,
+      "mode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-final-gate-launch/launcher.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "actualExit": 0,
+      "mode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-final-gate-analysis-20261110.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "actualExit": 0,
+      "mode": 256
+    }
+  ],
+  "priorAudits": [
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-browser-ci.manifest.json",
+      "sha256": "222bf783d41d631e503326ffd19c6a5006d398ec2cadb1f65aa5c74b1152dd83",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-compiler-first.manifest.json",
+      "sha256": "d8915d986b9cb13a09dbe05afc7f56229ac142934aad8b0981980abe7af5105b",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-control2-baseline-reconciled.manifest.json",
+      "sha256": "ab8ee47dbcb65bfc7029d2561e7dfcac6438fd8972aab75d4e0749cd3e337f3d",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-mutant-only-control.manifest.json",
+      "sha256": "28d8400ea8bf34956643f9ecad92d5b3e2091876d42ad6ac0a1185ba4b837154",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-node-positive-reconciled.manifest.json",
+      "sha256": "8928451dba6f76b061071df41ec8f1efad526593a29b511fb96e5fc0fcfd44b9",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-page-build.manifest.json",
+      "sha256": "ed65659815fd16424c5cf5f9f1ab516ea27b667e0cdaf5b59c4f4def1a564879",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-post-d-four-compilers.manifest.json",
+      "sha256": "966f85b8d29ecdc1bea8f5b32741e9cede1f77ca20bf3f7ec72f5b3433a7c6c1",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-repaired-focus.manifest.json",
+      "sha256": "32d865477dafe8d1e3eb5266be2cfbceb799308c9dbeea6d0d467cf11b59c1d3",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-source-seal-producer.manifest.json",
+      "sha256": "774e1364fac997d17473f85ec628d62167dedb8b5645812d31631a52697bb672",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-10-t0e-strict-three-output.manifest.json",
+      "sha256": "804457ab15d98b1791e995f8fcd4962b6fc8ebed06e0077acb45203b6b5c5ebd",
+      "qualification": "Historical evidence retains its actual checkpoint, failed controllers and split metadata reconciliation; this final gate does not relabel those attempts."
+    }
+  ],
+  "metadataSealerHistory": {
+    "actualExit": 1,
+    "sourceSha256": "61016d1b54c1e8fc495570fb234777af8adbaa105ec487985364e46a3f728c2b",
+    "receipts": [
+      {
+        "path": "/private/tmp/artroom-t0e-final-gate-sealer-v2-run-20261110.exit",
+        "bytes": 2,
+        "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+      },
+      {
+        "path": "/private/tmp/artroom-t0e-final-gate-sealer-v2-run-20261110.stdout",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/private/tmp/artroom-t0e-final-gate-sealer-v2-run-20261110.stderr",
+        "bytes": 437,
+        "sha256": "5047bec24bfd552682580d0cccf8b3d44994b2d8acc8c9fc807e4d8615707158"
+      }
+    ],
+    "failureStage": "Metadata tool-mode assertion before any public/private/output write.",
+    "qualification": "The old mask omitted /bin/ps set-user-ID bit: expected full mode2541 versus unchanged low mode493. V3 compares the unchanged recorded full permission mode with stat.S_IMODE. No frozen mode was changed or rebaselined; the original gate/analyzer results stand."
+  },
+  "readonlyScope": "All original gate+launcher+private-analysis leaves400 and directories500; curated files400/directories500. Source/tools/priorunits remain unchanged.",
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}

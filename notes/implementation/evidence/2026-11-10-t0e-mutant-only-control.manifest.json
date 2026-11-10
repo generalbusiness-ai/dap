@@ -1,0 +1,1357 @@
+{
+  "kind": "E split-baseline read-failure guard distinguished",
+  "head": "3d345cfae86257cfbc297e5967917ba686410ba3",
+  "tree": "93f6882911cf4a13a8ca61376f5682ed459c0830",
+  "booking": "dadbaeaffe6f8961c791d5a8e6270fb3f3eccc3e",
+  "end": "81fe5ddb8f1455b57c2f42fa5d8097b5a7c5636b",
+  "actualExits": {
+    "mutant": 1,
+    "inner": 0,
+    "outerDriver": 0,
+    "launcher": 0
+  },
+  "guardDistinguished": true,
+  "baselineReused": true,
+  "baselineRepeated": false,
+  "thirdRun": false,
+  "retainedBaseline": {
+    "manifest": {
+      "path": "/private/tmp/artroom-r3b-evidence-t0e-control2-baseline-reconciled-20261110.manifest.json",
+      "sha256": "ab8ee47dbcb65bfc7029d2561e7dfcac6438fd8972aab75d4e0749cd3e337f3d"
+    },
+    "positive": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-baseline-review/baseline-positive.json",
+      "sha256": "1664e2546c96aca5d6b4a83c432408cb00019d400414ef21ca3b97b9b26fe0e7"
+    },
+    "booking": "7b16a15288ec07e32ece67b61bd07f5fb1d3bd18",
+    "end": "399b911a071e104cb1f7f10a27ec46fd0094a8a7",
+    "reconciliationAct": "46b6f94041a2a70b7f2fff18f7dc41fd68b6fd57",
+    "actualExits": {
+      "baseline": 0,
+      "inner": 2,
+      "outerDriver": 2,
+      "launcher": 2,
+      "correctedMetadataAnalyzer": 0
+    },
+    "passedCases": 3,
+    "baselineRepeated": false
+  },
+  "mutantCounts": {
+    "cases": 3,
+    "passed": 2,
+    "failed": 1,
+    "skipped": 0,
+    "unrun": 0,
+    "retries": 0
+  },
+  "safeFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-review/SHA256SUMS",
+      "sha256": "b460dd389a18073b5d569eff499d86894241c438bdac31435fe68305af27c447",
+      "bytes": 353,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-review/control-summary.json",
+      "sha256": "f8803181d8af9b2fba0a917b60dfbdb9431bed6b23215d588b420981d371ca0e",
+      "bytes": 1825,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-review/mutant-classification.json",
+      "sha256": "633baa138195cfa435cc6da3ee92da7b9384977b7bdac6e33ebdc0a59bc1908b",
+      "bytes": 1301,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-review/raw-input-index.json",
+      "sha256": "736063c665d0df8404dd704b7f4844668d867bad52b9c33a6fea734f8ad91269",
+      "bytes": 57923,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-review/source-custody.json",
+      "sha256": "a8863bd64c9002bedf0866cbf8351f63a953f489a707223865004c1cf589a759",
+      "bytes": 4955,
+      "sealedMode": 256
+    }
+  ],
+  "rawFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/classification.json",
+      "sha256": "f415bbc834c412b86a7aa972485bf6177226730f1d0027fb7640e1d4633e0301",
+      "bytes": 2582,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/driver.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/guards.json",
+      "sha256": "9cf983c534b13e315992a3cb88ee5433e11bae00596c39c43696a93f0beaa4e2",
+      "bytes": 9174,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/launch.json",
+      "sha256": "af2e2205a73de8f8a7ee4bf9b4cf394c9730bdebb3291496ec1ac45f3df8bc2d",
+      "bytes": 870,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant-argv.json",
+      "sha256": "12080213879dcfc8bd8b518bc1e28e000a5d44577b83a38ccb9b54ae2ae779fa",
+      "bytes": 1022,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant-config-after.json",
+      "sha256": "4d09b1d1363245208824e606d2c2e57b7b0261ef541dfad2fbcffb9d6f7bd3dd",
+      "bytes": 653,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant-config-before.json",
+      "sha256": "4d09b1d1363245208824e606d2c2e57b7b0261ef541dfad2fbcffb9d6f7bd3dd",
+      "bytes": 653,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant-started.json",
+      "sha256": "802fbc6f9320855d9a5bc4bc8044888bd0529a653cf034bf63d0392fb294e44a",
+      "bytes": 44,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/control.config.mts",
+      "sha256": "8d3bbc4f382b585e7e35fb92099ff4229135ebe93701def2bac9dc575c0b18db",
+      "bytes": 595,
+      "capturedMode": 256,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/coverage.jsonl",
+      "sha256": "439e6682bab387905cb638bc82ff1a08bf819085f124f0cb8259a7a7921210df",
+      "bytes": 6153,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/008e11f0",
+      "sha256": "de5a20e97cd1af35fe2a7149e055bbcc6530c0096039fa62b311c88638c97f71",
+      "bytes": 980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/01feceb6",
+      "sha256": "f730c68b1d8040d2605b7342efb0940c3154c88c94b2ba308b3e6eac6fb1edbc",
+      "bytes": 9396,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/03a31394",
+      "sha256": "8b91833b9e1d840e1a7810a5bf111b23a52d801d3f2ef8b9a68aafe5a66dfd40",
+      "bytes": 4876,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0506da0f",
+      "sha256": "e7e6f27767c935d6c6e46fe55f0e30ec552580d5eae7694cf3cb248cdf21ab32",
+      "bytes": 2548,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0583faf7",
+      "sha256": "4c828972f666b07cad82e7aa8b3ab3102450556e2b7d07cd67a969bf07681fc2",
+      "bytes": 2308,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/085b401c",
+      "sha256": "f5ed01efe44a5eb108801ed522444854b0d04026418d5a9f6cf67f0462b507d6",
+      "bytes": 8980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/099ae615",
+      "sha256": "094e18343ce48ec936ebaa84a379bfdc8d83ff3ecaacbd4222045250da159409",
+      "bytes": 22708,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0ae0b4a1",
+      "sha256": "b702c977bb776980af68a00ebdddee4574c4b9270f4898b404ec6a9ab5f01b61",
+      "bytes": 10564,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0bf8da60",
+      "sha256": "df51ac80f8f7e53b364556aed25630eaa8262ef0e9f09d2d1b47496b77771c6e",
+      "bytes": 2428,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0d87aaf7",
+      "sha256": "8ad2ca0dc4e7c399db2eb374cb8f0498499905cf61af2bca08513c14307bb0f0",
+      "bytes": 6300,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0e0adc41",
+      "sha256": "bc6129f0340e53b44d4bc0a56fde70801121a610303f48bc62abf7713f2aff9d",
+      "bytes": 3628,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/1016587d",
+      "sha256": "f825e6f287b1d35a5b03ba4199b71f37579593b00e2c75869689b15d3d4cc21c",
+      "bytes": 980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/132b5855",
+      "sha256": "bd8d94c532ffa82bf803ab1ed5fbcdbb03838393036d1afc67c00b665e849e0e",
+      "bytes": 13476,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/18bfad11",
+      "sha256": "7a343e07cd2fff0edd397bc3738c9e7b7884ebfa47ce37419014595525331f58",
+      "bytes": 1556,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/1a201826",
+      "sha256": "e75ee3a2ef15f0c7b9677518c419344decaac0bb2951b28615cf137ba69bbb9a",
+      "bytes": 3404,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/1d2ca18a",
+      "sha256": "5bea8dc5531e69ea87075d0c1d3fe738f7e243925bd3825011b71e0c92f09649",
+      "bytes": 1644,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/1e0c4b38",
+      "sha256": "b22022f55582e663390ef885d08d8bbc8477558ba11362a931f8a509ee40cf26",
+      "bytes": 11716,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/245c1b28",
+      "sha256": "2f9c868a57059f497c82fe87995e0bbfbf8918eb9ef6de431d1ff986bf16267a",
+      "bytes": 2044,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/25e3d2b3",
+      "sha256": "7a4bc47b8a1863717210627c280fce5f3ec79f755a0a09a518388d9a9e0a9a2a",
+      "bytes": 2516,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/270ca0c3",
+      "sha256": "09dafe6c96a0e642c1cded4106e64520c9fd75bc06894d7cb776b3de0e91c991",
+      "bytes": 1876,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/289415bf",
+      "sha256": "e0da9a32fac106ad0757f2e36e9c33ad61b9d92f26266c7e6342ecae7d9cb52d",
+      "bytes": 1596,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/28baa490",
+      "sha256": "07d66f4b278fab00061fe9216805113297dc58099288c4f34061fcf85fdb4129",
+      "bytes": 6548,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/298eabbb",
+      "sha256": "725bcdb3ffc46174f9abc92be4c98470f5d1f55a66d99837d434befa02cfe68f",
+      "bytes": 2980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/2ae054c9",
+      "sha256": "9d854fed152ed4285c02004ef6b69825cae84394d3be96b583607efa1ff83210",
+      "bytes": 11780,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/2b11235c",
+      "sha256": "8a55de38051cb7d30a0b4f135752a74f7eeac4027f7c444d72d9b6fecb773a47",
+      "bytes": 13052,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/2b9bed5b",
+      "sha256": "fa65fa0111d9e3d86a8cc48ec528819762f7c935d78646e0b4256b1f6b1025ec",
+      "bytes": 1892,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/2d4ddb38",
+      "sha256": "cc0ae8ef540acb5e422ab545cdbafccaedba6cd959bbdeb1593975249b93223d",
+      "bytes": 1892,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/33301af3",
+      "sha256": "c1d396e575ac5b88abc7f153d1e9988869757c7a395b54ca1b1907b3bc82c682",
+      "bytes": 1124,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3366a888",
+      "sha256": "9e576d57c6f3969e1a01422ff73b1c59a5bf3121489ad91ac4c5f87a46342173",
+      "bytes": 1036,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/33c17c99",
+      "sha256": "83799ddf29ef880fff10d51797230fbd2a55a9223c6ddfa6e7fc790deb6c58df",
+      "bytes": 2412,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/34d08acb",
+      "sha256": "f60a25ccaafcadda902ae691f1d9190dc90248f31e962012300078b5c716c271",
+      "bytes": 1508,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/35976d88",
+      "sha256": "ef0655594e404b7ba0151145f1c9a6daf7890c00a9a11209b5d8e369d41805b1",
+      "bytes": 7756,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/384fd853",
+      "sha256": "f33799315ec0e5ef212c20739971c5e5b55944c0c84c9fe582d18169b425bfa4",
+      "bytes": 3156,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3e24b25d",
+      "sha256": "e2564babd97750f4369ebcaf64dee7d46e879e8e57f612fba669be8916bdf72b",
+      "bytes": 7524,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3ec1a3b2",
+      "sha256": "929f55a325ba195c948fec00523a7bebe815e8cc1507f05f8f98845fe1a22b57",
+      "bytes": 2076,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3f5d47ce",
+      "sha256": "38c8e31d952320c96022fe0c58e71e188f2abb9399bc6e62985aaf3dbf4b10e6",
+      "bytes": 5060,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3f6b1a76",
+      "sha256": "fceea1bbe33884e222c31342ba26dafbb736aab6bf33b6e843e0339d07d0a22a",
+      "bytes": 1164,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3fdcdbec",
+      "sha256": "7c357d60c1dcb0c041b525acf3de2391061dcbc780519ab4392a772131689609",
+      "bytes": 35444,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/409b7d96",
+      "sha256": "9d86a15c1521340aaa6ea940a4b9a7c06ff6b2850d7821f67f344f65c2ee0abc",
+      "bytes": 10748,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/42142ecf",
+      "sha256": "4a242f61a250694f340ffc477170e2f053d432514050de21c3249252524a9e13",
+      "bytes": 96596,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/4d5292c1",
+      "sha256": "877fa27f72e8d9721204009935fac38a1efcb6fa8fe6502ee3af9cacc4c3f075",
+      "bytes": 11244,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/4d847649",
+      "sha256": "732fa8e66288efc86714253bd6137e2fb11a2949cf88d097cc324bbd03cd59d6",
+      "bytes": 2580,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/4de22c8b",
+      "sha256": "235247f195c78744469357e6f5566b05937fe400aafa49f2bb20248bc1f21164",
+      "bytes": 6436,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/50411221",
+      "sha256": "3da682708907e71d57089eb94cea2bae7d775e9c0f10a4a8921d0614e7135d94",
+      "bytes": 1020,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/526afb59",
+      "sha256": "c7a8460a167e2a9958279f1bdb5b743735d6df381518f1701d061c05aeae12ed",
+      "bytes": 1556,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/52715c7a",
+      "sha256": "e06c7c862cfc9f12c2d0c171ffc88480f53638f10e4684186074ffc36324a5d1",
+      "bytes": 4260,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/5614e36d",
+      "sha256": "8f61553a8c7773c79e610d8ecf81dc74155762357c7ace55bcc538c4fcf8d7ed",
+      "bytes": 2324,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/56499abd",
+      "sha256": "53752f39ceb2bedf41fb142cf67a2cf8ce85d6b6430e14d6a69bae452461e7fa",
+      "bytes": 2676,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/571053ba",
+      "sha256": "11244d54ad9442ae43791ab93e4ba273884637eb2a45778d533d090fa5e0f547",
+      "bytes": 151772,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/5836f300",
+      "sha256": "59462424fff56329985b09f931b7bd0f72bfc2fd42918fbe014f55a87a52562e",
+      "bytes": 3796,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/583bd455",
+      "sha256": "d1948f261f1c3d1e755326884c06392797e3297b27efc3f31a48d904281154d8",
+      "bytes": 1292,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/5fa3db87",
+      "sha256": "427d3cf3a6694e737d90c662317bcf7206b632d72d635440d9f88e59f130861b",
+      "bytes": 6124,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/641cbbf5",
+      "sha256": "11be9e4e9086e8e43ad5aeeaacbe92e267fdbe27131721d14ed62635c8010099",
+      "bytes": 3532,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/65f0e057",
+      "sha256": "38f12b80fdde4516ef683ae4461a667c938700bbcda4e0383d40b9f529ccf9be",
+      "bytes": 2020,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/6630b76d",
+      "sha256": "be196d6edc26c2842a550443dba4ddb3843b178fa9f687fa2df28ca32a28ef51",
+      "bytes": 1132,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/6b2120ba",
+      "sha256": "7f3c846ec0cf0d407daebd7292ae1226f8cf69f0e7cbe3a87fa5fc312d6532c2",
+      "bytes": 2340,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/6cbd92db",
+      "sha256": "a1ddb1b1fbc97ddccc24900a6413be7a3cf00883e051480421583ba3d134067d",
+      "bytes": 1500,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/76fa1175",
+      "sha256": "c89dcbf49a3b4ec260d86c62272bd369f4b8edc4a2c1980c9e56697c8d14cbda",
+      "bytes": 6260,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/790408fe",
+      "sha256": "cdd56e3546a6d52ed78ab875292344bf5f1bbe16e44add061eb1cc83901d65bd",
+      "bytes": 1980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/79e707ca",
+      "sha256": "5d8207351c249f7beeb8b7eb4ff73981cf7fbe3fd3a32264c345c637ea9efc6b",
+      "bytes": 1684,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/7a02dd39",
+      "sha256": "146389d3fc4d34156f2bfb699d51fff2f4bd106df293a1a930f3b85e5f5a89ea",
+      "bytes": 62740,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/7a731be5",
+      "sha256": "982c95f927626715a260fd19aedfe717537129a80940f302a6d5d37f5aff99a4",
+      "bytes": 4508,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/7cb81e87",
+      "sha256": "cec735d8dc69b70859d40196030400eadcc53b160da8a8c673075fa846dde618",
+      "bytes": 9996,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/7d1e9d4f",
+      "sha256": "96386bf76e8f05ff9d782cdc81144b9e297cc4874a5be17cb51c3dde3e21996f",
+      "bytes": 1764,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/81fec9dd",
+      "sha256": "70e82b120b7b59e3bd7505081e5ac6e213581405a19e147520d6b82d44d60c16",
+      "bytes": 3148,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8487531c",
+      "sha256": "0e0e36b4d94e4505d2b110b064b255fc4e86efa38eed325a199b982fbd61e57a",
+      "bytes": 12404,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/84b05463",
+      "sha256": "ce826c7a50c86dd161111825f3415c78a6158a5ff07063b7828e4c3975345c95",
+      "bytes": 3068,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/84dcd2a1",
+      "sha256": "9b904c8c29dece2ec0ab8c5b5458f6be4b26e18407840482ad94e8fe91d60d26",
+      "bytes": 5692,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/85cdcb2a",
+      "sha256": "fa9f4a12ab9d9646f64d40f5992c8e1be3d6d6d5941bcfa07cdec556f38d7a9e",
+      "bytes": 1020,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8654f511",
+      "sha256": "9d4da4da40af1fc14a566de7bccd330c7040b486bc5f6501b7db5e7fe3d1ef64",
+      "bytes": 2076,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8926040c",
+      "sha256": "33bee8afa78f2b1cdfbb25d4409f9b8f218e3e529195a286146a5cfc82a6865a",
+      "bytes": 5612,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/895d8eef",
+      "sha256": "ee8488e9d6ce9daba9ed314e1dd2cbccf0f2f677bbba5767583410b05fd0e31c",
+      "bytes": 55188,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/897ebac6",
+      "sha256": "8d43d243fe40e9bc4bb13689d8f44b30e026d0c889ba28452ca5d14053ef8b34",
+      "bytes": 4004,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/89a7b29b",
+      "sha256": "aaed92f817797cf4d750db9497267496dd24c836929a6969dc0c72111b622760",
+      "bytes": 1076,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8a7c989e",
+      "sha256": "992384bdc6ab39fc11000ec57a9bf7b2274386421a2361e87b336981b8daecf2",
+      "bytes": 908,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8abe8db3",
+      "sha256": "58690bdbc81e0777837f31fc6ac4400cc4b776894f2483b9173b2e7cd9c316e4",
+      "bytes": 10228,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8b277af6",
+      "sha256": "46593e2facdba0cc0817a3e4f2a21e0cca1b3752fb2549a94a51cbac25db40c3",
+      "bytes": 1748,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8bc36a46",
+      "sha256": "d8d81560d2a4ecfbeb6cd796788a612af59160a3447cf8d53af2fae7ed2b0d8f",
+      "bytes": 1436,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8c80d208",
+      "sha256": "9c7aec6e66a0ddb1d2544e2de4d3541cf509b36562d230d03138cd249419e14c",
+      "bytes": 46492,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9a192c5d",
+      "sha256": "8d4e29acf4b05800d58e4b138517d8b5aff0c17fc9f08b9c6804addb9237cf4e",
+      "bytes": 2564,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9b130200",
+      "sha256": "f2548137add0a2cd2bee440bb5c72e1c74af6854ca55b3812511589cba26b729",
+      "bytes": 2900,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9ce3b7c3",
+      "sha256": "a50a2aadf0c1e22af15ead6388507c4f556cbf86ce70c6602202d04758675d49",
+      "bytes": 1388,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9d50cd50",
+      "sha256": "d030e59a95ff8e6f2ff46417deec0c09aab768669db5403659a0f00398b9c671",
+      "bytes": 474868,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9e55f17b",
+      "sha256": "d3baca7e21cdf271a89e8acac232bef07d65a7c0acbcf67897dbb426d0366e2b",
+      "bytes": 1100,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9fb46f14",
+      "sha256": "3837a38cd3927aabe0e97a20ff6835d9ce1619d1a028f9488280a47174405f23",
+      "bytes": 3692,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9fb75b6c",
+      "sha256": "1dfc6d6dffe185195243f3448c93c3fede56ef11e9074768b39bb5f3d739b0af",
+      "bytes": 2020,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9fcb06cd",
+      "sha256": "4c1d7ffbf9d1186ec71045beba09e120992cf36a1da633d8b96d1eb512a8a850",
+      "bytes": 6292,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/a39c7274",
+      "sha256": "1f2765d5a2e753a705cef7d731292a9fd2b412250331d0595166148616a47a66",
+      "bytes": 5028,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/a5be35f4",
+      "sha256": "46a3299dd97cce20e8a37d2803b5f2fbabc2f4193523477a58c4637144ad5381",
+      "bytes": 1292,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/a6226537",
+      "sha256": "a3c599e7c17c69a1d3bce7c92f2a8c0ac147d7de8f82efb44a6c6b37927ea8f8",
+      "bytes": 4812,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/a8984242",
+      "sha256": "2abfa8df30a948b0097a816e296060c0acd5eac302a9293adf21a9416a4050fb",
+      "bytes": 1268,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/ab64c787",
+      "sha256": "84acb716e0fc5d5095bbc03866ccc08dd1bc5883c38829e9c46240f5d156529d",
+      "bytes": 8516,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/af2d8b95",
+      "sha256": "37a8dba29e9d6ae0da8df7dcf1cc20a174a7c851f6c51c319efe5b709c4d17fd",
+      "bytes": 14444,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/af7c5746",
+      "sha256": "892a713dbf51648d5890c33fcbc54498a6cdfb3a49b23e6c8f7a6fa0d068e971",
+      "bytes": 5892,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b0717258",
+      "sha256": "8db41b3362d0c40f606006c07c4d64dad18936e544da7510cbd790aa24d5b880",
+      "bytes": 26340,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b26dd352",
+      "sha256": "9b8609264f02bcb2b8895e9636e47ccebbdf56e7a190e4713781d1a09d504a49",
+      "bytes": 908,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b2ef4b81",
+      "sha256": "e8120e30d405fb96997f3505c8e28bd0e0ec490cec6dbe553dcb24ce0a566119",
+      "bytes": 1748,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b4207135",
+      "sha256": "d65c410221ba3ca1ff3cf9aea48e268554e07dd738fd9429b85ae50ac5c0ac52",
+      "bytes": 9244,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b4e345c1",
+      "sha256": "a46dba9ff534b272b4bead0b687af811ce3f4917b3b842fb1f27d900720f20d3",
+      "bytes": 1820,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b53ce722",
+      "sha256": "bf9c25f009fb8861c5353a02eb91debe4259400c0408b7cc18a768b4c0f701a6",
+      "bytes": 14188,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b9d214e6",
+      "sha256": "7c971fd872329b0ef92df2a3f14c23a172fbc51aaad3b379cb0db863bc6cd36d",
+      "bytes": 6052,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b9dffe51",
+      "sha256": "40d942c454895b7adb975f05a31e1649d5f23b9e9e1e26916997e0079ae91db7",
+      "bytes": 604,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/bd33ee39",
+      "sha256": "d4b13533f3698ff402ad76d0e9a5e54f46e704ecd7440c725f5f767c3db47cd6",
+      "bytes": 16084,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/bdf46dd3",
+      "sha256": "a0124504394abd3b20dad9d5fcb2dee5bfd9dbab1d3af4ec49d5166e4d3b160f",
+      "bytes": 2492,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/bf61d766",
+      "sha256": "3d1f68e255d4f1aedf140071856246e3ea328c0f866e5682c8c62939f1ff798d",
+      "bytes": 1780,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/bfdaa294",
+      "sha256": "08f71eae3028cb35944a4bf3ca36bdc3c344dbf00a05a0bf8910e57e0cbf4d18",
+      "bytes": 2644,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c09eb001",
+      "sha256": "dbe1943f1aaa5e8e9ab28444d08e737f0b22ec6a43e0057d9422afed1583319d",
+      "bytes": 788,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c16fb685",
+      "sha256": "940437712cc8426923e3a44a1b050ca9af87f18127257cf8a57c00f1335b1892",
+      "bytes": 19236,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c185bf69",
+      "sha256": "555b21b45c2d893fad14c0dddf817459cc52995e391cc0af119b3559f54543f4",
+      "bytes": 4044,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c257c224",
+      "sha256": "10475854f83462059f995e7bdebb99cd0835a8a1463b122e0a802544b469b63a",
+      "bytes": 1172,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c36cbea5",
+      "sha256": "af3ac13b476b613f12c9a3d1be2f042cdadd94c399a9920be66f52b86d1e3663",
+      "bytes": 1980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c66552cb",
+      "sha256": "6c6fa06363b2d8c9befe7d8a6573f8ebc26bf074a610e53abbe6f530347f5a9b",
+      "bytes": 2380,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c6caa484",
+      "sha256": "100556bb75c6b195702feb41aa30fa9b7638c2be0182056a76facc2a1af82384",
+      "bytes": 2644,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c75bf89d",
+      "sha256": "6265325968a4be73628a7ce73a63babe5f7817cb43359d3e9bd3667bae1f8000",
+      "bytes": 12548,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c8aa0ef9",
+      "sha256": "c05d8657e95f5373744bb62422a7e590088eb2938fe006f6c225f89ff27053f9",
+      "bytes": 13476,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/cac6095b",
+      "sha256": "c81304a4970bd702b575c4fda60ff036a60a21a26504dfb4ac1c62cd00fe7702",
+      "bytes": 2932,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/cbbf053c",
+      "sha256": "df8cd7d5f82c31f678bf26cfb7a0c164fc114ca8629df023874d502184b3b5cd",
+      "bytes": 7172,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/d3a10f6d",
+      "sha256": "20a79a998ec2d246f25165b940f5972438e4bfcf480746e067235299627b26bb",
+      "bytes": 66676,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/d4b7de65",
+      "sha256": "06f53c2d9b1159894a0e84b128fab90bf48ef093a0eaffe15194ec063d7269c2",
+      "bytes": 6348,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/d59cddf8",
+      "sha256": "8f84b3f18f9407166359279452bfe24ebd8ca5b9e5ecefe2eeb8c65a11739487",
+      "bytes": 2804,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/d9f59b19",
+      "sha256": "d4b8d0602cd76fcbf27264bd04b51dbc398be3835cfa238c70d244ab038c41d3",
+      "bytes": 3836,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/daa55d75",
+      "sha256": "5cc456279ce01574dede0b1245b31d5ea45e4e1d63e7a0ac6a1a02090f4e0fb5",
+      "bytes": 26692,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/db1163d8",
+      "sha256": "f277ae96fafc74d8b12738b453391bcd6a1d88f53ace722cd0ef439bb8c5c270",
+      "bytes": 2468,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/dc2283c5",
+      "sha256": "8a9680e357b25ae2ab81977b2f0b1e98a9ed97ed0754d27f22c0d083b1cc4d50",
+      "bytes": 1932,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/dd247132",
+      "sha256": "bff9a4b54136453129d4c947ae2764b25848093c02b8897b29521c2bc7e1d2ec",
+      "bytes": 16740,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/df56f637",
+      "sha256": "aeea5ff4c2b6bb6f2bfd950efb68bacd945133133d3af54ae5297566d587d55d",
+      "bytes": 3932,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e0efebfe",
+      "sha256": "126af07537fa01208c926b9d2cce08912ef541d02f9bd648844e964a870f5a8a",
+      "bytes": 1284,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e0f00389",
+      "sha256": "1db01a21af79a774ce4ebf26ee0991767207e334983c51b7ccb80f386f2f0542",
+      "bytes": 5772,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e3c3aea2",
+      "sha256": "47884a2ff211b0dfc7baf7a6df92d84895b707e6b06a29d7b2c181461d284ba9",
+      "bytes": 1844,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e576e88f",
+      "sha256": "0c0c8875535f5ea7b30b595b6abc3c7d53cb3755754cb221f5c727bbde96fcda",
+      "bytes": 1612,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e5cfc63f",
+      "sha256": "2c902d4e4829ed1a772a17832b54130a1c4b1e3d92abf6e9f8c793606be157fc",
+      "bytes": 32420,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e5f0cb19",
+      "sha256": "0c6d16e6974aec9781e6d8dee55c84cb6dc3eac791b743c08d5cd194b02284d6",
+      "bytes": 2364,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e753f60e",
+      "sha256": "007a47132a803e212f082e2e89a340e494efee9fa5a044537fe4f79341bc642f",
+      "bytes": 10700,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e84352c9",
+      "sha256": "ebaf3a8d210ce189d4f501b426f41a20491e482a6393a8d70ef68f82a08a234f",
+      "bytes": 1268,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e9247c4c",
+      "sha256": "214c8de2fe18b6e4101fee262af8c71852f1754a91d82137611a0a69292d4da9",
+      "bytes": 2460,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e9289bf4",
+      "sha256": "032f78046da3cebc36f6b996955bc90393a37859cdf0e722d321576af0698439",
+      "bytes": 3708,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/eced686b",
+      "sha256": "20b1b609247635fc4cd486e64d61b2cfd7b3bedb23c5f42ff15c39b807ef6e9c",
+      "bytes": 17452,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/ee039353",
+      "sha256": "aac49d2c887e0c236a1f31a71fca29e5ae7243654f30991a0b11ccd15ea1b06c",
+      "bytes": 2164,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/ee4cbc06",
+      "sha256": "6d9c5434827629caa9a61e0eb1f77974ed88c39ad4b272b36ab2ec070ad2dcf0",
+      "bytes": 6188,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/f607068d",
+      "sha256": "c02969c19c41aa98c84d3e8cc16f4b0075d1a845f4fa4f9e03754e9ce7e900e6",
+      "bytes": 19788,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/f68629bc",
+      "sha256": "9a51ccee521fb028e7c2e112a52dc09d6c0d8255b823d2c02489f10f5b779e4c",
+      "bytes": 4012,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/f7b45b9a",
+      "sha256": "e181d0221ed7c2d3e6406b06fe8a8fe946ecd4b3c436a40bcf38d9ee35564ecf",
+      "bytes": 636,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/fc737f15",
+      "sha256": "50eb80f3aae7f2e154acec690f89c7bebb3c6c8134d0b7b502c7d15aeeb0cfc3",
+      "bytes": 1188,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501/fe2c767b",
+      "sha256": "28b787a076daff3c8a7901304e526e1f44ac34245e3e403af9a3f6322a130c20",
+      "bytes": 2372,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/plan.json",
+      "sha256": "c82de79a67df64f81883c1b25f442b8664c21cb38518a50373aa926004ec2783",
+      "bytes": 835,
+      "capturedMode": 256,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/stderr.log",
+      "sha256": "b972094535ea3b3135af6321944b7d7d9976b35f062a499ede93c922564e3f76",
+      "bytes": 715,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/stdout.log",
+      "sha256": "f52bd86128352ef84542120d477b722d89c41f7ac3485b586f813bc3742f5a2a",
+      "bytes": 986,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/vite-cache/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "sha256": "ed8f42b6df0efe9af95042667ad2f3be1d935520821769e78c37c69af16f5ed2",
+      "bytes": 126,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/vitest.json",
+      "sha256": "26ac4de1d4a27fef1fc3f6e46af790f48f88906edbef6c4719b516cb82e28282",
+      "bytes": 2298,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/original.ts",
+      "sha256": "1f4843c98837d0c75397eeb19bd9374a500ac27b0f4cceeb39202e3a19fee250",
+      "bytes": 16709,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/result.json",
+      "sha256": "d5318accbd1e40a48716848318c750fff3eac34b235ab0545651c3796b5f00ed",
+      "bytes": 9334,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/steps.json",
+      "sha256": "a386a4f62573795cbb72c19a6b810365aeceef1039e25bb243bcc2c5f0051b09",
+      "bytes": 1313,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/actualdriver.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/after.json",
+      "sha256": "0acc7143efb141528bde35b771d6c374b0796b147835668744f57d0fc29415a4",
+      "bytes": 1563,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/before.json",
+      "sha256": "0acc7143efb141528bde35b771d6c374b0796b147835668744f57d0fc29415a4",
+      "bytes": 1563,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/cleanup.json",
+      "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+      "bytes": 109,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/driver.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/driver.stdout",
+      "sha256": "f2f92a0f927cf7e04f92b5c31c1fc2eeabf6f75911e0aef5d7b5e6b56b0e51fa",
+      "bytes": 152,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/launcher.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/launcher.json",
+      "sha256": "44a7c4fa447b3a53edeb0006661b22a21d5250dcbcc0fa29447e8a2a4199e522",
+      "bytes": 1321,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/outer-timing.json",
+      "sha256": "e0a4c2c38074ae3eb8e6df453801ecbfdb60fbceacbe27401783e27cca68c9f7",
+      "bytes": 542,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/restoration.json",
+      "sha256": "31a6b43b4b8ec26240ba7711d5d03357342bbf1604e399d570fb520093b81f93",
+      "bytes": 42,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/result.json",
+      "sha256": "1b1b6be8c3138c41364c7c279dda954b2416a94b2c2ce733d91f25021bdcad55",
+      "bytes": 250,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch/started.json",
+      "sha256": "f2632b1f332fbb3d2968ea893c5a05c7ed70ca8370178d89e31250dc47d28669",
+      "bytes": 44,
+      "capturedMode": 384,
+      "sealedMode": 256
+    }
+  ],
+  "rawDirectories": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node-compile-cache/v26.13.0-arm64-310b2ce3-501",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node_modules",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/node_modules/.vite-temp",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/vite-cache",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/vite-cache/vitest",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only/mutant/vite-cache/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-mutant-only-launch",
+      "sealedMode": 320
+    }
+  ],
+  "preservedStartupFailure": {
+    "path": "/private/tmp/artroom-r3b-evidence-t0e-control-first-startup-failure-20261110.manifest.json",
+    "sha256": "4357aa47fae3ed59327d8ef92fbb2b4d63bd332948362db2fb356df507774afe",
+    "booking": "ef7bf2d796106c904b9bac4156866799ab994293",
+    "end": "5b22967d5b133f07583d0de288e030db92236048",
+    "runtimeCasesObserved": 0,
+    "mutantStatus": "UNRUN"
+  },
+  "qualification": "Split control evidence: prior baseline actual0/3pass with original wrapper2/2/2 and corrected metadata0; new mutant actual1/2pass1intendedfailure with wrappers0 and exact restoration. This does not claim a complete gate, output capture, browser acceptance or deployment."
+}

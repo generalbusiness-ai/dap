@@ -1,0 +1,1354 @@
+{
+  "kind": "E retained baseline positive plus original analyzer/wrapper stop",
+  "head": "3d345cfae86257cfbc297e5967917ba686410ba3",
+  "tree": "93f6882911cf4a13a8ca61376f5682ed459c0830",
+  "booking": "7b16a15288ec07e32ece67b61bd07f5fb1d3bd18",
+  "end": "399b911a071e104cb1f7f10a27ec46fd0094a8a7",
+  "reconciliationAct": "46b6f94041a2a70b7f2fff18f7dc41fd68b6fd57",
+  "actualExits": {
+    "baseline": 0,
+    "inner": 2,
+    "outerDriver": 2,
+    "launcher": 2,
+    "correctedMetadataAnalyzer": 0
+  },
+  "baselinePassedCases": 3,
+  "mutantStatus": "UNRUN",
+  "guardDistinguished": false,
+  "baselineMustNotRepeat": true,
+  "safeFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-baseline-review/SHA256SUMS",
+      "sha256": "b9a9479131ba6998a6aa35120618475b1cd82dd70a76e5c8de1af7f6078c0780",
+      "bytes": 350,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-baseline-review/baseline-positive.json",
+      "sha256": "1664e2546c96aca5d6b4a83c432408cb00019d400414ef21ca3b97b9b26fe0e7",
+      "bytes": 1078,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-baseline-review/baseline-summary.json",
+      "sha256": "9f1f5208bccfb1003b4a956d111fc5384d6f32bada7fcb3783df7e9c77587e14",
+      "bytes": 926,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-baseline-review/raw-input-index.json",
+      "sha256": "44be1bdc25d96eb241a408681ec4cf5046d0309f36533964a105535e8828b662",
+      "bytes": 58640,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-baseline-review/source-custody.json",
+      "sha256": "ccde290d473db12e01cb8fe485975c1ad2a0231ce9df608aa6ff36fcffa88b4e",
+      "bytes": 2919,
+      "sealedMode": 256
+    }
+  ],
+  "rawFiles": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline-argv.json",
+      "sha256": "8152fe28b4d89e128f5be15dc811a5bc19699c7e99b0509d9f4314697afe0f39",
+      "bytes": 1010,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline-config-after.json",
+      "sha256": "90ffa7a8282b61384fd4cf58f88e400f5eb13aa57b39bf45951c904b674fd220",
+      "bytes": 641,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline-config-before.json",
+      "sha256": "90ffa7a8282b61384fd4cf58f88e400f5eb13aa57b39bf45951c904b674fd220",
+      "bytes": 641,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline-started.json",
+      "sha256": "33215768d36e4894615aba55b36bf7d925c25580311d292c719deb24a1899ea5",
+      "bytes": 44,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/control.config.mts",
+      "sha256": "8d3bbc4f382b585e7e35fb92099ff4229135ebe93701def2bac9dc575c0b18db",
+      "bytes": 595,
+      "capturedMode": 256,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/coverage.jsonl",
+      "sha256": "f898164690b7e587bc083f252410a613fe7a4ef8feee375f07f02d640da595e1",
+      "bytes": 6070,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/008e11f0",
+      "sha256": "1ad6984cc2631dbc2d1ffbb173171b790560540c665045cf3a0ae405b3177f8b",
+      "bytes": 980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/01feceb6",
+      "sha256": "f5bd49141c4dbc432a0888fd2181eb417e0e26bf9537d7922b1bbfaa5fbda564",
+      "bytes": 9396,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/03a31394",
+      "sha256": "de85bfc9cae5c2a6d32b9092cdccfe3247e9c958f2185c61cf6dc7c42c35f0ad",
+      "bytes": 4876,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0506da0f",
+      "sha256": "f0feb5072de5cd5e8013eb319a8051f05b4fe292865629a79adc97e610a640b5",
+      "bytes": 2548,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0583faf7",
+      "sha256": "c9d078190b5fb04a8edcdcb9e673f25490f347b644ec84f3de51414d1580576a",
+      "bytes": 2308,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/085b401c",
+      "sha256": "cff2d0ae74621957b4626b7c7918c8116af7e6ba5cdd72edd1322a0e82efa442",
+      "bytes": 8980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/099ae615",
+      "sha256": "42df168cfe03c16898a8a66e23a7f316bc35cb702611cc1998631896cddeb8a8",
+      "bytes": 22724,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0ae0b4a1",
+      "sha256": "e2a3e5c020f062740d11dd3978e29563d8d44633009e0e20149820c240007dda",
+      "bytes": 10564,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0bf8da60",
+      "sha256": "8e7db9b09044126a35ccc9f137f7897ed24ab15f294a0135143d2824b12a460b",
+      "bytes": 2428,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0d87aaf7",
+      "sha256": "145a6b540f357405ac356b16b009ac1e6bc0eb0c878b8b81c7b42320348dd275",
+      "bytes": 6300,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/0e0adc41",
+      "sha256": "58b0f4c7c48e5d291dbed47e8b6978154d77d8d1f5cb8f6e535a776696248562",
+      "bytes": 3628,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/1016587d",
+      "sha256": "4fab091afdd66ef6fb7caaa11e1a1c1724e0503f4478b9cc75bdc0af20ec136d",
+      "bytes": 980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/132b5855",
+      "sha256": "e555089f0dbf7e2cc1272791f2972cbd407c69700919163bca3e3ccda1b5c6b7",
+      "bytes": 13476,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/14b0ea2b",
+      "sha256": "f60c91bd8c97e7a620b3e089b2360c20d2113a9f2e8b27428e3daa6c1f65a689",
+      "bytes": 19236,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/18bfad11",
+      "sha256": "ec9748dc78c1fb11457f5be1aa35e67bf1d302f54c4b7fcee6daaac81e1d894e",
+      "bytes": 1556,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/1a201826",
+      "sha256": "3be5195b96b3aaa5a2f938a4b8a9173a5889772ae3a46928dc978d8b44aeaeea",
+      "bytes": 3404,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/1d2ca18a",
+      "sha256": "91c05aa6f2759e64908e6845f2fc7da30f409fa4d0bdf739a2c39436f64178b0",
+      "bytes": 1644,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/1e0c4b38",
+      "sha256": "0fda6e82daf49ce2fd768a85a71692a371652852329627d3007f75e722360bb4",
+      "bytes": 11716,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/245c1b28",
+      "sha256": "af39fae89b48f210643ce6ecc36762c55b80230cda3632e9ebb47debae2fc51f",
+      "bytes": 2044,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/25e3d2b3",
+      "sha256": "c3afe4ed656d0b21cdb9077643badca00c197dc5d765d3579d9c15809c16856d",
+      "bytes": 2516,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/270ca0c3",
+      "sha256": "21354a0f3b2427951d753f84bcc79fb234acaf3d5ab84b96cfa42404e897b19b",
+      "bytes": 1876,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/289415bf",
+      "sha256": "5246e6f5390111314fb89eba7d980fc989916cf7c8120305bcd9ce243af7b52a",
+      "bytes": 1596,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/28baa490",
+      "sha256": "fa84ff274fd9552bb35656183d5729c858d69ab8ef05dc57816e72edeae782cc",
+      "bytes": 6548,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/298eabbb",
+      "sha256": "48578d686fbf444472c87b060da77981770375ea54b6cdc4584c631e8eec78fc",
+      "bytes": 2980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/2ae054c9",
+      "sha256": "c64d415a527cc0a95154af4d92f40fa6de397baf008d00d60f3c92ffd39ee548",
+      "bytes": 11780,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/2b11235c",
+      "sha256": "b899a0b8bd1b150cd2f47dcacdbd134ed12db680b3d9df9fbf51604889bb7c6e",
+      "bytes": 13052,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/2b9bed5b",
+      "sha256": "7b78ca85da40cce65f6184900f6782ac8268ed13874f71ed5dccf7cc600d562c",
+      "bytes": 1892,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/2d4ddb38",
+      "sha256": "239280d4d9c23a291580d9131b8883532f901c5dcdc3454634fb731d8d559963",
+      "bytes": 1892,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/33301af3",
+      "sha256": "276da586ac24e789e07fc97d76662332673a6078daafa4b26aedf10a256fd9b8",
+      "bytes": 1124,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3366a888",
+      "sha256": "a652bec252cd2301e7eefe31c30468fa121df07a5f1318f10fac299309d49984",
+      "bytes": 1036,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/33c17c99",
+      "sha256": "10f57b531a58f33e8d30e16f0a428be790b7f181256640b7dd4921b0a6dcfc38",
+      "bytes": 2412,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/34d08acb",
+      "sha256": "f3b0c15cf6d32a5991f8498d57696c36045ed3f70bc1112510b8853a5a434746",
+      "bytes": 1508,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/35976d88",
+      "sha256": "e9675eed3e6946aa803d69817643ef65047755ae54e2de714c335cacefd713f1",
+      "bytes": 7756,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/384fd853",
+      "sha256": "ecde7ec556027a0d3dfccf46020f44f54af044fce6aafdb254d87ab4328b8588",
+      "bytes": 3156,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3e24b25d",
+      "sha256": "bdd7a41aff66d70de66e6ff3f26a78f1ef81ab8b77f7d8698682f3b92fad3e96",
+      "bytes": 7524,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3f5d47ce",
+      "sha256": "6a6ca384f1ccd16ecb0e81fadb32ffa4c9c1421f24b1553a73f56d6818ffd3be",
+      "bytes": 5060,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3f6b1a76",
+      "sha256": "928efdfbba0030b0ab012b9877cad100c92cb6b8ecc14030b7d242d143aa2f2f",
+      "bytes": 1164,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/3fdcdbec",
+      "sha256": "44713a898327a4e4707f3c684f95535de216ce39bfc591dca3fe1df26b6289c7",
+      "bytes": 35468,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/409b7d96",
+      "sha256": "e1b2e367bb98615b5883f4687bf51a3b80030362cbe482b67447c926345c8553",
+      "bytes": 10748,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/42142ecf",
+      "sha256": "0fe7a970aa1c177e3cd7c2548e958f3232910b4662e31a507b84f9e1d97d56f4",
+      "bytes": 96604,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/4d5292c1",
+      "sha256": "0c33df8b418532628492de1204b271090b11c17a64db42a247a843cef101564d",
+      "bytes": 11244,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/4d847649",
+      "sha256": "b30f255a3cd94dbafeb2ac4304ffae88de409b96ef1532d61622459a39f7859c",
+      "bytes": 2580,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/4de22c8b",
+      "sha256": "307c0f6bf3d4a5e9a38aa44a6273984c6da55e2d845051450af7994fd7bf5dd7",
+      "bytes": 6436,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/50411221",
+      "sha256": "7a987e44696cc0350c5e3d1d93cc1689d82253ad874c37cf10b0a79e6680646a",
+      "bytes": 1020,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/526afb59",
+      "sha256": "cb903012250f66e97676dd2a61f083e8118cb8616e2affd181a2427c70f94e74",
+      "bytes": 1556,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/52715c7a",
+      "sha256": "136d3efdc8e8fa9ed3fcf07eef98d5688fda08e50baf8996f6c03e3caa9ef8b6",
+      "bytes": 4260,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/5614e36d",
+      "sha256": "c91e0f61d2f2c60a4cbfb38d87cfabe591c5c7927d2155cf78f2f4056103c13c",
+      "bytes": 2324,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/56499abd",
+      "sha256": "10c684ec72b2e6b4b3cc440e5a0b5f39001c0839ef6cdab664f8a3d3d5bbf374",
+      "bytes": 2676,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/571053ba",
+      "sha256": "2c68efcc31524c6007ee2bdb105ea7b2e6f7f3b0141362a8f2fac7dbc667b759",
+      "bytes": 151756,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/5836f300",
+      "sha256": "c53ef313c7138082a945c046d551c25f832eaedffdb7908367e201231e307571",
+      "bytes": 3796,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/583bd455",
+      "sha256": "7d0e25a7992e8c9b2f81125e16f1f7d6c287d193064d4d93fd7ea116dfa84d02",
+      "bytes": 1292,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/5fa3db87",
+      "sha256": "3aa051d90de0b2e5375fece3a9ed11e6442de28b317deea73a1ee5b2013a2e07",
+      "bytes": 6124,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/641cbbf5",
+      "sha256": "f2b63d71a055aa1e31025c993ea2de84a711ae76dc56b14e8727212539b8210a",
+      "bytes": 3532,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/65f0e057",
+      "sha256": "c56721bdcd6fe4699f08790b5b28aaf00631b0dcfba8df5665cf6d2dc6b4b1eb",
+      "bytes": 2020,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/6630b76d",
+      "sha256": "6698695a1c19a6515866560aedb6b1b1a511095c5ed8b49185310fd008f77f70",
+      "bytes": 1132,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/6b2120ba",
+      "sha256": "7c4ed9abe00180477a222de780fd9fcff26e2208fda40cc01b377d2f0b98053b",
+      "bytes": 2340,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/6cbd92db",
+      "sha256": "ca8829edd3b407dce8c4d32ea76b8b07ebd3ee7e747183c78362e5eeef272f55",
+      "bytes": 1500,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/76fa1175",
+      "sha256": "eb4e2141d4d2db4a995d329ef7f1325dd173b0949241785b201a34038efb6f56",
+      "bytes": 6260,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/790408fe",
+      "sha256": "4fb9d87827bb3fb09b36ffaeed8acdefcee03e534a1df3c8842a62b2f9f2afb7",
+      "bytes": 1980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/79e707ca",
+      "sha256": "0a6e0b810e451d0170e27da4b1bcc936aab0b08d8aaa74afc4c375b2170bfa59",
+      "bytes": 1684,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/7a02dd39",
+      "sha256": "dbe46ea5261d8dbf102b3bcb3485ea1d79fe5d242ba07adc56699e4eb92c707d",
+      "bytes": 62756,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/7a731be5",
+      "sha256": "63cf76a2ebe789a1b1478a3cd259ab989ec064b4f2f546ce2f211749962b966c",
+      "bytes": 4508,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/7cb81e87",
+      "sha256": "8add42ff732e7938f38272f20a9cc6065b4d1df939e70bd2fe1c450516fd63a3",
+      "bytes": 9996,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/7d1e9d4f",
+      "sha256": "7193b6455d3842c26f958ecb752fbc4cdf273f9eb90cd1c392201dae3b13a520",
+      "bytes": 1764,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/81fec9dd",
+      "sha256": "793c4a33a7f9493cdd29507c725bf440bac1f6da0a515e0253073c1ad59dbb65",
+      "bytes": 3148,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8487531c",
+      "sha256": "4eda5a5d3287d628c937e88229a0b3e8f96bc1e7aa933fb7dd12b35726a6db53",
+      "bytes": 12404,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/84b05463",
+      "sha256": "f673a4881dfbd0b8a24720e50d681785d8af019e00e471e2a41ac73f35e9d766",
+      "bytes": 3068,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/84dcd2a1",
+      "sha256": "ac758b64fe5fc7f8d1f1659d2583ab7d5aea201e6211b79f0280791cb6382322",
+      "bytes": 5692,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/85cdcb2a",
+      "sha256": "27f313ba432aaed9a468ae8049f0c096ba64abb54dc34bd691c267210e395b33",
+      "bytes": 1020,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8654f511",
+      "sha256": "c9bbad64f7876a5a2249742d87e0e66c0b4afbd8c344f5e93c919f7a4b87c1c9",
+      "bytes": 2076,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8926040c",
+      "sha256": "8c2fa457428f2fab421d28f8fa42975dbdc6f170372118051f5ac6e2e7c4eeee",
+      "bytes": 5612,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/895d8eef",
+      "sha256": "311fd79c487f11782e854fd83503ee79b9bc4368dfb7389412d5e724be9b65e0",
+      "bytes": 55172,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/897ebac6",
+      "sha256": "ad85c5c1bd37b3aa4ff121a74a356d3c739fe14c261d8f3dcf53b1517ddc74d1",
+      "bytes": 4004,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/89a7b29b",
+      "sha256": "9a766745e15f31d12abef5c666596d8a5514330348e8193d5a99dbf059a2cf66",
+      "bytes": 1076,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8a7c989e",
+      "sha256": "59b17205b8de6d5e415147e2d831b90631f25498494e8030dd07142d4a3de052",
+      "bytes": 908,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8abe8db3",
+      "sha256": "21fc251fbb340cd2d60076aa427c74d7baf6985ec04a3fc40932aab08f61673d",
+      "bytes": 10228,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8b277af6",
+      "sha256": "3a010d5f3b67201adea5ee3ce7095763c0e4d3974b2e9290d4f050b438d4374a",
+      "bytes": 1748,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8bc36a46",
+      "sha256": "651c0be20537dadb934ee15c69d4e403dee11239613b7550e4147dd68f5dd3fd",
+      "bytes": 1436,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/8c80d208",
+      "sha256": "8f4732b16e3e2509ba567dc72ef18bb3b070797323f440872a36484f3e71f6e7",
+      "bytes": 46492,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9a192c5d",
+      "sha256": "94bd892e089dc43a8a3367763d3c3e9abe7543aaa448749f85e22ef73b237754",
+      "bytes": 2564,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9b130200",
+      "sha256": "380b58395f98f0e6c549edafd19e7e6bcab0434a9070b070b9c0e680a89d6a13",
+      "bytes": 2900,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9ce3b7c3",
+      "sha256": "94311e12f50f00598e3e809b4353dffcd12bb474924573c9e2e2492ab57564ef",
+      "bytes": 1388,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9d50cd50",
+      "sha256": "31a41384cafff37adf570d6dfee5604024679c2754a1d67862e82dee511a3afa",
+      "bytes": 474900,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9e55f17b",
+      "sha256": "46b32457fa52763055b08ee5d5e45ba734b2876289514ed0eddea741d6e957e0",
+      "bytes": 1100,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9fb46f14",
+      "sha256": "ab0e0628b45aa31f900546eddcad6dabc755043b03da8cc7d46f25e21497cfea",
+      "bytes": 3692,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9fb75b6c",
+      "sha256": "870ff9d4114503aeebe6301524c5b76cf3a2f651789fc936da5d708a76716612",
+      "bytes": 2020,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/9fcb06cd",
+      "sha256": "9e2ffc2aa4296cf74b6e8c9078fb5c4937917f5d23afe0bd1e0dfcab400242de",
+      "bytes": 6292,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/a39c7274",
+      "sha256": "43897891f0159144a0c6a50d7ac66d0ef2da315652e4baba6d5e0d7455eb6bb4",
+      "bytes": 5028,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/a5be35f4",
+      "sha256": "71d490af4abe599c1c329c76da3e08e6e6be4a236980d24d8ccda1837d5ee357",
+      "bytes": 1292,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/a6226537",
+      "sha256": "c29cf868c2c7307d71a2f681dcba9bc166fc25a8ef3464ba3c0ab846c3bf43ef",
+      "bytes": 4812,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/a8984242",
+      "sha256": "cf824046014d435dc78cd329e610a4576d66255d00d1acfa1fe8238feda4eec5",
+      "bytes": 1268,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/ab64c787",
+      "sha256": "37e6995f1ad6e3db7d4947d987a516b29bd9cd69b33b03fd5057591e9bc9bde4",
+      "bytes": 8516,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/af2d8b95",
+      "sha256": "868945957799be1b0475ee9cb20e9415884805d6c76e9ef63fcd916f5c9419e3",
+      "bytes": 14444,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/af7c5746",
+      "sha256": "8bb6d28056a7cb7b0d464649cb1b8b06cbc0fa41bc1d595c1b007c5e98338072",
+      "bytes": 5892,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b0717258",
+      "sha256": "e5e3885fd2981c252d46a1497cf1e839db9a26396c2e558d540e8fefbb8730b7",
+      "bytes": 26340,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b26dd352",
+      "sha256": "09f431aba7248a75b1df2c542106cf3b2730318bb77beca1ccf7dacff0e43de7",
+      "bytes": 908,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b2ef4b81",
+      "sha256": "58ba1699b147fa9b11bcffb8afd4630be19f6726c61be19dd7ee2f0d1a9a76d6",
+      "bytes": 1748,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b4207135",
+      "sha256": "9dad5e1507c23df7e128c55b787fce19504ab6de0ff2508b035c5e5d2d27ec93",
+      "bytes": 9244,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b4e345c1",
+      "sha256": "11dae546c40536def0e7429bb9faf661efc824bb3cec82bec04445caa25647fb",
+      "bytes": 1820,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b53ce722",
+      "sha256": "c54410c0314c5fb17c3df660bf96f17c967fdeb7df6ba614c2b965f59c6bfdf3",
+      "bytes": 14188,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b9d214e6",
+      "sha256": "bddc9ee87872d04954c9e9c3acdf808f7ab754943752e7e8e41872cccef464c8",
+      "bytes": 6052,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/b9dffe51",
+      "sha256": "93bbf5783f5078fb13776bbc90f6b672bcfe5a58bbc5fceb5770b712f3c00be8",
+      "bytes": 604,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/bd33ee39",
+      "sha256": "fa5747bb2e5df383eae76d7ab470edf5b8c9c6eda87790a4f5481fc707b6b6de",
+      "bytes": 16100,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/bdf46dd3",
+      "sha256": "18edea2d40d7ca9e53bdd67b2811be299095b5b26838bc5251d94494c3d4a067",
+      "bytes": 2492,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/bf61d766",
+      "sha256": "250bd363579afeb66e8a5b5e5e3f3abf42c893505b767bb8ff11b2d51e3c66a8",
+      "bytes": 1780,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/bfdaa294",
+      "sha256": "4e6c60fdb5d35ef3ef18cb486580b1ac7da0f9cbd0af9ed30f86e937f3746fd3",
+      "bytes": 2644,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c09eb001",
+      "sha256": "845a6a49f2f1ffb79a3de3d400cf8983680c40196a70f2c4b54fefe75f178762",
+      "bytes": 788,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c185bf69",
+      "sha256": "6234a8143fa4d134365eae15fbe075b22cd003e7bf714dd0098b604059507995",
+      "bytes": 4044,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c257c224",
+      "sha256": "953669229cc74cca747efabc1f067a7aa8f0241b2ce30c30343d6f7bda57c823",
+      "bytes": 1172,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c36cbea5",
+      "sha256": "77ab5b1f10774cb94c5083da32fe65bf979c75dae684e688155c60916168f62b",
+      "bytes": 1980,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c66552cb",
+      "sha256": "739ab4f6efe8dd73bd54fe11f5fec487b1af2b7ee19b386071f094bf1244f4f4",
+      "bytes": 2380,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c6caa484",
+      "sha256": "8723bb488d4bf1b13e2ad25d5865e37fd09e98aeefb4d6454bfa7230789bbcc8",
+      "bytes": 2644,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c75bf89d",
+      "sha256": "315bfe5ec821e317bbd6cdf7dfcee73235071df67e9f8ace241eac89c93cbd3d",
+      "bytes": 12548,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/c8aa0ef9",
+      "sha256": "5cc35a1eb8630238dff8f0907dbdd0951dd02c756e624fb536c41acaafca5b87",
+      "bytes": 13476,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/cac6095b",
+      "sha256": "44ee1fb7ceb5a27ec0663e7cc73cea87b6ec421ff3ee25b52b37374ba1d82e5d",
+      "bytes": 2932,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/cbbf053c",
+      "sha256": "4a2363562c7e2ffd1cac52c2d4af47631a1746b8240bb6913c9ea0012e708f33",
+      "bytes": 7172,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/d3a10f6d",
+      "sha256": "b3c45e4001a78d5ae9093a33fd4663098b4ad3861fe7671b66c4908cff6d4c42",
+      "bytes": 66668,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/d4b7de65",
+      "sha256": "f6af5620bcaa2019e040aa9c3ac3a2db47f4cf04b68636070a8ee5a3624b3756",
+      "bytes": 6348,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/d59cddf8",
+      "sha256": "168948c70d9aff53e437a439f40285a4e22fd48d8b4b1198f3a6e33a4120ab3e",
+      "bytes": 2804,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/d9f59b19",
+      "sha256": "71387a242c7b0d9b54b4986fd68899443ad3bc69b44e72a8c4305536e977ad54",
+      "bytes": 3836,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/daa55d75",
+      "sha256": "f811d3187511b88bc31382498e593e066ca7c8bbb65e516930006d42780ca7d6",
+      "bytes": 26692,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/db1163d8",
+      "sha256": "17cb73cbfafa7d7adf0a755fe988bebd1bc06c4c48a427587d0b43ee20e159b1",
+      "bytes": 2468,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/dc2283c5",
+      "sha256": "df5c25fb8888069fa8edccc02e5c62a5f4dae7e32dff892217fa16ffc3033c0a",
+      "bytes": 1932,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/dd247132",
+      "sha256": "d32d2de6512573d7d85dc84122f9ef390503c884284594018b41415b662d9a55",
+      "bytes": 16740,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/df56f637",
+      "sha256": "4a287d8373cbe0148826ebe103f40f10e3d21be72b5a19963f88d883b8e001bc",
+      "bytes": 3932,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e0efebfe",
+      "sha256": "bda80838456570256175f718193c30212fcb008951c534337ab680ab7351b0b8",
+      "bytes": 1284,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e0f00389",
+      "sha256": "bd546ab9d099f6a6ae984f99333bee5086e14e7cedf050b24e3d12da84d7f2d7",
+      "bytes": 5772,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e3c3aea2",
+      "sha256": "d648ed42623ffcf0112fc2ea4e25efae7a31037e55ce41a887ee30e0b5927ea6",
+      "bytes": 1844,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e576e88f",
+      "sha256": "645958018c04f15f0882e9013b36ccbf34331d0b402c6eb1f33dd1c0450e03ee",
+      "bytes": 1612,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e5cfc63f",
+      "sha256": "96532837e7ce76c514adb7435b2bd599c5dbb17f5bbbd57c4f1198a11cbab019",
+      "bytes": 32444,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e5f0cb19",
+      "sha256": "9f71834e7b89f6c004e5dbc4e4ad821c8d7169b0218b327791e15fb487983267",
+      "bytes": 2364,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e753f60e",
+      "sha256": "2cea6b8f8dc2a2f82c8c78b25d4536bf7fc9008f2c9a0fc2ef3d4193eaa4af46",
+      "bytes": 10700,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e84352c9",
+      "sha256": "777cb2d2cff3467ac7547ad327a561632879efe6be78c9647dc6beebf6b740a8",
+      "bytes": 1268,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e9247c4c",
+      "sha256": "ced55fce3580397ebe4d0016077dab09ec272fe2892cddb758a50e0668254c5b",
+      "bytes": 2460,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/e9289bf4",
+      "sha256": "5a80b91e92742dbd15900ec3e52b3668eb281020d527e8c1ae93e40e83a3019e",
+      "bytes": 3708,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/eced686b",
+      "sha256": "84c9254a6bd75c8b061731b07133fe28686380f062c0cfe2dd608e5239eda0f7",
+      "bytes": 17444,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/ee039353",
+      "sha256": "aee4572bea3c70f888747e220f9bae920aa4c48ff2e5fb7b776c48be63cb12dd",
+      "bytes": 2164,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/ee4cbc06",
+      "sha256": "bd6393dfed862b40dcf19fb58e3c0916226ad0d2ad6d70d770c49f3041bcfe2e",
+      "bytes": 6188,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/f607068d",
+      "sha256": "1aec6df93b7359d3666ddfcb65f48561d5e7e653ea911377ca395c13e0aa15d6",
+      "bytes": 19788,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/f60aec45",
+      "sha256": "d18c368c6ff38df17c81ebd3c89a5a6e0d12c66156fc23a7bb5c0cca85737479",
+      "bytes": 2076,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/f68629bc",
+      "sha256": "d47a04e690b9416ccd601f81351000c90972c5065980be15fb26746f73c1e20f",
+      "bytes": 4012,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/f7b45b9a",
+      "sha256": "a77e9ffc2d42588d7da2ea155fd4640cebe467e033fcf6a361c547703c6e2451",
+      "bytes": 636,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/fc737f15",
+      "sha256": "5ed3baf83def1f7a916c1a399d1854639a46eef4d790454bdb98bc59bae26a10",
+      "bytes": 1188,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501/fe2c767b",
+      "sha256": "8889a34c7a9ca222388cef483e5a876c315adc4c3619baefe64a4712365a32a4",
+      "bytes": 2372,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/plan.json",
+      "sha256": "c82de79a67df64f81883c1b25f442b8664c21cb38518a50373aa926004ec2783",
+      "bytes": 835,
+      "capturedMode": 256,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/stdout.log",
+      "sha256": "03d183d6fbc7409bab9d61b469f0fc15009b63d26a23ede7cab1156671e1f5ec",
+      "bytes": 924,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/vite-cache/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "sha256": "24a805bc7012c2980f74bff5dfdc16a11b1d2b79c92fbec61b0d66b6f04ea104",
+      "bytes": 119,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/vitest.json",
+      "sha256": "bbf40294fd8073b9f7deac2288318dd890cb73dcda85532f6cf74dca6fdf26d8",
+      "bytes": 1953,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/driver.exit",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/guards.json",
+      "sha256": "4abac80dfb2c7e2308a0f058f013154e92fb238081bf4734cedf587982dacf3c",
+      "bytes": 4411,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/launch.json",
+      "sha256": "d435ecc5699a3b4411a96a8ff3d8d3636c83644097d667dfaeb560a76eafdd74",
+      "bytes": 828,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/original.ts",
+      "sha256": "1f4843c98837d0c75397eeb19bd9374a500ac27b0f4cceeb39202e3a19fee250",
+      "bytes": 16709,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/result.json",
+      "sha256": "49ef6fbfa7777043f959dd3294a0a16d94b9ff574828a3e0f73c819b917d6f68",
+      "bytes": 5235,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/steps.json",
+      "sha256": "a2a9be50540182f5765a00acaca8fc7983fe45212e1e5ff955fd9544eedf3f0f",
+      "bytes": 1481,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/actualdriver.exit",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/after.json",
+      "sha256": "f29c5adbe11d06d0d4e1647eaa128b87b72a32c75aac643dfde4c6ed578adc81",
+      "bytes": 897,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/before.json",
+      "sha256": "f29c5adbe11d06d0d4e1647eaa128b87b72a32c75aac643dfde4c6ed578adc81",
+      "bytes": 897,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/cleanup.json",
+      "sha256": "b5b00ba3c3b69835a5b093044debcc2abf19e5fc3d0b36ffde0d5bac39aa702e",
+      "bytes": 109,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/driver.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/driver.stdout",
+      "sha256": "5c7268fd5deeda3cfc18018ffe5eff2f699b6bbc7f8df592cfbdbf2c6c6e3126",
+      "bytes": 150,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/launcher.exit",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+      "bytes": 2,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/launcher.json",
+      "sha256": "880e543f962638bb565c0a3f67d1e4c77eb1388caeb02baebe2ff6f7c49f03b2",
+      "bytes": 1277,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/outer-timing.json",
+      "sha256": "e80db0fb10c8f6c09297a3eda529be8cfb7427d14fdaead6ec9dd1eb12a1bfe8",
+      "bytes": 528,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/restoration.json",
+      "sha256": "31a6b43b4b8ec26240ba7711d5d03357342bbf1604e399d570fb520093b81f93",
+      "bytes": 42,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/result.json",
+      "sha256": "e233edf302be52946ad1858ee924ea20b78c0698b4fb18ea6e65c735495b7a96",
+      "bytes": 251,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch/started.json",
+      "sha256": "2b519b589d05129a7b29ea6b69e03f99e79e919f6bc01fe18ae7619c9ffb2055",
+      "bytes": 44,
+      "capturedMode": 384,
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-baseline-analysis-20261110/actual-analyzer.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-baseline-analysis-20261110/argv.json",
+      "sha256": "1f33ff1527ac6fd2bc63df25438771e8b7bac7408832ecf5908e42ac0a970d1e",
+      "bytes": 859,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-baseline-analysis-20261110/classification.json",
+      "sha256": "1664e2546c96aca5d6b4a83c432408cb00019d400414ef21ca3b97b9b26fe0e7",
+      "bytes": 1078,
+      "capturedMode": 420,
+      "sealedMode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-baseline-analysis-20261110/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "capturedMode": 420,
+      "sealedMode": 256
+    }
+  ],
+  "rawDirectories": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node-compile-cache/v26.13.0-arm64-310b2ce3-501",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node_modules",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/node_modules/.vite-temp",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/vite-cache",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/vite-cache/vitest",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2/baseline/vite-cache/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "sealedMode": 320
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0e-read-failure-control2-launch",
+      "sealedMode": 320
+    },
+    {
+      "path": "/private/tmp/artroom-t0e-retained-baseline-analysis-20261110",
+      "sealedMode": 320
+    }
+  ],
+  "preservedStartupFailure": {
+    "path": "/private/tmp/artroom-r3b-evidence-t0e-control-first-startup-failure-20261110.manifest.json",
+    "sha256": "4357aa47fae3ed59327d8ef92fbb2b4d63bd332948362db2fb356df507774afe",
+    "booking": "ef7bf2d796106c904b9bac4156866799ab994293",
+    "end": "5b22967d5b133f07583d0de288e030db92236048",
+    "runtimeCasesObserved": 0,
+    "mutantStatus": "UNRUN"
+  },
+  "qualification": "Split evidence: the existing baseline is positive; the original wrapper failed and remains failed. The mutant is unrun. No baseline repeat, mutant failure, guard distinction, gate or deployment claim."
+}
