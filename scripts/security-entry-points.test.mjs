@@ -150,7 +150,7 @@ const namedOwners = {
     "packages/cli/src/command-change.ts:EDIT_BYTES": "9bbee0ea572e3aee4339d86e8e59defc86538133d2ad92449cdc827c7b86b2b5",
     "packages/cli/src/command-change.ts:stateOf": "28ea558ff346032f886d018fa25925b7e0ed64fc914fb8b6a25fc08c6ab174a2",
     "packages/cli/src/command-change.ts:valueOf_": "b5c04f914e3a5b9ddd741664cb83611b825719e519f3b4e423515279493bac44",
-    "packages/cli/src/command-change.ts:supportsEdit": "8f0e9431ab92a0725c94389550908542074ee0065f4ef97575fb796aa429fcfc",
+    "packages/cli/src/command-change.ts:supportsEdit": "faf1b5d8e650f0cb9fc716abd69872b227a64477bdbb93f798128f077730f6a8",
     "packages/cli/src/command-change.ts:edit": "f40d95a0f633610c5348bc959476bf9b07dc795ae7f49e7d5fcf1db857028f6f",
     "packages/cli/src/command-change.ts:propose": "cd58d412a613dbacbc96ae2e0222949f99377272c7f4089e78269009e3ff5142",
     "packages/cli/src/command-change.ts:proposingFiles": "22a95036e1d4e2b2541a999f5ada1f69b83fec0fae29c0ce241319a211395daf",
