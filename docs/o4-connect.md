@@ -157,7 +157,7 @@ card act. The read-only card press and separate Native act remain distinct.
 7. Prepare the room's reviewed issue profile through the founder's ordinary
    Rules path before the live window. Record its exact definition and
    activation fact. Confirm the existing agent role holds `issue.open`.
-   Each host then uses `open_issue` once, with a distinct bounded title:
+   Each host then uses `issue.create` once, with a distinct bounded title:
    **O4 Claude native act** and **O4 ChatGPT native act**. Record the real
    tool schema from that connection. Confirm the Directory's created issue,
    its actual lane genesis and title, and the exact host agent signer.
@@ -180,7 +180,7 @@ card act. The read-only card press and separate Native act remain distinct.
    operation and continue its original request; do not replace the agent.
 4. Record MCP initialize, tools, and the Grow site card. Press its
    **Open O4 room** control, then ask that same agent to create its named
-   issue through `open_issue`. Keep these two operations separate.
+   issue through `issue.create`. Keep these two operations separate.
    Read the journal to confirm
    the exact accepted fact and agent signer, controlled by `@o4-member`.
    A rendered card, a text claim or a tool's accepted request alone proves

@@ -20,7 +20,8 @@ An issue is named by its number, `3` or `#3`, as `dap issues` lists it,
 or by its lane's scope ID.
 
 The source is `packages/cli`. In this repository the command runs as
-`packages/cli/bin/dap.js` under Node 22.0.0 or later. The launcher loads
+`packages/cli/bin/dap.js` under Node 22.18 or later. The project tests on
+Node 26, and the operator pages require it. The launcher loads
 the CLI's own installed TypeScript loader from beside the package, so it
 works from any directory and fetches nothing when it runs. No registry
 publishes the package.
@@ -734,7 +735,8 @@ Signs and sends one act.
 - `--value <file>` sends the file's text beside the intent. Give it once
   for each file. The scope reads a value only where its definition says,
   by its digest: the bytes of a definition for the rules scope's
-  `activate`, and for the directory's `open-issue` and `open-pr`.
+  `activate`, and for the directory's `open-issue`, `open-pr` and
+  `establish-application`.
 
 The command fills in the current revision of each item that the act
 names, from the scope's summary. The scope checks the revisions again.

@@ -181,10 +181,11 @@ evaluation cannot finish yields `unavailable`, not a proved refusal.
 An accepted response carries a receipt. An uncertain transport result
 does not prove acceptance or refusal.
 
-The typed authoring spike can declare grants and reasons and report
-per-act refusal metadata. That metadata does not change the native answer
-union or canonical definition. Keep the starter's actual imports. Do not
-invent a published helper entrypoint from the spike's checkout-only files.
+The typed authoring package `@generalbusiness/dap-define`, in
+`packages/define`, can declare grants and reasons and report per-act
+refusal metadata. That metadata does not change the native answer union or
+canonical definition. Keep the starter's actual imports. npm does not
+publish `@generalbusiness/dap-define` yet, so import it only from a checkout.
 
 ## Check the complete package
 
@@ -298,8 +299,8 @@ and unimplemented capability code do not become available through a
 successful source build. A package signature proves identity, not a live
 host, outside effect, complete journey, or migration of existing scopes.
 
-Read the current [package install requirements](https://github.com/generalbusiness-ai/artroom/blob/main/docs/cli.md),
-[application reference](https://github.com/generalbusiness-ai/artroom/blob/main/docs/write-an-application.md),
-[view reference](https://github.com/generalbusiness-ai/artroom/blob/main/docs/application-views.md),
-and [scope forms](https://github.com/generalbusiness-ai/artroom/blob/main/docs/scopes.md)
+Read the current [package install requirements](https://github.com/generalbusiness-ai/dap/blob/main/docs/cli.md),
+[application reference](https://github.com/generalbusiness-ai/dap/blob/main/docs/write-an-application.md),
+[view reference](https://github.com/generalbusiness-ai/dap/blob/main/docs/application-views.md),
+and [scope forms](https://github.com/generalbusiness-ai/dap/blob/main/docs/scopes.md)
 when the request exceeds this bundled path.

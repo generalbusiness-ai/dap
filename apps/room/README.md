@@ -11,7 +11,7 @@ Counter and Lending are ordinary trusted packages, built from their maintained
 sources and installed by immutable Git URI. The host contains neither app's
 route or compiled asset module.
 
-[wrangler.jsonc](wrangler.jsonc) owns the `artroom-scope` deployment and its
+[wrangler.jsonc](wrangler.jsonc) owns the `dap-self-host` deployment and its
 private application-content binding. The dated lending configuration is
 retained for its historical service; it is not the generic M1 deployment target.
 The [deployment guide](../../docs/deploy.md) describes host trust and storage.

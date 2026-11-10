@@ -6,7 +6,10 @@ correlation. A deploy check reads the metrics and health after a
 deployment.
 
 The room Worker's [configuration](../apps/room/wrangler.jsonc) declares
-the `METRICS` Analytics Engine binding and `VERSION_METADATA`. It keeps
+`VERSION_METADATA` and no `METRICS` Analytics Engine binding. The hosted
+configurations `wrangler.artroom-scope.jsonc`, `wrangler.commons.jsonc`,
+`wrangler.demo.jsonc` and `wrangler.grow.jsonc` in `apps/room/` declare
+`METRICS`. The room Worker's configuration keeps
 console logs at full head sampling and turns off platform invocation
 logs, which can include URLs. These settings apply when you deploy the
 Worker.
