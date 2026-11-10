@@ -1,0 +1,122 @@
+{
+  "qualification": "Independent metadata-only audit and retained custody of one final-head exported-model-value capture. The capture ran once at the integrated head, reused the sealed main19dd values, and printed109strictly equal observations. No baseline process, new test case, DOM/Native/live acceptance, application or validation body ran in the audit.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-head-values/independent-audit/unit",
+  "checkpoint": {
+    "commit": "1088dc060c29ead773ed76b59a6fbb4a8a258f37",
+    "tree": "6664cc8e0bd4626aae586330f5b64547cc235fc3"
+  },
+  "booking": "fd390a927d1afefa750afef8fc16b2f4552d6689",
+  "end": "7e08d07f7aa295d78ce8d7c9db45287fe47a45a8",
+  "fileCount": 7,
+  "payloadFileCount": 6,
+  "payloadBytes": 32811,
+  "sha256Sums": "a049a74a6cdd196c3505586374479e3fcb3bdfd98890538425a2501fee435c91",
+  "files": [
+    {
+      "path": "actual-exits.json",
+      "bytes": 469,
+      "sha256": "b1778d4f1cf63baacefee142dc83695e7b7626cb0dacaeeb5cf797c067ee5b90"
+    },
+    {
+      "path": "custody.json",
+      "bytes": 589,
+      "sha256": "298511e6a7bc7c869667af0af167d8d66012056c2deaab4ce4d8c7fe1763c294"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 1806,
+      "sha256": "ad576e887b0155ed312be386199952caa3a5ee4f824e42c8fcff27f9b8b29212"
+    },
+    {
+      "path": "source-tool-fences.json",
+      "bytes": 618,
+      "sha256": "50601e24ef2d1366040765fe6dd58f8495ec759b147dd4e39c06e676dd7e9156"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 1430,
+      "sha256": "ba69a8ba2064c4b42a91129bc3462f4b35910a221c2ec69f7296d38e564e238e"
+    },
+    {
+      "path": "value-identities.json",
+      "bytes": 27899,
+      "sha256": "a6b5ba3474a3e80ce77e7ed773aa9db7dccabe4fb1fa30ba2389ec004f766a6e"
+    }
+  ],
+  "reusedBaseline": {
+    "manifestPath": "/private/tmp/2026-11-09-t0d-paired-values.manifest.json",
+    "manifestSha256": "a61a17c15bf1c485361f4e76109c50647d849895a27210d079113391864c9417",
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-09-t0d-paired-values/main19dd.values.json",
+    "sha256": "65293eb4cc03985b986aa0eb160eeba038aab69faf0b13876b0e6a165f021122",
+    "sourceCorrespondence": {
+      "namedMain": "19ddc868b0056df612f2c976968684d2cd08c8e5",
+      "baselineCheckout": "0b72dffc4a90fd3acd6c351cdd3cd483fb8a4fcd",
+      "equalFullTree": "a7af981d473459fe30cd9160c74dd86423b518ae",
+      "qualification": "Full Git tree equality and clean current baseline checkout; every tracked baseline byte is frozen. Main may later advance; this named main19dd remains the reviewed before-D baseline."
+    },
+    "rerun": false
+  },
+  "actualExits": {
+    "body/headFinal.exit": 0,
+    "body/actualrunner.exit": 0,
+    "actualdriver.exit": 0,
+    "launcher.exit": 0
+  },
+  "observedValueRows": 109,
+  "withheldOutputs": [
+    {
+      "name": "headFinal",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "--import",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/tsx/dist/loader.mjs",
+        "/private/tmp/artroom-t0d-final109-1088dc06-20261110/capture.mjs",
+        "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109",
+        "/private/tmp/artroom-t0d-paired-values-20261109.inputs.json",
+        "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-head-values/run/body/headFinal.values.json",
+        "headFinal"
+      ],
+      "exitCode": 0,
+      "output": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-head-values/run/body/headFinal.stdout",
+      "bytes": 34373,
+      "sha256": "4cdb8f7b44326340f9a18e4f1f05691df8f628ee01eec46683a09259e2d5de8d",
+      "keptValues": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-head-values/run/body/headFinal.values.json",
+      "keptValuesSha256": "4cdb8f7b44326340f9a18e4f1f05691df8f628ee01eec46683a09259e2d5de8d",
+      "process": {
+        "pid": 73396,
+        "ppid": 73393,
+        "execPath": "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "cwd": "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109",
+        "execArgv": [
+          "--import",
+          "/Users/hughpyle/play/artroom/.builder-worktrees/typed-browser-models-t0d-20261109/node_modules/tsx/dist/loader.mjs"
+        ],
+        "config": "/private/tmp/artroom-t0d-final109-1088dc06-20261110/headFinal.tsconfig.json",
+        "disableCache": "1"
+      },
+      "closedOwnedGroups": true,
+      "comparison": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-head-values/run/body/comparison.json",
+      "comparisonSha256": "916f480a5082877fe3c292f0f9132352008c148f0b39e16260d61c3373eb56b6"
+    }
+  ],
+  "sourceUnits": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-head-values/run",
+      "ownerPrivate": true,
+      "originalsRetainedUnmodified": true,
+      "originalsClaimedReadonly": false
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-t0d-final-head-values/independent-audit/private",
+      "ownerPrivate": true,
+      "manifest": "manifest.private.json",
+      "manifestSha256": "a57e8d0525b51a90ea89ce1eeb86f18758d08ce02857f4b8e841fcd8bdb5016c",
+      "copiedDataFiles": 44,
+      "newArchiveReadonly": true
+    }
+  ],
+  "retention": {
+    "atLeastDaysAfterLanding": 30,
+    "removalRequires": "recorded planner act naming adopted manifest"
+  }
+}

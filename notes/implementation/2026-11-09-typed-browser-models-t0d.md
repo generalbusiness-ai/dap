@@ -55,6 +55,20 @@ The clean C baseline has the exact full tree of named main `19ddc868`.
 The 109 rows cover exported limits, enums, action lists, proposals, and
 refusal words. They are value comparisons, not test cases.
 
+The [final-head value capture](evidence/2026-11-10-t0d-final-head-values.manifest.json)
+passed at `1088dc06` after the approved B and BR13 main merges. One fresh
+`headFinal` process printed the same 109 values as the sealed `main19dd`
+baseline. The baseline did not run again. The independent audit checked
+all four actual exits, the ordered row identities and complete stable
+JSON values, source/tool/input hashes, and empty owned process groups.
+This follow-up adds exported-value evidence only. The linked manifest
+records the exact capture argv.
+
+| Check | Command | Exit | Output digest |
+|---|---|---|---|
+| Final-head exported values | Node/TSX, `headFinal` ([exact argv](evidence/2026-11-10-t0d-final-head-values.manifest.json)) | 0 | `4cdb8f7b44326340f9a18e4f1f05691df8f628ee01eec46683a09259e2d5de8d` |
+| Gate before review | `npm run gate` | Not run | Pending |
+
 Ruling `ac586d65` accepts the four compiler contexts and 63 maintained
 runtime cases as D's whole runtime witness. It requires no Lending DOM
 fixture or real-Native browser scene. This head claims no Lending DOM
@@ -63,8 +77,9 @@ Lending pages after deployment.
 
 ## Remaining checks
 
-The Page workflow must pass on the review head. The final `npm run gate`
-remains owed after the BR13 and B main merges. D lands last among the
+The Page workflow must pass on the integrated review head. The final
+`npm run gate` remains owed. Its whitespace, commit-message and JSON-format
+prechecks must pass at the actual gate source. D lands last among the
 DX-T0 heads and closes the parent only after required evidence and review.
 
 No kernel, definition pin, retained JSON, manifest behavior, client API,
