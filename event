@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/define/package.json","body":{"commit":"19ddc868b0056df612f2c976968684d2cd08c8e5","path":"packages/define/package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/define/src/index.ts","body":{"commit":"19ddc868b0056df612f2c976968684d2cd08c8e5","path":"packages/define/src/index.ts"}}
