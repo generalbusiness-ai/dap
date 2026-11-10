@@ -1,0 +1,64 @@
+# Identifiers head plan
+
+Planning child `60a07099`, promise `692e7875`, covers this report only.
+Parent `05d618e2` stays open. No source, protocol or acceptance work ran.
+The plan follows the landed section 8, `c0a795e7`, and the canonical-mode
+addition in `865f4d70` and `788bc90a`.
+
+1. **(a) Retirement premise: landed at `1d7be4f3`.** The reviewed note
+   records retirement on the same four Workers, the retained old reader,
+   and replacement-room acceptance. Existing old-format services stay
+   working. Its documentation gate proves no protocol implementation.
+2. **(b) Independent vectors and integrity verifier: first code head in
+   phase 3.** Publish `vectors/dap1`, `git`, and `git256` from a Python
+   producer that imports no dap code. Tests only consume them. Add generic
+   citation parsing and exact levels 0–3 reports, preserving current
+   Native wire data and full judgment replay. Witness the complete section
+   7 case list, including real signed dap1 founding/act/preparation data,
+   unsigned delivery, changed signature, missing bytes and explicit anchors.
+3. **(c+d) Atomic identity, admission, archive and fact-text cutover, after
+   (b) and F on main.** Keep the originally proposed archive head (d) in
+   the Native admission head (c): current archive pins, both head layouts
+   and Replay compare or serialize the old reference. A split would leave
+   those paths incoherent or require forbidden compatibility code. Change
+   references, nonce/genesis entry shape, all four genesis self-reference
+   rules, routing and refusal names together with archive/clone/fact text.
+   Preserve address routing, exact journal bytes and signatures, full
+   new-format replay, and the `artroom-entry-1` domain. The Directory
+   witness must prove pre-seal sibling IDs, resolved full parent refs, and
+   different siblings for a second sequence at the same scope ID.
+4. **(e) Sequence HTTP binding, after (c+d).** Add document, event and page
+   reads under `/v1/sequences`; retain `/v1/scopes` address routes. Witness
+   exact encoded bytes/citations, the DID document and unique `SeqHttp`
+   service IDs, contiguous pages, strict counts 1–1000, and empty-body
+   400/404/403 failures. Ordinary routing keeps the scope address; sequence
+   lookup must verify its genesis association. Authorization stays with
+   the host, and offline verification hashes the bytes itself.
+
+The canonical-mode rule belongs in **(c+d), not another head**. After F
+lands, every new-format definition admission uses `canonical: true`:
+creation, application install, rules, directory, archive reads and Replay.
+Keep each platform/outcome option alongside that flag. Each category needs
+an admitted canonical definition and a refused redundant spelling. F alone
+does not switch those fold paths.
+
+Before cutover deployment, the planner records every affected room in one
+act: Worker, scope ID, last entry, archive state, and last old-format main
+commit. Replay at that commit remains the old-journal reader. The new code
+returns a named retired-room refusal with that commit; it never rewrites
+or re-signs old bytes. No translation, dual write or frozen old-format
+Worker deployment enters the plan.
+
+The recorded old-spelling demo release becomes uninstallable. The planner
+signs a new release from canonical new-format sources before recreating
+Grow, Lending and J5 Site. After cutover, the planner and builder recreate
+those rooms and run actual J5 acceptance against the new Site room.
+Neither prior J5 evidence nor a planned scene closes that requirement.
+
+Current source areas and exact admission call sites are in the companion
+JSON. They identify work, not a complete future source inventory. Every
+implementation head still needs meaningful focused witnesses, the three
+static prechecks, one gate and checker approval at its exact head before
+landing. If section 8 cannot work as written, ask the planner first.
+This report performs no deployment, inventory, signing, recreation or
+parent-request closure.

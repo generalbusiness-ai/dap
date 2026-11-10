@@ -1,0 +1,328 @@
+{
+  "status": "READ-ONLY PLANNING REPORT; NOT IMPLEMENTATION OR ACCEPTANCE",
+  "child": "60a07099e07a268569806bf44b8061e62196c160",
+  "promise": "692e7875340a120f8112c78c192ed6f5c0e2c2e1",
+  "parent": "05d618e28d87f9d6b3aa6b41ce414a9b0e084717",
+  "parentImplementationStatus": "OPEN; no acceptance claim",
+  "sourceMain": "1d7be4f339a8ba778fa8ad253a0c7f07fac2ca51",
+  "authoritiesFullyRead": [
+    "05d618e28d87f9d6b3aa6b41ce414a9b0e084717",
+    "c0a795e715159ba3058ddcab81db6e633cf15edf",
+    "76481fef9cec17441d36b17931454a5a2446ab35",
+    "88cf23c309a7fc7085cc0590d47f6bdf051f637b",
+    "865f4d70b20ea6d8fa35fa7ae8ce7746a1d58f6d",
+    "788bc90ac899761ae36719f8e54cba8856821c66",
+    "60a07099e07a268569806bf44b8061e62196c160"
+  ],
+  "trackedNotes": [
+    {
+      "path": "notes/2026-10-19-record-and-event-identifiers.md",
+      "sha256": "7a3aaf038cfb235eb8e6fdef149504bf16c8ff5e5c754d99b50385693dbc422e"
+    },
+    {
+      "path": "notes/implementation/2026-11-09-identifiers-retirement-premise.md",
+      "sha256": "0982b8310b9ae22f87636e79f3e044c895fff88426d9ae89d7403f3aab1027fb"
+    }
+  ],
+  "nonnegotiable": [
+    "No implementation or protocol closure in this child",
+    "Identifiers first in phase3; E/F/G/H take priority now",
+    "Canonical true in SAME admission cutover head, only after F on main",
+    "Scope creation, install, rules, directory, archive reads, and new-format Replay all use canonical true",
+    "Old signed demo release becomes uninstallable; planner signs canonical release before replacement rooms",
+    "Planner inventories every retired room: Worker, scope ID, last entry, archive state, last old-format main commit",
+    "Replay at recorded old-format commit remains reader; no rewriting/resigning, translation, dual write, or frozen old Worker deployment",
+    "Named retired-room refusal names old reader commit",
+    "Recreate Grow/Lending/J5 Site and rerun actual J5 acceptance after cutover"
+  ],
+  "sourceAreasRead": [
+    "packages/contract/src/scope.ts:62",
+    "packages/contract/src/entry.ts:14",
+    "packages/derive/src/genesis.ts:89,155,211",
+    "packages/platform/src/directory.ts:483,593",
+    "packages/scope/src/core.ts:330,362",
+    "packages/scope/src/creation-lineage.ts:170",
+    "packages/platform/src/application-install.ts:103",
+    "packages/platform/src/application-install-v2.ts:40",
+    "packages/platform/src/rules-scope.ts:659",
+    "packages/platform/src/definition-input.ts:38",
+    "packages/platform/src/validate-package.ts:28",
+    "packages/platform/src/device-application-rules.ts:51",
+    "packages/scope/src/applications/admission.ts:41",
+    "packages/scope/src/archive-declarations.ts:68",
+    "packages/scope/src/archive-source-pins.ts:85",
+    "packages/scope/src/archive-native-root.ts:21",
+    "packages/replay/src/verify.ts:1437,1465,2039",
+    "packages/scope/src/namespace.ts:108",
+    "packages/scope/src/archive-pin.ts:42",
+    "packages/scope/src/archive-fixed-layout.ts:108",
+    "packages/scope/src/archive-scout-layout.ts:196",
+    "packages/replay/src/archive.ts:323",
+    "packages/bytes/src/facttext.ts:27",
+    "packages/scope/src/worker.ts:452,466"
+  ],
+  "heads": [
+    {
+      "id": "a",
+      "order": 0,
+      "title": "Record the retirement premise",
+      "state": "LANDED DOCUMENTATION ONLY",
+      "landedMain": "1d7be4f339a8ba778fa8ad253a0c7f07fac2ca51",
+      "section8": [
+        "retirement boundary",
+        "phase3 order",
+        "old-reader commitment",
+        "new-room acceptance boundary"
+      ],
+      "dependsOn": [],
+      "whatStaysWorking": [
+        "All existing deployed old-format rooms and ordinary source paths remain unchanged.",
+        "Historical notes and retained evidence keep their original language."
+      ],
+      "witnesses": [
+        "The reviewed note and sealed documentation-only gate already landed; this proves no identifier protocol, admission, routing, HTTP or live cutover."
+      ],
+      "sourceAreas": [
+        "notes/2026-10-19-record-and-event-identifiers.md:721",
+        "notes/implementation/2026-11-09-identifiers-retirement-premise.md"
+      ],
+      "remaining": "No source work in this planning child. Parent05d remains open."
+    },
+    {
+      "id": "b",
+      "order": 1,
+      "title": "Publish independent vectors and add generic integrity verification",
+      "state": "PROPOSED; IMPLEMENTATION UNBUILT",
+      "section8": [
+        "fact citation grammar",
+        "levels0-3 integrity mode",
+        "vectors/dap1,git,git256"
+      ],
+      "dependsOn": [
+        "Phase3 opening after the phase2 typed lanes; identifiers remains ahead of C1/M1a/join-parity/foreign-hold work."
+      ],
+      "whatStaysWorking": [
+        "Existing Native references, entries, genesis, admission, routing and deployed rooms retain their old format.",
+        "Existing full judgment replay stays working; generic citation integrity is a separate requested mode, not a replacement for level4."
+      ],
+      "witnesses": [
+        "A non-TypeScript producer imports no dap implementation and emits sequence.json/cases.json for dap1, git and git256. Tests consume retained vectors without regeneration.",
+        "Cover the complete section7 list: valid events, malformed grammar, unknown format, changed bytes/position/sequence, false or missing middle bytes, held predecessor without anchor, explicit and wrong anchors, foreign-sequence anchor, depth limit, absent signature profile and altered signature.",
+        "dap1 includes founding genesis, a signed act and preparation, unsigned delivery and one changed signature. Compare the complete section4 report including requested/result/reached/reason/anchor/trusts; never promote held bytes to an anchor."
+      ],
+      "sourceAreas": [
+        "proposed vectors/dap1/{sequence,cases}.json",
+        "proposed vectors/git/{sequence,cases}.json",
+        "proposed vectors/git256/{sequence,cases}.json",
+        "proposed independent Python vector producer",
+        "packages/replay/src/verify.ts",
+        "packages/replay/src/bin.ts",
+        "packages/bytes/src/facttext.ts",
+        "packages/bytes/src/hash.ts"
+      ],
+      "limits": [
+        "No conformance claim before vectors and actual exact-report witnesses exist.",
+        "No switching Native wire data or admitting new-format rooms in this head."
+      ]
+    },
+    {
+      "id": "c+d",
+      "order": 2,
+      "title": "Cut over Native identity, admission, archives and fact text atomically",
+      "state": "PROPOSED; IMPLEMENTATION UNBUILT",
+      "section8": [
+        "SequenceRef/FactRef",
+        "genesis nonce and following-entry genesis",
+        "four null-self genesis rules",
+        "routing and refusal names",
+        "fact text/public refs",
+        "archive head/genesis and clone/replay coherence",
+        "canonical:true at all new-format admission paths"
+      ],
+      "dependsOn": [
+        "Headb on main",
+        "F canonical-spelling mode and its pin migration on main",
+        "Head a retirement premise already landed"
+      ],
+      "combinesOriginalHeads": [
+        "c",
+        "d"
+      ],
+      "combinationReason": "The archive pin reader currently compares ScopeRef inc/kind (archive-pin.ts42), Replay compares the same fields (archive.ts323), and both archive layouts serialize the old scope reference in head.json (fixed108/scout196). A Native type/wire cutover cannot leave those readers and producers on the old schema in an independently working intermediate head. Keep d inside the admission-path cutover rather than introduce a compatibility branch. If implementation proves a smaller coherent split or finds a rule cannot work, ask planner before changing this plan.",
+      "whatStaysWorking": [
+        "One coherent new-format main code line supports ordinary create/install/rules/directory/act/delivery/clone/replay/application paths.",
+        "Scope IDs remain addresses and archive refs remain keyed by scope ID. /v1/scopes address routes remain available for new-format rooms.",
+        "Sender kind checks still work by verifying and retaining the source genesis once; kind does not remain in references.",
+        "Old recorded journals remain byte-for-byte readable using Replay at the recorded pre-cutover main commit. This is retained reader source, not a frozen old-format Worker deployment.",
+        "Before the planner deploys this head, currently deployed Workers keep running their old-format code. After deployment, requests for retired old-format rooms receive a named refusal naming the retained reader commit."
+      ],
+      "witnesses": [
+        "Directory genesis: compute sibling scope IDs before sealing; each sibling records the Directory full SequenceRef; a second sequence under the same scope ID produces different sibling scope IDs.",
+        "Genesis self-reference null is limited to its own sequence, including outgoing seeds/messages/effects; copied seed/message bytes retain null, while receivers resolve and record a full ref from genesis source or delivery from.",
+        "Child seed cause hashes the creator genesis input in artroom-input-1, with nonce; genesis entry hash is computed once after sends. The artroom-entry-1 domain remains unchanged.",
+        "Wrong-sequence delivery and creation conflict refuse under reviewed replacement names, even when the scope address matches; handler kind checks use held verified genesis data.",
+        "New fact text is did:seq:dap1:<genesis>/<seq>/<hash>; public refs keep the event hash as a component. Address URLs never substitute for citations.",
+        "New archive head carries genesis, archive/foreign-prefix/clone proofs and forecasts agree with actual new bytes, and full new-format Replay remains consistent.",
+        "For each new-format admission category below, a canonical definition admits and a redundant spelling refuses under canonical:true; retain other platform/outcome options. No signed old-spelling release bypasses the rule.",
+        "Named retired-room refusal reports the correct old reader commit and does not reinterpret, rewrite or re-sign old bytes. Existing source/tests/current docs contain no ScopeRef/inc-member/wrong-incarnation/incarnation-conflict, while historical evidence remains untouched."
+      ],
+      "sourceAreas": [
+        "packages/contract/src/scope.ts:62-65",
+        "packages/contract/src/entry.ts:14-17,53",
+        "packages/bytes/src/domains.ts:44,60",
+        "packages/bytes/src/records.ts",
+        "packages/bytes/src/facttext.ts:27",
+        "packages/derive/src/genesis.ts:89,155,211",
+        "packages/platform/src/directory.ts:483-488,593",
+        "packages/scope/src/core.ts:330,362",
+        "packages/scope/src/namespace.ts:108",
+        "packages/scope/src/object.ts",
+        "packages/scope/src/archive-pin.ts:42",
+        "packages/scope/src/archive-fixed-layout.ts:108",
+        "packages/scope/src/archive-scout-layout.ts:196",
+        "packages/replay/src/verify.ts:1437,1465,2039",
+        "packages/replay/src/archive.ts:323",
+        "packages/cli/src/archive-remote.ts",
+        "packages/cli/src/clone-proof.ts",
+        "all affected client/Page/MCP/metrics/operator reference consumers and hand-built fixtures; exact touched set belongs to implementation inventory"
+      ],
+      "canonicalMode": {
+        "authority": "788bc90ac899761ae36719f8e54cba8856821c66",
+        "sameHead": true,
+        "requiresFOnMain": true,
+        "newSeparateHead": false,
+        "paths": {
+          "scopeCreation": [
+            "packages/scope/src/core.ts:330,362",
+            "packages/scope/src/creation-lineage.ts:170"
+          ],
+          "applicationInstallAndDefinitionInputs": [
+            "packages/platform/src/application-install.ts:103",
+            "packages/platform/src/application-install-v2.ts:40",
+            "packages/platform/src/definition-input.ts:38",
+            "packages/platform/src/validate-package.ts:28",
+            "packages/platform/src/device-application-rules.ts:51",
+            "packages/scope/src/applications/admission.ts:41"
+          ],
+          "rules": [
+            "packages/platform/src/rules-scope.ts:659"
+          ],
+          "directory": [
+            "packages/platform/src/directory.ts:593"
+          ],
+          "archiveReads": [
+            "packages/scope/src/archive-declarations.ts:68",
+            "packages/scope/src/archive-source-pins.ts:85",
+            "packages/scope/src/archive-native-root.ts:21"
+          ],
+          "newFormatReplay": [
+            "packages/replay/src/verify.ts:1437,1465,2039"
+          ]
+        },
+        "inventoryLimit": "These are current public call sites inspected for planning, not a claim of a complete future transitive runtime call graph. The implementation head must inventory every admission call before review.",
+        "oldSignedRelease": "Not installable after cutover; do not translate, resign or exempt it."
+      }
+    },
+    {
+      "id": "e",
+      "order": 3,
+      "title": "Serve the sequence document, event and page HTTP binding",
+      "state": "PROPOSED; IMPLEMENTATION UNBUILT",
+      "section8": [
+        "/v1/sequences binding",
+        "address routes remain",
+        "HTTP authorization and exact failures"
+      ],
+      "dependsOn": [
+        "Head c+d coherent new-format identity/archive/admission on main"
+      ],
+      "whatStaysWorking": [
+        "The new-format /v1/scopes address API, application operations and archive/clone/replay paths remain working.",
+        "Internal routing still uses scope ID. Genesis-addressed sequence HTTP reads require a verified host lookup, not deriving an address from a digest or trusting an arbitrary service endpoint.",
+        "Host read authorization stays authoritative; having bytes still permits offline integrity verification."
+      ],
+      "witnesses": [
+        "GET /v1/sequences/<format>:<genesis> returns the exact section5.3 application/did+json document, unique SeqHttp service IDs and encoded genesis; verify returned genesis bytes against the identifier.",
+        "Event read returns exact raw bytes under stated utf-8 or padded base64 encoding, its position/digest/citation. Hash bytes independently.",
+        "Pages contain contiguous increasing positions,1..count entries and correct next/null. Strict decimal count1..1000 has no leading zeros.",
+        "Malformed citation/path/count returns400, unheld sequence/position404 and refused reader403, each with an empty body. Existing scope-address routes and reader rules retain their own reviewed behavior.",
+        "A copied archive served through a host produces the same citations and verifies against headb vectors/reports; no mismatch becomes a successful read."
+      ],
+      "sourceAreas": [
+        "packages/scope/src/worker.ts:452-466",
+        "packages/scope/src/namespace.ts",
+        "packages/scope/src/signed-reads.ts",
+        "packages/scope/src/sessions.ts",
+        "packages/scope/src/archive-host.ts",
+        "packages/replay/src/verify.ts",
+        "new sequence document/event/page route and owning boundary tests"
+      ],
+      "limits": [
+        "No route implementation or live host read in this planning child.",
+        "The future implementation must preserve the named retired-room refusal and the exact SeqHttp empty-error-body contract; ask planner if a concrete interface conflict prevents both."
+      ]
+    }
+  ],
+  "headsDeployedByThisPlan": false,
+  "allBodies": "UNRUN in this child",
+  "finalCandidateHead": null,
+  "finalArtifactArgv": null,
+  "publication": "Root may report only on planning child60a; parent05d remains open",
+  "plannerPrerequisites": {
+    "retirementInventory": {
+      "state": "PENDING ACTUAL PLANNER INVENTORY",
+      "mustPrecede": "cutover deployment",
+      "workers": [
+        "dap-grow",
+        "dap-lending",
+        "dap-demo",
+        "artroom-scope"
+      ],
+      "fieldsPerRoom": [
+        "Worker",
+        "scope ID",
+        "last entry",
+        "archive state"
+      ],
+      "sharedField": "last old-format main commit whose Replay remains reader",
+      "inventoryAct": null,
+      "readerCommit": null,
+      "preservation": "Old journal and signature bytes never change."
+    },
+    "newCanonicalRelease": {
+      "state": "PENDING PLANNER SIGNED RELEASE",
+      "mustPrecede": "replacement room creation",
+      "requires": [
+        "approved new-format admission head",
+        "canonical sources after F"
+      ],
+      "oldRecordedRelease": "Not installable after cutover; no exception/translation/dual write.",
+      "releaseAct": null
+    },
+    "recreation": {
+      "state": "PENDING POST-CUTOVER PLANNER/BUILDER ACTION",
+      "rooms": [
+        "Grow",
+        "Lending",
+        "J5 Site"
+      ],
+      "newJ5Room": null,
+      "actualJ5AcceptanceScene": null,
+      "requirement": "Run and retain J5 acceptance on the newly recreated Site room. Old-room evidence does not satisfy this new witness."
+    }
+  },
+  "perHeadReviewRule": [
+    "Meaningful focused checks of actual changes, with source-fixed complete identities and actual exits",
+    "Mandatory whitespace/commit-message/format prechecks before root books one gate",
+    "One full gate before each exact-head checker review; no sweeps or repeated whole suites without a material failure/ruling",
+    "Only checker-approved exact heads may land; planner owns deployment",
+    "If a section8 rule cannot be implemented as written, stop and ask planner before another construction"
+  ],
+  "openParentAcceptance": [
+    "No identifier implementation exists in this child",
+    "Directory sibling/null-self/cause/routing witness remains unrun",
+    "No vectors or exact integrity reports produced by this child",
+    "No HTTP binding/error/auth witness produced by this child",
+    "No old-room inventory/refusal/cutover/recreation/J5 acceptance performed"
+  ]
+}
