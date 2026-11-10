@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:92a5fae3172f40f4a5520f0a2ded6d526e130b05","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-br13-list1-native-diagnosis.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:93d6b882d854f55c63d386a153893963b13855e9","text":"Merge retired a covered predecessor; the successor is at packages/replay/src/archive.ts."}
