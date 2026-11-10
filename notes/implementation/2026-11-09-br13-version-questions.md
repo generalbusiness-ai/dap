@@ -57,14 +57,15 @@ security assertion and byte stays unchanged.
 The initial ledger at `913eff93a1` lists 454 Vitest cases and 13 Node
 cases. The c35 ledger retains the 454 plain cases and 38 compiler contexts,
 runs the eight complete host Node cases, and defers the whole five-case SDK
-module owner. C owns the separate Git `./diff` release metadata repair;
-BR13 must inherit it before running that owner.
+module owner. BR13 later inherits C's Git `./diff` release metadata repair
+at `c7800a6282`; the integration checks below run the complete owner.
 
 The owned APFS dependency copy retains the matching lock stamp, real
 namespace and cache directories, and relative workspace links. No package
 installation ran. The selective focused pass below covers the reviewed
-compiler closure, exact query fixtures and named consumer owners. The SDK
-owner, remaining consumer evidence and full gate still need validation.
+compiler closure, exact query fixtures and named consumer owners. Post-C
+integration checks the complete SDK owner below. The remaining combined
+compiler/consumer scope, query controls and full gate still need validation.
 
 
 ## Editor and Effects correspondence
@@ -163,9 +164,10 @@ static graph includes type-only edges. No Card build runs. The Page build
 changes no Editor or Effects protected source and needs no repeated formal
 check. Focused validation below uses the committed Page output. Its selective
 scope covers 38 compiler contexts, 454 plain cases and eight host Node
-cases. The complete existing five-case SDK module owner remains unrun
-until C lands its Git `./diff` source-export repair. That deferred owner,
-the full maintained gate and affected workflow citations remain due.
+cases. At that build checkpoint, the complete five-case SDK module owner
+remains unrun until C lands its Git `./diff` source-export repair. The
+post-C integration below discharges that owner; the full maintained gate
+and final-source workflow evidence remain due.
 
 
 ## Selective focused checks pass at c35
@@ -194,9 +196,64 @@ retained original files, read-only through 9 December. Complete raw test
 reports remain outside the checkout. This evidence commit changes only
 this note and its manifest after the tested c35 checkpoint.
 
-The entire five-case `scripts/public-release-modules.test.mjs` owner stays
-unrun. Its two actual-Git manifest cases encounter the existing missing
+At c35, the entire five-case `scripts/public-release-modules.test.mjs`
+owner remains unrun. Its two actual-Git manifest cases encounter the missing
 `./diff` exclusion; C owns that repair. The selective pass makes no SDK,
 live-room, browser or deployment acceptance claim. The prepared guard
-controls have not run. BR13 still needs C/main integration, the complete
-SDK owner, affected workflow citations, the maintained gate and review.
+controls have not run. The later C/main integration and complete SDK
+owner results follow below; affected final-source workflow citations, the
+maintained gate and review remain due.
+
+
+## C integration passes the Page and SDK owners
+
+The ordinary merge `c7800a6282a5e0871364eb15fc6666d3103f9433` combines
+BR13 c57 with landed main `19ddc868`. Git merges the two shared SDK files
+without a conflict. The resulting release plan and guide keep C's nine
+packages and Git `./diff` exclusion alongside BR13's contract vocabulary
+export. All BR13 seals, three tables, two independent fixtures and eight
+formal-covered source hashes stay unchanged.
+
+The owned APFS dependency copy matches C's 5,598 file, mode and link rows.
+It retains the truthful lock
+`f19d4f6db3ac980a82586a0c2673f5a318a09dfdd0d165160267e7e1ec3e2583`,
+15 relative workspace bindings and 50 aliases. The old BR13 view and
+copied C caches remain outside the checkout; the new Vite state uses
+owned real directories. No package installation runs.
+
+START `d565fb6d`, END `1a3c511e`, runs the maintained read-only Page asset
+owner first and the complete SDK module Node owner next at actual c780.
+The audit reads the Page, Node, inner, outer-driver and launcher exits:
+all contain zero. The same-run Page ledger records its one exact case;
+the Node TAP and derived JSON ledger agree on all five cases, with no
+skips. All process and cleanup receipts are empty. The Page producer
+still matches committed `assets.ts`, so no additional build runs.
+
+The [C integration manifest](evidence/2026-11-09-br13-c-integration.manifest.json)
+hashes to
+`37c75302b49024a1a23e665c1ca9000c5edb75f5be4ec9a315a22db2548936e0`.
+It inventories 28 safe metadata files and 33 retained originals,
+read-only through 9 December. This evidence commit changes only this
+note and its manifest after tested c780.
+
+The complete SDK5 deferment ends at this actual source. These Node
+witnesses check supported manifests and scripted release-output guards;
+they run no standalone SDK compiled-output checker or private capture.
+The Page asset comparison provides no browser or live-room acceptance.
+The earlier c35 Page/Card workflow results do not establish equivalence
+through C; the final-source workflow outcomes need their own review.
+
+The new closure comparison identifies 37 compiler contexts with changed
+inputs and 347 cases in the two whole pure question/relation owners.
+Those checks and both query controls still need booked slots. The three
+unchanged compiler contexts and Git archive-policy owner need their exact
+carry receipts. The old eight host Node cases remain historical until the
+final maintained gate runs its current Node stage.
+
+Both query-control baselines cover their complete files: 105 CLI cases
+and one timed-opener case. The independent frozen rows predict three CLI
+mutant failures, at destination17, destination7 and destination8, with
+102 passes; the named destination7 assertion remains required. The timer
+mutant predicts its one destination3 write assertion failure. Those
+predictions remain unobserved. No filter, early bail, retry or restored
+source test rerun forms part of these prepared controls.
