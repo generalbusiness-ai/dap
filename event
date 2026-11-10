@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:546058206cc862c0dbfb2abcfb622a71d0dd5722","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/prepare-project.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:56db0fdf1d448b603caf0d459ed675ed3ee110ac","text":"Merge retired a covered predecessor; the successor is at verification/state-machines/coverage.json."}
