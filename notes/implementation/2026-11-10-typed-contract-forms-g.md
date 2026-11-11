@@ -1,13 +1,22 @@
-# Typed contract forms: G source preparation
+# Typed contract forms
 
-Request `f682cbc46d28df9029418272616bf0f4ead29dc7` covers the remaining
-Define builder witnesses, missing contract forms, and exact authored Grow
-and lane definitions. Promise `39da96860e62eaad1dc05da05a3772d3389bbe33`
-covers this builder work. Planner ruling
-`88cf23c309a7fc7085cc0590d47f6bdf051f637b` opened items 2 and 3 for source work before F landed. Item 1 now uses
-the canonical spelling on F main `a419407e`, under ruling `09048d34`.
+Define now represents the remaining contract forms, and Grow, Change and Issue
+use complete typed authors that retain their canonical definition values and
+pins. Runtime wrappers read generated JSON through type-only authoring aliases.
+Default publishing validates its literal table before any parent or descendant
+write. The final gate at `818009b868881508f04c65a087a2df88e4f53516` checks 5,859
+obligations: 5,856 passes and three planned skips. The two distinguishing controls
+use that same gate's 12-case import baseline without repeating its positive body.
 
-## Missing forms
+Request `f682cbc46d28df9029418272616bf0f4ead29dc7` and builder promise
+`39da96860e62eaad1dc05da05a3772d3389bbe33` own this change. The evidence
+checkpoint tree is `ab69e56f6e9ca2480e1ae83104c2882f99e2cc4d`. Planner
+rulings `88cf23c309a7fc7085cc0590d47f6bdf051f637b`, `09048d34` and
+`47ade9f5` govern the forms, F spelling integration and compiler JSON options.
+
+## Decisions and witnesses
+
+### Missing forms
 
 `reference(fragment)` emits `{ type: "reference", fragment }` as plain
 contract data. The helper preserves the literal numeric bound. The real
@@ -22,7 +31,7 @@ accepts `where` and `except` in its options and passes them to `range`.
 The typed filter exposes the scanned item's declared slot names. Calls
 that omit these options retain their previous output shapes.
 
-## PD-2 form mapping
+### PD-2 form mapping
 
 This inventory maps the current declared contract in
 `packages/contract/src/definition.ts` to the authoring API. A represented
@@ -61,11 +70,11 @@ invalid bound. Platform-only definitions remain outside the authoring API.
 | Every request result clause | The send's `result` record; `conflict` remains creation-only at validation |
 | Notices and timed rules | Subject `notify`, body `attention`, `timed` |
 
-The table records source representation. It does not claim that the full
-PD-2 acceptance is complete. The exact Grow, Change, and Issue source witnesses now use the complete
-authored models. Their compiler and runtime results remain unrun.
+The table records source representation. The exact Grow, Change, and Issue
+witnesses use the complete authored models. The final gate checks their
+compiler and runtime boundaries; the evidence table records its scope.
 
-## Validator witnesses
+### Validator witnesses
 
 The new whole owner `packages/define/test/contract-forms.test.ts` declares
 twelve cases. Each compiles a small made-up definition through the existing
@@ -91,7 +100,7 @@ a text argument. It also rejects comparisons on non-field facts and an
 undeclared slot in a set's filter. Existing suites retain their cases and
 assertions.
 
-## One authored model per definition
+### One authored model per definition
 
 Grow's `authoring/forms.ts`, `room.ts`, and `site.ts` replace its raw
 component builders. The existing complete Define fixtures supply this
@@ -130,7 +139,7 @@ adds the missing whole Issue case. The earlier subject-spelling witnesses
 remain. The active-source owner also guards runtime authoring imports and
 keeps Define out of dap-lanes' runtime dependencies.
 
-## JSON compiler inputs
+### JSON compiler inputs
 
 Planner ruling `47ade9f5` permits `resolveJsonModule: true` in the seven
 original additional configurations below and any further affected compiler
@@ -166,10 +175,10 @@ that the same compile context checks their JSON assertions. That additional
 edge requires `resolveJsonModule: true` in `packages/define/tsconfig.test.json`
 under the same ruling. This one test-configuration JSON edit changes no
 definition JSON or retained pin. Define's production configuration stays
-unchanged. This table records static source imports. The focused compiler
-pass must confirm the complete closure.
+unchanged. This table records static source imports. The final gate checks the
+complete compiler closure.
 
-## Slot modifiers and runtime JSON types
+### Slot modifiers and runtime JSON types
 
 The focus at `a59044c7` stopped in the CLI Scope compiler with two TS2352
 errors. `author(party.optional)` inferred both `author: false` and
@@ -216,7 +225,7 @@ unbranded even inside readonly arrays. It directly imports both actual
 runtime wrappers, so their JSON assertions belong to this same compile
 context. Existing runtime tests and their assertions stay.
 
-## Working compiler checks
+### Working compiler checks
 
 Ruling `1ce32e09` separates ordinary working checks from acceptance evidence.
 Compiler-06 now passes with the corrected JSON view. All twenty-one selected
@@ -231,7 +240,7 @@ Their assertions and case counts stay unchanged. Grow's Worker entry uses
 keeps its exact signed packet bytes while the JSON-aware compiler accepts
 the entry. The signed packet, release and publisher stay unchanged.
 
-## Canonical object order and generated reference
+### Canonical object order and generated reference
 
 The continuation at `8b1ea8cc` passed all twenty-one current compiler
 contexts, then stopped at the Grow pin witness. Its twelve repeated-subject
@@ -258,48 +267,103 @@ working startup failure before any cases ran. A writable scratch config
 and the local-listen permission resolved those setup failures. These are
 working results, not sealed acceptance evidence.
 
-## Validation status
+### Generated references and failed histories
 
-The first three focused attempts stopped at compiler-06 before runtime
-owners ran. The fourth passed all twenty-one current compilers and failed
-in Plain; Node and Native were not launched in that sealed unit. Its raw
-receipts, the earlier failures and their source checkpoints remain distinct.
-The repaired source proceeds to the required full gate without another
-sealed focus repeat. Its first full gate at `699bd733` passed the initial
-checks through citation tests, then stopped at the documentation-link
-check. Three links still named the removed `examples/grow/device.ts`.
-They now name `examples/grow/authoring/forms.ts`, which owns those typed
-forms. The ordinary maintained link check reports 1,232 links and zero
-broken links. The failed gate reached no compiler or runtime test phase.
-Its raw receipts remain distinct from the focused attempts.
-
-The second full gate at `d92fc933` passed its compiler and initial checks,
-all 150 Node cases and all 56 Counting cases. Plain reported 4,520 passes,
-two failures and one skip. Both failures compared MCP descriptions with
-stale references after canonical JSON changed named-field order. Native
-did not run. This failed unit supplies no successful gate or control
-baseline.
+The first full gate at `699bd733` stopped at three links to the removed
+`examples/grow/device.ts`. They now name `examples/grow/authoring/forms.ts`.
+The failed gate reached no compiler or runtime phase. The second full gate
+at `d92fc933` passed 150 Node and 56 Counting cases, then reported 4,520 Plain
+passes, two stale MCP reference failures and one skip. Native did not run.
+Neither failed gate becomes a pass through the later evidence.
 
 The maintained MCP reference writer regenerated `docs/mcp-tools.json` once.
 All 75 tools retain their identities and order. Nine descriptions reorder
-existing field clauses, and five required-field arrays reorder their
-existing names. Every other value and schema stays exact. The Markdown
-reference and worked example now show the same descriptions. The existing
-inventory witness also compares each native table description exactly,
-with one row per tool. Its title and case count stay unchanged.
+existing field clauses, and five required-field arrays reorder existing
+names; every other value and schema stays exact. The Markdown reference
+and worked example now show those descriptions. The existing inventory
+witness compares every native table description with one row per tool;
+its title and count stay unchanged. Ordinary follow-up checks passed the
+13 cases across the two affected files and their compiler context before
+the final gate. They remain working history rather than a separate gate pass.
 
-Both affected MCP test files pass in ordinary read-only mode: thirteen
-cases across two files. Their compiler context also passes. These working
-checks follow the writer run and establish no gate acceptance. The failed
-gate receipts remain separate.
+The failed focused histories stay distinct. The first three stopped at
+compiler-06; their current versus historical compiler passes are separate.
+The fourth passed 21 current compiler contexts and then failed in Plain.
+It reported 28 passes, one failure and 1,425 unresolved Plain obligations;
+its 12 Node and three Native cases did not run. No runtime carry follows
+from that interrupted unit. Planner ruling `1ce32e09` left the third
+focused unit raw-only, and root requested the fourth raw-only readback.
+The final filing preserves their audits and indexes without claiming
+retrospective focused seals.
 
-Page and Card workflows passed at both `699bd733` and `d92fc933`. The MCP
-reference follow-up still owes its successful full gate, controls and
-final-head browser workflows. No acceptance or deployment follows from
-these earlier passes.
+The first controls attempt stopped during owned-mirror setup with actual
+exit 2, before any Node or publishing scene launched. Its partial mirror
+and restoration enforcement error remain evidence. The corrected attempt
+used independent owned custody and distinguished both controls. Its
+controller exits are 0; expected mutant and entry failures remain actual 1.
 
-The observed maintained AST parser output seals Grow's Text-module bridge.
-No route or gate assertion changed. The later working repair changes comparisons in two
-test owners and the generated Lane reference. Definition JSON, retained
-pins, authored runtime object expressions and kernel source stay unchanged.
-The retained whole-definition byte and pin witnesses still govern acceptance.
+## Final evidence
+
+The committed manifest is
+`notes/implementation/evidence/2026-11-11-typed-contract-forms-g.manifest.json`.
+Its public unit is
+`/Users/hughpyle/play/artroom-evidence/2026-11-11-g-final-818/unit`.
+The table cites curated metadata or actual static stdout, as its output column
+says. Each curated metadata file preserves the exact raw-output hashes and
+private archive paths. The raw index maps copied files and references the immutable gate/control
+archives, whose original inventories retain source paths and original modes.
+
+| Check | Command | Actual exit | Output and SHA-256 | Qualification |
+| --- | --- | --- | --- | --- |
+| Historical producer: grow-render | `/opt/homebrew/Cellar/node/26.13.0_2/bin/node --import /Users/hughpyle/play/artroom/.builder-worktrees/typed-contract-forms-g-20261110/node_modules/tsx/dist/loader.mjs scripts/check-definition-pins.mjs --write grow` | 0 | `producer-terminal-summary.json`: `7fa9f8ec03fb2c2499cfffe42c23b16e5e40c26d05a04ce8d1273d02147b981d` | Two render commands plus formatter: three commands, seven custody exits; canonical values/pins retained. |
+| Historical producer: lane-render | `/opt/homebrew/Cellar/node/26.13.0_2/bin/node apps/room/lanes/scripts/pin.mjs` | 0 | `producer-terminal-summary.json`: `7fa9f8ec03fb2c2499cfffe42c23b16e5e40c26d05a04ce8d1273d02147b981d` | Two render commands plus formatter: three commands, seven custody exits; canonical values/pins retained. |
+| Historical producer: format-changed-json | `/opt/homebrew/Cellar/node/26.13.0_2/bin/node /Users/hughpyle/play/artroom/.builder-worktrees/typed-contract-forms-g-20261110/node_modules/prettier/bin/prettier.cjs --write --no-config --no-editorconfig --ignore-path /dev/null -- apps/room/lanes/package.json apps/room/lanes/tsconfig.json apps/room/page/tsconfig.scope.json apps/room/page/tsconfig.test.json examples/grow/definitions/room.json examples/grow/definitions/site.json examples/grow/tsconfig.json packages/cli/tsconfig.json packages/cli/tsconfig.scope.json packages/derive/tsconfig.test.json packages/platform/tsconfig.test.json scripts/tsconfig.json` | 0 | `producer-terminal-summary.json`: `7fa9f8ec03fb2c2499cfffe42c23b16e5e40c26d05a04ce8d1273d02147b981d` | Two render commands plus formatter: three commands, seven custody exits; canonical values/pins retained. |
+| Focus1 a590 | Compiler 04/05/06; exact argv/cwd in ledger | 1 | `focus1-compiler-ledger.json`: `a515846ee0bf51a6d49b63b9b0ff9d0ef99d470ef5160d5dfeb5f1ca1f6216f4` | 2 passes, 06 failed, 20 unrun; all 1,469 runtime cases unrun. |
+| Focus2 5cd | Current 05/06; historical 04 separate | 1 | `focus2-compiler-ledger.json`: `aba50d98b9822f6deca83ff1f7b6f73e0588eb5e220472268571357132745a93` | Current 05 pass / 06 fail; 20 later and all 1,469 runtime unrun. |
+| Focus3 7098 | Current 06; historical 04/05 separate | 1 | `focus3-audit.json`: `01aeeb22ed0a42bac67361aa3737be2d8402c9df61c381086b586a17ada8d774` | 06 failed; 20 later plus 1,469 runtime unrun; raw-only historical audit. |
+| Focus4 8b1ea | 21 current compiler contexts, frozen Plain argv | 1 | `focus4-audit.json`: `47441fdb395e3635e482a44a143a2c336c66b19db7eb8d684251c72c31c535af` | Plain 28 pass / 1 fail / 1,425 unresolved; Node 12 / Native 3 unrun; no carry. |
+| First full gate 699 | `npm run gate` | 1 | `gate1-manifest.json`: `8b4a398b7d008a4029c79c3f0aa347cd793ff165a222c26de7fbefdb999f347f` | Three broken links; no compiler/runtime reached; selector not run. |
+| Second full gate d92 | `npm run gate` | 1 | `gate2-manifest.json`: `4d7230c8912dfdb563dd497ed27c9e69a830bdbbb9c3e120cc7b8095ccd2314c` | Node 150 / Counting 56; Plain 4,520 pass / 2 fail / 1 skip; Native 1,130 unreached. |
+| Current 818 whitespace | `git diff --check 9f3338ff8b46f9e08c5d006352d15e05a09c8a35 818009b868881508f04c65a087a2df88e4f53516` | 0 | `static818-whitespace.stdout`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | Actual stdout; exact current head and all custody exits 0. |
+| Current 818 commit-messages | `node scripts/check-commit-messages.mjs 9f3338ff8b46f9e08c5d006352d15e05a09c8a35 818009b868881508f04c65a087a2df88e4f53516` | 0 | `static818-commit-messages.stdout`: `4444466e8b15a91bb14a83c987a807c9fd40e5c3a788a23db225866d21aa0e94` | Actual stdout; exact current head and all custody exits 0. |
+| Current 818 format | `npm run format:check` | 0 | `static818-format.stdout`: `6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79` | Actual stdout; exact current head and all custody exits 0. |
+| Final full gate 818 | `npm run gate`; pinned metadata reconciliation | 0 / analysis 0 | `final-gate-summary.json`: `b6d1bfa332107c580ca57a3eda06833eb53dd5dede653dcfd9113ec96334d101` | 5,859 accepted: 5,856 pass / 3 planned skips; 45 compilers / 16 scripts; 111 UNKNOWN; 6 Scale omitted. |
+| Controls first setup | Owned-mirror construction; no scene launched | 2 | `controls-first-setup-audit.json`: `779cde7c8c203bd175154500e188bd720d7eeae9eb39ddf3ca8243e8a4029049` | Partial mirror retained; no complete restoration or distinction claimed. |
+| Corrected controls | Full 12-case import mutant; two real publishing entry probes | runner 0; children 1 / 0 / 1 | `final-controls-summary.json`: `5b0f97d1b5473ff7dea526017653ec86bb96d3f3fbfcac6748d36a426205303c` | Import 11 pass / 1 intended ERR_ASSERTION; correct entry 1 / probe 0 / no writes; wrong-order entry 1 / probe 1 / only two mtimes. |
+| Page browser CI 818 | GitHub Page workflow 42981045289 | success | `ci818-page.json`: `2ced03eb1b3a0bc6a931663192688d37a8ae3040a1f177b7e31e04e68762b943` | Exact 818 terminal observation; not local gate or control evidence. |
+| Card/Grow browser CI 818 | GitHub Card workflow 42981048495 | success | `ci818-card.json`: `599d52a1474f0085f1072158951c57f4d6d44cbccc304e0c884711cc42707df5` | Exact 818 terminal observation; not local gate or control evidence. |
+
+Counts come from the structured case reporters and pinned reconciliation,
+with all parameterized occurrences retained. The final counts are Node 150,
+Counting 56, Plain 4,522 passes/one planned skip and Native 1,128 passes/two
+planned skips. The 111 UNKNOWN wrapper observations are not passing cases.
+The control child cases stay outside the gate's 5,859 obligations.
+
+The gate driver's monotonic clock measured 895.522511666 seconds. The outer
+launcher measured 895.802576875 seconds, including its guards and passive
+observer. The corrected controls measured 32.032687792 seconds inside and
+32.221732375 seconds outside. Per-command user/system values are separate
+measurements; their sum is not pipeline wall time. RSS is a sampled
+single-process observation by PID/start and kind, not heap, an aggregate
+or a true peak. Missing maxima remain UNKNOWN. CI times come from saved
+GitHub job and step timestamps.
+
+## Open limits
+
+Request `f682cbc46d28df9029418272616bf0f4ead29dc7` still owns review,
+landing and planner deployment. This evidence supplies no deployment or
+live-room acceptance. The reviewer must verify the final filing manifest
+and actual source correspondence before approving the head.
+
+The review records source/test correspondence against checkpoint tree
+`ab69e56f6e9ca2480e1ae83104c2882f99e2cc4d` under
+`docs/evidence-filing.md`'s documentation follow-up rule. Review also requires
+Page and Card workflows at the exact reviewed head. The saved 818 runs
+remain checkpoint observations. External review attachments pin the actual
+follow-up head and workflow results; the committed manifest stays unchanged.
+
+The maintained selector omitted six Scale obligations because this source
+stays outside their paths. `.github/workflows/scale-tests.yml` retains its
+unchanged `node --import tsx scripts/check-definition-pins.mjs` step. Its
+automatic main run follows landing. The G request keeps that qualification;
+no extra Scale dispatch or local Scale acceptance follows from this unit.
