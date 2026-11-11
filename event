@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c68df187a0c1324d09ff9612c221e02509789904","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-worker.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c8aa9c0343dc1ad5b802ae8bba3884ee7370125e","text":"Merge retired a covered predecessor; the successor is at packages/define/tsconfig.test.json."}
