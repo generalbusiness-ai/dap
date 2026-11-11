@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bab8f2ce7730822d7402077c0cd80d70a3ca9d76","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-f-supports-edit-seal.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bc8e2356c1772ec693017ed603d0e1479ef39ecc","text":"Merge retired a covered predecessor; the successor is at .github/workflows/scale-tests.yml."}
