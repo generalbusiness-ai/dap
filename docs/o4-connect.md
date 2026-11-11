@@ -1,7 +1,7 @@
 # Test a hosted connector
 
 Use a separate Worker to connect Claude web and ChatGPT developer mode to
-the [hosted endpoint](mcp.md#the-hosted-endpoint), and to revoke each
+the [hosted endpoint](hosted-mcp.md), and to revoke each
 connection. The Worker has its own register, Durable Object namespaces and
 private content bucket, so the test changes no other Worker. Keep dynamic
 registration unset.
@@ -18,7 +18,7 @@ namespaces for that Worker and names its own private content bucket.
 2. Set `MCP_RESOURCE_URLS` to one connector URL for each host, for example
    `https://<your-worker>/mcp` and `https://<your-worker>/mcp?host=chatgpt`.
    Set `MCP_CARD_ORIGINS` for the same URLs, as
-   [Cards from an installed application](mcp.md#cards-from-an-installed-application)
+   [Cards from an installed application](hosted-mcp.md#cards-from-an-installed-application)
    describes. Keep `MCP_ENABLED` equal to the string `"false"`.
 3. Keep `OAUTH_DYNAMIC_REGISTRATION`, `OAUTH_CLIENT_METADATA_ORIGINS` and
    `OAUTH_REDIRECT_URIS` absent. The defaults disable registration and
