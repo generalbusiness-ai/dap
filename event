@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:788ab00b6549f9839c82f369a08cf2673002aaeb","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-f-site-docs94-sigbus-failure.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:79b20956c6f0d8dd19ff0f259053317a228d1ab6","text":"Merge retired a covered predecessor; the successor is at packages/define/test/pins.test.ts."}
