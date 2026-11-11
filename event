@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:657c51982aa473468b78d135829d8885ce34267d","text":"Merge retired a covered predecessor; the successor is at scripts/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:67cc6f465341ce157418cea9c826a0bf04e04cde","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/definition-corpus-data.ts."}
