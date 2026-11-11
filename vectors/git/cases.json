@@ -853,5 +853,32 @@
       "anchor": null,
       "trusts": []
     }
+  },
+  {
+    "name": "parent-after-author",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/1/04e057f7be5ee81944cdbda36b966453f06346b8",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268801 +0000\nparent d4a864475495146a0983b844ba5369b7a344ca60\ncommitter Public TEST <test@example.invalid> 1794268801 +0000\n\nTEST event 1: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/1/04e057f7be5ee81944cdbda36b966453f06346b8",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": 1,
+      "reason": "position",
+      "anchor": null,
+      "trusts": []
+    }
   }
 ]
