@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at docs/security/trust-boundaries.md","body":{"commit":"74c958d0cecd17f7d668518184c66e58c1aa1829","path":"docs/security/trust-boundaries.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:046a7f16fe010720c144eb6b3a3cf15d49673544","text":"Merge retired a covered predecessor; the successor is at docs/hosts.md."}
