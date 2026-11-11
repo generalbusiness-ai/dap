@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at vitest.projects.mjs","body":{"commit":"7c061b742b8aed6fd4399a31e7acaca20b782bbf","path":"vitest.projects.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:11abe01c7a12f4436522662debcfae0909df8fa1","text":"Merge retired a covered predecessor; the successor is at scripts/test-j3-runner.mjs."}
