@@ -51,11 +51,13 @@ protocol result, or 2 for invalid options. Existing Native argv keeps its meanin
 
 The file reader accepts section 7's `event` and `source` members, with no trusted
 anchor member. It checks the byte bound before allocation, accepts exact UTF-8
-or padded standard base64, and rejects duplicate digest claims. Syntax and
-unknown formats open no byte source.
+or padded standard base64. A duplicate digest claim makes the source unavailable:
+the reader reports `incomplete`/`unavailable` and exits 1, rather than a usage
+error with exit 2. Syntax and unknown formats open no byte source.
 
 The Git reader disables replace refs and lazy fetch. It reads raw commit bytes,
-uses no revision walk, and follows only the first parent header. Missing objects
+uses no revision walk, and follows the first parent directly after `tree`. It
+refuses a later parent header as `mismatch` with reason `position`. Missing objects
 remain unavailable at a shallow boundary. SHA-1 uses Git's `hash-object
 --literally -t commit --stdin` without `-w`, in a fresh empty directory. This
 makes no claim about a particular Git build's SHA1DC selection. Git256 hashes

@@ -48,16 +48,21 @@ function dapEvent(bytes: Uint8Array): DapEvent | null {
   } catch { return null; }
 }
 
-/** Only raw header lines identify parents. A message or second parent never supplies an event. */
+/** Parents immediately follow tree. Refuse later parent headers; never follow a second parent. */
 function gitEvent(bytes: Uint8Array, format: string): GitEvent | null {
   let end = -1;
   for (let i = 0; i + 1 < bytes.length; i++) if (bytes[i] === 10 && bytes[i + 1] === 10) { end = i; break; }
   if (end < 0) return null;
   const lines = new TextDecoder("latin1").decode(bytes.subarray(0, end)).split("\n");
   if (!lines[0]?.startsWith("tree ") || !digest(format, lines[0].slice(5))) return null;
-  const parents = lines.filter(line => line.startsWith("parent ")).map(line => line.slice(7));
-  if (parents.some(parent => !digest(format, parent))) return null;
-  return { parent: parents[0] ?? null };
+  let parent: string | null = null, parentHeaders = true;
+  for (const line of lines.slice(1)) {
+    if (!line.startsWith("parent ")) { parentHeaders = false; continue; }
+    const value = line.slice(7);
+    if (!parentHeaders || !digest(format, value)) return null;
+    parent ??= value;
+  }
+  return { parent };
 }
 
 function dapFields(event: DapEvent, position: number, genesis: string): CitationReason | null {

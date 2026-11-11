@@ -275,6 +275,14 @@ def cases_for(format_name, raws, other):
         cites_malformed = json.loads(raws[3]); cites_malformed["prev"] = "sha256:" + malformed_digest
         raw = canonical(cites_malformed)
         case("well-hashed-malformed-predecessor", cite(3, hashed(format_name, raw)), encoded(raw), [{"digest": malformed_digest, **encoded(malformed)}], level, "mismatch", 1, "position")
+    else:
+        # Git reads parents only immediately after tree; a later header must not supply a predecessor.
+        headers, message = raws[1].split(b"\n\n", 1)
+        lines = headers.split(b"\n")
+        parent = lines.pop(1)
+        lines.insert(2, parent)  # Move the sole parent after author, outside Git's parent run.
+        raw = b"\n".join(lines) + b"\n\n" + message
+        case("parent-after-author", cite(1, hashed(format_name, raw)), encoded(raw), source([0]), 2, "mismatch", 1, "position")
     sequence = {"id": sequence_id, "events": [{"position": i, "digest": digests[i], **encoded(raw, i % 2 == 1)} for i, raw in enumerate(raws)]}
     return sequence, cases
 

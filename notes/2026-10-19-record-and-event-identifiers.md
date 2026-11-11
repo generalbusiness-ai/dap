@@ -358,7 +358,8 @@ for level 3 from a verifier without the gitseq profile:
 in a clone of the gitseq workroom. It hashes each commit itself, because
 Git does not check the hash of an object when it reads the object. It
 reads stored objects and not their replacements. It reads the first
-parent from the raw commit, so grafts have no effect. If an object is
+parent from the contiguous run after tree and refuses a later parent
+header, so grafts have no effect. If an object is
 not in the clone, the script stops as incomplete, not as a mismatch.
 
 ```sh
@@ -368,7 +369,17 @@ while :; do
   git cat-file -e "$c" 2>/dev/null || { echo "incomplete: $c unavailable"; exit 2; }
   h=$(git cat-file commit "$c" | git hash-object -t commit --stdin)
   [ "$h" = "$c" ] || { echo "mismatch: $c hashes to $h"; exit 1; }
-  parent=$(git cat-file commit "$c" | sed -n '/^$/q; s/^parent //p' | head -n 1)
+  parent=$(git cat-file commit "$c" | awk '
+    NR == 1 { if ($0 !~ /^tree /) exit 1; next }
+    /^$/ { exit }
+    /^parent / {
+      if (headersClosed) exit 1
+      if (!haveParent) { parent = substr($0, 8); haveParent = 1 }
+      next
+    }
+    { headersClosed = 1 }
+    END { print parent }
+  ') || { echo "mismatch: position"; exit 1; }
   [ -n "$parent" ] || break
   [ "$p" -gt 0 ] || { echo "mismatch: position"; exit 1; }
   c=$parent; p=$((p - 1))
@@ -377,8 +388,10 @@ done
   || { echo "mismatch: the walk ends at $c, position $p"; exit 1; }
 ```
 
-On 19 October 2026 the script read 558 commits and printed
-`level 2 passes`. Level 3 then needs the gitseq signature profile
+On 19 October 2026 the earlier script read 558 commits and printed
+`level 2 passes`. That version read the first parent header without
+checking its position. The corrected header reader above has not run.
+Level 3 then needs the gitseq signature profile
 (appendix A.2, item 8).
 
 ## 5. Resolution
@@ -628,6 +641,13 @@ anchor and empty trusts. During a level 2 walk, correctly hashed
 predecessor bytes that cannot decode as an entry stop with `mismatch`,
 `position`, reached 1.
 
+For `git` and `git256`, parent headers form one contiguous run directly
+after the `tree` header. At level 2 or above, this verifier refuses a
+`parent` header after that run as `mismatch`, `position`, reached 1,
+with a null anchor and empty trusts. Each Git format includes one
+correctly hashed event whose parent header follows `author`; it must
+not verify as position 1 under the claimed genesis.
+
 An implementation conforms when it passes the vectors of the formats
 that it claims and states the levels that it runs.
 
@@ -711,9 +731,10 @@ did:seq:git256:6320f109df9ff94238c96c7a1c732aa7b9614589e74ef51bf382451f1c9e64a1
    an event.
 7. **Position.** Not carried. The position is the number of first-parent
    steps from the genesis to the event. The verifier reads stored
-   objects and the parent lines of the raw commit, so replace refs and
-   grafts have no effect. A walk that reaches the boundary of a shallow
-   clone stops as `incomplete`.
+   objects and the contiguous parent lines immediately after the tree
+   header of the raw commit, so replace refs and grafts have no effect.
+   Section 7 states the refusal for a later parent header. A walk that
+   reaches the boundary of a shallow clone stops as `incomplete`.
 8. **Signatures.** A convention of the genesis selects the profile. This
    note defines no profile for `git` or `git256`. A gitseq event carries
    two signatures. A `gpgsig` header holds the SSH signature of the
