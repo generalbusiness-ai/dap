@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:98eafa716d46e9c24949fd79be1809644dff2ceb","text":"Merge retired a covered predecessor; the successor is at examples/grow/room.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:99e5e69374152baaab558935a6a11c29736c30d9","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-lane-pins.generated.ts."}
