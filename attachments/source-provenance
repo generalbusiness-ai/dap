@@ -1,0 +1,18 @@
+{
+  "base": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+  "source": {
+    "path": "packages/mcp/src/hosted.ts",
+    "sha256": "ebed936f319e21e1440836d3f5fbab5dbb1ea514039b53f649d6a8f3c2bbc1b9",
+    "bytes": 81089
+  },
+  "exactSchemas": {
+    "control": "CREATE TABLE IF NOT EXISTS control (op TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, action TEXT NOT NULL, agent TEXT, state TEXT NOT NULL, answer TEXT, not_after TEXT NOT NULL, created TEXT NOT NULL)",
+    "agents": "CREATE TABLE IF NOT EXISTS agents (agent TEXT PRIMARY KEY, handle TEXT NOT NULL, key TEXT, state TEXT NOT NULL, created TEXT NOT NULL)",
+    "oauth_agent": "CREATE TABLE IF NOT EXISTS oauth_agent (controller TEXT NOT NULL, client_id TEXT NOT NULL, agent TEXT NOT NULL UNIQUE, handle TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY (controller, client_id))"
+  },
+  "rulingRequired": "Legacy NULL consent continuity, not the new pending-owner mechanics",
+  "observedAffectedRows": null,
+  "actualMigrationOrChecks": "UNRUN",
+  "request": "9a0534023dcfb11850a1625b7da40398f907c0ad",
+  "promise": "abbd5eba6806777f902556d91b09d0566e107175"
+}

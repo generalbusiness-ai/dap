@@ -1,0 +1,101 @@
+# S4 legacy OAuth mapping: ruling needed
+
+The old schema records a controller/client→Agent binding but cannot prove
+whether the operation that first created it completed. This is a source
+question before adoption, not observed loss or a deployment change. The
+current Worker configuration keeps hosted MCP closed.
+
+The exact7177 schemas are:
+
+```sql
+CREATE TABLE IF NOT EXISTS control (op TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, action TEXT NOT NULL, agent TEXT, state TEXT NOT NULL, answer TEXT, not_after TEXT NOT NULL, created TEXT NOT NULL)
+CREATE TABLE IF NOT EXISTS agents (agent TEXT PRIMARY KEY, handle TEXT NOT NULL, key TEXT, state TEXT NOT NULL, created TEXT NOT NULL)
+CREATE TABLE IF NOT EXISTS oauth_agent (controller TEXT NOT NULL, client_id TEXT NOT NULL, agent TEXT NOT NULL UNIQUE, handle TEXT NOT NULL, created TEXT NOT NULL, PRIMARY KEY (controller, client_id))
+```
+
+The mapping has no originating op, pending flag or fingerprint. Control rows
+have an op/fingerprint/target/state, but do not store client_id/controller or
+the full signed body. Native Agent rows exposed by Registry give only
+agent/handle/key/state/created. A completed control answer generally names
+agent/grant/codeShown/state_digest, not its originating mapping client.
+The fingerprint binds a supplied request; it cannot identify which old mapping
+that request INSERTed versus reused. Same target or created timestamp is not
+ownership: repeated requests can share a clock value and reuse the same row.
+The source admits multiple reserved grant operations against an already
+mapped Agent. Neither a sole convenient candidate nor NULL proves ownership.
+
+## Minimal new-row ownership
+
+Add nullable `pending_op TEXT` transactionally, default NULL on old rows.
+Use three disjoint meanings in that one column:
+
+- NULL: legacy origin unresolved. Do not claim, delete, credit or silently
+  call it established.
+- A nonempty valid control op: this exact new operation provisionally owns
+  the new mapping. Control op and fingerprint/target plus every mapping field
+  must still match before settlement.
+- Empty string: a new mapping was explicitly confirmed after the exact
+  successful handoff. Empty is not a valid control op.
+
+New op bytes obey the existing1–128 UTF-8-byte bound. Charge those bytes once
+with the existing five mapping values+ROW_OVERHEAD128 and control reservation
+CONTROL_ROW_BYTES4096, under the existing control budget16MiB with1MiB kept
+for retire. Clearing owner to empty credits only its op bytes, once. Removing
+a definitively refused, exact owned pending mapping credits its full logical
+mapping bytes once. Established empty-marker rows are never claimed by a new
+operation; they survive another grant's refusal.503/temporary denial/known
+committed-but-withheld work retains the pending owner and exact reservation.
+
+The ALTER adds no logical value bytes to legacy rows. NULL/empty both add
+zero UTF-8 value bytes; the existing row-overhead convention remains. No
+migration refund, speculative charge, tombstone deletion or capacity expansion
+follows. All migration/settlement changes remain inside their owning SQL
+transactions; mismatch retains/refuses rather than guessing an owner.
+
+## Continuity choice for legacy NULL
+
+A conservative unconditional branch retains the row and refuses new
+mapping-changing consent with existing503 temporarily_unavailable. It never
+deletes uncertain rows. This protects pending exclusivity but blocks new
+consent on affected old bindings, even if some were established. Existing
+valid access/refresh admission does not read this Registry mapping, so this
+choice does not itself revoke all old tokens. Ordinary expiry, fresh role,
+Agent retirement and reuse rules still apply. No code proves the affected
+legacy population here.
+
+A narrower fresh-reauthorization alternative may avoid that consent loss
+without pretending to recover the old origin:
+
+1. Obtain a NEW explicit signed authorization for the SAME stored controller,
+   client and Agent. Verify trusted current client context, exact public Agent
+   identity and fresh same-head Native key/controller/subset/actor authority.
+   Do not infer fresh consent from the old row alone.
+2. In one Registry transaction, compare the entire unchanged legacy mapping
+   and verify there is NO other unresolved reserved grant control for that
+   Agent, across all clients. Reserve the fresh op in that same transaction.
+   All legacy/new grant entry paths must honor this exclusive control fence;
+   an expired notAfter alone does not prove an old handoff never committed.
+3. Retain the legacy NULL mapping untouched while the fresh handoff runs.
+   Record new-op exclusivity in its existing control reservation, not by
+   pretending the old row was created by it. Repeated same-op work resumes.
+4. Only after an actual successful matching Agent grant, final fresh authority
+   and exact control/candidate/mapping comparisons, mark the row confirmed
+   empty. This establishes the NEW authorization now; it proves no historical
+   completion. On definitive refusal retain the old NULL row unchanged and
+   settle only the fresh operation. Unavailable/uncertain work stays reserved.
+
+This alternative adds one explicit fresh consent where needed and requires a
+reviewed all-path reservation fence. It may refuse when any legacy pending
+handoff remains or complete owner facts are unavailable. Existing code does
+not yet prove that fence; no implementation or unconditional recovery claim
+is made. It creates no secret/progress file, counting mechanism or new recovery
+task. Planner can choose it, retain/refuse, or specify another bounded policy
+before adoption. The note assumes no permanent deferral or automatic cleanup
+of unknown rows. Existing authorized retirement/list/revoke semantics remain
+separate and cannot be silently weakened to make migration convenient.
+
+Unchanged new-mapping/grantExisting work can proceed with the explicit pending
+owner and exact fresh reads. Its legacy branch stays conditional on this
+ruling. Full creation fresh admission, issuer/Agent final checks, witness
+assembly and actual c+d/main rebind remain required. No migration, compiler,
+parser/helper, import, test, control, build, deployment or other body ran.
