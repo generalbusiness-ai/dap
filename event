@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4bd83ec6ffbf28afec7e925fd1a79e49511a51bb","text":"Merge retired a covered predecessor; the successor is at docs/public-sdk-release.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4f280eed0a8d572f1a644878d75e447508066dc0","text":"Merge retired a covered predecessor; the successor is at scripts/public-release.json."}
