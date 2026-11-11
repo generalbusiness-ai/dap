@@ -1,0 +1,39 @@
+{
+  "result": "CLEAR",
+  "scope": "Independent read-only Git metadata, canonical event payload/basis and captured current live-artifact fold audit; no merge, push or validation body executed.",
+  "merge": "43acea3c0c3c40528face0cfc0aeeba0e95fba4c",
+  "tree": "bd9dae418376d3a53af6093a79e1984eb36a8aa6",
+  "parents": [
+    "9f3338ff8b46f9e08c5d006352d15e05a09c8a35",
+    "9632a5b747c623a68bfa50ea6e6179c9748d7a28"
+  ],
+  "receipt": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:174a3c04db1e8b44b371c4c7c9b734a706752be3",
+  "sequence_through": "239c30e9d2047f45f8f840b3516ecec0498821ac",
+  "official_refreshed_plan_sha256": "0a47cdc91cb31492984a2f1ddc045b2d4414b453ed374ef00ab752aa0c924146",
+  "actual_exit": 0,
+  "nine_trailers_exact": true,
+  "records": {
+    "total": 156,
+    "receipt": 1,
+    "successor_artifacts": 55,
+    "supersessions": 100,
+    "all_builder": true,
+    "causal_bases_exact": true
+  },
+  "current_fold": {
+    "exact_and_area_live_union": 126,
+    "new_successors": 55,
+    "left_live": 71,
+    "carried": 68,
+    "protected_planner_siblings": 3,
+    "retired_absent": 100,
+    "explicit_empty_successor_deletion_entries": 8
+  },
+  "root_main_exact_and_clean": true,
+  "pins": {
+    "records_sha256": "422f82af1899552e223e3841fefac333314d35300fdd0cda009feea2f0594ead",
+    "trailers_sha256": "ae62ab80abd70a159b7a4bc87a55f1df19331446be6cce88f51ff590640507b0",
+    "current_fold_sha256": "0b626c1a48a67f2967edef02fa4727bed07da32908bef5ff003cd29d2925c31f"
+  },
+  "limitations": "Captured fold at sequence 239c30e9, depth 102719; no future push/deployment or acceptance inferred. Existing stale carried pointers remain live as specified by plan."
+}

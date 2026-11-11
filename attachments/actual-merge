@@ -1,0 +1,22 @@
+{
+  "main": "43acea3c0c3c40528face0cfc0aeeba0e95fba4c",
+  "tree": "bd9dae418376d3a53af6093a79e1984eb36a8aa6",
+  "parents": [
+    "9f3338ff8b46f9e08c5d006352d15e05a09c8a35",
+    "9632a5b747c623a68bfa50ea6e6179c9748d7a28"
+  ],
+  "receipt": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:174a3c04db1e8b44b371c4c7c9b734a706752be3",
+  "seqThrough": "239c30e9d2047f45f8f840b3516ecec0498821ac",
+  "actualMergeExit": 0,
+  "allNineTrailersMatch": true,
+  "completeCanonicalActs": 156,
+  "retirements": 100,
+  "successors": 55,
+  "explicitEmptyDeletionEntries": 8,
+  "leftLive": 71,
+  "carried": 68,
+  "protectedSiblings": 3,
+  "workingTreeClean": true,
+  "allActualActorAndCausalBasesVerified": true,
+  "qualification": "Root independently checked all156 canonical actual records, fullreceiptmaps, exact Gitparents/tree/nineactualtrailers,100retirement bases and55successors. Officiallegacyunheldrequest permits phase-one withoutstructuredauthorization; userroutine landingauthorizationpersists. Independentcurrentfoldpeer andatomicpush remain owed; no deployment."
+}
