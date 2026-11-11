@@ -6,15 +6,16 @@ Request `2ad35350`, promise `226d9000`, and rulings `0a0286c4`, `865f4d70`,
 The repaired focus passed at `a9727fb3`. Three prechecks passed at `43e9b328`,
 and its full gate failed. The archive fixture repair is at `3979f03f`.
 The first archive focus failed at `3979f03f`. The archive-only control
-passed all nine cases at that same head. The prechecks, full gate, review,
-landing, and planner deployment remain pending.
+passed all nine cases at that same head. The prechecks passed at `688cda1e`.
+The full gate passed at that exact precheck head. Review, landing, and
+planner deployment remain pending.
 The seven earlier focus failures retain their original results.
 
 ## What changed
 
 Canonical source admission gives new authors one spelling before signing.
 Recorded journals, signatures, declarations, and raw digests keep their bytes.
-The gate tested `43e9b32801908301066d83de2ab5725edccd3f2a`, tree
+The first full gate tested `43e9b32801908301066d83de2ab5725edccd3f2a`, tree
 `d54901187e16e485549723249521e6c8b069f803`, with 4,598 tracked paths.
 It adds the review note and 17 public manifests to repaired focus
 `a9727fb3`. Earlier `e6ed7365` integrates Docs D, Docs F, and the sprint
@@ -75,7 +76,7 @@ packet, signatures, journals, and simulator constants. Retained lookup stays
 in `packages/scope/src/core.ts:375–396` and `namespace.ts:170–187`; Replay
 checks raw bytes in `packages/replay/src/verify.ts:1430–1447`. The complete
 Native archive owner contains nine obligations, including its retained Grow
-producer-clone and old R17 witnesses. Both passed in the gate, which failed
+producer-clone and old R17 witnesses. Both passed in the first gate at `43e9b328`, which failed
 three Grow TEST cases. These results cover the TEST journals.
 
 The first Counting TypeScript and JSON declarations keep their original bytes
@@ -122,213 +123,8 @@ for retained outputs and final review. The manifest links name repository
 copies of sealed manifests. Raw payloads stay in owner-only custody. Copies use modes 400/500. Retention lasts
 at least 30 days after landing.
 
-The AST metadata runs passed at their recorded sources. The first sealed
-producer adds three whole-owner rows and updates two named Scope hashes; the
-builder committed only the exact table at `d4cb0cb2`. A later producer at
-`038480f8` updated only the named CLI `supportsEdit` seal, committed at
-`01b9e7bf`. All other table bytes and assertions stayed unchanged. These are
-maintained-parser metadata results, not compiler, Native, or live authority.
-
-The original census and default pin producer each exited zero. The wrapper
-then required old hashes for two authorized generated JSON aliases and stopped.
-Its census/default/runner/driver/launcher history remains `0/0/2/2/2` in
-[the partial manifest][m-partial]. Only ten successful default outputs entered
-`e99a771e`. Two later metadata audits exited one before creating archives.
-Their authored observations retain those failures without invented raw stderr
-or exit files. The successful audit separates F's contemporaneous cache proof
-from a later E-owned Vitest cache change. It retains the old cache hash and
-667-byte size, not an unretained old cache payload. No producer repeated.
-
-The continuation ran only `--j4`, `--finding`, and fresh verification. Its
-three children and runner/driver/launcher all exited zero. The eleven rows
-agree exactly in [the continuation manifest][m-continuation]. Only four outputs
-entered `b9a6ca0f`; the adoption proof records 4,542 other Git blobs and modes
-unchanged. These successes do not erase the original wrapper failure.
-
-The one docs/assets pipeline at `9bf8a1a8` refreshed four manual current pin
-references, the lane reference, and MCP inventory; captured Lending; and built
-Page. All seven exits were zero. The two complete MCP owners supplied 13
-positive cases with matching public and JSON identities and no unknown coverage
-events. Lending retained its original 298,441 bytes and SHA-256
-`7f4bd447c30a078dd68ce1f2ed57decdf3652ccbb1caf9efacd950bc0969f468` without a
-baseline rerun. Four fresh Page dist leaves matched served asset `04e79668…`.
-The outer elapsed time was 22.470554292 seconds and the inner elapsed time was
-22.218516167 seconds. The fences retained 8,307 tools, 20 inputs, 4,558 other
-tracked files, existing caches, and closed process groups. The four outputs
-entered `6f3491e4`. The 13 MCP positives remain evidence at their actual source;
-later CLI dependency changes require the current affected owners to run.
-
-Two Page-only builds followed meaningful source changes. At `01b9e7bf`, the
-explicit/implicit subject repair produced served asset `f96877b7…`; all four
-exits were zero, and inner/outer elapsed times were 8.513401792/8.737918416
-seconds. At `6df7088a`, the Page layer repair produced asset `1ad8d3dd…`; its
-four exits were zero, four fresh dist leaves matched their served scalars,
-and inner/outer times were 8.55429675/8.760228917 seconds. The latter build's
-[own manifest][m-page-boundary] retains all 4,562 other files and modes, 8,307
-tools, seven inputs, unchanged caches, and empty cleanup. The builder adopted
-only that asset at `d303f793`. Neither build repeated Lane, MCP, Lending,
-census, or pin production.
-
-The [first CI packet][m-ci-old] preserves both initial failures at `6f3491e4`
-and the later exact `d1d09f3c` successes. Page run `42873607177` failed at its
-screenshot step because CLI required the redundant subject; its next three
-browser steps skipped. Card run `42873606686` failed at Grow routing because
-the fresh scenario selected old Room. Two initial failed gh ANSI-output reads
-remain separate from corrected log GETs. After the bounded repairs, Page run
-`42878816688` and Card run `42878816651` both passed at exact `d1d09f3c`, push,
-attempt one, with 12 and 13 successful steps. The source-equivalence proof to
-`8dc1381c` covers only its two test-file changes; it does not assert a later
-runtime repair or a new workflow run.
-
-The [fresh CI packet][m-ci-current] records actual Page run
-[42893173451](https://github.com/generalbusiness-ai/dap/actions/runs/42893173451)
-and Card run
-[42895299526](https://github.com/generalbusiness-ai/dap/actions/runs/42895299526)
-at exact `3de5bb68`, attempt one. Page used `push`; Card used
-`workflow_dispatch`. All 25 job steps passed. Each CI metadata sealer kept
-its first missing-parent refusal and the same unchanged source's later zero
-exit. Creating the parent repeated no API call or workflow. The fresh packet
-preserves 42 mode-guarded original inputs and two workflow source files whose
-historical original modes were not recorded; it does not invent those modes.
-Only new retained copies become read-only. The explicit source-closure proof
-covers 703 Page inputs and 727 Card inputs from `3de5bb68` to `9578637f`. That
-proof carries their exact scope; it is not an observed `9578637f` CI run or a
-per-case local ledger.
-
-The narrow Editor check and statechart passed at actual `8dc1381c` (session
-`17203`, END `88e648ea`) with runner and launcher zero. The [Editor
-manifest][m-editor] retains 26 source files, three model files, TLC scratch,
-and all three chart-directory roles, including hidden and empty directories.
-Its 93 private payloads, five public payloads, and two manifests passed custody
-checks. The already absent shared `Naturals.tla` reference remains explicitly
-unretained. The check reported ten generated states and seven distinct states;
-the chart has seven states, nine steps, six visible arrows, and three hidden
-terminal waits. `EvidenceBeforeProgress`, `NoDeadlock`, and the real-source
-property passed under TLA+ tools release 1.7.4, whose TLC banner is 2.19.
-The protected functions and models stayed byte-identical, so no fault control
-repeated. The builder adopted only correspondence metadata, skill, README,
-and manifest at `f995e1db`. This bounded result proves no signatures, every
-workflow order, or reload behavior.
-
-Seven earlier focused runs failed. Each outcome belongs to its original check head.
-
-1. At `d1d09f3c`, session `93759` passed 23 compiler contexts and failed the
-   24th, `packages/scope/tsconfig.test.json`, on an unused `FactRef` import
-   and two missing `Operand` narrowings. Seventeen later contexts and all 143
-   runtime cases were unrun. All four exits were one. The outer elapsed time
-   was 30.960211375 seconds. [The compiler-failure manifest][m-focus1] retains
-   its complete logs and END `1c7ab4b3`. The two-file test repair at `8dc1381c`
-   changes no title, expected old digest, Native proof assertion, or production
-   code.
-2. At `8dc1381c`, session `36384` passed the other 18 compiler contexts, giving
-   41 distinct historical positives. Plain recorded 29 passes, one failure,
-   three aborted skips, 17 unfinished starts, and 29 unrun cases. Only three
-   complete owners supplied the 29 positives: Define authoring 13, Define pins
-   seven, and Derive definition-format nine. The aborted application-examples
-   owner supplies no carry despite its built-in JSON file label. Strict pack
-   correctly refused retained Counting bytes used as fresh authoring.
-   Node 56 and Native eight did not launch. [The Plain-failure
-   manifest][m-focus2] retains END `97002689` and all four exits one.
-3. At docs-only `0ca2b250`, session `93112` recorded 55 Node passes and one
-   active-source architecture failure. The Page runtime imported lanes. Its
-   failed owner's other 11 positives supply no owner carry; Native eight
-   stayed unrun. [The Node-failure manifest][m-focus3] keeps all four exits
-   one and END `f913fc9b`. The following finite Page pin repair and build have
-   their own source and evidence above.
-4. At `3de5bb68`, session `72249` passed ten compilers, then Plain recorded
-   four passes, one failure, 23 bail-aborted skips, and 34 unrun cases. It
-   completed no current runtime owner. Node 12 and Native eight never
-   launched. [The combined-failure manifest][m-focus4] preserves the four one
-   exits and END `b6bc573d`. The failure was the corpus's assumption that
-   retained Site must refuse canonical mode; the declaration was already
-   canonical. This established no product failure. The one-path Site repair
-   now checks true admission plus exact `d2bc830e…` bytes and digest, while
-   Room and both Counting rows still require false admission. That attempt
-   took 21.409630625 seconds inside and 21.652257958 outside. Its three RSS
-   samples observed Node 169,744 KiB; workerd remained UNKNOWN with Native
-   unrun. This is sampled single-process RSS, not heap, a process sum, or a
-   true peak; no repeat follows from a missing sample.
-
-5. At `9578637f`, session `90289` passed the one remaining compiler context,
-   `packages/derive/tsconfig.test.json`. Plain then ended on `SIGBUS` with no
-   numeric Vitest child exit. Its reporter recorded 13 passes and 49 unrun
-   cases, including three that started without a result. No end callback,
-   complete module record, or built-in JSON establishes a whole-owner pass.
-   Node 24 and Native eight were unrun. All 94 runtime cases remained owed.
-   The Plain wrapper, runner, driver, and launcher each exited one. The
-   [crash manifest][m-focus5] retains END `0dd3281a`, root readback `1078cd21`,
-   and diagnostic review `6121d776`. Two RSS samples contained no owned Node
-   or workerd process, so both sampled peaks are UNKNOWN and the sampling
-   status is failed.
-6. Planner `ebf8c4b9` ordered one control at the same `9578637f` source. The
-   compiler exited zero. Plain passed 62 cases in 19 owners and Node passed
-   24 cases in two owners, with six unknown wrapper records. Native then
-   refused selection before global setup or any test body. Its metadata
-   expected `workerd` and the installed pool reported `cloudflare-pool`.
-   The eight Native cases remain unrun. Plain and Node exited zero, while
-   Native, runner, driver, and launcher exited one. The [control manifest][m-focus6]
-   retains END `c7be3b44`, root readback `81d68be8`, and peer readback `c37eb9`.
-   Four RSS samples recorded a maximum sampled Node process of 1,471,120 KiB.
-   The workerd sample peak is UNKNOWN.
-7. At `e6ed7365`, booking `fc0e54af` ran eight cases in three Native owners.
-   The six expectation fields named `cloudflare-pool` and selection succeeded.
-   The evidence-parent case failed its first proof assertion at line 43.
-   Page Story passed its sole case. RetainedEditor passed two of its six cases
-   before bail skipped four. Native, runner, driver, and launcher each exited
-   one. The public reporter ended as interrupted and built-in JSON records the
-   same complete Story pass. The run reproduced neither the pool-label refusal
-   nor the earlier `SIGBUS`. Root readback `a0779ecc` records END `dda9127` and
-   empty cleanup. The [seventh failure manifest][m-focus7] keeps all five
-   exits at one. The command ran for 13.712
-   seconds, with 20.880 seconds inside the wrapper and 21.116 outside. Three
-   RSS samples observed single-process peaks of 867,184 KiB for Node and
-   266,928 KiB for workerd.
-
-**Known red.** At 16:13, Node 26 hit `SIGBUS` in a Vitest worker thread, with
-`EXC_ARM_DA_ALIGN` inside `Array.prototype.map` and no failed assertion. The
-same-head control passed that Plain body with 62 cases in 19 owners. The crash
-did not repeat. Ruling `c207fd46` closes cause investigation unless it recurs
-and calls for a new ruling if it recurs in the gate.
-
-Source-correspondence proof `89bd55fa` carried 40 compiler histories to
-`9578637f`. The fifth run's compiler pass supplies the 41st distinct context.
-The control repeated that context under the planner's instruction and adds
-no distinct compiler history. Proof `eb26cbc4` accounts for all 41 historical
-compiler positives and 61 complete-owner cases through `76dde02d`. Those 61
-cases cover Define authoring 13, Define pins seven, Derive definition-format
-nine, S4 26, and J5 six.
-
-At `a9727fb3`, proof `328606a7` matches all 4,581 tracked paths to their Git
-blobs, file modes, and actual bytes. It qualifies the 61 earlier cases and
-the control's 62 Plain cases in 19 complete owners for carry. The proof
-covers their case identities, source, configuration, and file reads. The
-control's two Markdown reads retain their exact bytes. The proof qualifies
-40 of the 41 historical compiler contexts. The Scope test compiler directly
-includes the repaired file and passed once at the current source.
-
-Story proof `9e77b203` matches the single passing public and built-in JSON
-case to the current source, Worker, configuration, and setup inputs. The
-sibling fixture repair changes only that sibling's local proof conversion.
-Root adoption `d0ca6186` binds the combined and Story proofs to `a9727fb3`
-and the seventh failure seal. It carries 124 cases, including Story's one
-complete owner. Earlier partial Plain and RetainedEditor results supply zero
-carry. The control's 24 Node positives remain historical because their
-active-source and security document inputs changed.
-
-The repaired focus at booking `3a7a63cc` passed Scope compiler 23, the repaired
-evidence-parent case, and all six RetainedEditor cases. Public callbacks and
-built-in JSON agree on seven passes across both whole Native owners. The run
-adds one current compiler result to 40 carried results and seven current
-Native passes to 124 carried cases. The gate records the 24 Node cases that
-remained due in the 155-case focus scope.
-
-The compiler and Vitest child exited zero. The Native wrapper, runner, driver,
-launcher, and command each exited zero. Compiler and Vitest wall times were
-0.84 and 17.77 seconds. The inner and outer elapsed times were
-29.369934791 and 29.619219917 seconds. Three RSS samples recorded sampled
-single-process maxima of 793,024 KiB for Node and 454,912 KiB for workerd.
-Ruling `be87ca86` set this scope. Root readback `e4f54cc9` records empty
-cleanup. The sealed focus records END `9e8a6cf7`. [Repaired focus][m-focus-repaired]
+The [validation history](2026-11-10-canonical-spelling-history.md) records
+the earlier attempts, source correspondence, and retained observations.
 
 The table records actual commands, exits, and output hashes. `node` means
 pinned Node 26.13.0_2. Hashes cover stdout unless a row names another file.
@@ -353,6 +149,8 @@ RD /Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/run
 G /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9
 BASE d7736fa3de1c75d588f003f3d7e467545cf8ed06
 HEAD 43e9b32801908301066d83de2ab5725edccd3f2a
+FINAL 688cda1ef5b3a70a917bc9132bd6984943cca5be
+GF /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-688c
 ```
 
 | Check and source | Actual command | Exit | Output SHA-256 | Manifest |
@@ -396,29 +194,10 @@ HEAD 43e9b32801908301066d83de2ab5725edccd3f2a
 | Scope compiler 23, `3979f03f` | `node "$F/node_modules/typescript/bin/tsc" -p "$F/packages/scope/tsconfig.test.json"` | `0` | `d176ea0c291938d3efb974f8b730a09f45ef4e5960c0c49b2890db175918c812` (compiler log) | [a3b39913][m-grow-run-seal] |
 | Archive repair Native focus, `3979f03f` | `node "$F/node_modules/vitest/vitest.mjs" run "$F/packages/scope/test/archive-installed.test.ts" "$F/packages/scope/test/source-order.test.ts" --config "$R10/body/native-config/native.config.mts" --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter="$F/scripts/focused-check.mjs" --outputFile.json="$R10/body/native-focused/vitest.json"` | child/Native/runner/driver/launcher/command `1/1/1/1/1/1` | `06953df463a17b6b7a2d24d06af1d80ac850ffc2d6074baf868c33fb89e9a0fe` (Vitest log) | [a3b39913][m-grow-run-seal] |
 | Archive-only Native control, `3979f03f` | `node "$F/node_modules/vitest/vitest.mjs" run "$F/packages/scope/test/archive-installed.test.ts" --config "$R11/body/native-config/native.config.mts" --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter="$F/scripts/focused-check.mjs" --outputFile.json="$R11/body/native-focused/vitest.json"` | child/Native/runner/driver/launcher/command `0/0/0/0/0/0` | `00ffe4cf720febffcdb8e8f7821fc2f7f7be429cfa9ab34ad022491b77e2c390` (Vitest log) | [cbd25201][m-archive-control-seal] |
-
-The V2 metadata freezer exited one because published main advanced from Docs C
-to Docs D before its parent check. It created no frozen output and launched
-no compiler or test. The V3 freezer checked the integrated C and published D
-heads separately and exited zero. Both launch directories retain their own
-`command.json`, stdout, stderr, and `actual.exit`. The crash belongs to the
-later focus at booking `93bb44f8`. Its recorded inner and outer elapsed times
-are 11.874392625 and 12.118501333 seconds. The same-head control at booking
-`dc114da5` took 36.474097584 seconds inside and 36.711579125 seconds outside.
-Sampled RSS describes an observed process at a sample time.
-
-The Docs D merge `d469d3d6` integrates `810905c9` after the crash. Its proof
-`a2aab39b` records 21 Markdown paths and 4,559 other matching blobs and modes.
-The Docs D landing records nine receipt-matching trailers and 37 covered
-retirements. Docs D changed the security entry-point and threat-model inputs.
-The Docs F merge `76dde02d` integrates `36d30002`. Proof `3cfdbf3a` records
-28 Markdown paths, 4,552 other matching blobs and modes, nine matching
-trailers, and 56 covered retirements. The later report merge `e6ed7365`
-adds only `notes/reports/2026-11-10-sprint-report.md` and matches all 4,580
-previous blobs and modes. Proof `65e997d6` records that union with `d7736fa3`.
-The Page, Card, and MCP closure proof at `76dde02d` covers 703, 727, and 398
-inputs respectively. Final review must confirm the corresponding closure at
-its actual source before carrying any of that evidence.
+| Whitespace, `688cda1e` | `git diff --check "$BASE" "$FINAL"` | `0` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | [58d18151][m-static-final] |
+| Commit messages, `688cda1e` | `node scripts/check-commit-messages.mjs "$BASE" "$FINAL"` | `0`; 29 checked, zero flagged | `3e005adbebc4ecf196ca22b0aa0e3b49cd2607c7ea38195671bfb7116501752b` | [58d18151][m-static-final] |
+| Format, `688cda1e` | `/opt/homebrew/Cellar/node/26.13.0_2/bin/npm run format:check` | `0` | `6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79` | [58d18151][m-static-final] |
+| Full gate, `688cda1e` | `/usr/bin/caffeinate -i /usr/bin/time -p -o "$GF/gate.time" npm run gate` | gate/inner/outer/launcher/command `0/0/0/0/0` | `35191dc6b56a8cfda4341fcc1d10c6e356927f80128cd51a874a7240b4116084` (gate log) | [778d014b][m-gate-final] |
 
 ## Prechecks and failed gate
 
@@ -456,28 +235,9 @@ because it expected command receipt mode 0600 after the receipt became 0400.
 The bytes matched. V3 readback and seal exited zero and retain the failed
 gate. [Failed gate seal][m-gate]
 
-## Worker exit at `43e9b328`
-
-The Native log identifies workerd PID 39509 in a V8 heap abort with signal 6
-and a Miniflare restart warning near 23:32 UTC. Its final and highest sample
-was 2,352,208 KiB at 23:31:55.890757 UTC, sample 96. Sample 97 has no PID
-39509. The gate maximum, 3,057,488 KiB, belongs to PID 39508 at sample 80.
-The ten-second sampler reports single-process RSS and can miss shorter
-peaks. The terminal pool error gives no PID or timestamp. [Worker report][m-worker]
-[GC and abort log][m-worker-gc] [RSS samples][m-worker-rss]
-
-The nearby records show passing `authority-order.test.ts`,
-`peer-pin.test.ts`, and `directory-partition-capacity.scope.test.ts` cases.
-The reporter records case identities and the sampler records PIDs. The
-sealed records contain no join between them. The files held by PID 39509
-remain unknown. The run records no ready, result, or final event for
-`source-order.test.ts`. Act `5a6a143e` records the findings.
-[Native progress][m-worker-progress]
-
-BR13 v5b records a separate workerd V8 heap abort and lacks a same-PID RSS
-sample. BR13's passing v6b gate records the 3,318,784 KiB sample on workerd
-PID 26657. F's maximum was 261,296 KiB lower. The comparison uses sampled
-RSS from separate runs. [BR13 review][m-worker-br13]
+The [Worker exit record](2026-11-10-canonical-spelling-history.md#worker-exit-at-43e9b328)
+compares the aborting PID’s final sample of 2,352,208 KiB with the gate
+maximum of 3,057,488 KiB on a different PID. Its test assignments remain unknown.
 
 ## Archive fixture repair at `3979f03f`
 
@@ -567,13 +327,60 @@ their own passing observations at booking `94d41fbc`. The earlier focus
 and the `43e9b328` gate retain their failed outcomes.
 [Source correspondence][m-archive-control-peer] [Earlier focus seal][m-grow-run-seal] [Earlier gate seal][m-gate]
 
+## Prechecks at `688cda1e`
+
+Booking `f70eaf25` and END `dd006d93` record the three precheck exits and
+four wrapper or command exits at zero. The source, tool, and input fences
+matched 4,604, 8,311, and 54 entries. Both main refs matched. Cleanup
+closed empty. Inner and outer times were 11.491 and 11.667 seconds.
+The V1 archive readback exited one on a mistyped historical booking ID.
+The corrected metadata readback and seal exited zero. Both preserve the
+same single precheck invocation. [Final static seal][m-static-final]
+
+The focused source `3979f03f` and the precheck source `688cda1e` differ
+only in the implementation note and the two focused-run manifests. All
+4,601 other tracked blobs and modes match. The final gate ran at the exact precheck head and tree.
+
+## Full gate at `688cda1e`
+
+Booking `1a99b2d6` and END `e0d7d8ae` record the passing gate. All five
+actual exit receipts read zero. The analyzer and independent raw readback
+also exited zero with zero readback issues. The public and built-in
+ledgers reconcile all 5,852 known cases across 708 owners. Node passed
+150 and Counting passed 56. Plain passed 4,509 with one skip. Native
+passed 1,134 with two skips. All 45 compiler contexts and 16 typecheck
+scripts completed. All six selected Scale cases passed. The 111 unknown
+wrapper observations remain outside case counts. The skipped Page
+Recorder duration remains unknown. [Final gate seal][m-gate-final]
+
+Archive-installed passed all nine cases and source-order passed. The raw
+log contains no runtime error signature or unexpected deadline diagnostic.
+Both main refs matched, the 4,604 source, 8,311 tool, and 132 input fences
+held, and cleanup closed empty. Inner and outer elapsed times were
+1,286.1119515 and 1,286.388777208 seconds. The passive ten-second sampler
+completed 129 samples. Single-process maxima were 2,342,848 KiB for Node
+and 2,970,304 KiB for workerd PID 2916. [Final gate summary][m-gate-final-summary]
+
+The tracked closure comparison to `688cda1e` retains all 703 Page inputs,
+727 Card inputs, and 398 MCP Describe inputs from their actual historical
+sources. Their run IDs and results keep the original source attribution.
+The comparison establishes Git blob and mode equality for those declared
+tracked inputs. [Current source correspondence][m-final-closure]
+
+The gate warned that the primary note at `688cda1e` had 51,674 bytes.
+This reporting follow-up moves historical detail into the linked annex
+and preserves the command and nine-case fixture tables. It adds the two
+sealed final manifests. All 4,603 existing tracked rows outside the
+primary note retain the gate’s blobs and modes. The gate’s tree is
+`be8a8e57d87b9b53a6f53f3f16f9587eed18a17c`. The reviewer binds the later
+reporting tree and this four-path delta under
+[the follow-up rule](../../docs/evidence-filing.md#follow-up-after-a-gate).
+
 ## Open limits and remaining checks
 
-Rulings `98e4753c` and `297e04cc` place the three prechecks and one full gate
-after the nine-case pass. Both remain unrun at `3979f03f`. Ruling
-`297e04cc` assigns any final gate with an unhandled Worker exit or missing
-owner and zero assertion failures to the planner for a ruling on
-splitting Native.
+Ruling `297e04cc` assigns any final gate with an unhandled Worker exit
+or missing owner and zero assertion failures to the planner for a ruling
+on splitting Native.
 
 Ruling `865f4d70` assigns canonical fold admission to identifiers head (c+d).
 Ruling `23559d21` assigns removal of the temporary Counting helper and two
@@ -624,3 +431,7 @@ acceptance.
 [m-archive-control-seal]: evidence/2026-11-10-f-archive-only-focus-3979.manifest.json
 [m-archive-control-terminal]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/unit/terminal-summary.json
 [m-archive-control-seal-peer]: /private/tmp/artroom-jp1-f-archive-only-3979-pass-seal-peer-20261110.json
+[m-static-final]: evidence/2026-11-10-f-final-static-688c.manifest.json
+[m-gate-final]: evidence/2026-11-10-f-final-gate-688c.manifest.json
+[m-gate-final-summary]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-688c-sealed/unit/terminal-summary.json
+[m-final-closure]: /private/tmp/artroom-jp1-f-688c-final-review-draft-20261110/LIVE-COVERAGE.PLAN.json
