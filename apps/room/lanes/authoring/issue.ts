@@ -1,5 +1,6 @@
 import { anyOf, author, authorsOf, bool, by, commit, constant, count, create, define, detached, digest, el, enumOf, equals, fact, final, grants, index, int, invoke, isFact, item, itemOf, list, live, member, none, one, open, optional, part, party, permit, plusSeconds, range, reasons, receive, record, ref, relate, require, required, sameSet, scope, self, sender, settlesCopy, signer, source, tell, text, theScope, transition, tree, update, value, via, when } from "@generalbusiness/dap-define";
 import { exportItem, holdItem, sharedForms } from "./shared.ts";
+import type { DefinitionData } from "./shared.ts";
 
 const g = grants(
   {
@@ -1161,4 +1162,4 @@ export const issueSource = define(
     capabilities: [{"name": "hold", "version": 1}, {"name": "git-read", "version": 1}],
   },
 );
-export type IssueDefinition = typeof issueSource;
+export type IssueDefinition = DefinitionData<typeof issueSource>;

@@ -163,11 +163,32 @@ JSON imports. Define's pin witness reads retained JSON through `readFileSync`,
 so its compiler needs no new JSON option. This table records static source
 imports. The focused compiler pass must confirm the complete closure.
 
+## Slot modifiers and runtime JSON types
+
+The focus at `a59044c7` stopped in the CLI Scope compiler with two TS2352
+errors. `author(party.optional)` inferred both `author: false` and
+`author: true`, so the intersection became `never`. The helper now declares
+its actual overwrite result: `Omit<S, "author">` with `author: true`.
+Its emitted object expression stays unchanged.
+
+Lane authoring retains the exact constructor types in `changeSource` and
+`issueSource`. Runtime JSON imports have arrays rather than authored tuple
+cardinality. The lane-only `DefinitionData` view keeps readonly arrays,
+literal element values and object keys without promising those lengths.
+It handles primitives first so branded grant strings stay strings. Only
+the exported runtime data aliases use this view. The wrappers keep their
+existing single assertions and type-only imports. Grow's existing mutable
+contract aliases need no change.
+
+The existing type fixture checks the overwritten author flag and retained
+slot modes, both real performer slots, exact constructor tuples, readonly
+JSON element values and string grants. It rejects a tuple-length claim
+about imported JSON. Existing runtime tests and their assertions stay.
+
 ## Validation status
 
-Compiler, validator, producer, formatter, focused owners, and the final
-gate remain **UNRUN** for this proposal. The new Grow JSON holds the exact
-retained canonical values. Its Prettier rendering remains unrun. No pin
-change, acceptance, deployment, or readiness follows from this source
-proposal. The runtime boundary, parent-first producer, whole definitions,
-and compiler contexts need the booked G focused pass before the gate.
+The producer completed under its separate evidence. The subsequent focus
+stopped at compiler-06 before runtime owners ran. Compiler and runtime
+checks for this type repair remain **UNRUN**. This repair changes no
+runtime object expression, JSON, pin or kernel source. The retained
+whole-definition byte and pin witnesses still govern the next checks.

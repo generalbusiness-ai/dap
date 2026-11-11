@@ -135,7 +135,7 @@ export const ref = {
   optional: <const T extends FieldType>(to: T) => ({ ...MODE.optional, to }) as const,
 };
 /** The members of this party slot are authors of what the item records (section 6.7). */
-export const author = <const S extends PartySlot>(slot: S) => ({ ...slot, author: true }) as const;
+export const author = <const S extends PartySlot>(slot: S): Omit<S, "author"> & { readonly author: true } => ({ ...slot, author: true }) as const;
 /** A slot that only a capability's code may write. */
 export const owned = <const S extends object, const C extends CapabilityName>(slot: S, capability: C) => ({ ...slot, capability }) as const;
 

@@ -14,6 +14,7 @@ import {
   via, when,
 } from "@generalbusiness/dap-define";
 import { exportItem, holdItem, sharedForms } from "./shared.ts";
+import type { DefinitionData } from "./shared.ts";
 
 const g = grants(
   {
@@ -1823,4 +1824,4 @@ export const changeSource = define(
     capabilities: [{"name": "hold", "version": 1}, {"name": "git-read", "version": 1}],
   },
 );
-export type ChangeDefinition = typeof changeSource;
+export type ChangeDefinition = DefinitionData<typeof changeSource>;
