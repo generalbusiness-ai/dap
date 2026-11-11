@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:46dce0a7e1516410ce2949da7060f1cc7eb93be5","text":"Merge retired a covered predecessor; the successor is at scripts/test-j3-runner.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:572a9e86a19bc6a190d98d8ad1686c2de1f0d68b","text":"Merge retired a covered predecessor; the successor is at packages/cli/README.md."}
