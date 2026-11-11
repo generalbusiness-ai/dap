@@ -231,12 +231,45 @@ Their assertions and case counts stay unchanged. Grow's Worker entry uses
 keeps its exact signed packet bytes while the JSON-aware compiler accepts
 the entry. The signed packet, release and publisher stay unchanged.
 
+## Canonical object order and generated reference
+
+The continuation at `8b1ea8cc` passed all twenty-one current compiler
+contexts, then stopped at the Grow pin witness. Its twelve repeated-subject
+paths matched exactly, but canonical JSON enumerated the named acts in a
+different order. The comparison now sorts both path lists. Three Lane
+metadata comparisons also sort their complete shape and row lists. These
+comparisons preserve duplicates and every expected value. Guard, effect,
+send and other semantic arrays keep their existing order assertions.
+
+An ordinary working run then found the generated Lane reference stale.
+The maintained `apps/room/lanes/scripts/reference.mjs` writer regenerated it
+once. All 504 rows keep their keys, values and counts; row and named-field
+order now follows the canonical definitions. Non-table prose, byte stamps
+and digests stay exact. This reference write is separate from the earlier
+Lane/Grow render and JSON-format producer.
+
+Ordinary working checks passed the eight pin cases, the four Lane
+definition cases, twelve active-source Node cases and three Native Grow
+cases. The interrupted broader Plain working run reported 1,432 passes,
+one stale-reference failure and two skips; it did not finish every selected
+case. The two compiler contexts that read the assertion repairs also pass.
+A read-only config directory and sandboxed local listen each caused one
+working startup failure before any cases ran. A writable scratch config
+and the local-listen permission resolved those setup failures. These are
+working results, not sealed acceptance evidence.
+
 ## Validation status
 
-The producer completed under its separate evidence. All three focus
-attempts stopped at compiler-06 before runtime owners ran. The previous
-source and raw failures remain separate records. The next sealed continuation
-and the full gate remain **UNRUN**. The repair changes one test-configuration
-JSON flag and the working-check fixes above. Definition JSON, retained pins,
-authored runtime object expressions and kernel source stay unchanged. The
-retained whole-definition byte and pin witnesses still govern acceptance.
+The first three focused attempts stopped at compiler-06 before runtime
+owners ran. The fourth passed all twenty-one current compilers and failed
+in Plain; Node and Native were not launched in that sealed unit. Its raw
+receipts, the earlier failures and their source checkpoints remain distinct.
+The repaired source proceeds to the required full gate without another
+sealed focus repeat. The full gate, controls and final-head Page/Card
+workflows remain **UNRUN**.
+
+The observed maintained AST parser output seals Grow's Text-module bridge.
+No route or gate assertion changed. The later working repair changes comparisons in two
+test owners and the generated Lane reference. Definition JSON, retained
+pins, authored runtime object expressions and kernel source stay unchanged.
+The retained whole-definition byte and pin witnesses still govern acceptance.

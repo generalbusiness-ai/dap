@@ -85,7 +85,7 @@ test("the pinned grow room is canonical and the earlier spelling adds only twelv
   const earlier = repeatedSubjects(roomData, paths.map(path => [`acts.${path}`, "on"] as const));
   const diffs = differences(earlier, normalize(earlier));
   expect(diffs.every((d) => d.endsWith('.of: "on" vs undefined'))).toBe(true);
-  expect(diffs.map((d) => d.replace(/^acts\./, "").replace(/\.of: "on" vs undefined$/, ""))).toEqual(paths);
+  expect(diffs.map((d) => d.replace(/^acts\./, "").replace(/\.of: "on" vs undefined$/, "")).sort()).toEqual([...paths].sort());
   expect(normalize(earlier)).toEqual(roomData);
   expect(normalize(roomData)).toEqual(roomData);
   expect(definitionDigest(normalize(earlier))).not.toBe(definitionDigest(earlier));
