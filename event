@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Accept request git:sha1…17cf4e9: S2: artroom-scope runs the scope index in enforce mode","body":{"branch":"planner/artroom-scope-enforce-20261111"}}
+{"kind":"artifact","text":"packages/cli/test/demo-config.test.ts at exact c02593659b215178f068efd257dee0ed4b5bccce on planner/artroom-scope-enforce-20261111, under promise git:sha1…959d754 on request git:sha1…17cf4e9","body":{"commit":"c02593659b215178f068efd257dee0ed4b5bccce","path":"packages/cli/test/demo-config.test.ts"}}
