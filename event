@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:22828ff1b1ca97087a3e43a455ff44624547b576","text":"Merge retired a covered predecessor; the successor is at examples/grow/definition-corpus-data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:24c1cdb9bc9f686b5c0b78f09cd34cf005ed2f5f","text":"Merge retired a covered predecessor with no successor at its old path."}
