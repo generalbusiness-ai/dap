@@ -1,0 +1,19 @@
+# node graph.mjs <worktree at 7177b87b>; static import closure by regex, lines of .ts source including comments
+deployed closure: 583 modules, 91832 lines (entry apps/room/fetch.ts)
+    28647  packages/scope
+    20419  packages/platform
+    19427  packages/derive
+     8783  packages/mcp
+     6659  packages/git
+     4415  packages/client
+     1710  packages/bytes
+      817  packages/contract
+      776  packages/package-graph
+      179  apps/room
+behind hosted MCP and OAuth: 51 modules, 9151 lines (10.0% of the closure)
+behind GitHub host: 4 modules, 931 lines (1.0% of the closure)
+behind archive: 93 modules, 11097 lines (12.1% of the closure)
+behind public Site: 12 modules, 3241 lines (3.5% of the closure)
+behind demo creation: 2 modules, 77 lines (0.1% of the closure)
+closure from packages/scope/src/site/html.ts, packages/scope/src/site/blocks.ts, packages/scope/src/site/inlines.ts: 6 modules, 2098 lines
+closure from packages/git/src/http-read.ts: 38 modules, 4043 lines
