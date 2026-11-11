@@ -1,0 +1,857 @@
+[
+  {
+    "name": "valid-event-0",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/0/d4a864475495146a0983b844ba5369b7a344ca60",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+    },
+    "source": [],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/0/d4a864475495146a0983b844ba5369b7a344ca60",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "valid-event-1",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/1/3392a99095634338667e75f46fbe83f27ae514af",
+    "requested": 2,
+    "event": {
+      "encoding": "base64",
+      "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/1/3392a99095634338667e75f46fbe83f27ae514af",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "valid-event-2",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/2/3040fea69059e16caf261bb905669005849d096c",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/2/3040fea69059e16caf261bb905669005849d096c",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "valid-event-3",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "base64",
+      "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCAzMDQwZmVhNjkwNTllMTZjYWYyNjFiYjkwNTY2OTAwNTg0OWQwOTZjCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDMgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMyArMDAwMAoKVEVTVCBldmVudCAzOiBjYWbDqQo="
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "bytes-only",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 0,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 0,
+      "result": "ok",
+      "reached": 0,
+      "reason": null,
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "fields-only",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 1,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 1,
+      "result": "ok",
+      "reached": 1,
+      "reason": null,
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "no-signature-profile",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 3,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 3,
+      "result": "incomplete",
+      "reached": 2,
+      "reason": "profile",
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "uppercase-digest",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/BBC99C8598EC0F0724E0E5E87BED762E7F201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/BBC99C8598EC0F0724E0E5E87BED762E7F201036",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "leading-zero-position",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/03/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/03/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "overflow-position",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/9007199254740992/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/9007199254740992/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "fragment-not-event-path",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3#bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3#bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "trailing-newline",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036\n",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036\n",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "unknown-format",
+    "citation": "did:seq:unknown:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:unknown:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": null,
+      "reason": "format",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "changed-cited-bytes",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\u000b"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": null,
+      "reason": "digest",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "wrong-position",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/4/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/4/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": 1,
+      "reason": "position",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "different-genesis",
+    "citation": "did:seq:git:6eadd21825b524ed889f7e97457e34dd02d93686/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:6eadd21825b524ed889f7e97457e34dd02d93686/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": 1,
+      "reason": "genesis",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "changed-middle-under-old-digest",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n "
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": 1,
+      "reason": "digest",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "missing-middle",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": 1,
+      "reason": "unavailable",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "held-middle-is-not-anchor",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": 1,
+      "reason": "unavailable",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "explicit-middle-anchor",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [
+      "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/2/3040fea69059e16caf261bb905669005849d096c"
+    ],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/2/3040fea69059e16caf261bb905669005849d096c",
+      "trusts": [
+        "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/2/3040fea69059e16caf261bb905669005849d096c"
+      ]
+    }
+  },
+  {
+    "name": "wrong-middle-anchor",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [
+      "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/2/6eadd21825b524ed889f7e97457e34dd02d93686"
+    ],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": 1,
+      "reason": "anchor",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "foreign-anchor-ignored",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [
+      "did:seq:git:6eadd21825b524ed889f7e97457e34dd02d93686/2/3040fea69059e16caf261bb905669005849d096c"
+    ],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "short-depth",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": 2,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": 1,
+      "reason": "depth",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "genesis-at-zero-depth",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/0/d4a864475495146a0983b844ba5369b7a344ca60",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+    },
+    "source": [],
+    "anchors": [],
+    "depth": 0,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/0/d4a864475495146a0983b844ba5369b7a344ca60",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "anchor-edge-needs-depth",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3040fea69059e16caf261bb905669005849d096c\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [
+      "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/2/3040fea69059e16caf261bb905669005849d096c"
+    ],
+    "depth": 0,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": 1,
+      "reason": "depth",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "missing-cited-event",
+    "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+    "requested": 2,
+    "event": null,
+    "source": [
+      {
+        "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+        "encoding": "base64",
+        "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "3040fea69059e16caf261bb905669005849d096c",
+        "encoding": "utf-8",
+        "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60/3/bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": null,
+      "reason": "unavailable",
+      "anchor": null,
+      "trusts": []
+    }
+  }
+]

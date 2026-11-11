@@ -1,0 +1,857 @@
+[
+  {
+    "name": "valid-event-0",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/0/6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+    },
+    "source": [],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/0/6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "valid-event-1",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/1/f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+    "requested": 2,
+    "event": {
+      "encoding": "base64",
+      "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/1/f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "valid-event-2",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/2/54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/2/54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "valid-event-3",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "base64",
+      "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA1NGQwMWRmODM3ZDVhN2VmNWE5MGEwZDQzZTlmNWMzZDEyMmI3NTMyM2Q3OGMzYWRiZGI0YTljMjVjNTU5NmI4CmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDMgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMyArMDAwMAoKVEVTVCBldmVudCAzOiBjYWbDqQo="
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "bytes-only",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 0,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 0,
+      "result": "ok",
+      "reached": 0,
+      "reason": null,
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "fields-only",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 1,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 1,
+      "result": "ok",
+      "reached": 1,
+      "reason": null,
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "no-signature-profile",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 3,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 3,
+      "result": "incomplete",
+      "reached": 2,
+      "reason": "profile",
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "uppercase-digest",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/F85D03A4283533EAAA24F457B44F9984815045ED5AA92E9290B6C3F4E30C0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/F85D03A4283533EAAA24F457B44F9984815045ED5AA92E9290B6C3F4E30C0667",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "leading-zero-position",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/03/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/03/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "overflow-position",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/9007199254740992/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/9007199254740992/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "fragment-not-event-path",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3#f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3#f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "trailing-newline",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667\n",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667\n",
+      "requested": 2,
+      "result": "invalid",
+      "reached": null,
+      "reason": "syntax",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "unknown-format",
+    "citation": "did:seq:unknown:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:unknown:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": null,
+      "reason": "format",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "changed-cited-bytes",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\u000b"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": null,
+      "reason": "digest",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "wrong-position",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/4/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/4/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": 1,
+      "reason": "position",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "different-genesis",
+    "citation": "did:seq:git256:d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": 1,
+      "reason": "genesis",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "changed-middle-under-old-digest",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n "
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": 1,
+      "reason": "digest",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "missing-middle",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": 1,
+      "reason": "unavailable",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "held-middle-is-not-anchor",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": 1,
+      "reason": "unavailable",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "explicit-middle-anchor",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [
+      "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/2/54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8"
+    ],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/2/54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+      "trusts": [
+        "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/2/54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8"
+      ]
+    }
+  },
+  {
+    "name": "wrong-middle-anchor",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [
+      "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/2/d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755"
+    ],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "mismatch",
+      "reached": 1,
+      "reason": "anchor",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "foreign-anchor-ignored",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [
+      "did:seq:git256:d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755/2/54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8"
+    ],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "short-depth",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": 2,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": 1,
+      "reason": "depth",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "genesis-at-zero-depth",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/0/6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+    },
+    "source": [],
+    "anchors": [],
+    "depth": 0,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/0/6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+      "requested": 2,
+      "result": "ok",
+      "reached": 2,
+      "reason": null,
+      "anchor": "genesis",
+      "trusts": []
+    }
+  },
+  {
+    "name": "anchor-edge-needs-depth",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": {
+      "encoding": "utf-8",
+      "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent 54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8\nauthor Public TEST <test@example.invalid> 1794268803 +0000\ncommitter Public TEST <test@example.invalid> 1794268803 +0000\n\nTEST event 3: café\n"
+    },
+    "source": [
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [
+      "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/2/54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8"
+    ],
+    "depth": 0,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": 1,
+      "reason": "depth",
+      "anchor": null,
+      "trusts": []
+    }
+  },
+  {
+    "name": "missing-cited-event",
+    "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+    "requested": 2,
+    "event": null,
+    "source": [
+      {
+        "digest": "6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+      },
+      {
+        "digest": "f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e",
+        "encoding": "base64",
+        "bytes": "dHJlZSA2ZWYxOWI0MTIyNWM1MzY5ZjFjMTA0ZDQ1ZDhkODVlZmE5YjA1N2I1M2IxNGI0YjliOTM5ZGQ3NGRlY2M1MzIxCnBhcmVudCA2ZmIyYTExZDYyZjVmYjJjZWI3MjQ1MWY2ODc2ZWExYjNiYWRjOTJiYmJmNjQ5NWQ3NzZmYTI3ODc5MmRmNDhhCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+      },
+      {
+        "digest": "54d01df837d5a7ef5a90a0d43e9f5c3d122b75323d78c3adbdb4a9c25c5596b8",
+        "encoding": "utf-8",
+        "bytes": "tree 6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321\nparent f248dce403da24ccf5183436c610ec257ee401408f874070f969476db018ae8e\nparent d32ea87766b7d8dab8b85647514df07c7b439a5d2a1072f1f7a8b587e638f755\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+      }
+    ],
+    "anchors": [],
+    "depth": null,
+    "expect": {
+      "citation": "did:seq:git256:6fb2a11d62f5fb2ceb72451f6876ea1b3badc92bbbf6495d776fa278792df48a/3/f85d03a4283533eaaa24f457b44f9984815045ed5aa92e9290b6c3f4e30c0667",
+      "requested": 2,
+      "result": "incomplete",
+      "reached": null,
+      "reason": "unavailable",
+      "anchor": null,
+      "trusts": []
+    }
+  }
+]

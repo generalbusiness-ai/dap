@@ -1,0 +1,29 @@
+{
+  "id": "did:seq:git:d4a864475495146a0983b844ba5369b7a344ca60",
+  "events": [
+    {
+      "position": 0,
+      "digest": "d4a864475495146a0983b844ba5369b7a344ca60",
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nauthor Public TEST <test@example.invalid> 1794268800 +0000\ncommitter Public TEST <test@example.invalid> 1794268800 +0000\n\nTEST genesis\n"
+    },
+    {
+      "position": 1,
+      "digest": "3392a99095634338667e75f46fbe83f27ae514af",
+      "encoding": "base64",
+      "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCBkNGE4NjQ0NzU0OTUxNDZhMDk4M2I4NDRiYTUzNjliN2EzNDRjYTYwCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDEgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMSArMDAwMAoKVEVTVCBldmVudCAxOiBjYWbDqQo="
+    },
+    {
+      "position": 2,
+      "digest": "3040fea69059e16caf261bb905669005849d096c",
+      "encoding": "utf-8",
+      "bytes": "tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\nparent 3392a99095634338667e75f46fbe83f27ae514af\nparent 6eadd21825b524ed889f7e97457e34dd02d93686\nauthor Public TEST <test@example.invalid> 1794268802 +0000\ncommitter Public TEST <test@example.invalid> 1794268802 +0000\n\nTEST event 2: café\n"
+    },
+    {
+      "position": 3,
+      "digest": "bbc99c8598ec0f0724e0e5e87bed762e7f201036",
+      "encoding": "base64",
+      "bytes": "dHJlZSA0YjgyNWRjNjQyY2I2ZWI5YTA2MGU1NGJmOGQ2OTI4OGZiZWU0OTA0CnBhcmVudCAzMDQwZmVhNjkwNTllMTZjYWYyNjFiYjkwNTY2OTAwNTg0OWQwOTZjCmF1dGhvciBQdWJsaWMgVEVTVCA8dGVzdEBleGFtcGxlLmludmFsaWQ+IDE3OTQyNjg4MDMgKzAwMDAKY29tbWl0dGVyIFB1YmxpYyBURVNUIDx0ZXN0QGV4YW1wbGUuaW52YWxpZD4gMTc5NDI2ODgwMyArMDAwMAoKVEVTVCBldmVudCAzOiBjYWbDqQo="
+    }
+  ]
+}

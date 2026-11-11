@@ -3,9 +3,10 @@
 Request: `a30f1b67`. Promise: `5a78cc01`. Planner source and reason ruling:
 `f194f905`. Parent: `05d618e2`.
 
-Status: source draft. The independent producer, compilers, focused witnesses,
-control, static checks and gate remain unrun. The six vector files do not exist
-yet. Root will book the producer after the typed work's executable priority.
+Status: source and independent vectors prepared. Five working checks and 43
+affected compiler contexts passed at `372f5ff5`, tree `4bf16cce`. The independent
+producer and maintained Bytes index AST producer then completed once there.
+Runtime witnesses, control, gate and exact-head review remain due.
 
 Bytes adds `parseSequenceIdentifier` and `parseCitation` to its existing entry.
 Each parser consumes the whole string, preserves its spelling and enforces the
@@ -63,10 +64,10 @@ format has a signature profile in this head.
 `scripts/identifier-vectors.py` imports only Python's standard library. Its
 TEST-only signer follows [RFC 8032 section 6](https://www.rfc-editor.org/rfc/rfc8032.html#section-6)
 and retains section 7.1's first three independent signing answers. The producer
-will check them before writing any output. The fixed public TEST seeds are not
+checked them before writing any output. The fixed public TEST seeds are not
 custody keys; this illustrative signer is outside production code.
 
-The producer writes only a new external directory. Its canonical JSON writer
+The producer wrote only a new external directory. Its canonical JSON writer
 admits these ASCII-key, safe-integer fixtures, rather than claiming a general
 JCS implementation. Dap1 includes signed founding, act and preparation entries,
 unsigned delivery and an unsigned alternate genesis. Git vectors include a
@@ -79,10 +80,15 @@ and a shallow missing predecessor. The existing CLI owner adds citation dispatch
 and lazy source boundaries. The whole Bytes fact-text/domain owners and Native
 Replay owner retain their existing regression obligations.
 
-The Bytes index has one existing whole-AST source seal. Its actual replacement
-value remains pending root's maintained parser booking and review. Raw file
-hashes do not replace that AST value. No inventory assertion changes in this
-source draft.
+The Bytes index has one whole-AST source seal. The unchanged maintained
+`sourceSeal` function produced `7c8c9514` from one owner read and one native
+`parseAst` call. This head adopts that actual value in the existing table and
+keeps every inventory assertion. Raw file hashes do not replace the AST value.
 
-Published vectors, complete reports and exact-head review are still owed. This
+The six vector files exactly copy the independent output: 30 dap1 cases and
+26 cases each for git and git256. Those counts describe fixtures, not passing
+implementation tests. The raw producer and AST records remain under
+`~/play/artroom-evidence/2026-11-11-b372-independent-identifier-vectors` and
+`~/play/artroom-evidence/2026-11-11-identifiers-b-bytes-index-ast` until final
+filing. Complete implementation reports and exact-head review are still owed. This
 head has no room, wire, migration, rollout or deployment action.
