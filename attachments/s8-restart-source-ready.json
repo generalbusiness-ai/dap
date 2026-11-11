@@ -1,0 +1,29 @@
+{
+  "status": "SOURCE CONTRACT ONLY; PLANNER DECISION REQUIRED BEFORE FAMILY SOURCE",
+  "request": "93adab5279ac0480bfbbc3a33e2588e64a1c3e11",
+  "promise": "9c6ef68e7f8eb7a9a2616f9fc9ac1857c14238c4",
+  "basisHead": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+  "files": [
+    {
+      "path": "/private/tmp/artroom-r3b-design-s8-restart-revision-contract-v1-7177-20261111/contract.md",
+      "sha256": "0e47a8e8ea19555479fc541a15060c7a301d4afad420061f3cc06fb2fbc5f5af",
+      "bytes": 7418,
+      "mode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-r3b-design-s8-restart-revision-contract-v1-7177-20261111/provenance.json",
+      "sha256": "1fdeff6c37719a69b667108b3395a5a9a641dd13b96b85bc4a88e7927e453466",
+      "bytes": 5528,
+      "mode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-r3b-design-s8-restart-revision-contract-v1-7177-20261111/source-excerpts.md",
+      "sha256": "76046cf5e1f372f6b5d982b5d5ee075446597d94481433a7e01626891e7c91d8",
+      "bytes": 30268,
+      "mode": 256
+    }
+  ],
+  "actualChecks": "UNRUN",
+  "implementationAuthorized": false,
+  "results": null
+}
