@@ -12,27 +12,39 @@ interface ExpressionContext {
   readonly on: NamedSubject | undefined;
   readonly also: Readonly<Record<string, NamedSubject>>;
 }
+interface RowContext {
+  readonly row: Readonly<Record<string, { readonly row: string }>>;
+  readonly f?: never; readonly on?: never; readonly also?: never;
+}
 
 type FieldReference<C extends ExpressionContext> = C["f"][keyof C["f"] & string] & { readonly part?: never };
 type SlotReference<S> = S extends { readonly item: infer I extends ItemDef; readonly subject: infer N extends Subject }
   ? { readonly slot: Slots<I>; readonly of: N; readonly part?: never }
   : never;
-type Reference<C extends ExpressionContext> = FieldReference<C> | SlotReference<C["on"]> | SlotReference<C["also"][keyof C["also"] & string]>;
+type Reference<C extends ExpressionContext | RowContext> = C extends ExpressionContext
+  ? FieldReference<C> | SlotReference<C["on"]> | SlotReference<C["also"][keyof C["also"] & string]>
+  : C extends RowContext ? C["row"][keyof C["row"] & string] & { readonly part?: never } : never;
 
 const keywords = new Set(["and", "or", "in", "true", "false", "null", "function"]);
+const actContext = (ctx: ExpressionContext | RowContext): ctx is ExpressionContext => "f" in ctx && "on" in ctx && "also" in ctx;
 
 /** A quoted name is one path member, including an alias such as also.library. */
 function member(base: string, name: string): string {
-  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(name) && !keywords.has(name)) return `${base}.${name}`;
-  if (!name.includes("`")) return `${base}.\`${name}\``;
+  const before = base ? `${base}.` : "";
+  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(name) && !keywords.has(name)) return `${before}${name}`;
+  if (!name.includes("`")) return `${before}\`${name}\``;
   // The profile's backquoted names have no escape for a literal backtick.
   throw new TypeError("expression cannot quote a name containing a backtick");
 }
 
-function path(ctx: ExpressionContext, reference: unknown): string {
+function path(ctx: ExpressionContext | RowContext, reference: unknown): string {
   if (typeof reference !== "object" || reference === null || Array.isArray(reference)) throw new TypeError("expression requires a field or slot reference");
   const value = reference as Record<string, unknown>;
   const keys = Object.keys(value);
+  if (!actContext(ctx)) {
+    if (keys.length !== 1 || keys[0] !== "row" || typeof value["row"] !== "string" || !Object.hasOwn(ctx.row, value["row"]) || ctx.row[value["row"]]!.row !== value["row"]) throw new TypeError("expression names no projected row field");
+    return member("", value["row"]);
+  }
   if (keys.length === 1 && keys[0] === "field" && typeof value["field"] === "string") {
     const name = value["field"];
     if (!Object.hasOwn(ctx.f, name)) throw new TypeError(`expression names no field ${name}`);
@@ -51,10 +63,10 @@ function path(ctx: ExpressionContext, reference: unknown): string {
 }
 
 /**
- * Return a tag whose holes accept this act body's typed field and slot reads.
+ * Return a tag whose holes accept the bound act reads or projected row fields.
  * TypeScript checks those references. The ordinary compiler checks raw rule text.
  */
-export function expression<const C extends ExpressionContext>(ctx: C): (parts: TemplateStringsArray, ...references: Reference<C>[]) => string {
+export function expression<const C extends ExpressionContext | RowContext>(ctx: C): (parts: TemplateStringsArray, ...references: Reference<C>[]) => string {
   return (parts, ...references) => {
     if (parts.length !== references.length + 1 || typeof parts[0] !== "string") throw new TypeError("expression requires a complete template");
     let source = parts[0];

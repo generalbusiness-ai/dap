@@ -99,6 +99,12 @@ values in acts and guards. The compiler checks the declared names and
 returns per-act `refusals` beside the definition. Write an inline `rule`
 where the guard uses it. `define` collects its expression in `rules`.
 
+When you author the package too, declare its roles first with
+`declareRoles` from `@generalbusiness/dap-define/package`. Its `grant`
+method accepts only an action held by those roles. Pass the returned
+grant to an act and the same `roles` value to `manifest`. The manifest's
+type checks reject an act whose action no role holds.
+
 Act fields that contain record lists expose their declared members inside
 list callbacks. For a list read from a fetched fact, declare its members
 with `elements(list, "memberName")`. An unannotated list exposes only
@@ -169,6 +175,12 @@ generated JSON artifact per definition. Lane wrappers import their types
 from the authoring modules with `import type`. Grow wrappers retain the
 mutable contract type that its demo variants use. Runtime paths never
 import Define or an authoring module by value.
+
+To record an additive extension, pass a compiled parent and the child
+definition to `extend`. Preserve every inherited form. `compile` returns
+the parent's digest and the added item, act, handler, timed-rule and rule
+names as `provenance`. This metadata stays outside the definition's
+serialized bytes. Package derivation and parameters remain reserved.
 
 When an effect attributes authorship, name both subjects. In
 `target.attribute("authors", work)`, the effect writes the `authors` party
@@ -372,6 +384,28 @@ declarations before you review them.
 
 ## Write scenarios
 
+Author a local scenario with `tell` from
+`@generalbusiness/dap-define/story`. Give it the definition, projections,
+explicit public TEST seeds, grants and founding fields. Its act methods
+check field names and types against that definition. Each act reads its
+expected item revisions from the fold, including the items that the
+maintained `also` resolver selects.
+
+For each step, supply an `OutcomeAssertion` with every entry's input,
+ordered effects and sends. Supply empty lists explicitly when the step
+writes nothing. `advance` requires the complete timed firings for that
+step. Generation refuses a different judge answer or any unasserted
+entry, effect, send or firing. These checks stay with the step that owns
+them; they add no fields to scenario v1.
+
+The [Lending story](../examples/lending/story.ts) is the complete example.
+It emits the retained
+[scenario file](../examples/lending/scenarios/application.json), including
+its refused membership and path cases. The story's `projection` steps
+read their rows from the same fold. Keep author-supplied projection
+metadata in the order you want it in the JSON file. `dap check` consumes
+the generated v1 JSON through its existing scenario path.
+
 A scenario states one invariant and shows the acts that reach it. Include
 the refused path that distinguishes the invariant, as well as the path
 that takes effect. Each tutorial's `run.ts` is a small scenario: it signs
@@ -437,6 +471,34 @@ and writes that canonical value first.
 Validation, pins and creation check the declaration and its record. They
 do not show that a host, an outside adapter or a whole application
 journey works. A live run is separate evidence.
+
+## Package several definitions
+
+For a package with one declared entry, use `items`, `entries`,
+`projection` and `manifest` from `@generalbusiness/dap-define/package`.
+Choose the slots to display, layout, roles, assets and browser entry.
+The builders derive field types and nullability, sorted states and act
+lists, host profile, capabilities and scope-reference connections from
+the definition. The
+[Lending package](../examples/lending/package.ts) and
+[Counter package](../apps/counter/package.ts) author their existing
+manifest data this way.
+
+Bind views with `views(definition, projections, roles)` from the same
+subpath. Select a projection and source through `card`, `carousel`,
+`record`, or `log`. The callback supplies `row`, `text`, and `when`.
+Use `text` holes for templates and `when` holes for flat row references
+in conditions. Item rows also supply `act(kind, label, when, options)`;
+that helper derives the required grant from the selected native act.
+Its optional `args` and `parameters` use that act's declared fields.
+Journal rows expose no act constructor.
+
+Choose an actor from the selected member fields. Use selected integer
+fields for scaled facts and time fields for age facts. Context and
+fallback templates can also use the callback's `waiting` reference.
+The manifest checks back targets after you supply the complete view
+map. The host still admits conditions, checks current authority, and
+submits native acts through its ordinary guards.
 
 To put several definitions in one signed package, read
 [Package reference](package-reference.md) and

@@ -1,8 +1,9 @@
 /** The lending library authored with typed helpers. The JSON file and pin remain the byte witness. */
 import type { DeclaredDefinition, Operand } from "@generalbusiness/dap-contract";
-import { by, define, normalize, equals, final, grants, item, live, member, none, one, open, party, ref, required, rule, scope, signer, tell, text, transition, value, type ItemDef, type Of } from "@generalbusiness/dap-define";
+import { by, define, normalize, equals, final, item, live, member, none, one, open, party, ref, required, rule, scope, signer, tell, text, transition, value, type ItemDef, type Of } from "@generalbusiness/dap-define";
+import { lendingRoles } from "./roles.ts";
 
-export const lendingGrants = grants({ establish: "lending.establish", member: "lending.member", staff: "lending.staff" });
+export const lendingGrants = { establish: lendingRoles.grant("lending.establish"), member: lendingRoles.grant("lending.member"), staff: lendingRoles.grant("lending.staff") } as const;
 
 export const library = item("library", {
   initial: "open", states: { open: live },
