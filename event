@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c2ed6c6feeaa3ae971f8c801bd69264ba5a9fba1","text":"Merge retired a covered predecessor; the successor is at packages/define/test/contract-forms.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c646bda35e5658f2129dc60b11132ee95cd5f2e2","text":"Merge retired a covered predecessor; the successor is at package-lock.json."}
