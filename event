@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:250ea71ea4c6c5739735143e4ba8cab1f0322237","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/publishing-provenance.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:25d9c9618579f5ecd5c72317976b9ef7c3b6f580","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/definitions/change.json."}
