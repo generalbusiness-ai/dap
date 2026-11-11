@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-10-live-level.md","body":{"commit":"9f3338ff8b46f9e08c5d006352d15e05a09c8a35","path":"notes/2026-11-10-live-level.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1a385d165d15f1c41cd59d4eb07d5f5b69934a77","text":"Merge retired a covered predecessor; the successor is at docs/kernel.md."}
