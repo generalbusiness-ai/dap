@@ -273,9 +273,30 @@ forms. The ordinary maintained link check reports 1,232 links and zero
 broken links. The failed gate reached no compiler or runtime test phase.
 Its raw receipts remain distinct from the focused attempts.
 
-Page and Card workflows passed at `699bd733`. The documentation follow-up
-still owes its successful full gate, controls and final-head browser
-workflows. No acceptance or deployment follows from these earlier passes.
+The second full gate at `d92fc933` passed its compiler and initial checks,
+all 150 Node cases and all 56 Counting cases. Plain reported 4,520 passes,
+two failures and one skip. Both failures compared MCP descriptions with
+stale references after canonical JSON changed named-field order. Native
+did not run. This failed unit supplies no successful gate or control
+baseline.
+
+The maintained MCP reference writer regenerated `docs/mcp-tools.json` once.
+All 75 tools retain their identities and order. Nine descriptions reorder
+existing field clauses, and five required-field arrays reorder their
+existing names. Every other value and schema stays exact. The Markdown
+reference and worked example now show the same descriptions. The existing
+inventory witness also compares each native table description exactly,
+with one row per tool. Its title and case count stay unchanged.
+
+Both affected MCP test files pass in ordinary read-only mode: thirteen
+cases across two files. Their compiler context also passes. These working
+checks follow the writer run and establish no gate acceptance. The failed
+gate receipts remain separate.
+
+Page and Card workflows passed at both `699bd733` and `d92fc933`. The MCP
+reference follow-up still owes its successful full gate, controls and
+final-head browser workflows. No acceptance or deployment follows from
+these earlier passes.
 
 The observed maintained AST parser output seals Grow's Text-module bridge.
 No route or gate assertion changed. The later working repair changes comparisons in two

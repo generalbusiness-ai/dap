@@ -87,7 +87,8 @@ describe("every activity is reachable, and every act renders", () => {
   });
 
   // Invariant: the tool reference of docs/mcp.md is what tools/list sends: each generic tool's description and schemas verbatim,
-  // and docs/mcp-tools.json the whole list for an admin of the demo room. MCP_WRITE_DOCS=1 writes the file from the derivation.
+  // each native table description as sent, and docs/mcp-tools.json the whole list for an admin of the demo room.
+  // MCP_WRITE_DOCS=1 writes the JSON file from the derivation.
   test("the tool reference is the list as sent", async () => {
     const mcp = new McpService({ service: "https://x", signer: fixedSigner(0), config: { read: async () => ({ service: "https://x" }), addRoot: async () => {} }, custody: memoryStore(), mode: "add" });
     const generic = (await mcp.page()).tools;
@@ -97,7 +98,11 @@ describe("every activity is reachable, and every act renders", () => {
     }
     const inventory = demoInventory("admin");
     const acts = bindingsOf(inventory, WORDS).filter((b) => listed(b, inventory)).map((b) => actTool(b, inventory, "default"));
-    for (const t of acts) expect(DOC, t.name).toContain(`| \`${t.name}\` | `);
+    for (const t of acts) {
+      const rows = DOC.split("\n").filter((row) => row.startsWith(`| \`${t.name}\` | `));
+      expect(rows, t.name).toHaveLength(1);
+      expect(rows[0]!.split(" | ").slice(2).join(" | "), t.name).toBe(`${t.description.replaceAll("|", "\\|")} |`);
+    }
     const list = `${JSON.stringify({ tools: [...generic.filter((t) => t.name !== "actions" && t.name !== "act"), ...acts] }, null, 2)}\n`;
     const file = new URL("../../../docs/mcp-tools.json", import.meta.url);
     if (process.env["MCP_WRITE_DOCS"] === "1") writeFileSync(file, await format(list, { parser: "json" }));
