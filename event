@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9984aa4e30c1b0f479a133c8ab4bc340ba0ee169","text":"Merge retired a covered predecessor; the successor is at scripts/check-definition-pins.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:99bc311d425dced92850a3f8aa752d11ab80ac30","text":"Merge retired a covered predecessor; the successor is at packages/define/test/fixtures/grow-room.ts."}
