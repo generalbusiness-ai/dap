@@ -6,7 +6,7 @@ import { accepted, member, tell, writesNothing, type OutcomeAssertion, type Stor
 import { lendingStory, lendingStorySpec } from "../../../examples/lending/story.ts";
 
 test("the Lending story uses real judges and regenerates its retained scenario bytes", async () => {
-  expect(await format(JSON.stringify(await lendingStory()), { parser: "json" })).toBe(readFileSync(new URL("../../../examples/lending/scenarios/application.json", import.meta.url), "utf8"));
+  expect(await format(JSON.stringify(await lendingStory(), null, 2), { parser: "json" })).toBe(readFileSync(new URL("../../../examples/lending/scenarios/application.json", import.meta.url), "utf8"));
 });
 
 // These grants and the scope's signed founding are scripted TEST authority, not native membership.

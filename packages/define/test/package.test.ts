@@ -7,10 +7,10 @@ import { lendingPackage } from "../../../examples/lending/package.ts";
 import { counterPackage } from "../../../apps/counter/package.ts";
 
 test("the Lending manifest regenerates its retained file bytes", async () => {
-  expect(await format(JSON.stringify(lendingPackage), { parser: "json" })).toBe(readFileSync(new URL("../../../examples/lending/dap.application.json", import.meta.url), "utf8"));
+  expect(await format(JSON.stringify(lendingPackage, null, 2), { parser: "json" })).toBe(readFileSync(new URL("../../../examples/lending/dap.application.json", import.meta.url), "utf8"));
 });
 test("the Counter manifest regenerates its retained file bytes", async () => {
-  expect(await format(JSON.stringify(counterPackage), { parser: "json" })).toBe(readFileSync(new URL("../../../apps/counter/dap.application.json", import.meta.url), "utf8"));
+  expect(await format(JSON.stringify(counterPackage, null, 2), { parser: "json" })).toBe(readFileSync(new URL("../../../apps/counter/dap.application.json", import.meta.url), "utf8"));
 });
 
 const roles = declareRoles({ admin: ["package.create", "package.edit"] });
