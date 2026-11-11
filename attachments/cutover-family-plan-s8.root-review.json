@@ -1,0 +1,9 @@
+{
+  "sourceSha256": "9beccfbfa386cfc5168316192c1054bb7e701b225292f675dde0976f9f0a307d",
+  "canonicalBaseUnchanged": true,
+  "appendOnlyDiffReproduced": true,
+  "actualSourceRowsVerified": 13,
+  "independentPeer": "cutover_family_plan full V1 and bounded V2 clear; confirmed author/controller cost and initial certificate corrections",
+  "combinedSha256": "bf0ad692cfa4344524beb354535f624c7544a7160bbdb69cbabf7a022b3001d4",
+  "qualification": "Plan amendment only; no source or validation or deployment."
+}

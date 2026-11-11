@@ -1,0 +1,182 @@
+{
+  "status": "ADDED SECTION ONLY; NO PUBLICATION; SOURCE CLOSED PENDING PLANNER",
+  "request": "93adab5279ac0480bfbbc3a33e2588e64a1c3e11",
+  "promise": "9c6ef68e7f8eb7a9a2616f9fc9ac1857c14238c4",
+  "actor": "builder",
+  "baseArtifact": {
+    "report": "69fed84313d3e123a7e264d31e0aa4eba4fa913f",
+    "attachment": "attachments/cutover-family-plan.md",
+    "gitBlob": "d7594d61eeeed74517937a8185b24406effb1f8a",
+    "sha256": "333e0627d6c210b5878eff3d3282c43c78a522651ebc7f6f1986591dfd70fbf1",
+    "bytes": 25462,
+    "identifiedThrough": "builder-only gitseq inspect69fed843, then exact canonical Git attachment read"
+  },
+  "scopeRuling": "68356c6c4d4f3d62c81a7566407d3e327bd32c9c",
+  "externalV3Context": {
+    "path": "/private/tmp/artroom-cutover-family-plan-v3-20261110/plan.md",
+    "sha256": "a13c64315dc6b870592d24abe8bb085bf6b1ecc7111cda0e8fbd6b3950bc2098",
+    "status": "External annotation only; cutover author confirms no later durable V3 report located; not a replacement artifact"
+  },
+  "sourceCheckpoint": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+  "acts": [
+    {
+      "label": "s8-request",
+      "event": "93adab5279ac0480bfbbc3a33e2588e64a1c3e11",
+      "kind": "request",
+      "rawSha256": "6c4c68069924f172777c2d166fd45b994439d7cea10919cb216eabbbc8b7cec9",
+      "gitEventBlob": "5060c2fce9a027d943f244551fa9accdbf32df5e"
+    },
+    {
+      "label": "s8-promise",
+      "event": "9c6ef68e7f8eb7a9a2616f9fc9ac1857c14238c4",
+      "kind": "promise",
+      "rawSha256": "bb4409e7841782e3930e7c124f6b55275bd7f119ea96aa3612f5df2357f49b1f",
+      "gitEventBlob": "1a3d5e4692f5136d53d3e85c314749c462ccde5a"
+    },
+    {
+      "label": "family-request",
+      "event": "9ecd3efadf9c4713f880929760a4c4477f549fe1",
+      "kind": "request",
+      "rawSha256": "d7d3fd9c9821280b553437d77eb7a291e684f7457091d46d867b1b042822ca09",
+      "gitEventBlob": "8203805c01e3f917d78a1a4e0af768151938ad21"
+    },
+    {
+      "label": "family-report",
+      "event": "69fed84313d3e123a7e264d31e0aa4eba4fa913f",
+      "kind": "report",
+      "rawSha256": "b7afa7b97ad4480e71e9ae30f2ebf96dcac0a63db39a6d796d8a9ed51136c467",
+      "gitEventBlob": "e4ee7c7b639414906e6589ca4faddee3a3daa648"
+    },
+    {
+      "label": "family-ruling",
+      "event": "68356c6c4d4f3d62c81a7566407d3e327bd32c9c",
+      "kind": "assert",
+      "rawSha256": "50b2085703ad4e0a5542055bfa051fa0a84aef160f8f7bc167c0fb1028faa503",
+      "gitEventBlob": "a0e6c6c4b439826be81bd1f1d65e184c3c78c29c"
+    },
+    {
+      "label": "november-review",
+      "event": "79daff0f3f5ab13b1f6c1e2b6274035c8ff42f67",
+      "kind": "request",
+      "rawSha256": "c4242dd418ca2ac295441e1d15b3b491cfee89b21872b9fc184f1fe3491976d9",
+      "gitEventBlob": "782bf73293d470e28ed1aea9d183bf0889fd17db"
+    },
+    {
+      "label": "october-review",
+      "event": "6dd06d03925e9eb34f4abc3e99b8ee81668d2ae3",
+      "kind": "request",
+      "rawSha256": "f7cf010703570ed6ac52dc60bcfa0ad8913f925bd5d76dec8a91428addded2e4",
+      "gitEventBlob": "88a678a2cb69711fe53ba31ea9ff13cf6583efb5"
+    },
+    {
+      "label": "order",
+      "event": "fc7576f8488f5125c1f56bbd95be7c1616657804",
+      "kind": "assert",
+      "rawSha256": "2c26ddd8f66bcc48c03bdcf890798ce3d6586778bce2613e6e237f429ae078b8",
+      "gitEventBlob": "eb2adff5c611fb26916a7c0403d8767c2a95743d"
+    }
+  ],
+  "sourceRows": [
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/rules-policy-v11.ts",
+      "gitBlob": "fe104135766a32889a3f6e5a21be4dd4f6ce95fd",
+      "sha256": "65417047041ff62824b017f2577e4f265b73d0a79845d25c3d43dd944c4179b1",
+      "bytes": 10519
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/rules-scope-v11.ts",
+      "gitBlob": "04e7ab98c5de22b3ac6ff93b6b4e5a288d47b8eb",
+      "sha256": "c11ba08d7302f1e976f00b132bf1dae38071057cc4385b7f69e014c89bdbbd4d",
+      "bytes": 11087
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/rules-policy-tree.ts",
+      "gitBlob": "d95d623816de97673f07b3a0b3b9f83e4eca91bd",
+      "sha256": "ac99a1991a1d0f75bcf53a329df4c28f8660071410d811aaf40765dd3f74f030",
+      "bytes": 8688
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/reservation.ts",
+      "gitBlob": "85409f103802a930b78e422bd16d6be407d7362c",
+      "sha256": "7e2c897ac0dcfa5b5dff6fac01119f5f6da5caadd09d11b0a4cc17e16e8ce098",
+      "bytes": 25733
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/reservation-v14.ts",
+      "gitBlob": "bbe28ca11ec0a35ec43a17fef975c3efbf3cd457",
+      "sha256": "7124699ead628c78c6090b4a96c7d366b7d89ef79f3b07222a2d75fd8083b14b",
+      "bytes": 14055
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/extents.ts",
+      "gitBlob": "6d7cc48ff3ea91002f26bffedc851b401f8a0d19",
+      "sha256": "d1496063bd15f9f22395ebbae27bef71be94525ff9a9fe6bf8fc103ce11d82a7",
+      "bytes": 31654
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/register.ts",
+      "gitBlob": "4beb6da9b28d7c233e25aef2ad45d03ef9a98715",
+      "sha256": "859c205aa8018f699a0b9debceb037485f231041d16ba21974c90f5d7e3e21f5",
+      "bytes": 29106
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/rules-scope.ts",
+      "gitBlob": "7a017f9f03b567d54562afd1bbe6082f4e7ecc47",
+      "sha256": "9753d816ed7bdb47afba26dc705c6d803ec66e64fe90544bede40dfc04438fe7",
+      "bytes": 39217
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/index.ts",
+      "gitBlob": "69fcee6bb0a4d4800e77ff50c52e9a5d14fe283e",
+      "sha256": "33b0b0eba66e5e250099faaf686b4f7666ab7524b0a9a5ac3b10026256ca1f23",
+      "bytes": 13328
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/failed-claim-cohort.ts",
+      "gitBlob": "65b95b93b018aed188ff408c87b3b4ea60c4d485",
+      "sha256": "b4c2ae5a4846237f80d836b5e10057ff7e867f9897cc0004608357bae39564ce",
+      "bytes": 350
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/test/rules-policy-v11.test.ts",
+      "gitBlob": "9a4c86d726e944a27f841cb69ab14a3f7883076e",
+      "sha256": "94f3ef1a23ec768da3909a4a37aff0c3c983e1024c7f6cc5a20a99f3e825bc44",
+      "bytes": 13903
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/test/reservation-authority.test.ts",
+      "gitBlob": "29ff1bfeb7501f2e73fdb4551570a03bb62a5fc9",
+      "sha256": "1ead6b99dfd6ac988d617e60e6ea7eb7e365eb7cf1e66ba21d6307d4807710f9",
+      "bytes": 17424
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/test/register.test.ts",
+      "gitBlob": "92220c08ef007bb888176cb8eeac00a8979c7617",
+      "sha256": "ea3397b7da58f6c8e66c14056777f4b9b54af294e23e9b35e7a55cf7126e79d0",
+      "bytes": 23370
+    }
+  ],
+  "decisionsRequested": {
+    "item2": "certified explicit zero opt-in recommended; alternatives absoluteban or historical permissive form",
+    "item3": "retain open and state intentional bypass recommended; alternative keys-only closes it",
+    "item5": "include existing certified policy contract and Native consumers in stable default recommended"
+  },
+  "mandatory": "Globalrequired+touchedextent check union with complete decision provenance",
+  "ruled": "One admin publishes alone; no new counting mechanism",
+  "qualification": "No source edit or application import; no helper, compiler, test, build, control, TLC, capture or signing operation. No Git/workroom/report publication. CLI read attempts refused config-lock access; builder connector inspect and readonlyGit supplied canonical public metadata. Prior artifacts remain untouched.",
+  "revision": "V2 qualifies single-person/controller approval cost and uncertifiedinitialstate. No proposedpolicychange.",
+  "sourcePeerQualification": "Cutover completed V1fullpeer; only confirmedcostcorrection plus safeinitialwording clarified. V2 boundedpeer pending."
+}
