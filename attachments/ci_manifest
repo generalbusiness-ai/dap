@@ -1,0 +1,299 @@
+{
+  "head": "de980a3d77145291de7b27e7e796974d8c963862",
+  "branch": "builder/identifiers-vectors-b-20261110",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-final-browser-ci-sealed-de980a3d/unit",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 169,
+      "sha256": "1f671345a3c92c2afca5a0c3e29b51bc43b3c951124f73e795a5a99facd405b7",
+      "mode": 256
+    },
+    {
+      "path": "raw-index.json",
+      "bytes": 50564,
+      "sha256": "48eb7d55e8e459c05bd57719701beccd0fd92b92076f2a78e6b29919bb0cc079",
+      "mode": 256
+    },
+    {
+      "path": "terminal-summary.json",
+      "bytes": 15155,
+      "sha256": "e8c758c8074aa8b5801b3f7e71d2d47d5c807dd2fe1a674645dd85b5a5844253",
+      "mode": 256
+    }
+  ],
+  "runs": [
+    {
+      "label": "page",
+      "run": {
+        "id": 43099179105,
+        "name": "Page browser scripts",
+        "path": ".github/workflows/page-browser.yml",
+        "head_sha": "de980a3d77145291de7b27e7e796974d8c963862",
+        "head_branch": "builder/identifiers-vectors-b-20261110",
+        "run_attempt": 1,
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/generalbusiness-ai/dap/actions/runs/43099179105"
+      },
+      "job": {
+        "id": 130785070738,
+        "name": "page-browser",
+        "run_id": 43099179105,
+        "run_attempt": 1,
+        "head_sha": "de980a3d77145291de7b27e7e796974d8c963862",
+        "head_branch": "builder/identifiers-vectors-b-20261110",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-11T20:59:07Z",
+        "completed_at": "2026-11-11T21:06:13Z",
+        "steps": [
+          {
+            "number": 1,
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:08Z",
+            "completed_at": "2026-11-11T20:59:09Z"
+          },
+          {
+            "number": 2,
+            "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:09Z",
+            "completed_at": "2026-11-11T20:59:14Z"
+          },
+          {
+            "number": 3,
+            "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:14Z",
+            "completed_at": "2026-11-11T20:59:20Z"
+          },
+          {
+            "number": 4,
+            "name": "Run npm ci",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:20Z",
+            "completed_at": "2026-11-11T20:59:29Z"
+          },
+          {
+            "number": 5,
+            "name": "Install the pinned browser tools in a scratch directory",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:29Z",
+            "completed_at": "2026-11-11T20:59:50Z"
+          },
+          {
+            "number": 6,
+            "name": "Run the page screenshot script",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:50Z",
+            "completed_at": "2026-11-11T21:00:25Z"
+          },
+          {
+            "number": 7,
+            "name": "Run the recorded demo captures",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:00:25Z",
+            "completed_at": "2026-11-11T21:02:16Z"
+          },
+          {
+            "number": 8,
+            "name": "Run the create room witness",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:02:16Z",
+            "completed_at": "2026-11-11T21:04:18Z"
+          },
+          {
+            "number": 9,
+            "name": "Run the local label witness",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:04:18Z",
+            "completed_at": "2026-11-11T21:06:10Z"
+          },
+          {
+            "number": 17,
+            "name": "Post Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:06:10Z",
+            "completed_at": "2026-11-11T21:06:10Z"
+          },
+          {
+            "number": 18,
+            "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:06:10Z",
+            "completed_at": "2026-11-11T21:06:10Z"
+          },
+          {
+            "number": 19,
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:06:10Z",
+            "completed_at": "2026-11-11T21:06:10Z"
+          }
+        ]
+      },
+      "allExpectedStepsSuccessful": true,
+      "captureSummary": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-final-browser-ci-observations-de980a3d/211011-fixed-ca3fa9ed/summary.json"
+    },
+    {
+      "label": "card",
+      "run": {
+        "id": 43099182682,
+        "name": "Card browser scripts",
+        "path": ".github/workflows/views-browser.yml",
+        "head_sha": "de980a3d77145291de7b27e7e796974d8c963862",
+        "head_branch": "builder/identifiers-vectors-b-20261110",
+        "run_attempt": 1,
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/generalbusiness-ai/dap/actions/runs/43099182682"
+      },
+      "job": {
+        "id": 130785122603,
+        "name": "views-browser",
+        "run_id": 43099182682,
+        "run_attempt": 1,
+        "head_sha": "de980a3d77145291de7b27e7e796974d8c963862",
+        "head_branch": "builder/identifiers-vectors-b-20261110",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-11T20:59:45Z",
+        "completed_at": "2026-11-11T21:03:32Z",
+        "steps": [
+          {
+            "number": 1,
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:46Z",
+            "completed_at": "2026-11-11T20:59:47Z"
+          },
+          {
+            "number": 2,
+            "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:47Z",
+            "completed_at": "2026-11-11T20:59:51Z"
+          },
+          {
+            "number": 3,
+            "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:51Z",
+            "completed_at": "2026-11-11T20:59:59Z"
+          },
+          {
+            "number": 4,
+            "name": "Run npm ci",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T20:59:59Z",
+            "completed_at": "2026-11-11T21:00:09Z"
+          },
+          {
+            "number": 5,
+            "name": "Install the pinned browser tools in a scratch directory",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:00:09Z",
+            "completed_at": "2026-11-11T21:00:28Z"
+          },
+          {
+            "number": 6,
+            "name": "Refuse a generated card module that its sources do not build",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:00:28Z",
+            "completed_at": "2026-11-11T21:00:28Z"
+          },
+          {
+            "number": 7,
+            "name": "Prepare the owned Worker test dependency",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:00:28Z",
+            "completed_at": "2026-11-11T21:00:28Z"
+          },
+          {
+            "number": 8,
+            "name": "Run the card browser script",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:00:28Z",
+            "completed_at": "2026-11-11T21:02:16Z"
+          },
+          {
+            "number": 9,
+            "name": "Run the Grow room browser script",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:02:16Z",
+            "completed_at": "2026-11-11T21:02:24Z"
+          },
+          {
+            "number": 10,
+            "name": "Run the Grow routing browser script",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:02:24Z",
+            "completed_at": "2026-11-11T21:03:29Z"
+          },
+          {
+            "number": 19,
+            "name": "Post Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:03:29Z",
+            "completed_at": "2026-11-11T21:03:29Z"
+          },
+          {
+            "number": 20,
+            "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:03:29Z",
+            "completed_at": "2026-11-11T21:03:29Z"
+          },
+          {
+            "number": 21,
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "started_at": "2026-11-11T21:03:29Z",
+            "completed_at": "2026-11-11T21:03:29Z"
+          }
+        ]
+      },
+      "allExpectedStepsSuccessful": true,
+      "captureSummary": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-final-browser-ci-observations-de980a3d/211011-fixed-ca3fa9ed/summary.json"
+    }
+  ],
+  "actualTotalJobs": 2,
+  "actualTotalSteps": 25,
+  "originalOutcome": "PASSED",
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-final-browser-ci-sealed-de980a3d/private",
+    "manifestSha256": "6ac3f96c3a8b3a625482d9879b61fd622c8b237d3ad5143f13ca5a2ea23ca725",
+    "files": 133,
+    "minimumRetentionDaysAfterLanding": 30
+  },
+  "qualification": "Exact B chosen push-or-workflow_dispatch attempt1 CI at bound head/tree. Actual step/job/GET/catalog counts retained; outcome derives from every reported step and run. No automatic rerun, inferred case count, live acceptance or deployment claim. Original observation modes retained; archive copies400/500."
+}

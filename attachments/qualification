@@ -1,0 +1,17 @@
+{
+  "validatedSourceHead": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+  "validatedSourceTree": "e2a4a809609d99cb5d652e328b57f7c016ba8553",
+  "fullAggregateSha256": "4c49f9bc21b100b53f2d90ce8eeabfd2f23b0702e527d6e145504972d7e2de51",
+  "committedDescriptorSha256": "6d6cc21e1cb60f34816120eb4b213e63fc24eb2b6807779e13f9c51ac531191b",
+  "currentPositiveCases": 37,
+  "historicalCases": 5844,
+  "historicalOwners": 706,
+  "negativeControlChildExit": 1,
+  "controlControllerExit": 0,
+  "wholeGateOutcome": "FAILED1",
+  "secondGateRun": false,
+  "ordinaryRawLogsSealed": false,
+  "parentIdentifiersRequest": "05d618e2",
+  "nativeIdentityCutoverAccepted": false,
+  "deploymentPerformed": false
+}

@@ -1,0 +1,40 @@
+{
+  "head": "de980a3d77145291de7b27e7e796974d8c963862",
+  "tree": "1c2eea2a7205e152d3c3a159724f1a0d9594e8f9",
+  "sourceHead": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+  "sourceTree": "e2a4a809609d99cb5d652e328b57f7c016ba8553",
+  "documentationDelta": [
+    "notes/implementation/2026-11-10-identifiers-vectors-b.md",
+    "notes/implementation/evidence/2026-11-11-identifiers-vectors-b.manifest.json"
+  ],
+  "unchangedOtherGitBlobsAndModes": 4657,
+  "main": "ab8026147478c43e308aa6bb9be31e737153d0c3",
+  "candidatePaths": 25,
+  "allOther4634MainBlobsAndModesExact": true,
+  "builderAuthorAndCommitter": true,
+  "aggregateManifestSha256": "4c49f9bc21b100b53f2d90ce8eeabfd2f23b0702e527d6e145504972d7e2de51",
+  "committedDescriptorSha256": "6d6cc21e1cb60f34816120eb4b213e63fc24eb2b6807779e13f9c51ac531191b",
+  "ordinaryChecks": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-de980a3d-working-checks/results.json",
+    "sha256": "8d3e1047a601b137d047571f00d39a28f9b02a54fc44efe14d9d239f2eafb2ac",
+    "bytes": 2017,
+    "mode": 384,
+    "actualExits": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "validation": {
+    "ruling": "15d3b0bde9c627831617eb879878854235dd6c3b",
+    "currentFocusPassed": 37,
+    "carriedHistoricalCases": 5844,
+    "controlNegativeChild": 1,
+    "controlController": 0,
+    "wholeGateOutcome": "FAILED1",
+    "secondWholeGateRun": false
+  },
+  "qualification": "Documentation-only follow-up. Source and tests remain at validated3da; all original outcomes retain heads. Working rawlogs stay plain/unsealed and outside CI custody. ExactheadCI/review/landing/deployment unclaimed."
+}
