@@ -6,6 +6,14 @@ E landed at `8289d9e5`. This source integrates item 3, typed views, after
 an ordinary merge that preserves E's expression context and H's grant
 and provenance metadata.
 
+This source now includes main `74c958d0`, after G's typed contract forms
+and S9's security pages. Merge `edd371c6` preserves all 4,610 paths outside
+H's 32 owned paths. Thirty owned paths retain their earlier H bytes; the
+Define index and application guide combine both branches' changes.
+Current validation is pending. The earlier focus at `4dbec9a2` passed one
+current compiler context and 67 cases, with twelve compiler contexts and
+thirteen authoring cases carried from their recorded heads.
+
 ## What changed
 
 The package subpath derives projections and manifest fields from the
@@ -50,6 +58,12 @@ It preserves the parent's inherited forms and reports the parent digest
 and sorted added form names through `compile.provenance`. The pinned
 declaration carries none of that metadata.
 
+The existing three-case CLI application owner now invokes the actual
+`checkCommand` with `check . --config` for the Counter and Lending package
+files. It requires successful native scenario replay and projection checks
+and retains every earlier package, asset and direct replay assertion.
+The two calls use public TEST authority and disable outside effects.
+
 ## Decisions and why
 
 The existing act helpers widened a grant literal to `GrantRef<string>`.
@@ -83,15 +97,18 @@ empty optional slot map beside a real state assertion.
 
 | Check | Command | Exit | Output digest |
 |---|---|---|---|
-| Source work | No validation body booked yet | UNRUN | Unknown |
+| Current merged source | One whole H gate and two distinguishing controls remain owed | UNRUN | Unknown |
 
-No compiler, parser, test, scenario generator, build, capture, control or
-gate body has run for this source draft. Root owns the later focused
-slot, static checks, one gate, sealed evidence and exact-head review.
+No validation body has run at this merged source. Earlier focused results
+and unsuccessful units keep their original heads and outcomes. The current
+head still owes static checks, one gate, two distinguishing controls,
+sealed evidence and exact-head review. The whole gate can cover the
+changed CLI owner without repeating the earlier focused batch.
 
 ## Open limits
 
-Request `d49269fd` still owes F integration and all validation.
-The later merge must retain F's normalization and row-name transfer
-with H's provenance copy. This source draft supplies no passing
-manifest, scenario, gate, deployment or live-acceptance evidence.
+Request `d49269fd` still owes current validation, review and landing.
+The merged source retains F's normalization and row-name transfer before
+H's provenance copy. The compiler closure, owned dependency bindings and
+five-project Native registry need current frozen bindings before a body
+runs. This preparation supplies no current gate or control result.
