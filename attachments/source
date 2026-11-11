@@ -1,0 +1,124 @@
+{
+  "status": "SOURCE ONLY; factory/body UNRUN",
+  "head": "5f749419ff7357d2d8320699ae8f1cbf47821388",
+  "tree": "55c5ba5866689d1a08a5f2003020ec1500fd598d",
+  "main": "74c958d0cecd17f7d668518184c66e58c1aa1829",
+  "files": {
+    "README.md": {
+      "sha256": "0b16901c423b6aa3755fc7076f5cf08807906787b76f6e1ea6629366f067b2c9",
+      "mode": 256,
+      "bytes": 1038
+    },
+    "analysis.from-H4db.diff": {
+      "sha256": "bdbef64c50a3fba77e199d025bd06e14557150b1b9d6c3e789ec2d596cbfbe2a",
+      "mode": 256,
+      "bytes": 1096
+    },
+    "analysis.py": {
+      "sha256": "6f7b3803bcb4013ff4ddfddd97b5bd054650ff9c1ac9bd8d3762a09d1e823dd5",
+      "mode": 256,
+      "bytes": 9744
+    },
+    "driver.from-H4db.diff": {
+      "sha256": "59beabc7acff54835f897c703672c6ef5ccec8d78386288eebc5e4b00ab30e05",
+      "mode": 256,
+      "bytes": 4425
+    },
+    "driver.py": {
+      "sha256": "da549401b83c5099d53ca514802183e588448c42555566c84cc190735c64f26c",
+      "mode": 256,
+      "bytes": 27945
+    },
+    "freeze.cli.metadata.SOURCE.py": {
+      "sha256": "caf81fcf79c289bd95a8c3b98555118609e35d6839f7acc3b72ad2fa63c30219",
+      "mode": 256,
+      "bytes": 6853
+    },
+    "namespace.expected.json": {
+      "sha256": "c6241a74fa497e5b402fb454aee2442048c82ed5952013f68321637448bf558b",
+      "mode": 256,
+      "bytes": 1745190
+    },
+    "node-analysis.py": {
+      "sha256": "925bf72855d87197d4b2a7744743866d521b983562f587da7282c216c8e539e2",
+      "mode": 256,
+      "bytes": 5445
+    },
+    "outer.py": {
+      "sha256": "d516154507f4c79c880ca7f1f39d95dc28f70b59dcd1d32242fff1449cd61e2c",
+      "mode": 256,
+      "bytes": 14033
+    },
+    "plain.config.mts": {
+      "sha256": "210fe836e28b6317023ae2e2e5c46fdeb201eb1276c066f70b8ce86c235d3b75",
+      "mode": 256,
+      "bytes": 510
+    },
+    "plain.plan.TEMPLATE.json": {
+      "sha256": "2efa32af7ef0bb7b8546663a43e38212bc45fdcde0e6c6edb494ff90281aec9f",
+      "mode": 256,
+      "bytes": 3616670
+    },
+    "plan.TEMPLATE.json": {
+      "sha256": "81fabf2ae2f25cb4a6c02dffef59dc421a98530de93bb65d16731096649ff910",
+      "mode": 256,
+      "bytes": 4468328
+    },
+    "python-runtime.json": {
+      "sha256": "59968fcaa45c0b0cefc8d744b935d15743242dbb01325196c773cb795b260f0a",
+      "mode": 256,
+      "bytes": 225772
+    },
+    "rss-sampler.py": {
+      "sha256": "6cb1c1f13f9bb7530e602325a531f066b1af8f9c6327ebbc26343423dc67c6f0",
+      "mode": 256,
+      "bytes": 9670
+    }
+  },
+  "externalInputs": [
+    {
+      "path": "/private/tmp/artroom-h5f749-namespace-actual-v2-20261111/namespace.actual.json",
+      "sha256": "9149ac83b31161a537ebdb62beb0375e8c6e45891e26c98a16f7de96e09f9f22",
+      "mode": 256,
+      "bytes": 60315
+    },
+    {
+      "path": "/private/tmp/artroom-h5f749-namespace-actual-v2-20261111/refresh-audit.json",
+      "sha256": "a61ba3d718da2b30b1b6a04f84f7d32029184ce929cf5ce54868d08b9aa42d89",
+      "mode": 256,
+      "bytes": 2120929
+    },
+    {
+      "path": "/private/tmp/artroom-h5f749-namespace-actual-v2-20261111/actual.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "mode": 256,
+      "bytes": 2
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h-literal-cli-source/proof.json",
+      "sha256": "0e281ee3d782439359d89e956c233650f763a012ad36c3a14cea90e9b9c9f4df",
+      "mode": 256,
+      "bytes": 982
+    }
+  ],
+  "actualNamespace": {
+    "path": "/private/tmp/artroom-h5f749-namespace-actual-v2-20261111/namespace.actual.json",
+    "sha256": "9149ac83b31161a537ebdb62beb0375e8c6e45891e26c98a16f7de96e09f9f22",
+    "mode": 256,
+    "bytes": 60315
+  },
+  "namespaceExit": "/private/tmp/artroom-h5f749-namespace-actual-v2-20261111/actual.exit",
+  "previousController": {
+    "path": "/private/tmp/artroom-phase2-h-focus-formatter-source-4dbec9-20261110/SOURCE.READY.json",
+    "sha256": "91df780de2a870390012ba02eda6c741ca9c1a8b2ae2f5a983640890f0ef2f3d"
+  },
+  "booking": null,
+  "results": null,
+  "expected": {
+    "compiler": 1,
+    "Plain": 3,
+    "Node": 0,
+    "Native": 0,
+    "wholeOwners": 1
+  }
+}
