@@ -133,7 +133,8 @@ keeps Define out of dap-lanes' runtime dependencies.
 ## JSON compiler inputs
 
 Planner ruling `47ade9f5` permits `resolveJsonModule: true` in the seven
-additional configurations below. Each edit adds that option alone. The
+original additional configurations below and any further affected compiler
+context. Each edit adds that option alone. The
 production contract, bytes, and derive configurations keep their options,
 and their runtime source imports no JSON. The kernel boundary check keeps
 its assertions.
@@ -159,9 +160,14 @@ which reads `TextEncoder` and `TextDecoder`. The lane configuration had
 inherited an empty `types` list, so the same narrow type entry as Define
 completes this compile-time closure. Grow includes its new authoring
 directory. MCP and Scope test configurations already support
-JSON imports. Define's pin witness reads retained JSON through `readFileSync`,
-so its compiler needs no new JSON option. This table records static source
-imports. The focused compiler pass must confirm the complete closure.
+JSON imports. Define's pin witness reads retained JSON through `readFileSync`.
+Its existing type fixture now imports both real lane runtime wrappers so
+that the same compile context checks their JSON assertions. That additional
+edge requires `resolveJsonModule: true` in `packages/define/tsconfig.test.json`
+under the same ruling. This one test-configuration JSON edit changes no
+definition JSON or retained pin. Define's production configuration stays
+unchanged. This table records static source imports. The focused compiler
+pass must confirm the complete closure.
 
 ## Slot modifiers and runtime JSON types
 
@@ -175,8 +181,9 @@ Lane authoring retains the exact constructor types in `changeSource` and
 `issueSource`. Runtime JSON imports have arrays rather than authored tuple
 cardinality. The lane-only `DefinitionData` view keeps readonly arrays,
 literal element values and object keys without promising those lengths.
-It handles primitives first so branded grant strings stay strings. Only
-the exported runtime data aliases use this view. The wrappers keep their
+It projects branded grant and refusal names to their underlying string
+names before handling ordinary primitives. Only the exported runtime data
+aliases use this view. The wrappers keep their
 existing single assertions and type-only imports. Grow's existing mutable
 contract aliases need no change.
 
@@ -191,20 +198,45 @@ The symbol audit covers all seven Define markers. `ACT_NAME`, `TYPE`,
 and `RECORD_ELEMENT_KEYS` describe authoring types. `INLINE_RULE` and
 `DECLARATIONS` hold nonenumerable authoring metadata. The JSON view omits
 object keys of each symbol type if they occur. Primitive `GRANT` and
-`REASON` brands remain intact because the primitive branch returns the
-original type before the object mapping. This type view neither removes
-runtime properties nor changes serialization.
+`REASON` markers belong to authoring strings, not JSON. The continuation at
+`7098b54d` stopped in compiler-06 because the earlier primitive branch kept
+those brands in the data view. The view now extracts each underlying name
+with the same conditional inference pattern as Define's `GrantNames`.
+Constructor values still carry the brands. The data aliases carry the
+literal names without those authoring markers. This type view neither
+removes runtime properties nor changes serialization.
 
 The existing type fixture checks the overwritten author flag, retained
 slot modes, both performer slots, exact constructor tuples, and readonly
 JSON element values. It also checks exact authored act identity, rejects
-`fact(jsonAct)`, omits nested object symbol keys, and preserves both
-primitive brands. Existing runtime tests and their assertions stay.
+`fact(jsonAct)`, and omits nested object symbol keys. The fixture proves
+that real vocabulary constructors retain both brands, plain names cannot
+impersonate them, and materialized grant/reason names remain literal and
+unbranded even inside readonly arrays. It directly imports both actual
+runtime wrappers, so their JSON assertions belong to this same compile
+context. Existing runtime tests and their assertions stay.
+
+## Working compiler checks
+
+Ruling `1ce32e09` separates ordinary working checks from acceptance evidence.
+Compiler-06 now passes with the corrected JSON view. All twenty-one selected
+compiler contexts pass on the repaired source. These working runs establish
+no acceptance, gate, or deployment result.
+
+The checks also corrected three fixture types: the declaration helper now
+retains its literal act keys, the foreign-send fixture narrows the send kind,
+and the description fixture names its already-required presented pin.
+Their assertions and case counts stay unchanged. Grow's Worker entry uses
+`String(packet)` with Wrangler's existing Text module rule; imported text
+keeps its exact signed packet bytes while the JSON-aware compiler accepts
+the entry. The signed packet, release and publisher stay unchanged.
 
 ## Validation status
 
-The producer completed under its separate evidence. Both focus attempts
-stopped at compiler-06 before runtime owners ran. Compiler and runtime
-checks for this symbol-key repair remain **UNRUN**. This repair changes no
-runtime object expression, JSON, pin or kernel source. The retained
-whole-definition byte and pin witnesses still govern the next checks.
+The producer completed under its separate evidence. All three focus
+attempts stopped at compiler-06 before runtime owners ran. The previous
+source and raw failures remain separate records. The next sealed continuation
+and the full gate remain **UNRUN**. The repair changes one test-configuration
+JSON flag and the working-check fixes above. Definition JSON, retained pins,
+authored runtime object expressions and kernel source stay unchanged. The
+retained whole-definition byte and pin witnesses still govern acceptance.

@@ -157,7 +157,7 @@ describe("descriptions are derived from the whole declaration", () => {
       acts: { ...change.acts, "propose-manifest": {
         ...change.acts["propose-manifest"],
         presents: { ...change.acts["propose-manifest"].presents,
-          pin: { ...change.acts["propose-manifest"].presents.pin, required: true },
+          pin: { ...change.acts["propose-manifest"].presents!.pin, required: true },
         },
       } },
     } as const;

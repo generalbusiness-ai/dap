@@ -14,9 +14,9 @@ const grant = grants({ establish: "forms.establish", open: "forms.open", edit: "
 const root = item("root", { states: { open: live } });
 const establish = open(root, grant.establish);
 
-function declaration(
+function declaration<const A extends Record<string, ActType>>(
   items: readonly ItemDef[],
-  acts: Record<string, ActType>,
+  acts: A,
   options: {
     receives?: Record<string, ReceiveType>;
     timed?: Record<string, TimedRule>;
