@@ -1,0 +1,27 @@
+# Clarify the lifetime of a held live genesis
+
+Ruling 70186a25 item 6 says a live scope reads sender genesis once and holds
+it. Does this permit the following bounded Scope-instance interpretation?
+
+The receiver reuses an already checked source genesis at position 0, or
+makes one existing bounded exact-proof read on a cold miss. It holds the
+immutable checked bytes in a cache keyed by full SequenceRef, bounded by
+32 frames and 8 MiB at current entry bounds. Completed frames can leave
+by bounded eviction; restart loses the instance cache. A later use then
+makes a fresh exact read and verifies the same genesis again. Concurrent
+cold inputs may duplicate a bounded read; no pending map or queue exists.
+No cache hit supplies authority, Native birth proof or from.pin evidence.
+
+This means once while held, not one remote read for the room's permanent
+lifetime. It adds no durable cache payload, SQL row or archive export and
+keeps the existing Native retained-byte/reservation ledger unchanged.
+
+If item 6 instead requires permanent durable retention and one read across
+restarts, that is a different construction. Ordinary retained birth uses
+need explicit byte reservations and archive/privacy treatment; an unnamed
+private retained blob cannot be added without breaking current Replay byte
+accounting. The builder will not choose that larger construction silently.
+
+This question concerns live cache lifetime only. The caller-only offline
+record in 70186a25 and the after-checker-answer condition of 14493009 stay
+unchanged. No code or validation ran.
