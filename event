@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7a6ab8d929240688b2ed92057d1953e8c46f77dd","text":"Merge retired a covered predecessor; the successor is at apps/counter/vitest.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7f53882d38e60fc9cab16e3adfb5eeccb843cb4a","text":"Merge retired a covered predecessor; the successor is at packages/define/test/provenance.test.ts."}
