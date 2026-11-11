@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:817ebea1c2b5ca44afb14a8fbc1883dfa6abebb4","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/object.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8300651f9cec5536a7c2ab6e2c8488d43f10129b","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/evidence-rules-real-fixture.ts."}
