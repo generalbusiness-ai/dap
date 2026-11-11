@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:86cc06ce2f7f9d23af3a69fdb8ac1d4f1eae75e9","text":"Merge retired a covered predecessor; the successor is at apps/counter/vitest.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8a709baa9495b51e20c7b16bd08ae51d76c46bca","text":"Merge retired a covered predecessor; the successor is at examples/lending/story.ts."}
