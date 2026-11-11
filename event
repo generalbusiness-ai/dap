@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/tsconfig.json","body":{"commit":"43acea3c0c3c40528face0cfc0aeeba0e95fba4c","path":"scripts/tsconfig.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0010c19a5764e4aa28312be3d3b0309cbf714eb8","text":"Merge retired a covered predecessor; the successor is at packages/define/test/pins.test.ts."}
