@@ -26,6 +26,7 @@
     "@cloudflare/workers-types": "5.20260815.1",
     "@generalbusiness/dap-bytes": "0.1.0-dev.1",
     "@generalbusiness/dap-client": "0.1.0-dev.1",
+    "@generalbusiness/dap-define": "0.1.0-dev.1",
     "@generalbusiness/dap-derive": "0.1.0-dev.1",
     "@generalbusiness/dap-replay": "0.1.0-dev.1",
     "@generalbusiness/dap-scope": "0.1.0-dev.1",

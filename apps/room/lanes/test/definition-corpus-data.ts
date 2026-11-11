@@ -23,7 +23,9 @@ export function foreignDestinationChange() {
       ...changeDemo.acts.merge,
       fields: { ...changeDemo.acts.merge.fields, foreign: { type: "scope", kind: "destination", required: true } },
       effects: [...changeDemo.acts.merge.effects, { ref: { slot: "foreign", from: { field: "foreign" } } }],
-      sends: changeDemo.acts.merge.sends.map(form => ({ tell: { ...form.tell, to: { slot: "foreign" } } })),
+      sends: changeDemo.acts.merge.sends.map(form => "tell" in form
+        ? { tell: { ...form.tell, to: { slot: "foreign" } } }
+        : form),
     } },
   } as const satisfies DeclaredDefinition;
 }

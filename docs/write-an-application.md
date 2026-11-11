@@ -106,6 +106,40 @@ with `elements(list, "memberName")`. An unannotated list exposes only
 Use `elementMember(row, "self")` to read a declared member named `self`;
 `row.self` reads the whole element.
 
+Use `reference(fragmentBytes)` for a document or entry citation. The bound
+limits its optional UTF-8 fragment. A citation grants no authority and
+retains no dependency. Wrap the type in `required` or `optional`, as for
+other fields, and let `compile` check the bound.
+
+Use `withDefault(optional(type), start)` for an act field with a default.
+Use `on.every(fieldOrSlot, ...states)` for a list of local items and
+`on.notSigner(...partySlots)` to exclude the signer. `some(range(...))`
+requires a matching item. To send a bounded report, put
+`collect(range(...), members)` in a send field. Use `authorsOf(range(...),
+partySlot)` as an additional source of an attribution effect.
+
+To compare a fetched field fact with the current input, use
+`isFact(f.report, [equals({ field: "label" }, f.label)])`. The left read
+names a field in the fetched entry; the right read names the current
+input. Only a field fact accepts these comparisons. Pass `where` and
+`except` in `sameSet` options to filter its item range before it matches
+the list's keys. The filter reads the scanned item, not a list element.
+
+Redact a detached text with `on.redact(slot)`. Declare a settlement mark
+with `value.required(bool, false)` and `on.settlesBy(mark, ...states)`.
+Set that mark only to `constant(true)`. In a `relate` handler, use
+`update("state")`, `update("item")`, or `update("revision")`. Use
+`resultReason` only in a send's result effects. A timed rule can notify
+a party slot through `attention`; its notice takes no condition.
+
+Pass durability and capacity as `define` options, for example
+`level: { name: "recorded", version: 1 }` and
+`capacity: { name: "whole-scope", version: 1 }`. Omit either option to keep
+it out of the pinned bytes. Pass handler `late`, `order`, and `copies`
+options directly to `receive`, and result clauses directly to the send
+helper. Use `part(read, { of: entryPart, then: "scope" })` for a compound
+entry part. These existing options need no separate constructors.
+
 Keep these four forms distinct:
 
 - **Builders:** author item, act, handler, and module values that compile
@@ -123,16 +157,25 @@ membership, destination, or rules definitions through these helpers.
 The compiled declaration remains the data that a scope pins and judges.
 Importing authored code gives that code no authority over the scope.
 Use the [generated vocabulary](../spikes/typed-surface/VOCABULARY.md) to
-find helper names and forms. The
-[Lending definition](../examples/lending/definition.ts) and
-[Counter commitments](../apps/counter/commitments.ts) show complete values.
+find helper names and forms. The [Lending definition](../examples/lending/definition.ts),
+[Counter commitments](../apps/counter/commitments.ts),
+[Grow Room](../examples/grow/authoring/room.ts),
+[Grow Site](../examples/grow/authoring/site.ts),
+[Change](../apps/room/lanes/authoring/change.ts), and
+[Issue](../apps/room/lanes/authoring/issue.ts) show complete values.
+
+Grow and the lanes keep authoring offline. Runtime wrappers import one
+generated JSON artifact per definition. Lane wrappers import their types
+from the authoring modules with `import type`. Grow wrappers retain the
+mutable contract type that its demo variants use. Runtime paths never
+import Define or an authoring module by value.
 
 When an effect attributes authorship, name both subjects. In
 `target.attribute("authors", work)`, the effect writes the `authors` party
 slot on `target`. Its nested `attribute.of` names `work`, whose author
 slots supply those authors. The effect's outer `of` names `target`.
 
-To check the retained Lending and Counter JSON and pin files, run:
+To check all six authored definitions against their retained JSON and pins, run:
 
 ```sh
 node --import tsx scripts/check-definition-pins.mjs
@@ -140,7 +183,11 @@ node --import tsx scripts/check-definition-pins.mjs
 
 The gate runs this check without changing the retained files. If a file
 differs, inspect the authored change before you regenerate and review its
-new pin.
+new pin. To regenerate Grow, run the same command with `--write grow`.
+To regenerate the lanes and their descendants, run
+`node apps/room/lanes/scripts/pin.mjs`. The lane producer writes both
+base parents before it imports a descendant. Its opt-in successor modes
+check the parents without rewriting them.
 
 ### Release status
 
@@ -446,7 +493,7 @@ Checked against main `6bfb6e16` on 10 November 2026. Sources:
 [the package validation](../packages/platform/src/validate-package.ts),
 [the lane pin script](../apps/room/lanes/scripts/pin.mjs),
 [the lending definition](../examples/lending/definition.ts), and
-[the Grow device forms](../examples/grow/device.ts). The validation and
+[the Grow device forms](../examples/grow/authoring/forms.ts). The validation and
 pin commands on this page ran on 12 October 2026 at main `d309b6b9`, and
 the printed digests are from that run. The same validation at main
 `6bfb6e16` prints the same digests. The scope-creation commands were

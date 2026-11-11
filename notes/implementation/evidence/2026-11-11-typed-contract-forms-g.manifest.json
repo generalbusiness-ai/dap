@@ -1,0 +1,426 @@
+{
+  "qualification": "Final G evidence aggregate. Actual gate and controls passed at818; four focused failures, two failed gates and first controls setup failure retain their distinct outcomes.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g-final-818/unit",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g-final-818/unit",
+  "checkpoint": "818009b868881508f04c65a087a2df88e4f53516",
+  "head": "818009b868881508f04c65a087a2df88e4f53516",
+  "tree": "ab69e56f6e9ca2480e1ae83104c2882f99e2cc4d",
+  "fileCount": 40,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3560,
+      "sha256": "8173faad7bc42db0ada5e3a793202ad58b19b84510b9ca7cd0ed77d56ba00de6",
+      "mode": 256
+    },
+    {
+      "path": "ci818-card.json",
+      "bytes": 2802,
+      "sha256": "599d52a1474f0085f1072158951c57f4d6d44cbccc304e0c884711cc42707df5",
+      "mode": 256
+    },
+    {
+      "path": "ci818-page.json",
+      "bytes": 2581,
+      "sha256": "2ced03eb1b3a0bc6a931663192688d37a8ae3040a1f177b7e31e04e68762b943",
+      "mode": 256
+    },
+    {
+      "path": "controls-final-root-audit.json",
+      "bytes": 3653,
+      "sha256": "bce98065d5dc7c12125efac3ea6c35bfe2fb8a543287a55376ec6e709616e0dd",
+      "mode": 256
+    },
+    {
+      "path": "controls-first-setup-audit.json",
+      "bytes": 5435,
+      "sha256": "779cde7c8c203bd175154500e188bd720d7eeae9eb39ddf3ca8243e8a4029049",
+      "mode": 256
+    },
+    {
+      "path": "controls-seal-peer.json",
+      "bytes": 1402,
+      "sha256": "eba256dfb070fe8a21dd179ffae8dd1d7d86b92616ffe01e585a69b5e1e84430",
+      "mode": 256
+    },
+    {
+      "path": "controls-seal-root-readback.json",
+      "bytes": 597,
+      "sha256": "8008c25bde1c89eced76a77e0b0e80fe05468b62b431ccc8a3f9c5b0cdd10816",
+      "mode": 256
+    },
+    {
+      "path": "final-controls-manifest.json",
+      "bytes": 1968,
+      "sha256": "324d99e143f5a1507ceb32b5abeaec670358de67f27238b903a1bb83e584f564",
+      "mode": 256
+    },
+    {
+      "path": "final-controls-raw-index.original.json",
+      "bytes": 4621049,
+      "sha256": "2228d20d07b9c230aed31fe7508d39c6476b87365c14eaa9bb0e540fda071c2a",
+      "mode": 256
+    },
+    {
+      "path": "final-controls-summary.json",
+      "bytes": 2419,
+      "sha256": "5b0f97d1b5473ff7dea526017653ec86bb96d3f3fbfcac6748d36a426205303c",
+      "mode": 256
+    },
+    {
+      "path": "final-gate-manifest.json",
+      "bytes": 1582,
+      "sha256": "535c08aab2a5cd6d66d77539a258239cfde4aac7336238b14401089908d7dd26",
+      "mode": 256
+    },
+    {
+      "path": "final-gate-raw-index.original.json",
+      "bytes": 542101,
+      "sha256": "80697199d0ab89423b4ae4b442566802ae0792efd0f69e43bc287ad7817082e0",
+      "mode": 256
+    },
+    {
+      "path": "final-gate-summary.json",
+      "bytes": 2033,
+      "sha256": "b6d1bfa332107c580ca57a3eda06833eb53dd5dede653dcfd9113ec96334d101",
+      "mode": 256
+    },
+    {
+      "path": "focus1-audit.json",
+      "bytes": 3389,
+      "sha256": "443877ee473436953b7658d31c0cfce77c64a9f58130c9dafd835a48d523144f",
+      "mode": 256
+    },
+    {
+      "path": "focus1-compiler-ledger.json",
+      "bytes": 33911,
+      "sha256": "a515846ee0bf51a6d49b63b9b0ff9d0ef99d470ef5160d5dfeb5f1ca1f6216f4",
+      "mode": 256
+    },
+    {
+      "path": "focus1-manifest.json",
+      "bytes": 2091,
+      "sha256": "29787a58f1bb88c9284f2bd563c4df27be0a2f17ccd39c545a7b8c4ed037b46e",
+      "mode": 256
+    },
+    {
+      "path": "focus1-raw-index.json",
+      "bytes": 49966,
+      "sha256": "bbabca6cbd7d1d8a4fcfdc271773fedf353be4004e76b81f59f43a1ed1d4fe29",
+      "mode": 256
+    },
+    {
+      "path": "focus1-runtime-ledger.json",
+      "bytes": 430877,
+      "sha256": "c71bf71e4dc68d19b2e67475022a0f092a65731cb20e0af49d0789bd53dc5a43",
+      "mode": 256
+    },
+    {
+      "path": "focus2-audit.json",
+      "bytes": 4407,
+      "sha256": "19389776080d9132e9c94135d606f481436e45e06f96038c4c211972b1299570",
+      "mode": 256
+    },
+    {
+      "path": "focus2-compiler-ledger.json",
+      "bytes": 34643,
+      "sha256": "aba50d98b9822f6deca83ff1f7b6f73e0588eb5e220472268571357132745a93",
+      "mode": 256
+    },
+    {
+      "path": "focus2-manifest.json",
+      "bytes": 2387,
+      "sha256": "59f0261449b6373a7d6b5bf4cf6ef051ef8035edc89e046ff8bfe85dc1cf8fa0",
+      "mode": 256
+    },
+    {
+      "path": "focus2-raw-index.json",
+      "bytes": 32108,
+      "sha256": "865e9dc3655d377857eb54e5bfc20d95fa9a48cddc893b48eb14c6b9729718df",
+      "mode": 256
+    },
+    {
+      "path": "focus2-runtime-ledger.json",
+      "bytes": 430877,
+      "sha256": "c71bf71e4dc68d19b2e67475022a0f092a65731cb20e0af49d0789bd53dc5a43",
+      "mode": 256
+    },
+    {
+      "path": "focus3-END-readback.json",
+      "bytes": 1554,
+      "sha256": "615aecc6356d4bc12c2ba0ca16b6864a2e66d04ed43e3458b5eed24e6428bf3d",
+      "mode": 256
+    },
+    {
+      "path": "focus3-audit.json",
+      "bytes": 16462,
+      "sha256": "01aeeb22ed0a42bac67361aa3737be2d8402c9df61c381086b586a17ada8d774",
+      "mode": 256
+    },
+    {
+      "path": "focus3-raw-index.original.json",
+      "bytes": 8223,
+      "sha256": "f7e23a5a395751c8b6cab02fe4149a53dfcdfea5da9c394e3ab7c3d52b5ace45",
+      "mode": 256
+    },
+    {
+      "path": "focus4-audit.json",
+      "bytes": 4681,
+      "sha256": "47441fdb395e3635e482a44a143a2c336c66b19db7eb8d684251c72c31c535af",
+      "mode": 256
+    },
+    {
+      "path": "focus4-raw-index.original.json",
+      "bytes": 44576,
+      "sha256": "c70b24572b571f1090528f245239221254782d761aee4fa845fbd6fd7ecdd617",
+      "mode": 256
+    },
+    {
+      "path": "gate1-manifest.json",
+      "bytes": 44711,
+      "sha256": "8b4a398b7d008a4029c79c3f0aa347cd793ff165a222c26de7fbefdb999f347f",
+      "mode": 256
+    },
+    {
+      "path": "gate2-manifest.json",
+      "bytes": 793468,
+      "sha256": "4d7230c8912dfdb563dd497ed27c9e69a830bdbbb9c3e120cc7b8095ccd2314c",
+      "mode": 256
+    },
+    {
+      "path": "producer-manifest.json",
+      "bytes": 1580,
+      "sha256": "9772f587a138cec2adb554b6928e4bc0a0eef969231999d4e0759e24b007018c",
+      "mode": 256
+    },
+    {
+      "path": "producer-raw-index.json",
+      "bytes": 51023,
+      "sha256": "b3c84afd57811a2fcaa59e41cf267c62a2d158e91eecd50fbe5faeb591b8a0de",
+      "mode": 256
+    },
+    {
+      "path": "producer-terminal-summary.json",
+      "bytes": 10549,
+      "sha256": "7fa9f8ec03fb2c2499cfffe42c23b16e5e40c26d05a04ce8d1273d02147b981d",
+      "mode": 256
+    },
+    {
+      "path": "raw-index.json",
+      "bytes": 1533738,
+      "sha256": "9b993445657c27d3b9e94dc09eecd0ad2354946cedbc72551f4fa6042bba36d2",
+      "mode": 256
+    },
+    {
+      "path": "static818-commit-messages.stdout",
+      "bytes": 39,
+      "sha256": "4444466e8b15a91bb14a83c987a807c9fd40e5c3a788a23db225866d21aa0e94",
+      "mode": 256
+    },
+    {
+      "path": "static818-format.stdout",
+      "bytes": 114,
+      "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79",
+      "mode": 256
+    },
+    {
+      "path": "static818-manifest.json",
+      "bytes": 43900,
+      "sha256": "043841b5ef880fe005260a0e43c6ce464a6b386fe194611d4911108d2ea48d3c",
+      "mode": 256
+    },
+    {
+      "path": "static818-root-readback.json",
+      "bytes": 2250,
+      "sha256": "e86f898df2f59addf9bed7e6aeaa9eea28e22b94147c1efddf65e548b8ea49d3",
+      "mode": 256
+    },
+    {
+      "path": "static818-whitespace.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "terminal-prerequisites.json",
+      "bytes": 8938,
+      "sha256": "451ce74486a53940a0c9107569fa9558a57e351e057de097574f022f2a1a429e",
+      "mode": 256
+    }
+  ],
+  "historicalUnits": [
+    {
+      "id": "producer",
+      "head": "580465a6fb811ae676a36a72fc760c8c4bfa1510",
+      "tree": "357e08fc236979ae96d6b29999f88b12aebf15be",
+      "booking": "6c150a30e4a86650c22b6a73ab5c067afef49f09",
+      "end": "0e7cdc8882f650bb35eeeb44ab8ba8d540fc68f7",
+      "originalOutcome": "PASSED",
+      "existingManifest": {
+        "path": "/private/tmp/artroom-g580-producer-formatter-20261110.manifest.json",
+        "sha256": "9772f587a138cec2adb554b6928e4bc0a0eef969231999d4e0759e24b007018c",
+        "bytes": 1580,
+        "mode": 256
+      },
+      "qualification": "Actual producer/formatter custody only. Source adoption, compiler/test/gate, CI, landing and deployment remain separate."
+    },
+    {
+      "id": "focus1",
+      "head": "a59044c756ae81baa27c1d35f00de4b9a5b1b4a2",
+      "tree": "f6221ebc7de49e6cf6590c1356eba1accf7c5c96",
+      "booking": "83aff36c6e5266f25946c6dc6e9df9a6a6e723eb",
+      "end": "3ba54b79aaa90f80484bf8ea9156891cf25ddd36",
+      "originalOutcome": "FAILED",
+      "existingManifest": {
+        "path": "/private/tmp/artroom-g590-focus-compiler06-failure-20261110.manifest.json",
+        "sha256": "29787a58f1bb88c9284f2bd563c4df27be0a2f17ccd39c545a7b8c4ed037b46e",
+        "bytes": 2091,
+        "mode": 256
+      },
+      "qualification": "Actual first G focus failure. Two compiler histories passed; no runtime case ran. Future closure/repair/compilers/tests/gate/CI/landing/deployment remain separate."
+    },
+    {
+      "id": "focus2",
+      "head": "5cd112504a2719b1344d89178be0ba46d59daf2b",
+      "tree": "54cc376ae2687cc307e0363ceb1bcd26e591c304",
+      "booking": "a71f88e4cb7174938fa3fd62bea50f92bf4ea749",
+      "end": "5eb05525107e50f14684affe38776a2127c9c58f",
+      "originalOutcome": "FAILED",
+      "existingManifest": {
+        "path": "/private/tmp/artroom-g5cd-focus-compiler06-failure-20261110.manifest.json",
+        "sha256": "59f0261449b6373a7d6b5bf4cf6ef051ef8035edc89e046ff8bfe85dc1cf8fa0",
+        "bytes": 2387,
+        "mode": 256
+      },
+      "qualification": "Actual second G focus failure; current05 pass and historical04 carry stay separate. All1469 runtime cases remain unrun. Future repair/input-carry/gate/CI/landing/deployment remain separate."
+    },
+    {
+      "id": "focus3",
+      "head": "7098b54daa9aa62c33be7c6c92a3af1014a07c77",
+      "tree": "d0d59a7b88c6404819eb40dbed104f2fd98266c8",
+      "booking": "871d832d1fd86f910521d1eabf6f395a9357b5d7",
+      "end": {
+        "hash": "f05f3886c27e0f83a0a0651cfbdcdce44966f68e",
+        "source": "Parent supplied; actual event export requested, not independently read yet"
+      },
+      "originalOutcome": "FAILED",
+      "historicalSealing": "NOT REQUIRED OR CLAIMED; retain raw-only histories under planner1ce32e09/root raw-only instructions",
+      "existingRawIndex": {
+        "path": "/private/tmp/artroom-g7098-third-failure-independent-raw-index-20261111.json",
+        "sha256": "f7e23a5a395751c8b6cab02fe4149a53dfcdfea5da9c394e3ab7c3d52b5ace45",
+        "bytes": 8223,
+        "mode": 256
+      },
+      "existingAudit": {
+        "path": "/private/tmp/artroom-g7098-third-failure-independent-raw-audit-20261111.json",
+        "sha256": "01aeeb22ed0a42bac67361aa3737be2d8402c9df61c381086b586a17ada8d774",
+        "bytes": 16462,
+        "mode": 256
+      }
+    },
+    {
+      "id": "focus4",
+      "head": "8b1ea8ccef7ff4409173270ff2827158da34f5cb",
+      "tree": "123f14dbb7bd5541856e641569490613eff2e6c4",
+      "booking": "0a3f9b74146cde82249528bcb2fb429defa0a72a",
+      "end": "adf2b4c5a1c3261a2b74926591419e6e4f64eb3e",
+      "originalOutcome": "FAILED",
+      "historicalSealing": "NOT REQUIRED OR CLAIMED; retain raw-only histories under planner1ce32e09/root raw-only instructions",
+      "existingRawIndex": {
+        "path": "/private/tmp/artroom-phase2-g8b1ea-fourth-failure-raw-index-20261111.json",
+        "sha256": "c70b24572b571f1090528f245239221254782d761aee4fa845fbd6fd7ecdd617",
+        "bytes": 44576,
+        "mode": 256
+      },
+      "existingAudit": {
+        "path": "/private/tmp/artroom-phase2-g8b1ea-fourth-failure-raw-readback-20261111.json",
+        "sha256": "47441fdb395e3635e482a44a143a2c336c66b19db7eb8d684251c72c31c535af",
+        "bytes": 4681,
+        "mode": 256
+      }
+    },
+    {
+      "id": "gate1",
+      "head": "699bd7333cacdd2beaf88f197feaf3dcb606de12",
+      "tree": "eda616c09faa04e80acb671a95bdb3c3bc868b2c",
+      "booking": "2900fa2378d530620cf5ca36a25715f30cf10e7c",
+      "end": "22bb8da16da748e4dbe1ef35a9faf2c816edf6d4",
+      "originalOutcome": "FAILED",
+      "existingManifest": {
+        "path": "/private/tmp/artroom-g699-first-full-gate-failure-20261111.manifest.json",
+        "sha256": "8b4a398b7d008a4029c79c3f0aa347cd793ff165a222c26de7fbefdb999f347f",
+        "bytes": 44711,
+        "mode": 256
+      },
+      "qualification": "Payload bytes unchanged. Original run modes retained separately from final sealed modes. No successful gate analyzer or control baseline is claimed."
+    },
+    {
+      "id": "gate2",
+      "head": "d92fc9337540975d9b58c9dab655cccc46e1c525",
+      "tree": "11467ab77a052324a844ea159c3bd95f7821ba87",
+      "booking": "1bc2319311d2c1fc67add0ff28d3b3dcd6991b53",
+      "end": "9d12c46dcc2bd17a27c271d7cd0c0946651d3a1d",
+      "originalOutcome": "FAILED",
+      "existingManifest": {
+        "path": "/private/tmp/artroom-gd92-second-full-gate-failure-20261111.manifest.json",
+        "sha256": "4d7230c8912dfdb563dd497ed27c9e69a830bdbbb9c3e120cc7b8095ccd2314c",
+        "bytes": 793468,
+        "mode": 256
+      },
+      "qualification": "Payload bytes unchanged. Original full run modes remain separate from final file0400/directory0500 modes. Existing public/final reporter rows remain unchanged, not double-counted. Native1130 remains UNREACHED and111 wrapper observations UNKNOWN. No successful gate analyzer, acceptance or control baseline is claimed."
+    },
+    {
+      "id": "static818",
+      "head": "818009b868881508f04c65a087a2df88e4f53516",
+      "tree": "ab69e56f6e9ca2480e1ae83104c2882f99e2cc4d",
+      "booking": "63a2effba21b1db892c9d468506be72e46b9921a",
+      "end": "c6345afec57f87466a536ae03b4e3657b9137f5b",
+      "originalOutcome": "PASSED STATIC ONLY",
+      "existingManifest": {
+        "path": "/private/tmp/artroom-g818-static3-20261111.manifest.json",
+        "sha256": "043841b5ef880fe005260a0e43c6ce464a6b386fe194611d4911108d2ea48d3c",
+        "bytes": 43900,
+        "mode": 256
+      },
+      "qualification": "Payload bytes unchanged; original run modes and final sealed modes recorded. Both prior failed gates remain separate."
+    }
+  ],
+  "gateManifestSha256": "535c08aab2a5cd6d66d77539a258239cfde4aac7336238b14401089908d7dd26",
+  "controlsManifestSha256": "324d99e143f5a1507ceb32b5abeaec670358de67f27238b903a1bb83e584f564",
+  "sealedPrerequisites": {
+    "gate818": {
+      "manifest": {
+        "path": "/private/tmp/artroom-g818-full-gate-20261111.manifest.json",
+        "bytes": 1582,
+        "sha256": "535c08aab2a5cd6d66d77539a258239cfde4aac7336238b14401089908d7dd26",
+        "mode": 256
+      },
+      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g818-full-gate-passed-sealed/unit",
+      "originalPrivateDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g818-full-gate-passed-sealed/private",
+      "privateManifestSha256": "a8ce57ac9df3bc4aba854487501f1e98582cfffcb288cc6798aa293990c0f88d",
+      "aggregateRawIndexLeaf": "final-gate-raw-index.original.json",
+      "minimumRetentionDaysAfterLanding": 30,
+      "qualification": "Reuse immutable sealed prerequisite custody; do not duplicate mirror payloads or original inventories. No removal without a recorded act naming its manifest."
+    },
+    "controls818": {
+      "manifest": {
+        "path": "/private/tmp/artroom-g818-controls2-20261111.manifest.json",
+        "bytes": 1968,
+        "sha256": "324d99e143f5a1507ceb32b5abeaec670358de67f27238b903a1bb83e584f564",
+        "mode": 256
+      },
+      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g818-controls2-passed-sealed/unit",
+      "originalPrivateDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g818-controls2-passed-sealed/private",
+      "privateManifestSha256": "c456d28b5e070fcf8190116d0b3ad51ccdb28eca4f88f0f5ae3c68960fa30c28",
+      "aggregateRawIndexLeaf": "final-controls-raw-index.original.json",
+      "minimumRetentionDaysAfterLanding": 30,
+      "qualification": "Reuse immutable sealed prerequisite custody; do not duplicate mirror payloads or original inventories. No removal without a recorded act naming its manifest."
+    }
+  },
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g-final-818/private",
+    "manifestSha256": "454c82c914b7de79fffcd688f5dcd66e64766f8bb22ca30247fcfefa03abc067",
+    "files": 3677,
+    "minimumRetentionDays": 30
+  }
+}

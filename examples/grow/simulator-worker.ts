@@ -4,4 +4,5 @@ import packet from "./demo/application.dap.json";
 import { DEMO_PUBLISHER, DEMO_RELEASE } from "./demo-release.ts";
 import { simulatorHost } from "./simulator-host.ts";
 
-export default simulatorHost(packet, DEMO_RELEASE, DEMO_PUBLISHER);
+/** Wrangler's Text rule supplies the committed signed packet bytes. */
+export default simulatorHost(String(packet), DEMO_RELEASE, DEMO_PUBLISHER);
