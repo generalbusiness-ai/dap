@@ -29,7 +29,7 @@ service; `scripts/active-source.test.mjs` refuses one.
 
 ```
 npx vitest run --project mcp                       # derivation, custody, errors, wire, budgets, in Node
-npx vitest run --project scope packages/mcp/test   # the stories on the real test Worker
+npx vitest run --project scope-stories packages/mcp/test   # the stories on the real test Worker
 npm run typecheck --workspace @generalbusiness/dap-mcp
 ```
 
