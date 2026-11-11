@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b96ee59ddc60f65368da14bdd5602814c48d92ca","text":"Merge retired a covered predecessor; the successor is at packages/define/src/index.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bab8f2ce7730822d7402077c0cd80d70a3ca9d76","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-f-supports-edit-seal.manifest.json."}
