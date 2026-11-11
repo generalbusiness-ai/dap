@@ -86,11 +86,13 @@ fixed owner is another object; its lookup witness checks real SQLite and
 read-only lookup separately. A register-mode backfill or an enforce-mode
 rollout needs its own [operator evidence](../deploy.md).
 
-The tracked file `apps/room/wrangler.artroom-scope.jsonc` selects
-`register` for the Worker `artroom-scope`. The other tracked Worker files
-under `apps/room/` select `enforce`. They configure `dap-self-host`,
-`dap-demo`, `dap-grow`, `dap-lending`, `dap-commons`, `dap-connect` and
-`dap-celld-local`.
+Every tracked Worker file under `apps/room/` selects `enforce`. The files
+configure `artroom-scope`, `dap-self-host`, `dap-demo`, `dap-grow`,
+`dap-lending`, `dap-commons`, `dap-connect` and `dap-celld-local`. The
+Worker `artroom-scope` ran `register` until 11 November 2026. Its index
+lists each scope that a request reached while it ran that mode. The
+Worker now refuses an older scope that no request reached in that time.
+The scope's data stays in its object.
 
 ## Authority observations and cache bounds
 

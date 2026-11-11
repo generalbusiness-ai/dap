@@ -223,7 +223,7 @@ Its shared resources are `ARTIFACTS` namespace `artroom-demo`, R2 bucket `artroo
 
 The MCP namespaces are present, but the file sets neither `MCP_ENABLED` nor `MCP_TOOL_ADDITIONS`. The route needs exact opt-in and both namespaces. An operator can still have set the opt-in on the Worker, so the file alone does not show that the hosted endpoint is off. `APPLICATION_SCREEN_HOSTS` is explicitly empty. The file is marked for existing rooms. Browser Start for new rooms points to `dap-demo`.
 
-The file sets the index to `register`. In register mode, an unknown, well-formed scope ID reaches `registerKnown()` on a new target object. Constructing that object writes the full schema. The [threat model](threat-model.md#invariants-and-their-limits) states this limit.
+The file sets the index to `enforce`. A read of an unknown scope ID reaches no target object, as the [threat model](threat-model.md#invariants-and-their-limits) states. The Worker ran `register` until 11 November 2026. In that mode, an unknown, well-formed scope ID reached `registerKnown()` on a new target object, and constructing the object wrote the full schema. Those objects stay in the namespace. The index lists none of them, so no read reaches one.
 
 ## dap-grow
 
