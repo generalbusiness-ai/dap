@@ -1,0 +1,48 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/unit",
+  "head": "3979f03f126582c0e8f6ebf044c24e8668c5113b",
+  "tree": "bc3fe3d95f7556d47b09871a1091f094a8225cd2",
+  "booking": "924f69d2ecd33003a31ce308ba7dbc9a4d401fd2",
+  "end": "3d41e72b3ed4583d57dc938b4abb5973b5a0e358",
+  "originalOutcome": "PASSED",
+  "actualExits": {
+    "launcher": 0,
+    "driver": 0,
+    "command": 0,
+    "runner": 0,
+    "focused": 0
+  },
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "cd075d6d0978328406ce1b71c09df4f35e04bd54c1e443a6d272ba2c73441bc2",
+      "bytes": 169,
+      "mode": 256
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "4fa8c1e8d5d9fab1cae4a8187ad74dee4f09b00104924c727917b58035ebf7e7",
+      "bytes": 133914,
+      "mode": 256
+    },
+    {
+      "path": "terminal-summary.json",
+      "sha256": "31d02d996114fbf1a65398545c11dde644cd71d374091050d60a787d8cb3319b",
+      "bytes": 5232,
+      "mode": 256
+    }
+  ],
+  "fullGateResult": null,
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/private",
+    "manifestSha256": "9c9604bc39d1edada1ea0ab71869ed24a4799b432ea9f53b4d19dbe178ef3eaf",
+    "files": 711,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-11T00:40:24.385669+00:00"
+    }
+  },
+  "qualification": "One archive-installed attempt. The earlier failed gate and focus retain their own results."
+}

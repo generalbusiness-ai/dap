@@ -1,10 +1,13 @@
 # Canonical spelling for new definition sources
 
 Request `2ad35350`, promise `226d9000`, and rulings `0a0286c4`, `865f4d70`,
-and `23559d21` own this change.
+`23559d21`, `297e04cc`, and `98e4753c` own this change.
 
 The repaired focus passed at `a9727fb3`. Three prechecks passed at `43e9b328`,
-and its full gate failed. Review, landing, and planner deployment remain pending.
+and its full gate failed. The archive fixture repair is at `3979f03f`.
+The first archive focus failed at `3979f03f`. The archive-only control
+passed all nine cases at that same head. The prechecks, full gate, review,
+landing, and planner deployment remain pending.
 The seven earlier focus failures retain their original results.
 
 ## What changed
@@ -73,7 +76,7 @@ in `packages/scope/src/core.ts:375–396` and `namespace.ts:170–187`; Replay
 checks raw bytes in `packages/replay/src/verify.ts:1430–1447`. The complete
 Native archive owner contains nine obligations, including its retained Grow
 producer-clone and old R17 witnesses. Both passed in the gate, which failed
-three fresh Grow cases. These results cover the TEST journals.
+three Grow TEST cases. These results cover the TEST journals.
 
 The first Counting TypeScript and JSON declarations keep their original bytes
 and pin `435d9f57`. The corpus names exactly four retained rows: those two
@@ -342,6 +345,8 @@ R6 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-site-docs94-957/run
 R7 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-same957-crash-control/run
 R8 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-native8-only/run
 R9 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-native7-scope23/run
+R10 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run
+R11 /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run
 S0 /private/tmp/artroom-f-source-seal-frozen-93a87a7b-20261110
 S1 /private/tmp/artroom-f-supports-edit-seal-frozen-038480f8-20261110
 RD /Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/run
@@ -388,6 +393,9 @@ HEAD 43e9b32801908301066d83de2ab5725edccd3f2a
 | Commit messages, `43e9b328` | `node scripts/check-commit-messages.mjs "$BASE" "$HEAD"` | `0`; 26 checked, zero flagged | `fbcfeda467c63e2a28b82227b54478d1e327c437a59d6b142e7c8020234e8fc4` | [85d1c563][m-static] |
 | Format, `43e9b328` | `/opt/homebrew/Cellar/node/26.13.0_2/bin/npm run format:check` | `0` | `6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79` | [85d1c563][m-static] |
 | Full gate, `43e9b328` | `/usr/bin/caffeinate -i /usr/bin/time -p -o "$G/gate.time" npm run gate` | gate/inner/outer/launcher/command `1/1/1/1/1` | `d3be465224a5007787d84935a686112d3f71b40066f07717f832dafc81bd17e4` (gate log) | [b19a7114][m-gate] |
+| Scope compiler 23, `3979f03f` | `node "$F/node_modules/typescript/bin/tsc" -p "$F/packages/scope/tsconfig.test.json"` | `0` | `d176ea0c291938d3efb974f8b730a09f45ef4e5960c0c49b2890db175918c812` (compiler log) | [a3b39913][m-grow-run-seal] |
+| Archive repair Native focus, `3979f03f` | `node "$F/node_modules/vitest/vitest.mjs" run "$F/packages/scope/test/archive-installed.test.ts" "$F/packages/scope/test/source-order.test.ts" --config "$R10/body/native-config/native.config.mts" --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter="$F/scripts/focused-check.mjs" --outputFile.json="$R10/body/native-focused/vitest.json"` | child/Native/runner/driver/launcher/command `1/1/1/1/1/1` | `06953df463a17b6b7a2d24d06af1d80ac850ffc2d6074baf868c33fb89e9a0fe` (Vitest log) | [a3b39913][m-grow-run-seal] |
+| Archive-only Native control, `3979f03f` | `node "$F/node_modules/vitest/vitest.mjs" run "$F/packages/scope/test/archive-installed.test.ts" --config "$R11/body/native-config/native.config.mts" --bail=1 --allowOnly=false --passWithNoTests=false --reporter=verbose --reporter=json --reporter="$F/scripts/focused-check.mjs" --outputFile.json="$R11/body/native-focused/vitest.json"` | child/Native/runner/driver/launcher/command `0/0/0/0/0/0` | `00ffe4cf720febffcdb8e8f7821fc2f7f7be429cfa9ab34ad022491b77e2c390` (Vitest log) | [cbd25201][m-archive-control-seal] |
 
 The V2 metadata freezer exited one because published main advanced from Docs C
 to Docs D before its parent check. It created no frozen output and launched
@@ -436,8 +444,7 @@ Original Grow looked up a historical cost by the new fixture pin and received
 failed the old Room text digest check at Directory sequence 5, line
 `1370:144`. The Native reporter separately records one unhandled
 `cloudflare-pool` Worker exit. The log records a 10,000 ms close timeout.
-The terminal ledger has no final case for `source-order.test.ts`. The
-receipts establish no cause or relation for those observations. The earlier
+The terminal ledger has no final case for `source-order.test.ts`. The earlier
 `SIGBUS` did not recur here.
 
 The gate's source, tool, and input fences matched 4,598/8,311/63. Both main
@@ -449,14 +456,124 @@ because it expected command receipt mode 0600 after the receipt became 0400.
 The bytes matched. V3 readback and seal exited zero and retain the failed
 gate. [Failed gate seal][m-gate]
 
+## Worker exit at `43e9b328`
+
+The Native log identifies workerd PID 39509 in a V8 heap abort with signal 6
+and a Miniflare restart warning near 23:32 UTC. Its final and highest sample
+was 2,352,208 KiB at 23:31:55.890757 UTC, sample 96. Sample 97 has no PID
+39509. The gate maximum, 3,057,488 KiB, belongs to PID 39508 at sample 80.
+The ten-second sampler reports single-process RSS and can miss shorter
+peaks. The terminal pool error gives no PID or timestamp. [Worker report][m-worker]
+[GC and abort log][m-worker-gc] [RSS samples][m-worker-rss]
+
+The nearby records show passing `authority-order.test.ts`,
+`peer-pin.test.ts`, and `directory-partition-capacity.scope.test.ts` cases.
+The reporter records case identities and the sampler records PIDs. The
+sealed records contain no join between them. The files held by PID 39509
+remain unknown. The run records no ready, result, or final event for
+`source-order.test.ts`. Act `5a6a143e` records the findings.
+[Native progress][m-worker-progress]
+
+BR13 v5b records a separate workerd V8 heap abort and lacks a same-PID RSS
+sample. BR13's passing v6b gate records the 3,318,784 KiB sample on workerd
+PID 26657. F's maximum was 261,296 KiB lower. The comparison uses sampled
+RSS from separate runs. [BR13 review][m-worker-br13]
+
+## Archive fixture repair at `3979f03f`
+
+Ruling `297e04cc` resolves request `51cb1f6e`. The Grow cost case signs a
+TEST packet with the exact pre-F Site and Room declarations. The packet
+reuses the public config and assets and remaps the definition references.
+The case checks the old pins and the Room text digest. The independent
+gross and support receipt blocks match their historical source byte for
+byte. An exact old-pin cost difference remains a failed assertion.
+[Source proof][m-grow-source] [Historical receipt proof][m-grow-cost]
+
+Publication and failed-claim keep the fresh canonical packet. Each case
+derives the text digest and stored byte count from the signed child
+declaration before archive work. Both compare that digest and count at
+Directory sequence 5 and retain the scalar byte count, discovery, and
+replay checks. The repair changes the test owner and adds two raw TEST
+declarations. The committed signed demo and shared test setup keep their
+bytes.
+
+| Native case | Package input | Evidence checked |
+|---|---|---|
+| installed fixture scopes export genesis zero after a late native membership directory binding | Constructed TEST packet | Existing local fixture |
+| installed Grow scopes export genesis zero after a late native membership directory binding | Retained TEST Site/Room | Exact pre-F bytes and old gross and support receipts |
+| installed Grow production scopes export genesis zero after a late native membership directory binding | Committed signed demo | Retained release and native export |
+| installed Grow production public archive command verifies its native producer clone | Committed signed demo via producer | Retained release and native clone |
+| installed Grow activation warm scopes export genesis zero after a late native membership directory binding | Committed signed demo | Retained release and warm activation |
+| installed Grow activation evicted scopes export genesis zero after a late native membership directory binding | Committed signed demo | Retained release and evicted activation |
+| installed Grow publication scopes export genesis zero after a late native membership directory binding | Fresh canonical Site/Room | Signed child text digest and Directory sequence 5 |
+| installed Grow failed-claim scopes export genesis zero after a late native membership directory binding | Fresh canonical Site/Room | Signed child text digest and Directory sequence 5 |
+| installed old R17 Grow advances a published thirty-seven-pass history from sequence 146 with an exact remainder | Committed signed demo | Retained release and old R17 Room A shape |
+
+## Archive fixture focus at `3979f03f`
+
+Booking `94d41fbc` and END `8f25399b` record one Scope test compiler 23
+run and one focus of both Native owners under ruling `297e04cc`. The compiler exited zero in 0.83 seconds. Vitest
+and the Native wrapper, runner, driver, launcher, and command each exited
+one. Vitest ran for 62.79 seconds. The outer receipt records 71.511163709
+seconds and empty cleanup. Eight RSS samples recorded single-process
+maxima of 874,064 KiB for Node and 511,568 KiB for workerd.
+[Command result][m-grow-run-result] [RSS receipt][m-grow-run-rss]
+
+The Native focus recorded eight passes. Source-order passed its only case.
+Seven archive-installed cases passed, including the retained Grow cost
+case and canonical publication. Failed-claim recorded `Network connection
+lost.` at 4,980 ms. The log serializes `remote: true` and `retryable: true`.
+It records no assertion failure or source stack frame. The reporter ended
+as interrupted with zero unhandled errors. The old R17 case is pending in
+both per-case reports. The built-in aggregate reports zero pending tests
+despite its pending case row. The archive-installed owner failed.
+[Vitest log][m-grow-run-log] [Case callbacks][m-grow-run-cases] [Built-in JSON][m-grow-run-json]
+
+The metadata readback and seal each exited zero. The sealed focus retains
+its failed outcome and adopts zero case results for carry. The independent
+readback matched 690 copies to their originals and verified both checksum
+indexes. [Failure seal][m-grow-run-seal] [Terminal summary][m-grow-run-terminal] [Custody readback][m-grow-run-peer]
+
+The failed-claim record includes 37 one-entry pass footprints and the
+3,481-byte membership-copy cost receipt written at
+`archive-installed.test.ts:1350`. That receipt precedes the credential
+refusal assertion at line 1353. The log ends with generic archive-row
+diagnostics and the remote error. It contains no failed-claim closure
+marker or record that identifies the failing RPC. The evidence does not
+establish whether the omission comparison ran. [Vitest log][m-grow-run-log]
+
+## Archive-only control at `3979f03f`
+
+Ruling `98e4753c` resolves request `b0591d58` and authorizes one unchanged
+run of the whole archive-installed owner with passive RSS sampling.
+Booking `924f69d2` and END `3d41e72b` record all nine Native passes, including
+canonical failed-claim and old R17. The public reporter and built-in JSON
+agree on the nine identities and results. The reporter records zero
+unhandled errors. Vitest and all five command and wrapper receipts
+exited zero. [Command result][m-archive-control-command] [Case callbacks][m-archive-control-cases] [Built-in JSON][m-archive-control-json]
+
+Vitest ran for 72.90 seconds and the outer receipt records 84.064061333
+seconds. Nine samples recorded single-process maxima of 908,928 KiB for
+Node and 591,024 KiB for workerd. Both main refs and the final custody
+fence matched. Cleanup closed empty. The metadata readback and seal
+exited zero. The independent readback matched 709 sealed copies to their
+originals and verified both checksum indexes. [RSS receipt][m-archive-control-rss]
+[Pass seal][m-archive-control-seal] [Terminal summary][m-archive-control-terminal] [Custody readback][m-archive-control-seal-peer]
+
+The control ran zero compilers and zero source-order cases. The frozen
+correspondence matched tracked source and tools to the earlier focus at
+the same head. Scope compiler 23 and the sole source-order case retain
+their own passing observations at booking `94d41fbc`. The earlier focus
+and the `43e9b328` gate retain their failed outcomes.
+[Source correspondence][m-archive-control-peer] [Earlier focus seal][m-grow-run-seal] [Earlier gate seal][m-gate]
+
 ## Open limits and remaining checks
 
-Request `51cb1f6e` asks the planner to choose the archive fixture scope and
-next validation. The proposed split preserves exact pre-F TEST Room/Site
-bytes for the gross-cost case. Publication and failed-claim would keep the
-canonical packet and compute the omission expectation from the signed
-child before export. The missing source-order result and another gate
-remain part of the ruling. No repair or later result is recorded.
+Rulings `98e4753c` and `297e04cc` place the three prechecks and one full gate
+after the nine-case pass. Both remain unrun at `3979f03f`. Ruling
+`297e04cc` assigns any final gate with an unhandled Worker exit or missing
+owner and zero assertion failures to the planner for a ruling on
+splitting Native.
 
 Ruling `865f4d70` assigns canonical fold admission to identifiers head (c+d).
 Ruling `23559d21` assigns removal of the temporary Counting helper and two
@@ -484,3 +601,26 @@ acceptance.
 [m-focus-repaired]: evidence/2026-11-10-f-native7-scope23-repaired-focus.manifest.json
 [m-static]: evidence/2026-11-10-f-final-static-43e9-v3.manifest.json
 [m-gate]: evidence/2026-11-10-f-final-gate-43e9.manifest.json
+[m-worker]: /private/tmp/artroom-f-43e9-worker-exit-forensics-20261110.md
+[m-worker-gc]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/stage.unCiMSXK/test.log:267122
+[m-worker-rss]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/outer-launch/rss-samples/samples.jsonl:98
+[m-worker-progress]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-gate-43e9-sealed/private/gate/case-progress.native.jsonl:2102
+[m-worker-br13]: 2026-11-09-br13-version-questions.md
+[m-grow-source]: /private/tmp/artroom-jp1-f-archive-grow-fixture-patch-source-v2-20261110/SOURCE.PROOF.json
+[m-grow-cost]: /private/tmp/artroom-jp1-f-archive-grow-v2-historical-receipt-proof-20261110.json
+[m-grow-run-result]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/result.json
+[m-grow-run-rss]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/rss-peaks.json
+[m-grow-run-log]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/body.log:6810
+[m-grow-run-cases]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/coverage.jsonl
+[m-grow-run-json]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/run/body/native-focused/vitest.json
+[m-grow-run-seal]: evidence/2026-11-10-f-archive-repair-focus-3979-failure.manifest.json
+[m-grow-run-terminal]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/failed-focus-sealed/unit/terminal-summary.json
+[m-grow-run-peer]: /private/tmp/artroom-jp1-f-3979-focus-failure-seal-peer-20261110.json
+[m-archive-control-command]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run/body/native-focused/result.json
+[m-archive-control-cases]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run/body/native-focused/coverage.jsonl
+[m-archive-control-json]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run/body/native-focused/vitest.json
+[m-archive-control-rss]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/run/rss-peaks.json
+[m-archive-control-peer]: /private/tmp/artroom-f-archive-only-3979-frozen-independent-readback-20261110.json
+[m-archive-control-seal]: evidence/2026-11-10-f-archive-only-focus-3979.manifest.json
+[m-archive-control-terminal]: /Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-only-control-3979/archive-focus-sealed/unit/terminal-summary.json
+[m-archive-control-seal-peer]: /private/tmp/artroom-jp1-f-archive-only-3979-pass-seal-peer-20261110.json
