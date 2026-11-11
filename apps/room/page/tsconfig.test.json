@@ -1,7 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "resolveJsonModule": true, "types": ["node"] },
+    "resolveJsonModule": true,
+    "types": ["node"]
+  },
   "include": ["src", "test", "vitest.config.ts"],
   "exclude": ["test/**/*.scope.test.ts", "test/support"]
 }

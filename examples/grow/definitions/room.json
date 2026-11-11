@@ -1,1 +1,2041 @@
-{"acts":{"apply":{"also":{},"attention":[],"effects":[],"fields":{"product":{"max":80,"required":true,"type":"text"},"rate":{"max":80,"required":true,"type":"text"},"reason":{"max":1024,"required":true,"type":"text"},"zone":{"of":"zone","required":true,"type":"item"}},"grant":"grow.apply","guards":[],"on":null,"sends":[],"step":"comment"},"approve-watering":{"also":{},"attention":[],"effects":[{"state":"approved"},{"party":{"from":{"signer":true},"slot":"decidedBy"}},{"value":{"from":{"field":"decision"},"slot":"decision"}},{"ref":{"from":"self","slot":"decisionAt"}}],"fields":{"decision":{"max":1024,"required":true,"type":"text"}},"grant":"grow.water-more","guards":[{"state":["asked"]}],"on":"watering","sends":[],"step":"transition"},"authorize":{"also":{"heater":{"item":"device","via":{"of":"on","slot":"heater"}}},"attention":[],"effects":[{"state":"authorized"},{"party":{"from":{"signer":true},"slot":"authorizedBy"}},{"of":"also.heater","value":{"from":{"of":"on","slot":"target"},"slot":"target"}},{"of":"also.heater","value":{"from":{"of":"on","slot":"level"},"slot":"level"}},{"of":"also.heater","ref":{"from":"self","slot":"targetAt"}},{"capability":{"do":"open","name":"device-command","with":{"device":{"slot":"kind"}}},"of":"also.heater"}],"fields":{},"grant":"grow.heat","guards":[{"state":["open"]},{"of":"also.heater","state":["active"]},{"equals":{"a":{"of":"also.heater","slot":"kind"},"b":{"const":"heater"}}},{"anyOf":[[{"of":"also.heater","unset":"reported"}],[{"differs":{"a":{"slot":"reported"},"b":{"const":"error"}},"of":"also.heater"}]],"reason":"device-error"},{"reason":"device-limit","rule":"authorized-target"},{"capability":{"guard":"allowed","name":"device-command","with":{"kind":{"of":"also.heater","slot":"kind"}}}}],"on":"alert","sends":[],"step":"transition"},"bind-zone-devices":{"also":{"fan":{"by":"fan","item":"device"},"heater":{"by":"heater","item":"device"},"vent":{"by":"vent","item":"device"}},"attention":[],"effects":[{"ref":{"from":{"field":"vent"},"slot":"vent"}},{"ref":{"from":{"field":"fan"},"slot":"fan"}},{"ref":{"from":{"field":"heater"},"slot":"heater"}}],"fields":{"fan":{"of":"device","required":true,"type":"item"},"heater":{"of":"device","required":true,"type":"item"},"vent":{"of":"device","required":true,"type":"item"}},"grant":"grow.configure","guards":[{"state":["unobserved","in-band","out-of-band"]},{"of":"also.vent","state":["active"]},{"equals":{"a":{"of":"also.vent","slot":"kind"},"b":{"const":"vent"}}},{"equals":{"a":{"of":"also.vent","slot":"zone"},"b":{"item":"on"}}},{"of":"also.fan","state":["active"]},{"equals":{"a":{"of":"also.fan","slot":"kind"},"b":{"const":"fan"}}},{"equals":{"a":{"of":"also.fan","slot":"zone"},"b":{"item":"on"}}},{"of":"also.heater","state":["active"]},{"equals":{"a":{"of":"also.heater","slot":"kind"},"b":{"const":"heater"}}},{"equals":{"a":{"of":"also.heater","slot":"zone"},"b":{"item":"on"}}}],"on":"zone","sends":[],"step":"transition"},"close-incident":{"also":{"incident":{"by":"incident","item":"incident"},"zone":{"item":"zone","via":{"of":"on","slot":"zone"}}},"attention":[],"effects":[{"state":"closed"},{"ref":{"from":"self","slot":"last"}},{"of":"also.incident","state":"closed"},{"of":"also.incident","ref":{"from":"self","slot":"last"}}],"fields":{"incident":{"of":"incident","required":true,"type":"item"}},"grant":"grow.climate","guards":[{"state":["open","held","authorized"]},{"of":"also.incident","state":["open"]},{"of":"also.zone","state":["in-band"]},{"signer":["raisedBy"]},{"equals":{"a":{"of":"also.incident","slot":"alert"},"b":{"item":"on"}}},{"reason":"recovery-not-observed","rule":"recovery-evidence"}],"on":"alert","sends":[],"step":"transition"},"commission-bench":{"also":{"zone":{"by":"zone","item":"zone"}},"attention":[],"effects":[{"value":{"from":{"field":"label"},"slot":"label"}},{"value":{"from":{"field":"row"},"slot":"row"}},{"value":{"from":{"field":"column"},"slot":"column"}},{"ref":{"from":{"field":"zone"},"slot":"zone"}}],"fields":{"column":{"max":10,"min":1,"required":true,"type":"int"},"label":{"max":80,"required":true,"type":"text"},"row":{"of":["A","B","C","D","E","F","G","H","I","J"],"required":true,"type":"enum"},"zone":{"of":"zone","required":true,"type":"item"}},"grant":"grow.configure","guards":[{"none":{"states":["stale","fresh"],"type":"bench","where":[{"equals":{"a":{"slot":"row"},"b":{"field":"row"}}},{"equals":{"a":{"slot":"column"},"b":{"field":"column"}}}]},"reason":"bench-exists"}],"on":"bench","sends":[],"step":"open"},"commission-device":{"also":{"zone":{"by":"zone","item":"zone"}},"attention":[],"effects":[{"value":{"from":{"field":"kind"},"slot":"kind"}},{"value":{"from":{"field":"label"},"slot":"label"}},{"value":{"from":{"field":"minLevel"},"slot":"minLevel"}},{"value":{"from":{"field":"maxLevel"},"slot":"maxLevel"}},{"value":{"from":{"field":"target"},"slot":"target"}},{"value":{"from":{"field":"level"},"slot":"level"}},{"ref":{"from":"self","slot":"targetAt"}},{"ref":{"from":{"field":"zone"},"slot":"zone"}}],"fields":{"kind":{"of":["vent","fan","heater"],"required":true,"type":"enum"},"label":{"max":80,"required":true,"type":"text"},"level":{"max":100,"min":0,"required":true,"type":"int"},"maxLevel":{"max":100,"min":0,"required":true,"type":"int"},"minLevel":{"max":100,"min":0,"required":true,"type":"int"},"target":{"of":["open","closed","on","off"],"required":true,"type":"enum"},"zone":{"of":"zone","required":true,"type":"item"}},"grant":"grow.configure","guards":[{"reason":"device-limit","rule":"device-setup"},{"none":{"states":["active"],"type":"device","where":[{"equals":{"a":{"slot":"zone"},"b":{"field":"zone"}}},{"equals":{"a":{"slot":"kind"},"b":{"field":"kind"}}}]},"reason":"device-already-commissioned"}],"on":"device","sends":[],"step":"open"},"commission-zone":{"also":{},"attention":[],"effects":[{"value":{"from":{"field":"label"},"slot":"label"}},{"value":{"from":{"field":"setpoint"},"slot":"setpoint"}},{"value":{"from":{"field":"band"},"slot":"band"}}],"fields":{"band":{"max":2000,"min":1,"required":true,"type":"int"},"label":{"max":80,"required":true,"type":"text"},"setpoint":{"max":8000,"min":-4000,"required":true,"type":"int"}},"grant":"grow.configure","guards":[],"on":"zone","sends":[],"step":"open"},"configure-watering":{"also":{},"attention":[],"effects":[{"value":{"from":{"field":"opensAt"},"slot":"opensAt"}},{"value":{"from":{"field":"closesAt"},"slot":"closesAt"}},{"value":{"from":{"field":"maxMl"},"slot":"maxMl"}}],"fields":{"closesAt":{"required":true,"type":"time"},"maxMl":{"max":10000,"min":1,"required":true,"type":"int"},"opensAt":{"required":true,"type":"time"}},"grant":"grow.configure","guards":[{"reason":"invalid-water-window","rule":"water-window"}],"on":"water-policy","sends":[],"step":"open"},"decline-watering":{"also":{},"attention":[],"effects":[{"state":"declined"},{"party":{"from":{"signer":true},"slot":"decidedBy"}},{"value":{"from":{"field":"decision"},"slot":"decision"}},{"ref":{"from":"self","slot":"decisionAt"}}],"fields":{"decision":{"max":1024,"required":true,"type":"text"}},"grant":"grow.water-more","guards":[{"state":["asked"]}],"on":"watering","sends":[],"step":"transition"},"establish":{"also":{},"attention":[],"effects":[{"value":{"from":{"field":"label"},"slot":"label"}},{"ref":{"from":{"field":"site"},"slot":"site"}},{"ref":{"from":{"field":"siteRoom"},"slot":"siteRoom"}}],"fields":{"label":{"max":80,"required":true,"type":"text"},"site":{"kind":"lane","required":false,"type":"scope"},"siteRoom":{"kind":["create-room"],"required":false,"type":"fact","under":"grow-site"}},"grant":"grow.configure","guards":[{"anyOf":[[{"equals":{"a":{"field":"site"},"b":{"none":true}}},{"equals":{"a":{"field":"siteRoom"},"b":{"none":true}}}],[{"differs":{"a":{"field":"site"},"b":{"none":true}}},{"differs":{"a":{"field":"siteRoom"},"b":{"none":true}}}]]},{"fact":{"field":"siteRoom"},"ifPresent":true},{"equals":{"a":{"field":"siteRoom","part":"scope"},"b":{"field":"site"}},"ifPresent":true}],"on":"room","sends":[],"step":"open"},"fulfill-watering":{"also":{},"attention":[],"effects":[{"state":"done"},{"party":{"from":{"signer":true},"slot":"performedBy"}},{"value":{"from":{"time":{"plusSeconds":0}},"slot":"performedTime"}},{"ref":{"from":"self","slot":"performedAt"}}],"fields":{},"grant":"grow.water","guards":[{"state":["approved"]}],"on":"watering","sends":[],"step":"transition"},"hold":{"also":{},"attention":[],"effects":[{"state":"held"},{"party":{"from":{"signer":true},"slot":"heldBy"}},{"value":{"from":{"time":{"plusSeconds":60}},"slot":"holdUntil"}}],"fields":{},"grant":"grow.heat","guards":[{"state":["open"]}],"on":"alert","sends":[],"step":"transition"},"observe":{"also":{},"attention":[],"effects":[],"fields":{"sampledAt":{"required":true,"type":"time"},"zones":{"max":4,"of":{"of":{"inBand":{"max":25,"min":0,"required":true,"type":"int"},"max":{"max":8000,"min":-4000,"required":true,"type":"int"},"mean":{"max":8000,"min":-4000,"required":true,"type":"int"},"min":{"max":8000,"min":-4000,"required":true,"type":"int"},"zone":{"of":"zone","required":true,"type":"item"}},"type":"record"},"required":true,"type":"list"}},"grant":"grow.sense","guards":[],"on":null,"sends":[],"step":"comment"},"offer-task":{"also":{"alert":{"by":"alert","item":"alert"},"device":{"by":"device","item":"device"}},"attention":[],"effects":[{"ref":{"from":{"field":"device"},"slot":"device"}},{"ref":{"from":{"field":"alert"},"slot":"alert"}},{"ref":{"from":{"of":"also.device","slot":"zone"},"slot":"zone"}},{"value":{"from":{"field":"text"},"slot":"text"}}],"fields":{"alert":{"of":"alert","required":true,"type":"item"},"device":{"of":"device","required":true,"type":"item"},"text":{"max":1024,"required":true,"type":"text"}},"grant":"grow.climate","guards":[{"of":"also.device","state":["active"]},{"of":"also.alert","state":["open","held","authorized"]},{"equals":{"a":{"of":"also.device","slot":"zone"},"b":{"of":"also.alert","slot":"zone"}},"reason":"wrong-task-zone"}],"on":"task","sends":[],"step":"open"},"open-incident":{"also":{"alert":{"by":"alert","item":"alert"}},"attention":[],"effects":[{"ref":{"from":{"item":"also.alert"},"slot":"alert"}},{"ref":{"from":{"field":"alert"},"slot":"first"}}],"fields":{"alert":{"kind":["raise-alert"],"required":true,"type":"fact","under":"grow-room"}},"grant":"grow.climate","guards":[{"fact":{"field":"alert"}},{"equals":{"a":{"field":"alert","part":"scope"},"b":{"scope":true}}},{"of":"also.alert","state":["open","held","authorized"]},{"of":"also.alert","signer":["raisedBy"]},{"none":{"states":["open","closed"],"type":"incident","where":[{"equals":{"a":{"slot":"alert"},"b":{"item":"also.alert"}}}]},"reason":"incident-exists"}],"on":"incident","sends":[],"step":"open"},"probe":{"also":{},"attention":[],"effects":[{"if":[{"differs":{"a":{"field":"moisture"},"b":{"none":true}}}],"value":{"from":{"field":"moisture"},"slot":"moisture"}},{"if":[{"differs":{"a":{"field":"moisture"},"b":{"none":true}}}],"ref":{"from":"self","slot":"moistureAt"}},{"if":[{"differs":{"a":{"field":"ec"},"b":{"none":true}}}],"value":{"from":{"field":"ec"},"slot":"ec"}},{"if":[{"differs":{"a":{"field":"ec"},"b":{"none":true}}}],"ref":{"from":"self","slot":"ecAt"}},{"if":[{"differs":{"a":{"field":"ph"},"b":{"none":true}}}],"value":{"from":{"field":"ph"},"slot":"ph"}},{"if":[{"differs":{"a":{"field":"ph"},"b":{"none":true}}}],"ref":{"from":"self","slot":"phAt"}},{"if":[{"differs":{"a":{"field":"height"},"b":{"none":true}}}],"value":{"from":{"field":"height"},"slot":"height"}},{"if":[{"differs":{"a":{"field":"height"},"b":{"none":true}}}],"ref":{"from":"self","slot":"heightAt"}},{"if":[{"differs":{"a":{"field":"insects"},"b":{"none":true}}}],"value":{"from":{"field":"insects"},"slot":"insects"}},{"if":[{"differs":{"a":{"field":"insects"},"b":{"none":true}}}],"ref":{"from":"self","slot":"insectsAt"}},{"if":[{"differs":{"a":{"field":"note"},"b":{"none":true}}}],"value":{"from":{"field":"note"},"slot":"note"}},{"if":[{"differs":{"a":{"field":"note"},"b":{"none":true}}}],"ref":{"from":"self","slot":"noteAt"}},{"state":"fresh"},{"value":{"from":{"time":{"plusSeconds":0}},"slot":"probeTime"}},{"value":{"from":{"time":{"plusSeconds":172800}},"slot":"staleAt"}},{"ref":{"from":"self","slot":"lastProbe"}}],"fields":{"ec":{"max":10000,"min":0,"required":false,"type":"int"},"height":{"max":5000,"min":0,"required":false,"type":"int"},"insects":{"max":10000,"min":0,"required":false,"type":"int"},"moisture":{"max":100,"min":0,"required":false,"type":"int"},"note":{"max":1024,"required":false,"type":"text"},"ph":{"max":1400,"min":0,"required":false,"type":"int"}},"grant":"grow.tend","guards":[{"state":["stale","fresh"]},{"reason":"empty-probe","rule":"probe-content"}],"on":"bench","sends":[],"step":"transition"},"propose-restoration":{"also":{"vent":{"item":"device","via":{"of":"also.zone","slot":"vent"}},"zone":{"item":"zone","via":{"of":"on","slot":"zone"}}},"attention":[],"effects":[{"state":"open"},{"value":{"from":{"field":"text"},"slot":"text"}},{"value":{"from":{"field":"proposal"},"slot":"proposal"}},{"value":{"from":{"const":"on"},"slot":"target"}},{"value":{"from":{"const":100},"slot":"level"}},{"party":{"from":null,"slot":"authorizedBy"}}],"fields":{"proposal":{"max":1024,"required":true,"type":"text"},"text":{"max":1024,"required":true,"type":"text"}},"grant":"grow.climate","guards":[{"state":["authorized"]},{"signer":["raisedBy"]},{"of":"also.zone","state":["in-band","out-of-band"]},{"of":"also.vent","state":["active"]},{"of":"also.vent","set":"reported"},{"anyOf":[[{"of":"also.vent","unset":"reported"}],[{"differs":{"a":{"slot":"reported"},"b":{"const":"error"}},"of":"also.vent"}]],"reason":"device-error"}],"on":"alert","sends":[],"step":"transition"},"raise-alert":{"also":{"fan":{"item":"device","via":{"of":"also.zone","slot":"fan"}},"heater":{"item":"device","via":{"of":"also.zone","slot":"heater"}},"vent":{"item":"device","via":{"of":"also.zone","slot":"vent"}},"zone":{"by":"zone","item":"zone"}},"attention":[],"effects":[{"party":{"from":{"signer":true},"slot":"raisedBy"}},{"ref":{"from":{"field":"zone"},"slot":"zone"}},{"ref":{"from":{"item":"also.heater"},"slot":"heater"}},{"ref":{"from":"self","slot":"first"}},{"value":{"from":{"field":"text"},"slot":"text"}},{"value":{"from":{"field":"proposal"},"slot":"proposal"}},{"value":{"from":{"field":"target"},"slot":"target"}},{"value":{"from":{"field":"level"},"slot":"level"}},{"value":{"from":{"time":{"plusSeconds":0}},"slot":"raisedTime"}}],"fields":{"level":{"max":100,"min":0,"required":true,"type":"int"},"proposal":{"max":1024,"required":true,"type":"text"},"target":{"of":["on","off"],"required":true,"type":"enum"},"text":{"max":1024,"required":true,"type":"text"},"zone":{"of":"zone","required":true,"type":"item"}},"grant":"grow.climate","guards":[{"of":"also.zone","state":["out-of-band"]},{"of":"also.vent","state":["active"]},{"of":"also.fan","state":["active"]},{"of":"also.heater","state":["active"]},{"reason":"climate-actions-remain","rule":"climate-exhausted"},{"anyOf":[[{"equals":{"a":{"field":"target"},"b":{"const":"off"}}},{"equals":{"a":{"field":"level"},"b":{"const":0}}}],[{"equals":{"a":{"field":"target"},"b":{"const":"on"}}},{"equals":{"a":{"field":"level"},"b":{"const":100}}}]],"reason":"invalid-heater-proposal"},{"none":{"states":["open","held","authorized"],"type":"alert","where":[{"equals":{"a":{"slot":"zone"},"b":{"field":"zone"}}}]},"reason":"zone-alert-open"}],"on":"alert","sends":[],"step":"open"},"report-device":{"also":{},"attention":[],"effects":[{"value":{"from":{"field":"reported"},"slot":"reported"}},{"value":{"from":{"field":"level"},"slot":"reportedLevel"}},{"value":{"from":{"field":"description"},"slot":"description"}},{"value":{"from":{"time":{"plusSeconds":0}},"slot":"reportedTime"}},{"ref":{"from":"self","slot":"reportedAt"}}],"fields":{"description":{"max":1024,"required":true,"type":"text"},"level":{"max":100,"min":0,"required":true,"type":"int"},"reported":{"of":["open","closed","on","off","error"],"required":true,"type":"enum"}},"grant":"grow.sense","guards":[{"state":["active"]},{"reason":"invalid-device-report","rule":"device-report"}],"on":"device","sends":[],"step":"transition"},"report-site":{"also":{},"attention":[],"effects":[{"ref":{"from":"self","slot":"lastSiteReport"}}],"fields":{"openAlerts":{"max":4,"min":0,"required":true,"type":"int"}},"grant":"grow.sense","guards":[{"state":["open"]},{"set":"site"},{"set":"siteRoom"},{"count":{"max":{"field":"openAlerts"},"min":{"field":"openAlerts"},"states":["open","held","authorized"],"type":"alert"},"reason":"wrong-alert-count"}],"on":"room","sends":[{"relate":{"detail":{"openAlerts":{"field":"openAlerts"},"room":{"slot":"siteRoom"}},"item":{"item":"on"},"name":"room-summary","result":{"refused":[],"undelivered":[]},"state":"reported","to":{"slot":"site"}}}],"step":"transition"},"report-task":{"also":{},"attention":[],"effects":[{"state":"done"},{"value":{"from":{"field":"report"},"slot":"report"}},{"value":{"from":{"time":{"plusSeconds":0}},"slot":"reportTime"}},{"ref":{"from":"self","slot":"reportAt"}}],"fields":{"report":{"max":2048,"required":true,"type":"text"}},"grant":"grow.tend","guards":[{"state":["taken"]},{"signer":["performer"]},{"reason":"empty-task-report","rule":"task-report-content"}],"on":"task","sends":[],"step":"transition"},"report-zone":{"also":{},"attention":[],"effects":[{"if":[{"equals":{"a":{"field":"inBand"},"b":{"const":25}}}],"state":"in-band"},{"state":"out-of-band","unless":[{"equals":{"a":{"field":"inBand"},"b":{"const":25}}}]},{"value":{"from":{"field":"min"},"slot":"min"}},{"value":{"from":{"field":"max"},"slot":"max"}},{"value":{"from":{"field":"mean"},"slot":"mean"}},{"value":{"from":{"field":"inBand"},"slot":"inBand"}},{"value":{"from":{"field":"sampledAt"},"slot":"summaryTime"}},{"ref":{"from":{"field":"summary"},"slot":"summary"}}],"fields":{"inBand":{"max":25,"min":0,"required":true,"type":"int"},"max":{"max":8000,"min":-4000,"required":true,"type":"int"},"mean":{"max":8000,"min":-4000,"required":true,"type":"int"},"min":{"max":8000,"min":-4000,"required":true,"type":"int"},"sampledAt":{"required":true,"type":"time"},"summary":{"kind":["observe"],"required":true,"type":"fact","under":"grow-room"},"zones":{"max":4,"of":{"of":{"inBand":{"max":25,"min":0,"required":true,"type":"int"},"max":{"max":8000,"min":-4000,"required":true,"type":"int"},"mean":{"max":8000,"min":-4000,"required":true,"type":"int"},"min":{"max":8000,"min":-4000,"required":true,"type":"int"},"zone":{"of":"zone","required":true,"type":"item"}},"type":"record"},"required":true,"type":"list"}},"grant":"grow.sense","guards":[{"state":["unobserved","in-band","out-of-band"]},{"fact":{"field":"summary"}},{"equals":{"a":{"field":"summary","part":"scope"},"b":{"scope":true}},"reason":"wrong-summary-room"},{"equals":{"a":{"field":"summary","part":{"field":"zones"}},"b":{"field":"zones"}},"reason":"summary-mismatch"},{"equals":{"a":{"field":"summary","part":{"field":"sampledAt"}},"b":{"field":"sampledAt"}},"reason":"summary-mismatch"},{"reason":"invalid-zone-evidence","rule":"zone-evidence"},{"reason":"stale-zone-summary","rule":"zone-order"},{"reason":"no-band-crossing","rule":"zone-crossing"}],"on":"zone","sends":[],"step":"transition"},"request-watering":{"also":{"bench":{"by":"bench","item":"bench"},"zone":{"by":"zone","item":"zone"}},"attention":[],"effects":[{"ref":{"from":{"field":"zone"},"slot":"zone"}},{"ref":{"from":{"field":"bench"},"slot":"bench"}},{"ref":{"from":{"field":"basis"},"slot":"basis"}},{"value":{"from":{"field":"amountMl"},"slot":"amountMl"}},{"value":{"from":{"const":"requested"},"slot":"mode"}},{"value":{"from":{"field":"reason"},"slot":"reason"}}],"fields":{"amountMl":{"max":10000,"min":1,"required":true,"type":"int"},"basis":{"kind":["probe"],"required":true,"type":"fact","under":"grow-room"},"bench":{"of":"bench","required":true,"type":"item"},"reason":{"max":1024,"required":true,"type":"text"},"zone":{"of":"zone","required":true,"type":"item"}},"grant":"grow.water","guards":[{"fact":{"field":"basis"}},{"equals":{"a":{"field":"basis","part":"scope"},"b":{"scope":true}},"reason":"wrong-watering-room"},{"equals":{"a":{"field":"basis","part":"on"},"b":{"field":"bench"}},"reason":"wrong-watering-bench"},{"equals":{"a":{"of":"also.bench","slot":"zone"},"b":{"field":"zone"}},"reason":"wrong-watering-zone"},{"reason":"empty-watering-reason","rule":"water-request-content"}],"on":"watering","sends":[],"step":"open"},"set-band":{"also":{},"attention":[],"effects":[{"value":{"from":{"field":"setpoint"},"slot":"setpoint"}},{"value":{"from":{"field":"band"},"slot":"band"}},{"state":"unobserved"}],"fields":{"band":{"max":2000,"min":1,"required":true,"type":"int"},"setpoint":{"max":8000,"min":-4000,"required":true,"type":"int"}},"grant":"grow.heat","guards":[{"state":["unobserved","in-band","out-of-band"]}],"on":"zone","sends":[],"step":"transition"},"set-fan":{"also":{},"attention":[],"effects":[{"value":{"from":{"field":"target"},"slot":"target"}},{"value":{"from":{"field":"level"},"slot":"level"}},{"ref":{"from":"self","slot":"targetAt"}},{"capability":{"do":"open","name":"device-command","with":{"device":{"slot":"kind"}}}}],"fields":{"level":{"max":100,"min":0,"required":true,"type":"int"},"target":{"of":["open","closed","on","off"],"required":true,"type":"enum"}},"grant":"grow.climate","guards":[{"state":["active"]},{"equals":{"a":{"slot":"kind"},"b":{"const":"fan"}},"reason":"wrong-device-kind"},{"anyOf":[[{"unset":"reported"}],[{"differs":{"a":{"slot":"reported"},"b":{"const":"error"}}}]],"reason":"device-error"},{"reason":"device-limit","rule":"device-target"},{"capability":{"guard":"allowed","name":"device-command","with":{"kind":{"slot":"kind"}}}}],"on":"device","sends":[],"step":"transition"},"set-heater":{"also":{},"attention":[],"effects":[{"value":{"from":{"field":"target"},"slot":"target"}},{"value":{"from":{"field":"level"},"slot":"level"}},{"ref":{"from":"self","slot":"targetAt"}},{"capability":{"do":"open","name":"device-command","with":{"device":{"slot":"kind"}}}}],"fields":{"level":{"max":100,"min":0,"required":true,"type":"int"},"target":{"of":["open","closed","on","off"],"required":true,"type":"enum"}},"grant":"grow.heat","guards":[{"state":["active"]},{"equals":{"a":{"slot":"kind"},"b":{"const":"heater"}},"reason":"wrong-device-kind"},{"anyOf":[[{"unset":"reported"}],[{"differs":{"a":{"slot":"reported"},"b":{"const":"error"}}}]],"reason":"device-error"},{"reason":"device-limit","rule":"device-target"},{"capability":{"guard":"allowed","name":"device-command","with":{"kind":{"slot":"kind"}}}}],"on":"device","sends":[],"step":"transition"},"set-vent":{"also":{},"attention":[],"effects":[{"value":{"from":{"field":"target"},"slot":"target"}},{"value":{"from":{"field":"level"},"slot":"level"}},{"ref":{"from":"self","slot":"targetAt"}},{"capability":{"do":"open","name":"device-command","with":{"device":{"slot":"kind"}}}}],"fields":{"level":{"max":100,"min":0,"required":true,"type":"int"},"target":{"of":["open","closed","on","off"],"required":true,"type":"enum"}},"grant":"grow.climate","guards":[{"state":["active"]},{"equals":{"a":{"slot":"kind"},"b":{"const":"vent"}},"reason":"wrong-device-kind"},{"anyOf":[[{"unset":"reported"}],[{"differs":{"a":{"slot":"reported"},"b":{"const":"error"}}}]],"reason":"device-error"},{"reason":"device-limit","rule":"device-target"},{"capability":{"guard":"allowed","name":"device-command","with":{"kind":{"slot":"kind"}}}}],"on":"device","sends":[],"step":"transition"},"set-water-policy":{"also":{},"attention":[],"effects":[{"value":{"from":{"field":"opensAt"},"slot":"opensAt"}},{"value":{"from":{"field":"closesAt"},"slot":"closesAt"}},{"value":{"from":{"field":"maxMl"},"slot":"maxMl"}}],"fields":{"closesAt":{"required":true,"type":"time"},"maxMl":{"max":10000,"min":1,"required":true,"type":"int"},"opensAt":{"required":true,"type":"time"}},"grant":"grow.water-more","guards":[{"state":["active"]},{"reason":"invalid-water-window","rule":"water-window"}],"on":"water-policy","sends":[],"step":"transition"},"take-task":{"also":{},"attention":[],"effects":[{"state":"taken"},{"party":{"from":{"signer":true},"slot":"performer"}}],"fields":{},"grant":"grow.tend","guards":[{"state":["offered"]}],"on":"task","sends":[],"step":"transition"},"water":{"also":{"policy":{"item":"water-policy","one":true},"zone":{"by":"zone","item":"zone"}},"attention":[],"effects":[{"state":"done"},{"ref":{"from":{"field":"zone"},"slot":"zone"}},{"value":{"from":{"field":"amountMl"},"slot":"amountMl"}},{"value":{"from":{"const":"scheduled"},"slot":"mode"}},{"value":{"from":{"field":"reason"},"slot":"reason"}},{"party":{"from":{"signer":true},"slot":"performedBy"}},{"value":{"from":{"time":{"plusSeconds":0}},"slot":"performedTime"}},{"ref":{"from":"self","slot":"performedAt"}}],"fields":{"amountMl":{"max":10000,"min":1,"required":true,"type":"int"},"reason":{"max":1024,"required":true,"type":"text"},"zone":{"of":"zone","required":true,"type":"item"}},"grant":"grow.water","guards":[{"of":"also.policy","state":["active"]},{"after":{"slot":"opensAt"},"of":"also.policy"},{"before":{"slot":"closesAt"},"of":"also.policy"},{"reason":"watering-exceeds-schedule","rule":"water-amount"}],"on":"watering","sends":[],"step":"open"}},"capabilities":[{"name":"device-command","version":1}],"format":"artroom-definition-1","genesis":"establish","items":{"alert":{"initial":"open","many":true,"max":4,"parties":{"authorizedBy":{"author":false,"fixed":false,"list":false,"required":false},"heldBy":{"author":false,"fixed":false,"list":false,"required":false},"raisedBy":{"author":false,"fixed":true,"list":false,"required":true}},"refs":{"first":{"fixed":true,"required":true,"to":{"kind":["raise-alert"],"type":"fact","under":"grow-room"}},"heater":{"fixed":true,"required":true,"to":{"of":"device","type":"item"}},"last":{"fixed":false,"required":false,"to":{"kind":["close-incident"],"type":"fact","under":"grow-room"}},"zone":{"fixed":true,"required":true,"to":{"of":"zone","type":"item"}}},"states":{"authorized":{"final":false},"closed":{"final":true},"held":{"final":false},"open":{"final":false}},"values":{"holdUntil":{"fixed":false,"of":{"type":"time"},"required":false},"level":{"fixed":false,"of":{"max":100,"min":0,"type":"int"},"required":true},"proposal":{"fixed":false,"of":{"max":1024,"type":"text"},"required":true},"raisedTime":{"fixed":true,"of":{"type":"time"},"required":true},"target":{"fixed":false,"of":{"of":["on","off"],"type":"enum"},"required":true},"text":{"fixed":false,"of":{"max":1024,"type":"text"},"required":true}}},"bench":{"initial":"stale","many":true,"max":100,"parties":{},"refs":{"ecAt":{"fixed":false,"required":false,"to":{"kind":["probe"],"type":"fact","under":"grow-room"}},"heightAt":{"fixed":false,"required":false,"to":{"kind":["probe"],"type":"fact","under":"grow-room"}},"insectsAt":{"fixed":false,"required":false,"to":{"kind":["probe"],"type":"fact","under":"grow-room"}},"lastProbe":{"fixed":false,"required":false,"to":{"kind":["probe"],"type":"fact","under":"grow-room"}},"moistureAt":{"fixed":false,"required":false,"to":{"kind":["probe"],"type":"fact","under":"grow-room"}},"noteAt":{"fixed":false,"required":false,"to":{"kind":["probe"],"type":"fact","under":"grow-room"}},"phAt":{"fixed":false,"required":false,"to":{"kind":["probe"],"type":"fact","under":"grow-room"}},"zone":{"fixed":true,"required":true,"to":{"of":"zone","type":"item"}}},"states":{"fresh":{"final":false},"stale":{"final":false}},"values":{"column":{"fixed":true,"of":{"max":10,"min":1,"type":"int"},"required":true},"ec":{"fixed":false,"of":{"max":10000,"min":0,"type":"int"},"required":false},"height":{"fixed":false,"of":{"max":5000,"min":0,"type":"int"},"required":false},"insects":{"fixed":false,"of":{"max":10000,"min":0,"type":"int"},"required":false},"label":{"fixed":true,"of":{"max":80,"type":"text"},"required":true},"moisture":{"fixed":false,"of":{"max":100,"min":0,"type":"int"},"required":false},"note":{"fixed":false,"of":{"max":1024,"type":"text"},"required":false},"ph":{"fixed":false,"of":{"max":1400,"min":0,"type":"int"},"required":false},"probeTime":{"fixed":false,"of":{"type":"time"},"required":false},"row":{"fixed":true,"of":{"of":["A","B","C","D","E","F","G","H","I","J"],"type":"enum"},"required":true},"staleAt":{"fixed":false,"of":{"type":"time"},"required":false}}},"device":{"initial":"active","many":true,"max":12,"parties":{},"refs":{"outcomeAt":{"capability":"device-command@1","fixed":false,"required":false,"to":{"kind":["device-command@1:answer"],"type":"fact","under":"grow-room"}},"reportedAt":{"fixed":false,"required":false,"to":{"kind":["report-device"],"type":"fact","under":"grow-room"}},"targetAt":{"fixed":false,"required":true,"to":{"kind":["commission-device","set-vent","set-fan","set-heater","authorize"],"type":"fact","under":"grow-room"}},"zone":{"fixed":true,"required":true,"to":{"of":"zone","type":"item"}}},"states":{"active":{"final":false}},"values":{"description":{"fixed":false,"of":{"max":1024,"type":"text"},"required":false},"kind":{"fixed":true,"of":{"of":["vent","fan","heater"],"type":"enum"},"required":true},"label":{"fixed":true,"of":{"max":80,"type":"text"},"required":true},"level":{"fixed":false,"of":{"max":100,"min":0,"type":"int"},"required":true},"maxLevel":{"fixed":true,"of":{"max":100,"min":0,"type":"int"},"required":true},"minLevel":{"fixed":true,"of":{"max":100,"min":0,"type":"int"},"required":true},"outcome":{"capability":"device-command@1","fixed":false,"of":{"of":["confirmed","refused","unknown"],"type":"enum"},"required":false},"reported":{"fixed":false,"of":{"of":["open","closed","on","off","error"],"type":"enum"},"required":false},"reportedLevel":{"fixed":false,"of":{"max":100,"min":0,"type":"int"},"required":false},"reportedTime":{"fixed":false,"of":{"type":"time"},"required":false},"target":{"fixed":false,"of":{"of":["open","closed","on","off"],"type":"enum"},"required":true}}},"incident":{"initial":"open","many":true,"max":4,"parties":{},"refs":{"alert":{"fixed":true,"required":true,"to":{"of":"alert","type":"item"}},"first":{"fixed":true,"required":true,"to":{"kind":["raise-alert"],"type":"fact","under":"grow-room"}},"last":{"fixed":false,"required":false,"to":{"kind":["close-incident"],"type":"fact","under":"grow-room"}}},"states":{"closed":{"final":true},"open":{"final":false}},"values":{}},"room":{"initial":"open","many":false,"max":1,"parties":{},"refs":{"lastSiteReport":{"fixed":false,"required":false,"to":{"kind":["report-site"],"type":"fact","under":"grow-room"}},"site":{"fixed":true,"required":false,"to":{"kind":"lane","type":"scope"}},"siteRoom":{"fixed":true,"required":false,"to":{"kind":["create-room"],"type":"fact","under":"grow-site"}}},"states":{"open":{"final":false}},"values":{"label":{"fixed":true,"of":{"max":80,"type":"text"},"required":true}}},"task":{"initial":"offered","many":true,"max":32,"parties":{"performer":{"author":true,"fixed":false,"list":false,"required":false}},"refs":{"alert":{"fixed":true,"required":true,"to":{"of":"alert","type":"item"}},"device":{"fixed":true,"required":true,"to":{"of":"device","type":"item"}},"reportAt":{"fixed":false,"required":false,"to":{"kind":["report-task"],"type":"fact","under":"grow-room"}},"zone":{"fixed":true,"required":true,"to":{"of":"zone","type":"item"}}},"states":{"done":{"final":true},"offered":{"final":false},"taken":{"final":false}},"values":{"report":{"fixed":false,"of":{"max":2048,"type":"text"},"required":false},"reportTime":{"fixed":false,"of":{"type":"time"},"required":false},"text":{"fixed":true,"of":{"max":1024,"type":"text"},"required":true}}},"water-policy":{"initial":"active","many":false,"max":1,"parties":{},"refs":{},"states":{"active":{"final":false}},"values":{"closesAt":{"fixed":false,"of":{"type":"time"},"required":true},"maxMl":{"fixed":false,"of":{"max":10000,"min":1,"type":"int"},"required":true},"opensAt":{"fixed":false,"of":{"type":"time"},"required":true}}},"watering":{"initial":"asked","many":true,"max":32,"parties":{"decidedBy":{"author":false,"fixed":false,"list":false,"required":false},"performedBy":{"author":true,"fixed":false,"list":false,"required":false}},"refs":{"basis":{"fixed":false,"required":false,"to":{"kind":["probe"],"type":"fact","under":"grow-room"}},"bench":{"fixed":false,"required":false,"to":{"of":"bench","type":"item"}},"decisionAt":{"fixed":false,"required":false,"to":{"kind":["approve-watering","decline-watering"],"type":"fact","under":"grow-room"}},"performedAt":{"fixed":false,"required":false,"to":{"kind":["water","fulfill-watering"],"type":"fact","under":"grow-room"}},"zone":{"fixed":true,"required":true,"to":{"of":"zone","type":"item"}}},"states":{"approved":{"final":false},"asked":{"final":false},"declined":{"final":true},"done":{"final":true}},"values":{"amountMl":{"fixed":true,"of":{"max":10000,"min":1,"type":"int"},"required":true},"decision":{"fixed":false,"of":{"max":1024,"type":"text"},"required":false},"mode":{"fixed":true,"of":{"of":["scheduled","requested"],"type":"enum"},"required":true},"performedTime":{"fixed":false,"of":{"type":"time"},"required":false},"reason":{"fixed":true,"of":{"max":1024,"type":"text"},"required":true}}},"zone":{"initial":"unobserved","many":true,"max":4,"parties":{},"refs":{"fan":{"fixed":false,"required":false,"to":{"of":"device","type":"item"}},"heater":{"fixed":false,"required":false,"to":{"of":"device","type":"item"}},"summary":{"fixed":false,"required":false,"to":{"kind":["observe"],"type":"fact","under":"grow-room"}},"vent":{"fixed":false,"required":false,"to":{"of":"device","type":"item"}}},"states":{"in-band":{"final":false},"out-of-band":{"final":false},"unobserved":{"final":false}},"values":{"band":{"fixed":false,"of":{"max":2000,"min":1,"type":"int"},"required":true},"inBand":{"fixed":false,"of":{"max":25,"min":0,"type":"int"},"required":false},"label":{"fixed":true,"of":{"max":80,"type":"text"},"required":true},"max":{"fixed":false,"of":{"max":8000,"min":-4000,"type":"int"},"required":false},"mean":{"fixed":false,"of":{"max":8000,"min":-4000,"type":"int"},"required":false},"min":{"fixed":false,"of":{"max":8000,"min":-4000,"type":"int"},"required":false},"setpoint":{"fixed":false,"of":{"max":8000,"min":-4000,"type":"int"},"required":true},"summaryTime":{"fixed":false,"of":{"type":"time"},"required":false}}}},"name":"grow-room","profile":{"name":"restricted","version":1},"receives":{},"rules":{"authorized-target":"(subjects.on.values.target = 'off' and subjects.on.values.level = 0) or (subjects.on.values.target = 'on' and subjects.on.values.level = 100 and subjects.`also.heater`.values.minLevel <= 100 and subjects.`also.heater`.values.maxLevel >= 100)","climate-exhausted":"(subjects.`also.vent`.values.reported = 'error' or subjects.`also.vent`.values.level >= subjects.`also.vent`.values.maxLevel) and (subjects.`also.fan`.values.reported = 'error' or subjects.`also.fan`.values.level >= subjects.`also.fan`.values.maxLevel)","device-report":"(fields.reported = 'error' and $length(fields.description) > 0) or (fields.description = '' and (((subjects.on.values.kind = 'vent') and fields.reported in ['open', 'closed']) or ((subjects.on.values.kind in ['fan', 'heater']) and fields.reported in ['on', 'off'])) and ((fields.reported in ['closed', 'off'] and fields.level = 0) or (fields.reported in ['open', 'on'] and fields.level >= 1 and (subjects.on.values.kind != 'heater' or fields.level = 100))))","device-setup":"fields.minLevel <= fields.maxLevel and ((((fields.kind = 'vent') and fields.target in ['open', 'closed']) or ((fields.kind in ['fan', 'heater']) and fields.target in ['on', 'off'])) and ((fields.target in ['closed', 'off'] and fields.level = 0) or (fields.target in ['open', 'on'] and fields.level >= 1 and fields.level >= fields.minLevel and fields.level <= fields.maxLevel and (fields.kind != 'heater' or fields.level = 100))))","device-target":"(((subjects.on.values.kind = 'vent') and fields.target in ['open', 'closed']) or ((subjects.on.values.kind in ['fan', 'heater']) and fields.target in ['on', 'off'])) and ((fields.target in ['closed', 'off'] and fields.level = 0) or (fields.target in ['open', 'on'] and fields.level >= 1 and fields.level >= subjects.on.values.minLevel and fields.level <= subjects.on.values.maxLevel and (subjects.on.values.kind != 'heater' or fields.level = 100)))","probe-content":"$exists(fields.moisture) or $exists(fields.ec) or $exists(fields.ph) or $exists(fields.height) or $exists(fields.insects) or ($length(fields.note) > 0 and $not($contains(\" \\t\\r\\n\", $substring(fields.note, 0, 1))))","recovery-evidence":"subjects.`also.zone`.refs.summary > subjects.on.refs.first","task-report-content":"$length(fields.report) > 0 and $not($contains(\" \\t\\r\\n\", $substring(fields.report, 0, 1)))","water-amount":"$exists(subjects.`also.policy`) and fields.amountMl <= subjects.`also.policy`.values.maxMl","water-request-content":"$length(fields.reason) > 0 and $not($contains(\" \\t\\r\\n\", $substring(fields.reason, 0, 1)))","water-window":"fields.opensAt < fields.closesAt","zone-crossing":"subjects.on.state = 'unobserved' or (fields.inBand = 25 ? subjects.on.state = 'out-of-band' : subjects.on.state = 'in-band')","zone-evidence":"($id := subjects.on.id; $z := fields.zones[zone = $id]; $lo := subjects.on.values.setpoint - subjects.on.values.band; $hi := subjects.on.values.setpoint + subjects.on.values.band; $count($z) = 1 and fields.min = $z.min and fields.max = $z.max and fields.mean = $z.mean and fields.inBand = $z.inBand and fields.min <= fields.mean and fields.mean <= fields.max and ((fields.min >= $lo and fields.max <= $hi) ? fields.inBand = 25 : ((fields.max < $lo or fields.min > $hi) ? fields.inBand = 0 : ((fields.min < $lo and fields.max > $hi) ? fields.inBand <= 23 : (fields.inBand >= 1 and fields.inBand <= 24)))))","zone-order":"subjects.on.refs.summary = null or (fields.sampledAt >= subjects.on.values.summaryTime and (fields.summary > subjects.on.refs.summary or (fields.summary = subjects.on.refs.summary and subjects.on.state = 'unobserved')))"},"timed":{"bench-stale":{"attention":[],"deadline":"staleAt","effects":[{"state":"stale"}],"on":"bench","states":["fresh"]},"hold-expired":{"attention":[],"deadline":"holdUntil","effects":[{"state":"open"},{"party":{"from":null,"slot":"heldBy"}},{"value":{"from":null,"slot":"holdUntil"}}],"on":"alert","states":["held"]}}}
+{
+  "acts": {
+    "apply": {
+      "also": {},
+      "attention": [],
+      "effects": [],
+      "fields": {
+        "product": { "max": 80, "required": true, "type": "text" },
+        "rate": { "max": 80, "required": true, "type": "text" },
+        "reason": { "max": 1024, "required": true, "type": "text" },
+        "zone": { "of": "zone", "required": true, "type": "item" }
+      },
+      "grant": "grow.apply",
+      "guards": [],
+      "on": null,
+      "sends": [],
+      "step": "comment"
+    },
+    "approve-watering": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "state": "approved" },
+        { "party": { "from": { "signer": true }, "slot": "decidedBy" } },
+        { "value": { "from": { "field": "decision" }, "slot": "decision" } },
+        { "ref": { "from": "self", "slot": "decisionAt" } }
+      ],
+      "fields": {
+        "decision": { "max": 1024, "required": true, "type": "text" }
+      },
+      "grant": "grow.water-more",
+      "guards": [{ "state": ["asked"] }],
+      "on": "watering",
+      "sends": [],
+      "step": "transition"
+    },
+    "authorize": {
+      "also": {
+        "heater": { "item": "device", "via": { "of": "on", "slot": "heater" } }
+      },
+      "attention": [],
+      "effects": [
+        { "state": "authorized" },
+        { "party": { "from": { "signer": true }, "slot": "authorizedBy" } },
+        {
+          "of": "also.heater",
+          "value": {
+            "from": { "of": "on", "slot": "target" },
+            "slot": "target"
+          }
+        },
+        {
+          "of": "also.heater",
+          "value": { "from": { "of": "on", "slot": "level" }, "slot": "level" }
+        },
+        { "of": "also.heater", "ref": { "from": "self", "slot": "targetAt" } },
+        {
+          "capability": {
+            "do": "open",
+            "name": "device-command",
+            "with": { "device": { "slot": "kind" } }
+          },
+          "of": "also.heater"
+        }
+      ],
+      "fields": {},
+      "grant": "grow.heat",
+      "guards": [
+        { "state": ["open"] },
+        { "of": "also.heater", "state": ["active"] },
+        {
+          "equals": {
+            "a": { "of": "also.heater", "slot": "kind" },
+            "b": { "const": "heater" }
+          }
+        },
+        {
+          "anyOf": [
+            [{ "of": "also.heater", "unset": "reported" }],
+            [
+              {
+                "differs": {
+                  "a": { "slot": "reported" },
+                  "b": { "const": "error" }
+                },
+                "of": "also.heater"
+              }
+            ]
+          ],
+          "reason": "device-error"
+        },
+        { "reason": "device-limit", "rule": "authorized-target" },
+        {
+          "capability": {
+            "guard": "allowed",
+            "name": "device-command",
+            "with": { "kind": { "of": "also.heater", "slot": "kind" } }
+          }
+        }
+      ],
+      "on": "alert",
+      "sends": [],
+      "step": "transition"
+    },
+    "bind-zone-devices": {
+      "also": {
+        "fan": { "by": "fan", "item": "device" },
+        "heater": { "by": "heater", "item": "device" },
+        "vent": { "by": "vent", "item": "device" }
+      },
+      "attention": [],
+      "effects": [
+        { "ref": { "from": { "field": "vent" }, "slot": "vent" } },
+        { "ref": { "from": { "field": "fan" }, "slot": "fan" } },
+        { "ref": { "from": { "field": "heater" }, "slot": "heater" } }
+      ],
+      "fields": {
+        "fan": { "of": "device", "required": true, "type": "item" },
+        "heater": { "of": "device", "required": true, "type": "item" },
+        "vent": { "of": "device", "required": true, "type": "item" }
+      },
+      "grant": "grow.configure",
+      "guards": [
+        { "state": ["unobserved", "in-band", "out-of-band"] },
+        { "of": "also.vent", "state": ["active"] },
+        {
+          "equals": {
+            "a": { "of": "also.vent", "slot": "kind" },
+            "b": { "const": "vent" }
+          }
+        },
+        {
+          "equals": {
+            "a": { "of": "also.vent", "slot": "zone" },
+            "b": { "item": "on" }
+          }
+        },
+        { "of": "also.fan", "state": ["active"] },
+        {
+          "equals": {
+            "a": { "of": "also.fan", "slot": "kind" },
+            "b": { "const": "fan" }
+          }
+        },
+        {
+          "equals": {
+            "a": { "of": "also.fan", "slot": "zone" },
+            "b": { "item": "on" }
+          }
+        },
+        { "of": "also.heater", "state": ["active"] },
+        {
+          "equals": {
+            "a": { "of": "also.heater", "slot": "kind" },
+            "b": { "const": "heater" }
+          }
+        },
+        {
+          "equals": {
+            "a": { "of": "also.heater", "slot": "zone" },
+            "b": { "item": "on" }
+          }
+        }
+      ],
+      "on": "zone",
+      "sends": [],
+      "step": "transition"
+    },
+    "close-incident": {
+      "also": {
+        "incident": { "by": "incident", "item": "incident" },
+        "zone": { "item": "zone", "via": { "of": "on", "slot": "zone" } }
+      },
+      "attention": [],
+      "effects": [
+        { "state": "closed" },
+        { "ref": { "from": "self", "slot": "last" } },
+        { "of": "also.incident", "state": "closed" },
+        { "of": "also.incident", "ref": { "from": "self", "slot": "last" } }
+      ],
+      "fields": {
+        "incident": { "of": "incident", "required": true, "type": "item" }
+      },
+      "grant": "grow.climate",
+      "guards": [
+        { "state": ["open", "held", "authorized"] },
+        { "of": "also.incident", "state": ["open"] },
+        { "of": "also.zone", "state": ["in-band"] },
+        { "signer": ["raisedBy"] },
+        {
+          "equals": {
+            "a": { "of": "also.incident", "slot": "alert" },
+            "b": { "item": "on" }
+          }
+        },
+        { "reason": "recovery-not-observed", "rule": "recovery-evidence" }
+      ],
+      "on": "alert",
+      "sends": [],
+      "step": "transition"
+    },
+    "commission-bench": {
+      "also": { "zone": { "by": "zone", "item": "zone" } },
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "label" }, "slot": "label" } },
+        { "value": { "from": { "field": "row" }, "slot": "row" } },
+        { "value": { "from": { "field": "column" }, "slot": "column" } },
+        { "ref": { "from": { "field": "zone" }, "slot": "zone" } }
+      ],
+      "fields": {
+        "column": { "max": 10, "min": 1, "required": true, "type": "int" },
+        "label": { "max": 80, "required": true, "type": "text" },
+        "row": {
+          "of": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
+          "required": true,
+          "type": "enum"
+        },
+        "zone": { "of": "zone", "required": true, "type": "item" }
+      },
+      "grant": "grow.configure",
+      "guards": [
+        {
+          "none": {
+            "states": ["stale", "fresh"],
+            "type": "bench",
+            "where": [
+              { "equals": { "a": { "slot": "row" }, "b": { "field": "row" } } },
+              {
+                "equals": {
+                  "a": { "slot": "column" },
+                  "b": { "field": "column" }
+                }
+              }
+            ]
+          },
+          "reason": "bench-exists"
+        }
+      ],
+      "on": "bench",
+      "sends": [],
+      "step": "open"
+    },
+    "commission-device": {
+      "also": { "zone": { "by": "zone", "item": "zone" } },
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "kind" }, "slot": "kind" } },
+        { "value": { "from": { "field": "label" }, "slot": "label" } },
+        { "value": { "from": { "field": "minLevel" }, "slot": "minLevel" } },
+        { "value": { "from": { "field": "maxLevel" }, "slot": "maxLevel" } },
+        { "value": { "from": { "field": "target" }, "slot": "target" } },
+        { "value": { "from": { "field": "level" }, "slot": "level" } },
+        { "ref": { "from": "self", "slot": "targetAt" } },
+        { "ref": { "from": { "field": "zone" }, "slot": "zone" } }
+      ],
+      "fields": {
+        "kind": {
+          "of": ["vent", "fan", "heater"],
+          "required": true,
+          "type": "enum"
+        },
+        "label": { "max": 80, "required": true, "type": "text" },
+        "level": { "max": 100, "min": 0, "required": true, "type": "int" },
+        "maxLevel": { "max": 100, "min": 0, "required": true, "type": "int" },
+        "minLevel": { "max": 100, "min": 0, "required": true, "type": "int" },
+        "target": {
+          "of": ["open", "closed", "on", "off"],
+          "required": true,
+          "type": "enum"
+        },
+        "zone": { "of": "zone", "required": true, "type": "item" }
+      },
+      "grant": "grow.configure",
+      "guards": [
+        { "reason": "device-limit", "rule": "device-setup" },
+        {
+          "none": {
+            "states": ["active"],
+            "type": "device",
+            "where": [
+              {
+                "equals": { "a": { "slot": "zone" }, "b": { "field": "zone" } }
+              },
+              {
+                "equals": { "a": { "slot": "kind" }, "b": { "field": "kind" } }
+              }
+            ]
+          },
+          "reason": "device-already-commissioned"
+        }
+      ],
+      "on": "device",
+      "sends": [],
+      "step": "open"
+    },
+    "commission-zone": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "label" }, "slot": "label" } },
+        { "value": { "from": { "field": "setpoint" }, "slot": "setpoint" } },
+        { "value": { "from": { "field": "band" }, "slot": "band" } }
+      ],
+      "fields": {
+        "band": { "max": 2000, "min": 1, "required": true, "type": "int" },
+        "label": { "max": 80, "required": true, "type": "text" },
+        "setpoint": {
+          "max": 8000,
+          "min": -4000,
+          "required": true,
+          "type": "int"
+        }
+      },
+      "grant": "grow.configure",
+      "guards": [],
+      "on": "zone",
+      "sends": [],
+      "step": "open"
+    },
+    "configure-watering": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "opensAt" }, "slot": "opensAt" } },
+        { "value": { "from": { "field": "closesAt" }, "slot": "closesAt" } },
+        { "value": { "from": { "field": "maxMl" }, "slot": "maxMl" } }
+      ],
+      "fields": {
+        "closesAt": { "required": true, "type": "time" },
+        "maxMl": { "max": 10000, "min": 1, "required": true, "type": "int" },
+        "opensAt": { "required": true, "type": "time" }
+      },
+      "grant": "grow.configure",
+      "guards": [{ "reason": "invalid-water-window", "rule": "water-window" }],
+      "on": "water-policy",
+      "sends": [],
+      "step": "open"
+    },
+    "decline-watering": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "state": "declined" },
+        { "party": { "from": { "signer": true }, "slot": "decidedBy" } },
+        { "value": { "from": { "field": "decision" }, "slot": "decision" } },
+        { "ref": { "from": "self", "slot": "decisionAt" } }
+      ],
+      "fields": {
+        "decision": { "max": 1024, "required": true, "type": "text" }
+      },
+      "grant": "grow.water-more",
+      "guards": [{ "state": ["asked"] }],
+      "on": "watering",
+      "sends": [],
+      "step": "transition"
+    },
+    "establish": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "label" }, "slot": "label" } },
+        { "ref": { "from": { "field": "site" }, "slot": "site" } },
+        { "ref": { "from": { "field": "siteRoom" }, "slot": "siteRoom" } }
+      ],
+      "fields": {
+        "label": { "max": 80, "required": true, "type": "text" },
+        "site": { "kind": "lane", "required": false, "type": "scope" },
+        "siteRoom": {
+          "kind": ["create-room"],
+          "required": false,
+          "type": "fact",
+          "under": "grow-site"
+        }
+      },
+      "grant": "grow.configure",
+      "guards": [
+        {
+          "anyOf": [
+            [
+              { "equals": { "a": { "field": "site" }, "b": { "none": true } } },
+              {
+                "equals": {
+                  "a": { "field": "siteRoom" },
+                  "b": { "none": true }
+                }
+              }
+            ],
+            [
+              {
+                "differs": { "a": { "field": "site" }, "b": { "none": true } }
+              },
+              {
+                "differs": {
+                  "a": { "field": "siteRoom" },
+                  "b": { "none": true }
+                }
+              }
+            ]
+          ]
+        },
+        { "fact": { "field": "siteRoom" }, "ifPresent": true },
+        {
+          "equals": {
+            "a": { "field": "siteRoom", "part": "scope" },
+            "b": { "field": "site" }
+          },
+          "ifPresent": true
+        }
+      ],
+      "on": "room",
+      "sends": [],
+      "step": "open"
+    },
+    "fulfill-watering": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "state": "done" },
+        { "party": { "from": { "signer": true }, "slot": "performedBy" } },
+        {
+          "value": {
+            "from": { "time": { "plusSeconds": 0 } },
+            "slot": "performedTime"
+          }
+        },
+        { "ref": { "from": "self", "slot": "performedAt" } }
+      ],
+      "fields": {},
+      "grant": "grow.water",
+      "guards": [{ "state": ["approved"] }],
+      "on": "watering",
+      "sends": [],
+      "step": "transition"
+    },
+    "hold": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "state": "held" },
+        { "party": { "from": { "signer": true }, "slot": "heldBy" } },
+        {
+          "value": {
+            "from": { "time": { "plusSeconds": 60 } },
+            "slot": "holdUntil"
+          }
+        }
+      ],
+      "fields": {},
+      "grant": "grow.heat",
+      "guards": [{ "state": ["open"] }],
+      "on": "alert",
+      "sends": [],
+      "step": "transition"
+    },
+    "observe": {
+      "also": {},
+      "attention": [],
+      "effects": [],
+      "fields": {
+        "sampledAt": { "required": true, "type": "time" },
+        "zones": {
+          "max": 4,
+          "of": {
+            "of": {
+              "inBand": {
+                "max": 25,
+                "min": 0,
+                "required": true,
+                "type": "int"
+              },
+              "max": {
+                "max": 8000,
+                "min": -4000,
+                "required": true,
+                "type": "int"
+              },
+              "mean": {
+                "max": 8000,
+                "min": -4000,
+                "required": true,
+                "type": "int"
+              },
+              "min": {
+                "max": 8000,
+                "min": -4000,
+                "required": true,
+                "type": "int"
+              },
+              "zone": { "of": "zone", "required": true, "type": "item" }
+            },
+            "type": "record"
+          },
+          "required": true,
+          "type": "list"
+        }
+      },
+      "grant": "grow.sense",
+      "guards": [],
+      "on": null,
+      "sends": [],
+      "step": "comment"
+    },
+    "offer-task": {
+      "also": {
+        "alert": { "by": "alert", "item": "alert" },
+        "device": { "by": "device", "item": "device" }
+      },
+      "attention": [],
+      "effects": [
+        { "ref": { "from": { "field": "device" }, "slot": "device" } },
+        { "ref": { "from": { "field": "alert" }, "slot": "alert" } },
+        {
+          "ref": {
+            "from": { "of": "also.device", "slot": "zone" },
+            "slot": "zone"
+          }
+        },
+        { "value": { "from": { "field": "text" }, "slot": "text" } }
+      ],
+      "fields": {
+        "alert": { "of": "alert", "required": true, "type": "item" },
+        "device": { "of": "device", "required": true, "type": "item" },
+        "text": { "max": 1024, "required": true, "type": "text" }
+      },
+      "grant": "grow.climate",
+      "guards": [
+        { "of": "also.device", "state": ["active"] },
+        { "of": "also.alert", "state": ["open", "held", "authorized"] },
+        {
+          "equals": {
+            "a": { "of": "also.device", "slot": "zone" },
+            "b": { "of": "also.alert", "slot": "zone" }
+          },
+          "reason": "wrong-task-zone"
+        }
+      ],
+      "on": "task",
+      "sends": [],
+      "step": "open"
+    },
+    "open-incident": {
+      "also": { "alert": { "by": "alert", "item": "alert" } },
+      "attention": [],
+      "effects": [
+        { "ref": { "from": { "item": "also.alert" }, "slot": "alert" } },
+        { "ref": { "from": { "field": "alert" }, "slot": "first" } }
+      ],
+      "fields": {
+        "alert": {
+          "kind": ["raise-alert"],
+          "required": true,
+          "type": "fact",
+          "under": "grow-room"
+        }
+      },
+      "grant": "grow.climate",
+      "guards": [
+        { "fact": { "field": "alert" } },
+        {
+          "equals": {
+            "a": { "field": "alert", "part": "scope" },
+            "b": { "scope": true }
+          }
+        },
+        { "of": "also.alert", "state": ["open", "held", "authorized"] },
+        { "of": "also.alert", "signer": ["raisedBy"] },
+        {
+          "none": {
+            "states": ["open", "closed"],
+            "type": "incident",
+            "where": [
+              {
+                "equals": {
+                  "a": { "slot": "alert" },
+                  "b": { "item": "also.alert" }
+                }
+              }
+            ]
+          },
+          "reason": "incident-exists"
+        }
+      ],
+      "on": "incident",
+      "sends": [],
+      "step": "open"
+    },
+    "probe": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        {
+          "if": [
+            {
+              "differs": { "a": { "field": "moisture" }, "b": { "none": true } }
+            }
+          ],
+          "value": { "from": { "field": "moisture" }, "slot": "moisture" }
+        },
+        {
+          "if": [
+            {
+              "differs": { "a": { "field": "moisture" }, "b": { "none": true } }
+            }
+          ],
+          "ref": { "from": "self", "slot": "moistureAt" }
+        },
+        {
+          "if": [
+            { "differs": { "a": { "field": "ec" }, "b": { "none": true } } }
+          ],
+          "value": { "from": { "field": "ec" }, "slot": "ec" }
+        },
+        {
+          "if": [
+            { "differs": { "a": { "field": "ec" }, "b": { "none": true } } }
+          ],
+          "ref": { "from": "self", "slot": "ecAt" }
+        },
+        {
+          "if": [
+            { "differs": { "a": { "field": "ph" }, "b": { "none": true } } }
+          ],
+          "value": { "from": { "field": "ph" }, "slot": "ph" }
+        },
+        {
+          "if": [
+            { "differs": { "a": { "field": "ph" }, "b": { "none": true } } }
+          ],
+          "ref": { "from": "self", "slot": "phAt" }
+        },
+        {
+          "if": [
+            { "differs": { "a": { "field": "height" }, "b": { "none": true } } }
+          ],
+          "value": { "from": { "field": "height" }, "slot": "height" }
+        },
+        {
+          "if": [
+            { "differs": { "a": { "field": "height" }, "b": { "none": true } } }
+          ],
+          "ref": { "from": "self", "slot": "heightAt" }
+        },
+        {
+          "if": [
+            {
+              "differs": { "a": { "field": "insects" }, "b": { "none": true } }
+            }
+          ],
+          "value": { "from": { "field": "insects" }, "slot": "insects" }
+        },
+        {
+          "if": [
+            {
+              "differs": { "a": { "field": "insects" }, "b": { "none": true } }
+            }
+          ],
+          "ref": { "from": "self", "slot": "insectsAt" }
+        },
+        {
+          "if": [
+            { "differs": { "a": { "field": "note" }, "b": { "none": true } } }
+          ],
+          "value": { "from": { "field": "note" }, "slot": "note" }
+        },
+        {
+          "if": [
+            { "differs": { "a": { "field": "note" }, "b": { "none": true } } }
+          ],
+          "ref": { "from": "self", "slot": "noteAt" }
+        },
+        { "state": "fresh" },
+        {
+          "value": {
+            "from": { "time": { "plusSeconds": 0 } },
+            "slot": "probeTime"
+          }
+        },
+        {
+          "value": {
+            "from": { "time": { "plusSeconds": 172800 } },
+            "slot": "staleAt"
+          }
+        },
+        { "ref": { "from": "self", "slot": "lastProbe" } }
+      ],
+      "fields": {
+        "ec": { "max": 10000, "min": 0, "required": false, "type": "int" },
+        "height": { "max": 5000, "min": 0, "required": false, "type": "int" },
+        "insects": { "max": 10000, "min": 0, "required": false, "type": "int" },
+        "moisture": { "max": 100, "min": 0, "required": false, "type": "int" },
+        "note": { "max": 1024, "required": false, "type": "text" },
+        "ph": { "max": 1400, "min": 0, "required": false, "type": "int" }
+      },
+      "grant": "grow.tend",
+      "guards": [
+        { "state": ["stale", "fresh"] },
+        { "reason": "empty-probe", "rule": "probe-content" }
+      ],
+      "on": "bench",
+      "sends": [],
+      "step": "transition"
+    },
+    "propose-restoration": {
+      "also": {
+        "vent": {
+          "item": "device",
+          "via": { "of": "also.zone", "slot": "vent" }
+        },
+        "zone": { "item": "zone", "via": { "of": "on", "slot": "zone" } }
+      },
+      "attention": [],
+      "effects": [
+        { "state": "open" },
+        { "value": { "from": { "field": "text" }, "slot": "text" } },
+        { "value": { "from": { "field": "proposal" }, "slot": "proposal" } },
+        { "value": { "from": { "const": "on" }, "slot": "target" } },
+        { "value": { "from": { "const": 100 }, "slot": "level" } },
+        { "party": { "from": null, "slot": "authorizedBy" } }
+      ],
+      "fields": {
+        "proposal": { "max": 1024, "required": true, "type": "text" },
+        "text": { "max": 1024, "required": true, "type": "text" }
+      },
+      "grant": "grow.climate",
+      "guards": [
+        { "state": ["authorized"] },
+        { "signer": ["raisedBy"] },
+        { "of": "also.zone", "state": ["in-band", "out-of-band"] },
+        { "of": "also.vent", "state": ["active"] },
+        { "of": "also.vent", "set": "reported" },
+        {
+          "anyOf": [
+            [{ "of": "also.vent", "unset": "reported" }],
+            [
+              {
+                "differs": {
+                  "a": { "slot": "reported" },
+                  "b": { "const": "error" }
+                },
+                "of": "also.vent"
+              }
+            ]
+          ],
+          "reason": "device-error"
+        }
+      ],
+      "on": "alert",
+      "sends": [],
+      "step": "transition"
+    },
+    "raise-alert": {
+      "also": {
+        "fan": {
+          "item": "device",
+          "via": { "of": "also.zone", "slot": "fan" }
+        },
+        "heater": {
+          "item": "device",
+          "via": { "of": "also.zone", "slot": "heater" }
+        },
+        "vent": {
+          "item": "device",
+          "via": { "of": "also.zone", "slot": "vent" }
+        },
+        "zone": { "by": "zone", "item": "zone" }
+      },
+      "attention": [],
+      "effects": [
+        { "party": { "from": { "signer": true }, "slot": "raisedBy" } },
+        { "ref": { "from": { "field": "zone" }, "slot": "zone" } },
+        { "ref": { "from": { "item": "also.heater" }, "slot": "heater" } },
+        { "ref": { "from": "self", "slot": "first" } },
+        { "value": { "from": { "field": "text" }, "slot": "text" } },
+        { "value": { "from": { "field": "proposal" }, "slot": "proposal" } },
+        { "value": { "from": { "field": "target" }, "slot": "target" } },
+        { "value": { "from": { "field": "level" }, "slot": "level" } },
+        {
+          "value": {
+            "from": { "time": { "plusSeconds": 0 } },
+            "slot": "raisedTime"
+          }
+        }
+      ],
+      "fields": {
+        "level": { "max": 100, "min": 0, "required": true, "type": "int" },
+        "proposal": { "max": 1024, "required": true, "type": "text" },
+        "target": { "of": ["on", "off"], "required": true, "type": "enum" },
+        "text": { "max": 1024, "required": true, "type": "text" },
+        "zone": { "of": "zone", "required": true, "type": "item" }
+      },
+      "grant": "grow.climate",
+      "guards": [
+        { "of": "also.zone", "state": ["out-of-band"] },
+        { "of": "also.vent", "state": ["active"] },
+        { "of": "also.fan", "state": ["active"] },
+        { "of": "also.heater", "state": ["active"] },
+        { "reason": "climate-actions-remain", "rule": "climate-exhausted" },
+        {
+          "anyOf": [
+            [
+              {
+                "equals": {
+                  "a": { "field": "target" },
+                  "b": { "const": "off" }
+                }
+              },
+              { "equals": { "a": { "field": "level" }, "b": { "const": 0 } } }
+            ],
+            [
+              {
+                "equals": { "a": { "field": "target" }, "b": { "const": "on" } }
+              },
+              { "equals": { "a": { "field": "level" }, "b": { "const": 100 } } }
+            ]
+          ],
+          "reason": "invalid-heater-proposal"
+        },
+        {
+          "none": {
+            "states": ["open", "held", "authorized"],
+            "type": "alert",
+            "where": [
+              {
+                "equals": { "a": { "slot": "zone" }, "b": { "field": "zone" } }
+              }
+            ]
+          },
+          "reason": "zone-alert-open"
+        }
+      ],
+      "on": "alert",
+      "sends": [],
+      "step": "open"
+    },
+    "report-device": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "reported" }, "slot": "reported" } },
+        { "value": { "from": { "field": "level" }, "slot": "reportedLevel" } },
+        {
+          "value": { "from": { "field": "description" }, "slot": "description" }
+        },
+        {
+          "value": {
+            "from": { "time": { "plusSeconds": 0 } },
+            "slot": "reportedTime"
+          }
+        },
+        { "ref": { "from": "self", "slot": "reportedAt" } }
+      ],
+      "fields": {
+        "description": { "max": 1024, "required": true, "type": "text" },
+        "level": { "max": 100, "min": 0, "required": true, "type": "int" },
+        "reported": {
+          "of": ["open", "closed", "on", "off", "error"],
+          "required": true,
+          "type": "enum"
+        }
+      },
+      "grant": "grow.sense",
+      "guards": [
+        { "state": ["active"] },
+        { "reason": "invalid-device-report", "rule": "device-report" }
+      ],
+      "on": "device",
+      "sends": [],
+      "step": "transition"
+    },
+    "report-site": {
+      "also": {},
+      "attention": [],
+      "effects": [{ "ref": { "from": "self", "slot": "lastSiteReport" } }],
+      "fields": {
+        "openAlerts": { "max": 4, "min": 0, "required": true, "type": "int" }
+      },
+      "grant": "grow.sense",
+      "guards": [
+        { "state": ["open"] },
+        { "set": "site" },
+        { "set": "siteRoom" },
+        {
+          "count": {
+            "max": { "field": "openAlerts" },
+            "min": { "field": "openAlerts" },
+            "states": ["open", "held", "authorized"],
+            "type": "alert"
+          },
+          "reason": "wrong-alert-count"
+        }
+      ],
+      "on": "room",
+      "sends": [
+        {
+          "relate": {
+            "detail": {
+              "openAlerts": { "field": "openAlerts" },
+              "room": { "slot": "siteRoom" }
+            },
+            "item": { "item": "on" },
+            "name": "room-summary",
+            "result": { "refused": [], "undelivered": [] },
+            "state": "reported",
+            "to": { "slot": "site" }
+          }
+        }
+      ],
+      "step": "transition"
+    },
+    "report-task": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "state": "done" },
+        { "value": { "from": { "field": "report" }, "slot": "report" } },
+        {
+          "value": {
+            "from": { "time": { "plusSeconds": 0 } },
+            "slot": "reportTime"
+          }
+        },
+        { "ref": { "from": "self", "slot": "reportAt" } }
+      ],
+      "fields": { "report": { "max": 2048, "required": true, "type": "text" } },
+      "grant": "grow.tend",
+      "guards": [
+        { "state": ["taken"] },
+        { "signer": ["performer"] },
+        { "reason": "empty-task-report", "rule": "task-report-content" }
+      ],
+      "on": "task",
+      "sends": [],
+      "step": "transition"
+    },
+    "report-zone": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        {
+          "if": [
+            { "equals": { "a": { "field": "inBand" }, "b": { "const": 25 } } }
+          ],
+          "state": "in-band"
+        },
+        {
+          "state": "out-of-band",
+          "unless": [
+            { "equals": { "a": { "field": "inBand" }, "b": { "const": 25 } } }
+          ]
+        },
+        { "value": { "from": { "field": "min" }, "slot": "min" } },
+        { "value": { "from": { "field": "max" }, "slot": "max" } },
+        { "value": { "from": { "field": "mean" }, "slot": "mean" } },
+        { "value": { "from": { "field": "inBand" }, "slot": "inBand" } },
+        {
+          "value": { "from": { "field": "sampledAt" }, "slot": "summaryTime" }
+        },
+        { "ref": { "from": { "field": "summary" }, "slot": "summary" } }
+      ],
+      "fields": {
+        "inBand": { "max": 25, "min": 0, "required": true, "type": "int" },
+        "max": { "max": 8000, "min": -4000, "required": true, "type": "int" },
+        "mean": { "max": 8000, "min": -4000, "required": true, "type": "int" },
+        "min": { "max": 8000, "min": -4000, "required": true, "type": "int" },
+        "sampledAt": { "required": true, "type": "time" },
+        "summary": {
+          "kind": ["observe"],
+          "required": true,
+          "type": "fact",
+          "under": "grow-room"
+        },
+        "zones": {
+          "max": 4,
+          "of": {
+            "of": {
+              "inBand": {
+                "max": 25,
+                "min": 0,
+                "required": true,
+                "type": "int"
+              },
+              "max": {
+                "max": 8000,
+                "min": -4000,
+                "required": true,
+                "type": "int"
+              },
+              "mean": {
+                "max": 8000,
+                "min": -4000,
+                "required": true,
+                "type": "int"
+              },
+              "min": {
+                "max": 8000,
+                "min": -4000,
+                "required": true,
+                "type": "int"
+              },
+              "zone": { "of": "zone", "required": true, "type": "item" }
+            },
+            "type": "record"
+          },
+          "required": true,
+          "type": "list"
+        }
+      },
+      "grant": "grow.sense",
+      "guards": [
+        { "state": ["unobserved", "in-band", "out-of-band"] },
+        { "fact": { "field": "summary" } },
+        {
+          "equals": {
+            "a": { "field": "summary", "part": "scope" },
+            "b": { "scope": true }
+          },
+          "reason": "wrong-summary-room"
+        },
+        {
+          "equals": {
+            "a": { "field": "summary", "part": { "field": "zones" } },
+            "b": { "field": "zones" }
+          },
+          "reason": "summary-mismatch"
+        },
+        {
+          "equals": {
+            "a": { "field": "summary", "part": { "field": "sampledAt" } },
+            "b": { "field": "sampledAt" }
+          },
+          "reason": "summary-mismatch"
+        },
+        { "reason": "invalid-zone-evidence", "rule": "zone-evidence" },
+        { "reason": "stale-zone-summary", "rule": "zone-order" },
+        { "reason": "no-band-crossing", "rule": "zone-crossing" }
+      ],
+      "on": "zone",
+      "sends": [],
+      "step": "transition"
+    },
+    "request-watering": {
+      "also": {
+        "bench": { "by": "bench", "item": "bench" },
+        "zone": { "by": "zone", "item": "zone" }
+      },
+      "attention": [],
+      "effects": [
+        { "ref": { "from": { "field": "zone" }, "slot": "zone" } },
+        { "ref": { "from": { "field": "bench" }, "slot": "bench" } },
+        { "ref": { "from": { "field": "basis" }, "slot": "basis" } },
+        { "value": { "from": { "field": "amountMl" }, "slot": "amountMl" } },
+        { "value": { "from": { "const": "requested" }, "slot": "mode" } },
+        { "value": { "from": { "field": "reason" }, "slot": "reason" } }
+      ],
+      "fields": {
+        "amountMl": { "max": 10000, "min": 1, "required": true, "type": "int" },
+        "basis": {
+          "kind": ["probe"],
+          "required": true,
+          "type": "fact",
+          "under": "grow-room"
+        },
+        "bench": { "of": "bench", "required": true, "type": "item" },
+        "reason": { "max": 1024, "required": true, "type": "text" },
+        "zone": { "of": "zone", "required": true, "type": "item" }
+      },
+      "grant": "grow.water",
+      "guards": [
+        { "fact": { "field": "basis" } },
+        {
+          "equals": {
+            "a": { "field": "basis", "part": "scope" },
+            "b": { "scope": true }
+          },
+          "reason": "wrong-watering-room"
+        },
+        {
+          "equals": {
+            "a": { "field": "basis", "part": "on" },
+            "b": { "field": "bench" }
+          },
+          "reason": "wrong-watering-bench"
+        },
+        {
+          "equals": {
+            "a": { "of": "also.bench", "slot": "zone" },
+            "b": { "field": "zone" }
+          },
+          "reason": "wrong-watering-zone"
+        },
+        { "reason": "empty-watering-reason", "rule": "water-request-content" }
+      ],
+      "on": "watering",
+      "sends": [],
+      "step": "open"
+    },
+    "set-band": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "setpoint" }, "slot": "setpoint" } },
+        { "value": { "from": { "field": "band" }, "slot": "band" } },
+        { "state": "unobserved" }
+      ],
+      "fields": {
+        "band": { "max": 2000, "min": 1, "required": true, "type": "int" },
+        "setpoint": {
+          "max": 8000,
+          "min": -4000,
+          "required": true,
+          "type": "int"
+        }
+      },
+      "grant": "grow.heat",
+      "guards": [{ "state": ["unobserved", "in-band", "out-of-band"] }],
+      "on": "zone",
+      "sends": [],
+      "step": "transition"
+    },
+    "set-fan": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "target" }, "slot": "target" } },
+        { "value": { "from": { "field": "level" }, "slot": "level" } },
+        { "ref": { "from": "self", "slot": "targetAt" } },
+        {
+          "capability": {
+            "do": "open",
+            "name": "device-command",
+            "with": { "device": { "slot": "kind" } }
+          }
+        }
+      ],
+      "fields": {
+        "level": { "max": 100, "min": 0, "required": true, "type": "int" },
+        "target": {
+          "of": ["open", "closed", "on", "off"],
+          "required": true,
+          "type": "enum"
+        }
+      },
+      "grant": "grow.climate",
+      "guards": [
+        { "state": ["active"] },
+        {
+          "equals": { "a": { "slot": "kind" }, "b": { "const": "fan" } },
+          "reason": "wrong-device-kind"
+        },
+        {
+          "anyOf": [
+            [{ "unset": "reported" }],
+            [
+              {
+                "differs": {
+                  "a": { "slot": "reported" },
+                  "b": { "const": "error" }
+                }
+              }
+            ]
+          ],
+          "reason": "device-error"
+        },
+        { "reason": "device-limit", "rule": "device-target" },
+        {
+          "capability": {
+            "guard": "allowed",
+            "name": "device-command",
+            "with": { "kind": { "slot": "kind" } }
+          }
+        }
+      ],
+      "on": "device",
+      "sends": [],
+      "step": "transition"
+    },
+    "set-heater": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "target" }, "slot": "target" } },
+        { "value": { "from": { "field": "level" }, "slot": "level" } },
+        { "ref": { "from": "self", "slot": "targetAt" } },
+        {
+          "capability": {
+            "do": "open",
+            "name": "device-command",
+            "with": { "device": { "slot": "kind" } }
+          }
+        }
+      ],
+      "fields": {
+        "level": { "max": 100, "min": 0, "required": true, "type": "int" },
+        "target": {
+          "of": ["open", "closed", "on", "off"],
+          "required": true,
+          "type": "enum"
+        }
+      },
+      "grant": "grow.heat",
+      "guards": [
+        { "state": ["active"] },
+        {
+          "equals": { "a": { "slot": "kind" }, "b": { "const": "heater" } },
+          "reason": "wrong-device-kind"
+        },
+        {
+          "anyOf": [
+            [{ "unset": "reported" }],
+            [
+              {
+                "differs": {
+                  "a": { "slot": "reported" },
+                  "b": { "const": "error" }
+                }
+              }
+            ]
+          ],
+          "reason": "device-error"
+        },
+        { "reason": "device-limit", "rule": "device-target" },
+        {
+          "capability": {
+            "guard": "allowed",
+            "name": "device-command",
+            "with": { "kind": { "slot": "kind" } }
+          }
+        }
+      ],
+      "on": "device",
+      "sends": [],
+      "step": "transition"
+    },
+    "set-vent": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "target" }, "slot": "target" } },
+        { "value": { "from": { "field": "level" }, "slot": "level" } },
+        { "ref": { "from": "self", "slot": "targetAt" } },
+        {
+          "capability": {
+            "do": "open",
+            "name": "device-command",
+            "with": { "device": { "slot": "kind" } }
+          }
+        }
+      ],
+      "fields": {
+        "level": { "max": 100, "min": 0, "required": true, "type": "int" },
+        "target": {
+          "of": ["open", "closed", "on", "off"],
+          "required": true,
+          "type": "enum"
+        }
+      },
+      "grant": "grow.climate",
+      "guards": [
+        { "state": ["active"] },
+        {
+          "equals": { "a": { "slot": "kind" }, "b": { "const": "vent" } },
+          "reason": "wrong-device-kind"
+        },
+        {
+          "anyOf": [
+            [{ "unset": "reported" }],
+            [
+              {
+                "differs": {
+                  "a": { "slot": "reported" },
+                  "b": { "const": "error" }
+                }
+              }
+            ]
+          ],
+          "reason": "device-error"
+        },
+        { "reason": "device-limit", "rule": "device-target" },
+        {
+          "capability": {
+            "guard": "allowed",
+            "name": "device-command",
+            "with": { "kind": { "slot": "kind" } }
+          }
+        }
+      ],
+      "on": "device",
+      "sends": [],
+      "step": "transition"
+    },
+    "set-water-policy": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "value": { "from": { "field": "opensAt" }, "slot": "opensAt" } },
+        { "value": { "from": { "field": "closesAt" }, "slot": "closesAt" } },
+        { "value": { "from": { "field": "maxMl" }, "slot": "maxMl" } }
+      ],
+      "fields": {
+        "closesAt": { "required": true, "type": "time" },
+        "maxMl": { "max": 10000, "min": 1, "required": true, "type": "int" },
+        "opensAt": { "required": true, "type": "time" }
+      },
+      "grant": "grow.water-more",
+      "guards": [
+        { "state": ["active"] },
+        { "reason": "invalid-water-window", "rule": "water-window" }
+      ],
+      "on": "water-policy",
+      "sends": [],
+      "step": "transition"
+    },
+    "take-task": {
+      "also": {},
+      "attention": [],
+      "effects": [
+        { "state": "taken" },
+        { "party": { "from": { "signer": true }, "slot": "performer" } }
+      ],
+      "fields": {},
+      "grant": "grow.tend",
+      "guards": [{ "state": ["offered"] }],
+      "on": "task",
+      "sends": [],
+      "step": "transition"
+    },
+    "water": {
+      "also": {
+        "policy": { "item": "water-policy", "one": true },
+        "zone": { "by": "zone", "item": "zone" }
+      },
+      "attention": [],
+      "effects": [
+        { "state": "done" },
+        { "ref": { "from": { "field": "zone" }, "slot": "zone" } },
+        { "value": { "from": { "field": "amountMl" }, "slot": "amountMl" } },
+        { "value": { "from": { "const": "scheduled" }, "slot": "mode" } },
+        { "value": { "from": { "field": "reason" }, "slot": "reason" } },
+        { "party": { "from": { "signer": true }, "slot": "performedBy" } },
+        {
+          "value": {
+            "from": { "time": { "plusSeconds": 0 } },
+            "slot": "performedTime"
+          }
+        },
+        { "ref": { "from": "self", "slot": "performedAt" } }
+      ],
+      "fields": {
+        "amountMl": { "max": 10000, "min": 1, "required": true, "type": "int" },
+        "reason": { "max": 1024, "required": true, "type": "text" },
+        "zone": { "of": "zone", "required": true, "type": "item" }
+      },
+      "grant": "grow.water",
+      "guards": [
+        { "of": "also.policy", "state": ["active"] },
+        { "after": { "slot": "opensAt" }, "of": "also.policy" },
+        { "before": { "slot": "closesAt" }, "of": "also.policy" },
+        { "reason": "watering-exceeds-schedule", "rule": "water-amount" }
+      ],
+      "on": "watering",
+      "sends": [],
+      "step": "open"
+    }
+  },
+  "capabilities": [{ "name": "device-command", "version": 1 }],
+  "format": "artroom-definition-1",
+  "genesis": "establish",
+  "items": {
+    "alert": {
+      "initial": "open",
+      "many": true,
+      "max": 4,
+      "parties": {
+        "authorizedBy": {
+          "author": false,
+          "fixed": false,
+          "list": false,
+          "required": false
+        },
+        "heldBy": {
+          "author": false,
+          "fixed": false,
+          "list": false,
+          "required": false
+        },
+        "raisedBy": {
+          "author": false,
+          "fixed": true,
+          "list": false,
+          "required": true
+        }
+      },
+      "refs": {
+        "first": {
+          "fixed": true,
+          "required": true,
+          "to": {
+            "kind": ["raise-alert"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "heater": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "device", "type": "item" }
+        },
+        "last": {
+          "fixed": false,
+          "required": false,
+          "to": {
+            "kind": ["close-incident"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "zone": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "zone", "type": "item" }
+        }
+      },
+      "states": {
+        "authorized": { "final": false },
+        "closed": { "final": true },
+        "held": { "final": false },
+        "open": { "final": false }
+      },
+      "values": {
+        "holdUntil": {
+          "fixed": false,
+          "of": { "type": "time" },
+          "required": false
+        },
+        "level": {
+          "fixed": false,
+          "of": { "max": 100, "min": 0, "type": "int" },
+          "required": true
+        },
+        "proposal": {
+          "fixed": false,
+          "of": { "max": 1024, "type": "text" },
+          "required": true
+        },
+        "raisedTime": {
+          "fixed": true,
+          "of": { "type": "time" },
+          "required": true
+        },
+        "target": {
+          "fixed": false,
+          "of": { "of": ["on", "off"], "type": "enum" },
+          "required": true
+        },
+        "text": {
+          "fixed": false,
+          "of": { "max": 1024, "type": "text" },
+          "required": true
+        }
+      }
+    },
+    "bench": {
+      "initial": "stale",
+      "many": true,
+      "max": 100,
+      "parties": {},
+      "refs": {
+        "ecAt": {
+          "fixed": false,
+          "required": false,
+          "to": { "kind": ["probe"], "type": "fact", "under": "grow-room" }
+        },
+        "heightAt": {
+          "fixed": false,
+          "required": false,
+          "to": { "kind": ["probe"], "type": "fact", "under": "grow-room" }
+        },
+        "insectsAt": {
+          "fixed": false,
+          "required": false,
+          "to": { "kind": ["probe"], "type": "fact", "under": "grow-room" }
+        },
+        "lastProbe": {
+          "fixed": false,
+          "required": false,
+          "to": { "kind": ["probe"], "type": "fact", "under": "grow-room" }
+        },
+        "moistureAt": {
+          "fixed": false,
+          "required": false,
+          "to": { "kind": ["probe"], "type": "fact", "under": "grow-room" }
+        },
+        "noteAt": {
+          "fixed": false,
+          "required": false,
+          "to": { "kind": ["probe"], "type": "fact", "under": "grow-room" }
+        },
+        "phAt": {
+          "fixed": false,
+          "required": false,
+          "to": { "kind": ["probe"], "type": "fact", "under": "grow-room" }
+        },
+        "zone": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "zone", "type": "item" }
+        }
+      },
+      "states": { "fresh": { "final": false }, "stale": { "final": false } },
+      "values": {
+        "column": {
+          "fixed": true,
+          "of": { "max": 10, "min": 1, "type": "int" },
+          "required": true
+        },
+        "ec": {
+          "fixed": false,
+          "of": { "max": 10000, "min": 0, "type": "int" },
+          "required": false
+        },
+        "height": {
+          "fixed": false,
+          "of": { "max": 5000, "min": 0, "type": "int" },
+          "required": false
+        },
+        "insects": {
+          "fixed": false,
+          "of": { "max": 10000, "min": 0, "type": "int" },
+          "required": false
+        },
+        "label": {
+          "fixed": true,
+          "of": { "max": 80, "type": "text" },
+          "required": true
+        },
+        "moisture": {
+          "fixed": false,
+          "of": { "max": 100, "min": 0, "type": "int" },
+          "required": false
+        },
+        "note": {
+          "fixed": false,
+          "of": { "max": 1024, "type": "text" },
+          "required": false
+        },
+        "ph": {
+          "fixed": false,
+          "of": { "max": 1400, "min": 0, "type": "int" },
+          "required": false
+        },
+        "probeTime": {
+          "fixed": false,
+          "of": { "type": "time" },
+          "required": false
+        },
+        "row": {
+          "fixed": true,
+          "of": {
+            "of": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
+            "type": "enum"
+          },
+          "required": true
+        },
+        "staleAt": {
+          "fixed": false,
+          "of": { "type": "time" },
+          "required": false
+        }
+      }
+    },
+    "device": {
+      "initial": "active",
+      "many": true,
+      "max": 12,
+      "parties": {},
+      "refs": {
+        "outcomeAt": {
+          "capability": "device-command@1",
+          "fixed": false,
+          "required": false,
+          "to": {
+            "kind": ["device-command@1:answer"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "reportedAt": {
+          "fixed": false,
+          "required": false,
+          "to": {
+            "kind": ["report-device"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "targetAt": {
+          "fixed": false,
+          "required": true,
+          "to": {
+            "kind": [
+              "commission-device",
+              "set-vent",
+              "set-fan",
+              "set-heater",
+              "authorize"
+            ],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "zone": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "zone", "type": "item" }
+        }
+      },
+      "states": { "active": { "final": false } },
+      "values": {
+        "description": {
+          "fixed": false,
+          "of": { "max": 1024, "type": "text" },
+          "required": false
+        },
+        "kind": {
+          "fixed": true,
+          "of": { "of": ["vent", "fan", "heater"], "type": "enum" },
+          "required": true
+        },
+        "label": {
+          "fixed": true,
+          "of": { "max": 80, "type": "text" },
+          "required": true
+        },
+        "level": {
+          "fixed": false,
+          "of": { "max": 100, "min": 0, "type": "int" },
+          "required": true
+        },
+        "maxLevel": {
+          "fixed": true,
+          "of": { "max": 100, "min": 0, "type": "int" },
+          "required": true
+        },
+        "minLevel": {
+          "fixed": true,
+          "of": { "max": 100, "min": 0, "type": "int" },
+          "required": true
+        },
+        "outcome": {
+          "capability": "device-command@1",
+          "fixed": false,
+          "of": { "of": ["confirmed", "refused", "unknown"], "type": "enum" },
+          "required": false
+        },
+        "reported": {
+          "fixed": false,
+          "of": {
+            "of": ["open", "closed", "on", "off", "error"],
+            "type": "enum"
+          },
+          "required": false
+        },
+        "reportedLevel": {
+          "fixed": false,
+          "of": { "max": 100, "min": 0, "type": "int" },
+          "required": false
+        },
+        "reportedTime": {
+          "fixed": false,
+          "of": { "type": "time" },
+          "required": false
+        },
+        "target": {
+          "fixed": false,
+          "of": { "of": ["open", "closed", "on", "off"], "type": "enum" },
+          "required": true
+        }
+      }
+    },
+    "incident": {
+      "initial": "open",
+      "many": true,
+      "max": 4,
+      "parties": {},
+      "refs": {
+        "alert": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "alert", "type": "item" }
+        },
+        "first": {
+          "fixed": true,
+          "required": true,
+          "to": {
+            "kind": ["raise-alert"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "last": {
+          "fixed": false,
+          "required": false,
+          "to": {
+            "kind": ["close-incident"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        }
+      },
+      "states": { "closed": { "final": true }, "open": { "final": false } },
+      "values": {}
+    },
+    "room": {
+      "initial": "open",
+      "many": false,
+      "max": 1,
+      "parties": {},
+      "refs": {
+        "lastSiteReport": {
+          "fixed": false,
+          "required": false,
+          "to": {
+            "kind": ["report-site"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "site": {
+          "fixed": true,
+          "required": false,
+          "to": { "kind": "lane", "type": "scope" }
+        },
+        "siteRoom": {
+          "fixed": true,
+          "required": false,
+          "to": {
+            "kind": ["create-room"],
+            "type": "fact",
+            "under": "grow-site"
+          }
+        }
+      },
+      "states": { "open": { "final": false } },
+      "values": {
+        "label": {
+          "fixed": true,
+          "of": { "max": 80, "type": "text" },
+          "required": true
+        }
+      }
+    },
+    "task": {
+      "initial": "offered",
+      "many": true,
+      "max": 32,
+      "parties": {
+        "performer": {
+          "author": true,
+          "fixed": false,
+          "list": false,
+          "required": false
+        }
+      },
+      "refs": {
+        "alert": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "alert", "type": "item" }
+        },
+        "device": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "device", "type": "item" }
+        },
+        "reportAt": {
+          "fixed": false,
+          "required": false,
+          "to": {
+            "kind": ["report-task"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "zone": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "zone", "type": "item" }
+        }
+      },
+      "states": {
+        "done": { "final": true },
+        "offered": { "final": false },
+        "taken": { "final": false }
+      },
+      "values": {
+        "report": {
+          "fixed": false,
+          "of": { "max": 2048, "type": "text" },
+          "required": false
+        },
+        "reportTime": {
+          "fixed": false,
+          "of": { "type": "time" },
+          "required": false
+        },
+        "text": {
+          "fixed": true,
+          "of": { "max": 1024, "type": "text" },
+          "required": true
+        }
+      }
+    },
+    "water-policy": {
+      "initial": "active",
+      "many": false,
+      "max": 1,
+      "parties": {},
+      "refs": {},
+      "states": { "active": { "final": false } },
+      "values": {
+        "closesAt": {
+          "fixed": false,
+          "of": { "type": "time" },
+          "required": true
+        },
+        "maxMl": {
+          "fixed": false,
+          "of": { "max": 10000, "min": 1, "type": "int" },
+          "required": true
+        },
+        "opensAt": {
+          "fixed": false,
+          "of": { "type": "time" },
+          "required": true
+        }
+      }
+    },
+    "watering": {
+      "initial": "asked",
+      "many": true,
+      "max": 32,
+      "parties": {
+        "decidedBy": {
+          "author": false,
+          "fixed": false,
+          "list": false,
+          "required": false
+        },
+        "performedBy": {
+          "author": true,
+          "fixed": false,
+          "list": false,
+          "required": false
+        }
+      },
+      "refs": {
+        "basis": {
+          "fixed": false,
+          "required": false,
+          "to": { "kind": ["probe"], "type": "fact", "under": "grow-room" }
+        },
+        "bench": {
+          "fixed": false,
+          "required": false,
+          "to": { "of": "bench", "type": "item" }
+        },
+        "decisionAt": {
+          "fixed": false,
+          "required": false,
+          "to": {
+            "kind": ["approve-watering", "decline-watering"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "performedAt": {
+          "fixed": false,
+          "required": false,
+          "to": {
+            "kind": ["water", "fulfill-watering"],
+            "type": "fact",
+            "under": "grow-room"
+          }
+        },
+        "zone": {
+          "fixed": true,
+          "required": true,
+          "to": { "of": "zone", "type": "item" }
+        }
+      },
+      "states": {
+        "approved": { "final": false },
+        "asked": { "final": false },
+        "declined": { "final": true },
+        "done": { "final": true }
+      },
+      "values": {
+        "amountMl": {
+          "fixed": true,
+          "of": { "max": 10000, "min": 1, "type": "int" },
+          "required": true
+        },
+        "decision": {
+          "fixed": false,
+          "of": { "max": 1024, "type": "text" },
+          "required": false
+        },
+        "mode": {
+          "fixed": true,
+          "of": { "of": ["scheduled", "requested"], "type": "enum" },
+          "required": true
+        },
+        "performedTime": {
+          "fixed": false,
+          "of": { "type": "time" },
+          "required": false
+        },
+        "reason": {
+          "fixed": true,
+          "of": { "max": 1024, "type": "text" },
+          "required": true
+        }
+      }
+    },
+    "zone": {
+      "initial": "unobserved",
+      "many": true,
+      "max": 4,
+      "parties": {},
+      "refs": {
+        "fan": {
+          "fixed": false,
+          "required": false,
+          "to": { "of": "device", "type": "item" }
+        },
+        "heater": {
+          "fixed": false,
+          "required": false,
+          "to": { "of": "device", "type": "item" }
+        },
+        "summary": {
+          "fixed": false,
+          "required": false,
+          "to": { "kind": ["observe"], "type": "fact", "under": "grow-room" }
+        },
+        "vent": {
+          "fixed": false,
+          "required": false,
+          "to": { "of": "device", "type": "item" }
+        }
+      },
+      "states": {
+        "in-band": { "final": false },
+        "out-of-band": { "final": false },
+        "unobserved": { "final": false }
+      },
+      "values": {
+        "band": {
+          "fixed": false,
+          "of": { "max": 2000, "min": 1, "type": "int" },
+          "required": true
+        },
+        "inBand": {
+          "fixed": false,
+          "of": { "max": 25, "min": 0, "type": "int" },
+          "required": false
+        },
+        "label": {
+          "fixed": true,
+          "of": { "max": 80, "type": "text" },
+          "required": true
+        },
+        "max": {
+          "fixed": false,
+          "of": { "max": 8000, "min": -4000, "type": "int" },
+          "required": false
+        },
+        "mean": {
+          "fixed": false,
+          "of": { "max": 8000, "min": -4000, "type": "int" },
+          "required": false
+        },
+        "min": {
+          "fixed": false,
+          "of": { "max": 8000, "min": -4000, "type": "int" },
+          "required": false
+        },
+        "setpoint": {
+          "fixed": false,
+          "of": { "max": 8000, "min": -4000, "type": "int" },
+          "required": true
+        },
+        "summaryTime": {
+          "fixed": false,
+          "of": { "type": "time" },
+          "required": false
+        }
+      }
+    }
+  },
+  "name": "grow-room",
+  "profile": { "name": "restricted", "version": 1 },
+  "receives": {},
+  "rules": {
+    "authorized-target": "(subjects.on.values.target = 'off' and subjects.on.values.level = 0) or (subjects.on.values.target = 'on' and subjects.on.values.level = 100 and subjects.`also.heater`.values.minLevel <= 100 and subjects.`also.heater`.values.maxLevel >= 100)",
+    "climate-exhausted": "(subjects.`also.vent`.values.reported = 'error' or subjects.`also.vent`.values.level >= subjects.`also.vent`.values.maxLevel) and (subjects.`also.fan`.values.reported = 'error' or subjects.`also.fan`.values.level >= subjects.`also.fan`.values.maxLevel)",
+    "device-report": "(fields.reported = 'error' and $length(fields.description) > 0) or (fields.description = '' and (((subjects.on.values.kind = 'vent') and fields.reported in ['open', 'closed']) or ((subjects.on.values.kind in ['fan', 'heater']) and fields.reported in ['on', 'off'])) and ((fields.reported in ['closed', 'off'] and fields.level = 0) or (fields.reported in ['open', 'on'] and fields.level >= 1 and (subjects.on.values.kind != 'heater' or fields.level = 100))))",
+    "device-setup": "fields.minLevel <= fields.maxLevel and ((((fields.kind = 'vent') and fields.target in ['open', 'closed']) or ((fields.kind in ['fan', 'heater']) and fields.target in ['on', 'off'])) and ((fields.target in ['closed', 'off'] and fields.level = 0) or (fields.target in ['open', 'on'] and fields.level >= 1 and fields.level >= fields.minLevel and fields.level <= fields.maxLevel and (fields.kind != 'heater' or fields.level = 100))))",
+    "device-target": "(((subjects.on.values.kind = 'vent') and fields.target in ['open', 'closed']) or ((subjects.on.values.kind in ['fan', 'heater']) and fields.target in ['on', 'off'])) and ((fields.target in ['closed', 'off'] and fields.level = 0) or (fields.target in ['open', 'on'] and fields.level >= 1 and fields.level >= subjects.on.values.minLevel and fields.level <= subjects.on.values.maxLevel and (subjects.on.values.kind != 'heater' or fields.level = 100)))",
+    "probe-content": "$exists(fields.moisture) or $exists(fields.ec) or $exists(fields.ph) or $exists(fields.height) or $exists(fields.insects) or ($length(fields.note) > 0 and $not($contains(\" \\t\\r\\n\", $substring(fields.note, 0, 1))))",
+    "recovery-evidence": "subjects.`also.zone`.refs.summary > subjects.on.refs.first",
+    "task-report-content": "$length(fields.report) > 0 and $not($contains(\" \\t\\r\\n\", $substring(fields.report, 0, 1)))",
+    "water-amount": "$exists(subjects.`also.policy`) and fields.amountMl <= subjects.`also.policy`.values.maxMl",
+    "water-request-content": "$length(fields.reason) > 0 and $not($contains(\" \\t\\r\\n\", $substring(fields.reason, 0, 1)))",
+    "water-window": "fields.opensAt < fields.closesAt",
+    "zone-crossing": "subjects.on.state = 'unobserved' or (fields.inBand = 25 ? subjects.on.state = 'out-of-band' : subjects.on.state = 'in-band')",
+    "zone-evidence": "($id := subjects.on.id; $z := fields.zones[zone = $id]; $lo := subjects.on.values.setpoint - subjects.on.values.band; $hi := subjects.on.values.setpoint + subjects.on.values.band; $count($z) = 1 and fields.min = $z.min and fields.max = $z.max and fields.mean = $z.mean and fields.inBand = $z.inBand and fields.min <= fields.mean and fields.mean <= fields.max and ((fields.min >= $lo and fields.max <= $hi) ? fields.inBand = 25 : ((fields.max < $lo or fields.min > $hi) ? fields.inBand = 0 : ((fields.min < $lo and fields.max > $hi) ? fields.inBand <= 23 : (fields.inBand >= 1 and fields.inBand <= 24)))))",
+    "zone-order": "subjects.on.refs.summary = null or (fields.sampledAt >= subjects.on.values.summaryTime and (fields.summary > subjects.on.refs.summary or (fields.summary = subjects.on.refs.summary and subjects.on.state = 'unobserved')))"
+  },
+  "timed": {
+    "bench-stale": {
+      "attention": [],
+      "deadline": "staleAt",
+      "effects": [{ "state": "stale" }],
+      "on": "bench",
+      "states": ["fresh"]
+    },
+    "hold-expired": {
+      "attention": [],
+      "deadline": "holdUntil",
+      "effects": [
+        { "state": "open" },
+        { "party": { "from": null, "slot": "heldBy" } },
+        { "value": { "from": null, "slot": "holdUntil" } }
+      ],
+      "on": "alert",
+      "states": ["held"]
+    }
+  }
+}
