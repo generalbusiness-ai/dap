@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6997994f945100441dce097576e63029bd014d7c","text":"Merge retired a covered predecessor; the successor is at packages/define/test/pins.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d4afbd230005b56cae9e08ad55f343ca540dfa0","text":"Merge retired a covered predecessor; the successor is at .agents/skills/verify-retained-editor/SKILL.md."}
