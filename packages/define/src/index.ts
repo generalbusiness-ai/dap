@@ -24,10 +24,13 @@ import type {
 } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
-import { validateDefinition } from "@generalbusiness/dap-derive";
+import { normalizeDefinition, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, RuleEvalError, ruleReferences } from "@generalbusiness/dap-derive/rule";
+import { copyDefinitionProvenance, definitionProvenance } from "./provenance.ts";
+export { extend, definitionProvenance, type DefinitionProvenance, type CompiledParent } from "./provenance.ts";
 
 export { expression } from "./expression.ts";
+export { reference } from "./field-types.ts";
 
 declare const ACT_NAME: unique symbol;
 const actNames = new WeakMap<object, { readonly under: string; readonly kind: string }>();
@@ -134,7 +137,7 @@ export const ref = {
   optional: <const T extends FieldType>(to: T) => ({ ...MODE.optional, to }) as const,
 };
 /** The members of this party slot are authors of what the item records (section 6.7). */
-export const author = <const S extends PartySlot>(slot: S) => ({ ...slot, author: true }) as const;
+export const author = <const S extends PartySlot>(slot: S): Omit<S, "author"> & { readonly author: true } => ({ ...slot, author: true }) as const;
 /** A slot that only a capability's code may write. */
 export const owned = <const S extends object, const C extends CapabilityName>(slot: S, capability: C) => ({ ...slot, capability }) as const;
 
@@ -316,9 +319,9 @@ export function none(item: ItemDef | Range, states?: readonly string[], where?: 
 export const some = (items: Range): Guard => ({ some: items });
 export const count = (items: Range, bounds: { min?: number | Operand; max?: number | Operand }): Guard => ({ count: { ...items, ...bounds } });
 /** The list's elements, keyed, are the same set as the range's items; `match` pairs an element with its item. */
-export function sameSet<L extends Operand, I extends ItemDef>(list: L, as: string, key: (element: ElemOf<L>) => Operand, item: I, states: readonly States<I>[], more: { match?: (it: Of<I>, element: ElemOf<L>) => readonly Where[]; ordered?: boolean } = {}): Guard {
+export function sameSet<L extends Operand, I extends ItemDef>(list: L, as: string, key: (element: ElemOf<L>) => Operand, item: I, states: readonly States<I>[], more: { where?: (it: Of<I>) => readonly Where[]; except?: readonly Subject[]; match?: (it: Of<I>, element: ElemOf<L>) => readonly Where[]; ordered?: boolean } = {}): Guard {
   const element = elem(as) as ElemOf<L>;
-  return { sameSet: { list, as, key: key(element), items: range(item, states), ...(more.match ? { match: more.match(of(item), element) } : {}), ...(more.ordered !== undefined ? { ordered: more.ordered } : {}) } };
+  return { sameSet: { list, as, key: key(element), items: range(item, states, more), ...(more.match ? { match: more.match(of(item), element) } : {}), ...(more.ordered !== undefined ? { ordered: more.ordered } : {}) } };
 }
 /** A scalar or an unannotated list element exposes only its complete value. */
 export type Elem = { readonly self: Operand };
@@ -370,7 +373,12 @@ function keepInline<F extends object>(from: object, into: F): F {
   return into;
 }
 /** The fact an operand names (a field, a presented fact or a bound element) is fetched and verified. */
-export const isFact = (o: Operand): Guard => ({ fact: o as { field: string } | { presented: string } | { element: string } });
+export function isFact(o: Operand): Guard;
+export function isFact(o: { field: string }, where: readonly Where[]): Guard;
+export function isFact(o: Operand, where?: readonly Where[]): Guard {
+  const fact = o as { field: string } | { presented: string } | { element: string };
+  return { fact: where === undefined ? fact : { ...fact, where } };
+}
 /** A capability's code runs `action` for the act, with no subject. */
 export const invoke = (name: "hold" | "git-read" | "device-command", action: string, args: Record<string, Operand>): EffectForm => ({ capability: { name, do: action, with: args } });
 /** The capability's rule `guard` holds for `with`. */
@@ -473,8 +481,8 @@ function inferredFields<F extends Fields, AL extends AlsoSpec>(fields: F, also: 
   return { ...inferred, ...fields } as EffectiveFields<F, AL>;
 }
 
-function act<S extends ActType["step"], I extends ItemDef | null, const F extends Fields, const AL extends AlsoSpec, const P extends Presents>(
-  step: S, on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P>, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body,
+function act<S extends ActType["step"], I extends ItemDef | null, const F extends Fields, const AL extends AlsoSpec, const P extends Presents, const G extends GrantRef = GrantRef>(
+  step: S, on: I, grant: G, spec: ActSpec<I, F, AL, P>, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body,
 ) {
   const also = (typeof spec.also === "function" ? spec.also(on === null ? undefined as OnOf<I> : of(on, "on") as OnOf<I>) : spec.also ?? {}) as AL;
   const fields = inferredFields((spec.fields ?? {}) as F, also), presents = (spec.presents ?? {}) as P;
@@ -485,9 +493,9 @@ function act<S extends ActType["step"], I extends ItemDef | null, const F extend
     guards: b.guards ?? [], effects: b.effects ?? [], sends: b.sends ?? [], attention: b.attention ?? [], ...(b.settles ? { settles: b.settles } : {}),
   };
 }
-export const open = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("open", on, grant, spec, body);
-export const transition = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("transition", on, grant, spec, body);
-export const comment = <I extends ItemDef | null, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("comment", on, grant, spec, body);
+export const open = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}, const G extends GrantRef = GrantRef>(on: I, grant: G, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("open", on, grant, spec, body);
+export const transition = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}, const G extends GrantRef = GrantRef>(on: I, grant: G, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("transition", on, grant, spec, body);
+export const comment = <I extends ItemDef | null, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}, const G extends GrantRef = GrantRef>(on: I, grant: G, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("comment", on, grant, spec, body);
 
 /** What a handler's body may name, beyond an act's: the envelope's sender, and parts of the verified source entry. */
 export interface HandlerCtx<I extends ItemDef | null, F extends Fields, AL extends AlsoSpec> extends Ctx<I, F, AL, {}> {
@@ -527,7 +535,7 @@ export function timed<I extends ItemDef>(on: I, spec: { states: readonly States<
 // ================================================================ the definition
 
 type ItemsOf<L extends readonly ItemDef[]> = { [I in L[number] as I["name"]]: I["type"] };
-type NamedActs<N extends string, A extends Record<string, ActType>> = { [K in keyof A & string]: A[K] & NamedAct<N, K> };
+type NamedActs<N extends string, A extends Record<string, ActType>> = { [K in keyof A & string]: A[K] & Pick<NamedAct<N, K>, typeof ACT_NAME> };
 interface Declarations { grants?: readonly string[]; reasons?: readonly string[]; diagnostics: readonly Diagnostic[] }
 type DeclaredMetadata = { readonly [DECLARATIONS]?: Declarations };
 
@@ -660,6 +668,7 @@ export class CompileError extends Error {
 }
 /** Validate the full definition. A row slice must first be overlaid on its complete pinned definition. */
 export function compile<D extends DeclaredDefinition>(definition: D) {
+  const provenance = definitionProvenance(definition);
   const declarations = (definition as D & DeclaredMetadata)[DECLARATIONS];
   const canonical = normalize(definition);
   const found = findings(canonical);
@@ -674,112 +683,25 @@ export function compile<D extends DeclaredDefinition>(definition: D) {
     if (act) { const list = refusals[act] ??= []; if (!list.includes(guard.reason)) list.push(guard.reason); }
     if (declarations?.reasons && !declarations.reasons.includes(guard.reason)) diagnostics.push(diagnostic("findings", path, guard, "refusal reason is not declared"));
   });
-  const validation = validateDefinition(canonical, PROPOSED_BOUNDS, RULE_PROFILES);
+  const validation = validateDefinition(canonical, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true });
   if (!validation.ok) for (const problem of validation.problems) {
     const form = /^(?:acts|receives|timed)\.[^.]+\.(?:guards|effects|sends|attention)(?:\[\d+\]|\.\d+)/.exec(problem.path)?.[0] ?? problem.path;
     diagnostics.push(diagnostic("validator", form, valueAt(canonical, form), problem.message, problem.code));
   }
   if (diagnostics.length) throw new CompileError(diagnostics);
-  return { definition: canonical, digest: definitionDigest(canonical), findings: found, validation, refusals };
+  return { definition: canonical, digest: definitionDigest(canonical), findings: found, validation, refusals, ...(provenance ? { provenance } : {}) };
 }
 
 // ================================================================ one spelling
 
-/**
- * The contract admits two spellings of several forms with one meaning: a
- * form on `on` may say `of: "on"` or not; an operand may name the subject
- * of its own form or not; a range may carry an empty `except` or `where`
- * or not. The pinned definitions mix them, by author habit. The builders
- * write every subject explicitly, and `normalize` then puts the data in one
- * spelling: a subject is named only where it differs from the enclosing
- * form's, and empty lists are left out. The kernel reads both spellings the
- * same way; only the bytes differ.
- */
-type J = Record<string, unknown>;
-const isObj = (v: unknown): v is J => typeof v === "object" && v !== null && !Array.isArray(v);
-const mapValues = <T, U>(o: Record<string, T>, f: (v: T, k: string) => U): Record<string, U> => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, f(v, k)]));
-
+/** Use the kernel's authored spelling while preserving diagnostic row names. */
 export function normalize<D extends DeclaredDefinition>(definition: D): D {
-  const operandN = (o: unknown, subject: string, inRange: boolean): unknown => {
-    if (!isObj(o)) return o;
-    const out: J = { ...o };
-    if (typeof out["slot"] === "string" && !inRange && out["of"] === subject) delete out["of"];
-    const p = out["part"];
-    if (isObj(p) && isObj(p["set"])) out["part"] = { ...p, set: { ...p["set"], item: operandN(p["set"]["item"], subject, inRange) } };
-    return out;
-  };
-  const whereN = (ws: unknown): unknown => Array.isArray(ws) ? ws.map((w) => isObj(w) ? mapValues(w, (pair) => isObj(pair) ? { a: operandN(pair["a"], "", true), b: operandN(pair["b"], "", true) } : pair) : w) : ws;
-  const rangeN = (r: J): J => {
-    const out: J = { ...r };
-    if (Array.isArray(out["where"])) { if (out["where"].length === 0) delete out["where"]; else out["where"] = whereN(out["where"]); }
-    if (Array.isArray(out["except"]) && out["except"].length === 0) delete out["except"];
-    return out;
-  };
-  const sourceN = (x: unknown, subject: string): unknown => isObj(x) && isObj(x["collect"]) ? { collect: { ...x["collect"], items: rangeN(x["collect"]["items"] as J) } } : operandN(x, subject, false);
-  const argN = (a: unknown, subject: string): unknown => isObj(a) && isObj(a["items"]) ? { ...a, items: rangeN(a["items"]) } : isObj(a) && "each" in a ? { ...a, each: operandN(a["each"], subject, false), value: operandN(a["value"], subject, false) } : operandN(a, subject, false);
-  const listFormN = (l: J, subject: string): J => ({
-    ...l, list: operandN(l["list"], subject, false),
-    ...(Array.isArray(l["where"]) ? (l["where"].length ? { where: whereN(l["where"]) } : {}) : {}),
-    ...(Array.isArray(l["guards"]) ? { guards: l["guards"].map(guardN) } : {}),
-  });
-  const guardN = (g: unknown): unknown => {
-    if (!isObj(g)) return g;
-    const subject = typeof g["of"] === "string" ? g["of"] : "on";
-    const out: J = { ...g };
-    if (out["of"] === "on") delete out["of"];
-    const op = (x: unknown) => operandN(x, subject, false);
-    for (const k of ["equals", "differs"]) { const pair = out[k]; if (isObj(pair)) out[k] = { a: op(pair["a"]), b: op(pair["b"]) }; }
-    for (const k of ["none", "some"]) if (isObj(out[k])) out[k] = rangeN(out[k] as J);
-    if (isObj(out["count"])) { const { min, max, ...r } = out["count"]; out["count"] = { ...rangeN(r), ...(min !== undefined ? { min: op(min) } : {}), ...(max !== undefined ? { max: op(max) } : {}) }; }
-    for (const k of ["each", "has"]) if (isObj(out[k])) out[k] = listFormN(out[k] as J, subject);
-    if (isObj(out["distinct"])) out["distinct"] = { ...out["distinct"], list: op(out["distinct"]["list"]), key: op(out["distinct"]["key"]) };
-    if (isObj(out["sameSet"])) { const s = out["sameSet"]; out["sameSet"] = { ...s, list: op(s["list"]), key: op(s["key"]), items: rangeN(s["items"] as J), ...(Array.isArray(s["match"]) ? (s["match"].length ? { match: whereN(s["match"]) } : {}) : {}) }; }
-    if (Array.isArray(out["anyOf"])) out["anyOf"] = out["anyOf"].map((alt: unknown) => Array.isArray(alt) ? alt.map(guardN) : alt);
-    if (isObj(out["capability"])) out["capability"] = { ...out["capability"], with: mapValues(out["capability"]["with"] as J, (a) => argN(a, subject)) };
-    if (isObj(out["fact"])) out["fact"] = op(out["fact"]);
-    return out;
-  };
-  const authorN = (a: unknown, subject: string): unknown => !isObj(a) ? a : isObj(a["items"]) ? { ...a, items: rangeN(a["items"]) } : "each" in a ? { ...a, each: operandN(a["each"], subject, false), list: operandN(a["list"], subject, false) } : "list" in a ? { ...a, list: operandN(a["list"], subject, false) } : a;
-  const effectN = (e: unknown): unknown => {
-    if (!isObj(e)) return e;
-    const subject = typeof e["of"] === "string" ? e["of"] : "on";
-    const out: J = { ...e };
-    if (out["of"] === "on") delete out["of"];
-    const op = (x: unknown) => operandN(x, subject, false);
-    for (const k of ["if", "unless"]) if (Array.isArray(out[k])) out[k] = (out[k] as unknown[]).map(guardN);
-    if (isObj(out["party"])) { const f = out["party"]["from"]; out["party"] = { ...out["party"], from: Array.isArray(f) ? f.map(op) : op(f) }; }
-    if (isObj(out["value"])) out["value"] = { ...out["value"], from: op(out["value"]["from"]) };
-    if (isObj(out["ref"])) out["ref"] = { ...out["ref"], from: op(out["ref"]["from"]) };
-    if (isObj(out["hold"]) && out["hold"]["extent"] !== undefined) out["hold"] = { ...out["hold"], extent: op(out["hold"]["extent"]) };
-    if (isObj(out["capability"])) out["capability"] = { ...out["capability"], with: mapValues(out["capability"]["with"] as J, op) };
-    if (isObj(out["attribute"]) && Array.isArray(out["attribute"]["with"])) out["attribute"] = { ...out["attribute"], with: out["attribute"]["with"].map((a: unknown) => authorN(a, subject)) };
-    return out;
-  };
-  const clausesN = (c: unknown): unknown => isObj(c) ? mapValues(c, (effects) => Array.isArray(effects) ? effects.map(effectN) : effects) : c;
-  const noticeN = (n: unknown): unknown => isObj(n) && isObj(n["notify"]) && Array.isArray(n["notify"]["if"]) ? { notify: { ...n["notify"], if: n["notify"]["if"].map(guardN) } } : n;
-  const sendN = (s: unknown): unknown => {
-    if (!isObj(s)) return s;
-    const src = (x: unknown) => sourceN(x, "on"), ifN = (x: unknown) => Array.isArray(x) ? { if: x.map(guardN) } : {};
-    if (isObj(s["tell"])) { const t = s["tell"]; return { tell: { ...t, to: operandN(t["to"], "on", false), ...ifN(t["if"]), fields: mapValues(t["fields"] as J, src), result: clausesN(t["result"]) } }; }
-    if (isObj(s["create"])) { const c = s["create"]; return { create: { ...c, fields: mapValues(c["fields"] as J, src), result: clausesN(c["result"]) } }; }
-    if (isObj(s["relate"])) { const r = s["relate"]; return { relate: { ...r, ...(isObj(r["each"]) ? { each: rangeN(r["each"]) } : {}), to: src(r["to"]), item: src(r["item"]), ...ifN(r["if"]), detail: mapValues(r["detail"] as J, src), result: clausesN(r["result"]) } }; }
-    if (isObj(s["index"])) return { index: { fields: mapValues(s["index"]["fields"] as J, src) } };
-    return s;
-  };
-  const rowN = <R extends J>(row: R): R => {
-    const normalized = {
-      ...row,
-      ...(Array.isArray(row["guards"]) ? { guards: row["guards"].map(guardN) } : {}),
-      ...(Array.isArray(row["effects"]) ? { effects: row["effects"].map(effectN) } : {}),
-      ...(Array.isArray(row["sends"]) ? { sends: row["sends"].map(sendN) } : {}),
-      ...(Array.isArray(row["attention"]) ? { attention: row["attention"].map(noticeN) } : {}),
-    };
-    const name = actNames.get(row);
-    if (name) actNames.set(normalized, name);
-    return normalized;
-  };
-  return {
-    ...definition,
-    acts: mapValues(definition.acts as unknown as Record<string, J>, rowN), receives: mapValues(definition.receives as unknown as Record<string, J>, rowN), timed: mapValues(definition.timed as unknown as Record<string, J>, rowN),
-  } as D;
+  const normalized = normalizeDefinition(definition);
+  for (const table of ["acts", "receives", "timed"] as const) {
+    for (const [kind, row] of Object.entries(definition[table])) {
+      const name = actNames.get(row);
+      if (name) actNames.set(normalized[table][kind]!, name);
+    }
+  }
+  return copyDefinitionProvenance(definition, normalized);
 }

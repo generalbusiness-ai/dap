@@ -22,7 +22,7 @@ keep stable, and lists the parts that fail its test today.
 | A declared application: you write a definition as data, validate it, pin it, and create a scope under it in a room. Guards, grants, timed rules and detached texts are available to it. | [Write an application](write-an-application.md) |
 | dap-counter, a declared application in which people and agents take turns. | [The Counter source](../apps/counter/README.md), [Build a counter](build-a-counter.md) |
 | dap-library, a declared lending library. Each act that changes a thing also publishes that thing's shelf page through the room's destination. | [The lending library](../examples/lending/README.md), [Build a lending library](build-a-lending-library.md) |
-| Agents act in a room through MCP: a local server over stdio or loopback HTTP, and a hosted endpoint on the scope Worker. The hosted endpoint is off unless the operator sets `MCP_ENABLED` to `true`. | [MCP](mcp.md), [The hosted endpoint](mcp.md#the-hosted-endpoint), [Connect an AI app](connect-an-ai-app.md#which-apps-work-today) |
+| Agents act in a room through MCP: a local server over stdio or loopback HTTP, and a hosted endpoint on the scope Worker. The hosted endpoint is off unless the operator sets `MCP_ENABLED` to `true`. | [MCP](mcp.md), [The hosted endpoint](hosted-mcp.md), [Connect an AI app](connect-an-ai-app.md#which-apps-work-today) |
 | A room created from the served page, with no email. A whole service run on your own Cloudflare account. | [Run your own service on Cloudflare](self-host-cloudflare.md) |
 | A room Worker run on your own machine with celld, and a kit that installs it as a service on a Mac. | [Run the local Worker](celld.md), [Run on a Mac](self-host-mac.md) |
 | Published repositories served as pages. | [Pages](pages.md) |
@@ -80,7 +80,7 @@ In order, nearest first.
 | [Split and join](#split-and-join) | Not designed. The dap-spike sketches a protocol | A merger of two records |
 | [An authoring language](#an-authoring-language) | Not designed. One attempt in the dap-spike stopped | Every case, for its author |
 | [Hosted agent teams](../notes/2026-10-21-roles-flow-and-instances.md) | Designed, not built | Every case with agents in a team |
-| [OAuth on the hosted MCP endpoint](../notes/plans/031-2026-10-12-generic-mcp-service.md) | Built. The [hosted endpoint](mcp.md#oauth-authorization-and-consent) takes an OAuth grant after consent, or a bearer token. No acceptance run with hosted Claude or ChatGPT is recorded | 47, 51, and every person who reaches a room from their own AI app |
+| [OAuth on the hosted MCP endpoint](../notes/plans/031-2026-10-12-generic-mcp-service.md) | Built. The [hosted endpoint](hosted-mcp.md#oauth-authorization-and-consent) takes an OAuth grant after consent, or a bearer token. No acceptance run with hosted Claude or ChatGPT is recorded | 47, 51, and every person who reaches a room from their own AI app |
 | [Running dap off Cloudflare](../notes/2026-10-19-self-hosting-on-celld.md) | The [local Worker](celld.md) and the [Mac kit](self-host-mac.md) run. The rest of the self-hosting design is not built | Self-hosting |
 | [Sequence and event identifiers](../notes/2026-10-19-record-and-event-identifiers.md) | Designed, not built | Records read outside dap |
 | [Charts composed in chat](../notes/2026-10-20-chat-composed-views.md) | Not built. Superseded by views as notes in [boundary objects in use](../notes/2026-10-28-boundary-objects-in-use.md) | Every case with measurements |

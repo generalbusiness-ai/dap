@@ -1,7 +1,7 @@
 import { expect } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, DeclaredDefinition, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isFactRef, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ANCESTRY_BOUNDS, CAPABILITY_CODE, countedEntries, holding, ledgerOf, localRetainedPlan, outcomeValueDomains, ownersOf, reserved, snapshotInput, stagedRefName, validateDefinition, valueDigest, walk, type Item, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -410,8 +410,8 @@ export function evidenceRulesPolicy(roomService: RulesPolicyV13['roomService'], 
 }
 
 /** All identities come from actual creation and activation, never a scripted peer. */
-export async function evidenceDefinitions(room: EvidenceRoom) {
-  const issue = issueEvidence4, issueId = definitionDigest(issue), change = changeEvidence4(issueId), changeId = definitionDigest(change);
+export async function evidenceDefinitions(room: EvidenceRoom, changeDeclaration?: DeclaredDefinition) {
+  const issue = issueEvidence4, issueId = definitionDigest(issue), change = changeDeclaration ?? changeEvidence4(issueId), changeId = definitionDigest(change);
   for (const [definition, digest] of [[issue, issueId], [change, changeId]] as const) {
     const dependencies = digest === changeId ? { dependency1: issueId } : {};
     const values = digest === changeId ? [canonicalize(change), canonicalize(issue)] : [canonicalize(issue)];
@@ -760,8 +760,8 @@ export async function enrolEvidenceKey(room: EvidenceRoom, service: PreparedEvid
   await room.pause(room.nodes);
 }
 
-export async function preparePublishedEvidence(room: EvidenceRoom) {
-  const definitions = await evidenceDefinitions(room), service = await evidenceChecker(room);
+export async function preparePublishedEvidence(room: EvidenceRoom, changeDeclaration?: DeclaredDefinition) {
+  const definitions = await evidenceDefinitions(room, changeDeclaration), service = await evidenceChecker(room);
   const configuration: Configuration = { name: "published", image: `sha256:${"2".repeat(64)}`, environment: [], steps: [["/bin/true"]],
     judged: { passed: { status: 0, line: "ok" }, failed: { status: 1, line: "bad" } }, limits: { seconds: 60, outputBytes: 65536 } };
   const digest = configurationDigest(configuration);

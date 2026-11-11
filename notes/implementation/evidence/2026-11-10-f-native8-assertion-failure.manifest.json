@@ -1,0 +1,49 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-native8-only/assertion-failure-sealed/unit",
+  "head": "e6ed73658e51cfbcab4666bab4814ea38b9762b1",
+  "tree": "4813ce7fa866301f7f43cce544111359bd5f7f2e",
+  "booking": "fc0e54aff0461d608388c49e4d6444dafd492303",
+  "end": "dda9127b3455165cfaf567cb4631dac8b384893b",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "2c59091722a37b06a9669eab0e8e9b95b7c4fcf4722a3a4176406b8776c425cc",
+      "bytes": 339
+    },
+    {
+      "path": "audit.json",
+      "sha256": "56cf6752b19cee6e3972af6ed318909b20bd866ad6e67e182709c0a919ec842d",
+      "bytes": 2713
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "3dbc94e7561d7aea6734ad926ff08737d716791fb2aa67ac9e052ffe74f21d3c",
+      "bytes": 132886
+    },
+    {
+      "path": "reporter-reconciliation.json",
+      "sha256": "ed8c990a78a38cda9d3231b7a265778c8cacf8a4d4cff7baea5ce992359997fc",
+      "bytes": 408
+    },
+    {
+      "path": "runtime-ledger.json",
+      "sha256": "70aa9f831ff5c525e1002c2fe50a7e5963f58aa6c6bd395bc8890a2a528e33fc",
+      "bytes": 3081
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-native8-only/assertion-failure-sealed/private",
+    "manifestSha256": "5b3538696f563f067ab9e60ed5bbef3ae36b1ad2eabd409662d97b7f86e5c84a",
+    "files": 690,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T22:35:37.891702+00:00"
+    }
+  },
+  "withheld": [
+    "Raw logs and captured input payloads remain in private custody."
+  ],
+  "qualification": "Seventh F history failed at the Native assertion. Three cases passed, one failed, and four stopped at bail. Story is a whole-owner candidate. All six prior failures remain failed."
+}

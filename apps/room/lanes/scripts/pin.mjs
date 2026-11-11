@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Pin the two lane definitions and the two of the demo profile: write
 // readable JSON for each to definitions/. Their canonical values determine
-// the digests written to src/digests.ts. Source values live in src/.
+// the digests written to src/digests.ts. Parent authors live in authoring/.
 //
 //   node apps/room/lanes/scripts/pin.mjs
 //
@@ -11,22 +11,52 @@
 //
 // The digest is `definitionDigest` of the bytes package: SHA-256 over the tag
 // `artroom-definition-1`, a newline and the canonical JSON of the whole value.
-// Node reads the TypeScript sources directly, by removing their types.
-import { writeFileSync } from "node:fs";
+// Node reads runtime wrappers by removing their types. The authoring child
+// uses tsx because Define contains TypeScript that needs transformation.
+import { readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { format } from "prettier";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
-import { change3, changeDemo3 } from "../src/change3.ts";
-import { change } from "../src/change.ts";
-import { changeDemo, issueDemo } from "../src/demo.ts";
-import { LANE_FORMS } from "../src/digests.ts";
-import { issue } from "../src/issue.ts";
-import { issueEvidence4 } from "../src/issue4.ts";
-import { changeEvidence4 } from "../src/change4.ts";
-import { changeJ4, issueJ4 } from "../src/j4.ts";
-
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const args = process.argv.slice(2);
+const optIn = ["--finding", "--questions-brief", "--questions", "--j4"];
+if (args.length && (args.length !== 1 || !optIn.includes(args[0]))) {
+  throw new Error("Use pin.mjs [--finding|--questions-brief|--questions|--j4]");
+}
+// This six-row export is current representative metadata, not an admission list.
+// Prepare its exact five literal slots before any default-mode output is written.
+function preparePublishingTable() {
+  const publishingPath = join(root, "..", "..", "..", "packages", "platform", "src", "publishing-provenance.ts");
+  const publishingBefore = readFileSync(publishingPath, "utf8");
+  const publishingPattern = /(export const PUBLISHING_LANE_DIGESTS = \[\n)([\s\S]*?)(\] as const satisfies readonly Digest\[\];)/g;
+  const publishingMatches = [...publishingBefore.matchAll(publishingPattern)];
+  if (publishingMatches.length !== 1) throw new Error("Expected one current representative publishing-pin table.");
+  const publishingMatch = publishingMatches[0], publishingRows = publishingMatch[2].trimEnd().split("\n");
+  if (publishingRows.length !== 6 || publishingRows[4] !== "  EVIDENCE_LANE_PINS.change,"
+    || [0, 1, 2, 3, 5].some(index => !/^  "sha256:[a-f0-9]{64}",$/.test(publishingRows[index]))) {
+    throw new Error("Expected exactly five literal publishing pins and the existing evidence mirror reference.");
+  }
+  return { publishingPath, publishingBefore, publishingMatch, publishingRows };
+}
+const preparedPublishing = args.length ? null : preparePublishingTable();
+
+// Publish both parents before importing any runtime wrapper or descendant.
+// Opt-in successor modes only check their parents. They cannot repin them.
+execFileSync(process.execPath, [
+  "--import", "tsx", join(root, "../../../scripts/check-definition-pins.mjs"),
+  args.length ? "--check" : "--write", "lanes",
+], { cwd: join(root, "../../.."), stdio: "inherit" });
+const [
+  { change3, changeDemo3 }, { change }, { changeDemo, issueDemo },
+  { LANE_FORMS }, { issue }, { issueEvidence4 }, { changeEvidence4 }, { changeJ4, issueJ4 },
+] = await Promise.all([
+  import("../src/change3.ts"), import("../src/change.ts"), import("../src/demo.ts"),
+  import("../src/digests.ts"), import("../src/issue.ts"), import("../src/issue4.ts"),
+  import("../src/change4.ts"), import("../src/j4.ts"),
+]);
+
 // This opt-in mode writes only the finding successor and its separate pin.
 if (process.argv.includes("--finding")) {
   if (process.argv.length !== 3) throw new Error("Use --finding alone to pin the finding successor.");
@@ -101,6 +131,9 @@ export const J4_DIGESTS = {
   for (const p of pinned) console.log(`${p.name}-j4  ${p.digest}  ${p.size} formatted bytes`);
   process.exit(0);
 }
+// Every opt-in mode exits above. Default mode reuses the table checked
+// before the parent subprocess wrote its first output.
+const { publishingPath, publishingBefore, publishingMatch, publishingRows } = preparedPublishing;
 const evidenceChange = changeEvidence4(definitionDigest(issueEvidence4));
 const pinned = await Promise.all(Object.entries({ "issue-evidence4": issueEvidence4, "change-evidence4": evidenceChange, issue, change, "issue-demo": issueDemo, "change-demo": changeDemo, change3, "change-demo3": changeDemo3 }).map(async ([name, definition]) => {
   const canonical = canonicalize(definition);
@@ -138,4 +171,10 @@ export const DEMO_DIGESTS = {
 writeFileSync(join(root, "src", "digests3.ts"), `/** Manifest-list successors; generated by scripts/pin.mjs. */\nexport const MANIFEST_DIGESTS = { change: "${digest("change3")}", demo: "${digest("change-demo3")}" } as const;\n`);
 writeFileSync(join(root, "src", "digests4.ts"), `/** Opt-in evidence-rule successors; generated by scripts/pin.mjs. */\nexport const EVIDENCE_DIGESTS = { issue: "${digest("issue-evidence4")}", change: "${digest("change-evidence4")}" } as const;\n`);
 writeFileSync(join(root, "..", "..", "..", "packages", "platform", "src", "evidence-lane-pins.generated.ts"), `/** Exact opt-in evidence lane identities; generated by apps/room/lanes/scripts/pin.mjs. */\nexport const EVIDENCE_LANE_PINS = { issue: "${digest("issue-evidence4")}", change: "${digest("change-evidence4")}" } as const;\n`);
+const representatives = [digest("change"), digest("change-demo"), digest("change3"), digest("change-demo3"), null, definitionDigest(changeJ4)];
+for (const index of [0, 1, 2, 3, 5]) publishingRows[index] = `  "${representatives[index]}",`;
+const publishingAfter = publishingBefore.slice(0, publishingMatch.index) + publishingMatch[1]
+  + publishingRows.join("\n") + "\n" + publishingMatch[3]
+  + publishingBefore.slice(publishingMatch.index + publishingMatch[0].length);
+writeFileSync(publishingPath, publishingAfter);
 for (const p of pinned) console.log(`${p.name}  ${p.digest}  ${p.size} formatted bytes`);

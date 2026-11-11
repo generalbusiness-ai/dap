@@ -3,7 +3,7 @@
 
 import { main } from "./cli.ts";
 import { ARCHIVE_REPLAY_CODE } from "@generalbusiness/dap-platform";
-import { archiveTexts, auditClone, gitSource, readArchiveReceipt } from "./git.ts";
+import { archiveTexts, auditClone, citationFileSource, citationGitHash, citationGitSource, gitSource, readArchiveReceipt } from "./git.ts";
 
 /** The little of Node's `process` this file uses. */
 declare const process: { argv: string[]; exitCode: number | undefined; stdout: { write(text: string): unknown }; stderr: { write(text: string): unknown } };
@@ -15,6 +15,9 @@ try {
     receipt: readArchiveReceipt,
     audit: auditClone,
     native: ARCHIVE_REPLAY_CODE,
+    citationFile: citationFileSource,
+    citationGit: citationGitSource,
+    hashGitCommit: citationGitHash,
   });
 } catch (error) {
   process.stderr.write(`read error: ${error instanceof Error ? error.message : String(error)}\n`);

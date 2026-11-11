@@ -17,7 +17,8 @@ address. Replace it with your own. Run every command on this page from
 the root of the checkout.
 
 For the Mac host, [Maintain the host](self-host-mac.md#maintain-the-host)
-gives the stop, restart and verify steps.
+gives the stop, restart and verify steps. To serve the MCP service to AI
+apps at `/mcp`, read [Run the hosted MCP endpoint](hosted-mcp.md).
 
 ## Read health and logs
 
@@ -156,7 +157,7 @@ the file holds and settings that `--keep-vars` keeps.
    - `lending` and `demo` need `SESSION_SECRET` and an existing
      `DEPLOYMENT` setting. Their files supply their Artifacts configuration.
    - `artroom-scope` needs `SESSION_SECRET` and its existing `DEPLOYMENT`,
-     register and host settings. Its tracked index mode is `register`.
+     register and host settings. Its tracked index mode is `enforce`.
    - On any Worker whose retained host uses `GITHUB_APP_CONFIG`, keep
      `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN` and
      `GITHUB_READ_TOKEN`. Keep `GITHUB_CLEANUP_TOKENS` if that host uses

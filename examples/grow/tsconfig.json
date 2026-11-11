@@ -2,8 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "skipLibCheck": true,
-    "resolveJsonModule": false,
+    "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["*.ts"]
+  "include": ["*.ts", "authoring"]
 }

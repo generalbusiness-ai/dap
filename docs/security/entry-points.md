@@ -100,8 +100,11 @@ The scope rows use these shared descriptions:
   before application provenance, receiver policy and foreign facts. A
   definite denial of an ordinary grant refuses before those reads. Native
   grant marks retain their fallback checks, and the commit checks authority
-  again. Only an alarm drains timed work. Remote standing admits at most
-  4,096 signing keys per run, including once-only and failed reads. Rule
+  again. An act with a native grant mark, such as `found` or `join`, and an
+  act whose standing read came back null fetch up to `usesPerEntry` foreign
+  facts before the judge refuses them. Only an alarm drains timed work.
+  Remote standing admits at most 4,096 signing keys per run, including
+  once-only and failed reads. Rule
   expression evaluation follows the grant check. Public parentless creation and
   signed reads first use the serving windows below. Joins keep their
   membership-local window for failed addresses, and also count failures of

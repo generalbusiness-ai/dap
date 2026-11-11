@@ -2,9 +2,42 @@ import { expect, test, vi } from "vitest";
 import type { Digest, Entry, ScopeId } from "@generalbusiness/dap-contract";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { retainedReadArgument } from "@generalbusiness/dap-bytes";
 import { SourceError, httpSource, main, verify, type Fetch, type MemoryScope, type MemorySource } from "../src/index.ts";
 import { rewrite, sourceOf, world } from "./world.ts";
+import { citationFileSource } from "../src/git.ts";
+import { publishedCases } from "./citation-vectors.ts";
+
+test("citation dispatch preserves exact reports and opens no Native or unnecessary byte source", async () => {
+  const cases = publishedCases("dap1"), good = cases.find(row => row.name === "valid-event-3")!;
+  const unavailable = cases.find(row => row.name === "missing-cited-event")!;
+  const directory = mkdtempSync(join(tmpdir(), "artroom-citation-cli-")), sourcePath = join(directory, "source.json");
+  writeFileSync(sourcePath, JSON.stringify({ event: good.event, source: good.source }));
+  const out: string[] = [], err: string[] = [];
+  let files = 0, native = 0;
+  const io = {
+    out: (text: string) => out.push(text), err: (text: string) => err.push(text),
+    citationFile: (path: string) => { files++; return citationFileSource(path); },
+    fetch: async () => { native++; throw new Error("Citation mode must not enter Native HTTP replay"); },
+  };
+  expect(await main(["--citation", good.citation, "--source", sourcePath], io)).toBe(0);
+  expect(JSON.parse(out.pop()!)).toEqual(good.expect);
+  expect([files, native, err.length]).toEqual([1, 0, 0]);
+  for (const row of cases.filter(row => row.name === "trailing-newline" || row.name === "unknown-format")) {
+    expect(await main(["--citation", row.citation, "--source", "never-open"], io)).toBe(1);
+    expect(JSON.parse(out.pop()!)).toEqual(row.expect);
+    expect([files, native]).toEqual([1, 0]);
+  }
+  writeFileSync(sourcePath, JSON.stringify({ event: good.event, source: [...good.source, good.source[0]] }));
+  expect(await main(["--citation", good.citation, "--source", sourcePath], io)).toBe(1);
+  expect(JSON.parse(out.pop()!)).toEqual(unavailable.expect);
+  expect(await main(["--citation", good.citation, "--source", "never-open", "--level", "3\n"], io)).toBe(2);
+  expect([files, native]).toEqual([2, 0]);
+  expect(out).toEqual([]);
+});
 
 /** A scope service's two verifier routes, answered from histories in memory, in the form the Worker answers them. */
 function service(source: MemorySource): Fetch {

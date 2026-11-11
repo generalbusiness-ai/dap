@@ -93,6 +93,8 @@ For example, this valid extent record requires no review:
 
 It is a fragment of a complete extent list. Publishing the complete list must retain the protected `rules` extent, including its fixed patterns, at least one approval, `rules.publish` approver, and `authority` class. The list must also have exactly one catch-all extent. The `rules` minimum cannot be lowered to zero by this example.
 
+The fixed minimum governs file landings in the `rules` extent, not the `publish` act. Every admin holds `rules.publish`. Under `rules@10` and `rules@14`, one admin's `publish` can reset every other threshold alone: `approvals`, `ownerMayReview` and the other extents.
+
 With a positive threshold, an action held by all roles broadens who can count as a reviewer. It does not remove the distinct-member and author exclusions. `ownerMayReview` affects whether an authoring agent's controller may count outside the `rules` extent. If nobody holds the approver action, no review can count toward a positive threshold. A zero threshold requires nobody to hold it.
 
 A well-formed path pattern is not proof that it matches an intended path. Unmatched paths use the catch-all extent. These choices need review against the actual role table, changed paths, checks, and pinned rules version.

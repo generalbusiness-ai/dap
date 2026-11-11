@@ -71,7 +71,9 @@ Replacing `SESSION_SECRET` ends every session of the deployment at once. It does
 
 ### A Git read token outlasts the bound
 
-The `read-token` act at the destination gives a member a Git read token, and every role holds its grant. The token reads the repository until its own end. Destination19 accepts no duration field and fixes the token lifetime at one hour. Historical destinations on Cloudflare Artifacts accept 1 to 24 hours. GitHub fixes its own lifetime at one hour.
+The `read-token` act at the destination gives a member a Git read token, and every role holds its grant. The token reads the repository until its own end. Destination19 accepts no duration field and fixes the token lifetime at one hour. That fixed hour applies to Destination19 only. Every other destination version with a `read-token` act, including the newer Destination20, accepts 1 to 24 hours on Cloudflare Artifacts. GitHub fixes its own lifetime at one hour.
+
+`apps/room/wrangler.commons.jsonc` pins Destination16 and binds Artifacts. A key about to be revoked keeps repository read there for up to 24 hours. `apps/room/wrangler.connect.jsonc` pins Destination20, which accepts the same 1 to 24 hours. That file declares no Artifacts binding.
 
 A `compromised` notice closes two routes for the key that it names. Membership tells the directory, and the directory tells the destination. Once the destination applies the notice:
 
@@ -220,6 +222,8 @@ It declares its own `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS` bindings
 Its shared resources are `ARTIFACTS` namespace `artroom-demo`, R2 bucket `artroom-application-content`, and dataset `artroom_metrics_v1`. The operator sets `SESSION_SECRET`, `DEPLOYMENT`, `REGISTER_SCOPE` and `ARTIFACTS_CONFIG`. The file holds none of them.
 
 The MCP namespaces are present, but the file sets neither `MCP_ENABLED` nor `MCP_TOOL_ADDITIONS`. The route needs exact opt-in and both namespaces. An operator can still have set the opt-in on the Worker, so the file alone does not show that the hosted endpoint is off. `APPLICATION_SCREEN_HOSTS` is explicitly empty. The file is marked for existing rooms. Browser Start for new rooms points to `dap-demo`.
+
+The file sets the index to `enforce`. A read of an unknown scope ID reaches no target object, as the [threat model](threat-model.md#invariants-and-their-limits) states. The Worker ran `register` until 11 November 2026. In that mode, an unknown, well-formed scope ID reached `registerKnown()` on a new target object, and constructing the object wrote the full schema. Those objects stay in the namespace. The index lists none of them, so no read reaches one.
 
 ## dap-grow
 

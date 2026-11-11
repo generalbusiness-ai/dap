@@ -1,0 +1,121 @@
+{
+  "request": "6a3a7fccf752dd841226f78071a51b566a74087b",
+  "promise": "af287821038111e452959ff3e62c5dd612cc7dae",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-static3-92ad-sealed/unit",
+  "head": "92ad89c47aed018cdf56dce232d85026dbbafc85",
+  "tree": "e016ef97fd6468ea6477cf53b46605c1bef67585",
+  "main": "a419407ead7772fa9e701427a098109734449a29",
+  "base": "a419407ead7772fa9e701427a098109734449a29",
+  "booking": "7d968d3f49d6b291026a3c29a756fe13094090d6",
+  "originalOutcome": "PASSED",
+  "end": "b657d2c2bec2544bc8b2a3afae681e7e023d3b2d",
+  "endEventSha256": "defa18e97db44dec75839f5a90b5e0c3e69a9da28ea1155ac5975026147b280b",
+  "actualExitFiles": {
+    "whitespace": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-static3-92ad/whitespace.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 420,
+      "actualExit": 0
+    },
+    "commit-messages": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-static3-92ad/commit-messages.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 420,
+      "actualExit": 0
+    },
+    "format": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-static3-92ad/format.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 420,
+      "actualExit": 0
+    },
+    "driver": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-static3-92ad/driver.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 420,
+      "actualExit": 0
+    },
+    "outerDriver": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-static3-92ad-launch/actualdriver.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 420,
+      "actualExit": 0
+    },
+    "launcher": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-static3-92ad-launch/launcher.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 420,
+      "actualExit": 0
+    }
+  },
+  "rootReadback": {
+    "path": "/private/tmp/artroom-tg1-static3-metadata-readback-92ad-20261110.json",
+    "sha256": "dbb4f0f5361d46273b094142f53b0ba0f4481843a8388233f8a1068c6efa8e30",
+    "bytes": 76965,
+    "mode": 256
+  },
+  "launchEvidence": {
+    "outerCommandExit": {
+      "path": "/private/tmp/artroom-tg1-static3-body-launch-92ad-20261110/actual.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 420,
+      "actualExit": 0
+    },
+    "metadataFreezeExit": {
+      "path": "/private/tmp/artroom-tg1-static3-freeze-launch-92ad-20261110/actual.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 420,
+      "actualExit": 0
+    },
+    "rootProof": {
+      "path": "/private/tmp/artroom-tg1-static3-root-readback-92ad-20261110.json",
+      "sha256": "0f90775577b0609fc2a5c4cafa13978675c74b891be6ce79e0fe5de1e83f4ac3",
+      "bytes": 3839,
+      "mode": 420
+    },
+    "independentFrozenPeer": {
+      "path": "/private/tmp/artroom-phase2-tg1-static3-frozen-92ad-independent-readback-20261110.json",
+      "sha256": "58c6f59c0eeadd30c32db11aadb181a23026f03b5bb5b2b44814e0e25c020cef",
+      "bytes": 2845,
+      "mode": 256
+    },
+    "rootLauncherSeconds": 12.475119750000886,
+    "rootReaderMetadataErrors": {
+      "count": 2,
+      "separateFilesExist": false,
+      "qualification": "Seven actual exits read after session91081 closed0; exact3commands and emptycleanup. Two initial root-reader exceptions requested absent outer head/elapsed fields before writing proof. No static body repeated.",
+      "staticBodyRepeated": false
+    }
+  },
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "f267308c715fb33f05668a90a98eb17ab542395d993a7d6ef388fd54e7c76975",
+      "bytes": 168
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "a38da590bf50a87d2cbf7425e21084d7443f3a87e118b3be9fd3dabcedd96a19",
+      "bytes": 35659
+    },
+    {
+      "path": "static-readback.json",
+      "sha256": "71fdcc016db4d42e647151b1b8a1711b1bb46538bdeaa456330e2db16f957451",
+      "bytes": 5719
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-static3-92ad-sealed/private",
+    "manifestSha256": "b2c642dd23078b0e0e72e349c4089834fa69a9f40adcdfde8f5a6b665dc9cf17",
+    "files": 194
+  },
+  "qualification": "One actual TG1 static preflight at92ad. Two inline root-reader schema errors remain documented; no body repeated. No full-gate result."
+}

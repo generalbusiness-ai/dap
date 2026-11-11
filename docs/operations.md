@@ -241,7 +241,7 @@ The client limits the SQL result to 50,000 rows and 16 MiB, health to
 overfull, truncated or malformed reply fails the check, which never
 judges a partial window. A redirect is an error. The query leaves out
 scope indexes, request IDs and trace IDs, and excludes the separate
-[MCP metrics](mcp.md#operational-metrics). The check prints no raw
+[MCP metrics](hosted-mcp.md#operational-metrics). The check prints no raw
 provider response and no token.
 
 Exit 0 means the check passed. Exit 1 means it failed. Exit 2 means an

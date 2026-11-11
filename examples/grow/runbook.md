@@ -315,7 +315,7 @@ belongs to G6.
 
 Connect the person's AI app to the actual hosted MCP endpoint with that
 person's own membership custody, following
-[The hosted endpoint](../../docs/mcp.md#the-hosted-endpoint). During the
+[Connect through a hosted endpoint](../../docs/connect-an-ai-app.md#connect-through-a-hosted-endpoint). During the
 fault, the person takes the operator's `authorize` act. Proving read: the
 native entry has the operator's signer and exact alert revision, the target
 changes, the sensors owner records the outcome separately, and a later

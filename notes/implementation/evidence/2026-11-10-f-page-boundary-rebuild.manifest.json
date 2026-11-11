@@ -1,0 +1,49 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-page-boundary-6df/sealed/unit",
+  "head": "6df7088ad359197fd589976ea1daef180b91b1bf",
+  "tree": "e5e76dcb008826316332c984f4bdda7c0dd271ec",
+  "booking": "87966e39bebafd4ebaae97d09f89e6f49be32447",
+  "end": "87fdfe4f3e253c7d6162d734d557ff157a837239",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "aa824ff2af5eeb9eb0d4a970f7f8e13ca1e7ad5345e983c3e6e774f14514e506",
+      "bytes": 328
+    },
+    {
+      "path": "audit.json",
+      "sha256": "f22a019b976591dbec689259609583d40a47cff3646e93a813a187313a888888",
+      "bytes": 2216
+    },
+    {
+      "path": "output-custody.json",
+      "sha256": "6545de256160d45bf1f8cce70b129853675e6f668eb36a703d5951e08950307e",
+      "bytes": 431
+    },
+    {
+      "path": "page-custody.json",
+      "sha256": "1a7f886c5ac45472e4c623833ccb3ee7702fd301b32023b54187fdea86290ec3",
+      "bytes": 964
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "d500d0aa1ccd48382a77a402e2d07d4c89ab7deaacbfd98148ea8ead78534405",
+      "bytes": 9008
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-page-boundary-6df/sealed/private",
+    "manifestSha256": "cc519542e686a8110836cf902559a0426ed0ca2b4ac66040891e0f8da15a1594",
+    "files": 58,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T20:15:20.442954+00:00"
+    }
+  },
+  "withheld": [
+    "Original Page/npm/time stdout/stderr, frozen source/tool observations, generated buffers and raw temp files stay in the opaque owner-only private archive."
+  ],
+  "qualification": "One actual Page build success at historical6df; four zeros/four retained dist-scalar identities/oneassetdelta. No otherproducer/compiler/test/browser/gate/deploy/live acceptance. All prior failures remainfailed. No helper or body repeated; no livecache prerequisite."
+}

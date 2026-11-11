@@ -1,10 +1,11 @@
 /** The live Counter: counting commitments, Draft 4. The JSON file and pin remain the byte witness. */
 import type { DeclaredDefinition, Operand } from "@generalbusiness/dap-contract";
-import { anyOf, by, constant, count, define, differs, enumOf, equals, fact, final, grants, int, item, itemOf, list, live, member, none, normalize, one, open, party, plusSeconds, range, record, ref, required, rule, sameSet, self, signer, time, timed, transition, value, when, type Of } from "@generalbusiness/dap-define";
+import { anyOf, by, constant, count, define, differs, enumOf, equals, fact, final, int, item, itemOf, list, live, member, none, normalize, one, open, party, plusSeconds, range, record, ref, required, rule, sameSet, self, signer, time, timed, transition, value, when, type Of } from "@generalbusiness/dap-define";
+import { counterRoles } from "./roles.ts";
 
 const NAME = "counting-commitments";
-export const countingGrants = grants({ establish: "counting.establish", control: "counting.control", participate: "counting.participate",
-  activity: "counting.activity", commit: "counting.commit", fulfill: "counting.fulfill", fail: "counting.fail" });
+export const countingGrants = { establish: counterRoles.grant("counting.establish"), control: counterRoles.grant("counting.control"), participate: counterRoles.grant("counting.participate"),
+  activity: counterRoles.grant("counting.activity"), commit: counterRoles.grant("counting.commit"), fulfill: counterRoles.grant("counting.fulfill"), fail: counterRoles.grant("counting.fail") } as const;
 const level = int(0, 1_000_000), number = int(1, 100);
 const failureReasons = enumOf("media-error", "process-error", "cancelled", "interrupted", "speech-uncertain");
 

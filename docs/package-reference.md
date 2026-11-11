@@ -138,7 +138,7 @@ open command reserves one answer. A sensor report changes reported fields
 independently. An older answer closes its own command without replacing
 the current outcome. A missing answer leaves outcome empty. Without an
 installed grant, target acts open no command. See the
-[Grow device forms](../examples/grow/device.ts).
+[Grow device forms](../examples/grow/authoring/forms.ts).
 
 Local `dap check` scenarios may name a public TEST actor with
 `deviceOwner` and use `prepare` steps for native answers. `$position`
@@ -154,4 +154,4 @@ Sources:
 [the package codec](../packages/platform/src/application-codec/application-package-v2.ts),
 [the package validation](../packages/platform/src/validate-package.ts),
 [the device-command bounds](../packages/contract/src/device-command.ts) and
-[the Grow device forms](../examples/grow/device.ts).
+[the Grow device forms](../examples/grow/authoring/forms.ts).

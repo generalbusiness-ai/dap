@@ -1871,6 +1871,12 @@ the head above. The path from a lane's seed to its room's destination
 
 ## 16. The scope is the unit of durability (amendment, 12 October 2026)
 
+**Amended on 10 November 2026.** The
+[live note](2026-11-10-live-level.md) designs the live level. Where it
+and this section differ, that note holds. Its section 6 lists what it
+withdraws from 16.2 to 16.5: the live scope with no genesis, the
+reference "ID, generation, kind" and the locator.
+
 **Proposed design; no runtime adoption.** Same request and promise as
 section 15. Hugh decided on 12 October 2026 that the region is not needed
 apart from the scope. This section amends sections 1 to 14; where it and
@@ -1883,7 +1889,9 @@ the host nothing (16.3, 16.4, 16.5).
 ### 16.1 The decision
 
 The scope is the only unit. Each scope's definition declares one level:
-Live, Recorded or Archived (15.2). An application that needs live state
+Live, Recorded or Sequenced (15.2, as the
+[sequenced note](2026-10-18-sequenced-level-and-order-scope.md) amends
+it). An application that needs live state
 beside recorded state is two scopes, composed as scopes already are.
 
 Withdrawn from section 2:

@@ -231,7 +231,11 @@ test("SDK published manifests match the actual supported workspace manifests", (
   const defineManifest = JSON.parse(readFileSync(new URL("packages/define/package.json", root), "utf8"));
   const publicDefine = publishManifest(define, defineManifest, "0.1.0-dev.2");
   assert.equal(defineManifest.version, "0.1.0-dev.1");
-  assert.deepEqual(publicDefine.exports, { ".": { types: "./dist/src/index.d.ts", default: "./dist/src/index.js" } });
+  assert.deepEqual(publicDefine.exports, {
+    ".": { types: "./dist/src/index.d.ts", default: "./dist/src/index.js" },
+    "./package": { types: "./dist/src/package.d.ts", default: "./dist/src/package.js" },
+    "./story": { types: "./dist/src/story.d.ts", default: "./dist/src/story.js" },
+  });
   assert.deepEqual(publicDefine.dependencies, {
     "@generalbusiness/dap-bytes": "0.1.0-dev.2",
     "@generalbusiness/dap-contract": "0.1.0-dev.2",

@@ -20,7 +20,7 @@ test('timing reconciles actual identities, missing callbacks and concurrent dura
   assert.equal(summary.cases.length,3); assert.equal(summary.top.length,2); assert.equal(summary.top[1].durationMs,0);
   assert.equal(summary.projects.find(row=>row.project==='bytes').status,'partial');
   assert.equal(summary.projects.find(row=>row.project==='scope').status,'unreached');
-  assert.equal(summary.projects.length,20);
+  assert.equal(summary.projects.length,21);
   assert.deepEqual(summary.projects.find(row=>row.project==='define'),
     {project:'define',phase:'plain',modules:1,durationMs:3,status:'observed'});
   assert.match(formatSummary(summary),/Vitest define: observed; 1 observed modules; test-and-hook duration sum 3\.00 ms/);
@@ -38,11 +38,11 @@ test('timing reconciles actual identities, missing callbacks and concurrent dura
   // Every real native project belongs to the native stage, and a missing
   // native terminal cannot silently become complete project coverage.
   const nativeStages = [{name:'native',status:'passed',wallMs:5,userMs:null,systemMs:null}];
-  const nativeModules = ['scope','scope-lending','scope-denial','scope-scale'].map(project =>
+  const nativeModules = ['scope','scope-stories','scope-lending','scope-denial','scope-scale'].map(project =>
     ({...knownModule,phase:'native',project,file:`/${project}.test.ts`}));
   const nativeSummary = summarize({stages:nativeStages,observations:[...nativeModules,{...end,phase:'native'}]});
   assert.deepEqual(nativeSummary.projects.filter(row=>row.phase==='native').map(row=>[row.project,row.status]),
-    [['scope','observed'],['scope-lending','observed'],['scope-denial','observed'],['scope-scale','observed']]);
+    [['scope','observed'],['scope-stories','observed'],['scope-lending','observed'],['scope-denial','observed'],['scope-scale','observed']]);
   const omittedStages = [{ ...nativeStages[0], scaleSelection: { include:false, reason:'outside-scale-paths' } }];
   const omittedSummary = summarize({stages:omittedStages,
     observations:[...nativeModules.filter(row=>row.project!=='scope-scale'),{...end,phase:'native'}]});

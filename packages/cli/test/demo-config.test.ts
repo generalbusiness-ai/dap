@@ -49,7 +49,7 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
     ["wrangler.commons.jsonc", "dap-commons", "worker.commons.ts", "enforce", ["platform:register@23", "platform:directory@22", "platform:membership@9", "platform:rules@14", "platform:destination@16", "platform:inbox@1", "platform:commons@1"]],
     ["wrangler.grow.jsonc", "dap-grow", "worker.grow.ts", "enforce", ["platform:register@17", "platform:directory@16", "platform:membership@8", "platform:rules@10", "platform:destination@12", "platform:inbox@1"]],
     ["wrangler.lending.jsonc", "dap-lending", "worker.ts", "enforce", ["platform:register@5", "platform:directory@5", "platform:membership@4", "platform:rules@3", "platform:destination@2", "platform:inbox@1"]],
-    ["wrangler.artroom-scope.jsonc", "artroom-scope", "worker.ts", "register", null],
+    ["wrangler.artroom-scope.jsonc", "artroom-scope", "worker.ts", "enforce", null],
     ["wrangler.jsonc", "dap-self-host", "worker.ts", "enforce", null],
   ] as const;
   for (const [file, name, main, mode, pins] of roomPolicies) {
@@ -85,7 +85,7 @@ test("the self-host template has no project resources and the retired Worker ret
   for (const config of [template, retired]) {
     for (const field of ["DEMO_START_CONFIG", "DEPLOYMENT", "SESSION_SECRET", "GITHUB_APP_PRIVATE_KEY", "GITHUB_CREATION_TOKEN", "GITHUB_READ_TOKEN"]) expect(config.vars).not.toHaveProperty(field);
   }
-  expect([retired.name, retired.main, retired.vars.SCOPE_INDEX_MODE]).toEqual(["artroom-scope", "worker.ts", "register"]);
+  expect([retired.name, retired.main, retired.vars.SCOPE_INDEX_MODE]).toEqual(["artroom-scope", "worker.ts", "enforce"]);
   expect(retired.r2_buckets).toEqual([{ binding: "APPLICATION_CONTENT", bucket_name: "artroom-application-content" }]);
   const packageJson = JSON.parse(readFileSync(new URL("../../../package.json", import.meta.url), "utf8"));
   expect(packageJson.scripts["deploy:scope"]).toBe("npx -y wrangler@4.147.0 deploy --keep-vars --config apps/room/wrangler.self-host.jsonc");
