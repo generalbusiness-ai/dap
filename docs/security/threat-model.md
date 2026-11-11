@@ -53,6 +53,19 @@ definition-author reference's
 [fail-open list](definition-authors.md#fail-open-authoring-list) includes valid
 vacuous guards and permissive review thresholds.
 
+The admin role governs a room's Rules. Every admin holds `rules.publish`,
+so any one admin publishes Rules alone. Under `rules@10` and `rules@14`, a
+`publish` can lower every threshold outside the fixed minimum of the
+`rules` extent. That minimum governs file landings, not the `publish` act.
+No guard of `publish` asks for a second key. A compromised admin key can
+publish Rules under which a landing outside the `rules` extent needs no
+review.
+
+A refused act answers `judgedAt` with the scope's head: its sequence number
+and hash. So a caller who knows a scope ID learns how far that scope's
+journal has grown and the digest of its head. The caller needs no
+membership for this answer.
+
 ## Invariants and their limits
 
 The [witness inventory](#witnesses) names executable tests by file and
@@ -63,7 +76,7 @@ literal case name. Its invariant keys refer to these claims:
 | `grant` | An ordinary declared act takes effect only with an observed grant for its key, action and scope. Expired or unavailable standing cannot authorize a fresh act. Trusted platform acts and genesis have their own pinned authority rules. A cached observation can remain valid during its defined window; revocation is not instantaneous across scopes. |
 | `sealed-operation` | An outside operation starts from its committed opening entry and exact operation, attempt and scope. A forged or mismatched origin reaches no provider. This applies to native operation effects. Authenticated reads, proof fetches, telemetry and provider readiness probes can precede an act's commit. The [entry-point inventory](entry-points.md) records that work. |
 | `session-membership` | A room read session opens only the reads in its claims, for its exact deployment and Membership reference, until expiry. It opens no other room's ordinary scope. The pinned Register has a separate read policy for rooms it created, described in [Deployment trust boundaries](trust-boundaries.md). A revoked key can retain an already-issued session until its end. |
-| `verified-genesis` | In enforce mode, an unknown scope ID reaches no target object, and only a target's verified applied genesis registers it. Native creation is an explicit exception: after serving admission, a refused creation can leave unregistered target storage. Register mode also reaches legacy targets so they can prove their stored genesis. Neither mode establishes that no physical object exists without a genesis. |
+| `verified-genesis` | In enforce mode, an unknown scope ID reaches no target object, and only a target's verified applied genesis registers it. Native creation is an explicit exception: after serving admission, a refused creation can leave unregistered target storage. In register mode, any unknown, well-formed scope ID reaches `registerKnown()` on a new target object. Constructing that object writes the full schema, and no serving window bounds an unsigned request on this path. Neither mode establishes that no physical object exists without a genesis. |
 | `credential-custody` | A read or workspace token leaves private custody only once, to the session key that prepared it and only while the token and its recorded use remain eligible. Journal entries contain no token plaintext. A provider credential already disclosed to that key remains governed by its provider lifetime and revocation behavior. |
 
 The `verified-genesis` row states the limit of that invariant. The software
@@ -73,6 +86,12 @@ fixed owner is another object; its lookup witness checks real SQLite and
 read-only lookup separately. A register-mode backfill or an enforce-mode
 rollout needs its own [operator evidence](../deploy.md).
 
+The tracked file `apps/room/wrangler.artroom-scope.jsonc` selects
+`register` for the Worker `artroom-scope`. The other tracked Worker files
+under `apps/room/` select `enforce`. They configure `dap-self-host`,
+`dap-demo`, `dap-grow`, `dap-lending`, `dap-commons`, `dap-connect` and
+`dap-celld-local`.
+
 ## Authority observations and cache bounds
 
 A held observation that already denies an ordinary grant causes
@@ -81,6 +100,19 @@ turn. Null or unavailable standing proves no denial. Native grant marks
 retain their recovery-key and action-null checks, and the commit rechecks
 authority at its own head and clock. Only the alarm drains timed work;
 other inputs cannot pass a due transition.
+
+Two kinds of act reach foreign reads before the judge refuses them. One
+kind carries a native grant mark, such as `found` or `join`. The other
+kind is an act whose standing read came back null. Each such act fetches
+up to `usesPerEntry` foreign facts through the scope index. Each fetch has
+`fetchSeconds` to answer. `PROPOSED_BOUNDS` sets these to 128 facts and 10
+seconds.
+
+The scope-index census route also works before its final check. It
+verifies the request signature and applies the signed-read serving windows
+of one key and one address. The census owner then reads the register's
+genesis proof, up to 1 MiB within 10 seconds. Only after that read does it
+compare the founding actor with the caller.
 
 A remote authority run reserves a signing-key place only after a checked
 Membership observation grants current standing. Once-only grants count too:
