@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-18-sequenced-level-and-order-scope.md","body":{"commit":"7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62","path":"notes/2026-10-18-sequenced-level-and-order-scope.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:63f8ce1cf3f57e31488883408c62483d7a2e91f0","text":"Merge retired a covered predecessor; the successor is at docs/kernel.md."}
