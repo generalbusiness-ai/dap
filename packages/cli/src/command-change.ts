@@ -72,7 +72,8 @@ function supportsEdit(declared: DeclaredDefinition, path: string, content: strin
     ])) return false;
     const rules = ask.sends.filter((send) => "tell" in send && send.tell.message === "rules-wanted");
     if (rules.length !== 1 || !("tell" in rules[0]!) || "if" in rules[0]!.tell
-      || !same(rules[0]!.tell.to, { slot: "rulesScope", of: "on" })) return false;
+      || !(same(rules[0]!.tell.to, { slot: "rulesScope", of: "on" })
+        || same(rules[0]!.tell.to, { slot: "rulesScope" }))) return false;
     const reserves = merge.sends.filter((send) => "tell" in send && send.tell.message === "reserve");
     const sending = reserves[0];
     if (reserves.length !== 1 || !sending || !("tell" in sending) || "if" in sending.tell

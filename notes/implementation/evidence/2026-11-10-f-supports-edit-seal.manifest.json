@@ -1,0 +1,151 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-supports-edit-seal/unit",
+  "head": "038480f8d82d9e6478935f918680f8d24a1be308",
+  "tree": "dedab575778f80e96c7b2bbc896dc95eb4f5b72e",
+  "booking": "386257853011a23dfe01c17b7d3ae2075f1a061c",
+  "end": "f3e0c887e5bf78c86a4987beea8375b14ddf6302",
+  "files": [
+    {
+      "path": "actual-proposal/metadata.json",
+      "sha256": "8ae09c9ba8ac6e292890dd7d98afc1e0aba6b29474ca08469339833f98661130",
+      "bytes": 2977
+    },
+    {
+      "path": "actual-proposal/proposed-table.txt",
+      "sha256": "e64367d6312a29c9f0faf56ea5ec479fe62617786c4292ca5fe4546d1893b01a",
+      "bytes": 68760
+    },
+    {
+      "path": "current-source/command-change.ts",
+      "sha256": "2c599e6bbf90848becbed50a0b162691f965d3595b37b18b199f6537c4d3dc8f",
+      "bytes": 30759
+    },
+    {
+      "path": "frozen/READY.UNRUN.json",
+      "sha256": "88933bc10f94ae73b6b7f48da6407ff48b59a648887b4e532bfb7bb0a8fc24cb",
+      "bytes": 2613
+    },
+    {
+      "path": "frozen/command-change.baseline.ts",
+      "sha256": "83189e13daea9249876eba42dbb5730530d7727c18d7b774e6d35d6f99b14c89",
+      "bytes": 30698
+    },
+    {
+      "path": "frozen/launch-plan.json",
+      "sha256": "371e04d41a9a60fda6019f855bbd0ce8a621fa03b5c604e7d57dad2ecf697db9",
+      "bytes": 2854
+    },
+    {
+      "path": "frozen/namespace.json",
+      "sha256": "3c085306e79063c716b63efa394bdd454cfd6a79692543434aa9e1e80975a35e",
+      "bytes": 1153778
+    },
+    {
+      "path": "frozen/outer.mjs",
+      "sha256": "f4ee424b28d519aa2842302a823da28799ecdbb74adbbd78acefc57caa9b3832",
+      "bytes": 8696
+    },
+    {
+      "path": "frozen/plan.json",
+      "sha256": "aa09dbd0f7b1d9d7922516d89bd26ee3ee11e9f5c1952f601bc9759dc02853bb",
+      "bytes": 1564035
+    },
+    {
+      "path": "frozen/producer.mjs",
+      "sha256": "605496204c5abef8440734ece530e478fb490b1803a720b1c01bac5097825865",
+      "bytes": 9089
+    },
+    {
+      "path": "original-process/actual-producer.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "original-process/after.json",
+      "sha256": "4c7c82a5b5d864b7441191d9f16ae714f628144203c976ef409b4fa4d1e773cf",
+      "bytes": 250
+    },
+    {
+      "path": "original-process/before.json",
+      "sha256": "4c7c82a5b5d864b7441191d9f16ae714f628144203c976ef409b4fa4d1e773cf",
+      "bytes": 250
+    },
+    {
+      "path": "original-process/cleanup.json",
+      "sha256": "74df09df8cba8f7b42b32863aeaee29a4f78f62c56e5dde8fc77469d8383760a",
+      "bytes": 86
+    },
+    {
+      "path": "original-process/launch.json",
+      "sha256": "d1946914144fb7cfbcde9f1e9ac1a21d05618a8bda9ae8c40c93d511f4f45d0d",
+      "bytes": 747
+    },
+    {
+      "path": "original-process/launcher.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "original-process/native-resolution.json",
+      "sha256": "7146572bfdafacb058b501277a4163c4934b10bff07c4380c17be31c41b6f219",
+      "bytes": 1150
+    },
+    {
+      "path": "original-process/producer.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "original-process/producer.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "original-process/result.json",
+      "sha256": "ba621aaa6db15727f7d0357449c78a07b0ddb357cc09eabaa0341edb7e263574",
+      "bytes": 1027
+    },
+    {
+      "path": "original-process/started.json",
+      "sha256": "8f816e87e6299e4dd911766c18e016d01a590b21517efb63b4e6e27e03af3002",
+      "bytes": 44
+    },
+    {
+      "path": "original-process/timing.json",
+      "sha256": "63f524cffcf6ea482cd78496fda091d1bc577c0b4fea93181b7b88731443a0fd",
+      "bytes": 119
+    },
+    {
+      "path": "receipt.json",
+      "sha256": "b508c94a8101a2dae1d82132989ec9ca56a2be9942302e8f069855a4e18d316f",
+      "bytes": 7606
+    },
+    {
+      "path": "root/artroom-f-supports-edit-seal-root-preflight-20261110.json",
+      "sha256": "dc7ff0db5fbd811ddd3c60a0340c03dc9640a1a692626afe57fa4c68e0d2431a",
+      "bytes": 816
+    },
+    {
+      "path": "root/artroom-f-supports-edit-seal-root-readback-20261110.json",
+      "sha256": "2534605a74126961dd58691f418721c4c34bb80b7e58a0040dd8af50bf011174",
+      "bytes": 1247
+    },
+    {
+      "path": "root/artroom-f-supports-edit-seal-root-readback-v2-20261110.json",
+      "sha256": "1f10d8a63b727b4d1654689bb7eff8d7c73e9e38a652a9e38a5660b817951ef4",
+      "bytes": 1593
+    },
+    {
+      "path": "SHA256SUMS",
+      "sha256": "c0b2626a45d00b5eafac5dffcaf9e825636f0e1d27f178d6a94afe122918d0c4",
+      "bytes": 2554
+    }
+  ],
+  "qualification": "One maintained AST producer and explicit exactnativebindingload. No app/compiler/test/control/build/gate. Originalunits untouched; copiesonly400/500.",
+  "retention": {
+    "minimumDays": 30,
+    "retainThroughUtc": "2026-12-10T18:38:00.538372+00:00"
+  }
+}

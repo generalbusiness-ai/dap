@@ -1,4 +1,4 @@
-import { answersVersionQuestion, applicationRoom, applicationInstallation, applicationProjectionDeclaration, compromisedKey, sourceName, evidenceIncidentAdmissionPositionV17, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
+import { answersVersionQuestion, applicationRoom, applicationInstallation, applicationProjectionDeclaration, compromisedKey, sourceName, evidenceIncidentAdmissionPositionV17, evidenceIncidentParentV17, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
 import { readMinimum } from "@generalbusiness/dap-bytes";
 import { ReadWait, type ReadWaitRefusal } from "./read-wait.ts";
 import { configuredArchive, archiveDriver, floorOffer } from "./object-archive.ts";
@@ -700,7 +700,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
         const read = await within(() => this.#resolver.read(creator.fact, this.#fetchSeconds, true), this.#fetchSeconds);
         if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, creator.fact)) return null;
         proof = [proof[0]!, { ...creator, under: read.under }];
-        if (pinned.named === EVIDENCE_INCIDENT_PINS_V17.change && creatorInput?.type === "act" && creatorInput.signed.intent.kind === "open-pr") {
+        if (evidenceIncidentParentV17(pinned.named) && creatorInput?.type === "act" && creatorInput.signed.intent.kind === "open-pr") {
           const directory = read.origin?.find(copy => copy.fact.seq === 0 && canonicalize(copy.fact.at) === canonicalize(creator.fact.at));
           if (!directory || !isEntryOf(directory.entry, directory.fact) || directory.entry.input.type !== "genesis") return null;
           proof = [...proof, directory];
