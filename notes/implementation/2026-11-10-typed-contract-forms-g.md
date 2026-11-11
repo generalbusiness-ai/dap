@@ -265,8 +265,17 @@ owners ran. The fourth passed all twenty-one current compilers and failed
 in Plain; Node and Native were not launched in that sealed unit. Its raw
 receipts, the earlier failures and their source checkpoints remain distinct.
 The repaired source proceeds to the required full gate without another
-sealed focus repeat. The full gate, controls and final-head Page/Card
-workflows remain **UNRUN**.
+sealed focus repeat. Its first full gate at `699bd733` passed the initial
+checks through citation tests, then stopped at the documentation-link
+check. Three links still named the removed `examples/grow/device.ts`.
+They now name `examples/grow/authoring/forms.ts`, which owns those typed
+forms. The ordinary maintained link check reports 1,232 links and zero
+broken links. The failed gate reached no compiler or runtime test phase.
+Its raw receipts remain distinct from the focused attempts.
+
+Page and Card workflows passed at `699bd733`. The documentation follow-up
+still owes its successful full gate, controls and final-head browser
+workflows. No acceptance or deployment follows from these earlier passes.
 
 The observed maintained AST parser output seals Grow's Text-module bridge.
 No route or gate assertion changed. The later working repair changes comparisons in two

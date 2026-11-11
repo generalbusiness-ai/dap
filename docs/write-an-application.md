@@ -493,7 +493,7 @@ Checked against main `6bfb6e16` on 10 November 2026. Sources:
 [the package validation](../packages/platform/src/validate-package.ts),
 [the lane pin script](../apps/room/lanes/scripts/pin.mjs),
 [the lending definition](../examples/lending/definition.ts), and
-[the Grow device forms](../examples/grow/device.ts). The validation and
+[the Grow device forms](../examples/grow/authoring/forms.ts). The validation and
 pin commands on this page ran on 12 October 2026 at main `d309b6b9`, and
 the printed digests are from that run. The same validation at main
 `6bfb6e16` prints the same digests. The scope-creation commands were
