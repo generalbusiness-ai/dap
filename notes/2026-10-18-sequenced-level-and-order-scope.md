@@ -13,9 +13,10 @@ and designs the runtime for the second.
 
 1. **The archive is a binding of the room, not a level of the
    definition.** The `archived` level of the archive note
-   ([section 15.2](2026-10-09-shared-language-volatile-acts.md), point 5
-   of its decision) is withdrawn. A room binds its repository to the
-   archive at its claim or later, and a package may require that binding.
+   ([section 15.2](2026-10-09-shared-language-volatile-acts.md), and
+   point 5 of the decision in its section 15.1) is withdrawn. A room
+   binds its repository to the archive at its claim or later, and a
+   package may require that binding.
 2. **The third level is "sequenced".** A sequenced scope keeps its own
    journal, as a recorded scope does, and shares an order with a group of
    scopes through one order scope. A sequenced act or handler may read the
@@ -252,9 +253,15 @@ or handler may use `{ read: string; part?: Part }`, the list that a
 `count`, `distinct`, and `sameSet`, and as an `element` source inside
 them. A read is a list of records. For each item the range covers in the
 member as of the cut, the record holds its ID, state, revision, and
-value slots, in the member's own types. The validator refuses `read`
-anywhere but a sequenced act or handler, and refuses `reads` on an input
-without `sequenced`.
+value slots, in the member's own types. A record never holds a detached
+text. The page leaves each detached text slot out, so a redaction in the
+member never meets a retained page. A `read` whose `part` names a
+detached text slot is refused `redactable-read`, as a guard that reads
+one is today (`packages/derive/src/validate/operands.ts`). The package
+check makes that refusal, because only the package holds the reader's
+definition and the member's. The validator refuses `read` anywhere but a
+sequenced act or handler, and refuses `reads` on an input without
+`sequenced`.
 
 **In the entry.** `Entry` (`packages/contract/src/entry.ts`) gains:
 
@@ -390,10 +397,14 @@ refused. The level adds one edge: a lane may create an `order` scope
 when the cohort that its lineage resolves to carries an `order` pin, and
 the child's pin equals it. The second is the package check. The root's
 `create` send carries the group's `name`, `size` and `lifetime` as
-constants. The check compares them with the package's `groups` entry
-(`PackageGroup` in `packages/package-graph/src/types.ts`) and refuses a
-package where they differ. So a group has the size and the lifetime that
-its package declares.
+constants. The package's `groups` entry has a `name`, a list `members`
+and a `lifetime` (`PackageGroup` in
+`packages/package-graph/src/types.ts`). The check refuses a package
+where the root's `name` or `lifetime` differs from the entry, or where
+`size` is not the length of `members`. It also refuses a group with
+more than 32 members, where the package graph's own limit is 128
+(`PACKAGE_COMPOSITION_LIMITS`). So a group has the size and the
+lifetime that its package declares.
 
 **Capacity.** An allocation is new work. It opens an `allocation` in
 `open` with its `expires` deadline, so it reserves the one entry that
@@ -430,8 +441,9 @@ the order scope's own turn, with a new input kind:
   `order-left`, `order-closed`, or `scope-full`.
 - **Resolve.** `open` to `resolved`, recording the prepare entry's fact,
   hash included, so that exactly one prepared result can commit at that
-  position. Refused `expired` or `holed` when the allocation is already
-  final in that state, and `not-open` when it names another member's or
+  position. Refused `allocation-expired` or `holed` when the allocation
+  is already final in the state `expired` or `holed`, and `not-open`
+  when it names another member's or
   input's allocation. Idempotent on a `resolved` allocation with the same
   `prepare`. A different `prepare` for a resolved position is refused
   `position-bound`.
@@ -445,7 +457,10 @@ the member, does not fetch, and holds no bytes but the digest.
 from `open` to `expired` when `opened` plus the group's `lifetime` has
 passed, with attention. The lifetime is set at genesis from the
 package's `groups` declaration. A later `resolve` for that position is
-refused `expired`, so a hole never gains a commit. Only an `open`
+refused `allocation-expired`, so a hole never gains a commit. `expired`
+is a state of the `allocation` item. The refusal has its own code,
+because `RefusalReason` already has `expired` for an intent past its
+`notAfter` (`packages/contract/src/result.ts`). Only an `open`
 allocation expires. A `resolved` one has a determined result (5.5, the
 failure model). Expiry, resolution, and holes are entries of one
 journal, so which came first is decided where the position was
@@ -469,7 +484,8 @@ steps for an input whose act or handler is `sequenced`:
    with the reason `order-unavailable`, nothing is written, and the
    sender keeps the duty. A refusal: an act is refused with the order
    scope's reason. A delivery is answered `unavailable` with a reason
-   that can change, such as `forming`, and the sender keeps the duty;
+   that can change, such as `order-forming`, and the sender keeps the
+   duty;
    with `order-left` or `not-a-member` it is decided outside the group's
    order: an ordinary deciding entry with no position, `refused` with
    that reason, no effects, and its one result, whose `uses` cites the
@@ -547,7 +563,8 @@ steps for an input whose act or handler is `sequenced`:
    the commit entry (5.2) against the prepare's reservation. The effects
    take effect, the reservation for their pending work transfers to
    those states, the sends are dispatched from the commit, and the
-   signer receives the commit's receipt. On `expired`, the scope writes
+   signer receives the commit's receipt. On `allocation-expired`, the
+   scope writes
    the abandon entry against the same reservation and releases the
    rest. The prepared judgment is void, and the input is judged again
    from step 3 with a new allocation. An intent past its `notAfter` is
@@ -569,17 +586,19 @@ steps for an input whose act or handler is `sequenced`:
 | Delivery, `refused` after allocation (a guard, `late`, `spacing`) | yes | prepare, then commit: the deciding entry with its result |
 | Delivery, `superseded` (an older `relate` revision, a source-ordered `tell`) | yes | prepare, then commit: the deciding entry with its result |
 | Delivery, refused `order-left` or `not-a-member` | no | one deciding entry outside the order, citing the order head (step 3, 5.8) |
-| Delivery, `unavailable` (`scope-full`, `order-unavailable`, `member-pending`, `member-uncommitted`, `cut-gone`, `forming`, `clock-behind`) | no, or the allocation stays open for the retry, or a hole after `cut-gone` | nothing; the sender keeps the duty |
+| Delivery, `unavailable` (`scope-full`, `order-unavailable`, `member-pending`, `member-uncommitted`, `cut-gone`, `order-forming`, `clock-behind`) | no, or the allocation stays open for the retry, or a hole after `cut-gone` | nothing; the sender keeps the duty |
 
 **Restart and resume.** An object that restarts reads its head. A
 pending row with no prepare entry resumes at step 4. A prepare entry at
 the head with no commit or abandon resumes at step 8. The resolve
-request is idempotent, and its answer, `resolved` or `expired`, is also
-readable from the order journal without a request, which is how a
-member settles after the order scope has closed. The object's own alarm
+request is idempotent. Its outcome, the state `resolved` or `expired`
+of the allocation, is also readable from the order journal without a
+request, which is how a member settles after the order scope has
+closed. The object's own alarm
 resumes both cases, as it runs timed rules, so a stopped member that
 returns completes its input without its sender. An admitted delivery is
-never abandoned by this. After an `expired` answer, the sender's
+never abandoned by this. After an `allocation-expired` answer, the
+sender's
 dispatcher retries it, and the retry is judged at a new position.
 
 **Unsequenced inputs** of a sequenced scope take no position. Outside
@@ -620,8 +639,10 @@ entry included, as every act does. The cut is what other members see of
 it.
 
 **The read.** A new read of the scope API, `at(X, range)`, answers the
-items the range covers as of X, in one page bounded as `items` is. It
-answers `busy` under the limits the member has for any reader. It
+items the range covers as of X, in one page of at most 64 items (5.9).
+It answers `unavailable` with the reason `busy` (`UnavailableReason` in
+`packages/contract/src/result.ts`) under the limits the member has for
+any reader. It
 answers `uncommitted` while the member holds a prepare entry at or below
 X whose position the order journal shows resolved and whose commit entry
 it has not yet written. The read contract already has an answer
@@ -697,9 +718,9 @@ export interface GroupReadUse {
 `uses` cites, in the entry domain, the order scope's head entry the
 reader read, the cut entry, and for a left member the `leave` entry. The
 page is written to the reader's retained inputs under a new kind `page`,
-keyed by its digest, when the entry is committed. It is bounded by the
-page bound (64 items, each bounded by the member's slot types) and
-archived with the entry (section 8). The two byte domains are never
+keyed by its digest, when the entry is committed. It holds at most the
+items of one read (5.9), each bounded by the member's slot types, and
+it is archived with the entry (section 8). The two byte domains are never
 mixed.
 
 **Absence.** The one absence is a member that left. When the `leave`
@@ -807,7 +828,9 @@ The verifier (`packages/replay`) checks:
 The report keeps its result values (`Report.result` in
 `packages/contract/src/report.ts`), and four of them answer for a
 group. **`consistent`**: every check holds. **`incomplete`**: a prepare
-entry at the head, which `at` names. **`mismatch`**: a journal or a
+entry at the head. `Report.at` names it. That member names the entry of
+a mismatch today, and H6 gives it this second use. **`mismatch`**: a
+journal or a
 retained page contradicts an entry, including an `open` allocation at
 or below a cited cut, which a committed reader can never have seen, a
 `holed` or `expired` allocation with a commit entry at its position, or
@@ -835,7 +858,7 @@ delivery, are assigned at admission and are inputs to the judgment.
 |---|---|---|
 | Members of a group | 32 | One list slot of the order scope, and the fan-out bound of a `relate` |
 | `reads` per input | 4 | Four fetches before a turn, as `presents` allows four facts |
-| Items per read | 64 | The list bound of the contract's revision 19 |
+| Items per read, and per page | 64 | The list bound of the contract's revision 19, because a read is a list. The `items` read has its own, larger page |
 | Pending rows per scope | 1 | One sequenced input at a time |
 | Cut copies per member | 8 | The cuts a member can still serve when its floor has passed them (5.5). One copy of the member's items for each, or the changed items |
 | Reserved by a prepare | its commit or abandon, plus the settling entries its effects open | "Room to settle". The prepare is new work. The commit and abandon are settling entries |
@@ -970,7 +993,8 @@ order-sensitive decision has one owner.
 
 The grow package has one `site` scope and one `room` scope per grow room
 ([grow design](2026-10-17-grow-operation-application-design.md), section
-6.1). Written as connections in the package:
+6.1). Written as connections in the package, as that design stated
+them on 17 October:
 
 | From | To | Form |
 |---|---|---|
@@ -981,7 +1005,11 @@ Every site rule the design names is order-insensitive. The overview sums
 counts, and routing sends each alert to the holders of the authority it
 needs inside its own room. So the grow package needs no group, and the
 demo's package declares its scopes at the recorded level. This note
-changes nothing in plan 033's G0 to G3.
+changes nothing in plan 033's G0 to G3. The table is the design's
+example and not the code on main. In `examples/grow/site.ts` the fan-in
+is the `room-summary` relate with `copies: 3`, and each member owns its
+presence item. A relate orders each copy by its owner's revision, and
+only the owner changes its presence item, so neither needs a group.
 
 The two-scope application that M2 asks for ("one owner of a shared
 amount", applications note, section 7) is the first witness of the
@@ -1009,7 +1037,7 @@ consistent view, not for allocation. The witness shows these things:
   commit, and replay verifies that the resolution names its hash;
 - an owner stopped past the group's lifetime before preparing leaves a
   hole the reader passes over, and the owner's later resolve is refused
-  `expired` and writes an abandon entry;
+  `allocation-expired` and writes an abandon entry;
 - an owner stopped after resolution and before the commit leaves the
   reader `uncommitted`, not on an older cut, until the owner resumes;
 - a requester with a `staleness` of one hour proceeds while the owner's
@@ -1099,7 +1127,7 @@ parallel lanes. Request `333de97b` stays their parent.
 | H2, derive | `fits` and `owed` for a prepare and an allocation, in every capacity dimension. One source for the effective sequence in the six functions that set `self`. The fold of prepare, commit and abandon, with the indexes keyed on the wrapped input. `source-not-effective` | H1 | Unit tests. An item that a commit opens has the commit's sequence as its ID. Every time judgment uses the prepare entry's clock reading. A delivery that cites a prepare entry is refused. A `relate` send from a commit has the commit's sequence as its revision |
 | H3, platform | `platform:order@1`: its items, `establish`, `enroll`, the three requests and expiry. Its catalog entry. The creation family that carries the `order` pin. The lineage edge from a lane to `order` | H1 | The order scope in memory through `forming`, `open`, allocation, resolution, hole and expiry, with each refusal of 5.3. A lineage pair: a lane creates an order scope in the new family, and the same create is refused in an older one |
 | H4, runtime | The sequenced turn: the pending row, the prepare entry, the fence, resolve, commit, abandon and resume. The `at` read with cut copies. Retention of pages | H2 and H3 | The first version's witness of section 7, in memory and on native storage |
-| H5, package | The reading of `groups` in the package graph, with its four group findings. The check that the root's create constants equal the `groups` entry. The install refusal in a room without the level (O10). The check of the level in `stagedFindings` goes: it compares the level object with a string and never holds | H3 | A package with one group installs in a room of the new family and forms its group. The same package is refused at install in a room of an older family, before any scope is created |
+| H5, package | The reading of `groups` in the package graph, with its four group findings. The check that the root's create constants equal the `groups` entry. The install refusal in a room without the level (O10). The check of the level in `stagedFindings` goes: it compares the level object with a string and never holds. The refusal of a `read` of a detached text slot (5.2), and of a group with more than 32 members (5.3) | H1 for the package-graph part. H3 for the install witness | A refusal pair for each package finding. A package with one group installs in a room of the new family and forms its group. The same package is refused at install in a room of an older family, before any scope is created |
 | H6, replay and documents | The checks of 5.8 for acts. The `incomplete` report for a prepare entry at the head. Promises 2, 4 and 5 of the kernel page (13.2). `docs/scopes.md` and the other rows of section 8 | H4 | The witness's journals replay. A tampered position, a page that differs, an `open` allocation below a cited cut, a resolution that names another hash, and an entry inside a fence are each a `mismatch`. A missing order journal or commit entry is `missing-dependency` |
 
 **The family.** `platform:order` is a new platform name. A room reaches
@@ -1217,7 +1245,7 @@ application that needs a group is installed in a room of the new family.
 | O5 | How `reads.member` resolves when two packages install groups with the same names | Names are scoped to one order scope. `reads.member` resolves through the scope's own `order` reference |
 | O6 | Whether a sequenced handler for a `relate` update allocates before or after the revision check | Settled after landing (5.4, step 6): before. A superseded update takes a position and is prepared and committed with its result, so one path serves every decision after allocation |
 | O7 | Whether the order scope should tell a member that its position expired | Attention only in the first version. A `tell` once timed rules may send (packages note, 4.3) |
-| O8 | The `page` kind's byte bound, and whether a page is shared across readers of one cut | 64 items by the member's slot types. One retained copy per reader's scope |
+| O8 | The `page` kind's byte bound, and whether a page is shared across readers of one cut | The item bound of 5.9, with each item bounded by the member's slot types. One retained copy per reader's scope |
 | O9 | Whether a reader may fold a member's resolved but uncommitted prepare entry itself, from the two journals, so that `uncommitted` disappears | Not in the first version. A member's own state must come from its own journal, and the commit entry is what makes the prepare effective there. Revisit after H4's measurements |
 | O10 | Which pinned version judges the install refusal in a room without the level: an opt-in of the room's Rules, or a read of the room's cohort | H5 proposes. The refusal carries a reason code, and it comes before any scope of the package is created |
 
@@ -1355,7 +1383,7 @@ expresses, so a definition pinned by digest cannot state them.
 | The mark `sequenced`, `reads`, and the `read` operand | `contract/src/definition.ts`, and the grammar in `derive` | Section 7. One more form in each copy of the grammar that K5 names |
 | The retained kind `page` | `RetainedInput` in `contract/src/read.ts` | Section 7 |
 | The `at` read, with the answers `uncommitted` and `cut-gone` | `contract/src/read.ts` and `transport.ts` | Section 7 |
-| The reason codes of 5.2 to 5.5 that `contract` lacks, among them `order-unavailable`, `not-a-member`, `order-forming`, `member-pending`, `member-uncommitted`, `cut-gone`, `source-not-effective`, `position-bound` and `not-open` | `RefusalReason` in `contract/src/result.ts` | Section 7 |
+| The reason codes of 5.2 to 5.5 that `contract` lacks, among them `order-unavailable`, `not-a-member`, `order-forming`, `member-pending`, `member-uncommitted`, `cut-gone`, `source-not-effective`, `position-bound`, `not-open` and `allocation-expired` | `RefusalReason` in `contract/src/result.ts` | Section 7 |
 
 **The filing rule.** Section 7.1 of the kernel page holds a note or a
 change that adds a scope kind, a platform name, a level, an entry kind
@@ -1368,10 +1396,12 @@ head of section 9 that adds to the kernel says what it adds to K1 and
 K4.
 
 **The promises.** Three promises of section 6 of the kernel page change
-when the level is built. H6 makes the change, in these words.
+when replay handles the level. H6 is the head that makes replay handle
+it, and it changes them to these words.
 
-- Promise 2 names the number of inputs that replay handles. It is nine
-  today, and the level makes it fifteen.
+- Promise 2, second sentence: "Replay refuses no entry kind today: the
+  `Verifier` class in `replay/src/verify.ts` handles all fifteen
+  inputs." It says nine today. The level adds six.
 - Promise 4: "A judgment is about one head. A scope judges each act
   against its own whole head. A sequenced act also rests on the cuts
   that it read, and its prepare entry cites each one."
