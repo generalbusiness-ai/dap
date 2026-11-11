@@ -1,0 +1,119 @@
+{
+  "status": "COMMITTED WORKING REPAIR; FULL GATE AND CONTROLS OWED",
+  "head": "818009b868881508f04c65a087a2df88e4f53516",
+  "tree": "ab69e56f6e9ca2480e1ae83104c2882f99e2cc4d",
+  "parent": "d92fc9337540975d9b58c9dab655cccc46e1c525",
+  "main": "9f3338ff8b46f9e08c5d006352d15e05a09c8a35",
+  "clean": true,
+  "ownedPathsAboveMain": 57,
+  "changes": [
+    {
+      "path": "docs/mcp-tools.json",
+      "sha256": "d5c3f0a07b62e7e07b42b205a6494f290491603c1b2414cbb8859c0231842c80",
+      "bytes": 262660,
+      "mode": 420
+    },
+    {
+      "path": "docs/mcp.md",
+      "sha256": "882025d8fbfc210904c887fc0143035832d1e78e4f7c0f12475e331d9fae1f98",
+      "bytes": 112012,
+      "mode": 420
+    },
+    {
+      "path": "notes/implementation/2026-11-10-typed-contract-forms-g.md",
+      "sha256": "f2570b28b4964764f486d9d3daf5163cc6eb01f628d693684de1b3cecd7d76a9",
+      "bytes": 19370,
+      "mode": 420
+    },
+    {
+      "path": "packages/mcp/test/describe.test.ts",
+      "sha256": "0d3cd15ec30daab7ebe16c824d25f3c1dd3836ea8be6e735e9c46ada62c84748",
+      "bytes": 18694,
+      "mode": 420
+    },
+    {
+      "path": "packages/mcp/test/inventory.test.ts",
+      "sha256": "b24758bc0af4279bc7dac607c97a06c81dc51034caf5c2636205386407e29cf4",
+      "bytes": 9359,
+      "mode": 420
+    }
+  ],
+  "jsonTools": 75,
+  "identitiesAndOrderExact": true,
+  "semanticDeltas": [
+    {
+      "path": "/tools/21/description",
+      "kind": "description clause permutation"
+    },
+    {
+      "path": "/tools/23/description",
+      "kind": "description clause permutation"
+    },
+    {
+      "path": "/tools/24/description",
+      "kind": "description clause permutation"
+    },
+    {
+      "path": "/tools/24/inputSchema/properties/fields/required",
+      "kind": "required permutation"
+    },
+    {
+      "path": "/tools/27/description",
+      "kind": "description clause permutation"
+    },
+    {
+      "path": "/tools/27/inputSchema/properties/fields/required",
+      "kind": "required permutation"
+    },
+    {
+      "path": "/tools/28/inputSchema/properties/fields/required",
+      "kind": "required permutation"
+    },
+    {
+      "path": "/tools/31/description",
+      "kind": "description clause permutation"
+    },
+    {
+      "path": "/tools/31/inputSchema/properties/fields/required",
+      "kind": "required permutation"
+    },
+    {
+      "path": "/tools/33/description",
+      "kind": "description clause permutation"
+    },
+    {
+      "path": "/tools/42/description",
+      "kind": "description clause permutation"
+    },
+    {
+      "path": "/tools/44/description",
+      "kind": "description clause permutation"
+    },
+    {
+      "path": "/tools/45/description",
+      "kind": "description clause permutation"
+    },
+    {
+      "path": "/tools/45/inputSchema/properties/fields/required",
+      "kind": "required permutation"
+    }
+  ],
+  "otherValuesAndSchemasExact": true,
+  "runtimeProductionChanges": false,
+  "testCaseTitlesAndCountChanged": false,
+  "workingResults": {
+    "writerSession": 80428,
+    "writerExit": 0,
+    "readOnlySession": 82413,
+    "readOnlyExit": 0,
+    "files": 2,
+    "cases": 13,
+    "compilerExit": 0
+  },
+  "failedGate": {
+    "session": 39743,
+    "gateExit": 1,
+    "end": "9d12c46dcc2bd17a27c271d7cd0c0946651d3a1d"
+  },
+  "peerSha256": "50b67775e9d06194f43f5702e71c3c0c529d919854752b43edba108cfbb68ee2"
+}
