@@ -1,0 +1,59 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-same957-crash-control/different-failure-sealed/unit",
+  "head": "9578637f6294ec85d6db639f25ce308cdb34d290",
+  "tree": "ed0c92d305f7d2f802bd1060f1b99cc872ee6bbf",
+  "booking": "dc114da57536adbb6124e1f995d99b215975b6eb",
+  "end": "c7be3b44c29e775640ca85e99b177a39aa900b22",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "bca4ba0705bd7a28722463924ba14acabedd76fb5113e86d41d56ba19a632115",
+      "bytes": 514
+    },
+    {
+      "path": "audit.json",
+      "sha256": "5584815cd82199685db984b5942b1177ae5a863fcd6afee862007c25c643267b",
+      "bytes": 2929
+    },
+    {
+      "path": "carry-candidates.json",
+      "sha256": "0ff98895dd98c3ea93c6df67cdf46107799b53b975f43814e873ae2251796a8e",
+      "bytes": 66173
+    },
+    {
+      "path": "compiler-ledger.json",
+      "sha256": "1e8d7deb222990f01c8872c1157b2240f2d98f0e27c700beacfff7af79a1aa00",
+      "bytes": 49586
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "086782c5e8636942754fff5eb0e6187e3aef5ccb8ad68887af7c163e254f2881",
+      "bytes": 156816
+    },
+    {
+      "path": "reporter-reconciliation.json",
+      "sha256": "1d17c8fbc3d4f73e124a6a3da02fedcb87ddc64164a8718c48096bf5aabb736e",
+      "bytes": 36591
+    },
+    {
+      "path": "runtime-ledger.json",
+      "sha256": "b71713e0406c300c724935b397265f310ac56c4ba79e86ef6b4471f2ef0fcf9a",
+      "bytes": 44903
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-same957-crash-control/different-failure-sealed/private",
+    "manifestSha256": "e85f0caad2fc424b7fa241c0bec2ada649725a96f9bd98f606ce9410e6e0c1b8",
+    "files": 801,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T21:55:56.133736+00:00"
+    }
+  },
+  "withheld": [
+    "Original raw stdout/stderr, compiler diagnostics, process/source/tool/frozen/staged/temp/cache payloads stay in the opaque owner-only private archive."
+  ],
+  "qualification": "Sixth control FAILED DIFFERENT WAY: exact Native pool-label refusal before setup/bodies. Plain62+Node24 at957 are86case candidates only; no automatic later-head carry. Native8 UNRUN, no SIGBUS/assertion. All five prior histories remain FAILED. Stop F executable work; no acceptance."
+}
