@@ -1,0 +1,59 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-combined82-3de/combined-failure-sealed/unit",
+  "head": "3de5bb68b3deac34267f42187c8065454211e530",
+  "tree": "35d0e22790fef2d6f31c20758b6bd3cd3c04efdd",
+  "booking": "4e257607c25625312000186bcd08a734a448ef62",
+  "end": "b6bc573d37f811d84bd23c9811eece4692ee77e4",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "984ba843a095c0eb1f8c1a12f755f63d5d6b6dfe22dce761f3986a14c3e40ebb",
+      "bytes": 514
+    },
+    {
+      "path": "audit.json",
+      "sha256": "b6f0b00846c54f97c9368288b1d63d7e117a45d582a918b4efce9e19a66ba9d8",
+      "bytes": 2624
+    },
+    {
+      "path": "carry-candidates.json",
+      "sha256": "c5a172f0403da6dd936c17ff85fa3c70e3acd2248bb888e986f9913f8f65264b",
+      "bytes": 48725
+    },
+    {
+      "path": "compiler-ledger.json",
+      "sha256": "01626a5f5d96b4a077415efb6d100c9cdf2aebf7e3b291c7ab8beb5ca4d2078c",
+      "bytes": 48691
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "a9fc1f1d9db8b6320002420dbfb94618493932f5589b178cd62754bdc4787517",
+      "bytes": 20831
+    },
+    {
+      "path": "reporter-reconciliation.json",
+      "sha256": "4b23e4b98fdb4718ad572545eda8eabcea903f36d39c178f8377d71749e01dfe",
+      "bytes": 703
+    },
+    {
+      "path": "runtime-ledger.json",
+      "sha256": "0e5c1b1d813cdae2ff907b8da52ba59ca3d21598a451b0e3c10c767e38b3773f",
+      "bytes": 37724
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-combined82-3de/combined-failure-sealed/private",
+    "manifestSha256": "0b12eedb234ecd5161a95aa57202149c5acdac061072bed1e8071894779bafa3",
+    "files": 125,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T20:50:54.339714+00:00"
+    }
+  },
+  "withheld": [
+    "Original raw stdout/stderr, compiler diagnostics and process/source/tool/frozen/staged/temp/cache payloads stay in the opaque owner-only private archive."
+  ],
+  "qualification": "Actual combined focus FAILURE. Ten current compiler passes plus31 historical contexts remain41distinct histories. Plain4passed/1failed/23bail-aborted/34unrun grants no complete current owner; Node12/Native8 UNRUN. All82 current runtime obligations remain owed;73 historical whole-owner cases remain separate. All three prior runs remain failed; no body repeated."
+}

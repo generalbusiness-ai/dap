@@ -1,0 +1,40 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-browser-ci/sealed/unit",
+  "head": "d1d09f3cfd15b8b794eb53aec65e4d83dddd4671",
+  "tree": "5fac757a3e5e4b2a26778bff731b4c94b31ddd47",
+  "files": [
+    {
+      "path": "filter-correspondence.json",
+      "sha256": "d42d15cf3363f0f9b2781b7763c283243f849e5e91439c3ae7664927abb85938",
+      "bytes": 1912
+    },
+    {
+      "path": "observation-custody.json",
+      "sha256": "e8039cdf47b44e9c612fe6486dd72e71917b39bc509bdc5b911d0e7982d61c23",
+      "bytes": 12119
+    },
+    {
+      "path": "step-outcomes.json",
+      "sha256": "95e248c2081ae8a407dba0f85a0de1f10da79f42ae98f841c62408b495fa5e5b",
+      "bytes": 9181
+    },
+    {
+      "path": "summary.json",
+      "sha256": "ecf2cd70b88936c1f3a7e1054c882e1bdfbb424bd9e925a3f3c195182b6069f5",
+      "bytes": 25028
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-browser-ci/sealed/private",
+    "manifestSha256": "3a9808277016d71daa444dbf52a387bf5eea487090e73a62bec758ef919d149d",
+    "files": 178,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T19:11:31.460212+00:00"
+    }
+  },
+  "readonlyScope": "Only new copies/public payloads400 and their containing directories500; all original scratch status/log/receipt directories and files stay writable/unsealed.",
+  "qualification": "Original6f workflow failures and initial two actual gh read refusals preserved; exactd1 automatic Page/Card push attempt1 runs and all25steps successful, bound again by terminal GET after job reads. No rerun/dispatch, Worker/localbody/fullgate/deploy/live acceptance."
+}

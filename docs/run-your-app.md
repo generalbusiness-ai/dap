@@ -10,9 +10,12 @@ A definition on its own, like the tutorial's, runs in a room of the
 `application` cohort. You activate the definition in the room's rules and
 ask the room's directory to create the scope. A package, which bundles
 several definitions with their views, is built with `dap new`, `dap check`
-and `dap pack` and installs into a room with `dap install`.
-[The dap command](cli.md) says which room cohorts accept a package
-today. This page takes the first path.
+and `dap pack`. No room that a current Worker creates installs an
+ordinary package, one that requires no host capability. You can still
+check and preview a package on your computer, as
+[Check and preview a package](check-and-preview-a-package.md) shows.
+[Creation cohorts](cli.md#creation-cohorts) lists the room cohorts. This
+page takes the first path.
 
 Step 2 of this page ran on 15 October 2026. Steps 3 to 8 have not been
 run end to end for this page. The lending library's first definition went
@@ -24,15 +27,16 @@ records.
 
 You need the `my-counter` directory from the tutorial, a Cloudflare
 account that can deploy Workers, and a checkout of the dap repository.
-[Run your own service](self-host.md) lists the details. On this page,
-`dap` means `node packages/cli/bin/dap.js`, run from the root of the
-checkout. The command is not published to a registry yet.
+[Run your own service on Cloudflare](self-host-cloudflare.md) lists the
+details. On this page, `dap` means `node packages/cli/bin/dap.js`, run from
+the root of the checkout. No registry publishes the command.
+[Get the dap command](get-dap.md) sets up the checkout.
 
 ## Step 1: Deploy the service
 
-Follow [Run your own service](self-host.md) through the deployment of the
-Worker. Stop before you create a room. You now have a service at
-`https://<name>.<subdomain>.workers.dev`.
+Follow [Run your own service on Cloudflare](self-host-cloudflare.md) through
+the deployment of the Worker. Stop before you create a room. You now have a
+service at `https://<name>.<subdomain>.workers.dev`.
 
 ## Step 2: Pin the definition
 
@@ -98,8 +102,8 @@ dap install --plan https://<name>.<subdomain>.workers.dev --cohort application -
 
 The plan lasts 14 minutes. Finish this step within that time. Set the
 Worker's `REGISTER_SCOPE` setting to the planned register ID the command
-prints, as [Run your own service](self-host.md) describes, then install
-the plan and create the room:
+prints, as [Run your own service on Cloudflare](self-host-cloudflare.md)
+describes, then install the plan and create the room:
 
 ```sh
 dap install --planned --cohort application
@@ -232,10 +236,11 @@ admin only.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
-[the install cohorts](../packages/cli/src/commands.ts),
+Checked against main `6bfb6e16` on 10 November 2026. Sources:
+[the install cohorts](../packages/cli/src/command-install.ts),
 [the application list](../packages/cli/src/application-list.ts),
-[the directory's establish act](../packages/platform/src/directory.ts), and
+[the directory's establish act](../packages/platform/src/application.ts), and
 [the lending runbook](../examples/lending/runbook.md). Step 2 ran on
-15 October 2026 with the published packages at `0.1.0-dev.2`. The other
-steps were not run for this revision.
+15 October 2026 with the published packages at `0.1.0-dev.2`, and the
+digests on this page come from that run. The other steps were not run for
+this revision.

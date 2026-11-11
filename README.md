@@ -37,7 +37,7 @@ be self-hosted on other services using workerd and celld.
 - **Connect an AI app:** [Connect an AI app to a room](docs/connect-an-ai-app.md).
 - **Build an application:** [Build a counter](docs/build-a-counter.md).
 - **Run a service:** [Run your own service](docs/self-host.md).
-- **Check the security:** [Security invariants and witnesses](docs/security/threat-model.md).
+- **Check the security:** [Threat model](docs/security/threat-model.md).
 - **Contribute:** [Contribute to dap](docs/contribute.md).
 
 [The documentation index](docs/README.md) lists every page in reading

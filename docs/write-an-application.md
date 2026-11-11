@@ -18,6 +18,9 @@ definition declares. You write no judging code.
 
 Start from a template and remove what your application does not need:
 
+- For a first application, start from the `definition.ts` that you wrote
+  in [Build a counter](build-a-counter.md) or
+  [Build a lending library](build-a-lending-library.md).
 - For a small application with turns and a target, start from the
   [Counter definition](../apps/counter/definition.ts).
 - For things that members hold, lend and remove, with a member role and a
@@ -31,6 +34,23 @@ Start from a template and remove what your application does not need:
 After you remove rows, validate the whole result.
 
 ## Write a definition in TypeScript
+
+The typed helpers are optional. The tutorials write each definition as
+plain objects with the types of `@generalbusiness/dap-contract`, and that
+form stays valid. `@generalbusiness/dap-define` runs only from a checkout
+of this repository, because its publication has not run (see
+[Release status](#release-status)). Its package exports its TypeScript
+source, `src/index.ts`, and declares no `bin` command. Plain `node` refuses
+that source with `ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`, because the source
+uses a TypeScript parameter property. Keep a file that imports the
+helpers in the checkout, and run it with `tsx` from the repository root:
+
+```sh
+node --import tsx my-definition.ts
+```
+
+`npm ci` in the checkout installs `tsx` 4.21.0, a dependency of the CLI
+package.
 
 Import the authoring helpers from `@generalbusiness/dap-define`. Declare
 items and acts as values, then pass them to `define`. Call `compile` on the
@@ -170,13 +190,16 @@ hold people (`parties`), references (`refs`) and values (`values`). Say
 whether a slot is required and whether it may change. Say how many items
 of the type the scope may hold.
 
-For example, the issue definition has a `commitment` item. It holds the
-requester, offeree and performer. Its fixed `termsAt` reference names the
-entry that stated the terms. Its states include `offered`, `accepted` and
-the final state `fulfilled`. A `report` is a separate item, so reporting
-work does not itself say that the requester accepted it.
+For example, [Build a lending library](build-a-lending-library.md)
+declares a `thing` item. Its states are `available`, `lent` and the final
+state `gone`, and a new thing starts `available`. Its `parties` hold the
+fixed `donor` and the changeable `borrower`. Its `values` hold a fixed
+`name` and `description` and a changeable `reason`. The library holds at
+most 64 things (`many: true, max: 64`). [Build a counter](build-a-counter.md)
+declares one `board` item (`many: false, max: 1`) and at most eight
+`player` items.
 
-Read the [issue](../apps/room/lanes/src/issue.ts) and
+For larger item types, read the [issue](../apps/room/lanes/src/issue.ts) and
 [change](../apps/room/lanes/src/change.ts) declarations beside the
 [generated row reference](lanes-reference.md). Keep the names your
 application needs and remove the others.
@@ -189,11 +212,14 @@ the action in `grant` that the signer must be allowed to take, the guards
 that must hold, the effects it writes, and the messages and notices it
 sends.
 
-The issue's `accept` act changes a commitment. Its signer supplies a
-`terms` reference and needs `issue.promise`. Its guards require an offered
-commitment, the named offeree when there is one, and the same terms the
-commitment already holds. Its effects make the commitment accepted and
-the signer its performer. The entry also records notice to the requester.
+The library's `borrow` act changes a `thing`, so its `step` is
+`transition`. The signer supplies no fields and needs `lending.member`.
+Its one guard requires the state `available`. Its effects move the thing
+to `lent` and make the signer its `borrower`. The counter's `say` act
+takes a field `n` and needs `counter.play`. Its first guard requires the
+state `counting`. Each of the other three names a refusal reason, such as
+`not-your-turn`. Its last effect moves the board
+to `done` when `n` equals the board's `target`.
 
 Then write the handlers in `receives` and the timed rules in `timed`.
 A handler says what a message from another scope changes. A timed rule
@@ -206,12 +232,13 @@ Write each invariant as a plain sentence before you choose its form.
 
 | Invariant | Where it lives |
 |---|---|
-| A person accepts the terms that were offered. | The fixed `commitment.termsAt` reference and the `accept` guard that compares it with the supplied `terms`. |
-| Only the named offeree accepts an offer that names one. | The `accept` guard, in the definition. |
-| A fulfilled commitment has ended. | `fulfilled` is a final state of the commitment item. Holds under a commitment end in the entry that makes it final. |
+| Only a player may count. | The counter's `say` guard `{ some: { ...players, where: [isSigner] }, reason: "not-a-player" }`. |
+| Nobody counts twice in a row. | The `say` guard `{ notIn: ["last"], reason: "not-your-turn" }`. |
+| Each number is one more than the last. | The rule expression `next-number`, `fields.n = subjects.on.values.count + 1`, which a `say` guard names. |
+| A finished count cannot change. | `done` is a final state of the counter's `board` item. |
 | A thing that is lent cannot be borrowed again until it is returned. | The lending `borrow` guard `{ state: ["available"] }`. |
 | Only staff remove a thing from the library. | The lending `cancel` act names `lending.staff` in its `grant` field. In the rehearsal room, membership gives that action to the `admin` role only. |
-| A person may promise work only when allowed to. | The act names `issue.promise` in its `grant` field, and membership says who is allowed to take it. Being allowed does not replace the act's guards. |
+| A person may count only when allowed to. | The `say` act names `counter.play` in its `grant` field, and membership says who is allowed to take it. Being allowed does not replace the act's guards. |
 | Each recorded attempt at an outside effect is sent at most once, including across restarts. | The platform's operation ledger and driver. The application inherits this rule. |
 | Publishing a change to the rules extent needs the controller's approval. | The room's published rules configuration, which its controller may change. The destination judges the change against that configuration. |
 
@@ -235,7 +262,7 @@ commits its journal before it answers with a receipt. You can declare
 that requirement explicitly with `level: { name: "recorded", version: 1 }`.
 The explicit member changes the definition's bytes and digest. It does not
 change an existing scope's pin. The Live and Sequenced levels are not
-supported yet. The validator refuses their declarations as
+built. The validator refuses their declarations as
 `unsupported-definition`.
 
 An archive is a binding of the room, not of a definition. A signed
@@ -258,7 +285,8 @@ Use the installation's bounds. The supplied examples use
 `PROPOSED_BOUNDS`. These numbers are provisional. If the definition
 declares rule expressions, pass `RULE_PROFILES` from
 `@generalbusiness/dap-derive/rule` as the third argument, as the
-[Counter's tests](../apps/counter/definition.test.ts) do. The
+[Counter's tests](../apps/counter/definition.test.ts) do. Each tutorial's
+`run.ts` makes the same call before it runs the definition. The
 [lane definition tests](../apps/room/lanes/test/definitions.test.ts) show
 the validator calls for the room's lane definitions and their demo
 profiles, which declare no rule expressions.
@@ -307,8 +335,8 @@ Keep the declaration, its canonical bytes and its digest together. The
 Counter keeps them in [definition.ts](../apps/counter/definition.ts),
 [definition.json](../apps/counter/definition.json) and
 [pin.ts](../apps/counter/pin.ts), and its test checks that the three
-agree. The room's lane package keeps its declarations in `src`, canonical
-bytes in `definitions` and digests in `src/digests.ts`. Its
+agree. The room's lane package keeps its declarations in `src`, readable
+JSON in `definitions` and digests in `src/digests.ts`. Its
 [pin script](../apps/room/lanes/scripts/pin.mjs) writes every lane
 definition and its digest. Its
 [reference script](../apps/room/lanes/scripts/reference.mjs) writes the
@@ -323,7 +351,7 @@ node apps/room/lanes/scripts/reference.mjs --check
 ```
 
 The pin script prints one line per definition, with its digest and the
-size of its canonical bytes. The reference check prints
+size of its formatted JSON. The reference check prints
 `docs/lanes-reference.md is current` when the page matches the
 declarations. After you edit a lane declaration, the pin script writes
 its new bytes and digest. Generate the reference from the same
@@ -333,7 +361,11 @@ declarations before you review them.
 
 A scenario states one invariant and shows the acts that reach it. Include
 the refused path that distinguishes the invariant, as well as the path
-that takes effect. For the demo profile, the
+that takes effect. Each tutorial's `run.ts` is a small scenario: it signs
+acts that take effect and acts that the scope refuses, and prints each
+answer. For a package,
+[Check and preview a package](check-and-preview-a-package.md) shows a
+scenario file that `dap check` runs. For the demo profile, the
 [story scenario](../apps/room/lanes/test/story.scope.test.ts) covers an
 open extent and a controlled extent. The
 [real-room scenarios](../apps/room/lanes/test/wiring.scope.test.ts) cover
@@ -393,111 +425,20 @@ Validation, pins and creation check the declaration and its record. They
 do not show that a host, an outside adapter or a whole application
 journey works. A live run is separate evidence.
 
-## Package several definitions
-
-A version 2 package describes how its definitions fit together. Each
-scope still pins its own whole definition. Package metadata names the
-connections and responsibilities between those definitions. It does not
-give a member an action or replace a native guard.
-
-The signed semantic value carries seven composition places:
-
-| Place | What it declares |
-|---|---|
-| `connections` | A scope slot, identified by definition, item type and slot, and the definition it reaches, or `outside`. |
-| `rights` | A name and the one definition that owns it. |
-| `exercises` | The act or handler rows that exercise each declared right. |
-| `order` | Each handler's ordering choice: `any` or a declared right. |
-| `groups` | Reserved for sequenced groups. Use an empty array. |
-| `derivation` | Reserved for derived definitions. Use an empty object. |
-| `parameters` | Reserved for parameter bindings. Use an empty object. |
-
-In `dap.application.json`, references to definitions are paths already
-listed in `definitions`. Packing resolves them to the captured
-definitions' exact digests. Include all seven composition places in the
-source file and the signed version 2 value, with explicit empty arrays or
-objects where a place is reserved. Both `packApplication2` and
-`validatePackage` refuse a missing place. Packing never fills in an
-omitted place.
-
-For example, the [Grow source](../examples/grow/check/dap.application.json)
-connects the Site's child slot to the Room definition:
-
-```json
-{
-  "connections": [
-    { "from": "site.json", "item": "room", "slot": "scope", "to": "room.json" },
-    { "from": "room.json", "item": "room", "slot": "site", "to": "site.json" }
-  ],
-  "rights": { "room-count": { "owner": "site.json" } },
-  "exercises": [
-    { "definition": "site.json", "row": "acts.create-room", "right": "room-count" }
-  ],
-  "order": [
-    { "definition": "site.json", "handler": "room-summary", "by": "any" }
-  ],
-  "groups": [],
-  "derivation": {},
-  "parameters": {}
-}
-```
-
-This excerpt shows the composition shape, not a complete package. A
-connected handler's `from.under` names its sender definition and its
-`from.pin` names that definition's exact digest. Runtime delivery checks
-the pin against verified native birth metadata. A same-name definition
-with another digest cannot take the declared peer's place.
-
-The package codec checks composition during packing, before signing, and
-when reading signed bytes. `validatePackage(bytes, bounds, profiles)`
-from `@generalbusiness/dap-platform/package-validation` also validates every
-native definition and returns the graph findings and projected counts. The
-release on npm at `0.1.0-dev.2` does not export that path yet, and `dap check`
-runs the same function from a checkout. Pass the same bounds
-and rule profiles you use for whole-definition validation.
-
-The graph checks endpoint writers, port field types, handler reachability,
-result clauses, timed exits for pending work, default-role action coverage,
-declared right ownership and handler order. Automatic send or create
-cycles need a stated state condition. This structural check gives no
-storm or termination bound. Rights and exercises describe the listed
-rows. They do not discover every writer of a business constraint.
-
-A relation's `copies` counts retained keys over its lifetime. A live item
-maximum alone cannot prove that count, because a final item may free a
-slot for another key. The validator refuses an unproved count as
-`fan-in-unproved` and a proved count above `copies` as
-`fan-in-exceeds-copies`. Grow's three retained Room slots prove three
-senders for its singleton Room item, so `copies: 3` passes and
-`copies: 2` refuses. If each Room instead relates two nonfinal items, the
-required count is six.
-
-Run `dap check <directory>` to validate a source package and its listed
-local scenarios. `dap pack <directory>` refuses the same composition
-findings before it writes a release. Both print findings as rows naming
-the definition, row, check, severity, reason and message. A `refusal`
-stops validation. A `warning`, such as `unowned-bound`, is reported on a
-package that passes. Resolve a warning in the application's design or
-explain why it is safe.
-
-Check also reports live item allowances, successful-creation entry and
-item-key ceilings, and any unproved lifetime totals. Creation-path figures
-exclude failures, repeated inputs, timed work and outside scopes. They do
-not promise that a scope's retained bounds accept the application, and
-they measure no physical memory or provider quota.
-
-Groups, group ordering, declared reads, sequenced definitions, row
-`states`, handler `spacing`, timed sends, derivation and parameters refuse
-with `unsupported-form` until the slices that own them are implemented.
-Existing native `late` handlers remain available. A local scenario's TEST
-authority is separate from installation, live membership and a provider.
+To put several definitions in one signed package, read
+[Package reference](package-reference.md) and
+[Check and preview a package](check-and-preview-a-package.md). No room
+that a current Worker creates installs an ordinary package, one that
+requires no host capability. A definition on its own, activated as above,
+is the path that runs in a new room.
 
 ## Publish a file from an act
 
 A room of the `application-publication` cohort has a destination that
 publishes a file when an application's act asks it to. That cohort is not
-among the cohorts a new room can be created with today, so a new room
-cannot publish files from an act. The lending library's rehearsal room is
+among the cohorts a new room can be created with today, so a new
+`application` room cannot publish files from an act. The lending
+library's rehearsal room is
 one that can. [The dap command](cli.md) lists the current cohorts.
 
 Declare a genesis field named `destination`, with type `scope` and kind
@@ -513,8 +454,10 @@ The [lending definition](../examples/lending/definition.ts) shows this
 form. Its guards further restrict paths to the shelf and keep each path
 owned by one thing, including after that thing is gone.
 
-An application of the room can overwrite any repository path, including
-files in the rules extent. The room's change-review rules do not govern
+An application of the room can overwrite any ordinary repository path.
+The host refuses reserved paths and the rules control extents, as
+[Application file publication](application-views.md#application-file-publication)
+describes. The room's change-review rules do not govern
 `publish-file`. Control remains at activation and creation: a member needs
 `rules.activate` to activate the definition and `application.establish` to
 create its scope. Activate only definitions whose writes you trust. The
@@ -529,45 +472,9 @@ send ordinal) supersedes older unsent work even if it arrives first. An
 unknown push keeps the publication slot and is never resent. Later work
 waits behind it.
 
-## Declare a device command
-
-A package v2 may require the host's finite `device-command@1` capability:
-
-```json
-{"name":"device-command@1","bounds":{"kinds":["fan","heater","vent"],"owners":1}}
-```
-
-List kinds in sorted order. The requirement names no owner identity.
-Install in a device cohort (`archive-device-application` or
-`archive-device-publication`), and choose an existing full member
-reference with `--owner`. The native install checks that member's current
-membership. This cohort runs host capability code, never code supplied by
-the package. At most eight package definitions may use the capability.
-The installed root may delegate its grant to one permitted child
-generation, as Grow's Site does for Room.
-
-The definition declares device-command version 1. A target-writing effect
-sets target, level and its own targetAt, then opens the bound device's
-command through the capability. Only the capability may write the optional
-outcome and outcomeAt slots. Its owner's `answer` preparation names the
-full command fact and closes it as confirmed, refused or unknown. Each
-open command reserves one answer. A sensor report changes reported fields
-independently. An older answer closes its own command without replacing
-the current outcome. A missing answer leaves outcome empty. Without an
-installed grant, target acts open no command. See the
-[Grow device forms](../examples/grow/device.ts).
-
-Local `dap check` scenarios may name a public TEST actor with
-`deviceOwner` and use `prepare` steps for native answers. `$position`
-resolves a saved accepted receipt's position, and `$fact` resolves its
-full fact. The
-[Grow fault scenario](../examples/grow/check/fault-scenario.json)
-uses these references and checks native command records. The scenario
-proves no production grant or physical device action.
-
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+Checked against main `6bfb6e16` on 10 November 2026. Sources:
 [the definition forms](../packages/contract/src/definition.ts),
 [the validator](../packages/derive/src/validate/index.ts),
 [the package validation](../packages/platform/src/validate-package.ts),
@@ -575,7 +482,8 @@ Checked against main `5dc9765f` on 30 October 2026. Sources:
 [the lending definition](../examples/lending/definition.ts), and
 [the Grow device forms](../examples/grow/device.ts). The validation and
 pin commands on this page ran on 12 October 2026 at main `d309b6b9`, and
-the printed digests are from that run. The scope-creation commands were
+the printed digests are from that run. The same validation at main
+`6bfb6e16` prints the same digests. The scope-creation commands were
 not run for this revision. The text about consuming the published Grow
 release that an earlier revision carried is kept in
 [the relocated text of the 30 October

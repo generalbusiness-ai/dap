@@ -20,6 +20,7 @@ things. A job name such as "reviewer" or "writer" grants nothing.
 The room can still refuse an act that your role allows, for example when a
 review requirement lacks approvals. To see the acts that your role allows
 on a scope, run `dap acts <scope>`, such as `dap acts membership`.
+[Get the dap command](../../../docs/get-dap.md) sets up the command.
 
 ## Invite a person
 

@@ -3,7 +3,8 @@
 You keep a scope Worker running after its first deployment. You read its
 health and logs, deploy new source, roll back, keep copies of the record,
 rotate its secrets, and retire it. This page assumes the Cloudflare
-deployment from [Run your own service](self-host.md). You need:
+deployment from
+[Run your own service on Cloudflare](self-host-cloudflare.md). You need:
 
 - The checkout that you deployed from, with its ignored file
   `apps/room/wrangler.self-host.jsonc`.
@@ -15,8 +16,9 @@ The examples use `https://dap-my-room.example.workers.dev` as the Worker's
 address. Replace it with your own. Run every command on this page from
 the root of the checkout.
 
-For the Mac host, [Maintain the host](self-host.md#maintain-the-host)
-gives the stop, restart and verify steps.
+For the Mac host, [Maintain the host](self-host-mac.md#maintain-the-host)
+gives the stop, restart and verify steps. To serve the MCP service to AI
+apps at `/mcp`, read [Run the hosted MCP endpoint](hosted-mcp.md).
 
 ## Read health and logs
 
@@ -62,9 +64,9 @@ gives the stop, restart and verify steps.
 
 The template declares no `METRICS` binding, so `scripts/deploy-check.mjs`
 has no metrics to read. To collect metrics, add the binding as
-[Run your own service](self-host.md#deploy-a-room) describes in step 3,
-and name its dataset `artroom_metrics_v1`. The deploy check reads only
-that dataset.
+[Run your own service on Cloudflare](self-host-cloudflare.md#deploy-a-room)
+describes in step 3, and name its dataset `artroom_metrics_v1`. The deploy
+check reads only that dataset.
 [Observe a deployment](operations.md) describes the metrics and the
 deploy check.
 
@@ -118,6 +120,10 @@ deploy check.
    The health `version` equals the new version ID, and the route answers
    `200`. `dap verify --all` replays every scope of the room. Its last
    line is `All consistent: <n> scopes.`
+
+New source does not move an existing room to newer platform versions.
+Each room keeps the Rules, Membership and other platform versions that it
+pinned at creation. To use newer versions, create a new room.
 
 [Deploy the scope Worker](deploy.md) gives the rules for settings that
 the file holds and settings that `--keep-vars` keeps.
@@ -249,6 +255,29 @@ says which token to use and how long it lasts.
 [Respond to a stolen key](security/trust-boundaries.md#respond-to-a-stolen-key)
 gives the steps. Step 4 of those steps replaces `SESSION_SECRET` as above.
 
+## Keep a register for existing rooms
+
+With `INSTALLED_REGISTER_SCOPES` absent, a deployed Worker admits new child
+scopes only under its current `REGISTER_SCOPE`. Replacing that pin leaves
+earlier rooms readable but stops their new inboxes, lanes and other child
+scopes. Switching the host configuration without retaining that root also
+stops old-room Git authority. A successful health or room read proves
+neither child-creation nor Git continuity.
+
+To keep earlier rooms creating children and using Git, list the current register and all
+earlier installed roots in `INSTALLED_REGISTER_SCOPES`, as
+[Keep existing rooms able to create children](deploy.md#keep-existing-rooms-able-to-create-children)
+describes. `REGISTER_SCOPE` still selects the current primary register.
+Native lineage and authority checks still apply. A separate Worker with
+its own namespaces remains an option when you need a separate service.
+
+On a maintained Mac host, put the reviewed list in the new prepared project
+before GitHub staging, as
+[Run your own service on a Mac](self-host-mac.md#bind-a-new-room-to-github)
+describes. Both Mac project validators check it. After any
+register change, prove an actual child birth in an earlier room; a setting
+or existing-room read alone proves no deployed continuity.
+
 ## Retire a Worker
 
 1. Tell the members, and give them time to clone their repositories with
@@ -263,7 +292,7 @@ gives the steps. Step 4 of those steps replaces `SESSION_SECRET` as above.
 
 3. Delete the repositories, the Durable Object storage and the Worker.
    Follow steps 1 to 6 of
-   [Remove the test deployment](self-host.md#remove-the-test-deployment).
+   [Remove the test deployment](self-host-cloudflare.md#remove-the-test-deployment).
    The deletion migration deletes every object and its data. The Artifacts
    namespace stays in your account, because Wrangler cannot delete it.
 

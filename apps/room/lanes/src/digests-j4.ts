@@ -3,5 +3,5 @@ import type { Digest } from "@generalbusiness/dap-contract";
 
 export const J4_DIGESTS = {
   issue: "sha256:ff901d2e6d25794b1f3719e6786e3c5e73004f1009297dce5f72684b36ac2cc7",
-  change: "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7",
+  change: "sha256:e2765ff48621fff251e76fece06bfccccdc9cea5301e30e4615f540220c9634e",
 } as const satisfies Record<string, Digest>;

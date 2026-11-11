@@ -109,4 +109,4 @@ Definition validation alone neither proves a genesis nor authorizes a credential
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [validate/index.ts](../../packages/derive/src/validate/index.ts), [validate/shape.ts](../../packages/derive/src/validate/shape.ts), [validate/format-1.ts](../../packages/derive/src/validate/format-1.ts), [validate/guards.ts](../../packages/derive/src/validate/guards.ts), [guards.ts](../../packages/derive/src/guards.ts), [judge.ts](../../packages/derive/src/judge.ts), [extents.ts](../../packages/platform/src/extents.ts).
+Checked against main `6bfb6e16` on 10 November 2026. Sources: [validate/index.ts](../../packages/derive/src/validate/index.ts), [validate/shape.ts](../../packages/derive/src/validate/shape.ts), [validate/format-1.ts](../../packages/derive/src/validate/format-1.ts), [validate/guards.ts](../../packages/derive/src/validate/guards.ts), [guards.ts](../../packages/derive/src/guards.ts), [judge.ts](../../packages/derive/src/judge.ts), [extents.ts](../../packages/platform/src/extents.ts).

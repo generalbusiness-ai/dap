@@ -4,7 +4,6 @@
  */
 import { canonicalize, isFactRef, isMemberRef, isScopeRef } from "@generalbusiness/dap-bytes";
 import type { Head, Item, MemberRef, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { FINDING_DIGESTS } from "../../room/lanes/src/digests-finding.ts";
 import { J4_DIGESTS } from "../../room/lanes/src/digests-j4.ts";
 import { changeKicker, changeRequests, findingReasons, mergeHolds, mergeReasons, questionRows, questions, reviewReasons, unknownMergeReasons } from "./attention.ts";
 import { FINDING_CLAUSE, findingActs, findingProfile, malformedRange, openFindings, requiredSource, shownText, sourceRow } from "./findings.ts";
@@ -19,8 +18,10 @@ export const matchItem = (value: unknown, id: number, scope: ScopeRef): boolean 
 
 /** A lane under an issue definition that these views read. */
 export const issueLane = (pin: unknown): boolean => questions(pin) || pin === J4_DIGESTS.issue;
+/** The recorded workspace declaration remains readable after fresh spelling changes. */
+const RECORDED_J4_CHANGE = "sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7";
 /** The exact pins of a change lane that these views read. There is no generic profile loader. */
-export const changes = (pin: unknown): boolean => pin === J4_DIGESTS.change || pin === FINDING_DIGESTS.change;
+export const changes = (pin: unknown): boolean => pin === RECORDED_J4_CHANGE || pin === J4_DIGESTS.change || findingProfile(pin);
 
 /** Each lane the directory lists, once, in the stable order of a walk. Null when one lane names two incarnations. */
 export function laneRefs(items: readonly Item[]): ScopeRef[] | null {

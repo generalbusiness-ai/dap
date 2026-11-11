@@ -77,7 +77,7 @@ async function source(directory: string, configPath: string): Promise<{ input: A
     const value = parseStrictBytes(await readSource(root, path, LIMITS.definitionBytes));
     // These are the current native validator's proposed allowances, not new
     // adopted host quotas. The eventual host must validate under its own bounds.
-    const checked = validateDefinition(value, PROPOSED_BOUNDS, RULE_PROFILES);
+    const checked = validateDefinition(value, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true });
     if (!checked.ok) return refuse(`Invalid native definition ${path}: ${checked.problems.slice(0, 3).map(problem => `${problem.path}: ${problem.message}`.slice(0, 256)).join("; ")}.`);
     definitions.push({ id: checked.definition.digest, bytes: canonicalize(checked.definition.declared) });
   }

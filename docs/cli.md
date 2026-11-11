@@ -24,7 +24,8 @@ The source is `packages/cli`. In this repository the command runs as
 Node 26, and the operator pages require it. The launcher loads
 the CLI's own installed TypeScript loader from beside the package, so it
 works from any directory and fetches nothing when it runs. No registry
-publishes the package.
+publishes the package. [Get the dap command](get-dap.md) sets up a
+checkout.
 
 The hosted service for new rooms is <https://dap-demo.inguz.workers.dev>.
 Its CLI routes are under `/v1/scopes` and its hosted MCP endpoint is
@@ -324,7 +325,9 @@ unsupported pin is a verification failure.
 #### Install an application package
 
 `dap install <git+https-uri> --release <release-id> --request <kept-key>`
-records one application install in the room.
+records one application install in the room. No room that a current
+Worker creates installs an ordinary package, one that requires no host
+capability.
 
 - An ordinary version 1 package needs an existing historical
   `trusted-application` room. An ordinary version 2 package needs an
@@ -432,8 +435,8 @@ requirements.
 - A source or scenario file is missing, inaccessible or a symbolic link.
   Exit 1.
 
-[Write an application](write-an-application.md) describes the package
-and what the validation checks.
+[Package reference](package-reference.md) describes the package and what
+the validation checks.
 
 ### `dap dev`
 
@@ -1052,6 +1055,11 @@ Without `git`:
 git is not installed here, so nothing was signed. With git installed, run dap clone again; it runs:
 git -c http.extraHeader="Authorization: Bearer <read token>" clone -- https://<service host>/git/artroom-demo/5kywbv2y...-1.git here
 ```
+
+Journal refs exist only for a room whose directory binds an archive, on a
+Worker that runs the archive engine. Of the Workers in this
+repository, only the Grow Worker (`apps/room/worker.grow.ts`) runs it. No
+command restores a room from an archive.
 
 `--archive` needs an explicit directory. After the clone, the command
 fetches `refs/artroom/journal/*` into it with the same token, which stays

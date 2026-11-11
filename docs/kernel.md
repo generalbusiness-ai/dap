@@ -52,7 +52,7 @@ is not meant to be kernel, is listed in section 5 with what passing takes.
 | `packages/git` | Platform service | Passes | `derive` has its own commit parser for `git-read@1` (`commitParents` in `derive/src/capability/ancestry.ts`). |
 | `packages/checkers` | Platform service | Passes | A checker signs ordinary intents (`checkers/src/signing.ts`). |
 | `packages/replay` | Platform service (tool): the independent verifier | Passes | It names platform versions and lane names (K6). Its local Git source is a Node adapter (section 8). |
-| `packages/cli` | Platform service (tool) | Passes | It gives replay the platform code (`ARCHIVE_REPLAY_CODE`) and the capability code (`CAPABILITY_CODE`, `derive`'s one table) in `replayOf`, in `cli/src/commands.ts` (K8). |
+| `packages/cli` | Platform service (tool) | Passes | It gives replay the platform code (`ARCHIVE_REPLAY_CODE`) and the capability code (`CAPABILITY_CODE`, `derive`'s one table) in `replayOf`, in `cli/src/command-verify.ts` (K8). |
 | `packages/client` | Platform service (tool): the client library | Passes | None. |
 | `apps/counter` | Application | Passes | None. |
 | `apps/jam` | Application | Passes | A static page with no scope. |
@@ -83,7 +83,7 @@ whether it is one, or a special case that the kernel knows.
 Each item names what passing takes, its status, and the work that covers
 it.
 
-- <a id="k1"></a>**K1. Platform rules are code that replay needs.** A platform scope pins `platform:<name>@<n>`, and replay derives it only with code its caller supplies. The catalog holds 88 versions. Passing takes pinning each version's rules by digest, freezing the shipped versions into the kernel, or replacing the marks with declared forms. Open. Covered by the design note "Platform rules that replay needs".
+- <a id="k1"></a>**K1. Platform rules are code that replay needs.** A platform scope pins `platform:<name>@<n>`, and replay derives it only with code its caller supplies. The catalog holds 100 versions. Passing takes pinning each version's rules by digest, freezing the shipped versions into the kernel, or replacing the marks with declared forms. Open. Covered by the design note "Platform rules that replay needs".
 - **K2. The package graph leaves the production kernel.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
 - **K3. Application codecs leave `bytes`.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
 - **K4. Platform and application vocabulary in `contract` and `derive`.** For example the closed kind list, the closed capability names, the grow device kinds, membership versions in `INVITATION_KEY_MEMBERSHIPS` (`contract/src/invitation.ts`), the rules scope's content in observations (`contract/src/observation.ts`), and lane actions and literal destination versions in `derive`. Passing takes each name into the definition or capability that owns it, as data. Open. No work covers it yet.
@@ -262,11 +262,12 @@ values a recorded field accepts. A host service cannot replace those
 checks or decide their meaning after the entry exists.
 
 `INVITATION_KEY_MEMBERSHIPS`, in `packages/contract/src/invitation.ts`,
-holds the exact pin `platform:membership@9`. That version keeps the private
-invitation proof protocol. Clients use this list to choose the redemption
-fields for the exact native version. A host service or an application
-cannot choose a different credential form for that pin. The entry
-recognizes the version and grants no invitation authority.
+holds the exact pins `platform:membership@6` to `platform:membership@13`.
+Those versions keep the private invitation proof protocol. Clients use
+this list to choose the redemption fields for the exact native version. A
+host service or an application cannot choose a different credential form
+for those pins. Each entry recognizes its version and grants no invitation
+authority.
 
 A `reference` holds exactly one document digest or entry `FactRef`, with an
 optional bounded fragment string. The kernel checks its shape and byte

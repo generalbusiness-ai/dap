@@ -25,6 +25,8 @@ replace what it shows.
 
 ## Merge with the dap command
 
+[Get the dap command](../../../docs/get-dap.md) sets up the command.
+
 1. Merge the change by its scope ID.
 
    ```sh

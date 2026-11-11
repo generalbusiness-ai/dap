@@ -1,0 +1,42 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-eleven-pin-continuation/independent-audit/unit",
+  "head": "e99a771e9ff479788de3023898b4e6612cc4423a",
+  "tree": "3c796d9ace2cf1b38b4d27feefeada115880c047",
+  "booking": "c1abf40a5e602cf3f277abbcb6a411981a7540d8",
+  "end": "c9cae84fdf5ecec1158dadbc9ed72224f05445a8",
+  "files": [
+    {
+      "path": "audit.json",
+      "bytes": 4813,
+      "sha256": "32316eb10ff7afd3b2a4a67953016f9ebb00d4e3f373e77ca788044edda0dfca"
+    },
+    {
+      "path": "identity-ledger.json",
+      "bytes": 3501,
+      "sha256": "10b9c17b9e52bebffec69878c17633edeb8f5d0b4b43c4da7a99e57d050dca4e"
+    },
+    {
+      "path": "output-custody.json",
+      "bytes": 1876,
+      "sha256": "3d2e459986c4a77bc3ece9877d7e769310d44c50972f782eb7f9ff36fbfbd2b0"
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-eleven-pin-continuation/independent-audit/private",
+    "manifestSha256": "6da9fc6d57222a27b91aa39d0e0ee3a128e7639130603b8a3c5813619dba7aa4",
+    "files": 70,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T16:58:05.105205+00:00",
+      "action": "Retain original continuation raw/source/frozen inputs and this owner-only archive. Prior partial custody stays referenced separately; its old E cache payload was not retained. No cleanup scheduled or executed."
+    }
+  },
+  "priorPartialManifestSha256": "0a4515cd886c6247d023c922b2c471715aa5536daf989fd1827d9fc30b94059d",
+  "withheld": [
+    "Complete continuation raw/launcher/frozen packet and exact generated before/after buffers, including copied sealed historical census payloads. Prior partial failure/raw custody remains separately referenced."
+  ],
+  "readonlyScope": "Only new payloads0400/directories0500. Original raw/source/frozen/tool/cache paths remain untouched.",
+  "qualification": "Continuation all six actual exits0. Original partial0/0/2/2/2 and later metadata failures remain unchanged. No compiler/test/build/gate or live-activation claim."
+}

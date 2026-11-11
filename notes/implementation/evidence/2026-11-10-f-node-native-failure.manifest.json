@@ -1,0 +1,59 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-node-native-0ca2/node-failure-sealed/unit",
+  "head": "0ca2b25011efec06bb0211370cdc681be46a1161",
+  "tree": "a4def2eb5a7755c796e2e7874b718d51ce0a7a27",
+  "booking": "cbb564f5e3c1b1ba0bf2830a2d300167ebb29819",
+  "end": "f913fc9b14474e620a5028de5566bde05fe71bff",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "056e4e5f21403ecab88c2d57d40957024730b5503b4691d2dc7a428c4b52f2cc",
+      "bytes": 516
+    },
+    {
+      "path": "audit.json",
+      "sha256": "1c98c9d26fa98f72de6d2a1c018f092a535fc6de63176287bb680bed4ff88f9f",
+      "bytes": 2203
+    },
+    {
+      "path": "carry-candidates.json",
+      "sha256": "598636e1dc7ca070fed303530e1c57d919be9e3d5390f4dd6eaef6bb04708471",
+      "bytes": 20688
+    },
+    {
+      "path": "native-unrun-ledger.json",
+      "sha256": "5bfdc6a8d46a23c77218acb88a87c5f05b05e42b8e3e781b60b4c802a1af7a99",
+      "bytes": 4975
+    },
+    {
+      "path": "node-case-ledger.json",
+      "sha256": "43cd879b7699201f3d3b27930999ae688e70b1fc556fdfa2a452f776c804ec99",
+      "bytes": 43700
+    },
+    {
+      "path": "node-reconciliation.json",
+      "sha256": "c5cb08fffec6dbc45003c76de68a9fa9c94741f5920f8e8872ba26fbc2cf39e0",
+      "bytes": 10273
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "95e930afff32b423158450c572ed0f4d8d009686789ae684630b074e12701399",
+      "bytes": 96719
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-node-native-0ca2/node-failure-sealed/private",
+    "manifestSha256": "a38d82d95a48b1753ab37a9e2b5c402eb4b16266e48217fb82744dcc4cd5c8be",
+    "files": 475,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T20:01:47.578128+00:00"
+    }
+  },
+  "withheld": [
+    "Original raw stdout/stderr, compiler diagnostics and process/source/tool/frozen/staged/temp/cache payloads stay in the opaque owner-only private archive."
+  ],
+  "qualification": "Classification of actual Node FAILURE:55passed/1failed; only3completeowners44cases are carrycandidates. Active-source12,Native8 andPlain50 remain70owed before repairs. All12wrapperobservations stayUNKNOWN. Bothpriorfailures remainfailed; no body repeated."
+}
