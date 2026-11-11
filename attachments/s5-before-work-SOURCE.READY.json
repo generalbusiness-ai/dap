@@ -1,0 +1,43 @@
+{
+  "status": "FROZEN S5 SOURCE/WITNESS PLAN ONLY; ROOT/PLANNER DECISIONS PENDING",
+  "request": "7ceefd43fd3a8f904d33ae7fa1149d46e4ac7fb5",
+  "promise": "ad443a7a7797fc9ce4b971e485b8af6cf4e328b3",
+  "files": [
+    {
+      "path": "/private/tmp/artroom-r3b-design-s5-before-work-plan-v1-20261110/attack-review.event.json",
+      "sha256": "c4242dd418ca2ac295441e1d15b3b491cfee89b21872b9fc184f1fe3491976d9",
+      "bytes": 22867,
+      "mode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-r3b-design-s5-before-work-plan-v1-20261110/plan.md",
+      "sha256": "17e145970f9027873482ff6092ff1abb27186dfd1520be8dadb21e25942d4e79",
+      "bytes": 14638,
+      "mode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-r3b-design-s5-before-work-plan-v1-20261110/promise.event.json",
+      "sha256": "f3098123322e04c882eeb6b0ce50e2c879a56374c3e36e3e6bff9888cb1bcf5f",
+      "bytes": 315,
+      "mode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-r3b-design-s5-before-work-plan-v1-20261110/provenance.json",
+      "sha256": "2ab653613b64283624503359a9bfbad5e010d7de4082e0c9c34a8da5fd8f5074",
+      "bytes": 10966,
+      "mode": 256
+    },
+    {
+      "path": "/private/tmp/artroom-r3b-design-s5-before-work-plan-v1-20261110/request.event.json",
+      "sha256": "0adb440de40c7dcc16447d50513117aac2cb95c7911d58588bf2d8dbcc13fc0f",
+      "bytes": 1319,
+      "mode": 256
+    }
+  ],
+  "futureHead": null,
+  "futurePatch": null,
+  "compilerContexts": null,
+  "actualTestSelection": null,
+  "actualResults": null,
+  "sourceOpens": false
+}

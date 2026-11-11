@@ -1,0 +1,260 @@
+{
+  "status": "READONLY SOURCE PLAN; NO AUTHORITY CHANGE",
+  "request": "7ceefd43fd3a8f904d33ae7fa1149d46e4ac7fb5",
+  "promise": "ad443a7a7797fc9ce4b971e485b8af6cf4e328b3",
+  "sourceHead": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+  "sourceTree": "03c3a1a1cff20423b38fe0313bf6d0b16cdbcdf2",
+  "acts": [
+    {
+      "label": "request",
+      "event": "7ceefd43fd3a8f904d33ae7fa1149d46e4ac7fb5",
+      "sha256": "0adb440de40c7dcc16447d50513117aac2cb95c7911d58588bf2d8dbcc13fc0f",
+      "blob": "a12393e61d33ab0f2cf04bbb7d7526742d9b1f9e",
+      "bytes": 1319
+    },
+    {
+      "label": "promise",
+      "event": "ad443a7a7797fc9ce4b971e485b8af6cf4e328b3",
+      "sha256": "f3098123322e04c882eeb6b0ce50e2c879a56374c3e36e3e6bff9888cb1bcf5f",
+      "blob": "a5883bda3cc62b9b316ccde00ca1ef7022c3d1cd",
+      "bytes": 315
+    },
+    {
+      "label": "attack-review",
+      "event": "79daff0f3f5ab13b1f6c1e2b6274035c8ff42f67",
+      "sha256": "c4242dd418ca2ac295441e1d15b3b491cfee89b21872b9fc184f1fe3491976d9",
+      "blob": "782bf73293d470e28ed1aea9d183bf0889fd17db",
+      "bytes": 22867
+    }
+  ],
+  "sourceRows": [
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/scope-index-census.ts",
+      "blob": "0986685d7b7809b0ff7ab19f802296f7faaeeb2b",
+      "sha256": "d27c651fde6adc124d34802f2fd6a13d22f2c53d37b33e367846dc4b5ef11339",
+      "bytes": 9655
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/scope-index.ts",
+      "blob": "bfd2fe5361c6f2e40e84a8b9bdb8049906da9774",
+      "sha256": "d163e80fd9d704d17e245fed43bc3806a873473cc3ccd9f95a9600daa7ca6787",
+      "bytes": 11612
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/worker.ts",
+      "blob": "38d38e479b5dbb604fe6dd1893a1203601f109d8",
+      "sha256": "17b78f1397d99e314fbd3742486cf4b6170a12114ecc5b14159fec2943c448e9",
+      "bytes": 58629
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/object.ts",
+      "blob": "6308aa5b732c40f852007d9aa4a441b1cd7f1208",
+      "sha256": "e1ae310a18ea588af0f78be1a8fd67d0d085e222c70cd941e0ff7f2ddde86922",
+      "bytes": 75254
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/core.ts",
+      "blob": "21a06a75b40495644b036f86d616da601d095f95",
+      "sha256": "b5c88530532cd19bd8366eb1f98d53d5d1479b331b570bcabf19543b6a8b5fd2",
+      "bytes": 54673
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/ports.ts",
+      "blob": "fdd1da35566ac9cf2a52b35e90612564bbc6a2a8",
+      "sha256": "3d6779618c5ed7e06cdc048c3fc2f2aeffd0e37f5c078a4743dfdca02178304d",
+      "bytes": 21003
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/register-setting.ts",
+      "blob": "d73ae36f960c88e0c85d80fd4b1eb90bd7933fbc",
+      "sha256": "513a7f13500ef753950b85ae26e1e5d8b9eb21d8f73c4ae4b4e4f2597a82a857",
+      "bytes": 2298
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/serving-admission.ts",
+      "blob": "a4653dbb3638fafd72b06b207d40f352c83f78ca",
+      "sha256": "3cb08345749990ac14bb8b408590e8cff4fc327bd43e2b4c3cc00ffcf7d5db3f",
+      "bytes": 3968
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/proof-bytes.ts",
+      "blob": "c0820e2c86fa3b8ca998c60a27f92a65c72bb35e",
+      "sha256": "6c39e8a1eb53b78f27c0855875428c875bb209bb1f8e523ad8173a6c28c4c775",
+      "bytes": 6611
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/src/turn.ts",
+      "blob": "2d2b902f3e91db99e4df0b8d499c23341ea70580",
+      "sha256": "ff019550f88fbf79c771a2014204db4ba202761fde6ae413fc836847805db83e",
+      "bytes": 25388
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/derive/src/judge.ts",
+      "blob": "2b0a74b4281799f74c870f2c87f4861babf3beaf",
+      "sha256": "c443d7b986cfc3da4920fedeb5851faaa5ab726707dc137b06a4079258ad0634",
+      "bytes": 31223
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/derive/src/marks.ts",
+      "blob": "4760fdd51dc3e48316edae5d07697d7b6c6e1775",
+      "sha256": "19e877dd675daa9b8025b5b0ac3d3d09be0c31bb90a8573ee125303f281cab1b",
+      "bytes": 37916
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/derive/src/fields.ts",
+      "blob": "dcd5a2d3d8aff8bfea99c82c72812bbcb9ff0928",
+      "sha256": "2859fb44805e483709e584173c01470e0158feef2d2f9035d059473612b2363e",
+      "bytes": 16672
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/register.ts",
+      "blob": "4beb6da9b28d7c233e25aef2ad45d03ef9a98715",
+      "sha256": "859c205aa8018f699a0b9debceb037485f231041d16ba21974c90f5d7e3e21f5",
+      "bytes": 29106
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/membership.ts",
+      "blob": "3894d844e0a3e7462d60227ed2cc937a78ba74fb",
+      "sha256": "483915d7ecfd9396aea90e0209af74aed401f3c1d6c38e05eed1546fed82417f",
+      "bytes": 50795
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/platform/src/invitation-key.ts",
+      "blob": "598750e6167cf6db787e431de64a89081d72f7f1",
+      "sha256": "e130ec4b435116b880fecfa7769c2387e65b94a4195091a9fab58afce21a3a76",
+      "bytes": 3373
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/test/scope-index-census.test.ts",
+      "blob": "c21e702ac498f7e08573aa2b2cbe043f92e20722",
+      "sha256": "4da0821a9f856a53f911bb61bfcd54a3a96782161ae2b14b0a6ab7304bc0b2d4",
+      "bytes": 9602
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/test/support/scope-census-fixture.ts",
+      "blob": "d55c7a904939f331da2ff6585749f17523668347",
+      "sha256": "ff728fcd95b438dc958b8148201fc924ee01e4f207a4181c7a48fb52b79094cb",
+      "bytes": 8299
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/test/authority-order.test.ts",
+      "blob": "d55d09fe27d61ada63c4d79095c914e5478425a6",
+      "sha256": "567604e56ee1c7a380f7d6ac72ef170cf8cd3c38d524ec6d63764aa5b7f1093e",
+      "bytes": 4350
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "packages/scope/test/answers.test.ts",
+      "blob": "11d64a9406908870840be68cf245f67841b800be",
+      "sha256": "10b28c893c6a6d4cbcff894920e1dca77702e9e963f91d88128b6d9ad392a635",
+      "bytes": 6310
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "scripts/security-entry-points.test.mjs",
+      "blob": "13fab09234da44a00547b1d9254d72432f384276",
+      "sha256": "e64367d6312a29c9f0faf56ea5ec479fe62617786c4292ca5fe4546d1893b01a",
+      "bytes": 68760
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "verification/state-machines/README.md",
+      "blob": "a512d782d06a16ad8f644f79f66564b9d1fc9978",
+      "sha256": "7a5bafda8f2feac003df7bf717b0667fe1004a0a98d14deec33deb38ee078fd9",
+      "bytes": 13905
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "verification/state-machines/coverage.json",
+      "blob": "4ed3e9463c763209ba28a9373b860c60c705535d",
+      "sha256": "b906d282facd30475dd323b6052b23a16b0ef522e52e29b4eb84429ce5e13e19",
+      "bytes": 5053
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "verification/state-machines/Observation/Observation.tla",
+      "blob": "fcf0de116e9f31d721a55ad0dcd95a7b33cd7b4c",
+      "sha256": "214030326a6a3767d4e595761d626c4b6e18f7a8b3fc61de430989d3217139c4",
+      "bytes": 772
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "verification/state-machines/Effects/Effects.tla",
+      "blob": "3b96c9ffc5c1505b7e0b9df45da39550871a7174",
+      "sha256": "7f8a65004aa8b4bf50724dc52b7dc10a2c6e5bc5552edbac120f23c87e264a53",
+      "bytes": 895
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": ".agents/skills/verify-client-observation/SKILL.md",
+      "blob": "4d5c5415a72c0616bc4edefa95e4a0867c276041",
+      "sha256": "afca4aa531ba89b351436d70ecba0f504b90ca38ce3e47aa6f9b7d8dffedebd2",
+      "bytes": 3968
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": ".agents/skills/verify-outside-effects/SKILL.md",
+      "blob": "a623ad377dd3c150a0b6e11a70b8ddf87e14af52",
+      "sha256": "8728f72e9f8b019c21034b44b5d49514ae2f564ffdf62cc1b11e01800f098fae",
+      "bytes": 5043
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "docs/security/settings.md",
+      "blob": "d52c5d73c7eb8bcc3f49cb086bc1652fcf4957c2",
+      "sha256": "3e6f486bd9dc6b6c884f7342819f983239e02982be3cfa198839d2355919b4a0",
+      "bytes": 65882
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "docs/security/threat-model.md",
+      "blob": "51331b2290963fab88014b7067e468dfd365f184",
+      "sha256": "b99e3a9a24a37c03b00f256363c3850af82acfdcb733a56ea2c271c74f29fe98",
+      "bytes": 13447
+    },
+    {
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "path": "docs/cli.md",
+      "blob": "635c0ac5663630df85f1dc2775d2ab53f8c382b2",
+      "sha256": "c270d8d36644dcd3a2e2d963b78e08d327e5f85527f94614bb07069561aa9b42",
+      "bytes": 64111
+    }
+  ],
+  "plannerChoices": [
+    {
+      "id": "trusted-census-actor",
+      "preferred": "public deployment descriptor bound to selected Register scope/incarnation/genesis/actor",
+      "alternative": "one authenticated durable projection with proactive migration",
+      "coldCall": "missing/malformed metadata must fail closed before proof; no lazy bootstrap",
+      "refusalChoicePending": "unavailable versus forbidden for missing trusted metadata"
+    },
+    {
+      "id": "native-early-denial",
+      "preferred": "shared pure deny-only local authority preflight with explicit prerequisites; unknown defers",
+      "requires": "root/planner approval of any new internal rule interface and error precedence; full judge sole positive path"
+    }
+  ],
+  "witnessCountRequested": 2,
+  "executionOrder": "after cutover family",
+  "formalCoverage": "Current proposed files do not modify existing Observation or Effects protected functions; exact correspondence and future closure still required",
+  "qualification": "Only source/metadata reads and plan writing. No patch, application/config/helper/parser/compiler/test/control/TLC/build/capture/import/install or workroom mutation. Future source/head/closure/selector/measurements remain unset."
+}
