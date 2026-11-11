@@ -72,7 +72,7 @@ Three kinds of thing are told apart.
 
 | Property | Adds a form or changes an answer of the scope | Where it lives |
 |---|---|---|
-| Live | Yes: no history, and the answers `applied` and `reset` (archive note, 16.2) | Definition |
+| Live | Yes: no entry after the scope's creation, and the answers `applied` and `reset` ([live note](2026-11-10-live-level.md), section 2) | Definition |
 | Recorded | Yes: a history and a receipt | Definition |
 | Sequenced | Yes: the position in the entry, the `sequenced` mark, and group reads in guards | Definition (this note) |
 | Archive | No. The archiver runs after the commit, writes no entry, and "archived through N" is a read (archive note, 15.1 and 15.5) | A binding of the room (section 4), and a requirement a package may declare |
@@ -97,12 +97,12 @@ until the heads of section 9 land the sequenced level.
 
 | Level | What survives | Whose order | Read as of a position | Cited as a fact |
 |---|---|---|---|---|
-| Live | Nothing | None | No | No |
+| Live | The genesis entry and the creator's confirmation | None | No | The two creation entries only |
 | Recorded | The journal | Its own | No | Yes |
 | Sequenced | The journal | Its own, and the group's | Yes, by a sequenced input of the same group | Yes |
 
-Each level implies the one before it. A live scope has no entries, so it
-cannot be a member of a group. A scope has one level, as the archive
+Each level implies the one before it. A live scope keeps no entry after
+its creation, so it cannot be a member of a group. A scope has one level, as the archive
 note's 15.2 says. An application that needs a live surface beside a
 sequenced record is two scopes.
 

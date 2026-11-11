@@ -156,6 +156,15 @@ The level is designed and not built. The
 section 13.2, lists what it adds to `contract` and `derive`, and the words
 that promises 2, 4 and 5 take when replay handles it.
 
+The first version of the live level is permitted under this section by
+ruling `4b5e0ec2`. A live scope writes its genesis entry and its creator's
+confirmation, and no entry after them. The kernel part is the validator's
+admission of the level and the fold's refusal of a later entry. The code
+that runs live acts is a platform service, because no recorded entry
+depends on it. The level is designed and not built. The
+[live note](../notes/2026-11-10-live-level.md), section 4, gives the
+review and the sentences that promises 1, 7 and 11 gain.
+
 A head adds to the kernel when it does any of these:
 
 - adds a file or an export to `packages/contract`, `packages/derive`, or
@@ -229,6 +238,9 @@ These do not wait:
   November 2026 and ruling `08c5ff25`. It closes no K item. It adds the
   scope kind `order` to K4's closed list and the rules of
   `platform:order@1` to K1's count, and each head that builds it says so.
+- the first version of the live level, by the owner's decision of 10
+  November 2026 and ruling `4b5e0ec2`. It closes no K item, and it adds
+  nothing to K1's count or to K4's list.
 
 A head that adds to the kernel names the K item that it closes, or the
 planner holds it.
