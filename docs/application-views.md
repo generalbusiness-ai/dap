@@ -452,8 +452,12 @@ and inline styles in a shadow root. During script initialization,
 The initialization property is removed after the scripts run. A resource
 keeps its API reference in a closure. It does not receive a signer, token
 or arbitrary tool callback. The kit runs the package's code as trusted
-code, in the same document as its own tool bridge. Install only a package
-whose code you trust.
+code, in the same document as its own tool bridge. A package script can
+post its own `tools/call` message to the host through `window.parent`, as
+the bridge does. The service's write tools (`create`, `join`,
+`install_application`, `prepare` and `act`) declare no
+`_meta.ui.visibility`, so their metadata does not limit them to the model.
+Install only a package whose code you trust.
 
 The service resolves typed party and journal signer fields into
 `data.members.records`, keyed by the canonical full member reference.
