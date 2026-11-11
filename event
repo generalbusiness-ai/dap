@@ -1,1 +1,1 @@
-{"kind":"assert","text":"START: S2 landing and the artroom-scope deployment. H landed as\nce516e9b, and origin equals it. I land the approved head c0259365\n(approval cf8e5b87) on main now, push main, and deploy the Worker\nartroom-scope only. I run no test and no gate. Hold your next gate\npacket until my END act, which names the new main.","body":{"to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cf8e5b870d934a7b5a73b9c90eab00c7260b915b"}
