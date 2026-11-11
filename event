@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2a912e9b37437a7796f03a7ee22d2ac4ae45b42f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-f-native8-assertion-failure.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2e01812c3b6de5a19dbc41b9137649b87f404b5f","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/publishing-provenance.ts."}
