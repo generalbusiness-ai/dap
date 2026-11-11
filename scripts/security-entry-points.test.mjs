@@ -261,7 +261,7 @@ const seals = {
   "packages/checkers/src/stage-origin.ts": "6311b4c69f7d00f5dac7cbdb51e22895efa379ce2c30f6e50a2d32d6aed1c3a6", // Actual Native admission and causal proof verifier.
   "packages/scope/src/stage-snapshot.ts": "1c4a9890a6e3ba4b3c536aba628947c197b4c054419dbe23a00374c5ccadad3a", // Signed stage read and current Rules, key and work-source gates.
   "packages/bytes/src/address.ts": "d6d2fc3f86f50318c6a88b21649daef212f40c4d46b942033d27b3853902ccd2", // Canonical local full-address and routable /64 counter keys; actual maintained output.
-  "packages/bytes/src/index.ts": "bb4abe5eadcce69b5979e8a02edd09e22bbd4f9eff0bfab550d15ef6aa5ab6b6", // Bind the shared address-key export to its reviewed owner.
+  "packages/bytes/src/index.ts": "7c8c95148c4af026aa1416b4f2d9ce8e53b33343a49bf27d1875a86e2d5c07b7", // Bind the shared address-key and citation parser exports to their reviewed owner.
   "apps/room/celld/worker.ts": "d1bc465525bd0af046fa0703464f14aeaaee8286b88415dfec3b9e03869fb644", // H1 reviewed production entry or public-origin gate owner.
   "packages/scope/src/public-origin.ts": "d6e867fc859db69b6fcf2d465d387a032966331cbae04310ea4c24cda3773269", // H1 reviewed production entry or public-origin gate owner.
   "packages/platform/src/versions.ts": "6b9b184d22fbffaa617049e1b6ec01bc64fd6039b068ac534d0adaf443868962", // Closed native publication protocol policy; actual maintained parser output.

@@ -1,4 +1,5 @@
 export * from "./source.ts";
+export * from "./citation.ts";
 export * from "./verify.ts";
 export * from "./report.ts";
 export * from "./archive.ts";
