@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d6ceb4ce7557a939a14a6072b01e8d4420e88737","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/cli.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d8cfc73bf10ef37951e2e444f488463454740705","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-11-identifiers-vectors-b.manifest.json."}
