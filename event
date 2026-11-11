@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3762dd198ff81fa7ec9ef2fd6aacb881d858f6ab","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-lane-pins.generated.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:384c3b772069d48b18a584aaf22cc7866811aef7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-f-current3de-browser-ci.manifest.json."}
