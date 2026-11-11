@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:87ead2a79aba6e08ade11e655cf5d064b0825440","text":"Merge retired a covered predecessor; the successor is at packages/replay/src/index.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:89b614736536e74298b4df370de091c118bbd3cf","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-19-record-and-event-identifiers.md."}
