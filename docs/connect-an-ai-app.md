@@ -143,7 +143,7 @@ The consent page lists your connections under **Connected clients**. To
 end a connection, press **Revoke** next to the client. The service ends
 that grant's sessions at once, and the app's next request fails.
 
-[OAuth authorization and consent](mcp.md#oauth-authorization-and-consent)
+[OAuth authorization and consent](hosted-mcp.md#oauth-authorization-and-consent)
 gives the full rules for consent, tokens and revocation.
 
 ## Next steps
@@ -151,5 +151,5 @@ gives the full rules for consent, tokens and revocation.
 - [The MCP service](mcp.md) lists every tool and its input.
 - [Read a room with the local adapter](../apps/views/README.md) describes
   the compact cards.
-- [The hosted endpoint](mcp.md#the-hosted-endpoint) tells an operator how
-  to turn on `/mcp` and OAuth.
+- [Run the hosted MCP endpoint](hosted-mcp.md) tells an operator how to
+  turn on `/mcp` and OAuth.

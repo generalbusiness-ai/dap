@@ -17,7 +17,8 @@ address. Replace it with your own. Run every command on this page from
 the root of the checkout.
 
 For the Mac host, [Maintain the host](self-host-mac.md#maintain-the-host)
-gives the stop, restart and verify steps.
+gives the stop, restart and verify steps. To serve the MCP service to AI
+apps at `/mcp`, read [Run the hosted MCP endpoint](hosted-mcp.md).
 
 ## Read health and logs
 
