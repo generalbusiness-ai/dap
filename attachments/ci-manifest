@@ -1,0 +1,385 @@
+{
+  "status": "ALL THREE EXACT G MAIN43 AUTOMATIC RUNS TERMINAL SUCCESS",
+  "head": "43acea3c0c3c40528face0cfc0aeeba0e95fba4c",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-g43-main-auto-ci-observation",
+  "fileCount": 62,
+  "files": [
+    {
+      "path": "OBSERVATION.json",
+      "bytes": 14030,
+      "sha256": "ef9dcc09018c291a8b7b511c83ed541ef9a27fb37c655a127dc83b1001818f4c",
+      "mode": 256
+    },
+    {
+      "path": "README.md",
+      "bytes": 1250,
+      "sha256": "61809a00103b28bc39f1278b6f75351e7b032c1acb647814514e2589799a1d4f",
+      "mode": 256
+    },
+    {
+      "path": "git-checkpoint.actual.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "mode": 256
+    },
+    {
+      "path": "git-checkpoint.argv.json",
+      "bytes": 114,
+      "sha256": "04900ce4ec476526316c9106d0f16abf4ad64057e24e30f5871f1b2ad28c6ff3",
+      "mode": 256
+    },
+    {
+      "path": "git-checkpoint.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "git-checkpoint.stdout",
+      "bytes": 233,
+      "sha256": "5fdc48ea11a893a2a98ff9174f7d34f4ca50ecd16fa5bedb5810c697e4163658",
+      "mode": 256
+    },
+    {
+      "path": "network-tool-receipts.json",
+      "bytes": 3027,
+      "sha256": "29ba9727252a3e8475a37fc99e387f3da46d08d61801572b536c9fce52d6e45b",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-jobs.actual.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-jobs.argv.json",
+      "bytes": 115,
+      "sha256": "4db5c04d4b14c235461ff9c60aaff301539df09cdef473d1ccad5baf57ca4ef6",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-jobs.network.actual.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-jobs.network.argv.json",
+      "bytes": 115,
+      "sha256": "4db5c04d4b14c235461ff9c60aaff301539df09cdef473d1ccad5baf57ca4ef6",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-jobs.network.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-jobs.network.stdout.json",
+      "bytes": 3089,
+      "sha256": "2466a964ce4cae14065919d66db3d5dc6cd454999160517d229b1748b3b3fde9",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-jobs.receipt.json",
+      "bytes": 319,
+      "sha256": "6d19cb4f8933d81cc884a333df1acb72cf5e93486f04dbb9a47d6cbec24ee0dc",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-jobs.stderr",
+      "bytes": 94,
+      "sha256": "eed65211f0fcee1b82c2661764250c1adaebcb36f0cb78a702d59632f056c439",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-jobs.stdout.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-run.actual.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-run.argv.json",
+      "bytes": 97,
+      "sha256": "0e81fb6224f4cd6d1508fb63b7389fc4869a5ffdbcabf4bc08d63913449f78f0",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-run.network.actual.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-run.network.argv.json",
+      "bytes": 97,
+      "sha256": "0e81fb6224f4cd6d1508fb63b7389fc4869a5ffdbcabf4bc08d63913449f78f0",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-run.network.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-run.network.stdout.json",
+      "bytes": 40593,
+      "sha256": "fb481a95b388a994f299d351f97b216a3894cbf2446f2849cfa8ad93ba2824ef",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-run.receipt.json",
+      "bytes": 300,
+      "sha256": "3af43b2cfc421733892d04caa973a6d6b3c483a1fbe41b93e16779dd9c71e761",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-run.stderr",
+      "bytes": 94,
+      "sha256": "eed65211f0fcee1b82c2661764250c1adaebcb36f0cb78a702d59632f056c439",
+      "mode": 256
+    },
+    {
+      "path": "page-43002149017-run.stdout.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-jobs.actual.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-jobs.argv.json",
+      "bytes": 115,
+      "sha256": "4b3d6ba8ab41974956724080de94c7b62599e7fc4053d39971efe9451dbcce4c",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-jobs.network.actual.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-jobs.network.argv.json",
+      "bytes": 115,
+      "sha256": "4b3d6ba8ab41974956724080de94c7b62599e7fc4053d39971efe9451dbcce4c",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-jobs.network.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-jobs.network.stdout.json",
+      "bytes": 2779,
+      "sha256": "25b2c31e246433f70f4b92fd35bfbb63c3ab3f90456e272fac0c7289760ffe0c",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-jobs.receipt.json",
+      "bytes": 320,
+      "sha256": "b8f5acaf57f7cd585db4282e8a3827d961387c60dcaf76ce8eebda7db8aab1a0",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-jobs.stderr",
+      "bytes": 94,
+      "sha256": "eed65211f0fcee1b82c2661764250c1adaebcb36f0cb78a702d59632f056c439",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-jobs.stdout.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-run.actual.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-run.argv.json",
+      "bytes": 97,
+      "sha256": "4b62707418a63bf1790137da339fc56eee53d3f5cf348158a21194cd3ea27f92",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-run.network.actual.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-run.network.argv.json",
+      "bytes": 97,
+      "sha256": "4b62707418a63bf1790137da339fc56eee53d3f5cf348158a21194cd3ea27f92",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-run.network.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-run.network.stdout.json",
+      "bytes": 40594,
+      "sha256": "896a59cf3319571eed5b7bbd6b3c8a7ffa8e0410747eb6b86bb204b98950824e",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-run.receipt.json",
+      "bytes": 301,
+      "sha256": "0a1860d2a4b45640ebff86fff889b0ae24c54012bf2b95719bdd2956ba1ba48e",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-run.stderr",
+      "bytes": 94,
+      "sha256": "eed65211f0fcee1b82c2661764250c1adaebcb36f0cb78a702d59632f056c439",
+      "mode": 256
+    },
+    {
+      "path": "scale-43002148906-run.stdout.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-jobs.actual.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-jobs.argv.json",
+      "bytes": 115,
+      "sha256": "34fbf29b5eab9982565347e22ab1845245b09dbae72d8e1021863fc0d0346691",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-jobs.network.actual.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-jobs.network.argv.json",
+      "bytes": 115,
+      "sha256": "34fbf29b5eab9982565347e22ab1845245b09dbae72d8e1021863fc0d0346691",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-jobs.network.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-jobs.network.stdout.json",
+      "bytes": 2570,
+      "sha256": "356291021fd81079013fc030766444c447ca59e8742ab572ae7f143100625d9f",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-jobs.receipt.json",
+      "bytes": 320,
+      "sha256": "4303987e1b43b42a6935343231a54daf88bcd947dab325fe43bf13d47ede1e26",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-jobs.stderr",
+      "bytes": 94,
+      "sha256": "eed65211f0fcee1b82c2661764250c1adaebcb36f0cb78a702d59632f056c439",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-jobs.stdout.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-run.actual.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-run.argv.json",
+      "bytes": 97,
+      "sha256": "6ba0169672966488ebd2c625419f645fcf113887c1c2e199fceb63de92a48845",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-run.network.actual.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-run.network.argv.json",
+      "bytes": 97,
+      "sha256": "6ba0169672966488ebd2c625419f645fcf113887c1c2e199fceb63de92a48845",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-run.network.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-run.network.stdout.json",
+      "bytes": 40590,
+      "sha256": "18648bf61b64359a99738e8b44abb987314b05002794d57768d23fb776592394",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-run.receipt.json",
+      "bytes": 301,
+      "sha256": "bf628337a12b8cb365ad5ebfa11b6cfb60c28d9f0b827283235220539e2ef943",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-run.stderr",
+      "bytes": 94,
+      "sha256": "eed65211f0fcee1b82c2661764250c1adaebcb36f0cb78a702d59632f056c439",
+      "mode": 256
+    },
+    {
+      "path": "smoke-43002148611-run.stdout.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 256
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 6135,
+      "sha256": "995d5c7c4784ffb6a52a53a8f0363393f584e91b8a68e1e0442d9b8aacbe8dc0",
+      "mode": 256
+    }
+  ],
+  "qualification": "Counts refer only to complete returned job/step metadata. Step-number gaps are retained and no omitted-step outcome is invented. This observes existing automatic push workflows, not a local execution, deployment or new dispatch. Job intervals come from GitHub timestamps and are not summed step times or benchmark metrics. G43 Scale itself succeeded, so no later-main source-equivalence claim is needed. Read-only copied unit; minimum retention30days after G landing. Removal needs a recorded act naming this manifest.",
+  "preparationManifest": {
+    "path": "/private/tmp/artroom-g43-main-automatic-ci-observation-20261111/manifest.json",
+    "sha256": "cd9d04fc4e6815d5c481b0a3233798b17d6e7b4070d250831c91fc2335809848"
+  }
+}
