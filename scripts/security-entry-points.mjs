@@ -76,7 +76,7 @@ const { presentsSignedRead } = load(readSource("packages/scope/src/signed-reads.
 const adminReads = strings(declaration(readSource("packages/scope/src/sessions.ts"), "ADMIN_READS"));
 const readGate = name => adminReads.includes(name) ? "admin" : signedReads.includes(name) ? "self-signed" : "session";
 const gates = {
-  create: "creation", submit: "membership", prepare: "membership", settle: "self-signed", session: "membership", reservationSnapshot: "membership", stageSnapshot: "membership",
+  create: "creation", submit: "self-signed", prepare: "membership", settle: "self-signed", session: "membership", reservationSnapshot: "membership", stageSnapshot: "membership",
   // Census is signed only by the pinned register's standing founding-install
   // signer. It is not an ordinary member/session read; its whole owner is sealed.
   census: "self-signed",
@@ -116,7 +116,9 @@ export async function scopeRows(text, snapshotDispatches = []) {
   const globals = {
     URL, Response, ReadableStream, TextDecoder, read: () => new Response(), answered: () => new Response(), MISSING: {}, isObject: value => value !== null && typeof value === "object" && !Array.isArray(value), BODY_BYTES: 1024 * 1024,
     admittedRequestUrl: () => true, credentialInUrl: () => false, presentsSignedRead,
-    api: () => remote, json: status => new Response(null, { status }),
+    api: () => remote, scopedApi: () => remote, json: status => new Response(null, { status }),
+    // Structural route enumeration only; the five serving witnesses own actual admission.
+    admitCreationAddress: async () => ({ decision: "admitted", overflow: null }),
     requestQuery: () => true, positionOf: value => /^\d+$/.test(value ?? "") ? Number(value) : null,
     ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS,
     isScopeId: value => value === scope, utf8: value => new TextEncoder().encode(value),

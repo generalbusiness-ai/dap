@@ -55,7 +55,7 @@ import { closeOnDisconnect } from "./http-stream.ts";
  * A join is served through the serving limits of its membership scope
  * (`limits.ts`), keyed by the caller's address, which is the header
  * `CF-Connecting-IP` as the platform sets it. A caller over the service
- * binding has no address, and nothing is counted for it.
+ * binding has no address unless its trusted transport supplies one explicitly.
  *
  * The operator's instruction to send a waiting request again has no route:
  * an operator's authentication is the installation design's.
@@ -103,7 +103,7 @@ import { parentlessCreationAdmission, type CreationAdmission } from "./creation-
 import { readRegisterScope } from "./register-setting.ts";
 import { indexedScopes, scopeIndex, ScopeIndexRows, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
 import { ScopeIndexCensus, scopeIndexCensusRoute } from "./scope-index-census.ts";
-import { admitServing, boundedParentlessIntent, ServingAdmission, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
+import { admitCreationAddress, admitServing, boundedParentlessIntent, boundedServingIntent, ServingAdmission, type CreationAddressReservation, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
 import { SiteTokenReuse, type SiteTokenRequest } from "./site/token-reuse.ts";
 import { presentsSignedRead } from "./signed-reads.ts";
 
@@ -170,6 +170,7 @@ export class ScopeIndex extends DurableObject<Env> {
   list(after: string, limit: number, reader: unknown) { return this.#census.list(after, limit, reader); }
   /** Separate synchronous memory-only action; has() remains SQL-read-only. */
   admitServing(request: ServingRequest, address: string | null) { return this.#serving.admit(request, address, Date.now()); }
+  creationAddress(address: string) { return this.#serving.creationAddress(address, Date.now()); }
 }
 
 /** A scope's surface as a caller over RPC has it. */
@@ -231,9 +232,14 @@ export interface Api extends ScopeApi {
 /**
  * Every operation, each on the object the scope ID names. A name that is no
  * scope ID names nothing. `address`: the caller's address, for the serving
- * limits of a join, or null when the caller has none.
+ * limits of creation, found, joins and signed reads, or null when absent.
  */
 export function api(binding: Binding, address: string | null = null, creationAdmission: CreationAdmission & ServingEnvironment = {}): Api {
+  return scopedApi(binding, address, creationAdmission);
+}
+/** Only the HTTP creation route carries its completed address reservation.
+ * No request body or public API argument can supply this internal receipt. */
+function scopedApi(binding: Binding, address: string | null, creationAdmission: CreationAdmission & ServingEnvironment, reserved?: CreationAddressReservation): Api {
   const creationPolicy = injectedPlatformCreationPolicy(creationAdmission);
   const readGate = async (reader: unknown): Promise<{ ok: false; reason: "rate-limited" | "unavailable" | "forbidden" } | null> => {
     if (!presentsSignedRead(reader)) return null;
@@ -288,9 +294,11 @@ export function api(binding: Binding, address: string | null = null, creationAdm
      * `beside`: the detached texts that the creation intent's fields name.
      */
     async create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> {
+      const early = reserved ?? await admitCreationAddress(creationAdmission, address);
+      if (early.decision !== "admitted") return { answer: "unavailable", reason: early.decision === "rate-limited" ? early.decision : "unavailable" };
       const owned = boundedParentlessIntent(creation);
       if (!owned) return { answer: "refused", reason: "source-unverified" };
-      const decision = await admitServing(creationAdmission, { kind: "creation", signed: owned }, address);
+      const decision = await admitServing(creationAdmission, { kind: "creation", signed: owned, ...(early.overflow ? { overflowReservation: early.overflow } : {}) }, null);
       if (decision === "rate-limited" || decision === "unavailable") return { answer: "unavailable", reason: decision };
       // Invalid custody earns no key charge. The unchanged R1 admission and
       // native judge still give their original refusal; this result is no grant.
@@ -315,7 +323,16 @@ export function api(binding: Binding, address: string | null = null, creationAdm
       }
       return at(name)!.create(creation, definition, definitions, beside);
     },
-    async submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> { return (await at(scope)?.submit(signed, grants, beside, address)) ?? { answer: "unavailable", reason: "unavailable" }; },
+    async submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> {
+      if (signed?.intent?.kind === "found") {
+        const owned = boundedServingIntent(signed);
+        if (owned) {
+          const decision = await admitServing(creationAdmission, { kind: "found", signed: owned }, address);
+          if (decision === "rate-limited" || decision === "unavailable") return { answer: "unavailable", reason: decision };
+        }
+      }
+      return (await at(scope)?.submit(signed, grants, beside, address)) ?? { answer: "unavailable", reason: "unavailable" };
+    },
     async prepare(scope: string, signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return (await at(scope)?.prepare(signed, grants, capability, step)) ?? { answer: "unavailable", reason: "unavailable" }; },
     async settle(scope: string, signed: SignedIntent): Promise<Settlement> { return (await at(scope)?.settle(signed)) ?? MISSING; },
     async summary(scope: string, reader: unknown, atLeast?: ReadMinimum): Promise<Read<Summary>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.summary(reader, atLeast)) ?? MISSING; },
@@ -444,7 +461,7 @@ function projectionResponse(result: NativeApplicationProjection): Response {
 
 /** One request to the scope routes in docs/security/entry-points.md. */
 /** address is trusted transport metadata supplied only by an actual edge
- * fetch. Synthetic/service/hosted callers leave it null; forwarded headers
+ * fetch or its explicit sandbox service call. Other callers leave it null; headers
  * are not promoted into trusted identities here. */
 export async function route(request: Request, binding: Binding, env: MetricEnvironment & CreationAdmission & ServingEnvironment = {}, address: string | null = null, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> {
   return measuredRequest(request, env, () => routedRequest(request, binding, env, address, ctx));
@@ -511,11 +528,18 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
   if (request.method !== (posts ? "POST" : "GET")) return json(405, { error: "method-not-allowed" });
 
   if (posts) {
+    let creationAddress: CreationAddressReservation | undefined;
+    if (scope === undefined) {
+      creationAddress = await admitCreationAddress(env, address);
+      if (creationAddress.decision !== "admitted") return answered({ answer: "unavailable", reason: creationAddress.decision === "rate-limited" ? creationAddress.decision : "unavailable" }, 201);
+    }
     const given = await body(request);
     if (!given) return json(400, { error: "bad-request" });
     // What travels beside the intent is untrusted, like the rest of the body: the scope reads each text and each presented fact itself.
     const beside = { ...("texts" in given ? { texts: given["texts"] } : {}), ...("presented" in given ? { presented: given["presented"] } : {}), ...("values" in given ? { values: given["values"] } : {}) } as Beside;
-    if (scope === undefined) return answered(await scopes.create(given["creation"] as SignedIntent, given["definition"] as DeclaredDefinition, (given["definitions"] ?? []) as DeclaredDefinition[], beside), 201);
+    // HTTP already reserved its address before body(); null prevents a
+    // second charge while the same fixed owner verifies and counts the key.
+    if (scope === undefined) return answered(await scopedApi(binding, address, env, creationAddress).create(given["creation"] as SignedIntent, given["definition"] as DeclaredDefinition, (given["definitions"] ?? []) as DeclaredDefinition[], beside), 201);
     if (what === "reservation-snapshot") {
       // The hint selects a proof format; only the signed job/native owner authorizes it.
       const snapshot = given["stage"] === true
@@ -746,7 +770,7 @@ export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypo
     return await applicationSandboxPage(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }) ?? json(404, { error: "not-found" });
   }
   /** Stream-only named RPC exchange. Ordinary native() remains Response-only. */
-  async nativeStream(screenOrigin: string, request: Request): Promise<{ response: Response; lifetime: ApplicationStreamLifetime }> {
+  async nativeStream(screenOrigin: string, request: Request, address: string | null = null): Promise<{ response: Response; lifetime: ApplicationStreamLifetime }> {
     let close = (): Promise<void> => Promise.resolve();
     const response = await measuredRequest(request, this.env, async () => {
       const host = this.screenHost(screenOrigin), url = new URL(request.url), parts = url.pathname.split("/");
@@ -754,18 +778,18 @@ export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypo
         || request.method !== "GET" || parts.length !== 5 || parts[1] !== "v1" || parts[2] !== "scopes" || parts[4] !== "stream") return json(404, { error: "not-found" });
       if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
       if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
-      const opened = await api(indexedScopes(this.env.SCOPES, this.env), null, this.env).streamExchange(parts[3]!, request.headers.get("authorization"));
+      const opened = await api(indexedScopes(this.env.SCOPES, this.env), address, this.env).streamExchange(parts[3]!, request.headers.get("authorization"));
       if (!("body" in opened)) return read(opened);
       close = opened.close;
       return new Response(opened.body, { status: 200, headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } });
     });
     return { response, lifetime: new ApplicationStreamLifetime(close, work => this.ctx.waitUntil(work)) };
   }
-  async native(screenOrigin: string, request: Request): Promise<Response> {
+  async native(screenOrigin: string, request: Request, address: string | null = null): Promise<Response> {
     const host = this.screenHost(screenOrigin);
     if (!host || !this.#gateway(host, request)) return json(404, { error: "not-found" });
     if (credentialInUrl(new URL(request.url))) return json(400, { error: "credential-in-url" });
-    return isSite(request) ? site(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }) : route(request, indexedScopes(this.env.SCOPES, this.env), this.env, null, this.ctx);
+    return isSite(request) ? site(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }, undefined, address) : route(request, indexedScopes(this.env.SCOPES, this.env), this.env, address, this.ctx);
   }
 }
 

@@ -19,19 +19,21 @@ test("site attempts have an exact fixed minute, bounded address bytes and a shar
   expect(window.size).toBe(3);
 });
 
-test("site key churn cannot evict an active window or bypass capacity; only expired slots are reclaimed", () => {
+test("4096 addresses of one IPv6 /64 leave another Site visitor admitted; full tables share bounded overflow", () => {
   const window = new SiteReadWindow();
-  expect(window.admit("old", 0)).toBe(true);
-  for (let n = 1; n < 240; n++) expect(window.admit("old", 0)).toBe(true);
-  for (let n = 0; n < 4095; n++) expect(window.admit(`address-${n}`, 1)).toBe(true);
-  expect(window.size).toBe(4096);
-  for (let n = 0; n < 20; n++) expect(window.admit(`overflow-${n}`, 59_999)).toBe(false);
-  expect(window.admit("old", 59_999)).toBe(false);
-  expect(window.admit("address-0", 59_999)).toBe(true);
-  expect(window.admit("replacement", 60_000)).toBe(true);
-  expect(window.size).toBe(4096);
-  expect(window.admit("another", 60_000)).toBe(false);
-  expect(window.admit("address-0", 60_000)).toBe(true);
-  expect(window.admit("another", 60_001)).toBe(true);
-  expect(window.size).toBe(2); // replacement and another; no live eviction
+  let admitted = 0;
+  for (let n = 1; n <= 4096; n++) if (window.admit(`2001:db8:1:2::${n.toString(16)}`, 0)) admitted++;
+  expect(admitted).toBe(240);
+  expect(window.size).toBe(1);
+  expect(window.admit("198.51.100.20", 1000)).toBe(true);
+  expect(window.admit("2001:db8:1:2::ffff", 1000)).toBe(false);
+
+  const full = new SiteReadWindow();
+  for (let n = 0; n < 4096; n++) expect(full.admit(`10.${n >> 8}.${n & 255}.1`, 0)).toBe(true);
+  for (let n = 0; n < 240; n++) expect(full.admit(`198.51.100.${n + 1}`, 0)).toBe(true);
+  expect(full.admit("203.0.113.1", 0)).toBe(false);
+  expect(full.size).toBe(4097); // dedicated table plus one overflow window
+  expect(full.admit("10.0.0.1", 0)).toBe(true);
+  expect(full.admit("203.0.113.1", 60_000)).toBe(true);
+  expect(full.size).toBe(1);
 });
