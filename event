@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:52e088661e72f72af0eb70cc3c5abdd5d0534a7f","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/evidence-rules-real-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:52f86f93655cfe625fb0ad2b75423192471b5ef0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-f-canonical-source-seals.manifest.json."}
