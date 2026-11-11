@@ -440,7 +440,7 @@ export const change = {
       fields: {},
       guards: [],
       effects: [],
-      sends: [{ tell: { to: { slot: "rulesScope", of: "on" }, message: "rules-wanted", fields: {}, result: {} } }],
+      sends: [{ tell: { to: { slot: "rulesScope" }, message: "rules-wanted", fields: {}, result: {} } }],
       attention: [],
     },
 
@@ -800,7 +800,7 @@ export const change = {
       sends: [
         {
           tell: {
-            to: { slot: "staging", of: "on" },
+            to: { slot: "staging" },
             message: "pin-confirm",
             if: [{ differs: { a: { field: "lane" }, b: { none: true } } }],
             fields: { commit: { field: "integration" } },
@@ -928,7 +928,7 @@ export const change = {
         { none: { type: "merge", states: ["intended", "committed", "unknown"] }, reason: "merge-in-progress" },
         { notIn: ["authors"], of: "also.manifest", reason: "author-cannot-review" },
         { signer: ["reviewer"], of: "also.earlier" },
-        { equals: { a: { slot: "manifest", of: "also.earlier" }, b: { item: "also.manifest" } }, of: "also.earlier" },
+        { equals: { a: { slot: "manifest" }, b: { item: "also.manifest" } }, of: "also.earlier" },
         { state: ["submitted"], of: "also.earlier" },
         { signer: ["requested"], of: "also.request" },
         { state: ["open"], of: "also.request" },
@@ -1001,8 +1001,8 @@ export const change = {
       guards: [
         { state: ["current"], of: "also.manifest" },
         { none: { type: "merge", states: ["intended", "committed", "unknown"] }, reason: "merge-in-progress" },
-        { equals: { a: { slot: "manifest", of: "also.earlier" }, b: { item: "also.manifest" } }, of: "also.earlier" },
-        { equals: { a: { slot: "name", of: "also.earlier" }, b: { field: "name" } }, of: "also.earlier" },
+        { equals: { a: { slot: "manifest" }, b: { item: "also.manifest" } }, of: "also.earlier" },
+        { equals: { a: { slot: "name" }, b: { field: "name" } }, of: "also.earlier" },
         { state: ["requested", "passed", "failed", "errored", "timed-out"], of: "also.earlier" },
         {
           none: {

@@ -11,7 +11,7 @@ const act = (body: Pick<ActType, "step" | "on" | "grant"> & Partial<ActType>): A
 const fixed = { fixed: true, required: true } as const, optional = { fixed: false, required: false } as const;
 const party = { ...optional, list: false, author: false };
 const eq = (a: import("@generalbusiness/dap-contract").Operand, b: import("@generalbusiness/dap-contract").Operand): Guard => ({ equals: { a, b } });
-const live = (of: Subject, states: readonly string[]): Guard => ({ of, state: states });
+const live = (of: Subject, states: readonly string[]): Guard => ({ ...(of === "on" ? {} : { of }), state: states });
 const fact = (kinds: readonly string[]) => ({ type: "fact", under: ROOM, kind: kinds } as const);
 const zone = zoneForms(ROOM), device = deviceForms(ROOM, ["authorize"]);
 const work = workForms(ROOM);

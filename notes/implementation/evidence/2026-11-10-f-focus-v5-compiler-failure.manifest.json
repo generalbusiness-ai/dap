@@ -1,0 +1,54 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-successor143/compiler23-failure-sealed/unit",
+  "head": "d1d09f3cfd15b8b794eb53aec65e4d83dddd4671",
+  "tree": "5fac757a3e5e4b2a26778bff731b4c94b31ddd47",
+  "booking": "e003b705a29cc451941c191d83ff7675f4d135f2",
+  "end": "1c7ab4b30580eb6889f5d737e0a5db6ae97b2215",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "8d816d72acac68a9ccadfad85c1a9b5291135e4fe84a1c0a37846652d148a50d",
+      "bytes": 428
+    },
+    {
+      "path": "audit.json",
+      "sha256": "44d738eaad1cab6723d937f29b1d90cbf4e370dd9d96ce799dfa5536b0098019",
+      "bytes": 2496
+    },
+    {
+      "path": "compiler-carry-candidates.json",
+      "sha256": "891a726b5e5cef6e110a4c551c915e8f80226eeaf50973faa6f0ea45f715294e",
+      "bytes": 24069
+    },
+    {
+      "path": "compiler-ledger.json",
+      "sha256": "2e4a79ae004cc020da7fffccd10d44d64b8c345d41f3802b9d5a8892b90482aa",
+      "bytes": 33147
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "323046556d38dfe5bffb91be406acf80f85b7d39c02335717255d65e03a22483",
+      "bytes": 15081
+    },
+    {
+      "path": "runtime-ledger.json",
+      "sha256": "be266c8edea0192c2a3e94fa1f25b390ce596953a1143c117422bb119acd9fcf",
+      "bytes": 72026
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-successor143/compiler23-failure-sealed/private",
+    "manifestSha256": "09113f97e3db0d5bd0b859a338676a8d67ba979dafff708e6cc14bf6354c7829",
+    "files": 91,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T19:15:52.253325+00:00"
+    }
+  },
+  "withheld": [
+    "Original raw stdout/stderr, compiler diagnostics and process/source/tool/frozen/staged/temp/cache payloads stay in the opaque owner-only private archive."
+  ],
+  "qualification": "Classification of an actual FAILED partial compiler run;23PASS/1FAIL/17UNRUN compilercontexts and all143 runtimeUNRUN. Carry candidates require future exact unaffected source/tool/import closure proof. No compiler/test/parser/application/control/build/gate repeated."
+}

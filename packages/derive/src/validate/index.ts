@@ -17,12 +17,14 @@ import type { Markers } from "../markers.ts";
 import type { Standing } from "./standing.ts";
 import { PROFILE } from "../rule/profile.ts";
 import { FORMAT_1, validateFormat1 } from "./format-1.ts";
+import { normalizeDefinition } from "./spelling.ts";
 
 export type { MarkKind, MarkPlace, RangeIndex } from "./context.ts";
 export type { Problem, ProblemCode } from "./shape.ts";
 export type { Underived } from "./capability.ts";
 export type { KindReserved, Reserving } from "./holds.ts";
 export { timedGraph, type TimedGraph, type TimedMove } from "./timed.ts";
+export { normalizeDefinition } from "./spelling.ts";
 
 /** A definition that passed, with what was derived from it. The judges and the fold take only this. */
 export interface ValidDefinition {
@@ -129,6 +131,8 @@ export const PROFILES: Readonly<Record<string, Profile>> = { "restricted@1": { i
  * that the contract does not define, and is refused as any such form is.
  */
 export interface ValidateOptions {
+  /** Refuse redundant authored spelling. Off for recorded format-1 history. */
+  readonly canonical?: boolean;
   readonly platform?: boolean;
   /** Static declarations of the trusted pinned owner code, by outcome kind. */
   readonly outcomeValues?: Readonly<Record<string, readonly import("../ledger.ts").EvidenceValueDomain[]>> | null;
@@ -157,5 +161,9 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
     // Only a nonempty unknown format selects the unsupported-format refusal.
     bad("shape", "format", "must be artroom-definition-1");
   }
-  return validateFormat1(input, bounds, profiles, options, top, read, platform);
+  const checked = validateFormat1(input, bounds, profiles, options, top, read, platform);
+  if (checked.ok && options.canonical === true && canonicalize(normalizeDefinition(checked.definition.declared)) !== canonicalize(input)) {
+    return { ok: false, problems: [{ code: "shape", path: "", message: "must omit redundant subjects and empty optional filters in canonical mode" }] };
+  }
+  return checked;
 }

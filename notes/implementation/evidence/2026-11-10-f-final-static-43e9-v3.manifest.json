@@ -1,0 +1,116 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-43e9-v3-sealed/unit",
+  "head": "43e9b32801908301066d83de2ab5725edccd3f2a",
+  "tree": "d54901187e16e485549723249521e6c8b069f803",
+  "main": "d7736fa3de1c75d588f003f3d7e467545cf8ed06",
+  "base": "d7736fa3de1c75d588f003f3d7e467545cf8ed06",
+  "booking": "3e25e213d1a309b7345a4aa4e720dd58e5231d50",
+  "originalOutcome": "PASSED",
+  "end": "cf15d1e61cbdc08ca58055f26c2f4061a2841ad9",
+  "endEventSha256": "de9d9fa90291abe20a22d764a765ace7e6878d88a32c984b3aa20499c3b7b84b",
+  "actualExitFiles": {
+    "whitespace": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-43e9/whitespace.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 384,
+      "actualExit": 0
+    },
+    "commit-messages": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-43e9/commit-messages.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 384,
+      "actualExit": 0
+    },
+    "format": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-43e9/format.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 384,
+      "actualExit": 0
+    },
+    "driver": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-43e9/driver.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 384,
+      "actualExit": 0
+    },
+    "outerDriver": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-43e9-launch/actualdriver.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 384,
+      "actualExit": 0
+    },
+    "launcher": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-43e9-launch/launcher.exit",
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320",
+      "bytes": 7,
+      "mode": 384,
+      "actualExit": 0
+    }
+  },
+  "rootReadback": {
+    "path": "/private/tmp/artroom-f-final-static-v3-root-readback-43e9-20261110.json",
+    "sha256": "e4f92f1bb3008fbf7050aaf0d1732e0ce56f2b8891c1dbace0852ed1a242ecb1",
+    "bytes": 82342,
+    "mode": 256
+  },
+  "launchEvidence": {
+    "outerCommandExit": {
+      "path": "/private/tmp/artroom-f-final-static-body-launch-43e9-20261110/actual.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "mode": 256,
+      "actualExit": 0
+    },
+    "metadataFreezeExit": {
+      "path": "/private/tmp/artroom-f-final-static-freeze-launch-43e9-20261110/actual.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "mode": 256,
+      "actualExit": 0
+    },
+    "immediateRefsBeforeAndAfter": [
+      "43e9b32801908301066d83de2ab5725edccd3f2a",
+      "d54901187e16e485549723249521e6c8b069f803",
+      "d7736fa3de1c75d588f003f3d7e467545cf8ed06",
+      "d7736fa3de1c75d588f003f3d7e467545cf8ed06"
+    ],
+    "separatePreBodyPathRefusal": {
+      "path": "/private/tmp/artroom-f-static3-first-launch-preflight-refusal-43e9-20261110.json",
+      "sha256": "441a0f45d20fbf3df25d3e6fbedc7978838ee922545c9c275e0490c7f8de366b",
+      "bytes": 1057,
+      "mode": 256,
+      "toolObservedExit": 1,
+      "bodyExecuted": false
+    }
+  },
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "baa8698b6088771fb78c46677c316c07ef7723b98fca0f1953afe4e302150699",
+      "bytes": 168
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "3bde5441c64be8e009be94781afd99835ef53f4657b4ad654f278a240f0520ca",
+      "bytes": 38231
+    },
+    {
+      "path": "static-readback.json",
+      "sha256": "b4e56770e8d0321be24f95d6dd435232d4c20f92cf3f988b4b42328867699141",
+      "bytes": 5405
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-final-static-43e9-v3-sealed/private",
+    "manifestSha256": "fd4cd41efa7dde031e223433d247ddb4de580b2db52f885ee1219cb09e38ff89",
+    "files": 210
+  },
+  "qualification": "One actual static preflight at the final source. The gate remains unrun."
+}

@@ -424,8 +424,8 @@ function scriptedChange(f, definition, extra = () => []) {
 // Every read of a room with no finding profile, as canonical bytes. The finding profile left these bytes alone at main 76cac675. J2 added a change's Earlier versions lines, the diff read's label and its interdiff reads. J5 added three reasons on each needs_you row, and entry lines on since and the updates card. The actor-chip head adds signer displays from the exact entry and its membership, with explicit unavailable words; the ordinary row records stay the same. The card words head took the raw row out of the card's body, into a disclosure, gave each card a kicker and each act its receipt words, gave the rule line words, added a merge row's holds, and said what an empty list means.
 test('a room with no finding profile reads byte for byte as it did before the finding profile', async t => {
   const f = fixture(t), source = decisionSource(f.app);
-  const ready = scriptedChange(f, J4_DIGESTS.change);
-  const requested = scriptedChange(f, J4_DIGESTS.change, () => [item(10, 'review-request', 'open', {}, {}, { requested: f.viewer, requester: f.other }),
+  const ready = scriptedChange(f, 'sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7');
+  const requested = scriptedChange(f, 'sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7', () => [item(10, 'review-request', 'open', {}, {}, { requested: f.viewer, requester: f.other }),
     item(11, 'merge', 'unknown', {}, { manifest: 6 }, { merger: f.viewer })]);
   const q = await question(f, undefined, 'TEST-fixed-question');
   const screens = { 'needs-you': await source.read({ screen: 'needs-you', position: 0, page: 'summary' }), work: await source.read({ screen: 'work', position: 0, page: 'summary' }), updates: await source.read({ screen: 'change', position: 0, page: 'updates' }),
