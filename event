@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3758724ff0dc5a01d6bead75ab829713765e05dd","text":"Merge retired a covered predecessor; the successor is at .github/workflows/scale-tests.yml."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3762dd198ff81fa7ec9ef2fd6aacb881d858f6ab","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-lane-pins.generated.ts."}
