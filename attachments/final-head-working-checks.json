@@ -1,0 +1,70 @@
+{
+  "head": "8793316b4a4affc7e41ada79af521618477878b7",
+  "rows": [
+    {
+      "name": "whitespace",
+      "argv": [
+        "/usr/bin/git",
+        "diff",
+        "--check",
+        "main",
+        "HEAD"
+      ],
+      "actualExit": 0,
+      "startedUtc": "2026-11-11T18:27:41.302707+00:00",
+      "endedUtc": "2026-11-11T18:27:41.319237+00:00",
+      "elapsedSeconds": 0.016541333025088534
+    },
+    {
+      "name": "subjects",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "scripts/check-commit-messages.mjs",
+        "main",
+        "HEAD"
+      ],
+      "actualExit": 0,
+      "startedUtc": "2026-11-11T18:27:41.319250+00:00",
+      "endedUtc": "2026-11-11T18:27:41.429663+00:00",
+      "elapsedSeconds": 0.11042124999221414
+    },
+    {
+      "name": "format",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "format:check"
+      ],
+      "actualExit": 0,
+      "startedUtc": "2026-11-11T18:27:41.429673+00:00",
+      "endedUtc": "2026-11-11T18:27:42.520331+00:00",
+      "elapsedSeconds": 1.0906700000050478
+    },
+    {
+      "name": "links",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "scripts/check-doc-links.mjs"
+      ],
+      "actualExit": 0,
+      "startedUtc": "2026-11-11T18:27:42.520348+00:00",
+      "endedUtc": "2026-11-11T18:27:42.634293+00:00",
+      "elapsedSeconds": 0.11395379199529998
+    },
+    {
+      "name": "notes",
+      "argv": [
+        "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+        "scripts/check-notes.mjs",
+        "main",
+        "HEAD"
+      ],
+      "actualExit": 0,
+      "startedUtc": "2026-11-11T18:27:42.634304+00:00",
+      "endedUtc": "2026-11-11T18:27:42.754293+00:00",
+      "elapsedSeconds": 0.11999587499303743
+    }
+  ],
+  "qualification": "Ordinary unsealed checks after final two-path documentation commit and before publication/CI. No compiler/test/control/gate/build repeated."
+}
