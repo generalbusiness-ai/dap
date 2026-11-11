@@ -5,6 +5,8 @@ const source = (path: string): string => new URL(`../../packages/${path}`, impor
 export default defineConfig({
   root: new URL(".", import.meta.url).pathname,
   resolve: { alias: [
+    { find: "@generalbusiness/dap-define/package", replacement: source("define/src/package.ts") },
+    { find: "@generalbusiness/dap-define/story", replacement: source("define/src/story.ts") },
     { find: "@generalbusiness/dap-platform/membership-actions", replacement: source("platform/src/membership-actions.ts") },
     { find: /^@generalbusiness\/dap-platform$/, replacement: source("platform/src/index.ts") },
     { find: "@generalbusiness/dap-derive/testing", replacement: source("derive/test/fixtures.ts") },

@@ -9,8 +9,16 @@ import { EVIDENCE_LANE_PINS } from "./evidence-lane-pins.generated.ts";
 import { EVIDENCE_RULES_COHORT as C } from "./evidence-cohort.ts";
 import { readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 
-export const EVIDENCE_INCIDENT_PINS_V17 = Object.freeze({ issue: EVIDENCE_LANE_PINS.issue, change: EVIDENCE_LANE_PINS.change,
+// Recorded parent declarations retain their exact identity after fresh authoring changes.
+const RECORDED_EVIDENCE_CHANGE_V17 = "sha256:fe3cfa584ef4beb697ffd43cbd99391626e2b5dcd863f7aee2cdbf4fac3849d1";
+
+export const EVIDENCE_INCIDENT_PINS_V17 = Object.freeze({ issue: EVIDENCE_LANE_PINS.issue, change: RECORDED_EVIDENCE_CHANGE_V17,
   directory: C.directory, destination: C.destination });
+
+/** The two exact retained/current parents whose native origin carries a Directory genesis. */
+export function evidenceIncidentParentV17(named: unknown): named is Digest {
+  return named === RECORDED_EVIDENCE_CHANGE_V17 || named === EVIDENCE_LANE_PINS.change;
+}
 
 const objectId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{40}$/.test(value);
 const selfOr = (value: unknown, fact: FactRef): boolean => same(value, fact) || isRecord(value) && Object.keys(value).join() === "self" && value["self"] === true;
@@ -91,14 +99,15 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly Fetched
     if (!parent) return missing;
     const parentBirth = parent.entry.input;
     if (parentBirth.type !== "genesis" || parentBirth.decision !== "applied" || parentBirth.kind !== "open" || !isSeed(parentBirth.seed)
-      || parentBirth.seed.definition !== EVIDENCE_LANE_PINS.change || parentBirth.seed.kind !== "lane" || parentBirth.seed.ordinal !== 0
+      || !evidenceIncidentParentV17(parentBirth.seed.definition)
+      || parentBirth.seed.kind !== "lane" || parentBirth.seed.ordinal !== 0
       || parentBirth.inc !== parent.fact.at.inc || scopeIdOf(parentBirth.seed) !== parent.fact.at.scope || !isFactRef(parentBirth.source)
       || parentBirth.n === null || !parentBirth.message || parentBirth.message.class !== "request" || parentBirth.message.type !== "create") return false;
     const opened = find(parentBirth.source);
     if (!opened) return missing;
     const made = opened.entry.input;
     if (opened.under !== "platform:directory" || made.type !== "act" || made.signed.intent.kind !== "open-pr" || !verifySignedIntent(made.signed)
-      || made.signed.intent.fields["definition"] !== EVIDENCE_LANE_PINS.change || !same(made.signed.intent.to, opened.fact.at)
+      || made.signed.intent.fields["definition"] !== parentBirth.seed.definition || !same(made.signed.intent.to, opened.fact.at)
       || !same(parentBirth.seed.creator, opened.fact.at) || parentBirth.seed.cause !== intentDigest(made.signed.intent)
       || !sentBy(opened.entry, { from: opened.fact, n: parentBirth.n, to: parentBirth.seed, message: parentBirth.message })) return false;
     const directory = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, opened.fact.at));

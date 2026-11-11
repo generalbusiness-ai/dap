@@ -35,7 +35,11 @@
     },
     {
       "dir": "define",
-      "exports": { ".": "src/index" },
+      "exports": {
+        ".": "src/index",
+        "./package": "src/package",
+        "./story": "src/story"
+      },
       "dependencies": {
         "@generalbusiness/dap-bytes": "coordinated",
         "@generalbusiness/dap-contract": "coordinated",

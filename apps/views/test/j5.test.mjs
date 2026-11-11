@@ -86,6 +86,15 @@ test('every kind of row says what needs you, why it is yours and what settles it
   assert.deepEqual(of(7).settledBy, ['withdraw-approval-request'], 'A CLOSED QUESTION: only the requester can close this request');
   assert.equal(of(12).why, 'Your role holds change.merge, and this finding holds that merge.', 'A FINDING: the row says why this viewer sees it');
   assert.ok(of(12).needs.includes('src/a.ts'), 'A FINDING: the row names the file');
+  // Scripted summaries prove exact historical/current read selection only.
+  // The recorded golden stays unchanged; no native factory runs here.
+  for (const pin of ['sha256:aaf68c3bd82c217312acd7784dfe06bcb7ba6a30a066d0475a7728c62c43a7e7', FINDING_DIGESTS.change]) {
+    change.definition = pin;
+    const found = (await rowsOf(f)).rows.find(row => row.category === 'open-finding' && row.item === 12);
+    assert.ok(found, 'Both exact finding pins retain the open-finding row');
+    assert.equal(found.rule.definition, pin);
+    for (const name of ['needs', 'why', 'settles', 'settledBy']) assert.deepEqual(found[name], of(12)[name], 'Spelling changes no finding meaning');
+  }
 });
 
 test('a decision is due only when the approvals are in on the current text and the viewer holds issue.decide', async t => {

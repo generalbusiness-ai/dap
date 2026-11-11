@@ -1,0 +1,49 @@
+{
+  "request": "6a3a7fccf752dd841226f78071a51b566a74087b",
+  "promise": "af287821038111e452959ff3e62c5dd612cc7dae",
+  "head": "92ad89c47aed018cdf56dce232d85026dbbafc85",
+  "tree": "e016ef97fd6468ea6477cf53b46605c1bef67585",
+  "booking": "9030f979438b9b3b69c2aaebfb70450e7de90438",
+  "end": "e29ee5c673591c6e0deaec63dc9b5b7e65e7286d",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-node4-92ad/sealed/unit",
+  "files": [
+    {
+      "path": "actual-exits.json",
+      "sha256": "289e69c27a6c21e1d107d6c59ba30adbc320c1958cc61519fa06c08b9cda9c18",
+      "bytes": 248
+    },
+    {
+      "path": "case-outcomes.json",
+      "sha256": "9917a52a9f7d0841ba8ba61aa9afe25688213cbc45ab68194aebd35672ff6daa",
+      "bytes": 2050
+    },
+    {
+      "path": "source-custody.json",
+      "sha256": "8d418321f59c2d216a329effa474556ee56a4e66b596afb4b30fa46f6619defc",
+      "bytes": 865
+    },
+    {
+      "path": "summary.json",
+      "sha256": "00578ff68cb1d78768307bcb70adc998447bb2d553b751be91052b39433361ee",
+      "bytes": 917
+    },
+    {
+      "path": "tap-metadata.json",
+      "sha256": "7fc2270ed969a98452e736319a6bd550b9322eec68d0bd504f408d34b076e143",
+      "bytes": 498
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-node4-92ad/sealed/private",
+    "manifestSha256": "35d82ed4e338a09427ce0fd1ee56f1868ee94959d087b41d211c55cffb5a9a57",
+    "files": 48,
+    "mappedOriginalDirectories": 8,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-11T01:58:47.138480+00:00"
+    }
+  },
+  "focusedResult": "4passed/2wholeowners/6UNKNOWN",
+  "fullGateResult": null,
+  "qualification": "Only the focused Node owners passed. Full gate, review and landing remain pending. Originals keep their byte and mode pins; new copies receive read-only modes."
+}

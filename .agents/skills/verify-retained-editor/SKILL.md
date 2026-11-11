@@ -12,7 +12,7 @@ Premature progress could present an unverified change as recorded.
 
 ## Coverage
 
-The correspondence review covers commit `c9f4dff6267d12d89d1215a0d894e7ec2f5f2435`. `verification/state-machines/coverage.json` records exact source hashes. BR13 moves version queries outside `continueEdit`; its protected function stays byte-identical to the earlier correspondence. The 9 November model and source checks pass. Planner ruling `12c4f5fb` requires no repeated fault control for this unchanged boundary. See the [BR13 note](../../../notes/implementation/2026-11-09-br13-version-questions.md) for the comparison and retained evidence.
+The correspondence review covers commit `8dc1381c732132be8a6d378697e0b87191bd2801`. `verification/state-machines/coverage.json` records exact source hashes. F accepts both reviewed `rulesScope` operand spellings in `supports`, outside `continueEdit`. Both protected functions remain byte-identical to the BR13 correspondence at `c9f4dff6`. The 10 November model check, real-source witness and statechart pass. The model reaches seven distinct states, with no deadlock or `EvidenceBeforeProgress` violation. Planner ruling `12c4f5fb` requires no repeated fault control for this unchanged boundary. The [BR13 note](../../../notes/implementation/2026-11-09-br13-version-questions.md) retains the earlier comparison and evidence. See the [F implementation note](../../../notes/implementation/2026-11-10-canonical-spelling.md) for the 10 November Editor evidence.
 
 - `apps/room/page/src/retained-editor-state.ts`: `transitionEdit: attempted, answer, receipt-verified, step-recorded`.
 - `apps/room/page/src/retained-editor-data.ts`: `continueEdit`.
@@ -23,7 +23,7 @@ One request step. Repeat this obligation at opening, rules, source and manifest 
 
 ## Run the check
 
-Use TLC 1.7.4 and Java 11 or later outside the checkout. Set `TLA2TOOLS` to the installed jar and `JAVA` to the Java executable. The runner checks the jar digest before use. The recorded run used Temurin 25.0.5.
+Use the pinned TLA+ tools release 1.7.4 artifact and Java 11 or later outside the checkout. Its TLC component reports version 2.19. Set `TLA2TOOLS` to the installed jar and `JAVA` to the Java executable. The runner checks the jar digest before use. The recorded run used Temurin 25.0.5.
 
 Use a dedicated worktree and reserve the single validation slot before any check or control. Never run either command from the shared checkout at `~/play/artroom`. Run no other validation or builds during that interval. Keep the checked worktree's source fixed, except for the control's recorded fault and restoration. The control refuses a dirty checkout or an unreadable Git status.
 

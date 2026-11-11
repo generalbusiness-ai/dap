@@ -1,32 +1,28 @@
 /**
  * Canonical projects for the root suite and its plain/native phase views.
- * Each project keeps its package's own config. The sixteen plain projects share a
- * group with at most four active file tasks in total. The `scope`,
- * `scope-lending`, `scope-denial` and `scope-scale` groups follow in order,
- * with worker limits of two, one, one and two in separate runtimes.
+ * The sixteen plain projects share a group with at most four active file
+ * tasks. The Native groups follow in order: scope, scope-stories,
+ * scope-lending, scope-denial, and scope-scale. Their worker limits are
+ * two, two, one, one, and two. Each group uses separate runtimes.
  * The file-task limit does not cap child processes or overlapping teardown.
- *
- * Most lane scenarios, `apps/room/lanes/test/*.scope.test.ts`, run inside
- * `scope`; the named partition scale owner runs in `scope-scale`. A
- * second project in the Workers runtime pool historically added 0.7 seconds to this run,
- * and the files in the one project add 0.2 (observed, three runs each, on a
- * shared machine). The scope package does not name them: this file does.
- * `apps/room/lanes/vitest.scope.config.ts` runs them alone, in a Worker of
- * the lanes package's own, with the same classes. The command line's story,
- * `packages/cli/test/*.scope.test.ts`, and the page's story,
- * `apps/room/page/test/*.scope.test.ts`, and the MCP server's stories,
- * `packages/mcp/test/*.scope.test.ts`, run here the same way, and have no
- * Worker of their own.
- *
- * The historical Lending story has its own ordered `scope-lending` Worker
- * runtime after `scope`. Its repeated mixed-project failure remains masked;
- * this bounds runtime reuse without claiming that cause is established.
- * The post-sent local-denial witness then has its own `scope-denial` Worker
- * runtime. This isolates the observed unsafe-abort interaction
- * with later Operations tests; each witness still runs once in the native phase.
  */
-const project = (name, dir, config, group, more = [], options = {}) =>
-  ({ extends: `./${dir}/${config}`, test: { name, root: `./${dir}`, ...(more.length > 0 ? { include: ["test/**/*.test.ts", ...more] } : {}), sequence: { groupOrder: group }, ...options } });
+const project = (name, dir, config, group, options = {}) =>
+  ({ extends: `./${dir}/${config}`, test: { name, root: `./${dir}`, sequence: { groupOrder: group }, ...options } });
+
+const storyFiles = [
+  "../../apps/room/lanes/test/**/*.scope.test.ts",
+  "../cli/test/**/*.scope.test.ts",
+  "../../apps/room/page/test/**/*.scope.test.ts",
+  "../mcp/test/**/*.scope.test.ts",
+];
+
+// The page and demo recorders run only when explicitly requested.
+const scopeProvide = {
+  j3Runner: null,
+  evidenceRunner: null,
+  pageRecord: process.env["PAGE_RECORD"] === "1",
+  demoRecord: process.env["DEMO_RECORD"] === "1",
+};
 
 export { scopeScaleFiles } from "./packages/scope/vitest.scale-files.ts";
 
@@ -39,14 +35,16 @@ const projects = [
       project("checkers", "packages/checkers", "vitest.config.ts", 0),
       project("replay", "packages/replay", "vitest.config.ts", 0),
       project("client", "packages/client", "vitest.config.ts", 0),
-      project("scope", "packages/scope", "vitest.worker.config.ts", 1, ["../../apps/room/lanes/test/**/*.scope.test.ts", "../cli/test/**/*.scope.test.ts", "../../apps/room/page/test/**/*.scope.test.ts", "../mcp/test/**/*.scope.test.ts"], {
-        // The page's recorder for its screenshots runs only when asked: `PAGE_RECORD=1` (apps/room/page/test/screens.mjs). So does
-        // the demo runner's recorder for its captures: `DEMO_RECORD=1` (scripts/demo-captures.ts --recorded).
-        provide: { j3Runner: null, evidenceRunner: null, pageRecord: process.env["PAGE_RECORD"] === "1", demoRecord: process.env["DEMO_RECORD"] === "1" },
+      project("scope", "packages/scope", "vitest.worker.config.ts", 1, { provide: scopeProvide }),
+      project("scope-stories", "packages/scope", "vitest.worker.config.ts", 2, {
+        include: storyFiles,
+        // Vite appends include arrays from the project to the inherited list.
+        exclude: ["test/**/*.test.ts"],
+        provide: scopeProvide,
       }),
-      project("scope-lending", "packages/scope", "vitest.lending.config.ts", 2),
-      project("scope-denial", "packages/scope", "vitest.denial.config.ts", 3),
-      project("scope-scale", "packages/scope", "vitest.scale.config.ts", 4),
+      project("scope-lending", "packages/scope", "vitest.lending.config.ts", 3),
+      project("scope-denial", "packages/scope", "vitest.denial.config.ts", 4),
+      project("scope-scale", "packages/scope", "vitest.scale.config.ts", 5),
       project("lanes", "apps/room/lanes", "vitest.config.ts", 0),
       project("cli", "packages/cli", "vitest.config.ts", 0),
       project("page", "apps/room/page", "vitest.config.ts", 0),
@@ -70,7 +68,7 @@ const projects = [
 ];
 
 const plainNames = ["bytes", "derive", "define", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow", "repo-in-ai"];
-const nativeNames = ["scope", "scope-lending", "scope-denial", "scope-scale"];
+const nativeNames = ["scope", "scope-stories", "scope-lending", "scope-denial", "scope-scale"];
 const namesEqual = (actual, expected) => actual.length === expected.length && actual.every((name, index) => name === expected[index]);
 
 // Select data before Vitest resolves any inherited package config/plugin.
@@ -85,7 +83,7 @@ export function testOptions(phase = "all", scale = "run") {
   if (!namesEqual(plain.map(project => project.test.name), plainNames)
     || !namesEqual(native.map(project => project.test.name), nativeNames)
     || native.some((project, index) => project.test.sequence.groupOrder !== index + 1)) {
-    throw new Error("The canonical test projects do not match the sixteen/plain four/native partition.");
+    throw new Error("The canonical test projects do not match the sixteen/plain five/native partition.");
   }
   return {
     maxWorkers: 4,

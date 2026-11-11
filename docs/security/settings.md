@@ -52,9 +52,9 @@ and the retired demo-offer route provisions no register.
 The O4 configuration deploys `dap-connect` with hosted MCP closed. Its sole
 register placeholder needs an own-agent install plan. Its four Durable
 Object namespaces and private content bucket belong only to this Worker.
-The planner supplies a fresh session secret and the reviewed application
-trust before the witness setup; [the O4 runbook](../o4-connect.md) records
-the deployment and live-window sequence.
+The operator supplies a fresh session secret.
+[Test a hosted connector](../o4-connect.md) gives the deployment and
+live-window steps.
 
 Test Wrangler configurations and local build and CLI environment variables
 are not deployed settings, so the inventory omits them.

@@ -1,14 +1,7 @@
 # Provision and run the Grow demo
 
-Run status, 20 October 2026, 07:20 ET: planner provisioning record
-`740b21d9` reports the `dap-grow` scope Worker and `dap-grow-simulator`
-provisioned from published Main `8aad37bb`. The Register17 room has
-confirmed Directory16, Membership8, Rules10 and Destination12 siblings.
-Install item 2 is active; its Site and Room A are created. The operator
-and two controlled agents are enrolled. The simulator runs every UTC
-minute; the record includes its 07:18 tick and native device answers.
-The homepage deployment, visitor invitation journey, a person's authorize
-act and missed-tick recovery remain open under the operational milestone.
+Follow this runbook to deploy the Grow demo, install its signed package,
+start the simulator and enable the room archive.
 
 The scope service is `https://dap-grow.inguz.workers.dev`, with deployment
 identity `dap-grow-v1`. Its public settings are committed in
@@ -24,8 +17,6 @@ ARTROOM_REPO=/absolute/path/to/artroom
 cd "$(mktemp -d)"
 npx -y wrangler@4.147.0 deploy --keep-vars --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
 ```
-
-Planner owns deployment and the remaining hosted acceptance procedure.
 
 Use the reviewed, landed checkout and preserve each original request and
 receipt. The committed packet is `examples/grow/demo/application.dap.json`.
@@ -324,7 +315,7 @@ belongs to G6.
 
 Connect the person's AI app to the actual hosted MCP endpoint with that
 person's own membership custody, following
-[The hosted endpoint](../../docs/mcp.md#the-hosted-endpoint). During the
+[Connect through a hosted endpoint](../../docs/connect-an-ai-app.md#connect-through-a-hosted-endpoint). During the
 fault, the person takes the operator's `authorize` act. Proving read: the
 native entry has the operator's signer and exact alert revision, the target
 changes, the sensors owner records the outcome separately, and a later

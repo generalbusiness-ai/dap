@@ -1,4 +1,5 @@
 import { addCounterCitation, scenarioParent } from "./definition-corpus-data.ts";
+import { freshCountingSource } from "../../derive/test/support/fresh-counting-source.ts";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 /** Real native Counter scenarios; only the final test's verifier reports are
  * deliberately faulted, to show the scenario cannot hide failed replay. */
@@ -70,7 +71,9 @@ test("the actual check bin refuses vacuous scenarios and preserves explicit answ
   const root = await realpath(await mkdtemp(join(tmpdir(), "dap-scenario-check-")));
   const packed = await packet(), bin = fileURLToPath(new URL("../bin/dap.js", import.meta.url));
   try {
-    await writeFile(join(root, "definition.json"), packed.package.semantic.definitions[0]!.bytes);
+    // The new authoring directory owns a copy; the signed packet stays unchanged.
+    const source = freshCountingSource(JSON.parse(packed.package.semantic.definitions[0]!.bytes));
+    await writeFile(join(root, "definition.json"), canonicalize(source));
     await writeFile(join(root, "index.html"), "<!doctype html><title>TEST scenario fixture</title>");
     await writeFile(join(root, "dap.application.json"), JSON.stringify({ v: 1, name: "test.example.scenarios", version: "0.1.0", entry: "definition.json", definitions: ["definition.json"],
       host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], projections: {}, roles: {}, predecessor: null,

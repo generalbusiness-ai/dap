@@ -48,9 +48,9 @@ export function demoDefinitions(): { site: DeclaredDefinition; room: DeclaredDef
   observe.fields["targetBasis"] = { ...head, required: true };
   observe.guards = [...observe.guards, { rule: "demo-reading-order", reason: "stale-demo-reading" }];
   observe.effects = [...observe.effects,
-    { of: "on", value: { slot: "commandsAnsweredThrough", from: { field: "commandsAnsweredThrough" } } },
-    { of: "on", value: { slot: "lastSampledAt", from: { field: "sampledAt" } } },
-    { of: "on", ref: { slot: "lastReading", from: "self" } }];
+    { value: { slot: "commandsAnsweredThrough", from: { field: "commandsAnsweredThrough" } } },
+    { value: { slot: "lastSampledAt", from: { field: "sampledAt" } } },
+    { ref: { slot: "lastReading", from: "self" } }];
   room.rules["demo-reading-order"] = "(subjects.on.values.lastSampledAt = null or fields.sampledAt >= subjects.on.values.lastSampledAt) and (subjects.on.values.commandsAnsweredThrough = null or (fields.commandsAnsweredThrough.seq >= subjects.on.values.commandsAnsweredThrough.seq and (fields.commandsAnsweredThrough.seq > subjects.on.values.commandsAnsweredThrough.seq or fields.commandsAnsweredThrough.hash = subjects.on.values.commandsAnsweredThrough.hash)))";
   // Autonomous closure records what was actually observed about the heater,
   // rather than implying that a person cut it while nobody was present.

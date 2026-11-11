@@ -25,6 +25,7 @@ native answer.
 directory, membership, rules scope, destination and the caller's inbox.
 It finds other scopes from confirmed references and recorded creation
 sends. `dap status membership`, or a scope ID, selects one scope.
+[Get the dap command](get-dap.md) sets up the command.
 
 Each scope has a summary with its status, time and the count of items in
 each type and state. The outbox column counts requests without a result
@@ -73,7 +74,8 @@ When `REGISTER_SCOPE` is set, it must be a valid scope ID, and an
 Otherwise `register` is `unavailable`. When `REGISTER_SCOPE` is unset, the `registerScope` of
 `GITHUB_APP_CONFIG` or `ARTIFACTS_CONFIG` is the fallback. No valid
 fallback gives `unconfigured`, and two different fallbacks give
-`ambiguous`.
+`ambiguous`. An invalid `INSTALLED_REGISTER_SCOPES` list also gives
+`unavailable`.
 
 The Worker probes the selected register's metadata without a scope read
 session, a provider call or a native turn. The probe gives `ready` for an
@@ -84,8 +86,8 @@ metadata.
 A host's wiring is `off` with the reason `unconfigured` when its setting
 is absent. Other reasons name the part that is wrong: for Artifacts
 `invalid-config`, `namespace-mismatch` or `missing-binding`, and for
-GitHub `invalid-config`, `private-key`, `read-token`, `creation-token` or
-`cleanup-tokens`.
+GitHub `invalid-config`, `private-key`, `read-token`, `creation-token`,
+`cleanup-tokens` or `repository-bindings`.
 
 Health returns 200 only when `sessions` is `ok`, `register` is `ready`,
 and no configured host has its wiring `off`. Every other result returns
@@ -239,7 +241,7 @@ The client limits the SQL result to 50,000 rows and 16 MiB, health to
 overfull, truncated or malformed reply fails the check, which never
 judges a partial window. A redirect is an error. The query leaves out
 scope indexes, request IDs and trace IDs, and excludes the separate
-[MCP metrics](mcp.md#operational-metrics). The check prints no raw
+[MCP metrics](hosted-mcp.md#operational-metrics). The check prints no raw
 provider response and no token.
 
 Exit 0 means the check passed. Exit 1 means it failed. Exit 2 means an
@@ -281,4 +283,4 @@ this index.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [health.ts](../packages/scope/src/health.ts), [metrics.ts](../packages/scope/src/metrics.ts), [request-index.ts](../packages/scope/src/request-index.ts), [status-report.ts](../packages/cli/src/status-report.ts), [deploy-check.mjs](../scripts/deploy-check.mjs), [wrangler.jsonc](../apps/room/wrangler.jsonc).
+Checked against main `6bfb6e16` on 10 November 2026. Sources: [health.ts](../packages/scope/src/health.ts), [metrics.ts](../packages/scope/src/metrics.ts), [request-index.ts](../packages/scope/src/request-index.ts), [status-report.ts](../packages/cli/src/status-report.ts), [deploy-check.mjs](../scripts/deploy-check.mjs), [wrangler.jsonc](../apps/room/wrangler.jsonc).

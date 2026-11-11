@@ -100,8 +100,11 @@ The scope rows use these shared descriptions:
   before application provenance, receiver policy and foreign facts. A
   definite denial of an ordinary grant refuses before those reads. Native
   grant marks retain their fallback checks, and the commit checks authority
-  again. Only an alarm drains timed work. Remote standing admits at most
-  4,096 signing keys per run, including once-only and failed reads. Rule
+  again. An act with a native grant mark, such as `found` or `join`, and an
+  act whose standing read came back null fetch up to `usesPerEntry` foreign
+  facts before the judge refuses them. Only an alarm drains timed work.
+  Remote standing admits at most 4,096 signing keys per run, including
+  once-only and failed reads. Rule
   expression evaluation follows the grant check. Public parentless creation and
   signed reads first use the serving windows below. Joins keep their
   membership-local window for failed addresses, and also count failures of
@@ -893,8 +896,8 @@ authority to restart an archive.
 
 ## Member read-token reservations
 
-Under ruling `67b1fb7f`, a Destination object admits at most eight open
-read-token reservations per authenticated member. The already judged
+A Destination object admits at most eight open read-token reservations per
+authenticated member. The already judged
 grant's subject supplies the full Membership ScopeRef and member identity.
 Several keys of one member share the bucket. Neither a caller key nor a
 principal or handle prefix chooses it. The full Destination ScopeRef also

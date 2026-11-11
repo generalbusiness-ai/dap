@@ -7,8 +7,8 @@ packages into a staging directory. `scripts/check-public-release.mjs`,
 the checker, inspects what the producer staged. Neither script publishes,
 installs application packages, configures accounts or deploys a service.
 
-Read [Test dap](testing.md) first. The evidence rule there applies to
-every run on this page.
+Read [File test evidence](evidence-filing.md) first. The evidence rule there
+applies to every run on this page.
 
 ## Versions
 
@@ -28,7 +28,7 @@ source and the tool view, and has released the run.
 
 1. Make a clean checkout of the reviewed head.
 2. Make a new evidence directory outside the checkout, as
-   [the evidence rule](testing.md#the-implementation-note-and-its-evidence)
+   [the evidence rule](evidence-filing.md#the-implementation-note-and-its-evidence)
    says: `~/play/artroom-evidence/<date>-<head-slug>/`. Use its absolute,
    canonical path. The staging directory goes inside it, and must not
    exist yet.
@@ -54,7 +54,7 @@ source and the tool view, and has released the run.
    It prints `Compiled SDK output checked` and writes its result to
    `sdk-stage/checks/result.json`.
 7. Write `SHA256SUMS`, make the evidence directory read-only, and commit
-   its manifest, as [File the evidence](testing.md#file-the-evidence)
+   its manifest, as [File the evidence](evidence-filing.md#file-the-evidence)
    says. The checker's result is the proof. Producer output alone is not
    a pass.
 
@@ -121,7 +121,7 @@ and derive exports `.`, `./rule` and `./testing`.
 | contract | `.`, `./catalog-vocabulary` | | |
 | bytes | `.`, `./web` | | contract |
 | derive | `.`, `./rule`, `./field-types`, `./testing` | | bytes, contract |
-| define | `.` | | bytes, contract, derive |
+| define | `.`, `./package`, `./story` | | bytes, contract, derive |
 | package-graph | `.` | | contract, derive |
 | git | `./tree-proof`, `./checkout-types`. No root export | `.` and every other subpath | bytes, contract |
 | platform | `.`, `./membership-actions`, `./application`, `./application-v2`, `./package-validation` | `./testing`, `./application-install` | bytes, contract, derive, package-graph, git |

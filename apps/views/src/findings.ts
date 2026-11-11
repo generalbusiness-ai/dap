@@ -6,7 +6,8 @@ import type { Item, MemberRef } from "@generalbusiness/dap-contract";
 import { FINDING_DIGESTS } from "../../room/lanes/src/digests-finding.ts";
 import { sameOptional, shownText } from "./words.ts";
 
-export const findingProfile = (pin: unknown): boolean => pin === FINDING_DIGESTS.change;
+const RECORDED_FINDING_CHANGE = "sha256:aaf68c3bd82c217312acd7784dfe06bcb7ba6a30a066d0475a7728c62c43a7e7";
+export const findingProfile = (pin: unknown): boolean => pin === RECORDED_FINDING_CHANGE || pin === FINDING_DIGESTS.change;
 /** The clause a finding's attention row names: the guard that holds the merge, and the item it reads. */
 export const FINDING_CLAUSE = "acts.merge#finding-open;items.finding";
 

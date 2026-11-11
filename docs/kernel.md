@@ -52,7 +52,7 @@ is not meant to be kernel, is listed in section 5 with what passing takes.
 | `packages/git` | Platform service | Passes | `derive` has its own commit parser for `git-read@1` (`commitParents` in `derive/src/capability/ancestry.ts`). |
 | `packages/checkers` | Platform service | Passes | A checker signs ordinary intents (`checkers/src/signing.ts`). |
 | `packages/replay` | Platform service (tool): the independent verifier | Passes | It names platform versions and lane names (K6). Its local Git source is a Node adapter (section 8). |
-| `packages/cli` | Platform service (tool) | Passes | It gives replay the platform code (`ARCHIVE_REPLAY_CODE`) and the capability code (`CAPABILITY_CODE`, `derive`'s one table) in `replayOf`, in `cli/src/commands.ts` (K8). |
+| `packages/cli` | Platform service (tool) | Passes | It gives replay the platform code (`ARCHIVE_REPLAY_CODE`) and the capability code (`CAPABILITY_CODE`, `derive`'s one table) in `replayOf`, in `cli/src/command-verify.ts` (K8). |
 | `packages/client` | Platform service (tool): the client library | Passes | None. |
 | `apps/counter` | Application | Passes | None. |
 | `apps/jam` | Application | Passes | A static page with no scope. |
@@ -83,7 +83,7 @@ whether it is one, or a special case that the kernel knows.
 Each item names what passing takes, its status, and the work that covers
 it.
 
-- <a id="k1"></a>**K1. Platform rules are code that replay needs.** A platform scope pins `platform:<name>@<n>`, and replay derives it only with code its caller supplies. The catalog holds 88 versions. Passing takes pinning each version's rules by digest, freezing the shipped versions into the kernel, or replacing the marks with declared forms. Open. Covered by the design note "Platform rules that replay needs".
+- <a id="k1"></a>**K1. Platform rules are code that replay needs.** A platform scope pins `platform:<name>@<n>`, and replay derives it only with code its caller supplies. The catalog holds 100 versions. Passing takes pinning each version's rules by digest, freezing the shipped versions into the kernel, or replacing the marks with declared forms. Open. Covered by the design note "Platform rules that replay needs".
 - **K2. The package graph leaves the production kernel.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
 - **K3. Application codecs leave `bytes`.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
 - **K4. Platform and application vocabulary in `contract` and `derive`.** For example the closed kind list, the closed capability names, the grow device kinds, membership versions in `INVITATION_KEY_MEMBERSHIPS` (`contract/src/invitation.ts`), the rules scope's content in observations (`contract/src/observation.ts`), and lane actions and literal destination versions in `derive`. Passing takes each name into the definition or capability that owns it, as data. Open. No work covers it yet.
@@ -146,6 +146,24 @@ holds the reason for each earlier addition. Rules observation record
 revision 21 is permitted under this section by ruling `1bc4f7fd`: its
 nullable `roomService` and scoped `serviceGeneration` state what a judge may
 know of the Rules scope's admin-published mark and native-selected position.
+
+The first version of the sequenced level is permitted under this section
+by ruling `08c5ff25`. What an input may read when a scope judges it is
+part of the meaning of the judgment, so the level's read at a cut and its
+prepare and commit entries cannot be a platform service or an application.
+The level is designed and not built. The
+[sequenced note](../notes/2026-10-18-sequenced-level-and-order-scope.md),
+section 13.2, lists what it adds to `contract` and `derive`, and the words
+that promises 2, 4 and 5 take when replay handles it.
+
+The first version of the live level is permitted under this section by
+ruling `4b5e0ec2`. A live scope writes its genesis entry and its creator's
+confirmation, and no entry after them. The kernel part is the validator's
+admission of the level and the fold's refusal of a later entry. The code
+that runs live acts is a platform service, because no recorded entry
+depends on it. The level is designed and not built. The
+[live note](../notes/2026-11-10-live-level.md), section 4, gives the
+review and the sentences that promises 1, 7 and 11 gain.
 
 A head adds to the kernel when it does any of these:
 
@@ -216,6 +234,13 @@ These do not wait:
   but it adds one to K1's count, and the change says so.
 - fixes for the filed security findings, R1 to R16 and D1 to D6. They
   still follow section 7 and add no K item.
+- the first version of the sequenced level, by the owner's decision of 10
+  November 2026 and ruling `08c5ff25`. It closes no K item. It adds the
+  scope kind `order` to K4's closed list and the rules of
+  `platform:order@1` to K1's count, and each head that builds it says so.
+- the first version of the live level, by the owner's decision of 10
+  November 2026 and ruling `4b5e0ec2`. It closes no K item, and it adds
+  nothing to K1's count or to K4's list.
 
 A head that adds to the kernel names the K item that it closes, or the
 planner holds it.
@@ -262,11 +287,12 @@ values a recorded field accepts. A host service cannot replace those
 checks or decide their meaning after the entry exists.
 
 `INVITATION_KEY_MEMBERSHIPS`, in `packages/contract/src/invitation.ts`,
-holds the exact pin `platform:membership@9`. That version keeps the private
-invitation proof protocol. Clients use this list to choose the redemption
-fields for the exact native version. A host service or an application
-cannot choose a different credential form for that pin. The entry
-recognizes the version and grants no invitation authority.
+holds the exact pins `platform:membership@6` to `platform:membership@13`.
+Those versions keep the private invitation proof protocol. Clients use
+this list to choose the redemption fields for the exact native version. A
+host service or an application cannot choose a different credential form
+for those pins. Each entry recognizes its version and grants no invitation
+authority.
 
 A `reference` holds exactly one document digest or entry `FactRef`, with an
 optional bounded fragment string. The kernel checks its shape and byte

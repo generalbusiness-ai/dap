@@ -1,0 +1,44 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-page-rebuild/sealed/unit",
+  "head": "01b9e7bfa2c47297ee602da1dd2020cd38a2a9e0",
+  "tree": "f9e52e1779be651994170b9e7028553098a33ed9",
+  "booking": "657a1dd9a3bdd5fd085697c44e26f8205ce79233",
+  "end": "521d999c810bae35d5f1279403eb22f424b04576",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "7448421149200b94179a5a3fc4bed84083a6875cb04f1f46cb0f8ee0ae72d58f",
+      "bytes": 247
+    },
+    {
+      "path": "audit.json",
+      "sha256": "7dda778b2ee16bbd30a49a3dd1cafed5618a8ff03d3674ad7d2d351a17575711",
+      "bytes": 1813
+    },
+    {
+      "path": "output-custody.json",
+      "sha256": "ca7d2fa6495384c985eef0cbf5925525ec9ecdf26ed790b45f76ecf0ee0a68cf",
+      "bytes": 456
+    },
+    {
+      "path": "page-custody.json",
+      "sha256": "bd1bb61f403e3f2b3afda61901de062beceda8cc02fd7a34e6c67dc010311992",
+      "bytes": 989
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-page-rebuild/sealed/private",
+    "manifestSha256": "acdff57429a2292c7be301c61dfebb2269e0869454d4eaff9daf5f539bdcef4f",
+    "files": 48,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T18:46:01.496963+00:00"
+    }
+  },
+  "withheld": [
+    "Originalrawprocesslogs/frozenfulltool+sourcefacts/before-afterassetbuffers/cachecopiedprivately."
+  ],
+  "qualification": "ExactlyonePagebuild/fouractualzeroexits/fourdist-scalaridentities/exactassetdelta. Nootherproducer/compiler/test/control/browser/gate/deploymentacceptance. Originalunits/source/cacheuntouched; copies400/500 only."
+}

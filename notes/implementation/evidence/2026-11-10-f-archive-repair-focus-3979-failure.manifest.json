@@ -1,0 +1,48 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/failed-focus-sealed/unit",
+  "head": "3979f03f126582c0e8f6ebf044c24e8668c5113b",
+  "tree": "bc3fe3d95f7556d47b09871a1091f094a8225cd2",
+  "booking": "94d41fbccf10482ff54db9a5030bd6930fa31cce",
+  "end": "8f25399bd48e718f959279bf5a45578c41f7474b",
+  "originalOutcome": "FAILED",
+  "actualExits": {
+    "launcher": 1,
+    "driver": 1,
+    "command": 1,
+    "runner": 1,
+    "focused": 1
+  },
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "9a069be74f014900c725e92c245e8729efb4bbaca879918f184074f9d2a78c84",
+      "bytes": 169,
+      "mode": 256
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "9d56877e71dfb37633bd86389d5cccc1b7a9cc212625609933de84ee8bcebcc9",
+      "bytes": 130532,
+      "mode": 256
+    },
+    {
+      "path": "terminal-summary.json",
+      "sha256": "e040466f321f468260f46d6429ac6c3b285c24a1a6fda7009eb552aeb5d0ea30",
+      "bytes": 4850,
+      "mode": 256
+    }
+  ],
+  "fullGateResult": null,
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-archive-repair-focus-3979/failed-focus-sealed/private",
+    "manifestSha256": "4ef2af2befe42a27d4264979f6bc4ceda3242e8e085695a4c56afda837d0baf3",
+    "files": 692,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-11T00:27:56.145730+00:00"
+    }
+  },
+  "qualification": "One focused attempt. The earlier failed gate and the new focus retain their own results."
+}

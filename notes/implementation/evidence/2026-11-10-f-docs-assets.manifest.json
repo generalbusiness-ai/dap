@@ -1,0 +1,51 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/independent-audit/unit",
+  "head": "9bf8a1a8745ba25fae616957df59084f03281cb7",
+  "tree": "805bd2e3dae55eac032d6ebf15333ef8e4ef21e5",
+  "booking": "a378ab9f8dfb7b13e0382532f6b3f99d009ccf20",
+  "end": "9565df71593e566d82fea90c37ad5dc8d04ca062",
+  "files": [
+    {
+      "path": "audit.json",
+      "bytes": 5567,
+      "sha256": "a1c92646b212d8fe959df24392ae3faa261850b2fb3007f8c84068867c7362f7"
+    },
+    {
+      "path": "lending-comparison.json",
+      "bytes": 691,
+      "sha256": "51fb58311b718a6e81bf7100d2fc2fdc178a880844eb8facb30228bc6ab6e111"
+    },
+    {
+      "path": "mcp-case-ledger.json",
+      "bytes": 8901,
+      "sha256": "7effb6e63df00209d2e3add707e0f59f8df689ce394cf84c7f95719d39b4e457"
+    },
+    {
+      "path": "output-custody.json",
+      "bytes": 1356,
+      "sha256": "dd69cd275db730df326592da0a7b725ea4189e70df69574fa285e8031be5eacf"
+    },
+    {
+      "path": "page-custody.json",
+      "bytes": 989,
+      "sha256": "af2eb014c40b32fb23e855a73fd2c59e9be2421646b9c84fa6e5473c655aed7e"
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-docs-assets/independent-audit/private",
+    "manifestSha256": "8868b0cd5d7352a05bc1641da43c3772b825b8d57b5dec2222fc0421a032fb41",
+    "files": 444,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T18:11:40.064553+00:00",
+      "action": "Retain all original docs/assets raw/source/frozen buffers, actual new F cache and this owner-only archive. No prior cache payload or historical baseline is reconstructed; no cleanup scheduled or executed."
+    }
+  },
+  "withheld": [
+    "Complete raw/launcher logs, structured reports, post-cleanup full source/tool observations, staged config/compiled cache, exact before/after docs/Page buffers and independent metadata analysis. No generated fixture signing material enters the public unit."
+  ],
+  "readonlyScope": "Only new public/private payloads0400 and directories0500. Original unit, checkout, frozen inputs and dependencies/caches remain untouched.",
+  "qualification": "Seven actual zeros; MCP13 and original Lending bytes reconciled; four Page served scalars match fresh dist. This is bounded production/writer evidence, not F compiler/focus/gate/browser or live-activation acceptance."
+}

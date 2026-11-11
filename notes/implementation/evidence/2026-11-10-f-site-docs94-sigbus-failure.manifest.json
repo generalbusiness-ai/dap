@@ -1,0 +1,64 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-site-docs94-957/sigbus-failure-sealed/unit",
+  "head": "9578637f6294ec85d6db639f25ce308cdb34d290",
+  "tree": "ed0c92d305f7d2f802bd1060f1b99cc872ee6bbf",
+  "booking": "93bb44f8ab5fbb621af8e5218ad5d6acfb1f125d",
+  "end": "0dd3281aead99d0241e31ab663dc1b55b316fb91",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "2179a01a2d894efd4336dbee60369be8bef630f3bf63c9fc4df9383b32f88e1e",
+      "bytes": 604
+    },
+    {
+      "path": "audit.json",
+      "sha256": "abd9c0a9f963db2148ebd4395e17f8f8b28f30b1769865e112c539aa0618253a",
+      "bytes": 3023
+    },
+    {
+      "path": "carry-candidates.json",
+      "sha256": "ee80687ac8c08b0b32489703ab3cf4e964b64879e76be4a1dc1d19036e1247e1",
+      "bytes": 49551
+    },
+    {
+      "path": "compiler-ledger.json",
+      "sha256": "3ed580cb2a17efc8ba8e38d390931567ad465c25324d22d7f89f21a0ca4ccc34",
+      "bytes": 49557
+    },
+    {
+      "path": "diagnostic-summary.json",
+      "sha256": "42dd4d0a8a91677e4f6b32461275861364059772c1e9278064d9989bfe9c0532",
+      "bytes": 468
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "04b70af63ebae3898b04021df71ca8d02bcbab263288e677f970552758c43916",
+      "bytes": 152075
+    },
+    {
+      "path": "reporter-reconciliation.json",
+      "sha256": "9c19d6248e797b40da8335aca0b4efd00490bdd920c7ddff59a1037581c7323e",
+      "bytes": 443
+    },
+    {
+      "path": "runtime-ledger.json",
+      "sha256": "aefeb5764ac244e2c20e091b6ec4239d5e787d58f801b6cafdf52a0f5a672445",
+      "bytes": 40788
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-site-docs94-957/sigbus-failure-sealed/private",
+    "manifestSha256": "64bf0ec8fbdd41231c2a62b59d1756f64d25212be84576f68a415a708d567f9f",
+    "files": 773,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T21:34:23.498444+00:00"
+    }
+  },
+  "withheld": [
+    "Original raw stdout/stderr, compiler diagnostics, full native crash IPS and process/source/tool/frozen/staged/temp/cache payloads stay in the opaque owner-only private archive."
+  ],
+  "qualification": "Actual fifth focus FAILURE. One current compiler pass plus40 historical contexts remain41distinct histories. SIGBUS, child actualExit null;13 individual positives/49unrun grants no complete owner. Node24/Native8 UNRUN. All94 current runtime obligations remain owed;61 historical whole-owner cases remain separate. All four prior runs remain failed; no body repeated."
+}
