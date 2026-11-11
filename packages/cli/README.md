@@ -34,6 +34,6 @@ installed loader and does not state the runtime for the repository gate.
 
 ```
 npx vitest run --project cli            # the key files, in Node
-npx vitest run --project scope story    # the story on real scopes, in workerd
+npx vitest run --project scope-stories story    # the story on real scopes, in workerd
 npm run typecheck --workspace @generalbusiness/dap-cli
 ```

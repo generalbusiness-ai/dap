@@ -10,7 +10,7 @@ import { fixture } from "./views-host.ts";
 interface Scene { kind: string; actor: ActorChip; receipt: string; opened: CallResult; before: Display; pressed: CallResult; refreshed: Display }
 export function nativeActorCards(out: string): { qualification: string; scenes: Scene[] } {
   // The one native owner collects all three identities. The browser never manufactures a member row or a signer label.
-  const output = execFileSync(process.execPath, ["node_modules/vitest/vitest.mjs", "run", "--project", "scope", "packages/mcp/test/change-view.scope.test.ts", "-t", "signed entries and receipts name", "--silent=false", "--reporter=verbose"], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 });
+  const output = execFileSync(process.execPath, ["node_modules/vitest/vitest.mjs", "run", "--project", "scope-stories", "packages/mcp/test/change-view.scope.test.ts", "-t", "signed entries and receipts name", "--silent=false", "--reporter=verbose"], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 });
   writeFileSync(join(out, "native-actor-record.log"), output);
   const record = recordFrom(output, "ACTOR-RECORD") as { qualification: string; scenes: Scene[] };
   if (record.scenes.map(scene => scene.kind).join(",") !== "person,agent,checker") throw Error("Native actor record lacks an identity.");
