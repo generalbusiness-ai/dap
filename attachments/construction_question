@@ -1,0 +1,131 @@
+# Private source kind after the reference cutover
+
+A planner decision is needed before this slice changes. Section 8 requires a
+handler to obtain sender kind from verified genesis. Existing offline Replay
+can instead judge retained private Register and Membership entries without
+reading or exporting their genesis. The new wire format removes the kind
+that those retained entries currently carry.
+
+This question concerns only that existing exact-anchor private-copy path.
+It does not open implementation, export more private bytes, add a resolver,
+or change live authority. All facts below come from source at main
+`df41e59964f09ce1d723ce870f5e4e5c6d8d4641`. No application or validation ran.
+
+## The current path reaches actual judgment
+
+1. `scope/src/archive-source-pins.ts:43–54` accepts an authorized fixture
+   birth read, verifies its canonical bytes, entry hash, seed-derived address,
+   incarnation and kind, and selects its exact native pin. Its header states
+   that this is metadata, not consent or permission to export a payload.
+   `archive-inventory.ts:84–111,203–205` separately checks privacy and emits
+   only selected copies plus a descriptive source basis.
+2. `git/src/journal-selection.ts:33,98` and the v2 manifest hold source rows
+   `{at,pin}`. The old `at` includes kind. The journal readers check copy
+   identity and the selected pin. The v2 reader publishes the bounded source
+   table at `journal-v2-reader.ts:198–206`; it does not turn that table into
+   a source-history or birth proof.
+3. `git/src/journal-anchors.ts:52–69` limits published caller anchors to
+   Register and Membership kinds, exact facts, canonical order, and scopes
+   outside the archived public set. Each anchor and descriptive visit pays
+   the existing work and metadata bounds. Publishing a list does not make
+   Replay trust it automatically.
+4. `replay/src/archive.ts:168–184` recognizes only an exact caller-anchored
+   private fact and the finite catalog's Register or Membership pin. It
+   supplies the retained definition name at `286–307` without opening the
+   private journal. Its comment explicitly says this proves no birth or
+   source history. Missing or wrong descriptive metadata takes the ordinary
+   unavailable-history path instead.
+5. `replay/src/verify.ts:1540–1565` records an exact anchor as `anchored`
+   and adds anchor trust. `2050–2089` still builds actual `Fetched` copies
+   and leaves an anchored copy's retained name in place. It then passes
+   those copies to `judgeGenesis` at `2184–2200` or `judgeDelivery` at
+   `2241–2275`. Anchoring does not skip judgment.
+6. Kind participates in that judgment. `verify.ts:2158–2159` uses sender
+   kind before field-bound handling. `derive/src/handlers.ts:49–61` selects
+   a handler by sender kind. `derive/src/delivery.ts:246` uses kind in a
+   copies bound. Only a handler declaring `from.pin` invokes the extra
+   `#identityFrame` path at `verify.ts:2268–2271`. Its comment at
+   `1952–1954` says anchors alone supply no code or birth authority.
+
+The current trust text at `verify.ts:293` includes observed values and each
+retained definition name. It does not explicitly authorize a new external
+sender-kind assertion in place of the kind in the retained entry.
+
+## The missing information is concrete
+
+Today an anchored non-genesis copy contains `entry.at.kind` in the entry's
+hashed bytes. Its exact caller anchor therefore binds that value when the
+copy matches its fact. Under section 8, a non-genesis entry contains only the
+sequence's genesis digest, and its `FactRef.at` contains `{scope,genesis}`.
+Neither reveals the kind. A genesis digest is not its seed's preimage.
+
+The missing evidence is the canonical genesis entry whose hash equals
+`FactRef.at.genesis`, with a seed whose digest gives `FactRef.at.scope`.
+Its verified `input.seed.kind` supplies the required kind. An authorized
+exporter can know that kind from its private birth read, but a later
+`foreignSources` row carrying the kind would remain descriptive metadata.
+It cannot prove the seed-kind binding to an offline reader that has no
+birth bytes. A finite reviewed definition pin is an allowlist fact, not a
+proof that this particular sequence has that birth.
+
+There is no gap when the actual retained copy is genesis, or when the
+needed genesis bytes already exist in the permitted retained set and pass
+all identity checks. Those cases can use verified kind without another
+fetch or export. The question concerns non-genesis private copies whose
+permitted closure omits genesis.
+
+## The existing witness exercises the affected case
+
+`replay/test/archive.test.ts:133–194`, titled “exact caller anchors classify
+reviewed private Register copies without admitting unknown archive names”,
+builds real Register and Directory judgments in a labelled in-memory fixture.
+It creates a Register founding act and confirmed outcome, then uses that
+non-genesis outcome as the Directory's creation source. It anchors the
+retained Register facts and expects full Replay `consistent`, with the
+anchors listed and zero private journal reads. Without anchors it expects
+missing dependency. Wrong pin or kind must not take the private shortcut.
+
+That test does not run a live Worker or export private history. Its current
+successful expectation must not survive by assigning an unverified kind to
+a new verified-genesis context.
+
+## Two possible ruled behaviors
+
+**A. Preserve the portable result with an explicit replay-only trust basis.**
+Allow a bounded, closed caller trust record for the exact SequenceRef, kind,
+and finite native pin alongside the exact fact anchor. Keep this record
+separate from verified birth evidence and show the kind assumption in the
+report's trust statement. Archive metadata alone must not manufacture the
+caller assumption. Live admission still reads and retains verified genesis;
+existing `from.pin` and native birth-proof requirements still require their
+real evidence.
+
+This keeps private genesis outside the archive. It adds a new explicit trust
+assumption and a small caller/manifest/report interface. It needs a planner
+clarification of section 8 for this narrow offline path. Its witnesses must
+bind the exact scope, genesis, kind, pin and fact, preserve the finite cohort,
+and distinguish a matching caller assertion from tampered or absent archive
+metadata. No result may call this verified genesis or Native birth proof.
+
+**B. Require verified genesis and report incomplete when it is absent.**
+Use only an already permitted, verified genesis copy to recover kind. If a
+kind-dependent new-format judgment lacks that copy, stop with the owning
+incomplete or missing-dependency result rather than guess. Do not fetch or
+export a private source merely to retain the previous successful result.
+A separately authorized caller-supplied genesis can serve only after the
+same complete identity and bounds checks; no automatic closure expansion
+follows from this option.
+
+This follows the strict sender-kind rule without a new trust assumption,
+but the existing non-genesis exact-anchor fixture loses its prior portable
+`consistent` result when birth is absent. The planner must accept that
+behavioral cost. Strengthen the existing owner to show the truthful failure
+with zero private reads, and show success only when verified genesis already
+belongs to the allowed input set. The exact result vocabulary belongs to
+its actual missing-evidence boundary, not a new successful anchor shortcut.
+
+Both choices preserve copy classification, exact caller anchors, finite
+catalog selection, admission and byte-work ceilings, and the ban on broad
+private-genesis discovery or export. Neither changes old journals: retained
+old-format Replay remains their reader. Other c+d source mapping can
+continue while this one construction choice awaits a ruling.
