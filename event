@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7b9e81ab91a1eddf0578ac55164d4be0cfb18ba7","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/actor-cards.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:821367ddc1e3f958f7f482a7a4d164a51e96a6b7","text":"Merge retired a covered predecessor; the successor is at scripts/test-summary.mjs."}
