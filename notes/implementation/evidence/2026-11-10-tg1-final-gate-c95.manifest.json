@@ -1,0 +1,48 @@
+{
+  "request": "6a3a7fccf752dd841226f78071a51b566a74087b",
+  "promise": "af287821038111e452959ff3e62c5dd612cc7dae",
+  "head": "c95bc118db07afbd87485608a95d4baf3b2c759f",
+  "tree": "92cdd6efaa3c412d31c42b7c93d221bc4a8553d3",
+  "booking": "df00b230b2457551b2ea0a306b748257968c3b5f",
+  "end": "1f02105139d0984a88d1ad6c7d63a7983e91c722",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-final-gate-c95-sealed/unit",
+  "originalOutcome": "PASSED",
+  "actualExits": {
+    "gate": 0,
+    "innerDriver": 0,
+    "outerDriver": 0,
+    "launcher": 0,
+    "command": 0
+  },
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "954bf61fc16edd1636b459046ecaf459b48fcb027039c83f660346c421d91c82",
+      "bytes": 169,
+      "mode": 256
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "cc3573b671abcefe8cf53d1d5a14447ef709510bd5abb8e4e39d1e660477f70d",
+      "bytes": 603938,
+      "mode": 256
+    },
+    {
+      "path": "terminal-summary.json",
+      "sha256": "121d0ec6255a1614dc7a7d2b20763ebae3a8e7d38a48a972c57da98901a3cff3",
+      "bytes": 10111,
+      "mode": 256
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-final-gate-c95-sealed/private",
+    "manifestSha256": "ec77ecc96324b90dcd7834e0bef10ea6bd72ca41064a60d6f35b7a0050f1cb3d",
+    "files": 2822,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-11T03:15:57.589330+00:00",
+      "qualification": "Keep private custody for at least 30 days after landing."
+    }
+  },
+  "qualification": "Gate custody only. Review, landing, CI, live acceptance and deployment remain separate."
+}

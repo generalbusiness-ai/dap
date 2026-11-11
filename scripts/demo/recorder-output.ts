@@ -7,10 +7,10 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 
-/** Run one recorder test in the `scope` project, and answer its stdout. */
+/** Run one recorder test in the `scope-stories` project, and answer its stdout. */
 export function recorderLog(root: string, target: string, env: Record<string, string>): string {
   try {
-    return execFileSync(process.execPath, [join(root, "node_modules/vitest/vitest.mjs"), "run", "--project", "scope", target, "--silent=false", "--reporter=verbose"], {
+    return execFileSync(process.execPath, [join(root, "node_modules/vitest/vitest.mjs"), "run", "--project", "scope-stories", target, "--silent=false", "--reporter=verbose"], {
       cwd: root, env: { ...process.env, ...env }, encoding: "utf8", maxBuffer: 256 * 1024 * 1024,
     });
   } catch (error) {
