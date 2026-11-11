@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/public-release.json","body":{"commit":"ce516e9beae4d14b4839a18765cc7638d2812a82","path":"scripts/public-release.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:05c651943397d3f9622cca89a0c3f71cbd11c793","text":"Merge retired a covered predecessor; the successor is at examples/lending/package.ts."}
