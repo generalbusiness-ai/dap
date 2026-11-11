@@ -1,0 +1,41 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-eleven-pins/partial-audit/unit",
+  "head": "d4cb0cb2f005dd5eaae5cc0f44f209bb66e37ad9",
+  "tree": "43cd23a5c945c98e101b6549b0b12cf7ce1cf75a",
+  "booking": "c9bdffdb9f735b5c39319638a5a8867ca0e8e7ec",
+  "end": "9e060bba7ce1ccc102184398568f647611878e41",
+  "files": [
+    {
+      "path": "census-identities.json",
+      "bytes": 3501,
+      "sha256": "bc626f610097ff60cd45cdfa3010ca57ba0aa7021b3582e9b9b937788abe40d5"
+    },
+    {
+      "path": "default-output-custody.json",
+      "bytes": 4339,
+      "sha256": "3255d35472800fb8809eae261e9868a14116fe75395101caf1232784f7a0db3e"
+    },
+    {
+      "path": "partial-audit.json",
+      "bytes": 8185,
+      "sha256": "b1428575da8c81cc701b153aae0562377573c83c298fc3ca3d643818fd4efaab"
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-eleven-pins/partial-audit/private",
+    "manifestSha256": "c308756580804d9fc22f3223c3669db9ab1fccb569c5b1e4c53fa2ddc22b355b",
+    "files": 179,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T16:36:10.287430+00:00",
+      "action": "Retain original F source/raw buffers, frozen code/plans/inputs and this archive. The old mutable E cache payload was not captured; only its contemporaneous hash and later observations remain. No cleanup scheduled or executed."
+    }
+  },
+  "withheld": [
+    "Complete original F raw buffers/logs, old/current eleven-declaration payloads, frozen code/plans/inputs and exact before/after default outputs. Old E mutable cache payload was not retained; its original hash and later metadata observations remain. No private signing keys or custody read."
+  ],
+  "readonlyScope": "Only new public/private payloads0400 and directories0500; this audit leaves original raw/frozen/source/dependency/cache paths untouched. The E gate may continue changing its own cache separately.",
+  "qualification": "Original body failed2 after census0/default0. This archive claims successful census/default only; J4/finding/fresh verification remain unrun. No retry or source adoption."
+}

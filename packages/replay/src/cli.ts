@@ -19,11 +19,12 @@ import { verifyArchive, type ArchiveSource } from "./archive.ts";
 import { render } from "./report.ts";
 import { httpSource, type Fetch } from "./source.ts";
 import { SourceError, verify, type Options, type Anchor } from "./verify.ts";
+import { CITATION_USAGE, citationMain, type CitationIo } from "./citation-cli.ts";
 
-export const USAGE = "usage: artroom-replay <service URL> <scope ID> [options]\n       artroom-replay --git <clone> [<scope ID>] [--texts <directory>] [--receipt <file>] [options]\n       artroom-replay --git <clone> --all [--expect-journals 5] [--trust-published-anchors] [--json]\n       artroom-replay --git <clone> --check-secrets [--json]\noptions: [--mode integrity|replay] [--head <seq>:<hash>] [--anchor <scope>:<seq>:<hash>]... [--json]";
+export const USAGE = "usage: artroom-replay <service URL> <scope ID> [options]\n       artroom-replay --git <clone> [<scope ID>] [--texts <directory>] [--receipt <file>] [options]\n       artroom-replay --git <clone> --all [--expect-journals 5] [--trust-published-anchors] [--json]\n       artroom-replay --git <clone> --check-secrets [--json]\noptions: [--mode integrity|replay] [--head <seq>:<hash>] [--anchor <scope>:<seq>:<hash>]... [--json]\n" + CITATION_USAGE;
 
 /** Where the command writes, and the `fetch` it reads with. */
-export interface Io {
+export interface Io extends CitationIo {
   out(text: string): void; err(text: string): void; fetch?: Fetch;
   /** The Node entry supplies these caller-selected ports; portable main has no filesystem access. */
   archive?: (directory: string, texts?: string) => ArchiveSource;
@@ -35,6 +36,7 @@ export interface Io {
 }
 
 export async function main(argv: readonly string[], io: Io): Promise<number> {
+  if (argv[0] === "--citation") return citationMain(argv, io);
   const usage = (what: string): number => {
     io.err(`${what}\n${USAGE}`);
     return 2;

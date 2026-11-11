@@ -1,0 +1,52 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-editor-8dc1381c/sealed/unit",
+  "head": "8dc1381c732132be8a6d378697e0b87191bd2801",
+  "tree": "7cfdcf8fc7a1a03d56dd849134ee3bce7c1474b1",
+  "booking": "7718926b0d9d27e8c4830a4e07bf6a2f4cbb782b",
+  "end": "88e648ea97eebca5fde085494aa37abcc5f2ece6",
+  "files": [
+    {
+      "path": "chart.mmd",
+      "sha256": "c844121af3d56a51b1a2c83be635599146039578a8e89b5f9c65b0e3926af0d2",
+      "bytes": 497,
+      "mode": 256
+    },
+    {
+      "path": "report.md",
+      "sha256": "c7f11b32b522bd58309e9f424399dc2d346fa518d3f7a0f593947fb25144eb59",
+      "bytes": 195,
+      "mode": 256
+    },
+    {
+      "path": "reproduce.json",
+      "sha256": "ae3a54391309b5691922ae5bcba1558d909796304bacd0d8aa450fef47f5d3fc",
+      "bytes": 1602,
+      "mode": 256
+    },
+    {
+      "path": "source-correspondence.json",
+      "sha256": "33af646c20683cadb26c224fb7242d6ab921ecc42e39b36cb9d52f8817c3a7fc",
+      "bytes": 1497,
+      "mode": 256
+    },
+    {
+      "path": "summary.json",
+      "sha256": "c192674f053c14df55afe2d0cdc2b84234fae8e03127f5e513d3187eac5a12fd",
+      "bytes": 1454,
+      "mode": 256
+    }
+  ],
+  "privateCustody": {
+    "opaqueManifestSha256": "eb754758361f73d33ed3a7841e79afa2253f3e328b537a4e3b24e9da4fe56de7",
+    "files": 93,
+    "copiedOriginalDirectories": 27,
+    "preservedStatechartRoles": 3,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T19:39:59.271032+00:00"
+    }
+  },
+  "qualification": "One actual narrow Editor check and statechart passed; no full F focus/gate/deployment/live acceptance. Full raw logs/paths/temporary artifacts stay opaque and private. No model/source/diagram regeneration or validation repeat."
+}

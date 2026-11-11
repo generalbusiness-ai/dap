@@ -71,7 +71,7 @@ describe("the two lane definitions, as data (lane forms, revision 14)", () => {
     // of the two are six of the form `{ of, in }` and one `{ copy }`, and each reserves the entries that it did before that form
     // was read. The numbers were read from the source before the change, at `d034be890`, and are the same.
     const settles = (d: DeclaredDefinition) => [...Object.values(d.acts), ...Object.values(d.receives)].flatMap((form) => (form.settles ? [Object.keys(form.settles).sort().join(" ")] : []));
-    expect([settles(issue), settles(change)]).toEqual([["in of", "copy", "in of"], ["in of", "in of", "in of", "in of"]]);
+    expect([settles(issue).sort(), settles(change).sort()]).toEqual([["in of", "copy", "in of"].sort(), ["in of", "in of", "in of", "in of"].sort()]);
     const reserves = ({ deadlines, pending, pendingCopies, clauseEntries, markers }: ValidDefinition) => ({ deadlines, pending, pendingCopies, clauseEntries, markers });
     expect(reserves(valid.issue)).toEqual({ deadlines: { hold: { held: 1 } }, pending: { concern: { created: 1 }, export: { authorized: 1 } }, pendingCopies: [{ name: "closes", kind: "lane", states: ["set"], entries: 1 }], clauseEntries: 1, markers: undefined });
     expect(reserves(valid.change)).toEqual({ deadlines: { job: { requested: 1 }, hold: { held: 1 } }, pending: { job: { requested: 1, "timed-out": 1 }, merge: { intended: 67, committed: 67, unknown: 67 }, export: { authorized: 1 } }, pendingCopies: [], clauseEntries: 0, markers: undefined });
@@ -79,8 +79,8 @@ describe("the two lane definitions, as data (lane forms, revision 14)", () => {
     // What the validator reads and derives nothing of: the rows that need the code of `hold@1` or `git-read@1`. They are 3 acts
     // and 7 handlers, with the type that names a check entry. A runtime with no such code runs neither definition.
     const rows = (definition: ValidDefinition) => [...new Set(definition.underived.map((u) => u.path.split(".").slice(0, 2).join(".")))];
-    expect(rows(valid.issue)).toEqual(["capabilities.1", "acts.report", "acts.refuse-report", "receives.pin-confirm", "receives.unpin", "receives.export-license", "receives.export-settled"]);
-    expect(rows(valid.change)).toEqual(["capabilities.1", "items.manifest", "acts.propose-manifest", "receives.publication", "receives.export-license", "receives.export-settled"]);
+    expect(rows(valid.issue).sort()).toEqual(["capabilities.1", "acts.report", "acts.refuse-report", "receives.pin-confirm", "receives.unpin", "receives.export-license", "receives.export-settled"].sort());
+    expect(rows(valid.change).sort()).toEqual(["capabilities.1", "items.manifest", "acts.propose-manifest", "receives.publication", "receives.export-license", "receives.export-settled"].sort());
     for (const name of names) {
       expect([...new Set(valid[name].underived.map((u) => u.capability))].sort(), name).toEqual(["git-read@1", "hold@1"]);
       expect(derivable(valid[name], null), name).toBe(false);

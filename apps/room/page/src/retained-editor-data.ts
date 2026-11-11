@@ -75,7 +75,9 @@ function supports(declared: DeclaredDefinition, fields: Record<string, FieldValu
     const expected = [{ party: { slot: "integrator", from: { signer: true } } }, { party: { slot: "authors", from: [{ signer: true }] } }, ...["base", "path", "digest", "size"].map(slot => ({ value: { slot, from: { field: slot } } })), { value: { slot: "complete", from: { const: true } } }];
     const requests = ask.sends.filter(s => "tell" in s && s.tell.message === "rules-wanted");
     return requests.length === 1 && expected.every(wanted => file.effects.filter(e => (e.of === undefined || e.of === "on") && ("party" in wanted ? "party" in e && e.party.slot === wanted.party.slot : "value" in e && e.value.slot === wanted.value.slot)).length === 1 && file.effects.some(e => canonicalize(e) === canonicalize(wanted)))
-      && ask.sends.some(s => "tell" in s && s.tell.message === "rules-wanted" && !s.tell.if && canonicalize(s.tell.to) === canonicalize({ slot: "rulesScope", of: "on" }));
+      && ask.sends.some(s => "tell" in s && s.tell.message === "rules-wanted" && !s.tell.if
+        && (canonicalize(s.tell.to) === canonicalize({ slot: "rulesScope", of: "on" })
+          || canonicalize(s.tell.to) === canonicalize({ slot: "rulesScope" })));
   } catch { return false; }
 }
 async function currentRoom(room: Room, options: EditOptions): Promise<Room> { check(options); const fresh = await openRoom(room.session, { directory: room.directory, membership: room.membership }); check(options); if (fresh.rules !== room.rules || fresh.destination !== room.destination || fresh.me?.handle !== room.me?.handle || fresh.key !== room.key) throw new Unreadable("The room identity changed. Nothing new was sent."); return fresh; }

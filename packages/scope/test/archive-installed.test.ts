@@ -6,7 +6,7 @@ import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test"
 import { expect, inject, test, vi } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type ScopeRef, type Sealed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, encodeItemQueryParameter, isDigest, isEntry, isFactRef, isScopeId, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
-import { readApplicationPackage2, readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
+import { packApplication2, readApplicationPackage2, readPublishedApplicationPackage2, type ApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ARCHIVE_REPLAY_CODE, FAILED_CLAIM_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
@@ -65,6 +65,52 @@ import { CAPABILITY_CODE, production } from "../src/ports.ts";
 import { rita, una, vic, routed } from "./repository.ts";
 import { net, soon } from "./net.ts";
 import type {} from "./support/maintained-applications.ts";
+import { fixedSigner } from "./fixtures-core.ts";
+import retainedGrowRoom from "./support/retained-archive-grow-room.json.txt?raw";
+import retainedGrowSite from "./support/retained-archive-grow-site.json.txt?raw";
+
+const retainedGrowPins = {
+  site: "sha256:69424c1bbbf7c2f81528fcc6c910b1230a88d061ac3655c5bde916aaa2572c56",
+  room: "sha256:5e2d34fa9965662aa508aaaffd83bdcd4198746ae8d4a8dd24654d74289529a4",
+} as const;
+const retainedGrowRoomText = "sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530";
+
+/** Keep the measured declaration bytes and reuse the fresh TEST packet's
+ * public metadata and assets. The wire codec derives the exact create edges. */
+function retainedGrowPacket(freshGrow: ApplicationPackage2) {
+  const signer = fixedSigner(254);
+  expect(signer.key).toBe(freshGrow.release.manifest.publisher);
+  const { creates: _creates, ...semantic } = freshGrow.semantic;
+  const { semantic: _semantic, ...presentation } = freshGrow.presentation;
+  const pins = new Map<Digest, Digest>([
+    [semantic.entry, retainedGrowPins.site],
+    [semantic.projections["grid"]!.definition, retainedGrowPins.room],
+  ]);
+  if (pins.size !== 2 || semantic.definitions.length !== pins.size) throw Error("The Grow fixture must have one Site and one Room.");
+  const retainedPin = (current: Digest): Digest => {
+    const retained = pins.get(current);
+    if (!retained) throw Error("A Grow fixture reference must name its Site or Room.");
+    return retained;
+  };
+  const { name, version } = freshGrow.release.manifest;
+  return packApplication2({ name, version, presentation, semantic: {
+    ...semantic,
+    entry: retainedPin(semantic.entry),
+    definitions: [
+      { id: retainedGrowPins.site, bytes: retainedGrowSite },
+      { id: retainedGrowPins.room, bytes: retainedGrowRoom },
+    ],
+    projections: Object.fromEntries(Object.entries(semantic.projections).map(([key, projection]) =>
+      [key, { ...projection, definition: retainedPin(projection.definition) }])),
+    connections: semantic.connections.map(edge => ({
+      ...edge, from: retainedPin(edge.from), to: edge.to === "outside" ? edge.to : retainedPin(edge.to),
+    })),
+    rights: Object.fromEntries(Object.entries(semantic.rights).map(([key, right]) =>
+      [key, { ...right, owner: retainedPin(right.owner) }])),
+    exercises: semantic.exercises.map(exercise => ({ ...exercise, definition: retainedPin(exercise.definition) })),
+    order: semantic.order.map(row => ({ ...row, definition: retainedPin(row.definition) })),
+  } }, signer);
+}
 
 const inline = new Set<Input["type"]>(["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"]);
 /** TEST control for independent historical gross-ceiling receipts only.
@@ -150,14 +196,26 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
   test(producerTitle, { timeout: 30_000 }, async context => {
   const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || scenario === "Grow Room A shape" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
   let roomAFan: number | null = null;
-  const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : (() => {
+  const prepared = kind === "fixture" ? await applicationOwnedScopesPacket() : await (async () => {
     const captured = inject("maintainedApplications")[productionScenario ? "growDemo" : "grow"], bytes = unb64url(captured.bytes);
     if (!bytes) throw Error("The maintained TEST Grow packet must be captured.");
-    const packet = (productionScenario ? readPublishedApplicationPackage2 : readApplicationPackage2)(bytes, captured.release), rootId = packet.package.semantic.entry, childId = packet.package.semantic.projections["grid"]!.definition;
+    const packet = productionScenario ? readPublishedApplicationPackage2(bytes, captured.release)
+      : scenario === "Grow" ? await retainedGrowPacket(readApplicationPackage2(bytes, captured.release).package)
+      : readApplicationPackage2(bytes, captured.release);
+    const rootId = packet.package.semantic.entry, childId = packet.package.semantic.projections["grid"]!.definition;
     const definition = (id: Digest) => parseStrict(packet.package.semantic.definitions.find(part => part.id === id)!.bytes) as DeclaredDefinition;
     return { packet, rootId, childId, root: definition(rootId), child: definition(childId) };
   })();
   const { packet, root, child, rootId, childId } = prepared;
+  const signedChild = packet.package.semantic.definitions.find(part => part.id === childId)!.bytes;
+  const canonicalChildText = scenario === "Grow publication" || scenario === "Grow failed-claim"
+    ? { digest: textDigest(signedChild), bytes: utf8(canonicalize(signedChild)).length }
+    : null;
+  if (scenario === "Grow") {
+    expect([rootId, childId]).toEqual([retainedGrowPins.site, retainedGrowPins.room]);
+    expect(signedChild).toBe(retainedGrowRoom);
+    expect(textDigest(signedChild)).toBe(retainedGrowRoomText);
+  }
   if (productionScenario) {
     expect(packet.ids.release).toBe(DEMO_RELEASE);
     expect(packet.package.release.manifest.publisher).toBe(DEMO_PUBLISHER);
@@ -1332,8 +1390,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     // are caller-trusted; copied bodies supply no source proof.
     const diagnosticObjects = productionPeer?.data ?? new Map([...diagnosticArchives.values()].flatMap(archive => archive.objects.map(object => [object.id, object] as const)));
     const diagnosticRefs = productionPeer?.refs ?? new Map([...diagnosticArchives].map(([scope, archive]) => [journalRef(scope), archive.commit]));
-    const omittedDigest = productionScenario ? textDigest(packet.package.semantic.definitions.find(part => part.id === childId)!.bytes)
-      : "sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530";
+    const omittedDigest = productionScenario ? textDigest(signedChild) : canonicalChildText?.digest ?? retainedGrowRoomText;
     const knownDeclarationTexts = packet.package.semantic.definitions.map(part => ({ digest: textDigest(part.bytes), bytes: utf8(canonicalize(part.bytes)).length }));
     const nativeExpectedOmissions = productionScenario ? (await Promise.all(allHistories.map(async ({ scope, read }) => {
       // Exact signed installation inputs, with direct Native scalar sizes
@@ -1367,7 +1424,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(sizes).toEqual(expected.map(row => ({ digest: row.digest, size: row.bytes })));
     }
     const declarationFirst = productionScenario ? nativeStageOracle!.fact.seq : 5;
-    expect(expectedOmissions.some(row => row.digest === omittedDigest && row.first.at.scope === D.name && row.first.seq === declarationFirst)).toBe(true);
+    expect(expectedOmissions.some(row => row.digest === omittedDigest
+      && (canonicalChildText === null || row.bytes === canonicalChildText.bytes)
+      && row.first.at.scope === D.name && row.first.seq === declarationFirst)).toBe(true);
     const probe = allHistories[0]!;
     const memberHead = productionScenario ? nativeInstallOracle!.memberHead : expectedAnchors.find(fact => fact.at.scope === M.name && fact.seq === 4)!;
     const nativeRulesRows = allHistories.find(history => history.scope.name === A.name)!.read.value;

@@ -1,0 +1,59 @@
+{
+  "request": "2ad35350c6d16f6af44163ac92778cf1dc3ba88f",
+  "promise": "226d90000f49ddd6c0b93d5a0b6fd791cd5814d2",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-continuation18-8dc/plain-failure-sealed/unit",
+  "head": "8dc1381c732132be8a6d378697e0b87191bd2801",
+  "tree": "7cfdcf8fc7a1a03d56dd849134ee3bce7c1474b1",
+  "booking": "372e08d6c596b8392d3960f288331de0e71dbd66",
+  "end": "9700268953a97e000b52ad9ca2d032f436690e51",
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "8bdfe5922c2c1789b3dc65da1c761eca135fbada76773424ebf963e217b094b5",
+      "bytes": 514
+    },
+    {
+      "path": "audit.json",
+      "sha256": "98d589c0c51de67ab8f679e981cef90bfe855070bd83b8981fe2188c763b8619",
+      "bytes": 2379
+    },
+    {
+      "path": "carry-candidates.json",
+      "sha256": "3d97e236db3b322770ac56eaebf87e19968749ba453a5291662f9b020f1b9765",
+      "bytes": 50695
+    },
+    {
+      "path": "compiler-ledger.json",
+      "sha256": "d000b61ea515ba077dd540f0d717756427257fb9bd2b4a7ed211697b23c3ca7a",
+      "bytes": 47453
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "f3c241259e5e881e051ca91cde6dd55a2a79883803a210cd8164531005d0fc60",
+      "bytes": 15919
+    },
+    {
+      "path": "reporter-reconciliation.json",
+      "sha256": "c0c6d272018f37296eb90a6bb0311b45e35092e6e9a7b643a2f1b12ad1d4286a",
+      "bytes": 678
+    },
+    {
+      "path": "runtime-ledger.json",
+      "sha256": "dbdb6f5689ced7ecd223677d275501e59af3be98a24f3182903f66f02978a2c2",
+      "bytes": 64149
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-f-focus-continuation18-8dc/plain-failure-sealed/private",
+    "manifestSha256": "74d1993924378be502aa95a977d6fd68498fd5bc7901d5eeb7e67ecfbfcaa2bf",
+    "files": 96,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-10T19:36:10.071376+00:00"
+    }
+  },
+  "withheld": [
+    "Original raw stdout/stderr, compiler diagnostics and process/source/tool/frozen/staged/temp/cache payloads stay in the opaque owner-only private archive."
+  ],
+  "qualification": "Classification of actual partial Plain FAILURE;18current+23prior compiler positives give41distinct histories. Only3completeowners29cases passed;114runtime cases remain owed. Application-examples filepassed with3aborted/skipped cases grants no carry. Allcarry candidates require nextrepair exact source/tool/import closure. No body repeated."
+}

@@ -32,7 +32,7 @@ const bridgeRoot = join(output, "native-runs"); await mkdir(bridgeRoot, { mode: 
 const bridge = await containerBridge(settings, bridgeRoot);
 let status = 1;
 try {
-  const argv = [join(root, "node_modules/vitest/vitest.mjs"), "run", "--config", "scripts/test/j3-runner.config.mjs", "--project", "scope", "apps/room/lanes/test/manifest-tree.scope.test.ts", "-t", "dap edit uses a one-element reservation tree", "--reporter=default", "--reporter=json", `--outputFile.json=${join(output, "native.json")}`, "--silent=false"];
+  const argv = [join(root, "node_modules/vitest/vitest.mjs"), "run", "--config", "scripts/test/j3-runner.config.mjs", "--project", "scope-stories", "apps/room/lanes/test/manifest-tree.scope.test.ts", "-t", "dap edit uses a one-element reservation tree", "--reporter=default", "--reporter=json", `--outputFile.json=${join(output, "native.json")}`, "--silent=false"];
   const started = performance.now(), streams = { stdout: [], stderr: [] }; let count = 0, killed = false;
   const child = spawn(process.execPath, argv, { cwd: root, env: { ...process.env, ARTROOM_J3_NATIVE: JSON.stringify(bridge.settings) }, detached: true, stdio: ["ignore", "pipe", "pipe"] });
   const stop = () => { if (killed) return; killed = true; try { process.kill(-child.pid, "SIGTERM"); } catch {} };

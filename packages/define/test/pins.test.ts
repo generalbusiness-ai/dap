@@ -6,10 +6,12 @@
 import { expect, test } from "vitest";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { CURRENT_DEFINITION_PINS } from "./fixtures/current-definition-pins.ts";
 const lendingData = JSON.parse(readFileSync(new URL("../../../examples/lending/definition.json", import.meta.url), "utf8")) as DeclaredDefinition;
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
 const commitmentsData = JSON.parse(readFileSync(new URL("../../../apps/counter/commitments.json", import.meta.url), "utf8")) as DeclaredDefinition;
@@ -26,6 +28,14 @@ const witness = (built: Parameters<typeof compile>[0], pinned: DeclaredDefinitio
   expect(findings).toEqual([]);
   const checked = validateDefinition(definition, PROPOSED_BOUNDS, RULE_PROFILES);
   expect(checked.ok ? [] : checked.problems).toEqual([]);
+  return { definition, digest };
+};
+
+const retained = (source: Parameters<typeof compile>[0], data: DeclaredDefinition, expected: (typeof CURRENT_DEFINITION_PINS)[keyof typeof CURRENT_DEFINITION_PINS]) => {
+  const { definition } = witness(source, data, expected.pin);
+  const bytes = canonicalize(definition);
+  expect(Buffer.byteLength(bytes)).toBe(expected.bytes);
+  expect(createHash("sha256").update(bytes).digest("hex")).toBe(expected.sha256);
 };
 
 test("lending compiles to the pinned definition", () => witness(lending, lendingData, LENDING_DEFINITION));
@@ -33,8 +43,8 @@ test("the live Counter (counting commitments) compiles to the pinned definition"
 
 // ---------------------------------------------------------------- grow: canonical spelling
 
-import { room as roomData } from "../../../examples/grow/room.ts";
-import { site as siteData } from "../../../examples/grow/site.ts";
+const roomData = JSON.parse(readFileSync(new URL("../../../examples/grow/definitions/room.json", import.meta.url), "utf8")) as DeclaredDefinition;
+const siteData = JSON.parse(readFileSync(new URL("../../../examples/grow/definitions/site.json", import.meta.url), "utf8")) as DeclaredDefinition;
 import { room } from "./fixtures/grow-room.ts";
 import { growSite } from "./fixtures/grow-site.ts";
 import { normalize } from "../src/index.ts";
@@ -49,64 +59,66 @@ function differences(a: unknown, b: unknown, at = ""): string[] {
   return JSON.stringify(a) === JSON.stringify(b) ? [] : [`${at}: ${JSON.stringify(a)} vs ${JSON.stringify(b)}`];
 }
 
-test("the grow room compiles to the pinned definition in canonical spelling", () => {
-  const { definition, findings } = compile(room);
-  expect(findings).toEqual([]);
-  expect(definition).toEqual(normalize(roomData));
-  const checked = validateDefinition(definition, PROPOSED_BOUNDS, RULE_PROFILES);
-  expect(checked.ok ? [] : checked.problems).toEqual([]);
+/** Reintroduce the exact old subject spellings without changing the current generator. */
+function repeatedSubjects(definition: DeclaredDefinition, rows: readonly (readonly [string, string])[]): DeclaredDefinition {
+  const copy = structuredClone(definition);
+  for (const [path, subject] of rows) {
+    let value: unknown = copy;
+    for (const key of path.replace(/\[(\d+)\]/g, ".$1").split(".")) value = (value as Record<string, unknown>)[key];
+    (value as Record<string, unknown>)["of"] = subject;
+  }
+  return copy;
+}
+
+test("the grow room compiles to the retained canonical bytes and pin", () => {
+  retained(room, roomData, CURRENT_DEFINITION_PINS.room);
 });
 
-test("the pinned grow room spells `of: \"on\"` where canonical form leaves it out, and nowhere else differs", () => {
-  const diffs = differences(roomData, normalize(roomData));
-  // Each difference is one `of: "on"` on a guard whose subject is the act's item.
-  expect(diffs.every((d) => d.endsWith('.of: "on" vs undefined'))).toBe(true);
-  expect(diffs.map((d) => d.replace(/^acts\./, "").replace(/\.of: "on" vs undefined$/, ""))).toEqual([
+test("the pinned grow room is canonical and the earlier spelling adds only twelve repeated subjects", () => {
+  const paths = [
     "report-site.guards[0]",
     "set-vent.guards[2].anyOf[0][0]", "set-vent.guards[2].anyOf[1][0]",
     "set-fan.guards[2].anyOf[0][0]", "set-fan.guards[2].anyOf[1][0]",
     "set-heater.guards[2].anyOf[0][0]", "set-heater.guards[2].anyOf[1][0]",
     "bind-zone-devices.guards[0]", "hold.guards[0]", "authorize.guards[0]", "propose-restoration.guards[0]", "close-incident.guards[0]",
+  ];
+  const earlier = repeatedSubjects(roomData, paths.map(path => [`acts.${path}`, "on"] as const));
+  const diffs = differences(earlier, normalize(earlier));
+  expect(diffs.every((d) => d.endsWith('.of: "on" vs undefined'))).toBe(true);
+  expect(diffs.map((d) => d.replace(/^acts\./, "").replace(/\.of: "on" vs undefined$/, "")).sort()).toEqual([...paths].sort());
+  expect(normalize(earlier)).toEqual(roomData);
+  expect(normalize(roomData)).toEqual(roomData);
+  expect(definitionDigest(normalize(earlier))).not.toBe(definitionDigest(earlier));
+  expect(definitionDigest(normalize(roomData))).toBe(definitionDigest(roomData));
+});
+
+test("the grow site compiles to its retained bytes with the exact room parent pin", () => {
+  retained(growSite(CURRENT_DEFINITION_PINS.room.pin), siteData, CURRENT_DEFINITION_PINS.site);
+});
+
+// ---------------------------------------------------------------- complete lanes
+
+import { change as changeSource, issue as issueSource } from "./fixtures/lanes.ts";
+const change = JSON.parse(readFileSync(new URL("../../../apps/room/lanes/definitions/change.json", import.meta.url), "utf8")) as DeclaredDefinition;
+const issue = JSON.parse(readFileSync(new URL("../../../apps/room/lanes/definitions/issue.json", import.meta.url), "utf8")) as DeclaredDefinition;
+
+test("the complete change author preserves the retained canonical bytes and pin", () => {
+  retained(changeSource, change, CURRENT_DEFINITION_PINS.change);
+});
+
+test("the complete issue author preserves the retained canonical bytes and pin", () => {
+  retained(issueSource, issue, CURRENT_DEFINITION_PINS.issue);
+});
+
+test("the pinned change lane is canonical and the earlier spelling adds only five repeated subjects", () => {
+  const earlier = repeatedSubjects(change, [
+    ["acts.ask-rules.sends[0].tell.to", "on"],
+    ["acts.propose-manifest.sends[0].tell.to", "on"],
+    ["acts.request-check.guards[2].equals.a", "also.earlier"],
+    ["acts.request-check.guards[3].equals.a", "also.earlier"],
+    ["acts.review-verdict.guards[4].equals.a", "also.earlier"],
   ]);
-  // The kernel reads both spellings alike, so only the digest differs.
-  expect(definitionDigest(normalize(roomData))).not.toBe(definitionDigest(roomData));
-});
-
-test("the grow site compiles to the exact pinned definition, given the room's pinned digest", () => {
-  const roomPin = definitionDigest(roomData);
-  const { definition, digest, findings } = compile(growSite(roomPin));
-  expect(findings).toEqual([]);
-  expect(definition).toEqual(siteData);
-  expect(digest).toBe(definitionDigest(siteData));
-  const checked = validateDefinition(definition, PROPOSED_BOUNDS, RULE_PROFILES);
-  expect(checked.ok ? [] : checked.problems).toEqual([]);
-});
-
-// ---------------------------------------------------------------- lanes: row by row
-
-import { acts as laneActs, items as laneItems, receives as laneReceives } from "./fixtures/lanes.ts";
-
-const change = JSON.parse(readFileSync(new URL("../../../apps/room/lanes/definitions/change.json", import.meta.url), "utf8")) as typeof lendingData;
-
-test("the rewritten change-lane rows preserve the complete pinned definition in canonical spelling", () => {
-  // The witness rewrites a slice, so validate it in the complete pinned
-  // definition rather than inventing a partial genesis or skipping checks.
-  const complete = {
-    ...change,
-    items: { ...change.items, ...Object.fromEntries(laneItems.map((item) => [item.name, item.type])) },
-    acts: { ...change.acts, ...laneActs },
-    receives: { ...change.receives, ...laneReceives },
-  };
-  const definition = compile(complete).definition as typeof lendingData;
-  const canonical = normalize(change);
-  expect(definition).toEqual(canonical);
-  for (const name of Object.keys(laneItems.reduce((o, i) => ({ ...o, [i.name]: 1 }), {}))) expect(definition.items[name], name).toEqual(change.items[name]);
-  for (const name of Object.keys(laneActs)) expect(definition.acts[name], name).toEqual(canonical.acts[name]);
-  for (const name of Object.keys(laneReceives)) expect(definition.receives[name], name).toEqual(canonical.receives[name]);
-});
-
-test("the pinned change lane's spelling differs from canonical form in five places, each a subject named twice", () => {
-  const diffs = differences(change, normalize(change));
+  const diffs = differences(earlier, normalize(earlier));
   expect(diffs).toEqual([
     'acts.ask-rules.sends[0].tell.to.of: "on" vs undefined',
     'acts.propose-manifest.sends[0].tell.to.of: "on" vs undefined',
@@ -114,4 +126,7 @@ test("the pinned change lane's spelling differs from canonical form in five plac
     'acts.request-check.guards[3].equals.a.of: "also.earlier" vs undefined',
     'acts.review-verdict.guards[4].equals.a.of: "also.earlier" vs undefined',
   ]);
+  expect(normalize(earlier)).toEqual(change);
+  expect(normalize(change)).toEqual(change);
+  expect(definitionDigest(normalize(change))).toBe(definitionDigest(change));
 });

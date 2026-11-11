@@ -2,5 +2,5 @@
 import type { Digest } from "@generalbusiness/dap-contract";
 
 export const FINDING_DIGESTS = {
-  change: "sha256:aaf68c3bd82c217312acd7784dfe06bcb7ba6a30a066d0475a7728c62c43a7e7",
+  change: "sha256:16b1ff90f0a7b04ad1b6d3bc0d3052f6d0638d0c52f36571772a7e0a20f8e3ab",
 } as const satisfies Record<string, Digest>;

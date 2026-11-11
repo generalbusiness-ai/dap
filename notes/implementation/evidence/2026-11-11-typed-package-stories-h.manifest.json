@@ -1,0 +1,431 @@
+{
+  "qualification": "Final H evidence aggregate. Actual gate and projection-only sealed continuation and retained Story classification retain their own results; three focused failures, the historical focused pass, CLI3, failed static and failed controller attempt retain their distinct heads and outcomes. The file list and private custody match the sealed aggregate. Its indexed metadata retains the detailed historical inventories.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h-final-9ff09d-v3/unit",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h-final-9ff09d-v3/unit",
+  "checkpoint": "9ff09d548af3701d3645f7ee15ac5748bc158252",
+  "head": "9ff09d548af3701d3645f7ee15ac5748bc158252",
+  "tree": "6e6c51f0c683c4603d5686413e3d0abce053e6b3",
+  "fileCount": 45,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4426,
+      "sha256": "cec5f4ff3454250799500c4b644543980bb62b00131036792efbbec33c754c35",
+      "mode": 256
+    },
+    {
+      "path": "cli3-pass-5f749-SHA256SUMS",
+      "bytes": 433,
+      "sha256": "468b8e5b7d8f4b687e6ab7c36c2da46c918fdd8b8429df8574b327650086afb7",
+      "mode": 256
+    },
+    {
+      "path": "cli3-pass-5f749-compiler-ledger.json",
+      "bytes": 794,
+      "sha256": "ce55914c27a501154aefb2c086db33c51b914743bd25c967a23123cbb9ef584c",
+      "mode": 256
+    },
+    {
+      "path": "cli3-pass-5f749-literal-case-ledger.json",
+      "bytes": 2568,
+      "sha256": "745465410311ba960db924f05941dbc6794c8d1ba4e413a829eb0d820103ffb5",
+      "mode": 256
+    },
+    {
+      "path": "cli3-pass-5f749-manifest.json",
+      "bytes": 2175,
+      "sha256": "ed44ee8e217ab95409da43b52d217e8fe0269c63defa585abb0d40ccac49cd64",
+      "mode": 256
+    },
+    {
+      "path": "cli3-pass-5f749-raw-index.json",
+      "bytes": 14061,
+      "sha256": "8a489c1d5a5bf0f5ea99650e49fcb33d30f53561ba58b69738879905733a1d4e",
+      "mode": 256
+    },
+    {
+      "path": "cli3-pass-5f749-runtime-ledger.json",
+      "bytes": 1283,
+      "sha256": "643ddd3fd156c588a23d8ca75090486c49fcbdfa62f004b711478fdb68291c34",
+      "mode": 256
+    },
+    {
+      "path": "cli3-pass-5f749-terminal-summary.json",
+      "bytes": 2763,
+      "sha256": "72216a28936bb6eafe1e8f9e209a3bffccb3936c2a5070efd8717393fd06445c",
+      "mode": 256
+    },
+    {
+      "path": "compiler00-failure-manifest.json",
+      "bytes": 1384,
+      "sha256": "ea8bb1f8c540c0678b5a6a156a6e14fe1fc5ef51cf47851fd5dd5401feda3b0e",
+      "mode": 256
+    },
+    {
+      "path": "compiler00-failure-originals-index.json",
+      "bytes": 19841,
+      "sha256": "b01a48912587f86bf089a7b463bb6d6ab795107324ba3b82a9926a0077ab99c2",
+      "mode": 256
+    },
+    {
+      "path": "compiler00-failure-terminal-summary.json",
+      "bytes": 6403,
+      "sha256": "039725951ab58ef6da8e06f10f5528f33639022708a642436b57c10fb3644e99",
+      "mode": 256
+    },
+    {
+      "path": "compiler02-failure-manifest.json",
+      "bytes": 1418,
+      "sha256": "98867e327d4661f004b26fff4f0886fd9de001e88a602c2caef92384a069ca3b",
+      "mode": 256
+    },
+    {
+      "path": "compiler02-failure-originals-index.json",
+      "bytes": 20838,
+      "sha256": "9b313010275f50f65c9a47d3a26204dcbd39f58efad8009cec77e17d1ffab444",
+      "mode": 256
+    },
+    {
+      "path": "compiler02-failure-terminal-summary.json",
+      "bytes": 6887,
+      "sha256": "f39f327782ae28c70cdfe6d566cb9a2c35278dbdf40dde4a264c1291e4a9097d",
+      "mode": 256
+    },
+    {
+      "path": "continuation-ruling.event.json",
+      "bytes": 2326,
+      "sha256": "7165529b6c8fd0bfdd97371e49aeed9b5ae59cfc63d220ecd421245357ce11e8",
+      "mode": 256
+    },
+    {
+      "path": "controls-attempt1-failed-SHA256SUMS",
+      "bytes": 169,
+      "sha256": "5e51e90af034eb0732d71c5fb60a8e444f3f2f488a7a4d799fc01943834ac7c0",
+      "mode": 256
+    },
+    {
+      "path": "controls-attempt1-failed-manifest.json",
+      "bytes": 1786,
+      "sha256": "191c00df38a7dafa4646b4e8112bc88fc13310583a36e9d323d5cd0d654f508d",
+      "mode": 256
+    },
+    {
+      "path": "controls-attempt1-failed-raw-index.json",
+      "bytes": 2248580,
+      "sha256": "0cf18d5933b39ff5f1ae73f301f744a205da4b4c64c65799fbdba3559b0f9c81",
+      "mode": 256
+    },
+    {
+      "path": "controls-attempt1-failed-terminal-summary.json",
+      "bytes": 2304,
+      "sha256": "a5b72dcf1ca9d40d9d16329f5091ecd4355628aa65220b4ed8bfe3ec48447604",
+      "mode": 256
+    },
+    {
+      "path": "final-gate-manifest.json",
+      "bytes": 1581,
+      "sha256": "e8f900cdd0b4877916e433c5731c09d4d1f93cf8b2e84078ec8d1f7cd6dbf032",
+      "mode": 256
+    },
+    {
+      "path": "final-gate-raw-index.original.json",
+      "bytes": 544268,
+      "sha256": "e6ecf7139123abe255094ba1763c637f9dc7fe52093ca982707bbc6f0252530c",
+      "mode": 256
+    },
+    {
+      "path": "final-gate-summary.json",
+      "bytes": 7762,
+      "sha256": "30b358325167792a6cb5f4dbb58b2e81c97752e703ee71423e0d185e43866ae1",
+      "mode": 256
+    },
+    {
+      "path": "final-projection-manifest.json",
+      "bytes": 4093,
+      "sha256": "6e148d746294880c9e30d73743d251c437dd91b0adebf2d9639d4481c1d078ca",
+      "mode": 256
+    },
+    {
+      "path": "final-projection-raw-index.original.json",
+      "bytes": 2269551,
+      "sha256": "b43878ef4170445cbd89cea741de5853e4a4f0fde79af077af4dfa331383e75c",
+      "mode": 256
+    },
+    {
+      "path": "final-projection-summary.json",
+      "bytes": 5175,
+      "sha256": "a0efebc5a9ad7de2b6845c26393b2d51b2a06d27db3ea44bb4e8b32afceef076",
+      "mode": 256
+    },
+    {
+      "path": "focus-pass-4dbec9-manifest.json",
+      "bytes": 1579,
+      "sha256": "ac3be3e308fee56f4b3189a354411d4b9008b0ef361ae9f602a4f1f9bead4942",
+      "mode": 256
+    },
+    {
+      "path": "focus-pass-4dbec9-originals-index.json",
+      "bytes": 191014,
+      "sha256": "0d5b1ff39563b9fdcbe93ba06a468b2ed8772459c5a6c627e6e9185ed77aa463",
+      "mode": 256
+    },
+    {
+      "path": "focus-pass-4dbec9-runtime-cases.json",
+      "bytes": 14383,
+      "sha256": "b421144fd2cf2ad7c7b6333dedf3ba5bcac23b9a8c3744bd7ed65d5b9aae6971",
+      "mode": 256
+    },
+    {
+      "path": "focus-pass-4dbec9-terminal-summary.json",
+      "bytes": 12925,
+      "sha256": "e162d3fa7d31454d3ad843ea76a6a1dc26298c1d26f63609bc320e58c6bddfee",
+      "mode": 256
+    },
+    {
+      "path": "message-repair-root-proof.json",
+      "bytes": 2049,
+      "sha256": "a55ed3773daddff06980d0293133687459e25d39e9304ac8604a94960ba59d9e",
+      "mode": 256
+    },
+    {
+      "path": "metadata-refusals-summary.json",
+      "bytes": 1939,
+      "sha256": "da5041949343ae382c0af1ade604897ad8bbac0c6ee3f9989f4f2f650ccd319b",
+      "mode": 256
+    },
+    {
+      "path": "ordinary-compiler-results.json",
+      "bytes": 9530,
+      "sha256": "a85ec6630fd8d16fda6b19bec76c7897d6c446d4bed864d1ee13c9d8a18467a5",
+      "mode": 256
+    },
+    {
+      "path": "ordinary-working-results.json",
+      "bytes": 972,
+      "sha256": "655c3803039bab1c99bc5633342cd24d66b266a5e74650e737b57764d029c76f",
+      "mode": 256
+    },
+    {
+      "path": "plain-failure-f879-manifest-formatting-readback.json",
+      "bytes": 942,
+      "sha256": "d8a10d41d677cf26472ba4bb855d7ea5c36e3cd7b77f765133646cf9e55020aa",
+      "mode": 256
+    },
+    {
+      "path": "plain-failure-f879-manifest.json",
+      "bytes": 1588,
+      "sha256": "fc554b6db81d67196546686457933a25a5e5d075bfdfbe6f5533bd768c8c2171",
+      "mode": 256
+    },
+    {
+      "path": "plain-failure-f879-originals-index.json",
+      "bytes": 25523,
+      "sha256": "0b9fc160c03df7f306900c02ff8da4bfec7a8c3506154097cdc94a0348ed712d",
+      "mode": 256
+    },
+    {
+      "path": "plain-failure-f879-terminal-summary.json",
+      "bytes": 24780,
+      "sha256": "67f59fe2bfdbd80ff112b84efe21fe4ca5f1ac400d558cbd44e0accc665f4004",
+      "mode": 256
+    },
+    {
+      "path": "projection-actual-audit.json",
+      "bytes": 5466,
+      "sha256": "ee0e93d920136ce596b467b0411f0381ecd2a02b02b87df3506d6878e5dfa5bf",
+      "mode": 256
+    },
+    {
+      "path": "projection-seal-peer.json",
+      "bytes": 1866,
+      "sha256": "aa7034a072893ee23d4643cc0521558cc511b53d3ac32e0a3b5a885d9a775e7f",
+      "mode": 256
+    },
+    {
+      "path": "projection-seal-root-readback.json",
+      "bytes": 630,
+      "sha256": "cb81bafd090d0103e9b3013df70a274e9c4394a7b840242fbef64d5f5d2cc7fc",
+      "mode": 256
+    },
+    {
+      "path": "raw-index.json",
+      "bytes": 45746,
+      "sha256": "cca02dd05ac7170a7f49d74bd30bb1d74ad7e75c9ea9c76aa9a450d9a15d12f9",
+      "mode": 256
+    },
+    {
+      "path": "retained-story-classification.json",
+      "bytes": 1319,
+      "sha256": "aedd5f80a3f15b8986e69fa2a009f4d06d130b426e7a9430f0a99666064116be",
+      "mode": 256
+    },
+    {
+      "path": "static-failure-5f749-manifest.json",
+      "bytes": 13008,
+      "sha256": "cedcf21eb94c787bd73373a7dfda7b1769237abca589f1d7729734649fb295d7",
+      "mode": 256
+    },
+    {
+      "path": "terminal-prerequisites.json",
+      "bytes": 49367,
+      "sha256": "2a4b7294cd4fc4410f57c260dd92060249dd2d38b6cc410fcaface33430b3642",
+      "mode": 256
+    },
+    {
+      "path": "two-config-formatting-result.json",
+      "bytes": 531,
+      "sha256": "5d67ba5449ed1371b3ba3ec01549ceed96ac13a0e27310cb7e9f938e5f2a93c6",
+      "mode": 256
+    }
+  ],
+  "gateManifestSha256": "e8f900cdd0b4877916e433c5731c09d4d1f93cf8b2e84078ec8d1f7cd6dbf032",
+  "projectionManifestSha256": "6e148d746294880c9e30d73743d251c437dd91b0adebf2d9639d4481c1d078ca",
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h-final-9ff09d-v3/private",
+    "manifestSha256": "e5b86355df2e1eec15c5acbc0dc55a92ffabbfaf48470da8b810b2a51832f604",
+    "files": 62,
+    "minimumRetentionDays": 30
+  },
+  "historicalUnits": [
+    {
+      "label": "compiler00-failure",
+      "head": "8028b8f93a59294f4b0f7af58ea05c6a731a2467",
+      "tree": "d5099488f40b03473fa10dca9f49534f816dd6a6",
+      "booking": "2444cc3817c7cdbe107122ed31fc0a58e8dc3f4b",
+      "end": "c21ab65decc0a0601f779f4979280b2930347a4a",
+      "originalOutcome": "FAILED compiler-00; 12 compilers and all 80 runtime cases UNRUN",
+      "fullGateResult": null,
+      "manifest": {
+        "path": "/private/tmp/artroom-h-compiler00-failure-20261110.manifest.json",
+        "bytes": 1384,
+        "sha256": "ea8bb1f8c540c0678b5a6a156a6e14fe1fc5ef51cf47851fd5dd5401feda3b0e",
+        "mode": 256
+      }
+    },
+    {
+      "label": "compiler02-failure",
+      "head": "92e209844665a85bbdb0d5f6d9a5d3b159942ab7",
+      "tree": "eacea4c69f88864f7cfe3727ab47f555de5842a3",
+      "booking": "42513438836d358f39bc9449b69a542f9e601362",
+      "end": "614a687235695b949e1a672323663aa1388473c5",
+      "originalOutcome": "FAILED compiler-02; two compiler passes, ten compilers and all 80 runtime cases UNRUN",
+      "fullGateResult": null,
+      "manifest": {
+        "path": "/private/tmp/artroom-h-compiler02-failure-20261110.manifest.json",
+        "bytes": 1418,
+        "sha256": "98867e327d4661f004b26fff4f0886fd9de001e88a602c2caef92384a069ca3b",
+        "mode": 256
+      }
+    },
+    {
+      "label": "plain-failure-f879",
+      "head": "f879326039aa30143c9ba8a38b980435a0cf46eb",
+      "tree": "50e4a33c488982a75476092b638f3e7c915b747d",
+      "booking": "003150581507409b937d981432cd1ce9c4903c0b",
+      "end": "01bc480466bfd6b48d98af95f1039085e16a139d",
+      "originalOutcome": "FAILED Plain retained-byte assertion; 13 compilers passed; Node 29 and Native 2 UNRUN",
+      "fullGateResult": null,
+      "manifest": {
+        "path": "/private/tmp/artroom-h-f879-plain-failure-20261110.manifest.json",
+        "bytes": 1588,
+        "sha256": "fc554b6db81d67196546686457933a25a5e5d075bfdfbe6f5533bd768c8c2171",
+        "mode": 256
+      }
+    },
+    {
+      "label": "focus-pass-4dbec9",
+      "head": "4dbec9a22a319beee3c19f59396bded96679dbd7",
+      "tree": "9733ca67f5045ba30978995213f2a57717494f1a",
+      "booking": "f10dd3e52ad6d64ea3dc367565be653ba4c6b58a",
+      "end": "c8f189fbeb8b257ea5160d4f0b064451ea6c2bdf",
+      "originalOutcome": "PASSED one compiler and 67 current cases; 12 compiler contexts and 13 authoring cases carry",
+      "fullGateResult": null,
+      "manifest": {
+        "path": "/private/tmp/artroom-h-4dbec9-focus-pass-20261110.manifest.json",
+        "bytes": 1579,
+        "sha256": "ac3be3e308fee56f4b3189a354411d4b9008b0ef361ae9f602a4f1f9bead4942",
+        "mode": 256
+      }
+    },
+    {
+      "label": "cli3-pass-5f749",
+      "head": "5f749419ff7357d2d8320699ae8f1cbf47821388",
+      "tree": "55c5ba5866689d1a08a5f2003020ec1500fd598d",
+      "booking": "eb900164599e04e8a3f38d357722a109c8341d57",
+      "end": "dab2aeebacd74e651f6c12a6f76f7fcaf405445d",
+      "originalOutcome": "PASSED",
+      "fullGateResult": null,
+      "manifest": {
+        "path": "/private/tmp/artroom-h5f749-cli3-20261111.manifest.json",
+        "bytes": 2175,
+        "sha256": "ed44ee8e217ab95409da43b52d217e8fe0269c63defa585abb0d40ccac49cd64",
+        "mode": 256
+      }
+    },
+    {
+      "label": "static-failure-5f749",
+      "head": "5f749419ff7357d2d8320699ae8f1cbf47821388",
+      "tree": "55c5ba5866689d1a08a5f2003020ec1500fd598d",
+      "booking": "7d421c646a077b6aa1082aa5301e9100bc753fdd",
+      "end": "a3e2c83af4e58ffdd655551ab09fd3f2c528ce32",
+      "originalOutcome": "FAILED",
+      "fullGateResult": null,
+      "manifest": {
+        "path": "/private/tmp/artroom-h5f749-static3-failure-20261111.manifest.json",
+        "bytes": 13008,
+        "sha256": "cedcf21eb94c787bd73373a7dfda7b1769237abca589f1d7729734649fb295d7",
+        "mode": 256
+      }
+    },
+    {
+      "label": "controls-attempt1-failed",
+      "head": "9ff09d548af3701d3645f7ee15ac5748bc158252",
+      "tree": "6e6c51f0c683c4603d5686413e3d0abce053e6b3",
+      "booking": "68ea13632a74ce1f25997da0fc2e72bb97ae159f",
+      "end": "bdf61b5206b6e99675ef25a049de3a5686383f24",
+      "originalOutcome": "FAILED",
+      "fullGateResult": null,
+      "manifest": {
+        "path": "/private/tmp/artroom-h9ff09d-controls-attempt1-failed-v2-20261111.manifest.json",
+        "bytes": 1786,
+        "sha256": "191c00df38a7dafa4646b4e8112bc88fc13310583a36e9d323d5cd0d654f508d",
+        "mode": 256
+      }
+    }
+  ],
+  "sealedPrerequisites": {
+    "gateH9ff09d": {
+      "manifest": {
+        "path": "/private/tmp/artroom-h9ff09d-full-gate-20261111.manifest.json",
+        "bytes": 1581,
+        "sha256": "e8f900cdd0b4877916e433c5731c09d4d1f93cf8b2e84078ec8d1f7cd6dbf032",
+        "mode": 256
+      },
+      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h9ff09d-gate-passed-sealed/unit",
+      "originalPrivateDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h9ff09d-gate-passed-sealed/private",
+      "privateManifestSha256": "6226052501f11bd37f5eb95a29a3cb8abf85db68a0ae55600d0351ad1a37ebf5",
+      "aggregateRawIndexLeaf": "final-gate-raw-index.original.json",
+      "minimumRetentionDaysAfterLanding": 30,
+      "qualification": "Reuse immutable sealed prerequisite custody; do not duplicate mirror payloads or original inventories. No removal without a recorded act naming its manifest."
+    },
+    "projectionH9ff09d": {
+      "manifest": {
+        "path": "/private/tmp/artroom-h9ff09d-projection-continuation-20261111.manifest.json",
+        "bytes": 4093,
+        "sha256": "6e148d746294880c9e30d73743d251c437dd91b0adebf2d9639d4481c1d078ca",
+        "mode": 256
+      },
+      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h9ff09d-projection-continuation-passed-sealed/unit",
+      "originalPrivateDirectory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h9ff09d-projection-continuation-passed-sealed/private",
+      "privateManifestSha256": "dce3605b90ead53964aed8b10dc2c6d6706ccf705503c7fda1c097d972ec5305",
+      "aggregateRawIndexLeaf": "final-projection-raw-index.original.json",
+      "minimumRetentionDaysAfterLanding": 30,
+      "qualification": "Reuse immutable sealed prerequisite custody; do not duplicate mirror payloads or original inventories. No removal without a recorded act naming its manifest."
+    }
+  },
+  "sourceAggregateManifest": {
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-11-h-final-9ff09d-v3/unit/manifest.json",
+    "bytes": 57330,
+    "sha256": "cb4c0d7ea618418e26b06044240169160130d9b615ce692aaa3af1730201deb9"
+  }
+}

@@ -298,10 +298,10 @@ reason `Native archive fixture skipped: prior close failed; ownership retained`.
 The original failure still fails the run. Late task completion does not clear
 that failed owner. Ordinary overlap with a healthy owner is an error.
 
-The functional `scope` project sets a thirty-second framework allowance in
-`packages/scope/vitest.worker.config.ts` for cases without an explicit
-limit. Each worker reuses its own isolate across multi-scope story files
-on a shared machine.
+The `scope` and `scope-stories` projects inherit the thirty-second
+framework allowance in `packages/scope/vitest.worker.config.ts` for
+cases without an explicit limit. Each worker reuses its own isolate
+across files in its project.
 The offline public archive command uses a process limit of at least three
 times its measured median on the shared machine. When only the enclosing
 follower has timings, use its median as a conservative bound for each
@@ -378,11 +378,12 @@ what the branch changed.
 The sixteen plain projects share one group with at most four active file
 tasks in total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
 The `scope` project follows in the workerd pool, against real Durable
-Objects with SQLite storage, with an explicit limit of two workers.
-Each worker reuses its own isolate across files.
-The `scope-lending` group follows with one worker and its own runtime, then
-`scope-denial` with one worker in another runtime. This limits active
-file tasks, not all live workers, child processes or overlapping teardown.
+Objects with SQLite storage. It runs the Scope package's functional tests
+with two workers. The `scope-stories` group then runs the lanes, CLI, Page,
+and MCP stories in its own two runtimes. Each worker reuses its isolate
+within its project. The `scope-lending` and `scope-denial` groups follow
+with one runtime each. These limits apply to active file tasks. Child
+processes and teardown can overlap.
 The
 `git` project runs the real `git` program, as a client and as a server, on
 local repositories, and one file of the `checkers` project runs it for the
@@ -408,7 +409,7 @@ Report failures fail an otherwise passing run while preserving an earlier
 child failure. A process killed before finalization cannot print a final
 summary.
 
-The existing Lending story runs only in `scope-lending`, after `scope`.
+The existing Lending story runs only in `scope-lending`, after `scope-stories`.
 It uses the same real Worker, SQLite, read sessions, story acts, expected
 assertions and deadlines. It needs neither the clone server nor maintained
 application capture setup. Both the root and Scope package entrypoints
@@ -491,7 +492,7 @@ files for seven days. The first main run `42570561287` remains failed;
 a later runner result records a separate observation.
 
 The command line's story, `packages/cli/test/*.scope.test.ts`, runs from
-the root inside the `scope` project too, and has no Worker of its own. Its
+the root inside the `scope-stories` project. Its
 commands go over the Worker's HTTP routes for the namespace `PLATFORM`,
 called in the test's isolate. The Git host and the scheduler are labelled
 stand-ins in the file. Its readers are the real read sessions and signed
@@ -507,10 +508,10 @@ runs the package's Vitest tests, then those same three resolver cases once.
 The gate does not invoke the CLI package's test script separately.
 
 To run a control of the story, give `scripts/control.mjs` the root as its
-package directory: `-- . --project scope story`.
+package directory with `-- . --project scope-stories story`.
 
 The page's story, `apps/room/page/test/story.scope.test.ts`, runs from the
-root inside the `scope` project too. Its room is `apps/room/page/test/support/demo.ts`:
+root inside the `scope-stories` project. Its room is `apps/room/page/test/support/demo.ts`:
 created by the command line over the Worker's HTTP routes, with the real
 read sessions under a TEST SECRET, and the site route for addresses under
 `/site/`. The Git host (`OwnGit` under the production wiring of Artifacts)
@@ -525,8 +526,8 @@ to take the page's screenshots in a browser. That script needs
 gate, and [`page-browser.yml`](../.github/workflows/page-browser.yml) runs it.
 
 The lane scenarios, `apps/room/lanes/test/*.scope.test.ts`, run from
-the root inside the `scope` project: the same Worker code, loaded once per
-worker runtime.
+the root inside the `scope-stories` project. Each runtime loads the same
+Worker code.
 The root `vitest.config.ts` adds them, and no file of the scope package
 names the lanes package. The Site publication and clock lifetime scenarios
 also live in the lanes package: they need its definition or graph. They use
@@ -684,8 +685,8 @@ change touches the page, the brand files, the Worker's dispatch, the demo
 recorder, the demo scripts or the workflow. Its `on:` block lists the paths.
 The gate does not run these commands.
 
-Each command first runs a recorder test in the `scope` project:
-`apps/room/page/test/record.scope.test.ts` or the second test of
+Each command first runs a recorder in the `scope-stories` project. The
+recorder is `apps/room/page/test/record.scope.test.ts` or the second case in
 `apps/room/lanes/test/demo.scope.test.ts`. The browser then gets the Worker's
 recorded answers. A request that the recorder did not make fails the command.
 A browser POST is answered by its path, so these commands admit no act.

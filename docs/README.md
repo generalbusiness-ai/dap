@@ -39,8 +39,7 @@ yet.
 
 1. [Connect an AI app to a room](connect-an-ai-app.md): which apps work
    today, and how to connect Claude Desktop.
-2. [The MCP service](mcp.md): the server, its options, every tool and the
-   hosted endpoint.
+2. [The MCP service](mcp.md): the server, its options and every tool.
 3. [Read a room with the local adapter](../apps/views/README.md): five
    reads and the compact cards, from an enrolled `DAP_HOME`.
 
@@ -110,8 +109,8 @@ The applications built on dap are examples to read:
    use before you retire it.
 9. [Run the local Worker](celld.md): the production Worker on celld,
    behind a proxy.
-10. [The hosted endpoint](mcp.md#the-hosted-endpoint): turn on `/mcp` and
-    OAuth for AI apps.
+10. [Run the hosted MCP endpoint](hosted-mcp.md): turn on `/mcp` and
+    OAuth for AI apps, and read the MCP metrics.
 11. [Test a hosted connector](o4-connect.md): connect Claude and ChatGPT
     to a separate Worker, then revoke each connection.
 12. [Rehearse the demo](demo.md): run and record the repository story

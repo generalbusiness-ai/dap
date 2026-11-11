@@ -123,7 +123,10 @@ What it does:
   and a valid ISO expiry. The port infers no expiry from the TTL. A failed
   revocation stays unconfirmed, and the expiry is the service's own
   statement. Before it reads, the port checks that the service reports the
-  expected remote URL for the name.
+  expected remote URL for the name. The port checks a member's read token
+  less strictly, as
+  [How a member reads the repository](#how-a-member-reads-the-repository)
+  describes.
 
 What a person sees as the remote:
 
@@ -225,12 +228,17 @@ Administration permission. These restrictions follow
 ## How a member reads the repository
 
 On Artifacts or GitHub, a member runs `dap clone`. It signs the
-destination's `read-token` act, which any active member may sign, with a
-lifetime from 1 to 24 hours. The destination opens one host operation,
-`mint-read`:
+destination's `read-token` act, which any active member may sign.
+Destination19 takes no lifetime and fixes it at one hour. Every other
+destination version takes a lifetime from 1 to 24 hours. There, a key about
+to be revoked can keep repository read for up to 24 hours. The destination
+opens one host operation, `mint-read`:
 
 - On Artifacts, the port mints a read token for the repository through the
-  binding, `createToken("read", hours * 3600)`.
+  binding, `createToken("read", hours * 3600)`. Before this mint, the port
+  does not ask the service for the repository's remote URL. It accepts a
+  token reply that states no scope, and refuses a reply that states a
+  scope other than `read`.
 - On GitHub, the port mints an installation token restricted to the
   repository's ID with contents read. GitHub fixes its lifetime at one
   hour.

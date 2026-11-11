@@ -1,0 +1,61 @@
+{
+  "request": "6a3a7fccf752dd841226f78071a51b566a74087b",
+  "promise": "af287821038111e452959ff3e62c5dd612cc7dae",
+  "head": "c95bc118db07afbd87485608a95d4baf3b2c759f",
+  "tree": "92cdd6efaa3c412d31c42b7c93d221bc4a8553d3",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-browser-ci-c95bc118/unit",
+  "outcome": "PASSED",
+  "runs": [
+    {
+      "label": "Page",
+      "run": 42944496863,
+      "attempt": 1,
+      "event": "workflow_dispatch",
+      "job": 130273928129,
+      "status": "completed",
+      "conclusion": "success",
+      "steps": 12
+    },
+    {
+      "label": "Card",
+      "run": 42944500401,
+      "attempt": 1,
+      "event": "workflow_dispatch",
+      "job": 130273927963,
+      "status": "completed",
+      "conclusion": "success",
+      "steps": 13
+    }
+  ],
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "sha256": "c4b8b54d10e0df0418282b8901a403288fed555be1c7900aa489195d548eee11",
+      "bytes": 163,
+      "mode": 256
+    },
+    {
+      "path": "ci-summary.json",
+      "sha256": "d187a2165207b90fa29f3f470b228e430751791e5808ecca0f66dbf4afdcd844",
+      "bytes": 10540,
+      "mode": 256
+    },
+    {
+      "path": "raw-index.json",
+      "sha256": "57e3f129e620739e901a15a0e82185055bb7af8ac56f670f3a5f27d09e7647db",
+      "bytes": 24127,
+      "mode": 256
+    }
+  ],
+  "privateCustody": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-10-tg1-browser-ci-c95bc118/private",
+    "manifestSha256": "74b87ccdc09772e9a0fda7c335a4362fd88d0bac0cce4302ef64d3bd0557f32c",
+    "files": 141,
+    "retention": {
+      "minimumDays": 30,
+      "retainThroughUtc": "2026-12-11T02:22:07.532902+00:00",
+      "qualification": "Retain through at least 30 days after landing."
+    }
+  },
+  "qualification": "GitHub dispatch, run, attempt, job, and step metadata for the exact selected source. Browser jobs own their observed results. This packet records no local browser run, deployment, or live acceptance."
+}

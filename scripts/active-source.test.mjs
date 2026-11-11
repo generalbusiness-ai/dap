@@ -20,7 +20,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Preserve the existing dependency checks at their relocated physical paths.
 const packagePath = (file) => file.replace(/^apps\/room\/lanes\//, "packages/lanes/").replace(/^apps\/room\/page\//, "packages/page/");
 const INACTIVE = /^apps\/counter\/|^(notes|examples|spikes|\.github)\/|^docs\/(protocol|policy-pack|release)\.md$|^scripts\/active-source\.test\.mjs$/;
-const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" }).split("\0").filter((f) => f !== "" && !INACTIVE.test(packagePath(f)));
+const tracked = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" }).split("\0").filter(Boolean);
+const files = tracked.filter((f) => !INACTIVE.test(packagePath(f)));
 const text = (file) => { try { return readFileSync(join(root, file), "utf8"); } catch { return ""; } };   // a file deleted and not yet committed
 
 const REMOVED = /artroom-log-v1|artroom-policy-v[12]|artroom-steps-v1|artroom-legacy-v1|artroom\.v1|\bROOMS\b|\bREGISTRY\b|LEASE_SECONDS/;
@@ -253,4 +254,24 @@ test("framework runtime modules do not import application source", () => {
     return target.startsWith("apps/") || /^@generalbusiness\/dap-page(?:\/|$)/.test(target) ? [`${file}: ${value}`] : [];
   }));
   assert.deepEqual(reaches, []);
+  // Authoring stays offline. These roots cover framework modules, Card,
+  // dap-lanes, and every Grow runtime module, including demo and simulator.
+  const offline = /^(?:@generalbusiness\/dap-define(?:\/|$)|packages\/define\/|(?:examples\/grow|apps\/room\/lanes)\/authoring\/|examples\/grow\/(?:definition-corpus-data|test-support)\.ts$)/;
+  const applicationRuntime = tracked.filter(file => (
+    /^apps\/(?:views|room\/(?:lanes|page))\/src\/.*\.ts$/.test(file)
+    || /^examples\/grow\/[^/]+\.ts$/.test(file) && !/(?:\.test\.ts$|(?:^|\/)(?:definition-corpus-data|test-support|vitest\.config)\.ts$)/.test(file)
+  ));
+  const valueEdges = [...runtime.filter(file => !file.startsWith("packages/define/")), ...applicationRuntime].flatMap(file => {
+    const body = text(file);
+    return moduleSpecifierSpans(body).flatMap(span => {
+      if (!offline.test(edgeTarget(file, span.value))) return [];
+      const start = body.lastIndexOf("\n", span.start) + 1;
+      const end = body.indexOf("\n", span.end);
+      const statement = body.slice(start, end < 0 ? body.length : end).trim();
+      return /^(?:import|export) type\b/.test(statement) ? [] : [`${file}: ${span.value}`];
+    });
+  });
+  assert.deepEqual(valueEdges, []);
+  const lane = JSON.parse(text("apps/room/lanes/package.json"));
+  assert.equal(lane.dependencies?.["@generalbusiness/dap-define"], undefined);
 });

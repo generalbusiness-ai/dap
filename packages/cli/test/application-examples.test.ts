@@ -28,6 +28,12 @@ test("maintained Counter and Lending packages bind their current browser definit
     ["apps/counter/dap.application.json", COUNTING_COMMITMENTS_DEFINITION, 18, 10],
     ["examples/lending/dap.application.json", LENDING_DEFINITION, 14, 4],
   ] as const) {
+    const checked = await checkCommand(["check", ".", "--config", config], root);
+    expect(checked.code, checked.lines.join("\n")).toBe(0);
+    expect(checked.lines).toContain("Native definitions: 1 validated.");
+    expect(checked.lines).toContain(`Scenario ${config.startsWith("apps/") ? "counter-package" : "lending-package"}: ${steps} steps passed; native replay consistent through ${through}.`);
+    expect(checked.lines).toContain("Declared projection checks: 3 passed at native journal heads.");
+    expect(checked.lines).toContain("Local external effects are disabled; this check does not admit a package or audit screen code.");
     const prepared = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)), { config });
     const packet = prepared.packet;
     expect(packet.package.v).toBe(2);
