@@ -1,13 +1,13 @@
 import { anyOf, by, constant, detached, digest, enumOf, equals, fact, final, grants, int, invoke, item, itemOf, live, member, open, party, permit, plusSeconds, reasons, receive, ref, require, required, sender, signer, source, text, time, timed, transition, value, via, when } from "@generalbusiness/dap-define";
 import type { ItemDef } from "@generalbusiness/dap-define";
 
-/** Readonly JSON data keeps literal values and keys without authored tuple lengths. */
+/** Readonly JSON data omits symbol metadata and authored tuple lengths. */
 export type DefinitionData<T> = T extends string | number | boolean | null | undefined
   ? T
   : T extends readonly (infer V)[]
     ? readonly DefinitionData<V>[]
     : T extends object
-      ? { readonly [K in keyof T]: DefinitionData<T[K]> }
+      ? { readonly [K in keyof T as K extends symbol ? never : K]: DefinitionData<T[K]> }
       : T;
 
 export const exportItem = item(

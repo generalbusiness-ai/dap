@@ -1,6 +1,8 @@
 /** Field bounds stay literal; reference values remain contract data. */
 import type { FieldType } from "@generalbusiness/dap-contract";
-import { author, party, equals, isFact, item, live, optional, reference, required, sameSet, text, value } from "../src/index.ts";
+import { author, party, equals, fact, isFact, item, live, optional, reference, required, sameSet, text, value } from "../src/index.ts";
+import type { GrantRef, NamedAct, ReasonRef, RecordElement, Typed } from "../src/index.ts";
+import type { DefinitionData } from "../../../apps/room/lanes/authoring/shared.ts";
 
 export const citation = reference(64) satisfies FieldType;
 export const exactCitation: { readonly type: "reference"; readonly fragment: 64 } = citation;
@@ -53,3 +55,31 @@ export const jsonGrant: string = jsonChange.acts.accept.grant;
 export const jsonAskTuple: readonly ["ask"] = jsonIssue.items.block.refs.on.to.kind;
 // @ts-expect-error The materialized array remains readonly.
 jsonIssue.items.block.refs.on.to.kind.push("ask");
+
+// Authored acts retain their exact identity. JSON does not claim authoring metadata.
+export const authoredChangeAccept: NamedAct<"change", "accept"> = changeSource.acts.accept;
+export const authoredIssueAccept: NamedAct<"issue", "accept"> = issueSource.acts.accept;
+export const authoredAcceptFact = fact(changeSource.acts.accept);
+export const authoredAcceptKind: readonly ["accept"] = authoredAcceptFact.kind;
+export const authoredAcceptUnder: "change" = authoredAcceptFact.under;
+// @ts-expect-error A JSON act has no authoring NamedAct marker or WeakMap identity.
+fact(jsonChange.acts.accept);
+
+type NoSymbols<T extends never> = T;
+export type JsonActSymbolKeys = NoSymbols<Extract<keyof ChangeDefinition["acts"]["accept"], symbol>>;
+export type JsonTypedSymbolKeys = NoSymbols<Extract<keyof DefinitionData<Typed<{ type: "text" }>>, symbol>>;
+export type JsonRecordElementSymbolKeys = NoSymbols<Extract<keyof DefinitionData<RecordElement<"label">>, symbol>>;
+
+declare const authorOnly: unique symbol;
+type MarkedTree = { readonly [authorOnly]: "root"; readonly acts: readonly [{ readonly [authorOnly]: "nested"; readonly name: "accept" }] };
+declare const jsonMarkedTree: DefinitionData<MarkedTree>;
+export const jsonNestedName: "accept" = jsonMarkedTree.acts[0]!.name;
+// @ts-expect-error The JSON view omits root object symbol keys.
+jsonMarkedTree[authorOnly];
+// @ts-expect-error The JSON view also omits symbol keys inside arrays.
+jsonMarkedTree.acts[0]![authorOnly];
+
+declare const jsonGrantBrand: DefinitionData<GrantRef<"change.promise">>;
+declare const jsonReasonBrand: DefinitionData<ReasonRef<"not-offeree">>;
+export const retainedGrantBrand: GrantRef<"change.promise"> = jsonGrantBrand;
+export const retainedReasonBrand: ReasonRef<"not-offeree"> = jsonReasonBrand;

@@ -180,15 +180,31 @@ the exported runtime data aliases use this view. The wrappers keep their
 existing single assertions and type-only imports. Grow's existing mutable
 contract aliases need no change.
 
-The existing type fixture checks the overwritten author flag and retained
-slot modes, both real performer slots, exact constructor tuples, readonly
-JSON element values and string grants. It rejects a tuple-length claim
-about imported JSON. Existing runtime tests and their assertions stay.
+The continuation at `5cd11250` passed compiler-05, then stopped in
+compiler-06 because imported acts lack the author-only `[ACT_NAME]` key.
+The JSON view now omits symbol keys at every object depth. The exact
+constructor types still carry named-act identity, so `fact(act)` retains
+the authored definition and act names. Imported JSON cannot claim that
+identity or the runtime WeakMap entry.
+
+The symbol audit covers all seven Define markers. `ACT_NAME`, `TYPE`,
+and `RECORD_ELEMENT_KEYS` describe authoring types. `INLINE_RULE` and
+`DECLARATIONS` hold nonenumerable authoring metadata. The JSON view omits
+object keys of each symbol type if they occur. Primitive `GRANT` and
+`REASON` brands remain intact because the primitive branch returns the
+original type before the object mapping. This type view neither removes
+runtime properties nor changes serialization.
+
+The existing type fixture checks the overwritten author flag, retained
+slot modes, both performer slots, exact constructor tuples, and readonly
+JSON element values. It also checks exact authored act identity, rejects
+`fact(jsonAct)`, omits nested object symbol keys, and preserves both
+primitive brands. Existing runtime tests and their assertions stay.
 
 ## Validation status
 
-The producer completed under its separate evidence. The subsequent focus
+The producer completed under its separate evidence. Both focus attempts
 stopped at compiler-06 before runtime owners ran. Compiler and runtime
-checks for this type repair remain **UNRUN**. This repair changes no
+checks for this symbol-key repair remain **UNRUN**. This repair changes no
 runtime object expression, JSON, pin or kernel source. The retained
 whole-definition byte and pin witnesses still govern the next checks.
