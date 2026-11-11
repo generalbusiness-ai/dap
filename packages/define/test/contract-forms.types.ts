@@ -25,3 +25,11 @@ export const filteredSet = sameSet({ field: "selected" }, "row", row => row.self
   },
   except: ["on"],
 });
+
+// Shared forms retain each caller's literal item identity.
+import { issueSource } from "../../../apps/room/lanes/authoring/issue.ts";
+import { changeSource } from "../../../apps/room/lanes/authoring/change.ts";
+export const issueCommentSubject: "comment" = issueSource.acts["edit-comment-own"].on;
+export const issueCommitmentSubject: "commitment" = issueSource.acts.decline.on;
+export const changeCommentSubject: "comment" = changeSource.acts["edit-comment-own"].on;
+export const changeCommitmentSubject: "commitment" = changeSource.acts.decline.on;

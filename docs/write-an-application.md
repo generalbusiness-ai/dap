@@ -157,16 +157,25 @@ membership, destination, or rules definitions through these helpers.
 The compiled declaration remains the data that a scope pins and judges.
 Importing authored code gives that code no authority over the scope.
 Use the [generated vocabulary](../spikes/typed-surface/VOCABULARY.md) to
-find helper names and forms. The
-[Lending definition](../examples/lending/definition.ts) and
-[Counter commitments](../apps/counter/commitments.ts) show complete values.
+find helper names and forms. The [Lending definition](../examples/lending/definition.ts),
+[Counter commitments](../apps/counter/commitments.ts),
+[Grow Room](../examples/grow/authoring/room.ts),
+[Grow Site](../examples/grow/authoring/site.ts),
+[Change](../apps/room/lanes/authoring/change.ts), and
+[Issue](../apps/room/lanes/authoring/issue.ts) show complete values.
+
+Grow and the lanes keep authoring offline. Runtime wrappers import one
+generated JSON artifact per definition. Lane wrappers import their types
+from the authoring modules with `import type`. Grow wrappers retain the
+mutable contract type that its demo variants use. Runtime paths never
+import Define or an authoring module by value.
 
 When an effect attributes authorship, name both subjects. In
 `target.attribute("authors", work)`, the effect writes the `authors` party
 slot on `target`. Its nested `attribute.of` names `work`, whose author
 slots supply those authors. The effect's outer `of` names `target`.
 
-To check the retained Lending and Counter JSON and pin files, run:
+To check all six authored definitions against their retained JSON and pins, run:
 
 ```sh
 node --import tsx scripts/check-definition-pins.mjs
@@ -174,7 +183,11 @@ node --import tsx scripts/check-definition-pins.mjs
 
 The gate runs this check without changing the retained files. If a file
 differs, inspect the authored change before you regenerate and review its
-new pin.
+new pin. To regenerate Grow, run the same command with `--write grow`.
+To regenerate the lanes and their descendants, run
+`node apps/room/lanes/scripts/pin.mjs`. The lane producer writes both
+base parents before it imports a descendant. Its opt-in successor modes
+check the parents without rewriting them.
 
 ### Release status
 

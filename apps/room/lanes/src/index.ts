@@ -6,7 +6,7 @@
  * `definitions/change.json` hold readable JSON. Their canonical values
  * determine the digests and provide the canonical bytes that a creator
  * retains for its children or a rules scope activates by digest. The
- * package exports both files. `scripts/pin.mjs` writes them from the values.
+ * package exports both files. `scripts/pin.mjs` compiles their parent authors before deriving successors.
  */
 
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";

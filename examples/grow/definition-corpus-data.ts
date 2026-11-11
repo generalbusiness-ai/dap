@@ -1,25 +1,33 @@
-/** Pure raw declarations shared with the original Grow judgment witnesses.
+/** Pure declarations shared with the Grow judgment witnesses.
  * This module validates nothing and constructs no history, actor key or service. */
 import type { DeclaredDefinition, FieldValue } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { deviceCommandRow as row } from "../../packages/derive/test/fixtures-device-command.ts";
-import { deviceForms } from "./device.ts";
-import { zoneForms } from "./zone.ts";
+import { define, item, live, normalize, open } from "@generalbusiness/dap-define";
+import { deviceActs, deviceItem, growVocabulary, zoneActs, zoneItem } from "./authoring/forms.ts";
 import { site } from "./site.ts";
 import { room } from "./room.ts";
 
+const rootItem = item("root", { initial: "open", states: { open: live } });
+
 export function deviceTestDefinition(): DeclaredDefinition {
-  const under = "grow-device-fixture", forms = deviceForms(under);
-  return { format: "artroom-definition-1", name: under, profile: { name: "restricted", version: 1 }, capabilities: [{ name: "device-command", version: 1 }], genesis: "establish",
-  items: { root: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: {}, refs: {}, values: {} }, device: forms.item },
-  acts: { establish: { step: "open", on: "root", grant: "grow.configure", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] }, ...forms.acts }, receives: {}, timed: {}, rules: forms.rules };
+  const under = "grow-device-fixture", vocabulary = growVocabulary();
+  const device = deviceItem(under), forms = deviceActs(device, vocabulary);
+  return normalize(define({
+    name: under, genesis: "establish", grants: vocabulary.g, reasons: vocabulary.r,
+    capabilities: [{ name: "device-command", version: 1 }], items: [rootItem, device],
+    acts: { establish: open(rootItem, vocabulary.g.configure, {}, () => ({})), ...forms.acts },
+  }));
 }
 
 export function zoneTestDefinition(): DeclaredDefinition {
-  const under = "grow-zone-fixture", forms = zoneForms(under);
-  return { format: "artroom-definition-1", name: under, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-  items: { root: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: {}, refs: {}, values: {} }, zone: forms.item },
-  acts: { establish: { step: "open", on: "root", grant: "grow.configure", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] }, ...forms.acts }, receives: {}, timed: {}, rules: forms.rules };
+  const under = "grow-zone-fixture", vocabulary = growVocabulary();
+  const zone = zoneItem(under), forms = zoneActs(zone, under, vocabulary);
+  return normalize(define({
+    name: under, genesis: "establish", grants: vocabulary.g, reasons: vocabulary.r,
+    items: [rootItem, zone],
+    acts: { establish: open(rootItem, vocabulary.g.configure, {}, () => ({})), ...forms.acts },
+  }));
 }
 
 export function simulatorTickParentDefinition(room: DeclaredDefinition, fields: Record<string, FieldValue>): DeclaredDefinition {

@@ -4,8 +4,8 @@ Request `f682cbc46d28df9029418272616bf0f4ead29dc7` covers the remaining
 Define builder witnesses, missing contract forms, and exact authored Grow
 and lane definitions. Promise `39da96860e62eaad1dc05da05a3772d3389bbe33`
 covers this builder work. Planner ruling
-`88cf23c309a7fc7085cc0590d47f6bdf051f637b` opens items 2 and 3 for source
-work before F lands. Item 1 waits for F's canonical spelling changes.
+`88cf23c309a7fc7085cc0590d47f6bdf051f637b` opened items 2 and 3 for source work before F landed. Item 1 now uses
+the canonical spelling on F main `a419407e`, under ruling `09048d34`.
 
 ## Missing forms
 
@@ -62,8 +62,8 @@ invalid bound. Platform-only definitions remain outside the authoring API.
 | Notices and timed rules | Subject `notify`, body `attention`, `timed` |
 
 The table records source representation. It does not claim that the full
-PD-2 acceptance is complete. Exact Grow, Change, and Issue witnesses and
-their regeneration check still wait for item 1 after F lands.
+PD-2 acceptance is complete. The exact Grow, Change, and Issue source witnesses now use the complete
+authored models. Their compiler and runtime results remain unrun.
 
 ## Validator witnesses
 
@@ -91,9 +91,83 @@ a text argument. It also rejects comparisons on non-field facts and an
 undeclared slot in a set's filter. Existing suites retain their cases and
 assertions.
 
+## One authored model per definition
+
+Grow's `authoring/forms.ts`, `room.ts`, and `site.ts` replace its raw
+component builders. The existing complete Define fixtures supply this
+source. The fixtures now re-export the application authors. The test
+corpus composes the same device and zone forms. Presence retains its
+runtime projection and bound.
+
+The lanes' `authoring/shared.ts`, `change.ts`, and `issue.ts` contain the
+complete base definitions. Shared forms receive the lane name and the
+comment and commitment items explicitly. Historical demo, manifest,
+evidence, workspace, Question, and Finding descendants keep their source.
+The old runtime shared file retains only its `LaneDefinition` type.
+
+Each definition uses one generated JSON artifact. Grow's wrappers retain
+the mutable `DeclaredDefinition` type for its demo variants. The lane
+wrappers use type-only imports from their authors. Runtime code imports
+neither Define nor authoring values. Define remains a development
+dependency of dap-lanes. The lockfile adds only that workspace metadata.
+
+`check-definition-pins.mjs` compiles all six application authors. It
+compiles Room before Site and gives Site that exact Room digest. Its
+normal mode compares the rendered JSON without writing. It also checks
+the existing Lending, Counter, and lane pins. `--write grow` regenerates
+both Grow artifacts. The lane producer compiles and writes both base
+parents before it imports a runtime wrapper or descendant. Default mode
+checks the existing publishing table before that parent subprocess can
+write any JSON. It carries the checked source text and rows into the
+existing default writer. A malformed table therefore stops every default
+output. Opt-in modes check the parents without rewriting them and keep
+their separate output paths.
+
+The complete pin witness retains independent F byte counts, canonical
+SHA-256 values, and tagged definition pins for Grow Room, Grow Site,
+Change, and Issue. It strengthens the existing Grow and Change cases and
+adds the missing whole Issue case. The earlier subject-spelling witnesses
+remain. The active-source owner also guards runtime authoring imports and
+keeps Define out of dap-lanes' runtime dependencies.
+
+## JSON compiler inputs
+
+Planner ruling `47ade9f5` permits `resolveJsonModule: true` in the seven
+additional configurations below. Each edit adds that option alone. The
+production contract, bytes, and derive configurations keep their options,
+and their runtime source imports no JSON. The kernel boundary check keeps
+its assertions.
+
+| Configuration | Import that reaches generated JSON |
+| --- | --- |
+| `packages/derive/tsconfig.test.json` | `test/canonical-spelling.test.ts` imports Grow Room and Site, and the lane package |
+| `packages/platform/tsconfig.test.json` | `test/package-graph.test.ts` imports Grow Room and the package-graph fixtures reach Site |
+| `packages/cli/tsconfig.json` | Its test configuration inherits the option. `test/application-examples.test.ts` reaches Grow through `prepare-check.ts`. Views and repo-in-ai also inherit this configuration and import the lanes |
+| `packages/cli/tsconfig.scope.json` | `test/host-none.scope.test.ts` imports the lane package |
+| `apps/room/page/tsconfig.test.json` | `test/retained-editor.test.ts` imports the lane package |
+| `apps/room/page/tsconfig.scope.json` | `test/signed-read-standing.scope.test.ts` imports the lane package |
+| `scripts/tsconfig.json` | `demo/rehearse.ts` imports the lane package |
+
+Grow and dap-lanes enable the same option in their own configurations.
+The lanes include their new authoring directory and the narrow
+`@generalbusiness/dap-bytes/web` types that Define already uses. These
+provide the text coders and other Web globals that the authoring closure
+reads, without adding DOM or Node types. `src/issue.ts` type-imports
+`authoring/issue.ts`. That author imports `packages/define/src/index.ts`,
+which imports `packages/bytes/src/index.ts`. Bytes exports `canonical.ts`,
+which reads `TextEncoder` and `TextDecoder`. The lane configuration had
+inherited an empty `types` list, so the same narrow type entry as Define
+completes this compile-time closure. Grow includes its new authoring
+directory. MCP and Scope test configurations already support
+JSON imports. Define's pin witness reads retained JSON through `readFileSync`,
+so its compiler needs no new JSON option. This table records static source
+imports. The focused compiler pass must confirm the complete closure.
+
 ## Validation status
 
-All new compiler, validator, and gate checks remain **UNRUN**. Source
-preparation changes no kernel, pin, generator, dependency, normalization,
-or compile implementation. Root will book the focused checks and the one
-final gate after the remaining source work and main integration.
+Compiler, validator, producer, formatter, focused owners, and the final
+gate remain **UNRUN** for this proposal. The new Grow JSON holds the exact
+retained canonical values. Its Prettier rendering remains unrun. No pin
+change, acceptance, deployment, or readiness follows from this source
+proposal. The runtime boundary, parent-first producer, whole definitions,
+and compiler contexts need the booked G focused pass before the gate.
