@@ -1,0 +1,155 @@
+{
+  "status": "SOURCE COMMAND-PATH COUNT SUPPLEMENT ONLY; PLANNER PLACEMENT RULING REQUIRED",
+  "request": "93adab5279ac0480bfbbc3a33e2588e64a1c3e11",
+  "promise": "9c6ef68e7f8eb7a9a2616f9fc9ac1857c14238c4",
+  "ruling": {
+    "event": "11f4d8257664d07f648a8265736f1818193c35ae",
+    "path": "/private/tmp/artroom-builder-unread-planner-acts/11f4d8257664d07f648a8265736f1818193c35ae.event.json",
+    "sha256": "9bcbd698bf5aad5f36fe8733309bea029af94f6ba081e75d47ffb065c8aec30f",
+    "bytes": 1834,
+    "mode": 384
+  },
+  "canonicalFamilyPlan": {
+    "report": "69fed84313d3e123a7e264d31e0aa4eba4fa913f",
+    "attachment": "attachments/cutover-family-plan.md",
+    "sha256": "333e0627d6c210b5878eff3d3282c43c78a522651ebc7f6f1986591dfd70fbf1"
+  },
+  "s8AmendmentV2": {
+    "path": "/private/tmp/artroom-r3b-design-s8-family-plan-amendment-v2-20261110/SOURCE.READY.json",
+    "sha256": "9beccfbfa386cfc5168316192c1054bb7e701b225292f675dde0976f9f0a307d"
+  },
+  "files": [
+    {
+      "path": "/private/tmp/artroom-s8-solo-command-count-supplement-v1-7177-20261111/supplement.md",
+      "sha256": "d5d9c2eb02bc5b024f45bcf93f791ce96fcb7a65ee496224a86fbbdb3d675019",
+      "bytes": 6743,
+      "mode": 256
+    }
+  ],
+  "sourcePins": [
+    {
+      "path": "packages/cli/src/line.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "a432825bfe8ecc424810ad27226ca4868fdb8df7",
+      "sha256": "9c11dd67e9610c510c3b49a3f298627101d870a6080b0fd7383c58b9bc19f0fe",
+      "bytes": 16444
+    },
+    {
+      "path": "packages/cli/src/claim.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "d14cb681357d6db8d85b1cf71e086e5a2f8a854b",
+      "sha256": "4e7450cc2cd16a091100eb9640d6b2aaaf72b3170105be9e113dc9dd1b218aa2",
+      "bytes": 33189
+    },
+    {
+      "path": "packages/cli/src/command-install.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "925815723025000ecb011dc2c98cf064443e961d",
+      "sha256": "c0cd8db6aba88837495b902b2a857366dc1d37315f643eecf19ef51c0340b32f",
+      "bytes": 25215
+    },
+    {
+      "path": "packages/cli/src/command-change.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "7989b02d678eac7fd3421c721915d49227cb4d19",
+      "sha256": "2c599e6bbf90848becbed50a0b162691f965d3595b37b18b199f6537c4d3dc8f",
+      "bytes": 30759
+    },
+    {
+      "path": "packages/cli/src/command-scope.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "e88eed5f31dedbcf9a2e281788c8084e7a56e62c",
+      "sha256": "ff32eefeb5cd934e4f9ddea395424b5d42116a92884350e92e092c42c1119d0e",
+      "bytes": 13083
+    },
+    {
+      "path": "packages/cli/src/command-targets.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "ce47f4a7fc764b71bcbb03ba3e68c31f523be6be",
+      "sha256": "24a31ac8b01dbba77bfd1b01ffa1fc7acbb5b02e3098dd7ce0f9ceddc6d9222f",
+      "bytes": 7212
+    },
+    {
+      "path": "packages/cli/src/browser-helpers.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "322f355e75ff8be98f2baceb43bd2609c6661bcf",
+      "sha256": "e2a34ab886eaba57f8af8d0668beac920bb7dfa970f60c0faa72d7cb79fae84d",
+      "bytes": 4274
+    },
+    {
+      "path": "packages/cli/test/story.scope.test.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "386d3d6835447bb9da3cce1c6a94d2e3ff34a905",
+      "sha256": "c176514a36cb20b5fb9f8685f44cdc59d016911ffdc7f4d7b565daea158109dc",
+      "bytes": 25261
+    },
+    {
+      "path": "packages/cli/test/host-none.scope.test.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "b44cf416001bb28a96e6257adb98446ded1c11dd",
+      "sha256": "f5295595c078f18e8dfde8d06f4682bb44a15612d4ce0b10900d4bbc0f596140",
+      "bytes": 37750
+    },
+    {
+      "path": "packages/platform/src/rules-scope-v11.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "04e7ab98c5de22b3ac6ff93b6b4e5a288d47b8eb",
+      "sha256": "c11ba08d7302f1e976f00b132bf1dae38071057cc4385b7f69e014c89bdbbd4d",
+      "bytes": 11087
+    },
+    {
+      "path": "packages/platform/src/rules-policy-v11.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "fe104135766a32889a3f6e5a21be4dd4f6ce95fd",
+      "sha256": "65417047041ff62824b017f2577e4f265b73d0a79845d25c3d43dd944c4179b1",
+      "bytes": 10519
+    },
+    {
+      "path": "packages/platform/src/rules-policy-tree.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "d95d623816de97673f07b3a0b3b9f83e4eca91bd",
+      "sha256": "ac99a1991a1d0f75bcf53a329df4c28f8660071410d811aaf40765dd3f74f030",
+      "bytes": 8688
+    },
+    {
+      "path": "packages/platform/src/rules-certificate.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "82a89c46e02e8cd4c33ced16e150fdda0721968a",
+      "sha256": "a7545755a200ca61febf234c80b37df4631adb05c217a58ebb44e5a364b68104",
+      "bytes": 11254
+    },
+    {
+      "path": "packages/platform/src/destination-v14.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "ee3ec2c6565c9dd8247706698bc9669b26206dca",
+      "sha256": "8000ec73d44b06cb54f666f5be123f2c62faf8e51cae15ab7fa9b691d52e1448",
+      "bytes": 8201
+    },
+    {
+      "path": "packages/platform/src/reservation-v14.ts",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "bbe28ca11ec0a35ec43a17fef975c3efbf3cd457",
+      "sha256": "7124699ead628c78c6090b4a96c7d366b7d89ef79f3b07222a2d75fd8083b14b",
+      "bytes": 14055
+    },
+    {
+      "path": "docs/cli.md",
+      "head": "7177b87be03ced9e2ddae2a5ebfcdfffcc1fda62",
+      "gitBlob": "635c0ac5663630df85f1dc2775d2ab53f8c382b2",
+      "sha256": "c270d8d36644dcd3a2e2d963b78e08d327e5f85527f94614bb07069561aa9b42",
+      "bytes": 64111
+    }
+  ],
+  "counts": {
+    "baselineCurrentSourceDAPInvocations": 4,
+    "baselineActualRunForSupplement": false,
+    "newManualProtocolLowerBound": 6,
+    "exactSupportedNewFamilyCount": null,
+    "proposedIntegratedSoloPolicyCommand": 4,
+    "proposedIntegratedCreateSoloChoice": 3,
+    "futureCountsAreDesignOnly": true
+  },
+  "finding": "The manual certified path is larger than the current bounded task and lacks complete maintained orchestration. Planner must rule on first certifiedpublish placement before source opens.",
+  "callerFixNeeded": "New open-policy install must send empty founders; current writer always sends signer key. Historical retained plans remain exact.",
+  "qualification": "Scratch-only prose and source/Git/hash metadata reads. No actual command, parser/helper/project import/compiler/test/control/TLC/build/capture/install/body execution, source patch, checkout/workroom write, new pin/digest or acceptance claim."
+}
