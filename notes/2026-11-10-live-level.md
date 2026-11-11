@@ -1,6 +1,6 @@
 # The live level: a first version
 
-Status: current. Draft 1, for request `bf1992ae`. Nothing here is built.
+Status: current. Draft 2, for request `bf1992ae`. Nothing here is built.
 
 A scope's definition declares one durability level: live, recorded or
 sequenced. Recorded is built. The sequenced level has its design in the
@@ -25,7 +25,7 @@ cuts its first version. It decides three things.
 
 Where this note and section 16 of the volatile acts note differ, this
 note governs. Section 6 lists each point. Source facts name a file and a
-symbol at main `73e30699`.
+symbol at main `7177b87b`.
 
 ## 1. What asks for the level
 
@@ -62,15 +62,26 @@ A live scope keeps its creation and nothing else.
 | Cited as a fact | Yes | The two creation entries only |
 
 **Applied** means that the act changed live state in generation G at
-revision N. It says nothing about whether that state still exists.
+tick N. It says nothing about whether that state still exists.
 **Reset** means that the generation a caller names is gone. The caller
 reads again and starts from what it finds. An act whose answer was lost
 may have applied.
 
 A **generation** is one life of the scope's object in memory. The object
 mints a random generation value when it starts. No order between two
-generations is promised. A **revision** is the count of inputs applied
-in the generation (3.3).
+generations is promised.
+
+A **tick** is the scope's counter inside one generation. It starts at
+the sequence of the journal's head, and each applied input adds one
+(3.3). The word is new. The volatile acts note calls this counter a
+revision (its section 6), but `Item.revision` in
+`packages/contract/src/read.ts` already has that name for the counter
+of one item, and a live item keeps it.
+
+| Word | What it counts | Where it appears |
+|---|---|---|
+| Revision | The changes of one item | `Item.revision`, the `expected` of an act, and the refusal `revision-moved` |
+| Tick | The inputs applied to the scope in one generation | `LiveAnswer.tick`, every read of live state, the watch, and the ID of a live item |
 
 ## 3. A live scope
 
@@ -79,10 +90,13 @@ in the generation (3.3).
 A scope with a live definition is created as any child scope is. A
 package root sends `create`, the child seals its genesis and sends its
 result, and the creator's confirmation activates it (`confirmation` in
-`packages/derive/src/delivery.ts`). Its kind is `lane`, the kind of
-every scope with a definition pinned by digest. Creation lineage, the
-scope index and routing admit it as they admit any lane
-(`admitChildCreation` in `packages/scope/src/creation-lineage.ts`).
+`packages/derive/src/delivery.ts`). The root's seed names the kind
+`lane`, as the platform's seed does for an application
+(`create-application` in `packages/platform/src/application.ts`).
+Creation lineage, the scope index and routing admit the scope as they
+admit any lane (`admitChildCreation` in
+`packages/scope/src/creation-lineage.ts`). The level does not rest on
+the kind. The level that the definition pins selects the live turn.
 
 So a live scope has a genesis digest, and its reference is the
 `SequenceRef` of the identifiers note, as for every scope. Its journal
@@ -136,7 +150,8 @@ A live act is an ordinary signed intent, in the intent domain that
 recorded acts use, addressed to the live scope's reference. The scope
 judges it as a recorded scope does: the signature, `notAfter` against
 the clock, the grant read from the membership scope, the `expected`
-revisions, then the guards and the effects, with the functions of
+revision of each item, then the guards and the effects, with the
+functions of
 `derive`. The request that carries the intent also names the generation
 that its sender last read. Another generation is answered `reset`, and
 nothing is judged.
@@ -144,17 +159,18 @@ nothing is judged.
 The scope then applies the effects to its state in memory. It writes no
 entry and nothing to storage.
 
-**The revision takes the place of the sequence.** In each generation the
-revision starts at the sequence of the journal's head, and each applied
-input adds one. An applied act that opens an item gives it that revision
-as its ID, as a recorded entry gives its sequence. So the IDs of live
+**The tick takes the place of the sequence.** In each generation the
+tick starts at the sequence of the journal's head, and each applied
+input adds one. An applied act that opens an item gives it that tick as
+its ID, as a recorded entry gives its sequence. So the IDs of live
 items never collide with the items that the genesis opened, and they
 repeat from one generation to the next. A reference to a live item names
-the generation.
+the generation. Each item keeps its own revision, which an act's
+`expected` names, as in a recorded scope.
 
 **A repeat.** The index of accepted intents is in memory. A repeat of an
 applied intent in the same generation is answered `applied` with the
-same revision. After a reset, a repeat inside the intent's lifetime can
+same tick. After a reset, a repeat inside the intent's lifetime can
 apply again. An application that cannot accept that uses a recorded
 scope.
 
@@ -166,15 +182,22 @@ A live act has four answers.
 
 ```ts
 type LiveAnswer =
-  | { answer: "applied"; generation: string; revision: number; touched: readonly number[] }
-  | { answer: "refused"; reason: RefusalReason; name?: string; generation: string; revision: number }
+  | { answer: "applied"; generation: string; tick: number }
+  | { answer: "refused"; reason: RefusalReason; name?: string; generation: string; tick: number }
   | { answer: "reset"; generation: string }          // the current generation
   | { answer: "unavailable"; reason: UnavailableReason };
 ```
 
-`applied` carries no receipt, no hash and no `FactRef`. A refusal names
-the generation and the revision that judged it, where a recorded refusal
-names a head. The reasons are the reasons of the recorded contract.
+`applied` carries no receipt, no hash and no `FactRef`. Its tick is the
+ID of an item that the act opened. A refusal names the generation and
+the tick that judged it, where a recorded refusal names a head. The
+reasons are the reasons of the recorded contract.
+
+The answer `applied` is not the clause `applied` of a send's result
+(`OutboxItem.result` in `packages/contract/src/read.ts`). The creator's
+confirmation of a live scope carries that clause, as the confirmation
+of every created scope does. The two words are members of different
+types, and neither is renamed.
 
 These shapes, the live reads and the live calls are one interface of
 their own in a platform package. The kernel's `Answer`, `Read` and
@@ -186,15 +209,15 @@ A live scope answers two families of read, and they never mix.
 
 - **Reads of the record** are the reads of any scope. They answer the
   two creation entries and the fold of the genesis, at the journal's
-  head. The sequence document of the identifiers note describes a live
-  scope as a sequence of two entries.
+  head. To these reads a live scope is a sequence of two entries
+  (section 5).
 - **Reads of live state** answer the scope's summary and its items in
-  memory. Each answer names the generation and the revision that it
+  memory. Each answer names the generation and the tick that it
   shows. A read session authorizes them, as it authorizes the reads of
   the record.
 
 **The watch** sends one line when the live state changes: the
-generation and the revision. A viewer that receives it reads the items
+generation and the tick. A viewer that receives it reads the items
 again. While a line waits unread, later changes send nothing more, so a
 slow viewer sees the latest state and not every step. A new generation
 sends a line too. The head stream works this way today for a recorded
@@ -205,7 +228,7 @@ each send (`Streams` in `sessions.ts`).
 
 A timed rule of a live definition runs from memory. A presence lease is
 one: an item with a deadline, and a rule that removes it when the
-deadline passes. A timed rule that applies adds one to the revision. A
+deadline passes. A timed rule that applies adds one to the tick. A
 reset drops every pending deadline with the state that held it.
 
 ### 3.7 Reset
@@ -278,6 +301,16 @@ capability, no entry kind, no field type and no kind of reference
 between scopes. It adds nothing to K1's count or to K4's list. It adds
 one app-only MCP tool beside `view_read`, and no group of tools.
 
+**The codes of the two refusals.** The validator reports a refused
+form as a `Problem` with a `ProblemCode`. Both are types of `derive`
+(`packages/derive/src/validate/shape.ts`), not of `contract`. The
+refusal of `live` today has the code `unsupported-definition`. Replay
+reports a third entry with the result `mismatch`, which the replay
+report has (`packages/contract/src/report.ts`). LV1 names the code of
+each refusal of 3.2 and the way the fold reports a third entry to the
+runtime. Where LV1 adds a code to `ProblemCode` or to `contract`, it
+says so, because section 7 of the kernel page counts the addition.
+
 K1, K4, K5, K6 and K10 are open, and the level closes none of them.
 Ruling `4b5e0ec2` admits the first version by the owner's decision of 10
 November 2026, as ruling `08c5ff25` admits the sequenced level, and this
@@ -290,10 +323,10 @@ level is built. LV5 is the head that changes them, to these words.
 
 - Promise 1 gains: "The state of a live scope is the one exception. It
   is not in the record, and nothing in the record rests on it."
-- Promise 7 gains: "A live scope orders its inputs by revision inside
-  one generation, and no order crosses a reset."
+- Promise 7 gains: "A live scope orders its inputs by tick inside one
+  generation, and no order crosses a reset."
 - Promise 11 gains: "A read of live state names a generation and a
-  revision, and it is not a read of the record."
+  tick, and it is not a read of the record."
 
 The other promises hold as they stand. Promise 2: the level writes no
 new entry kind. Promise 4: a live act is judged against the scope's own
@@ -322,7 +355,7 @@ Nothing changes in that head. The four questions have these answers.
 | Point | Section 16 | This note |
 |---|---|---|
 | L1, the format | A new definition format for live definitions | `artroom-definition-1`. The validator already refuses a level that the runtime lacks, which was the reason for a new format (`validateFormat1`) |
-| L2, the kind | A new kind `live` in the seed | No new kind. A live scope is a `lane` |
+| L2, the kind | A new kind `live` in the seed | No new kind. The seed of a live scope names `lane` |
 | L3, establishment | The directory records each live scope in an item, by a new directory version | The creator's `create` send and its result record it, as for any child. No directory version |
 | L4, the genesis | A live definition has no genesis act | It has one, and each generation starts from its fold (3.1) |
 | L5, sessions, leases and messaging | A pass over sections 5 to 9 is owed | Still owed, before the forms of section 7 that wait |
@@ -331,10 +364,13 @@ Nothing changes in that head. The four questions have these answers.
 
 Also withdrawn from 16.2 to 16.5: "it exists when addressed", the
 reference "ID, generation, kind", the read of a host entry at each
-start, and "no entry and no storage". Kept: zero durability after
-creation, the answers `applied` and `reset`, generations and revisions,
-one level for each scope, and the refusal of every durable effect in a
-live definition.
+start, and "no entry and no storage". The witness of 16.5 that reads
+"A field of type `fact` that names a live scope is refused" is
+withdrawn too: such a field may name either creation entry (3.8). Kept:
+zero durability after creation, the answers `applied` and `reset`,
+generations, the scope's counter under the name tick (section 2), one
+level for each scope, and the refusal of every durable effect in a live
+definition.
 
 ## 7. The first version
 
@@ -368,14 +404,13 @@ live definition.
 Each is one head with one gate. They follow identifiers head (c+d),
 because a live act is addressed to a `SequenceRef`. The level needs no
 creation family of its own. A room that installs ordinary packages can
-install one with a live scope, and the cutover family is the first that
-does.
+install one with a live scope.
 
 | Head | Owns | Needs | Witness |
 |---|---|---|---|
 | LV1, validator and fold | `live` version 1 in `validateFormat1`, with the refusals of 3.2. The fold's refusal of an entry after a live scope's confirmation | Identifiers head (c+d) | A definition-corpus row for each admitted form, and a refusal pair for each refused form. The corpus row that refuses `live` today becomes an admission. A journal with a third entry does not fold |
-| LV2, the live turn | The object's live mode, chosen by the pinned level. The generation. The turn of 3.3 over memory, with the judges of `derive`. Timed rules from memory. The answers. Any change that a judge needs to run with no sealed entry | LV1 | One definition and one sequence of acts: the live run and the recorded run reach the same items and states. On native storage: an applied act, a refused stale `expected`, and an act that names an old generation after an eviction, answered `reset`. The stored rows after many live acts equal the stored rows after creation |
-| LV3, reads and the watch | The live reads and the watch of 3.5. The bounds of the live state (O1) | LV2 | Two viewers receive a line for a change. A slow viewer reads the latest state. A read names the generation and the revision. A viewer with no session is refused |
+| LV2, the live turn | The object's live mode, chosen by the pinned level. The generation. The turn of 3.3 over memory, with the judges of `derive`. Timed rules from memory. The answers. Any change that a judge needs to run with no sealed entry | LV1 | One definition and one sequence of acts: the live run and the recorded run reach the same items and states. On native storage: an applied act, a refused stale `expected`, and an act that names an old generation after an eviction, answered `reset`. A repeat of an applied intent after a reset applies again. The stored rows after many live acts equal the stored rows after creation |
+| LV3, reads and the watch | The live reads and the watch of 3.5. The bounds of the live state (O1) | LV2 | Two viewers receive a line for a change. A slow viewer reads the latest state. A read names the generation and the tick. A viewer with no session is refused |
 | LV4, package and tools | The package graph's entry for a live scope, and its refusal of a send to one. The app-only MCP tool, the client call and `dap act` | LV1 for the graph. LV3 for the tool | A package with one live scope installs, and a presence card enters, renews and leaves. A package that sends to its live scope is refused |
 | LV5, replay and documents | Replay of the two creation entries. Promises 1, 7 and 11 of the kernel page (4.3). The one-channel audit. `docs/scopes.md`, `docs/write-an-application.md`, the roadmap, and B4 of the members and presence note | LV1 for replay. LV4 for the documents | The replay test that refuses `live` today passes for a live scope's two entries. A forged third entry is a `mismatch` |
 
@@ -387,7 +422,7 @@ LV2 and the graph part of LV4 can run as parallel lanes after LV1.
 |---|---|---|
 | `docs/kernel.md`, sections 7 and 7.1 | Ruling `4b5e0ec2` | This head |
 | Volatile acts note, section 16 | A pointer to this note at its head. 16.1 reads "Live, Recorded or Sequenced" | This head |
-| Sequenced note, sections 2 and 3 | A live scope keeps no entry after its creation. The row for Live cites this note | This head |
+| Sequenced note, sections 2 and 3 | A live scope keeps no entry after its creation. The row for Live in section 2 cites this note. The row for Live in section 3 says what survives and what a fact may cite | This head |
 | `docs/kernel.md`, section 6 | Promises 1, 7 and 11 gain the sentences of 4.3 | LV5 |
 | One-channel audit | The class "judged, not retained" for a live act and a live read | LV5 |
 | `docs/scopes.md`, `docs/write-an-application.md`, `docs/roadmap.md` | The level as built | LV5 |
@@ -401,12 +436,12 @@ LV2 and the graph part of LV4 can run as parallel lanes after LV1.
 3. Each generation starts from the fold of the genesis. Planner.
 4. A live act is an ordinary signed intent, judged with the functions of
    `derive` under a membership grant. Planner.
-5. The revision takes the place of the sequence inside one generation.
-   Planner.
+5. The tick takes the place of the sequence inside one generation. An
+   item's revision keeps its name and its meaning. Planner.
 6. A live definition uses the recorded grammar and is refused every
    handler, send, capability and `fact`. Planner.
-7. A live scope is a `lane`. No scope kind, directory version or
-   creation family is added. Planner.
+7. The seed of a live scope names the kind `lane`. No scope kind,
+   directory version or creation family is added. Planner.
 8. The code that runs live acts is a platform service. The kernel
    admits the level in the validator and refuses a third entry in the
    fold. Planner, with ruling `4b5e0ec2`.
@@ -419,7 +454,7 @@ LV2 and the graph part of LV4 can run as parallel lanes after LV1.
 
 | Point | Question | Proposed |
 |---|---|---|
-| O1 | The bound on a live scope's state in memory | LV3 proposes a byte bound from the definition's item limits. An act that would pass it is refused `scope-full` |
+| O1 | The bound on a live scope's state in memory | LV3 proposes a byte bound from the definition's item limits. An act that would pass it is refused `scope-full`. The comment on `Answer` in `packages/contract/src/result.ts` gives that reason to the exhausted budget of the whole scope. For a live scope the budget counts state in memory, so the meaning widens from stored state to held state. LV3 changes the comment and says so as a change to `contract` |
 | O2 | What a live scope answers to a delivery that arrives after its confirmation | `unavailable`. The package check stops the sender before that. LV2 confirms that the sender's own deadline settles its request |
 | O3 | Whether an idle live scope should stay in memory while a watch is open | LV3 measures what the host does. The level promises nothing either way |
 | O4 | The name `live` already means "not final" for items and holds in source | Keep the level's name, which the definition type already has. Documents say "the live level" and "live state", never "a live item" for an open one |

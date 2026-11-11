@@ -97,7 +97,7 @@ until the heads of section 9 land the sequenced level.
 
 | Level | What survives | Whose order | Read as of a position | Cited as a fact |
 |---|---|---|---|---|
-| Live | Nothing | None | No | No |
+| Live | The genesis entry and the creator's confirmation | None | No | The two creation entries only |
 | Recorded | The journal | Its own | No | Yes |
 | Sequenced | The journal | Its own, and the group's | Yes, by a sequenced input of the same group | Yes |
 
