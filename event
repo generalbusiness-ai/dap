@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:729a6f682381f4533c57842e55a4e6f535c2a4f6","text":"Merge retired a covered predecessor; the successor is at scripts/test/j3-runner.config.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:759787bc122fca82eda43c8b6e9c201b5c48fac4","text":"Merge retired a covered predecessor; the successor is at vitest.projects.mjs."}
