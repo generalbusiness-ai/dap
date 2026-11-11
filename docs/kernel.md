@@ -147,6 +147,15 @@ revision 21 is permitted under this section by ruling `1bc4f7fd`: its
 nullable `roomService` and scoped `serviceGeneration` state what a judge may
 know of the Rules scope's admin-published mark and native-selected position.
 
+The first version of the sequenced level is permitted under this section
+by ruling `08c5ff25`. What an input may read when a scope judges it is
+part of the meaning of the judgment, so the level's read at a cut and its
+prepare and commit entries cannot be a platform service or an application.
+The level is designed and not built. The
+[sequenced note](../notes/2026-10-18-sequenced-level-and-order-scope.md),
+section 13.2, lists what it adds to `contract` and `derive`, and the words
+that promises 2, 4 and 5 take when replay handles it.
+
 A head adds to the kernel when it does any of these:
 
 - adds a file or an export to `packages/contract`, `packages/derive`, or
@@ -216,6 +225,10 @@ These do not wait:
   but it adds one to K1's count, and the change says so.
 - fixes for the filed security findings, R1 to R16 and D1 to D6. They
   still follow section 7 and add no K item.
+- the first version of the sequenced level, by the owner's decision of 10
+  November 2026 and ruling `08c5ff25`. It closes no K item. It adds the
+  scope kind `order` to K4's closed list and the rules of
+  `platform:order@1` to K1's count, and each head that builds it says so.
 
 A head that adds to the kernel names the K item that it closes, or the
 planner holds it.
