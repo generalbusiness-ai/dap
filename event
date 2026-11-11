@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f74456015f1922797ebf4e6617ead0c6ae045dbf","text":"Merge retired a covered predecessor; the successor is at docs/package-reference.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd63c6bcae7c1743d4b0389294735410e9f43426","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-10-typed-contract-forms-g.md."}
