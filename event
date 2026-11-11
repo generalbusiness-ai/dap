@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:20453633fefc1c8dedd3b74702b7ad5165bcf542","text":"Merge retired a covered predecessor; the successor is at packages/define/src/field-input.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:29b2c7ec9105f2695449f98d3a01f503eff4ab4a","text":"Merge retired a covered predecessor; the successor is at packages/define/test/story.test.ts."}
