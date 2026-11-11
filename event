@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at verification/state-machines/coverage.json","body":{"commit":"a419407ead7772fa9e701427a098109734449a29","path":"verification/state-machines/coverage.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:01c2cdff8a100d51407d07c8e0c4e9c324525380","text":"Merge retired a covered predecessor; the successor is at verification/state-machines/README.md."}
