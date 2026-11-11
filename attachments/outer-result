@@ -1,0 +1,28 @@
+{
+  "actualDriverReturnCode": 0,
+  "launcherExit": 0,
+  "failure": null,
+  "interruptions": [],
+  "cleanup": {
+    "initialGroups": [],
+    "termGroups": [],
+    "killGroups": [],
+    "remainingGroups": [],
+    "closed": true
+  },
+  "rss": {
+    "status": "complete",
+    "intervalSeconds": 10.0,
+    "samples": 2,
+    "nodeWorkerdRows": 2,
+    "errors": [],
+    "startedUtc": "2026-11-11T11:00:30.770209+00:00",
+    "lastSampleUtc": "2026-11-11T11:00:40.780247+00:00",
+    "endedUtc": "2026-11-11T11:00:48.640906+00:00",
+    "lastSampleGapSeconds": 7.860669125000001,
+    "qualification": "Passive ps RSS observations only. No heap, worker, environment or validation deadline changes. Peaks must be derived per kind and PID/start identity; sampled RSS is not heap size or an instantaneous maximum.",
+    "passed": true,
+    "samplesSha256": "047311c07570cb043b63efc60ec82ae2bd56be3330cf492d1278b2fd95d592ff"
+  },
+  "passed": true
+}
