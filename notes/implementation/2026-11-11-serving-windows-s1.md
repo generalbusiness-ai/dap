@@ -84,8 +84,9 @@ failures. The added cases and baseline distinctions still require
 their actual booked executions.
 
 This source includes the landed identifiers (b) through main df41.
-The S1 gate follows JP1 and OPS1 under the current work order, after
-ordinary working checks and exact source correspondence review.
+The current order gives the next gate to JP1 or OPS1, whichever is
+ready first. S1 follows that head, after ordinary working checks and
+exact source correspondence review.
 Root owns all bookings and execution. The planner deploys after
 landing. This draft claims no acceptance, deployment, review
 approval, or successful validation.
