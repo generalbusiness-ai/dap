@@ -1,0 +1,54 @@
+{
+  "status": "ROOT_REVIEWED_H_STATIC_PREREQUISITES",
+  "accepted": true,
+  "finalLock": {
+    "head": "5f749419ff7357d2d8320699ae8f1cbf47821388",
+    "tree": "55c5ba5866689d1a08a5f2003020ec1500fd598d",
+    "main": "74c958d0cecd17f7d668518184c66e58c1aa1829",
+    "base": "74c958d0cecd17f7d668518184c66e58c1aa1829"
+  },
+  "request": "d49269fda2dd038f47a9bdd495467a109e1fa0bf",
+  "promise": "d43e33e153e295f576fc0594086d06fe02663e3d",
+  "acceptedRoles": [
+    "namespace",
+    "new-cli-working-checks",
+    "main-integration"
+  ],
+  "records": [
+    {
+      "role": "namespace",
+      "path": "/private/tmp/artroom-h5f749-namespace-actual-v2-20261111/namespace.actual.json",
+      "sha256": "9149ac83b31161a537ebdb62beb0375e8c6e45891e26c98a16f7de96e09f9f22",
+      "bytes": 60315,
+      "mode": 256
+    },
+    {
+      "role": "new-cli-working-checks",
+      "path": "/private/tmp/artroom-h5f749-cli3-20261111.manifest.json",
+      "sha256": "ed44ee8e217ab95409da43b52d217e8fe0269c63defa585abb0d40ccac49cd64",
+      "bytes": 2175,
+      "mode": 256
+    },
+    {
+      "role": "main-integration",
+      "path": "/private/tmp/artroom-h5f749-current-prerequisites-source-20261111/main-integration-current.json",
+      "sha256": "fbeea98ee7972129e87c37a7b4983c9c7fbdcb5e020afd77f4ecc9d5e0652cec",
+      "bytes": 2994,
+      "mode": 256
+    }
+  ],
+  "roleRequirements": {
+    "namespace": "Actual V2 metadata refresh with only stamp changed; no install/copy.",
+    "new-cli-working-checks": "Actual H5f749 CLI compiler and complete three-case owner pass, actual exits and terminal seal/END.",
+    "main-integration": "Actual main74 ordinary merge preserving H32/shared union and clean5f749 final CLI witness commit."
+  },
+  "reviewObligations": {
+    "controls": "TWO_DISTINGUISHING_CONTROLS_AFTER_SUCCESSFUL_GATE_WITH_ITS_WHOLE_OWNERS",
+    "exactHeadPageCardCI": "REQUIRED_BEFORE_REVIEW"
+  },
+  "staticResult": null,
+  "gateBooking": null,
+  "gateResult": null,
+  "controlResults": null,
+  "historicalQualification": "Historical67 focus and12compiler/13authoring carry retain actual recorded heads."
+}
