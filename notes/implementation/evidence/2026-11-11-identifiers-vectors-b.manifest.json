@@ -1,580 +1,889 @@
 {
-  "qualification": "Final B aggregate. The one fa6 full gate stays FAILED1; the bounded377 continuation passes5current compilers and1146current cases, separately from4735runtime/40compiler historical no-read carry. Preparation, focus, both control outcomes and Page build retain their own histories. No deployment/review/landing or predicted CI result.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-377b/unit",
-  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-377b/unit",
-  "checkpoint": "377b2adbaa48c68851de87365bd3ca0edcc0c329",
-  "head": "377b2adbaa48c68851de87365bd3ca0edcc0c329",
-  "tree": "25bfe076587670c52edf172d9a1479ffacf58ee4",
-  "fileCount": 62,
+  "qualification": "Repaired B aggregate at3da. The fa6 full gate remainsFAILED1 and377 continuation/879 rejection stayhistorical. Currentfocus37passed0compilers;5844historical observations/706no-callowners remainseparate. Controlactuals and allpreparationheads retained. No newwholegate,review,landing,deployment orpredictedCI.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-3da8226/unit",
+  "unit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-3da8226/unit",
+  "checkpoint": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+  "head": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+  "tree": "e2a4a809609d99cb5d652e328b57f7c016ba8553",
+  "fileCount": 86,
   "files": [
     {
       "path": "SHA256SUMS",
+      "bytes": 10630,
+      "sha256": "8817d8a6db2a382b9fc4f60a2bc2de1593b96bf136dc9489280430b6ce40b1a1",
+      "mode": 256
+    },
+    {
+      "path": "history/377b/SHA256SUMS",
       "bytes": 7207,
       "sha256": "35665a5345165fb9a4e59a8c73a976c4a6da3023cabad70e6f1baef2f3f896fe",
       "mode": 256
     },
     {
-      "path": "raw-index.json",
+      "path": "history/377b/raw-index.json",
       "bytes": 42511,
       "sha256": "c6d08f395b1b6c12c5c6a9b09cfe45f3ec38515a0ca2b8aaeae5877cc48d52ef",
       "mode": 256
     },
     {
-      "path": "terminal-prerequisites.json",
+      "path": "history/377b/terminal-prerequisites.json",
       "bytes": 34516,
       "sha256": "4f930d6890ea2b0da864921ce3c8c28c39c460f0b1aed1a17300a24c848565dd",
       "mode": 256
     },
     {
-      "path": "units/bounded-continuation/files/SHA256SUMS",
+      "path": "history/377b/units/bounded-continuation/files/SHA256SUMS",
       "bytes": 433,
       "sha256": "8361c7501aaad2e5de0287c97521de78745fd0865abc35468a94de9815ab73e6",
       "mode": 256
     },
     {
-      "path": "units/bounded-continuation/files/compiler-ledger.json",
+      "path": "history/377b/units/bounded-continuation/files/compiler-ledger.json",
       "bytes": 3908,
       "sha256": "d1f8ff8702bab63051d71c588b9e315fc13cb29c63d5d95f03514aaf13da95a0",
       "mode": 256
     },
     {
-      "path": "units/bounded-continuation/files/literal-case-ledger.json",
+      "path": "history/377b/units/bounded-continuation/files/literal-case-ledger.json",
       "bytes": 937238,
       "sha256": "ac1933678ae83ad17a49ce243a9966911c27a9521447b426ff6b5cff073efe3b",
       "mode": 256
     },
     {
-      "path": "units/bounded-continuation/files/raw-index.json",
+      "path": "history/377b/units/bounded-continuation/files/raw-index.json",
       "bytes": 124179,
       "sha256": "731b2d5a4ee2b24ff2bd0fd58a7197e64748d1c72f2dd3ca6ec55e954801fde2",
       "mode": 256
     },
     {
-      "path": "units/bounded-continuation/files/runtime-ledger.json",
+      "path": "history/377b/units/bounded-continuation/files/runtime-ledger.json",
       "bytes": 3659,
       "sha256": "552fe86f9ad700c315281ad92bb2786db2f2ec0373affc9345349a578d2f681a",
       "mode": 256
     },
     {
-      "path": "units/bounded-continuation/files/terminal-summary.json",
+      "path": "history/377b/units/bounded-continuation/files/terminal-summary.json",
       "bytes": 17382,
       "sha256": "85361350ace220f235843303d328808944c35af4c356fd9973c8d9ae6070810f",
       "mode": 256
     },
     {
-      "path": "units/bounded-continuation/manifest.original.json",
+      "path": "history/377b/units/bounded-continuation/manifest.original.json",
       "bytes": 2803,
       "sha256": "8487f779efdd2bdb3925f2f9fae8b9353eeb6190d3f9c7745691385af81c900d",
       "mode": 256
     },
     {
-      "path": "units/citation-controls/files/SHA256SUMS",
+      "path": "history/377b/units/citation-controls/files/SHA256SUMS",
       "bytes": 433,
       "sha256": "285efc52e23dc728d70b8d95ab1aa7319aad7e3aa761e1a01e0d6c6c96291adb",
       "mode": 256
     },
     {
-      "path": "units/citation-controls/files/compiler-ledger.json",
+      "path": "history/377b/units/citation-controls/files/compiler-ledger.json",
       "bytes": 3,
       "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
       "mode": 256
     },
     {
-      "path": "units/citation-controls/files/literal-case-ledger.json",
+      "path": "history/377b/units/citation-controls/files/literal-case-ledger.json",
       "bytes": 17721,
       "sha256": "8fad8bd9928e9475e9e312801e7955ddd6e544b5ac8862ef554f59c7c0e94365",
       "mode": 256
     },
     {
-      "path": "units/citation-controls/files/raw-index.json",
+      "path": "history/377b/units/citation-controls/files/raw-index.json",
       "bytes": 36303,
       "sha256": "320c740fba4c3eba9a16a3b9f23d5a4fd9788bdf661d07fd4c2133b04a3ca050",
       "mode": 256
     },
     {
-      "path": "units/citation-controls/files/runtime-ledger.json",
+      "path": "history/377b/units/citation-controls/files/runtime-ledger.json",
       "bytes": 16415,
       "sha256": "c23e670c2b613dd88261b990b19dab6c773ebfbc18307522377b80ea192915a6",
       "mode": 256
     },
     {
-      "path": "units/citation-controls/files/terminal-summary.json",
+      "path": "history/377b/units/citation-controls/files/terminal-summary.json",
       "bytes": 1782,
       "sha256": "1354c31a61442009e2a37ab70410bb93e5cec1ad0f9c94540ab56814cb7b1fff",
       "mode": 256
     },
     {
-      "path": "units/citation-controls/manifest.original.json",
+      "path": "history/377b/units/citation-controls/manifest.original.json",
       "bytes": 2828,
       "sha256": "663033cbc8af8cf64281f35292f39d2f39c017d7550b30832e15aa9965645d1a",
       "mode": 256
     },
     {
-      "path": "units/failed-full-gate/files/SHA256SUMS",
+      "path": "history/377b/units/failed-full-gate/files/SHA256SUMS",
       "bytes": 169,
       "sha256": "84a5e014ee8958714c8f569563b8881a677aed3af8d5412ffa82b3d072dc663d",
       "mode": 256
     },
     {
-      "path": "units/failed-full-gate/files/raw-index.json",
+      "path": "history/377b/units/failed-full-gate/files/raw-index.json",
       "bytes": 660456,
       "sha256": "26ae948cd7c86a8b82c90bf4d8c44b59b24f6f48430e5e90c57b76c1cede2f56",
       "mode": 256
     },
     {
-      "path": "units/failed-full-gate/files/terminal-summary.json",
+      "path": "history/377b/units/failed-full-gate/files/terminal-summary.json",
       "bytes": 132915,
       "sha256": "82734b5ed6abe6192a5853b982c6d0ba306f75a42746ef37018c13680e9762bd",
       "mode": 256
     },
     {
-      "path": "units/failed-full-gate/manifest.original.json",
+      "path": "history/377b/units/failed-full-gate/manifest.original.json",
       "bytes": 2162,
       "sha256": "299ae5ebaa32d0c8c19fe2e83a42d46b3b4b6919188c33544cc96152115e5ced",
       "mode": 256
     },
     {
-      "path": "units/focused169/files/SHA256SUMS",
+      "path": "history/377b/units/focused169/files/SHA256SUMS",
       "bytes": 433,
       "sha256": "4d2874f9e397acc0005972125c2b680a01f6af5fb532ad66cf52bf42c7cac90a",
       "mode": 256
     },
     {
-      "path": "units/focused169/files/compiler-ledger.json",
+      "path": "history/377b/units/focused169/files/compiler-ledger.json",
       "bytes": 3,
       "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
       "mode": 256
     },
     {
-      "path": "units/focused169/files/literal-case-ledger.json",
+      "path": "history/377b/units/focused169/files/literal-case-ledger.json",
       "bytes": 67532,
       "sha256": "0c96c2ef0917fb2a0ff2a8654b79c7335497ae1f24eeaa8f28170b2996183eb2",
       "mode": 256
     },
     {
-      "path": "units/focused169/files/raw-index.json",
+      "path": "history/377b/units/focused169/files/raw-index.json",
       "bytes": 42564,
       "sha256": "4edc1b09b4f1aab565cae8fae7fb22847ab3bd03903e9f755e48cce7a91a7d79",
       "mode": 256
     },
     {
-      "path": "units/focused169/files/runtime-ledger.json",
+      "path": "history/377b/units/focused169/files/runtime-ledger.json",
       "bytes": 2094,
       "sha256": "b11d03903c9e05dad9b76ac236557d42e8fd23540eb002d398841296c7f30b1d",
       "mode": 256
     },
     {
-      "path": "units/focused169/files/terminal-summary.json",
+      "path": "history/377b/units/focused169/files/terminal-summary.json",
       "bytes": 8759,
       "sha256": "f46d9e226321f8f81e6b6795ec1444b4a1df338850aabc38c9e3233e25c0d3c3",
       "mode": 256
     },
     {
-      "path": "units/focused169/manifest.original.json",
+      "path": "history/377b/units/focused169/manifest.original.json",
       "bytes": 2186,
       "sha256": "07e7f857d5d9fa3a1d9c14742d4ecc015a3bfec0d3f6539857c7d0db3338a73f",
       "mode": 256
     },
     {
-      "path": "units/page-build/files/SHA256SUMS",
+      "path": "history/377b/units/page-build/files/SHA256SUMS",
       "bytes": 169,
       "sha256": "40e4e52d791885e715750bb19982141b749cf10a926b84374a58b6dc2693c904",
       "mode": 256
     },
     {
-      "path": "units/page-build/files/raw-index.json",
+      "path": "history/377b/units/page-build/files/raw-index.json",
       "bytes": 18679,
       "sha256": "95343e8a461f99f5a4c25c2fa924c81b820fc3ffa6fa25e400e004ea5e672c5e",
       "mode": 256
     },
     {
-      "path": "units/page-build/files/terminal-summary.json",
+      "path": "history/377b/units/page-build/files/terminal-summary.json",
       "bytes": 11702,
       "sha256": "318962cc8d9e471fdbbfc7d64f68432f136ccf6167b2941bae61222ab9d7225b",
       "mode": 256
     },
     {
-      "path": "units/page-build/manifest.original.json",
+      "path": "history/377b/units/page-build/manifest.original.json",
       "bytes": 2241,
       "sha256": "0b8ad987757df9afaad2274ffec2157d35eaeafe8c39dfe385cc26b11325b2c3",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/SHA256SUMS",
+      "path": "history/377b/units/preparation/files/SHA256SUMS",
       "bytes": 2905,
       "sha256": "f664bab20f755c07b58eaaae0f80dc7331dd28f75222c56286b585abffda0e9c",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/bytes-index-ast-launch/actual.exit",
+      "path": "history/377b/units/preparation/files/bytes-index-ast-launch/actual.exit",
       "bytes": 2,
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/bytes-index-ast-launch/argv.json",
+      "path": "history/377b/units/preparation/files/bytes-index-ast-launch/argv.json",
       "bytes": 344,
       "sha256": "04a2a94e18d74c39a3a5931055d3cb5e0329d0cad48a7b22fb371bf451d5c4ec",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/bytes-index-ast-launch/external-receipt.json",
+      "path": "history/377b/units/preparation/files/bytes-index-ast-launch/external-receipt.json",
       "bytes": 222,
       "sha256": "be9fafc470f7e4fd4fcb249de738644f5d1d10b1d85a9a0a4bc016662d59820a",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/bytes-index-ast-launch/stderr",
+      "path": "history/377b/units/preparation/files/bytes-index-ast-launch/stderr",
       "bytes": 29,
       "sha256": "9f449aeb0da7bcb73c7ba83e35afef6fa1526ef3e02da001d4377f646324b7f9",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/bytes-index-ast-launch/stdout.json",
+      "path": "history/377b/units/preparation/files/bytes-index-ast-launch/stdout.json",
       "bytes": 2161,
       "sha256": "8acadcafbdcb41f2db1f640573e81d6ddbbbb82f0f67abeddea540f96cdf6e52",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/bytes-index-ast/actual.json",
+      "path": "history/377b/units/preparation/files/bytes-index-ast/actual.json",
       "bytes": 2161,
       "sha256": "8acadcafbdcb41f2db1f640573e81d6ddbbbb82f0f67abeddea540f96cdf6e52",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/bytes-index-ast/maintained-sourceSeal.txt",
+      "path": "history/377b/units/preparation/files/bytes-index-ast/maintained-sourceSeal.txt",
       "bytes": 482,
       "sha256": "af15868c610674ad7268bae07d634c27c8af8b2db357ae3c4da29aeec9b6a7e8",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors-launch/actual.exit",
+      "path": "history/377b/units/preparation/files/independent-vectors-launch/actual.exit",
       "bytes": 2,
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors-launch/argv.json",
+      "path": "history/377b/units/preparation/files/independent-vectors-launch/argv.json",
       "bytes": 523,
       "sha256": "2cbfce120c8dbad23707e86b777fb36662131a5af5eec9e8ced09d913e26fa48",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors-launch/external-receipt.json",
+      "path": "history/377b/units/preparation/files/independent-vectors-launch/external-receipt.json",
       "bytes": 164,
       "sha256": "af66dfdd39eadcb35373e4bf657592102e8df1e717a5ac619247e90825b72b40",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors-launch/stderr",
+      "path": "history/377b/units/preparation/files/independent-vectors-launch/stderr",
       "bytes": 29,
       "sha256": "4b12ea7788203d865f7faad25413a0918e5d37d00d22c4c33238478c50a49b0a",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors-launch/stdout.json",
+      "path": "history/377b/units/preparation/files/independent-vectors-launch/stdout.json",
       "bytes": 1250,
       "sha256": "18ff8f96c841b5062fbddd5c70b2db3d12484323785dfbca1411a7a15ec2b4fa",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/actual.exit",
+      "path": "history/377b/units/preparation/files/independent-vectors/actual.exit",
       "bytes": 2,
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/after.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/after.json",
       "bytes": 1273319,
       "sha256": "aa256e0cbc349b4fa74f6b6bc8f766e20a7c0c14e3fd033540df38eec92706ab",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/before.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/before.json",
       "bytes": 1273299,
       "sha256": "0e1dab278d79fc0a0e048266f2371d1bee8715e7a3991402d5d6668ccb6eb055",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/driver.actual.exit",
+      "path": "history/377b/units/preparation/files/independent-vectors/driver.actual.exit",
       "bytes": 2,
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/invocation.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/invocation.json",
       "bytes": 1087,
       "sha256": "4a94633689934ace4c32dc5a09bff2aad961477ecf1b8f26bbdaea1760069b4d",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/observed-output.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/observed-output.json",
       "bytes": 1273,
       "sha256": "56823a5f57d4c868b147d58c558bf729950cb1a653f737cd983c3921df92f009",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/receipt.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/receipt.json",
       "bytes": 3503,
       "sha256": "e8a196fd52838d5dcd4e0c8095922c224f7691d1eb69f11e93db24678214cac1",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/started.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/started.json",
       "bytes": 44,
       "sha256": "353e595f0031c98f5351ebb16fe645ce954a00516a903751372b9dc99ed7d67c",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/stderr",
+      "path": "history/377b/units/preparation/files/independent-vectors/stderr",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/stdout.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/stdout.json",
       "bytes": 1063,
       "sha256": "047b2c46dd6285452fe1bbca0beabe3fe444f79ee4c75e051f70221a276f2f61",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/vectors/dap1/cases.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/vectors/dap1/cases.json",
       "bytes": 89218,
       "sha256": "be7273f90c85345ea6a4cbcf20c47564ce1f0ab3c9964e629927ddcf16bf57d5",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/vectors/dap1/sequence.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/vectors/dap1/sequence.json",
       "bytes": 3495,
       "sha256": "46b43e25824595e6b3a80df42958a8467635ba8fd9a09fcb196d72f415bf967b",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/vectors/git/cases.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/vectors/git/cases.json",
       "bytes": 43785,
       "sha256": "d48a1934bbc6bc54ce7a54fae86eaf7d58bc280cfb439a9f02592c071cca14ce",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/vectors/git/sequence.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/vectors/git/sequence.json",
       "bytes": 1752,
       "sha256": "d580e6665624f97cb65f3d8cea39ba9c707de3bee8878f9577b03162f2d59607",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/vectors/git256/cases.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/vectors/git256/cases.json",
       "bytes": 52265,
       "sha256": "a50be5406b9b8020c97961132f2f3ae20b943f9dc3077936615088e48f12748e",
       "mode": 256
     },
     {
-      "path": "units/preparation/files/independent-vectors/vectors/git256/sequence.json",
+      "path": "history/377b/units/preparation/files/independent-vectors/vectors/git256/sequence.json",
       "bytes": 2099,
       "sha256": "99cf3b1683632dabb8f72328a937c9de11640a7a963adabb7d365dcb784f98b9",
       "mode": 256
     },
     {
-      "path": "units/preparation/manifest.original.json",
+      "path": "history/377b/units/preparation/manifest.original.json",
       "bytes": 25408,
       "sha256": "b5411a953860743c3367500afa817af04b7e60724617b253a70f6a8f65652966",
+      "mode": 256
+    },
+    {
+      "path": "no-call-proof-reference.json",
+      "bytes": 918,
+      "sha256": "07ddbeb2595eb5b75127474af0e72591a501c19136de62b7b348223b2d8c6dc1",
+      "mode": 256
+    },
+    {
+      "path": "raw-index.json",
+      "bytes": 61834,
+      "sha256": "708ef5febccef9411884f5fe1229dbfa360a6a5cbf1b2ef24b0dde773d173b7e",
+      "mode": 256
+    },
+    {
+      "path": "terminal-prerequisites.json",
+      "bytes": 33573,
+      "sha256": "c405ca8ccb0b5e5360fb0b23cd9d2d90e48804c8c5529c6f5b1f0d20ac6bb34f",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-control/files/SHA256SUMS",
+      "bytes": 433,
+      "sha256": "3fe949cc061aacdb58cb205b0b3b6083a96c3485adbea6d0720c121e51591809",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-control/files/compiler-ledger.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-control/files/literal-case-ledger.json",
+      "bytes": 2472,
+      "sha256": "874484520153197efaec13963270300af97eca2890169810106a05157c23a6a5",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-control/files/raw-index.json",
+      "bytes": 11371,
+      "sha256": "69235e3d11030be16c52e0652f199bcf7163e6d709c7fa7eec31554e96eefe71",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-control/files/runtime-ledger.json",
+      "bytes": 1807,
+      "sha256": "d75b12a7073076035e91020b9bf4ccee006b6b8efb330912318b928a46224313",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-control/files/terminal-summary.json",
+      "bytes": 6424,
+      "sha256": "d1b155cd0cf9a0de73157d12eda0602ed1e1e37a1b3580ad1252c2c22781c1fa",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-control/manifest.original.json",
+      "bytes": 2170,
+      "sha256": "11ebcac2855c0f123a2a8fdf82ae80ce9a14964a831c48b071d5b0cbbe3743c0",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-focus/files/SHA256SUMS",
+      "bytes": 433,
+      "sha256": "5bde6a951d83ce1c0affa8cd72118a1c31526c4689e0644256814f0315925a3b",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-focus/files/compiler-ledger.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-focus/files/literal-case-ledger.json",
+      "bytes": 18829,
+      "sha256": "0fe35d914c25bdad7735d77ce59a0e564a0ce70a2709b1d03cf87e6abaaa65d6",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-focus/files/raw-index.json",
+      "bytes": 37402,
+      "sha256": "2ba47f065182dd018149c955643d8b182e15d6c7f3ad1123a697de3dded7f8d6",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-focus/files/runtime-ledger.json",
+      "bytes": 2111,
+      "sha256": "77792acbc2a854674362298b1bcc4e28cc876e75812af50b2703c340e1636cc9",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-focus/files/terminal-summary.json",
+      "bytes": 7162,
+      "sha256": "4abf5cc8db83f50b6becbd9a66c9657a94005fc98a574875326411c93cf704d0",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-focus/manifest.original.json",
+      "bytes": 2185,
+      "sha256": "c276458b41bec234dee34d884d903c98fc5db6114c53ea5a09e0e62f16f6c7c8",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-preparation/files/SHA256SUMS",
+      "bytes": 374,
+      "sha256": "e9c4545bb71ef5ced09707a753a3b084b3dcd09953ff47b9f553a373bb372222",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-preparation/files/independent-producer.summary.json",
+      "bytes": 809,
+      "sha256": "179e4e822ba910d962a99cde9b7ec2ebca8c7688410919dd1c95a098617d3398",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-preparation/files/owned-output-quarantine.summary.json",
+      "bytes": 577,
+      "sha256": "d726e3f3be3e4dcdd65000589fc8b4f2ec6c3bcb7ba0d20934c93206c6df2889",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-preparation/files/page-build.summary.json",
+      "bytes": 1579,
+      "sha256": "ef6d54d33697c4071712cf0a27c982f05c6316613067c15250bcb50997e43c7d",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-preparation/files/raw-index.json",
+      "bytes": 40689,
+      "sha256": "17f9bd872df450f3e4663591861482a7b263a873539e0cf427e4e15cb554e58d",
+      "mode": 256
+    },
+    {
+      "path": "units/repair-preparation/manifest.original.json",
+      "bytes": 4976,
+      "sha256": "f52de26e4a128cb6bb5b7b04785af4084fa9d77b11247aee78fb52f3dd64d5eb",
       "mode": 256
     }
   ],
   "historicalUnits": [
     {
-      "label": "preparation",
-      "head": "372f5ff584827149dda73dd786ce0472b1649bf6",
-      "tree": "4bf16cce61e8e7aa9898ffaa286ad5cae97d2bc0",
-      "booking": null,
-      "end": null,
-      "originalOutcome": "COMPLETED_PUBLIC_PREPARATION",
+      "label": "repair-preparation",
+      "history": [
+        {
+          "label": "independent-producer",
+          "head": "7f06529a0de3be9d68cbe5dde25520bd52d57172",
+          "tree": "9268c4052948207290b1af65a85eae0131115345",
+          "START": "c8f55a7677b0c2affb4339d0aefd2796fb6aa000",
+          "END": "fc83eac89b6a36c29b999ceaf49644b56c90a833",
+          "actualExits": {
+            "producer": 0,
+            "driver": 0,
+            "external": 0
+          },
+          "generatedCaseCounts": {
+            "dap1": 30,
+            "git": 27,
+            "git256": 27
+          },
+          "knownAnswersReported": 3,
+          "generatedDataComparisons": {
+            "total": 84,
+            "retainedCaseObjects": 82,
+            "newLateParentObjects": 2,
+            "unchangedSequenceFiles": 3,
+            "dapCasesByteExact": true,
+            "gitOriginal26EachExact": true
+          },
+          "qualification": "One independent producer;84 expected-report data rows, not verifier/test results.82 prior cases retained;2 late-parent rows added."
+        },
+        {
+          "label": "page-build",
+          "head": "7f06529a0de3be9d68cbe5dde25520bd52d57172",
+          "tree": "9268c4052948207290b1af65a85eae0131115345",
+          "START": "f77e42ed86f100f63f818b6db7fe0cdb83cf7dcd",
+          "END": "da8bb4432793212e732e29d0fd5dcaf592276bfd",
+          "actualExits": {
+            "metadataFreeze": 0,
+            "PageChild": 0,
+            "inner": 0,
+            "outer": 0,
+            "launcher": 0,
+            "external": 0
+          },
+          "moduleResult": "SAME",
+          "assetSha256": "e104ec88feef46fe5a973c256873f9dc6dfcde6f62fa1282d912093f241e0530",
+          "assetBytes": 2435554,
+          "fourDist": [
+            {
+              "leaf": "index.html",
+              "scalar": "PAGE_HTML",
+              "bytes": 26259,
+              "sha256": "62339a1ea0bcea8af96184debab781bb20f679b51116a88551c94701a7a9a754"
+            },
+            {
+              "leaf": "page.js",
+              "scalar": "PAGE_JS",
+              "bytes": 1304589,
+              "sha256": "7f8dacc3df74c985e81f38b5451f1f455dcf050760ac20b7d47d3bea795dcbd4"
+            },
+            {
+              "leaf": "oauth.html",
+              "scalar": "OAUTH_HTML",
+              "bytes": 3435,
+              "sha256": "87e3ea59858b3221b250910eaa6d5c2189e6185ace47a930f1c06479f73feb0a"
+            },
+            {
+              "leaf": "oauth.js",
+              "scalar": "OAUTH_JS",
+              "bytes": 1022727,
+              "sha256": "bcb51acd3dd73daa9df0d8697634e95014eed78617c3978d31d3a64abbbd0cb6"
+            }
+          ],
+          "rss": {
+            "rawStatus": "failed",
+            "samples": 1,
+            "NodeWorkerdRows": 0,
+            "errors": [],
+            "admission": "accepted UNKNOWN",
+            "lifetimeUpperBounds": "UNKNOWN"
+          },
+          "qualification": "One maintained Page build; SAME module and scalar/dist byte correspondence only. No semantic-equivalence, browser, Native, test or gate result."
+        },
+        {
+          "label": "owned-output-quarantine",
+          "head": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+          "tree": "e2a4a809609d99cb5d652e328b57f7c016ba8553",
+          "START": "d75173e5c8ac6962d8350c60d2576e7c96b67c2e",
+          "END": "e98537aa573e4a687464dad258372df996dfec2a",
+          "actualExits": {
+            "quarantine": 0,
+            "external": 0
+          },
+          "renames": 3,
+          "freshCacheDirectories": 2,
+          "preservedEntries": 10,
+          "distAfter": "absent",
+          "qualification": "Metadata-only owned-output quarantine. Three trees retained by rename; fresh cache directories only. No application or validation result."
+        }
+      ],
       "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-preparation-records-20261111.manifest.json",
-        "sha256": "b5411a953860743c3367500afa817af04b7e60724617b253a70f6a8f65652966",
-        "bytes": 25408,
+        "path": "/private/tmp/artroom-identifiers-b-repair-preparation-20261111.manifest.json",
+        "sha256": "f52de26e4a128cb6bb5b7b04785af4084fa9d77b11247aee78fb52f3dd64d5eb",
+        "bytes": 4976,
         "mode": 256
       }
     },
     {
-      "label": "focused169",
-      "head": "fa6e7419b020e1899db1e7a2d15f4605387ebb92",
-      "tree": "85957753830449cf389b0291ea01554c426626e4",
-      "booking": "fb3c449bada758f5dda9387e5f6fe4129ed35d85",
-      "end": "4e0fd25738395f56454ee043d3510c6a172fc05c",
-      "originalOutcome": "PASSED",
+      "label": "repair-focus",
+      "history": {
+        "head": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+        "tree": "e2a4a809609d99cb5d652e328b57f7c016ba8553",
+        "booking": "3cd98df5dbd1b5f0e8d8b6e7ac3aa8ad890fa05e",
+        "end": "07e14ac9b6de9fa553dfe230ed082c814598d3c9",
+        "originalOutcome": "PASSED",
+        "actualExits": {
+          "metadataFreeze": 0,
+          "node": 0,
+          "plainPipeline": 0,
+          "runner": 0,
+          "outerDriver": 0,
+          "launcher": 0,
+          "external": 0,
+          "plainBody": 0
+        }
+      },
       "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-fa6-169-focus-20261111.manifest.json",
-        "sha256": "07e7f857d5d9fa3a1d9c14742d4ecc015a3bfec0d3f6539857c7d0db3338a73f",
-        "bytes": 2186,
+        "path": "/private/tmp/artroom-identifiers-b3da-37-focus-20261111.manifest.json",
+        "sha256": "c276458b41bec234dee34d884d903c98fc5db6114c53ea5a09e0e62f16f6c7c8",
+        "bytes": 2185,
         "mode": 256
       }
     },
     {
-      "label": "citation-controls",
-      "head": "fa6e7419b020e1899db1e7a2d15f4605387ebb92",
-      "tree": "85957753830449cf389b0291ea01554c426626e4",
-      "booking": "b613406bc9faac8d412722997cad1d30743b211c",
-      "end": "f994858ce7a73983e668885127742362dee8d97a",
-      "originalOutcome": "DISTINGUISHED",
+      "label": "repair-control",
+      "history": {
+        "head": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+        "tree": "e2a4a809609d99cb5d652e328b57f7c016ba8553",
+        "booking": "813c3aaf55c7be1f6a48d5c13961153db5669059",
+        "end": "24dbe941e4b128365cf0975661edaa08cead38a4",
+        "originalOutcome": "DISTINGUISHED",
+        "actualExits": {
+          "negativeChild": 1,
+          "controller": 0,
+          "outerDriver": 0,
+          "launcher": 0,
+          "external": 0
+        }
+      },
       "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-fa6-citation-controls-20261111.manifest.json",
-        "sha256": "663033cbc8af8cf64281f35292f39d2f39c017d7550b30832e15aa9965645d1a",
-        "bytes": 2828,
-        "mode": 256
-      }
-    },
-    {
-      "label": "failed-full-gate",
-      "head": "fa6e7419b020e1899db1e7a2d15f4605387ebb92",
-      "tree": "85957753830449cf389b0291ea01554c426626e4",
-      "booking": "d8650358d818237336f61fa7230ce695e7c40703",
-      "end": "bbb5bfdf46d578e9769d7414244f9cb8edd9d835",
-      "originalOutcome": "FAILED",
-      "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-fa6-failed-full-gate-20261111.manifest.json",
-        "sha256": "299ae5ebaa32d0c8c19fe2e83a42d46b3b4b6919188c33544cc96152115e5ced",
-        "bytes": 2162,
-        "mode": 256
-      }
-    },
-    {
-      "label": "page-build",
-      "head": "fa6e7419b020e1899db1e7a2d15f4605387ebb92",
-      "tree": "85957753830449cf389b0291ea01554c426626e4",
-      "booking": "32e4476972812394648a0c6bfbab185d679774e4",
-      "end": "50a9cf7c60fc07a4203620cc254808949ab87417",
-      "originalOutcome": "PASSED",
-      "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-fa6-page-rebuild-20261111.manifest.json",
-        "sha256": "0b8ad987757df9afaad2274ffec2157d35eaeafe8c39dfe385cc26b11325b2c3",
-        "bytes": 2241,
-        "mode": 256
-      }
-    },
-    {
-      "label": "bounded-continuation",
-      "head": "377b2adbaa48c68851de87365bd3ca0edcc0c329",
-      "tree": "25bfe076587670c52edf172d9a1479ffacf58ee4",
-      "booking": "a87affc7c803ae350ce272695473a65b20dc1380",
-      "end": "879cbb5e82b4501f1d8e6a7396eb55f2629562b3",
-      "originalOutcome": "PASSED",
-      "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b377-page-continuation-20261111.manifest.json",
-        "sha256": "8487f779efdd2bdb3925f2f9fae8b9353eeb6190d3f9c7745691385af81c900d",
-        "bytes": 2803,
+        "path": "/private/tmp/artroom-identifiers-b3da-late-parent-control-20261111.manifest.json",
+        "sha256": "11ebcac2855c0f123a2a8fdf82ae80ce9a14964a831c48b071d5b0cbbe3743c0",
+        "bytes": 2170,
         "mode": 256
       }
     }
   ],
   "sealedPrerequisites": {
-    "preparation": {
+    "history377": {
       "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-preparation-records-20261111.manifest.json",
-        "sha256": "b5411a953860743c3367500afa817af04b7e60724617b253a70f6a8f65652966",
-        "bytes": 25408,
+        "path": "/private/tmp/artroom-identifiers-b-final-aggregate-20261111.manifest.json",
+        "sha256": "f632859d1a84236729b03f45784438b6e0767c1d94ab911448014f8bfdea5076",
+        "bytes": 34543,
         "mode": 256
       },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-preparation-records-sealed",
-      "originalPrivateCustody": null,
-      "aggregateOriginalManifestLeaf": "units/preparation/manifest.original.json",
-      "minimumRetentionDaysAfterLanding": 30,
-      "qualification": "Reuse original immutable sealed custody. Only public records and private manifest metadata are copied; original private payloads are never traversed or duplicated."
-    },
-    "focused169": {
-      "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-fa6-169-focus-20261111.manifest.json",
-        "sha256": "07e7f857d5d9fa3a1d9c14742d4ecc015a3bfec0d3f6539857c7d0db3338a73f",
-        "bytes": 2186,
-        "mode": 256
-      },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-fa6-169-focus-sealed/unit",
-      "originalPrivateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-fa6-169-focus-sealed/private",
-        "manifestSha256": "a5487ee3ead61013d72b47e2eea0bd701c9217840eacaf8bb45d2c03b8356eef",
-        "files": 220,
+      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-377b/unit",
+      "originalPrivateCustodyLocatorOnly": {
+        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-377b/private",
+        "manifestSha256": "e70558122e1d75d0bb2815052c6b49a2c569cd4ca4d5c92225546d4a6c6f0cf6",
+        "files": 13,
         "minimumRetentionDays": 30
       },
-      "aggregateOriginalManifestLeaf": "units/focused169/manifest.original.json",
-      "minimumRetentionDaysAfterLanding": 30,
-      "qualification": "Reuse original immutable sealed custody. Only public records and private manifest metadata are copied; original private payloads are never traversed or duplicated."
+      "privatePayloadsReadOrCopied": false
     },
-    "citation-controls": {
+    "repair-preparation": {
       "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-fa6-citation-controls-20261111.manifest.json",
-        "sha256": "663033cbc8af8cf64281f35292f39d2f39c017d7550b30832e15aa9965645d1a",
-        "bytes": 2828,
+        "path": "/private/tmp/artroom-identifiers-b-repair-preparation-20261111.manifest.json",
+        "sha256": "f52de26e4a128cb6bb5b7b04785af4084fa9d77b11247aee78fb52f3dd64d5eb",
+        "bytes": 4976,
         "mode": 256
       },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-fa6-citation-controls-sealed/unit",
-      "originalPrivateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-fa6-citation-controls-sealed/private",
-        "manifestSha256": "a3de4a9a620f25d25c24726a3dab194b616440eb6f4490f5a4b09a7567686112",
-        "files": 182,
-        "minimumRetentionDays": 30
+      "history": [
+        {
+          "label": "independent-producer",
+          "head": "7f06529a0de3be9d68cbe5dde25520bd52d57172",
+          "tree": "9268c4052948207290b1af65a85eae0131115345",
+          "START": "c8f55a7677b0c2affb4339d0aefd2796fb6aa000",
+          "END": "fc83eac89b6a36c29b999ceaf49644b56c90a833",
+          "actualExits": {
+            "producer": 0,
+            "driver": 0,
+            "external": 0
+          },
+          "generatedCaseCounts": {
+            "dap1": 30,
+            "git": 27,
+            "git256": 27
+          },
+          "knownAnswersReported": 3,
+          "generatedDataComparisons": {
+            "total": 84,
+            "retainedCaseObjects": 82,
+            "newLateParentObjects": 2,
+            "unchangedSequenceFiles": 3,
+            "dapCasesByteExact": true,
+            "gitOriginal26EachExact": true
+          },
+          "qualification": "One independent producer;84 expected-report data rows, not verifier/test results.82 prior cases retained;2 late-parent rows added."
+        },
+        {
+          "label": "page-build",
+          "head": "7f06529a0de3be9d68cbe5dde25520bd52d57172",
+          "tree": "9268c4052948207290b1af65a85eae0131115345",
+          "START": "f77e42ed86f100f63f818b6db7fe0cdb83cf7dcd",
+          "END": "da8bb4432793212e732e29d0fd5dcaf592276bfd",
+          "actualExits": {
+            "metadataFreeze": 0,
+            "PageChild": 0,
+            "inner": 0,
+            "outer": 0,
+            "launcher": 0,
+            "external": 0
+          },
+          "moduleResult": "SAME",
+          "assetSha256": "e104ec88feef46fe5a973c256873f9dc6dfcde6f62fa1282d912093f241e0530",
+          "assetBytes": 2435554,
+          "fourDist": [
+            {
+              "leaf": "index.html",
+              "scalar": "PAGE_HTML",
+              "bytes": 26259,
+              "sha256": "62339a1ea0bcea8af96184debab781bb20f679b51116a88551c94701a7a9a754"
+            },
+            {
+              "leaf": "page.js",
+              "scalar": "PAGE_JS",
+              "bytes": 1304589,
+              "sha256": "7f8dacc3df74c985e81f38b5451f1f455dcf050760ac20b7d47d3bea795dcbd4"
+            },
+            {
+              "leaf": "oauth.html",
+              "scalar": "OAUTH_HTML",
+              "bytes": 3435,
+              "sha256": "87e3ea59858b3221b250910eaa6d5c2189e6185ace47a930f1c06479f73feb0a"
+            },
+            {
+              "leaf": "oauth.js",
+              "scalar": "OAUTH_JS",
+              "bytes": 1022727,
+              "sha256": "bcb51acd3dd73daa9df0d8697634e95014eed78617c3978d31d3a64abbbd0cb6"
+            }
+          ],
+          "rss": {
+            "rawStatus": "failed",
+            "samples": 1,
+            "NodeWorkerdRows": 0,
+            "errors": [],
+            "admission": "accepted UNKNOWN",
+            "lifetimeUpperBounds": "UNKNOWN"
+          },
+          "qualification": "One maintained Page build; SAME module and scalar/dist byte correspondence only. No semantic-equivalence, browser, Native, test or gate result."
+        },
+        {
+          "label": "owned-output-quarantine",
+          "head": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+          "tree": "e2a4a809609d99cb5d652e328b57f7c016ba8553",
+          "START": "d75173e5c8ac6962d8350c60d2576e7c96b67c2e",
+          "END": "e98537aa573e4a687464dad258372df996dfec2a",
+          "actualExits": {
+            "quarantine": 0,
+            "external": 0
+          },
+          "renames": 3,
+          "freshCacheDirectories": 2,
+          "preservedEntries": 10,
+          "distAfter": "absent",
+          "qualification": "Metadata-only owned-output quarantine. Three trees retained by rename; fresh cache directories only. No application or validation result."
+        }
+      ],
+      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-repair-preparation-sealed-3da8226/unit",
+      "originalPrivateCustodyLocatorOnly": {
+        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-repair-preparation-sealed-3da8226/private",
+        "manifestSha256": "264828a69dce820e22218e62dce22b911648da5ed12cd2f87895f226ad23daf8",
+        "files": 131,
+        "minimumRetentionDaysAfterLanding": 30
       },
-      "aggregateOriginalManifestLeaf": "units/citation-controls/manifest.original.json",
-      "minimumRetentionDaysAfterLanding": 30,
-      "qualification": "Reuse original immutable sealed custody. Only public records and private manifest metadata are copied; original private payloads are never traversed or duplicated."
+      "aggregateOriginalManifestLeaf": "units/repair-preparation/manifest.original.json",
+      "privatePayloadsReadOrCopied": false
     },
-    "failed-full-gate": {
+    "repair-focus": {
       "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-fa6-failed-full-gate-20261111.manifest.json",
-        "sha256": "299ae5ebaa32d0c8c19fe2e83a42d46b3b4b6919188c33544cc96152115e5ced",
-        "bytes": 2162,
+        "path": "/private/tmp/artroom-identifiers-b3da-37-focus-20261111.manifest.json",
+        "sha256": "c276458b41bec234dee34d884d903c98fc5db6114c53ea5a09e0e62f16f6c7c8",
+        "bytes": 2185,
         "mode": 256
       },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-fa6-final-gate-failed-sealed/unit",
-      "originalPrivateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-fa6-final-gate-failed-sealed/private",
-        "manifestSha256": "739eaff7a829dc2e5e597991146cb177ed053007281124dc0f01a56ab36d8178",
-        "files": 2613,
+      "history": {
+        "head": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+        "tree": "e2a4a809609d99cb5d652e328b57f7c016ba8553",
+        "booking": "3cd98df5dbd1b5f0e8d8b6e7ac3aa8ad890fa05e",
+        "end": "07e14ac9b6de9fa553dfe230ed082c814598d3c9",
+        "originalOutcome": "PASSED",
+        "actualExits": {
+          "metadataFreeze": 0,
+          "node": 0,
+          "plainPipeline": 0,
+          "runner": 0,
+          "outerDriver": 0,
+          "launcher": 0,
+          "external": 0,
+          "plainBody": 0
+        }
+      },
+      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b3da-37-focus-sealed/unit",
+      "originalPrivateCustodyLocatorOnly": {
+        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b3da-37-focus-sealed/private",
+        "manifestSha256": "330b3a20e8faee187560ca6b469366956bc0b183229264b2425efcaef4429358",
+        "files": 198,
         "minimumRetentionDays": 30
       },
-      "aggregateOriginalManifestLeaf": "units/failed-full-gate/manifest.original.json",
-      "minimumRetentionDaysAfterLanding": 30,
-      "qualification": "Reuse original immutable sealed custody. Only public records and private manifest metadata are copied; original private payloads are never traversed or duplicated."
+      "aggregateOriginalManifestLeaf": "units/repair-focus/manifest.original.json",
+      "privatePayloadsReadOrCopied": false
     },
-    "page-build": {
+    "repair-control": {
       "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b-fa6-page-rebuild-20261111.manifest.json",
-        "sha256": "0b8ad987757df9afaad2274ffec2157d35eaeafe8c39dfe385cc26b11325b2c3",
-        "bytes": 2241,
+        "path": "/private/tmp/artroom-identifiers-b3da-late-parent-control-20261111.manifest.json",
+        "sha256": "11ebcac2855c0f123a2a8fdf82ae80ce9a14964a831c48b071d5b0cbbe3743c0",
+        "bytes": 2170,
         "mode": 256
       },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-fa6-page-rebuild-sealed/unit",
-      "originalPrivateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b-fa6-page-rebuild-sealed/private",
-        "manifestSha256": "352775b1dca3252592acdd7a8376976b05bc0dcef3b127984c26ceb79e98f420",
-        "files": 96,
+      "history": {
+        "head": "3da82263837ed39bf2274fa7caf8d7c784b09d64",
+        "tree": "e2a4a809609d99cb5d652e328b57f7c016ba8553",
+        "booking": "813c3aaf55c7be1f6a48d5c13961153db5669059",
+        "end": "24dbe941e4b128365cf0975661edaa08cead38a4",
+        "originalOutcome": "DISTINGUISHED",
+        "actualExits": {
+          "negativeChild": 1,
+          "controller": 0,
+          "outerDriver": 0,
+          "launcher": 0,
+          "external": 0
+        }
+      },
+      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b3da-late-parent-control-sealed/unit",
+      "originalPrivateCustodyLocatorOnly": {
+        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b3da-late-parent-control-sealed/private",
+        "manifestSha256": "4014c08a4d115e6810fdd8810327617bafc2179433dbb2617e116cef4d035109",
+        "files": 68,
         "minimumRetentionDays": 30
       },
-      "aggregateOriginalManifestLeaf": "units/page-build/manifest.original.json",
-      "minimumRetentionDaysAfterLanding": 30,
-      "qualification": "Reuse original immutable sealed custody. Only public records and private manifest metadata are copied; original private payloads are never traversed or duplicated."
-    },
-    "bounded-continuation": {
-      "manifest": {
-        "path": "/private/tmp/artroom-identifiers-b377-page-continuation-20261111.manifest.json",
-        "sha256": "8487f779efdd2bdb3925f2f9fae8b9353eeb6190d3f9c7745691385af81c900d",
-        "bytes": 2803,
-        "mode": 256
-      },
-      "originalPublicUnit": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b377-page-continuation-sealed/unit",
-      "originalPrivateCustody": {
-        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-b377-page-continuation-sealed/private",
-        "manifestSha256": "7982e0c9a23c5afc927fc334bc292e48dcd0ed0b659b4f00601db4e5dfa54490",
-        "files": 531,
-        "minimumRetentionDays": 30
-      },
-      "aggregateOriginalManifestLeaf": "units/bounded-continuation/manifest.original.json",
-      "minimumRetentionDaysAfterLanding": 30,
-      "qualification": "Reuse original immutable sealed custody. Only public records and private manifest metadata are copied; original private payloads are never traversed or duplicated."
+      "aggregateOriginalManifestLeaf": "units/repair-control/manifest.original.json",
+      "privatePayloadsReadOrCopied": false
     }
   },
   "privateCustody": {
-    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-377b/private",
-    "manifestSha256": "e70558122e1d75d0bb2815052c6b49a2c569cd4ca4d5c92225546d4a6c6f0cf6",
-    "files": 13,
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-3da8226/private",
+    "manifestSha256": "d7bd293ba0f3376561d6e14a8996a293bb09556d90863d38a869ec76e5dba9fd",
+    "files": 27,
     "minimumRetentionDays": 30
   },
   "exactHeadReviewAttachments": {
@@ -585,8 +894,8 @@
     ]
   },
   "sourceAggregateManifest": {
-    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-377b/unit/manifest.json",
-    "bytes": 34543,
-    "sha256": "f632859d1a84236729b03f45784438b6e0767c1d94ab911448014f8bfdea5076"
+    "path": "/Users/hughpyle/play/artroom-evidence/2026-11-11-identifiers-b-final-3da8226/unit/manifest.json",
+    "bytes": 47599,
+    "sha256": "4c49f9bc21b100b53f2d90ce8eeabfd2f23b0702e527d6e145504972d7e2de51"
   }
 }

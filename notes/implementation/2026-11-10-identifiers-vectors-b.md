@@ -1,193 +1,201 @@
-# Verify generic citations against independent vectors
+# Verify citations and reject misplaced Git parents
 
-Request: `a30f1b67`. Promise: `5a78cc01`. Source and reason ruling: `f194f905`.
-Parent identifiers request: `05d618e2`.
+Request: `a30f1b67`. Promise: `5a78cc01`. Parent identifiers request:
+`05d618e2`.
 
-The tested source is `377b2adbaa48c68851de87365bd3ca0edcc0c329`, tree
-`25bfe076587670c52edf172d9a1479ffacf58ee4`. The complete fa6 gate failed.
-One Page build repaired its generated module, and the ruled continuation
-completed with all command exits 0. The aggregate preserves each outcome and
-the historical carry separately. Exact-head Page and Card CI belongs in the
-external review attachment after the final note and evidence commit.
+Replay's generic citation verifier now rejects a Git `parent` header after an
+`author` or another non-parent header. The old private `gitEvent` collected
+parent lines anywhere in the header block. A correctly hashed malformed commit
+could therefore supply a false chain edge. Review rejected head `8793316b` for
+that gap. Repair `7f06529a` accepts parent headers only in the contiguous block
+immediately after `tree`, validates each digest, and follows only the first
+parent. It changes 13 lines of that private function, whose sole caller is
+`verifyCitation`.
 
-## Citation integrity stays separate from Native judgment
+Current source checkpoint `3da82263837ed39bf2274fa7caf8d7c784b09d64`, tree
+`e2a4a809609d99cb5d652e328b57f7c016ba8553`, adds only the two independently
+produced Git vector rows after `7f06529a`. The repair has 37 current passing
+cases. The old-scan control produced the two expected report failures and has
+its own sealed record. The completed metadata aggregate preserves all outcomes.
+The documentation follow-up changes only this note and its evidence descriptor;
+source, tests, dependencies, configuration, and generated asset blobs stay
+fixed at that checkpoint. Exact-head CI belongs in the external review
+attachment. Nothing here turns the failed full gate or rejected review into a
+pass.
+
+## Keep integrity separate from Native authority
 
 Bytes adds `parseSequenceIdentifier` and `parseCitation` to its existing entry.
-Both consume the whole string, preserve its spelling, and check digest width
-and safe decimal position. Unknown format tokens retain the generic grammar,
-so verification can report `incomplete/format`.
+They consume the whole string, preserve its spelling, and check digest widths
+and safe decimal positions. Replay adds `verifyCitation(text, source,
+options)`. It copies and hashes source bytes before it decodes fields. Its
+result keeps exactly seven protocol members. Invalid caller options fail before
+reads.
 
-Replay adds `verifyCitation(text, source, options)`. The source supplies raw
-cited and predecessor bytes. Options select the requested level, caller anchors,
-depth, and an optional trusted Git hashing operation. The result has exactly
-seven protocol members. Caller option errors throw before I/O. The existing
-Native verifier, reference shapes, integrity mode, and judgment Replay retain
-their bodies. Identifiers (c+d) still owns the Native identity, admission,
-archive, and wire cutover.
+The generic verifier preserves explicit anchor and depth boundaries. Fetched or
+cached bytes never become trusted anchors. For Git, it reads raw commit bytes,
+ignores replace refs, disables lazy fetch, and follows the first parent without
+a revision walk. A shallow missing object remains unavailable. SHA-1 uses Git's
+literal commit hashing without writing an object. This makes no claim about a
+Git build's SHA1DC selection. Git256 hashes the exact header and content with
+SHA-256. Neither Git format has a signature profile here.
 
-The verifier copies each byte reply and hashes it before decoding fields.
-For dap1, carried genesis precedes position. Correctly hashed bytes that cannot
-decode as an entry report `mismatch/position`, reached 0 for the cited event
-or 1 in the predecessor walk. Missing valid predecessor syntax above position
-0 also stops at reached 1. The protocol's reason table records these boundaries.
+The CLI's `--citation` mode accepts a section-7 file source or a Git clone. Its
+default is level 3 with 10,000 predecessor edges; the API defaults to level 3
+with unlimited depth. The CLI exits 0 for `ok`, 1 for another protocol result,
+or 2 for invalid options. A duplicate digest claim in the file source reports
+`incomplete/unavailable` and exits 1. Existing Native argv, verifier bodies,
+reference shapes, judgment Replay, and admission rules keep their meaning.
 
-Depth counts predecessor edges, including an edge to an explicit anchor.
-Genesis needs no edge. Conflicting caller anchors fail before reads, and
-identical duplicates trust the anchor once. Fetched or cached bytes never
-become anchors. Signature failure or an absent profile preserves a successful
-level-2 anchor and its trusts.
+Native identity, admission, archive, and wire changes still belong to
+identifiers (c+d) under `05d618e2`. Citation integrity alone establishes none
+of current-key authority, freshness, deployment, or live acceptance.
 
-The CLI uses the `--citation` mode:
+## Bind the repair to independent expected reports
 
-```text
-artroom-replay --citation <citation> --source <file> [--level 0|1|2|3]
-artroom-replay --citation <citation> --git <clone> --level 2
-```
+`scripts/identifier-vectors.py` uses only Python's standard library. Its public
+TEST signer checks three RFC 8032 signing answers before output. Its fixed TEST
+seeds are not custody keys, and the signer stays outside production. Its JSON
+writer claims no general JCS implementation.
 
-Both forms accept `--depth <edges>` and repeated `--anchor <citation>`.
-The API defaults to level 3 and unlimited depth. The CLI defaults to level 3
-and 10,000 edges. It prints the exact report and exits 0 for `ok`, 1 for another
-protocol result, or 2 for invalid options. Existing Native argv keeps its meaning.
+The original producer at `372f5ff5` emitted 82 expected-report rows: 30 dap1,
+26 git, and 26 git256. The one repair producer at `7f06529a` emitted 84: 30,
+27, and 27. All 82 prior case objects remain exact, as do all three sequence
+files. The new `parent-after-author` rows live in `vectors/git/cases.json` and
+`vectors/git256/cases.json`. Each places a `parent` line after `author` and
+expects `mismatch`, reached 1, reason `position`, with no anchor or trusts.
+These are 84 expected-report rows. The positive Replay owners compare those
+reports; the rows are not 84 registered tests.
 
-The file reader accepts section 7's `event` and `source` members, with no trusted
-anchor member. It checks the byte bound before allocation, accepts exact UTF-8
-or padded standard base64. A duplicate digest claim makes the source unavailable:
-the reader reports `incomplete`/`unavailable` and exits 1, rather than a usage
-error with exit 2. Syntax and unknown formats open no byte source.
+The maintained Page input graph reaches the changed Replay source through the
+CLI browser exports, claim/invitations, `command-support`'s `SourceError`
+import, and Replay's barrel export. Ruling `7505fa96` required the
+changed-input build. One Page build at `7f06529a` exited 0 and left `assets.ts`
+byte-equal: `e104ec88feef46fe5a973c256873f9dc6dfcde6f62fa1282d912093f241e0530`,
+2,435,554 bytes. All four served scalars and digest comments equal their dist
+files. SAME bytes establish that correspondence, not semantic equivalence.
 
-The Git reader disables replace refs and lazy fetch. It reads raw commit bytes,
-uses no revision walk, and follows the first parent directly after `tree`. It
-refuses a later parent header as `mismatch` with reason `position`. Missing objects
-remain unavailable at a shallow boundary. SHA-1 uses Git's `hash-object
---literally -t commit --stdin` without `-w`, in a fresh empty directory. This
-makes no claim about a particular Git build's SHA1DC selection. Git256 hashes
-the exact object header and content with SHA-256. Neither Git format has a
-signature profile in this head. Integrity does not establish Native authority,
-current-key standing, freshness, or collision detection by a named Git build.
+The measured Bytes AST seal remains
+`7c8c95148c4af026aa1416b4f2d9ce8e53b33343a49bf27d1875a86e2d5c07b7`. The
+security inventory retains its assertions. A raw file hash cannot replace that
+maintained AST value. The repair changes only the inventory comment; its
+measured Bytes seal and all assertions remain unchanged.
 
-## Independent expected reports and production boundaries
+## Preserve each historical outcome
 
-`scripts/identifier-vectors.py` imports only Python's standard library. Its
-TEST-only signer follows [RFC 8032 section 6](https://www.rfc-editor.org/rfc/rfc8032.html#section-6)
-and checks section 7.1's first three signing answers before output. Fixed public
-TEST seeds are not custody keys. The illustrative signer stays outside
-production code, and its ASCII-key, safe-integer JSON writer claims no general
-JCS implementation.
+The full fa6 gate and its same-run analyzer exited 1. It completed all 45
+compiler contexts and 16 typecheck scripts, then stopped at the Page module
+comparison. It reported Node 150 passes, Counting 56 passes, and Plain 4,543
+passes, one failure, and one skip. All 1,130 Native obligations were unreached.
+The original Page build and ruled `377b2adb` continuation stay separate: five
+current compiler passes and 1,146 current cases, including 1,128 Native passes
+and two planned Native skips. The old 4,735-runtime/40-compiler correspondence
+remains historical at fa6.
 
-The producer ran once at `372f5ff5` and wrote six files: 30 dap1 cases and 26
-each for git and git256. Dap1 includes signed founding, act, and preparation
-entries, unsigned delivery, and an alternate unsigned genesis. Git includes a
-second parent and literal UTF-8 content. The 82 rows are fixture comparisons,
-not 82 registered cases. Tests consume the adopted files and compare complete
-reports. They never run the producer or derive expected reports with dap code.
+Head `8793316b` carried that evidence and successful Page/Card workflows, but
+its review still requested the late-parent repair. Those workflow outcomes do
+not cover a new review head. Ruling `89d505ad` accepted the five late cheap
+checks at `377b2adb` and the already-sealed evidence without repetition. The
+note preserves their after-continuation order. The final 879 documentation head
+also had five ordinary checks before publication.
 
-The real-Git owner retains TEST replace-ref, graft, and shallow-object stores.
-Other histories keep their stated stand-in limits. The unchanged maintained
-`sourceSeal` read the Bytes index once and called native `parseAst` once,
-producing `7c8c95148c4af026aa1416b4f2d9ce8e53b33343a49bf27d1875a86e2d5c07b7`.
-Adoption keeps every AST inventory assertion. A raw file
-hash does not replace that AST value. Act `fcdf80ee` corrects an abbreviated
-receipt-hash reference in END `31064c88`, without changing bytes or repeating
-production.
+For this repair, 19 affected compiler contexts passed as ordinary working
+checks before the ruled focus. Five cheap checks at `3da82263` also exited 0.
+Their raw logs stay plain and external, outside the preparation or validation
+seals. No new packet or acceptance claim follows from those working checks.
 
-## Actual checks and the bounded continuation
+At `3da82263`, the one ruled focus passed all 37 selected cases: 24 Node cases
+and 13 Plain cases across the three whole Replay owners. Six Node wrappers
+remain UNKNOWN. Both phase children and all enclosing commands exited 0;
+cleanup closed empty and source/tool/input fences held. No compiler ran inside
+that focused unit. Its actual focus seal is
+`c276458b41bec234dee34d884d903c98fc5db6114c53ea5a09e0e62f16f6c7c8`.
 
-The repaired-head cheap working checks ran after the continuation; each exited 0.
-The planner's disposition of ordering request `d7b0514b` belongs in the
-exact-head review attachment.
+Ruling `15d3b0bd` permits this focused continuation instead of a second whole
+gate. The per-owner proof `5cdd9a81` covers 706 carried owners and 5,844
+historical observations: 5,841 passed and three skipped. Of those observations,
+4,710 belong to fa6 and 1,134 to `377b2adb`. The proof resolves 84 finite
+readers and shows that each carried owner does not call the changed `gitEvent`
+lines. Those observations and the 37 current cases form 5,881 disjoint
+identities. The proof creates no current runtime pass. A caller outside the
+selected scope would stop this correspondence and require a new scope ruling.
 
-The 43 affected compiler contexts completed at `372f5ff5` after resolution of
-all 45 maintained contexts. Their correspondence remains historical. The fa6
-focus ran zero compilers, 24 Node leaves, and 145 Plain cases across twelve
-whole owners. Six Node wrappers remain UNKNOWN. Both runtime children and
-enclosing commands exited 0 with no skips, retries, repeats, or unhandled errors.
-Its first metadata preparation exited 1 before any runtime body. Corrected V2
-metadata and the subsequent focus do not turn that first preparation into a pass.
+## Evidence and filing
 
-Each citation fault ran the unchanged five-case owner with `bail=0`, verbose,
-JSON, and the maintained FocusedReporter. Each child exited 1 with three named
-line 22 comparison failures and two boundary passes. The predecessor-rehash
-controller exited 2 because it expected a full path in verbose output. A separate
-metadata-only reader exited 0 and classified the saved assertions. The later
-anchor-only controller exited 0. The control continuation ran only the previously
-unrun anchor fault.
-Internal vector loops stop at the failed assertion, so the controls do not prove
-that every one of the 82 rows ran under a fault.
+The
+[evidence manifest](evidence/2026-11-11-identifiers-vectors-b.manifest.json)
+binds 86 indexed public files and 27 indexed private records to the source
+checkpoint. The full sealed aggregate descriptor has SHA-256
+`4c49f9bc21b100b53f2d90ce8eeabfd2f23b0702e527d6e145504972d7e2de51`. The table
+preserves original exits, including the first citation-control controller's 2.
+Every named aggregate artifact is indexed. Complete argv, raw exits, literal
+identities, and custody maps remain in the original units.
 
-The full gate and its same-run analyzer exited 1. All 45 compiler contexts and
-16 typecheck scripts completed. Runtime reports contain Node 150 passes,
-Counting 56 passes, and Plain 4,543 passes, one failure, and one skip. All 111
-wrapper observations remain UNKNOWN, six Scale cases remain omitted, and all
-1,130 Native obligations were unreached in that run. The sole failed case is Page's
-unchanged build-to-module comparison. Its expected module had the same
-2,435,554-byte length as the checked-in module, with different bytes.
+| Check and checkpoint | Recorded command or owner | Actual outcome | Evidence |
+| --- | --- | --- | --- |
+| Original vectors/Bytes seal, 372f5ff5 | `identifier-vectors.py`; maintained `sourceSeal` | Producer 0; AST producer 0 | `history/377b/units/preparation/manifest.original.json`, `b5411a953860` |
+| Original focus, fa6 | Node owners and maintained focused runner | Metadata V1 1 before runtime; V2 runtime 0: 24 Node + 145 Plain | `history/377b/units/focused169/manifest.original.json`, `07e7f857d5d9` |
+| Original citation controls, fa6 | Whole `citation.test.ts`, two separate faults | Both children 1. First controller 2; metadata adjudication 0; anchor continuation controller 0 | `history/377b/units/citation-controls/manifest.original.json`, `663033cbc8af` |
+| Full gate, fa6 | Recorded gate driver and same-run analyzer | Both 1; Native unreached | `history/377b/units/failed-full-gate/manifest.original.json`, `299ae5ebaa32` |
+| Original Page repair, fa6 → 377 | `npm run build --workspace @generalbusiness/dap-page` | Build 0; only asset adopted | `history/377b/units/page-build/manifest.original.json`, `0b8ad987757d` |
+| Original ruled continuation, 377 | Five compilers; Page, Node, Native phases | All commands 0; 1,144 passed, two skipped | `history/377b/units/bounded-continuation/manifest.original.json`, `8487f779efdd` |
+| Rejected review head, 879 | Page/Card workflows; checker review | Both workflows succeeded; checker requested changes | Historical external review attachment; no new-head CI claim |
+| Repair producer, 7f | One `identifier-vectors.py` invocation | Producer/driver/external 0; 84 expected-report rows | `units/repair-preparation/files/independent-producer.summary.json`; descriptor `f52de26e4a12` |
+| Repair Page build, 7f | One maintained Page build | All exits 0; SAME asset | `units/repair-preparation/files/page-build.summary.json`; descriptor `f52de26e4a12` |
+| Owned-output quarantine, 3da | Metadata-only `quarantine.SOURCE.py` | 0; three retained trees, two fresh caches | `units/repair-preparation/files/owned-output-quarantine.summary.json`; descriptor `f52de26e4a12` |
+| Current focus, 3da | Node owners and `scripts/focused-check.mjs` | 37 passed; all commands 0; six UNKNOWN wrappers | `units/repair-focus/manifest.original.json`, `c276458b41be` |
+| Historical correspondence, 3da source graph | Per-owner no-call proof | 706 owners; 5,844 historical observations | `no-call-proof-reference.json`, `07ddbeb2595e`; private proof `5cdd9a81015a` |
+| Old-scan control, 3da | Whole citation owner, old scan restored | Child 1; controller/outer/launcher/external 0. Two expected report failures and three passes | `units/repair-control/manifest.original.json`, `11ebcac2855c` |
+| Final aggregate, 3da | Metadata writer freeze and seal | Both 0; 86 public and 27 private indexed records | `raw-index.json`, `708ef5febcce`; `terminal-prerequisites.json`, `c405ca8ccb0b` |
+| Exact final-head CI | Page/Card workflows | Required external review attachment | Exact commit, events, attempts, all terminal steps, and sealed CI manifest |
 
-One maintained `npm run build --workspace @generalbusiness/dap-page` exited 0
-at fa6. Commit `377b2adb` adopts only `apps/room/page/assets.ts`, with its mode
-unchanged. The module's SHA-256 is
-`e104ec88feef46fe5a973c256873f9dc6dfcde6f62fa1282d912093f241e0530`, exactly
-the output measured by the failed gate. The build alone supplies no repaired
-Page-test, browser, or Native result.
+The control continuation in the original evidence ran only the previously unrun
+anchor fault. The new old-scan control retained its own result: the git and
+git256 `parent-after-author` cases failed at the full-report comparison on line
+22. The other three cases passed, with no retries or positive repeat. END
+`24dbe941e4b128365cf0975661edaa08cead38a4` records that distinguished fault.
+Its control descriptor is
+`11ebcac2855c0f123a2a8fdf82ae80ce9a14964a831c48b071d5b0cbbe3743c0`. The
+metadata seal exited 0 under END `8dbaa75ec0b891f87bd31aeab27c50a39ae8a6e4`;
+that END does not replace the runtime END or the negative child exit 1.
 
-Ruling `7505fa96` permits the bounded continuation instead of a second complete
-gate. Its current records at `377b2adb` contain the affected helper check, five
-compiler passes, one Page comparison pass, 15 Node passes, and 1,130 Native cases:
-1,128 passed and two planned cases skipped. Six Node wrappers remain UNKNOWN.
-The four phase children, inner runner, outer driver, launcher, external command,
-and the one in-body Native analyzer exited 0. Native analysis reports no issues.
-Both cleanups closed empty, and final source, tool, and dist fences accepted
-unchanged inputs.
+The preparation descriptor is
+`f52de26e4a128cb6bb5b7b04785af4084fa9d77b11247aee78fb52f3dd64d5eb`. Its three
+units retain their own heads and outcomes. The final writer copied the old 62
+public metadata files under `history/377b/` and curated public metadata from
+the new sealed units. It retained older private archive locators and full
+hashes without reading or copying their raw payloads.
 
-The no-read carry proof `665c0507` retains 4,735 historical runtime observations
-and 40 compiler contexts at fa6. `units/bounded-continuation/files/raw-index.json`
-indexes the retained proof by its full hash. `terminal-prerequisites.json` records
-the original private-custody locator. The aggregate copies metadata for that
-custody without duplicating its raw private payloads.
-Each carried owner and program excludes `assets.ts`. Those results do not
-become current compiler or runtime commands. The checker judges the failed
-gate, this proof, and the separate continuation together. The same ruling
-requires changed-input generators after every main integration and before a
-sealed unit.
+The 13,476,635-byte current no-call proof has exactly one new private copy.
+`no-call-proof-reference.json` binds its full SHA-256
+`5cdd9a81015a80e62dd154b86a097424bb539f4dd8cdef16e1bb452137708c83` to
+`proofs/no-call/carry-proof.json` in the aggregate's private custody. The
+private manifest has SHA-256
+`d7bd293ba0f3376561d6e14a8996a293bb09556d90863d38a869ec76e5dba9fd`. The large
+proof is absent from the public files.
 
-The [evidence manifest](evidence/2026-11-11-identifiers-vectors-b.manifest.json)
-binds the 62 indexed public aggregate files to this source checkpoint and the
-six sealed units below. Each table path names an indexed aggregate artifact.
-The full aggregate manifest has SHA-256
-`f632859d1a84236729b03f45784438b6e0767c1d94ab911448014f8bfdea5076`.
+Metadata freeze and seal both exited 0. END
+`6f8b68479793eb73ff18c42c2b00745e4d050d5f` closes that metadata operation. Its
+97 copy maps, 97 selected original files, nine source files, and 26 source
+directories retained their full original facts. Original file bytes, recorded metadata, and
+directory membership remain unchanged. Archive copies use files 0400 and
+directories 0500, with at least 30 days' retention after landing. Ordinary
+compiler and cheap-check logs stay plain and external.
 
-| Evidence and checkpoint | Actual outcome | Indexed aggregate artifact |
-| --- | --- | --- |
-| Independent vectors and Bytes AST seal, 372f5ff5 | Producer 0 and AST producer 0 | `units/preparation/manifest.original.json`, SHA `b5411a953860` |
-| Metadata V1 and focus V2, fa6e7419 | First metadata 1. V2 focus 0: Node 24 and Plain 145 | `units/focused169/manifest.original.json`, SHA `07e7f857d5d9` |
-| Two citation controls, fa6e7419 | Both children 1. First controller 2, metadata adjudication 0, anchor controller 0 | `units/citation-controls/manifest.original.json`, SHA `663033cbc8af` |
-| Complete gate, fa6e7419 | Gate 1 and analyzer 1. Native 1,130 unreached | `units/failed-full-gate/manifest.original.json`, SHA `299ae5ebaa32` |
-| One Page build, fa6; adoption 377b2adb | Build and enclosing exits 0. Only assets.ts changes | `units/page-build/manifest.original.json`, SHA `0b8ad987757d` |
-| Ruled continuation, 377b2adb | Commands 0. Five compilers; Page 1, Node 15, Native 1,128 passed and two skipped | `units/bounded-continuation/manifest.original.json`, SHA `8487f779efdd` |
-| Current case, compiler, and command identities | 1,146 current cases, including two planned skips; historical carry stays separate | `units/bounded-continuation/files/literal-case-ledger.json`, `compiler-ledger.json`, and `runtime-ledger.json` in that same directory |
+RSS remains passive sampled single-process information. The repair Page build
+keeps raw status `failed`, one sample, no owned Node/workerd row, and a
+separate accepted UNKNOWN record. The control keeps raw status `failed`, two
+samples, no owned Node/workerd row, no observer error, and its own accepted
+UNKNOWN record. The current focus has three samples and two owned rows with no
+observer error. These samples supply no lifetime upper bound.
 
-The aggregate retains original unit manifests, full hashes, commands, literal
-identities, and custody maps. Its 13 indexed private files contain metadata.
-Original raw TEST payloads stay in their original sealed private units. The
-aggregate does not copy those payloads. Archive copies use mode `0400` for
-files and mode `0500` for directories; original bytes, modes, identities, and
-timestamps remain unchanged. Minimum retention is 30 days after landing.
-No validation body repeats during filing.
+## Open obligations
 
-Passive RSS values remain sampled single-process observations, not heap, true
-peaks, sums, or lifetime bounds. The controls and Page build retain raw observer
-status `failed` with separate accepted UNKNOWN admission because the samples
-contain no owned Node or workerd row. The focus sampled Node 896,304 KiB, and
-the failed gate sampled Node 2,405,344 KiB with workerd UNKNOWN.
+Request `a30f1b67` still owns exact final-head Page/Card CI and review. The
+review attachments bind the exact commit containing this note and the evidence
+descriptor, chosen events and attempts, every terminal step, and the sealed CI
+manifest. Filing CI needs no later note commit. No second whole gate or
+deployment follows from `15d3b0bd`; the checker judges the evidence together.
 
-The continuation recorded 89 samples and 248 Node/workerd rows with no observer
-error. Its largest sampled Node process used 2,675,712 KiB; workerd used
-2,523,680 KiB. Lifetime upper bounds remain UNKNOWN. External elapsed time was
-888.3013221249857 seconds. No validation or telemetry body repeated for filing.
-
-External review attachments bind Page and Card run IDs, attempts, chosen events,
-full terminal steps, and the sealed CI manifest to the exact commit containing
-this note and the evidence descriptor. CI filing does not require another note
-commit. Review approval, landing, cutover, and deployment remain separate.
-[File test evidence](../../docs/evidence-filing.md) and the
-[testing reference](../../docs/testing-reference.md) state the filing and
-stand-in limits. Identifiers (c+d) remains unfinished.
+Parent `05d618e2` remains open for identifiers (c+d). This head performs no
+Native identity or admission cutover. The planner owns deployment.
