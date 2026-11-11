@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7109f6f9226052caf9150d3ae6f58cc8df017ee9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-tg1-browser-ci-c95bc118.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:729a6f682381f4533c57842e55a4e6f535c2a4f6","text":"Merge retired a covered predecessor; the successor is at scripts/test/j3-runner.config.mjs."}
