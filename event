@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c5168d1f3e7b2e5a4125ab3c231e446833558f48","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-10-f-final-gate-688c.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c5670f00edacb737822ef125673a79cd6d8b1e32","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/source-support.ts."}
