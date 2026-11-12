@@ -1,11 +1,13 @@
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import type { GenesisEntry } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, intentDigest, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { readNativeBirth, type NativeBirth } from "../src/native-birth.ts";
 import { namespace } from "../src/namespace.ts";
 import { controls } from "../src/testing.ts";
+import { PreparationBudget } from "../src/preparation-budget.ts";
+import { PROOF_BYTE_BOUNDS } from "../src/proof-bytes.ts";
 import { at, definition, create, rita, type Remote } from "./fixtures-native.ts";
 type Peer = Remote & { nativeBirth(at: unknown, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null>; nativeBirthByName(name: unknown, kind: unknown, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null> };
 
@@ -23,7 +25,26 @@ test("native raw birth reads the exact accepted pin without an activation turn, 
   const before = await snapshot();
   const birth = await peer.nativeBirth(ref, 10000);
   expect(birth).toMatchObject({ v: 1, named: "platform:register@3", declarationName: "platform:register", native: true, proof: { fact: { at: ref, seq: 0, hash: answer.receipt.fact.hash } } });
-  expect(birth && readNativeBirth(birth, ref)).toEqual(birth);
+  if (!birth) throw Error("Actual Native birth required");
+  const budget = new PreparationBudget(), debits: number[] = [];
+  const debit = (bytes: number) => { budget.spend({ calls: 1, candidates: 1 }); debits.push(bytes); };
+  const admitted = readNativeBirth(birth, ref, PROOF_BYTE_BOUNDS.body, debit);
+  expect(admitted?.birth).toEqual(birth);
+  expect(admitted?.sequence.at).toEqual(ref); expect(admitted?.sequence.kind).toBe("register");
+  expect(admitted?.entry.input.seed.kind).toBe("register");
+  expect(debits).toEqual([utf8(birth.proof.bytes).length]);
+  expect(Reflect.apply(readNativeBirth, undefined, [birth, ref, PROOF_BYTE_BOUNDS.body])).toBeNull();
+  expect(admitted && [admitted, admitted.birth, admitted.entry, admitted.sequence].every(Object.isFrozen)).toBe(true);
+  expect(readNativeBirth(admitted, ref, PROOF_BYTE_BOUNDS.body, debit)).toBeNull();
+  // A malformed byte body still reaches the debit before parsing. A budget
+  // stop must keep its exact identity rather than become malformed data.
+  const stop = new Error("TEST original budget stop"); let caught: unknown;
+  try { readNativeBirth({ ...birth, proof: { ...birth.proof, bytes: "{" } }, ref, PROOF_BYTE_BOUNDS.body, () => { throw stop; }); }
+  catch (error) { caught = error; }
+  expect(caught).toBe(stop);
+  const mutable = { ...birth, proof: { ...birth.proof, fact: { ...birth.proof.fact, at: { ...birth.proof.fact.at } } } };
+  const ownedBirth = readNativeBirth(mutable, ref, PROOF_BYTE_BOUNDS.body, bytes => { debit(bytes); mutable.proof.bytes = "{"; });
+  expect(ownedBirth?.birth.proof.bytes).toBe(birth.proof.bytes); expect(ownedBirth?.sequence.at).toEqual(ref);
   expect(Object.keys(birth!).sort()).toEqual(["declarationName", "named", "native", "proof", "v"]);
   const via = await namespace(env.SCOPES).births.read(ref, 10000);
   expect(via).toEqual(birth);
@@ -33,7 +54,7 @@ test("native raw birth reads the exact accepted pin without an activation turn, 
   expect(await peer.nativeBirthByName(`sc_${"z".repeat(52)}`, "register", 10000)).toBeNull();
   expect(await peer.nativeBirthByName(ref.scope, "register", 10000, 1)).toBeNull();
   expect(await peer.nativeBirthByName(ref.scope, "register", 0)).toBeNull();
-  expect(await peer.nativeBirth({ ...ref, inc: newIncarnation(new Uint8Array(16).fill(9)) }, 10000)).toBeNull();
+  expect(await peer.nativeBirth({ ...ref, genesis: textDigest("TEST wrong genesis") }, 10000)).toBeNull();
   expect(await peer.nativeBirth(ref, 10000, 1)).toBeNull();
   expect(await peer.nativeBirth(ref, 0)).toBeNull(); expect(await peer.nativeBirth(ref, 10001)).toBeNull();
   expect(await snapshot()).toEqual(before);
@@ -43,9 +64,18 @@ test("declared raw birth retains its actual name without promoting identity; ove
   const scope = await create(), peer = scope.object as unknown as Peer;
   const birth = await peer.nativeBirth(scope.at, 10000);
   expect(birth).toMatchObject({ named: definition.digest, declarationName: definition.declared.name, native: false });
-  expect(readNativeBirth({ ...birth, under: "issue" }, scope.at)).toBeNull();
-  expect(readNativeBirth({ ...birth, native: true }, scope.at)).toBeNull();
-  expect(readNativeBirth({ ...birth, v: 2 }, scope.at)).toBeNull();
+  const budget = new PreparationBudget(), debit = (_bytes: number) => budget.spend({ calls: 1, candidates: 1 });
+  expect(readNativeBirth({ ...birth, under: "issue" }, scope.at, PROOF_BYTE_BOUNDS.body, debit)).toBeNull();
+  expect(readNativeBirth({ ...birth, native: true }, scope.at, PROOF_BYTE_BOUNDS.body, debit)).toBeNull();
+  expect(readNativeBirth({ ...birth, v: 2 }, scope.at, PROOF_BYTE_BOUNDS.body, debit)).toBeNull();
+  const admitted = readNativeBirth(birth, scope.at, PROOF_BYTE_BOUNDS.body, debit);
+  if (!admitted) throw Error("Actual original genesis bytes required");
+  // Byte-association fixture only, not a Native refused creation judgment.
+  const refused: GenesisEntry = { ...admitted.entry, input: { ...admitted.entry.input, decision: "refused" }, effects: [], sends: [] };
+  const bytes = canonicalize(refused), hash = entryHash(refused), at = { scope: scope.at.scope, genesis: hash };
+  const negative = readNativeBirth({ ...admitted.birth, proof: { fact: { at, seq: 0, hash }, bytes } }, at, PROOF_BYTE_BOUNDS.body, debit);
+  expect(negative?.entry.input.decision).toBe("refused"); expect(negative?.sequence.at).toEqual(at);
+  expect(negative?.birth.named).toBe(admitted.birth.named);
   // An explicit storage-corruption fixture, not a native transition. The
   // production bounded reader rejects its size before loading entry bytes.
   await scope.inside(async (state) => {
@@ -69,12 +99,12 @@ test("declared raw birth retains its actual name without promoting identity; ove
 // Protocol stand-in only. Unsupported peers cannot fall back to legacy source
 // or a summary, and invalid input reaches no namespace.
 test("raw birth protocol refuses unsupported senders and invalid admission without a legacy fallback", async () => {
-  const ref = { kind: "directory", scope: `sc_${"a".repeat(52)}`, inc: newIncarnation(new Uint8Array(16).fill(1)) } as const;
+  const ref = { scope: `sc_${"a".repeat(52)}`, genesis: textDigest("TEST raw protocol reference, not a birth") } as const;
   let lookups = 0, legacy = 0;
   const binding = { idFromName: () => ref.scope, get: () => { lookups++; return { source: () => { legacy++; }, summary: () => { legacy++; } }; } };
   const births = namespace(binding as never).births;
   expect(await births.read(ref, 10000)).toBeNull(); expect([lookups, legacy]).toEqual([1, 0]);
-  expect(await births.read({} as ScopeRef, 10000)).toBeNull(); expect(await births.read(ref, 10001)).toBeNull();
+  expect(await Reflect.apply(births.read, births, [{}, 10000])).toBeNull(); expect(await births.read(ref, 10001)).toBeNull();
   expect(await births.read(ref, 10000, 0)).toBeNull();
   expect([lookups, legacy]).toEqual([1, 0]);
 });

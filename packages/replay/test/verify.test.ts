@@ -1,8 +1,8 @@
 import { replayHolding, replayChained } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { replayReservedSource, replayReservedReceiver, replayQualifiedReceiver } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { describe, expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report } from "@generalbusiness/dap-contract";
-import { canonicalize, textDigest } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report, type ScopeKind } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, entryHash, isEntry, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { grantFrom, namedBy, observationOf, validateDefinition } from "@generalbusiness/dap-derive";
 import { created, keys, notesDefinition, on, otherLane, t, type Actor, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { C, cap, clean } from "../../derive/test/fixtures-hold.ts";
@@ -11,6 +11,7 @@ import { Roster } from "../../../packages/platform/test/support.ts";
 import { Rulebook } from "../../../packages/platform/test/support-rules.ts";
 import { MemorySource, TRUSTS, platformCode, render, verify, type MemoryScope, type Options, type Tally } from "../src/index.ts";
 import { View } from "../src/view.ts";
+import { IdentityEvidence, type IdentityFrame, type ReceiverIdentityCode } from "../src/identity.ts";
 import { Gate, Lane, OWNER, RULES_SCOPE } from "./staging.ts";
 import { VALUE, Weighing } from "./weighing.ts";
 import { entryOf, histories as ledgers, rewrite, served, sourceOf, unsupportedDefinitionHistory, world, type World } from "./world.ts";
@@ -97,8 +98,168 @@ test("a replay without native identity policy leaves a reserved declared source 
   const qualifiedSource = new MemorySource([qualifiedSender, qualifiedHistory]);
   const qualified = await verify(qualifiedSource, { ...options, scope: Q.at.scope, sourceName });
   expect([qualified.report.result, qualified.why, qualified.report.dependencies.missing, qualified.report.anchors]).toEqual(["consistent", null, [], []]);
-  const anchored = await verify(source(), { ...options, anchors: [{ scope: fact.at.scope, seq: fact.seq, hash: fact.hash }] });
+  const anchoredSource = source(), opened: string[] = [];
+  const page = anchoredSource.page.bind(anchoredSource);
+  anchoredSource.page = async (...args) => { opened.push(args[0]); return page(...args); };
+  let anchoredPolicyCalls = 0;
+  const anchored = await verify(anchoredSource, { ...options, anchors: [{ scope: fact.at.scope, seq: fact.seq, hash: fact.hash }],
+    sourceName: () => { anchoredPolicyCalls++; return null; } });
   expect([anchored.report.result, anchored.why, anchored.report.trusts.includes(TRUSTS.anchors), anchored.report.anchors]).toEqual(["consistent", null, true, [fact]]);
+  expect(opened).not.toContain(S.at.scope);
+  expect(anchoredPolicyCalls).toBe(0);
+  expect(anchored.report.trusts.filter(trust => trust === TRUSTS.recordedKinds)).toEqual([TRUSTS.recordedKinds]);
+
+  // Exercise the actual Replay collector, with process-local associations
+  // admitted from original canonical birth bytes. These pure code callbacks
+  // are fixture policy, not a Native factory or a host admission.
+  const original = ledgers(), creator = original.D, child = original.I;
+  const creatorBirth = creator.entries[0]!.entry, childBirth = child.entries[0]!.entry;
+  if (creatorBirth.input.type !== "genesis" || childBirth.input.type !== "genesis" || childBirth.input.source === null) throw Error("the existing histories have actual births");
+  const creatorInput = creatorBirth.input;
+  const creatorAt = { scope: scopeIdOf(creatorBirth.input.seed), genesis: entryHash(creatorBirth) };
+  const creatorSequence = admitSequenceGenesis(canonicalize(creatorBirth), creatorAt, PROPOSED_BOUNDS.entryBytes);
+  if (!creatorSequence) throw Error("the actual creator birth must admit its association");
+  const creatorFrame: IdentityFrame = { fact: { at: creatorAt, seq: 0, hash: creatorAt.genesis }, entry: creatorBirth,
+    sequence: creatorSequence, named: creator.definition.digest, declarationName: "notes", native: false };
+  const wrongRecorded = { ...childBirth, input: { ...childBirth.input, sourceKind: "lane" } };
+  if (!isEntry(wrongRecorded) || wrongRecorded.input.type !== "genesis") throw Error("the changed input remains a closed genesis");
+  const childAt = { scope: scopeIdOf(wrongRecorded.input.seed), genesis: entryHash(wrongRecorded) };
+  const childSequence = admitSequenceGenesis(canonicalize(wrongRecorded), childAt, PROPOSED_BOUNDS.entryBytes);
+  if (!childSequence || wrongRecorded.input.type !== "genesis" || !wrongRecorded.input.source) throw Error("the changed word must remain a closed, admitted birth");
+  const childFrame: IdentityFrame = { fact: { at: childAt, seq: 0, hash: childAt.genesis }, entry: wrongRecorded,
+    sequence: childSequence, named: child.definition.digest, declarationName: "change", native: false };
+  const cause = wrongRecorded.input.source, causeEntry = creator.entries[cause.seq]!.entry;
+  const causeFrame: IdentityFrame = { ...creatorFrame, fact: cause, entry: causeEntry };
+  let policyCalls = 0;
+  const code: ReceiverIdentityCode = { version: 1,
+    bounds: { facts: 32, laneDepth: 16, entryBytes: PROPOSED_BOUNDS.entryBytes, bytes: 16 * 1024 * 1024 },
+    cohort: { directory: "platform:directory@15", partition: "platform:directory-partition@1", membership: "platform:membership@8",
+      rules: "platform:rules@1", destination: "platform:destination@1", inbox: "platform:inbox@1" },
+    receiver: () => { policyCalls++; return null; }, creation: () => { policyCalls++; return null; },
+    producer: at => { policyCalls++; return canonicalize(at) === canonicalize(creatorAt) ? "declared:notes" : "declared:change"; },
+    source: () => { policyCalls++; return "declared:change"; },
+    publication: () => { policyCalls++; return true; } };
+  const frames = [creatorFrame, causeFrame, childFrame];
+  const evidence = () => new IdentityEvidence(code, {
+    birth: async at => frames.find(frame => frame.fact.seq === 0 && canonicalize(frame.fact.at) === canonicalize(at)) ?? null,
+    fact: async from => frames.find(frame => canonicalize(frame.fact) === canonicalize(from)) ?? null,
+  });
+  expect(await evidence().name(creatorFrame.fact)).toEqual({ producer: "declared:notes", under: "declared:notes" });
+  policyCalls = 0;
+  expect(creatorSequence.kind).toBe("directory");
+  expect(childSequence.kind).toBe("lane");
+  expect(wrongRecorded.input.sourceKind).toBe("lane");
+  expect(await evidence().name(childFrame.fact)).toBeNull();
+  expect(policyCalls).toBe(0);
+  const wrongOwnKind = { ...creatorFrame, declarationName: "change" };
+  expect(await new IdentityEvidence(code, { birth: async () => wrongOwnKind, fact: async () => wrongOwnKind }).name(wrongOwnKind.fact)).toBeNull();
+  expect(policyCalls).toBe(0);
+  expect(await new IdentityEvidence(code, { birth: async () => null, fact: async () => causeFrame }).name(childFrame.fact)).toBeNull();
+  expect(policyCalls).toBe(0);
+
+  // The matching creator is complete legacy evidence, not a kind inferred
+  // from an alias. Only the existing naming policy selects the result.
+  const matching = { ...childBirth, input: { ...childBirth.input, sourceKind: creatorSequence.kind } };
+  if (!isEntry(matching) || matching.input.type !== "genesis") throw Error("the matching fixture birth must remain closed");
+  const matchingAt = { scope: scopeIdOf(matching.input.seed), genesis: entryHash(matching) };
+  const matchingSequence = admitSequenceGenesis(canonicalize(matching), matchingAt, PROPOSED_BOUNDS.entryBytes);
+  if (!matchingSequence) throw Error("the matching original birth must admit its association");
+  const matchingFrame: IdentityFrame = { ...childFrame, entry: matching, sequence: matchingSequence,
+    fact: { at: matchingAt, seq: 0, hash: matchingAt.genesis } };
+  const matchingFrames = [creatorFrame, causeFrame, matchingFrame];
+  const checkedSource = (rows: readonly IdentityFrame[]) => ({
+    birth: async (at: IdentityFrame["fact"]["at"]) => rows.find(frame => frame.fact.seq === 0 && canonicalize(frame.fact.at) === canonicalize(at)) ?? null,
+    fact: async (from: IdentityFrame["fact"]) => rows.find(frame => canonicalize(frame.fact) === canonicalize(from)) ?? null,
+  });
+  expect(await new IdentityEvidence(code, checkedSource(matchingFrames)).name(matchingFrame.fact)).toEqual({ producer: "declared:change", under: "declared:change" });
+  expect(policyCalls).toBe(2);
+  policyCalls = 0;
+  // Malformed cohort metadata over the original declared birth cannot use
+  // the legacy path. This is a contradiction stand-in, not Native admission.
+  const cohortCreator = { ...creatorFrame, native: true, named: code.cohort.partition };
+  expect(await new IdentityEvidence(code, checkedSource([cohortCreator, causeFrame, matchingFrame])).name(matchingFrame.fact)).toBeNull();
+  expect(policyCalls).toBe(0);
+
+  // Scripted canonical frames exercise this collector, not Native admission
+  // or the supplied policy's ancestry algorithm. Every association still
+  // comes from the original bytes of its own closed genesis.
+  const birthFrame = (kind: ScopeKind, named: IdentityFrame["named"], origin: IdentityFrame | null,
+    body: unknown = { fields: {} }): IdentityFrame => {
+    const candidate: unknown = { ...creatorBirth, input: { ...creatorInput,
+      seed: { ...creatorInput.seed, kind, definition: named, creator: origin?.fact.at ?? null,
+        cause: origin ? entryHash(origin.entry) : creatorInput.seed.cause },
+      source: origin?.fact ?? null, sourceKind: origin?.sequence.kind ?? null, n: origin ? 0 : null,
+      message: origin ? { class: "request", type: "create", body } : null } };
+    if (!isEntry(candidate) || candidate.input.type !== "genesis") throw Error("collector frame needs a closed canonical birth");
+    const at = { scope: scopeIdOf(candidate.input.seed), genesis: entryHash(candidate) };
+    const sequence = admitSequenceGenesis(canonicalize(candidate), at, PROPOSED_BOUNDS.entryBytes);
+    if (!sequence) throw Error("collector frame needs a genuinely admitted association");
+    return { fact: { at, seq: 0, hash: at.genesis }, entry: candidate, sequence, named,
+      declarationName: kind === "lane" ? "change" : `platform:${kind}`, native: kind !== "lane" };
+  };
+  const register = birthFrame("register", "platform:register@19", null);
+  const root = birthFrame("directory", code.cohort.directory, register);
+  const siblings = [
+    birthFrame("membership", code.cohort.membership, root), birthFrame("rules", code.cohort.rules, root),
+    birthFrame("destination", code.cohort.destination, root),
+  ];
+  const fields = { membership: siblings[0]!.fact.at, rules: siblings[1]!.fact.at, destination: siblings[2]!.fact.at };
+  for (const sealed of [false, true]) {
+    const sealSender = birthFrame("directory", "platform:directory@14", null);
+    const openingBody: unknown = { ...causeFrame.entry, genesis: root.fact.at.genesis, seq: 1, prev: root.fact.hash,
+      ...(sealed ? { input: { type: "delivery", from: sealSender.fact, sourceKind: "directory", n: 0,
+        message: { class: "request", type: "tell", body: { message: "seal", fields: {} } }, decision: "applied" } } : {}) };
+    if (!isEntry(openingBody) || openingBody.input.type === "genesis") throw Error("collector opening needs one closed non-genesis entry");
+    const opening: IdentityFrame = { ...root, fact: { at: root.fact.at, seq: 1, hash: entryHash(openingBody) }, entry: openingBody };
+    const partition = birthFrame("directory", code.cohort.partition, opening, { fields });
+    const rows = [register, root, ...siblings, opening, partition, ...(sealed ? [sealSender] : [])];
+    let parent = partition;
+    // Nine concern births for act, eight for seal: both views total16.
+    for (let n = 0; n < (sealed ? 8 : 9); n++) { parent = birthFrame("lane", child.definition.digest, parent); rows.push(parent); }
+    expect(rows).toHaveLength(16);
+    const asked = parent.fact, reads: string[] = [], kept: (readonly IdentityFrame[])[] = [];
+    const boundedCode: ReceiverIdentityCode = { ...code, bounds: { ...code.bounds, facts: 16 },
+      producer: (_at, frames) => { kept.push(frames); return "declared:change"; }, source: () => "declared:change" };
+    const inputSource = checkedSource(rows);
+    const boundedSource = { ...inputSource, birth: async (at: IdentityFrame["fact"]["at"]) => { reads.push(canonicalize(at)); return inputSource.birth(at); } };
+    const collector = new IdentityEvidence(boundedCode, boundedSource);
+    expect(await collector.name(asked)).toEqual({ producer: "declared:change", under: "declared:change" });
+    expect(kept[0]).toHaveLength(16);
+    expect(kept[0]).toContain(register);
+    if (sealed) expect(kept[0]).toContain(sealSender);
+    expect(reads.filter(at => at === canonicalize(register.fact.at))).toHaveLength(1);
+    // Reusing a held Register costs no second source read or duplicate view.
+    expect(await collector.name(asked)).toEqual({ producer: "declared:change", under: "declared:change" });
+    expect(reads.filter(at => at === canonicalize(register.fact.at))).toHaveLength(1);
+    expect(await new IdentityEvidence({ ...boundedCode, bounds: { ...boundedCode.bounds, facts: 15 } }, checkedSource(rows)).name(asked)).toBeNull();
+    expect(await new IdentityEvidence(boundedCode, checkedSource(rows.filter(frame => frame !== register))).name(asked)).toBeNull();
+    if (sealed) expect(await new IdentityEvidence(boundedCode, checkedSource(rows.filter(frame => frame !== sealSender))).name(asked)).toBeNull();
+    // A late dependency supplies no callback before its actual promise
+    // settles. The enclosing Verifier, not this fixture, owns the deadline.
+    let release!: (frame: IdentityFrame | null) => void, began!: () => void;
+    const held = new Promise<IdentityFrame | null>(resolve => { release = resolve; });
+    const entered = new Promise<void>(resolve => { began = resolve; });
+    const before = kept.length;
+    const pending = new IdentityEvidence(boundedCode, { ...inputSource, birth: async at => {
+      if (canonicalize(at) === canonicalize(register.fact.at)) { began(); return held; }
+      return inputSource.birth(at);
+    } }).name(asked);
+    await entered;
+    expect(kept).toHaveLength(before);
+    release(null);
+    expect(await pending).toBeNull();
+    expect(kept).toHaveLength(before);
+    // Bootstrap uses the same Register and conditional sender dependency.
+    const born = partition.entry.input;
+    if (born.type !== "genesis" || !born.source || born.sourceKind === null || born.n === null || !born.message) throw Error("the fixture partition has its full creation input");
+    let bootstrapFrames: readonly IdentityFrame[] = [];
+    expect(await new IdentityEvidence({ ...boundedCode, creation: (_creation, _definition, frames) => {
+      bootstrapFrames = frames; return { mode: "partition-v1" };
+    } }, checkedSource(rows)).bootstrap({ seed: born.seed, source: born.source, sourceKind: born.sourceKind, n: born.n, message: born.message }, code.cohort.partition)).toEqual({ mode: "partition-v1" });
+    expect(bootstrapFrames).toContain(register);
+    if (sealed) expect(bootstrapFrames).toContain(sealSender);
+  }
+
 });
 
 describe("a detached text whose bytes are gone (section 9.3)", () => {

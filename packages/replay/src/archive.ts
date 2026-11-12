@@ -1,11 +1,10 @@
-import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 /** Portable archive adaptation. The trusted read port owns object parsing
  * and I/O. This module imports neither Git nor Node and changes no judge. */
 import { natural } from "@generalbusiness/dap-bytes";
-import { DOMAINS, type Digest, type Entry, type FactRef, type Head, type PlatformDefinition, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isEntry, isFactRef, isScopeId, platformName, rawRetainedJSON, utf8 } from "@generalbusiness/dap-bytes";
+import { DOMAINS, type Digest, type FactRef, type Head, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, isDigest, isFactRef, isScopeId, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type TextOmission, type Unread, type FloorCommitRead } from "./source.ts";
-import { LIMITS, SourceError, TRUSTS, verify, type Limits, type Options, type PublishedAnchorPolicy, type Verification } from "./verify.ts";
+import { LIMITS, SourceError, TRUSTS, verify, type ExporterSourceRow, type Limits, type Options, type PublishedAnchorPolicy, type Verification } from "./verify.ts";
 
 export interface ArchiveCost { entries: number; attempts: number; nodes: number; calls: number; metadata: number; inputWork: number }
 /** One traversal's original counters and deadline, shared by every scope. */
@@ -36,7 +35,7 @@ export interface ArchiveData {
   readonly entries: readonly Stored[];
   readonly retained: readonly RetainedInput[];
   /** Archive-declared classifier basis; no source-history proof is implied. */
-  readonly foreignSources?: readonly { readonly at: ScopeRef; readonly pin: Digest | PlatformDefinition }[];
+  readonly foreignSources?: readonly ExporterSourceRow[];
   /** Canonical retained JSON byte counts; no decoded text or field bound. */
   readonly omittedTexts?: readonly { readonly digest: Digest; readonly bytes: number; readonly first: { readonly scope: ScopeId; readonly seq: number } }[];
 }
@@ -142,12 +141,11 @@ class Session implements HistorySource {
   /** Populated from each actual validated snapshot before page/retained
    * returns to the verifier; this map grants no trust by itself. */
   readonly publications = new Map<ScopeId, PublishedAnchorPolicy>();
+  /** Actual already-open exporter rows. This map supplies validation, never a kind or caller trust. */
+  readonly sourceRows = new Map<ScopeId, readonly ExporterSourceRow[]>();
   readonly #opened = new Map<ScopeId, Promise<ArchiveRead>>();
   readonly #receiptScopes = new Set<ScopeId>();
   readonly #receipts = new Map<string, Promise<Omit<Extract<FloorCommitRead, { ok: true }>, "bytes"> | Unread>>();
-  readonly #anchors = new Set<string>();
-  readonly #anchorScopes = new Set<ScopeId>();
-  readonly #privateNames = new Map<ScopeId, ReadonlyMap<string, string>>();
   readonly #omissionRows = new Map<ScopeId, ReadonlyMap<Digest, TextOmission>>();
   failure: ArchiveFailure | null = null;
   readonly port: ArchiveReadPort;
@@ -157,30 +155,7 @@ class Session implements HistorySource {
   constructor(port: ArchiveReadPort, work: Work, texts?: ArchiveTextPort, anchors?: Options["anchors"], published = false) {
     this.published = published;
     this.port = port; this.work = work; this.texts = texts;
-    for (const anchor of anchors ?? []) {
-      work.spend({ metadata: 256, inputWork: 512 });
-      this.#anchors.add(canonicalize([anchor.scope, anchor.seq, anchor.hash])); this.#anchorScopes.add(anchor.scope);
-    }
-  }
-  /** An exact caller anchor already leaves the retained definition name
-   * on trust. Only this commissioned native private cohort can use its
-   * descriptive archive basis; this proves no birth or source history. */
-  #anchoredPrivateName(archive: ArchiveData, entry: Entry, size: number): string | null {
-    if (!this.#anchorScopes.has(entry.at.scope)) return null;
-    this.work.spend({ inputWork: size * 8 + 512 });
-    if (!this.#anchors.has(canonicalize([entry.at.scope, entry.seq, entryHash(entry)]))) return null;
-    let names = this.#privateNames.get(archive.scope.scope);
-    if (!names) {
-      const selected = new Map<string, string>();
-      for (const source of archive.foreignSources ?? []) {
-        this.work.spend({ metadata: 256, inputWork: 512 });
-        if (!this.#anchorScopes.has(source.at.scope)) continue;
-        if ((answersCatalogVocabularyQuestion(source.pin, "archiveMembershipForeignCopy")) && source.at.kind === "membership"
-          || (answersCatalogVocabularyQuestion(source.pin, "archiveRegisterForeignCopy")) && source.at.kind === "register") selected.set(canonicalize(source.at), platformName(source.pin));
-      }
-      names = selected; this.#privateNames.set(archive.scope.scope, names);
-    }
-    return names.get(canonicalize(entry.at)) ?? null;
+    for (let index = 0; index < (anchors?.length ?? 0); index++) work.spend({ metadata: 256, inputWork: 512 });
   }
   async open(scope: ScopeId): Promise<ArchiveRead> {
     if (this.failure) return this.failure;
@@ -191,6 +166,17 @@ class Session implements HistorySource {
           this.work.check();
           const read = await this.work.wait(() => this.port.open(scope, this.work));
           if (!read.ok && read.result !== "not-found") this.failure ??= read;
+          if (read.ok) {
+            const rows = new Map<string, ExporterSourceRow>();
+            for (const row of read.archive.foreignSources ?? []) {
+              this.work.spend({ metadata: 256, inputWork: 512 });
+              if (!isScopeRef(row.at)) throw new Stopped("unavailable");
+              const key = canonicalize(row.at), prior = rows.get(key);
+              if (prior && (prior.pin !== row.pin)) throw new Stopped("unavailable");
+              rows.set(key, Object.freeze({ at: Object.freeze({ ...row.at }), pin: row.pin }));
+            }
+            this.sourceRows.set(scope, Object.freeze([...rows.values()]));
+          }
           if (read.ok && this.published) {
             if (read.archive.scope.scope !== scope) throw new Stopped("unavailable");
             // Existing per-anchor reader metadata pays for consultation
@@ -292,18 +278,8 @@ class Session implements HistorySource {
     if (!input) return unread("not-found");
     this.work.spend({ inputWork: input.bytes.length * 3 });
     const size = utf8(input.bytes).length; if (size > maximum) return unread("too-large");
-    if (kind === "entry") {
-      const entry = rawRetainedJSON(digest, input.bytes);
-      if (isEntry(entry)) {
-        const anchored = this.#anchoredPrivateName(read.archive, entry, size);
-        if (anchored !== null) input = { ...input, under: anchored };
-        else {
-          const foreign = await this.open(entry.at.scope);
-          if (foreign.ok && foreign.archive.name !== null) input = { ...input, under: foreign.archive.name };
-          else if (!foreign.ok && foreign.result !== "not-found") return unread(foreign.result);
-        }
-      }
-    }
+    // A raw retained copy never triggers a source open or derives a name.
+    // Replay checks verified history or the receiving entry's recorded kind and exact caller anchor first.
     this.work.check(); return { ok: true, input, bytes: size };
   }
   async settle(): Promise<void> { await Promise.all([this.port.settle?.(), this.texts?.settle?.()]); }
@@ -320,7 +296,7 @@ function provenance(native: Verification, selectedHead: boolean): Verification {
 }
 function receiptResult(fact: FactRef, archive: ArchiveData, integrity: Verification): ArchiveReceipt {
   if (integrity.report.result !== "consistent") return { fact, result: "unverified", reason: "archive integrity and continuity did not complete" };
-  if (fact.at.scope !== archive.scope.scope || fact.at.inc !== archive.scope.inc || fact.at.kind !== archive.scope.kind) return { fact, result: "mismatch", reason: "receipt names another history" };
+  if (fact.at.scope !== archive.scope.scope || fact.at.genesis !== archive.scope.genesis) return { fact, result: "mismatch", reason: "receipt names another history" };
   if (fact.seq > archive.head.seq) return { fact, result: "behind", reason: "archive head is below the receipt position" };
   return archive.entries[fact.seq]?.hash === fact.hash ? { fact, result: "archived", reason: null } : { fact, result: "mismatch", reason: "receipt hash differs at its position" };
 }
@@ -360,6 +336,7 @@ export class ArchiveSource implements HistorySource {
           if (previous && previous.hash !== fact.hash) return { ok: false, result: "mismatch", reason: "published anchor lists contradict one full source reference and position", location: { scope, commit: a.commit } };
           anchors.set(key, fact);
         }
+
       }
       const publicScopes = new Set(archives.map(archive => archive.scope.scope));
       if ([...anchors.values()].some(fact => publicScopes.has(fact.at.scope))) return { ok: false, result: "mismatch", reason: "published anchor names a journal in the public archive set", location: {} };
@@ -388,7 +365,9 @@ export class ArchiveSource implements HistorySource {
         // Integrity does not consult authority/dependency proofs, so it
         // cannot establish exact-list acceptance under the trust option.
         if (options.trustPublishedAnchors && (options.mode !== "replay" || !read.archive.anchorRanges)) throw new Stopped("unavailable");
-        const asked = { ...options, head, ...(options.trustPublishedAnchors ? {
+        // This adapter owns the strict alias basis, even when it is empty.
+        // Caller options and retained names cannot select direct-history mode.
+        const asked = { ...options, head, archiveSourceRows: session.sourceRows, ...(options.trustPublishedAnchors ? {
           publishedAnchorPolicies: session.publications,
         } : {}) };
         let integrity: Verification | undefined;

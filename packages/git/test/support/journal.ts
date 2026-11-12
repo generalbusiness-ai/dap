@@ -2,8 +2,8 @@
  * hashes, seeds and signatures use the real byte library. No native
  * judgment, SQL inventory, privacy admission or export is claimed. */
 import { execFileSync } from "node:child_process";
-import type { Entry, Intent, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Entry, Intent, Seed, PlatformDefinition, ScopeKind } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, entryHash, intentDigest, keyIdOfSecret, newGenesisNonce, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../../../scope/src/archive-budget.ts";
 import { journalKeyName } from "../../src/journal-selection.ts";
 import type { JournalFormat, JournalObject, JournalObjectSource } from "../../src/journal-objects.ts";
@@ -11,23 +11,23 @@ import type { ArchiveRetainedName } from "../../src/journal-path.ts";
 import type { JournalInputSource } from "../../src/journal-layout.ts";
 import { git, scratch } from "./repo.ts";
 
-export function syntheticJournal(count = 1, incarnation = 1, salt = 1) {
+export function syntheticJournal(count = 1, nonce = 1, salt = 1, pin: PlatformDefinition = "platform:register@1", kind: ScopeKind = "register") {
   const secret = new Uint8Array(32).fill(salt), actor = keyIdOfSecret(secret);
   const intent: Intent = { v: 1, to: null, actor, kind: "install", on: null, expected: {}, fields: {}, idempotencyKey: `TEST journal-${salt}`, notAfter: "2030-01-01T00:00:00Z" };
-  const seed: Seed = { v: 1, kind: "register", definition: "platform:register@1", creator: null, cause: intentDigest(intent), ordinal: 0 };
-  const at = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(incarnation)), kind: "register" as const };
+  const seed: Seed = { v: 1, kind, definition: pin, creator: null, cause: intentDigest(intent), ordinal: 0 };
   const bodies: string[] = [], entries: { seq: number; hash: ReturnType<typeof entryHash>; bytes: number }[] = [];
   for (let seq = 0; seq < count; seq++) {
-    const entry: Entry = {
-      v: 1, at, seq, prev: entries.at(-1)?.hash ?? null, time: timeOf(1_700_000_000_900 + seq * 1000), clamped: false, epoch: 0,
-      // Genesis records the act's kind; the seed and ScopeRef hold the separate scope kind.
-      input: seq === 0 ? { type: "genesis", seed, inc: at.inc, kind: intent.kind, "founding": signIntent(intent, secret), source: null, n: null, message: null, decision: "applied" }
-        : seq === 1 ? { type: "outcome", operation: "0:0", attempt: 0, owner: "platform:destination@1", kind: "TEST outcome", result: "confirmed", evidence: { basis: "own-answer", body: { test: true } } }
-        : { type: "checkpoint", through: seq - 1, state: digestBytes(utf8("TEST state")) },
-      uses: [], prepared: [], effects: [], sends: [],
-    };
+    const common = { v: 1 as const, time: timeOf(1_700_000_000_900 + seq * 1000), clamped: false, epoch: 0 as const,
+      uses: [], prepared: [], effects: [], sends: [] };
+    const entry: Entry = seq === 0 ? { ...common, seq: 0, prev: null,
+      input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(nonce)), kind: intent.kind,
+        founding: signIntent(intent, secret), source: null, sourceKind: null, n: null, message: null, decision: "applied" } }
+      : { ...common, genesis: entries[0]!.hash, seq, prev: entries.at(-1)!.hash,
+        input: seq === 1 ? { type: "outcome", operation: "0:0", attempt: 0, owner: "platform:destination@1", kind: "TEST outcome", result: "confirmed", evidence: { basis: "own-answer", body: { test: true } } }
+          : { type: "checkpoint", through: seq - 1, state: digestBytes(utf8("TEST state")) } };
     const bytes = canonicalize(entry); bodies.push(bytes); entries.push({ seq, hash: entryHash(entry), bytes: utf8(bytes).length });
   }
+  const at = { scope: scopeIdOf(seed), genesis: entries[0]!.hash };
   const origin = (seq: number) => ({ at: { at, seq, hash: entries[seq]!.hash }, input: seq === 0 ? "genesis" : seq === 1 ? "outcome" : "checkpoint" });
   const retained = new Map<string, string>();
   const objects: { key: ArchiveRetainedName; bytes: number; consumers: unknown[] }[] = [0, ...(count > 1 ? [1] : [])].map(seq => {
@@ -104,6 +104,7 @@ export function retimedSyntheticRoot(milliseconds: number) {
   fixture.bodies[0] = bytes;
   fixture.description.entries[0] = { seq: 0, hash, bytes: utf8(bytes).length };
   fixture.description.through.hash = hash;
+  fixture.at.genesis = hash;
   for (const object of fixture.description.objects) for (const raw of object.consumers) {
     const consumer = raw as { origin: { at: { hash: typeof hash } } };
     consumer.origin.at.hash = hash;

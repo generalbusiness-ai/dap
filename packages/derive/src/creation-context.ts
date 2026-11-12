@@ -10,7 +10,7 @@ export type CreationContext = { kind: "legacy" } | { kind: "invalid" }
 export function creationContextOf(body: unknown, definition: Digest): CreationContext {
   if (!isObject(body) || !Object.hasOwn(body, "creationContext")) return { kind: "legacy" };
   const marker = body["creationContext"], membership = body["membership"];
-  if (!isObject(marker) || !isScopeRef(membership) || membership.kind !== "membership") return { kind: "invalid" };
+  if (!isObject(marker) || !isScopeRef(membership)) return { kind: "invalid" };
   if (Object.keys(marker).length === 1 && Object.hasOwn(marker, "v") && marker["v"] === 1) return { kind: "marked", membership };
   if (Object.keys(marker).length !== 3 || marker["v"] !== 2 || typeof marker["delegate"] !== "boolean" || !Object.hasOwn(marker, "deviceCommand")) return { kind: "invalid" };
   const deviceCommand = readDeviceCommandGrant(marker["deviceCommand"], membership);

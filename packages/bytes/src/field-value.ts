@@ -36,7 +36,7 @@ export function fitsFieldType(type: FieldType, v: unknown, bounds: Bounds): bool
     case "item": return isLocalId(v);
     case "fact": return isFactRef(v);
     case "reference": return isReference(v, type.fragment);
-    case "scope": return isScopeRef(v) && v.kind === type.kind;
+    case "scope": return isScopeRef(v); // Kind is checked when the room reads from this sequence (429c1be7).
     case "digest": return isDigest(v);
     case "commit": case "tree": return isObjectId(v);
     case "list": return Array.isArray(v) && v.length <= Math.min(type.max, bounds.listElements) && v.every((e) => fitsFieldType(type.of, e, bounds));

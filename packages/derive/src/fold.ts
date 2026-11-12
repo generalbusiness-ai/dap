@@ -11,8 +11,8 @@
  * using the pinned selector rule where the definition states one.
  */
 
-import type { Digest, Entry, OperationId } from "@generalbusiness/dap-contract";
-import { intentDigest, seedDigest } from "@generalbusiness/dap-bytes";
+import type { Digest, Effect, Entry, FactRef, GenesisEffect, OperationId, ScopeRef } from "@generalbusiness/dap-contract";
+import { intentDigest, isEffect, resolveGenesisSelf, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { UNDER, historyOf } from "./attribution.ts";
 import { drawsOf, released, type DrawOptions } from "./draws.ts";
 import { indexRows } from "./binding.ts";
@@ -20,7 +20,7 @@ import { fixedRowsOf, rekeyFixed } from "./fixed-index.ts";
 import { changeItem, newItem, signerOf } from "./item-effects.ts";
 export { changeItem, newItem, signerOf, HOLDER, type ItemEffect } from "./item-effects.ts";
 import { attemptedBy, openedBy, operationId } from "./ledger.ts";
-import type { Item, ObservedHead, StateWriter, Status } from "./state.ts";
+import type { Item, ObservedHead, StateView, StateWriter, Status } from "./state.ts";
 import { isLocalId, isObject, isScopeRef, own, same } from "./values.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { checkStandingEntry, StandingError } from "./standing.ts";
@@ -28,6 +28,7 @@ import { updateItemDuties } from "./item-duties.ts";
 import { requestReservation } from "./request-duties.ts";
 import { itemSettledBy, itemSettlementBinding } from "./handlers.ts";
 import { heldPositions, nextFloorState } from "./floor.ts";
+import { resolveGenesisValue } from "./genesis-values.ts";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 
 /** An entry that this state cannot take: out of sequence, or with an effect on nothing. */
@@ -58,11 +59,16 @@ export function headsOf(proof: unknown): ObservedHead[] {
 export function applyEntry(writer: StateWriter, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions = {}): void {
   const scope = writer.scope();
   const input = entry.input;
+  const at: ScopeRef = input.type === "genesis" ? { scope: scopeIdOf(input.seed), genesis: hash } : scope?.at ?? (() => { throw new FoldError("a later entry has no sequence"); })();
+  if (input.type !== "genesis" && (!("genesis" in entry) || entry.genesis !== at.genesis)) throw new FoldError("the entry names another sequence");
+  const effects = resolvedEntryEffects(writer, definition, entry, at);
+  // This owned fold view never replaces the sealed bytes, copied seed, or message.
+  const applied = { ...entry, effects };
   if (input.type === "genesis" ? scope !== null || entry.seq !== 0 || entry.prev !== null : scope === null || entry.seq !== scope.head.seq + 1 || entry.prev !== scope.head.hash) {
     throw new FoldError(`entry ${entry.seq} does not follow the head`);
   }
   if (definition.standing) {
-    try { checkStandingEntry(writer, definition, entry.effects, entry.seq); }
+    try { checkStandingEntry(writer, definition, effects, entry.seq); }
     catch (error) { if (error instanceof StandingError) throw new FoldError(`entry ${entry.seq}: ${error.message}`); throw error; }
   }
   // Section 7.2: a child is provisional until its creator confirms it; a refused genesis is terminal. A directory has no creator to confirm it.
@@ -72,7 +78,7 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
   const signer = signerOf(entry);
   // Section 17.2a: what the entry does to the counts of the holders, on the state before it. An entry that draws past a count, or
   // that opens a held operation with no holder, is one that no judge writes.
-  const drawn = drawsOf(writer, definition, entry, options);
+  const drawn = drawsOf(writer, definition, applied, options);
   if ("fault" in drawn) throw new FoldError(`entry ${entry.seq}, ${drawn.fault}: ${drawn.detail}`);
   /** The holders whose release is asked after this entry: each whose counts, item, operation or request the entry changed. */
   const touched = new Set<number>(drawn.holders.keys());
@@ -104,7 +110,7 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
     return held;
   };
   let outcomes = 0;
-  for (const effect of entry.effects) {
+  for (const effect of effects) {
     switch (effect.effect) {
       case "open": {
         const type = own(definition.declared.items, effect.type);
@@ -179,7 +185,7 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
     }
     // Section 17.2a, "An index that an item type declares": the rows of an item are written in the transaction of the entry that
     // opens it, with the item, and by no later entry: an indexed slot is fixed. A type that declares no index has none.
-    if (!was) for (const row of indexRows(definition, item, entry.at)) writer.putIndexed(item.type, row.slot, row.key, item.id);
+    if (!was) for (const row of indexRows(definition, item, at)) writer.putIndexed(item.type, row.slot, row.key, item.id);
     if (was?.state !== item.state) {
       if (was) writer.addCount(was.type, was.state, -1);
       writer.addCount(item.type, item.state, 1);
@@ -214,7 +220,7 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
     writer.putDecided(input.from, input.n, entry.seq);
     if ("decision" in input && input.decision === "applied" && input.message.type === "tell" && isObject(input.message.body)) {
       const message = input.message.body["message"];
-      const handler = Object.values(definition.declared.receives).find(handler => handler.class === "tell" && handler.message === message && handler.from.kind === input.from.at.kind);
+      const handler = Object.values(definition.declared.receives).find(handler => handler.class === "tell" && handler.message === message && handler.from.kind === input.sourceKind);
       if (handler?.order === "source") writer.putSourceOrder({ from: { scope: input.from.at.scope, inc: input.from.at.inc }, handler: handler.message, seq: input.from.seq, n: input.n });
     }
     if ("clause" in input) {
@@ -271,8 +277,8 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
   // The index now describes the post-entry held history even when the fold's
   // caller supplied no payload reader (a supported in-memory fold).
   writer.putFixedHash(entry.seq, hash);
-  rekeyFixed(writer, entry.at, [{ seq: entry.seq, hash }], seq => writer.fixedHash(seq));
-  for (const id of now.keys()) for (const write of fixedRowsOf(definition, writer.item(id)!, entry.at, seq => writer.fixedHash(seq))) writer.putFixed(write.row, write.dependencies);
+  rekeyFixed(writer, at, [{ seq: entry.seq, hash }], seq => writer.fixedHash(seq));
+  for (const id of now.keys()) for (const write of fixedRowsOf(definition, writer.item(id)!, at, seq => writer.fixedHash(seq))) writer.putFixed(write.row, write.dependencies);
 
   if (input.type === "floor") {
     if (!writer.putFloor || !options.own) throw new FoldError("a floor requires the held journal and floor state writer");
@@ -284,11 +290,48 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
       const hash = writer.fixedHash(seq);
       if (hash !== null) removed.push({ seq, hash });
     }
-    rekeyFixed(writer, entry.at, removed, seq => seq < floor.floor && !kept.has(seq) ? null : writer.fixedHash(seq));
+    rekeyFixed(writer, at, removed, seq => seq < floor.floor && !kept.has(seq) ? null : writer.fixedHash(seq));
     writer.putFloor(floor);
   }
 
+  const creator = scope ? scope.creator : input.type === "genesis" && input.seed.creator && input.source ? resolveGenesisSelf(input.seed.creator, input.source) : null;
+  if (input.type === "genesis" && input.seed.creator !== null && creator === null) throw new FoldError("the genesis creator has no verified full sequence");
   const genesis = scope?.genesis ?? { hash, source: input.type === "genesis" ? input.source : null, n: input.type === "genesis" ? input.n : null };
-  writer.setScope({ at: entry.at, creator: scope ? scope.creator : input.type === "genesis" ? input.seed.creator : null, status, head: { seq: entry.seq, hash }, time: entry.time, genesis, held });
-  writer.finishFixed(definition.digest, entry.at, { seq: entry.seq, hash });
+  writer.setScope({ at, kind: scope?.kind ?? (input.type === "genesis" ? input.seed.kind : (() => { throw new FoldError("missing sequence kind"); })()), creator, status, head: { seq: entry.seq, hash }, time: entry.time, genesis, held });
+  writer.finishFixed(definition.digest, at, { seq: entry.seq, hash });
+}
+
+/** The fold and receipt share this resolved view without changing sealed bytes. */
+export function resolvedEntryEffects(writer: Pick<StateView, "item">, definition: ValidDefinition, entry: Entry, at: ScopeRef): Effect[] {
+  if (entry.input.type === "genesis") return resolvedGenesisEffects(writer, definition, entry.effects, { at, seq: 0, hash: at.genesis });
+  if (!entry.effects.every(isEffect)) throw new FoldError("a later entry retains an encoded self");
+  return [...entry.effects];
+}
+
+/** Resolve explicit effect reference positions using the declared slot types. */
+function resolvedGenesisEffects(writer: Pick<StateView, "item">, definition: ValidDefinition, encoded: readonly GenesisEffect[], origin: FactRef): Effect[] {
+  const opened = new Map<number, string>();
+  return encoded.map(effect => {
+    if (effect.effect === "open") opened.set(effect.item, effect.type);
+    let resolved: unknown = effect;
+    if (effect.effect === "ref" || effect.effect === "value") {
+      const name = opened.get(effect.item) ?? writer.item(effect.item)?.type;
+      const item = name === undefined ? undefined : own(definition.declared.items, name);
+      const type = effect.effect === "ref" ? own(item?.refs, effect.slot)?.to : own(item?.values, effect.slot)?.of;
+      if (!type) throw new FoldError("a genesis effect has no declared slot");
+      const value = effect.effect === "ref" ? effect.to : effect.value;
+      const full = value === null ? null : resolveGenesisValue(type, value, origin);
+      resolved = effect.effect === "ref" ? { ...effect, to: full } : { ...effect, value: full };
+    } else if (effect.effect === "relation") {
+      const owner = resolveGenesisSelf(effect.owner, origin);
+      if (!owner) throw new FoldError("a relation has an unbound genesis owner");
+      resolved = { ...effect, owner };
+    } else if ((effect.effect === "party" || effect.effect === "list") && effect.member) {
+      const membership = resolveGenesisSelf(effect.member.membership, origin);
+      if (!membership) throw new FoldError("a party has an unbound genesis membership");
+      resolved = { ...effect, member: { ...effect.member, membership } };
+    }
+    if (!isEffect(resolved)) throw new FoldError("a genesis effect retains an unresolved self");
+    return resolved;
+  });
 }

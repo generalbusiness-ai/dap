@@ -6,7 +6,7 @@ import { expect, onTestFinished, test } from "vitest";
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Input} from "@generalbusiness/dap-contract";
-import { canonicalize, isEntry, newIncarnation, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isEntry, digestBytes, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -307,7 +307,7 @@ test("foreign plans quote native whole prefixes and retain an earlier boundary a
     archiveSupportMetadata(policy(receiver).support, budget);
     const counts: number[] = [], recordedKinds: string[] = [];
     for (const position of prefix.positions) {
-      const source = { kind: "local" as const, position }, header = archiveEntryHeader(sql, source, budget);
+      const source = { kind: "local" as const, position }, header = archiveEntryHeader(sql, source, budget, prefix.pin.at);
       archiveEntryPrivacy(sql, source, header, policy(receiver).support, budget);
       counts.push(header.uses);
       let recorded: Readonly<ArchiveForeignRecordedScan> | null = null;
@@ -496,12 +496,16 @@ test("native inventory admits only classified direct copies and refuses a final 
     expect(() => archiveInput(sql, selection, new ArchiveBudget())).toThrow(expect.objectContaining({ reason: "foreign-source-unavailable" }));
     const wrongPair = { ...selection, foreignSources: [{ at: f.producer.at, pin: receiver.digest }] };
     expect(() => archiveInput(sql, wrongPair, new ArchiveBudget(), f.sources)).toThrow(expect.objectContaining({ reason: "foreign-source-mismatch" }));
+    const extraKind = { at: f.producer.at, kind: "membership", pin: definition.digest };
+    expect(() => archiveInput(sql, { ...selection, foreignSources: [extraKind] }, new ArchiveBudget(), f.sources)).toThrow(expect.objectContaining({ reason: "unavailable" }));
     expect(calls).toBe(0);
     const input = archiveInput(sql, selection, new ArchiveBudget(), f.sources);
     for (const object of selection.objects.filter(object => object.key.kind === "entry")) {
       const bytes = await input.retained(object.key, object.bytes);
       expect(bytes).not.toBeNull();
-      expect(JSON.parse(bytes!).at).toEqual(f.producer.at);
+      const copy = parseStrict(bytes!);
+      expect(isEntry(copy)).toBe(true);
+      if (isEntry(copy)) expect(copy.input.type === "genesis" ? entryHash(copy) : "genesis" in copy ? copy.genesis : null).toBe(f.producer.at.genesis);
     }
     expect(await input.entry(3, 1)).toBeNull();
   });
@@ -521,17 +525,19 @@ test("published replay closure adds only admitted public-copy producers and rebu
     at: f.consumer.at, through, after: null, bounds: PROPOSED_BOUNDS, policies: f.policies,
     format: "sha1", parent: null, markedAt: at(0), fixtureSources: f.sources, replayScopes,
   }, new ArchiveBudget()));
-  const conflicting = { ...f.producer.at, inc: newIncarnation(new Uint8Array(16).fill(73)) };
-  expect(conflicting.inc).not.toBe(f.producer.at.inc);
+  const conflicting = { ...f.producer.at, genesis: digestBytes(new Uint8Array(16).fill(73)) };
+  expect(conflicting.genesis).not.toBe(f.producer.at.genesis);
   expect(await plan([...targetScopes, conflicting])).toEqual({ ok: false, reason: "foreign-source-mismatch" });
-  const privateAt = archiveAuthorityAnchors(f.consumer).find(fact => fact.at.kind === "membership")!.at;
+  const privateAt = archiveAuthorityAnchors(f.consumer).find(fact => f.sources.get(fact.at, new ArchiveBudget())?.kind === "membership")!.at;
   expect(await plan([...targetScopes, privateAt])).toEqual({ ok: false, reason: "unavailable" });
   const planned = await plan();
   expect(planned.ok, JSON.stringify(planned)).toBe(true); if (!planned.ok) return;
   expect(planned.archive.selection.objects.some(object => object.foreign?.fact.at.scope === f.producer.name)).toBe(true);
   expect(planned.mark.replayScopes).toEqual(expected);
   expect(planned.archive.manifest.anchors?.some(fact => fact.at.scope === f.producer.name)).toBe(false);
-  expect(planned.mark.replayScopes?.some(where => ["membership", "register", "inbox"].includes(where.kind))).toBe(false);
+  expect(planned.archive.manifest).not.toHaveProperty("anchorSources");
+  const privateAnchors = planned.archive.manifest.anchors ?? [];
+  expect(planned.mark.replayScopes?.some(where => privateAnchors.some(fact => canonicalize(fact.at) === canonicalize(where)))).toBe(false);
   for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) expect(planned.archive.cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
   await f.consumer.inside(state => {
     const rows = new ArchiveRows(archiveSql(state), f.consumer.at);
@@ -710,7 +716,7 @@ test("recorded cold foreign support uses one paid validation walk and keeps reco
   await f.consumer.inside(state => {
     const sql = archiveSql(state), prefix = archivePrefixMetadata(sql, f.consumer.at, f.through,
       PROPOSED_BOUNDS, new ArchiveBudget(), new Set([receiver.digest]));
-    const position = prefix.positions.find(position => archiveEntryHeader(sql, { kind: "local", position }, new ArchiveBudget()).uses === 1)!;
+    const position = prefix.positions.find(position => archiveEntryHeader(sql, { kind: "local", position }, new ArchiveBudget(), prefix.pin.at).uses === 1)!;
     expect(position).toBeDefined();
     const ordinaryBudget = new ArchiveBudget(), recordedBudget = new ArchiveBudget();
     const ordinary = new ArchiveForeignMetadata(sql, f.sources, policies, PROPOSED_BOUNDS, ordinaryBudget, new Set(), receiver.digest);

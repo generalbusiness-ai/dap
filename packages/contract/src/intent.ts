@@ -3,7 +3,7 @@
  * 2.1).
  */
 
-import type { Base64Url, FactRef, KeyId, MemberRef, ScopeRef, Timestamp } from "./scope.ts";
+import type { Base64Url, FactRef, GenesisSelfRef, KeyId, MemberRef, ScopeRef, Timestamp } from "./scope.ts";
 
 /**
  * Every digest and signature is over one of these tags, a newline, and the
@@ -13,6 +13,7 @@ export const DOMAINS = {
   intent: "artroom-intent-1",
   seed: "artroom-seed-1",
   entry: "artroom-entry-1",
+  input: "artroom-input-1",
   message: "artroom-message-1",
   delivery: "artroom-delivery-1",
   definition: "artroom-definition-1",
@@ -30,6 +31,10 @@ export type DomainTag = (typeof DOMAINS)[keyof typeof DOMAINS];
 export type FieldValue = string | number | boolean | MemberRef | FactRef | ScopeRef | readonly FieldValue[] | FieldRecord;
 /** A value of a `record` type: each member that is present, by its name. A member that is absent has no key. */
 export interface FieldRecord { readonly [member: string]: FieldValue }
+
+/** A typed genesis payload before its own sequence can be sealed. */
+export type GenesisFieldValue = FieldValue | GenesisSelfRef | { membership: ScopeRef | GenesisSelfRef; member: MemberRef["member"] } | readonly GenesisFieldValue[] | GenesisFieldRecord;
+export interface GenesisFieldRecord { readonly [member: string]: GenesisFieldValue }
 
 export interface Intent {
   v: 1;

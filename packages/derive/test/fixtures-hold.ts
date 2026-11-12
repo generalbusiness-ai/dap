@@ -118,7 +118,10 @@ export class Staging extends Scope {
   }
   /** What a capability rule is given for an input of this scope, with that intent digest. */
   given(over: Partial<CapabilityGiven> = {}): CapabilityGiven {
-    return { view: this.state, definition: this.definition, scope: { at: this.at, creator: null }, self: this.head.seq + 1, kind: "", fields: {}, signer: null, facts: new Map(), own: this.own, snapshot: (digest) => snapshots.get(digest) ?? null, clock: clockOf(this.state, this.now), ...over };
+    const scope = this.state.scope();
+    if (!scope) throw new Error("the staging fixture has no local genesis");
+    return { view: this.state, definition: this.definition, scope: { at: this.at, kind: scope.kind, creator: null }, self: this.head.seq + 1, kind: "", fields: {}, signer: null, facts: new Map(),
+      kindContext: { source: null, declared: {} }, own: this.own, snapshot: (digest) => snapshots.get(digest) ?? null, clock: clockOf(this.state, this.now), ...over };
   }
   /** The entries that the pending work reserves, with what the capability declares. */
   reserved(): number { return owed(this.state, this.definition, this.last.input, cap); }

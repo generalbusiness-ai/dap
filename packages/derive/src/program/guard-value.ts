@@ -6,7 +6,7 @@ import { capabilityGuard } from "../capability.ts";
 import { members, preparedRule, type GuardResult, type Judging } from "../guards.ts";
 import { all, any, coveredItems, excepted, scanItems } from "../lists.ts";
 import { guardByRule } from "../marks.ts";
-import { entryValue, equal, kindOf, normalValue, slotOf } from "../operand.ts";
+import { copyEntry, copyUnder, matchesCopy, entryValue, equal, kindOf, normalValue, slotOf } from "../operand.ts";
 import type { Item } from "../state.ts";
 import { timeMs } from "../time.ts";
 import { isFactRef, isLocalId, own, same } from "../values.ts";
@@ -121,9 +121,12 @@ function executeGuardValue(j: Judging, body: BodyStructure, node: GuardNode, ele
     case "fact": {
       const ref = code.source.op === "field" ? own(j.fields, code.source.field.name) : read(code.source.read);
       if (ref === undefined || ref === null) return "fail";
-      const local = isLocalId(ref), fetched = local ? j.own?.(ref) : isFactRef(ref) ? j.facts.get(ref.hash) : undefined;
-      if (!fetched) return local ? "unavailable" : "dependency-unavailable";
-      const kind = kindOf(fetched.entry), under = "under" in fetched ? fetched.under : declarationOf(j.definition).name;
+      const local = isLocalId(ref), kept = local ? j.own?.(ref) : undefined;
+      const fetched = isFactRef(ref) ? j.facts.get(ref.hash) : undefined;
+      if (local ? !kept : !fetched || !isFactRef(ref) || !matchesCopy(fetched, ref)) return local ? "unavailable" : "dependency-unavailable";
+      const entry = kept?.entry ?? (fetched ? copyEntry(fetched) : null);
+      if (!entry) return local ? "unavailable" : "dependency-unavailable";
+      const kind = kindOf(entry), under = fetched ? copyUnder(fetched) : declarationOf(j.definition).name;
       if (kind === null || !code.type.kind.includes(kind) || under !== code.type.under) return "fail";
       if (code.source.op !== "field") return "pass";
       return ok(code.where.every(pair => equal(j, isLocalId(ref) || isFactRef(ref) ? entryValue(j, ref, isLocalId(ref) ? j.scope.at : ref.at, { op: "field", name: pair.name }) : null, read(pair.value))));

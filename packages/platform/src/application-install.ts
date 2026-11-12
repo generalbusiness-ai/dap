@@ -100,7 +100,7 @@ function proof(given: RuleGiven): ApplicationReleaseProof | null {
   for (let index = 0; index < result.semantic.definitions.length; index++) {
     const part = result.semantic.definitions[index]!;
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");
-    const value = parseStrict(part.bytes), checked = validateDefinition(value, given.resolved.bounds, RULE_PROFILES);
+    const value = parseStrict(part.bytes), checked = validateDefinition(value, given.resolved.bounds, RULE_PROFILES, { canonical: true });
     if (!checked.ok || checked.definition.digest !== part.id || canonicalize(value) !== part.bytes) throw Error("unsupported native definition");
     requireReferenceInstall(checked.definition.declared, pinnedBy(given));
   }

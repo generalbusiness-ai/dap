@@ -11,7 +11,7 @@ import { countedEntries } from "@generalbusiness/dap-derive";
  * send, at that ordinal, to that address, with that message. The judgment
  * runs in the scope's turn like any other input: the same queue, drain,
  * snapshot, commit and budgets. An empty store that a `create` reaches
- * writes its genesis the same way, and mints its incarnation in that commit.
+ * writes its genesis the same way, and mints its genesis nonce in that commit.
  *
  * The source entry's bytes are retained with the entry that used it, and the
  * message is inside that entry (section 9.2).
@@ -24,12 +24,12 @@ import { countedEntries } from "@generalbusiness/dap-derive";
  * task.
  */
 
-import type { Bounds, Digest, Entry, FactRef, Incarnation, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isPlatformDefinition, newIncarnation, isSeed, parseStrict, platformName } from "@generalbusiness/dap-bytes";
+import type { Bounds, Digest, Entry, FactRef, GenesisNonce, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
+import { canonicalize, isDigest, isPlatformDefinition, newGenesisNonce, isSeed, parseStrict, platformName } from "@generalbusiness/dap-bytes";
 
 import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, textsNamed } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Creation, Delivered, DeliveryContext, Fetched, Judgment, PlatformRules, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
-import { NO_INCARNATION, Observes, Received, ownOf, retainedFacts, snapshotsOf, used, valuesOf, type Scope } from "./core.ts";
+import { NO_GENESIS_NONCE, Observes, Received, ownOf, retainedFacts, snapshotsOf, used, valuesOf, type Scope } from "./core.ts";
 import { carryProducerName } from "./receiver-facts.ts";
 import { ReceiverReads } from "./receiver-reads.ts";
 import { namedBy } from "./definitions.ts";
@@ -261,8 +261,8 @@ export class Deliveries {
     /** The definition a section of the turn runs under: the pinned one, or before the genesis the one the seed names. */
     const definition = (): ValidDefinition => this.#scope.pinned()?.definition ?? creation!.valid;
     /** A `create` goes to the genesis judge, which answers a repeat from the genesis when the scope exists. */
-    const judge = (view: StateView, inc: Incarnation, reading: DeliveryContext): Judgment =>
-      (creates ? judgeGenesis(view, definition(), { name, inc, to: delivered.to as Seed, from, n: delivered.n, message } as Creation, reading) : judgeDelivery(view, definition(), delivered, reading));
+    const judge = (view: StateView, nonce: GenesisNonce, reading: DeliveryContext): Judgment =>
+      (creates ? judgeGenesis(view, definition(), { name, nonce, to: delivered.to as Seed, from, n: delivered.n, message } as Creation, reading) : judgeDelivery(view, definition(), delivered, reading));
 
     if (pinned?.definition && !creates) {
       const at = pinned.definition;
@@ -271,12 +271,12 @@ export class Deliveries {
     const end = await rows.turn((stop) => this.#scope.turns.run<Delivery>({
       asks: (view, clock) => {
         const reading = { ...context(clock), prepared: [] };
-        return creates ? prepareRules(view, definition(), { genesis: { name, inc: NO_INCARNATION, to: delivered.to as Seed, from, n: delivered.n, message } as Creation, context: reading }) : prepareRules(view, definition(), { delivery: delivered, context: reading });
+        return creates ? prepareRules(view, definition(), { genesis: { name, nonce: NO_GENESIS_NONCE, to: delivered.to as Seed, from, n: delivered.n, message } as Creation, context: reading }) : prepareRules(view, definition(), { delivery: delivered, context: reading });
       },
       judge: (view, clock, prepared) => {
         const genesis = view.scope() === null;
-        // Section 2.2: the incarnation is minted in the transaction that writes the first entry.
-        const judged = judge(view, genesis ? newIncarnation(this.#ports.random.bytes(16)) : NO_INCARNATION, { ...context(clock), prepared });
+        // Section 2.2: the genesis nonce is minted in the transaction that writes the first entry.
+        const judged = judge(view, genesis ? newGenesisNonce(this.#ports.random.bytes(16)) : NO_GENESIS_NONCE, { ...context(clock), prepared });
         // Section 16.1, "In the commit": a subject of the commit's list with no observation at hand stops the commit. The scope
         // reads what is missing, and the turn starts again. The delivery is tried again.
         stop(judged.result === "unavailable" ? judged.missing : undefined);

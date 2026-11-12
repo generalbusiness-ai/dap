@@ -64,10 +64,12 @@ export async function selectedEntries(selection: JournalSelection & { readonly a
     let entry: unknown;
     try { entry = parseStrict(bytes); if (canonicalize(entry) !== bytes) return refuseJournal("input-mismatch", where); }
     catch { return refuseJournal("input-mismatch", where); }
-    if (!isEntry(entry) || entry.seq !== descriptor.seq || !sameJournalScope(entry.at, selection.at) || entryHash(entry) !== descriptor.hash || entry.prev !== (rows.at(-1)?.descriptor.hash ?? selection.after?.hash ?? null)) return refuseJournal("input-mismatch", where);
+    if (!isEntry(entry)) return refuseJournal("input-mismatch", where);
+    const hash = entryHash(entry);
+    if (entry.seq !== descriptor.seq || hash !== descriptor.hash || entry.prev !== (rows.at(-1)?.descriptor.hash ?? selection.after?.hash ?? null)) return refuseJournal("input-mismatch", where);
     if (descriptor.seq === 0) {
-      if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== entry.at.scope || entry.input.seed.kind !== entry.at.kind || entry.input.inc !== entry.at.inc) return refuseJournal("input-mismatch", where);
-    } else if (entry.input.type === "genesis") return refuseJournal("input-mismatch", where);
+      if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== selection.at.scope || hash !== selection.at.genesis) return refuseJournal("input-mismatch", where);
+    } else if (entry.input.type === "genesis" || !("genesis" in entry) || entry.genesis !== selection.at.genesis) return refuseJournal("input-mismatch", where);
     work.check(); rows.push({ descriptor, entry, bytes });
   }
   work.metadata(journalOriginsMetadata(selection.objects.reduce((n, row) => n + row.consumers.length, 0) + selection.omitted.reduce((n, row) => n + row.consumers.length, 0) + selection.ancestryUnwalked.length));
@@ -111,8 +113,12 @@ export async function selectedRetained(selection: JournalSelection, input: Journ
     if (parsed === undefined || canonicalize(parsed) !== bytes) return refuseJournal("input-mismatch", where);
     if (key.kind === "entry") {
       const foreign = selected.foreign;
-      if (!foreign || !isEntry(parsed) || !sameJournalScope(parsed.at, foreign.fact.at) || parsed.seq !== foreign.fact.seq || entryHash(parsed) !== foreign.fact.hash) return refuseJournal("input-mismatch", where);
-      if (parsed.seq === 0 ? parsed.input.type !== "genesis" || parsed.prev !== null || parsed.input.seed.definition !== foreign.pin || parsed.input.inc !== parsed.at.inc || scopeIdOf(parsed.input.seed) !== parsed.at.scope || parsed.input.seed.kind !== parsed.at.kind : parsed.input.type === "genesis") return refuseJournal("input-mismatch", where);
+      if (!foreign || !isEntry(parsed)) return refuseJournal("input-mismatch", where);
+      const hash = entryHash(parsed);
+      if (parsed.seq !== foreign.fact.seq || hash !== foreign.fact.hash) return refuseJournal("input-mismatch", where);
+      if (parsed.seq === 0 ? parsed.input.type !== "genesis" || parsed.prev !== null || parsed.input.seed.definition !== foreign.pin
+        || hash !== foreign.fact.at.genesis || scopeIdOf(parsed.input.seed) !== foreign.fact.at.scope
+        : parsed.input.type === "genesis" || !("genesis" in parsed) || parsed.genesis !== foreign.fact.at.genesis) return refuseJournal("input-mismatch", where);
     }
     work.check(); work.metadata(journalRetainedNameMetadata(where.length));
     rows.set(where, { key, data: utf8(bytes) });

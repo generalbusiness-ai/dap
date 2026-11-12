@@ -2,7 +2,7 @@ import { sourceArrival, sourceTime, sourceOnlyOne } from "./definition-corpus/ge
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { newIncarnation } from "@generalbusiness/dap-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "../src/index.ts";
 import { created, deliver, keys, t, sourceOrderDefinition, sourceOrderFixture } from "./fixtures-entry.ts";
 
@@ -14,6 +14,9 @@ test("source order applies increasing pairs and suppresses lower pairs only afte
       expect(result).toMatchObject({ result: "write" });
       const input = receiver.last.input;
       expect(input.type).toBe("delivery");
+      const birth = sender.entries[0]!.entry.input;
+      if (birth.type !== "genesis" || input.type !== "delivery") throw new Error("the fixture delivery has its actual sender genesis");
+      expect(input.sourceKind).toBe(birth.seed.kind);
       if (input.type === "delivery" && "decision" in input) {
         decisions.push(input.decision);
         expect(receiver.last.sends.at(-1)?.message).toMatchObject({ class: "result", outcome: input.decision });
@@ -35,7 +38,7 @@ test("source order applies increasing pairs and suppresses lower pairs only afte
     expect(deliver(receiver, other, 1, 0)).toMatchObject({ result: "write", draft: { input: { decision: "applied" } } });
     expect(receiver.item(0).values["last"]).toBe(99);
     expect(receiver.state.sourceOrder(sender.at, "sample")).toMatchObject({ seq: 2, n: 1 });
-    expect(receiver.state.sourceOrder({ ...sender.at, inc: newIncarnation(new Uint8Array(16).fill(2)) }, "sample")).toBeNull();
+    expect(receiver.state.sourceOrder({ ...sender.at, genesis: textDigest("another sender genesis") }, "sample")).toBeNull();
   }
 });
 

@@ -12,7 +12,10 @@ export type Digest = `sha256:${string}`;
 /** A scope's ID: `sc_` + the 52 base32 characters of its seed's digest (section 2.1). */
 export type ScopeId = `sc_${string}`;
 
-/** A scope's incarnation: `in_` + 26 base32 characters, random, minted with the first entry (section 2.2). */
+/** A genesis nonce: the canonical 26-character base32 encoding of 16 bytes. */
+export type GenesisNonce = string;
+
+/** Legacy consumer type, removed with the remaining c+d migration. */
 export type Incarnation = `in_${string}`;
 
 /** The kinds of scope (section 2.1). `register` is new: the one scope of a deployment that has no creator (section 7.1). */
@@ -45,7 +48,7 @@ export interface Seed {
   v: 1;
   kind: ScopeKind;
   definition: Digest | PlatformDefinition;
-  creator: ScopeRef | null;     // null for a scope with no creator: a repository's directory in the first delivery, a register in section 7.1
+  creator: SequenceRef | GenesisSelfRef | null;     // null for a scope with no creator: a repository's directory in the first delivery, a register in section 7.1
   cause: Digest;                // identifies the one input that asked for this scope; section 7.2
   ordinal: number;              // which creation of that input, from 0
 }
@@ -58,18 +61,23 @@ export interface DeliveryCause {
   message: Digest;              // the digest of the delivered message
 }
 
-/** Identity: this scope, this incarnation. Says nothing about its state. */
-export interface ScopeRef { scope: ScopeId; inc: Incarnation; kind: ScopeKind }
+/** The address and sealed genesis of one sequence. Kind comes from its seed. */
+export interface SequenceRef { scope: ScopeId; genesis: Digest }
+
+/** Encoded only in a genesis origin's typed payloads, never in a FactRef. */
+export interface GenesisSelfRef { scope: ScopeId; genesis: null }
+
+/** Temporary erased migration spelling. It accepts only the new full shape. */
+export type ScopeRef = SequenceRef;
 
 /** Fact: one sealed entry, exactly. Always built after that entry is sealed. */
-export interface FactRef { at: ScopeRef; seq: number; hash: Digest }
+export interface FactRef { at: SequenceRef; seq: number; hash: Digest }
 
 /**
  * Where a grant holds when it names more than one scope: every scope of one
  * repository (section 16.1, "The form of `within`, and of the read";
- * authority note, section 3.3). `membership` is the membership scope, with
- * its incarnation. The filter covers that scope itself, and every scope
- * that records it, with that incarnation, as its membership reference.
+ * authority note, section 3.3). `membership` is the full membership sequence. The filter covers that
+ * sequence itself and every scope that records that same membership sequence.
  */
 export interface ScopeFilter { membership: ScopeRef }
 

@@ -1,12 +1,13 @@
 /** Complete v2 clone validation. Every pass retains its own S2b basis.
  * No service fallback, native admission or replay judgment is supplied. */
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import { DOMAINS, type Digest, type FactRef, type RetainedInput, type ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { decodeGitText } from "./wire-text.ts";
 import { journalRef } from "./journal-path.ts";
 import { archiveSegments } from "./journal-segments.ts";
 import { JournalObjectReader, journalId, type JournalObjectSource } from "./journal-objects.ts";
-import { JOURNAL_SELECTION_BYTES, journalKeyName, sameJournalScope, type JournalForeignSource } from "./journal-selection.ts";
+import { JOURNAL_SELECTION_BYTES, journalKeyName, type JournalForeignSource } from "./journal-selection.ts";
 import { journalV2Head, journalPassManifest, type JournalPassManifest, type JournalTextOmission } from "./journal-v2-manifest.ts";
 import { journalV2Directory, journalV2PassPath, journalV2Position, journalV2RetainedPath, journalV2SegmentPath, readJournalV2Path } from "./journal-v2-path.ts";
 import { JournalLayoutRefusal, JournalWork, refuseJournal } from "./journal-work.ts";
@@ -132,8 +133,11 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
         for (const bytes of lines) {
           let entry: unknown;
           try { entry = parseStrict(bytes); } catch { return mismatch(segment.path); }
-          if (!isEntry(entry) || canonicalize(entry) !== bytes || !sameJournalScope(entry.at, head.scope) || entry.seq !== entries.length || entry.seq > pass.through.seq || entry.prev !== (entries.at(-1)?.hash ?? null)) return mismatch(segment.path);
-          if (entry.seq === 0 ? entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== scope || entry.input.inc !== head.scope.inc || entry.input.seed.kind !== head.scope.kind : entry.input.type === "genesis") return mismatch(segment.path);
+          if (!isEntry(entry) || canonicalize(entry) !== bytes) return mismatch(segment.path);
+          const hash = entryHash(entry);
+          if (entry.seq !== entries.length || entry.seq > pass.through.seq || entry.prev !== (entries.at(-1)?.hash ?? null)) return mismatch(segment.path);
+          if (entry.seq === 0 ? entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== scope || hash !== head.scope.genesis
+            : entry.input.type === "genesis" || !("genesis" in entry) || entry.genesis !== head.scope.genesis) return mismatch(segment.path);
           const asked = claimed.get(entry.seq);
           if (asked) {
             // Check explicit claims, not discover dependencies or body reads.
@@ -153,7 +157,7 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
             if (prior && canonicalize(prior) !== canonicalize(use.fact)) return mismatch(segment.path);
             uses.set(use.content, use.fact);
           }
-          const row = { seq: entry.seq, hash: entryHash(entry), bytes }; entries.push(row); local.push(row); lastTime = timeMs(entry.time);
+          const row = { seq: entry.seq, hash, bytes }; entries.push(row); local.push(row); lastTime = timeMs(entry.time);
         }
       }
       if (entries.length !== pass.through.seq + 1 || entries.at(-1)?.hash !== pass.through.hash) return mismatch("pass head");
@@ -174,8 +178,12 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
         const fact = uses.get(held.digest), bytes = retained.get(journalKeyName(held))?.bytes;
         if (!fact || !bytes) return mismatch("foreign copy");
         const entry = parseStrict(bytes), pin = basis.get(canonicalize(fact.at));
-        if (!isEntry(entry) || !pin || !sameJournalScope(entry.at, fact.at) || entry.seq !== fact.seq || entryHash(entry) !== fact.hash) return mismatch("foreign copy");
-        if (entry.seq === 0 ? entry.input.type !== "genesis" || entry.prev !== null || entry.input.seed.definition !== pin || entry.input.inc !== entry.at.inc || entry.input.seed.kind !== entry.at.kind || scopeIdOf(entry.input.seed) !== entry.at.scope : entry.input.type === "genesis") return mismatch("foreign birth");
+        if (!isEntry(entry) || !pin) return mismatch("foreign copy");
+        const hash = entryHash(entry);
+        if (entry.seq !== fact.seq || hash !== fact.hash) return mismatch("foreign copy");
+        if (entry.seq === 0 ? entry.input.type !== "genesis" || entry.prev !== null || entry.input.seed.definition !== pin
+          || hash !== fact.at.genesis || scopeIdOf(entry.input.seed) !== fact.at.scope
+          : entry.input.type === "genesis" || !("genesis" in entry) || entry.genesis !== fact.at.genesis) return mismatch("foreign birth");
         usedSources.add(canonicalize(fact.at));
       }
       if (basis.size !== usedSources.size) return mismatch("foreign source basis");
@@ -196,8 +204,11 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
         if (data && typeof data === "object" && "name" in data && typeof data.name === "string") name = data.name;
       }
     }
+    // The finite alias classifies descriptive private-copy metadata only.
+    // This visit grants no checked birth, kind or automatic Replay trust.
+    work.input(sources.size * 1024);
     const publication = readJournalAnchorPublication(passes, [head.scope, ...[...sources.values()]
-      .filter(source => source.at.kind !== "register" && source.at.kind !== "membership").map(source => source.at)], id, work);
+      .filter(source => !answersCatalogVocabularyQuestion(source.pin, "archiveRegisterForeignCopy") && !answersCatalogVocabularyQuestion(source.pin, "archiveMembershipForeignCopy")).map(source => source.at)], id, work);
     work.check();
     return { ok: true, archive: Object.freeze({ scope: Object.freeze({ ...head.scope }), head: Object.freeze({ seq: head.through, hash: head.hash }), format, commit: id, name,
       entries: Object.freeze(entries.map(entry => Object.freeze(entry))), retained: Object.freeze([...retained.values()].map(input => Object.freeze(input))),

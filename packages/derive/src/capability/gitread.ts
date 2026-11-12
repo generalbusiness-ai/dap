@@ -87,7 +87,7 @@ function checked(args: Readonly<Record<string, unknown>>, given: CapabilityGiven
     // The v2 profile consumes only the exact authenticated check outcome.
     // Its owner is source evidence; a bare record kind or caller label is not.
     // The original v1 path retains its existing acceptance rule.
-    if (owner === "hold@2" && (!isFactRef(presented) || !fetched || !same(fetched.fact, presented) || !isEntryOf(fetched.entry, presented)
+    if (owner === "hold@2" && (!isFactRef(presented) || !fetched || !same(fetched.fact, presented) || !isEntryOf(fetched.entry, presented, fetched.sequence)
       || fetched.entry.input.type !== "outcome" || fetched.entry.input.owner !== owner || fetched.entry.input.kind !== "check" || fetched.entry.input.result !== "confirmed")) return null;
     const carried = (fetched?.entry.effects ?? []).filter((e) => e.effect === "record" && e.capability === owner && e.kind === "check");
     const only = carried.length === 1 ? carried[0]! : null;
@@ -476,8 +476,8 @@ export function capabilitiesOf<T extends Capabilities>(first: T, ...others: read
       }) satisfies NonNullable<Capabilities["workspace"]>,
     } : {}),
     ...(parts.some(p => p.bound) ? {
-      bound: ((capability, view, at, from, fields) =>
-        (listedPart(capability, "bound") ?? first).bound?.(capability, view, at, from, fields) ?? null
+      bound: ((capability, view, at, from, fields, sourceKind) =>
+        (listedPart(capability, "bound") ?? first).bound?.(capability, view, at, from, fields, sourceKind) ?? null
       ) satisfies NonNullable<Capabilities["bound"]>,
     } : {}),
     ...(parts.some(p => p.deriveEffect) ? {

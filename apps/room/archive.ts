@@ -1,6 +1,6 @@
 /** Grow's explicit host-owned archive wiring. No member or Worker secret. */
-import type { Bounds, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeId, isScopeRef, parseStrict, readItemQueryParameter, readItemQueryReply, utf8 } from "@generalbusiness/dap-bytes";
+import type { Bounds, SequenceRef } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, isScopeId, isSequenceRef, parseStrict, readItemQueryParameter, readItemQueryReply, same, utf8 } from "@generalbusiness/dap-bytes";
 import { ARTIFACTS_HOST, ARTIFACTS_NAMESPACE, artifactsBinding, artifactsConfiguration, type ArtifactsBindings } from "../../packages/scope/src/artifacts-wiring.ts";
 import { ArtifactsProvider } from "../../packages/scope/src/artifacts-host.ts";
 import { archiveTarget } from "../../packages/scope/src/archive-target.ts";
@@ -19,6 +19,7 @@ import type { Sql } from "../../packages/scope/src/sqlite.ts";
 import { archiveSourceReferences } from "../../packages/scope/src/archive-source-window.ts";
 import { ArchivePrefixStopped } from "../../packages/scope/src/archive-prefix.ts";
 import { ArchiveStopped } from "../../packages/scope/src/archive-budget.ts";
+import type { ArchiveReplayContext } from "../../packages/scope/src/archive-publication.ts";
 
 export interface GrowArchiveEnvironment extends ArtifactsBindings { GROW_ARCHIVE_CONFIG?: string; ARCHIVE_RESTART_DIRECTIVE?: string }
 export function growArchiveConfiguration(env: GrowArchiveEnvironment): (ArchiveHostConfiguration & { readonly repositoryName: string; readonly service: string; readonly maxBytes: number }) | null {
@@ -39,15 +40,15 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
   const config = growArchiveConfiguration(env), artifacts = artifactsBinding(env.ARTIFACTS);
   if (!config || !artifacts) return null;
   const prepared = new WeakMap<ArchiveBudget, Map<string, FixtureArchiveSourceBirth>>();
-  const publicScopes = new WeakMap<ArchiveBudget, readonly ScopeRef[]>();
+  const publicScopes = new WeakMap<ArchiveBudget, Readonly<{ replayScopes: readonly SequenceRef[]; replayContext: ArchiveReplayContext }>>();
   const provider = new ArtifactsProvider({ binding: artifacts, host: config.host, namespace: config.namespace, service: config.service, maxBytes: Math.min(config.maxBytes, 8 * 1024 * 1024), ...(fetch ? { fetch } : {}),
     credentialHandle: async () => { throw new Error("Archive uses no destination ledger credential"); } }).archive(() => given.clock.read());
   return { production: "room-binding", policies: { registry: policies }, provider,
-    admit: (at, seed) => !["register", "membership", "inbox"].includes(at.kind) && policies.has(seed.definition),
+    admit: (_at, seed) => !["register", "membership", "inbox"].includes(seed.kind) && policies.has(seed.definition),
     target: { resolve: async (at, seed, budget) => {
       const births = new Map<string, FixtureArchiveSourceBirth>();
       const nativeBirths = namespace(binding).births;
-      const capture = (where: ScopeRef, reply: Awaited<ReturnType<typeof nativeBirths.read>>) => {
+      const capture = (where: SequenceRef, reply: Awaited<ReturnType<typeof nativeBirths.read>>) => {
         const birth = readNativeBirth(reply, where, 256 * 1024);
         if (!birth) return null;
         const policy = policies.get(birth.named);
@@ -63,21 +64,24 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
           const checked = readItemQueryParameter(query);
           const page = answer.ok && checked ? readItemQueryReply(utf8(answer.serialized), checked) : null;
           const row = page?.ok && page.complete && page.value.items.length === 1 ? page.value.items[0] : null;
-          if (where.kind === "directory" && (!row || !isScopeRef(row.refs["register"]) || !isScopeRef(row.refs["membership"]))) return { ok: false, reason: "forbidden" };
+          // The resolver supplies its already-checked Directory full ref.
+          // A bare ref or a caller's kind label does not classify this read.
+          if (same(where, directory) && (!row || !isSequenceRef(row.refs["register"]) || !isSequenceRef(row.refs["membership"]))) return { ok: false, reason: "forbidden" };
           return answer;
         } });
       // Directory's own charged pass discovers/activates its quiet Rules
       // sibling. Room/Site preserve their complete target route while not
       // reading that unrelated birth on every application-journal pass.
-      const discovered = await (at.kind === "lane" ? target.discoverRoom(at, seed, budget) : target.discover(at, seed, budget));
+      const discovered = await (seed.kind === "lane" ? target.discoverRoom(at, seed, budget) : target.discover(at, seed, budget));
       const repository = discovered?.repository;
       if (!repository || repository.host !== config.host || repository.namespace !== config.namespace || repository.name !== config.repositoryName) return null;
       prepared.set(budget, births);
-      publicScopes.set(budget, discovered!.publicScopes);
+      publicScopes.set(budget, Object.freeze({ replayScopes: discovered!.publicScopes, replayContext: discovered!.replayContext }));
       return repository;
     } },
     sources: async (after, through, budget, exact) => {
       const births = prepared.get(budget); if (!births) return budget.stop("unavailable");
+      const replay = publicScopes.get(budget); if (!replay) return budget.stop("unavailable");
       const pins = new ArchiveSourcePins([], bounds, budget, policies), included = new Set<string>();
       const prepare = async (seq: number, sameBudget: ArchiveBudget) => {
         if (sameBudget !== budget) return budget.stop("unavailable");
@@ -113,12 +117,19 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
             source = { at: where, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, ...(policy.declaration ? { declaration: policy.declaration } : {}) };
             births.set(key, source);
           }
+          if (replay.replayContext.directoryRules && same(replay.replayContext.directoryRules.at, where)) {
+            // This source was already needed by the selected candidate.
+            // Pay for the additional byte-factory pass before parsing it;
+            // the role record never initiates a read or supplies proof.
+            budget.spend({ metadata: bounds.entryBytes, inputWork: bounds.entryBytes * 8 });
+            const sequence = admitSequenceGenesis(source.birth.bytes, where, bounds.entryBytes);
+            if (!sequence || sequence.kind !== "rules") throw new ArchivePrefixStopped("foreign-source-mismatch");
+          }
           pins.include([source], bounds, budget); included.add(key);
         }
       };
       if (exact) for (let seq = (after?.seq ?? -1) + 1; seq <= through.seq; seq++) await prepare(seq, budget);
-      const replayScopes = publicScopes.get(budget); if (!replayScopes) return budget.stop("unavailable");
-      return { pins, replayScopes, ...(exact ? {} : { prepare }) };
+      return { pins, ...replay, ...(exact ? {} : { prepare }) };
     },
   };
 }

@@ -153,8 +153,8 @@ export class ArchiveScout {
     const next = window.next(reserve);
     if (next.kind !== "position") return next;
     const position = next.position, source = { kind: "local" as const, position }, budget = this.budget;
-    const header = archiveEntryHeader(window.sql, source, budget), previous = this.#rows.get(position.seq - 1);
-    if (header.seq !== position.seq || header.at.scope !== this.at.scope || header.at.inc !== this.at.inc || header.at.kind !== this.at.kind) return stop("mismatch");
+    const header = archiveEntryHeader(window.sql, source, budget, window.base.pin.at), previous = this.#rows.get(position.seq - 1);
+    if (header.seq !== position.seq || header.at.scope !== this.at.scope || header.at.genesis !== this.at.genesis) return stop("mismatch");
     const previousHash = previous?.hash ?? this.after?.hash ?? null;
     if (header.prev !== previousHash) return stop("mismatch");
     if (!this.reviewed.get(this.#named)!.entryTypes.has(header.input)) return stop("unsupported-archive-cohort");

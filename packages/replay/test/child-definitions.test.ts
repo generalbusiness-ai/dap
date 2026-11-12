@@ -2,8 +2,9 @@ import { replayChildAlias } from "../../derive/test/definition-corpus/replay-lit
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
-import { clockOf, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
+import { clockOf, judgeGenesis, normalizeDefinition, validateDefinition } from "@generalbusiness/dap-derive";
 import { created, keys, Ledger, on, T0, t, valid } from "@generalbusiness/dap-derive/testing";
+import { childDeclaration } from "../../derive/test/definition-corpus/child-definitions-data.ts";
 import { childDefinitions } from "../../derive/test/fixtures-child-definitions.ts";
 import { MemorySource, verify } from "../src/index.ts";
 import { served } from "./world.ts";
@@ -25,6 +26,22 @@ test("opt-in replay counts the complete shared child closure at genesis, while l
   expect(absent.why).toContain(leaf.digest);
   const old = created(childDefinitions(false).root, {});
   expect((await verify(new MemorySource([served(old, [old])]), { ...options, scope: old.at.scope })).report.result).toBe("consistent");
+
+  // Rebuild all enclosing digests rather than changing a retained child
+  // behind its old pin. No archived declaration is normalized in place.
+  for (const redundant of [false, true]) {
+    const leafData = normalizeDefinition(childDeclaration("canonical-leaf", []));
+    if (redundant) leafData.acts["write"]!.guards = leafData.acts["write"]!.guards.map(guard => ({ ...guard, of: "on" }));
+    const child = valid(validateDefinition(leafData, PROPOSED_BOUNDS));
+    const parent = valid(validateDefinition(normalizeDefinition(childDeclaration("canonical-branch", [child.digest], true)), PROPOSED_BOUNDS));
+    const owner = valid(validateDefinition(normalizeDefinition(childDeclaration("canonical-root", [parent.digest, child.digest], true)), PROPOSED_BOUNDS));
+    const journal = created(owner, {}, `child-canonical-${redundant}`);
+    const kept = [owner, parent, child].map(definition => ({ kind: "definition" as const, digest: definition.digest, bytes: canonicalize(definition.declared) }));
+    const input = { ...served(journal, [journal]), retained: kept }, before = canonicalize(input);
+    const checked = await verify(new MemorySource([input]), { mode: "replay", scope: journal.at.scope, grants: "as-recorded" });
+    expect([checked.report.result, checked.report.at?.seq ?? null]).toEqual(redundant ? ["unsupported-definition", 0] : ["consistent", null]);
+    expect(canonicalize(input)).toBe(before);
+  }
 });
 
 test("a later definition-domain value is charged at its actual entry and an alias of a birth child is not charged twice", async () => {

@@ -1,8 +1,8 @@
 /** Immutable fixture preparation for foreign archive source identity.
  * A verified header/pin is metadata, never reviewed privacy coverage,
  * production provenance, consent or permission to export a payload. */
-import type { Bounds, Digest, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { same, canonicalize, definitionDigest, entryHash, isDigest, isEntry, isRecord, isScopeRef, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Bounds, Digest, PlatformDefinition, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, definitionDigest, isDigest, isEntry, isRecord, isScopeRef, parseStrict, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { nativeDeclarationText, platform } from "@generalbusiness/dap-platform";
@@ -23,7 +23,7 @@ export interface FixtureArchiveSourceBirth {
   readonly declaration?: string;
 }
 export interface ArchiveSourceBasis { readonly at: ScopeRef; readonly pin: Digest | PlatformDefinition }
-export interface ArchiveSourcePin extends ArchiveSourceBasis { readonly genesis: Digest; readonly declaration: string; readonly staticNative?: true }
+export interface ArchiveSourcePin extends ArchiveSourceBasis { readonly kind: ScopeKind; readonly genesis: Digest; readonly checked: CheckedSequence; readonly declaration: string; readonly staticNative?: true }
 const json = (bytes: string): unknown => { try { return parseStrict(bytes); } catch { return stop("mismatch"); } };
 const birthInput = (value: unknown): value is FixtureArchiveSourceBirth => isRecord(value) && isRecord(value["birth"])
   && isScopeRef(value["at"]) && isDigest(value["birth"]["hash"]) && typeof value["birth"]["bytes"] === "string";
@@ -48,12 +48,12 @@ export class FixtureArchiveSourcePins {
       if (!birthInput(source)) return stop("unavailable");
       const bytes = source.birth.bytes;
       if (!bytes.length || bytes.length > bounds.entryBytes) budget.stop("limit");
-      budget.spend({ metadata: 512, inputWork: bytes.length * 3 * 32 });
+      // The factory checks canonical genesis identity. Pin/declaration extraction
+      // parses those same bytes once more; pay that additional parse explicitly.
+      budget.spend({ metadata: 512, inputWork: bytes.length * 4 * 32 });
       if (utf8(bytes).length > bounds.entryBytes) budget.stop("limit");
-      const entry = json(bytes);
-      if (!isEntry(entry) || canonicalize(entry) !== bytes || entryHash(entry) !== source.birth.hash || entry.seq !== 0 || entry.prev !== null
-        || entry.input.type !== "genesis" || !same(entry.at, source.at) || entry.input.inc !== source.at.inc
-        || entry.input.seed.kind !== source.at.kind || scopeIdOf(entry.input.seed) !== source.at.scope) return stop("mismatch");
+      const checkedSequence = admitSequenceGenesis(bytes, source.at, bounds.entryBytes), entry = json(bytes);
+      if (!checkedSequence || !isEntry(entry) || entry.input.type !== "genesis" || source.birth.hash !== source.at.genesis) return stop("mismatch");
       const pin = entry.input.seed.definition;
       const native = isDigest(pin) ? null : platform(pin);
       let declaration: string;
@@ -82,17 +82,17 @@ export class FixtureArchiveSourcePins {
       if (!declaration.length || declaration.length > bounds.definitionBytes) budget.stop("limit");
       budget.spend({ inputWork: declaration.length * 3 * 32 });
       if (utf8(declaration).length > bounds.definitionBytes) budget.stop("limit");
-      const raw = json(declaration), checked = validateDefinition(raw, bounds, RULE_PROFILES,
-        native ? { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) } : {});
-      if (!checked.ok || staticDigest !== undefined && checked.definition.digest !== staticDigest || canonicalize(raw) !== declaration || isDigest(pin) && definitionDigest(checked.definition.declared) !== pin) return stop("mismatch");
+      const raw = json(declaration), checkedDefinition = validateDefinition(raw, bounds, RULE_PROFILES,
+        native ? { canonical: true, platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) } : { canonical: true });
+      if (!checkedDefinition.ok || staticDigest !== undefined && checkedDefinition.definition.digest !== staticDigest || canonicalize(raw) !== declaration || isDigest(pin) && definitionDigest(checkedDefinition.definition.declared) !== pin) return stop("mismatch");
       const key = canonicalize(source.at);
       if (this.#sources.has(key)) return stop("mismatch");
       const at = Object.freeze({ ...source.at });
-      this.#sources.set(key, Object.freeze({ at, pin, genesis: source.birth.hash, declaration, ...(staticDigest !== undefined ? { staticNative: true as const } : {}) }));
+      this.#sources.set(key, Object.freeze({ at, kind: checkedSequence.kind, pin, genesis: source.birth.hash, checked: checkedSequence, declaration, ...(staticDigest !== undefined ? { staticNative: true as const } : {}) }));
     }
     budget.check();
   }
-  /** Full scope/incarnation/kind only. Neither producer name nor receiver
+  /** Full scope/genesis only. Neither producer name nor receiver
    * alias is a key. Callers must separately join an explicit reviewed policy. */
   get(at: ScopeRef, budget: ArchiveBudget): Readonly<ArchiveSourcePin> | null {
     budget.spend({ attempts: 1, metadata: ARCHIVE_SOURCE_LOOKUP_METADATA, inputWork: ARCHIVE_SOURCE_LOOKUP_WORK });
@@ -110,7 +110,7 @@ export class FixtureArchiveSourcePins {
     budget.spend({ metadata: this.#sources.size * 128, inputWork: this.#sources.size * 256 });
     const lookups: ArchiveCost = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 };
     for (const source of this.#sources.values()) {
-      if (source.at.kind !== "register" && source.at.kind !== "membership") continue;
+      if (source.kind !== "register" && source.kind !== "membership") continue;
       const cost = forecastArchiveSourceLookup(source.declaration.length);
       for (const key of Object.keys(lookups) as (keyof ArchiveCost)[]) lookups[key] += cost[key];
     }

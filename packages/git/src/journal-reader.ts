@@ -10,7 +10,7 @@ import { JournalObjectReader, journalId, type JournalFormat, type JournalObjectS
 export { journalId };
 import { archiveRetainedPath, firstOfArchiveSegment, journalRef } from "./journal-path.ts";
 import { archiveSegments, archiveShards } from "./journal-segments.ts";
-import { JOURNAL_SELECTION_BYTES, sameJournalScope, type JournalForeignSource } from "./journal-selection.ts";
+import { JOURNAL_SELECTION_BYTES, type JournalForeignSource } from "./journal-selection.ts";
 import { JournalLayoutRefusal, JournalWork, type JournalBudget } from "./journal-work.ts";
 import type { JournalTextOmission } from "./journal-v2-manifest.ts";
 import type { JournalAnchorCoverage, JournalAnchorRange } from "./journal-anchors.ts";
@@ -123,10 +123,12 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
         work.check();
         let entry: unknown;
         try { entry = parseStrict(bytes); if (canonicalize(entry) !== bytes) mismatch("entry is not canonical JSON"); } catch { mismatch("entry is not canonical JSON"); }
-        if (!isEntry(entry) || !sameJournalScope(entry.at, head.scope) || entry.seq !== entries.length || entry.prev !== (entries.at(-1)?.hash ?? null)) mismatch("entry identity, position or chain differs");
+        if (!isEntry(entry)) mismatch("entry identity, position or chain differs");
+        const hash = entryHash(entry);
+        if (entry.seq !== entries.length || entry.prev !== (entries.at(-1)?.hash ?? null)) mismatch("entry identity, position or chain differs");
         if (entry.seq === 0) {
-          if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== scope || entry.input.inc !== head.scope.inc || entry.input.seed.kind !== head.scope.kind) mismatch("archive genesis identity differs");
-        } else if (entry.input.type === "genesis") mismatch("archive contains a second genesis");
+          if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== scope || hash !== head.scope.genesis) mismatch("archive genesis identity differs");
+        } else if (entry.input.type === "genesis" || !("genesis" in entry) || entry.genesis !== head.scope.genesis) mismatch("archive contains a second genesis or another sequence");
         lastTime = timeMs(entry.time);
         if (entry.uses.length && !manifest.foreignSources) mismatch("foreign uses lack a classified source basis");
         if (manifest.foreignSources) {
@@ -138,7 +140,7 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
             foreignUses.set(use.content, { fact: use.fact, found: false });
           }
         }
-        entries.push({ seq: entry.seq, hash: entryHash(entry), bytes });
+        entries.push({ seq: entry.seq, hash, bytes });
       }
     }
     if (entries.length !== head.through + 1 || entries.at(-1)?.hash !== head.hash || lastTime === null || Math.floor(lastTime / 1000) !== commit.seconds) mismatch("archive prefix does not reach its stated head and time");
@@ -155,10 +157,14 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
       if (value === undefined || canonicalize(value) !== bytes || key.kind === "entry" && !isEntry(value)) mismatch("retained input differs from its named bytes");
       if (key.kind === "entry" && manifest.foreignSources) {
         const use = foreignUses.get(key.digest);
-        if (!isEntry(value) || !use || !sameJournalScope(value.at, use.fact.at) || value.seq !== use.fact.seq || entryHash(value) !== use.fact.hash) mismatch("foreign copy differs from its consumer fact");
-        const source = canonicalize(value.at), pin = sources.get(source);
+        if (!isEntry(value) || !use) mismatch("foreign copy differs from its consumer fact");
+        const hash = entryHash(value);
+        if (value.seq !== use.fact.seq || hash !== use.fact.hash) mismatch("foreign copy differs from its consumer fact");
+        const source = canonicalize(use.fact.at), pin = sources.get(source);
         if (!pin) mismatch("foreign copy lacks its classified source pin");
-        if (value.seq === 0 ? value.input.type !== "genesis" || value.prev !== null || value.input.seed.definition !== pin || value.input.inc !== value.at.inc || value.input.seed.kind !== value.at.kind || scopeIdOf(value.input.seed) !== value.at.scope : value.input.type === "genesis") mismatch("foreign copy birth differs from its classified source pin");
+        if (value.seq === 0 ? value.input.type !== "genesis" || value.prev !== null || value.input.seed.definition !== pin
+          || hash !== use.fact.at.genesis || scopeIdOf(value.input.seed) !== use.fact.at.scope
+          : value.input.type === "genesis" || !("genesis" in value) || value.genesis !== use.fact.at.genesis) mismatch("foreign copy birth differs from its classified source pin");
         use.found = true; usedSources.add(source);
       }
       retained.push({ ...key, bytes }); files.push({ key, data: body });

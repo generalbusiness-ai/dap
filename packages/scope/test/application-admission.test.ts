@@ -4,8 +4,10 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
-import { packApplication, type ApplicationPackageInput } from "@generalbusiness/dap-client";
+import { packApplication, readApplicationPackage, type ApplicationPackageInput } from "@generalbusiness/dap-client";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
+import { validateDefinition } from "@generalbusiness/dap-derive";
+import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { lending } from "../../../examples/lending/definition.ts";
 import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readApplicationTrust, readTrustedApplication } from "../src/applications/admission.ts";
 import { applicationTrust, fixedSigner } from "./fixtures-native.ts";
@@ -19,6 +21,16 @@ const input = (definition: DeclaredDefinition): ApplicationPackageInput => ({ na
 test("both current application definitions admit only under their exact release and publisher", async () => {
   for (const definition of [countingCommitments, lending]) {
     const packet = await packApplication(input(definition), signer), rows = [{ release: packet.ids.release, publisher: signer.key, host: "git.example" }];
+    expect(validateDefinition(definition, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok).toBe(true);
+    const redundant = structuredClone(definition);
+    Object.assign(redundant.acts[redundant.genesis]!.effects[0]!, { of: "on" });
+    expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
+    expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok).toBe(false);
+    const hostile = await packApplication(input(redundant), signer);
+    expect(readApplicationPackage(hostile.bytes, hostile.ids.release).ids).toEqual(hostile.ids);
+    expect(hostile.ids.release).not.toBe(packet.ids.release);
+    const hostileTrust = readApplicationTrust(applicationTrust(hostile, signer.key));
+    expect(() => readTrustedApplication(hostile.bytes, hostile.ids.release, hostileTrust, PROPOSED_BOUNDS)).toThrow("application-unsupported-definition");
     const trust = readApplicationTrust(JSON.stringify(rows, null, 2));
     expect(readTrustedApplication(packet.bytes, packet.ids.release, trust, PROPOSED_BOUNDS)).toEqual(packet);
     expect(Object.isFrozen(trust[0])).toBe(true);

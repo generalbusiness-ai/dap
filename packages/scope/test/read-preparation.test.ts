@@ -34,10 +34,15 @@ test("preparation reads genuine native pinned content without legacy Store reade
     const loader = new ReadPreparation(sql, native), first = loader.capture();
     const before = declarations, current = first?.current() ?? false;
     const second = loader.capture();
-    return { first: first?.pinned.named, second: second?.pinned.named, before, declarations, geneses, current, readsOnly: queries.every(query => query.startsWith("SELECT")) };
+    return { first: first?.pinned.named, second: second?.pinned.named, before, declarations, geneses, current,
+      sequence: first?.sequence.at, secondSequence: second?.sequence.at, kind: first?.sequence.kind,
+      frozenSequence: first ? Object.isFrozen(first.sequence) && Object.isFrozen(first.sequence.at) : false,
+      readsOnly: queries.every(query => query.startsWith("SELECT")) };
   });
   expect(got.first).toMatch(/^sha256:/); expect(got.second).toBe(got.first);
   expect(got).toMatchObject({ before: 1, declarations: 1, geneses: 2, current: true, readsOnly: true });
+  expect(got.sequence).toEqual(scope.at); expect(got.secondSequence).toEqual(got.sequence);
+  expect(got.kind).toBe("directory"); expect(got.frozenSequence).toBe(true);
 });
 
 test("missing declarations can arrive later and cached content rechecks current whole-runtime support", async () => {
@@ -121,15 +126,24 @@ test("one operation cannot recapture a new genesis allowance and post-await chan
     const sql = sqlOf(state), store = new SqliteStore(sql), native = support(scope, store);
     let policy = "first";
     const loader = new ReadPreparation(sql, { ...native, policy: () => policy }), budget = new PreparationBudget(), first = loader.capture(budget);
+    const beforeLowBudget = store.stored(0)!;
+    const validationDebits: unknown[] = [];
+    // Eight calls fit the prior declared capture; the added byte-factory
+    // candidate consumes the ninth without increasing the hard ceiling.
+    const limited = new ReadPreparation(sql, native).capture(new PreparationBudget({ ...B, calls: 8 }, () => true,
+      cost => validationDebits.push(cost)));
     const recaptured = loader.capture(budget);
     const policyFrame = loader.capture(); policy = "second";
     const policyChanged = policyFrame?.current() ?? true; policy = "first";
     const current = loader.capture();
     const before = store.scope()!; store.setScope({ ...before, head: { seq: before.head.seq + 1, hash: `sha256:${"0".repeat(64)}` } }); // labelled synthetic head drift
     const changed = current?.current() ?? true;
-    return { first: first !== null, recaptured: recaptured === null, available: budget.available, policyChanged, changed, after: current?.budget.available };
+    return { first: first !== null, recaptured: recaptured === null, available: budget.available, policyChanged, changed, after: current?.budget.available,
+      limited: limited === null, validationDebits, originalUnchanged: store.stored(0)!.bytes === beforeLowBudget.bytes };
   });
-  expect(got).toEqual({ first: true, recaptured: true, available: false, policyChanged: false, changed: false, after: false });
+  expect(got).toMatchObject({ first: true, recaptured: true, available: false, policyChanged: false, changed: false, after: false,
+    limited: true, originalUnchanged: true });
+  expect(got.validationDebits).toContainEqual({ calls: 1, candidates: 1 });
 });
 
 /** Synthetic pin storage for actual native catalog validation. This does
@@ -139,9 +153,10 @@ function pin(state: DurableObjectState, named: PlatformDefinition) {
   if (sample.input.type !== "genesis") return expect.fail("native fixture lacks genesis");
   const kind = named.startsWith("platform:directory-partition@") ? "directory" : named.slice("platform:".length).split("@")[0];
   if (!isScopeKind(kind)) return expect.fail("fixture pin has unsupported scope kind");
-  const seed = { ...sample.input.seed, kind, definition: named }, at = { ...sample.at, kind, scope: scopeIdOf(seed) };
-  const entry: Entry = { ...sample, at, input: { ...sample.input, seed, "founding": null, kind: platform(named)?.data.genesis ?? "unsupported" }, effects: [], sends: [] };
+  const seed = { ...sample.input.seed, kind, definition: named };
+  const entry: Entry = { ...sample, input: { ...sample.input, seed, "founding": null, kind: platform(named)?.data.genesis ?? "unsupported" }, effects: [], sends: [] };
   const bytes = canonicalize(entry), hash = entryHash(entry);
+  const at = { scope: scopeIdOf(seed), genesis: hash };
   state.storage.sql.exec("UPDATE entry SET hash=?,bytes=?,size=? WHERE seq=0", hash, bytes, utf8(bytes).length);
   store.setScope({ ...current, at, head: { seq: 0, hash }, genesis: { ...current.genesis, hash } });
 }

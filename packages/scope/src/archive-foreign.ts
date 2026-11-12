@@ -98,7 +98,7 @@ export class ArchiveForeignMetadata {
     if (sizes.length !== 1 || sizes[0]?.["type"] !== "text" || !natural(size) || size === 0) return stop("unavailable");
     if (size > this.bounds.entryBytes) return stop("limit");
     if (expected && expected.bytes !== size) return stop("foreign-source-mismatch");
-    const location = { kind: "copy" as const, content, bytes: size }, header = archiveEntryHeader(this.sql, location, this.budget);
+    const location = { kind: "copy" as const, content, bytes: size }, header = archiveEntryHeader(this.sql, location, this.budget, fact.at);
     if (expected && (expected.input !== header.input || expected.effects !== header.effects)) return stop("foreign-source-mismatch");
     if (!same(header.at, fact.at) || header.seq !== fact.seq) return stop("foreign-source-mismatch");
     const source = this.sources.get(header.at, this.budget);
@@ -110,8 +110,8 @@ export class ArchiveForeignMetadata {
     if (header.uses > this.bounds.usesPerEntry) return stop("limit");
     if (header.seq === 0) {
       if (fact.hash !== source.genesis) return stop("foreign-source-mismatch");
-      const rows = this.budget.native(this.sql, () => ({ metadata: ARCHIVE_FOREIGN_GENESIS_METADATA, inputWork: 0 })).exec(`SELECT ${text("$.input.seed.definition", 128)} AS pin, ${text("$.input.inc", 64)} AS inc, ${text("$.input.seed.kind", 16)} AS kind FROM retained_input WHERE kind = 'entry' AND digest = ? AND octet_length(bytes) = ? LIMIT 1`, content, size).toArray();
-      if (rows.length !== 1 || rows[0]?.["pin"] !== source.pin || rows[0]?.["inc"] !== source.at.inc || rows[0]?.["kind"] !== source.at.kind) return stop("foreign-source-mismatch");
+      const rows = this.budget.native(this.sql, () => ({ metadata: ARCHIVE_FOREIGN_GENESIS_METADATA, inputWork: 0 })).exec(`SELECT ${text("$.input.seed.definition", 128)} AS pin, ${text("$.input.seed.kind", 16)} AS kind FROM retained_input WHERE kind = 'entry' AND digest = ? AND octet_length(bytes) = ? LIMIT 1`, content, size).toArray();
+      if (rows.length !== 1 || rows[0]?.["pin"] !== source.pin || rows[0]?.["kind"] !== source.kind) return stop("foreign-source-mismatch");
     }
     archiveEntryPrivacy(this.sql, location, header, policy.support, this.budget);
     const name = canonicalize(source.at), previous = this.#sources.get(name);
@@ -140,10 +140,10 @@ export class ArchiveForeignMetadata {
     if (!natural(count) || count > this.bounds.usesPerEntry) return stop("limit");
     if (this.observation?.record) this.budget.spend({ metadata: 256, inputWork: 512 });
     const recorded: Readonly<ArchiveForeignRecordedRequest>[] | undefined = this.observation?.record ? [] : undefined;
-    const rows = this.budget.native(this.sql, () => ({ metadata: archiveForeignUseMetadata(count), inputWork: 0 })).exec(`SELECT ${text("$.fact.at.scope", 71, "value")} AS scope, ${text("$.fact.at.inc", 64, "value")} AS inc, ${text("$.fact.at.kind", 16, "value")} AS kind, json_extract(value, '$.fact.seq') AS seq, ${text("$.fact.hash", 71, "value")} AS hash, ${text("$.content", 71, "value")} AS content FROM entry, json_each(entry.bytes, '$.uses') WHERE entry.seq = ? AND entry.hash = ? AND entry.size = ? AND octet_length(entry.bytes) = ? LIMIT ?`, position.seq, position.hash, position.bytes, position.bytes, count + 1).toArray();
+    const rows = this.budget.native(this.sql, () => ({ metadata: archiveForeignUseMetadata(count), inputWork: 0 })).exec(`SELECT ${text("$.fact.at.scope", 71, "value")} AS scope, ${text("$.fact.at.genesis", 71, "value")} AS genesis, json_extract(value, '$.fact.seq') AS seq, ${text("$.fact.hash", 71, "value")} AS hash, ${text("$.content", 71, "value")} AS content FROM entry, json_each(entry.bytes, '$.uses') WHERE entry.seq = ? AND entry.hash = ? AND entry.size = ? AND octet_length(entry.bytes) = ? LIMIT ?`, position.seq, position.hash, position.bytes, position.bytes, count + 1).toArray();
     if (rows.length !== count) return stop("unavailable");
     for (const row of rows) {
-      const fact = { at: { scope: row["scope"], inc: row["inc"], kind: row["kind"] }, seq: row["seq"], hash: row["hash"] };
+      const fact = { at: { scope: row["scope"], genesis: row["genesis"] }, seq: row["seq"], hash: row["hash"] };
       if (!isFactRef(fact) || !isDigest(row["content"])) return stop("foreign-source-unavailable");
       const request = this.#copy(fact, row["content"]);
       if (recorded && request) recorded.push(request);

@@ -10,7 +10,7 @@ import type { FactRef, Report, ScopeRef } from "@generalbusiness/dap-contract";
 
 export type { Report };
 
-const scope = (ref: ScopeRef): string => `${ref.scope}, incarnation ${ref.inc}, ${ref.kind}`;
+const scope = (ref: ScopeRef): string => `${ref.scope}, genesis ${ref.genesis}`;
 const fact = (ref: FactRef): string => `entry ${ref.seq} of ${ref.at.scope} (${ref.hash})`;
 
 const MODES: Record<Report["mode"], string> = {

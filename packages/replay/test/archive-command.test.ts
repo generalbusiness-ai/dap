@@ -33,18 +33,21 @@ test("legacy unpublished anchors refuse operator acceptance and public-journal a
   }
 });
 
-test("publication union refuses two lists with contradictory hashes, deduplicates identical facts and retains distinct incarnations", async () => {
+test("publication union refuses two lists with contradictory hashes, deduplicates identical facts and retains distinct genesis digests", async () => {
   const w = world(), first = w.I.entries[0]!, next = w.I.entries[1]!;
   const original = { at: w.I.scope, seq: first.seq, hash: first.hash };
   const different = { ...original, hash: next.hash };
   const later = { ...original, seq: next.seq, hash: next.hash };
-  const distinct = { ...different, at: { ...original.at, inc: w.D.scope.inc } };
-  expect(distinct.at.inc).not.toBe(original.at.inc);
+  const distinct = { ...different, at: { ...original.at, genesis: w.D.scope.genesis } };
+  expect(distinct.at.genesis).not.toBe(original.at.genesis);
   for (const second of [different, original, distinct, later]) {
     const source = archiveSource({ open: async scope => {
       const history = scope === w.D.scope.scope ? w.D : w.P;
       const entry = history.entries[0]!;
-      return { ok: true, archive: { scope: history.scope, head: { seq: entry.seq, hash: entry.hash }, format: "sha1", commit: "c".repeat(40), name: null, entries: history.entries, retained: [], publishedAnchors: [scope === w.D.scope.scope ? original : second], anchorCoverage: { covered: true, unpublished: [], legacy: [] } } };
+      const fact = scope === w.D.scope.scope ? original : second;
+      // Explicit metadata stand-in; production publisher birth checks have
+      // their own real exporter witnesses.
+      return { ok: true, archive: { scope: history.scope, head: { seq: entry.seq, hash: entry.hash }, format: "sha1", commit: "c".repeat(40), name: null, entries: history.entries, retained: [], publishedAnchors: [fact], anchorCoverage: { covered: true, unpublished: [], legacy: [] } } };
     } });
     const result = await source.publications([w.P.scope.scope, w.D.scope.scope]);
     if (second === different) expect(result).toMatchObject({ ok: false, result: "mismatch" });

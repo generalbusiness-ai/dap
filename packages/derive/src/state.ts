@@ -18,7 +18,7 @@ export type { Item, Party, Status };
 
 /** What every judgment reads first. `time` is the last entry's time (section 5.3). */
 export interface ScopeState {
-  at: ScopeRef; creator: ScopeRef | null; status: Status; head: Head; time: Timestamp;
+  at: ScopeRef; kind: ScopeKind; creator: ScopeRef | null; status: Status; head: Head; time: Timestamp;
   /** The hash of the genesis entry and, for a child, the creation request it answered: the creator's entry and send (section 7.2). */
   genesis: { hash: Digest; source: FactRef | null; n: number | null };
   /**

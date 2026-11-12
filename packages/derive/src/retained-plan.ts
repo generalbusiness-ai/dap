@@ -117,6 +117,7 @@ export function observedValueDependencies(definition: ValidDefinition, origin: D
 }
 
 export function detachedTextDependencies(definition: ValidDefinition, origin: DependencyOrigin, input: Input, under?: string) {
+  // A retained delivery supplies its own sourceKind; no remote kind lookup.
   return inputTexts(definition, input, under).map(digest => textDependency(origin, digest));
 }
 

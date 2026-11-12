@@ -1,8 +1,8 @@
 import { contextDeclared as declared, contextParentData, contextPlatformData, contextNamedData } from "./definition-corpus/general-creation-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeviceCommandGrant, type ScopeKind } from "@generalbusiness/dap-contract";
-import { canonicalize, isSeed, newIncarnation } from "@generalbusiness/dap-bytes";
-import { clockOf, judgeGenesis, validateDefinition, type ValidDefinition } from "../src/index.ts";
+import { canonicalize, isSeed, textDigest } from "@generalbusiness/dap-bytes";
+import { clockOf, directoryOf, judgeGenesis, membershipOf, validateDefinition, type ValidDefinition } from "../src/index.ts";
 import { Ledger, T0, creation, deliver, created, keys, valid } from "./fixtures-entry.ts";
 
 // Pure judge/send boundary. Parent metadata and authority are SCRIPTED in a
@@ -41,6 +41,13 @@ function confirm(parent: Ledger, child: Ledger) {
 test("unmarked genesis create bytes stay legacy even with incoming membership or a domain creationContext; later creates keep their old retained-genesis membership", () => {
   const { parent, child, judgment } = incoming({ membership });
   expect(judgment.result).toBe("write");
+  const birth = child.entries[0]!.entry.input;
+  if (birth.type !== "genesis") throw new Error("the child retains its actual genesis input");
+  expect(birth.sourceKind).toBe("directory");
+  expect(directoryOf(birth)).toEqual(parent.at);
+  // A recorded Directory source does not excuse another full creator.
+  expect(directoryOf({ ...birth, seed: { ...birth.seed, creator: membership } })).toBeNull();
+  expect(membershipOf(birth, child.at)).toEqual(membership);
   const legacy = { fields: { creationContext: { v: 99 } }, directory: parent.at };
   expect(canonicalize(bodyOf(child))).toBe(canonicalize(legacy));
   confirm(parent, child);
@@ -62,7 +69,7 @@ test("recognized verified-context metadata and the same full membership flow thr
 });
 
 test("unknown or malformed opt-in and marked missing/invalid full membership record bad-field refusal with only the native result; source-message proof and typed lower bounds still hold", () => {
-  for (const metadata of [{ creationContext: { v: 2 }, membership }, { creationContext: { v: 1, other: true }, membership }, { creationContext: { v: 1 } }, { creationContext: { v: 1 }, membership: { ...membership, kind: "lane" } }, { creationContext: { v: 1 }, membership, fields: { creationContext: { v: 0 } } }]) {
+  for (const metadata of [{ creationContext: { v: 2 }, membership }, { creationContext: { v: 1, other: true }, membership }, { creationContext: { v: 1 } }, { creationContext: { v: 1 }, membership: { ...membership, kind: "lane" } }, { creationContext: { v: 1 }, membership: { scope: membership.scope, genesis: null } }, { creationContext: { v: 1 }, membership, fields: { creationContext: { v: 0 } } }]) {
     const { child, judgment, asked, source } = incoming(metadata);
     expect(judgment).toMatchObject({ result: "write", draft: { input: { decision: "refused" }, sends: [{ n: 0, message: { class: "result", outcome: "refused", reason: { code: "bad-field" } } }] } });
     expect(child.last.sends).toHaveLength(1);
@@ -78,6 +85,10 @@ test("marked declared genesis does not stamp a platform creation, and membership
   expect(bodyOf(received.child)).toEqual({ fields: {} });
   const self = incoming({ creationContext: { v: 1 }, membership }, definition, "membership");
   expect(bodyOf(self.child)).toEqual({ fields: { creationContext: { v: 99 } }, directory: self.parent.at, membership: self.child.at });
+  const birth = self.child.entries[0]!.entry.input;
+  if (birth.type !== "genesis") throw new Error("the membership retains its actual genesis input");
+  expect(membershipOf(birth, self.child.at)).toEqual(self.child.at);
+  expect(membershipOf(birth, membership)).toBeNull();
 });
 
 test("a recorded device grant reaches only an allowed first child and cannot be delegated again", () => {
@@ -100,11 +111,11 @@ test("a recorded device grant reaches only an allowed first child and cannot be 
   expect(bodyOf(unlisted.child)).toEqual({ fields: { creationContext: { v: 99 } }, directory: unlisted.parent.at, membership, creationContext: { v: 1 } });
 });
 
-test("a device grant for another membership incarnation or definition refuses before any child send", () => {
+test("a device grant for another membership genesis or definition refuses before any child send", () => {
   const grant: DeviceCommandGrant = { capability: "device-command@1", owner: keys.rita.member,
     bounds: { kinds: ["heater"], owners: 1 }, root: definition.digest, definitions: [definition.digest] };
   const other = valid(validateDefinition(contextNamedData("foreign-device-definition"), PROPOSED_BOUNDS));
-  const foreignOwner = { ...grant, owner: { ...grant.owner, membership: { ...membership, inc: newIncarnation(new Uint8Array(16).fill(93)) } } };
+  const foreignOwner = { ...grant, owner: { ...grant.owner, membership: { ...membership, genesis: textDigest("another membership genesis") } } };
   for (const marker of [{ v: 2, deviceCommand: foreignOwner, delegate: true },
     { v: 2, deviceCommand: { ...grant, root: other.digest }, delegate: true },
     { v: 2, deviceCommand: { ...grant, definitions: [other.digest] }, delegate: false }]) {

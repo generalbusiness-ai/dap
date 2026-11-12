@@ -1,7 +1,7 @@
 /** Execute admitted operand descriptors over the shared value and entry-history leaves. */
 import type { FactRef } from "@generalbusiness/dap-contract";
 import type { Judging } from "../guards.ts";
-import { entryValue, equal, slotOf, type EntrySelection } from "../operand.ts";
+import { copyFact, entryValue, equal, slotOf, type EntrySelection } from "../operand.ts";
 import type { Item } from "../state.ts";
 import type { ElementIdentity } from "../validate/context.ts";
 import { isFactRef, isLocalId, isObject, own } from "../values.ts";
@@ -43,7 +43,7 @@ function executeRead(j: Judging, read: OperandRead, item: Item | null, elements:
     case "update": value = j.update?.[read.part] ?? null; break;
     case "result": value = j.result?.name ?? null; break;
     case "item": value = subject(read.subject)?.id ?? null; break;
-    case "source": value = j.source ? part(j.source.fact, read.entry) : null; break;
+    case "source": value = j.source ? part(copyFact(j.source), read.entry) : null; break;
     case "field": value = own(j.fields, read.name) ?? null; break;
     case "presented": value = own(j.presented, read.name) ?? null; break;
     case "slot": { const from = subject(read.slot.subject); value = from ? slotOf(from, read.slot.name) : null; break; }

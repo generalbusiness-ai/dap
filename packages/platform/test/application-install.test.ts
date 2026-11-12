@@ -3,24 +3,24 @@
  * storage, retry driver, or hosted install running in this witness. */
 import { expect, test } from "vitest";
 import { canonicalize, definitionDigest, textDigest, utf8, keyIdOfSecret, sign } from "@generalbusiness/dap-bytes";
-import { packApplication } from "../src/application-codec/application.ts";
+import { packApplication, readApplicationPackage } from "../src/application-codec/application.ts";
 import { clockOf, judgeOutcome, runnable, validateDefinition } from "@generalbusiness/dap-derive";
 import { d, keys, membership } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { platform, TRUSTED_APPLICATION_COHORT, SIBLINGS_OF, DIRECTORY_OF } from "../src/index.ts";
 import { APPLICATION_INSTALL_RULES } from "../src/application-install.ts";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { Rulebook } from "./fixtures-entry.ts";
 
-async function fixture(requireArchive = false) {
-  const id = definitionDigest(countingCommitments);
+async function fixture(requireArchive = false, definition: DeclaredDefinition = countingCommitments) {
+  const id = definitionDigest(definition);
   const packet = await packApplication({ name: "test.install", version: "1", semantic: {
-    v: 1, entry: id, definitions: [{ id, bytes: canonicalize(countingCommitments) }],
+    v: 1, entry: id, definitions: [{ id, bytes: canonicalize(definition) }],
     host: { execution: "recorded-do", profiles: ["restricted@1"], ...(requireArchive ? { requires: ["archive"] as const } : {}) }, capabilities: [],
     roles: { member: ["counting.fulfill"] }, projections: {}, predecessor: null,
   }, presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, { key: keyIdOfSecret(new Uint8Array(32).fill(64)), sign: bytes => sign(new Uint8Array(32).fill(64), bytes) });
-  const declarationText = canonicalize(countingCommitments);
+  const declarationText = canonicalize(definition);
   const texts = (digest: string) => digest === textDigest(declarationText) ? utf8(declarationText).length : undefined;
   class TextRulebook extends Rulebook {
     override act(...[who, kind, over = {}, context = {}]: Parameters<Rulebook["act"]>) { return super.act(who, kind, over, { texts, ...context }); }
@@ -76,6 +76,21 @@ test("install admission retains signed semantics, requires authority and exact a
 // grant or creating a lane. Definitive retry policy is a separate continuation.
 test("install rejects altered proof and records a bounded host refusal", async () => {
   const { r, fields, values, outcome } = await fixture();
+  expect(validateDefinition(countingCommitments, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok).toBe(true);
+  const redundant = structuredClone(countingCommitments);
+  Object.assign(redundant.acts[redundant.genesis]!.effects[0]!, { of: "on" });
+  expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
+  expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES, { canonical: true }).ok).toBe(false);
+  const hostile = await fixture(false, redundant), unchanged = hostile.r.state.snapshot();
+  // Fresh TEST definition/semantic/presentation/release ids and signature
+  // are recomputed together. Portable integrity passes before Native refuses.
+  expect(readApplicationPackage(hostile.packet.bytes, hostile.packet.ids.release).ids).toEqual(hostile.packet.ids);
+  expect(hostile.packet.package.semantic.entry).toBe(definitionDigest(redundant));
+  expect(hostile.packet.ids.release).not.toBe(fields.release);
+  expect(hostile.r.act(keys.rita, "install-application", { fields: hostile.fields as never }, { values: hostile.values }))
+    .toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
+  expect(hostile.r.state.snapshot()).toEqual(unchanged);
+
   for (const over of [{ values: "{}" }, { roles: ["member", "member"] }, { roles: ["admin"] }, { values: '{"opener":null}' }, { uri: "https://git.example/floating" }]) {
     expect(r.act(keys.rita, "install-application", { fields: { ...fields, ...over } as never }, { values })).toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
   }

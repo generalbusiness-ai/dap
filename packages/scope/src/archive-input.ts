@@ -1,9 +1,9 @@
 /** Exact immutable-selection reads for a build or rebuild. No head read,
  * inventory, retention enumeration or detached-text fallback. Foreign copies
  * require their marked source/pin pairs to match the fixture configuration. */
-import { natural } from "@generalbusiness/dap-bytes";
+import { natural, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { RETAINED_INPUT_BYTES, type Digest, type FactRef, type PlatformDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isRecord, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import { checkedRetainedKey, type RetainedKey } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
 import { ArchiveRetainedReader, type ArchiveRetainedCopy } from "./archive-retained.ts";
@@ -19,6 +19,9 @@ export interface ArchiveInputSelection {
 }
 const nameOf = (key: RetainedKey): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
 export interface ArchiveInput {
+  /** Genuine associations from the exact copy-only basis. These reuse the
+   * already-paid source lookup, never a descriptive source row or pin label. */
+  readonly sourceSequences: readonly CheckedSequence[];
   entry(seq: number, limit: number): Promise<string | null>;
   retained(key: RetainedKey, limit: number): Promise<string | null>;
 }
@@ -37,14 +40,15 @@ export function archiveInput(sql: Sql, selection: ArchiveInputSelection, budget:
   }
   const objects = new Map<string, { readonly key: RetainedKey; readonly bytes: number }>();
   const sources = new Map<string, { readonly source: ArchiveSourceBasis; readonly genesis: Digest; used: boolean }>();
-  const basis = selection.foreignSources ?? [];
+  const basis = selection.foreignSources ?? [], sourceSequences: CheckedSequence[] = [];
   if (basis.length > ARCHIVE_SOURCE_PINS) budget.stop("limit");
   budget.spend({ metadata: basis.length * 512, inputWork: basis.length * 1024 });
   for (const source of basis) {
-    if (!isScopeRef(source.at) || !isDigest(source.pin) && !isPlatformDefinition(source.pin) || sources.has(canonicalize(source.at))) budget.stop("unavailable");
+    if (!isRecord(source) || Object.keys(source).length !== 2 || !Object.hasOwn(source, "at") || !Object.hasOwn(source, "pin") || !isScopeRef(source.at) || !isDigest(source.pin) && !isPlatformDefinition(source.pin) || sources.has(canonicalize(source.at))) budget.stop("unavailable");
     const configured = fixtureSources?.get(source.at, budget);
     if (!configured) throw new ArchivePrefixStopped("foreign-source-unavailable");
     if (configured.pin !== source.pin) throw new ArchivePrefixStopped("foreign-source-mismatch");
+    sourceSequences.push(configured.checked);
     sources.set(canonicalize(source.at), { source: { at: { ...source.at }, pin: source.pin }, genesis: configured.genesis, used: false });
   }
   const copies: ArchiveRetainedCopy[] = [];
@@ -64,6 +68,7 @@ export function archiveInput(sql: Sql, selection: ArchiveInputSelection, budget:
   if ([...sources.values()].some(source => !source.used)) throw new ArchivePrefixStopped("foreign-source-mismatch");
   const retained = new ArchiveRetainedReader(sql, budget, copies);
   return {
+    sourceSequences: Object.freeze(sourceSequences),
     async entry(seq, limit) {
       budget.spend({ attempts: 1, inputWork: ARCHIVE_INPUT_REQUEST_WORK });
       const selected = entries.get(seq);

@@ -8,9 +8,9 @@ import { countedEntries, archivedPosition, heldPositions, judgeFloor } from "@ge
  * the answer to a creation, is the contract's, and is exported here again.
  */
 
-import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, Head, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newIncarnation, parseStrict, platformName, retainedValueKey, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
+import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, Effect, FactRef, Created, Grant, Head, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, SequenceRef, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import { canonicalize, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newGenesisNonce, parseStrict, sealedFactRef, platformName, retainedValueKey, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, resolvedEntryEffects, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, Own, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ReceiverReads } from "./receiver-reads.ts";
@@ -42,10 +42,10 @@ export interface Pinned { named: Digest | PlatformDefinition; definition: ValidD
 export interface Supplied { definition: ValidDefinition; platform: PlatformRules }
 
 /** The receipt of a sealed entry: a view, built after sealing (section 4.1). */
-export function receiptOf({ entry, hash }: Sealed, definition: Digest | PlatformDefinition): Receipt {
+export function receiptOf({ entry, hash }: Sealed, definition: Digest | PlatformDefinition, at: SequenceRef, effects: readonly Effect[]): Receipt {
   const input = entry.input;
   const intent = input.type === "act" ? intentDigest(input.signed.intent) : input.type === "genesis" && input["founding"] ? intentDigest(input["founding"].intent) : null;
-  return { fact: { at: entry.at, seq: entry.seq, hash }, definition, intent, effects: entry.effects, sends: entry.sends.map((s): OutboxId => `${entry.seq}.${s.n}`), epoch: 0 };
+  return { fact: sealedFactRef(entry, hash, at), definition, intent, effects, sends: entry.sends.map((s): OutboxId => `${entry.seq}.${s.n}`), epoch: 0 };
 }
 
 /** This scope's own sealed entry at a position, from its stored history, for the judges (section 6.2, a local fact). */
@@ -159,7 +159,7 @@ export const valuesOf = (draft: Draft): Retained[] => (draft.values ?? []).map((
   ({ ...retainedValueKey(value.domain, value.digest), bytes: value.bytes }));
 
 /** Asked for while rules are found in preparation, where nothing is written. The commit mints the real one. */
-export const NO_INCARNATION = newIncarnation(new Uint8Array(16));
+export const NO_GENESIS_NONCE = newGenesisNonce(new Uint8Array(16));
 
 const unavailable = (reason: UnavailableReason) => ({ answer: "unavailable", reason }) as const;
 const said = <A>(answer: A): Verdict<A> => ({ verdict: "answer", answer });
@@ -405,7 +405,11 @@ export class Scope {
 
   #receipt(seq: number, named: Digest | PlatformDefinition): Receipt {
     const kept = this.#store.stored(seq)!;
-    return receiptOf({ entry: JSON.parse(kept.bytes) as Entry, hash: kept.hash }, named);
+    const entry = JSON.parse(kept.bytes) as Entry;
+    const at = this.#store.scope()!.at;
+    const definition = this.pinned()?.definition;
+    if (!definition) throw new Error("a receipt requires the sequence's pinned definition");
+    return receiptOf({ entry, hash: kept.hash }, named, at, resolvedEntryEffects(this.#store, definition, entry, at));
   }
 
   /**
@@ -504,17 +508,17 @@ export class Scope {
     if (facts === ARCHIVED_FACT) return refused("archived");
     if (!facts) return unavailable("dependency-unavailable");
 
-    const asked = (inc: SignedCreation["inc"]): SignedCreation => ({ name, inc, seed, creation: creation });
+    const asked = (nonce: SignedCreation["nonce"]): SignedCreation => ({ name, nonce, seed, creation });
     const context = (clock: Reading) => ({ clock, bounds, facts, source: null, texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: platform ?? undefined });
     const pinned = (): Pinned => this.pinned() ?? { named: names, definition: valid, platform };
     const answer = (sealed: Sealed): Created =>
-      (sealed.entry.input.type === "genesis" && sealed.entry.input.decision === "applied" ? { answer: "accepted", receipt: receiptOf(sealed, pinned().named) } : refused("scope-refused"));
+      (sealed.entry.input.type === "genesis" && sealed.entry.input.decision === "applied" ? { answer: "accepted", receipt: receiptOf(sealed, pinned().named, this.#store.scope()!.at, resolvedEntryEffects(this.#store, valid, sealed.entry, this.#store.scope()!.at)) } : refused("scope-refused"));
 
     const end = await this.#turns.run<Created>({
-      asks: (view, clock) => prepareRules(view, valid, { genesis: asked(NO_INCARNATION), context: { ...context(clock), prepared: [] } }),
+      asks: (view, clock) => prepareRules(view, valid, { genesis: asked(NO_GENESIS_NONCE), context: { ...context(clock), prepared: [] } }),
       judge: (view, clock, prepared) => {
-        // Section 2.2: the incarnation is minted in the transaction that writes the first entry.
-        const judged = judgeGenesis(view, valid, asked(newIncarnation(random.bytes(16))), { ...context(clock), prepared });
+        // Section 2.2: the genesis nonce is minted in the transaction that writes the first entry.
+        const judged = judgeGenesis(view, valid, asked(newGenesisNonce(random.bytes(16))), { ...context(clock), prepared });
         switch (judged.result) {
           case "write":
             // The item the genesis opens is indexed as this definition says, from its first write.
@@ -674,7 +678,7 @@ export class Scope {
                 this.#ports.readTokenAdmission?.sealed(sealed.entry);
                 if (standing) told(standing, sealed);
                 rows.sealed(sealed);
-                return { answer: "accepted", receipt: receiptOf(sealed, named) };
+                return { answer: "accepted", receipt: receiptOf(sealed, named, this.#store.scope()!.at, resolvedEntryEffects(this.#store, definition, sealed.entry, this.#store.scope()!.at)) };
               },
               // An entry over the size bound, or a grant that is not canonical values, is never written.
               unfit: (why) => ({ answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head }),
@@ -771,7 +775,7 @@ export class Scope {
               // The entry retains the grant that was judged, and the port learns which entry used its read, as for an act.
               sealed: (sealed) => {
                 if (standing) told(standing, sealed);
-                return { answer: "accepted", receipt: receiptOf(sealed, named) };
+                return { answer: "accepted", receipt: receiptOf(sealed, named, this.#store.scope()!.at, resolvedEntryEffects(this.#store, definition, sealed.entry, this.#store.scope()!.at)) };
               },
               unfit: (why) => ({ answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head }),
               // Section 17.3: a preparation is new work. It is admitted only with the room of what it reserves.
@@ -831,7 +835,7 @@ export class Scope {
         const input = typeof offered === "function" ? offered() : offered;
         if (!input) return said<Checkpointed>(unavailable("unavailable"));
         const judged = judgeFloor(view, definition, input, { clock, bounds: this.#bounds, own: ownOf(this.#store), platform: this.pinned()?.platform ?? undefined });
-        if (judged.result === "write") return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: { at: entry.at, seq: entry.seq, hash } }), unfit: () => unavailable("unavailable"), full: (_head, bound) => ({ answer: "refused", reason: "scope-full", name: bound }) };
+        if (judged.result === "write") return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: sealedFactRef(entry, hash, this.#store.scope()!.at) }), unfit: () => unavailable("unavailable"), full: (_head, bound) => ({ answer: "refused", reason: "scope-full", name: bound }) };
         if (judged.result === "due") return { verdict: "stop" };
         if (judged.result === "refused") return said<Checkpointed>({ answer: "refused", reason: judged.reason });
         return said<Checkpointed>(unavailable(judged.result === "unavailable" ? judged.reason : "unavailable"));
@@ -866,7 +870,7 @@ export class Scope {
         switch (judged.result) {
           case "write":
             if (!definition.declared.capacity && countedEntries(view) >= bounds.scopeEntries) return said<Checkpointed>(unavailable("unavailable"));
-            return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: { at: entry.at, seq: entry.seq, hash } }), unfit: () => unavailable("unavailable"), full: (_head, bound) => definition.declared.capacity ? { answer: "refused", reason: "scope-full", name: bound } : unavailable("unavailable") };
+            return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: sealedFactRef(entry, hash, this.#store.scope()!.at) }), unfit: () => unavailable("unavailable"), full: (_head, bound) => definition.declared.capacity ? { answer: "refused", reason: "scope-full", name: bound } : unavailable("unavailable") };
           case "due": return { verdict: "stop" };
           case "refused": return said<Checkpointed>({ answer: "refused", reason: judged.reason });
           case "unavailable": return said<Checkpointed>(unavailable(judged.reason));

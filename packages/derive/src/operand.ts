@@ -7,14 +7,239 @@
  * none, which is `null` here. A part is never an error.
  */
 
-import type { Entry, EntryPart, FactRef, FieldValue, Operand, Part, ScopeRef } from "@generalbusiness/dap-contract";
-import { intentDigest } from "@generalbusiness/dap-bytes";
-import { creationFields, isEntryOf, isLocalFact } from "./fields.ts";
+import type { ActType, Digest, Entry, EntryPart, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Operand, Part, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import { canonicalize, intentDigest, isEntry, isEntryBodyOf, isScopeKind, isSequenceRef, messageDigest, parseStrict, platformName, utf8 } from "@generalbusiness/dap-bytes";
+import { creationFields, isEntryOf, isLocalFact, useOf, type Facts, type Local, type Reading } from "./fields.ts";
 import { bound } from "./handlers.ts";
 import { declarationOf } from "./program/declaration.ts";
-import type { Judging } from "./guards.ts";
-import type { Item } from "./state.ts";
-import { isFactRef, isLocalId, isObject, memberOf, own, same } from "./values.ts";
+import type { AnchoredJudgmentCopy, Fetched, Judging, ReplayAssumptions } from "./guards.ts";
+import type { Item, StateView } from "./state.ts";
+import { byteOrder, isFactRef, isLocalId, isObject, memberOf, own, same } from "./values.ts";
+import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
+import { archivedPosition } from "./floor.ts";
+import { RuleFault } from "./marks.ts";
+import type { Source, Delivered } from "./delivery.ts";
+import type { Creation, SignedCreation } from "./genesis.ts";
+
+// The runtime's native clone snapshots admitted JSON without another parser.
+declare function structuredClone<T>(value: T): T;
+
+/** Internal evidence arms. Only a Replay adapter installs caller copies. */
+type RecordedCopy = AnchoredJudgmentCopy & { readonly kind: ScopeKind };
+export type JudgmentCopy = { readonly mode: "verified"; readonly value: Fetched } | RecordedCopy;
+export function verifiedCopy(value: Fetched): Extract<JudgmentCopy, { mode: "verified" }> {
+  if (!isEntryOf(value.entry, value.fact, value.sequence)) throw new RuleFault("a verified judgment copy requires genuine matching genesis evidence");
+  return { mode: "verified", value };
+}
+export const copyFact = (copy: JudgmentCopy): FactRef => copy.mode === "verified" ? copy.value.fact : copy.fact;
+export const copyEntry = (copy: JudgmentCopy): Entry => copy.mode === "verified" ? copy.value.entry : copy.entry;
+export const copyUnder = (copy: JudgmentCopy): string => copy.mode === "verified" ? copy.value.under
+  : copy.mode === "retained-name" ? copy.under : platformName(copy.exporterRow.pin);
+export const copyKind = (copy: JudgmentCopy): ScopeKind => copy.mode === "verified" ? copy.value.sequence.kind : copy.kind;
+
+/** Full matching always precedes hash deduplication, including in the caller arm. */
+export function matchesCopy(copy: JudgmentCopy, fact: FactRef): boolean {
+  try {
+    if (copy.mode === "verified") return same(copy.value.fact, fact) && isEntryOf(copy.value.entry, fact, copy.value.sequence);
+    const { entry, anchor } = copy;
+    const body = same(copy.fact, fact) && entry.input.type !== "genesis" && isEntryBodyOf(entry, fact)
+      && canonicalize(entry) === copy.originalBytes
+      && anchor.scope === fact.at.scope && anchor.seq === fact.seq && anchor.hash === fact.hash;
+    if (!body) return false;
+    if (copy.mode === "retained-name") return isScopeKind(copy.kind) && typeof copy.under === "string";
+    if (copy.mode !== "caller-anchor") return false;
+    const { exporterRow } = copy;
+    const privatePin = copy.kind === "register" ? answersCatalogVocabularyQuestion(exporterRow.pin, "archiveRegisterForeignCopy")
+      : copy.kind === "membership" && answersCatalogVocabularyQuestion(exporterRow.pin, "archiveMembershipForeignCopy");
+    return same(exporterRow.at, fact.at) && privatePin;
+  } catch { return false; }
+}
+
+const EVIDENCE = Symbol("per-judgment-replay-evidence");
+interface Evidence { readonly facts: readonly JudgmentCopy[]; readonly source: JudgmentCopy | null; readonly recorded?: Entry }
+type BoundReading = Reading & { readonly [EVIDENCE]?: Evidence };
+
+/** A live entry point overwrites any inherited private context with verified-only input. */
+export function verifiedContext<C extends Reading>(context: C): C {
+  return { ...context, [EVIDENCE]: Object.freeze({ facts: Object.freeze(context.facts.map(verifiedCopy)), source: null }) };
+}
+
+/** Take owned snapshots before any rule can run or state view can change. */
+type ReplayAsked = { act: SignedIntent } | { delivery: Delivered } | { genesis: Creation | SignedCreation };
+export function replayContext<C extends Reading & { source?: Source | null }>(context: C, assumed: ReplayAssumptions, asked: ReplayAsked): C | null {
+  if (!assumed || !Array.isArray(assumed.facts) || context.source && assumed.source || !isEntry(assumed.recorded)) return null;
+  const freeze = (value: unknown): void => {
+    if (!value || typeof value !== "object") return;
+    for (const member of Object.values(value)) freeze(member);
+    Object.freeze(value);
+  };
+  // Only input and use metadata can choose a recorded kind. Copy them before
+  // a state/rule callback runs; the other entry members are not consulted.
+  const recorded = { ...assumed.recorded };
+  recorded.input = structuredClone(recorded.input);
+  recorded.uses = structuredClone(recorded.uses);
+  freeze(recorded.input); freeze(recorded.uses); Object.freeze(recorded);
+  const input = recorded.input;
+  if ("act" in asked) {
+    if (input.type !== "act" || !same(input.signed, asked.act)) return null;
+  } else if ("delivery" in asked) {
+    if (input.type !== "delivery" || !same(input.from, asked.delivery.from) || input.n !== asked.delivery.n || !same(input.message, asked.delivery.message)) return null;
+  } else {
+    const birth = asked.genesis;
+    const seed = "creation" in birth ? birth.seed : birth.to;
+    if (input.type !== "genesis" || !same(input.seed, seed) || input.nonce !== birth.nonce) return null;
+    if ("creation" in birth ? input.source !== null || !same(input.founding, birth.creation)
+      : !same(input.source, birth.from) || input.n !== birth.n || !same(input.message, birth.message)) return null;
+  }
+  const kinds = new Map<string, ScopeKind>();
+  const remember = (fact: FactRef, kind: ScopeKind): boolean => {
+    const key = canonicalize(fact.at), previous = kinds.get(key);
+    if (!isScopeKind(kind)) return false;
+    if (previous !== undefined && previous !== kind) throw new RuleFault("the receiving entry records contradictory kinds for one sequence");
+    kinds.set(key, kind); return true;
+  };
+  for (const use of recorded.uses) if (!remember(use.fact, use.kind)) return null;
+  const sourceFact = input.type === "delivery" ? input.from : input.type === "genesis" ? input.source : null;
+  const sourceKind = input.type === "delivery" || input.type === "genesis" ? input.sourceKind : null;
+  if (sourceFact && (sourceKind === null || !remember(sourceFact, sourceKind))) return null;
+  for (const value of context.facts) {
+    if (!isEntryOf(value.entry, value.fact, value.sequence)) return null;
+    const kind = kinds.get(canonicalize(value.fact.at));
+    if (kind !== undefined && value.sequence.kind !== kind) throw new RuleFault("the receiving entry's recorded kind differs from the verified genesis");
+  }
+  // The actual source is not required to appear a second time in facts (F1).
+  if (context.source) {
+    if (!sourceFact || !isEntryOf(context.source.entry, sourceFact, context.source.sequence)) return null;
+    const kind = kinds.get(canonicalize(context.source.sequence.at));
+    if (kind !== undefined && context.source.sequence.kind !== kind) throw new RuleFault("the receiving entry's sourceKind differs from the separately verified source genesis");
+  }
+  const kindFor = (fact: FactRef, source: boolean): ScopeKind | null => {
+    if (source) return sourceFact && same(sourceFact, fact) ? sourceKind : null;
+    return recorded.uses.find(use => same(use.fact, fact))?.kind ?? null;
+  };
+  const snapshot = (copy: AnchoredJudgmentCopy, source: boolean): RecordedCopy | null => {
+    try {
+      const closed = (value: unknown, keys: readonly string[]): boolean => isObject(value) && Object.keys(value).length === keys.length && Object.keys(value).every(key => keys.includes(key));
+      const basis = copy.mode === "caller-anchor"
+        ? closed(copy, ["mode", "fact", "entry", "originalBytes", "anchor", "exporterRow"]) && closed(copy.exporterRow, ["at", "pin"])
+        : copy.mode === "retained-name" && closed(copy, ["mode", "fact", "entry", "originalBytes", "anchor", "under"]) && typeof copy.under === "string";
+      if (!basis || !closed(copy.anchor, ["scope", "seq", "hash"])
+        || typeof copy.originalBytes !== "string" || copy.originalBytes.length > context.bounds.entryBytes || utf8(copy.originalBytes).length > context.bounds.entryBytes) return null;
+      const entry: unknown = parseStrict(copy.originalBytes);
+      if (!isEntry(entry)) return null;
+      const kind = kindFor(copy.fact, source);
+      if (kind === null) return null;
+      const body = { fact: { at: { ...copy.fact.at }, seq: copy.fact.seq, hash: copy.fact.hash }, entry,
+        originalBytes: copy.originalBytes, anchor: { ...copy.anchor }, kind };
+      const owned: RecordedCopy = copy.mode === "caller-anchor"
+        ? { ...body, mode: "caller-anchor", exporterRow: { at: { ...copy.exporterRow.at }, pin: copy.exporterRow.pin } }
+        : { ...body, mode: "retained-name", under: copy.under };
+      if (!same(copy.entry, entry) || !matchesCopy(owned, owned.fact)) return null;
+      freeze(owned);
+      return owned;
+    } catch { return null; }
+  };
+  const facts: JudgmentCopy[] = context.facts.map(verifiedCopy);
+  for (const copy of assumed.facts) {
+    const owned = snapshot(copy, false);
+    if (!owned) return null;
+    // A real genesis admission must agree with the recorded word and alias basis.
+    const verified = context.facts.find(value => same(value.fact.at, owned.fact.at));
+    if (verified && (verified.sequence.kind !== owned.kind || verified.under !== copyUnder(owned))) return null;
+    if (context.source && same(context.source.sequence.at, owned.fact.at) && (context.source.sequence.kind !== owned.kind || context.source.under !== copyUnder(owned))) return null;
+    facts.push(owned);
+  }
+  const source = assumed.source ? snapshot(assumed.source, true) : null;
+  if (assumed.source && !source) return null;
+  if (source) {
+    const verified = context.facts.find(value => same(value.fact.at, source.fact.at));
+    if (verified && (verified.sequence.kind !== source.kind || verified.under !== copyUnder(source))) return null;
+  }
+  return { ...context, [EVIDENCE]: Object.freeze({ facts: Object.freeze(facts), source, recorded }) };
+}
+
+export const judgmentFacts = (context: BoundReading): readonly JudgmentCopy[] => context[EVIDENCE]?.facts ?? context.facts.map(verifiedCopy);
+export function replayAssumptions(context: BoundReading): ReplayAssumptions | null {
+  const recorded = context[EVIDENCE]?.recorded;
+  if (!recorded) return null;
+  const source = assumedSource(context);
+  // Public copies have no kind slot; derive it again from the same record.
+  const copyOf = ({ kind: _kind, ...copy }: RecordedCopy): AnchoredJudgmentCopy => copy;
+  return { recorded, facts: judgmentFacts(context).flatMap(copy => copy.mode !== "verified" ? [copyOf(copy)] : []), source: source && source.mode !== "verified" ? copyOf(source) : null };
+}
+export const assumedSource = (context: BoundReading): JudgmentCopy | null => context[EVIDENCE]?.source ?? null;
+export function sourceCopy(context: Reading & { source: Source | null }, fact: FactRef): JudgmentCopy | null {
+  const source = context.source;
+  return source ? verifiedCopy({ fact, entry: source.entry, sequence: source.sequence, under: source.under }) : assumedSource(context);
+}
+
+/** Private per-call continuation; public Reading/Source never acquire an assumed member. */
+export function withJudgmentSource<C extends Reading>(context: C, source: JudgmentCopy): C {
+  const bound: BoundReading = context;
+  return { ...context, [EVIDENCE]: Object.freeze({ facts: judgmentFacts(context), source, recorded: bound[EVIDENCE]?.recorded }) };
+}
+
+export function sentByCopy(copy: JudgmentCopy, delivered: Delivered): boolean {
+  try {
+    const send = matchesCopy(copy, delivered.from) ? copyEntry(copy).sends.find(value => value.n === delivered.n) : undefined;
+    return !!send && same(send.to, delivered.to) && messageDigest(send.message) === messageDigest(delivered.message);
+  } catch { return false; }
+}
+
+/** Shared field walk; the public readFacts wrapper supplies only verified arms. */
+type JudgmentFacts<C extends JudgmentCopy> = Exclude<Facts, { result: "read" }> | { result: "read"; fields: Record<string, FieldValue>; facts: Map<Digest, C>; uses: FactUse[] };
+function leaves(type: FieldType, value: FieldValue): [FieldType, FieldValue][] {
+  if (type.type === "list") return (value as readonly FieldValue[]).flatMap(member => leaves(type.of, member));
+  if (type.type !== "record") return [[type, value]];
+  return Object.entries(type.of).flatMap(([name, of]) => {
+    const member = own(value as FieldRecord, name);
+    return member === undefined ? [] : leaves(of, member);
+  });
+}
+
+export function readJudgmentFacts<C extends JudgmentCopy>(view: StateView, types: ActType["fields"], fields: Readonly<Record<string, FieldValue>>, available: readonly C[], local: Local): JudgmentFacts<C> {
+  const facts = new Map<Digest, C>();
+  const uses: FactUse[] = [];
+  for (const name of Object.keys(fields).sort(byteOrder)) {
+    // A field with no declared type, as a handler's message has, names no item and no fact here.
+    const declared = own(types, name);
+    if (!declared) continue;
+    for (const [type, value] of leaves(declared, fields[name]!)) {
+      if (type.type === "item" && view.item(value as number)?.type !== type.of) return { result: "no-item", detail: `${name} names no ${type.of}`, uses };
+      if (type.type === "text" && type.detached) {
+        if (!local.texts) return { result: "unavailable" };
+        const size = local.texts(value as Digest);
+        if (size === undefined) return { result: "bad-field", detail: `${name} names a text that did not come with the input, or whose bytes its digest does not name`, uses };
+        if (size !== null && size > type.max) return { result: "bad-field", detail: `${name} names a text of ${size} bytes; at most ${type.max}`, uses };
+        if (size === null && local.texts.redactedOver?.(value as Digest, type.max)) return { result: "bad-field", detail: `${name}'s refusal depends on its unavailable original text size`, uses };
+      }
+      if (type.type !== "fact") continue;
+      const ref = value as FactRef;
+      if (isLocalFact(ref, local.at)) {
+        if (archivedPosition(view, ref.seq)) return { result: "archived", detail: `${name} names archived entry ${ref.seq}`, uses };
+        if (!local.own) return { result: "unavailable" };
+        const sequence = local.own.sequence();
+        if (!sequence) return { result: "unavailable" };
+        const kept = local.own(ref.seq);
+        if (!kept || kept.hash !== ref.hash || !isEntryOf(kept.entry, ref, sequence)) return { result: "fact-mismatch", detail: `${name} names no entry of this scope: entry ${ref.seq} has another hash, or does not exist`, uses };
+        continue;
+      }
+      const fetched = available.find((f) => same(copyFact(f), ref));
+      // Section 5.2, step 1: a foreign entry that was not fetched, or is not the entry the reference names, is a dependency that is not available.
+      if (!fetched || !matchesCopy(fetched, ref)) return { result: "unavailable" };
+      if (facts.has(ref.hash)) continue;
+      facts.set(ref.hash, fetched);
+      uses.push(useOf(ref, copyEntry(fetched), copyKind(fetched)));
+    }
+  }
+  // Each local fact as its `seq`: every one was checked above. Every other value as it is. Only a declared field of type fact holds one, or a list or a record with one.
+  const inNormalForm = (type: FieldType | undefined, value: FieldValue): FieldValue => {
+    if (type?.type === "list") return (value as readonly FieldValue[]).map((v) => inNormalForm(type.of, v));
+    if (type?.type === "record") return Object.fromEntries(Object.entries(value as FieldRecord).map(([name, member]) => [name, inNormalForm(own(type.of, name), member)]));
+    return type?.type === "fact" && isLocalFact(value as FactRef, local.at) ? (value as FactRef).seq : value;
+  };
+  return { result: "read", fields: Object.fromEntries(Object.entries(fields).map(([name, value]) => [name, inNormalForm(own(types, name), value)])), facts, uses };
+}
 
 /** What a slot holds, or null. An empty list is unset. */
 export function slotOf(item: Item, slot: string): FieldValue | null {
@@ -89,14 +314,17 @@ type Held = FactRef | number;
 function entryOf(j: Judging, ref: Held): { entry: Entry; local: boolean } | null {
   if (typeof ref === "number") {
     const kept = j.own?.(ref);
-    return kept ? { entry: kept.entry, local: true } : null;
+    const sequence = j.own?.sequence();
+    return kept && sequence && isSequenceRef(j.scope.at) && isEntryOf(kept.entry, { at: j.scope.at, seq: ref, hash: kept.hash }, sequence)
+      ? { entry: kept.entry, local: true } : null;
   }
   if (isLocalFact(ref, j.scope.at)) {
     const kept = j.own?.(ref.seq);
-    return kept && kept.hash === ref.hash ? { entry: kept.entry, local: true } : null;
+    const sequence = j.own?.sequence();
+    return kept && sequence && kept.hash === ref.hash && isEntryOf(kept.entry, ref, sequence) ? { entry: kept.entry, local: true } : null;
   }
-  const fetched = j.source && same(j.source.fact, ref) ? j.source : j.facts.get(ref.hash);
-  return fetched && isEntryOf(fetched.entry, ref) ? { entry: fetched.entry, local: false } : null;
+  const fetched = j.source && same(copyFact(j.source), ref) ? j.source : j.facts.get(ref.hash);
+  return fetched && matchesCopy(fetched, ref) ? { entry: copyEntry(fetched), local: false } : null;
 }
 
 /** The effects of an entry on one item of its own scope, by local ID. An effect on the item an entry opens names it by the entry's `seq`. */
@@ -169,7 +397,8 @@ function fieldOf(j: Judging, entry: Entry, local: boolean, name: string): unknow
     const declared = declarationOf(j.definition);
     return own(input.source ? creationFields(message, input.source, own(declared.acts, declared.genesis)!.fields) : null, name) ?? null;
   }
-  return input.type === "delivery" ? (own(bound(j.definition, message, input.from)?.fields ?? null, name) ?? null) : null;
+  if (input.type !== "delivery") return null;
+  return own(bound(j.definition, message, input.from, input.sourceKind)?.fields ?? null, name) ?? null;
 }
 
 /** Runtime leaf arguments. The lazy item read is never stored in an admitted graph. */
@@ -247,7 +476,7 @@ export function operand(j: Judging, o: Operand, item: Item | null): unknown {
   if ("update" in o) return j.update?.[o.update] ?? null;
   if ("result" in o) return j.result?.name ?? null;
   if ("item" in o) return (o.item === "each" ? j.each : j.subjects.get(o.item))?.id ?? null;
-  if ("source" in o) return j.source ? partOf(j, j.source.fact, o.source, item) : null;
+  if ("source" in o) return j.source ? partOf(j, copyFact(j.source), o.source, item) : null;
   let value: unknown;
   if ("field" in o) value = own(j.fields, o.field) ?? null;
   else if ("presented" in o) value = own(j.presented, o.presented) ?? null;

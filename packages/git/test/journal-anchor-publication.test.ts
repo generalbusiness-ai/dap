@@ -157,20 +157,20 @@ test("published lists refuse archived journals, duplicate positions, order chang
 });
 
 test("a nonempty publication survives the actual reader, which refuses malformed integrity-bound lists", async () => {
-  const fixture = syntheticJournal(), foreign = [syntheticJournal(1, 2, 2), syntheticJournal(1, 3, 3)];
+  const fixture = syntheticJournal(), foreign = [syntheticJournal(1, 2, 2, "platform:register@19"), syntheticJournal(1, 3, 3, "platform:register@19")];
   const facts = foreign.map(f => ({ at: f.at, seq: 0, hash: f.description.entries[0]!.hash }))
     .sort((a, b) => a.at.scope < b.at.scope ? -1 : 1);
   const entry = JSON.parse(fixture.bodies[0]!) as Entry;
-  entry.uses = foreign.map(f => ({ fact: { at: f.at, seq: 0, hash: f.description.entries[0]!.hash }, content: digestBytes(utf8(f.bodies[0]!)) }));
+  entry.uses = foreign.map(f => ({ fact: { at: f.at, seq: 0, hash: f.description.entries[0]!.hash }, content: digestBytes(utf8(f.bodies[0]!)), kind: "register" as const }));
   const bytes = canonicalize(entry), hash = entryHash(entry);
-  fixture.bodies[0] = bytes; fixture.description.entries[0] = { seq: 0, hash, bytes: utf8(bytes).length };
+  fixture.bodies[0] = bytes; fixture.at.genesis = hash; fixture.description.entries[0] = { seq: 0, hash, bytes: utf8(bytes).length };
   for (const row of fixture.description.objects) for (const raw of row.consumers) (raw as { origin: { at: { hash: string } } }).origin.at.hash = hash;
   for (const row of fixture.description.omittedTexts) row.origin.at.hash = hash;
   const copies = foreign.map(f => {
     const key = { kind: "entry" as const, digest: digestBytes(utf8(f.bodies[0]!)) };
     fixture.retained.set(journalKeyName(key), f.bodies[0]!);
     return { key, bytes: utf8(f.bodies[0]!).length, pass: 0,
-      foreign: { fact: { at: f.at, seq: 0, hash: f.description.entries[0]!.hash }, pin: "platform:register@1" },
+      foreign: { fact: { at: f.at, seq: 0, hash: f.description.entries[0]!.hash }, pin: "platform:register@19" },
       consumers: [{ mode: "required", origin: { at: { at: fixture.at, seq: 0, hash }, input: "genesis" },
         consumer: "foreign-use", purpose: "replay-required", key }] };
   });
@@ -178,7 +178,7 @@ test("a nonempty publication survives the actual reader, which refuses malformed
   const built = await buildJournalPass({ format: "sha1", selection: canonicalize({ ...fixture.description,
     format: "artroom-local-inventory-2", after: null, through: { seq: 0, hash },
     objects: [...fixture.description.objects.map(row => ({ ...row, pass: 0 })), ...copies],
-    foreignSources: foreign.map(f => ({ at: f.at, pin: "platform:register@1" })).sort((a, b) => canonicalize(a.at) < canonicalize(b.at) ? -1 : 1),
+    foreignSources: foreign.map(f => ({ at: f.at, pin: "platform:register@19" })).sort((a, b) => canonicalize(a.at) < canonicalize(b.at) ? -1 : 1),
     cost: budget.admitted(),
   }), input: selectedInput(fixture), parent: null, budget, publication: () => ({ anchors: facts }) });
   expect(built.ok ? "accepted" : built).toBe("accepted"); if (!built.ok) return;
@@ -191,10 +191,12 @@ test("a nonempty publication survives the actual reader, which refuses malformed
     object: (id, limit) => source.object(id, limit) }, fixture.at.scope,
     Object.assign(new ArchiveBudget({}, () => 0), { scope() {}, bytes(_size: number) {} }));
   expect(await read(built.archive.commit)).toMatchObject({ ok: true, archive: { publishedAnchors: facts, anchorCoverage: { covered: true } } });
-  const rewrite = async (anchors: unknown) => {
+  const rewrite = async (anchors: unknown, extra: Record<string, unknown> = {}, omitSources = false) => {
     const work = new JournalWork(new ArchiveBudget({}, () => 0)), reader = new JournalObjectReader("sha1", source, work), maker = new JournalObjects("sha1", work);
     const commit = reader.commit(await reader.read(built.archive.commit, "commit", 1024));
-    const blob = maker.make("blob", utf8(canonicalize({ ...built.archive.manifest, anchors })));
+    const altered: Record<string, unknown> = { ...built.archive.manifest, anchors, ...extra };
+    if (omitSources) delete altered["foreignSources"];
+    const blob = maker.make("blob", utf8(canonicalize(altered)));
     const replace = async (tree: string, parts: readonly string[]): Promise<string> => {
       const rows = reader.tree(await reader.read(tree, "tree"));
       const changed = [];
@@ -208,5 +210,32 @@ test("a nonempty publication survives the actual reader, which refuses malformed
   };
   for (const anchors of [[facts[0], facts[0]], [...facts].reverse(), [{ at: fixture.at, seq: 0, hash }]]) {
     expect(await read(await rewrite(anchors))).toMatchObject({ ok: false, result: "refused" });
+  }
+  const basis = built.archive.manifest.foreignSources!;
+  expect(basis).toHaveLength(2);
+  for (const source of basis) expect(Object.keys(source).sort()).toEqual(["at", "pin"]);
+  expect(built.archive.manifest).not.toHaveProperty("anchorSources");
+  const opened = await read(built.archive.commit);
+  expect(opened.ok).toBe(true);
+  if (opened.ok) expect(opened.archive).not.toHaveProperty("publishedAnchorSources");
+  expect((await read(await rewrite(facts, {}, true))).ok).toBe(false);
+  expect((await read(await rewrite(facts, { anchorSources: [] }))).ok).toBe(false);
+  for (const changed of [null, [], basis.slice(1), [...basis, basis[0]], [...basis].reverse(),
+    [{ ...basis[0]!, kind: "register" }, basis[1]],
+    [{ ...basis[0]!, pin: "platform:membership@8" }, basis[1]],
+    [{ ...basis[0]!, extra: true }, basis[1]],
+    [{ ...basis[0]!, at: { ...basis[0]!.at, genesis: digestBytes(utf8("TEST wrong source genesis")) } }, basis[1]]]) {
+    expect((await read(await rewrite(facts, { foreignSources: changed }))).ok).toBe(false);
+  }
+  // An observation can publish an exact private fact without retaining its
+  // bytes or adding a row to the copy-only alias basis.
+  const observed = syntheticJournal(1, 4, 4, "platform:membership@8", "membership");
+  const observedFact = { at: observed.at, seq: 0, hash: observed.description.entries[0]!.hash };
+  const observationFacts = [...facts, observedFact].sort((a, b) => a.at.scope < b.at.scope ? -1 : 1);
+  const observation = await read(await rewrite(observationFacts));
+  expect(observation).toMatchObject({ ok: true, archive: { publishedAnchors: observationFacts } });
+  if (observation.ok) {
+    expect(observation.archive.foreignSources).toEqual(built.archive.manifest.foreignSources);
+    expect(observation.archive).not.toHaveProperty("publishedAnchorSources");
   }
 });

@@ -1,8 +1,8 @@
 import { partitionRole, PARTITION_COHORT, PARTITION_IDENTITY_BOUNDS, partitionReceiverPolicy, partitionCreationPolicy, partitionDeclaredCreationPolicy, partitionSourceName, partitionNativeCreationPolicy, partitionProducerName, type PartitionCreationSelection, type PartitionCreation, type PartitionCreationPolicy, type PartitionNativeFrame, type PartitionReceiverPolicy } from "@generalbusiness/dap-platform";
 /** Raw immutable partition birth evidence. No frame is a judged `Fetched`
  * identity: receiver policy must validate the complete chain separately. */
-import type { DeclaredDefinition, FactRef, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, isDigest, isPlatformDefinition, isFactRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
+import type { DeclaredDefinition, Entry, FactRef, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, definitionDigest, isDigest, isPlatformDefinition, isFactRef, isScopeRef, resolveGenesisSelf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { isObject, same } from "@generalbusiness/dap-derive";
 
 import type { NativeBirth, NativeBirthSource } from "./native-birth.ts";
@@ -17,7 +17,7 @@ export const PARTITION_PROOF_BOUNDS = Object.freeze({ frames: 32, calls: 32, byt
 export type RawPartitionFrame = PartitionNativeFrame;
 export interface PartitionProof {
   source: RawPartitionFrame;
-  /** Eight base origin frames, plus any concern ancestors. The separately
+  /** Nine direct origin frames, plus concern ancestors and a seal sender when needed. The separately
    * requested current source entry is not repeated here unless it is genesis. */
   frames: readonly RawPartitionFrame[];
   calls: number;
@@ -36,7 +36,7 @@ export interface PartitionProofPorts {
 }
 
 /** A new instance belongs to one admission/read operation. It caches only raw
- * frames for that operation, keyed by exact at/incarnation/sequence/hash. */
+ * frames for that operation, keyed by exact scope/genesis/sequence/hash. */
 class Collection {
   readonly #frames = new Map<string, RawPartitionFrame>();
   readonly #positions = new Map<string, string>();
@@ -93,22 +93,25 @@ class Collection {
   }
   /** Charge raw UTF-8 before parse, including bad admitted replies. A valid
    * cached frame spends no new bytes. Work is never refunded. */
-  #charge(body: ProofBody, maxBytes: number): boolean {
-    if (!body || !isFactRef(body.fact) || typeof body.bytes !== "string" || body.bytes.length > maxBytes) return false;
-    const bytes = utf8(body.bytes).length;
-    if (bytes > maxBytes || bytes > PARTITION_PROOF_BOUNDS.actualBytes - this.#actualBytes) return false;
-    if (!this.#frames.has(canonicalize(body.fact))) this.#actualBytes += bytes;
+  #debit(fact: FactRef, bytes: number, maxBytes: number): boolean {
+    if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > maxBytes
+      || bytes > PARTITION_PROOF_BOUNDS.actualBytes - this.#actualBytes) return false;
+    if (!this.#frames.has(canonicalize(fact))) this.#actualBytes += bytes;
     return true;
   }
-  #keep(body: ProofBody, birth: Pick<NativeBirth, "named" | "declarationName" | "native"> & { at: ScopeRef }, maxBytes: number, charged = false): RawPartitionFrame | null {
-    if (!charged && !this.#charge(body, maxBytes)) return null;
+  #charge(body: ProofBody, maxBytes: number): boolean {
+    if (!body || !isFactRef(body.fact) || typeof body.bytes !== "string" || body.bytes.length > maxBytes) return false;
+    return this.#debit(body.fact, utf8(body.bytes).length, maxBytes);
+  }
+  #keep(body: ProofBody, birth: Pick<NativeBirth, "named" | "declarationName" | "native">,
+    entry: Entry, sequence: CheckedSequence): RawPartitionFrame | null {
+    if (!same(body.fact.at, sequence.at)) return null;
     const key = canonicalize(body.fact), position = canonicalize([body.fact.at, body.fact.seq]);
-    const entry = proofEntry(body, body.fact, maxBytes);
-    if (!entry || !same(body.fact.at, birth.at)) return null;
     const previous = this.#frames.get(key);
-    if (previous) return same(previous.entry, entry) && previous.named === birth.named && previous.declarationName === birth.declarationName && previous.native === birth.native ? previous : null;
+    if (previous) return same(previous.entry, entry) && previous.named === birth.named && previous.declarationName === birth.declarationName
+      && previous.native === birth.native && same(previous.sequence.at, sequence.at) ? previous : null;
     if (this.#positions.has(position) || this.#frames.size >= PARTITION_PROOF_BOUNDS.frames) return null;
-    const frame = { fact: body.fact, entry, named: birth.named, declarationName: birth.declarationName, native: birth.native };
+    const frame = { fact: body.fact, entry, sequence, named: birth.named, declarationName: birth.declarationName, native: birth.native };
     this.#positions.set(position, key); this.#frames.set(key, frame); return frame;
   }
   async birth(at: ScopeRef): Promise<RawPartitionFrame | null> {
@@ -119,9 +122,24 @@ class Collection {
     if (pending) return pending;
     if (!this.#available()) return null;
     const work = this.#call((ms, max) => this.ports.births.read(at, ms, max), (reply, max) => {
-      if (!reply || !this.#charge(reply.proof, max)) return null;
-      const birth = readNativeBirth(reply, at, max);
-      const frame = birth && this.#keep(birth.proof, { ...birth, at }, max, true);
+      if (!reply) return null;
+      let debited = false;
+      const stopped = Symbol("partition-byte-limit");
+      const fact = { at, seq: 0, hash: at.genesis };
+      let admitted: ReturnType<typeof readNativeBirth>;
+      try {
+        admitted = readNativeBirth(reply, at, max, bytes => {
+          debited = true;
+          if (!this.#debit(fact, bytes, max)) throw stopped;
+        });
+      } catch (error) {
+        if (error === stopped) return null;
+        throw error;
+      }
+      // Native metadata may refuse before its debit callback. Preserve the
+      // old charge for an admitted raw body, without a second debit.
+      if (!debited) { this.#charge(reply.proof, max); return null; }
+      const frame = admitted && this.#keep(admitted.birth.proof, admitted.birth, admitted.entry, admitted.sequence);
       if (frame) this.#births.set(key, frame);
       return frame;
     });
@@ -138,7 +156,11 @@ class Collection {
       const birth = await this.birth(fact.at);
       if (!birth) return null;
       if (fact.seq === 0) return same(fact, birth.fact) ? birth : null;
-      return this.#call((ms, max) => this.ports.proofs.read(fact, max, ms), (body, max) => body && same(body.fact, fact) ? this.#keep(body, { ...birth, at: birth.fact.at }, max) : null);
+      return this.#call((ms, max) => this.ports.proofs.read(fact, max, ms), (body, max) => {
+        if (!body || !same(body.fact, fact) || !this.#charge(body, max)) return null;
+        const entry = proofEntry(body, fact, max, birth.sequence);
+        return entry ? this.#keep(body, birth, entry, birth.sequence) : null;
+      });
     })();
     this.#pendingExact.set(key, work); return work;
   }
@@ -168,26 +190,36 @@ class View {
     if (depth > PARTITION_PROOF_BOUNDS.laneDepth || seen.has(key)) return false;
     seen.add(key);
     const child = await this.birth(at), entry = child?.entry;
-    if (!entry || entry.input.type !== "genesis" || !isFactRef(entry.input.source) || !isScopeRef(entry.input.seed.creator)
-      || !same(entry.input.source.at, entry.input.seed.creator)) return false;
+    if (!child || child.sequence.kind !== "lane" || !entry || entry.input.type !== "genesis" || !isFactRef(entry.input.source) || !entry.input.seed.creator
+      || !same(entry.input.source.at, resolveGenesisSelf(entry.input.seed.creator, entry.input.source))) return false;
     const source = await this.exact(entry.input.source);
     if (!source) return false;
-    const creator = entry.input.seed.creator;
-    if (creator.kind === "lane") return this.lane(creator, depth + 1, seen);
+    const creator = entry.input.source.at;
+    if (source.sequence.kind === "lane") return this.lane(creator, depth + 1, seen);
     return this.partition(creator);
   }
   async partition(at: ScopeRef): Promise<boolean> {
     const part = await this.birth(at), born = part?.entry;
-    if (!part?.native || partitionRole(part.named) !== "partition" || !born || born.input.type !== "genesis"
-      || !isFactRef(born.input.source) || !isScopeRef(born.input.seed.creator) || !same(born.input.source.at, born.input.seed.creator)
+    if (!part?.native || part.sequence.kind !== "directory" || partitionRole(part.named) !== "partition" || !born || born.input.type !== "genesis"
+      || !isFactRef(born.input.source) || !born.input.seed.creator || !same(born.input.source.at, resolveGenesisSelf(born.input.seed.creator, born.input.source))
       || born.input.n === null || !born.input.message || !isObject(born.input.message.body) || !isObject(born.input.message.body["fields"])) return false;
     return this.rootCreation({ seed: born.input.seed, source: born.input.source, n: born.input.n, message: born.input.message });
   }
   async rootCreation(creation: PartitionCreation): Promise<boolean> {
-    if (!isScopeRef(creation.seed.creator) || !isFactRef(creation.source) || !same(creation.seed.creator, creation.source.at)
+    if (!creation.seed.creator || !isFactRef(creation.source) || !same(resolveGenesisSelf(creation.seed.creator, creation.source), creation.source.at)
       || !isObject(creation.message.body) || !isObject(creation.message.body["fields"])) return false;
-    const root = await this.birth(creation.seed.creator);
-    if (!root?.native || partitionRole(root.named) !== "directory" || !await this.exact(creation.source)) return false;
+    const root = await this.birth(creation.source.at);
+    if (!root?.native || root.sequence.kind !== "directory" || partitionRole(root.named) !== "directory" || root.entry.input.type !== "genesis"
+      || !isFactRef(root.entry.input.source) || !root.entry.input.seed.creator
+      || !same(resolveGenesisSelf(root.entry.input.seed.creator, root.entry.input.source), root.entry.input.source.at)) return false;
+    const register = await this.birth(root.entry.input.source.at);
+    if (!register || register.sequence.kind !== "register") return false;
+    const opening = await this.exact(creation.source);
+    if (!opening) return false;
+    if (opening.entry.input.type === "delivery") {
+      const sender = await this.birth(opening.entry.input.from.at);
+      if (!sender || sender.sequence.kind !== "directory") return false;
+    }
     const fields = creation.message.body["fields"];
     for (const [name, pin] of [["membership", PARTITION_COHORT.membership], ["rules", PARTITION_COHORT.rules], ["destination", PARTITION_COHORT.destination]] as const) {
       const ref = fields[name]; if (!isScopeRef(ref)) return false;
@@ -202,14 +234,14 @@ class View {
     if (birth.native) {
       if (partitionRole(birth.named) === "partition") return await this.partition(at) ? own : null;
       if (partitionRole(birth.named) === "membership" || partitionRole(birth.named) === "rules" || partitionRole(birth.named) === "destination") {
-        if (isScopeRef(born.seed.creator) && !await this.birth(born.seed.creator)) return null;
-      } else if (partitionRole(birth.named) === "inbox" && isScopeRef(born.seed.creator)) {
-        const parent = await this.birth(born.seed.creator);
+        if (born.source && !await this.birth(born.source.at)) return null;
+      } else if (partitionRole(birth.named) === "inbox" && born.source && born.seed.creator) {
+        const parent = await this.birth(born.source.at);
         if (!parent) return null;
         if (partitionRole(parent.named) === "membership" && parent.native) {
           const entry = parent.entry;
-          if (!entry || entry.input.type !== "genesis" || !isScopeRef(entry.input.seed.creator)) return null;
-          const root = await this.birth(entry.input.seed.creator);
+          if (!entry || entry.input.type !== "genesis" || !entry.input.seed.creator || !entry.input.source) return null;
+          const root = await this.birth(entry.input.source.at);
           if (!root || partitionRole(root.named) === "directory" && (!isFactRef(born.source) || !await this.exact(born.source))) return null;
         }
       }
@@ -238,11 +270,11 @@ export class PartitionProofOperation {
   stats() { return this.#collection.stats(); }
   active(): boolean { return this.#collection.active(); }
   async lane(from: FactRef): Promise<PartitionProof | null> {
-    if (!isFactRef(from) || from.at.kind !== "lane") return null;
+    if (!isFactRef(from)) return null;
     try {
       const view = new View(this.#collection);
       const source = await view.exact(from);
-      return source && await view.lane(from.at) ? view.finish(source) : null;
+      return source && source.sequence.kind === "lane" && await view.lane(from.at) ? view.finish(source) : null;
     } catch { return null; }
   }
   async raw(from: FactRef): Promise<RawPartitionFrame | null> {
@@ -330,10 +362,10 @@ export class PartitionProofOperation {
     try {
       const view = new View(this.#collection);
       if (!isDigest(creation.seed.definition) || definitionDigest(definition) !== creation.seed.definition
-        || !isScopeRef(creation.seed.creator) || !isFactRef(creation.source) || !same(creation.seed.creator, creation.source.at)) return null;
+        || !creation.seed.creator || !isFactRef(creation.source) || !same(resolveGenesisSelf(creation.seed.creator, creation.source), creation.source.at)) return null;
       const source = await view.exact(creation.source);
       // Depth starts at two: the unborn concern is already the first lane.
-      if (!source || !(creation.seed.creator.kind === "lane" ? await view.lane(creation.seed.creator, 2) : await view.partition(creation.seed.creator))) return null;
+      if (!source || !(source.sequence.kind === "lane" ? await view.lane(creation.source.at, 2) : await view.partition(creation.source.at))) return null;
       const proof = view.finish(source, true), policy = proof && partitionDeclaredCreationPolicy(creation, definition, proof.frames);
       return policy && proof && this.#collection.active() ? { policy, proof } : null;
     } catch { return null; }

@@ -18,7 +18,7 @@ export function requestReservation(definition: ValidDefinition, entry: Entry, n:
     const kind = input.type === "act" ? input.signed.intent.kind : declarationOf(definition).genesis;
     body = namedBody(definition, "act", kind, "act");
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
-    const binding = bound(definition, input.message, input.from);
+    const binding = bound(definition, input.message, input.from, input.sourceKind);
     body = binding?.handler ? handlerBody(definition, binding.handler, "decision" in input ? input.late : undefined) : null;
   } else if (input.type === "outcome") {
     // A native outcome without a data send mark has no result clause,

@@ -23,6 +23,7 @@ import type { Digest, OutcomeMark, PlatformData, Send } from "@generalbusiness/d
 import { intentDigest } from "@generalbusiness/dap-bytes";
 import { joinReturnedEffects } from "./effects.ts";
 import type { Own, Reading } from "./fields.ts";
+import { verifiedCopy } from "./operand.ts";
 import type { Fetched, Judging } from "./guards.ts";
 import { overMax } from "./handlers.ts";
 import type { EvidenceValueDomain, OperationRules, OutcomeDerived, OutcomeInput, Owner, Owners } from "./ledger.ts";
@@ -80,7 +81,7 @@ export function ownersOf(definition: ValidDefinition, platform: PlatformRules | 
         if (rule.clock === true) reading.ran.clock = true;
         return {
           view, definition, bounds: reading.bounds, clock: reading.clock, scope, self: scope.head.seq + 1, kind, fields: {}, fieldTypes: {}, subjects: new Map(), signer: null,
-          facts: new Map((reading.facts ?? []).map((fact) => [fact.fact.hash, fact])), prepared: [], used: [], own: reading.own, platform, judged: { type: "outcome", operation: outcome.operation, attempt: outcome.attempt, owner: outcome.owner, kind: outcome.kind, result: outcome.result, evidence: outcome.evidence }, ran: reading.ran,
+          facts: new Map((reading.facts ?? []).map((fact) => [fact.fact.hash, verifiedCopy(fact)])), prepared: [], used: [], own: reading.own, platform, judged: { type: "outcome", operation: outcome.operation, attempt: outcome.attempt, owner: outcome.owner, kind: outcome.kind, result: outcome.result, evidence: outcome.evidence }, ran: reading.ran,
           // Item 2 and item 4 of what a rule is given: `observed`, and each entry in `uses`. Every rule of the one entry reads through
           // the one `beside`, so the entry retains each observation that any of them read, once.
           beside: reading.beside,
