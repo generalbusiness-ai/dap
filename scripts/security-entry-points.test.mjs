@@ -100,11 +100,11 @@ const namedOwners = {
     "packages/cli/src/command-install.ts:executePlannedInstall": "2d3ba2a6ced07d65136848b2c3621751fce05f666de2f378fe65a699cea9132f"
   },
   "packages/cli/src/command-membership.ts": {
-    "packages/cli/src/command-membership.ts:$module": "f2f7f7c45d3c38230f8ba0e27985e24429e2884ace5ff87b1a097f440d0f42d7",
+    "packages/cli/src/command-membership.ts:$module": "02ddb501239e0af446ce07a4b88ad6098a4700ff1a75db1765da9f185ba01c32",
     "packages/cli/src/command-membership.ts:joinSent": "b8a644d194680aeaccda9873f7eb9ee6f9e71110cdefe87b0af35d5ce946d692",
     "packages/cli/src/command-membership.ts:invite": "0f89f53e82d14214cc46d83bb6df8e11516e328c5b54eacced4dcc67ae1c2d5b",
     "packages/cli/src/command-membership.ts:inviteDevice": "58940c0af841e2c88452ef724a83725ccbe75a65dfce3dd1ed5c828f3a0b26c6",
-    "packages/cli/src/command-membership.ts:join": "7ee9c782ae2dfb488ac3e463380d781c6b395345a48efa87167379232ad9d22d"
+    "packages/cli/src/command-membership.ts:join": "010369bee04feb57bc5200e220cd623b6a81fd9a8e2c8ca866656e78c7d3ae11"
   },
   "packages/cli/src/command-scope.ts": {
     "packages/cli/src/command-scope.ts:$module": "45a4a2e30983d81ce76aa0ef0cc1dab3a07833fb7ed8c99376deba4613fcef95",
@@ -202,7 +202,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:WRITE": "5920731b91c504f8bfb945b3edbe132bea0167ec1c9a44579e3dd658e5e9cd91",
     "packages/mcp/src/service.ts:scopeArg": "36e8957cdbc823f8e1bf9ab903a7a353df3b10d1292ed7d378362aabc41f6ef4",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "ab17d87aaa5a01de35e0642c7a256b2a09c3e6b9b7e48eee3a6bbc6d4015d0f7", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:McpService": "65b03bbb6c917a368e6bf21faabd78940dc52c6fe6c55da5aa30865e36a5691c", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:commitIdFault": "3614f1add9efc0a6aa08e7afe8ec461e46d5728284a77e668fa67fb962614527",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -375,7 +375,7 @@ const pendingR8Seals = {
   "packages/cli/src/command-repository.ts": namedOwners["packages/cli/src/command-repository.ts"],
   "packages/cli/src/command-change.ts": namedOwners["packages/cli/src/command-change.ts"],
   "packages/cli/src/command-issues.ts": namedOwners["packages/cli/src/command-issues.ts"],
-  "packages/cli/src/browser-helpers.ts": "725e0e4135e419f89391d8bb69abe8a3a6263759f3a67142ef516a07471e5b20", // Shared declaration line and expected forwards; actual maintained parser output.
+  "packages/cli/src/browser-helpers.ts": "0b3ff6a2b25e714cb86cdc12854f77b71a3c90215e1c7bb652a380a38eb9c194", // Shared declaration line and expected forwards; actual maintained parser output.
   "packages/client/src/describe.ts": "1583520baf30f89bf0059b63fdc6022bf704e25a5394b09a2861f7dc2b809cbd", // Moved portable full/compact declaration and schema derivations; actual maintained parser output.
   "packages/client/src/mark-descriptions.ts": "7e22b5140e2a808e091b02d80acaa439f3d57d8c323a2480bfb994db9c063664", // Moved platform mark descriptions, own-property fallbacks and refusal names; actual maintained parser output.
   "packages/mcp/src/description-context.ts": "d249472e0f84ef0984c884685d85ba287a9bc35f1fce6800874b896eac138a41", // Private native-to-plain catalogue binding; actual maintained parser output.

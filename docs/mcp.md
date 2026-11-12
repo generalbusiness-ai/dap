@@ -23,7 +23,11 @@ The server runs where the command line runs, with the same config
 directory (`DAP_HOME`, or the legacy `ARTROOM_HOME`). Set the room up first
 with `dap install` and `dap create`. Or start the server with an empty
 config directory and call its `join` tool with an invitation link. `join`
-records the room there, as `dap join` does. The link holds the
+records the room there, as `dap join` does. A person link must name its
+exact supported Membership pin. A missing pin is refused. The configured
+service and the link's service may have terminal slashes. An invitation
+for another configured service is refused before signing.
+The link holds the
 invitation's secret, and `join`'s own result never repeats it. With
 membership@6, @7 or @8, the signed join holds a proof made with the
 invitation's private key. The proof is bound to that membership scope,
