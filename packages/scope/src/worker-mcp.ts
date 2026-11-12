@@ -160,17 +160,16 @@ async function boundedBytes(request: Request, most: number): Promise<Uint8Array 
 }
 
 /** A transport stop cannot become an inactive key or a refused authority read. */
-const RETIRED_MEMBERSHIP = Symbol("retired-membership");
 async function membershipControl(work: () => Promise<ControlAnswer>, error: "unavailable" | "temporarily_unavailable"): Promise<ControlAnswer> {
   try { return await work(); }
-  catch (failed) { if (failed === RETIRED_MEMBERSHIP) return { status: 503, body: { error } }; throw failed; }
+  catch (failed) { if (isRetiredStoreStop(failed)) return { status: 503, body: { error } }; throw failed; }
 }
 
 /** The membership object's observation read, as the hosted objects check authority: a real read of the membership now. */
 function observeThrough(binding: Binding): RegistryPorts["observe"] {
   return async (membership, ask) => {
     const answer = await (binding.get(binding.idFromName(membership.scope)) as unknown as { observe(asked: unknown): Promise<unknown> }).observe({ of: membership, ...ask });
-    if (isRoomRetiredStop(answer)) throw RETIRED_MEMBERSHIP;
+    if (isRoomRetiredStop(answer)) throw answer;
     return answer;
   };
 }
@@ -327,7 +326,7 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
     if (this.#format.kind === "retired") return roomRetiredResponse();
     if (this.#format.kind === "unavailable") return json(503, { error: "unavailable" });
     try { return await this.#of().fetch(request); }
-    catch (failed) { if (failed === RETIRED_MEMBERSHIP) return json(503, { error: "unavailable" }); throw failed; }
+    catch (failed) { if (isRetiredStoreStop(failed)) return json(503, { error: "unavailable" }); throw failed; }
   }
   async alarm(): Promise<void> {
     if (this.#format.kind === "retired" || this.#format.kind === "unavailable") return;

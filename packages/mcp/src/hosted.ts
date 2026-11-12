@@ -998,7 +998,7 @@ export class HostedAgent {
       try {
         const key = await this.ports.observe(row.membership, { key: row.key }) as KeyStanding | null;
         return key?.keyState === "retired" || key?.keyState === "compromised";
-      } catch { return false; }
+      } catch (failed) { if (isRetiredStoreStop(failed)) throw failed; return false; }
     };
     let decided: ControlAnswer;
     if (await revoked()) decided = result(true);
