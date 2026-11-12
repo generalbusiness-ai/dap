@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Digest, Entry, FactUse } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isEntryOf, utf8 } from "@generalbusiness/dap-bytes";
-import { checkpointOf, isRetainedUse, readRetainedUses, type Fetched, type OwnRetainedRow, type RetainedOwn } from "../src/index.ts";
+import { checkpointOf, inspectClassifiedRetainedUse, isRetainedUse, readRetainedUses, type Fetched, type OwnRetainedRow, type RetainedOwn } from "../src/index.ts";
 import { created, type Ledger } from "./fixtures.ts";
 
 // Pure constructor boundary. The instrumented local row port is a stand-in,
@@ -98,4 +98,85 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   const bad = readRetainedUses(badRow, origin.seq);
   if (bad.status !== "ready") return expect.fail("the unchanged actual origin is valid");
   expect(bad.read(0)).toEqual({ status: "invalid-use" });
+
+  // Inspection requires the original private classification, not its read view.
+  const bodyProjection = selected.project([heldLater.value], []);
+  if (bodyProjection.status !== "ready") return expect.fail("the actual later body must project without a birth");
+  const actualBody = bodyProjection.values[0]!;
+  const inspectedBody = inspectClassifiedRetainedUse(actualBody);
+  expect(inspectedBody).toMatchObject({ mode: "local-retained-use", use: { originalBytes: laterBytes } });
+  expect(inspectClassifiedRetainedUse(inspectedBody)).toBeNull();
+  const actualGenuine = classified.values[0]!;
+  const inspectedGenuine = inspectClassifiedRetainedUse(actualGenuine);
+  if (inspectedGenuine?.mode !== "genuine") return expect.fail("the actual byte-proved classification must inspect as genuine");
+  expect(isEntryOf(inspectedGenuine.use.entry, inspectedGenuine.use.fact, inspectedGenuine.sequence)).toBe(true);
+  expect(inspectedGenuine.use).toBe(actualGenuine.use);
+  expect(Object.isFrozen(inspectedGenuine)).toBe(true);
+  expect(inspectClassifiedRetainedUse(inspectedGenuine)).toBeNull();
+  for (const value of [actualBody, actualGenuine]) {
+    expect(inspectClassifiedRetainedUse({ ...value })).toBeNull();
+    expect(inspectClassifiedRetainedUse(Object.create(Object.getPrototypeOf(value)))).toBeNull();
+    expect(inspectClassifiedRetainedUse(Object.create(value))).toBeNull();
+    expect(inspectClassifiedRetainedUse(new Proxy(value, {}))).toBeNull();
+    expect(() => Reflect.construct(value.constructor, [])).toThrow(TypeError);
+  }
+  expect(inspectClassifiedRetainedUse({ mode: "genuine", use: realUse, sequence })).toBeNull();
+  expect(inspectClassifiedRetainedUse({ mode: "genuine", use: realUse, sequence: { ...sequence } })).toBeNull();
+
+  // Operations can reuse its already-read duplicate row without losing indices.
+  const duplicateOrigin = checkpoint(local, [laterUse, laterUse, birthUse, birthUse]);
+  const beforeDuplicateReads = reads.slice(), beforeDuplicateOrigins = originReads;
+  const duplicates = readRetainedUses(own, duplicateOrigin.seq);
+  if (duplicates.status !== "ready") return expect.fail("the actual duplicate uses must remain in the origin");
+  expect(originReads).toBe(beforeDuplicateOrigins + 1);
+  expect(reads).toEqual(beforeDuplicateReads);
+  expect(duplicates.uses.map(use => use.index)).toEqual([0, 1, 2, 3]);
+  const firstLater = duplicates.read(0), firstBirth = duplicates.read(2);
+  if (firstLater.status !== "ready" || firstBirth.status !== "ready") return expect.fail("only the two selected original rows must be read");
+  const afterSelectedReads = [...beforeDuplicateReads, laterUse.content, birthUse.content];
+  expect(reads).toEqual(afterSelectedReads);
+  const secondLater = duplicates.reuseSelectedAt(1, firstLater.value), secondBirth = duplicates.reuseSelectedAt(3, firstBirth.value);
+  if (secondLater.status !== "ready" || secondBirth.status !== "ready") return expect.fail("the exact duplicate indices must reuse their already-read rows");
+  expect(secondLater.value).not.toBe(firstLater.value);
+  expect(secondLater.value.use).not.toBe(firstLater.value.use);
+  expect(secondBirth.value).not.toBe(firstBirth.value);
+  expect(secondBirth.value.use).not.toBe(firstBirth.value.use);
+  expect(secondLater.value.use.useIndex).toBe(1); expect(secondBirth.value.use.useIndex).toBe(3);
+  expect(secondLater.value.use.originalBytes).toBe(laterBytes);
+  expect(secondLater.value.use.producer).toEqual(firstLater.value.use.producer);
+  expect(secondBirth.value.use.producer.name).toBeUndefined();
+  const duplicateProjection = duplicates.project([secondLater.value, firstLater.value, secondLater.value, firstBirth.value, secondBirth.value], []);
+  if (duplicateProjection.status !== "ready") return expect.fail("projection must preserve selected order and repeated positions");
+  expect(duplicateProjection.values.map(value => value.use.useIndex)).toEqual([1, 0, 1, 2, 3]);
+  expect(duplicateProjection.values.map(value => value.mode)).toEqual(["genuine", "genuine", "genuine", "genuine", "genuine"]);
+  expect(duplicateProjection.values.every(value => inspectClassifiedRetainedUse(value)?.mode === "genuine")).toBe(true);
+  expect(reads).toEqual(afterSelectedReads);
+  expect(originReads).toBe(beforeDuplicateOrigins + 1);
+  expect(duplicates.reuseSelectedAt(2, firstLater.value)).toEqual({ status: "invalid-use" });
+  expect(duplicates.reuseSelectedAt(1, firstBirth.value)).toEqual({ status: "invalid-use" });
+  expect(duplicates.reuseSelectedAt(-1, firstLater.value)).toEqual({ status: "invalid-index" });
+  expect(duplicates.reuseSelectedAt(4, firstLater.value)).toEqual({ status: "invalid-index" });
+  expect(duplicates.reuseSelectedAt(1, heldLater.value)).toEqual({ status: "invalid-use" });
+  expect(selected.reuseSelectedAt(0, firstLater.value)).toEqual({ status: "invalid-use" });
+  expect(Reflect.apply(duplicates.reuseSelectedAt, undefined, [1, { ...firstLater.value }])).toEqual({ status: "invalid-use" });
+  expect(Reflect.apply(duplicates.reuseSelectedAt, undefined, [1, Object.create(Object.getPrototypeOf(firstLater.value))])).toEqual({ status: "invalid-use" });
+  expect(reads).toEqual(afterSelectedReads);
+
+  // The full origin rejects a contradictory kind before any selected row read.
+  const contradictory = checkpoint(local, [laterUse, { ...laterUse, kind: sequence.kind === "directory" ? "register" : "directory" }]);
+  expect(readRetainedUses(own, contradictory.seq)).toEqual({ status: "invalid-origin" });
+  expect(reads).toEqual(afterSelectedReads);
+
+  // A failed ordinary read is not memoized, and supplies no token to reuse.
+  let missingReads = 0;
+  const missingOwn: RetainedOwn = Object.assign((seq: number) => local.own(seq), {
+    sequence: () => local.own.sequence(), retainedRow: () => { missingReads++; return null; },
+  });
+  const missing = readRetainedUses(missingOwn, duplicateOrigin.seq);
+  if (missing.status !== "ready") return expect.fail("the actual duplicate origin remains valid when a row is missing");
+  expect(missing.read(0)).toEqual({ status: "missing-use" });
+  expect(missing.read(0)).toEqual({ status: "missing-use" });
+  expect(missingReads).toBe(2);
+  expect(Reflect.apply(missing.reuseSelectedAt, undefined, [1, { status: "missing-use" }])).toEqual({ status: "invalid-use" });
+  expect(missingReads).toBe(2);
 });

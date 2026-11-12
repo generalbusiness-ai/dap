@@ -34,6 +34,7 @@ export type RetainedSelectionResult =
       readonly origin: Sealed;
       readonly uses: readonly { readonly index: number; readonly fact: FactRef; readonly content: Digest; readonly kind: ScopeKind }[];
       read(index: number): RetainedUseRead;
+      reuseSelectedAt(index: number, selected: SelectedRetainedUse): RetainedUseRead;
       project(selected: readonly SelectedRetainedUse[], heldFetched: readonly Fetched[]): RetainedUseProjection;
     };
 
@@ -80,13 +81,17 @@ class GenuineUse {
     this.#sequence = sequence; Object.freeze(this);
   }
   get sequence(): CheckedSequence { return this.#sequence; }
+  static is(value: unknown): value is GenuineUse { return object(value) && #sequence in value; }
 }
 class BodyUse {
+  readonly #use: LocalUse;
   readonly mode = "local-retained-use" as const;
-  constructor(token: unknown, readonly use: LocalUse) {
+  constructor(token: unknown, use: LocalUse) {
     if (token !== CONSTRUCT) throw new TypeError("retained body requires its actual local row");
-    Object.freeze(this);
+    this.#use = use; Object.freeze(this);
   }
+  get use(): LocalUse { return this.#use; }
+  static is(value: unknown): value is BodyUse { return object(value) && #use in value; }
 }
 for (const value of [LocalUse, SelectedBirth, SelectedLater, GenuineUse, BodyUse]) {
   Object.freeze(value.prototype); Object.freeze(value);
@@ -94,6 +99,22 @@ for (const value of [LocalUse, SelectedBirth, SelectedLater, GenuineUse, BodyUse
 
 /** Private fields, rather than a mode word, prototype, or caller constructor. */
 export function isRetainedUse(value: unknown): value is RetainedUse { return LocalUse.is(value); }
+
+/** Inspect the original private classification. The returned view is not proof. */
+export function inspectClassifiedRetainedUse(value: unknown): ClassifiedRetainedUse | null {
+  try {
+    if (GenuineUse.is(value)) {
+      const { use, sequence } = value;
+      if (!LocalUse.is(use) || sequence.kind !== use.kind || !isEntryOf(use.entry, use.fact, sequence)) return null;
+      return Object.freeze({ mode: "genuine" as const, use, sequence });
+    }
+    if (BodyUse.is(value)) {
+      const use = value.use;
+      return LocalUse.is(use) ? Object.freeze({ mode: "local-retained-use" as const, use }) : null;
+    }
+    return null;
+  } catch { return null; }
+}
 
 /** One actual local origin read. Retained bodies are read only by selected index. */
 export function readRetainedUses(own: RetainedOwn, originSeq: number): RetainedSelectionResult {
@@ -133,6 +154,25 @@ export function readRetainedUses(own: RetainedOwn, originSeq: number): RetainedS
         const birth = admitSequenceGenesis(bytes, use.fact.at, utf8(bytes).length);
         if (!birth || birth.kind !== use.kind || !isEntryOf(parsed, use.fact, birth)) return { status: "invalid-use" };
         return { status: "ready", value: new SelectedBirth(CONSTRUCT, owner, value, birth) };
+      } catch { return { status: "invalid-use" }; }
+    };
+    // Reuse only a row that THIS selection already read, at an equal actual use.
+    // Ordinary read(index) still performs each requested row read, even on failure.
+    const reuseSelectedAt = (index: number, selected: SelectedRetainedUse): RetainedUseRead => {
+      try {
+        if (!natural(index) || index >= uses.length) return { status: "invalid-index" };
+        if (!SelectedBirth.belongs(selected, owner) && !SelectedLater.belongs(selected, owner)) return { status: "invalid-use" };
+        const held = selected.use;
+        if (!LocalUse.belongs(held, owner) || !same(held.origin, origin)) return { status: "invalid-use" };
+        const original = uses[held.useIndex], target = uses[index]!;
+        if (!original || !same(original.fact, held.fact) || original.content !== held.content || original.kind !== held.kind
+          || !same(target.fact, held.fact) || target.content !== held.content || target.kind !== held.kind) return { status: "invalid-use" };
+        if (SelectedBirth.belongs(selected, owner)
+          && (target.fact.seq !== 0 || selected.sequence.kind !== target.kind || !isEntryOf(held.entry, target.fact, selected.sequence))) return { status: "invalid-use" };
+        const use = new LocalUse(CONSTRUCT, owner, origin, index, target.fact, target.content, target.kind,
+          held.entry, held.originalBytes, held.producer);
+        return { status: "ready", value: SelectedBirth.belongs(selected, owner)
+          ? new SelectedBirth(CONSTRUCT, owner, use, selected.sequence) : new SelectedLater(CONSTRUCT, owner, use) };
       } catch { return { status: "invalid-use" }; }
     };
     const project = (selected: readonly SelectedRetainedUse[], heldFetched: readonly Fetched[]): RetainedUseProjection => {
@@ -180,6 +220,6 @@ export function readRetainedUses(own: RetainedOwn, originSeq: number): RetainedS
         return { status: "ready", values: Object.freeze(result) };
       } catch { return { status: "invalid-use" }; }
     };
-    return Object.freeze({ status: "ready" as const, origin: sealed, uses, read, project });
+    return Object.freeze({ status: "ready" as const, origin: sealed, uses, read, reuseSelectedAt, project });
   } catch { return { status: "invalid-origin" }; }
 }
