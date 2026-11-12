@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ef9288427f39594a026a83eb7cdcaab8cf34e2aa","text":"Merge retired a covered predecessor; the successor is at scripts/deploy-smoke.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f19144994a9740cd06ffe9a00d133bb3f0ccb6f7","text":"Merge retired a covered predecessor; the successor is at scripts/deploy-config.mjs."}
