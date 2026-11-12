@@ -606,7 +606,7 @@ export class HostedRegistry {
     } catch { return { status: "unavailable" }; }
     finally { if (timer !== undefined) clearTimeout(timer); }
   }
-  async #existingGrantAuthority(request: ControlRequest, identity: Pick<HostedAgentIdentity, "handle"> & { key: KeyId | null }, credential: boolean, preEnrollment = false, expectedController: MemberId | null = null): Promise<{ ok: true; controller: MemberId | null; at: number } | { ok: false; result: ControlAnswer }> {
+  async #existingGrantAuthority(request: ControlRequest, identity: Pick<HostedAgentIdentity, "handle"> & { key: KeyId | null }, credential: boolean, preEnrollment = false, expectedController: MemberId | null = null): Promise<{ ok: true; controller: MemberId | null; at: number; keyAssociated: boolean } | { ok: false; result: ControlAnswer }> {
     const started = this.#factClock();
     if (started === null) return { ok: false, result: answer(503, { error: "temporarily_unavailable" }) };
     const asked: HostedRoleRequest = { membership: request.membership, agent: identity.handle, agentKey: identity.key, expectedController, actor: request.actor };
@@ -637,7 +637,10 @@ export class HostedRegistry {
           if (decision.status !== "active") return { ok: false, result: answer(403, { error: "unauthorized", rule: "controller-role" }) };
         }
       }
-      return { ok: true, controller: read.agent.controller, at };
+      // Association is independent of credential-use policy for retained receipts.
+      const keyAssociated = identity.key !== null && read.agentKey !== null
+        && read.agentKey.key === identity.key && read.agentKey.member === identity.handle;
+      return { ok: true, controller: read.agent.controller, at, keyAssociated };
     } catch { return { ok: false, result: answer(503, { error: "temporarily_unavailable" }) }; }
     finally { if (timer !== undefined) clearTimeout(timer); }
   }
@@ -714,30 +717,81 @@ export class HostedRegistry {
     if (link.service !== service) return answer(400, { error: "link", rule: "service" });
     if (!same(link.repository.membership, request.membership)) return answer(400, { error: "link", rule: "membership" });
     const handle = link.handle, controller = link.controller.member, fingerprint = fingerprintOf(request);
-    const before = this.#control.row(request.op);
-    let identity: HostedAgentIdentityRead | null = null, key: KeyId | null = null, preEnrollment = true, credential = true, preflightAt = started;
+    type CreationControl = NonNullable<ReturnType<ControlPlane["row"]>>;
+    let before = this.#control.row(request.op);
+    let identity: HostedAgentIdentityRead | null = null, key: KeyId | null = null, preEnrollment = true, credential = true;
+    let admissionAt = started, floor = started, adoptions = 0;
     const stillBefore = () => same(this.#control.row(request.op), before);
-    if (before) {
-      if (before.fingerprint !== fingerprint || before.action !== action || before.agent === null) return answer(409, { error: "op", rule: "fingerprint" });
-      identity = await this.#identityFact(before.agent);
-      const identityAt = this.#factClock();
-      if (identityAt === null || identityAt < started || identity.status === "unavailable") return answer(503, { error: "temporarily_unavailable" });
-      preflightAt = identityAt;
-      if (identity.status === "absent") {
-        if (before.state !== "reserved" || !stillBefore()) return answer(503, { error: "temporarily_unavailable" });
+    // A same-request row can progress only absent -> reserved -> terminal.
+    // Adoption never grants authority: the next phase reads its actual Agent
+    // identity and obtains fresh appropriate standing before using this row.
+    const adoptSameCreation = (current: CreationControl | null): boolean => {
+      if (adoptions >= 2 || current === null || current.agent === null || current.fingerprint !== fingerprint || current.action !== action
+        || !["reserved", "complete", "refused"].includes(current.state)) return false;
+      if (before !== null && (before.state !== "reserved" || current.state === "reserved"
+        || current.agent !== before.agent || current.fingerprint !== before.fingerprint
+        || current.action !== before.action || current.notAfter !== before.notAfter)) return false;
+      before = current;
+      adoptions++;
+      return true;
+    };
+    for (;;) {
+      // Only call-local facts are replaced; no authority or result is shared.
+      identity = null; key = null; preEnrollment = true; credential = true;
+      let preflightAt = floor;
+      if (before) {
+        if (before.fingerprint !== fingerprint || before.action !== action || before.agent === null) return answer(409, { error: "op", rule: "fingerprint" });
+        identity = await this.#identityFact(before.agent);
+        const identityAt = this.#factClock();
+        if (identityAt === null || identityAt < floor || identity.status === "unavailable") return answer(503, { error: "temporarily_unavailable" });
+        preflightAt = identityAt;
+        if (identity.status === "absent") {
+          if (before.state !== "reserved") return answer(503, { error: "temporarily_unavailable" });
+          const current = this.#control.row(request.op);
+          if (!same(current, before)) {
+            const expired = bound(signed, service, action, null, body, identityAt); if (expired) return expired;
+            if (!adoptSameCreation(current)) return answer(503, { error: "temporarily_unavailable" });
+            floor = identityAt;
+            continue;
+          }
+        } else {
+          const observed = identity.identity;
+          if (observed.op !== request.op || observed.handle !== handle || !same(observed.membership, request.membership)) return answer(409, { error: "op", rule: "stale" });
+          key = observed.key;
+          preEnrollment = before.state === "reserved" && observed.state === "enrolling";
+          credential = before.state === "reserved" && (observed.state === "enrolling" || observed.state === "enrolled");
+          if (preEnrollment) {
+            const current = this.#control.row(request.op);
+            if (!same(current, before)) {
+              const expired = bound(signed, service, action, null, body, identityAt); if (expired) return expired;
+              if (!adoptSameCreation(current)) return answer(503, { error: "temporarily_unavailable" });
+              floor = identityAt;
+              continue;
+            }
+          }
+        }
       } else {
-        const observed = identity.identity;
-        if (observed.op !== request.op || observed.handle !== handle || !same(observed.membership, request.membership)) return answer(409, { error: "op", rule: "stale" });
-        key = observed.key;
-        preEnrollment = before.state === "reserved" && observed.state === "enrolling";
-        credential = before.state === "reserved" && (observed.state === "enrolling" || observed.state === "enrolled");
-        if (preEnrollment && !stillBefore()) return answer(503, { error: "temporarily_unavailable" });
+        const current = this.#control.row(request.op);
+        if (!same(current, before)) {
+          if (!adoptSameCreation(current)) return answer(503, { error: "temporarily_unavailable" });
+          continue;
+        }
       }
-    } else if (!stillBefore()) return answer(503, { error: "temporarily_unavailable" });
-    const admitted = await this.#existingGrantAuthority(request, { handle, key }, credential, preEnrollment, controller);
-    if (!admitted.ok) return admitted.result;
-    if (admitted.at < preflightAt || !stillBefore()) return answer(503, { error: "temporarily_unavailable" });
-    let admissionAt = admitted.at;
+      const admitted = await this.#existingGrantAuthority(request, { handle, key }, credential, preEnrollment, controller);
+      if (!admitted.ok) return admitted.result;
+      if (admitted.at < preflightAt) return answer(503, { error: "temporarily_unavailable" });
+      const current = this.#control.row(request.op);
+      if (!same(current, before)) {
+        const expired = bound(signed, service, action, null, body, admitted.at); if (expired) return expired;
+        if (!adoptSameCreation(current)) return answer(503, { error: "temporarily_unavailable" });
+        floor = admitted.at;
+        continue;
+      }
+      if (identity?.status === "observed" && identity.identity.state === "enrolled" && !admitted.keyAssociated)
+        return answer(403, { error: "unauthorized", rule: "controller-role" });
+      admissionAt = admitted.at;
+      break;
+    }
     let expired = bound(signed, service, action, null, body, admissionAt); if (expired) return expired;
     if (context && !before) {
       const mapping = this.#mapping(controller, context.client.client_id);
@@ -823,6 +877,8 @@ export class HostedRegistry {
     const result = after.status === "observed" && after.identity.state === "enrolled" ? answer(given.status, { ...given.body, agent: reserved.agent, handle }) : given;
     if (!final.ok) return this.#withheldGrant(result, final.result);
     if (final.at < identityAt) return this.#withheldGrant(result, answer(503, { error: "temporarily_unavailable" }));
+    if (after.status === "observed" && after.identity.state === "enrolled" && !final.keyAssociated)
+      return this.#withheldGrant(result, answer(403, { error: "unauthorized", rule: "controller-role" }));
     expired = bound(signed, service, action, null, body, final.at); if (expired) return this.#withheldGrant(result, expired);
     this.ports.fault?.("complete");
     return this.sql.transaction(() => {
