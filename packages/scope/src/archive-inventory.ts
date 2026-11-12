@@ -1,7 +1,7 @@
 /** One local, caller-owned synchronous read frame. No route, writer,
  * certificate, provider lease, current authority or replay verdict. */
 import type { Bounds, Digest, FactRef, Head, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isEntry, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isEntry, isEntryBodyOf, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { localRetainedPlan, requiredDependency, snapshotRead, UnsupportedConsumer } from "@generalbusiness/dap-derive";
 import type { DependencyOrigin, LocalRetainedPlan, RequiredDependency, RetainedDependency, RetainedKey, TextDependency } from "@generalbusiness/dap-derive";
 import { ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
@@ -100,8 +100,9 @@ function inventoryArchiveInternal(coupled: boolean, sql: Sql, at: ScopeRef, thro
           const bytes = rows[0]?.["bytes"];
           if (rows.length !== 1 || typeof bytes !== "string" || bytes.length > position.bytes || utf8(bytes).length !== position.bytes) return stop("mismatch");
           const entry: unknown = parseStrict(bytes);
-          if (!isEntry(entry) || entry.seq !== position.seq || entry.at.scope !== at.scope || entry.at.inc !== at.inc || entry.at.kind !== at.kind || entry.input.type !== position.input || canonicalize(entry) !== bytes || entryHash(entry) !== position.hash) return stop("mismatch");
-          if (entry.seq === 0 && (entry.input.type !== "genesis" || canonicalize(entry.input.seed) !== canonicalize(prefix.pin.seed) || entry.input.inc !== at.inc || canonicalize(entry.input.source) !== canonicalize(prefix.frame.genesis.source) || entry.input.n !== prefix.frame.genesis.n)) return stop("mismatch");
+          // The body, hash and genesis digest bind the entry to the full reference.
+          if (!isEntry(entry) || entry.seq !== position.seq || !isEntryBodyOf(entry, { at, seq: position.seq, hash: position.hash }) || entry.input.type !== position.input || canonicalize(entry) !== bytes) return stop("mismatch");
+          if (entry.seq === 0 && (entry.input.type !== "genesis" || canonicalize(entry.input.seed) !== canonicalize(prefix.pin.seed) || canonicalize(entry.input.source) !== canonicalize(prefix.frame.genesis.source) || entry.input.n !== prefix.frame.genesis.n)) return stop("mismatch");
           for (const use of entry.uses) {
             const copy = foreign?.get(use.content);
             if (!copy || canonicalize(copy.fact) !== canonicalize(use.fact)) return stop("foreign-source-mismatch");

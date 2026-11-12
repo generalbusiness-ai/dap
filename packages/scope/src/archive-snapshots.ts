@@ -21,11 +21,11 @@ const count = (path: string) => `(SELECT count(*) FROM json_each(CASE WHEN ${typ
 const factColumns = (path: string) => [
   `${type(path)} = 'object' AS fact_object`, `${count(path)} AS fact_keys`,
   `${type(`${path}.at`)} = 'object' AS at_object`, `${count(`${path}.at`)} AS at_keys`,
-  `${text(`${path}.at.scope`)} AS scope`, `${text(`${path}.at.inc`)} AS inc`, `${text(`${path}.at.kind`)} AS scope_kind`,
+  `${text(`${path}.at.scope`)} AS scope`, `${text(`${path}.at.genesis`, 71)} AS genesis`,
   `${number(`${path}.seq`)} AS seq`, `${text(`${path}.hash`, 71)} AS hash`,
 ].join(", ");
-const fact = (r: Row): unknown => r["fact_object"] !== 1 || r["fact_keys"] !== 3 || r["at_object"] !== 1 || r["at_keys"] !== 3
-  ? null : { at: { scope: r["scope"], inc: r["inc"], kind: r["scope_kind"] }, seq: r["seq"], hash: r["hash"] };
+const fact = (r: Row): unknown => r["fact_object"] !== 1 || r["fact_keys"] !== 3 || r["at_object"] !== 1 || r["at_keys"] !== 2
+  ? null : { at: { scope: r["scope"], genesis: r["genesis"] }, seq: r["seq"], hash: r["hash"] };
 
 export function projectArchiveSnapshots(sql: Pick<Sql, "exec">, at: ScopeRef, position: ArchivePosition,
   context: Context, rules: OperationRules, budget: ArchiveBudget) {

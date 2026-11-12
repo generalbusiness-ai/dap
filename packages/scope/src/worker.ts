@@ -672,7 +672,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   const announcement = applicationAnnouncementOutside(given);
   let workspaceLate: Parameters<NonNullable<Outside["late"]>>[0] | null = null;
   const workspace = (): Outside => {
-    if (given.scope()?.at.kind !== "lane" || !given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2)) return NO_OUTSIDE;
+    if (given.scope()?.kind !== "lane" || !given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2)) return NO_OUTSIDE;
     const outside = wiring("artifacts-workspace", [env.REGISTER_SCOPE, env.INSTALLED_REGISTER_SCOPES, env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsWorkspaceOutside(given, sql, env, workspaceSources, fetch));
     if (workspaceLate) outside.late?.(workspaceLate);
     return outside;

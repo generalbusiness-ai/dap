@@ -37,7 +37,7 @@ export class WorkspaceHost implements Outside {
     this.#tokens = new TokenDriver({ host: { mint: ask => this.#mint(ask), revoke: ask => this.#revoke(ask) }, custody: { take: token => this.#take(token) } });
   }
   accepts(owner: string, kind: string): boolean {
-    return owner === OWNER && kinds.has(kind) && this.#given.scope()?.at.kind === "lane"
+    return owner === OWNER && kinds.has(kind) && this.#given.scope()?.kind === "lane"
       && this.#given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2) === true;
   }
   /** Target availability only, before the native driver's durable send mark. */

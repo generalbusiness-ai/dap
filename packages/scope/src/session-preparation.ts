@@ -3,7 +3,7 @@ import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 /** Session policy over an admitted operation frame. No roster or grant read. */
 import { freeze } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { isScopeRef, same, type Page, type StateView } from "@generalbusiness/dap-derive";
+import { isScopeRef, observedOf, same, type Page, type StateView } from "@generalbusiness/dap-derive";
 
 import { recordedMembership, repositorySessionBirth } from "./authority.ts";
 import type { Clock } from "./ports.ts";
@@ -91,9 +91,10 @@ export class SessionPreparation {
       if (!run.active()) return refused("unavailable");
       if (!sessionAllowsVisibility(authentic.claims.reads, selected)) return refused("forbidden");
       const context = { genesis: () => frame.genesis, state: referenceView(frame) };
-      const recorded = frame.scope.at.kind === "membership" ? frame.scope.at : recordedMembership(context, frame.scope.at);
-      if (!recorded || recorded.kind !== "membership") return refused("unavailable");
-      if (recorded.scope !== authentic.claims.membership.scope || (recorded.inc !== null && recorded.inc !== authentic.claims.membership.inc)) return refused("forbidden");
+      const recorded = frame.scope.kind === "membership" ? frame.scope.at : recordedMembership(context, frame.scope.at);
+      // The recorded membership position names the reference; a reference names no kind.
+      if (!recorded) return refused("unavailable");
+      if (!observedOf(authentic.claims.membership, recorded)) return refused("forbidden");
       const clock = sessionClock(this, frame.scope, authentic.claims);
       // An ID match with unresolved incarnation is not full affiliation.
       // Refuse generically before exposing this target's clock state.
@@ -114,8 +115,8 @@ export class SessionPreparation {
         if (!run.active()) return refused("unavailable"); // late task retains its slot but does no more local storage/support
         const reply = sessionReferenceReply(raw);
         if (!reply || !same(reply.directory, birth.directory) || !birth.definitions.includes(reply.definition)
-          || reply.membership.scope !== recorded.scope || (recorded.inc !== null && reply.membership.inc !== recorded.inc)
-          || (frame.scope.at.kind === "rules" && !same(reply.rules, frame.scope.at))) return refused("unavailable");
+          || !observedOf(reply.membership, recorded)
+          || (frame.scope.kind === "rules" && !same(reply.rules, frame.scope.at))) return refused("unavailable");
         if (!same(reply.membership, authentic.claims.membership)) return refused("forbidden");
         membership = reply.membership; resolvedBirth = true;
       }

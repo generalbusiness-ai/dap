@@ -44,7 +44,7 @@ export function archiveFrontierMarkCost(units: number): Partial<ArchiveCost> {
  * is copied. */
 export function archiveFrontierRowContextBound(row: Pick<ArchiveRow, "at" | "repository" | "confirmed">, ownedRowBytes?: number): number {
   const repo = row.repository, old = row.confirmed;
-  const units = row.at.scope.length + row.at.inc.length + row.at.kind.length
+  const units = row.at.scope.length + row.at.genesis.length
     + repo.host.length + repo.id.length + repo.name.length + repo.namespace.length
     + (old === null ? 0 : old.commit.length + old.through.hash.length);
   if (!natural(units)) throw new ArchiveStopped("unavailable");

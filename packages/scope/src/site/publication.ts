@@ -26,7 +26,8 @@ export function siteDestination(store: import("../sqlite.ts").SqliteStore, defin
   if (positions[0]!.size > 1024 * 1024) throw new Error("publication-history-limit");
   const repository = store.item(positions[0]!.id);
   const destination = repository?.refs["destination"];
-  return isScopeRef(destination) && destination.kind === "destination" ? destination : null;
+  // The repository records this reference in its destination slot. A reference names no kind.
+  return isScopeRef(destination) ? destination : null;
 }
 
 /** A confirmed destination's exact branch head, bound to the asking directory and repository. */

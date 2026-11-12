@@ -189,24 +189,25 @@ export { signerOf } from "./entry-signer.ts";
  * answer is `unavailable`, and may be another later. Each `read` is of an
  * entry that an entry of the chain retains. `own` gives an entry of this
  * scope by its position, for the cause of an outcome or a diagnosis; such a
- * cause of an entry of another scope ends the chain with no root.
+ * cause of an entry of another scope ends the chain with no root. An entry
+ * names no scope: `start` carries its scope, and each followed fact names the next.
  */
-export async function rootOf(start: Entry, read: (use: FactUse) => Promise<Entry | null>, steps = CHAIN_STEPS, own?: { scope: ScopeId; entry(seq: number): Entry | null }, work?: () => void): Promise<Root | null | "unavailable"> {
+export async function rootOf(start: { readonly entry: Entry; readonly scope: ScopeId }, read: (use: FactUse) => Promise<Entry | null>, steps = CHAIN_STEPS, own?: { scope: ScopeId; entry(seq: number): Entry | null }, work?: () => void): Promise<Root | null | "unavailable"> {
   const useOf = (entry: Entry, fact: FactRef) => {
     for (const use of entry.uses) { work?.(); if (same(use.fact, fact)) return use; }
     return undefined;
   };
-  let entry = start;
+  let entry = start.entry, scope = start.scope;
   for (let step = 0; ; step++) {
     work?.();
     const actor = signerOf(entry);
-    if (actor) return { actor, time: entry.time, scope: entry.at.scope, seq: entry.seq };
+    if (actor) return { actor, time: entry.time, scope, seq: entry.seq };
     if (step === steps) return null;
     const input = entry.input;
     if (input.type === "outcome" || input.type === "diagnosis") {
       // The entry that opened the operation, or that made the send which was diagnosed: an entry of the same scope.
       const seq = input.type === "outcome" ? Number(input.operation.split(":")[0]) : input.of.seq;
-      const local = own && own.scope === entry.at.scope && seq < entry.seq ? own.entry(seq) : null;
+      const local = own && own.scope === scope && seq < entry.seq ? own.entry(seq) : null;
       if (!local) return null;
       entry = local;
       continue;
@@ -217,7 +218,7 @@ export async function rootOf(start: Entry, read: (use: FactUse) => Promise<Entry
       if (!use) return null;
       const source = await read(use);
       if (!source) return "unavailable";
-      entry = source;
+      entry = source; scope = use.fact.at.scope;
       continue;
     }
     if (input.type !== "genesis" || input.decision !== "applied") return null;
@@ -227,19 +228,19 @@ export async function rootOf(start: Entry, read: (use: FactUse) => Promise<Entry
     if (!source) return "unavailable";
     if (source.input.type === "genesis") {
       if (seedDigest(source.input.seed) !== input.seed.cause) return null;
-      entry = source;
+      entry = source; scope = use.fact.at.scope;
       continue;
     }
     // The cause is an act's intent: the source itself, or the act that opened the source outcome's operation, which the genesis retains.
-    let act: Entry | null = null;
+    let act: { entry: Entry; scope: ScopeId } | null = null;
     for (const u of entry.uses) {
       work?.();
       const used = u === use ? source : await read(u);
       if (!used) return "unavailable";
-      if (used.input.type === "act" && intentDigest(used.input.signed.intent) === input.seed.cause) { act = used; break; }
+      if (used.input.type === "act" && intentDigest(used.input.signed.intent) === input.seed.cause) { act = { entry: used, scope: u.fact.at.scope }; break; }
     }
     if (!act) return null;
-    entry = act;
+    entry = act.entry; scope = act.scope;
   }
 }
 
@@ -284,9 +285,9 @@ export class Chains {
     const find = async (seq: number): Promise<void> => {
       const entry = entryAt(seq);
       if (!entry) { if (archivedPosition(this.#store, seq)) this.#retry.delete(seq); else this.#retry.add(seq); return; }
-      const root = await rootOf(entry, this.#read, CHAIN_STEPS, own);
+      const root = await rootOf({ entry, scope: scope.at.scope }, this.#read, CHAIN_STEPS, own);
       if (root === "unavailable") { this.#retry.add(seq); return; }
-      if (scope.at.kind === "register" && root && root.scope === scope.at.scope) for (const membership of await this.#memberships(entry)) { this.#claims.set(membership, root.seq); this.#discoveries.set(membership, seq); }
+      if (scope.kind === "register" && root && root.scope === scope.at.scope) for (const membership of await this.#memberships(entry)) { this.#claims.set(membership, root.seq); this.#discoveries.set(membership, seq); }
       this.#roots[seq] = root;
       this.#retry.delete(seq);
     };
@@ -298,7 +299,7 @@ export class Chains {
   /** The membership scopes whose seeds the directory's genesis that a delivery came from names, or none. */
   async #memberships(entry: Entry): Promise<ScopeId[]> {
     const input = entry.input;
-    if (input.type !== "delivery" || input.from.seq !== 0 || input.from.at.kind !== "directory") return [];
+    if (input.type !== "delivery" || input.from.seq !== 0 || input.sourceKind !== "directory") return [];
     const use = entry.uses.find((u) => same(u.fact, input.from));
     const genesis = use ? await this.#read(use) : null;
     if (!genesis || genesis.input.type !== "genesis") return [];
@@ -367,7 +368,7 @@ function checkedRead(config: SignedReading, store: Pick<Store, "scope" | "stored
   // Other entries may qualify by their own causal root, checked by Reads.
   const root = config.chains?.at(0) ?? null;
   const scoped = "key" in checked || leads(root, actor, since);
-  const whole = store.scope()?.at.kind === "register" && "key" in checked;
+  const whole = store.scope()?.kind === "register" && "key" in checked;
   if (read === "summary") observed(config, reader, "key" in checked ? "local-summary-eligible" : scoped ? "genesis-root-summary-eligible" : "genesis-root-summary-ineligible");
   else observed(config, reader, "other-read-eligible");
   return read === "summary" && !scoped ? { refused: false } : { key: actor, since, scoped, whole };

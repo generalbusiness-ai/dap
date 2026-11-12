@@ -60,10 +60,9 @@ export class ArchiveDeliveryFields {
           AND json_type(entry.bytes, '$.input.message.body.item.self') = 'true') OR
         ((SELECT count(*) FROM json_each(entry.bytes, '$.input.message.body.item')) = 3
           AND json_type(entry.bytes, '$.input.message.body.item.at') = 'object'
-          AND (SELECT count(*) FROM json_each(entry.bytes, '$.input.message.body.item.at')) = 3
+          AND (SELECT count(*) FROM json_each(entry.bytes, '$.input.message.body.item.at')) = 2
           AND json_extract(entry.bytes, '$.input.message.body.item.at.scope') = json_extract(entry.bytes, '$.input.from.at.scope')
-          AND json_extract(entry.bytes, '$.input.message.body.item.at.inc') = json_extract(entry.bytes, '$.input.from.at.inc')
-          AND json_extract(entry.bytes, '$.input.message.body.item.at.kind') = json_extract(entry.bytes, '$.input.from.at.kind')
+          AND json_extract(entry.bytes, '$.input.message.body.item.at.genesis') = json_extract(entry.bytes, '$.input.from.at.genesis')
           AND json_type(entry.bytes, '$.input.message.body.item.seq') = 'integer'
           AND json_extract(entry.bytes, '$.input.message.body.item.seq') BETWEEN 0 AND 9007199254740991
           AND json_type(entry.bytes, '$.input.message.body.item.hash') = 'text'
@@ -80,10 +79,10 @@ export class ArchiveDeliveryFields {
             AND json_type(entry.bytes, '$.input.message.body.name') = 'text' THEN json_extract(entry.bytes, '$.input.message.body.name') ELSE NULL END
       WHERE entry.seq = ? AND entry.hash = ? AND entry.size = ? AND typeof(entry.bytes) = 'text' AND octet_length(entry.bytes) = ?
         AND json_extract(entry.bytes, '$.input.type') = 'delivery'
-        AND json_extract(entry.bytes, '$.input.from.at.scope') = ? AND json_extract(entry.bytes, '$.input.from.at.inc') = ?
-        AND json_extract(entry.bytes, '$.input.from.at.kind') = ? AND json_extract(entry.bytes, '$.input.from.seq') = ?
+        AND json_extract(entry.bytes, '$.input.from.at.scope') = ? AND json_extract(entry.bytes, '$.input.from.at.genesis') = ?
+        AND json_extract(entry.bytes, '$.input.from.seq') = ?
         AND json_extract(entry.bytes, '$.input.from.hash') = ? LIMIT 2`,
-      this.#names, position.seq, position.hash, position.bytes, position.bytes, from.at.scope, from.at.inc, from.at.kind, from.seq, from.hash).toArray();
+      this.#names, position.seq, position.hash, position.bytes, position.bytes, from.at.scope, from.at.genesis, from.seq, from.hash).toArray();
     if (rows.length !== 1 || rows[0]?.["seq"] !== position.seq) return stop("mismatch");
     const row = rows[0], name = row["name"], cls = row["class"], type = row["type"];
     if (name === null || cls === null || type === null) return [];

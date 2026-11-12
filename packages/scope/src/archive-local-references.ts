@@ -67,11 +67,11 @@ export class ArchiveLocalReferences {
         (SELECT count(*) FROM json_each(bytes, '$.input.from')) AS keys,
         json_type(bytes, '$.input.from.at') = 'object' AS at_object,
         (SELECT count(*) FROM json_each(bytes, '$.input.from.at')) AS at_keys,
-        ${text("$.input.from.at.scope", 71)} AS scope, ${text("$.input.from.at.inc", 64)} AS inc, ${text("$.input.from.at.kind", 16)} AS kind,
+        ${text("$.input.from.at.scope", 71)} AS scope, ${text("$.input.from.at.genesis", 71)} AS genesis,
         CASE WHEN json_type(bytes, '$.input.from.seq') IN ('integer', 'real') THEN json_extract(bytes, '$.input.from.seq') ELSE NULL END AS seq, ${text("$.input.from.hash", 71)} AS hash
         FROM entry WHERE ${source} LIMIT 1`, ...args).toArray();
-      const row = rows[0], from = { at: { scope: row?.["scope"], inc: row?.["inc"], kind: row?.["kind"] }, seq: row?.["seq"], hash: row?.["hash"] };
-      if (rows.length !== 1 || row?.["object"] !== 1 || row["keys"] !== 3 || row["at_object"] !== 1 || row["at_keys"] !== 3 || !isFactRef(from)) return stop("mismatch");
+      const row = rows[0], from = { at: { scope: row?.["scope"], genesis: row?.["genesis"] }, seq: row?.["seq"], hash: row?.["hash"] };
+      if (rows.length !== 1 || row?.["object"] !== 1 || row["keys"] !== 3 || row["at_object"] !== 1 || row["at_keys"] !== 2 || !isFactRef(from)) return stop("mismatch");
       this.#delivery ??= new ArchiveDeliveryFields(this.support.definition, this.budget, this.bounds);
       let under: string | undefined;
       if (this.#delivery.needsUnder) {

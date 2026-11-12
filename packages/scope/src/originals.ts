@@ -131,7 +131,7 @@ export class Originals {
   #asker(reader: unknown): { inc: string; member: string; key: string; named: string; at: NonNullable<ReturnType<StateView["scope"]>> } | { refused: OriginalRefusal } {
     const scope = this.#config.state.scope();
     const pinned = this.#config.pinned();
-    if (!scope || scope.status !== "active" || scope.at.kind !== "membership" || !pinned || typeof pinned.named !== "string" || !platform(pinned.named)) return { refused: "not-found" };
+    if (!scope || scope.status !== "active" || scope.kind !== "membership" || !pinned || typeof pinned.named !== "string" || !platform(pinned.named)) return { refused: "not-found" };
     const key = this.#config.readers.holder?.(reader, "summary") ?? false;
     if (key === false) return { refused: "forbidden" };
     if (key === "sessions-unavailable" || key === "clock-behind") return { refused: key };

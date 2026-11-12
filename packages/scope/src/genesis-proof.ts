@@ -156,7 +156,7 @@ export class GenesisProofs {
     try {
       const start = ownEntry(0);
       if (start.input.type !== "genesis") return unknown();
-      const root = await rootOf(start, readUse, GENESIS_PROOF_BOUNDS.steps, { scope: own.at.scope, entry: ownEntry }, work);
+      const root = await rootOf({ entry: start, scope: own.at.scope }, readUse, GENESIS_PROOF_BOUNDS.steps, { scope: own.at.scope, entry: ownEntry }, work);
       active();
       return root === "unavailable" ? unknown() : root === null ? { kind: "none", of: own } : { kind: "root", of: own, root };
     } catch { return unknown(); }
