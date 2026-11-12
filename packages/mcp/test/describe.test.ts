@@ -3,7 +3,7 @@ import { ARCHIVE_DEVICE_APPLICATION_COHORT, COMMONS_COHORT, platform } from "@ge
 import { relaxedCounting } from "./support/definition-corpus-data.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { definitionDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { definitionDigest, isIncarnation, isScopeId, timeMs } from "@generalbusiness/dap-bytes";
 import { change, issueDemo } from "@generalbusiness/dap-lanes";
 import { lane as deriveLane } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
@@ -193,6 +193,23 @@ describe("descriptions are derived from the whole declaration", () => {
 
   // Invariant: a tool served across memberships with different roles names each membership's role in the order of the
   // memberships' scope IDs, so reordering the scopes changes neither the text nor the generation.
+  test("fixed-tool scope references: the ID patterns refuse set trailing bits, and settle takes a creation's membership", async () => {
+    const mcp = new McpService({ service: "https://x", signer: fixedSigner(0), config: { read: async () => ({ service: "https://x" }), addRoot: async () => {} }, custody: memoryStore(), mode: "add" });
+    const tools = (await mcp.page()).tools;
+    const inputOf = (name: string) => tools.find((t) => t.name === name)!.inputSchema as { properties: Record<string, Record<string, unknown>>; required: string[]; additionalProperties: boolean; anyOf?: { required: string[] }[] };
+    const membership = inputOf("create").properties["membership"] as { anyOf: [{ pattern: string }, { properties: { scope: { pattern: string }; inc: { pattern: string } } }] };
+    const scopePattern = new RegExp(membership.anyOf[1].properties.scope.pattern), incPattern = new RegExp(membership.anyOf[1].properties.inc.pattern);
+    // 52 base32 characters carry 260 bits for 32 bytes, and 26 carry 130 for 16: the bits past the last byte must be zero.
+    const scope = `sc_${"a".repeat(52)}`, scopeSetBits = `sc_${"a".repeat(51)}b`, inc = `in_${"a".repeat(25)}e`, incSetBits = `in_${"a".repeat(25)}b`;
+    expect([scopePattern.test(scope), scopePattern.test(scopeSetBits), isScopeId(scope), isScopeId(scopeSetBits)]).toEqual([true, false, true, false]);
+    expect([incPattern.test(inc), incPattern.test(incSetBits), isIncarnation(inc), isIncarnation(incSetBits)]).toEqual([true, false, true, false]);
+    expect(membership.anyOf[0].pattern).toBe(membership.anyOf[1].properties.scope.pattern);
+    // No JSON Schema validator runs here: the input is checked against the schema's members, keys, required, anyOf and pattern.
+    const settle = inputOf("settle"), creation = { definition: "platform:register@18", membership: scope, idempotencyKey: "TEST-settle-creation" };
+    expect(settle.properties["membership"]).toEqual(membership);
+    expect([settle.additionalProperties, Object.keys(creation).every((k) => k in settle.properties), settle.required.every((k) => k in creation), settle.anyOf!.some((c) => c.required.every((k) => k in creation)), scopePattern.test(creation.membership)]).toEqual([false, true, true, true, true]);
+  });
+
   test("two memberships with different roles, reordered: the same text and generation", () => {
     const base = demoInventory("admin");
     const m2 = "sc_aaaamembershipsecond" as ScopeId;
