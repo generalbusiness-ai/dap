@@ -359,12 +359,18 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
       arguments: { target: finalTarget, fields: { body: "An exact OAuth request keeps its original." }, idempotencyKey: key }, _meta: META } }) });
     const finalKey = "TEST-S4-oauth-final-comment", gate = holdAfterAdmission("@oauth-agent"), finalPosts: string[] = [];
     hostedTest.submitted = url => { finalPosts.push(new URL(url).pathname); };
+    const pendingFinal = room.wait(async () => {
+      const response = await call(finalKey);
+      const stopped = await response.json() as { result: { structuredContent: Record<string, unknown> } };
+      return { response: { status: response.status }, stopped };
+    });
+    // Observe rejection while this scene coordinates a different Native request.
+    void pendingFinal.catch(() => {});
     try {
-      const pending = room.wait(() => call(finalKey));
       await gate.entered; expect(gate.reads.calls).toBe(2);
       await changeActions(widerActions, "TEST-S4-oauth-final-wider");
       gate.release();
-      const response = await pending, stopped = await response.json() as { result: { structuredContent: Record<string, unknown> } };
+      const { response, stopped } = await pendingFinal;
       expect(response.status).toBe(200);
       expect(stopped.result.structuredContent).toMatchObject({ error: "unauthorized" });
       expect(stopped.result.structuredContent).not.toHaveProperty("answer");
@@ -380,7 +386,10 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
       expect(await grantState()).toEqual(exactGrant);
       expect((await list(claude, first.token, "192.0.2.78")).status).toBe(200);
     } finally {
-      gate.release(); hostedTest.roleReply = null; hostedTest.submitted = null;
+      gate.release();
+      // The main await reports request failure. An earlier scene failure still joins it before release.
+      await pendingFinal.catch(() => {});
+      hostedTest.roleReply = null; hostedTest.submitted = null;
       await changeActions(baseAgentActions, "TEST-S4-oauth-final-cleanup");
     }
 
@@ -390,14 +399,19 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
     const clockPosts: string[] = [], clockReads: number[] = [];
     hostedTest.now = () => epoch + 2000;
     hostedTest.submitted = url => { clockPosts.push(new URL(url).pathname); };
+    const pendingClock = room.wait(async () => {
+      const response = await call(clockKey);
+      const stopped = await response.json() as { result: { structuredContent: Record<string, unknown> } };
+      return { response: { status: response.status }, stopped };
+    });
+    void pendingClock.catch(() => {});
     try {
-      const pending = room.wait(() => call(clockKey));
       await clockGate.entered; expect(clockGate.reads.calls).toBe(2);
       hostedTest.roleReply = { agent: "@oauth-agent", at: 1, calls: 0, waiting: Promise.resolve(), entered: () => {
         hostedTest.now = () => { const value = epoch + (clockReads.length === 0 ? 5000 : 3000); clockReads.push(value); return value; };
       } };
       clockGate.release();
-      const response = await pending, stopped = await response.json() as { result: { structuredContent: Record<string, unknown> } };
+      const { response, stopped } = await pendingClock;
       expect(response.status).toBe(200);
       expect(stopped.result.structuredContent).toMatchObject({ error: "unavailable" });
       expect(clockReads.slice(0, 3)).toEqual([epoch + 5000, epoch + 3000, epoch + 3000]);
@@ -408,7 +422,9 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
       expect(original.record.outcomes).toEqual([]);
       expect(Date.parse(original.record.envelope.signed.intent.notAfter)).toBeGreaterThan(epoch + 5000);
     } finally {
-      clockGate.release(); hostedTest.roleReply = null; hostedTest.submitted = null; hostedTest.now = () => room.now();
+      clockGate.release();
+      await pendingClock.catch(() => {});
+      hostedTest.roleReply = null; hostedTest.submitted = null; hostedTest.now = () => room.now();
     }
 
     const initialization = (resource: string, token: string) => room.wait(() => routed(resource, { method: "POST",
@@ -952,7 +968,12 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", otherInc, bot3.agent, "", "inc"), ""))).status, "another incarnation").toBe(403);
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "retire", M, bot3.agent, "", "action"), ""))).status, "another action").toBe(400);
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "agent"), ""))).status, "another agent").toBe(400);
-    expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "x", "body"), ""))).status, "a differing body").toBe(400);
+    const changedBody = await room.wait(async () => {
+      const response = await post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "x", "body"), "");
+      return { status: response.status, body: await response.json() };
+    });
+    expect(changedBody, "a differing body refuses before mutable control admission or Agent dispatch")
+      .toEqual({ status: 403, body: { error: "control", rule: "body" } });
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "late", { notAfter: timeOf(room.now() - 1000) }), ""))).status, "an expired deadline").toBe(400);
     // A repeated op with the same digest answers the same; with a different digest it is refused.
     const same = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "rita-bearer-3"), ""));
@@ -1789,7 +1810,7 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
   const { room, rita } = await roomWithIssues();
   try {
     const M = rita.config.repository!.membership;
-    const registry = registryStub(M.scope) as unknown as { reset(): Promise<void>; agents(): Promise<{ agent: string; handle: string; key: string | null; state: string }[]>; reservedAgent(op: string): Promise<string | null> };
+    const registry = () => registryStub(M.scope) as unknown as { reset(): Promise<void>; agents(): Promise<{ agent: string; handle: string; key: string | null; state: string }[]>; reservedAgent(op: string): Promise<string | null> };
     const fences = ["reservation", "seed", "kept", "accepted", "complete"] as const;
     for (const [i, fence] of fences.entries()) {
       const handle = `@fence${i}`;
@@ -1801,8 +1822,8 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
       const failed = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body)).then((r) => r.status, () => -1);
       expect(failed, `${fence}: no answer`).not.toBe(201);
       expect(hostedTest.faultAt, `${fence}: the fault fired`).toBeNull();
-      await registry.reset();
-      const reserved = await registry.reservedAgent(op);
+      await registry().reset();
+      const reserved = await registry().reservedAgent(op);
       expect(reserved, `${fence}: the reservation survived`).toMatch(/^[0-9a-f]{64}$/);
       await agentStub(reserved!).reset();
       // The durable facts at the fence: the key once the seed was written, the kept enrol intent once the envelope was kept.
@@ -1835,20 +1856,25 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
       }
       if (fence === "kept") {
         // This is an actual local owner race across a real Native reply, not a Native role-loss witness.
-        const object = env.AGENTS.get(env.AGENTS.idFromString(reserved!));
-        const originalConfig = await runInDurableObject(object, (_agent, state) => String(state.storage.sql.exec(`SELECT config FROM agent WHERE id = 1`).toArray()[0]!["config"]));
+        const object = () => env.AGENTS.get(env.AGENTS.idFromString(reserved!));
+        const originalConfig = await runInDurableObject(object(), (_agent, state) => String(state.storage.sql.exec(`SELECT config FROM agent WHERE id = 1`).toArray()[0]!["config"]));
         const originalCustody = await agentStub(reserved!).custodyRecord(`enrol:${op}`);
         expect(originalCustody?.intent).toBe(before.enrol);
         let entered!: () => void, release!: () => void, submitted = 0;
         const reached = new Promise<void>(resolve => { entered = resolve; });
         hostedTest.roleReply = { agent: handle, at: 2, calls: 0, entered, waiting: new Promise<void>(resolve => { release = resolve; }) };
         hostedTest.submitted = () => { submitted++; };
+        const pending = room.wait(async () => {
+          const response = await post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body);
+          const result = await response.json();
+          return { refused: { status: response.status }, result };
+        });
+        void pending.catch(() => {});
         try {
-          const pending = room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
           await reached;
-          await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET config = json_set(config, '$.roots', json('[]')) WHERE id = 1`); });
+          await runInDurableObject(object(), (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET config = json_set(config, '$.roots', json('[]')) WHERE id = 1`); });
           release();
-          const refused = await pending, result = await refused.json();
+          const { refused, result } = await pending;
           expect(refused.status, "a changed configuration cannot use a held creation admission").toBe(409);
           expect(result).toMatchObject({ error: "op", rule: "stale", next: "This call submitted no enrollment. An earlier attempt may still have been sent; resume this same operation to reconcile its kept envelope." });
           expect(result).not.toHaveProperty("bearer");
@@ -1856,10 +1882,12 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
           const stopped = await agentStub(reserved!).custodyRecord(`enrol:${op}`);
           expect(stopped).toMatchObject({ intent: originalCustody!.intent, attempt: originalCustody!.attempt, outcomes: originalCustody!.outcomes, phase: "sent" });
           expect((await agentStub(reserved!).durableFacts()).bearer).toBe(false);
-          expect(await registry.reservedAgent(op), "the Registry keeps this exact resumable creation").toBe(reserved);
+          expect(await registry().reservedAgent(op), "the Registry keeps this exact resumable creation").toBe(reserved);
         } finally {
-          release(); hostedTest.roleReply = null; hostedTest.submitted = null;
-          await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET config = ? WHERE id = 1`, originalConfig); });
+          release();
+          await pending.catch(() => {});
+          hostedTest.roleReply = null; hostedTest.submitted = null;
+          await runInDurableObject(object(), (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET config = ? WHERE id = 1`, originalConfig); });
         }
       }
       const beforeAnswers = await storedBearerAnswers(reserved!, M.scope);
@@ -1891,7 +1919,7 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
       // The admitted entry holds the intent the object kept: the envelope was never replaced.
       const entry = (await rita.ok("step", { scope: "membership", seq: enrols[0]!.seq }))["entry"] as { input: { signed: { intent: unknown } } };
       expect(intentDigestOf(entry.input.signed.intent), `${fence}: the admitted intent is the kept one`).toBe(after.enrol);
-      expect((await registry.agents()).filter((a) => a.handle === handle).map((a) => [a.key, a.state])).toEqual([[answer.key, "enrolled"]]);
+      expect((await registry().agents()).filter((a) => a.handle === handle).map((a) => [a.key, a.state])).toEqual([[answer.key, "enrolled"]]);
       // A lost terminal disclosure needs a new signed renewal, not another
       // copy of the creation's secret. Earlier fences issue once on resume.
       let bearer = answer.bearer;
@@ -2406,8 +2434,8 @@ test("a controller's pending retire keeps no seed or replacement revoke and comp
     expect((await controller.ok("join", { link, idempotencyKey: "TEST-retire-controller-join" }))["answer"]).toBe("accepted");
     const bot = await hosted(room, rita, "@retire-controlled", "TEST-retire-controlled-create", controller.secret, "platform:membership@2", "@retire-controller");
     const retire = (body: string, op: string, signer = controller.secret) => room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, signer, "retire", M, bot.agent, body, op), body, "DELETE"));
-    const objectBefore = env.AGENTS.get(env.AGENTS.idFromString(bot.agent));
-    const configBefore = await runInDurableObject(objectBefore, (_instance, state) => state.storage.sql.exec("SELECT config FROM agent WHERE id = 1").toArray()[0]!["config"]);
+    const objectBefore = () => env.AGENTS.get(env.AGENTS.idFromString(bot.agent));
+    const configBefore = await runInDurableObject(objectBefore(), (_instance, state) => state.storage.sql.exec("SELECT config FROM agent WHERE id = 1").toArray()[0]!["config"]);
     if (typeof configBefore !== "string") throw Error("Missing retained retirement config");
     // Hold the actual Native fact reply; only the local replacement config is scripted.
     for (const [at, committed] of [[1, false], [2, true]] as const) {
@@ -2415,27 +2443,33 @@ test("a controller's pending retire keeps no seed or replacement revoke and comp
       const held = new Promise<void>(resolve => { entered = resolve; });
       hostedTest.roleReply = { agent: "@retire-controlled", at, calls: 0, entered, waiting: new Promise<void>(resolve => { release = resolve; }) };
       const op = committed ? "TEST-retire-no-envelope" : "TEST-retire-precommit-owner";
-      const waiting = retire("", op);
-      await held;
-      const beforeRelease = await runInDurableObject(objectBefore, (_instance, state) => ({
-        seed: state.storage.sql.exec("SELECT length(seed) AS n FROM agent WHERE id = 1").toArray()[0]!["n"],
-        control: state.storage.sql.exec("SELECT state, answer FROM control WHERE op = ?", op).toArray(),
-      }));
-      expect(beforeRelease.seed).toBe(committed ? 0 : 32);
-      expect(beforeRelease.control).toEqual(committed ? [{ state: "pending", answer: null }] : []);
-      const replacement = canonicalize({ ...JSON.parse(configBefore), service: "https://replacement.example" });
-      expect(replacement).not.toBe(configBefore);
-      await runInDurableObject(objectBefore, (_instance, state) => state.storage.sql.exec("UPDATE agent SET config=? WHERE id=1", replacement).toArray());
+      const waiting = room.wait(async () => {
+        const response = await post(`/mcp/agents/${bot.agent}`, control(room, controller.secret, "retire", M, bot.agent, "", op), "", "DELETE");
+        return { status: response.status, body: await response.json() };
+      });
+      void waiting.catch(() => {});
       try {
+        await held;
+        const beforeRelease = await runInDurableObject(objectBefore(), (_instance, state) => ({
+          seed: state.storage.sql.exec("SELECT length(seed) AS n FROM agent WHERE id = 1").toArray()[0]!["n"],
+          control: state.storage.sql.exec("SELECT state, answer FROM control WHERE op = ?", op).toArray(),
+        }));
+        expect(beforeRelease.seed).toBe(committed ? 0 : 32);
+        expect(beforeRelease.control).toEqual(committed ? [{ state: "pending", answer: null }] : []);
+        const replacement = canonicalize({ ...JSON.parse(configBefore), service: "https://replacement.example" });
+        expect(replacement).not.toBe(configBefore);
+        await runInDurableObject(objectBefore(), (_instance, state) => state.storage.sql.exec("UPDATE agent SET config=? WHERE id=1", replacement).toArray());
         release(); const stopped = await waiting;
-        expect([stopped.status, await stopped.json()]).toEqual([503, committed
+        expect([stopped.status, stopped.body]).toEqual([503, committed
           ? { error: "temporarily_unavailable", next: "The cleanup may already be in effect. Send the same operation again. Do not start a new operation." }
           : { error: "temporarily_unavailable" }]);
-        expect(await runInDurableObject(objectBefore, (_instance, state) => state.storage.sql.exec("SELECT config FROM agent WHERE id=1").toArray()[0]!["config"]))
+        expect(await runInDurableObject(objectBefore(), (_instance, state) => state.storage.sql.exec("SELECT config FROM agent WHERE id=1").toArray()[0]!["config"]))
           .toBe(replacement);
       } finally {
-        release(); hostedTest.roleReply = null;
-        await runInDurableObject(objectBefore, (_instance, state) => state.storage.sql.exec("UPDATE agent SET config=? WHERE id=1", configBefore).toArray());
+        release();
+        await waiting.catch(() => {});
+        hostedTest.roleReply = null;
+        await runInDurableObject(objectBefore(), (_instance, state) => state.storage.sql.exec("UPDATE agent SET config=? WHERE id=1", configBefore).toArray());
       }
     }
     const first = await retire("", "TEST-retire-no-envelope");

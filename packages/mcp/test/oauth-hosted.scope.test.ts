@@ -333,6 +333,7 @@ test("refresh retains its own sessions and revocation removes only that grant's 
       expect((await agent.connectionControl(signed("revoke-grant", "revoke-a", revoke), "revoke-grant", revoke)).status).toBe(200);
       expect(sql.exec(`SELECT id FROM oauth_session`).toArray().map(r => r["id"])).toEqual([bSession]);
       const refused = await agent.fetch(new Request(RESOURCE, { headers: { authorization: `Bearer ${next.body["access_token"]}` } })); expect(refused.status).toBe(401); await refused.body?.cancel();
+      f.wider = false;
       expect(await initialize(b.tokens.body["access_token"])).not.toBe(aSession);
       const empty = utf8("{}");
       const listed = await agent.connectionControl(signed("connections", "list", empty), "connections", empty);

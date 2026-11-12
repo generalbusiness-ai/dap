@@ -20,7 +20,8 @@ import { rita, routed } from "./repository.ts";
 import { hostedRegistries, hostedTest } from "./worker.ts";
 
 // Invariant: a hosted card press uses the exact installed declaration and the
-// agent's own native key; a host without UI sees no app tools or card metadata.
+// agent's own native key; a host without UI sees no app-only tools or card metadata.
+// Ordinary writes keep their model-only descriptor on either host.
 test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the hosted agent's card press ($register)", async cohort => {
   const device = cohort.register === B.register, screen = device ? "root" : "board", state = device ? "ready" : "open";
   const cardUri = `ui://dap/declared/${screen}`;
@@ -98,8 +99,9 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     if (!admittedRoster) throw Error("The installed application needs the native roster.");
     const adminActions = admittedRoster.values[ROLE_LISTS.admin], agentActions = admittedRoster.values[ROLE_LISTS.agent];
     if (!isActions(adminActions) || !isActions(agentActions)) throw Error("The installed native role action lists must stay valid.");
-    expect(adminActions).toEqual([...new Set([...beforeAdmin, ...adminAdditions])]);
-    expect(agentActions).toEqual([...new Set([...beforeAgent, ...agentAdditions])]);
+    // Installation appends the packed release's sorted defaults to the native roster.
+    expect(adminActions).toEqual([...new Set([...beforeAdmin, ...packet.package.semantic.roles["admin"]!])]);
+    expect(agentActions).toEqual([...new Set([...beforeAgent, ...packet.package.semantic.roles["agent"]!])]);
     expect(agentActions.filter(action => !adminActions.includes(action))).toEqual([]);
     expect(admittedMembers.find(item => item.type === "member" && item.values["handle"] === "@rita"))
       .toMatchObject({ state: "active", values: { role: "admin" } });
@@ -234,12 +236,19 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     } }, async () => { ambiguousLoads++; return packet.bytes; }));
     expect((await life.wait(() => ambiguous.page(undefined, true))).tools.some(tool => tool.name === `view_${screen}`)).toBe(false);
     expect(ambiguousLoads).toBe(0);
-    const localCards = (await life.wait(() => local.page(undefined, true))).tools.filter(tool => tool.name.startsWith("view_"));
+    const localTools = (await life.wait(() => local.page(undefined, true))).tools;
+    const localCards = localTools.filter(tool => tool.name.startsWith("view_"));
     const remoteCards = ((await rpc("tools/list"))["tools"] as Tool[]).filter(tool => tool.name.startsWith("view_"));
     expect(remoteCards).toEqual(localCards); expect(remoteCards.map(tool => tool.name)).toContain(`view_${screen}`);
     const plain = (await rpc("tools/list", {}, false))["tools"] as Tool[];
     expect(plain.some(tool => tool.name === "view_read" || tool.name === "view_act")).toBe(false);
-    expect(plain.every(tool => tool._meta?.["ui"] === undefined)).toBe(true);
+    for (const tool of plain) {
+      const original = localTools.find(candidate => candidate.name === tool.name);
+      expect(original, tool.name).toBeDefined();
+      const visibility = (original!._meta?.["ui"] as { visibility?: string[] } | undefined)?.visibility;
+      const modelOnly = visibility?.length === 1 && visibility[0] === "model";
+      expect(tool._meta?.["ui"], tool.name).toEqual(modelOnly ? { visibility: ["model"] } : undefined);
+    }
     const plainResources = (await rpc("resources/list", {}, false))["resources"] as { _meta?: { ui?: unknown } }[];
     expect(plainResources.every(resource => resource._meta?.ui === undefined)).toBe(true);
     const plainRead = (await rpc("resources/read", { uri: cardUri }, false))["contents"] as typeof plainResources;
