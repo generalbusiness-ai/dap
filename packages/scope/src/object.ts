@@ -1111,7 +1111,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       const branch = positions.length === 1 && positions[0]!.size <= 1024 * 1024 ? this.#store.item(positions[0]!.id) : null;
       if (branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null
         && typeof branch.values["name"] === "string" && isScopeId(branch.values["membership"]) && isScopeId(branch.values["rules"])
-        && isScopeRef(branch.refs["directory"]) && branch.refs["directory"].kind === "directory") return { ok: false, reason: "no-repository" };
+        && isScopeRef(branch.refs["directory"])) return { ok: false, reason: "no-repository" };
     }
     const workspace = scope?.kind === "lane" && this.#scope.pinned()?.definition?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2) === true;
     const answer = key !== false && typeof handle === "string" && (scope?.kind === "destination" || workspace) ? this.#outside.credential?.(handle, key) ?? null : null;

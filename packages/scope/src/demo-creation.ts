@@ -17,7 +17,7 @@ interface CurrentDemoCreationConfig { v: 2; origin: string; deployment: string; 
 export type DemoCreationConfig = CurrentDemoCreationConfig;
 interface DemoCreationSettings { current: CurrentDemoCreationConfig }
 export type DemoCreationOffer = CreationOffer;
-export const registerRef = (value: unknown): value is ScopeRef => record(value) && Object.keys(value).length === 3 && isScopeRef(value) && value.kind === "register";
+export const registerRef = (value: unknown): value is ScopeRef => record(value) && Object.keys(value).length === 2 && isScopeRef(value);
 export function demoCreationConfig(raw: string | undefined, deployment: string | undefined, bindings: Pick<ArtifactsBindings, "ARTIFACTS_CONFIG" | "ARTIFACTS_NAMESPACE"> = {}): DemoCreationSettings | null {
   try {
     if (!raw || utf8(raw).length > 4096) return null;

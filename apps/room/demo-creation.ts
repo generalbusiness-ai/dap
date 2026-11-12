@@ -12,8 +12,8 @@ export async function demoCreationRoute(request: Request, env: DemoCreationBindi
   if (url.pathname !== DEMO_OFFER_PATH || url.hash) return reply(404, { error: "not-found" });
   let selected: DemoCreationConfig["register"] | undefined;
   if (url.search) {
-    if ([...url.searchParams.keys()].sort().join(",") !== "inc,register") return reply(404, { error: "not-found" });
-    const value = { scope: url.searchParams.get("register"), inc: url.searchParams.get("inc"), kind: "register" };
+    if ([...url.searchParams.keys()].sort().join(",") !== "genesis,register") return reply(404, { error: "not-found" });
+    const value = { scope: url.searchParams.get("register"), genesis: url.searchParams.get("genesis") };
     if (!registerRef(value)) return reply(404, { error: "not-found" });
     selected = value;
   }
