@@ -86,12 +86,12 @@ test("the native device-command metadata admits only its command record and answ
   expect((await scan(lane, native)).reason).toBe("unsupported-archive-cohort");
 });
 
-test("changed incarnation, an unknown consumer variant and a stopped scan never publish partial privacy admission", async () => {
+test("changed genesis, an unknown consumer variant and a stopped scan never publish partial privacy admission", async () => {
   const lane = await create();
   await lane.did(rita, "remark", { on: 0, fields: { text: "last variant" } });
   await damageLast(lane, entry => { entry.input.type = "new-consumer" as never; });
   expect((await scan(lane)).reason).toBe("unavailable");
-  await damageLast(lane, entry => { entry.input.type = "act"; entry.at.inc = "wrong-incarnation" as never; });
+  await damageLast(lane, entry => { entry.input.type = "act"; if ("genesis" in entry) entry.genesis = `sha256:${"9".repeat(64)}`; });
   const changed = await scan(lane); expect(changed.reason).toBe("unavailable"); expect(changed.positions).toEqual([]);
   const stopped = await scan(await create(), support, 7);
   expect(stopped.reason).toBe("limit"); expect(stopped.positions).toEqual([]);

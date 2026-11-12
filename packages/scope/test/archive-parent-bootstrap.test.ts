@@ -4,7 +4,7 @@
  * of Native validation or replay of its contents. */
 import { expect, onTestFinished, test, vi } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Head } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { GitRefusal, Reader, idOf, objectId, parseCommit } from "@generalbusiness/dap-git";
 import { captureJournalParentFrontier, journalRef, JOURNAL_SELECTION_BYTES, buildJournalPass, type JournalObject } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCapacityRefusal, type ArchiveCost } from "../src/archive-budget.ts";
@@ -480,7 +480,7 @@ test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after 
   expect(birth.input.type).toBe("genesis");
   if (birth.input.type !== "genesis") throw Error("Actual native birth required");
   expect(birth.input.decision).toBe("applied"); expect(scopeIdOf(birth.input.seed)).toBe(lane.at.scope);
-  expect(birth.at).toEqual(lane.at); expect(birth.input.inc).toBe(lane.at.inc); expect(birth.input.seed.kind).toBe(lane.at.kind);
+  expect(entryHash(birth)).toBe(lane.at.genesis); expect(birth.input.seed.kind).toBe("lane");
   const birthSeed = canonicalize(birth.input.seed);
   const diagnostics: { state: string; cost: ArchiveCost; fixedFinish: ArchiveFixedFinish | null; capacityRefusal: ArchiveCapacityRefusal | null }[] = [];
   const info = console.info, log = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
@@ -498,7 +498,7 @@ test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after 
       }, clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
       policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) },
       admit: (at, admittedSeed) => canonicalize(at) === canonicalize(lane.at)
-        && admittedSeed.kind === lane.at.kind && scopeIdOf(admittedSeed) === lane.at.scope && canonicalize(admittedSeed) === birthSeed,
+        && admittedSeed.kind === "lane" && scopeIdOf(admittedSeed) === lane.at.scope && canonicalize(admittedSeed) === birthSeed,
       provider: host.provider, budget: () => budget,
       target: { resolve: async () => { order.push("target"); return repository; } },
       sources: async (_after, _through, sameBudget, exact) => {

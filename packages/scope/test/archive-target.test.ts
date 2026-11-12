@@ -37,7 +37,7 @@ test.each([["archive", C], ["device/archive", DC], ["device/publication/archive"
     const discovered = await resolver.discover(directory, genesis.input.seed, new ArchiveBudget());
     if (C === DC || C === PC) {
       expect(discovered?.repository).toEqual(expected);
-      expect(discovered?.scopes.map(scope => ({ kind: scope.at.kind, named: scope.named, via: scope.via }))).toEqual([
+      expect(discovered?.scopes.map(scope => ({ kind: scope.sequence.kind, named: scope.named, via: scope.via }))).toEqual([
         { kind: "directory", named: C.directory, via: "self" },
         { kind: "rules", named: C.rules, via: "rules" },
         { kind: "destination", named: C.destination, via: "destination" },

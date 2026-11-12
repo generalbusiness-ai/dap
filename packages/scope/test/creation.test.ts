@@ -3,7 +3,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
 import type { DeclaredDefinition, Entry, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { definitionDigest, intentDigest, isIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { definitionDigest, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { timeOf, type Delivered } from "@generalbusiness/dap-derive";
 import { Scope, grantOf, laneDefinition, variant } from "@generalbusiness/dap-derive/testing";
 import { inbox, platform } from "@generalbusiness/dap-platform";
@@ -30,14 +30,15 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
     expect(held).toEqual([{ entries: 0 }]);
   });
 
-  test("entry 0 holds the seed, the signed intent and a minted incarnation, and the scope answers under its own name only", async () => {
+  test("entry 0 holds the seed, the signed intent and a minted nonce, and the scope answers under its own name only", async () => {
     const s = await create();
     expect(await s.stub.entry(reader, 0)).toMatchObject({
       ok: true, at: { seq: 0, hash: s.genesis.fact.hash },
-      value: { entry: { seq: 0, prev: null, at: { scope: s.name, inc: s.at.inc, kind: "directory" }, input: { type: "genesis", inc: s.at.inc, "founding": s.signed, decision: "applied" } } },
+      value: { entry: { seq: 0, prev: null, input: { type: "genesis", "founding": s.signed, decision: "applied" } } },
     });
-    expect([isIncarnation(s.at.inc), s.genesis.intent, s.genesis.definition]).toEqual([true, intentDigest(s.signed.intent), definition.digest]);
-    // The same creation again is answered from the genesis: the same receipt, with the incarnation minted the first time.
+    // The scope's full reference is its seed's scope ID and the hash of its genesis.
+    expect([s.at, s.genesis.intent, s.genesis.definition]).toEqual([{ scope: s.name, genesis: s.genesis.fact.hash }, intentDigest(s.signed.intent), definition.digest]);
+    // The same creation again is answered from the genesis: the same receipt, with the nonce minted the first time.
     expect(await s.stub.create(s.signed, definition.declared)).toEqual({ answer: "accepted", receipt: s.genesis });
     expect(await s.head()).toEqual({ seq: 0, hash: s.genesis.fact.hash });
 
