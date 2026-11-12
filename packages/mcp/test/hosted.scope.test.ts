@@ -241,12 +241,12 @@ test.each(["platform:register@3", "platform:register@10"] as const)("H1, the who
 });
 
 /** A room created by rita with the issue definition active, and one agent created under `op`; the agent's answer. */
-async function hosted(room: Room, rita: Agent, handle: string, op: string, signer: Uint8Array = rita.secret, definition: AgentKeyInvitation["definition"] = "platform:membership@2", controller = "@rita"): Promise<{ agent: string; key: KeyId; bearer: string; link: string }> {
+async function hosted(room: Room, rita: Agent, handle: string, op: string, signer: Uint8Array = rita.secret, definition: AgentKeyInvitation["definition"] = "platform:membership@2", controller = "@rita"): Promise<IssuedBearer & { link: string }> {
   const M = rita.config.repository!.membership;
   const { link } = await invite(room, rita, handle, definition, controller);
   const body = JSON.stringify({ link });
   const created = await room.wait(() => post("/mcp/agents", control(room, signer, "create", M, null, body, op), body));
-  const answer = await created.json() as { agent: string; key: KeyId; bearer: string };
+  const answer: IssuedBearer = await created.json();
   expect(created.status, JSON.stringify(answer)).toBe(201);
   return { ...answer, link };
 }

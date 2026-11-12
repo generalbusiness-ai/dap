@@ -8,7 +8,7 @@ import { OAUTH_GRANT_MS } from "../src/oauth-access.ts";
 import { OAUTH_CLIENT_UNUSED_MS, OAuthError, oauthRedirectPolicy } from "../src/oauth-parameters.ts";
 import type { Sql } from "../src/sqlite-custody.ts";
 import { HostedRegistry } from "../src/hosted.ts";
-import type { MemberId } from "@generalbusiness/dap-contract";
+import type { MemberId, ScopeRef } from "@generalbusiness/dap-contract";
 
 const ID = "https://claude.ai/oauth/client.json", REDIRECT = "https://claude.ai/api/mcp/auth_callback", START = Date.parse("2099-01-01T00:00:00Z");
 const document = (id = ID) => ({ client_id: id, client_name: "Claude", redirect_uris: [REDIRECT], token_endpoint_auth_method: "none", logo_uri: "http://127.0.0.1/private" });
@@ -106,7 +106,7 @@ test("metadata refuses unknown origins before fetch and caches only exact, bound
     // Actual signed Registry entry and durable counters; observations are explicit stand-ins.
     const key = new Uint8Array(32).fill(6), otherKey = new Uint8Array(32).fill(7);
     const body = utf8(JSON.stringify({ after: null })), service = "https://room.example";
-    const membership = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" as const };
+    const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
     let observations = 0;
     const registryPorts = { now: () => now, mintId: (): never => { throw Error("A read cannot allocate an Agent"); }, agent: (): never => { throw Error("A read cannot call an Agent"); },
       ...{ roleStanding: async () => ({ status: "unavailable" as const }) },
