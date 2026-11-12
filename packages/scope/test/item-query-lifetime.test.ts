@@ -132,7 +132,7 @@ test("native unresolved-birth session query hides target clock state until full 
         }
       } finally {
         net.clock.now = current;
-        state.storage.sql.exec("DELETE FROM folded WHERE kind='observed' AND key=?", canonicalize([f.membership.scope, f.membership.inc, subject]));
+        state.storage.sql.exec("DELETE FROM folded WHERE kind='observed' AND key=?", canonicalize([f.membership.scope, f.membership.genesis, subject]));
       }
       return results;
     }));

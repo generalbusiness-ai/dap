@@ -78,6 +78,7 @@ test("native Rules activation projects the definition key under the owning defin
     const bounds = { ...PROPOSED_BOUNDS, definitionBytes: PROPOSED_BOUNDS.definitionBytes - 1 };
     const checked = validateDefinition(native.data, bounds, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
     if (!checked.ok) return expect.fail("The native Rules data must validate under this owning bound.");
+    const rulesAt = await life.wait(() => rules.at());
     const result = await life.wait(() => runInDurableObject(rules.object, (_instance, state) => {
       const row = state.storage.sql.exec<{ bytes: string; hash: typeof notesDefinition.digest; size: number }>("SELECT bytes, hash, size FROM entry WHERE seq = ? LIMIT 1", answer.receipt.fact.seq).one();
       const entry = parseStrict(row.bytes); if (!isEntry(entry)) return expect.fail("The actual native activation entry is required.");
@@ -87,7 +88,7 @@ test("native Rules activation projects the definition key under the owning defin
         for (const held of rows) cells.push(...Object.values(held));
         return { toArray: () => rows };
       } };
-      return { expected, projected: new ArchiveActFields(checked.definition, new ArchiveBudget(), bounds).project(sql, entry.at, { seq: entry.seq, hash: row.hash, bytes: row.size }), cells };
+      return { expected, projected: new ArchiveActFields(checked.definition, new ArchiveBudget(), bounds).project(sql, rulesAt, { seq: entry.seq, hash: row.hash, bytes: row.size }), cells };
     }));
     expect(result.projected.dependencies).toEqual(result.expected);
     expect(result.projected.dependencies).toHaveLength(1);

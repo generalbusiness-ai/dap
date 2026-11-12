@@ -92,7 +92,7 @@ async function confirmationFrom(child: ScopeId, parent: Lane) {
   const genesis = await stubOf(child).entry(reader, 0);
   if (!genesis.ok) throw new Error("child genesis is unreadable");
   const sent = genesis.value.entry.sends.find(send => send.message.class === "result")!;
-  const result = await peer(parent.name).deliver({ to: sent.to, from: { at: genesis.value.entry.at, seq: 0, hash: genesis.value.hash }, n: sent.n, message: sent.message });
+  const result = await peer(parent.name).deliver({ to: sent.to, from: { at: { scope: child, genesis: genesis.value.hash }, seq: 0, hash: genesis.value.hash }, n: sent.n, message: sent.message });
   expect(result).toMatchObject({ answer: "recorded" });
   if (result.answer !== "recorded") throw new Error("parent did not record the creation result");
   const read = await parent.stub.entry(reader, result.fact.seq);

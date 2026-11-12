@@ -1,7 +1,7 @@
 import { composeWholeTicketChange, composeWholeDeskChange } from "./definition-corpus-data.ts";
 import { describe, expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
-import type { Entry, Input, Seed } from "@generalbusiness/dap-contract";
+import type { Entry, Input, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { messageDigest, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { reserved, timeMs } from "@generalbusiness/dap-derive";
@@ -29,13 +29,15 @@ describe("creating a child (section 7.2), in two real objects, by the dispatcher
     await settle(D, I);
 
     const [d, i] = [await D.sealed(), await I.sealed()];
-    const fact = ({ entry, hash }: (typeof d)[number]) => ({ at: entry.at, seq: entry.seq, hash });
+    const [dAt, iAt] = [await D.at(), await I.at()];
+    const fact = ({ entry, hash }: (typeof d)[number], at: ScopeRef) => ({ at, seq: entry.seq, hash });
     expect([kinds(d.map((s) => s.entry)), kinds(i.map((s) => s.entry))]).toEqual([["genesis", "act", "result"], ["genesis"]]);
-    // I.0 names its source, D.1, and minted its own incarnation. D.2 records its result from I.0 and sends the confirmation.
-    expect(i[0]!.entry).toMatchObject({ at: { scope: I.name, kind: "lane" }, input: { type: "genesis", source: fact(d[1]!), n: 0, decision: "applied" } });
-    expect(d[2]!.entry).toMatchObject({ input: { from: fact(i[0]!), clause: "applied" }, effects: [{ effect: "state", item: 1, state: "created" }], sends: [{ message: { class: "control", genesis: fact(i[0]!) } }] });
+    // I.0 names its source, D.1, and its hash is I's genesis hash. D.2 records its result from I.0 and sends the confirmation.
+    expect(i[0]!.entry).toMatchObject({ input: { type: "genesis", source: fact(d[1]!, dAt), n: 0, decision: "applied" } });
+    expect([iAt.scope, iAt.genesis]).toEqual([I.name, i[0]!.hash]);
+    expect(d[2]!.entry).toMatchObject({ input: { from: fact(i[0]!, iAt), clause: "applied" }, effects: [{ effect: "state", item: 1, state: "created" }], sends: [{ message: { class: "control", genesis: fact(i[0]!, iAt) } }] });
     // Provisional: the result was sent and acknowledged with D.2; the index row of the genesis act is held, and no attempt of it started.
-    expect([(await I.summary()).value.status, await I.outboxItems()]).toMatchObject(["provisional", [{ outboxId: "0.0", held: false, acknowledged: fact(d[2]!) }, { outboxId: "0.1", held: true, attempts: [], acknowledged: null }]]);
+    expect([(await I.summary()).value.status, await I.outboxItems()]).toMatchObject(["provisional", [{ outboxId: "0.0", held: false, acknowledged: fact(d[2]!, dAt) }, { outboxId: "0.1", held: true, attempts: [], acknowledged: null }]]);
     expect(await I.act(una, "approve", approve)).toEqual({ answer: "unavailable", reason: "scope-provisional" });
 
     // The confirmation arrives on its next attempt. I.1 activates the scope, the held send goes out, and an act is accepted.
@@ -83,7 +85,7 @@ describe("creating a child (section 7.2), in two real objects, by the dispatcher
     // The first envelope again, exactly: D answers with the fact of the entry that decided it, and writes nothing.
     const head = (await D.summary()).at;
     const { entry, hash } = (await D.sealed())[spawned[0]!.entry.seq]!;
-    expect([await D.stub.deliver(first!), (await D.summary()).at]).toEqual([{ answer: "recorded", fact: { at: entry.at, seq: entry.seq, hash } }, head]);
+    expect([await D.stub.deliver(first!), (await D.summary()).at]).toEqual([{ answer: "recorded", fact: { at: await D.at(), seq: entry.seq, hash } }, head]);
   });
 });
 
@@ -99,7 +101,7 @@ describe("a relationship update (section 7.3) between two real objects", () => {
     net.hold = late ? (e) => e.message.class === "request" && (e.message.body as { state?: string }).state === "set" : null;
     // The link names the entry that filed P as its cause. To P that is a local fact. To I it is a foreign entry, fetched before the turn.
     const filed = (await P.sealed())[0]!;
-    const set = await P.did(rita, "link", { fields: { target: await I.at(), about: 0, because: { at: filed.entry.at, seq: 0, hash: filed.hash } } });
+    const set = await P.did(rita, "link", { fields: { target: await I.at(), about: 0, because: { at: await P.at(), seq: 0, hash: filed.hash } } });
     await settle(P, I);
     const removed = await P.did(rita, "unlink", { on: set.fact.seq, expected: { on: 1 } });
     await settle(P, I);
@@ -133,8 +135,8 @@ describe("a request that cannot be delivered (section 7.4)", () => {
     const D = await desk(directory, [under]);
     const S = await ticket(D, "S", under);
     const head = (await D.summary()).at;
-    // A reference to the desk's scope ID with an incarnation the desk does not have.
-    const lost = { ...(await D.at()), inc: (await S.at()).inc };
+    // A reference to the desk's scope ID with a genesis hash the desk does not have.
+    const lost = { ...(await D.at()), genesis: (await S.at()).genesis };
     const refusedEach = await S.did(una, "ask", { fields: { desk: lost } });
     await settle(S);
     // The first attempt of a second request gets no answer. Every later attempt of both is refused.
@@ -192,7 +194,7 @@ describe("a request that cannot be delivered (section 7.4)", () => {
     const head = (await D.summary()).at;
     const result = await I.envelope(0);                       // a real send: I.0's result, which D has recorded
     const confirmed = (await I.sealed())[1]!;                 // I.1, a real entry that sends nothing
-    const from = { at: confirmed.entry.at, seq: 1, hash: confirmed.hash };
+    const from = { at: await I.at(), seq: 1, hash: confirmed.hash };
     const spawn = { class: "request", type: "tell", body: { message: "spawn", fields: { opener: rita.member, title: "forged" } } } as const;
     expect([
       await D.stub.deliver({ to: await D.at(), from, n: 0, message: spawn }),
@@ -225,7 +227,7 @@ describe("a restart of the sender (sections 7.2 and 7.4)", () => {
     // The next attempt is a duplicate. The receiver answers it with the fact of its genesis and writes nothing.
     await later(1, D, I);
     expect([(await D.outboxItems())[0], (await I.summary()).at.seq]).toMatchObject([
-      { attempts: [{ answer: "none" }, { answer: "acknowledged" }], acknowledged: { at: genesis.entry.at, seq: 0, hash: genesis.hash } }, 0,
+      { attempts: [{ answer: "none" }, { answer: "acknowledged" }], acknowledged: { at: await I.at(), seq: 0, hash: genesis.hash } }, 0,
     ]);
   });
 });

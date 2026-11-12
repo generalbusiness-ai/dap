@@ -167,7 +167,7 @@ test("malformed or oversized native preparation rows and ambiguous observed inca
           sql.exec("UPDATE meta SET v=? WHERE k='scope'", canonicalize(scope));
           sql.exec("UPDATE entry SET bytes=? WHERE seq=0", genesis.bytes);
           sql.exec("UPDATE item SET record=? WHERE id=?", canonicalize(branch), branch.id);
-          sql.exec("DELETE FROM folded WHERE kind='observed' AND key IN (?,?)", canonicalize([f.membership.scope, f.membership.inc, subject]), canonicalize([other.scope, other.inc, subject]));
+          sql.exec("DELETE FROM folded WHERE kind='observed' AND key IN (?,?)", canonicalize([f.membership.scope, f.membership.genesis, subject]), canonicalize([other.scope, other.genesis, subject]));
         }
       }
       return results;

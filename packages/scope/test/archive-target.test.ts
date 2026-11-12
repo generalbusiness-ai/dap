@@ -160,7 +160,7 @@ test("one locate reuses only its identical checked Rules birth and keeps final f
     } }, query: async (at, encoded) => {
       itemReads++;
       const result = await (env.PLATFORM.get(env.PLATFORM.idFromName(at.scope)) as unknown as { queryItems(encoded: string, reader: unknown): Promise<NativeItemQuery> }).queryItems(encoded, reader);
-      if (!result.ok || at.kind !== "directory" || !substitute) {
+      if (!result.ok || at.scope !== directory.scope || !substitute) {
         itemBytes.push(result.ok ? utf8(result.serialized).length : null);
         return result;
       }

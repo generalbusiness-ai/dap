@@ -57,7 +57,7 @@ test("later repository authorization names one destination incarnation, stable r
     [row, { ...row }],
     [row, { ...row, destination: { ...destination, genesis: `sha256:${"04".repeat(32)}` as const } }],
     [{ ...row, repository: { ...repository, namespace: "another-account" } }],
-    [{ ...row, destination: { ...destination, inc: "in_invalid" } }],
+    [{ ...row, destination: { ...destination, genesis: "sha256:invalid" } }],
     [{ ...row, branch: "../main" }],
     [{ ...row, repository: { ...repository, id: "9007199254740992" } }],
     [{ ...row, extra: true }],
@@ -108,15 +108,15 @@ function destinationGiven(register: Ledger, creator: ScopeRef, definition: Platf
   const bytes = canonicalize(copy);
   const content = digestBytes(utf8(bytes));
   const seed: Seed = { v: 1, kind: "destination", definition, creator, cause: d("e"), ordinal: 3 };
-  const at: ScopeRef = { scope: scopeIdOf(seed), genesis: `sha256:${"03".repeat(32)}` as const };
   const entry: Entry = {
-    ...register.own(0)!.entry, at,
-    input: { type: "genesis", seed, inc: at.inc, kind: "establish", "founding": null, source: null, n: null, message: null, decision: "applied" },
-    uses: [{ fact: claim, content }], effects: [], sends: [],
+    v: 1, seq: 0, prev: null, time: register.own(0)!.entry.time, clamped: false, epoch: 0,
+    input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(3)), kind: "establish", "founding": null, source: null, sourceKind: null, n: null, message: null, decision: "applied" },
+    uses: [{ fact: claim, content }], prepared: [], effects: [], sends: [],
   };
   const hash = entryHash(entry);
+  const at: ScopeRef = { scope: scopeIdOf(seed), genesis: hash };
   const state = new MemoryState();
-  state.setScope({ ...register.state.scope()!, at, creator, head: { seq: 0, hash }, genesis: { hash, source: null, n: null } });
+  state.setScope({ ...register.state.scope()!, at, kind: "destination", creator, head: { seq: 0, hash }, genesis: { hash, source: null, n: null } });
   state.putItem({ id: 0, type: "branch", state: "empty", revision: 0, opened: hash, parties: {}, attributed: [], refs: { directory: creator as unknown as FieldValue, claim: claim as unknown as FieldValue }, values: { repository: register.item(1).values["repository"]!, name: "main" } });
   return { localSequence: () => null,
     state, own: (seq) => seq === 0 ? { entry, hash } : null,

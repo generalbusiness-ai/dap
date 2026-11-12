@@ -32,7 +32,7 @@ export interface Random { bytes(length: number): Uint8Array }
  * act needs (authority note, section 3.3).
  */
 export interface Asked {
-  /** The scope that judges, with its incarnation. */
+  /** The scope that judges, addressed by its scope ID and genesis hash. */
   scope: ScopeRef;
   /** The act, or the intent that a capability's step prepares for, with its signature and shape checked. Its signer is the intent's `actor`. */
   signed: SignedIntent;

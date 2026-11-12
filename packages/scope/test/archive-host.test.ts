@@ -21,7 +21,7 @@ import { ArchiveRows } from "../src/archive-row.ts";
 import { create, at as nativeTime } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 
-const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "destination" };
+const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 class RecordingSendBudget extends ArchiveBudget {
   readonly charges: Partial<ArchiveCost>[] = [];
   override spend(cost: Partial<ArchiveCost>): void { super.spend(cost); this.charges.push({ ...cost }); }
@@ -212,7 +212,7 @@ test.each(["github", "artifacts"] as const)("%s archive credential cannot escape
   const attempts: ArchiveSend[] = [
     { ...request, ref: "refs/heads/main" }, { ...request, ref: `${request.ref}/child` },
     { ...request, at: other, ref: journalRef(other.scope) },
-    { ...request, at: { ...at, inc: `in_${"b".repeat(25)}a` } },
+    { ...request, at: { ...at, genesis: `sha256:${"b".repeat(63)}a` } },
     { ...request, repository: { ...request.repository, id: "72" } },
     { ...request, credential: { ...request.credential } },
   ];

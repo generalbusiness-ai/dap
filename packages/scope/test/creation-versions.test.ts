@@ -94,7 +94,7 @@ test("indexed creation captures policy before awaits and changes cache identity 
 
 test("injected invalid or excluded child policy refuses before local and open-creation shortcuts", async () => {
   const signed = install(), root = scopeIdOf(seedOf(signed, legacy));
-  const at = { scope: root, kind: "register" as const, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" as const };
+  const at = { scope: root, genesis: `sha256:${"aa".repeat(32)}` as const };
   const to: Seed = { v: 1, kind: "membership", definition: "platform:membership@2", creator: at, cause: intentDigest(signed.intent), ordinal: 0 };
   const delivered = { to, from: { at, seq: 0, hash: intentDigest(signed.intent) }, n: 0, message: { class: "request", type: "create", body: {} } };
   let lookups = 0;

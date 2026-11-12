@@ -217,7 +217,7 @@ export async function nativeArchiveFixture() {
           const result = results[0]!;
           confirmation = factRefOf(result.entry, await life.wait(() => room.D.at())); expect(confirmation.hash).toBe(result.hash);
           const confirms = result.entry.sends.filter(value => value.message.class === "control" && value.message.type === "confirm"
-            && canonicalize(value.to) === canonicalize(born.entry.at) && canonicalize(value.message.genesis) === canonicalize(bornFact));
+            && canonicalize(value.to) === canonicalize(bornFact.at) && canonicalize(value.message.genesis) === canonicalize(bornFact));
           if (confirms.length !== 1) throw Error("One actual Directory confirmation send required");
           const confirmed = confirms[0]!, activations = childHistory.filter(value => {
             const input = value.entry.input;
@@ -227,7 +227,7 @@ export async function nativeArchiveFixture() {
           if (activations.length !== 1) throw Error("Actual child activation must retain the exact native confirmation");
           expect(activations[0]!.entry.effects).toContainEqual({ effect: "activate" });
           const c = controls(child.name, START); c.clock = clock;
-          made = new Lane(child.name, c, born.entry.at, receiptOf(born, under.digest), signed);
+          made = new Lane(child.name, c, bornFact.at, receiptOf(born, under.digest), signed);
         } else made = await create(bounds, reads, under, { opener, clock });
         const lane = new NativeArchiveLane(made, active, run, factory);
         lanes.push(lane);

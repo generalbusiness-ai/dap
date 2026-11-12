@@ -178,7 +178,7 @@ test("causal signed history and entry readers see a native delivery sealed durin
   const targetRef = await target.at(), before = await target.summary(), seq = before.at.seq + 1;
   const previousHold = net.hold;
   const hold: NonNullable<typeof net.hold> = envelope =>
-    (isScopeRef(envelope.to) && envelope.to.scope === targetRef.scope && envelope.to.inc === targetRef.inc && envelope.to.kind === targetRef.kind)
+    (isScopeRef(envelope.to) && envelope.to.scope === targetRef.scope && envelope.to.genesis === targetRef.genesis)
       || (previousHold?.(envelope) ?? false);
   net.hold = hold;
   try {

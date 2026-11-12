@@ -148,6 +148,6 @@ test("immutable proof is read-only and complete-directory-bound", async () => {
   const repo = (await D.item(0)).values["repository"];
   const peer = G.stub as unknown as import("../src/site/publication.ts").SitePublicationPeer;
   expect(await peer.sitePublishedCommit(source, repo as never, published)).toMatchObject({ ok: true, proof: { commit: published, directory: source, receipt: { ref: receiptRef, commit: receiptCommit } } });
-  expect(await peer.sitePublishedCommit({ ...source, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" as never }, repo as never, published)).toEqual({ ok: false, reason: "not-published" });
+  expect(await peer.sitePublishedCommit({ ...source, genesis: `sha256:${"aa".repeat(32)}` as const }, repo as never, published)).toEqual({ ok: false, reason: "not-published" });
   expect(await Promise.all([D, G].map(snapshot))).toEqual(before);
 });

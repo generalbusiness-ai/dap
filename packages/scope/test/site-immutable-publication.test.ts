@@ -128,7 +128,7 @@ test("two native publications retain older immutable content and deny pending/co
     finally { await d.wait(() => runInDurableObject(d.G.object, (_instance, state) => { d.active(); state.storage.sql.exec("UPDATE item SET state = ?, record = ? WHERE id = ?", oversized.state, oversized.record, oversized.id); })); }
     console.info("native-stage", "immutable", "completed", performance.now() - stageOrigin, lastStarted, lastCompleted = "history-byte-bounds");
     console.info("native-stage", "immutable", "started", performance.now() - stageOrigin, lastStarted = "identity-and-receipt-corruption", lastCompleted);
-    expect(await peer.sitePublishedCommit({ ...directory, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" as never }, repo as never, first)).toEqual({ ok: false, reason: "not-published" });
+    expect(await peer.sitePublishedCommit({ ...directory, genesis: `sha256:${"aa".repeat(32)}` as const }, repo as never, first)).toEqual({ ok: false, reason: "not-published" });
     expect(await peer.sitePublishedCommit(directory, { ...repo, id: "foreign" } as never, first)).toEqual({ ok: false, reason: "not-published" });
     const selection = await peer.sitePublishedCommit(directory, repo as never, first);
     if (!selection.ok) throw new Error("No native proof for the earlier publication");

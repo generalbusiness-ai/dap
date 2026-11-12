@@ -448,7 +448,7 @@ describe("signed reads on real registers (the planner's decisions 61cc5e50, c649
       // The birth resolution requires the full confirmed membership incarnation even before a local observation.
       const sessions = sessionsOf(platformNet.secret, TEST_DEPLOYMENT)!;
       const claims = openSession(sessions, session.slice("Session ".length))!;
-      const another = `Session ${mintSession(sessions, { ...claims, membership: { ...claims.membership, inc: `in_${claims.membership.inc[3] === "a" ? "b" : "a"}${claims.membership.inc.slice(4)}` as never } })}`;
+      const another = `Session ${mintSession(sessions, { ...claims, membership: { ...claims.membership, genesis: `sha256:${claims.membership.genesis[7] === "a" ? "b" : "a"}${claims.membership.genesis.slice(8)}` as never } })}`;
       expect([(await read(D, "", another)).status, (await read(G, "", another)).status]).toEqual([403, 403]);
       // Rita's key with no session keeps the signed-read rule: past the window of her claim she reads nothing of the destination,
       // and her session still reads it whole.

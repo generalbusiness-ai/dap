@@ -37,8 +37,8 @@ describe("the operator's record and the requests that wait (authority note, sect
     const S = await ticket(D, "S");
     const metrics: MetricPoint[] = [];
     metricBindings.set(S.object.id.toString(), { DEPLOYMENT: "operator-metrics-test", METRICS: { writeDataPoint: p => metrics.push(structuredClone(p)) } });
-    // A request to an incarnation that the desk does not have: every attempt is refused, and it ends `undelivered`. It waits in no list.
-    const lost = { ...(await D.at()), inc: (await S.at()).inc };
+    // A request to a genesis hash that the desk does not have: every attempt is refused, and it ends `undelivered`. It waits in no list.
+    const lost = { ...(await D.at()), genesis: (await S.at()).genesis };
     const refused = await S.did(una, "ask", { fields: { desk: lost } });
     await settle(S);
     // A second one whose first attempt gets no answer: it ends `delivery-unavailable`, and stays pending.
@@ -105,9 +105,9 @@ describe("the operator's record and the requests that wait (authority note, sect
   });
 
   test("T41: an incident that writes an entry is in that entry, and the record reads it from there: a creation's result that ran `conflict` names its entry and the entry of its request. The entry is MADE BY HAND: no second incarnation can be made in one namespace", () => {
-    const at = { scope: "s", inc: "i", kind: "directory" } as never;
+    const at = { scope: "s", genesis: "g" } as never;
     const entry = {
-      v: 1, at, seq: 9, prev: null, time: net.clock.now, clamped: false, epoch: 0, uses: [], prepared: [], effects: [{ effect: "state", item: 3, state: "conflicted" }], sends: [],
+      v: 1, genesis: "g", seq: 9, prev: null, time: net.clock.now, clamped: false, epoch: 0, uses: [], prepared: [], effects: [{ effect: "state", item: 3, state: "conflicted" }], sends: [],
       input: { type: "delivery", from: { at, seq: 0, hash: "sha256:" + "1".repeat(64) }, n: 0, clause: "conflict", message: { class: "result", type: "create", outcome: "applied", of: { from: { at, seq: 3, hash: "sha256:" + "2".repeat(64) }, n: 0 } } },
     } as unknown as Entry;
     const hash = entryHash(entry);

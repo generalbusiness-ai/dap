@@ -271,8 +271,8 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
       return new ScopeIndexRows(state.storage.sql).has(D.name);
     }));
     const registeredProof = () => life.wait(() => runInDurableObject(indexObject, (_instance, state) =>
-      state.storage.sql.exec("SELECT inc,kind,genesis FROM known_scope WHERE scope = ?", D.name).toArray()
-        .map(row => ({ at: { scope: D.name, inc: row["inc"], kind: row["kind"] }, genesis: row["genesis"] }))));
+      state.storage.sql.exec("SELECT genesis,kind FROM known_scope WHERE scope = ?", D.name).toArray()
+        .map(row => ({ at: { scope: D.name, genesis: row["genesis"] }, kind: row["kind"] }))));
     const registering = api(indexedScopes(env.PLATFORM, { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "register" }));
     const enforcing = api(indexedScopes(env.PLATFORM, { SCOPE_INDEX: env.SCOPE_INDEX, SCOPE_INDEX_MODE: "enforce" }));
     const summary = (scopes: typeof registering) => life.owner.required(() => life.wait(() => scopes.summary(D.name, memberReader)));
@@ -281,7 +281,8 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
     expect(await summary(enforcing)).toEqual({ ok: false, reason: "not-found" });
     const registered = await summary(registering);
     expect(registered).toMatchObject({ ok: true, at: later, value: { scope: directoryAt } });
-    expect(await registeredProof()).toEqual([{ at: directoryAt, genesis: genesis.hash }]);
+    expect(await registeredProof()).toEqual([{ at: directoryAt, kind: "directory" }]);
+    expect(directoryAt.genesis).toBe(genesis.hash);
     await life.wait(() => D.restart());
     expect(await summary(enforcing)).toEqual(registered);
 

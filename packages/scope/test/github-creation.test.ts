@@ -249,7 +249,7 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
       return destinationMembership(store);
     });
-    expect(await recordedMembership()).toEqual({ scope: (await membership.at()).scope, inc: null, kind: "membership" });
+    expect(await recordedMembership()).toEqual({ scope: (await membership.at()).scope, pending: true });
     const seat = await membership.did(rita, "seat", { expected: await membership.expected({ roster: 0 }) });
     await membership.did(rita, "first-key", { fields: { member: seat }, expected: await membership.expected({ roster: 0, member: seat }) });
     owner.configure({ sessions: true });
@@ -264,7 +264,7 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
       expect(history.ok && history.value.map(({ entry }) => entry)).toEqual(beforeRestart.entries);
       const retained = await G.stub.retained(native, "entry", retainedUse.content);
       expect(retained.ok && JSON.parse(retained.value.bytes)).toEqual((await D.entries())[0]);
-      expect(await recordedMembership()).toEqual({ scope: issued.session.claims.membership.scope, inc: null, kind: "membership" });
+      expect(await recordedMembership()).toEqual({ scope: issued.session.claims.membership.scope, pending: true });
     };
     await nativeReads();
     // MAC-authentic controls under the TEST SECRET, not membership-issued
