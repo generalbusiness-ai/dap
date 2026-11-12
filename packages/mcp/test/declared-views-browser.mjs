@@ -1,47 +1,15 @@
 // Pinned scratch Playwright; no install, provider or native-authority claim.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { lstat, mkdir, readdir, realpath, writeFile } from 'node:fs/promises';
-import { basename, dirname, join, resolve } from 'node:path';
-import { homedir } from 'node:os';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { startViewsHost } from './support/views-host.ts';
-
-// Fresh original output only. /tmp remains an explicit system alias; all
-// ancestry below its canonical root and all HOME ancestry must be real.
-async function outputDirectory(requested) {
-  assert.ok(typeof requested === 'string' && !requested.includes('\0') && requested === resolve(requested));
-  assert.equal(typeof process.getuid, 'function');
-  const uid = process.getuid(), homeEvidence = join(homedir(), 'play', 'artroom-evidence');
-  const temporaryPrefix = requested.startsWith('/private/tmp/') ? '/private/tmp' : requested.startsWith('/tmp/') ? '/tmp' : null;
-  assert.ok(temporaryPrefix || dirname(requested) === homeEvidence
-    && /^\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9._-]{0,127}$/.test(basename(requested)));
-  const temporaryRoot = temporaryPrefix ? await realpath(temporaryPrefix) : null;
-  const output = temporaryPrefix ? join(temporaryRoot, requested.slice(temporaryPrefix.length + 1)) : requested;
-  const parent = dirname(output);
-  for (let ancestor = parent; ; ancestor = dirname(ancestor)) {
-    const facts = await lstat(ancestor);
-    assert.ok(facts.isDirectory() && !facts.isSymbolicLink());
-    assert.equal(await realpath(ancestor), ancestor);
-    if (ancestor === '/') break;
-  }
-  const parentFacts = await lstat(parent);
-  assert.ok(parentFacts.uid === uid && (parentFacts.mode & 0o022) === 0
-    || temporaryRoot === parent && (parentFacts.mode & 0o1000) !== 0);
-  // Nonrecursive mkdir refuses an existing file, directory, or symlink.
-  await mkdir(output, { mode: 0o700 });
-  const facts = await lstat(output);
-  assert.ok(facts.isDirectory() && !facts.isSymbolicLink());
-  assert.equal(facts.uid, uid); assert.equal(facts.mode & 0o777, 0o700);
-  assert.equal(await realpath(output), output);
-  assert.deepEqual(await readdir(output), []);
-  return output;
-}
-const { PLAYWRIGHT_CORE, CHROMIUM, VIEW_CAPTURE_OUT: requestedOut } = process.env;
-assert.ok(PLAYWRIGHT_CORE && CHROMIUM && requestedOut);
+const { PLAYWRIGHT_CORE, CHROMIUM, VIEW_CAPTURE_OUT: out } = process.env;
+assert.ok(PLAYWRIGHT_CORE && CHROMIUM && out && /^\/(?:private\/)?tmp\//.test(out));
 const require = createRequire(join(PLAYWRIGHT_CORE, 'package.json'));
 assert.equal(require('playwright-core/package.json').version, '1.63.0');
 const { chromium } = require('playwright-core');
-const out = await outputDirectory(requestedOut);
+await mkdir(out, { recursive: true });
 const host = await startViewsHost(); let browser;
 const report = { browserPlugin: 'Browser plugin unavailable; cached pinned Playwright fallback', cases: [] };
 async function contained(app) {
