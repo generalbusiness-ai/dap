@@ -8,39 +8,60 @@
  */
 
 import type { ActType, Digest, Entry, EntryPart, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Operand, Part, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, isEntry, isEntryBodyOf, isScopeKind, isSequenceRef, messageDigest, parseStrict, platformName, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalBytes, canonicalize, digestBytes, intentDigest, isEntry, isEntryBodyOf, isScopeKind, isSequenceRef, messageDigest, parseStrict, platformName, scopeIdOf, isSeed, utf8 } from "@generalbusiness/dap-bytes";
 import { creationFields, isEntryOf, isLocalFact, useOf, type Facts, type Local, type Reading } from "./fields.ts";
 import { bound } from "./handlers.ts";
 import { declarationOf } from "./program/declaration.ts";
-import type { AnchoredJudgmentCopy, Fetched, Judging, ReplayAssumptions } from "./guards.ts";
+import type { AnchoredJudgmentCopy, Fetched, Judging, ReplayAssumptions, RetainedResultMaterial, RetainedResultOperand } from "./guards.ts";
 import type { Item, StateView } from "./state.ts";
 import { byteOrder, isFactRef, isLocalId, isObject, memberOf, own, same } from "./values.ts";
 import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import { archivedPosition } from "./floor.ts";
 import { RuleFault } from "./marks.ts";
-import type { Source, Delivered } from "./delivery.ts";
+import type { Source, Delivered, DeliveryContext } from "./delivery.ts";
 import type { Creation, SignedCreation } from "./genesis.ts";
+import { inspectClassifiedRetainedUse, isRetainedUse, type RetainedUse } from "./retained-use.ts";
 
 // The runtime's native clone snapshots admitted JSON without another parser.
 declare function structuredClone<T>(value: T): T;
 
 /** Internal evidence arms. Only a Replay adapter installs caller copies. */
 type RecordedCopy = AnchoredJudgmentCopy & { readonly kind: ScopeKind };
-export type JudgmentCopy = { readonly mode: "verified"; readonly value: Fetched } | RecordedCopy;
+const CONSTRUCT = Symbol("judgment-context-construction");
+class LocalRetainedCopy {
+  readonly #use: RetainedUse;
+  readonly mode = "local-retained" as const;
+  constructor(token: unknown, use: RetainedUse, readonly under: string) {
+    if (token !== CONSTRUCT || !isRetainedUse(use)) throw new TypeError("local judgment copy requires its original retained use");
+    this.#use = use;
+    Object.freeze(this);
+  }
+  get fact(): FactRef { return this.#use.fact; }
+  get entry(): Entry { return this.#use.entry; }
+  get kind(): ScopeKind { return this.#use.kind; }
+  static is(value: unknown): value is LocalRetainedCopy { return typeof value === "object" && value !== null && #use in value; }
+}
+Object.freeze(LocalRetainedCopy.prototype); Object.freeze(LocalRetainedCopy);
+export type JudgmentCopy = { readonly mode: "verified"; readonly value: Fetched } | RecordedCopy | LocalRetainedCopy;
+const localCopy = (copy: LocalRetainedCopy): LocalRetainedCopy => {
+  if (!LocalRetainedCopy.is(copy)) throw new RuleFault("local judgment copy requires private ownership");
+  return copy;
+};
 export function verifiedCopy(value: Fetched): Extract<JudgmentCopy, { mode: "verified" }> {
   if (!isEntryOf(value.entry, value.fact, value.sequence)) throw new RuleFault("a verified judgment copy requires genuine matching genesis evidence");
   return { mode: "verified", value };
 }
-export const copyFact = (copy: JudgmentCopy): FactRef => copy.mode === "verified" ? copy.value.fact : copy.fact;
-export const copyEntry = (copy: JudgmentCopy): Entry => copy.mode === "verified" ? copy.value.entry : copy.entry;
+export const copyFact = (copy: JudgmentCopy): FactRef => copy.mode === "verified" ? copy.value.fact : copy.mode === "local-retained" ? localCopy(copy).fact : copy.fact;
+export const copyEntry = (copy: JudgmentCopy): Entry => copy.mode === "verified" ? copy.value.entry : copy.mode === "local-retained" ? localCopy(copy).entry : copy.entry;
 export const copyUnder = (copy: JudgmentCopy): string => copy.mode === "verified" ? copy.value.under
-  : copy.mode === "retained-name" ? copy.under : platformName(copy.exporterRow.pin);
-export const copyKind = (copy: JudgmentCopy): ScopeKind => copy.mode === "verified" ? copy.value.sequence.kind : copy.kind;
+  : copy.mode === "local-retained" ? localCopy(copy).under : copy.mode === "retained-name" ? copy.under : platformName(copy.exporterRow.pin);
+export const copyKind = (copy: JudgmentCopy): ScopeKind => copy.mode === "verified" ? copy.value.sequence.kind : copy.mode === "local-retained" ? localCopy(copy).kind : copy.kind;
 
 /** Full matching always precedes hash deduplication, including in the caller arm. */
 export function matchesCopy(copy: JudgmentCopy, fact: FactRef): boolean {
   try {
     if (copy.mode === "verified") return same(copy.value.fact, fact) && isEntryOf(copy.value.entry, fact, copy.value.sequence);
+    if (copy.mode === "local-retained") return LocalRetainedCopy.is(copy) && same(copy.fact, fact) && isEntryBodyOf(copy.entry, fact);
     const { entry, anchor } = copy;
     const body = same(copy.fact, fact) && entry.input.type !== "genesis" && isEntryBodyOf(entry, fact)
       && canonicalize(entry) === copy.originalBytes
@@ -55,17 +76,130 @@ export function matchesCopy(copy: JudgmentCopy, fact: FactRef): boolean {
   } catch { return false; }
 }
 
-const EVIDENCE = Symbol("per-judgment-replay-evidence");
-interface Evidence { readonly facts: readonly JudgmentCopy[]; readonly source: JudgmentCopy | null; readonly recorded?: Entry }
-type BoundReading = Reading & { readonly [EVIDENCE]?: Evidence };
+const EVIDENCE = Symbol("per-judgment-evidence");
+type RuntimeAsked = { act: SignedIntent } | { delivery: Delivered } | { genesis: Creation | SignedCreation };
+type EvidencePhase = "live-verified" | "live-result-pending" | "live-result-admitted" | "replay";
+interface EvidenceData {
+  readonly phase: EvidencePhase;
+  readonly asked: Digest | null;
+  readonly valid: boolean;
+  readonly own: Reading["own"];
+  readonly material: RetainedResultMaterial | null;
+  readonly sourceInput: Source | null;
+  readonly sourcePin: Digest | null;
+  readonly facts: readonly JudgmentCopy[];
+  readonly source: JudgmentCopy | null;
+  readonly recorded?: Entry;
+}
+class ContextEvidence {
+  readonly #holder: Reading;
+  readonly #data: EvidenceData;
+  constructor(token: unknown, holder: Reading, data: EvidenceData) {
+    if (token !== CONSTRUCT) throw new TypeError("judgment evidence requires its owned holder");
+    this.#holder = holder; this.#data = Object.freeze(data); Object.freeze(this);
+  }
+  static for(holder: Reading): EvidenceData | null {
+    const value: unknown = Object.getOwnPropertyDescriptor(holder, EVIDENCE)?.value;
+    return typeof value === "object" && value !== null && #holder in value && value.#holder === holder ? value.#data : null;
+  }
+}
+Object.freeze(ContextEvidence.prototype); Object.freeze(ContextEvidence);
 
-/** A live entry point overwrites any inherited private context with verified-only input. */
-export function verifiedContext<C extends Reading>(context: C): C {
-  return { ...context, [EVIDENCE]: Object.freeze({ facts: Object.freeze(context.facts.map(verifiedCopy)), source: null }) };
+function fingerprint(value: unknown): Digest | null {
+  // Only canonical input binding can fail here; no port/body operation runs.
+  try { return digestBytes(canonicalBytes(value)); } catch { return null; }
+}
+function ownContext<C extends Reading>(context: C, data: EvidenceData): C {
+  const holder = { ...context };
+  Object.defineProperty(holder, EVIDENCE, { value: new ContextEvidence(CONSTRUCT, holder, { ...data, facts: Object.freeze([...data.facts]) }), enumerable: true });
+  Object.freeze(holder);
+  return holder;
+}
+function verifiedData(context: Reading, actual: RuntimeAsked): EvidenceData {
+  return { phase: "live-verified", asked: fingerprint(actual), valid: true, own: context.own,
+    material: null, sourceInput: null, sourcePin: null, facts: Object.freeze(context.facts.map(verifiedCopy)), source: null };
+}
+const resultAsked = (actual: RuntimeAsked): actual is { delivery: Delivered } => "delivery" in actual && isObject(actual.delivery.message) && actual.delivery.message.class === "result";
+const retainedPhase = (phase: EvidencePhase): boolean => phase === "live-result-pending" || phase === "live-result-admitted";
+
+function stagedMaterial(material: RetainedResultMaterial | null): RetainedResultMaterial | null {
+  if (!material || !isObject(material.origin) || !Array.isArray(material.operands)) return null;
+  const operands: RetainedResultOperand[] = [];
+  for (const operand of material.operands) {
+    if (!isObject(operand) || typeof operand.under !== "string") return null;
+    operands.push(Object.freeze({ classified: operand.classified, under: operand.under }));
+  }
+  return Object.freeze({ localSequence: material.localSequence,
+    origin: Object.freeze({ entry: material.origin.entry, hash: material.origin.hash }), operands: Object.freeze(operands) });
+}
+
+/** Stage existing material only. Failure cannot replace an earlier delivery answer. */
+export function retainedResultContext(base: Omit<DeliveryContext, "facts" | "origin">, actual: Delivered, material: RetainedResultMaterial | null): DeliveryContext {
+  const source = base.source ? Object.freeze({ ...base.source }) : null;
+  const staged = stagedMaterial(material);
+  const context: DeliveryContext = { ...base, clock: Object.freeze({ ...base.clock }), bounds: Object.freeze({ ...base.bounds }),
+    facts: Object.freeze([]), source, origin: staged?.origin.entry ?? null };
+  const asked = fingerprint({ delivery: actual });
+  return ownContext(context, { phase: "live-result-pending", asked, valid: asked !== null,
+    own: context.own, material: staged, sourceInput: source, sourcePin: fingerprint(source?.pin ?? null), facts: [], source: null });
+}
+
+/** A new live invocation re-stages an admitted result; no earlier admission is a lease. */
+export function verifiedContext<C extends Reading>(context: C, actual: RuntimeAsked): C {
+  const previous = ContextEvidence.for(context);
+  if (previous && retainedPhase(previous.phase) && resultAsked(actual)) {
+    const asked = fingerprint(actual);
+    const valid = previous.valid && asked !== null && asked === previous.asked && previous.own === context.own;
+    return ownContext({ ...context, facts: [] }, { ...previous, phase: "live-result-pending", asked, valid,
+      material: valid ? previous.material : null, facts: [], source: null });
+  }
+  return ownContext(context, verifiedData(context, actual));
+}
+
+/** The collector changes exactly two fields and never admits pending operands. */
+export function resultContextForRuleCollection(context: DeliveryContext, actual: Delivered, asked: import("./guards.ts").RuleInput[]): DeliveryContext {
+  const previous = ContextEvidence.for(context), collecting = { ...context, prepared: [], asked };
+  if (!previous || !retainedPhase(previous.phase)) return collecting;
+  const bound = fingerprint({ delivery: actual });
+  const valid = previous.valid && bound !== null && bound === previous.asked && previous.own === context.own;
+  return ownContext({ ...collecting, facts: Object.freeze([]) }, { ...previous, phase: "live-result-pending", valid, material: valid ? previous.material : null, facts: [], source: null });
+}
+
+/** The only runtime body admission, after the existing result/repeat guards. */
+export function admitRetainedResultContext(context: DeliveryContext, actual: Delivered, receiving: ScopeRef): DeliveryContext | null {
+  const evidence = ContextEvidence.for(context);
+  if (!evidence) return Object.getOwnPropertyDescriptor(context, EVIDENCE) ? null : context;
+  if (!retainedPhase(evidence.phase)) return context;
+  const material = evidence.material, message = actual.message, source = context.source;
+  if (!evidence.valid || evidence.own !== context.own || fingerprint({ delivery: actual }) !== evidence.asked
+    || !material || message.class !== "result" || !isObject(message.of) || !isFactRef(message.of.from) || !isLocalId(message.of.n)
+    || !same(message.of.from.at, receiving) || !isEntry(material.origin.entry)
+    || material.origin.hash !== message.of.from.hash || !isEntryOf(material.origin.entry, message.of.from, material.localSequence)
+    || !same(material.localSequence.at, receiving) || material.origin.entry.input.type === "genesis" && material.localSequence.kind !== material.origin.entry.input.seed.kind) return null;
+  if (source !== evidence.sourceInput || !source || !evidence.source || evidence.source.mode !== "verified"
+    || evidence.source.value.entry !== source.entry || evidence.source.value.sequence !== source.sequence || evidence.source.value.under !== source.under
+    || !matchesCopy(evidence.source, actual.from) || evidence.sourcePin === null || fingerprint(source.pin ?? null) !== evidence.sourcePin) return null;
+  const sent = material.origin.entry.sends.find(send => send.n === message.of.n);
+  if (!sent || sent.message.class !== "request") return null;
+  const target = isSequenceRef(sent.to) ? same(sent.to, actual.from.at)
+    : isSeed(sent.to) && scopeIdOf(sent.to) === actual.from.at.scope && sent.to.kind === evidence.source.value.sequence.kind;
+  if (!target) return null;
+  if (material.operands.length !== material.origin.entry.uses.length) return null;
+  const facts: JudgmentCopy[] = [], genuine: Fetched[] = [];
+  for (let index = 0; index < material.operands.length; index++) {
+    const operand = material.operands[index]!, classified = inspectClassifiedRetainedUse(operand.classified), use = material.origin.entry.uses[index]!;
+    if (!classified || typeof operand.under !== "string" || classified.use.useIndex !== index || !same(classified.use.origin, message.of.from)
+      || !same(classified.use.fact, use.fact) || classified.use.content !== use.content || classified.use.kind !== use.kind) return null;
+    if (classified.mode === "genuine") {
+      const value: Fetched = { fact: classified.use.fact, entry: classified.use.entry, sequence: classified.sequence, under: operand.under };
+      genuine.push(value); facts.push(verifiedCopy(value));
+    } else facts.push(new LocalRetainedCopy(CONSTRUCT, classified.use, operand.under));
+  }
+  return ownContext({ ...context, facts: Object.freeze(genuine) }, { ...evidence, phase: "live-result-admitted", facts: Object.freeze(facts) });
 }
 
 /** Take owned snapshots before any rule can run or state view can change. */
-type ReplayAsked = { act: SignedIntent } | { delivery: Delivered } | { genesis: Creation | SignedCreation };
+type ReplayAsked = RuntimeAsked;
 export function replayContext<C extends Reading & { source?: Source | null }>(context: C, assumed: ReplayAssumptions, asked: ReplayAsked): C | null {
   if (!assumed || !Array.isArray(assumed.facts) || context.source && assumed.source || !isEntry(assumed.recorded)) return null;
   const freeze = (value: unknown): void => {
@@ -155,28 +289,41 @@ export function replayContext<C extends Reading & { source?: Source | null }>(co
     const verified = context.facts.find(value => same(value.fact.at, source.fact.at));
     if (verified && (verified.sequence.kind !== source.kind || verified.under !== copyUnder(source))) return null;
   }
-  return { ...context, [EVIDENCE]: Object.freeze({ facts: Object.freeze(facts), source, recorded }) };
+  return ownContext(context, { phase: "replay", asked: fingerprint(asked), valid: true, own: context.own, material: null,
+    sourceInput: context.source ?? null, sourcePin: fingerprint(context.source?.pin ?? null), facts: Object.freeze(facts), source, recorded });
 }
 
-export const judgmentFacts = (context: BoundReading): readonly JudgmentCopy[] => context[EVIDENCE]?.facts ?? context.facts.map(verifiedCopy);
-export function replayAssumptions(context: BoundReading): ReplayAssumptions | null {
-  const recorded = context[EVIDENCE]?.recorded;
+export const judgmentFacts = (context: Reading): readonly JudgmentCopy[] => ContextEvidence.for(context)?.facts ?? context.facts.map(verifiedCopy);
+export function replayAssumptions(context: Reading): ReplayAssumptions | null {
+  const owned = ContextEvidence.for(context);
+  const recorded = owned?.phase === "replay" ? owned.recorded : undefined;
   if (!recorded) return null;
   const source = assumedSource(context);
   // Public copies have no kind slot; derive it again from the same record.
   const copyOf = ({ kind: _kind, ...copy }: RecordedCopy): AnchoredJudgmentCopy => copy;
-  return { recorded, facts: judgmentFacts(context).flatMap(copy => copy.mode !== "verified" ? [copyOf(copy)] : []), source: source && source.mode !== "verified" ? copyOf(source) : null };
+  return { recorded, facts: judgmentFacts(context).flatMap(copy => copy.mode === "caller-anchor" || copy.mode === "retained-name" ? [copyOf(copy)] : []), source: source && (source.mode === "caller-anchor" || source.mode === "retained-name") ? copyOf(source) : null };
 }
-export const assumedSource = (context: BoundReading): JudgmentCopy | null => context[EVIDENCE]?.source ?? null;
+export const assumedSource = (context: Reading): JudgmentCopy | null => ContextEvidence.for(context)?.source ?? null;
 export function sourceCopy(context: Reading & { source: Source | null }, fact: FactRef): JudgmentCopy | null {
   const source = context.source;
   return source ? verifiedCopy({ fact, entry: source.entry, sequence: source.sequence, under: source.under }) : assumedSource(context);
 }
 
 /** Private per-call continuation; public Reading/Source never acquire an assumed member. */
-export function withJudgmentSource<C extends Reading>(context: C, source: JudgmentCopy): C {
-  const bound: BoundReading = context;
-  return { ...context, [EVIDENCE]: Object.freeze({ facts: judgmentFacts(context), source, recorded: bound[EVIDENCE]?.recorded }) };
+export function withJudgmentSource<C extends Reading & { source?: Source | null }>(context: C, actual: { delivery: Delivered } | { genesis: Creation }, source: JudgmentCopy): C {
+  const previous = ContextEvidence.for(context);
+  if (!previous) throw new RuleFault("source continuation requires its owned context");
+  const asked = fingerprint(actual);
+  // Child genesis and delivery install only sourceCopy's actual checked source.
+  const from = "delivery" in actual ? actual.delivery.from : actual.genesis.from;
+  const input = context.source ?? null;
+  const checkedSource = source.mode === "verified" && input !== null
+    && source.value.entry === input.entry && source.value.sequence === input.sequence && source.value.under === input.under
+    && matchesCopy(source, from);
+  const sameSource = previous.phase === "replay" ? source === previous.source || checkedSource : checkedSource;
+  if (!sameSource) throw new RuleFault("source continuation requires the actual checked source");
+  const valid = previous.valid && asked !== null && asked === previous.asked && previous.own === context.own;
+  return ownContext(context, { ...previous, valid, material: valid ? previous.material : null, source });
 }
 
 export function sentByCopy(copy: JudgmentCopy, delivered: Delivered): boolean {

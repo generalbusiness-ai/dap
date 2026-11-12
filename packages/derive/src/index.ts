@@ -46,3 +46,5 @@ export * from "./retained-plan.ts";
 export * from "./floor.ts";
 
 export { readRetainedUses, isRetainedUse, inspectClassifiedRetainedUse, type RetainedUse, type SelectedRetainedUse, type ClassifiedRetainedUse, type RetainedUseRead, type RetainedUseProjection, type RetainedSelectionResult } from "./retained-use.ts";
+
+export { retainedResultContext } from "./operand.ts";

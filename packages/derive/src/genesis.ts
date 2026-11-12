@@ -111,7 +111,7 @@ function causeOf(source: JudgmentCopy, message: Request, facts: readonly Judgmen
  * leaves the genesis not judged, and nothing is written (section 6.1).
  */
 export function judgeGenesis(view: StateView, definition: ValidDefinition, asked: SignedCreation | Creation, context: DeliveryContext): Judgment {
-  return withinCounts(view, definition, unjudged(() => genesisJudged(view, definition, asked, verifiedContext(context))));
+  return withinCounts(view, definition, unjudged(() => genesisJudged(view, definition, asked, verifiedContext(context, { genesis: asked }))));
 }
 
 /** Replay keeps its explicit assumptions outside the verified delivery context. */
@@ -162,7 +162,7 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
     if (!source) return { result: "unavailable", reason: "dependency-unavailable" };
     if (!sentByCopy(source, asked)) return unverified("the source entry holds no create at that ordinal with that seed and that message");
     if (causeOf(source, asked.message, judgmentFacts(context)) !== seed.cause) return unverified("the seed's cause does not match the source entry");
-    context = withJudgmentSource(context, source);
+    context = withJudgmentSource(context, { genesis: asked }, source);
   }
 
   if (creation && !genesisBodiesPresent(definition, creation, context.texts)) return { result: "refused", reason: "bad-field", detail: "a named genesis text has no matching body" };

@@ -182,7 +182,7 @@ export type Judgment =
  * judged: `unavailable`, and nothing is written (section 6.1).
  */
 export function judgeAct(view: StateView, definition: ValidDefinition, signed: SignedIntent, context: JudgeContext): ActJudgment {
-  return withinCounts(view, definition, unjudged(() => actJudged(view, definition, signed, verifiedContext(context), false)));
+  return withinCounts(view, definition, unjudged(() => actJudged(view, definition, signed, verifiedContext(context, { act: signed }), false)));
 }
 
 /** Replay runs the same judge with explicitly separate caller assumptions. */
@@ -204,7 +204,7 @@ export function judgeActForReplay(view: StateView, definition: ValidDefinition, 
  */
 export function actNeeds(view: StateView, definition: ValidDefinition, signed: SignedIntent, context: JudgeContext): readonly Needed[] {
   if (!definition.observing) return [];
-  const planned = unjudged(() => actJudged(view, definition, signed, verifiedContext({ ...context, grants: null }), true));
+  const planned = unjudged(() => actJudged(view, definition, signed, verifiedContext({ ...context, grants: null }, { act: signed }), true));
   return (planned.result === "unavailable" && "missing" in planned ? planned.missing : undefined) ?? [];
 }
 

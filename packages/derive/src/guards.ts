@@ -7,7 +7,7 @@
 
 import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import { declarationOf } from "./program/declaration.ts";
-import type { Bounds, Entry, FactRef, FieldType, FieldValue, Guard, MemberRef, Prepared, Reason, ScopeRef, GenesisSelfRef, ScopeKind, UnavailableReason, Digest, ScopeId, SequenceRef, PlatformDefinition } from "@generalbusiness/dap-contract";
+import type { Bounds, Entry, FactRef, FieldType, FieldValue, Guard, MemberRef, Prepared, Reason, ScopeRef, GenesisSelfRef, ScopeKind, UnavailableReason, Digest, ScopeId, SequenceRef, PlatformDefinition, Sealed } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { type Capabilities } from "./capability.ts";
@@ -26,6 +26,14 @@ export { operand, slotOf };
 
 /** A foreign entry fetched before the turn, and the name of the definition its scope pins (section 6.2, the `fact` field). */
 export interface Fetched { fact: FactRef; entry: Entry; sequence: CheckedSequence; under: string }
+
+/** Staged existing result material. Only the late owned-context admission grants operands. */
+export interface RetainedResultOperand { readonly classified: unknown; readonly under: string }
+export interface RetainedResultMaterial {
+  readonly localSequence: CheckedSequence;
+  readonly origin: Sealed;
+  readonly operands: readonly RetainedResultOperand[];
+}
 
 /** Original retained bytes and an exact caller anchor, never birth proof. */
 interface RawAnchoredBody {

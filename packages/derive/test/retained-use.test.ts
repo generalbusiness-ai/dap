@@ -2,7 +2,11 @@ import { expect, test } from "vitest";
 import type { Digest, Entry, FactUse } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isEntryOf, utf8 } from "@generalbusiness/dap-bytes";
 import { checkpointOf, inspectClassifiedRetainedUse, isRetainedUse, readRetainedUses, type Fetched, type OwnRetainedRow, type RetainedOwn } from "../src/index.ts";
-import { created, type Ledger } from "./fixtures.ts";
+import { created, forged, type Ledger } from "./fixtures.ts";
+import { clockOf, judgeDelivery, prepareRules, retainedResultContext, type Delivered, type StateView } from "../src/index.ts";
+import { admitRetainedResultContext, copyEntry, copyKind, copyUnder, judgmentFacts, readJudgmentFacts, replayAssumptions, replayContext, resultContextForRuleCollection, sourceCopy, verifiedContext, withJudgmentSource } from "../src/operand.ts";
+import { entryHash } from "@generalbusiness/dap-bytes";
+import type { Request, Result } from "@generalbusiness/dap-contract";
 
 // Pure constructor boundary. The instrumented local row port is a stand-in,
 // not a SQL/Native restart or post-append lifecycle witness.
@@ -249,4 +253,155 @@ test("retained selection preserves reads and admits only byte-proved same-origin
     expect(() => Reflect.construct(held.constructor, [Symbol("wrong-token"), {}, held.use, sequence])).toThrow(TypeError);
   }
   expect(phaseOriginReads).toBe(2); expect(phaseRows).toEqual([laterUse.content, birthUse.content]);
+
+  // The pure result-context boundary retains body statements only for this
+  // actual request origin. These manually sealed sends are a stand-in for
+  // the host's paid origin and genuine remote Source, not Native admission.
+  const localSequence = local.own.sequence();
+  if (!localSequence) return expect.fail("the real receiving genesis must remain admitted");
+  const requestMessage: Request = { class: "request", type: "tell", body: { message: "retained-context", fields: {} } };
+  const requestOrigin = local.seal({ input: { type: "checkpoint", ...checkpointOf(local.state) }, uses: [laterUse], prepared: [], effects: [],
+    sends: [{ n: 0, to: foreign.at, message: requestMessage }], judgesTime: false });
+  const requestFact = local.fact(requestOrigin.seq), requestRow = local.state.request(requestOrigin.seq, 0);
+  if (!requestRow) return expect.fail("the actual folded send must appear in the receiving request index");
+  const resultSelection = readRetainedUses(own, requestOrigin.seq);
+  if (resultSelection.status !== "ready") return expect.fail("the actual request origin must select");
+  const resultLater = resultSelection.read(0);
+  if (resultLater.status !== "ready") return expect.fail("the actual requested later row must be present");
+  const resultProjection = resultSelection.project([resultLater.value], []);
+  if (resultProjection.status !== "ready") return expect.fail("the requested later body must remain body-only");
+  const contextOperand = resultProjection.values[0]!;
+  const makeResult = (of: Result["of"] = { from: requestFact, n: 0 }, decision: "applied" | "refused" = "applied") => {
+    const message: Result = { class: "result", of, outcome: "applied" };
+    const source = forged(foreign.at, 1000, { type: "delivery", from: of.from, sourceKind: localSequence.kind, n: of.n,
+      message: requestMessage, decision }, [{ n: 0, to: local.at, message }], sequence);
+    const delivered: Delivered = { to: local.at, from: { at: foreign.at, seq: source.entry.seq, hash: entryHash(source.entry) }, n: 0, message };
+    return { delivered, source, message };
+  };
+  const answer = makeResult();
+  const base = { clock: clockOf(local.state, local.now), bounds: local.bounds, prepared: [], own, source: answer.source };
+  const material = { localSequence, origin: resultSelection.origin, operands: [{ classified: contextOperand, under: "receiver:label" }] };
+  const beforeContextOrigins = originReads, beforeContextRows = reads.slice();
+  const borrowedFrozen = [base.clock, base.bounds, answer.source, own].map(value => Object.isFrozen(value));
+  const staged = retainedResultContext(base, answer.delivered, material);
+  expect(judgmentFacts(staged)).toEqual([]); expect(staged.facts).toEqual([]);
+  expect([base.clock, base.bounds, answer.source, own].map(value => Object.isFrozen(value))).toEqual(borrowedFrozen);
+  const checkedSource = sourceCopy(staged, answer.delivered.from);
+  if (!checkedSource) return expect.fail("the actual result Source must match its envelope");
+  const sourced = withJudgmentSource(verifiedContext(staged, { delivery: answer.delivered }), { delivery: answer.delivered }, checkedSource);
+  expect(judgmentFacts(sourced)).toEqual([]);
+  const admitted = admitRetainedResultContext(sourced, answer.delivered, local.at);
+  if (!admitted) return expect.fail("the exact original result material must admit at the clause boundary");
+  expect(Object.hasOwn(answer.source, "pin")).toBe(false);
+  // Deliberately malformed JavaScript boundary input: a Symbol is not a
+  // Digest or PlatformDefinition. No cast or typed authority fallback.
+  const malformedSource = Object.defineProperty({ ...answer.source }, "pin", {
+    value: Symbol("TEST noncanonical pin"), enumerable: true,
+  });
+  const malformedPending = retainedResultContext({ ...base, source: malformedSource }, answer.delivered, material);
+  const malformedCheckedSource = sourceCopy(malformedPending, answer.delivered.from);
+  if (!malformedCheckedSource) return expect.fail("the malformed public pin must not erase the genuine entry/sequence Source");
+  const malformedInstalled = withJudgmentSource(verifiedContext(malformedPending, { delivery: answer.delivered }),
+    { delivery: answer.delivered }, malformedCheckedSource);
+  expect(admitRetainedResultContext(malformedInstalled, answer.delivered, local.at)).toBeNull();
+  expect(admitted.facts).toEqual([]);
+  expect(judgmentFacts(admitted).map(copy => [copyEntry(copy), copyKind(copy), copyUnder(copy)]))
+    .toEqual([[resultLater.value.use.entry, sequence.kind, "receiver:label"]]);
+  const bodyRead = readJudgmentFacts(local.state, { picked: { type: "fact", kind: ["checkpoint"], under: "receiver:label" } },
+    { picked: laterUse.fact }, judgmentFacts(admitted), { at: local.at });
+  expect(bodyRead.result).toBe("read");
+  expect(resultLater.value.use.originalBytes).toBe(laterBytes);
+  expect(replayAssumptions(admitted)).toBeNull();
+  // A fresh wrapper invocation re-stages even an already admitted context.
+  const again = verifiedContext(admitted, { delivery: answer.delivered });
+  expect(judgmentFacts(again)).toEqual([]);
+  expect(admitRetainedResultContext(again, answer.delivered, local.at)).toBeNull(); // Source must pass its normal check again.
+  expect(verifiedContext(admitted, { delivery: { ...answer.delivered, message: requestMessage } }).facts).toEqual([]);
+  expect(judgmentFacts(verifiedContext(admitted, { delivery: { ...answer.delivered, message: requestMessage } }))).toEqual([]);
+  expect(admitRetainedResultContext(sourced, answer.delivered, unrelated.at)).toBeNull();
+  const receivingBirth = local.entries[0]!.entry.input;
+  if (receivingBirth.type !== "genesis" || !receivingBirth.founding) return expect.fail("the actual receiver must have its signed founding");
+  expect(judgmentFacts(verifiedContext(admitted, { act: receivingBirth.founding }))).toEqual([]);
+  expect(judgmentFacts(verifiedContext(admitted, { genesis: { name: local.at.scope, nonce: receivingBirth.nonce,
+    seed: receivingBirth.seed, creation: receivingBirth.founding } }))).toEqual([]);
+  expect(Object.isFrozen(staged)).toBe(true);
+  expect(Reflect.set(staged, "own", otherOwn)).toBe(false);
+  const differentOrigin = retainedResultContext(base, answer.delivered, { ...material, origin: otherSelection.origin });
+  const differentSource = sourceCopy(differentOrigin, answer.delivered.from);
+  if (!differentSource) return expect.fail("another origin must not erase the genuine incoming Source");
+  expect(admitRetainedResultContext(withJudgmentSource(verifiedContext(differentOrigin, { delivery: answer.delivered }),
+    { delivery: answer.delivered }, differentSource), answer.delivered, local.at)).toBeNull();
+
+  const historical = forged(local.at, 1001, { type: "delivery", from: answer.delivered.from, sourceKind: sequence.kind,
+    n: 0, message: answer.message, clause: "applied" }, [], localSequence);
+  const replay = replayContext({ ...base, facts: [], origin: requestOrigin }, {
+    recorded: { ...historical.entry, uses: [laterUse] }, source: null,
+    facts: [{ mode: "retained-name", fact: laterUse.fact, entry: resultLater.value.use.entry,
+      originalBytes: canonicalize(resultLater.value.use.entry), under: "replay:label",
+      anchor: { scope: laterUse.fact.at.scope, seq: laterUse.fact.seq, hash: laterUse.fact.hash } }],
+  }, { delivery: answer.delivered });
+  if (!replay) return expect.fail("the explicit historical replay assumption must admit separately");
+  expect(judgmentFacts(replay).map(copyUnder)).toEqual(["replay:label"]);
+  expect(replayAssumptions(replay)?.facts).toHaveLength(1);
+  expect(judgmentFacts(verifiedContext(replay, { delivery: answer.delivered }))).toEqual([]);
+
+
+  const symbols = Object.getOwnPropertySymbols(staged);
+  expect(symbols.length).toBe(1);
+  const evidence: unknown = Reflect.get(staged, symbols[0]!);
+  if (!evidence || typeof evidence !== "object") return expect.fail("the owned holder must have its private evidence object");
+  expect(() => Reflect.construct(evidence.constructor, [])).toThrow(TypeError);
+  const copied = { ...staged };
+  expect(admitRetainedResultContext(copied, answer.delivered, local.at)).toBeNull();
+  expect(judgmentFacts(verifiedContext(copied, { delivery: answer.delivered }))).toEqual([]);
+  const fakeEvidence = Object.create(Object.getPrototypeOf(evidence));
+  const forgedHolder = { ...staged, [symbols[0]!]: fakeEvidence };
+  expect(admitRetainedResultContext(forgedHolder, answer.delivered, local.at)).toBeNull();
+  expect(admitRetainedResultContext(sourced, { ...answer.delivered, n: 1 }, local.at)).toBeNull();
+  for (const classified of [inspectClassifiedRetainedUse(contextOperand), { ...contextOperand }, Object.create(Object.getPrototypeOf(contextOperand))]) {
+    const badMaterial = { ...material, operands: [{ classified, under: "receiver:label" }] };
+    const pending = retainedResultContext(base, answer.delivered, badMaterial);
+    const pendingSource = sourceCopy(pending, answer.delivered.from);
+    if (!pendingSource) return expect.fail("bad retained operands must not erase the separate genuine Source");
+    const stillPending = withJudgmentSource(verifiedContext(pending, { delivery: answer.delivered }), { delivery: answer.delivered }, pendingSource);
+    expect(admitRetainedResultContext(stillPending, answer.delivered, local.at)).toBeNull();
+  }
+  const collected: import("../src/guards.ts").RuleInput[] = [];
+  const collecting = resultContextForRuleCollection(staged, answer.delivered, collected);
+  expect(collecting.asked).toBe(collected); expect(collecting.prepared).toEqual([]);
+  expect(collecting.own).toBe(staged.own); expect(collecting.clock).toBe(staged.clock); expect(collecting.source).toBe(staged.source);
+  const collectionSource = sourceCopy(collecting, answer.delivered.from);
+  if (!collectionSource) return expect.fail("the collector must retain the exact genuine source");
+  expect(admitRetainedResultContext(withJudgmentSource(verifiedContext(collecting, { delivery: answer.delivered }),
+    { delivery: answer.delivered }, collectionSource), answer.delivered, local.at)).not.toBeNull();
+
+  // Actual judge guards precede the late failure, including the peer's wrong-hash route.
+  const unavailable = retainedResultContext(base, answer.delivered, null);
+  expect(judgeDelivery(local.state, local.definition, answer.delivered, unavailable))
+    .toEqual({ result: "unavailable", reason: "dependency-unavailable" });
+  expect(judgeDelivery(local.state, local.definition, { ...answer.delivered, to: unrelated.at }, unavailable))
+    .toEqual({ result: "routing", reason: "not-found" });
+  expect(laterUse.fact.hash).not.toBe(requestFact.hash);
+  const wrongHash = makeResult({ from: { ...requestFact, hash: laterUse.fact.hash }, n: 0 });
+  expect(judgeDelivery(local.state, local.definition, wrongHash.delivered,
+    retainedResultContext({ ...base, source: wrongHash.source }, wrongHash.delivered, material)))
+    .toEqual({ result: "source-unverified", detail: "the result names no request send of this scope" });
+  const wrongDecision = makeResult(undefined, "refused");
+  expect(judgeDelivery(local.state, local.definition, wrongDecision.delivered,
+    retainedResultContext({ ...base, source: wrongDecision.source }, wrongDecision.delivered, null)))
+    .toEqual({ result: "source-unverified", detail: "the source entry is not the entry that decided the request" });
+  // A minimal read-only view stand-in exposes only the earlier repeat condition.
+  const earlierView = (over: Partial<StateView>): StateView => new Proxy(local.state, { get(target, key) {
+    if (Object.prototype.hasOwnProperty.call(over, key)) return Reflect.get(over, key);
+    const value: unknown = Reflect.get(target, key);
+    return typeof value === "function" ? value.bind(target) : value;
+  } });
+  expect(judgeDelivery(earlierView({ decided: () => ({ from: answer.delivered.from.at, seq: answer.delivered.from.seq,
+    hash: answer.delivered.from.hash, n: 0, by: 77 }) }), local.definition, answer.delivered, unavailable))
+    .toEqual({ result: "repeat", seq: 77 });
+  expect(judgeDelivery(earlierView({ request: () => ({ ...requestRow, diagnosis: { seq: 78, finding: "undelivered" } }) }),
+    local.definition, answer.delivered, unavailable)).toEqual({ result: "repeat", seq: 78 });
+  expect(prepareRules(local.state, local.definition, { delivery: wrongHash.delivered,
+    context: retainedResultContext({ ...base, source: wrongHash.source }, wrongHash.delivered, material) })).toEqual([]);
+  expect(originReads).toBe(beforeContextOrigins); expect(reads).toEqual(beforeContextRows);
 });

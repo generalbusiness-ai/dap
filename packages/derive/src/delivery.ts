@@ -14,7 +14,7 @@ import { handlerBranch } from "./handler-branch.ts";
 import { declarationOf } from "./program/declaration.ts";
 import { timeMs } from "./time.ts";
 import type { ReplayAssumptions } from "./guards.ts";
-import { assumedSource, copyEntry, copyKind, copyUnder, replayContext, sourceCopy, sentByCopy, verifiedContext, withJudgmentSource } from "./operand.ts";
+import { admitRetainedResultContext, assumedSource, copyEntry, copyKind, copyUnder, replayContext, sourceCopy, sentByCopy, verifiedContext, withJudgmentSource } from "./operand.ts";
 import type { Judgment } from "./judge.ts";
 import { heldOpenings } from "./ledger.ts";
 import { withinCounts } from "./draws.ts";
@@ -102,7 +102,7 @@ function oneUpdateForKey(source: Entry, from: FactRef, to: ScopeRef, name: strin
  * judged: transport answers `retry`, and nothing is written (section 6.1).
  */
 export function judgeDelivery(view: StateView, definition: ValidDefinition, delivered: Delivered, context: DeliveryContext): Judgment {
-  return withinCounts(view, definition, unjudged(() => deliveryJudged(view, definition, delivered, verifiedContext(context))));
+  return withinCounts(view, definition, unjudged(() => deliveryJudged(view, definition, delivered, verifiedContext(context, { delivery: delivered }))));
 }
 
 /** Replay supplies caller copies separately; the delivery algorithm remains shared. */
@@ -128,7 +128,7 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
   const source = copyEntry(evidence);
   if (!sentByCopy(evidence, delivered)) return unverified("the source entry does not hold that send with that message");
   const sourceKind = copyKind(evidence);
-  context = withJudgmentSource(context, evidence);
+  context = withJudgmentSource(context, { delivery: delivered }, evidence);
 
   // A repeat is answered with the entry that recorded it, in any state of the scope: a creation request from the genesis.
   // A source scope has one entry at each sequence number, so another entry there is not from a valid history.
@@ -312,10 +312,11 @@ function confirmation(view: StateView, scope: ScopeState, { from, n }: Delivered
  * the seed's digest; and the source entry is the entry that decided that
  * request. It runs the matching clause of the send.
  */
-function result(view: StateView, definition: ValidDefinition, context: DeliveryContext, scope: ScopeState, { from, n }: Delivered, message: Result, source: Entry,
+function result(view: StateView, definition: ValidDefinition, context: DeliveryContext, scope: ScopeState, delivered: Delivered, message: Result, source: Entry,
   write: (input: { type: "delivery"; from: FactRef; sourceKind: ScopeKind; n: number; message: Result; clause: Exclude<Clause, "undelivered">; observed?: readonly ObservationUse[] }, effects: readonly Effect[], sends: readonly Send[], prepared: readonly Prepared[], judgesTime: boolean, read: readonly FactUse[]) => Judgment,
   judged: JudgedInput): Judgment {
   if (judged.type !== "delivery") throw new Error("a result clause requires its checked delivery input");
+  const { from, n } = delivered;
   const unverified = (detail: string): Judgment => ({ result: "source-unverified", detail });
   const of = message.of;
   const request = isObject(of) && isFactRef(of.from) && isLocalId(of.n) && same(of.from.at, scope.at) ? view.request(of.from.seq, of.n) : null;
@@ -336,6 +337,10 @@ function result(view: StateView, definition: ValidDefinition, context: DeliveryC
     if (!held || message.outcome !== "applied" || held.inc === from.at.inc) return { result: "repeat", seq: request.result.seq };
     clause = "conflict";
   }
+  // Retained-body admission cannot replace any earlier routing/source/result/repeat answer.
+  const admitted = admitRetainedResultContext(context, delivered, scope.at);
+  if (!admitted) return { result: "unavailable", reason: "dependency-unavailable" };
+  context = admitted;
   // Sections 4.1 and 16.1: a rule of the clause reads a further observation, in platform data, and what it reads is noted.
   // Revision 20: under a definition whose data states rows, the entry retains what the rows of its clause give, and nothing is at
   // hand for a rule until they are settled. Under any other, the older rule stands, as a stand-in.
