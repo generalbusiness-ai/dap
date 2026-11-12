@@ -477,7 +477,8 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
           const strings = [answer.bytes, ...(fact.seq === 0 ? [] : [answer.birth]), answer.under,
             ...(origin && Array.isArray(answer.origin) ? answer.origin.flatMap(row => [row?.bytes, row?.under]) : [])];
           if (strings.some(text => typeof text !== "string")) return remaining() === null ? null : { absent: true };
-          if (!withinAllowance(strings as string[], maxBytes)) return null;
+          // An answer over the allowance is not parsed. Its cause stays distinct from an unreadable answer (ruling a94bfa4d).
+          if (!withinAllowance(strings as string[], maxBytes)) return remaining() === null ? null : { tooLarge: true };
           // A first entry is its own birth. A later entry needs the original first entry of its sequence.
           const sequence = admitSequenceGenesis(fact.seq === 0 ? answer.bytes : answer.birth!, fact.at, maxBytes);
           const entry = sequence && proofEntry({ fact, bytes: answer.bytes }, fact, maxBytes, sequence);

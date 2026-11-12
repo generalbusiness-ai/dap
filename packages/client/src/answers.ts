@@ -31,7 +31,7 @@ const readAnswer = <T>(guard: (v: unknown) => v is T) => {
 const ACT_REFUSED: Record<RefusalReason, true> = REFUSAL_REASONS;
 /** Why a creation is refused (`Created`). */
 const CREATION_REFUSED: Record<RefusalReason | DeliveryRefusal | "unsupported-definition", true> = { ...REFUSAL_REASONS, "source-unverified": true, "unsupported-definition": true };
-const UNAVAILABLE: Record<UnavailableReason, true> = { "dependency-unavailable": true, busy: true, "clock-behind": true, "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true, "rate-limited": true };
+const UNAVAILABLE: Record<UnavailableReason, true> = { "dependency-unavailable": true, "source-response-too-large": true, busy: true, "clock-behind": true, "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true, "rate-limited": true };
 const CREATION_UNAVAILABLE: Record<CreationUnavailableReason, true> = { ...UNAVAILABLE, misconfigured: true, "host-unavailable": true };
 const MISMATCH: Record<MismatchReason, true> = { "idempotency-mismatch": true };
 

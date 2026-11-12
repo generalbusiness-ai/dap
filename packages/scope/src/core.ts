@@ -18,7 +18,7 @@ import { producerName } from "./receiver-facts.ts";
 import { namedBy } from "./definitions.ts";
 import type { Asked, DefinitionRead, Further, Ports, Standing } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
-import { LATE, ARCHIVED_FACT, Turns, fetchFacts, isSigned, within, type Verdict } from "./turn.ts";
+import { LATE, ARCHIVED_FACT, SOURCE_TOO_LARGE, Turns, fetchFacts, isSigned, within, type Verdict } from "./turn.ts";
 
 export type { Created };
 
@@ -569,6 +569,7 @@ export class Scope {
     const named = fields.ok && !this.#store.scope() ? factsNamed(act.fields, fields.fields, null) : [];
     const facts = named.length > bounds.usesPerEntry ? null : await fetchFacts(resolver, bounds, named);
     if (facts === ARCHIVED_FACT) return refused("archived");
+    if (facts === SOURCE_TOO_LARGE) return unavailable("source-response-too-large");
     if (!facts) return unavailable("dependency-unavailable");
 
     const asked = (nonce: SignedCreation["nonce"]): SignedCreation => ({ name, nonce, seed, creation });
@@ -696,6 +697,7 @@ export class Scope {
     if (!reader) return unavailable("dependency-unavailable");
     const facts = await fetchFacts(reader, bounds, wanted);
     if (facts === ARCHIVED_FACT) return { answer: "refused", reason: "archived", judgedAt: scope.head };
+    if (facts === SOURCE_TOO_LARGE) return unavailable("source-response-too-large");
     if (!facts) return unavailable("dependency-unavailable");
 
     // Phase two is in the commit: what that read holds at the commit's head, on the commit's one reading. The judge is given the

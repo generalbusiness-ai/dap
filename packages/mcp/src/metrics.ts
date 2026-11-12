@@ -18,7 +18,7 @@ const NATIVE: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRe
   "bad-intent": true, misaddressed: true, expired: true, "scope-refused": true, "unknown-act": true, "bad-field": true,
   "no-item": true, final: true, "fact-mismatch": true, unauthorized: true, "guard-failed": true, "capability-refused": true,
   "slot-full": true, "type-full": true, "entry-too-large": true, "send-unresolved": true, "unknown-message": true,
-  "unsupported-definition": true, "bad-input": true, "dependency-unavailable": true, busy: true, "clock-behind": true,
+  "unsupported-definition": true, "bad-input": true, "dependency-unavailable": true, "source-response-too-large": true, busy: true, "clock-behind": true,
   "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true,
   "rate-limited": true, "idempotency-mismatch": true, "not-found": true, "wrong-incarnation": true, forbidden: true,
   "history-unavailable": true, "too-large": true, "sessions-unavailable": true, "bad-request": true, replayed: true,

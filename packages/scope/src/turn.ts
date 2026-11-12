@@ -117,15 +117,18 @@ export function sourceReadRemaining(context: SourceReadContext): (() => number |
  * The foreign entries an input names, each read through the resolver within
  * one shared fetch deadline and checked against the fact that names it. Null: one
  * could not be read, and the input is answered `dependency-unavailable`.
+ * `SOURCE_TOO_LARGE`: one answer did not fit its entry allowance, and the input
+ * is answered `source-response-too-large`. An archived fact takes precedence.
  * Nothing is held.
  */
 export const ARCHIVED_FACT = Symbol("archived-fact");
-export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: readonly FactRef[]): Promise<Fetched[] | typeof ARCHIVED_FACT | null> {
+export const SOURCE_TOO_LARGE = Symbol("source-response-too-large");
+export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: readonly FactRef[]): Promise<Fetched[] | typeof ARCHIVED_FACT | typeof SOURCE_TOO_LARGE | null> {
   if (named.length === 0) return [];
   const maxBytes = bounds.entryBytes;
   const remaining = sourceReadRemaining({ maxBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) });
   if (!remaining) return null;
-  const read = await Promise.all(named.map(async (fact): Promise<Fetched | typeof ARCHIVED_FACT | null> => {
+  const read = await Promise.all(named.map(async (fact): Promise<Fetched | typeof ARCHIVED_FACT | typeof SOURCE_TOO_LARGE | null> => {
     const milliseconds = remaining();
     if (milliseconds === null) return null;
     const matched = await turnDeadline(() => {
@@ -134,11 +137,13 @@ export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: read
     }, milliseconds / 1000);
     if (remaining() === null) return null;
     if (matched !== LATE && matched !== null && "archived" in matched) return ARCHIVED_FACT;
+    if (matched !== LATE && matched !== null && "tooLarge" in matched) return SOURCE_TOO_LARGE;
     const accepted = matched !== LATE && matched !== null && "entry" in matched && isEntryOf(matched.entry, fact, matched.sequence) ? carryProducerName({ fact, entry: matched.entry, under: matched.under, sequence: matched.sequence }, matched) : null;
     return remaining() === null ? null : accepted;
   }));
-  const accepted: Fetched[] | typeof ARCHIVED_FACT | null = read.includes(ARCHIVED_FACT) ? ARCHIVED_FACT
-    : read.every((f): f is Fetched => f !== null && f !== ARCHIVED_FACT) ? read : null;
+  const accepted: Fetched[] | typeof ARCHIVED_FACT | typeof SOURCE_TOO_LARGE | null = read.includes(ARCHIVED_FACT) ? ARCHIVED_FACT
+    : read.includes(SOURCE_TOO_LARGE) ? SOURCE_TOO_LARGE
+    : read.every((f): f is Fetched => f !== null && f !== ARCHIVED_FACT && f !== SOURCE_TOO_LARGE) ? read : null;
   return remaining() === null ? null : accepted;
 }
 

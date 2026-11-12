@@ -82,6 +82,7 @@ export const REFUSALS: Readonly<Record<RefusalReason, (asked: Asked, name: strin
 
 export const UNAVAILABLE_NOTES: Readonly<Record<UnavailableReason, string>> = {
   "dependency-unavailable": "a scope or bytes it depends on could not be read",
+  "source-response-too-large": "a foreign entry and its scope's first entry are too large to read together",
   busy: "the scope is busy",
   "clock-behind": "the scope's clock reads earlier than its last entry",
   "scope-provisional": "the scope is not confirmed yet",

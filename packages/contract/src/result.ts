@@ -45,6 +45,7 @@ export type RefusalReason = FloorRefusal | "archived"
  * a grant, and nothing about its signer was read that the commit can judge on (sections 4.2, check 9, and 16.1).
  */
 export type UnavailableReason = "dependency-unavailable" | "busy" | "clock-behind" | "scope-provisional" | "guard-incomplete" | "authority-unavailable" | "unavailable"
+  | "source-response-too-large" // a foreign entry's answer and its original first entry do not fit one entry allowance together
   | "rate-limited";     // a serving answer to creation or join: nothing was judged or recorded and no invitation changes (authority note, section 3.6; R12)
 
 /** The same key and actor are on a sealed entry with another intent digest. */

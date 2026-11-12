@@ -36,7 +36,7 @@ import { namedBy } from "./definitions.ts";
 import { readNativeBirth } from "./native-birth.ts";
 import type { DefinitionRead, Delivery, Ports } from "./ports.ts";
 import type { Retained, Store } from "./store.ts";
-import { LATE, fetchFacts, within, type Verdict } from "./turn.ts";
+import { LATE, SOURCE_TOO_LARGE, fetchFacts, within, type Verdict } from "./turn.ts";
 
 const retry = (reason: UnavailableReason | "scope-full" | "unsupported-definition"): Delivery => ({ answer: "retry", reason });
 const UNVERIFIED: Delivery = { answer: "source-unverified" };
@@ -228,7 +228,7 @@ export class Deliveries {
       // The scope has no genesis yet, so no fact can name it: every fact a creation names is foreign.
       const named = fields?.ok ? factsNamed(act.fields, fields.fields, null) : [];
       const fetched = named.length > bounds.usesPerEntry ? null : await fetchFacts(resolver, bounds, named);
-      if (!Array.isArray(fetched)) return retry("dependency-unavailable");
+      if (!Array.isArray(fetched)) return retry(fetched === SOURCE_TOO_LARGE ? "source-response-too-large" : "dependency-unavailable");
       facts = fetched;
     } else if (message.class === "result" && isObject(message.of) && isFactRef(message.of.from)) {
       // One read of the origin through Own replaces the stored read. A missing or invalid origin or use stages no material,
@@ -253,7 +253,7 @@ export class Deliveries {
       // the judge refuses that message, `bad-field`, before it reads any.
       const wanted = messageFacts(store, pinned.definition, message, from, bounds, source.under);
       const fetched = wanted.length >= bounds.usesPerEntry ? [] : await fetchFacts(resolver, bounds, wanted);
-      if (!Array.isArray(fetched)) return retry("dependency-unavailable");
+      if (!Array.isArray(fetched)) return retry(fetched === SOURCE_TOO_LARGE ? "source-response-too-large" : "dependency-unavailable");
       facts = fetched;
       carried = messageTexts(pinned.definition, message, from, source.under);
     }

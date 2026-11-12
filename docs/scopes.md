@@ -671,6 +671,13 @@ The five scope budgets are the `SCOPE_BOUNDS`. A definition without
 `whole-scope` capacity is checked against all five. A refusal for a spent
 budget is `scope-full`, with the budget's name as `name`.
 
+One `entryBytes` allowance funds a whole foreign source answer. The answer
+counts the requested entry's original bytes, the original first entry of its
+scope for a later entry, the producer label and any origin rows. A scope
+reads a later foreign entry only when that entry and its scope's first entry
+fit one allowance together. An answer that does not fit is not parsed, and
+the input waits with the reason `source-response-too-large`.
+
 ## Reads and settlement
 
 `packages/contract/src/read.ts` holds the reads and their results.

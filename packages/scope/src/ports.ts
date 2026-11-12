@@ -157,9 +157,12 @@ export interface Further {
  * call. The resolver admits the source's original first entry against the
  * full reference that the fact names, and keeps that genuine `sequence`
  * beside the entry. Admission takes only canonical bytes, so the canonical
- * form of `entry` is the original string the source sent.
+ * form of `entry` is the original string the source sent. `tooLarge`: the
+ * answer's body, birth, labels and origin strings do not fit the one entry
+ * allowance together; nothing of it is parsed or used, and the input is
+ * answered `source-response-too-large`.
  */
-export type Foreign = { entry: Entry; under: string; sequence: CheckedSequence; origin?: readonly OriginRow[] } | { absent: true } | { archived: Archived } | null;
+export type Foreign = { entry: Entry; under: string; sequence: CheckedSequence; origin?: readonly OriginRow[] } | { absent: true } | { archived: Archived } | { tooLarge: true } | null;
 /**
  * One origin row exactly as its source sent it: the original bytes, their
  * parsed body and the label the source stated. The body matches its fact
