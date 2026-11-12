@@ -21,9 +21,9 @@ export interface Thing {
   /** The entry that last changed this thing. */
   seq: number;
 }
-/** The coherent read's record head. Page text uses only its known Scope/incarnation. */
-export interface RecordPointer { scope: string; incarnation: string; seq: number; hash: string }
-export type ScopePointer = Pick<RecordPointer, "scope" | "incarnation">;
+/** The coherent read's record head. Page text uses only its known scope and genesis hash. */
+export interface RecordPointer { scope: string; genesis: string; seq: number; hash: string }
+export type ScopePointer = Pick<RecordPointer, "scope" | "genesis">;
 
 /** A random path, made inside custody before signing; never derived from a typed name or future item number. */
 export function shelfPath(random: Uint8Array): string {
@@ -62,7 +62,7 @@ export function shelfPage(thing: Omit<Thing, "seq">, record: ScopePointer): stri
     ...(description ? [description, ""] : []),
     `- Status: ${statusOf(thing)}`,
     `- Donated by: ${literal(thing.donor)}`,
-    `- Record: lending scope ${record.scope}, incarnation ${record.incarnation}`,
+    `- Record: lending scope ${record.scope}, genesis ${record.genesis}`,
     "",
   ].join("\n");
 }
@@ -101,6 +101,6 @@ export function expectedPage(thing: Omit<Thing,"seq">, scope: ScopePointer): Pag
  return {title:words(thing.name)||`Thing ${thing.id}`, description:words(thing.description), lines:[
   `Status: ${thing.state === "available" ? "available" : thing.state === "lent" ? `lent to ${words(thing.borrower ?? "a member")}` : `gone: ${words(thing.reason ?? "")}`.trimEnd()}`,
   `Donated by: ${words(thing.donor)}`,
-  `Record: lending scope ${scope.scope}, incarnation ${scope.incarnation}`,
+  `Record: lending scope ${scope.scope}, genesis ${scope.genesis}`,
  ]};
 }

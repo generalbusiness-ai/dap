@@ -2,7 +2,7 @@ import {expect,test} from "vitest";
 import {renderMarkdown} from "../../../packages/scope/src/site/markdown.ts";
 import {shelfPage,type Thing} from "../shelf.ts";
 import {expectedPage} from "../shelf.ts";
-const scope={scope:"sc_known",incarnation:"in_known"};
+const scope={scope:"sc_known",genesis:"sha256:"+"c".repeat(64)};
 const decode=(s:string) => s.replace(/<[^>]*>/g,"").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&amp;/g,"&");
 // Uses the actual site's renderer, rather than assuming escaping preserves the visible text.
 test("the compared title, description and three lines are the actual Site renderer's visible text",()=>{

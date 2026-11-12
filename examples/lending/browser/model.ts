@@ -70,7 +70,7 @@ export function lendingView(summary: Summary, at: { seq: number; hash: string },
   things.sort((a, b) => a.id - b.id);
   const library = summary.items.find((item) => item.type === "library");
   return { things, library: library ? { id: library.id, revision: library.revision } : null, behind: entries.length <= at.seq,
-    record: { scope: summary.scope.scope, incarnation: summary.scope.inc, seq: at.seq, hash: at.hash } };
+    record: { scope: summary.scope.scope, genesis: summary.scope.genesis, seq: at.seq, hash: at.hash } };
 }
 
 /** Actual retained native item fields, including gone things. The bounded
@@ -83,7 +83,7 @@ export function lendingProjectionView(data: ApplicationProjectionData): LendingV
     reason: item.values["reason"] === null ? null : words(item.values["reason"]),
   }));
   return { things, library: library ? { id: library.id, revision: library.revision } : null, behind: false,
-    record: { scope: data.scope.scope, incarnation: data.scope.inc, seq: data.at.seq, hash: data.at.hash } };
+    record: { scope: data.scope.scope, genesis: data.scope.genesis, seq: data.at.seq, hash: data.at.hash } };
 }
 export interface LendingActivityRow { entry: Readonly<FactRef>; seq: number; kind: string; signer: string; what: string; time: string }
 /** Recent selected acts, at this projection's exact head. This makes no
