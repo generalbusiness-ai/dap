@@ -16,8 +16,16 @@ This document-only follow-up leaves source and tests unchanged from S1 checkpoin
 5900 passes and three planned skips reconcile all 5903 selected obligations.
 Both separately allocated control groups distinguished their intended faults.
 Root and independent readbacks checked complete owner identities, restoration,
-and cleanup for both groups. Final-head browser CI remains a future external review attachment.
-The external post-commit correspondence receipt records the final document commit and tree. It verifies that only this note and the canonical manifest changed, without inserting a self-referential final tree hash here. No deployment claim follows.
+and cleanup for both groups. At documentary head
+`bfc67122c8116f736c8a2577ae0c3ce124c2d609`, the push Page and Card workflows
+succeeded. The separate manual Page run failed and remains failed. Planner
+ruling `b5283835846713777cd40b7ad5b9863dff16115d` selects the two push runs for
+S1 review and forbids another S1 browser run. The checker judges that evidence.
+This later documentary successor reports those `bfc67122` observations; it
+claims no CI execution at its own new head. The external post-commit
+correspondence receipt must verify that only this note and the canonical
+manifest changed. Runtime source and tests remain at `acf797a7`. No deployment
+claim follows.
 
 ## The five serving changes
 
@@ -93,9 +101,14 @@ The canonical [S1 manifest](evidence/2026-11-12-serving-windows-s1.manifest.json
 indexes fourteen small files in
 `/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance`.
 They carry the label **Curated provenance, not raw output**. The table hashes
-those normalized metadata files, not copied stdout, reports, event rows, or
-source inventories. The manifest keeps all nineteen original references,
+those normalized metadata files. Its three CI rows instead hash the complete
+job logs at their original HOME locations; the rows mark those hashes as
+original logs. No stdout, report, event row, log line or source inventory was
+copied into the filing. The manifest keeps all nineteen original references,
 including original paths, hashes, modes, and checkpoints, in a separate list.
+The manifest's `finalCI` member adds authored run/status provenance and pins
+the existing API responses and complete job logs at their original HOME
+locations. It does not copy those raw records into this note or manifest.
 
 The source prerequisite and input-comparison records predate the gate. Their
 original `UNRUN` fields describe that chronology. The actual gate and control
@@ -104,7 +117,7 @@ AST, and producer results retain their own heads and do not fill current gate
 observations. The initial compiler context-27 failure and the earlier a22
 focus failure remain failed historical units.
 
-| Check | Command or exact invocation/provenance reference | Actual exit | Curated output SHA-256 | Checkpoint |
+| Check | Command or exact invocation/provenance reference | Actual exit | Output SHA-256 (curated unless marked original) | Checkpoint |
 | --- | --- | --- | --- | --- |
 | Current ordinary five | Exact command records: original `results.json` locator in `prerequisites.json` | All five 0 | `d32054b6fcdf776da758dfb26bcb4bc2972edbe963e0ce9bb08f83c37668fcd4` | `acf797a7`; END `55cd000c…` |
 | Historical compilers | Exact command records: initial/repaired original result locators in `prerequisites.json` | Initial unit 1 (context 27); repair 0 | `d32054b6fcdf776da758dfb26bcb4bc2972edbe963e0ce9bb08f83c37668fcd4` | Contexts 6/18/26 at `10d0cc38`; 27/31/34/41 at `df50066b` |
@@ -121,6 +134,9 @@ focus failure remain failed historical units.
 | A+B independent readback | Original run references in `address-and-site-independent-readback.json`; no rerun | Recorded child 1; controller/outer/launcher 0 | `30f3217856e25f945c6d90ccc62c87f7eeed2cc0bf0f1d3c736483f35c55cd7e` | `acf797a7`; two intended failures, five passes |
 | Control C+D+E, complete 11-case owner | Exact frozen READY `/invocation` in `ingress-boundaries-root.json`; no repeated positive | Mutant child 1; controller/outer/launcher 0 | `13d538ac09ab2e0038307beb79ea1980068ae56e5e11701a030758ec4af8f67a` | `acf797a7`; END `390b1bf3…` |
 | C+D+E independent readback | Original run references in `ingress-boundaries-independent-readback.json`; no rerun | Recorded child 1; controller/outer/launcher 0 | `4f66fefe628d4f9d15a0672b954d0a7ca517377d51eca65a64ee445f6708fd3e` | `acf797a7`; three intended failures, eight passes |
+| Page CI push | `.github/workflows/page-browser.yml`, job `page-browser`; [run 43201044890](https://github.com/generalbusiness-ai/dap/actions/runs/43201044890), attempt 1. Create-room command: `node --import tsx --no-warnings scripts/demo-captures.ts --recorded --claim-witness --out /tmp/claim-witness`; complete workflow commands remain in the exact Git file. | API job/all 12 steps success; complete log confirms claim and label completion; no individual child-zero receipt | Original complete job log `bc81aa8d8ff619c6ae6c3821329a64240b9d4e8a396783b6e16c6c080c0ab91d` | `bfc67122`; job `131124242674` |
+| Card CI push | `.github/workflows/views-browser.yml`, job `views-browser`; [run 43201044687](https://github.com/generalbusiness-ai/dap/actions/runs/43201044687), attempt 1. Card command: `node --import tsx packages/mcp/test/views-browser.mjs`; complete workflow also runs the maintained Grow room and routing commands. | API job/all 13 steps success; complete log confirms Card and both Grow completions; no individual child-zero receipt | Original complete job log `643216dc0bf4a1575bd9cdc2e8a066ee581fc5926bb0050a99c7e1f4b9783639` | `bfc67122`; job `131124242198` |
+| Page CI manual dispatch | Same exact Page workflow/create-room command; [run 43201184843](https://github.com/generalbusiness-ai/dap/actions/runs/43201184843), attempt 1, `workflow_dispatch` | Failure; explicit failed process exit 1 at focus assertion line 303; label/setup-node cleanup skipped | Original complete job log `e262952cd00a2db0831f6835413d9ab85bb4e9548c0194878ebfd08a544b8c47` | `bfc67122`; job `131124731653`; remains failed |
 
 The gate reconciled all 5,903 obligations: 5,900 passes and three planned
 skips across 713 whole owners. It ran all 45 compiler invocations and 16
@@ -176,6 +192,38 @@ obtain telemetry. The retained Page producer's raw observer failure remains
 failed with UNKNOWN admission for its short unsampled process; normalization
 does not rewrite that status.
 
+## Exact-head browser CI and the separate focus failure
+
+The automatic push runs at `bfc67122` completed successfully:
+
+- [Page browser scripts, run 43201044890](https://github.com/generalbusiness-ai/dap/actions/runs/43201044890),
+  job `131124242674`, attempt 1: all 12 steps succeeded.
+- [Card browser scripts, run 43201044687](https://github.com/generalbusiness-ai/dap/actions/runs/43201044687),
+  job `131124242198`, attempt 1: all 13 steps succeeded.
+
+Both runs started from the push at 10:30:58 UTC on 12 November. The additional
+[manual Page run 43201184843](https://github.com/generalbusiness-ai/dap/actions/runs/43201184843),
+job `131124731653`, attempt 1, started from `workflow_dispatch` at 10:31:54 UTC.
+It failed the create-room focus witness at `scripts/demo-captures.ts:303`.
+The failed process exited 1. The local-label witness and setup-node cleanup
+step were skipped; checkout cleanup completed. Those skipped steps are not
+passes, and the successful push run does not rewrite the manual failure.
+
+The focus witness, Page sources and served assets match main
+`d4cfae052a3d92aaeff28f8e986f59414807c233`. The retained source comparison checks
+18 exact Git owners. The manifest records both full commits, all 18 paths
+and the exact `git diff --quiet` comparison; root observed exit 0. The
+comparison depends on no scratch inventory. Source equality does not prove
+equal runtime data, browser timing or the cause of the focus failure. F-2 request
+`0f327b6b207defe01cb9a4a3fab743e3d6fc89aa` owns that separate investigation and
+one repair after S1. It adds no S1 retry, sleep or witness change.
+
+Ruling `b5283835` selects the existing push runs as S1's exact-head CI. No
+additional Page or Card run follows. These runs bind `bfc67122`, whose source
+and tests equal runtime checkpoint `acf797a7`; they are not executions at
+this later two-document successor. Review, landing and deployment remain
+separate acts.
+
 ## Open limits
 
 - Request `8bd2c9d2208811e7540a64d570515394d487c83a` owns the historical
@@ -183,10 +231,10 @@ does not rewrite that status.
   `/private/tmp` at its unchanged locator/hash/mode and can disappear on
   restart. It is not relabeled or persisted as curated metadata. Current
   gate/control physical dependency checks are separate actual evidence.
-- The same request owns the exact-final-head Page and Card CI attachment.
-  The external review records actual run IDs, event, attempt, jobs, steps, and
-  conclusions after the document-only commit. This note predicts no result
-  and needs no later commit solely to insert CI results.
+- The same request owns the browser-CI review disposition. The manifest
+  records the two successful push runs and failed manual Page run at
+  `bfc67122`. The checker judges them under ruling `b5283835`. This
+  documentary successor changes no runtime source and claims no new CI run.
 - The same request owns the external final-document correspondence receipt.
   It records the actual final commit/tree and confirms only
   `notes/implementation/2026-11-11-serving-windows-s1.md` and

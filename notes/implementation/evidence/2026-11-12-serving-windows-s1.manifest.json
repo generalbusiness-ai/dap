@@ -230,12 +230,209 @@
     }
   ],
   "finalCI": {
-    "status": "UNALLOCATED_EXTERNAL_REVIEW_ATTACHMENT_AFTER_FINAL_DOC_COMMIT",
-    "head": null,
-    "pageRun": null,
-    "cardRun": null,
-    "attachment": null,
-    "qualification": "Bind actual exact final head and actual run/job/event/attempt/results later. No predicted success or post-CI note rewrite."
+    "kind": "CURATED_PROVENANCE",
+    "label": "Curated provenance, not raw output",
+    "status": "ACTUAL_BFC_PUSH_SUCCESSES_WITH_SEPARATE_FAILED_MANUAL_RUN",
+    "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+    "tree": "83b4c4186393f110ca7d8453f2f1249614221dab",
+    "repository": "generalbusiness-ai/dap",
+    "ruling": "b5283835846713777cd40b7ad5b9863dff16115d",
+    "selectedExactHeadCIRuns": [
+      43201044890,
+      43201044687
+    ],
+    "runs": [
+      {
+        "workflow": "Page browser scripts",
+        "workflowPath": ".github/workflows/page-browser.yml",
+        "run": 43201044890,
+        "job": 131124242674,
+        "event": "push",
+        "attempt": 1,
+        "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+        "branch": "builder/serving-windows-s1-20261111",
+        "status": "completed",
+        "conclusion": "success",
+        "totalJobs": 1,
+        "steps": 12,
+        "successfulSteps": 12,
+        "createdAt": "2026-11-12T10:30:58Z",
+        "jobStartedAt": "2026-11-12T10:31:00Z",
+        "jobCompletedAt": "2026-11-12T10:36:41Z",
+        "url": "https://github.com/generalbusiness-ai/dap/actions/runs/43201044890",
+        "originals": {
+          "run": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044890-run.json",
+            "sha256": "055d4eb29ee9ca88f6e4ced079198cd990adc747f3971f76b659eb6e3aca485a",
+            "bytes": 13029,
+            "mode": 384
+          },
+          "jobs": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044890-jobs.json",
+            "sha256": "2e2f99e25036d6ca6e71b9a807b5aa25056c23d7a765efa57b1d08e6eeef746c",
+            "bytes": 3120,
+            "mode": 384
+          },
+          "jobLog": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/job-131124242674-original.log",
+            "sha256": "bc81aa8d8ff619c6ae6c3821329a64240b9d4e8a396783b6e16c6c080c0ab91d",
+            "bytes": 43894,
+            "mode": 384
+          }
+        },
+        "logCompletionObserved": true,
+        "successfulProcessQualification": "GitHub job and all step statuses are success; independent full-log readback observed maintained completion markers. No individual numeric child-zero receipt is claimed."
+      },
+      {
+        "workflow": "Card browser scripts",
+        "workflowPath": ".github/workflows/views-browser.yml",
+        "run": 43201044687,
+        "job": 131124242198,
+        "event": "push",
+        "attempt": 1,
+        "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+        "branch": "builder/serving-windows-s1-20261111",
+        "status": "completed",
+        "conclusion": "success",
+        "totalJobs": 1,
+        "steps": 13,
+        "successfulSteps": 13,
+        "createdAt": "2026-11-12T10:30:58Z",
+        "jobStartedAt": "2026-11-12T10:31:00Z",
+        "jobCompletedAt": "2026-11-12T10:34:13Z",
+        "url": "https://github.com/generalbusiness-ai/dap/actions/runs/43201044687",
+        "originals": {
+          "run": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044687-run.json",
+            "sha256": "f2278571ea953d0fa94fa908dc1f285779c6ab3112f31e9eeafc2562e7a2a8f8",
+            "bytes": 13029,
+            "mode": 384
+          },
+          "jobs": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044687-jobs.json",
+            "sha256": "45f347f27789f188c62e61ba6919207a4ac30227073e161225bbdc5a8fbd6f9e",
+            "bytes": 3343,
+            "mode": 384
+          },
+          "jobLog": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/job-131124242198-original.log",
+            "sha256": "643216dc0bf4a1575bd9cdc2e8a066ee581fc5926bb0050a99c7e1f4b9783639",
+            "bytes": 46045,
+            "mode": 384
+          }
+        },
+        "logCompletionObserved": true,
+        "successfulProcessQualification": "GitHub job and all step statuses are success; independent full-log readback observed maintained completion markers. No individual numeric child-zero receipt is claimed."
+      },
+      {
+        "workflow": "Page browser scripts",
+        "workflowPath": ".github/workflows/page-browser.yml",
+        "run": 43201184843,
+        "job": 131124731653,
+        "event": "workflow_dispatch",
+        "attempt": 1,
+        "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+        "branch": "builder/serving-windows-s1-20261111",
+        "status": "completed",
+        "conclusion": "failure",
+        "totalJobs": 1,
+        "steps": 12,
+        "failedSteps": 1,
+        "skippedSteps": 2,
+        "failedWitness": "create-room Escape focus assertion",
+        "sourceLocation": "scripts/demo-captures.ts:303",
+        "observedFailedProcessExit": 1,
+        "createdAt": "2026-11-12T10:31:54Z",
+        "jobStartedAt": "2026-11-12T10:31:58Z",
+        "jobCompletedAt": "2026-11-12T10:35:35Z",
+        "url": "https://github.com/generalbusiness-ai/dap/actions/runs/43201184843",
+        "originals": {
+          "run": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/run-observation-2.json",
+            "sha256": "8012a5f17c3fe13ab79f94997662b8e3fa78d2adb03f6d2d56fc9ce949ce10f0",
+            "bytes": 13027,
+            "mode": 420
+          },
+          "jobs": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/jobs-observation-2.json",
+            "sha256": "aba37dd76b37b9a94bf26cd2dcfea90efea699eb313d355420fde55adff2b387",
+            "bytes": 3120,
+            "mode": 420
+          },
+          "jobLog": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/job-131124731653-original.log",
+            "sha256": "e262952cd00a2db0831f6835413d9ab85bb4e9548c0194878ebfd08a544b8c47",
+            "bytes": 43628,
+            "mode": 420
+          },
+          "curatedFailure": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/failure-curated-readback.json",
+            "sha256": "8844b363df6faad2f4d816144d6aa66a27de4995dfc0b1b346a2e4c123451e74",
+            "bytes": 4578,
+            "mode": 384
+          }
+        },
+        "qualification": "The run remains failed. Push success does not turn this invocation or its skipped steps into passes."
+      }
+    ],
+    "sourceEqualMain": {
+      "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+      "comparisonHead": "d4cfae052a3d92aaeff28f8e986f59414807c233",
+      "owners": 18,
+      "paths": [
+        "scripts/demo-captures.ts",
+        "apps/room/page/src/main.ts",
+        "apps/room/page/src/focus.ts",
+        "apps/room/page/src/popups.ts",
+        "apps/room/page/src/index.html",
+        "apps/room/page/src/page-observation.ts",
+        "apps/room/page/src/workbench-work.ts",
+        "apps/room/page/src/claim.ts",
+        "apps/room/page/src/data.ts",
+        "apps/room/page/src/index.ts",
+        "apps/room/page/route.ts",
+        "apps/room/page/assets.ts",
+        "apps/room/page/test/focus.test.ts",
+        "apps/room/page/test/claim-ui.test.ts",
+        "apps/room/page/test/screens.mjs",
+        "apps/room/page/test/workbench-fixture.ts",
+        "scripts/demo/recorder-output.ts",
+        ".github/workflows/page-browser.yml"
+      ],
+      "gitComparison": {
+        "argvPrefix": [
+          "git",
+          "diff",
+          "--quiet",
+          "d4cfae052a3d92aaeff28f8e986f59414807c233",
+          "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+          "--"
+        ],
+        "appendPaths": "Append the exact paths array above, in its listed order.",
+        "rootObservedActualExit": 0,
+        "comparison": "Tracked blobs and Git modes; no browser/project body.",
+        "observation": "Root executed this exact comparison. V1 author independently compared each of the 18 Git blob/mode/byte inputs."
+      },
+      "qualification": "Durable commits and exact finite paths reproduce the comparison without a scratch source inventory. Equality does not establish equal dynamic data, browser timing or the observed runtime cause."
+    },
+    "separateFocusRequest": "0f327b6b207defe01cb9a4a3fab743e3d6fc89aa",
+    "failurePreserved": true,
+    "additionalS1Runs": 0,
+    "documentarySuccessor": {
+      "baseHead": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+      "head": null,
+      "tree": null,
+      "scope": "Only this existing S1 note and canonical manifest change. Runtime source remains acf797a7.",
+      "qualification": "CI ran at bfc, not at the later documentary successor. Ruling b528 selects those actual push runs; external correspondence must verify the exact two-doc-only successor. No new run is claimed or requested."
+    },
+    "checkerDisposition": null,
+    "independentCIReadback": {
+      "path": "/private/tmp/artroom-s1-bfc-push-ci-originals-independent-curated-readback-20261112.json",
+      "sha256": "05c5d0101ff5d9dd943d76bd6280d8959a77d41df9949addcd3b5a56aa848194",
+      "bytes": 14651,
+      "mode": 420
+    },
+    "custody": "Original API responses and complete logs remain at their original HOME locators with unchanged bytes and modes. This object contains authored identifiers, statuses, aggregate counts and file references only; no raw row/line copy, link, freeze or seal."
   },
   "custody": {
     "rawPolicy": "All ordinary and validation raw files remain plain external originals. No copies, selected-line projections, hardlinks, symlinks, chmod or raw sealing. References record path/hash/head/actual exit and derived facts only.",
@@ -773,7 +970,7 @@
     },
     {
       "request": "8bd2c9d2208811e7540a64d570515394d487c83a",
-      "limit": "Exact-final-head Page and Card CI belongs in an external future review attachment. No CI result or post-CI note rewrite is claimed."
+      "limit": "Actual Page/Card push successes at bfc67122 and the separately failed manual Page invocation are recorded in finalCI under ruling b528. The checker judges their review use; CI did not run at the later documentary successor, whose exact two-document correspondence remains an external receipt."
     },
     {
       "request": "8bd2c9d2208811e7540a64d570515394d487c83a",
