@@ -5,7 +5,6 @@ import { same } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isScopeRef } from "@generalbusiness/dap-bytes";
 import { readNativeBirth, type NativeBirthSource } from "../native-birth.ts";
-import { proofEntry } from "../proof-bytes.ts";
 import type { PreparationRun } from "../preparation-flight.ts";
 import type { PreparedRead } from "../read-preparation.ts";
 
@@ -26,11 +25,13 @@ export async function projectionScopeOwned(frame: PreparedRead, root: ScopeRef, 
     // No second caller timer: a late underlying RPC retains this flight.
     const raw = await births.read(parent, run.remaining(), APPLICATION_OWNERSHIP_BOUNDS.birthBytes);
     if (!run.active()) return "unavailable";
-    const birth = readNativeBirth(raw, parent, APPLICATION_OWNERSHIP_BOUNDS.birthBytes);
-    if (!birth || birth.native || !isDigest(birth.named)) return "unowned";
-    const entry = proofEntry(birth.proof, birth.proof.fact, APPLICATION_OWNERSHIP_BOUNDS.birthBytes);
-    if (!entry || entry.input.type !== "genesis" || entry.input.decision !== "applied" || !same(entry.at, parent)) return "unowned";
-    if (same(parent, root)) return birth.named === rootDefinition && same(entry.input.seed.creator, directory) ? "owned" : "unowned";
+    // The ancestor count and the per-birth cap bound this walk. It keeps no byte ledger to debit.
+    // Admission binds the genesis to the parent's full reference.
+    const admitted = readNativeBirth(raw, parent, APPLICATION_OWNERSHIP_BOUNDS.birthBytes, () => {});
+    if (!admitted || admitted.birth.native || !isDigest(admitted.birth.named)) return "unowned";
+    const entry = admitted.entry;
+    if (entry.input.decision !== "applied") return "unowned";
+    if (same(parent, root)) return admitted.birth.named === rootDefinition && same(entry.input.seed.creator, directory) ? "owned" : "unowned";
     genesis = entry.input;
   }
   return "too-large";

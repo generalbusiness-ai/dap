@@ -50,9 +50,10 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
       const births = new Map<string, FixtureArchiveSourceBirth>();
       const nativeBirths = namespace(binding).births;
       const capture = (where: SequenceRef, reply: Awaited<ReturnType<typeof nativeBirths.read>>) => {
-        const birth = readNativeBirth(reply, where, 256 * 1024);
-        if (!birth) return null;
-        const policy = policies.get(birth.named);
+        // archiveTarget's own admission of this same reply debits the archive budget. This copy charges nothing more.
+        const admitted = readNativeBirth(reply, where, 256 * 1024, () => {});
+        if (!admitted) return null;
+        const birth = admitted.birth, policy = policies.get(birth.named);
         if (!policy) return null;
         births.set(canonicalize(where), { at: where, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash }, ...(policy.declaration ? { declaration: policy.declaration } : {}) });
         return reply;
@@ -104,8 +105,9 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
                 return null;
               }
             });
-            const birth = readNativeBirth(reply, where, 256 * 1024), policy = birth ? policies.get(birth.named) : null;
-            if (birth) budget.settle(reservation, utf8(birth.proof.bytes).length);
+            // The debit settles the reservation at the actual size, before parsing.
+            const birth = readNativeBirth(reply, where, 256 * 1024, size => budget.settle(reservation, size))?.birth ?? null;
+            const policy = birth ? policies.get(birth.named) : null;
             if (!birth || !policy) {
               // Bounded copies of already validated metadata only. No raw birth,
               // payload, error or transport credential enters the pass diagnostic.

@@ -3,7 +3,7 @@ import { archiveTargetCohort, isOf } from "@generalbusiness/dap-platform";
  * Wiring and read authority are explicit fixture ports in this milestone. */
 import { same } from "@generalbusiness/dap-bytes";
 import { ITEM_QUERY_BOUNDS, type Digest, type Item, type ItemQuery, type PlatformDefinition, type SequenceRef, type Seed } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, encodeItemQueryParameter, isDigest, isRecord, isSequenceRef, isSeed, readItemQueryReply, resolveGenesisSelf, scopeIdOf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { canonicalize, encodeItemQueryParameter, isDigest, isRecord, isSequenceRef, isSeed, readItemQueryReply, resolveGenesisSelf, scopeIdOf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 
 import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/dap-git/archive-policy";
 import type { ArchiveBudget } from "./archive-budget.ts";
@@ -13,7 +13,6 @@ import type { DestinationRepository } from "./destination-host.ts";
 import type { NativeItemQuery } from "./item-queries.ts";
 import { readNativeBirth, type NativeBirthSource } from "./native-birth.ts";
 import { namespace, type Binding } from "./namespace.ts";
-import { proofEntry } from "./proof-bytes.ts";
 import type { ArchiveReplayContext, ExpectedDirectoryRulesRoot } from "./archive-publication.ts";
 
 const BIRTH_BYTES = 256 * 1024, HOPS = 8;
@@ -63,17 +62,14 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
 } {
   const birth = async (at: SequenceRef, budget: ArchiveBudget) => {
     const reservation = budget.reserve({ nodes: 1, calls: 1, metadata: BIRTH_BYTES, inputWork: BIRTH_BYTES * 8 });
-    const found = readNativeBirth(await budget.wait(() => reads.births.read({ ...at }, Math.min(10_000, budget.remaining()), BIRTH_BYTES)), at, BIRTH_BYTES);
-    if (!found) return null;
-    const size = utf8(found.proof.bytes).length;
-    budget.settle(reservation, size);
-    // The byte factory adds a bounded validation pass until the Native
-    // producer supplies this admitted association with its parsed entry.
-    budget.spend({ metadata: size, inputWork: size * 8 });
-    const sequence = admitSequenceGenesis(found.proof.bytes, at, BIRTH_BYTES);
-    if (!sequence) return null;
-    const entry = proofEntry(found.proof, found.proof.fact, BIRTH_BYTES);
-    if (entry?.input.type !== "genesis" || entry.input.decision !== "applied") return null;
+    // The debit settles the reservation at the actual size and keeps the existing validation-pass charge, before parsing.
+    const admitted = readNativeBirth(await budget.wait(() => reads.births.read({ ...at }, Math.min(10_000, budget.remaining()), BIRTH_BYTES)), at, BIRTH_BYTES, size => {
+      budget.settle(reservation, size);
+      budget.spend({ metadata: size, inputWork: size * 8 });
+    });
+    if (!admitted) return null;
+    const found = admitted.birth, entry = admitted.entry, sequence = admitted.sequence;
+    if (entry.input.decision !== "applied") return null;
     const encodedCreator = entry.input.seed.creator;
     const creator = encodedCreator === null ? null : isSequenceRef(encodedCreator) ? Object.freeze({ ...encodedCreator })
       : entry.input.source ? resolveGenesisSelf(encodedCreator, entry.input.source) : null;
