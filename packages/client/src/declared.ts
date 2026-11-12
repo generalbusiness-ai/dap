@@ -22,7 +22,7 @@
  */
 
 import type { ReferenceValue,
-  Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldType, FieldValue, Grant, Head, ItemQueryRead, MemberRef, PlatformDefinition, Read, ReadRefusal, ScopeRef, SignedIntent, Summary, Timestamp,
+  Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldType, FieldValue, Grant, Head, ItemQueryRead, MemberRef, PlatformDefinition, Read, ReadRefusal, ScopeRef, SignedIntent, Summary, Timestamp, TypeMark, ValuePlace,
 } from "@generalbusiness/dap-contract";
 import { isReference, definitionDigest, isDigest, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import type { ScopeHandle } from "./handle.ts";
@@ -91,57 +91,104 @@ export class ShapeError extends Error {
 
 // ---------------------------------------------------------------- the shape of a value
 
-const own = <T>(record: Readonly<Record<string, T>> | undefined, name: string): T | undefined => (record !== undefined && Object.hasOwn(record, name) ? record[name] : undefined);
+/** Declared fields and the two platform extensions. A mark is checked only by its platform rule. */
+export type ShapeFieldType = FieldType | TypeMark | (Omit<TypeMark, "type"> & { type?: undefined }) | ValuePlace;
+export type ShapeField = ShapeFieldType & { required?: boolean };
+export type ShapeFaultCode = "text" | "text-bytes" | "int" | "bool" | "time" | "enum" | "member" | "item" | "reference" | "fact" | "scope" | "digest" | "git" | "list" | "list-length" | "record" | "unknown" | "required" | "platform";
 
-/**
- * Checks `value` against `type`, and returns it as the intent holds it: the
- * same value, or for a detached text its digest, with the text added to
- * `texts`. It reads the type's own bounds. The scope's bounds on a member's
- * handle and on a list are the scope's to check.
- */
-function shaped(type: FieldType, value: unknown, path: string, texts: Set<string>): FieldValue {
-  const not = (what: string): never => { throw new ShapeError(path, what); };
-  switch (type.type) {
-    case "text": {
-      if (typeof value !== "string" || !wellFormed(value)) return not("is not a text");
-      if (utf8(value).length > type.max) return not(`is longer than ${type.max} bytes`);
-      if (!type.detached) return value;
-      texts.add(value);
-      return textDigest(value);
-    }
-    case "int": return typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= type.min && value <= type.max ? value : not(`is not an integer from ${type.min} to ${type.max}`);
-    case "bool": return typeof value === "boolean" ? value : not("is not true or false");
-    case "time": return timeMs(value) !== null ? (value as Timestamp) : not("is not a timestamp");
-    case "enum": return typeof value === "string" && type.of.includes(value) ? value : not(`is not one of: ${type.of.join(", ")}`);
-    case "member": return isMemberRef(value) ? value : not("is not a member reference");
-    case "item": return isLocalId(value) ? value : not("is not a local item ID");
-    case "fact": return isFactRef(value) ? value : not("is not a fact reference");
-    case "reference": return isReference(value, type.fragment) ? value : not("is not a document or entry reference with a bounded fragment");
-    case "scope": return isScopeRef(value) && value.kind === type.kind ? value : not(`is not a reference to a scope of kind ${type.kind}`);
-    case "digest": return isDigest(value) ? value : not("is not a digest");
-    case "commit": case "tree": return typeof value === "string" && /^([0-9a-f]{40}|[0-9a-f]{64})$/.test(value) ? value : not("is not a Git object ID");
-    case "list": {
-      if (!Array.isArray(value)) return not("is not a list");
-      if (value.length > type.max) return not(`has more than ${type.max} elements`);
-      return value.map((element, i) => shaped(type.of, element, `${path}.${i}`, texts));
-    }
-    case "record": {
-      if (!isRecord(value)) return not("is not a record");
-      return named(type.of, value, path, texts);
-    }
+/** A consumer can render its own words without checking a field a second time. */
+export class FieldShapeError extends ShapeError {
+  constructor(readonly code: ShapeFaultCode, readonly segments: readonly (string | number)[], readonly type: ShapeFieldType | null, what: string) {
+    super(segments.join("."), what);
   }
 }
 
-/** Named values against their declarations: no name that is not declared, and every required one. A name that is absent stays absent. */
-function named(types: Readonly<Record<string, FieldType & { required: boolean }>>, given: Readonly<Record<string, unknown>>, path: string, texts: Set<string>): Record<string, FieldValue> {
-  for (const name of Object.keys(given)) if (own(types, name) === undefined) throw new ShapeError(`${path}.${name}`, "is not declared");
+/** Pure adaptations of the values a caller gives. These options perform no scope read. */
+export interface FieldShapeOptions {
+  member?: (handle: string) => MemberRef | null;
+  texts?: ReadonlyMap<string, string>;
+  platformMarks?: true;
+}
+
+interface Shaping {
+  options: FieldShapeOptions;
+  texts: Map<string, string>;
+}
+
+const own = <T>(record: Readonly<Record<string, T>> | undefined, name: string): T | undefined => (record !== undefined && Object.hasOwn(record, name) ? record[name] : undefined);
+
+/** One exhaustive declared-field checker, shared by the typed handle and transport adapters. */
+function shaped(type: ShapeFieldType, value: unknown, path: readonly (string | number)[], at: Shaping): FieldValue {
+  const not = (code: ShapeFaultCode, what: string): never => { throw new FieldShapeError(code, path, type, what); };
+  if (type.type === "code" || type.type === undefined) {
+    if (at.options.platformMarks) return value as FieldValue;
+    return not("platform", "is not a declared field type");
+  }
+  switch (type.type) {
+    case "text": {
+      if (typeof value !== "string" || !wellFormed(value)) return not("text", "is not a text");
+      // A transport that supplies detached texts may name one by its digest.
+      if (type.detached && at.options.texts !== undefined && isDigest(value) && at.texts.has(value)) return value;
+      if (utf8(value).length > type.max) return not("text-bytes", `is longer than ${type.max} bytes`);
+      if (!type.detached) return value;
+      const digest = textDigest(value);
+      at.texts.set(digest, value);
+      return digest;
+    }
+    case "int": return typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= type.min && value <= type.max ? value : not("int", `is not an integer from ${type.min} to ${type.max}`);
+    case "bool": return typeof value === "boolean" ? value : not("bool", "is not true or false");
+    case "time": return timeMs(value) !== null ? (value as Timestamp) : not("time", "is not a timestamp");
+    case "enum": return typeof value === "string" && type.of.includes(value) ? value : not("enum", `is not one of: ${type.of.join(", ")}`);
+    case "member": {
+      const found = typeof value === "string" && value.startsWith("@") ? at.options.member?.(value) : null;
+      if (found) return found;
+      return isMemberRef(value) ? value : not("member", "is not a member reference");
+    }
+    case "item": return isLocalId(value) ? value : not("item", "is not a local item ID");
+    case "fact": return isFactRef(value) ? value : not("fact", "is not a fact reference");
+    case "reference": return isReference(value, type.fragment) ? value : not("reference", "is not a document or entry reference with a bounded fragment");
+    case "scope": return isScopeRef(value) && value.kind === type.kind ? value : not("scope", `is not a reference to a scope of kind ${type.kind}`);
+    case "digest": return isDigest(value) ? value : not("digest", "is not a digest");
+    case "commit": case "tree": return typeof value === "string" && /^([0-9a-f]{40}|[0-9a-f]{64})$/.test(value) ? value : not("git", "is not a Git object ID");
+    case "list": {
+      if (!Array.isArray(value)) return not("list", "is not a list");
+      if (value.length > type.max) return not("list-length", `has more than ${type.max} elements`);
+      return value.map((element, i) => shaped(type.of, element, [...path, i], at));
+    }
+    case "record": {
+      if (!isRecord(value)) return not("record", "is not a record");
+      return named(type.of, value, path, at);
+    }
+  }
+  // A new Contract FieldType must stop every consumer, including MCP, here.
+  const unhandled: never = type;
+  throw new TypeError(`Unsupported field declaration: ${String(unhandled)}`);
+}
+
+/** Named values against their declarations: no undeclared name, and every required one. */
+function named(types: Readonly<Record<string, ShapeField>>, given: Readonly<Record<string, unknown>>, path: readonly (string | number)[], at: Shaping): Record<string, FieldValue> {
+  for (const name of Object.keys(given)) if (own(types, name) === undefined) throw new FieldShapeError("unknown", [...path, name], null, "is not declared");
   const out: [string, FieldValue][] = [];
   for (const [name, type] of Object.entries(types)) {
     const value = own(given, name);
-    if (value === undefined && type.required) throw new ShapeError(`${path}.${name}`, "is required");
-    if (value !== undefined) out.push([name, shaped(type, value, `${path}.${name}`, texts)]);
+    if (value === undefined && type.required) throw new FieldShapeError("required", [...path, name], type, "is required");
+    if (value !== undefined) out.push([name, shaped(type, value, [...path, name], at)]);
   }
   return Object.fromEntries(out);
+}
+
+/** Shape fields without signing. Only detached texts named by the result travel beside it. */
+export function shapeFieldsOf(types: Readonly<Record<string, ShapeField>>, fields: Readonly<Record<string, unknown>>, options: FieldShapeOptions = {}): { fields: Record<string, FieldValue>; texts: string[] } {
+  const at: Shaping = { options, texts: new Map(options.texts) };
+  const result = named(types, fields, ["fields"], at);
+  const used = new Set<string>();
+  const walk = (value: unknown): void => {
+    if (typeof value === "string" && at.texts.has(value)) used.add(value);
+    else if (Array.isArray(value)) value.forEach(walk);
+    else if (isRecord(value)) Object.values(value).forEach(walk);
+  };
+  walk(result);
+  return { fields: result, texts: [...used].map((digest) => at.texts.get(digest)!) };
 }
 
 /** Check one declared act's input without signing or reading a scope.
@@ -155,11 +202,11 @@ export function shapeDeclaredAct<D extends DeclaredDefinition, K extends Kind<D>
   const on = given.on ?? null;
   const needs = act.step !== "open" && act.on !== null;
   if (needs ? !isLocalId(on) : on !== null) throw new ShapeError("on", needs ? "is the local ID of the item this act is on" : "is not given: this act is on no existing item");
-  const texts = new Set<string>();
-  const fields = named(act.fields, given.fields ?? {}, "fields", texts);
+  const at: Shaping = { options: {}, texts: new Map() };
+  const fields = named(act.fields, given.fields ?? {}, ["fields"], at);
   const presents = Object.fromEntries(Object.entries(act.presents ?? {}).map(([name, p]) => [name, { type: "fact", kind: p.kind, under: p.under, required: p.required } as const]));
-  const presented = named(presents, given.presented ?? {}, "presented", texts) as Record<string, FactRef>;
-  return { on, fields, beside: { ...(texts.size > 0 ? { texts: [...texts] } : {}), ...(Object.keys(presented).length > 0 ? { presented } : {}) } };
+  const presented = named(presents, given.presented ?? {}, ["presented"], at) as Record<string, FactRef>;
+  return { on, fields, beside: { ...(at.texts.size > 0 ? { texts: [...at.texts.values()] } : {}), ...(Object.keys(presented).length > 0 ? { presented } : {}) } };
 }
 
 // ---------------------------------------------------------------- the handle
