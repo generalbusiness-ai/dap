@@ -68,6 +68,8 @@ import type {} from "./support/maintained-applications.ts";
 import { fixedSigner } from "./fixtures-core.ts";
 import retainedGrowRoom from "./support/retained-archive-grow-room.json.txt?raw";
 import retainedGrowSite from "./support/retained-archive-grow-site.json.txt?raw";
+/** The address of a history's scope: its scope ID and the hash of its genesis entry. */
+const historyAt = (scope: ScopeId, history: readonly Sealed[]): ScopeRef => ({ scope, genesis: history[0]!.hash });
 
 const retainedGrowPins = {
   site: "sha256:69424c1bbbf7c2f81528fcc6c910b1230a88d061ac3655c5bde916aaa2572c56",
@@ -285,15 +287,15 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const observed = observations[0]!;
       const memberHead: FactRef = { at: { ...observed.of }, seq: observed.head.seq, hash: observed.head.hash };
       const nativeMembers = (await life.wait(() => M.sealed())).filter(sealed =>
-        canonicalize(sealed.entry.at) === canonicalize(memberHead.at) && sealed.entry.seq === memberHead.seq && sealed.hash === memberHead.hash);
+        canonicalize(membership) === canonicalize(memberHead.at) && sealed.entry.seq === memberHead.seq && sealed.hash === memberHead.hash);
       expect(nativeMembers).toHaveLength(1);
       const memberInput = nativeMembers[0]!.entry.input;
       (context.task.meta as Record<string, unknown>)["nativeInstallAuthorityOracle"] = {
-        preMcpSummary: membershipBeforeInstall, rulesAct: { at: rulesEntry.entry.at, seq: rulesEntry.entry.seq, hash: rulesEntry.hash },
+        preMcpSummary: membershipBeforeInstall, rulesAct: { at: rulesAt, seq: rulesEntry.entry.seq, hash: rulesEntry.hash },
         memberHead, memberInput: { type: memberInput.type, ...(memberInput.type === "act" ? { kind: memberInput.signed.intent.kind } : {}) },
         qualification: "Actual Native install act and exact local Membership sealed fact, before archive processing; no archive-derived expectation or notification-cause claim.",
       };
-      return { rulesEntry, memberHead };
+      return { rulesEntry, rulesAt, memberHead };
     })() : null;
     const nativeStageOracle = productionScenario ? await (async () => {
       const catalog = packet.package.semantic.definitions.map(part => ({
@@ -302,8 +304,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const stages = (await life.wait(() => D.sealed())).filter(sealed => {
         const input = sealed.entry.input;
         if (input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell"
-          || canonicalize(sealed.entry.at) !== canonicalize(directory)
-          || canonicalize(input.from.at) !== canonicalize(nativeInstallOracle!.rulesEntry.entry.at)
+          || canonicalize(input.from.at) !== canonicalize(nativeInstallOracle!.rulesAt)
           || !isRecord(input.message.body) || input.message.body["message"] !== "application-stage") return false;
         const fields = input.message.body["fields"];
         return isRecord(fields) && fields["job"] === nativeInstallOracle!.rulesEntry.entry.seq
@@ -316,7 +317,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(fields["declarations"]).toEqual(catalog);
       for (const [index, part] of catalog.entries()) expect(fields[`definitionText${index}`]).toBe(part.text);
       expect(Object.keys(fields).filter(key => /^definitionText[0-9]+$/.test(key)).sort()).toEqual(catalog.map((_part, index) => `definitionText${index}`).sort());
-      const fact: FactRef = { at: { ...stage.entry.at }, seq: stage.entry.seq, hash: stage.hash };
+      const fact: FactRef = { at: { ...directory }, seq: stage.entry.seq, hash: stage.hash };
       expect(fact.at).toEqual(directory);
       (context.task.meta as Record<string, unknown>)["nativeStageOracle"] = { fact, declarations: catalog.map(({ digest, text }) => ({ digest, text })),
         qualification: "Unique actual Native Directory staging delivery with exact sender/recipient/job/release/semantic/root and signed declaration text fields, before archive processing." };
@@ -344,10 +345,10 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const zone = await life.wait(() => childScope.did(rita, "commission-zone", { fields: { label: "TEST Zone", setpoint: 2400, band: 200 } }));
       const heater = await life.wait(async () => childScope.did(rita, "commission-device", { fields: { zone, kind: "heater", label: "TEST Heater", minLevel: 0, maxLevel: 100, target: "off", level: 0 }, expected: await childScope.expected({ zone }) }));
       const command = await life.wait(async () => childScope.did(rita, "set-heater", { on: heater, fields: { target: "on", level: 100 }, expected: await childScope.expected({ on: heater }) }));
-      const sealed = (await life.wait(() => childScope.sealed())).find(entry => entry.entry.seq === command)!;
+      const sealed = (await life.wait(() => childScope.sealed())).find(entry => entry.entry.seq === command)!, childAt = await life.wait(() => childScope.at());
       const ownerMcp = productionScenario ? new McpService({ ...port, signer: secretSigner(una.secret), custody: memoryStore() }) : mcp;
       const answer = await life.wait(() => ownerMcp.call("prepare", { resource: childScope.name, capability: DEVICE_COMMAND, step: "answer", idempotencyKey: "TEST-archive-Grow-owner-answer",
-        fields: { command: { at: sealed.entry.at, seq: command, hash: sealed.hash }, outcome: "confirmed", description: "TEST native owner reply" },
+        fields: { command: { at: childAt, seq: command, hash: sealed.hash }, outcome: "confirmed", description: "TEST native owner reply" },
       }));
       expect(answer.isError, JSON.stringify(answer.structuredContent)).toBe(false);
       expect(answer.structuredContent).toMatchObject({ step: { answer: { answer: "accepted" } } });
@@ -576,8 +577,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     const nativeTextFirsts = new Map<string, FactRef>();
     if (productionScenario) {
       const schemas = new Map<string, ValidDefinition>();
-      const nativeSchemas = [...allHistories.map(history => history.read.value), await life.wait(() => R.sealed()), await life.wait(() => M.sealed())];
-      for (const history of nativeSchemas) {
+      const nativeSchemas: (readonly [ScopeId, readonly Sealed[]])[] = [...allHistories.map(history => [history.scope.name, history.read.value] as const),
+        [R.name, await life.wait(() => R.sealed())], [M.name, await life.wait(() => M.sealed())]];
+      for (const [name, history] of nativeSchemas) {
         const first = history[0];
         if (!first || first.entry.seq !== 0 || first.entry.input.type !== "genesis") throw Error("Actual Native genesis schema required.");
         const pin = first.entry.input.seed.definition, coded = isDigest(pin) ? null : platform(pin);
@@ -586,11 +588,11 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         const checked = validateDefinition(declared, PROPOSED_BOUNDS, RULE_PROFILES,
           coded ? { platform: true, outcomeValues: outcomeValueDomains(coded.data, coded.rules) } : {});
         if (!checked.ok) throw Error("Actual Native schema must validate for omission oracle.");
-        schemas.set(canonicalize(first.entry.at), checked.definition);
+        schemas.set(canonicalize(historyAt(name, history)), checked.definition);
       }
       const knownTexts = new Set(packet.package.semantic.definitions.map(part => textDigest(part.bytes)));
-      for (const { read } of allHistories) for (const sealed of read.value) {
-        const schema = schemas.get(canonicalize(sealed.entry.at));
+      for (const { scope, read } of allHistories) for (const sealed of read.value) {
+        const sealedAt = historyAt(scope.name, read.value), schema = schemas.get(canonicalize(sealedAt));
         if (!schema) throw Error("Exact receiver schema required for Native text naming.");
         const input = sealed.entry.input;
         const sender = input.type === "delivery" ? schemas.get(canonicalize(input.from.at)) : undefined;
@@ -599,8 +601,8 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         // fields, and matched delivery fields. Result/control inputs name none.
         for (const digest of inputTexts(schema, input, sender?.declared.name)) {
           if (!knownTexts.has(digest)) throw Error("Native fixture names a detached text outside its signed declaration oracle.");
-          const key = canonicalize([sealed.entry.at, digest]);
-          if (!nativeTextFirsts.has(key)) nativeTextFirsts.set(key, { at: { ...sealed.entry.at }, seq: sealed.entry.seq, hash: sealed.hash });
+          const key = canonicalize([sealedAt, digest]);
+          if (!nativeTextFirsts.has(key)) nativeTextFirsts.set(key, { at: { ...sealedAt }, seq: sealed.entry.seq, hash: sealed.hash });
         }
       }
       for (const part of nativeStageOracle!.catalog) expect(nativeTextFirsts.get(canonicalize([directory, part.text]))).toEqual(nativeStageOracle!.fact);
@@ -660,7 +662,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     // No membership journal or body is selected for an archive.
     const credentialCopies = allHistories.flatMap(({ scope, read }) => read.value.flatMap(sealed => sealed.entry.uses
       .filter(use => fixtureSources.get(use.fact.at, new ArchiveBudget())?.pin === C.membership)
-      .map(use => ({ consumer: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash },
+      .map(use => ({ consumer: { at: historyAt(scope.name, read.value), seq: sealed.entry.seq, hash: sealed.hash },
         input: sealed.entry.input.type, source: use.fact, content: use.content, journal: scope.name }))));
     const credentialCounts = allHistories.map(({ scope }) => ({ scope: scope.name,
       entries: new Set(credentialCopies.filter(copy => copy.journal === scope.name).map(copy => copy.consumer.seq)).size,
@@ -941,7 +943,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         const bad = new Map(policies);
         bad.set(pin, { ...original, support: { ...original.support, owners } });
         const result = await life.wait(() => runInDurableObject(A.object, (_instance, state) => planArchive(archiveSql(state), {
-          at: history.read.value[0]!.entry.at, through: history.read.at, bounds: PROPOSED_BOUNDS, policies: bad,
+          at: historyAt(history.scope.name, history.read.value), through: history.read.at, bounds: PROPOSED_BOUNDS, policies: bad,
           format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources,
         }, new ArchiveBudget())));
         expect(result).toEqual({ ok: false, reason: "unsupported-custom-domain" });
@@ -1139,7 +1141,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         qualification: "Actual installed Grow root/child and Directory16/Rules10/Destination12, with native production host-item RPC, growArchiveDriver target/source preparation, adaptive writer, Mark and pending rebuild, actual Artifacts token adapter and smart-HTTP pack/send/readback. Exact committed signed demo packet and growArchivePolicies; TEST namespace, distinct enrolled agents, binding/HTTP peer, clock and scheduler; no real provider, alarm cadence or hosted acceptance. Every individual pass owns its default original30s ledger; first lost send and later rebuild retain separate costs. No source frame survives peer await." };
       let rebuildWitnessed = false;
       for (const { scope, read } of allHistories) {
-        const at = await life.wait(() => scope.at());
+        const at = await life.wait(() => scope.at()), born = read.value[0]!.entry.input, kind = born.type === "genesis" ? born.seed.kind : null;
         for (const sealed of read.value) {
           const cutoff = { seq: sealed.entry.seq, hash: sealed.hash };
           const later = read.value.find(row => row.entry.seq === cutoff.seq + 1);
@@ -1169,7 +1171,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
             const options = growArchiveDriver(archiveGiven(store), sql, binding, environment, policies, PROPOSED_BOUNDS, peer.fetch);
             if (!options) return expect.fail("The explicit native TEST host configuration must be admitted");
             const sourcePreparation = options.sources!;
-            const finishObserver = at.kind === "directory" && cutoff.seq === 2 ? observeDirectoryFinish(at, () => passBudget, cutoff, peer.data) : undefined;
+            const finishObserver = kind === "directory" && cutoff.seq === 2 ? observeDirectoryFinish(at, () => passBudget, cutoff, peer.data) : undefined;
             try {
             const driver = new ArchiveDriver({ ...options, target: { resolve: async (...args) => { const value = await options.target.resolve(...args); phases.push({ target: value, cost: args[2].admitted() }); return value; } }, sql, current: () => ({ at, head: ownerHead }), clock: () => timeOf(life.now()), bounds: PROPOSED_BOUNDS,
               sources: async (after, through, budget, exact) => {
@@ -1220,7 +1222,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
           const initial = await run();
           // Only settled TEST diagnostics inspect the already captured Native
           // history. This serialization does not schedule/admit any pass.
-          const entryShape = at.kind === "directory" && cutoff.seq === 2 ? {
+          const entryShape = kind === "directory" && cutoff.seq === 2 ? {
             input: sealed.entry.input.type, inputKeys: Object.keys(sealed.entry.input).sort(),
             entryBytes: utf8(canonicalize(sealed.entry)).length,
             qualification: "Already captured genuine Native entry; post-run shape only, no new journal read or body output." } : undefined;
@@ -1242,7 +1244,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
           passes.push({ scope: scope.name, seq: cutoff.seq, initial, ...(outcome === initial ? {} : { rebuilt: outcome }) });
           expect(outcome.result, JSON.stringify(passes.at(-1))).toMatchObject({ state: "confirmed" });
           expect(outcome.confirmed?.through).toEqual(cutoff);
-          if (at.kind === "directory" && cutoff.seq === 0) expect(initial.nativeRootReservations).toBe(2); // fresh Scout + fresh final inventory
+          if (kind === "directory" && cutoff.seq === 0) expect(initial.nativeRootReservations).toBe(2); // fresh Scout + fresh final inventory
           expect(initial.cost.inputWork).toBeLessThanOrEqual(64 * 1024 * 1024);
           expect(outcome.cost.inputWork).toBeLessThanOrEqual(64 * 1024 * 1024);
         }
@@ -1379,7 +1381,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     const expectedMemberPositions = productionScenario ? [0, nativeInstallOracle!.memberHead.seq, productionGrants[0]!.entry.seq, memberEntries.at(-1)!.entry.seq] : [0, 4, 5, 6];
     const expectedAnchors = [1, 2, 3].map(seq => registerEntries.find(entry => entry.entry.seq === seq)!)
       .concat([...new Set(expectedMemberPositions)].map(seq => memberEntries.find(entry => entry.entry.seq === seq)!))
-      .map(sealed => ({ at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash }))
+      .map(sealed => ({ at: historyAt(registerEntries.includes(sealed) ? R.name : M.name, registerEntries.includes(sealed) ? registerEntries : memberEntries), seq: sealed.entry.seq, hash: sealed.hash }))
       .sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq);
     if (productionScenario) { expect(expectedAnchors).toHaveLength(7); expect(expectedAnchors).toContainEqual(nativeInstallOracle!.memberHead); }
     expect(anchorFacts).toEqual(expectedAnchors);
@@ -1401,7 +1403,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       }))));
       return rows.filter(row => row.actual !== undefined).map(row => {
         expect(row.actual).toBe(row.bytes);
-        const at = read.value[0]!.entry.at, first = nativeTextFirsts.get(canonicalize([at, row.digest]));
+        const at = historyAt(scope.name, read.value), first = nativeTextFirsts.get(canonicalize([at, row.digest]));
         if (!first) throw Error("Native retained declaration text needs a declared detached-field naming entry");
         return { digest: row.digest, bytes: row.bytes, first };
       });
@@ -1412,7 +1414,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       return manifest.omitted.map(row => {
       if (!row.first || row.bytes === undefined) throw Error("A native unredacted omission must have count and first entry.");
       const first = read.value.find(sealed => sealed.entry.seq === row.first!.seq)!;
-      return { digest: row.digest, bytes: row.bytes, first: { at: first.entry.at, seq: first.entry.seq, hash: first.hash } };
+      return { digest: row.digest, bytes: row.bytes, first: { at: historyAt(scope.name, read.value), seq: first.entry.seq, hash: first.hash } };
       });
     });
     // Independent scalar reads of the native retained bodies; no text bytes
@@ -1442,7 +1444,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(offline.kind).toBe("verification"); if (offline.kind !== "verification") return;
       if (!wrong) expect(offline.verification.report).toMatchObject({ result: "missing-dependency", dependencies: { missing: [missing] } });
       else expect(offline.verification.report).toMatchObject({ result: "mismatch", dependencies: { missing: [] } });
-      if (missing === memberHead) expect(offline.verification.report.at).toEqual({ at: rulesEntry.entry.at, seq: productionScenario ? rulesEntry.entry.seq : 2, hash: rulesEntry.hash });
+      if (missing === memberHead) expect(offline.verification.report.at).toEqual({ at: historyAt(A.name, nativeRulesRows), seq: productionScenario ? rulesEntry.entry.seq : 2, hash: rulesEntry.hash });
     }
     const offlineResults = [];
     for (const { scope, read } of allHistories) {
@@ -1464,7 +1466,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     }
     const rootCopies = allHistories.flatMap(({ scope, read }) => read.value.flatMap(sealed => sealed.entry.uses
       .filter(use => use.fact.at.scope === claim.at.scope)
-      .map(use => ({ journal: scope.name, consumer: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash }, source: use.fact, content: use.content }))));
+      .map(use => ({ journal: scope.name, consumer: { at: historyAt(scope.name, read.value), seq: sealed.entry.seq, hash: sealed.hash }, source: use.fact, content: use.content }))));
     expect(offlineResults.every(result => result.offline.kind === "verification" && result.offline.verification.report.result === "consistent"),
       JSON.stringify({ kind, exported: allHistories.map(({ scope, read }) => ({ scope: scope.name, entries: read.value.length, head: read.at })),
         copyMetadataPassed: credentialCopies.length, domainRefusalsPassed: 2, credentialRefusalsPassed: 3, anchorRefusalsPassed: 4,
@@ -1560,7 +1562,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       }, scope, work) });
       const directory = allHistories.find(history => history.scope.name === D.name)!;
       const replayed = await life.wait(() => verifyArchive(source, { mode: "replay", platform: replayPlatform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: D.name, head: directory.read.at, anchors }));
-      const expectedAt = productionScenario ? nativeStageOracle!.fact : { at: directory.read.value[5]!.entry.at, seq: 5, hash: directory.read.value[5]!.hash };
+      const expectedAt = productionScenario ? nativeStageOracle!.fact : { at: historyAt(directory.scope.name, directory.read.value), seq: 5, hash: directory.read.value[5]!.hash };
       // At most two metadata-only results; record BEFORE any assertion so an
       // unexpected category retains its actual reason without payload bodies.
       omissionControls.push({ corruption, expectedAt, result: replayed.kind === "archive-failure"
@@ -1605,7 +1607,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const relation = (await life.wait(() => rootScope.sealed())).find(sealed => sealed.entry.seq > beforeHead.seq
         && sealed.entry.uses.some(use => use.fact.at.scope === childScope.name));
       if (!relation) expect.fail("a genuine delivered Room summary must retain its Room source");
-      const through = { seq:relation.entry.seq,hash:relation.hash }, at = relation.entry.at;
+      const through = { seq:relation.entry.seq,hash:relation.hash }, at = await life.wait(() => rootScope.at());
       let unavailable = true, refusedBirths = 0, currentThrough = through;
       const sourcePolicies = new Map(policies);
       const sourceAt = await life.wait(() => childScope.at());

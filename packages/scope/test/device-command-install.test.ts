@@ -86,8 +86,9 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
     // the fixture's entry ceiling applies from this child's construction.
     life.setHold(envelope => isSeed(envelope.to) && envelope.to.kind === "lane");
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
+    const directoryAt = await life.wait(() => D.at());
     const birth = (await life.wait(() => D.sealed())).flatMap(sealed => sealed.entry.sends.map(send => ({ send,
-      from: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash } }))).find(({ send }) => isSeed(send.to) && send.to.kind === "lane");
+      from: { at: directoryAt, seq: sealed.entry.seq, hash: sealed.hash } }))).find(({ send }) => isSeed(send.to) && send.to.kind === "lane");
     const creation = birth?.send;
     expect(creation).toBeDefined(); if (!birth || !creation || !isSeed(creation.to)) throw Error("Native Directory did not create the device scope.");
     expect(creation.message).toMatchObject({ body: { creationContext: { v: 2, delegate: true, deviceCommand: { capability: DEVICE_COMMAND, owner, bounds: { kinds: ["heater"], owners: 1 }, root: id, definitions: [id] } } } });
