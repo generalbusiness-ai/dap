@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"33836693a7439a13ee97ed887c58cf7191133878","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:003d4f373543bb32bfdf03132308d0870bd21d87","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/sqlite-custody.test.ts."}
