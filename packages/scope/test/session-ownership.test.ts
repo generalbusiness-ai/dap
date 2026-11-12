@@ -32,7 +32,7 @@ test("stale session cleanup and one completed lease cannot expose a new owner's 
     lease1.close();
     stop = observeSessionReads(fresh, (choice) => { if (choices.length >= 64) throw new Error("Session witness read bound exceeded."); choices.push(choice); });
     const response = await routed(`https://scopes.test/v1/scopes/${register.scope}`);
-    const body = await response.json() as { ok?: boolean; reason?: string; value?: { scope?: { scope?: string; inc?: string; kind?: string } } };
+    const body = await response.json() as { ok?: boolean; reason?: string; value?: { scope?: { scope?: string; genesis?: string } } };
     const matches = body.value?.scope?.scope === register.scope && body.value?.scope?.genesis === register.genesis;
     const classification = body.ok === false && body.reason === "forbidden" ? "forbidden" : body.ok === true && matches ? "ok-summary" : "unrecognized";
     // The control must reach this actual parsed native response assertion.

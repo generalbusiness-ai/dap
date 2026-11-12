@@ -458,7 +458,7 @@ test("an expiring deployment directive atomically restarts only its exact stoppe
     sql.exec("INSERT INTO meta(k,v) VALUES('archive-wake-1',?)",canonicalize({ pending:false,stopped:true,next:null }));
     sql.exec("INSERT INTO meta(k,v) VALUES('archive-frontier-confirmed-1',?)","TEST opaque frontier bytes, never parsed");
     const before = sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray();
-    for (const changed of [{ ...payload,at:{ ...lane.at,inc:"in_aaaaaaaaaaaaaaaaaaaaaaaaaa" } },{ ...payload,repository:{ ...repository,id:"another" } },{ ...payload,rowDigest:digestBytes(utf8("stale")) },{ ...payload,generation:1 },{ ...payload,confirmed:{ ...original.confirmed,commit:"b".repeat(40) } }]) {
+    for (const changed of [{ ...payload,at:{ ...lane.at,genesis:`sha256:${"aa".repeat(32)}` } },{ ...payload,repository:{ ...repository,id:"another" } },{ ...payload,rowDigest:digestBytes(utf8("stale")) },{ ...payload,generation:1 },{ ...payload,confirmed:{ ...original.confirmed,commit:"b".repeat(40) } }]) {
       const wrong = readArchiveRestart(encoded(changed),at(0)); if (!wrong) expect.fail("bounded mismatched directive must remain well formed");
       expect(store.restart(wrong,at(1),at(0))).toBe("refused");
       expect(sql.exec("SELECT k,v FROM meta WHERE k LIKE 'archive-%' ORDER BY k").toArray()).toEqual(before);

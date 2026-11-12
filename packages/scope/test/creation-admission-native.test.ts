@@ -27,7 +27,7 @@ test("deployed service admits its pinned register and its judged directory child
     const host = outsideOf(R.name);
     lifetime.wire(R.name, () => ({ outside: { accepts: () => { lifetime.active(); return host.accepts(); }, send: request => lifetime.wait(() => host.send(request)), late: deliver => { lifetime.active(); host.late(deliver); } } }));
     expect(await lifetime.wait(() => api.create(signIntent({ ...install, idempotencyKey: crypto.randomUUID() }, keys.paul.secret), REGISTER))).toEqual({ answer: "refused", reason: "unauthorized" });
-    expect(await lifetime.wait(() => api.create(signIntent(install, keys.paul.secret), REGISTER))).toMatchObject({ answer: "accepted", receipt: { definition: REGISTER, fact: { at: { scope: R.name, kind: "register" }, seq: 0 } } });
+    expect(await lifetime.wait(() => api.create(signIntent(install, keys.paul.secret), REGISTER))).toMatchObject({ answer: "accepted", receipt: { definition: REGISTER, fact: { at: { scope: R.name }, seq: 0 } } });
     const register = await R.at();
     const found = await R.intent(rita, "found", { expected: await R.expected({ register: 0 }), fields: { branch: "main", founderHandle: "@rita", recoveryKey: sam.key } });
     const seed: Seed = { v: 1, kind: "directory", definition: DIRECTORY, creator: register, cause: intentDigest(found.intent), ordinal: 0 };

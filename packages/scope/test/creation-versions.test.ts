@@ -139,7 +139,7 @@ test("actual deployed object defaults reject old new genesis and invalid policy 
       }
       const answer = await native.create(signed, pin);
       if ((pin === newest || pin === COMMONS_COHORT.register) && raw === undefined) {
-        expect(answer).toMatchObject({ answer: "accepted", receipt: { definition: pin, fact: { at: { scope: name, kind: "register" }, seq: 0 } } });
+        expect(answer).toMatchObject({ answer: "accepted", receipt: { definition: pin, fact: { at: { scope: name }, seq: 0 } } });
         expect(await count(object)).toBe(1);
         if (trace) {
           const fresh = { catalogReads: 1, wordReads: 0, formatWrites: 2, atFailure: null, tablesAfterFailure: null };
