@@ -5,7 +5,7 @@ import { scopeNamed } from "./command-targets.ts";
 import type { Config } from "./store.ts";
 import { Verification } from "./verification.ts";
 import { observeCleanup } from "./verify-cleanup.ts";
-import { canonicalize, factRefOf, isEntry, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, isEntry, isEntryBodyOf, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { type Fetch, signedLogReader, TransportError } from "@generalbusiness/dap-client";
 import type { FactRef, ScopeId, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
@@ -21,7 +21,7 @@ interface SessionDeniedDependency { neededFact: FactRef; at: FactRef; from: 0; t
 function sessionDeniedDependency(report: Pick<import("@generalbusiness/dap-contract").Report, "mode" | "result" | "at">, missing: readonly FactRef[], results: ReadonlyMap<string, FactRef>, denied: ReadonlySet<string>): SessionDeniedDependency | null {
   if (report.mode !== "replay" || report.result !== "missing-dependency" || !report.at || missing.length !== 1) return null;
   const neededFact = missing[0]!;
-  if (neededFact.at.kind !== "directory" || neededFact.seq !== 0 || !denied.has(`${neededFact.at.scope}:0`)) return null;
+  if (neededFact.seq !== 0 || neededFact.hash !== neededFact.at.genesis || !denied.has(`${neededFact.at.scope}:0`)) return null;
   const named = results.get(canonicalize(report.at));
   if (!named || canonicalize(named) !== canonicalize(neededFact)) return null;
   return { neededFact, at: report.at, from: 0, through: 0, line: `not proven: needs ${neededFact.at.scope} entries 0 to 0, not readable by this session` };
@@ -54,18 +54,18 @@ async function replaySource(ctx: Context, config: Config, budget: Verification, 
       if (got.ok) {
         if (accounting === "unique") for (const stored of got.page.entries) budget.storedEntry(named, got.page.scope, stored);
         else budget.entries(got.page.entries.length);
-        if (got.page.scope.kind === "register") for (const stored of got.page.entries) {
+        if (got.page.scope.scope === named && platform(got.page.definition)?.data.name === "platform:register") for (const stored of got.page.entries) {
           budget.check();
           // Keep only result metadata from actual journal pages. Retained
           // copies never substitute for the missing admission-proof page.
           let entry: unknown;
           try { entry = parseStrict(stored.bytes); } catch { continue; }
-          if (!isEntry(entry) || entry.at.scope !== named || entry.seq !== stored.seq) continue;
+          const at: FactRef = { at: got.page.scope, seq: stored.seq, hash: stored.hash };
+          if (!isEntry(entry) || !isEntryBodyOf(entry, at)) continue;
           const input = entry.input;
           if (input.type !== "delivery" || input.message.class !== "result" || input.message.outcome !== "applied"
-            || input.from.at.kind !== "directory" || input.from.seq !== 0 || canonicalize(input.message.of.from.at) !== canonicalize(entry.at)) continue;
-          const at = factRefOf(entry);
-          if (at.hash === stored.hash) results.set(canonicalize(at), input.from);
+            || input.sourceKind !== "directory" || input.from.seq !== 0 || canonicalize(input.message.of.from.at) !== canonicalize(got.page.scope)) continue;
+          results.set(canonicalize(at), input.from);
         }
       }
       return got;
@@ -158,8 +158,8 @@ async function roomScopes(ctx: Context, config: Config, budget: Verification): P
 /** Disclose the shared proof once, including the actual root of each prefix. */
 function sharedProofLines(proof: FinishedRoom): string[] {
   const lines = [...proof.otherRooms && !proof.dependencies.missing.length ? [otherRoomsLine(proof.anchors.length)] : [], `Shared room proof: ${proof.roots.length} roots; ${proof.dependencies.verified} verified dependencies; ${proof.dependencies.anchored} anchored dependencies; ${proof.dependencies.missing.length} missing dependencies.`];
-  for (const row of proof.coverage) lines.push(`Shared coverage: ${row.scope.scope}, incarnation ${row.scope.inc}, kind ${row.scope.kind}, entries ${row.from} to ${row.through}; proving root ${row.root}.`);
-  for (const row of proof.texts) lines.push(`Shared checked text: ${row.digest}; source ${row.source.scope}, incarnation ${row.source.inc}, kind ${row.source.kind}; proving root ${row.root}; consumers ${row.consumers.join(", ") || "none"}.`);
+  for (const row of proof.coverage) lines.push(`Shared coverage: ${row.scope.scope}, genesis ${row.scope.genesis}, entries ${row.from} to ${row.through}; proving root ${row.root}.`);
+  for (const row of proof.texts) lines.push(`Shared checked text: ${row.digest}; source ${row.source.scope}, genesis ${row.source.genesis}; proving root ${row.root}; consumers ${row.consumers.join(", ") || "none"}.`);
   for (const trust of proof.trusts) lines.push(`Shared trust: ${trust}.`);
   for (const fact of proof.anchors) lines.push(`Shared anchor: ${canonicalize(fact)}.`);
   for (const fact of proof.dependencies.missing) lines.push(`Shared missing dependency: ${canonicalize(fact)}.`);

@@ -18,7 +18,7 @@ export async function applicationList(transport: Transport, reader: unknown, dir
   let unavailable = 0, shortened = 0;
   for (const item of page.value.items) {
     const digest = item.values["definition"], scope = item.refs["scope"];
-    if (!isDigest(digest) || !isScopeRef(scope) || scope.kind !== "lane") return { code: 1, lines: ["A Directory application row has no valid definition or scope. Coverage is incomplete."] };
+    if (!isDigest(digest) || !isScopeRef(scope)) return { code: 1, lines: ["A Directory application row has no valid definition or scope. Coverage is incomplete."] };
     if (!names.has(digest)) {
       const kept = await transport.retained(directory.scope, reader, "definition", digest);
       const value = kept.ok ? domainRetainedJSON(DOMAINS.definition, digest, kept.value.bytes, { canonical: true, max: PROPOSED_BOUNDS.definitionBytes }) : undefined;
@@ -30,7 +30,7 @@ export async function applicationList(transport: Transport, reader: unknown, dir
     rows.push(`${name === null ? "(name unavailable)" : cell(name.length > 160 ? name.slice(0, 160) + "…" : name)} | ${digest} | ${canonicalize(scope)}`);
   }
   return { code: 0, lines: [
-    `Applications recorded by ${directory.scope} (${directory.inc}) at entry ${page.at.seq} (${page.at.hash}).`,
+    `Applications recorded by ${directory.scope} (genesis ${directory.genesis}) at entry ${page.at.seq} (${page.at.hash}).`,
     "Name | Definition | Scope (full reference)", ...rows,
     `${rows.length} created applications in this page; selected suffix ${page.complete ? "complete" : "incomplete"}.`,
     ...(unavailable ? [`Names unavailable for ${unavailable} rows; their recorded definitions and scopes are shown.`] : []),

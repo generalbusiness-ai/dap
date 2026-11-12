@@ -31,8 +31,8 @@ export function readApplicationScreenContext(value: unknown, address: Pick<Appli
     || typeof body["deployment"] !== "string" || !body["deployment"] || body["deployment"].length > 128 || !answersCatalogVocabularyQuestion(body["membershipDefinition"], "applicationScreenMembership")
 
     || body["item"] !== address.item || !isDigest(body["definition"])) return invalid();
-  for (const [field, kind] of Object.entries({ directory: "directory", rules: "rules", membership: "membership", destination: "destination", scope: "lane" })) {
-    const ref = body[field]; if (!isScopeRef(ref) || ref.kind !== kind) return invalid(); Object.freeze(ref);
+  for (const field of ["directory", "rules", "membership", "destination", "scope"]) {
+    const ref = body[field]; if (!isScopeRef(ref)) return invalid(); Object.freeze(ref);
   }
   const ids = body["ids"], directory = body["directory"];
   if (!isScopeRef(directory) || directory.scope !== address.directory || !isRecord(ids) || Object.keys(ids).sort().join() !== "presentation,release,semantic"

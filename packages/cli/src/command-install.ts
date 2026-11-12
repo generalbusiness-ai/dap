@@ -279,7 +279,7 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   }
   const matches = (receipt: unknown): receipt is NonNullable<PlannedInstall["acknowledged"]>["receipt"] => isReceipt(receipt)
     && receipt.definition === plan.definition && receipt.intent === intentDigest(plan["founding"].intent)
-    && receipt.fact.at.scope === plan.register && receipt.fact.at.kind === "register" && receipt.fact.seq === 0;
+    && receipt.fact.at.scope === plan.register && receipt.fact.seq === 0 && receipt.fact.at.genesis === receipt.fact.hash;
   const prior = plan.acknowledged;
   if (prior !== undefined && (!prior || prior.status !== "service-acknowledged" || prior.service !== plan.service || !matches(prior.receipt))) {
     return failed("Held: the retained install acknowledgement does not match the original plan. The plan is kept.");

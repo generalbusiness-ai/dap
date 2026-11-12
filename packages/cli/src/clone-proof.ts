@@ -1,12 +1,13 @@
 /** Check read-token receipt and entry evidence before any private handoff.
  * This is the client's exact-envelope/full-fact check, not history replay. */
 import type { Input, OperationId, PlatformDefinition, Receipt, ScopeRef, Sealed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, isPlatformDefinition, isReceipt, isRecord, isSealed, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { platform } from "@generalbusiness/dap-platform";
+import { canonicalize, intentDigest, isEntryBodyOf, isPlatformDefinition, isReceipt, isRecord, isSealed, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 
 export interface ReadTokenProof { to: ScopeRef; definition: PlatformDefinition; signed: SignedIntent; receipt: Receipt; operation: OperationId }
 export function readTokenReceipt(receipt: Receipt, summary: Pick<Summary, "scope" | "definition">, signed: SignedIntent): ReadTokenProof | null {
   try {
-    if (!isReceipt(receipt) || !isPlatformDefinition(summary.definition) || !verifySignedIntent(signed) || summary.scope.kind !== "destination" || signed.intent.kind !== "read-token" || signed.intent.on === null || receipt.fact.seq < 1
+    if (!isReceipt(receipt) || !isPlatformDefinition(summary.definition) || !verifySignedIntent(signed) || platform(summary.definition)?.data.name !== "platform:destination" || signed.intent.kind !== "read-token" || signed.intent.on === null || receipt.fact.seq < 1
       || canonicalize(signed.intent.to) !== canonicalize(summary.scope) || canonicalize(receipt.fact.at) !== canonicalize(summary.scope)
       || receipt.definition !== summary.definition || receipt.intent !== intentDigest(signed.intent)) return null;
     return { to: summary.scope, definition: summary.definition, signed, receipt, operation: `${receipt.fact.seq}:0` };
@@ -17,14 +18,14 @@ export function readTokenReceipt(receipt: Receipt, summary: Pick<Summary, "scope
  * advertised hash as well. A correct hash does not excuse a different scope. */
 export function readTokenEntry(sealed: Sealed, at: ScopeRef, seq: number): boolean {
   try {
-    return isSealed(sealed) && sealed.entry.seq === seq && canonicalize(sealed.entry.at) === canonicalize(at) && factRefOf(sealed.entry).hash === sealed.hash;
+    return isSealed(sealed) && isEntryBodyOf(sealed.entry, { at, seq, hash: sealed.hash });
   } catch { return false; }
 }
 
 export function readTokenOpening(sealed: Sealed, proof: ReadTokenProof): boolean {
   try {
     const { entry } = sealed;
-    if (!readTokenEntry(sealed, proof.to, proof.receipt.fact.seq) || canonicalize(factRefOf(entry)) !== canonicalize(proof.receipt.fact) || entry.input.type !== "act"
+    if (!readTokenEntry(sealed, proof.to, proof.receipt.fact.seq) || sealed.hash !== proof.receipt.fact.hash || canonicalize(proof.receipt.fact.at) !== canonicalize(proof.to) || entry.input.type !== "act"
       || canonicalize(entry.input.signed) !== canonicalize(proof.signed) || entry.epoch !== proof.receipt.epoch || canonicalize(entry.effects) !== canonicalize(proof.receipt.effects)
       || canonicalize(entry.sends.map((send) => `${entry.seq}.${send.n}`)) !== canonicalize(proof.receipt.sends)) return false;
     const operations = entry.effects.filter((effect) => effect.effect === "operation");

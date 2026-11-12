@@ -5,6 +5,7 @@
 
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { isScopeId } from "@generalbusiness/dap-bytes";
+import { platform } from "@generalbusiness/dap-platform";
 import { httpTransport, signedReads } from "@generalbusiness/dap-client";
 import { serve } from "@generalbusiness/dap-mcp/node";
 import type { McpConfig, Root } from "@generalbusiness/dap-mcp";
@@ -40,7 +41,7 @@ export function mcpOptions(argv: readonly string[]): McpOptions | Outcome {
 /**
  * `dap mcp --scope <scope> --membership <scope>`: append one standalone scope to the config, for the MCP server to list its
  * acts. The membership is the scope that standing for it is read from: `membership` for the room's own, or a scope ID, whose
- * incarnation is read from its summary by a signed read. The scope itself is not read here: the server reads it when it lists.
+ * genesis is read from its summary by a signed read. The scope itself is not read here: the server reads it when it lists.
  */
 export async function mcpRoot(ctx: Context, scope: string, membership: string | undefined): Promise<Outcome> {
   const config = await ctx.store.config();
@@ -56,9 +57,9 @@ export async function mcpRoot(ctx: Context, scope: string, membership: string | 
       if (!signer) return { code: 1, lines: [`The key ${config.key} is missing from the config directory; nothing was read.`] };
       const read = await signedReads(httpTransport(config.service, ctx.fetch ? { fetch: ctx.fetch } : {}), signer, ctx.now ? { now: ctx.now } : {}).summary(named, null);
       if (!read.ok) return { code: 1, lines: [`Cannot read ${named}: ${read.reason}. Nothing was recorded.`] };
+      if (platform(read.value.definition)?.data.name !== "platform:membership") return usage(`${named} is no membership scope.`);
       ref = read.value.scope;
     }
-    if (ref.kind !== "membership") return usage(`${named} is no membership scope.`);
   }
   const roots = (config.roots ?? []).filter((root) => root.scope !== scope);
   await ctx.store.save({ ...config, roots: [...roots, { scope, membership: ref }] });

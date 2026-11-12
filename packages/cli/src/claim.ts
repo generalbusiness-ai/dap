@@ -2,7 +2,7 @@
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { readFields } from "@generalbusiness/dap-derive";
 import type { ActType, Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Settlement, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, isDigest, isFactRef, isHead, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isScopeId, parseStrict, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, isDigest, isFactRef, isHead, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isScopeId, parseStrict, scopeIdOf, seedDigest, isEntryBodyOf } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, creationOffer, isCreationOffer, isCurrentCreationOffer, signedIntent, signedReads, type CreationOffer } from "@generalbusiness/dap-client";
 import { answersVersionQuestion, DIRECTORY_OF, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
 import type { Context, Outcome } from "./commands.ts";
@@ -80,7 +80,9 @@ async function recordedStep(handle: ScopeHandle, seq: number, at: ScopeRef, key:
   const got = await handle.entry(seq);
   if (!got.ok || got.value.entry.input.type !== "act") return stopCommand(failed(`Cannot recover the admitted ${kind} entry; the claim remains pending.`));
   const entry = got.value.entry;
-  const step: ClaimStep = { signed: entry.input.type === "act" ? entry.input.signed : stopCommand(failed("The enrollment entry is not an act.")), accepted: factRefOf(entry) };
+  const accepted: FactRef = { at, seq, hash: got.value.hash };
+  if (!isEntryBodyOf(entry, accepted)) return stopCommand(failed(`Cannot recover the admitted ${kind} entry; the claim remains pending.`));
+  const step: ClaimStep = { signed: entry.input.type === "act" ? entry.input.signed : stopCommand(failed("The enrollment entry is not an act.")), accepted };
   if (!validStep(step, at, key, kind) || step.accepted!.seq !== seq || step.accepted!.hash !== got.value.hash) return stopCommand(failed(`The admitted ${kind} entry does not match this membership and signing key. ${CLAIM_WENT}`));
   return step;
 }
@@ -230,7 +232,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
           if (!kept.ok) { unread = `retained claim read: ${kept.reason}`; continue; }
           try {
             const entry = parseStrict(kept.value.bytes) as unknown as Entry;
-            if (entry.input.type !== "act" || canonicalize(factRefOf(entry)) !== canonicalize(use.fact)) continue;
+            if (entry.input.type !== "act" || !isEntryBodyOf(entry, use.fact)) continue;
             const candidate: ClaimStep = { signed: entry.input.signed, accepted: use.fact };
             if (validStep(candidate, register, signer.key, "found") && intentDigest(candidate.signed.intent) === pending.intent && candidate.signed.intent.fields["founderHandle"] === pending.handle) { matched = candidate; break; }
           } catch { /* Not a checked copy of this legacy claim. */ }

@@ -1,7 +1,7 @@
 /** Bounded readings of Commons entries. Citations grant no read authority. */
 import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import type { Digest, FactRef, Head, KeyId, MemberRef, ReferenceValue, ScopeRef, Sealed, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, isDigest, isMemberRef, isReference, isScopeRef, same, utf8, verifySignedIntent, isEntryBodyOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isMemberRef, isReference, isScopeRef, same, utf8, verifySignedIntent, isEntryBodyOf } from "@generalbusiness/dap-bytes";
 import type { ScopeHandle } from "./handle.ts";
 
 export const COMMONS_READ_LIMITS = { pages: 2, entries: 400, textBytes: 1024 * 1024 } as const;
@@ -19,7 +19,7 @@ export interface CommonsView {
 export function commonsInstallCheck(directory: Summary, requires: readonly string[] | undefined): { ok: true; commons: ScopeRef | null } | { ok: false; reason: "commons-missing" } {
   const repository = directory.items.find(item => item.type === "repository");
   const ref = repository?.refs["commons"];
-  const commons = directory.status === "active" && isScopeRef(ref) && ref.kind === "commons" ? ref : null;
+  const commons = directory.status === "active" && isScopeRef(ref) ? ref : null;
   return requires?.includes("commons") && commons === null ? { ok: false, reason: "commons-missing" } : { ok: true, commons };
 }
 
@@ -51,7 +51,7 @@ function noteOf(sealed: Sealed, scope: ScopeRef): Omit<CommonsNote, "text"> | nu
   if (!verifySignedIntent(input.signed) || !same(input.signed.intent.to, scope) || !isDigest(fields["text"]) || typeof fields["media"] !== "string" || utf8(fields["media"]).length > 255 || !Array.isArray(fields["about"]) || fields["about"].length > 64 || !fields["about"].every(reference => isReference(reference, 512))) throw Error("Commons note fields are unavailable.");
   const key = input.signed.intent.actor, grants = input.authority.filter(grant => grant.key === key);
   const author = grants.length === 1 && isMemberRef(grants[0]!.subject) ? grants[0]!.subject : null;
-  return { fact: factRefOf(entry), key, author, time: entry.time, textDigest: fields["text"], media: fields["media"], about: JSON.parse(canonicalize(fields["about"])) as ReferenceValue[] };
+  return { fact: { at: scope, seq: entry.seq, hash: sealed.hash }, key, author, time: entry.time, textDigest: fields["text"], media: fields["media"], about: JSON.parse(canonicalize(fields["about"])) as ReferenceValue[] };
 }
 
 /** A finite history window plus hash-checked detached texts. `complete` means
