@@ -253,7 +253,7 @@ test("found custody windows stop one key across addresses and one address across
   const binding: Binding<string> = { idFromName: name => name, get: () => ({
     submit: async () => { submits++; return { answer: "unavailable", reason: "unavailable" }; },
   }) };
-  const found = (n: number) => signIntent({ ...creation(secret(n)).intent, to: target, kind: "found" }, secret(n));
+  const found = (n: number) => signIntent({ ...creation(secret(n)).intent, to: { scope: target, inc: newIncarnation(new Uint8Array(16).fill(9)), kind: "register" }, kind: "found" }, secret(n));
   const attempt = (n: number, address: string) => api(binding, address, owner.environment).submit(target, found(n), []);
   expect(await attempt(21, "192.0.2.1")).toEqual({ answer: "unavailable", reason: "unavailable" });
   expect(await attempt(21, "192.0.2.2")).toEqual({ answer: "unavailable", reason: "unavailable" });
