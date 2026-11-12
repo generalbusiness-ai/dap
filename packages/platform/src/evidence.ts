@@ -50,8 +50,8 @@ function record(value: unknown, names: readonly string[]): Record<string, unknow
   return copy;
 }
 function scope(value: unknown): ScopeRef | null {
-  const given = record(value, ["scope", "inc", "kind"]);
-  return isScopeRef(given) ? { scope: given["scope"], inc: given["inc"], kind: given["kind"] } : null;
+  const given = record(value, ["scope", "genesis"]);
+  return isScopeRef(given) ? { scope: given["scope"], genesis: given["genesis"] } : null;
 }
 function fact(value: unknown): FactRef | null {
   const given = record(value, ["at", "seq", "hash"]), at = given && scope(given["at"]);

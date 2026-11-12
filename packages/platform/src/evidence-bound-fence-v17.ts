@@ -2,7 +2,7 @@
  * synthetic item or later result substitutes for its sealed source. */
 import type { ActType, Bounds, Entry, FactRef } from "@generalbusiness/dap-contract";
 import { entryHash, isEntry, isFactRef, isOperationId, isRecord, same } from "@generalbusiness/dap-bytes";
-import { isEntryOf, messageFields, sentBy, useOf, type Item, type Operation, type Own, type StateView } from "@generalbusiness/dap-derive";
+import { isEntryBodyOf, messageFields, sentBy, useOf, type Item, type Operation, type Own, type StateView } from "@generalbusiness/dap-derive";
 import { claimEvidenceBatchJobV17, readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
 import { evidenceFundedBatchV17 } from "./destination-evidence-funding-v17.ts";
 import { evidenceOperationOpeningV17 } from "./evidence-opening-v17.ts";
@@ -24,13 +24,13 @@ const immutable = (batch: EvidenceBatchRecordV17) => ({ publication: batch.publi
 export function readEvidenceBoundFenceV17(state: StateView, own: Own, operation: Operation, bounds: Bounds): EvidenceBoundFenceV17 | null {
   try {
     const scope = state.scope(), genesis = own(0), actual = state.operation(operation.id);
-    if (!scope || scope.at.kind !== "destination" || !genesis || !isEntry(genesis.entry) || genesis.entry.seq !== 0
-      || !same(genesis.entry.at, scope.at) || entryHash(genesis.entry) !== genesis.hash || scope.genesis.hash !== genesis.hash
+    if (!scope || scope.kind !== "destination" || !genesis || !isEntry(genesis.entry) || genesis.entry.seq !== 0
+      || entryHash(genesis.entry) !== genesis.hash || scope.genesis.hash !== genesis.hash
       || genesis.entry.input.type !== "genesis" || genesis.entry.input.seed.definition !== "platform:destination@17"
       || !actual || !same(actual, operation) || !isOperationId(operation.id) || operation.owner !== "platform:destination@17"
       || operation.kind !== "evidence-admit" || operation.most !== 1 || operation.for === undefined) return null;
     const position = Number(operation.id.split(":")[0]), sealed = own(position), entry = sealed?.entry;
-    if (!sealed || !entry || !isEntry(entry) || entry.seq !== position || !same(entry.at, scope.at) || entryHash(entry) !== sealed.hash
+    if (!sealed || !entry || !isEntry(entry) || entry.seq !== position || entryHash(entry) !== sealed.hash
       || entry.seq <= 0 || entry.seq > scope.head.seq || !evidenceOperationOpeningV17(entry, operation)
       || entry.input.type !== "delivery" || !("decision" in entry.input) || entry.input.decision !== "applied" || entry.input.message.class !== "request"
       || entry.input.message.type !== "tell" || !isRecord(entry.input.message.body) || entry.input.message.body["message"] !== "check-fence"
@@ -41,7 +41,7 @@ export function readEvidenceBoundFenceV17(state: StateView, own: Own, operation:
     if (!isRecord(body)) return null;
     const batch = holder && evidenceFundedBatchV17(state, own, holder, bounds), batchBirth = holder && own(holder.id);
     if (!holder || !batch || !batchBirth || entryHash(batchBirth.entry) !== batchBirth.hash || holder.opened !== batchBirth.hash
-      || !same(batchBirth.entry.at, scope.at) || batchBirth.entry.seq !== holder.id || holder.id >= entry.seq) return null;
+      || batchBirth.entry.seq !== holder.id || holder.id >= entry.seq) return null;
     const fields = messageFields(body["fields"], input.from, factFields);
     if (!fields || !isFactRef(fields["job"]) || !same(fields["job"], input.from) || !same(input.from.at, batch.operation.at)
       || !same(holder.refs["lane"], input.from.at) || !same(fields["operation"], batch.operation) || typeof fields["name"] !== "string") return null;
@@ -60,9 +60,10 @@ export function readEvidenceBoundFenceV17(state: StateView, own: Own, operation:
     const uses = entry.uses.filter(use => same(use.fact, jobFact));
     if (uses.length !== 1 || !own.retained) return null;
     const job = own.retained(uses[0]!);
-    if (!job || !isEntry(job) || !isEntryOf(job, jobFact) || !same(useOf(jobFact, job), uses[0])
+    // A retained use is a body only (ruling a94bfa4d): its content matches the use, and no sequence is claimed for it.
+    if (!job || !isEntry(job) || !isEntryBodyOf(job, jobFact) || !same(useOf(jobFact, job, uses[0]!.kind), uses[0])
       || !sentBy(job, { to: scope.at, from: input.from, n: input.n, message: input.message })) return null;
-    return { entry, source: { at: entry.at, seq: entry.seq, hash: sealed.hash }, holder, batch, fields, job,
+    return { entry, source: { at: scope.at, seq: entry.seq, hash: sealed.hash }, holder, batch, fields, job,
       birth: { at: scope.at, seq: 0, hash: genesis.hash }, batchFact: { at: scope.at, seq: holder.id, hash: batchBirth.hash } };
   } catch { return null; }
 }

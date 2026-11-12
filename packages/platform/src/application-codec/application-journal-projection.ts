@@ -27,7 +27,7 @@ export function projectApplicationJournalRead(source: ApplicationJournalProjecti
       || typeof row["bytes"] !== "string" || row["bytes"].length > B.resultBytes) return fail();
     bytes += utf8(row["bytes"]).length; if (bytes > B.resultBytes) return fail("limit");
     const entry: unknown = parseStrict(row["bytes"]);
-    if (!isEntry(entry) || entry.seq !== row["seq"] || canonicalize(entry.at) !== canonicalize(scope) || canonicalize(entry) !== row["bytes"]
+    if (!isEntry(entry) || entry.seq !== row["seq"] || ("genesis" in entry ? entry.genesis : entryHash(entry)) !== scope.genesis || canonicalize(entry) !== row["bytes"]
       || entryHash(entry) !== row["hash"] || (i > 0 ? entry.prev !== previous : from === 0 && entry.prev !== null)) return fail();
     previous = row["hash"];
     if (entry.input.type !== "act" || !source.acts.includes(entry.input.signed.intent.kind)) continue;

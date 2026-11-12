@@ -11,7 +11,7 @@ const exact = (value: unknown, keys: readonly string[]): value is Record<string,
 const text = (value: unknown, max: number): value is string => typeof value === "string" && value.length <= max && wellFormed(value) && utf8(value).length <= max;
 const objectId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{40}$/.test(value) && !/^0+$/.test(value);
 const owned = <T>(value: T): T => parseStrict(canonicalize(value)) as T;
-const scopeValue = (value: unknown): value is ScopeRef => exact(value, ["scope", "inc", "kind"]) && isScopeRef(value);
+const scopeValue = (value: unknown): value is ScopeRef => exact(value, ["scope", "genesis"]) && isScopeRef(value);
 const factValue = (value: unknown): value is FactRef => exact(value, ["at", "seq", "hash"]) && scopeValue(value["at"]) && isFactRef(value);
 const generation = (value: unknown): value is ScopedRulesPosition => exact(value, ["rules", "seq"]) && scopeValue(value["rules"]) && value["rules"].kind === "rules" && evidencePositionV17(value["seq"]) && value["seq"] <= 1000000000;
 

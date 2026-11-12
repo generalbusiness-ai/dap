@@ -267,7 +267,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       },
     };
     const outside = wiring.outside?.(outsideGiven);
-    const ports: Ports = { ...given, readTokenAdmission: given.readTokenAdmission ?? credentialExpiry.readTokens, alarm: wakes.deadline, sealedDelivery: (entry) => { const key = compromisedKey(entry); if (key !== null) credentialExpiry.name(key); }, ...(authority ? { authority } : {}), ...(readers ? { readers } : {}), ...(outside ? { outside } : {}),
+    const ports: Ports = { ...given, readTokenAdmission: given.readTokenAdmission ?? credentialExpiry.readTokens, alarm: wakes.deadline, sealedDelivery: (entry) => { const key = compromisedKey(entry, store.scope()?.kind); if (key !== null) credentialExpiry.name(key); }, ...(authority ? { authority } : {}), ...(readers ? { readers } : {}), ...(outside ? { outside } : {}),
       ...(wiring.applicationTrust && !given.freshActAdmission ? { freshActAdmission: { read: () => this.#applicationActAdmission!.read() } } : {}) };
     // The operator's record: two tables of this object's storage that are no part of the store, and that no judgment is given.
     const record = new OperatorRecord({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) }, ports.clock, () => store.scope()?.at ?? null);

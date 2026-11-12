@@ -16,13 +16,14 @@ export interface EvidenceDecisionV17 {
 const exact = (value: Record<string, unknown>, keys: readonly string[]) =>
   Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
 
-export function readEvidenceDecisionV17(sealed: Sealed, expected: EvidenceDecisionExpectedV17): EvidenceDecisionV17 | null {
+/** `at`: the sequence that the caller read `sealed` from, the sequence of its fact. */
+export function readEvidenceDecisionV17(sealed: Sealed, at: FactRef["at"], expected: EvidenceDecisionExpectedV17): EvidenceDecisionV17 | null {
   try {
     if (!isFactRef(expected.job) || !isFactRef(expected.admission) || !isDigest(expected.bindingDigest)
       || !isDigest(expected.configuration) || !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(expected.tree)
       || !isDigest(sealed.hash) || !isEntry(sealed.entry) || entryHash(sealed.entry) !== sealed.hash) return null;
     const entry = sealed.entry;
-    if (!same(entry.at, expected.job.at) || entry.seq <= expected.job.seq || entry.input.type !== "act") return null;
+    if (!same(at, expected.job.at) || entry.seq <= expected.job.seq || entry.input.type !== "act") return null;
     const signed = entry.input.signed, intent = signed.intent;
     if (!verifySignedIntent(signed) || !same(intent.to, expected.job.at) || intent.on !== null
       || !["check", "check-error"].includes(intent.kind) || expected.resultKey !== undefined && intent.actor !== expected.resultKey) return null;
@@ -63,6 +64,6 @@ export function readEvidenceDecisionV17(sealed: Sealed, expected: EvidenceDecisi
       || sent["bindingDigest"] !== expected.bindingDigest || !isRecord(sent["result"])
       || !exact(sent["result"], ["self"]) || sent["result"]["self"] !== true
       || Object.hasOwn(sent, "operation") && !isFactRef(sent["operation"])) return null;
-    return { result: { at: entry.at, seq: entry.seq, hash: sealed.hash }, key: intent.actor, outcome, reason: typeof reason === "string" ? reason : null };
+    return { result: { at: expected.job.at, seq: entry.seq, hash: sealed.hash }, key: intent.actor, outcome, reason: typeof reason === "string" ? reason : null };
   } catch { return null; }
 }

@@ -74,9 +74,9 @@ const TIME = '9999-12-31T23:59:59.999Z';
 const HASH = `sha256:${'f'.repeat(64)}` as const;
 // Longest real forms, not guessed per-entry slack. All numbers remain safe
 // integers and every identifier has the protocol's maximum encoded width.
-const SCOPE = { scope: `sc_${'a'.repeat(52)}`, inc: `in_${'a'.repeat(26)}`, kind: 'destination' } as const;
+const SCOPE = { scope: `sc_${'a'.repeat(52)}`, genesis: HASH } as const;
 const FACT: FactRef = { at: SCOPE, seq: MAX, hash: HASH };
-const USE: FactUse = { fact: FACT, content: HASH };
+const USE: FactUse = { fact: FACT, content: HASH, kind: 'destination' }; // the longest kind a use of this budget names
 const OPERATION = `${MAX}:${MAX}` as const;
 const KEY = `key_${'A'.repeat(43)}` as const;
 const TEXT128 = '\u0000'.repeat(128); // six canonical bytes for each permitted text byte
@@ -115,7 +115,7 @@ function generations(value: unknown, bounds: Bounds): value is readonly Certifie
 }
 
 const frame = (input: unknown, effects: readonly unknown[], sends: readonly unknown[]) => ({
-  v: 1, at: SCOPE, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0,
+  v: 1, genesis: HASH, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0,
   input, uses: [USE, USE, USE, USE], prepared: [], effects, sends,
 });
 const passes = { effect: 'value', item: MAX, slot: 'passes', value: null } as const;
@@ -151,7 +151,7 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds, captured: Evidence
     evidence: { basis: 'own-answer', body },
   });
   const shell = (kind: string, body: import('@generalbusiness/dap-contract').FieldValue, effects: Effect[], sends: Entry['sends']): Entry => ({
-    v: 1, at: SCOPE, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0,
+    v: 1, genesis: HASH, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0,
     input: input(kind, body), uses: [], prepared: [], effects: [attempt, ...effects], sends,
   });
   const written: Effect = { effect: 'state', item: MAX, state: 'written' };
@@ -239,7 +239,7 @@ export function certifiedBoundFenceBudgetV17(bounds: Bounds, batch: EvidenceBatc
         message: 'check-fence', fields: { operation: batch.operation, manifest: { ...job, at: manifest.at }, job, name: check.name,
           earlier: job, reuse: false, forJob: job, binding: null, bindingDigest: HASH },
       } } };
-      const entry: Entry = { v: 1, at: SCOPE, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0, prepared: [], uses: [], input, effects,
+      const entry: Entry = { v: 1, genesis: HASH, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0, prepared: [], uses: [], input, effects,
         sends: [{ n: MAX, to: batch.operation.at, message: { class: 'result', of: { from: job, n: MAX }, outcome: 'applied' } }] };
       variants.push(entry);
       // Only canonical JSON text passes readBindingTextV17's 16 KiB guard.

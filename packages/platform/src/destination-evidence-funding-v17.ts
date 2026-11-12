@@ -24,7 +24,7 @@ export interface FundingHooksV17 {
 const owned = <T>(value: T): T => JSON.parse(canonicalize(value)) as T;
 const factOf = (own: Own, at: FactRef["at"], seq: number): FactRef | null => {
   const sealed = own(seq);
-  return sealed && same(sealed.entry.at, at) && sealed.entry.seq === seq && entryHash(sealed.entry) === sealed.hash ? { at, seq, hash: sealed.hash } : null;
+  return sealed && sealed.entry.seq === seq && entryHash(sealed.entry) === sealed.hash ? { at, seq, hash: sealed.hash } : null;
 };
 /** readFacts normalizes checked own facts to local numbers. Bind that
  * normal form back to the unchanged retained incoming full reference. */
@@ -740,7 +740,7 @@ export function* evidenceFundingFloorReferencesV17(snapshot: StateSnapshot, own:
   }
   for (const seq of positions) {
     const value = own(seq);
-    if (!value || !same(value.entry.at, at) || value.entry.seq !== seq || entryHash(value.entry) !== value.hash) throw Error("A funding source is unavailable");
+    if (!value || value.entry.seq !== seq || entryHash(value.entry) !== value.hash) throw Error("A funding source is unavailable");
     yield seq;
   }
 }

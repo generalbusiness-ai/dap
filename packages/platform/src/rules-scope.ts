@@ -439,7 +439,7 @@ const PAGE = 100;
  */
 export function rulesAnswer(state: Pick<StateView, "scope" | "page">, asked: ObservationRequest, definition: PlatformDefinition): Omit<RulesObservation, "at"> | null {
   const scope = state.scope();
-  if (!scope || scope.status !== "active" || scope.at.kind !== "rules" || asked.of.kind !== "rules" || asked.of.scope !== scope.at.scope || ("inc" in asked.of && asked.of.inc !== scope.at.inc)) return null;
+  if (!scope || scope.status !== "active" || scope.kind !== "rules" || asked.of.scope !== scope.at.scope || ("genesis" in asked.of ? asked.of.genesis !== scope.at.genesis : asked.of.kind !== "rules")) return null;
   const [rules, revision] = [rulesOf(state), revisionOf(state)];
   if (!("asked" in asked) || !rules || revision === null) return null;
   const common = { subject: "rules", of: scope.at, head: scope.head, revision, definition } as const;
@@ -582,10 +582,11 @@ export const rulesScopeRules: Rules = {
       for (const check of checks) {
         const checker = isRecord(check) ? check["checker"] : null;
         if (!isMemberRef(checker)) throw new Error("a check names its checker as a member");
-        if (checker.membership.kind !== "membership" || checker.membership.scope !== recorded) return { holds: false, name: "not-a-checker" };
+        // The recorded membership place fixes the kind (ruling 080e7c84, item 3); the reference holds its position only.
+        if (checker.membership.scope !== recorded) return { holds: false, name: "not-a-checker" };
         const observation = given.observed({ member: checker.member })?.observation as MemberObservation | undefined;
-        if (!observation || observation.of.kind !== "membership" || observation.of.scope !== recorded) return { holds: null, reason: "dependency-unavailable" };
-        if (observation.of.inc !== checker.membership.inc || observation.memberState !== "active" || observation.role !== "checker") return { holds: false, name: "not-a-checker" };
+        if (!observation || observation.of.scope !== recorded) return { holds: null, reason: "dependency-unavailable" };
+        if (observation.of.genesis !== checker.membership.genesis || observation.memberState !== "active" || observation.role !== "checker") return { holds: false, name: "not-a-checker" };
       }
       return { holds: true };
     },

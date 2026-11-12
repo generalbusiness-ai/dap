@@ -1,6 +1,6 @@
 /** Q11/G14 native certificate custody. Candidate facts are never authority:
  * callers pass only the engine's admitted own/foreign facts and native state. */
-import type { Digest, Entry, FactRef, ScopeRef, Seed } from '@generalbusiness/dap-contract';
+import type { Digest, Entry, FactRef, ScopeKind, ScopeRef, Seed } from '@generalbusiness/dap-contract';
 import { entryHash, isDigest, isFactRef, isRecord, isScopeRef, same, scopeIdOf, seedDigest, utf8 } from '@generalbusiness/dap-bytes';
 import { isEntryOf, sentBy, type Fetched, type Operation, type Own, type RuleGiven, type StateView } from '@generalbusiness/dap-derive';
 import { type RulesTreeBinding } from './rules-policy-tree.ts';
@@ -27,7 +27,7 @@ export function rulesCertificateOpening(own:Own,operation:Operation,at:ScopeRef)
     if(operation.owner!=='platform:destination@14'||operation.kind!==RULES_CERTIFICATE_KIND||operation.most!==1
       || operation.attempts.length!==1 || operation.attempts[0]!.attempt!==1 || operation.for===undefined)return null;
     const opened=operation.attempts[0]!.opened, sealed=own(opened);
-    if(!sealed || operation.id!==`${opened}:0` || sealed.entry.seq!==opened || !same(sealed.entry.at,at) || entryHash(sealed.entry)!==sealed.hash
+    if(!sealed || operation.id!==`${opened}:0` || sealed.entry.seq!==opened || entryHash(sealed.entry)!==sealed.hash
       || sealed.entry.input.type!=='act' || sealed.entry.input.signed.intent.kind!==RULES_CERTIFICATE_KIND)return null;
     const operations=sealed.entry.effects.filter(e=>e.effect==='operation');
     if(operations.length!==1 || !operations.some(e=>e.effect==='operation' && e.k===0 && e.owner===operation.owner && e.kind===operation.kind && e.attempts===1 && e.for===operation.for))return null;
@@ -48,11 +48,11 @@ export function rulesCertificateBranchMatches(state:StateView,binding:RulesTreeB
 }
 
 interface Birth { fact:FactRef; entry:Entry; seed:Seed; fields:Record<string,unknown> }
-function birth(copy:Fetched|undefined,pin:string,kind:ScopeRef['kind']):Birth|null {
-  if(!copy || copy.under!==`platform:${kind}` || copy.fact.seq!==0 || !isEntryOf(copy.entry,copy.fact) || copy.entry.seq!==0 || copy.entry.prev!==null
+function birth(copy:Fetched|undefined,pin:string,kind:ScopeKind):Birth|null {
+  if(!copy || copy.under!==`platform:${kind}` || copy.fact.seq!==0 || !isEntryOf(copy.entry,copy.fact,copy.sequence) || copy.entry.seq!==0 || copy.entry.prev!==null
     || copy.entry.input.type!=='genesis' || copy.entry.input.decision!=='applied' || copy.entry.input.kind!=='establish')return null;
   const input=copy.entry.input;
-  if(input.seed.definition!==pin || input.seed.kind!==kind || input.inc!==copy.fact.at.inc || copy.fact.at.kind!==kind
+  if(input.seed.definition!==pin || input.seed.kind!==kind || copy.sequence.kind!==kind
     || scopeIdOf(input.seed)!==copy.fact.at.scope || !input.message || input.message.class!=='request' || input.message.type!=='create'
     || !isRecord(input.message.body) || !isRecord(input.message.body['fields']))return null;
   return {fact:copy.fact,entry:copy.entry,seed:input.seed,fields:input.message.body['fields']};
@@ -62,9 +62,9 @@ const find=(given:RuleGiven,fact:FactRef):Fetched|undefined=>given.uses.find(cop
 export function rulesCertificateFamily(given:RuleGiven,otherKind:'rules'|'destination',fields:Readonly<Record<string,unknown>>=given.resolved.fields):
   {directory:Birth;membership:Birth;rules:Birth;destination:Birth}|null {
   try {
-    const own=given.own(0),ownKind=given.resolved.at.kind;
-    if(!own || !['rules','destination'].includes(ownKind))return null;
-    const ownCopy:Fetched={fact:{at:given.resolved.at,seq:0,hash:own.hash},entry:own.entry,under:`platform:${ownKind}`};
+    const own=given.own(0),ownKind=given.state.scope()?.kind,ownSequence=given.own.sequence();
+    if(!own || !ownSequence || !ownKind || !['rules','destination'].includes(ownKind))return null;
+    const ownCopy:Fetched={fact:{at:given.resolved.at,seq:0,hash:own.hash},entry:own.entry,sequence:ownSequence,under:`platform:${ownKind}`};
     const directoryFact=fields['directoryBirth'],memberFact=fields['membershipBirth'],otherFact=fields[otherKind+'Birth'];
     if(!isFactRef(directoryFact)||!isFactRef(memberFact)||!isFactRef(otherFact))return null;
     const directory=birth(find(given,directoryFact),'platform:directory@18','directory');

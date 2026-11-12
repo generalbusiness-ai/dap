@@ -121,7 +121,7 @@ export const rulesScopeRulesV13:Rules={...archiveDeviceRules,
     if(!extents||serviceGeneration===null||revision===null)throw Error('Q13 generation unavailable');
     // Fixed scope/key grammars and one <=256-byte ASCII member bound the
     // three closed fields before canonical allocation. No policy list is copied here.
-    if(!isScopeRef(given.resolved.at)||given.resolved.at.kind!=='rules'||!Number.isSafeInteger(revision)||revision<0||revision>1_000_000_000
+    if(!isScopeRef(given.resolved.at)||given.state.scope()?.kind!=='rules'||!Number.isSafeInteger(revision)||revision<0||revision>1_000_000_000
       ||serviceGeneration>revision||!readServiceMarkV13(p.roomService).ok)throw Error('Q13 evidence policy unavailable');
     const evidencePolicy=canonicalize({roomService:p.roomService,serviceGeneration:{rules:given.resolved.at,seq:serviceGeneration},policyGeneration:{rules:given.resolved.at,seq:revision}});
     if(utf8(evidencePolicy).length>2048)throw Error('Q13 evidence policy exceeds its declared byte bound');
@@ -142,9 +142,10 @@ export const rulesScopeRulesV13:Rules={...archiveDeviceRules,
     if(!recorded)return {holds:null,reason:'dependency-unavailable'};
     for(const checker of required){
       const observed=given.observed({member:checker.member})?.observation as MemberObservation|undefined;
-      if(checker.membership.scope!==recorded.scope||checker.membership.kind!=='membership')return no('not-a-checker');
-      if(!observed||observed.of.scope!==recorded.scope||observed.of.kind!=='membership')return {holds:null,reason:'dependency-unavailable'};
-      if(observed.of.inc!==checker.membership.inc||recorded.inc!==null&&recorded.inc!==observed.of.inc||observed.memberState!=='active'||observed.role!=='checker')return no('not-a-checker');
+      // The recorded membership place fixes the kind (ruling 080e7c84, item 3).
+      if(checker.membership.scope!==recorded.scope)return no('not-a-checker');
+      if(!observed||observed.of.scope!==recorded.scope)return {holds:null,reason:'dependency-unavailable'};
+      if(observed.of.genesis!==checker.membership.genesis||!('pending' in recorded)&&recorded.genesis!==observed.of.genesis||observed.memberState!=='active'||observed.role!=='checker')return no('not-a-checker');
     }
     if(!same(oldMark(given.state),proposed.policy.roomService)){
       const observed=given.input.type==='act'?given.input.grant?.fresh?.observation:null;
@@ -188,8 +189,8 @@ function observationPolicy(state:Pick<StateView,'page'>) {
 export function rulesAnswerV13(state:Pick<StateView,'scope'|'page'>,asked:ObservationRequest):Omit<RulesObservation,'at'>|null {
   if('asked'in asked&&asked.asked==='definitions')return rulesAnswer(state,asked,'platform:rules@13');
   const scope=state.scope(),held=observationPolicy(state),revision=revisionOf(state);
-  if(!scope||scope.status!=='active'||scope.at.kind!=='rules'||asked.of.scope!==scope.at.scope||asked.of.kind!=='rules'
-    ||('inc'in asked.of&&asked.of.inc!==scope.at.inc)||!('asked'in asked)||asked.asked!=='rules'||!held||revision===null)return null;
+  if(!scope||scope.status!=='active'||scope.kind!=='rules'||asked.of.scope!==scope.at.scope
+    ||('genesis'in asked.of?asked.of.genesis!==scope.at.genesis:asked.of.kind!=='rules')||!('asked'in asked)||asked.asked!=='rules'||!held||revision===null)return null;
   const serviceGeneration=generation(state);
   if(serviceGeneration===null||serviceGeneration>revision||revision>scope.head.seq||held.policy.roomService!==null&&serviceGeneration===0)return null;
   const projection=content(held.policy,held.envelope,scope.at,serviceGeneration);

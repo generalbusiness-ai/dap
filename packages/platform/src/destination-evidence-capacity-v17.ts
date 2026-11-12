@@ -171,7 +171,7 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
     for (const slot of pending) {
       const publication = given.state.item(slot.publication.seq), sealed = given.own?.(slot.publication.seq);
       if (slot.job !== null || !publication || publication.type !== "publication" || !sealed || sealed.hash !== slot.publication.hash
-        || !same(sealed.entry.at, slot.publication.at) || !same(slot.publication.at, given.resolved.at)
+        || !same(slot.publication.at, given.resolved.at)
         || publication.values["withdrawDecided"] !== true || !["not-reserved", "cleanup-deleted", "cleaned"].includes(publication.state)) continue;
       const removed = withdrawEvidenceHoldPendingV17(pending, slot.publication);
       if (!removed.ok) return null; pending = removed.pending;

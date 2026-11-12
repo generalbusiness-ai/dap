@@ -791,7 +791,7 @@ export class DestinationHost implements Outside {
     const manifest = this.#fact(reserve, statement.manifest);
     if (!manifest || !sourcesOf(manifest) || manifest.input.type !== "act") return null;
     const uses = reserve.uses.flatMap((use) => { const entry = this.#fact(reserve, use.fact); return entry ? [{ fact: use.fact, entry }] : []; });
-    const files = manifestFiles(manifest, uses);
+    const files = manifestFiles(manifest, statement.manifest.at, uses);
     const base = manifest.input.signed.intent.fields["base"];
     return objectId(base) ? { files: files ?? [], base, operation: statement.operation } : null;
   }
