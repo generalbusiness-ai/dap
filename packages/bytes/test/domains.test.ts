@@ -152,7 +152,7 @@ describe("identifiers", () => {
       [isOutboxId, ["0.0", "17.2"], ["17", "17.02", "1.2.3", "-1.0", 17.2]],
       [isPlatformDefinition, ["platform:directory@1", "platform:directory-partition@1"], ["platform:lane@1", "platform:directory@01", "platform:directory-partition@01", "platform:directory-partitions@1", "directory@1"]],
       [isScopeKind, ["lane", "directory"], ["room", "", null]],
-      [isSequenceRef, [directory], [{ ...directory, kind: "directory" }, { scope: directory.scope, inc: `in_${"a".repeat(26)}`, kind: "directory" }, { scope: directory.scope, genesis: null }]],
+      [isSequenceRef, [directory], [{ ...directory, kind: "directory" }, { scope: directory.scope, genesis: `sha256:${"a".repeat(63)}` }, { scope: directory.scope, genesis: null }]],
       [isGenesisSelfRef, [{ scope: directory.scope, genesis: null }], [directory, { scope: directory.scope, genesis: null, kind: "directory" }]],
       [isFactRef, [{ at: directory, seq: 0, hash: directory.genesis }], [{ at: { scope: directory.scope, genesis: null }, seq: 0, hash: directory.genesis }]],
       // Section 9.2, revision 19: a retained value states its domain, and no other kind states one.

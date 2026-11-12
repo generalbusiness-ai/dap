@@ -6,12 +6,12 @@ import * as canonical from "../src/canonical.ts";
 import { isBehindRead, isFactRef, isHead, isRead } from "../src/records.ts";
 import { READ_MINIMUM_WIRE_BOUNDS as B, encodeReadMinimumParameter, isReadMinimum, readMinimum, readMinimumParameter } from "../src/read-minimum.ts";
 
-const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"c".repeat(64)}` };
 const hash = `sha256:${"a".repeat(64)}` as const;
 const head = { seq: 7, hash };
 const encoded = (value: unknown) => b64url(utf8(canonicalize(value)));
 
-test("minimum reads own an exact incarnation-qualified sequence or full head without widening Head or FactRef", () => {
+test("minimum reads own an exact genesis-addressed sequence or full head without widening Head or FactRef", () => {
   for (const input of [{ at, head: 0 }, { at, head: Number.MAX_SAFE_INTEGER }, { at, head }]) {
     const parameter = encodeReadMinimumParameter(input)!;
     expect(readMinimumParameter(parameter)).toEqual(input);
@@ -20,12 +20,12 @@ test("minimum reads own an exact incarnation-qualified sequence or full head wit
     expect(Object.isFrozen(readMinimumParameter(parameter))).toBe(true);
   }
   const input = { at: { ...at }, head: { ...head } }, owned = readMinimum(input)!;
-  input.head.seq = 99; input.at.kind = "task";
+  input.head.seq = 99; input.at.genesis = `sha256:${"d".repeat(64)}`;
   expect(owned).toEqual({ at, head });
   expect(Object.isFrozen(owned.at)).toBe(true); expect(Object.isFrozen(owned.head)).toBe(true);
   expect(isHead({ ...head, at })).toBe(false);
   expect(isFactRef({ at, ...head, atLeast: head })).toBe(false);
-  expect(encodeReadMinimumParameter({ at: { ...at, inc: `in_${"b".repeat(26)}` }, head })).not.toBe(encodeReadMinimumParameter({ at, head }));
+  expect(encodeReadMinimumParameter({ at: { ...at, genesis: `sha256:${"b".repeat(64)}` }, head })).not.toBe(encodeReadMinimumParameter({ at, head }));
 });
 
 test("minimum shape and byte admission reject malformed, executable and noncanonical input before using a position", () => {
@@ -34,7 +34,7 @@ test("minimum shape and byte admission reject malformed, executable and noncanon
     { at: { ...at, extra: true }, head }, { at, head: { ...head, extra: true } },
     { at, head: -0 }, { at, head: -1 }, { at, head: 1.5 }, { at, head: Number.MAX_SAFE_INTEGER + 1 },
     { at, head: { seq: -0, hash } }, { at, head: { seq: 1, hash: "not a digest" } },
-    { at: { ...at, inc: "another-incarnation" }, head }, { at: { ...at, kind: "unknown" }, head },
+    { at: { ...at, genesis: "another-genesis" }, head }, { at: { ...at, kind: "lane" }, head },
   ]) {
     expect(readMinimum(invalid)).toBeNull();
     expect(encodeReadMinimumParameter(invalid as ReadMinimum)).toBeNull();
