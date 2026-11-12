@@ -454,10 +454,7 @@ keeps its API reference in a closure. It does not receive a signer, token
 or arbitrary tool callback. The kit runs the package's code as trusted
 code, in the same document as its own tool bridge. A package script can
 post its own `tools/call` message to the host through `window.parent`, as
-the bridge does. The service's write tools (`create`, `join`,
-`install_application`, `prepare` and `act`) declare no
-`_meta.ui.visibility`, so their metadata does not limit them to the model.
-Install only a package whose code you trust.
+the bridge does. Install only a package whose code you trust.
 
 A trusted package script can submit any action declared by one of the
 package's views without a click, using the member's authority. Release trust
