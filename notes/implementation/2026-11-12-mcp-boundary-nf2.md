@@ -3,7 +3,7 @@
 For request `9a321a0a` (NF-2) and promise `b7f2ffaa`.
 Planner request `0916128e` states the six problems and the three parts.
 The base is main `33836693`, the NF-1 landing.
-The source for the gate is `10250c74`, tree `eef0f6be7ec7626c9999ace1c5df637fc44ba696`.
+The source for the gate is `ebc4c936`, tree `1e193aaa2bc78816afded26714261fbf3b377a33`.
 The note commit after it changes only this note.
 
 ## What changed
@@ -68,6 +68,7 @@ An act tool result, `act`, `create` and `join` now carry `effects` too. Before, 
 Its description says that it is where this client's kept request stands. The description of `answer` says that it is the room's decision.
 `install_application` now reports `kept.record.phase`, not the literal `"recorded"`.
 An accepted install therefore reports `accepted`.
+Eleven expectations in ten Scope test files read `phase: "recorded"` from an accepted `install_application` result. Commit `ebc4c936` changes them to `phase: "accepted"`. Each stays a `toMatchObject`, so the new `outboxIds` and `effects` members need no change.
 The accepted install result also gains `outboxIds` and `effects`, because `projectAnswer` builds it.
 `errors.test.ts` checks that `recorded` is no `Phase` with `@ts-expect-error`.
 
@@ -150,8 +151,10 @@ Paths are relative to `~/play/artroom-evidence`.
 | Plain | `38b395a3`: the `plain-2` command | 0. 71 files, 698 passed, 1 skipped | `2026-11-12-nf2-working-8d00dbbc/plain-3.stdout` |
 | Native | `38b395a3`: the `native-1` command and files | 0. 26 files, 96 of 96 passed | `2026-11-12-nf2-working-8d00dbbc/native-2.stdout` |
 | Plain, MCP | `10250c74`: `vitest run --config vitest.plain.config.ts --project mcp` | 0. 37 files, 350 passed, 1 skipped | `2026-11-12-nf2-working-8d00dbbc/plain-4.stdout` |
-| Gate | `10250c74` or later: `npm run gate` | PENDING | PENDING |
-| CI | `10250c74` or later: branch push | PENDING | PENDING |
+| First gate | `e989e6ee`: `npm run gate` | 1. Node 169 of 169, Counting 56 of 56, Plain 4,547 of 4,548 with 1 skip, Native 1,107 of 1,134 with 25 failed and 2 skips | `2026-11-12-nf2-gate-e989e6ee/gate.stdout` |
+| Native, the ten failed files | `ebc4c936`: `vitest run --config vitest.native.config.ts --project scope` on the ten files | 0. 10 files, 31 of 31 passed | `2026-11-12-nf2-working-8d00dbbc/native-3.stdout` |
+| Gate | `ebc4c936` or later: `npm run gate` | PENDING | PENDING |
+| CI | `ebc4c936` or later: branch push | PENDING | PENDING |
 
 Each Vitest and Node test command ran with `env -u VITEST_MAX_WORKERS`. The Native command also set `ARTROOM_SCALE_MODE=omit`.
 The skipped Plain test is `a dead reclaimer under a long ARTROOM_HOME`, which skips on macOS.
@@ -163,6 +166,11 @@ Commit `2ef00924` repairs them without casts: `ok<CustodyReport>` at the not-fou
 
 A gate started at `9d3a4fd5`. The coordinator stopped it, because commit `c2377a06` supersedes that head. It records no result.
 `plain-3` has one more test than `plain-2`: the new scope-reference test.
+
+The first gate failed 25 Native tests in ten files under `packages/scope/test/`: `application-cross-room`, `application-install-custody`, `application-owned-scopes`, `application-projection-native`, `archive-installed`, `archive-mcp`, `device-command-install`, `grow-demo-tick`, `grow-owned-scopes` and `maintained-application-projections`.
+24 failures are the same diff: the install result has `phase: "accepted"` where the test expects `"recorded"`.
+The 25th, `installed Grow production public archive command verifies its native producer clone`, fails with "the immediately preceding native producer did not publish a command session". It reads `retainedCommand`, which `installed Grow production scopes export genesis zero after a late native membership directory binding` sets only after its install check passes. That test failed at the phase check, so the 25th failure is a cascade.
+No failure had another cause. A search of `apps`, `examples`, `packages/cli`, `packages/client` and `packages/mcp` found no other install-phase expectation. The `"recorded"` values in the Counter voice tests and the lane delivery answers are different words.
 
 The seal changes in `scripts/security-entry-points.test.mjs` come from the test's failure output in two refreshes, `70ab6509` and `38b395a3`. Each one names a reviewed source change. The table shows each seal from main to `38b395a3`.
 
