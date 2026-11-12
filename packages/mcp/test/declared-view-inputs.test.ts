@@ -7,6 +7,7 @@ import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from
 import { applicationProjectionId, applicationProjectionQueryDigest, isApplicationJournalSource, packApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { applicationCounterPacket2 } from "../../scope/test/fixtures.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
+import type { DispatchContext } from "../src/results.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import { viewTools, toolsForHost } from "../src/views/tools.ts";
 import { viewInputToolName } from "../src/views/names.ts";
@@ -46,14 +47,15 @@ async function fixture(ordered = false, direction: "asc" | "desc" = "asc", missi
   const signed: { kind: string; args: Record<string, unknown> }[] = [];
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
-  const sessions = new ViewSessions(source, { call: async () => { throw Error("No adapter."); } }, async (kind, args, admit) => {
-    await admit(); signed.push({ kind, args }); await gate;
+  const readContexts: (DispatchContext | undefined)[] = [], actContexts: (DispatchContext | undefined)[] = [];
+  const sessions = new ViewSessions(source, dispatchContext => { readContexts.push(dispatchContext); return { call: async () => { throw Error("No adapter."); } }; }, async (kind, args, admit, dispatchContext) => {
+    await admit(); actContexts.push(dispatchContext); signed.push({ kind, args }); await gate;
     if (answer === "accepted" || commitUnknown) { revision++; times[String(args["on"])] = "2026-10-18T08:00:00Z"; }
     return { structuredContent: { answer, fact: { seq: 2 }, private: "must not reach the model" }, content: [], isError: false };
   }, async () => { throw Error("No unresolved original."); });
   const opening = await sessions.open("measure", "board"), tools = viewTools(sessions, source.screens), tool = tools[viewInputToolName("board", "pause")]!;
   const args = { view: "measure", item: opening.identity!.item, revision: "1", request: "one-reading", values: { moisture: 31, ec: 2.1, note: "leaf edge curl" } };
-  return { source, sessions, tools, tool, args, signed, release, id, scope, held: (value: string[]) => { held = value; }, revision: (value: number) => { revision = value; }, answer: (value: string) => { answer = value; }, commitUnknown: () => { commitUnknown = true; } };
+  return { source, sessions, tools, tool, args, signed, readContexts, actContexts, release, id, scope, held: (value: string[]) => { held = value; }, revision: (value: number) => { revision = value; }, answer: (value: string) => { answer = value; }, commitUnknown: () => { commitUnknown = true; } };
 }
 
 test("declared model input converts exact fields once, retains concurrent retries and exposes no private card data", async () => {
@@ -66,16 +68,21 @@ test("declared model input converts exact fields once, retains concurrent retrie
   expect(display.card?.actions).toEqual([{ id: "pause", label: "Measure", purpose: "act", input: "chat" }]);
   await expect(f.sessions.act("measure", display.cut, "pause")).rejects.toMatchObject({ reason: "shape" });
   const routed = { ...f.args, view: display.context.view, item: display.context.identity!.item, revision: display.context.identity!.revision };
-  const first = f.tool.run(routed), duplicate = f.tool.run(structuredClone(routed)); f.release();
+  const firstContext: DispatchContext = { prepare: async () => () => null }, duplicateContext: DispatchContext = { prepare: async () => () => null };
+  const first = f.tool.run(routed, firstContext), duplicate = f.tool.run(structuredClone(routed), duplicateContext); f.release();
   const [one, two] = await Promise.all([first, duplicate]);
   expect(one).toEqual(two); expect(f.signed).toHaveLength(1);
+  expect(f.actContexts).toEqual([firstContext]);
+  expect(f.readContexts.at(-1)).toBe(firstContext);
   expect(f.signed[0]).toMatchObject({ kind: "pause", args: { target: f.scope.scope, on: 2, digest: f.id,
     fields: { tag: "manual", moisture: 31, ec: 2100, note: "leaf edge curl" } } });
   expect(f.signed[0]!.args["at"]).toEqual(display.card!.identity.at);
   expect(one.structuredContent).toMatchObject({ identity: { revision: "2" }, receipt: expect.stringContaining("accepted (entry 2)") });
   expect(JSON.stringify(one)).not.toMatch(/lastNumber|leaf edge curl|private|2100/);
   f.held([]);
-  expect(await f.tool.run(f.args)).toEqual(one); expect(f.signed).toHaveLength(1);
+  const readsBeforeReplay = f.readContexts.length;
+  expect(await f.tool.run(f.args, duplicateContext)).toEqual(one); expect(f.signed).toHaveLength(1);
+  expect(f.actContexts).toEqual([firstContext]); expect(f.readContexts).toHaveLength(readsBeforeReplay);
   expect((await f.tool.run({ ...f.args, values: { moisture: 32 } })).structuredContent).toMatchObject({ error: "view", reason: "shape" });
 });
 

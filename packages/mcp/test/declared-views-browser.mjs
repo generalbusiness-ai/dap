@@ -98,6 +98,32 @@ try {
     await app.getByRole('link', { name: 'Choose the first milestone', exact: true }).click();
     await app.getByRole('button', { name: 'Accept', exact: true }).waitFor();
     await contained(app);
+    const visibility = await page.evaluate(async () => {
+      let id = 920;
+      const rpc = async (actor, method, params) => (await fetch('/rpc', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+        instance: window.proof.config.id, actor, request: { jsonrpc: '2.0', id: ++id, method, params },
+      }) })).json();
+      const tools = []; let cursor;
+      do {
+        const page = await rpc('model', 'tools/list', cursor ? { cursor } : {});
+        if (page.error) throw Error('Visibility witness could not list the actual service tools.');
+        tools.push(...page.result.tools); cursor = page.result.nextCursor;
+      } while (cursor);
+      const ordinary = tools.find(tool => tool.name === 'create');
+      const dynamic = tools.find(tool => tool._meta?.['dap/binding']);
+      if (!ordinary || !dynamic) throw Error('The ordinary and dynamic write tools must exist before testing host refusal.');
+      const ordinaryRefused = await rpc('app', 'tools/call', { name: ordinary.name, arguments: {} });
+      const dynamicRefused = await rpc('app', 'tools/call', { name: dynamic.name, arguments: {} });
+      const read = await rpc('app', 'tools/call', { name: 'view_read', arguments: { view: window.proof.config.id } });
+      const undeclared = await rpc('app', 'tools/call', { name: 'view_act', arguments: { view: window.proof.config.id,
+        cut: read.result.structuredContent.display.cut, action: 'TEST undeclared action' } });
+      return { ordinary: ordinary.name, dynamic: dynamic.name, ordinaryRefused, dynamicRefused, undeclared };
+    });
+    assert.equal(visibility.ordinaryRefused.error.code, -32601, 'the fixture host blocks an app call to an ordinary write');
+    assert.equal(visibility.dynamicRefused.error.code, -32601, 'the fixture host blocks an app call to a dynamic Native write');
+    assert.equal(visibility.undeclared.result.structuredContent.reason, 'shape', 'the app-callable view_act still refuses an undeclared action');
+    const beforeAction = await page.evaluate(async () => fetch('/proof?instance=' + window.proof.config.id).then(response => response.json()));
+    assert.equal(beforeAction.signed.length, 0, 'the refused calls sign no intent');
     await app.getByRole('button', { name: 'Accept', exact: true }).click();
     await app.getByRole('link', { name: 'Review the working terms', exact: true }).waitFor();
     await page.waitForFunction(() => window.proof.contexts.some(context => context.structuredContent.receipt));
@@ -105,7 +131,7 @@ try {
     const state = await page.evaluate(async () => fetch('/proof?instance=' + window.proof.config.id).then(response => response.json()));
     assert.equal(state.signed.length, 1, 'context reporting retains the original intent');
     assert.deepEqual(proof.chat, []); assert.deepEqual(proof.errors, []); assert.deepEqual(errors, []);
-    report.cases.push({ label: 'legacy-context-retry-390', signatures: state.signed.length, receiptContext: true, chat: proof.chat });
+    report.cases.push({ label: 'legacy-context-retry-390', signatures: state.signed.length, receiptContext: true, chat: proof.chat, modelOnlyRefusals: [visibility.ordinary, visibility.dynamic], undeclaredActionRefusal: 'shape', declaredViewActAdmitted: true });
     await page.close();
   }
   {

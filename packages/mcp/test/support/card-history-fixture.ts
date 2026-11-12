@@ -85,7 +85,7 @@ export class CardHistoryFixture {
   initialize() { return this.bridge.initialize(); }
   #session(process: 0 | 1): ViewSessions {
     return new ViewSessions({ initialPage: () => "item", read: async () => projection() },
-      { call: async () => { throw new Error("The fixture card source reads no native scope."); } },
+      () => ({ call: async () => { throw new Error("The fixture card source reads no native scope."); } }),
       async (_kind, args, admit) => {
         const context = this.#contexts[process]!;
         await admit(); this.writes.push({ key: args["idempotencyKey"] }); return answer(context.answer);

@@ -24,6 +24,7 @@
  * connection of one server is bound to the one key the process signs with.
  */
 
+import type { DispatchContext } from "./results.ts";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { utf8 } from "@generalbusiness/dap-bytes";
@@ -175,7 +176,7 @@ export class Wire {
    * `owner` is the client stream the message came on: the connection on
    * stdio, the response stream of a `subscriptions/listen` over HTTP.
    */
-  async handle(message: unknown, session: LegacySession | null, send: Send, owner: object = send, resourceDomain?: string): Promise<Message | null> {
+  async handle(message: unknown, session: LegacySession | null, send: Send, owner: object = send, resourceDomain?: string, dispatch?: DispatchContext): Promise<Message | null> {
     const kind = frameOf(message);
     if (kind === "invalid") return error(null, -32600, "Invalid Request: a JSON-RPC 2.0 request, notification or response is expected.");
     if (kind === "response") return null;   // a response to a request of ours: the server makes none
@@ -184,7 +185,7 @@ export class Wire {
     // A notification gets no reply, ever. A method that is only a request (initialize, tools/list, tools/call and the rest),
     // received as a notification, is not run: it is counted and dropped before dispatch.
     if (notification && !isNotificationMethod(m.method!)) { this.ignored++; return null; }
-    const answer = await this.#dispatch(m, notification, session, send, owner);
+    const answer = await this.#dispatch(m, notification, session, send, owner, dispatch);
     // Only the remote transport supplies this operator-validated value. Never
     // mutate shared resources: concurrent hosts use different sandbox origins.
     if (answer && isRecord(answer.result)) {
@@ -210,12 +211,12 @@ export class Wire {
     return notification ? null : answer;
   }
 
-  async #dispatch(m: Message, notification: boolean, session: LegacySession | null, send: Send, owner: object): Promise<Message | null> {
+  async #dispatch(m: Message, notification: boolean, session: LegacySession | null, send: Send, owner: object, dispatch?: DispatchContext): Promise<Message | null> {
     const id = m.id ?? null;
     const revision = revisionOf(m, session);
     try {
-      if (revision === "modern") return await this.#modern(m, notification, send, owner);
-      if (revision === "legacy") return session ? await this.#legacy(m, session, notification) : error(id, -32600, "This transport has no session for 2025-11-25.");
+      if (revision === "modern") return await this.#modern(m, notification, send, owner, dispatch);
+      if (revision === "legacy") return session ? await this.#legacy(m, session, notification, dispatch) : error(id, -32600, "This transport has no session for 2025-11-25.");
       if (notification) return null;
       return error(id, -32600, `Not initialized: send initialize (${LEGACY}), or name the protocol version in _meta (${MODERN}).`);
     } catch (thrown) {
@@ -224,7 +225,7 @@ export class Wire {
     }
   }
 
-  async #legacy(m: Message, session: LegacySession, notification: boolean): Promise<Message | null> {
+  async #legacy(m: Message, session: LegacySession, notification: boolean, dispatch?: DispatchContext): Promise<Message | null> {
     const id = m.id as Id;
     const params = isRecord(m.params) ? m.params : {};
     switch (m.method) {
@@ -266,7 +267,7 @@ export class Wire {
         return reply(id, { tools: page.tools, ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}) });
       }
       case "tools/call": {
-        const result = await this.service.call(String(params["name"]), params["arguments"]);
+        const result = await this.service.call(String(params["name"]), params["arguments"], dispatch);
         return reply(id, result);
       }
       case "resources/list": return reply(id, this.service.resources.list());
@@ -280,7 +281,7 @@ export class Wire {
     }
   }
 
-  async #modern(m: Message, notification: boolean, send: Send, owner: object): Promise<Message | null> {
+  async #modern(m: Message, notification: boolean, send: Send, owner: object, dispatch?: DispatchContext): Promise<Message | null> {
     const id = m.id as Id;
     const params = isRecord(m.params) ? m.params : {};
     const meta = isRecord(params["_meta"]) ? params["_meta"] : {};
@@ -301,7 +302,7 @@ export class Wire {
         const page = await this.service.page(params["cursor"], supportsViews(meta[CAPABILITIES_META]));
         return complete({ tools: page.tools, ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}), ttlMs: TOOLS_TTL_MS, cacheScope: "private" });
       }
-      case "tools/call": return complete({ ...(await this.service.call(String(params["name"]), params["arguments"])) });
+      case "tools/call": return complete({ ...(await this.service.call(String(params["name"]), params["arguments"], dispatch)) });
       case "resources/list": return complete({ ...this.service.resources.list(), ttlMs: TOOLS_TTL_MS, cacheScope: "private" });
       case "resources/read": return complete({ ...this.service.resources.read(String(params["uri"])) });
       case "prompts/list": return params["cursor"] === undefined ? complete({ prompts: [WORK_ON_PROMPT], ttlMs: TOOLS_TTL_MS, cacheScope: "private" }) : error(id, -32602, "This static prompt list has no cursor.");

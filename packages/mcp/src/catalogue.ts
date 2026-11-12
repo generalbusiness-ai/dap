@@ -246,7 +246,7 @@ export function actTool(binding: Binding, inventory: Inventory, mode: Mode): Too
     outputSchema: ACT_OUTPUT,
     // Truthful annotations: an act can close, remove or redact declared state; a repeat under the required key is idempotent.
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
-    _meta: { "dap/binding": { definition: binding.definition, kind: binding.kind, declaration: binding.declaration, digests: binding.digests } },
+    _meta: { ui: { visibility: ["model"] }, "dap/binding": { definition: binding.definition, kind: binding.kind, declaration: binding.declaration, digests: binding.digests } },
   };
 }
 

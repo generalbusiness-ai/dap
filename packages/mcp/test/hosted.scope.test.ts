@@ -16,23 +16,23 @@ import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { McpService, memoryStore } from "../src/index.ts";
 import worker from "../../../apps/room/worker.ts";
-import { creationTest, hostedTest, platformNet, type PlatformMcpAgent, type PlatformScope } from "../../scope/test/worker.ts";
+import { creationTest, hostedRegistries, hostedTest, platformNet, type PlatformMcpAgent, type PlatformScope } from "../../scope/test/worker.ts";
 import { startupTest, StartupOwner, startupSnapshot, startupReport, type StartupServingIndex } from "../../scope/test/support/serving-startup.ts";
 import { DEFAULT_SERVING_LIMITS } from "../../scope/src/serving-limits.ts";
 import { SCOPE_INDEX_NAME, type ScopeIndexPort } from "../../scope/src/scope-index.ts";
-import { BOUNDS, COMPLETION_BYTES, MODERN, MODERN_RESULT_EXTRA } from "../src/index.ts";
+import { BOUNDS, COMPLETION_BYTES, MODERN, MODERN_RESULT_EXTRA, controlOf } from "../src/index.ts";
 import { INVITATION_LINK } from "@generalbusiness/dap-client";
 import { mcpRoom, SERVICE, type Agent, type Room, created as createRoom } from "./fixtures-native.ts";
 import { MCP_METRIC_SCHEMA, type McpMetricPoint } from "../src/metrics.ts";
 import { OAUTH_STANDING_MS, type OAuthAccessGrant } from "../src/oauth-access.ts";
-import { ROW_OVERHEAD } from "../src/hosted.ts";
+import { ROW_OVERHEAD, type HostedAgentIdentityRead } from "../src/hosted.ts";
 import { httpSource, verify, type HistorySource } from "@generalbusiness/dap-replay";
 import { sqliteStore, type Sql } from "../src/sqlite-custody.ts";
 
 /** Production default dispatch, in this isolate. The actual native PLATFORM namespace is this fixture's Scope binding;
  * REGISTRIES and AGENTS keep their existing native subclasses, clocks, custody and control fences. */
 const routed = (url: string | URL, init?: RequestInit): Promise<Response> => {
-  const action = () => worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM, ...(startupTest.index ? { SCOPE_INDEX: startupTest.index } : {}), ...(hostedTest.toolSettings ?? { MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","install_application","credential","prepare","join","record","step","text"]' }) });
+  const action = () => worker.fetch(new Request(url, init), { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES), SCOPES: env.PLATFORM, ...(startupTest.index ? { SCOPE_INDEX: startupTest.index } : {}), ...(hostedTest.toolSettings ?? { MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","install_application","credential","prepare","join","record","step","text"]' }) });
   return startupTest.owner ? startupTest.owner.wait(action) : action();
 };
 const fetchLike = ((url: string | URL | Request, init?: RequestInit) => routed(url instanceof Request ? url.url : url, init)) as unknown as typeof fetch;
@@ -117,6 +117,7 @@ async function expectBearerNotStored(agent: string, membership: string, bearer: 
 
 test.each(["platform:register@3", "platform:register@10"] as const)("H1, the whole recipe: add-member, invite-key, create, enrol, then the pinned client in both revisions acts as the agent (%s)", async registerDefinition => {
   const room = mcpRoom();
+  hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
   const metrics: McpMetricPoint[] = [];
   hostedTest.metrics = { report: point => { metrics.push(structuredClone(point)); } };
   hostedTest.now = () => room.now();
@@ -207,7 +208,7 @@ test.each(["platform:register@3", "platform:register@10"] as const)("H1, the who
       expect(history).not.toContain(invitation.secret);
       expect(history).not.toContain('"secret"');
     }
-  } finally { hostedTest.metrics = null; hostedTest.now = null; hostedTest.pause = null; room.done(); }
+  } finally { hostedTest.metrics = null; hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.pause = null; room.done(); }
 });
 
 /** A room created by rita with the issue definition active, and one agent created under `op`; the agent's answer. */
@@ -222,6 +223,7 @@ async function hosted(room: Room, rita: Agent, handle: string, op: string, signe
 }
 async function roomWithIssues(): Promise<{ room: Room; rita: Agent }> {
   const room = mcpRoom();
+  hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
   hostedTest.now = () => room.now();
   hostedTest.pause = (waiting) => room.pause(waiting);
   const rita = room.agent("rita");
@@ -230,7 +232,7 @@ async function roomWithIssues(): Promise<{ room: Room; rita: Agent }> {
   expect((await rita.ok("rules.activate", { fields: { digest: DEMO_DIGESTS.issue, name: "issue" }, values: [canonicalize(issueDemo)], idempotencyKey: "activate-issue" }))["answer"]).toBe("accepted");
   return { room, rita };
 }
-const done = (room: Room) => { hostedTest.metrics = null; hostedTest.now = null; hostedTest.pause = null; hostedTest.lose = null; hostedTest.drop = null; hostedTest.controlBudget = null; hostedTest.custodyBounds = null; hostedTest.failWrite = null; hostedTest.faultAt = null; hostedTest.failSession = false; hostedTest.scheduleExpiry = null; room.done(); };
+const done = (room: Room) => { hostedTest.metrics = null; hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.pause = null; hostedTest.lose = null; hostedTest.drop = null; hostedTest.controlBudget = null; hostedTest.custodyBounds = null; hostedTest.failWrite = null; hostedTest.faultAt = null; hostedTest.failSession = false; hostedTest.scheduleExpiry = null; hostedTest.roleReply = null; hostedTest.submitted = null; hostedTest.removalReply = null; room.done(); };
 /** A raw request to the agent's endpoint with a bearer. */
 const mcp = async (bearer: string, method: string, headers: Record<string, string>, body?: unknown): Promise<Response> => {
   const response = await routed(`${SERVICE}/mcp`, { method, headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json", ...headers }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
@@ -423,6 +425,7 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
 // Native objects; the room's Git host and clock retain their TEST fixtures.
 test("configured public HTTPS origin binds a real hosted create and MCP session behind an internal HTTP Worker request", async context => {
   const room = mcpRoom(), publicOrigin = "https://public-room.example", internalOrigin = "http://celld.internal:8787";
+  hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
   hostedTest.now = () => room.now(); hostedTest.pause = waiting => room.pause(waiting);
   let client: Client | undefined;
   try {
@@ -430,7 +433,7 @@ test("configured public HTTPS origin binds a real hosted create and MCP session 
     await createRoom(room, rita);
     const membership = rita.config.repository!.membership;
     const boundary = (path: string, init: RequestInit, settings: { PUBLIC_ORIGIN?: string } = {}) => room.wait(() => worker.fetch(
-      new Request(internalOrigin + path, init), { ...env, SCOPES: env.PLATFORM, MCP_ENABLED: "true", ...settings }));
+      new Request(internalOrigin + path, init), { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES), SCOPES: env.PLATFORM, MCP_ENABLED: "true", ...settings }));
     const fresh = async (handle: string, op: string, signedService = publicOrigin) => {
       const invitation = (await invite(room, rita, handle)).invitation;
       const body = JSON.stringify({ link: encodeAgentKeyInvitation({ ...invitation, service: publicOrigin }) });
@@ -470,6 +473,7 @@ test("hosted default policy travels through Worker Env and the actual agent cons
   const previousToolSettings = hostedTest.toolSettings;
   hostedTest.toolSettings = { MCP_ENABLED: "true" };
   const room = mcpRoom();
+  hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
   hostedTest.now = () => room.now();
   hostedTest.pause = waiting => room.pause(waiting);
   try {
@@ -498,6 +502,7 @@ test("a hosted session on the default tools accepts exact terms and releases its
   const previousToolSettings = hostedTest.toolSettings;
   hostedTest.toolSettings = { MCP_ENABLED: "true" };
   const room = mcpRoom();
+  hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
   hostedTest.now = () => room.now();
   hostedTest.pause = waiting => room.pause(waiting);
   try {
@@ -595,6 +600,7 @@ test("a hosted session on the default tools accepts exact terms and releases its
 // The existing room uses the TEST namespace/clock and a STAND-IN Git provider.
 test("hosted production fetch preserves deployed parentless creation admission", async () => {
   const room = mcpRoom();
+  hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
   const previous = { settings: creationTest.settings, productionHostedFetch: creationTest.productionHostedFetch };
   hostedTest.now = () => room.now();
   hostedTest.pause = waiting => room.pause(waiting);
@@ -623,6 +629,7 @@ test("hosted production fetch preserves deployed parentless creation admission",
 // remain the room fixture's; no hosted bearer is claimed to be an unknown key.
 test("fresh MCP services' addressless native join failures count by verified key while an enrolled hosted key meets its earlier guard", async () => {
   const room = mcpRoom(), previous = { production: creationTest.productionHostedFetch, limits: platformNet.limits };
+  hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
   platformNet.limits = { windowSeconds: 60, failures: 2, windows: 4096, waiting: 8, joinBytes: 16 * 1024 };
   hostedTest.now = () => room.now(); hostedTest.pause = waiting => room.pause(waiting);
   try {
@@ -682,6 +689,7 @@ test.for(["legacy", "modern"] as const)("R12 default-limit hosted MCP %s connect
     await evictDurableObject(index);
     owned.assertOpen();
     const room = mcpRoom({ finish: "external", capture: life => owned.attach(life, () => { creationTest.productionHostedFetch = previous; done(room); }) });
+    hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
     hostedTest.now = () => room.now(); hostedTest.pause = waiting => room.pause(waiting);
     const rita = room.agent("rita");
     const { register } = await createRoom(room, rita, "default", ARCHIVE_DEVICE_APPLICATION_COHORT.register);
@@ -777,7 +785,7 @@ function stream(bearer: string, session: string): { text: () => string; stop: ()
 }
 const settle = (ms = 30) => new Promise((r) => setTimeout(r, ms));
 const until = async (check: () => boolean, ms = 3000) => { for (let t = 0; t < ms && !check(); t += 25) await new Promise((r) => setTimeout(r, 25)); return check(); };
-const agentStub = (id: string) => env.AGENTS.get(env.AGENTS.idFromString(id)) as unknown as { reset(): Promise<void>; tick(): Promise<boolean>; counts(): Promise<{ streams: number; sessions: number }>; heldAnswers(): Promise<{ control: { op: string; answer: boolean }[]; agent: boolean }>; used(): Promise<number>; durableFacts(): Promise<{ key: string | null; state: string | null; enrol: string | null; bearer: boolean }>; custodyRecord(key: string): Promise<{ intent: string; attempt: number; outcomes: number; phase: string; steps: string[]; reserved: number } | null> };
+const agentStub = (id: string) => env.AGENTS.get(env.AGENTS.idFromString(id)) as unknown as { reset(): Promise<void>; holdRemoval(): Promise<void>; roleIdentity(): Promise<HostedAgentIdentityRead>; tick(): Promise<boolean>; counts(): Promise<{ streams: number; sessions: number }>; heldAnswers(): Promise<{ control: { op: string; answer: boolean }[]; agent: boolean }>; used(): Promise<number>; durableFacts(): Promise<{ key: string | null; state: string | null; enrol: string | null; bearer: boolean }>; custodyRecord(key: string): Promise<{ intent: string; attempt: number; outcomes: number; phase: string; steps: string[]; reserved: number } | null> };
 const intentDigestOf = (intent: unknown) => digestBytes(utf8(canonicalize(intent as never)));
 const registryStub = (membership: string) => env.REGISTRIES.get(env.REGISTRIES.idFromName(membership)) as unknown as { agents(): Promise<{ agent: string; handle: string; state: string }[]>; heldAnswers(): Promise<{ op: string; answer: boolean }[]> };
 /** A 2026-07-28 listen, read in the background: its events so far. */
@@ -795,6 +803,8 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
   try {
     const M = rita.config.repository!.membership;
     const bot = await hosted(room, rita, "@bot", "create-bot");
+    // Keep expiry/renewal independent of the revoked-key refusal below.
+    const expiryBot = await hosted(room, rita, "@expiry-bot", "TEST-expiry-active-key");
     // paul joins as a plain member through his own server, with an invitation from rita.
     const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
     const invited = await rita.ok("member.invite", { fields: { handle: "@paul", role: "member", inviteHash: textDigest(secret), inviteEnds: timeOf(room.now() + 3_600_000) }, idempotencyKey: "invite-paul" });
@@ -838,7 +848,7 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "{}", "rita-bearer-3"), "{}"))).status, "the same op, another digest").toBe(409);
     // H2: two agents in one repository: the same idempotency key in both makes two records; one's session is unknown to the other.
     const first = await room.wait(() => modernCall(bot.bearer, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "by bot", conditions: ["done"] }, values: [canonicalize(issueDemo)], idempotencyKey: "same" }));
-    const bot3Rotated = adminAnswer.bearer;
+    let bot3Rotated = adminAnswer.bearer;
     const second = await room.wait(() => modernCall(bot3Rotated, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "by bot3", conditions: ["done"] }, idempotencyKey: "same" }));
     const factOf = async (r: Response) => ((await r.json() as { result: { structuredContent: { answer: string; fact: FactRef } } }).result.structuredContent);
     const [f1, f2] = [await factOf(first), await factOf(second)];
@@ -890,17 +900,196 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect(afterListen.text(), "with its result").toContain('"resultType":"complete"');
     expect((await mcp(botNew, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status).toBe(401);
     expect((await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "after-retire"), ""))).status).toBe(409);
-    // Keep a persisted session so rejected controls must preserve it too.
+    // Actual Native roster changes after enrollment have no kept-enrollment expected-revision dependency.
+    const roster = (await allItems(rita, "membership")).find(item => item.type === "roster")!;
+    const agentActions = [...roster.values[ROLE_LISTS.agent] as string[]];
+    const memberActions = roster.values[ROLE_LISTS.member] as string[];
+    expect(agentActions).not.toContain("membership.manage");
+    expect(memberActions).not.toContain("membership.manage");
+    const wider = [...agentActions, "membership.manage"];
+    const setAgentActions = async (actions: string[], key: string) => {
+      const result = await rita.ok("member.actions", { on: 0, fields: { role: "agent", actions }, idempotencyKey: key });
+      expect(result["answer"], JSON.stringify(result)).toBe("accepted");
+    };
+    const ordinaryOwner = () => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(bot3.agent)), (_instance, state) =>
+      state.storage.sql.exec(`SELECT bearer, bearer_expires FROM agent WHERE id = 1`).toArray()[0]);
+    const beforeRoleLoss = await ordinaryOwner();
+    const admittedList = () => mcp(bot3Rotated, "POST", { "cf-connecting-ip": "192.0.2.77", "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 91, method: "tools/list", params: { _meta: META } });
+    expect((await admittedList()).status).toBe(200);
+    hostedTest.now = () => room.now() - 1;
+    try {
+      for (let n = 0; n < 13; n++) expect((await admittedList()).status, "a valid ordinary secret before its fixed-lifetime issuance floor is unavailable, never a bad-secret failure").toBe(503);
+    } finally { hostedTest.now = () => room.now(); }
+    expect((await admittedList()).status, "backward-clock refusals did not fill the bad-secret window").toBe(200);
+    try {
+      await setAgentActions(wider, "TEST-S4-ordinary-wider");
+      for (let n = 0; n < 13; n++) {
+        const denied = await admittedList();
+        expect([denied.status, await denied.text()], "current Native Agent actions exceed its member controller's actual roster actions").toEqual([401, ""]);
+      }
+      expect(await ordinaryOwner(), "temporary role-subset denial neither rotates nor erases the stored bearer").toEqual(beforeRoleLoss);
+      const budget = await agentStub(bot3.agent).used();
+      const deniedRotation = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "TEST-S4-rotation-wide"), ""));
+      expect([deniedRotation.status, await deniedRotation.json()], "admin signing does not bypass the current controller subset before mint").toEqual([403, { error: "unauthorized", rule: "controller-role" }]);
+      expect(await ordinaryOwner()).toEqual(beforeRoleLoss);
+      expect(await agentStub(bot3.agent).used(), "the refused pre-mint rotation consumes no operation budget").toBe(budget);
+      expect(await runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(bot3.agent)), (_instance, state) => state.storage.sql.exec(`SELECT op FROM control WHERE op = ?`, "TEST-S4-rotation-wide").toArray())).toEqual([]);
+    } finally { await setAgentActions(agentActions, "TEST-S4-ordinary-restore"); }
+    expect((await admittedList()).status, "the same bearer and address work immediately: role denials did not fill the bad-secret window").toBe(200);
+
+    // A coherent old first read cannot authorize dispatch after the actual roster changes before the final read.
+    await agentStub(bot3.agent).reset();
+    let roleEntered!: () => void, roleRelease!: () => void, submitted = 0;
+    const roleReached = new Promise<void>(resolve => { roleEntered = resolve; });
+    hostedTest.roleReply = { agent: "@bot3", at: 1, calls: 0, entered: roleEntered, waiting: new Promise<void>(resolve => { roleRelease = resolve; }) };
+    hostedTest.submitted = () => { submitted++; };
+    try {
+      const pending = room.wait(() => admittedList());
+      await roleReached;
+      await setAgentActions(wider, "TEST-S4-ordinary-held-wider");
+      roleRelease();
+      const denied = await pending;
+      expect([denied.status, await denied.text()], "the post-setup admission reads actual current Native roles").toEqual([401, ""]);
+      expect(submitted, "a denied ordinary MCP list performs no Agent native act").toBe(0);
+      expect(await ordinaryOwner()).toEqual(beforeRoleLoss);
+    } finally {
+      roleRelease(); hostedTest.roleReply = null; hostedTest.submitted = null;
+      await setAgentActions(agentActions, "TEST-S4-ordinary-held-restore");
+    }
+    expect((await admittedList()).status, "a fresh read of narrowed actual roles restores ordinary admission without reminting").toBe(200);
+
+    const rotate = (op: string) => room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", op), ""));
+    const rotationState = (op: string) => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(bot3.agent)), (_instance, state) => ({
+      agent: state.storage.sql.exec(`SELECT bearer, bearer_expires FROM agent WHERE id = 1`).toArray()[0],
+      control: state.storage.sql.exec(`SELECT op, fingerprint, state, answer, not_after FROM control WHERE op = ?`, op).toArray()[0],
+    }));
+    // A local replacement during the actual pre-mint Native reply consumes no bearer or control owner.
+    const preOp = "TEST-S4-rotation-pre-owner", object = env.AGENTS.get(env.AGENTS.idFromString(bot3.agent));
+    const originalRotationConfig = await runInDurableObject(object, (_instance, state) => String(state.storage.sql.exec(`SELECT config FROM agent WHERE id = 1`).toArray()[0]!["config"]));
+    const preOwner = await ordinaryOwner(), preBudget = await agentStub(bot3.agent).used();
+    let preEntered!: () => void, preRelease!: () => void;
+    const preReached = new Promise<void>(resolve => { preEntered = resolve; });
+    hostedTest.roleReply = { agent: "@bot3", at: 1, calls: 0, entered: preEntered, waiting: new Promise<void>(resolve => { preRelease = resolve; }) };
+    try {
+      const pending = rotate(preOp);
+      await preReached;
+      await runInDurableObject(object, (_instance, state) => { state.storage.sql.exec(`UPDATE agent SET config = json_set(config, '$.service', ?) WHERE id = 1`, "https://TEST-configuration-owner.invalid"); });
+      preRelease();
+      const denied = await pending;
+      expect([denied.status, await denied.json()]).toEqual([409, { error: "op", rule: "stale" }]);
+      expect(await ordinaryOwner()).toEqual(preOwner);
+      expect((await rotationState(preOp)).control).toBeUndefined();
+      expect(await agentStub(bot3.agent).used()).toBe(preBudget);
+    } finally {
+      preRelease(); hostedTest.roleReply = null;
+      await runInDurableObject(object, (_instance, state) => { state.storage.sql.exec(`UPDATE agent SET config = ? WHERE id = 1`, originalRotationConfig); });
+    }
+    const preRetry = await rotate(preOp);
+    expect(preRetry.status).toBe(200);
+    bot3Rotated = (await preRetry.json() as IssuedBearer).bearer;
+
+    const armRemoval = async () => {
+      await legacySession(bot3Rotated); // A real generation and session make graceful await an actual removal callback.
+      let entered!: () => void, release!: () => void;
+      const reached = new Promise<void>(resolve => { entered = resolve; });
+      hostedTest.removalReply = { entered, waiting: new Promise<void>(resolve => { release = resolve; }) };
+      await agentStub(bot3.agent).holdRemoval();
+      return { reached, release };
+    };
+    // Native role loss while actual post-mint disposal waits must withhold the already-minted plaintext.
+    const heldSubset = await armRemoval(), heldOp = "TEST-S4-rotation-held-subset";
+    try {
+      const pending = rotate(heldOp);
+      await heldSubset.reached;
+      const committed = await rotationState(heldOp);
+      expect(committed.control).toMatchObject({ state: "complete" });
+      expect(JSON.parse(String(committed.control!["answer"]))).toMatchObject({ status: 200, body: { bearerShown: true } });
+      expect(JSON.parse(String(committed.control!["answer"])).body).not.toHaveProperty("bearer");
+      await setAgentActions(wider, "TEST-S4-rotation-held-wider");
+      heldSubset.release();
+      const response = await pending, result = await response.json();
+      expect(response.status).toBe(403);
+      expect(result).toMatchObject({ error: "unauthorized", rule: "controller-role", bearerShown: true, bearerExpires: committed.agent!["bearer_expires"] });
+      expect(result).not.toHaveProperty("bearer");
+      expect(await rotationState(heldOp), "postcommit withholding neither rolls back nor rewrites the committed issuance").toEqual(committed);
+      await setAgentActions(agentActions, "TEST-S4-rotation-held-narrow");
+      const replay = await rotate(heldOp);
+      expect([replay.status, await replay.json()]).toEqual([200, JSON.parse(String(committed.control!["answer"])).body]);
+      expect(await rotationState(heldOp), "same-operation replay cannot remint or recover the withheld secret").toEqual(committed);
+    } finally {
+      heldSubset.release(); hostedTest.removalReply = null;
+      await setAgentActions(agentActions, "TEST-S4-rotation-held-cleanup");
+    }
+    const nextIssuance = await rotate("TEST-S4-rotation-new-disclosure");
+    expect(nextIssuance.status).toBe(200);
+    bot3Rotated = (await nextIssuance.json() as IssuedBearer).bearer;
+    expect((await admittedList()).status).toBe(200);
+
+    // Epoch-only loss: reset/abrupt changes the old instance, while the exact SQL candidate stays unchanged.
+    const epochOp = "TEST-S4-rotation-epoch-only";
+    const epochOwnerSQL = () => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(bot3.agent)), (_instance, state) => {
+      const row = state.storage.sql.exec(`SELECT * FROM agent WHERE id = 1`).toArray()[0]!;
+      const seed = row["seed"];
+      if (!(seed instanceof Uint8Array) && !(seed instanceof ArrayBuffer)) throw Error("The TEST Agent must retain its seed bytes");
+      return {
+        agent: { ...row, seed: digestBytes(seed instanceof Uint8Array ? seed : new Uint8Array(seed)) },
+        control: state.storage.sql.exec(`SELECT * FROM control WHERE op = ?`, epochOp).toArray(),
+        budget: state.storage.sql.exec(`SELECT * FROM control_budget ORDER BY k`).toArray(),
+      };
+    });
+    const heldEpoch = await armRemoval();
+    try {
+      const pending = rotate(epochOp);
+      await heldEpoch.reached;
+      const committed = await epochOwnerSQL();
+      expect(committed.control[0]).toMatchObject({ state: "complete" });
+      expect(JSON.parse(String(committed.control[0]!["answer"]))).toMatchObject({ status: 200, body: { bearerShown: true } });
+      await agentStub(bot3.agent).reset(); // Actual evict calls old HostedAgent.abrupt; no new rotation or SQL write follows.
+      expect(await epochOwnerSQL(), "epoch loss alone preserves every private Agent/control/budget SQL field").toEqual(committed);
+      heldEpoch.release();
+      const response = await pending, result = await response.json();
+      expect(response.status, "an obsolete HTTP epoch cannot disclose even an unchanged SQL candidate").toBe(409);
+      expect(result).toMatchObject({ error: "op", rule: "stale", bearerShown: true });
+      expect(result).not.toHaveProperty("bearer");
+      expect(await epochOwnerSQL(), "old completion cannot rewrite the committed issuance").toEqual(committed);
+      const replay = await rotate(epochOp);
+      expect([replay.status, await replay.json()]).toEqual([200, JSON.parse(String(committed.control[0]!["answer"])).body]);
+      expect(await epochOwnerSQL(), "historical replay cannot redisclose or remint the epoch-withheld bearer").toEqual(committed);
+    } finally { heldEpoch.release(); hostedTest.removalReply = null; }
+    const afterEpoch = await rotate("TEST-S4-rotation-after-epoch-loss");
+    expect(afterEpoch.status).toBe(200);
+    bot3Rotated = (await afterEpoch.json() as IssuedBearer).bearer;
+    expect((await admittedList()).status).toBe(200);
+
+    // Reset creates a newer owner while the old instance's real disposal still waits.
+    const heldOwner = await armRemoval(), olderOp = "TEST-S4-rotation-older-owner";
+    try {
+      const older = rotate(olderOp);
+      await heldOwner.reached;
+      const committedOlder = await rotationState(olderOp);
+      await agentStub(bot3.agent).reset();
+      const newer = await rotate("TEST-S4-rotation-newer-owner");
+      expect(newer.status).toBe(200);
+      const next = await newer.json() as IssuedBearer;
+      bot3Rotated = next.bearer;
+      const newerState = await ordinaryOwner();
+      heldOwner.release();
+      const obsolete = await older, result = await obsolete.json();
+      expect(obsolete.status).toBe(409);
+      expect(result).toMatchObject({ error: "op", rule: "stale", bearerShown: true });
+      expect(result).not.toHaveProperty("bearer");
+      expect((await rotationState(olderOp)).control, "the older mint keeps only its original history").toEqual(committedOlder.control);
+      expect(await ordinaryOwner(), "old completion cannot replace or erase the newer legitimate bearer").toEqual(newerState);
+      expect((await admittedList()).status).toBe(200);
+    } finally { heldOwner.release(); hostedTest.removalReply = null; }
+    // Keep a persisted session so the later revoked-key/retention controls must preserve it too.
     const retentionSession = await legacySession(bot3Rotated);
-    // Revoking the native key does not retire this hosted bearer. Fresh
-    // standing hides the act before signing or custody, rather than sending
-    // an act that the native scope would refuse.
+
+    // A revoked exact Native key now refuses ordinary HTTP admission before tool lookup, signing or custody.
     const keyItem = (await allItems(rita, "membership")).find((i) => i.type === "key" && i.values["id"] === bot3.key)!;
     expect((await rita.ok("key.revoke", { on: keyItem.id, fields: { as: "retired" }, idempotencyKey: "revoke-bot3" }))["answer"]).toBe("accepted");
     const hidden = await room.wait(() => modernCall(bot3Rotated, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "after revocation", conditions: ["done"] }, idempotencyKey: "after-revoke" }));
-    expect(hidden.status, "the hosted bearer remains authenticated").toBe(200);
-    const refused = (await hidden.json() as { result: { structuredContent: { error: string } } }).result.structuredContent;
-    expect(refused.error, JSON.stringify(refused)).toBe("unknown-tool");
+    expect([hidden.status, await hidden.text()], "the stored ordinary secret cannot authorize a revoked exact Native key").toEqual([401, ""]);
     expect(await agentStub(bot3.agent).custodyRecord("after-revoke"), "hidden acts create no custody record").toBeNull();
     // Expiry: seven days past the original request's deadline, the op is stale and no answer body remains in either object.
     room.advance(8 * 86_400_000);
@@ -972,22 +1161,22 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect((await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, paul.secret, "bearer", M, bot3.agent, "", "paul-after-revoke"), ""))).status, "a revoked key").toBe(403);
     // Retention is seven days; bearer validity is its independent fixed
     // thirty-day deadline. Reset and ordinary use never extend that date.
-    const expires = Date.parse(adminAnswer.bearerExpires);
+    const expires = Date.parse(expiryBot.bearerExpires);
     room.advance(expires - room.now() - 1);
-    await agentStub(bot3.agent).reset();
-    const list = () => mcp(bot3Rotated, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } });
+    await agentStub(expiryBot.agent).reset();
+    const list = () => mcp(expiryBot.bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } });
     expect((await list()).status, "one millisecond before expiry").toBe(200);
     room.advance(1);
     const expired = await list();
     expect([expired.status, await expired.text()], "exact expiry refuses before any RPC answer").toEqual([401, ""]);
-    const renewedResponse = await room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", "renew-expired"), ""));
+    const renewedResponse = await room.wait(() => post(`/mcp/agents/${expiryBot.agent}/bearer`, control(room, rita.secret, "bearer", M, expiryBot.agent, "", "renew-expired"), ""));
     const renewed = await renewedResponse.json() as IssuedBearer;
     expect(renewedResponse.status, "signed authority can renew an expired bearer").toBe(200);
     expect(renewed.bearerExpires).toBe(timeOf(room.now() + BEARER_LIFETIME));
-    expect(renewed.bearer).not.toBe(bot3Rotated);
+    expect(renewed.bearer).not.toBe(expiryBot.bearer);
     expect((await list()).status, "renewal does not revive the old digest").toBe(401);
     expect((await modernCall(renewed.bearer, "room", {})).status).toBe(200);
-    await expectBearerNotStored(bot3.agent, M.scope, renewed.bearer);
+    await expectBearerNotStored(expiryBot.agent, M.scope, renewed.bearer);
   } finally { done(room); }
 });
 
@@ -1283,9 +1472,31 @@ test("the control budget is one aggregate: operations, sessions and configuratio
   hostedTest.controlBudget = { budget: 64 * 1024, reserve: 8 * 1024 };
   try {
     const M = rita.config.repository!.membership;
+    // Eighteen unique read operations exceed what this real 64 KiB control
+    // budget could keep at 4 KiB per row. The actual subsequent create must fit.
+    const registryBody = JSON.stringify({ after: null });
+    for (let n = 0; n < 18; n++) {
+      const listed = await room.wait(() => post("/mcp/agents/connections", control(room, rita.secret, "connections", M, null, registryBody, `read-registry-${n}`), registryBody));
+      expect(listed.status).toBe(200);
+    }
+    const registryObject = env.REGISTRIES.get(env.REGISTRIES.idFromName(M.scope));
+    const registryReads = await runInDurableObject(registryObject, (_registry, state) => ({
+      used: Number(state.storage.sql.exec(`SELECT v FROM control_budget WHERE k = 'used'`).toArray()[0]!["v"]),
+      reads: state.storage.sql.exec(`SELECT op FROM control WHERE action = 'connections'`).toArray(),
+    }));
+    expect(registryReads).toEqual({ used: 0, reads: [] });
     const bot = await hosted(room, rita, "@bot", "create-bot");
     const stub = agentStub(bot.agent);
     const afterCreate = await stub.used();
+    for (let n = 0; n < 18; n++) {
+      const listed = await room.wait(() => post(`/mcp/agents/${bot.agent}/connections`, control(room, rita.secret, "connections", M, bot.agent, "{}", `read-agent-${n}`), "{}"));
+      expect(listed.status).toBe(200);
+    }
+    expect(await stub.used()).toBe(afterCreate);
+    const agentObject = env.AGENTS.get(env.AGENTS.idFromString(bot.agent));
+    expect(await runInDurableObject(agentObject, (_agent, state) => state.storage.sql.exec(`SELECT op FROM control WHERE action = 'connections'`).toArray())).toEqual([]);
+    const afterReads = await hosted(room, rita, "@after-reads", "create-after-reads");
+    expect(afterReads.bearer).toMatch(new RegExp(`^${afterReads.agent}\\.`));
     expect(afterCreate, "the creation's reservation and the agent row's configuration are charged").toBeGreaterThan(4 * 1024);
     // A session's declared capabilities are bounded; within the bound, the session row's bytes are charged and credited on DELETE.
     const big = { experimental: { pad: "x".repeat(20 * 1024) } };
@@ -1347,7 +1558,47 @@ test("the control budget is one aggregate: operations, sessions and configuratio
     await stub.reset();
     expect(await stub.used()).toBe(beforeReset);
     expect((await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "rotate-after-reset"), ""))).status).toBe(507);
-    // Retire draws on the reserve: it succeeds where create and bearer were refused.
+    // Exhaust the Agent's real signed control window without spending more
+    // operation capacity. Direct RPC keeps the central window independent.
+    const directAgent = agentObject as unknown as Pick<PlatformMcpAgent, "connectionControl">;
+    let agentWindowLimited = false;
+    for (let n = 0; n <= 120; n++) {
+      const signed = controlOf(control(room, rita.secret, "connections", M, bot.agent, "{}", `window-agent-${n}`))!;
+      const listed = await room.wait(() => directAgent.connectionControl(signed, "connections", utf8("{}")));
+      if (listed.status === 429) { expect(listed.body).toEqual({ error: "rate-limited" }); agentWindowLimited = true; break; }
+      expect(listed.status).toBe(200);
+    }
+    expect(agentWindowLimited).toBe(true);
+    const publicClients = hostedRegistries(env.REGISTRIES);
+    const publicClientObject = publicClients.get(publicClients.idFromName("oauth-public-clients-1"));
+    const keyCalls = (object: DurableObjectStub) => runInDurableObject(object, (_instance, state) =>
+      state.storage.sql.exec("SELECT calls FROM mcp_request_window WHERE purpose = 'control' AND identity = ?", "identity:" + rita.key).toArray()[0]?.["calls"]);
+    expect(await keyCalls(agentObject)).toBe(120);
+    // Real routed reads consume the remaining central allowance even though
+    // this Agent already refuses. The exhausted central gate must also keep
+    // its cleanup purpose separate.
+    for (let n = 0; n <= 120 && await keyCalls(publicClientObject) !== 120; n++) {
+      const limited = await room.wait(() => post(`/mcp/agents/${bot.agent}/connections`, control(room, rita.secret, "connections", M, bot.agent, "{}", `window-route-${n}`), "{}"));
+      expect(limited.status).toBe(429);
+      expect(await limited.json()).toEqual({ error: "rate-limited" });
+    }
+    expect(await keyCalls(publicClientObject)).toBe(120);
+    expect(await keyCalls(agentObject)).toBe(120);
+    expect(await stub.used()).toBe(beforeReset);
+    const sameClientId = publicClients.idFromName("oauth-public-clients-1").toString();
+    // A new clock callback in this same room must keep the very same object.
+    hostedTest.now = () => room.now() - 1;
+    try {
+      expect(hostedRegistries(env.REGISTRIES).idFromName("oauth-public-clients-1").toString()).toBe(sameClientId);
+      const rollback = await room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, "", "retire-backward-clock"), "", "DELETE"));
+      expect(rollback.status).toBe(503);
+      expect(await rollback.json()).toEqual({ error: "temporarily_unavailable" });
+    } finally { hostedTest.now = () => room.now(); }
+    await evictDurableObject(publicClientObject);
+    expect(hostedRegistries(env.REGISTRIES).idFromName("oauth-public-clients-1").toString()).toBe(sameClientId);
+    expect(await keyCalls(publicClientObject)).toBe(120);
+    // Retire draws on the reserve and its separate cleanup window after both
+    // ordinary control windows refuse. No counter or budget is reset.
     expect((await room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, "", "retire-at-full"), "", "DELETE"))).status).toBe(202);
     expect((await mcp(bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status).toBe(401);
   } finally { done(room); }
@@ -1411,10 +1662,61 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
       await agentStub(reserved!).reset();
       // The durable facts at the fence: the key once the seed was written, the kept enrol intent once the envelope was kept.
       const before = await agentStub(reserved!).durableFacts();
+      const identityBefore = await agentStub(reserved!).roleIdentity();
+      if (fence === "reservation") expect(identityBefore, "reservation-before-seed is an exact absent Agent, not an unknown enrolled key").toEqual({ status: "absent", agent: reserved });
+      else expect(identityBefore).toMatchObject({ status: "observed", identity: { agent: reserved, op, key: before.key } });
       if (["seed", "kept", "accepted", "complete"].includes(fence)) expect(before.key, `${fence}: the key is durable`).toMatch(/^key_/);
       if (["kept", "accepted", "complete"].includes(fence)) expect(before.enrol, `${fence}: the envelope is kept`).toMatch(/^sha256:/);
       if (fence === "complete") expect(before.bearer, `${fence}: the bearer was minted before the reply was lost`).toBe(true);
       else expect(before.bearer, `${fence}: no bearer yet`).toBe(false);
+      if (fence === "seed" || fence === "kept") {
+        const object = env.AGENTS.get(env.AGENTS.idFromString(reserved!));
+        await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET op = ? WHERE id = 1`, "TEST wrong creation stage"); });
+        const wrongStage = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
+        expect(wrongStage.status, "a different creation owner cannot use pre-enrollment permission").toBe(409);
+        expect((await agentStub(reserved!).durableFacts()).key).toBe(before.key);
+        await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET op = ? WHERE id = 1`, op); });
+      }
+      if (fence === "complete") {
+        const object = env.AGENTS.get(env.AGENTS.idFromString(reserved!));
+        const missing = keyIdOfSecret(new Uint8Array(32).fill(251));
+        expect(missing).not.toBe(before.key);
+        await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET key = ? WHERE id = 1`, missing); });
+        const unknownEnrolledKey = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
+        expect(unknownEnrolledKey.status, "an enrolled Agent with a missing exact Native key cannot use pre-enrollment permission").toBe(403);
+        expect(await unknownEnrolledKey.json()).toEqual({ error: "unauthorized", rule: "controller-role" });
+        expect((await agentStub(reserved!).durableFacts()).bearer, "the refused read does not mint or remove the committed bearer").toBe(true);
+        await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET key = ? WHERE id = 1`, before.key!); });
+      }
+      if (fence === "kept") {
+        // This is an actual local owner race across a real Native reply, not a Native role-loss witness.
+        const object = env.AGENTS.get(env.AGENTS.idFromString(reserved!));
+        const originalConfig = await runInDurableObject(object, (_agent, state) => String(state.storage.sql.exec(`SELECT config FROM agent WHERE id = 1`).toArray()[0]!["config"]));
+        const originalCustody = await agentStub(reserved!).custodyRecord(`enrol:${op}`);
+        expect(originalCustody?.intent).toBe(before.enrol);
+        let entered!: () => void, release!: () => void, submitted = 0;
+        const reached = new Promise<void>(resolve => { entered = resolve; });
+        hostedTest.roleReply = { agent: handle, at: 2, calls: 0, entered, waiting: new Promise<void>(resolve => { release = resolve; }) };
+        hostedTest.submitted = () => { submitted++; };
+        try {
+          const pending = room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
+          await reached;
+          await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET config = json_set(config, '$.roots', json('[]')) WHERE id = 1`); });
+          release();
+          const refused = await pending, result = await refused.json();
+          expect(refused.status, "a changed configuration cannot use a held creation admission").toBe(409);
+          expect(result).toMatchObject({ error: "op", rule: "stale", next: "This call submitted no enrollment. An earlier attempt may still have been sent; resume this same operation to reconcile its kept envelope." });
+          expect(result).not.toHaveProperty("bearer");
+          expect(submitted, "the local admission stop reaches no actual Agent POST /acts").toBe(0);
+          const stopped = await agentStub(reserved!).custodyRecord(`enrol:${op}`);
+          expect(stopped).toMatchObject({ intent: originalCustody!.intent, attempt: originalCustody!.attempt, outcomes: originalCustody!.outcomes, phase: "sent" });
+          expect((await agentStub(reserved!).durableFacts()).bearer).toBe(false);
+          expect(await registry.reservedAgent(op), "the Registry keeps this exact resumable creation").toBe(reserved);
+        } finally {
+          release(); hostedTest.roleReply = null; hostedTest.submitted = null;
+          await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET config = ? WHERE id = 1`, originalConfig); });
+        }
+      }
       const beforeAnswers = await storedBearerAnswers(reserved!, M.scope);
       const beforeAnswer = beforeAnswers.agent[0]?.["answer"];
       const committedExpiry = beforeAnswer === null || beforeAnswer === undefined ? null
@@ -1431,6 +1733,7 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
       expect(await again.json(), `${fence}: only the stable receipt replays`).toEqual(shownReceipt(answer));
       // One key, one enrol entry signed by it: the envelope kept before the reset is the one admitted, never a second one.
       const after = await agentStub(reserved!).durableFacts();
+      expect(await agentStub(reserved!).roleIdentity(), `${fence}: the resumed reservation observes the exact key`).toMatchObject({ status: "observed", identity: { agent: reserved, op, key: answer.key, state: "enrolled" } });
       if (fence === "complete") {
         const afterAnswers = await storedBearerAnswers(reserved!, M.scope);
         expect(afterAnswers.agent[0]!["bearer"], "a committed issuance never remints on resume").toBe(beforeAnswers.agent[0]!["bearer"]);
@@ -1931,6 +2234,38 @@ test("a controller's pending retire keeps no seed or replacement revoke and comp
     expect((await controller.ok("join", { link, idempotencyKey: "TEST-retire-controller-join" }))["answer"]).toBe("accepted");
     const bot = await hosted(room, rita, "@retire-controlled", "TEST-retire-controlled-create", controller.secret, "platform:membership@2", "@retire-controller");
     const retire = (body: string, op: string, signer = controller.secret) => room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, signer, "retire", M, bot.agent, body, op), body, "DELETE"));
+    const objectBefore = env.AGENTS.get(env.AGENTS.idFromString(bot.agent));
+    const configBefore = await runInDurableObject(objectBefore, (_instance, state) => state.storage.sql.exec("SELECT config FROM agent WHERE id = 1").toArray()[0]!["config"]);
+    if (typeof configBefore !== "string") throw Error("Missing retained retirement config");
+    // Hold the actual Native fact reply; only the local replacement config is scripted.
+    for (const [at, committed] of [[1, false], [2, true]] as const) {
+      let entered!: () => void, release!: () => void;
+      const held = new Promise<void>(resolve => { entered = resolve; });
+      hostedTest.roleReply = { agent: "@retire-controlled", at, calls: 0, entered, waiting: new Promise<void>(resolve => { release = resolve; }) };
+      const op = committed ? "TEST-retire-no-envelope" : "TEST-retire-precommit-owner";
+      const waiting = retire("", op);
+      await held;
+      const beforeRelease = await runInDurableObject(objectBefore, (_instance, state) => ({
+        seed: state.storage.sql.exec("SELECT length(seed) AS n FROM agent WHERE id = 1").toArray()[0]!["n"],
+        control: state.storage.sql.exec("SELECT state, answer FROM control WHERE op = ?", op).toArray(),
+      }));
+      expect(beforeRelease.seed).toBe(committed ? 0 : 32);
+      expect(beforeRelease.control).toEqual(committed ? [{ state: "pending", answer: null }] : []);
+      const replacement = canonicalize({ ...JSON.parse(configBefore), service: "https://replacement.example" });
+      expect(replacement).not.toBe(configBefore);
+      await runInDurableObject(objectBefore, (_instance, state) => state.storage.sql.exec("UPDATE agent SET config=? WHERE id=1", replacement).toArray());
+      try {
+        release(); const stopped = await waiting;
+        expect([stopped.status, await stopped.json()]).toEqual([503, committed
+          ? { error: "temporarily_unavailable", next: "The cleanup may already be in effect. Send the same operation again. Do not start a new operation." }
+          : { error: "temporarily_unavailable" }]);
+        expect(await runInDurableObject(objectBefore, (_instance, state) => state.storage.sql.exec("SELECT config FROM agent WHERE id=1").toArray()[0]!["config"]))
+          .toBe(replacement);
+      } finally {
+        release(); hostedTest.roleReply = null;
+        await runInDurableObject(objectBefore, (_instance, state) => state.storage.sql.exec("UPDATE agent SET config=? WHERE id=1", configBefore).toArray());
+      }
+    }
     const first = await retire("", "TEST-retire-no-envelope");
     expect([first.status, await first.json()]).toEqual([202, expect.objectContaining({ pending: true, retired: false, seedErased: true, reason: "revoke-required" })]);
     const object = env.AGENTS.get(env.AGENTS.idFromString(bot.agent));
@@ -1963,5 +2298,15 @@ test("a controller's pending retire keeps no seed or replacement revoke and comp
     expect(await stored()).toEqual({ seedBytes: 0, revoke: canonicalize(revoke) });
     const entries = await room.platform(M.scope).entries();
     expect(entries.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "revoke-key" && entry.input.signed.intent.on === key.id)).toHaveLength(1);
+    // The original controller key permanently retires; no other signer takes its operation.
+    const controllerItems = await allItems(rita, "membership"), controllerKey = controllerItems.find(item => item.type === "key" && item.values["id"] === controller.key)!;
+    expect((await rita.ok("key.revoke", { on: controllerKey.id, fields: { as: "retired" }, idempotencyKey: "TEST-retire-original-controller-key" }))["answer"]).toBe("accepted");
+    const inactive = await retire(body, "TEST-retire-controller-envelope");
+    expect([inactive.status, await inactive.json()]).toEqual([403, { error: "unauthorized" }]);
+    const conflict = await retire(body, "TEST-retire-controller-envelope", rita.secret);
+    expect([conflict.status, await conflict.json()]).toEqual([409, { error: "op", rule: "fingerprint" }]);
+    expect(await stored()).toEqual({ seedBytes: 0, revoke: canonicalize(revoke) });
+    const listed = await room.wait(() => post(`/mcp/agents/${bot.agent}/connections`, control(room, rita.secret, "connections", M, bot.agent, "{}", "TEST-retired-connections"), "{}"));
+    expect([listed.status, await listed.json()]).toEqual([200, { agent: bot.agent, handle: "@retire-controlled", state: "retired", connections: [] }]);
   } finally { done(room); }
 });

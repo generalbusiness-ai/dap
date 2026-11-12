@@ -5,16 +5,18 @@ import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ControlRequest, DeclaredDefinition, FactRef, KeyId } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, isSeed, readItemQueryParameter, scopeIdOf, signControl, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { encodeAgentKeyInvitation, invitationIssueFields, secretSigner, type AgentKeyInvitation } from "@generalbusiness/dap-client";
-import { DECLARED_APPLICATION_COHORT as C, REPOSITORY_BINDING_COHORT as B } from "@generalbusiness/dap-platform";
+import { EXPIRY_MARGIN_MS, encodeAgentKeyInvitation, invitationIssueFields, secretSigner, type AgentKeyInvitation } from "@generalbusiness/dap-client";
+import { DECLARED_APPLICATION_COHORT as C, REPOSITORY_BINDING_COHORT as B, ROLE_LISTS, isActions } from "@generalbusiness/dap-platform";
 import { packApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { CAPABILITIES_META, MODERN, PROTOCOL_META, McpService, claudeCardDomain, memoryStore, type ServerPort, type Tool } from "@generalbusiness/dap-mcp";
+import type { CallResult, DispatchContext } from "../../mcp/src/results.ts";
+import type { Display } from "@generalbusiness/dap-mcp";
 import worker from "../../../apps/room/worker.ts";
 import { outsideOf } from "../src/worker.ts";
 import { applicationCounterPacket2, deviceApplicationPacket, applicationResolverFixture, applicationHttpPeer, applicationWorkerBindings, sessionRoom, effectFixture, dispatchFixture, driveFixture } from "./fixtures-native.ts";
 import { fixedSigner } from "./fixtures-core.ts";
 import { rita, routed } from "./repository.ts";
-import { hostedTest } from "./worker.ts";
+import { hostedRegistries, hostedTest } from "./worker.ts";
 
 // Invariant: a hosted card press uses the exact installed declaration and the
 // agent's own native key; a host without UI sees no app tools or card metadata.
@@ -31,10 +33,12 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     guards: [{ state: [state] }], effects: [{ state: device ? "ready" : "paused" }], sends: [], attention: [] };
   const id = definitionDigest(definition), boardView = presentation.views[screen]!;
   if (boardView.kind === "surface") throw Error("The fixture needs an ordinary declared card.");
+  const agentAdditions = [...(device ? [] : ["counting.control"]), "hosted-card.acknowledge"];
+  const adminAdditions = [...new Set([...(semantic.roles["admin"] ?? []), ...agentAdditions])];
   const packet = await packApplication2({ name: "test.hosted-cards", version: "1", semantic: {
     ...semantic, entry: id, definitions: [{ id, bytes: canonicalize(definition) }],
     projections: { [screen]: { ...semantic.projections[screen]!, definition: id } },
-    roles: { ...semantic.roles, agent: [...(device ? [] : ["counting.control"]), "hosted-card.acknowledge"] },
+    roles: { ...semantic.roles, admin: adminAdditions, agent: agentAdditions },
   }, presentation: { ...presentation, views: { [screen]: { ...boardView, acts: [...boardView.acts,
     { act: "acknowledge", label: "Acknowledge", needs: "hosted-card.acknowledge", when: `state = '${state}'` },
   ] } } } }, fixedSigner(67));
@@ -47,7 +51,8 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     { host: "chatgpt", url: chatgptUrl, domain: "https://dap-plugin.example.com" },
   ]);
   const MCP_RESOURCE_URLS = JSON.stringify([claudeUrl, chatgptUrl]);
-  const bindings = { ...env, ...applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX), MCP_ENABLED: "true", MCP_CARD_ORIGINS, MCP_RESOURCE_URLS };
+  hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
+  const bindings = { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES), ...applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX), MCP_ENABLED: "true", MCP_CARD_ORIGINS, MCP_RESOURCE_URLS };
   life.applicationTrust(() => bindings.APPLICATION_TRUST);
   hostedTest.applicationSettings = { APPLICATION_TRUST: bindings.APPLICATION_TRUST };
   hostedTest.toolSettings = { MCP_ENABLED: "true", MCP_CARD_ORIGINS, MCP_RESOURCE_URLS };
@@ -70,6 +75,10 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
       expect(answer.isError, JSON.stringify(answer.structuredContent)).toBe(false);
       return answer.structuredContent;
     };
+    const beforeRoster = (await life.wait(() => M.summary())).value.items.find(item => item.type === "roster");
+    if (!beforeRoster) throw Error("The native membership needs its actual roster.");
+    const beforeAdmin = beforeRoster.values[ROLE_LISTS.admin], beforeAgent = beforeRoster.values[ROLE_LISTS.agent];
+    if (!isActions(beforeAdmin) || !isActions(beforeAgent)) throw Error("The native roster needs complete valid role action lists.");
     const installed = await ok("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin", "agent"], ...(cohort.rules === B.rules ? { owner: { membership, member: "@rita" } } : {}), values: device ? {} : { target: 7 }, idempotencyKey: "TEST-hosted-card-install" });
     expect(installed, JSON.stringify(installed)).toMatchObject({ answer: "accepted" });
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
@@ -82,6 +91,17 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
       const board = (await life.wait(() => app.summary())).value.items.find(item => item.type === "board")!;
       await life.wait(() => app.did(rita, "start", { on: board.id, expected: { on: board.revision } }));
     }
+
+    const admittedMembers = (await life.wait(() => M.summary())).value.items;
+    const admittedRoster = admittedMembers.find(item => item.type === "roster");
+    if (!admittedRoster) throw Error("The installed application needs the native roster.");
+    const adminActions = admittedRoster.values[ROLE_LISTS.admin], agentActions = admittedRoster.values[ROLE_LISTS.agent];
+    if (!isActions(adminActions) || !isActions(agentActions)) throw Error("The installed native role action lists must stay valid.");
+    expect(adminActions).toEqual([...new Set([...beforeAdmin, ...adminAdditions])]);
+    expect(agentActions).toEqual([...new Set([...beforeAgent, ...agentAdditions])]);
+    expect(agentActions.filter(action => !adminActions.includes(action))).toEqual([]);
+    expect(admittedMembers.find(item => item.type === "member" && item.values["handle"] === "@rita"))
+      .toMatchObject({ state: "active", values: { role: "admin" } });
 
     const added = await ok("member.add", { fields: { handle: "@card-agent", kind: "agent", controller: "@rita" }, idempotencyKey: "TEST-card-member" });
     expect(added).toMatchObject({ answer: "accepted" });
@@ -137,6 +157,66 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
       expect(result.error).toBeUndefined(); return result.result!;
     };
     const local = await life.wait(() => McpService.fromInstalledApplication({ ...port, custody: memoryStore() }));
+    // Real McpService, declared cards, custody and Native app; only final
+    // dispatch judgments below are scripted. This is no Hosted role-loss proof.
+    let stoppedSubmits = 0;
+    const guarded = await life.wait(() => McpService.fromInstalledApplication({ ...port, dispatchRequired: true, custody: memoryStore(),
+      fetch: (url, init) => { if (new URL(url).pathname.endsWith("/acts")) stoppedSubmits++; return port.fetch!(url, init); },
+    }));
+    const allow: DispatchContext = { prepare: async () => () => null };
+    const unavailable: CallResult = { content: [{ type: "text", text: "TEST callback stop" }],
+      structuredContent: { error: "unavailable", message: "TEST callback stop", next: "TEST check the original" }, isError: true };
+    const unauthorized: CallResult = { ...unavailable, structuredContent: { ...unavailable.structuredContent, error: "unauthorized" } };
+    const deny: DispatchContext = { prepare: async () => () => unauthorized };
+    const denyCheck: DispatchContext = { prepare: async () => () => unavailable };
+    const guardedCall = (name: string, args: Record<string, unknown>, dispatch?: DispatchContext) => life.wait(() => guarded.call(name, args, dispatch));
+    const view = "TEST-stopped-declared-original";
+    const missingContext = await guardedCall(`view_${screen}`, { view });
+    expect(missingContext).toMatchObject({ isError: true, structuredContent: { error: "unavailable" } });
+    expect(await guarded.custody.unresolved()).toEqual([]);
+    expect(stoppedSubmits).toBe(0);
+    await guardedCall(`view_${screen}`, { view }, allow);
+    const stoppedOpening = await guardedCall("view_read", { view, ...(device ? {} : { cut: 0, page: "item" }) }, allow);
+    const stoppedDetail = stoppedOpening.structuredContent["display"] as Display;
+    expect(stoppedDetail.card!.actions.map(action => action.id)).toContain("acknowledge");
+    const firstStop = await guardedCall("view_act", { view, cut: stoppedDetail.cut, action: "acknowledge" }, deny);
+    expect(firstStop.structuredContent["result"]).toBe(unauthorized);
+    const pendingStop = firstStop.structuredContent["display"] as Display;
+    expect(pendingStop.receipt).toContain("outcome unknown; check the original request");
+    expect(pendingStop.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
+    expect(stoppedSubmits).toBe(0);
+    const openOriginals = await guarded.custody.unresolved();
+    expect(openOriginals).toHaveLength(1);
+    const originalKey = openOriginals[0]!.key, appRef = await life.wait(() => app.at());
+    const originalIdentity = { service, membership, signer: rita.key, target: appRef, key: originalKey };
+    const original = (await guarded.custody.find(originalIdentity))!;
+    expect(original).toMatchObject({ phase: "sent", outcomes: [], count: 0 });
+    const envelope = structuredClone(original.envelope);
+    // The same shared fixture clock drives both the service and actual Native
+    // deciding scope. Cross the original expiry AND the resend margin once.
+    life.advance(Date.parse(envelope.signed.intent.notAfter) + EXPIRY_MARGIN_MS + 1 - life.now());
+    const checkStop = await guardedCall("view_act", { view, cut: pendingStop.cut, action: pendingStop.card!.actions[0]!.id }, denyCheck);
+    expect(checkStop.structuredContent["result"]).toBe(unavailable);
+    const stillPending = checkStop.structuredContent["display"] as Display;
+    expect(stillPending.receipt).toContain("outcome unknown; check the original request");
+    expect(stillPending.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
+    const unchanged = (await guarded.custody.find(originalIdentity))!;
+    expect(unchanged.envelope).toEqual(envelope);
+    expect([unchanged.identity, unchanged.meaning, unchanged.binding, unchanged.outcomes, unchanged.count, unchanged.attempt])
+      .toEqual([original.identity, original.meaning, original.binding, [], 0, original.attempt]);
+    expect(stoppedSubmits).toBe(0);
+    expect((await guarded.custody.unresolved()).map(row => [row.id, row.key])).toEqual(openOriginals.map(row => [row.id, row.key]));
+    const restored = await guardedCall("view_act", { view, cut: stillPending.cut, action: stillPending.card!.actions[0]!.id }, allow);
+    expect((restored.structuredContent["result"] as CallResult).structuredContent).toMatchObject({ answer: "refused", reason: "expired" });
+    expect(stoppedSubmits).toBe(1);
+    const settledStop = restored.structuredContent["display"] as Display;
+    expect(settledStop.receipt).toContain("refused (expired)");
+    expect(settledStop.card!.actions).toEqual([]);
+    expect(await guarded.custody.unresolved()).toEqual([]);
+    const finalOriginal = (await guarded.custody.find(originalIdentity))!;
+    expect(finalOriginal.envelope).toEqual(envelope);
+    expect(finalOriginal.phase).toBe("refused");
+
     // Script only this response's second active row. This selection control
     // proves no native second installation; all other reads stay native.
     let ambiguousLoads = 0;
@@ -195,7 +275,7 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
   } finally {
     releaseOpening();
     await opening?.catch(() => {});
-    hostedTest.applicationSettings = null; hostedTest.toolSettings = null; hostedTest.now = null; hostedTest.configHold = null;
+    hostedTest.applicationSettings = null; hostedTest.toolSettings = null; hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.configHold = null;
     life.release();
   }
 }, 30000);

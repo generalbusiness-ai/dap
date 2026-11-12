@@ -1,6 +1,6 @@
 # The hosted MCP endpoint: plan 031, stage 2
 
-Status: current. Draft 5 is approved (`4a0af914`) and landed at
+Historical status, 13 October 2026. Draft 5 is approved (`4a0af914`) and landed at
 `77d9cca0`. `POST /mcp` is built (`3bd0ef1c`), and MCP Apps UI resources
 came with the card kit (`6e309b6b`). Not built: export, OAuth, pinned
 diff and file reads, prompts and Start join parity.
@@ -501,13 +501,16 @@ file store's semantics:
   - **Control budgets.** The registry and the agent object each have a
     control budget of 16 MiB, apart from custody, for reservations,
     answers, tombstones, the agent list, sessions, configuration and the
-    key. A `create` reserves the space for its complete answer and its
+    key. Read-only `connections` retains no new operation row and takes
+    no permanent control-budget place. It still performs fresh admission
+    and spends the bounded request window. Existing operation rows keep
+    their custody and accounting. A `create` reserves the space for its complete answer and its
     tombstone in the registry, and the agent object reserves the space
     for its row, its answer and its tombstone, **before** allocation and
     before enrolment, so a key is never enrolled and then found to have no
     space for `create`'s answer; a control request that cannot reserve
     refuses `full` before any effectful step; unfinished reservations
-    remain resumable. **Retirement is always possible:** of each
+    remain resumable. **Retirement has reserved capacity:** of each
     object's 16 MiB, the last 1 MiB is a reserve that only `retire` may
     draw on, enough for its answer and tombstone many times over, so a
     control budget that is full for `create` and `bearer` still admits
@@ -516,6 +519,18 @@ file store's semantics:
     ends the agent's authority in the scope regardless of the hosted
     objects; `docs/mcp.md` states this as the operator's recovery, and
     nothing in this head replaces or forgets an operation to make room.
+  - **S4 request windows.** Each admission object permits 120 control calls
+    per verified key in 60 seconds. Cleanup uses a separate 120-call
+    window. Each purpose holds at most 4,096 live identity counters and
+    one shared overflow counter. Expiry reclaims counters; object
+    reconstruction preserves them. A window limit returns `429`.
+    Unsafe or backward clocks return `503` without resetting counts.
+    This finite admission state is separate from operation custody.
+    `/oauth/authorize/context` uses the same bounded address-window
+    mechanism before client resolution. Invalid successful client
+    documents can enter a finite 60-second cache under the exact URL and
+    redirect policy. Network failures, timeouts and non-200 replies do
+    not enter that cache.
   - **Storage failure is not settlement.** `SQLITE_FULL` or any other
     write failure rolls the transaction back and is reported as a
     recoverable storage failure, not as an outcome: a record whose answer
@@ -831,3 +846,86 @@ full agent; the one-step `create` from the Start agent-key link.
 | Key representation, reader restriction, invalidation, stream ownership | Sections 3.1, 3.3, 3.5, 3.7 |
 | Retention rule, growth, 2 MB rows, storage full | Section 3.6: chunks of 1 MiB, archive by count or age, 1 GiB bound, `SQLITE_FULL` → `full`, H6 |
 | Fixed bodies and protocol correlation | Section 3.4: JSON-RPC error with the request's `id`, the code, and a message naming the header or rule, never a value |
+
+
+## S4 source composition, 11 November 2026
+
+This section describes an unvalidated source checkpoint under request
+9a053402 and promise abbd5eba. It composes the reviewed admission, identity,
+Issuer, windows, dispatch and management components. It records no test,
+model, compiler, host-compliance, deployment or acceptance result. The
+combined Native witnesses and actual c+d/main integration remain owed.
+Hosted MCP stays off until the reviewed S4 head lands.
+
+### Fresh facts and private owners
+
+The existing hosted-role RPC returns same-head facts for the exact Agent,
+key, controller and caller. Management uses a second closed actor-only
+request on that same RPC. Neither reply is a permission or an authority
+cache. Unknown keys remain absent facts, and only an exact public Agent
+SQL absence can select the private pre-enrollment path. A wider Agent role
+cannot acquire authority beyond its recorded controller at credential
+creation, bearer rotation, refresh or access. Temporary subset loss does
+not end the grant as if Native had revoked it.
+
+Every private disclosure retains its exact operation, configuration,
+control and SQL candidate across awaits. Fresh roles, safe clocks,
+deadlines and the owned HTTP epoch must still match at its final guard.
+Atomic mint/store and old-session deletion precede epoch changes,
+detach and graceful cleanup. A later stop preserves committed effects
+and withholds plaintext. A secret-free `codeShown` receipt consumes the
+one-time disclosure; it does not prove that the caller received the code.
+There is no rollback or remint to recover a withheld secret.
+
+The Agent releases a candidate when it hands the code to the trusted
+Registry. The Registry then checks fresh membership and its own local
+rows. It promises neither a lease nor validity at delivery. Another
+allowed operation may consume that code or change configuration before
+relay. Every actual use gets fresh admission. No additional remote
+candidate-lock protocol enters this contract.
+
+Legacy controller/client mappings with an unknown origin still refuse
+new consent with `503`, even with another Agent. A distinct new client
+binding can progress from provisional to confirmed. The cutover's
+retirement of old rooms remains the remedy for the legacy tuple.
+
+### Dispatch, cards and cleanup
+
+Each actual custody dispatch callback rechecks its current private owner
+and fresh standing. A local Stop is not a Native answer. The callback's
+private result identity lets ViewSessions retain the original pending key
+and envelope for `check-original`, without classifying every similarly
+worded error as uncertain. There is no public marker or fabricated Lost.
+Native remains the authority for any request that reaches it.
+
+Ordinary and dynamic writes declare model-only visibility. Hosts enforce
+that descriptor. Trusted package scripts may still submit any action
+that their installed view declares, without a click, through `view_act`
+and input tools. The server checks the retained declaration and bounds.
+The required host observations remain unrun. Credential secrets remain
+outside `structuredContent`.
+
+Read-only connection lists retain no operation row. Actor-only management
+facts and independent cleanup admission do not require a usable Agent
+credential or a controller live key. Cleanup still preserves each real
+committed end, erased seed/bearer/session, operation tombstone and first
+Native revoke envelope. A postcommit local stop returns exactly the
+existing `503` error plus: "The cleanup may already be in effect. Send the
+same operation again. Do not start a new operation." An inactive original
+signer still gets `403`. Every fingerprint conflict keeps the original
+`{error: "op", rule: "fingerprint"}` body. There is no retire_actor column,
+signer transfer, new permission or automatic member removal.
+
+Hosted retirement leaves the Native member active and occupying one of
+its controller's eight places until an authorized remove-member action.
+The Registry list keeps the OAuth row without a retired mark; the
+Agent's own list reports retired. The later family own-Agent removal
+rule needs its actual family source and documentation comparison before
+S4 can describe it as available on an integrated head.
+
+The final source still owes the actual late-role dispatch, Access-clock
+checkpoint, consumed-code relay, Native Card expired-resend and enrolled
+join witnesses. Existing titles, assertions and deadlines remain.
+Scripted callback decisions prove only their local boundary. Existing
+NoRevival, observation and outside-effect models keep their narrow scope;
+this checkpoint advances no formal correspondence or source seal.

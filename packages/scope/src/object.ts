@@ -45,7 +45,7 @@ import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-deriv
 import type { Delivered, Fetched, StateView } from "@generalbusiness/dap-derive";
 import { Scope, creationKind, ownOf, type Checkpointed, type Created } from "./core.ts";
 import { Deliveries } from "./delivery.ts";
-import { declaredBy, observedAt, routed, sentText, sourced, sourceOrigin, type Sourced } from "./namespace.ts";
+import { declaredBy, observedAt, hostedRoleStandingAt, routed, sentText, sourced, sourceOrigin, type Sourced } from "./namespace.ts";
 import { JoinLimits, isJoin, type LimitConfig } from "./limits.ts";
 import { Operations, type Outside } from "./operations.ts";
 import { OperatorRecord, sendAgain, type Incident, type Resent } from "./operator.ts";
@@ -821,6 +821,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
    * section 3.3). Only a membership scope that is active answers. Nothing is written, and no caller is named or checked.
    */
   observe(asked: unknown): unknown { this.#first(); return observedAt(this.#store, this.#scope.pinned(), asked); }
+
+  /** Internal hosted standing facts, read synchronously from this membership head. */
+  hostedRoleStanding(asked: unknown): unknown { this.#first(); return hostedRoleStandingAt(this.#store, this.#scope.pinned(), asked); }
 
   /**
    * A read session, for a device that asks with a signed request (authority note, section 3.9). Only an active membership scope

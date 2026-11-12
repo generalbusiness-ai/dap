@@ -32,6 +32,7 @@
  * never a value. Header safety is judged on the raw value as received.
  */
 
+import type { DispatchContext } from "./results.ts";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { LEGACY, MODERN, PROTOCOL_META, SESSION_FULL, UNSUPPORTED_VERSION, Wire, frameOf, isFrame, isNotificationMethod, newSession, type Id, type LegacySession, type Message, type Stream } from "./wire.ts";
@@ -405,7 +406,7 @@ export class McpHttp {
   get streams(): number { return this.generation.streams; }
   restore(rows: readonly SessionRow[]): void { this.generation.restore(rows); }
 
-  async handle(request: Request): Promise<Response> {
+  async handle(request: Request, dispatch?: DispatchContext): Promise<Response> {
     if (request.headers.get("origin") !== null) return bare(403);
     if (!(await this.port.authorized(request.headers.get("authorization")))) return bare(401);
     if (this.generation.closed || this.generation.due()) { if (!this.generation.retained) await this.closeAll(); return bare(this.generation.due() ? 401 : 404); }
@@ -448,7 +449,7 @@ export class McpHttp {
     const notification = frameOf(m) === "notification";
     // A notification is accepted with 202 and no body. One whose method is only a request runs nothing and issues no session.
     if (notification && !isNotificationMethod(m.method!)) { this.port.wire.ignored++; return bare(202); }
-    return revision === "modern" ? this.#modern(m, notification, request) : this.#legacy(m, notification, sessionId, request);
+    return revision === "modern" ? this.#modern(m, notification, request, dispatch) : this.#legacy(m, notification, sessionId, request, dispatch);
   }
 
   async #body(request: Request): Promise<Body> {
@@ -471,7 +472,7 @@ export class McpHttp {
     } catch { return { status: "parse" }; }
   }
 
-  async #modern(m: Message, notification: boolean, request: Request): Promise<Response> {
+  async #modern(m: Message, notification: boolean, request: Request, dispatch?: DispatchContext): Promise<Response> {
     const id = m.id ?? null;
     const methodHeader = request.headers.get("mcp-method");
     if (methodHeader === null || !safeHeader(methodHeader) || methodHeader !== m.method) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, "Mcp-Method must name the request's method."));
@@ -483,14 +484,14 @@ export class McpHttp {
     }
     if (m.method === "subscriptions/listen" && !notification) {
       if ((this.port.streamCount?.() ?? this.generation.streams) >= STREAMS_MOST) return rpcJsonReply(409, rpcError(id, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
-      return this.#listen(m);
+      return this.#listen(m, dispatch);
     }
-    const response = await this.port.wire.handle(m, null, () => {}, undefined, this.port.resourceDomain?.(request));
+    const response = await this.port.wire.handle(m, null, () => {}, undefined, this.port.resourceDomain?.(request), dispatch);
     if (!response) return bare(202);
     return rpcJsonReply(response.error?.code === -32601 ? 404 : 200, response);
   }
 
-  async #legacy(m: Message, notification: boolean, sessionId: string | null, request: Request): Promise<Response> {
+  async #legacy(m: Message, notification: boolean, sessionId: string | null, request: Request, dispatch?: DispatchContext): Promise<Response> {
     const id = m.id ?? null;
     await this.generation.expireIdle();
     let session: LegacySession;
@@ -508,7 +509,7 @@ export class McpHttp {
       if (!(await this.generation.touch(session))) return bare(404);
     }
     let response: Message | null;
-    try { response = await this.port.wire.handle(m, session, (out) => session.stream?.send(out), undefined, this.port.resourceDomain?.(request)); }
+    try { response = await this.port.wire.handle(m, session, (out) => session.stream?.send(out), undefined, this.port.resourceDomain?.(request), dispatch); }
     finally { this.generation.finishedIssuing(session); }
     if (issued) {
       const admitted = await this.generation.acceptIssue(session, response);
@@ -575,7 +576,7 @@ export class McpHttp {
    * A 2026-07-28 listen: its own stream, ended by the client, by the subscription's end, or by the server. A graceful ending
    * completes the subscription (its result, as the revision defines) and closes the body; an abrupt one sends nothing.
    */
-  #listen(m: Message): Response {
+  #listen(m: Message, dispatch?: DispatchContext): Response {
     if (this.generation.closed || this.generation.due()) { if (!this.generation.retained) void this.closeAll().catch(() => {}); return bare(this.generation.due() ? 401 : 404); }
     const owner = {};
     const sse = this.#sse(() => this.generation.cancelListen(owner));
@@ -586,7 +587,7 @@ export class McpHttp {
     // Register teardown before a deadline callback can close this layer.
     this.generation.registerListen(owner, sse.close);
     if (this.generation.closed || this.generation.due()) { if (!this.generation.retained) void this.closeAll().catch(() => {}); return bare(this.generation.due() ? 401 : 404); }
-    this.port.wire.handle(m, null, send, owner).then((response) => { if (response) send(response); }, () => send(rpcError(m.id ?? null, -32603, "Internal error")));
+    this.port.wire.handle(m, null, send, owner, undefined, dispatch).then((response) => { if (response) send(response); }, () => send(rpcError(m.id ?? null, -32603, "Internal error")));
     return new Response(sse.body, { status: 200, headers: SSE });
   }
 

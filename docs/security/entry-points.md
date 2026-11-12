@@ -756,6 +756,29 @@ observation, or bearer issuance. An archived custody outcome is terminal:
 it neither resends the enrollment nor confirms acceptance without archive
 verification. The route's gate class is unchanged.
 
+### Hosted membership facts RPC
+
+The internal `hostedRoleStanding` RPC accepts two closed request shapes on
+one synchronous Native facts path. The existing Agent request has exactly
+`membership`, `agent`, `agentKey`, `expectedController`, and `actor`. Its
+observed reply keeps `status`, `of`, `head`, `agent`, `agentKey`, `controller`,
+and `actor`. Null Agent keys and actors keep their existing meanings.
+
+The actor-only request has exactly `membership` and a nonnull `actor` key.
+Its observed reply has exactly `status`, `of`, `head`, and `actor`. The actor
+holds only that key's facts, or null when Native does not know that key.
+No other member, Agent or raw roster appears. Retired and compromised keys
+remain known facts; the caller still decides authority. Both shapes require
+the full active membership incarnation and one open roster with all five
+role action lists valid. Mixed, missing or extra request fields, malformed
+facts, and unavailable reads return only `{status:"unavailable"}`.
+
+The Worker uses the same closed decoder and five-second bound for both
+shapes. Each successful reply owns its scope, head, key facts and actions.
+The facts read neither writes a permission record nor grants a lease.
+Native still uses its existing paged key lookup; the one-RPC bound does not
+claim a constant number of SQLite reads or cancel work after caller timeout.
+
 ### Public origin
 
 `PUBLIC_ORIGIN`, when set, supplies the exact service origin for hosted MCP
