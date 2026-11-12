@@ -1277,7 +1277,7 @@ What is known about the envelope under idempotencyKey on target (or the creation
 
 ### `credential`
 
-The one-time read credential for a read-token act your key signed (entry: its seq at the destination), read once from the destination's credential route with your session. Its result is a secret: the credential is in the structured field credential only, with the remote URL beside it. Use it with Git; it is not kept here.
+The one-time read credential for a read-token act your key signed (entry: its seq at the destination), read once from the destination's credential route with your session. Its result is a secret: the credential appears once in the text content. The structured content holds only the remote URL, expiry, and entry. Use it with Git; it is not kept here.
 
 ```json
 {

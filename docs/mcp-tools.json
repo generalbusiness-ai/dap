@@ -173,6 +173,11 @@
         "destructiveHint": true,
         "idempotentHint": true,
         "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        }
       }
     },
     {
@@ -247,6 +252,11 @@
         "destructiveHint": true,
         "idempotentHint": true,
         "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        }
       }
     },
     {
@@ -292,6 +302,11 @@
         "destructiveHint": true,
         "idempotentHint": true,
         "openWorldHint": true
+      },
+      "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        }
       }
     },
     {
@@ -384,6 +399,11 @@
         "destructiveHint": true,
         "idempotentHint": true,
         "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        }
       }
     },
     {
@@ -641,7 +661,7 @@
     },
     {
       "name": "credential",
-      "description": "The one-time read credential for a read-token act your key signed (entry: its seq at the destination), read once from the destination's credential route with your session. Its result is a secret: the credential is in the structured field credential only, with the remote URL beside it. Use it with Git; it is not kept here.",
+      "description": "The one-time read credential for a read-token act your key signed (entry: its seq at the destination), read once from the destination's credential route with your session. Its result is a secret: the credential appears once in the text content. The structured content holds only the remote URL, expiry, and entry. Use it with Git; it is not kept here.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -818,6 +838,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "ask-rules",
@@ -927,6 +950,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "cancel-merge",
@@ -1036,6 +1062,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "close-own",
@@ -1179,6 +1208,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "comment",
@@ -1315,6 +1347,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:directory",
           "kind": "open-pr",
@@ -1448,6 +1483,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "edit-own",
@@ -1567,6 +1605,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "link-own",
@@ -1686,6 +1727,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "merge",
@@ -1809,6 +1853,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "offer",
@@ -1937,6 +1984,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "propose-file",
@@ -2175,6 +2225,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "propose-manifest",
@@ -2284,6 +2337,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "ready-own",
@@ -2393,6 +2449,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "release-hold",
@@ -2517,6 +2576,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "request-check",
@@ -2635,6 +2697,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "request-review-own",
@@ -2775,6 +2840,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "review-verdict",
@@ -2890,6 +2958,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "accept",
@@ -3005,6 +3076,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "change",
           "kind": "take-hold",
@@ -3114,6 +3188,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:inbox",
           "kind": "dismiss",
@@ -3221,6 +3298,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:inbox",
           "kind": "mark-read",
@@ -3339,6 +3419,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "accept-report",
@@ -3466,6 +3549,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "assign",
@@ -3580,6 +3666,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "close-any",
@@ -3694,6 +3783,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "close-own",
@@ -3832,6 +3924,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "comment",
@@ -3974,6 +4069,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:directory",
           "kind": "open-issue",
@@ -4098,6 +4196,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "edit-own",
@@ -4249,6 +4350,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "report",
@@ -4367,6 +4471,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "offer",
@@ -4476,6 +4583,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "reopen-own",
@@ -4591,6 +4701,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "accept",
@@ -4706,6 +4819,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "issue",
           "kind": "take-hold",
@@ -4828,6 +4944,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "invite-key",
@@ -4940,6 +5059,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "revoke-key",
@@ -5055,6 +5177,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "set-actions",
@@ -5180,6 +5305,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "add-member",
@@ -5300,6 +5428,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "invite-member",
@@ -5407,6 +5538,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "remove-member",
@@ -5519,6 +5653,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "set-role",
@@ -5626,6 +5763,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:destination",
           "kind": "add-branch-room",
@@ -5733,6 +5873,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:destination",
           "kind": "add-room",
@@ -5850,6 +5993,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:destination",
           "kind": "adopt-head",
@@ -5963,6 +6109,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:destination",
           "kind": "read-token",
@@ -6070,6 +6219,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:destination",
           "kind": "resend",
@@ -6183,6 +6335,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:destination",
           "kind": "resend-receipt",
@@ -6290,6 +6445,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:directory",
           "kind": "retry-import",
@@ -6413,6 +6571,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:register",
           "kind": "found",
@@ -6531,6 +6692,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "enrol",
@@ -6639,6 +6803,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "first-key",
@@ -6752,6 +6919,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "join",
@@ -6865,6 +7035,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "rotate-recovery",
@@ -6967,6 +7140,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:membership",
           "kind": "seat",
@@ -7087,6 +7263,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:rules",
           "kind": "activate",
@@ -7207,6 +7386,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:rules",
           "kind": "keep-configuration",
@@ -7380,6 +7562,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:rules",
           "kind": "publish",
@@ -7487,6 +7672,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:rules",
           "kind": "retire-definition",
@@ -7626,6 +7814,9 @@
         "openWorldHint": false
       },
       "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        },
         "dap/binding": {
           "definition": "platform:directory",
           "kind": "open-task",
