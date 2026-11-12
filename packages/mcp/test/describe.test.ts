@@ -204,10 +204,19 @@ describe("descriptions are derived from the whole declaration", () => {
     expect([scopePattern.test(scope), scopePattern.test(scopeSetBits), isScopeId(scope), isScopeId(scopeSetBits)]).toEqual([true, false, true, false]);
     expect([incPattern.test(inc), incPattern.test(incSetBits), isIncarnation(inc), isIncarnation(incSetBits)]).toEqual([true, false, true, false]);
     expect(membership.anyOf[0].pattern).toBe(membership.anyOf[1].properties.scope.pattern);
-    // No JSON Schema validator runs here: the input is checked against the schema's members, keys, required, anyOf and pattern.
-    const settle = inputOf("settle"), creation = { definition: "platform:register@18", membership: scope, idempotencyKey: "TEST-settle-creation" };
+    // No JSON Schema validator runs here: the input is checked against the schema's members, keys, required, anyOf and patterns.
+    // The same input then goes through #settle, which reads membership with #membershipRef; this server keeps no record under the key.
+    const settle = inputOf("settle"), ref = membership.anyOf[1] as unknown as { properties: Record<string, { pattern?: string; enum?: string[] }>; required: string[] };
+    const admits = (given: Record<string, unknown>) => Object.keys(given).every((k) => k in settle.properties) && settle.required.every((k) => k in given) && settle.anyOf!.some((c) => c.required.every((k) => k in given));
+    const refAdmits = (r: { scope: string; inc: string; kind: string }) => ref.required.every((k) => k in r) && scopePattern.test(r.scope) && incPattern.test(r.inc) && ref.properties["kind"]!.enum!.includes(r.kind);
     expect(settle.properties["membership"]).toEqual(membership);
-    expect([settle.additionalProperties, Object.keys(creation).every((k) => k in settle.properties), settle.required.every((k) => k in creation), settle.anyOf!.some((c) => c.required.every((k) => k in creation)), scopePattern.test(creation.membership)]).toEqual([false, true, true, true, true]);
+    for (const [at, schema, answered] of [[{ scope, inc, kind: "membership" }, true, "not-found"], [{ scope: scopeSetBits, inc, kind: "membership" }, false, "shape"]] as const) {
+      const creation = { definition: "platform:register@18", membership: at, idempotencyKey: "TEST-settle-creation" };
+      expect([settle.additionalProperties, admits(creation), refAdmits(at)]).toEqual([false, true, schema]);
+      const result = await mcp.call("settle", creation);
+      expect([result.isError, result.structuredContent[schema ? "answer" : "error"]], at.scope).toEqual([!schema, answered]);
+      if (!schema) expect(result.structuredContent["message"]).toContain("membership");
+    }
   });
 
   test("two memberships with different roles, reordered: the same text and generation", () => {
