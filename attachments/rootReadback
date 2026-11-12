@@ -1,0 +1,34 @@
+{
+  "status": "ACTUAL_JP1_CORRECTED_CONTINUATION27_PASSED",
+  "head": "cb79e7faef924821931e855ee666d10b574f2072",
+  "tree": "b8eff6e2cf9999c8374429bcd1284b5086a5e25a",
+  "booking": "2f20af9a3e56fb7e00c4981968fd4c1dc91144e7",
+  "actualExternalDriverLauncherRunnerExitsRead": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "actualPhaseExitsRead": {
+    "plain": 0,
+    "native": 0
+  },
+  "currentCases": 27,
+  "plainCases": 23,
+  "nativeCases": 4,
+  "wholeOwners": 7,
+  "fullStreamsAndPlainBodyLogRead": true,
+  "bothClassificationsAccepted": true,
+  "sameRunReconciliationPassed": true,
+  "source4661Unchanged": true,
+  "bothCleanupsClosedEmpty": true,
+  "noNodeCompilerOrProducerRepeat": true,
+  "original62": "FAILED1 retained",
+  "successor51": "REFUSED2 retained",
+  "priorSuccesses": "35 separate observations; originalfailedunits never relabeled",
+  "gate": "UNRUN",
+  "raw": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-cb79e7fa-continuation27",
+  "rssSamples": 3,
+  "rssNodeWorkerdRows": 3,
+  "rssQualification": "sampled observations only; no heap/lifetime/performanceclaim"
+}
