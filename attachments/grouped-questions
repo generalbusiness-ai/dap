@@ -1,0 +1,62 @@
+{
+  "authority": "e46dd964beaaf4515e79f045de715ac8e0987500 item6",
+  "questions": [
+    {
+      "id": "Q1",
+      "inventoryRows": [
+        "04"
+      ],
+      "question": "What new-reader boundary should the fixed applied-genesis-v1 ScopeIndex use? Old known_scope rows remain globally visible and INSERT-on-address conflict prevents replacing an old genesis. Item1 fences each room DB but not this shared index. Preserve old census data; no rebuild, clearing or remap is proposed."
+    },
+    {
+      "id": "Q2",
+      "inventoryRows": [
+        "05"
+      ],
+      "question": "May a new room reuse an unexpired Site provider read token/reservation keyed only by configuration+repository+ref, or must new-format requests use a separate partition/refusal boundary? Register/genesis is not in the key. Preserve unknown mint reservations and existing bounded provider lifecycle; do not repeat a mint to evade it."
+    },
+    {
+      "id": "Q3",
+      "inventoryRows": [
+        "06",
+        "07",
+        "08"
+      ],
+      "question": "How should the new reader enter existing hosted registry/agent objects? Registry selection uses membership address; an existing agent loads old config, sessions, custody and shared counts while serving changed roots. Fresh random agent ids isolate storage, but automatic retirement/re-enrollment is not ruled here. Preserve unresolved envelopes, reservations, seed custody and revoke debt; no translation/deletion is proposed."
+    },
+    {
+      "id": "Q4",
+      "inventoryRows": [
+        "11",
+        "13"
+      ],
+      "question": "Item5 already isolates ordinary CLI/MCP through a fresh DAP_HOME. For a caller explicitly reusing an old public fileStore/ReviewStore directory with new-room config, should entry refuse that whole store or may it retain/read old records solely for exact recovery/accounting while disallowing old-ref use? Full identity prevents targeted substitution but global reads/counts and whole-file validation still reach old rows. No new format or migration is proposed."
+    },
+    {
+      "id": "Q5",
+      "inventoryRows": [
+        "14",
+        "15",
+        "18"
+      ],
+      "question": "What same-origin browser boundary should precede Page bootstrap? Fixed saved settings, Start/enrollment originals and tab preferences can load before new-room selection; bootstrap can invoke existing legacy-key migration. Per-context full-ref journals are separately keyed. Preserve old originals/keys and unresolved fences; no cleanup, migration, signing or resubmission is authorized by this inventory."
+    },
+    {
+      "id": "Q6",
+      "inventoryRows": [
+        "20",
+        "21",
+        "22"
+      ],
+      "question": "For Counter/Lending at the same browser origin, may new-room operations share capacity with old AttemptJournal rows, and what boundary handles Counter default device slots/Lending default or address-only Kept slots? Full-ref installed prefixes prevent cross-context selection, while global counts/default slots still reach old metadata. Preserve prepared/sent/unknown bytes and terminal-only archive rules."
+    }
+  ],
+  "notQuestions": [
+    "Room-DB pre-SqliteStore word2/retired behavior is already item1; cutover_family_plan owns that separate proposal.",
+    "Strict CLI config v2/new DAP_HOME is already item5.",
+    "Key-only/public-client/nonreference/process-only stores require no reference migration on the shown source.",
+    "Exact full-ref keys need no extra partition solely because code imports shared storage.",
+    "Explicit Git input requires strict new manifest/birth matching; no extra archive format policy is requested.",
+    "Checker Durable has no real-storage adapter in its owning module; a future/reused adapter must disclose partition and immutable prior-run semantics."
+  ]
+}

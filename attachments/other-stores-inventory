@@ -1,0 +1,622 @@
+{
+  "status": "ONE_SOURCE_ONLY_OTHER_STORE_LIST_FOR_E46_ITEM6_NO_IMPLEMENTATION",
+  "basisHead": "79e546d555b7b751a10efc0307637544abf735cf",
+  "priorHead": "c967135e5ef2afba2b9f76bf1bf269a222f0050f",
+  "rows": [
+    {
+      "id": "01",
+      "store": "Scope room journal and all folded/operational state",
+      "sourcePaths": [
+        "packages/scope/src/object.ts",
+        "packages/scope/src/sqlite.ts",
+        "packages/scope/src/store.ts",
+        "packages/derive/src/state.ts",
+        "packages/scope/src/operator.ts",
+        "packages/scope/src/request-index.ts",
+        "packages/scope/src/archive-frontier-store.ts",
+        "packages/scope/src/local-signers.ts"
+      ],
+      "partitionAndKey": "SCOPES Durable Object selected by scope address; entry(seq),outbox(seq,n),folded(kind,key),inbox(scope,inc,seq,n),source_order(scope,inc,handler),operator_record,request_index,archive/floor metadata and local-signer tables share that object SQL.",
+      "heldReferences": "Original Entry/FactRef/ScopeState/Relation/Observed/HeldCreation/request/outbox/archive references; operator scope JSON; private local-signer control.",
+      "validatorsAndRead": "Current79 constructs SqliteStore/schema helpers before a room-format guard. all()/snapshot and JSON readers still contain legacy inc/kind projections. e46 item1 must intercept before all constructors.",
+      "write": "Existing sealing/fold transaction and private operational writes; no new format implementation in this inventory.",
+      "expiryOrRetention": "Journal/floor/archive policies remain; request correlation7days/4096rows; operator1024rows; index quanta unchanged.",
+      "oldRowForNewRoom": "Current79 can read old DB. After the required item1 guard, an addressed old/touched DB cannot become a new room, even if a caller supplies a different nonce at the same address. A genuinely new seed/address uses a different DB.",
+      "disposition": "COVERED_BY_E46_ITEM1_NOT_AN_EXTRA_STORE_POLICY",
+      "custodyConstraint": "No old payload/state translation, schema alteration, index rebuild, alarm, held send or helper on a retired DB. Every table, including a helper-only/touched empty-history table, makes it nonempty.",
+      "distinction": {
+        "physicalLoad": "YES_CURRENT_OLD_ROOM_DB",
+        "newRoomAcceptance": "BLOCKED_BY_REQUIRED_ITEM1_GUARD",
+        "accountingOrFencing": "SAME_ROOM_SQL"
+      }
+    },
+    {
+      "id": "02",
+      "store": "Scope private credentials and original request copies",
+      "sourcePaths": [
+        "packages/scope/src/credential-store.ts",
+        "packages/scope/src/read-token-quota.ts",
+        "packages/scope/src/workspace-host.ts",
+        "packages/scope/src/artifacts-wiring.ts",
+        "packages/scope/src/originals.ts"
+      ],
+      "partitionAndKey": "Same room SQL as01; credential keys include canonical current scope+credential id/mint/attempt; workspace(scope,token); creation(scope,handle); originals digest PK plus membership-inc/member index.",
+      "heldReferences": "Canonical old full current ref, original signed target/member refs and provider credential association.",
+      "validatorsAndRead": "Constructors and access derive the owner from the room state; key/full-envelope checks and original custody checks apply. No independent deployment-wide credential/original DB exists on this path.",
+      "write": "Same actual owner transaction/private SQL; plaintext disposal preserves provider metadata/revocation debt; original body remains exact.",
+      "expiryOrRetention": "Original quotas64rows/member16MiB/object1GiB/body1MiB and bounded sweep/expire; credential actual ends/plaintext cleanup remains existing policy.",
+      "oldRowForNewRoom": "Old rows are reachable only through their owning old room DB. A new address does not select it; item1 refuses same-address old DB before these helpers.",
+      "disposition": "COVERED_BY_E46_ITEM1_NOT_AN_EXTRA_STORE_POLICY",
+      "custodyConstraint": "Expiry/plaintext loss is not provider revocation. No unresolved credential or original request is rewritten as belonging to a new sequence.",
+      "distinction": {
+        "physicalLoad": "YES_CURRENT_OLD_ROOM_DB",
+        "newRoomAcceptance": "BLOCKED_BY_REQUIRED_ITEM1_GUARD",
+        "accountingOrFencing": "SAME_ROOM_SQL"
+      }
+    },
+    {
+      "id": "03",
+      "store": "Native read-session request bookkeeping and token claims",
+      "sourcePaths": [
+        "packages/scope/src/sessions.ts",
+        "packages/scope/src/session-reference.ts",
+        "packages/scope/src/session-preparation.ts",
+        "packages/bytes/src/session.ts",
+        "packages/contract/src/session.ts"
+      ],
+      "partitionAndKey": "session_request(key,operation) is inside Membership room SQL. Issued HMAC tokens carry deployment+full Membership+key/member/reads/ends; tokens themselves are not rows in a deployment-wide token DB.",
+      "heldReferences": "SessionClaims.membership and session-reference serialized full room refs.",
+      "validatorsAndRead": "MAC precedes claims; deployment and full membership comparison precede allowed read. Current79 still has mixed new-reference/legacy-kind accesses and is not a completed cutover validator.",
+      "write": "One signed issuance operation, existing claim serializer and expiry; no translation/remint proposed.",
+      "expiryOrRetention": "Session issuance600seconds; signed request900seconds; readers retain actual clock/skew semantics.",
+      "oldRowForNewRoom": "Room bookkeeping is covered by item1. A carried old token is untrusted external input, not a store migrated into a new room; the new reader must preserve full membership identity admission. Local persisted caches are separately12/19.",
+      "disposition": "COVERED_ROOM_DB_PLUS_EXISTING_TOKEN_VALIDATION_NO_NEW_SHARED_TOKEN_STORE",
+      "custodyConstraint": "No token word or claim grants signing authority; no old token remint or claim normalization.",
+      "distinction": {
+        "physicalLoad": "YES_CURRENT_OLD_ROOM_DB_OR_EXTERNAL_TOKEN",
+        "newRoomAcceptance": "FULL_IDENTITY_REQUIRED_NOT_TOKEN_SPELLING",
+        "accountingOrFencing": "SAME_ROOM_SQL"
+      }
+    },
+    {
+      "id": "04",
+      "store": "Deployment scope index and census",
+      "sourcePaths": [
+        "packages/scope/src/scope-index.ts",
+        "packages/scope/src/scope-index-census.ts",
+        "packages/scope/src/worker.ts",
+        "packages/cli/src/scope-index-manifest.ts"
+      ],
+      "partitionAndKey": "SCOPE_INDEX.idFromName(\"applied-genesis-v1\") fixed per binding; known_scope PRIMARY KEY(scope),stored inc/kind/genesis; register INSERT ON CONFLICT DO NOTHING. Census lists the same rows.",
+      "heldReferences": "One stored registration ref/genesis/kind per address, plus references returned in census.",
+      "validatorsAndRead": "has selects inc/genesis/kind by address; list reads old rows directly. Current has reconstructs the old shape under the new isScopeRef, an unfinished migration, not a deliberate store-format guard.",
+      "write": "register proves current target birth elsewhere then writes one immutable address row; old conflicting address row is not replaced.",
+      "expiryOrRetention": "No row TTL or automatic reset.",
+      "oldRowForNewRoom": "YES. The shared fixed object survives new rooms/deployment. Old rows are read for reachability/census, and an old row at the same address blocks a different genesis registration. New-address census still sees old addresses.",
+      "disposition": "NEEDS_PLANNER_Q1",
+      "custodyConstraint": "No wiping/relabeling old registrations, no inferred kind or genesis-to-address route. Registry rows prove reachability, never Native authority.",
+      "distinction": {
+        "physicalLoad": "YES_SHARED_INDEX",
+        "newRoomAcceptance": "REACHABILITY_AND_CENSUS_NOT_NATIVE_AUTHORITY",
+        "accountingOrFencing": "YES_ADDRESS_COLLISION"
+      }
+    },
+    {
+      "id": "05",
+      "store": "Site private provider read-token reuse",
+      "sourcePaths": [
+        "packages/scope/src/site/token-reuse.ts",
+        "packages/scope/src/worker.ts",
+        "packages/scope/src/artifacts-wiring.ts",
+        "packages/scope/src/artifacts-host.ts",
+        "packages/scope/src/installed-registers.ts"
+      ],
+      "partitionAndKey": "Owned by fixed ScopeIndex SQL, not a room DB. private_site_token key=canonical{configuration:ready.config,repository,ref}; random generation. request.register is checked against allowed registers but is not an independent key member. No room genesis key.",
+      "heldReferences": "Provider repository/ref and configured register ScopeID association; not a full Native sequence ref. Included explicitly because e46 item6 names Site token rows.",
+      "validatorsAndRead": "Configuration/binding and provider remote info are checked on acquisition; ready row is selected by the same provider key+generation and actual future expiry.",
+      "write": "Reserve before mint; one generation owns provider effect. Reserved/ready/unavailable states and unknown-mint hold survive restart.",
+      "expiryOrRetention": "256keys/32mint reservations; requested read TTL120seconds; reservation180seconds. Ready ends uses actual provider expiry, not a newly imposed local cap; maintenance deletes at most256expired keys.",
+      "oldRowForNewRoom": "YES. A new Native room can request the same repository/ref/config and load a pre-cutover row. Changing only room genesis does not change this key; even allowed register aliases share it when configuration is unchanged.",
+      "disposition": "NEEDS_PLANNER_Q2",
+      "custodyConstraint": "No silent deletion/second mint for unknown provider effects, no relabeling as Native permission. Do not read plaintext for this inventory.",
+      "distinction": {
+        "physicalLoad": "YES_SHARED_PROVIDER_KEY",
+        "newRoomAcceptance": "YES_READY_TOKEN_CAN_BE_REUSED_ACROSS_ROOMS",
+        "accountingOrFencing": "YES_RESERVED_CAPACITY"
+      }
+    },
+    {
+      "id": "06",
+      "store": "Hosted membership registry control/agent mapping",
+      "sourcePaths": [
+        "packages/scope/src/worker-mcp.ts",
+        "packages/mcp/src/hosted.ts"
+      ],
+      "partitionAndKey": "REGISTRIES.idFromName(request.membership.scope), no genesis in object name. agents(agent),oauth_agent(controller,client_id),control(op,fingerprint) and control_budget in that SQL; agents minted by new unique durable id.",
+      "heldReferences": "Control fingerprint hashes full requested membership; invitation/control answers and registry-to-agent association name the retired membership/agent.",
+      "validatorsAndRead": "Current authority is read before reservation. Fingerprint includes full membership; reusing op with a different ref conflicts. Registry tables are still reached by address-only name; there is no identifier-format guard.",
+      "write": "Atomic reserve then handoff to one random agent; unresolved operation stays reserved; retry of same op resumes it.",
+      "expiryOrRetention": "Control answer bodies7days past original notAfter; tombstones/budget/mappings persist according to existing control logic.",
+      "oldRowForNewRoom": "YES for same-address/new-genesis routing: same registry SQL and mapping/op queries are reached. A genuinely new membership address has a fresh registry. Old mappings can also remain after a room retires until explicit agent retirement processing.",
+      "disposition": "NEEDS_PLANNER_Q3",
+      "custodyConstraint": "Do not mark reserved/unknown control effects complete, mint a replacement agent implicitly, clear custody, or infer that a room retirement is an agent retirement.",
+      "distinction": {
+        "physicalLoad": "YES_SAME_ADDRESS_REGISTRY",
+        "newRoomAcceptance": "MAPPING_AND_CONTROL_ARE_ADDRESS_SCOPED",
+        "accountingOrFencing": "YES_CONTROL_BUDGET"
+      }
+    },
+    {
+      "id": "07",
+      "store": "Hosted agent enrollment/config and SQLite request custody",
+      "sourcePaths": [
+        "packages/scope/src/worker-mcp.ts",
+        "packages/mcp/src/hosted.ts",
+        "packages/mcp/src/sqlite-custody.ts",
+        "packages/mcp/src/custody.ts",
+        "packages/mcp/src/inventory.ts"
+      ],
+      "partitionAndKey": "AGENTS.idFromString(random64hex) per agent. agent(id=1) stores Membership JSON/config/seed state; same SQL holds record/chunk/segment/archive/identity/budget. Record id hashes full Identity(service,membership,signer,target,key).",
+      "heldReferences": "Agent membership/config.repository/roots, original signed target refs, preparation resource refs, outcomes/receipt refs.",
+      "validatorsAndRead": "Agent row/config are JSON-parsed/cast, not cutover-discriminated. Full identity mismatch prevents reading an old record as a new id, but existing agent config can change roots/repository, and shared unresolved/count/budget/archive paths read old metadata. Stored first enrollment membership remains separate.",
+      "write": "McpService uses sqliteStore in the agent SQL. Exact original envelopes and mark-before-send/settle remain; setRepository/addRoot update config, no per-room physical custody DB.",
+      "expiryOrRetention": "Prepared/sent/unknown records never expire into settlement. Default SQLite custody budget is 1 GiB, per-identity bound64 MiB, terminalMost1024/ageDays30; unresolvedMost256 and individual record2 MiB remain distinct custody bounds. Terminal archival does not resolve unknown originals.",
+      "oldRowForNewRoom": "YES when an existing agent serves newly configured roots/repository: old agent/config/custody/accounting is loaded in the same DB. A separately minted fresh agent id has fresh SQL and does not select another agent DB. No automatic new-agent substitution is inferred.",
+      "disposition": "NEEDS_PLANNER_Q3",
+      "custodyConstraint": "Preserve immutable unresolved envelopes, step results, segment/archive bytes, reservations and retirement revoke debt. Room-retired does not authorize seed deletion or silent agent retirement.",
+      "distinction": {
+        "physicalLoad": "YES_EXISTING_AGENT",
+        "newRoomAcceptance": "OLD_FULL_IDENTITY_RECORD_IS_NOT_NEW_ID",
+        "accountingOrFencing": "YES_SHARED_UNRESOLVED_AND_BYTES"
+      }
+    },
+    {
+      "id": "08",
+      "store": "Hosted HTTP sessions and OAuth credential rows",
+      "sourcePaths": [
+        "packages/mcp/src/hosted.ts",
+        "packages/mcp/src/http.ts",
+        "packages/mcp/src/oauth-access.ts",
+        "packages/mcp/src/oauth-issuer.ts",
+        "packages/mcp/src/oauth-http.ts"
+      ],
+      "partitionAndKey": "Same agent SQL. session(id),oauth_session(id,grant_id),oauth_grant(id),oauth_issuer(id,op),oauth_refresh_used(digest). Bound to one agent and bearer/grant, not each configured root.",
+      "heldReferences": "SessionRow itself has protocol/capabilities/listed digest and no typed ScopeRef. Grant/issuer rows hold controller MemberId/resource string; actual full Membership comes from the separately persisted agent row.",
+      "validatorsAndRead": "Bearer/OAuth current agent state and standing are checked; HTTP restores retained session rows on eviction. A changed configured root does not create a new session SQL partition.",
+      "write": "Original credential/session lifecycle, rotation/revocation/epoch/generation checks; no identifier cutover branch currently.",
+      "expiryOrRetention": "Bearer30days; HTTP idle30minutes,16sessions; OAuth access1hour/grant30days/8grants. Expiry is not request-custody settlement.",
+      "oldRowForNewRoom": "Old transport rows can be restored for the same existing agent after config changes; fresh random agent cannot read them. Direct rows hold no full old reference, but their owner context07 does. They are not an independent source of new-room authority.",
+      "disposition": "INCLUDE_UNDER_Q3_NO_SEPARATE_SCOPE_REF_MIGRATION_FOR_TRANSPORT_ROWS",
+      "custodyConstraint": "Do not discard unresolved Native requests through session/token expiry or silently terminate a credential as a proxy for retirement policy.",
+      "distinction": {
+        "physicalLoad": "YES_EXISTING_AGENT",
+        "newRoomAcceptance": "RESTORED_TRANSPORT_STATE_NOT_NATIVE_AUTHORITY",
+        "accountingOrFencing": "YES_AGENT_CONTROL_BUDGET"
+      }
+    },
+    {
+      "id": "09",
+      "store": "Global public OAuth client metadata registry",
+      "sourcePaths": [
+        "packages/scope/src/oauth-routes.ts",
+        "packages/scope/src/worker-mcp.ts",
+        "packages/mcp/src/oauth-clients.ts",
+        "packages/mcp/src/oauth-parameters.ts"
+      ],
+      "partitionAndKey": "REGISTRIES fixed OAUTH_CLIENT_REGISTRY; oauth_client/client_cache keyed by public client id.",
+      "heldReferences": "No Native room SequenceRef. Rows are client name/redirects/public-client metadata; resources are endpoint URLs, not a stored Membership identity.",
+      "validatorsAndRead": "Finite metadata/redirect policy and bounded expiry; actual agent context remains separate.",
+      "write": "Registration/retention/cache update under existing client limits.",
+      "expiryOrRetention": "Existing public metadata and registration deadlines; no Native unresolved request here.",
+      "oldRowForNewRoom": "No retired-room reference row exists in these schemas to reuse for a new room. Public client metadata is intentionally reusable.",
+      "disposition": "NO_ADDITIONAL_ACTION_UNDER_ITEM6",
+      "custodyConstraint": "No public client metadata gains Native identity or signing authority.",
+      "distinction": {
+        "physicalLoad": "YES_PUBLIC_METADATA",
+        "newRoomAcceptance": "NO_ROOM_REF_IN_THIS_STORE",
+        "accountingOrFencing": "PUBLIC_CLIENT_CAPACITY"
+      }
+    },
+    {
+      "id": "10",
+      "store": "CLI config, invitation records and named signing custody",
+      "sourcePaths": [
+        "packages/cli/src/files.ts",
+        "packages/cli/src/store.ts",
+        "packages/cli/src/claim.ts",
+        "packages/cli/src/invitations.ts",
+        "packages/cli/src/main.ts"
+      ],
+      "partitionAndKey": "One DAP_HOME/config.json,keys/<name>.key,private/<name>.data; public/pending config references and private invitation/enrollment original envelopes.",
+      "heldReferences": "Register/Directory/Membership refs; pending Claim/Join accepted facts, signed original targets and invitation pointers.",
+      "validatorsAndRead": "Current79 config reader checks v1 only via cast. Effective e46 item5 requires v2 strict shape and no old-home use/signing. It is not implemented here.",
+      "write": "Whole exclusive private publication/readback and config replacement. No cross-home fallback or search exists.",
+      "expiryOrRetention": "Config and immutable pending records have no TTL that authorizes replacement; key names persist. Invitation workflows retain exact retry identity/deadline.",
+      "oldRowForNewRoom": "Ordinary new DAP_HOME points to different filesystem roots and cannot automatically read old home rows. Reusing a v1 home must stop before any file/key/target work under item5. Explicit user copying is not automatic partition isolation and is not authorized by this list.",
+      "disposition": "COVERED_BY_E46_ITEM5_NO_NEW_HOME_TRANSLATION",
+      "custodyConstraint": "Do not alter old config/keys/private originals, re-sign, remint deadline, rewrite pending targets or clear unknown effects.",
+      "distinction": {
+        "physicalLoad": "YES_REUSED_HOME",
+        "newRoomAcceptance": "REQUIRED_V2_ENTRY_GUARD_BEFORE_KEY_OR_TARGET",
+        "accountingOrFencing": "FRESH_HOME_ISOLATES"
+      }
+    },
+    {
+      "id": "11",
+      "store": "Node/MCP file request custody and segments/archives",
+      "sourcePaths": [
+        "packages/mcp/src/node.ts",
+        "packages/mcp/src/custody.ts",
+        "packages/cli/src/main.ts",
+        "apps/views/src/node.ts"
+      ],
+      "partitionAndKey": "Actual79 path remains DAP_HOME/private/mcp-custody/{records,locks,segments,archive}; filenames are digest of full Identity. Public fileStore(dir) can also receive an explicit directory from a library host.",
+      "heldReferences": "Whole original request/step/receipt references; stepId still explicitly resource.inc at79 and needs cutover source migration.",
+      "validatorsAndRead": "Targeted id uses full canonical Identity; old3-member versus new2-member refs produce different ids. But live()/unresolved()/capacity/archive-index reads span the entire directory and JSON parse does not discriminate record format.",
+      "write": "Original atomic record, mark-before-send, exclusive lock/capacity/archive lease, append-only outcomes and retained original identity.",
+      "expiryOrRetention": "Unresolved never age out. Terminal age/count archival keeps bytes/segments and remains readable. No expiry authorizes new identity or resend.",
+      "oldRowForNewRoom": "A genuinely fresh DAP_HOME isolates the normal CLI/MCP route under item5. Reusing the same explicit public fileStore directory for a new-room library config can still read old records/metadata and count them against capacity.",
+      "disposition": "NEEDS_PLANNER_Q4_FOR_REUSED_ADAPTER_DIRECTORY_ONLY_ITEM5_COVERS_ORDINARY_CLI",
+      "custodyConstraint": "No old record id/step id rehash migration; no clearing records, locks, segments, archives or unknown debt. NF3/NF4 path move does not solve format isolation.",
+      "distinction": {
+        "physicalLoad": "YES_REUSED_EXPLICIT_DIRECTORY",
+        "newRoomAcceptance": "FULL_IDENTITY_ID_REJECTS_TARGET_REUSE",
+        "accountingOrFencing": "YES_GLOBAL_CUSTODY_COUNTS"
+      }
+    },
+    {
+      "id": "12",
+      "store": "CLI disposable read-session cache",
+      "sourcePaths": [
+        "packages/cli/src/files.ts",
+        "packages/cli/src/read-session-cache.ts",
+        "packages/cli/src/store.ts"
+      ],
+      "partitionAndKey": "One DAP_HOME/session-cache/read.data; no room-specific filename. In-memory fallback WeakMap per Store.",
+      "heldReferences": "v1{service,token,session}; claims include full membership/key/deployment/ends.",
+      "validatorsAndRead": "32KiB bounded read; restored validates service, complete membership equality, key, claims and future ends. Old mismatched cache cannot authenticate a new membership. Same path is read before rejection if reused.",
+      "write": "Replacement only for issued read session; compare-complete-bytes discard. No request-custody calls.",
+      "expiryOrRetention": "Reuse only with >30seconds remaining; token itself max600seconds per Native issuance. Invalid/expired disposable bytes can follow existing discard rule.",
+      "oldRowForNewRoom": "Fresh DAP_HOME isolates it. Same explicit Store/home or programmatic cache slot reads old cache then rejects/may discard it under existing bounded disposable-cache policy; full identity prevents using it as a new-room session.",
+      "disposition": "EXISTING_DISPOSABLE_CACHE_RULE_ITEM5_ISOLATES_HOME_NO_PENDING_CUSTODY_PERMISSION",
+      "custodyConstraint": "Its permitted discard rule never applies to immutable private originals or prepared/sent/unknown records.",
+      "distinction": {
+        "physicalLoad": "YES_REUSED_HOME_CACHE",
+        "newRoomAcceptance": "FULL_SERVICE_IDENTITY_AND_ENDS_CHECKED",
+        "accountingOrFencing": "DISPOSABLE_CACHE_POLICY_ONLY"
+      }
+    },
+    {
+      "id": "13",
+      "store": "Local reviewed-head marks",
+      "sourcePaths": [
+        "apps/views/src/review-store.ts",
+        "apps/views/src/node.ts",
+        "packages/mcp/src/views/types.ts"
+      ],
+      "partitionAndKey": "DAP_HOME/private/reviewed-heads.json,version1 marks[64]; binding canonical[service,directory,viewer,key],identity adds full scope.",
+      "heldReferences": "Full Directory, MemberRef membership, scope/head references.",
+      "validatorsAndRead": "Bounded32KiB nofollow/private-path reads validate all marks; read then filters full binding. A malformed old mark rejects the state; full new binding cannot select an old ref as current.",
+      "write": "Exclusive mark lease, temporary atomic replacement+fsync; original head monotonic/conflict checks.",
+      "expiryOrRetention": "64heads/32KiB; no automatic age expiry.",
+      "oldRowForNewRoom": "Ordinary new DAP_HOME cannot reach old file. An explicitly reused home/direct ReviewStore reads whole old file before validation, so stale marks can block a new mark; they do not become current full-identity marks.",
+      "disposition": "INCLUDE_UNDER_Q4_FOR_EXPLICIT_REUSE_ITEM5_COVERS_NORMAL_ENTRY",
+      "custodyConstraint": "Review marks are local evidence, not a Native receipt or permission; no mark rewrite/old identity normalization proposed.",
+      "distinction": {
+        "physicalLoad": "YES_REUSED_HOME_WHOLE_FILE",
+        "newRoomAcceptance": "FULL_IDENTITY_MARK_COMPARISON",
+        "accountingOrFencing": "INVALID_OLD_MARK_CAN_BLOCK"
+      }
+    },
+    {
+      "id": "14",
+      "store": "Page saved connection/settings",
+      "sourcePaths": [
+        "apps/room/page/src/main.ts",
+        "apps/room/page/src/oauth-context.ts",
+        "apps/room/page/src/browser-key-store.ts",
+        "apps/room/page/src/data.ts"
+      ],
+      "partitionAndKey": "Same browser origin localStorage key artroom-page, no room/genesis key. Settings holds place/publicKey/register/label/claimSelection. Nonextractable key material is separate IDB17.",
+      "heldReferences": "Membership/Register refs and chosen Directory address; claim selection preserves old operation/room refs.",
+      "validatorsAndRead": "Page bootstrap reads fixed slot, then key-custody migration/settings decoding. Current mixed isScopeRef+legacykind checks are incomplete migration, not a format boundary. OAuth reads the same fixed setting before current-room confirmation.",
+      "write": "saveSettings under origin Web Lock with exact before/readback; no cutover word.",
+      "expiryOrRetention": "No TTL or automatic old-room retirement clearing.",
+      "oldRowForNewRoom": "YES. New bundle/room selection at the same origin loads old fixed settings. It may attempt old-room opening or block selection before a new context exists; no source partition makes the old row unreachable.",
+      "disposition": "NEEDS_PLANNER_Q5",
+      "custodyConstraint": "Keep old key references and pending selection. Do not clear/relabel settings or invoke legacy secret migration merely to make new-room context appear.",
+      "distinction": {
+        "physicalLoad": "YES_SAME_ORIGIN_FIXED_SLOT",
+        "newRoomAcceptance": "MIXED_CURRENT_GUARDS_NOT_CUTOVER_BOUNDARY",
+        "accountingOrFencing": "OLD_SELECTION_CAN_PRECEDE_NEW_ROOM"
+      }
+    },
+    {
+      "id": "15",
+      "store": "Page origin-wide Start and enrollment originals",
+      "sourcePaths": [
+        "apps/room/page/src/start-custody.ts",
+        "apps/room/page/src/join-custody.ts",
+        "apps/room/page/src/custody.ts",
+        "apps/room/page/src/main.ts"
+      ],
+      "partitionAndKey": "localStorage artroom-page-start:<origin> and artroom-page-enrollment:<origin>; one origin-wide original, not one slot per room.",
+      "heldReferences": "Start configured Register/full config; join PreparedJoin.place Membership, exact signed target, receipt and refusal history. v1/v2 denotes prior key-custody format, not c+d format.",
+      "validatorsAndRead": "Whole bounded closed decode/signature/target checks. main.prepareSettings eagerly calls migratePageOperations before normal selection; migration can import a key and replace legacy secret-bearing row while retaining request. No c+d format discriminator precedes it.",
+      "write": "Exact original compare/readback under Web Locks; checked/continue/new flows preserve unknown originals and allow only explicit terminal/history transitions.",
+      "expiryOrRetention": "Start4096B; join64KiB/8prior refusals. Pending/prepared/unknown has no expiry-to-never-sent rule.",
+      "oldRowForNewRoom": "YES. Same origin loads old Start/join rows even for a newly chosen room. Unresolved old originals intentionally fence new operations, while old schema validation can reject before action.",
+      "disposition": "NEEDS_PLANNER_Q5",
+      "custodyConstraint": "Do not delete, replace, remap target, regenerate key/signature/deadline, or treat failed old-room read as settlement. Existing key migration is not cutover authorization.",
+      "distinction": {
+        "physicalLoad": "YES_SAME_ORIGIN_FIXED_SLOT",
+        "newRoomAcceptance": "OLD_ORIGINAL_STAYS_OLD_NOT_RESIGNED",
+        "accountingOrFencing": "YES_UNRESOLVED_FENCE"
+      }
+    },
+    {
+      "id": "16",
+      "store": "Page per-context claim/connection/OAuth journals",
+      "sourcePaths": [
+        "apps/room/page/src/claim.ts",
+        "apps/room/page/src/connection-custody.ts",
+        "apps/room/page/src/oauth-custody.ts",
+        "apps/room/page/src/oauth-context.ts",
+        "apps/room/page/src/custody.ts"
+      ],
+      "partitionAndKey": "claim key=artroom-page-claim:canonical[origin,fullRegister,definition,key]; creator connection=artroom-page-connections:canonical[origin,fullMembership,key,operation]; OAuth=artroom-oauth-connection-1:<digest[origin,key,fullMembership,directory]>.",
+      "heldReferences": "Exact config/pending claims/private request snapshot/control attempts/member refs and receipts.",
+      "validatorsAndRead": "Read binds exact whole context; canonical complete refs differ for a new genesis or old3-member shape. No key enumeration fallback. Fixed origin15 can deliberately reopen its old context, which is distinct from selecting it as the new room.",
+      "write": "Journal retains original operation and compare-before-write; private values never enter a new binding by discovery.",
+      "expiryOrRetention": "Claim64operations; connection/OAuth16rows and bounded bytes. Unresolved stays kept; no arbitrary eviction/expiry.",
+      "oldRowForNewRoom": "NO old slot is selected by a genuinely distinct full Register/Membership context. The origin-wide parent slots14/15 can still load the old context and need their own ruling. Current legacykind checks remain migration work, not proof of readiness.",
+      "disposition": "NO_EXTRA_PARTITION_CHANGE_FOR_FULL_REF_KEYS_SUBJECT_TO_Q5_PARENT_BOOTSTRAP",
+      "custodyConstraint": "Do not port an old journal into the new key or normalize its signed/context fields.",
+      "distinction": {
+        "physicalLoad": "NO_DIFFERENT_COMPLETE_CONTEXT_SLOT",
+        "newRoomAcceptance": "FULL_REF_KEY_DISTINCT",
+        "accountingOrFencing": "PARENT_BOOTSTRAP_SEPARATE"
+      }
+    },
+    {
+      "id": "17",
+      "store": "Page/browser signing-key slots",
+      "sourcePaths": [
+        "apps/room/page/src/browser-key-store.ts",
+        "packages/client/src/browser-storage.ts"
+      ],
+      "partitionAndKey": "Origin IDB artroom-page-private-1 / keys; bounded slot by publicKey under common origin lock.",
+      "heldReferences": "StoredKey v1 publicKey/privateKey only; no Native room ref. Legacy key import is triggered by separately retained records14/15/16.",
+      "validatorsAndRead": "StoredWebCryptoSigner proves key capability; it does not infer Membership or permission.",
+      "write": "Nonextractable key create/import and readback before use; no record scanning or automatic room association.",
+      "expiryOrRetention": "No room TTL; key persists until explicit host action.",
+      "oldRowForNewRoom": "Key row itself contains no old reference and can intentionally identify the same signer in multiple rooms. Bootstrap/migration callers with old references need Q5; key storage alone does not.",
+      "disposition": "NO_ADDITIONAL_REFERENCE_FORMAT_ACTION_FOR_KEY_ONLY_ROWS",
+      "custodyConstraint": "No key read/export performed for inventory; no retirement-based key deletion or remint proposed.",
+      "distinction": {
+        "physicalLoad": "YES_SHARED_PUBLIC_KEY_SLOT",
+        "newRoomAcceptance": "NO_ROOM_REF_OR_MEMBERSHIP_AUTHORITY",
+        "accountingOrFencing": "KEY_ONLY"
+      }
+    },
+    {
+      "id": "18",
+      "store": "Page tab list preferences",
+      "sourcePaths": [
+        "apps/room/page/src/list-context.ts"
+      ],
+      "partitionAndKey": "sessionStorage artroom-page-lists:v1 contains up to64rows; current serialized context explicitly [origin,directory,membership.scope,membership.inc,membership.kind,key,listKind].",
+      "heldReferences": "Old membership identity inside serialized keys; query/filter state only.",
+      "validatorsAndRead": "Bounded128KiB whole record read validates each key by roundtrip. Current code still uses inc/kind and cannot be treated as a completed new-genesis key.",
+      "write": "Merge memory+persisted valid rows, evict oldest preferences at64; writes optional and failures do not stop a Native task.",
+      "expiryOrRetention": "Browser-tab session lifetime; ordinary preference eviction, not immutable custody.",
+      "oldRowForNewRoom": "YES metadata is read wholesale by a new-room tab at same origin. Full-key comparison prevents claiming another context as current, but cutover key spelling/invalid-row handling is not yet implemented.",
+      "disposition": "INCLUDE_UNDER_Q5_AS_NONAUTHORITY_PREFERENCES",
+      "custodyConstraint": "A preference-row policy cannot erase or settle request custody.",
+      "distinction": {
+        "physicalLoad": "YES_WHOLE_PREFERENCES_RECORD",
+        "newRoomAcceptance": "CONTEXT_COMPARISON_NOT_AUTHORITY",
+        "accountingOrFencing": "INVALID_ROW_HANDLING_OWED"
+      }
+    },
+    {
+      "id": "19",
+      "store": "Page read sessions and process-only mounted state",
+      "sourcePaths": [
+        "apps/room/page/src/data.ts",
+        "apps/room/page/src/shell.ts",
+        "apps/room/page/src/main.ts",
+        "packages/client/src/session.ts",
+        "packages/client/src/handle.ts"
+      ],
+      "partitionAndKey": "Module-local room/request/session maps and signer capabilities, no Page localStorage/IDB token row in the observed production paths. Settings and preferences are14/18.",
+      "heldReferences": "In-memory full room refs and expiring read token claims; not reload-surviving record storage.",
+      "validatorsAndRead": "Fresh native opening and identity checks create the process context. Old open tabs run their old source; the new program does not deserialize their heap.",
+      "write": "No persistent session record to migrate; browser key row17 holds only capability.",
+      "expiryOrRetention": "Existing token/observation lifetimes; process/page reload drops heap.",
+      "oldRowForNewRoom": "No persisted old session row is automatically loaded for a new room by these modules. This does not waive retirement guards or the separately persisted settings/journals.",
+      "disposition": "NO_ADDITIONAL_PERSISTENT_STORE_ACTION",
+      "custodyConstraint": "No observation cancellation/teardown or signing lifecycle changed.",
+      "distinction": {
+        "physicalLoad": "NO_PERSISTED_SESSION_IN_THESE_MODULES",
+        "newRoomAcceptance": "HEAP_NOT_RELOADED_AS_NEW_CODE",
+        "accountingOrFencing": "PERSISTED_PARENTS_SEPARATE"
+      }
+    },
+    {
+      "id": "20",
+      "store": "Counter pending AttemptJournal and voice/command records",
+      "sourcePaths": [
+        "apps/counter/browser/storage.ts",
+        "apps/counter/browser/journal.ts",
+        "apps/counter/browser/client.ts",
+        "apps/counter/browser/voice-controller.ts",
+        "packages/client/src/request-attempts.ts",
+        "packages/client/src/request-dispatch.ts"
+      ],
+      "partitionAndKey": "Origin IDB artroom-counting-private-1 v2 / pending. key=digest(canonical complete ActorIdentity)+purpose; archives add digest. Identity includes scope/membership/member/definition/origin/deployment/publicKey.",
+      "heldReferences": "Original envelopes, AttemptJournal v2, signed full targets, refusal contexts and audio/report bindings.",
+      "validatorsAndRead": "Load compares canonical stored identity and bounded whole record. Full-ref new genesis changes slot; shared store.count capacity includes retained rows from other identities.",
+      "write": "Mark-before-send, exact active/refused history, terminal-only atomic archival; clear is not general unresolved deletion.",
+      "expiryOrRetention": "64 KiB per record and a shared32-row pending/archive capacity bound (the source constant is named IDENTITIES); one identity can own multiple purpose/archive slots. AttemptJournal bounds remain unchanged. Unknown/voice originals do not expire into absence.",
+      "oldRowForNewRoom": "Distinct full identity cannot load the old pending payload as its own. YES old rows can still affect global count/admission during a new-room operation, even when their identity slot differs.",
+      "disposition": "NEEDS_PLANNER_Q6_GLOBAL_ACCOUNTING",
+      "custodyConstraint": "Keep all unresolved old rows and audio/attempt history. Do not free capacity by eviction or rotate their identity.",
+      "distinction": {
+        "physicalLoad": "NO_NEW_IDENTITY_PAYLOAD_BUT_YES_COUNTS",
+        "newRoomAcceptance": "FULL_IDENTITY_MATCH_REQUIRED",
+        "accountingOrFencing": "YES_GLOBAL_ROW_COUNT"
+      }
+    },
+    {
+      "id": "21",
+      "store": "Counter device records and installed enrollment",
+      "sourcePaths": [
+        "apps/counter/browser/storage.ts",
+        "apps/counter/browser/installed.ts",
+        "apps/counter/browser/main.ts",
+        "apps/counter/browser/device-key.ts",
+        "packages/client/src/browser-joining.ts"
+      ],
+      "partitionAndKey": "Counter devices store uses default current/epoch for standalone demo, or installed:<canonical full applicationScope>:current/epoch. Enrollment uses separate dap-counter-enrollment-1/slots with canonical full applicationScope prefix and device/join/seat suffix.",
+      "heldReferences": "SavedDevice binding/seat and remembered join with membership/full scope refs; keys nonextractable, session tokens volatile.",
+      "validatorsAndRead": "Origin epoch lock, validated stored device signer and complete binding. Installed prefix differs for new genesis; unprefixed demo restore reads its old current row before context checks.",
+      "write": "Explicit remember/forget rotates epoch and leaves pending store separate. Enrollment clears only verified join after handing off seat.",
+      "expiryOrRetention": "No automatic unresolved expiry; pending store is untouched by device forget.",
+      "oldRowForNewRoom": "Installed full-scope prefix excludes old room device/join rows. YES standalone default current/epoch may load an old binding at same origin; it is not automatically new-room permission.",
+      "disposition": "NEEDS_PLANNER_Q6_FOR_DEFAULT_SLOTS_FULL_REF_INSTALLED_SLOTS_NEED_NO_PARTITION_CHANGE",
+      "custodyConstraint": "No key regeneration/forget or epoch reset to bypass pending custody.",
+      "distinction": {
+        "physicalLoad": "YES_DEFAULT_SLOT_NO_DIFFERENT_INSTALLED_PREFIX",
+        "newRoomAcceptance": "OLD_BINDING_NOT_NEW_PERMISSION",
+        "accountingOrFencing": "OLD_PENDING_IS_SEPARATE"
+      }
+    },
+    {
+      "id": "22",
+      "store": "Lending Kept/remembered/join browser rows",
+      "sourcePaths": [
+        "examples/lending/browser/storage.ts",
+        "examples/lending/browser/main.ts",
+        "examples/lending/browser/custody.ts",
+        "examples/lending/browser/join.ts",
+        "packages/client/src/request-custody.ts"
+      ],
+      "partitionAndKey": "Origin dap-lending-private-1/slots. Installed mode prefixes canonical full screen.scope. Standalone mode has unprefixed remembered/join. act:<scope.scope>:<publicKey> omits genesis inside the selected prefix.",
+      "heldReferences": "Remembered seat/identity, KeptJoin and Kept exact signed target/ref/phase.",
+      "validatorsAndRead": "Installed screen validates complete applicationDeviceIdentity; shared validKept compares full canonical signed.intent.to, key/kind/signature and64KiB bound. An address-only act slot may load an old kept row but target mismatch does not authorize its reuse.",
+      "write": "Persist before send; ordinary recovery is a read; explicit Continue resends only exact original. Remembered forget leaves Kept requests.",
+      "expiryOrRetention": "No session tokens stored and no expiry-to-delete for unknown Kept. Web Lock serializes participating tabs.",
+      "oldRowForNewRoom": "YES standalone remembered/join and address+key act slots may read old rows for same-origin/same-address/new-genesis. Full installed prefix excludes a distinct full application scope; full-target validation refuses old payload as new.",
+      "disposition": "NEEDS_PLANNER_Q6",
+      "custodyConstraint": "Do not clear old Kept on mismatch, normalize target, re-sign or fabricate a never-sent result.",
+      "distinction": {
+        "physicalLoad": "YES_DEFAULT_OR_ADDRESS_ONLY_SLOT",
+        "newRoomAcceptance": "FULL_TARGET_VALIDATION_REJECTS_REUSE",
+        "accountingOrFencing": "UNKNOWN_STAYS_HELD"
+      }
+    },
+    {
+      "id": "23",
+      "store": "Checker outcome Durable port",
+      "sourcePaths": [
+        "packages/checkers/src/store.ts",
+        "packages/checkers/src/service.ts"
+      ],
+      "partitionAndKey": "Caller-provided Durable create/read/replace; current source key job/<scope>/<inc>/<seq>/<hash>. No production real-storage adapter is defined in this store module.",
+      "heldReferences": "Full job fact, signed token request/result, reservation/stage snapshot and immutable started/kept/admitted/superseded run.",
+      "validatorsAndRead": "get parses the exact keyed record; snapshot readers validate bounded object content. The inc key is unfinished c+d migration. A valid new genesis changes job fact/body hash; do not treat undefined inc access as a deliberate fresh namespace.",
+      "write": "Create-if-absent before one run; compare-replace transitions; kept result reused without rerunning computation.",
+      "expiryOrRetention": "No automatic deletion that restarts an old run; durability rests on supplied adapter, not a repo-owned deployed DB.",
+      "oldRowForNewRoom": "The store module supplies no real-storage adapter. Reusing a caller-supplied Durable backend can load retained bytes under its exact job key; distinct valid job identity changes that key. External backend partitions were not inspected, so this is not an empty-store or no-live-deployment claim.",
+      "disposition": "ADAPTER_DEPLOYMENT_CORRESPONDENCE_REQUIRED_NO_AUTOMATIC_MIGRATION_OR_EMPTY_STORE_CLAIM",
+      "custodyConstraint": "Never restart a prior started/unknown run by rewriting its key, changing state or discarding an outcome.",
+      "distinction": {
+        "physicalLoad": "CALLER_BACKEND_AND_EXACT_KEY_DEPENDENT",
+        "newRoomAcceptance": "FULL_JOB_IDENTITY_MIGRATION_OWED",
+        "accountingOrFencing": "OLD_RUN_MUST_NOT_RESTART"
+      }
+    },
+    {
+      "id": "24",
+      "store": "Local reviewed-view memory and template/demo non-reference stores",
+      "sourcePaths": [
+        "packages/mcp/src/views/session.ts",
+        "packages/cli/src/application-local.ts",
+        "packages/cli/src/application-new.ts",
+        "examples/repo-in-ai/task-list/storage.mjs"
+      ],
+      "partitionAndKey": "ViewSessions bounded per-process maps; application-local SQLite is explicitly :memory:; generated browser key starter device slot; task-list localStorage contains task ids/text/completed only.",
+      "heldReferences": "Mounted views can hold refs only in heap. Template key/task list persistent rows have no Native room refs.",
+      "validatorsAndRead": "No new program deserializes a prior process heap or an in-memory SQLite instance. Key-only/task-only schemas do not reconstruct a Native room.",
+      "write": "Existing local fixture/UI writes; no deployed Native room store is constructed here.",
+      "expiryOrRetention": "Process lifetime for transient stores; own local preference bounds for task list.",
+      "oldRowForNewRoom": "No persistent retired-room reference row can be selected as a new room on these exact paths.",
+      "disposition": "NO_ADDITIONAL_ACTION_UNDER_ITEM6",
+      "custodyConstraint": "No test/simulator constructor is a production migration route; no source or runtime ran.",
+      "distinction": {
+        "physicalLoad": "NO_PERSISTENT_RETIRED_REFERENCE_ROW",
+        "newRoomAcceptance": "NO_OLD_ROOM_AUTHORITY",
+        "accountingOrFencing": "LOCAL_MEMORY_OR_NONREFERENCE_DATA"
+      }
+    },
+    {
+      "id": "25",
+      "store": "Git journal/archive objects and local archive bookkeeping",
+      "sourcePaths": [
+        "packages/git/src/journal-layout.ts",
+        "packages/git/src/journal-v2-layout.ts",
+        "packages/git/src/journal-manifest.ts",
+        "packages/git/src/journal-reader.ts",
+        "packages/git/src/journal-v2-reader.ts",
+        "packages/git/src/journal-anchors.ts",
+        "packages/scope/src/archive-pin.ts",
+        "packages/scope/src/archive-inventory.ts",
+        "packages/scope/src/archive-source-pins.ts"
+      ],
+      "partitionAndKey": "Git CAS objects and explicit supplied parent commit/tree; manifest/selection full sequence identity and foreign refs. Scope archive-pin/pass/frontier bookkeeping lives in room SQL and is covered by01.",
+      "heldReferences": "Immutable original entries, full journal/foreign/anchor facts, manifest sequence metadata.",
+      "validatorsAndRead": "New Git journal parser/layout checks full selection.at and original first-entry hash/seed address; later entry.genesis must match. Closed new reference shapes reject old-format manifests rather than normalize them. Separate old reader commit remains required for old archives.",
+      "write": "Content-addressed immutable objects and bounded parent/tree selection; no generic old archive-to-new-room conversion. Explicit old parent/source can still cause raw object reads before rejection.",
+      "expiryOrRetention": "Archives retain original bytes/signatures indefinitely under their owner policy; not a disposable cache.",
+      "oldRowForNewRoom": "A supplied old archive can be physically read by a new process as an input, but cannot lawfully serve as a new sequence after full manifest/birth matching. Same repository can hold both generations; scope-local metadata is item1 fenced.",
+      "disposition": "NO_EXTRA_POLICY_QUESTION_WHERE_STRICT_NEW_MANIFEST_AND_BIRTH_ADMISSION_REFUSES_OLD_INPUT_IMPLEMENTATION_CORRESPONDENCE_OWED",
+      "custodyConstraint": "No old archive rewrite/rebase, no producer/kind inference, no treating published anchors as Native birth proof.",
+      "distinction": {
+        "physicalLoad": "YES_EXPLICIT_ARCHIVE_INPUT",
+        "newRoomAcceptance": "NEW_MANIFEST_BIRTH_MATCH_REQUIRED",
+        "accountingOrFencing": "IMMUTABLE_GIT_OBJECT_RETENTION"
+      }
+    },
+    {
+      "id": "26",
+      "store": "Deployment/configured root address slots and immutable package content",
+      "sourcePaths": [
+        "packages/scope/src/installed-registers.ts",
+        "packages/scope/src/deployment-setting.ts",
+        "packages/scope/src/artifacts-wiring.ts",
+        "packages/scope/src/applications/content.ts",
+        "packages/scope/src/applications/admission.ts"
+      ],
+      "partitionAndKey": "Trusted Worker env REGISTER_SCOPE/INSTALLED_REGISTER_SCOPES/ARTIFACTS_CONFIG registerScope keep explicit routing addresses. Immutable application content is package-digest keyed, not room identity keyed.",
+      "heldReferences": "Configured addresses may still name retired rooms; package manifests alone hold code/definition identity, not an old room instance.",
+      "validatorsAndRead": "Configured roots do not mint CheckedSequence. Old scope address routing must meet item1 retirement even when a caller tries a new nonce. A genuinely new seed changes address. Package content remains independently verified.",
+      "write": "Operator/deployment configuration changes are planner-owned; no source array of retired rooms is consumed.",
+      "expiryOrRetention": "No TTL assumed for explicit configuration. Package CAS data immutable.",
+      "oldRowForNewRoom": "Old configured addresses can direct requests to retired objects; they are not automatically rebound to new genesis. They must not bypass the pre-construction guard. Package code reuse alone is not old room-row reuse.",
+      "disposition": "COVERED_ROLLOUT_CONFIGURATION_OBLIGATION_NOT_A_STORE_MIGRATION",
+      "custodyConstraint": "Do not infer current authority from static root address or copy a stale config into fresh custody.",
+      "distinction": {
+        "physicalLoad": "YES_EXPLICIT_OLD_ROOT_SETTING",
+        "newRoomAcceptance": "REQUIRED_ROOM_RETIREMENT_GUARD",
+        "accountingOrFencing": "ROLLOUT_CONFIGURATION"
+      }
+    }
+  ],
+  "rowCount": 26,
+  "interpretation": "This is the ONE item6 inventory at actual composed79, not a proposal to implement other-store changes. Physical loading, new-room acceptance and global accounting/fencing are separate per row. Current partial c+d legacy-kind/inc guards are not treated as a working cutover format boundary. Six policy questions group the unresolved cross-room stores; item1 room retirement and item5 CLI v2 are already ruled.",
+  "sameAddressNote": "Same Seed plus another actual genesis nonce retains scope address and changes genesis. Required room guard retires the addressed old object; it does not permit same-address recreation. Hosted/index/browser keys are evaluated separately rather than assuming new address.",
+  "noLiveStateRead": true,
+  "actualImplementation": null,
+  "actualValidation": null
+}
