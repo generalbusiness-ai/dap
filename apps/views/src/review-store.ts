@@ -6,11 +6,12 @@ import { canonicalize, isDigest, isMemberRef, isScopeRef, utf8 } from "@generalb
 import type { LocalReviewCapture } from "@generalbusiness/dap-mcp";
 import type { Point } from "./reads.ts";
 import { sameOptional } from "./reads.ts";
+import { retiredStoreMessage } from "../../../packages/mcp/src/store-format-error.ts";
 
 const BYTES = 32768, HEADS = 64;
 type Mark = Pick<LocalReviewCapture, "service" | "directory" | "viewer" | "key"> & Point;
-interface State { version: 1; marks: Mark[] }
-export class ReviewStoreError extends Error { constructor(readonly reason: "unsafe-path" | "invalid" | "busy" | "full" | "rollback" | "conflict") { super(reason); } }
+interface State { version: 2; marks: Mark[] }
+export class ReviewStoreError extends Error { constructor(readonly reason: "unsafe-path" | "invalid" | "busy" | "full" | "rollback" | "conflict" | "retired") { super(reason === "retired" ? retiredStoreMessage("local reviewed-heads file") : reason); } }
 const bad = (reason: ReviewStoreError["reason"]): never => { throw new ReviewStoreError(reason); };
 const owner = (path: string, directory: boolean): void => {
   const info = lstatSync(path);
@@ -45,7 +46,7 @@ export class ReviewStore {
   #read(): State {
     this.#location();
     let fd: number;
-    try { fd = openSync(this.#path, constants.O_RDONLY | constants.O_NOFOLLOW); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return { version: 1, marks: [] }; throw error; }
+    try { fd = openSync(this.#path, constants.O_RDONLY | constants.O_NOFOLLOW); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return { version: 2, marks: [] }; throw error; }
     try {
       owner(this.#path, false);
       const actual = fstatSync(fd);
@@ -54,8 +55,10 @@ export class ReviewStore {
       while (length < bytes.length && (count = readSync(fd, bytes, length, bytes.length - length, null)) > 0) length += count;
       if (length > BYTES) bad("invalid");
       const parsed: unknown = JSON.parse(bytes.subarray(0, length).toString("utf8"));
+      // Inspect only the container version before interpreting any old marks.
+      if (parsed && typeof parsed === "object" && "version" in parsed && parsed.version === 1) bad("retired");
       const state = parsed as State;
-      if (!state || state.version !== 1 || !Array.isArray(state.marks) || state.marks.length > HEADS || state.marks.some(mark => !valid(mark))
+      if (!state || state.version !== 2 || !Array.isArray(state.marks) || state.marks.length > HEADS || state.marks.some(mark => !valid(mark))
         || new Set(state.marks.map(identity)).size !== state.marks.length) bad("invalid");
       return state;
     } finally { closeSync(fd); }
@@ -66,6 +69,9 @@ export class ReviewStore {
   async mark(capture: LocalReviewCapture, admit: () => void): Promise<"marked" | "already"> {
     if (capture.heads.length === 0 || capture.heads.length > 8 || !capture.heads.every(point => valid({ ...capture, ...point }))
       || new Set(capture.heads.map(point => point.scope.scope)).size !== capture.heads.length) bad("invalid");
+    // Refuse an old container before creating a directory, lock or temporary file.
+    // Keep the existing in-lock read below; this preflight grants no write ownership.
+    this.#read();
     this.#location(true);
     const lock = join(this.#directory, "reviewed-heads.lock"); let fd: number;
     try { fd = openSync(lock, "wx", 0o600); } catch (error) { if ((error as NodeJS.ErrnoException).code === "EEXIST") bad("busy"); throw error; }

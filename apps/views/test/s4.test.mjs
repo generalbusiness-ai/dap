@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
 import { createServer } from 'node:http';
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
+import fs, { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { register } from 'tsx/esm/api';
@@ -294,6 +295,63 @@ test('since remains a pure read; a local mark survives restart and pre-publicati
   const published = readFileSync(path);
   assert.notDeepEqual(published, original, 'The later head actually publishes a new local mark');
   assert.equal(Buffer.isBuffer(observed) && observed.equals(published), true, 'Publication completes before a microtask queued by the final synchronous admission check');
+  assert.equal(JSON.parse(published.toString('utf8')).version, 2);
+  // The old file is a container to classify, not a source of recoverable marks.
+  const old = { ...JSON.parse(published.toString('utf8')), version: 1 };
+  const oldBytes = Buffer.from(JSON.stringify(old));
+  writeFileSync(path, oldBytes, { mode: 0o600 });
+  const oldMode = statSync(path).mode, oldNames = readdirSync(join(f.home, 'private')).sort();
+  let admissions = 0;
+  assert.throws(() => new ReviewStore(f.home).read(capture), error => error.reason === 'retired');
+  await assert.rejects(() => new ReviewStore(f.home).mark(next, () => { admissions++; }), error => error.reason === 'retired');
+  const refusedRead = await f.app.since();
+  assert.equal(refusedRead.isError, true); assert.equal(refusedRead.structuredContent.reason, 'retired');
+  const refusedMark = await source.markReviewed(next, { view: 'TEST', cut: 1, admit() { admissions++; } });
+  assert.deepEqual(refusedMark.structuredContent, { localStatus: 'unavailable', reason: 'retired' });
+  assert.equal(admissions, 0); assert.deepEqual(readFileSync(path), oldBytes);
+  assert.equal(statSync(path).mode, oldMode);
+  assert.deepEqual(readdirSync(join(f.home, 'private')).sort(), oldNames);
+
+  // A version1 container must retire before interpreting even invalid marks.
+  // Delegate real write attempts so a transient lock cannot hide in cleanup.
+  const malformedOld = Buffer.from(JSON.stringify({ version: 1, marks: [null] }));
+  writeFileSync(path, malformedOld, { mode: 0o600 });
+  const privateDirectory = join(f.home, 'private');
+  const attemptedWrites = [];
+  const inPrivate = value => typeof value === 'string' && (value === privateDirectory || value.startsWith(privateDirectory + '/'));
+  const observedMethods = ['mkdirSync', 'openSync', 'writeFileSync', 'renameSync', 'unlinkSync'];
+  const originals = observedMethods.map(method => ({ method, descriptor: Object.getOwnPropertyDescriptor(fs, method), original: fs[method] }));
+  try {
+    for (const { method, descriptor, original: operation } of originals) Object.defineProperty(fs, method, { ...descriptor, value: (...args) => {
+      const writes = method !== 'openSync' || typeof args[1] === 'string' && /[wax+]/.test(args[1])
+        || typeof args[1] === 'number' && (args[1] & (fs.constants.O_WRONLY | fs.constants.O_RDWR | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_APPEND)) !== 0;
+      const targets = method === 'renameSync' ? args.slice(0, 2) : args.slice(0, 1);
+      if (writes && targets.some(inPrivate)) attemptedWrites.push({ method, paths: targets.filter(inPrivate) });
+      return Reflect.apply(operation, fs, args);
+    } });
+    syncBuiltinESMExports();
+    assert.equal(writeFileSync, fs.writeFileSync);
+    // Calibrate the delegated observer with a fixture-owned write. The zero
+    // count starts afterward and covers only the four production calls.
+    writeFileSync(path, malformedOld, { mode: 0o600 });
+    assert.ok(attemptedWrites.some(attempt => attempt.method === 'writeFileSync' && attempt.paths.includes(path)));
+    attemptedWrites.length = 0;
+    assert.throws(() => new ReviewStore(f.home).read(capture), error => error.reason === 'retired');
+    await assert.rejects(() => new ReviewStore(f.home).mark(next, () => { admissions++; }), error => error.reason === 'retired');
+    const malformedRead = await f.app.since();
+    assert.equal(malformedRead.isError, true); assert.equal(malformedRead.structuredContent.reason, 'retired');
+    const malformedMark = await source.markReviewed(next, { view: 'TEST', cut: 1, admit() { admissions++; } });
+    assert.deepEqual(malformedMark.structuredContent, { localStatus: 'unavailable', reason: 'retired' });
+    assert.equal(admissions, 0);
+    assert.deepEqual(attemptedWrites, []);
+  } finally {
+    for (const { method, descriptor } of originals) Object.defineProperty(fs, method, descriptor);
+    syncBuiltinESMExports();
+  }
+  assert.equal(writeFileSync, fs.writeFileSync);
+  assert.deepEqual(readFileSync(path), malformedOld);
+  assert.equal(statSync(path).mode, oldMode);
+  assert.deepEqual(readdirSync(privateDirectory).sort(), oldNames);
 });
 
 test('review marks stay on one device while another device sees the same room changes (scope answers are stand-ins)', async t => {

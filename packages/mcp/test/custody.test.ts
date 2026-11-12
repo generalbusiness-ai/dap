@@ -1,13 +1,16 @@
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import fs, { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import type { Answer, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { signedIntent } from "@generalbusiness/dap-client";
-import { Custody, CustodyError, Lost, RECORD_BYTES, identityId, meaningOf, memoryStore, UNRESOLVED_MOST, type CustodyRecord, type Envelope } from "../src/index.ts";
+import { Custody, CustodyError, Lost, McpService, RECORD_BYTES, identityId, meaningOf, memoryStore, UNRESOLVED_MOST, type CustodyRecord, type Envelope } from "../src/index.ts";
 import { blockedBy, fileStore, releaseLock, takeLock } from "../src/node.ts";
+import { STORE_FORMAT_FILE } from "../src/store-format.ts";
+import { StoreFormatError } from "../src/store-format-error.ts";
 import { McpMetrics, type McpMetricPoint } from "../src/metrics.ts";
 import { T0, accepted, build, identity, lane, notAfter, receiptOf, refused, resource, signer } from "./support/custody.ts";
 
@@ -67,11 +70,95 @@ describe("custody keeps the exact envelope under the caller's key", () => {
     } finally { custody.store.write = write; }
     expect((await custody.store.read(identityId(identity("k1"))))?.phase).toBe("unknown");
     expect(points.filter(p => p.blobs[0] === "custody").map(p => p.blobs[5])).toEqual(["prepared", "sent", "unknown"]);
+    // A named format refusal is not swallowed as an ordinary unreadable/unkept write.
+    const formatRefusal = new StoreFormatError("retired");
+    custody.store.write = async () => { throw formatRefusal; };
+    try {
+      await expect(custody.settle(identity("k1"), async e => receiptOf(e.signed, 3))).rejects.toBe(formatRefusal);
+    } finally { custody.store.write = write; }
+    expect((await custody.store.read(identityId(identity("k1"))))?.phase).toBe("unknown");
     const settled = await metrics.call("settle", () => custody.settle(identity("k1"), async (e) => receiptOf(e.signed, 3)), () => ({ end: "ok", bytes: 0 }));
     expect([settled!.record.phase, settled!.receipt?.fact.seq]).toEqual(["accepted", 3]);
     expect(settled!.record.envelope.signed).toEqual(sent[0]);
     expect(sent[0]!.intent.idempotencyKey).toBe("k1");
     expect(points.filter(p => p.blobs[0] === "custody").map(p => p.blobs[5])).toEqual(["prepared", "sent", "unknown", "accepted"]);
+
+    // Format is not a record. Merely constructing the adapter touches nothing.
+    const fresh = mkdtempSync(join(tmpdir(), "mcp-format2-")), current = fileStore(fresh);
+    expect(readdirSync(fresh)).toEqual([]);
+    expect(current.archived()).toBe(0);
+    expect(readFileSync(join(fresh, STORE_FORMAT_FILE), "utf8")).toBe("2\n");
+    expect(readdirSync(fresh)).toEqual([STORE_FORMAT_FILE]);
+    const wordTime = statSync(join(fresh, STORE_FORMAT_FILE)).mtimeMs;
+    expect(fileStore(fresh).archived()).toBe(0);
+    expect(statSync(join(fresh, STORE_FORMAT_FILE)).mtimeMs).toBe(wordTime);
+
+    // Keep a real completed record as old bytes; no new store may recover/count it.
+    const old = mkdtempSync(join(tmpdir(), "mcp-format1-"));
+    mkdirSync(join(old, "records")); mkdirSync(join(old, "archive"));
+    const id = identityId(settled!.record.identity), original = canonicalize(settled!.record);
+    const oldRecord = join(old, "records", `${id}.json`), oldIndex = join(old, "archive", "index.json");
+    writeFileSync(oldRecord, original, { mode: 0o600 });
+    writeFileSync(oldIndex, "TEST old index must not be decoded", { mode: 0o600 });
+    const mode = statSync(oldRecord).mode, names = readdirSync(old).sort();
+    let callbacks = 0;
+    const attemptedOldReads: { method: string; path: string }[] = [];
+    const oldRoots = [join(old, "records"), join(old, "archive"), join(old, "segments")];
+    const oldPath = (value: unknown): string | null => typeof value === "string"
+      && oldRoots.some(root => value === root || value.startsWith(root + "/")) ? value : null;
+    const observedMethods = ["existsSync", "lstatSync", "statSync", "openSync", "readFileSync", "readSync", "readdirSync", "opendirSync", "closeSync"] as const;
+    const originals = observedMethods.map(method => ({ method, descriptor: Object.getOwnPropertyDescriptor(fs, method)!, original: fs[method] }));
+    const opened = new Map<number, string>();
+    try {
+      for (const { method, descriptor, original } of originals) Object.defineProperty(fs, method, { ...descriptor, value: (...args: unknown[]) => {
+        if (method === "closeSync") {
+          try { return Reflect.apply(original, fs, args); }
+          finally { if (typeof args[0] === "number") opened.delete(args[0]); }
+        }
+        const path = method === "readSync" ? typeof args[0] === "number" ? opened.get(args[0]) ?? null : null : oldPath(args[0]);
+        if (path) attemptedOldReads.push({ method, path });
+        const result = Reflect.apply(original, fs, args);
+        if (method === "openSync" && typeof result === "number" && path) opened.set(result, path);
+        return result;
+      } });
+      syncBuiltinESMExports();
+      expect(readFileSync).toBe(fs.readFileSync);
+      // Calibrate on the synthetic fixture, with a real delegated read. The
+      // zero-attempt checks below cover only subsequent factory/store calls.
+      expect(readFileSync(oldRecord, "utf8")).toBe(original);
+      expect(attemptedOldReads).toContainEqual({ method: "readFileSync", path: oldRecord });
+      attemptedOldReads.length = 0;
+      const retired = fileStore(old);
+      expect(attemptedOldReads).toEqual([]);
+      const operations: (() => unknown)[] = [
+        () => retired.archived(), () => retired.lock(id, notAfter),
+        () => retired.exclusive(async () => { callbacks++; }),
+        () => retired.read(id), () => retired.write(id, settled!.record),
+        () => retired.unresolved(), () => retired.segment(id, 0, []),
+        () => retired.segmented(id, 0, 0),
+      ];
+      for (const operation of operations) await expect(Promise.resolve().then(operation)).rejects.toMatchObject({ name: "StoreFormatError", code: "store-retired", reason: "retired" });
+      await expect(new Custody(retired, () => timeOf(T0)).find(settled!.record.identity)).rejects.toBeInstanceOf(StoreFormatError);
+      const configPort = { read: async () => { await retired.read(id); return { service: settled!.record.identity.service }; }, addRoot: async () => { callbacks++; } };
+      const service = new McpService({ service: settled!.record.identity.service, signer, custody: retired, config: configPort,
+        fetch: async () => { callbacks++; throw new Error("TEST no network after store retirement"); } });
+      const named = await service.call("TEST-store-format", {});
+      expect(named.isError).toBe(true);
+      expect(named.structuredContent).toMatchObject({ error: "store-retired", reason: "retired", message: expect.stringContaining("retired room format") });
+      expect(attemptedOldReads).toEqual([]);
+    } finally {
+      for (const { method, descriptor } of originals) Object.defineProperty(fs, method, descriptor);
+      syncBuiltinESMExports();
+    }
+    expect(readFileSync).toBe(fs.readFileSync);
+    expect(callbacks).toBe(0); expect(readdirSync(old).sort()).toEqual(names);
+    expect(readFileSync(oldRecord, "utf8")).toBe(original); expect(statSync(oldRecord).mode).toBe(mode);
+    expect(readFileSync(oldIndex, "utf8")).toBe("TEST old index must not be decoded");
+    expect(existsSync(join(old, STORE_FORMAT_FILE))).toBe(false);
+    const malformed = mkdtempSync(join(tmpdir(), "mcp-format-bad-"));
+    writeFileSync(join(malformed, STORE_FORMAT_FILE), "1\n", { mode: 0o600 });
+    expect(() => fileStore(malformed).archived()).toThrow(StoreFormatError);
+    expect(readFileSync(join(malformed, STORE_FORMAT_FILE), "utf8")).toBe("1\n");
   });
 
   // Invariant: an unavailable resend and a not-found settlement resolve nothing; the record stays unknown and is never evicted.
@@ -435,6 +522,8 @@ describe("custody keeps the exact envelope under the caller's key", () => {
   // the refusal names the reclaim file, and once an operator removes it exactly one of several processes enters.
   test("a reclaimer that died inside the reclaim section blocks recovery until an operator clears it", async () => {
     const { dir, custody } = setup();
+    // The following raw lock fixtures belong to a newly admitted format2 store.
+    expect(fileStore(dir).archived()).toBe(0);
     const deadPid = async () => { const p = spawn(process.execPath, ["-e", ""]); return new Promise<number>((resolve) => p.on("exit", () => resolve(p.pid!))); };
     const path = join(dir, "contended.lease");
     writeFileSync(path, JSON.stringify({ pid: await deadPid(), token: "dead-owner" }));

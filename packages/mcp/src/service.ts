@@ -23,6 +23,7 @@ import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "./custody.ts";
+import { StoreFormatError } from "./store-format-error.ts";
 import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type ActLike, type DefinitionLike } from "./describe.ts";
 import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
@@ -482,6 +483,7 @@ export class McpService {
 
   async #failure(error: unknown, given: Args): Promise<CallResult> {
     if (error instanceof Stop) return error.result;
+    if (error instanceof StoreFormatError) return failed({ error: error.code, reason: error.reason, reader: error.reader, message: error.message });
     if (error instanceof CustodyError) {
       const result = failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
       // An unkept outcome and an unreadable record already say what the server knows of the send.
