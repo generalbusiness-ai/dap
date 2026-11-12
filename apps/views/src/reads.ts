@@ -1,5 +1,5 @@
 /** One authenticated, bounded collection. No room inventory or background read. */
-import { canonicalize, entryHash, isFactRef, isMemberRef, isScopeRef, readMinimum, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isEntryBodyOf, isFactRef, isMemberRef, isScopeRef, readMinimum, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, Head, Item, MemberRef, ReadMinimum, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { ScopeHandle, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { actSigner, type ActSigner, ReadSessions, Reads, type McpConfig } from "@generalbusiness/dap-mcp";
@@ -190,7 +190,7 @@ export class Collection {
   }
   keepEntry(frame: Frame, sealed: Sealed): Sealed {
     const seq = sealed.entry.seq, key = canonicalize([frame.ref, seq]), old = this.#entries.get(key);
-    if (!Number.isSafeInteger(seq) || seq < 0 || seq > frame.head.seq || !sameOptional(sealed.entry.at, frame.ref) || entryHash(sealed.entry) !== sealed.hash || (seq === frame.head.seq && sealed.hash !== frame.head.hash)) throw new Unread("entry-mismatch");
+    if (!Number.isSafeInteger(seq) || seq < 0 || seq > frame.head.seq || !isEntryBodyOf(sealed.entry, { at: frame.ref, seq, hash: sealed.hash }) || (seq === frame.head.seq && sealed.hash !== frame.head.hash)) throw new Unread("entry-mismatch");
     if (old) { if (!sameOptional(old, sealed)) throw new Unread("entry-mismatch"); return old; }
     if (this.counters.history >= LIMITS.history) throw new Unread("history-limit");
     this.counters.history++; this.#entries.set(key, sealed); return sealed;

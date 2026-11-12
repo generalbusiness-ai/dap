@@ -1,5 +1,5 @@
 /** Read projections of the actual pinned lane records. These rows grant nothing. */
-import { canonicalize, digestBytes, isDigest, isFactRef, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isDigest, isEntryBodyOf, isFactRef, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, Item, ReadMinimum, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { FINDING_DIGESTS, J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
 import type { ActSigner, ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
@@ -34,7 +34,7 @@ const actorWords = (actor: ReturnType<Collection["actorOfKey"]>): string => !act
 function whatHappened(collection: Collection, sealed: Sealed): string {
   const input = sealed.entry.input;
   if (input.type === "act" || input.type === "preparation") return `${input.signed.intent.kind} by ${actorWords(collection.actorOfKey(input.signed.intent.actor))}`;
-  if (input.type === "delivery") return `a delivery from ${input.from.at.kind}`;
+  if (input.type === "delivery") return `a delivery from ${input.sourceKind}`;
   if (input.type === "timed") return `the timed rule ${input.rule}`;
   if (input.type === "outcome") return `the ${input.result} outcome of ${input.kind}`;
   return input.type === "genesis" ? "the scope opened" : input.type;
@@ -141,7 +141,7 @@ export class RepoInAi {
         const got = await collection.read(scope, handle => handle.history(cursor));
         for (const sealed of got.value) {
           const entry = sealed.entry;
-          if ((!previous && (entry.seq !== 0 || entry.prev !== null)) || !sameOptional(entry.at, scope) || entryHashFor(sealed) !== sealed.hash || (previous && (entry.seq !== previous.entry.seq + 1 || entry.prev !== previous.hash))) throw new Unread("history-mismatch");
+          if ((!previous && (entry.seq !== 0 || entry.prev !== null)) || entryHashFor(sealed) !== sealed.hash || !isEntryBodyOf(entry, { at: scope, seq: entry.seq, hash: sealed.hash }) || (previous && (entry.seq !== previous.entry.seq + 1 || entry.prev !== previous.hash))) throw new Unread("history-mismatch");
           previous = sealed;
           collection.keepEntry(frame, sealed);
           const fact = { at: scope, seq: entry.seq, hash: sealed.hash };

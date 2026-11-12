@@ -26,16 +26,16 @@ function listStorageKey(context: ListContext, kind: ListKind): string | null {
     const { origin, directory, membership, key } = context;
     if (origin.length > 2048 || new URL(origin).origin !== origin || !isScopeId(directory)
       || !isScopeRef(membership) || !isKeyId(key) || !validKind(kind)) return null;
-    return JSON.stringify([origin, directory, membership.scope, membership.inc, membership.kind, key, kind]);
+    return JSON.stringify([origin, directory, membership.scope, membership.genesis, key, kind]);
   } catch { return null; }
 }
 function kindOfKey(key: string): ListKind | null {
   try {
     const parts: unknown = JSON.parse(key);
-    if (!Array.isArray(parts) || parts.length !== 7) return null;
-    const [origin, directory, scope, inc, memberKind, keyId, kind] = parts;
+    if (!Array.isArray(parts) || parts.length !== 6) return null;
+    const [origin, directory, scope, genesis, keyId, kind] = parts;
     if (!validKind(kind)) return null;
-    const context = { origin, directory, membership: { scope, inc, kind: memberKind }, key: keyId } as ListContext;
+    const context = { origin, directory, membership: { scope, genesis }, key: keyId } as ListContext;
     return listStorageKey(context, kind) === key ? kind : null;
   } catch { return null; }
 }

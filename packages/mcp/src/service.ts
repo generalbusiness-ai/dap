@@ -1341,7 +1341,7 @@ export class McpService {
       if (read.ok) return read.value.scope;
       return stopCall({ error: "read", scope: given, reason: read.reason });
     }
-    return stopCall({ error: "shape", field: "membership", what: "is not a membership scope", declared: "a scope ID or { scope, inc, kind }" });
+    return stopCall({ error: "shape", field: "membership", what: "is not a membership scope", declared: "a scope ID or { scope, genesis }" });
   }
 
   async #create(args: Args, dispatch?: DispatchContext): Promise<CallResult> {

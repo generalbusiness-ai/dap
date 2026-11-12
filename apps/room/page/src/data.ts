@@ -45,7 +45,7 @@ import { actBodyText, deviceKeyInvitationOf, encodeDeviceKeyInvitation, invitati
  */
 
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Item, KeyId, MemberRef, ScopeId, ScopeRef, Summary, Read, SignedIntent, Receipt, OutboxId } from "@generalbusiness/dap-contract";
-import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, intentDigest, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent, type Expiry } from "@generalbusiness/dap-bytes";
+import { LATE, b64url, byteOrder, canonicalize, definitionDigest, intentDigest, isEntryBodyOf, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent, type Expiry } from "@generalbusiness/dap-bytes";
 import {
   ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, completeSummary, declaredHandle, httpTransport, openHttpHeadStream, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
 } from "@generalbusiness/dap-client";
@@ -124,7 +124,7 @@ export const handleOf = (room: Pick<Room, "session" | "reader">, scope: ScopeId)
 
 /** Each service, membership and key under which this page load held a read session. Memory only: closing or leaving a room forgets nothing, and only a new page load does. */
 const heldSessions = new Set<string>();
-const heldContext = (session: Session, membership: ScopeRef, key: string): string => JSON.stringify([session.service.replace(/\/+$/, ""), membership.scope, membership.inc, key]);
+const heldContext = (session: Session, membership: ScopeRef, key: string): string => JSON.stringify([session.service.replace(/\/+$/, ""), membership.scope, membership.genesis, key]);
 /**
  * Since this page loaded, it held a read session under this service, membership
  * and key, and it holds none now. It cannot keep a copy, and it must not send as
@@ -277,7 +277,7 @@ const scopeOf = (ref: FieldValue | null | undefined): ScopeId | null => (ref && 
 // ---------------------------------------------------------------- the room
 
 const hasScopeRefFields = (v: unknown): v is ScopeRef =>
-  typeof v === "object" && v !== null && typeof (v as ScopeRef).scope === "string" && typeof (v as ScopeRef).inc === "string" && typeof (v as ScopeRef).kind === "string";
+  typeof v === "object" && v !== null && typeof (v as ScopeRef).scope === "string" && typeof (v as ScopeRef).genesis === "string";
 
 /**
  * The room that a text names: an invitation link from `artroom invite`, or
@@ -404,7 +404,7 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   const rules = scopeOf(repository?.refs["rules"]);
   const destination = scopeOf(repository?.refs["destination"]);
   if (!repository || !hasScopeRefFields(M) || !rules || !destination) throw new Unreadable(`The directory ${place.directory} names no membership, rules scope and destination yet.`);
-  if (M.scope !== place.membership.scope || M.inc !== place.membership.inc) throw new Unreadable(`The directory ${place.directory} names another membership scope than ${place.membership.scope}.`);
+  if (M.scope !== place.membership.scope || M.genesis !== place.membership.genesis) throw new Unreadable(`The directory ${place.directory} names another membership scope than ${place.membership.scope}.`);
   room.rules = rules;
   room.destination = destination;
   const commons = repository.refs["commons"];
@@ -520,8 +520,8 @@ async function issueTimes(handle: ScopeHandle, summary: Summary, at: Head): Prom
     if (!first.ok || !last.ok || !first.complete || !last.complete || first.next !== undefined || last.next !== undefined) return unavailable;
     const genesis = first.value.entry, latest = last.value.entry;
     if (genesis.seq !== 0 || genesis.prev !== null || latest.seq !== at.seq
-      || canonicalize(genesis.at) !== canonicalize(summary.scope) || canonicalize(latest.at) !== canonicalize(summary.scope)
-      || entryHash(genesis) !== first.value.hash || entryHash(latest) !== last.value.hash || last.value.hash !== at.hash
+      || !isEntryBodyOf(genesis, { at: summary.scope, seq: 0, hash: first.value.hash }) || !isEntryBodyOf(latest, { at: summary.scope, seq: at.seq, hash: last.value.hash })
+      || last.value.hash !== at.hash
       || timeMs(genesis.time) === null || timeMs(latest.time) === null) return unavailable;
     const final = await summaryOf(handle);
     if (canonicalize(final.summary.scope) !== canonicalize(summary.scope) || canonicalize(final.at) !== canonicalize(at)) return unavailable;
@@ -534,7 +534,7 @@ async function factOf(handle: ScopeHandle, ref: ScopeRef, value: unknown): Promi
   const seq = typeof value === "number" ? value : isFactRef(value) && canonicalize(value.at) === canonicalize(ref) ? value.seq : null;
   if (seq === null) return null;
   const read = await handle.entry(seq);
-  if (!read.ok || !read.complete || read.next !== undefined || read.value.entry.seq !== seq || canonicalize(read.value.entry.at) !== canonicalize(ref) || entryHash(read.value.entry) !== read.value.hash) return null;
+  if (!read.ok || !read.complete || read.next !== undefined || read.value.entry.seq !== seq || !isEntryBodyOf(read.value.entry, { at: ref, seq, hash: read.value.hash })) return null;
   const fact: FactRef = { at: ref, seq, hash: read.value.hash };
   return isFactRef(value) && canonicalize(value) !== canonicalize(fact) ? null : fact;
 }
@@ -580,7 +580,7 @@ async function decidedQuestions(handle: ScopeHandle, ref: ScopeRef, asks: readon
   return Promise.all(asks.map(async (ask, index) => {
     const seq = decidedEntry(ask), question = shownText(ask.values["question"]), comment = typeof ask.values["decisionComment"] === "string" ? shownText(ask.values["decisionComment"]) : null;
     const read = seq === null || index >= details ? null : await handle.entry(seq).catch(() => null);
-    const entry = read?.ok && read.complete && read.value.entry.seq === seq && canonicalize(read.value.entry.at) === canonicalize(ref) && entryHash(read.value.entry) === read.value.hash ? read.value.entry : null;
+    const entry = read?.ok && read.complete && read.value.entry.seq === seq && isEntryBodyOf(read.value.entry, { at: ref, seq, hash: read.value.hash }) ? read.value.entry : null;
     const input = entry?.input;
     return { ask: ask.id, line: decidedLine(question, seq), question, body: bodies && index < details ? await textOf(handle, ask.values["body"]).catch(() => null) : null,
       by: input?.type === "act" ? keyHolder(members, input.signed.intent.actor)?.member ?? "a key that is no longer active" : null, at: entry?.time ?? null, comment };
@@ -752,8 +752,7 @@ async function reviewPolicyOf(room: Room, change: ScopeRef, proposal: Item, held
     const read = await handle.entry(source.seq);
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const entry = read.value.entry;
-    if (entry.seq !== source.seq || canonicalize(entry.at) !== canonicalize(source.at)
-      || entryHash(entry) !== source.hash || read.value.hash !== source.hash) return null;
+    if (!isEntryBodyOf(entry, source) || read.value.hash !== source.hash) return null;
     const sends = entry.sends.filter(send => canonicalize(send.to) === canonicalize(change) && send.message.class === "request"
       && send.message.type === "relate" && record(send.message.body) && send.message.body["name"] === "rules");
     if (sends.length !== 1) return null;
@@ -822,7 +821,7 @@ async function manifestContent(handle: ScopeHandle, scope: Summary["scope"], man
     const read = await handle.entry(manifest.id);
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const { entry, hash } = read.value;
-    if (entry.seq !== manifest.id || canonicalize(entry.at) !== canonicalize(scope) || entryHash(entry) !== hash || hash !== manifest.opened) return null;
+    if (!isEntryBodyOf(entry, { at: scope, seq: manifest.id, hash }) || hash !== manifest.opened) return null;
     if (!entry.effects.some((effect) => effect.effect === "open" && effect.type === "manifest" && effect.item === manifest.id)) return null;
     const input = entry.input;
     if (input.type !== "act" || input.signed.intent.kind !== "propose-file" || !verifySignedIntent(input.signed) || canonicalize(input.signed.intent.to) !== canonicalize(scope)) return null;
@@ -854,7 +853,7 @@ async function manifestListFile(handle: ScopeHandle, scope: ScopeRef, manifest: 
     const source = await handle.entry(fact.seq);
     if (!opening.ok || !opening.complete || opening.next !== undefined || !source.ok || !source.complete || source.next !== undefined) return null;
     const m = opening.value, s = source.value;
-    if (m.entry.seq !== manifest.id || canonicalize(m.entry.at) !== canonicalize(scope) || entryHash(m.entry) !== m.hash || m.hash !== manifest.opened || s.entry.seq !== fact.seq || canonicalize(s.entry.at) !== canonicalize(fact.at) || entryHash(s.entry) !== s.hash || s.hash !== fact.hash) return null;
+    if (!isEntryBodyOf(m.entry, { at: scope, seq: manifest.id, hash: m.hash }) || m.hash !== manifest.opened || !isEntryBodyOf(s.entry, fact) || s.hash !== fact.hash) return null;
     const mi = m.entry.input, si = s.entry.input;
     if (mi.type !== "act" || si.type !== "act" || mi.signed.intent.kind !== "propose-manifest" || si.signed.intent.kind !== "propose-file" || !verifySignedIntent(mi.signed) || !verifySignedIntent(si.signed) || canonicalize(mi.signed.intent.to) !== canonicalize(scope) || canonicalize(si.signed.intent.to) !== canonicalize(scope)) return null;
     if (!m.entry.effects.some((effect) => effect.effect === "open" && effect.type === "manifest" && effect.item === manifest.id) || !s.entry.effects.some((effect) => effect.effect === "open" && effect.type === "source" && effect.item === fact.seq)) return null;
@@ -1252,7 +1251,7 @@ export async function issueCreation(room: Room, result: Acted, current: () => bo
     if (!current()) return unavailable;
     if (!source.ok || !source.complete || source.next !== undefined) return unavailable;
     const entry = source.value.entry;
-    if (entry.seq !== receipt.fact.seq || canonicalize(entry.at) !== canonicalize(receipt.fact.at) || entryHash(entry) !== receipt.fact.hash || source.value.hash !== receipt.fact.hash
+    if (!isEntryBodyOf(entry, receipt.fact) || source.value.hash !== receipt.fact.hash
       || entry.input.type !== "act" || entry.input.signed.intent.kind !== "open-issue" || !verifySignedIntent(entry.input.signed)
       || canonicalize(entry.input.signed.intent.to) !== canonicalize(receipt.fact.at) || entry.input.signed.intent.actor !== room.key || intentDigest(entry.input.signed.intent) !== receipt.intent) return unavailable;
     const creates = entry.sends.filter(send => send.message.class === "request" && send.message.type === "create" && isSeed(send.to));

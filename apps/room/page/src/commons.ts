@@ -13,7 +13,7 @@ export function commonsSelection(encoded: string | null): ReferenceValue | null 
   return value;
 }
 export function commonsLink(reference: ReferenceValue): string { return `#/commons/${encodeURIComponent(canonicalize(reference))}`; }
-const authorRef = (note: CommonsNote): string => note.author ? `${note.author.member} (${note.author.membership.scope}, ${note.author.membership.inc})` : "Native author unavailable";
+const authorRef = (note: CommonsNote): string => note.author ? `${note.author.member} (${note.author.membership.scope}, genesis ${note.author.membership.genesis})` : "Native author unavailable";
 const author = (view: CommonsView, note: CommonsNote): string => {
   const label = note.author ? view.authorLabels?.[canonicalize(note.author)] : undefined;
   return label ? `${label.handle} (${label.kind})` : authorRef(note);
