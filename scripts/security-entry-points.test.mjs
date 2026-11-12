@@ -20,10 +20,11 @@ const namedOwners = {
     "packages/scope/src/object-archive.ts:floorOffer": "d090ac7253f79e303cf89e44935def408bf83778706cfc50a169a01806bb0805"
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "2fda1bffc3e5b98a7ac97b432c7190a9660de9ae0b0caca5af604fb66d5d6d9d",
-    "packages/scope/src/worker.ts:ScopeIndex": "db3c9e7383c242a7669551f1a1a8b33413129933ce32dc3e80faf0376ebf1719",
+    "packages/scope/src/worker.ts:$module": "cb9087e87840a9de25e56a2460799f87145a6814157713f3b67751ff0192d664",
+    "packages/scope/src/worker.ts:ScopeIndex": "b958e6997f55b05833f7075643065a54760b34fe6ede7f6051ec2354ad3b6c81",
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
-    "packages/scope/src/worker.ts:api": "03bb00a1a523796ca66c26c23d91142ef46758ad62290fdc9a5cc74556e8c171",
+    "packages/scope/src/worker.ts:api": "87713d2ffe8f050d1974d8de340a9ffaa732ef4bcee440a1ef51c605f05be8b3",
+    "packages/scope/src/worker.ts:scopedApi": "589e93aaf890c448dd328ed5615463ca54440231a54937938cd73235acf7cd0c",
     "packages/scope/src/worker.ts:BODY_BYTES": "158a6579a52843b40416a1f4d27e7bffb5e0f5df07105254bd3e87c3d3d203fd",
     "packages/scope/src/worker.ts:answered": "f1c36263f63cc8977a334b803d6c89c4863d2e078704d7cdffdce1c3dc2eaea0",
     "packages/scope/src/worker.ts:READ_STATUS": "8fcae05135649353af9322b5361f0b16e8a1d93c47583a3a18b80848f2990df7",
@@ -39,13 +40,13 @@ const namedOwners = {
     "packages/scope/src/worker.ts:PROJECTION_STATUS": "437dc39bac447f6fc149e3db253a2b2c5fbca4ef30410c0d0f3b58d94d1ac5bb",
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "97d61bda3cbfe7b427c932d6839a46e73cb5b9b6e75e575bf798329ebdc210ad",
-    "packages/scope/src/worker.ts:routedRequest": "3b0b751a7511500a15016f748d9a393ccaa3ad1860bfcdffe9008baadd7769be",
+    "packages/scope/src/worker.ts:routedRequest": "0f31c1f1c059802b01cfd801e4958789c123bc602cdcdb49a0194ec4cea9f77a",
     "packages/scope/src/worker.ts:outsideOf": "0853140503300b3a8a9a5e26ac61973e0db4dac32f2a414d48ff0d87c58efda2",
     "packages/scope/src/worker.ts:sessionWiring": "cb8f4d0e2b06854a3fbf080e5b4ce72e4182060b60f27cc7fb7f5ed6ac8779c5",
     "packages/scope/src/worker.ts:snapshotReaderOf": "dac91fd4e800bdcd1a9f7e47bd077b6efd0acd4eb3c70bf63122a12bdb7446b5",
     "packages/scope/src/worker.ts:DeployedScope": "660756384c04ec84a02cd513cf7bc8e00a2542b596bf16a846afcc25bf04020d",
     "packages/scope/src/worker.ts:ApplicationStreamLifetime": "4c82d6b5ea8ae68089f2f80321e3361b6176c9725d0b46481b6f32b6d2093ba3",
-    "packages/scope/src/worker.ts:ApplicationScreenService": "1d14294e957015e16bf05110852f1ab75efa3d1e4af34fa4417dbbd6cfc128a7"
+    "packages/scope/src/worker.ts:ApplicationScreenService": "c21c6c69f6b8f28aa64abfd9ca8e11a94a104f560d6430018f8ff9a68d52e5b8"
   },
   "packages/scope/src/worker-mcp.ts": {
     "packages/scope/src/worker-mcp.ts:$module": "7efc23a8ead02d1a8c5c3d8f7f57298892f545e659e632e05864dd551d019e83",
@@ -289,7 +290,7 @@ const seals = {
   "packages/scope/src/site/route.ts": "f4bbcdd1f53220ccce1337ec011e0c662f199f979513ca38ea891bda7add6ee8",
   "packages/scope/src/site/host.ts": "7c5352e51ef3ddd368f28f272f4f10917889fc44b5a4eee701168fe4aff7a814", // Private Site token custody; actual maintained parser output.
   "packages/scope/src/site/token-reuse.ts": "7df9e0eb8e1c5bbfc050f52729ffaed86f00ea6d56ed04ac1efdf9e6cbf51ab0", // Reviewed pre-mint generation cleanup rescheduling; custody checks unchanged.
-  "packages/scope/src/site/window.ts": "a5f64febfd69c17c682dc8bf1aa464378a3609d73d9ef0112c16fd79892aea54", // Bounded site-read window; actual maintained parser output.
+  "packages/scope/src/site/window.ts": "1b0e1d820a7840063d35d39dc74d61a2b9caa6ffb5763e82a21b6ae5524d4936", // Bounded site-read window; actual maintained parser output.
   "packages/scope/src/applications/route.ts": "be263fc237b3c3c0f8e57b6f528880f83482f75b52cd9cf9c29f936feceb8bd4", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
   "packages/scope/src/applications/projection-wire.ts": "289a66b25bf2dc63e0e7d4b0726c1eda067d21e9238bbf29737b4d8d89c1fa00",
@@ -305,8 +306,8 @@ const seals = {
   "packages/scope/src/reads.ts": "1fbb2ae6de2566c33c5dc6e19bd8ef7660a30cab6707a12c02508d650085a2cb",
   "packages/scope/src/signed-reads.ts": "3204207ea73dc48cdc40727bbde7f8b734675975fd78694a501b0116cf0abfe2", // Census wire name; its separate fixed-index predicate grants no ordinary scope read.
   "packages/scope/src/limits.ts": "dfab21444a03339291f51f500941dc1b0d23926fa01fb173e7cd7cc91983f099", // R12 verified-key join failure window.
-  "packages/scope/src/serving-limits.ts": "3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987", // New bounded memory-only counter, no live eviction.
-  "packages/scope/src/serving-admission.ts": "56196763d35e17e67df94862264b2b1af0f1e812d46cc5c50163a4c580cd06a2", // New bounded original-signature/counter ingress.
+  "packages/scope/src/serving-limits.ts": "94f6987027c7638ebe0aad6899f1dbf352a25029aceca60c00476b600e7d410b", // New bounded memory-only counter, no live eviction.
+  "packages/scope/src/serving-admission.ts": "a9915cf54ff03406bd5b2da15fc4e611a066a0ccf06503c1f21e3f4cfac951e7", // New bounded original-signature/counter ingress.
   "packages/bytes/src/records.ts": "05bf74f714d8c40e54d6923ec49ed0c95e82bb97b1f82227983ec7b964a8d696", // R11 named serving refusal; actual maintained parser output.
   "packages/scope/src/session-preparation.ts": "73d24f725ed50623a90919c8560c3afba86fcea4c020beb67ed46dec87c06523",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
@@ -391,7 +392,7 @@ const pendingR8Seals = {
   "packages/cli/src/scope-index-manifest.ts": "a01740e192abf37501b403fe56c7c641e56eaa56cb07c92367a8fa1cd7efdc91", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "4df678cff2b3fd5d9a106724c93fff16f8a284d04add98605b485a896a5a9c5d", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "3e4dfcbab9c9ab8585929b4c75ba01ac86c4e9ea7978f70f6bf3681af15bddb6", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "apps/sandbox/worker.ts": "6554155ed7854425c60b859d62c0a4da53e172a3be0fe3bd2cd0032f3e108e0b", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
+  "apps/sandbox/worker.ts": "758b28ea299eddad07022a913d4b94d632814aa51f2868810300a582ee833f51", // Inject the reply window; retain the existing Native lifetime close on an observed HTTP disconnect.
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
   "packages/client/src/application-route.ts": "3ba8c4d9e680ce7ff2078bbb3067b557aece506506efc4c0a89751777ba2a300",
   "packages/scope/src/applications/bindings.ts": "b89e8155ad5479d5b4f9175b2e941ef80b54c75dc9af4a993401c544e150cd78",
