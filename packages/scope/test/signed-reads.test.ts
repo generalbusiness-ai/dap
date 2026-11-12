@@ -2,7 +2,7 @@ import { describe, expect, onTestFinished, test } from "vitest";
 import { env, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, Intent, OperationId, ReadRequest, ScopeId, ScopeRef, Sealed, Seed, SignedReadName } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, entryHash, intentDigest, retainedReadArgument, scopeIdOf, seedDigest, signIntent, signRead } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalBytes, entryHash, factRefOf, intentDigest, newGenesisNonce, retainedReadArgument, scopeIdOf, seedDigest, signIntent, signRead } from "@generalbusiness/dap-bytes";
 import { requestSession, secretSigner, sessionRequest, signedLogReader, signedReader, type Fetch } from "@generalbusiness/dap-client";
 import { timeMs, timeOf, useOf } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t, type Actor } from "@generalbusiness/dap-derive/testing";
@@ -466,34 +466,39 @@ describe("signed reads on real registers (the planner's decisions 61cc5e50, c649
   // deliveries from the geneses. No scope judged them. It shows the bound of `rootOf`, which no real chain passes: the longest of the
   // platform's creation is four causes, from an entry of membership that the directory's confirmation wrote to the claim.
   test("a cause chain is followed through at most four causes: a genesis four creations from the signed act has its root, one five creations away has none; an outcome leads to the act that opened its operation, in its own scope only; a delivery leads to the entry that sent it, within the same bound; an entry that cannot be read is unavailable, and a cause that names no source has no root", async () => {
-    const act: Entry = { v: 1, at: otherLane, seq: 1, prev: d("0"), time: t(0), clamped: false, epoch: 0, input: { type: "act", signed: signIntent({ v: 1, to: otherLane, actor: rita.key, kind: "split", on: null, expected: {}, fields: {}, idempotencyKey: "split", notAfter: t(60) }, rita.secret), authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
-    const fact = (entry: Entry): FactRef => ({ at: entry.at, seq: entry.seq, hash: entryHash(entry) });
-    const kept = new Map<string, Entry>([[useOf(fact(act), act).content, act]]);
+    // Each hand-made entry with the full reference of its sequence. A genesis names its own hash; the act names the fixture lane.
+    const refs = new Map<Entry, ScopeRef>();
+    const placed = <E extends Entry>(entry: E, at: ScopeRef): E => { refs.set(entry, at); return entry; };
+    const fact = (entry: Entry): FactRef => factRefOf(entry, refs.get(entry)!);
+    const from = (entry: Entry) => ({ entry, scope: refs.get(entry)!.scope });
+    const act = placed<Entry>({ v: 1, genesis: otherLane.genesis, seq: 1, prev: d("0"), time: t(0), clamped: false, epoch: 0, input: { type: "act", signed: signIntent({ v: 1, to: otherLane, actor: rita.key, kind: "split", on: null, expected: {}, fields: {}, idempotencyKey: "split", notAfter: t(60) }, rita.secret), authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] }, otherLane);
+    const kept = new Map<string, Entry>([[useOf(fact(act), act, "lane").content, act]]);
     const chain: Entry[] = [];
     let source = act;
     for (let n = 1; n <= CHAIN_STEPS + 1; n++) {
-      const seed: Seed = { v: 1, kind: "lane", definition: d("e"), creator: source.at, cause: source.input.type === "genesis" ? seedDigest(source.input.seed) : intentDigest((source.input as { signed: { intent: Intent } }).signed.intent), ordinal: 0 };
-      const at: ScopeRef = { ...otherLane, scope: scopeIdOf(seed) };
-      const genesis: Entry = { v: 1, at, seq: 0, prev: null, time: t(n), clamped: false, epoch: 0, input: { type: "genesis", seed, inc: otherLane.inc, kind: "open", "founding": null, source: fact(source), n: 0, message: { class: "request", type: "create", body: {} }, decision: "applied" }, uses: [useOf(fact(source), source)], prepared: [], effects: [], sends: [] };
-      kept.set(useOf(fact(genesis), genesis).content, genesis);
+      const seed: Seed = { v: 1, kind: "lane", definition: d("e"), creator: refs.get(source)!, cause: source.input.type === "genesis" ? seedDigest(source.input.seed) : intentDigest((source.input as { signed: { intent: Intent } }).signed.intent), ordinal: 0 };
+      const body: Entry = { v: 1, seq: 0, prev: null, time: t(n), clamped: false, epoch: 0, input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(n)), kind: "open", "founding": null, source: fact(source), sourceKind: "lane", n: 0, message: { class: "request", type: "create", body: {} }, decision: "applied" }, uses: [useOf(fact(source), source, "lane")], prepared: [], effects: [], sends: [] };
+      const genesis = placed(body, { scope: scopeIdOf(seed), genesis: entryHash(body) });
+      kept.set(useOf(fact(genesis), genesis, "lane").content, genesis);
       chain.push(genesis);
       source = genesis;
     }
     const read = async (use: { content: string }) => kept.get(use.content) ?? null;
-    const root = { actor: rita.key, time: t(0), scope: act.at.scope, seq: act.seq };
-    expect([await rootOf(chain[0]!, read), await rootOf(chain[CHAIN_STEPS - 1]!, read), await rootOf(chain[CHAIN_STEPS]!, read)]).toEqual([root, root, null]);
+    const root = { actor: rita.key, time: t(0), scope: otherLane.scope, seq: act.seq };
+    expect([await rootOf(from(chain[0]!), read), await rootOf(from(chain[CHAIN_STEPS - 1]!), read), await rootOf(from(chain[CHAIN_STEPS]!), read)]).toEqual([root, root, null]);
     // Control: the same chain under a bound one longer has its root. An entry of the chain that cannot be read now; and a genesis whose
     // source is a genesis that its seed's cause does not name.
-    const stray: Entry = { ...chain[1]!, input: { ...(chain[1]!.input as Extract<Entry["input"], { type: "genesis" }>), seed: { ...(chain[1]!.input as Extract<Entry["input"], { type: "genesis" }>).seed, cause: d("c") } } };
-    expect([await rootOf(chain[CHAIN_STEPS]!, read, CHAIN_STEPS + 1), await rootOf(chain[1]!, async (use) => (use.content === useOf(fact(act), act).content ? null : read(use))), await rootOf(stray, read)]).toEqual([root, "unavailable", null]);
+    const strayInput = chain[1]!.input as Extract<Entry["input"], { type: "genesis" }>;
+    const stray = placed<Entry>({ ...chain[1]!, input: { ...strayInput, seed: { ...strayInput.seed, cause: d("c") } } } as Entry, refs.get(chain[1]!)!);
+    expect([await rootOf(from(chain[CHAIN_STEPS]!), read, CHAIN_STEPS + 1), await rootOf(from(chain[1]!), async (use) => (use.content === useOf(fact(act), act, "lane").content ? null : read(use))), await rootOf(from(stray), read)]).toEqual([root, "unavailable", null]);
 
     // An outcome of the operation that the act opened, in the act's scope: one cause, read from that scope's own entries. The same
     // outcome read as another scope's entry ends the chain.
-    const outcome: Entry = { ...act, seq: 2, prev: d("1"), input: { type: "outcome", operation: "1:0" as OperationId, attempt: 1, owner: REGISTER, kind: "create-repository", result: "confirmed", evidence: { basis: "own-answer", body: {} } } };
+    const outcome = placed<Entry>({ ...act, seq: 2, prev: d("1"), input: { type: "outcome", operation: "1:0" as OperationId, attempt: 1, owner: REGISTER, kind: "create-repository", result: "confirmed", evidence: { basis: "own-answer", body: {} } } } as Entry, otherLane);
     const own = { scope: otherLane.scope, entry: (seq: number) => (seq === 1 ? act : null) };
-    expect([await rootOf(outcome, read, CHAIN_STEPS, own), await rootOf(outcome, read, CHAIN_STEPS, { ...own, scope: chain[0]!.at.scope }), await rootOf(outcome, read)]).toEqual([root, null, null]);
+    expect([await rootOf(from(outcome), read, CHAIN_STEPS, own), await rootOf(from(outcome), read, CHAIN_STEPS, { ...own, scope: refs.get(chain[0]!)!.scope }), await rootOf(from(outcome), read)]).toEqual([root, null, null]);
     // A delivery from a genesis three creations away is four causes from the act; one from a genesis four creations away is five.
-    const delivery = (from: Entry): Entry => ({ ...act, seq: 3, prev: d("2"), input: { type: "delivery", from: fact(from), n: 0, message: { class: "control", type: "confirm", genesis: fact(from) } }, uses: [useOf(fact(from), from)] });
-    expect([await rootOf(delivery(chain[CHAIN_STEPS - 2]!), read), await rootOf(delivery(chain[CHAIN_STEPS - 1]!), read)]).toEqual([root, null]);
+    const delivery = (sent: Entry): Entry => placed<Entry>({ ...act, seq: 3, prev: d("2"), input: { type: "delivery", from: fact(sent), sourceKind: "lane", n: 0, message: { class: "control", type: "confirm", genesis: fact(sent) } }, uses: [useOf(fact(sent), sent, "lane")] } as Entry, otherLane);
+    expect([await rootOf(from(delivery(chain[CHAIN_STEPS - 2]!)), read), await rootOf(from(delivery(chain[CHAIN_STEPS - 1]!)), read)]).toEqual([root, null]);
   });
 });

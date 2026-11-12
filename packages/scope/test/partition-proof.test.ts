@@ -3,7 +3,8 @@ import { PROPOSED_BOUNDS, type FactRef } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isPlatformDefinition, utf8 } from "@generalbusiness/dap-bytes";
 import { scriptedPartitionOrigin } from "../../platform/test/support-partition-origin.ts";
 import { partitionProof, PartitionProofOperation, PARTITION_PROOF_BOUNDS as B, type PartitionProofPorts } from "../src/partition-proof.ts";
-import { used, retainedFacts } from "../src/core.ts";
+import { used } from "../src/core.ts";
+import type { ClassifiedRetainedUse } from "@generalbusiness/dap-derive";
 import { LATE, fetchFacts } from "../src/turn.ts";
 import { ReceiverReads } from "../src/receiver-reads.ts";
 import type { NativeBirth } from "../src/native-birth.ts";
@@ -94,7 +95,7 @@ test("receiver interpretation promotes a proved lane while retention and a later
   // RPC and storage maps are stand-ins. This protects the interpretation /
   // retention boundary, not native execution or handler authorization.
   const sample = protocol(); let producerCalls = 0;
-  const resolver = { read: async () => { producerCalls++; return { entry: sample.fixture.genesis, under: "declared:change" }; } };
+  const resolver = { read: async () => { producerCalls++; return { entry: sample.fixture.genesis, under: "declared:change", sequence: sample.fixture.frames[0]!.sequence }; } };
   const reader = await ReceiverReads.open({ ...sample.ports, resolver }, sample.fixture.partition);
   expect(reader).not.toBeNull();
   const fetched = await fetchFacts(reader!, PROPOSED_BOUNDS, [sample.fixture.from]);
@@ -105,10 +106,12 @@ test("receiver interpretation promotes a proved lane while retention and a later
   const uses = [{ fact: sample.fixture.from, kind: sample.fixture.frames[0]!.sequence.kind, content: digestBytes(utf8(canonicalize(sample.fixture.genesis))) }];
   const saved = used({ uses }, fetched!);
   expect(saved).toEqual([{ kind: "entry", digest: uses[0]!.content, bytes: canonicalize(sample.fixture.genesis), under: "declared:change" }]);
-  const retained = retainedFacts({ retained: () => saved[0] ?? null }, { uses });
-  expect(retained[0]?.under).toBe("declared:change");
+  // STAND-IN for one classified use that readRetainedUses would give for the saved row: its fact, original bytes and stored
+  // producer. The receiver name derives from the fact and the producer only, so no receiver origin entry is built here.
+  const retained: ClassifiedRetainedUse[] = [{ mode: "local-retained-use", use: { mode: "local-retained-use", origin: sample.fixture.from, useIndex: 0, fact: uses[0]!.fact, content: uses[0]!.content, kind: uses[0]!.kind, entry: sample.fixture.genesis, originalBytes: saved[0]!.bytes, producer: { name: saved[0]!.under, provenance: "unhashed-retained-row" } } }];
+  expect(retained[0]?.use.producer.name).toBe("declared:change");
   expect((await reader!.retained(retained))?.[0]?.under).toBe("change");
-  expect(retained[0]?.under).toBe("declared:change");
+  expect(retained[0]?.use.producer.name).toBe("declared:change");
   expect(producerCalls).toBe(0);
   const raw = await fetchFacts(resolver, PROPOSED_BOUNDS, [sample.fixture.from]);
   if (!Array.isArray(raw)) throw new Error("producer source did not return fetched entries");

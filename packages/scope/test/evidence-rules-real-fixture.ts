@@ -29,7 +29,7 @@ import type { OutsideGiven } from "../src/given.ts";
 import type { OperationStatus } from "../src/store.ts";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
 import { CredentialStore } from "../src/credential-store.ts";
-import { ownOf, retainedFacts, snapshotsOf } from "../src/core.ts";
+import { genuineRetained, ownOf, retainedUsesOf, snapshotsOf } from "../src/core.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { readRulesTree } from "../src/rules-tree-provider.ts";
 import { ownHost } from "./hosts.ts";
@@ -714,7 +714,9 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
           if (!kept) throw Error('Actual named retained value required');
           return [kept.bytes];
         });
-        view.fold(checked.definition, entry, hash, { bounds: PROPOSED_BOUNDS, platform: pinned, own, facts: retainedFacts(store, entry), values,
+        const retained = retainedUsesOf(own, seq);
+        if (!retained) throw Error('Actual retained uses required');
+        view.fold(checked.definition, entry, hash, { bounds: PROPOSED_BOUNDS, platform: pinned, own, facts: genuineRetained(retained.uses), values,
           snapshot: snapshotsOf(store), texts: digest => { const kept = store.retained('text', digest); if (!kept) return undefined;
             const text: unknown = JSON.parse(kept.bytes); return typeof text === 'string' ? utf8(text).length : undefined; } });
       }
