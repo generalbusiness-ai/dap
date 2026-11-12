@@ -476,7 +476,7 @@ export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; re
 
 /** No new inventory is computed after Mark. The caller supplies only the
  * marked parent's bounded object port; current head/retained sets are unread. */
-export async function rebuildArchive(sql: Sql, row: ArchiveRow, parent: Parent, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins, replayContext?: ArchiveReplayContext): Promise<ArchiveBuildResult> {
+export async function rebuildArchive(sql: Sql, row: ArchiveRow, parent: Parent, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins): Promise<ArchiveBuildResult> {
   const mark = row.pending ? { ...row.pending, through: { ...row.pending.through } } : null, at = { ...row.at }, format = row.format, base = parent ? { ...parent } : null;
   if (!mark || mark.parent !== (base?.id ?? null)) return { ok: false, reason: "manifest" };
   const selection = storedSelection(mark.manifest, budget);

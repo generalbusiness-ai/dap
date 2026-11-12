@@ -5,7 +5,7 @@
  * are never read here. */
 import { natural } from "@generalbusiness/dap-bytes";
 import { DOMAINS, RETAINED_INPUT_BYTES, type Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, entryHash, isDigest, isEntry, isFactRef, isPlatformDefinition, rawRetainedJSON, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, domainRetainedJSON, isDigest, isEntry, isEntryBodyOf, isFactRef, isPlatformDefinition, rawRetainedJSON, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { checkedRetainedKey, type ProbeDependency, type RetainedKey } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { ArchivePrefixStopped } from "./archive-prefix.ts";
@@ -156,8 +156,8 @@ export class ArchiveRetainedReader {
       : domainRetainedJSON(key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : DOMAINS.snapshot, key.digest, bytes, { canonical: true, max });
     this.budget.check();
     if (parsed === undefined || canonicalize(parsed) !== bytes) return null;
-    if (copy && (!isEntry(parsed) || parsed.seq !== copy.fact.seq || canonicalize(parsed.at) !== canonicalize(copy.fact.at)
-      || entryHash(parsed) !== copy.fact.hash || size !== copy.bytes || parsed.input.type === "genesis" && parsed.input.seed.definition !== copy.pin)) return null;
+    if (copy && (!isEntry(parsed) || !isEntryBodyOf(parsed, copy.fact)
+      || parsed.input.type === "genesis" && scopeIdOf(parsed.input.seed) !== copy.fact.at.scope || size !== copy.bytes || parsed.input.type === "genesis" && parsed.input.seed.definition !== copy.pin)) return null;
     this.budget.check();
     this.#cache.set(cacheKey, bytes);
     return { bytes, value: parsed };

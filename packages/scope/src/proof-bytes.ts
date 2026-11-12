@@ -35,8 +35,12 @@ export function proofEntry(value: ProofBody, fact: FactRef, maxBytes: number, se
   return entry && isEntryOf(entry, fact, sequence) ? entry : null;
 }
 
-/** Sender/storage integrity only. This result supplies no address association. */
-function rawProofEntry(value: ProofBody, fact: FactRef, maxBytes: number, content?: FactUse["content"]): Entry | null {
+/**
+ * Sender/storage integrity only. This result supplies no address association.
+ * A caller uses it only for a local retained use: a body that its own sealed
+ * entry names by fact and content digest.
+ */
+export function rawProofEntry(value: ProofBody, fact: FactRef, maxBytes: number, content?: FactUse["content"]): Entry | null {
   const entry = parsedProof(value, fact, maxBytes, content);
   return entry && isEntryBodyOf(entry, fact) ? entry : null;
 }

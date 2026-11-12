@@ -35,7 +35,7 @@ export function applicationDeclarationsIn(binding: Binding): ApplicationDeclarat
         || (!answersVersionQuestion(room["membershipDefinition"], "applicationProjectionMembership")))) return null;
 
       if (!isScopeRef(room["directory"])
-        || canonicalize(room["directory"]) !== canonicalize(directory) || !isScopeRef(room["rules"]) || room["rules"].kind !== "rules") return null;
+        || canonicalize(room["directory"]) !== canonicalize(directory) || !isScopeRef(room["rules"])) return null;
       const declared = await (binding.get(binding.idFromName(room["rules"].scope)) as RulesPeer).applicationProjectionDeclarationBytes(directory, install, name);
       if (run.active() && isRoomRetiredStop(declared)) throw RETIRED_DECLARATION;
       return run.active() ? owned(declared, APPLICATION_DECLARATION_BYTES) : null;

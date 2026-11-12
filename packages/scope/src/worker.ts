@@ -71,7 +71,7 @@ import { type HostedMcpSettings } from "@generalbusiness/dap-mcp";
 
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { FactRef, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, same, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { b64url, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { isObject, type Item } from "@generalbusiness/dap-derive";
 import { creationKind, type Created } from "./core.ts";
 import { repositorySessionMembership, fixedMembership, repositoryAuthority } from "./authority.ts";

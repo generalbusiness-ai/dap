@@ -22,7 +22,7 @@ import type { Bounds, ScopeBoundName, FactRef, Head, Prepared, SignedIntent } fr
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
 import { carryProducerName } from "./receiver-facts.ts";
 import { CanonicalError, admitSequenceGenesis, isEntry, canonicalize, entryHash, scopeIdOf, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, same, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
+import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, Due, Fetched, RetainedOwn, Owners, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { genuineRetained, ownOf, retainedUsesOf, snapshotsOf, type BirthCandidate, type PinCell, type Pinned, type ResolvedPin } from "./core.ts";
 import type { Ports, Resolver, SourceReadContext } from "./ports.ts";

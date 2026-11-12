@@ -299,7 +299,7 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
   async connections(signed: Parameters<HostedRegistry["connections"]>[0], body: Uint8Array, origin: string): Promise<ControlAnswer | RetiredStoreStop> { if (!this.#owns(signed?.request?.membership)) return RETIRED_STORE_STOP; return membershipControl(() => this.#of().connections(signed, body, origin), "unavailable"); }
   agents(membership: SequenceRef): ReturnType<HostedRegistry["agents"]> | RetiredStoreStop { if (!this.#owns(membership)) return RETIRED_STORE_STOP; return this.#of().agents(); }
   reservedAgent(op: string, membership: SequenceRef): string | null | RetiredStoreStop { if (!this.#owns(membership)) return RETIRED_STORE_STOP; return this.#of().reservedAgent(op); }
-  async alarm(): Promise<void> { /* No registry alarm work, including on old names. */ }
+  override async alarm(): Promise<void> { /* No registry alarm work, including on old names. */ }
 }
 
 /** One hosted agent: its key, bearer, sessions, custody and control identities. */
@@ -383,7 +383,7 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
     try { return await this.#of().fetch(request); }
     catch (failed) { if (isRetiredStoreStop(failed)) return json(503, { error: "unavailable" }); throw failed; }
   }
-  async alarm(): Promise<void> {
+  override async alarm(): Promise<void> {
     if (this.#format.kind === "retired" || this.#format.kind === "unavailable") return;
     // The admitted adapter also has no alarm work.
   }

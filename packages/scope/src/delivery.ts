@@ -243,7 +243,7 @@ export class Deliveries {
         material = { localSequence: sequence, origin: read.origin, operands };
       }
     } else if (!known && pinned?.definition && (message.class === "request" || message.class === "advisory")) {
-      if (bound(pinned.definition, message, from, source.under)?.handler?.from.pin) {
+      if (bound(pinned.definition, message, from, source.sequence.kind, source.under)?.handler?.from.pin) {
         const birth = await within(() => this.#ports.births?.read(from.at, bounds.fetchSeconds * 1000, bounds.entryBytes) ?? Promise.resolve(null), bounds.fetchSeconds);
         // This one read has its own fetch deadline and entry allowance and no preparation ledger, so nothing else is debited.
         const checked = birth === LATE ? null : readNativeBirth(birth, from.at, bounds.entryBytes, () => {});
@@ -252,11 +252,11 @@ export class Deliveries {
       }
       // Section 6.4: the foreign entries that the declared fields of the message name. More than one entry may use are not fetched:
       // the judge refuses that message, `bad-field`, before it reads any.
-      const wanted = messageFacts(store, pinned.definition, message, from, bounds, source.under);
+      const wanted = messageFacts(store, pinned.definition, message, from, source.sequence.kind, bounds, source.under);
       const fetched = wanted.length >= bounds.usesPerEntry ? [] : await fetchFacts(resolver, bounds, wanted);
       if (!Array.isArray(fetched)) return retry(fetched === SOURCE_TOO_LARGE ? "source-response-too-large" : "dependency-unavailable");
       facts = fetched;
-      carried = messageTexts(pinned.definition, message, from, source.under);
+      carried = messageTexts(pinned.definition, message, from, source.sequence.kind, source.under);
     }
     const texts = await this.#texts(from, carried);
     if (!texts) return retry("dependency-unavailable");
@@ -268,7 +268,7 @@ export class Deliveries {
     // A result stages its retained material in one owned context; the judge admits it after its own result checks.
     const context = (clock: Reading, prepared: DeliveryContext["prepared"]): DeliveryContext => {
       const sequence = this.#scope.localSequence();
-      const base = { clock, bounds, prepared, own: sequence ? ownOf(store, sequence) : undefined, snapshot: snapshotsOf(store), texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: (this.#scope.pinned() ?? creation)?.platform ?? undefined, source: { entry: source.entry, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, ...rows.hand() };
+      const base = { clock, bounds, prepared, own: sequence ? ownOf(store, sequence) : undefined, snapshot: snapshotsOf(store), texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: (this.#scope.pinned() ?? creation)?.platform ?? undefined, source: { entry: source.entry, sequence: source.sequence, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, ...rows.hand() };
       return message.class === "result" ? retainedResultContext(base, delivered, material) : { ...base, facts, origin };
     };
     /** The definition a section of the turn runs under: the pinned one, or before the genesis the one the seed names. */

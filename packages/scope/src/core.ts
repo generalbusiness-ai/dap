@@ -117,8 +117,12 @@ export function genuineRetained(uses: readonly ClassifiedRetainedUse[], fresh: r
 
 /** The receiver name of each retained use where no receiver reader is open: the producer's stored name. Null: a row has none. */
 export function retainedOperands(uses: readonly ClassifiedRetainedUse[]): RetainedResultOperand[] | null {
-  const operands = uses.map((classified) => typeof classified.use.producer.name === "string" ? { classified, under: classified.use.producer.name } : null);
-  return operands.every((operand): operand is RetainedResultOperand => operand !== null) ? operands : null;
+  const operands: RetainedResultOperand[] = [];
+  for (const classified of uses) {
+    if (typeof classified.use.producer.name !== "string") return null;
+    operands.push({ classified, under: classified.use.producer.name });
+  }
+  return operands;
 }
 
 /**

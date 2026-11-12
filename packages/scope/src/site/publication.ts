@@ -3,7 +3,7 @@
  * These reads do not start dispatchers, operations, sessions or provider calls.
  */
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isEntryBodyOf, isScopeRef } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, isEntryBodyOf, isScopeRef, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { isOf, destinationReceipt, initialCommitOf, usesFilePublicationProtocol } from "@generalbusiness/dap-platform";
 import { isObjectId, refName } from "@generalbusiness/dap-git";
 import type { DestinationRepository } from "../destination-host.ts";
@@ -86,7 +86,9 @@ export function sitePublishedCommit(store: import("../sqlite.ts").SqliteStore, d
     return take(store.itemBytes(id)) ? store.item(id) : null;
   };
   let current: Publication;
-  const own = (seq: number) => {
+  // The sequence comes from this scope's own genesis bytes, read once under the same bounds.
+  let sequence: CheckedSequence | null | undefined;
+  const own = Object.assign((seq: number) => {
     if (++entries > PUBLICATION_PROOF_BOUNDS.entries) exceed();
     if (!take(store.storedBytes(seq))) return null;
     const row = store.stored(seq);
@@ -94,7 +96,16 @@ export function sitePublishedCommit(store: import("../sqlite.ts").SqliteStore, d
     const entry = JSON.parse(row.bytes) as import("@generalbusiness/dap-contract").Entry;
     if (entry.seq !== seq || !isEntryBodyOf(entry, { at: current.at, seq, hash: row.hash })) return null;
     return { entry, hash: row.hash };
-  };
+  }, {
+    sequence: (): CheckedSequence | null => {
+      if (sequence !== undefined) return sequence;
+      if (++entries > PUBLICATION_PROOF_BOUNDS.entries) exceed();
+      const size = store.storedBytes(0);
+      const row = take(size) ? store.stored(0) : null;
+      sequence = row && size !== null ? admitSequenceGenesis(row.bytes, current.at, size) : null;
+      return sequence;
+    },
+  });
   let after: number | null = null;
   try {
     if (!take(store.scopeBytes())) return absent;

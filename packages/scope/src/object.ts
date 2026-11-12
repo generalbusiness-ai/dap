@@ -41,7 +41,7 @@ import { permitsNewPlatformScope, type PlatformCreationPolicy } from "./creation
 import { demoCreationOffer, type DemoCreationConfig } from "./demo-creation.ts";
 import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, ReadMinimum, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, ReadMinimum, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, isEntryBodyOf, isFactRef, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, same, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 
@@ -261,10 +261,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       localSequence: () => this.#scope?.localSequence() ?? null,
       definition: () => this.#scope.pinned()?.definition ?? null,
       retained: (...args) => store.retained(...args),
-      own: (seq) => {
+      own: Object.assign((seq: number): Sealed | null => {
         const kept = Number.isSafeInteger(seq) && seq >= 0 ? store.stored(seq) : null;
         return kept ? { entry: JSON.parse(kept.bytes) as Entry, hash: kept.hash } : null;
-      },
+      }, { sequence: () => this.#scope?.localSequence() ?? null }),
     };
     const outside = wiring.outside?.(outsideGiven);
     const ports: Ports = { ...given, readTokenAdmission: given.readTokenAdmission ?? credentialExpiry.readTokens, alarm: wakes.deadline, sealedDelivery: (entry) => { const key = compromisedKey(entry, store.scope()?.kind); if (key !== null) credentialExpiry.name(key); }, ...(authority ? { authority } : {}), ...(readers ? { readers } : {}), ...(outside ? { outside } : {}),

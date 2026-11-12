@@ -104,6 +104,7 @@ export class GenesisProofs {
       const raw = utf8(value.bytes);
       if (raw.length > GENESIS_PROOF_BOUNDS.bytes - bytes) throw new Error("proof-unavailable");
       bodies++; bytes += raw.length;
+      // HELD Q-GP: full admission needs the sequence of fact.at. This walk reads no birth, and a birth read is a new acquisition.
       const entry = proofEntry(value, fact, raw.length, content as FactUse["content"] | undefined);
       if (!entry) throw new Error("proof-unavailable");
       cache.set(canonicalize(fact), { entry, content: digestBytes(raw) });

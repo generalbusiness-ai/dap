@@ -174,7 +174,7 @@ export class Reads {
         types = act?.fields;
         fields = input["founding"]?.intent.fields ?? (input.source && act ? creationFields(input.message, input.source, act.fields) : null) ?? {};
       } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
-        const received = bound(definition, input.message, input.from, under);
+        const received = bound(definition, input.message, input.from, input.sourceKind, under);
         types = received?.handler?.fields;
         fields = received?.fields ?? {};
       }

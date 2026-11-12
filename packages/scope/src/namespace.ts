@@ -487,11 +487,12 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
           if (origin && answer.origin) {
             if (!Array.isArray(answer.origin) || answer.origin.length > 3 && answer.origin.length !== 9) return remaining() === null ? null : { absent: true };
             for (const row of answer.origin) {
-              if (!isObject(row) || !isFactRef(row.fact)) return remaining() === null ? null : { absent: true };
-              const body = parseStrict(row.bytes) as Entry;
+              if (!isObject(row) || !isFactRef(row["fact"]) || typeof row["under"] !== "string" || typeof row["bytes"] !== "string") return remaining() === null ? null : { absent: true };
+              const fact = row["fact"], under = row["under"], bytes = row["bytes"];
+              const body = parseStrict(bytes) as Entry;
               // Body integrity only; a row associates later only through a birth that the same rows hold.
-              if (!isEntryBodyOf(body, row.fact)) return remaining() === null ? null : { absent: true };
-              rows.push({ fact: row.fact, entry: body, under: row.under, bytes: row.bytes });
+              if (!isEntryBodyOf(body, fact)) return remaining() === null ? null : { absent: true };
+              rows.push({ fact, entry: body, under, bytes });
             }
             if (rows.length === 9 && (answer.under !== "issue" || canonicalize(rows[0]!.fact.at) !== canonicalize(answer.at)
               || sourceName(EVIDENCE_INCIDENT_PINS_V17.issue, "issue", admittedOrigin(rows, maxBytes)) !== "issue")) return remaining() === null ? null : { absent: true };

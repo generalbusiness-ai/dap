@@ -84,7 +84,7 @@ export class ReceiverReads implements Resolver {
     const born = selected.source.entry.input, message = delivered.message;
     if (born.type !== "genesis" || born.decision !== "refused" || !this.at || !isScopeRef(delivered.to) || !same(delivered.to, this.at)
       || !same(born.seed.creator, this.at) || !isFactRef(born.source) || !isObject(message.of) || !isFactRef(message.of.from) || !isLocalId(message.of.n) || !same(message.of.from, born.source) || message.of.n !== born.n
-      || message.outcome !== "refused" || !sentBy(selected.source.entry, delivered)) return null;
+      || message.outcome !== "refused" || !sentBy(selected.source.entry, delivered, selected.source.sequence)) return null;
     return receiverName({ entry: selected.source.entry, under: selected.producer, sequence: selected.source.sequence }, "");
   }
   /** A retained alias is checked metadata, never a receiver policy. Each use

@@ -10,8 +10,8 @@
  */
 
 import { CAPABILITIES, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Bounds, Capability, CapabilityName, Digest, Entry, FactRef, GenesisEntry, Input, ObservationRequest, PlatformDefinition, ScopeRef, Seed, Send, SequenceEntry, Timestamp } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, entryHash, factRefOf, isEntryOf, newGenesisNonce, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { Bounds, Capability, CapabilityName, Digest, Entry, FactRef, ObservationRequest, PlatformDefinition, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, isEntryOf } from "@generalbusiness/dap-bytes";
 import type { Capabilities, ContentStates, Delivered, Owners, Recorded, StateView, Steps, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { ownerReservations, NOTHING } from "@generalbusiness/dap-derive";
 import { observing } from "./authority.ts";

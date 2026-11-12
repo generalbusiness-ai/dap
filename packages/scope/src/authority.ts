@@ -475,7 +475,7 @@ export function repositorySessionBirth(config: Pick<Repository, "genesis" | "sta
   const held = item?.refs["directory"];
   const membership = recorded === undefined ? recordedMembership(config, scope) : recorded;
   // The creator's kind is the genesis's recorded source kind. The membership is the reference recorded in its membership position.
-  return directory && genesis.sourceKind === "directory" && isScopeRef(held) && same(held, directory) && genesis.source?.seq === 0 && same(genesis.source.at, directory) && genesis.message?.class === "request" && genesis.message.type === "create" && membership ? { directory, kind, membership, definitions } : null;
+  return directory && genesis.sourceKind === "directory" && isScopeRef(held) && same(held, directory) && genesis.source?.seq === 0 && same(genesis.source.at, directory) && genesis.message?.class === "request" && genesis.message.type === "create" && membership ? { directory: held, kind, membership, definitions } : null;
 }
 
 /** Resolve only the session reference of a rules scope or destination that has not retained

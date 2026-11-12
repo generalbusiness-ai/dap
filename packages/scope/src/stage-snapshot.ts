@@ -68,8 +68,9 @@ export async function readStageSnapshot(given: OutsideGiven, options: Destinatio
     const sources: Sealed[] = [], bound: SourceSealed[] = [], ids = new Set<string>();
     for (const fact of admitted.sourceFacts) {
       if (!isFactRef(fact) || ids.has(canonicalize(fact))) return null;
-      const sealed = same(fact.at, scope.at) ? given.own(fact.seq) : await reader.source(fact);
-      const sequence = same(fact.at, scope.at) ? local : sealed && "sequence" in sealed ? sealed.sequence : null;
+      const foreign = same(fact.at, scope.at) ? null : await reader.source(fact);
+      const sealed = foreign ?? (same(fact.at, scope.at) ? given.own(fact.seq) : null);
+      const sequence = same(fact.at, scope.at) ? local : foreign?.sequence ?? null;
       if (!sealed || !sequence || !isEntryOf(sealed.entry, fact, sequence) || sealed.hash !== fact.hash) return null;
       ids.add(canonicalize(fact)); sources.push({ entry: sealed.entry, hash: sealed.hash }); bound.push({ entry: sealed.entry, hash: sealed.hash, fact });
       // Reserve the complete proof before fetching or copying object bodies.
@@ -102,8 +103,9 @@ export async function readStageSnapshot(given: OutsideGiven, options: Destinatio
     if (!overlay || !await verifyOwnedCheckoutSnapshot(overlay)) return null;
     // Re-read source identity and eligibility after every provider/object await.
     for (const source of bound) {
-      const fact = boundFact(source), current = same(fact.at, scope.at) ? given.own(fact.seq) : await reader.source(fact);
-      const sequence = same(fact.at, scope.at) ? local : current && "sequence" in current ? current.sequence : null;
+      const fact = boundFact(source), foreign = same(fact.at, scope.at) ? null : await reader.source(fact);
+      const current = foreign ?? (same(fact.at, scope.at) ? given.own(fact.seq) : null);
+      const sequence = same(fact.at, scope.at) ? local : foreign?.sequence ?? null;
       if (!current || !sequence || !isEntryOf(current.entry, fact, sequence) || current.hash !== source.hash || !same(current.entry, source.entry)) return null;
     }
     const currentJob = await reader.job(jobFact);

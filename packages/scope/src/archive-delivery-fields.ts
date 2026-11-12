@@ -2,7 +2,7 @@
  * The owning frame supplies the actual verified source fact and its pin.
  * This returns metadata only and supplies no privacy/export admission. */
 import type { Advisory, Bounds, Digest, FactRef, Request, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef } from "@generalbusiness/dap-bytes";
+import { canonicalize, isFactRef, isScopeKind } from "@generalbusiness/dap-bytes";
 import { bound, isDetachedTextField, textDependency, textsNamed, type PlannedRetainedDependency, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_DIGEST_FIELD_BATCH, checkArchiveFieldSource, readArchiveDigestFields } from "./archive-digest-fields.ts";
@@ -52,6 +52,7 @@ export class ArchiveDeliveryFields {
         WHEN json_extract(entry.bytes, '$.input.message.type') = 'index' THEN 'index'
         WHEN json_extract(entry.bytes, '$.input.message.type') = 'notify' THEN 'notify' ELSE NULL END AS type,
       known.value AS name,
+      CASE WHEN json_type(entry.bytes, '$.input.sourceKind') = 'text' THEN json_extract(entry.bytes, '$.input.sourceKind') ELSE NULL END AS sourceKind,
       json_type(entry.bytes, '$.input.message.body.fields') = 'object' AS fields,
       json_type(entry.bytes, '$.input.message.body.detail') = 'object' AS detail,
       json_type(entry.bytes, '$.input.message.body.state') = 'text' AS state,
@@ -84,7 +85,7 @@ export class ArchiveDeliveryFields {
         AND json_extract(entry.bytes, '$.input.from.hash') = ? LIMIT 2`,
       this.#names, position.seq, position.hash, position.bytes, position.bytes, from.at.scope, from.at.genesis, from.seq, from.hash).toArray();
     if (rows.length !== 1 || rows[0]?.["seq"] !== position.seq) return stop("mismatch");
-    const row = rows[0], name = row["name"], cls = row["class"], type = row["type"];
+    const row = rows[0], name = row["name"], cls = row["class"], type = row["type"], sourceKind = row["sourceKind"];
     if (name === null || cls === null || type === null) return [];
     if (typeof name !== "string") return stop("mismatch");
     // This is a selector-only shape, not an invented message or journal.
@@ -95,7 +96,8 @@ export class ArchiveDeliveryFields {
     else if (cls === "request" && type === "relate") shape = { class: "request", type, body: { name, state: row["state"] === 1 ? "" : null, item: row["item"] === 1 ? from : null, detail: row["detail"] === 1 ? {} : null } };
     else if (cls === "advisory" && (type === "index" || type === "notify")) shape = { class: "advisory", type, body: { fields: row["fields"] === 1 ? {} : null } };
     else return [];
-    const matched = bound(this.definition, shape, from, under);
+    if (!isScopeKind(sourceKind)) return stop("mismatch");
+    const matched = bound(this.definition, shape, from, sourceKind, under);
     if (!matched?.handler || !matched.fields) return [];
     if (matched.handler.from.under !== undefined && under === undefined) return stop("unsupported-foreign-copy");
     const names = this.#schemas.get(handlerKey(matched.handler)); if (!names) return stop("mismatch");
