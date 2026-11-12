@@ -123,7 +123,7 @@ test("a completed scripted deployment writes an external receipt that supplies t
   assert.equal(await deployMain(["grow", "--previous-receipt", `grow=${path}`, "--dry-run"], { root: f.root, run: f.run, write: f.write }), 0);
 });
 
-test("the sandbox deploys its own configuration and an unchanged bundle and configuration refuse before upload", async t => {
+test("the sandbox deploys its own configuration and a name with an unchanged bundle and configuration sends nothing", async t => {
   const f = await fixture(t, ["grow", "sandbox"]); assert.equal(await f.invoke(), 0);
   const uploads = () => f.calls.filter(call => !call.args.includes("--dry-run"));
   assert.equal(uploads().length, 2);
@@ -135,11 +135,14 @@ test("the sandbox deploys its own configuration and an unchanged bundle and conf
   assert.match(sandbox.bundle.sha256, /^[a-f0-9]{64}$/); assert.deepEqual(sandbox.acceptedMigrations, []);
   const again = name => ["--previous-receipt", `${name}=${(name === "sandbox" ? sandbox : grow).path}`];
   const ports = { root: f.root, run: f.run, write: f.write };
-  assert.equal(await deployMain(["grow", "sandbox", ...again("grow"), ...again("sandbox"), "--receipt-dir", f.receipts], ports), 1);
-  assert.match(f.outputs.at(-1).failure, /grow equal its previous receipt/); assert.equal(uploads().length, 2);
+  // A changed SCREEN_HOSTS changes only configuration bytes; grow stays unchanged.
   await writeFile(f.path("sandbox"), JSON.stringify({ ...sandboxSettings(), vars: { SCREEN_HOSTS: "[ ]" } }) + "\n"); f.commit();
-  assert.equal(await deployMain(["sandbox", ...again("sandbox"), "--receipt-dir", f.receipts], ports), 0);
-  assert.equal(uploads().length, 3);
+  assert.equal(await deployMain(["grow", "sandbox", ...again("grow"), ...again("sandbox"), "--receipt-dir", f.receipts], ports), 0);
+  assert.deepEqual(f.outputs.find(row => row.unchanged), { config: "grow", unchanged: true, receipt: grow.path });
+  assert.ok(!f.outputs.some(row => row.unchanged && row.config === "sandbox"));
+  assert.equal(uploads().length, 3); assert.ok(uploads()[2].args.at(-1).endsWith(join("apps", "sandbox", "wrangler.rollout.jsonc")));
+  const after = await Promise.all((await readdir(f.receipts)).map(async name => JSON.parse(await readFile(join(f.receipts, name), "utf8"))));
+  assert.deepEqual(after.map(row => row.config).sort(), ["grow", "sandbox", "sandbox"]);
   await writeFile(f.path("sandbox"), JSON.stringify({ ...sandboxSettings(), migrations: [] }) + "\n"); f.commit();
   assert.equal(await deployMain(["sandbox", ...again("sandbox"), "--receipt-dir", f.receipts], ports), 1);
   assert.match(f.outputs.at(-1).failure, /declares migrations/); assert.equal(uploads().length, 3);

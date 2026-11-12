@@ -228,9 +228,11 @@ application sandbox `dap-application-sandbox`, with its configuration in
    On the next run, `--previous-receipt "grow=/absolute/receipt.json"`
    replaces `--deployed "grow=$GROW_DEPLOYED"`, and likewise for each name.
    If a previous receipt has the same dry-run bundle hash and the same
-   configuration bytes as the current build, nothing is left to deploy. The
-   command then refuses the whole batch before any upload. Leave that name
-   out of the command.
+   configuration bytes as the current build, the command prints that name
+   as `unchanged`. It sends nothing and writes no receipt for that name,
+   deploys the other names and exits 0. Keep the previous receipt for that
+   name. A changed `SCREEN_HOSTS` changes the configuration bytes, so the
+   sandbox still deploys.
 
    Exit 3 means a partial result. Read its external partial record and
    reconcile the reported Worker version before another run. A failed

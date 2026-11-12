@@ -22,10 +22,11 @@ name without a migration history. It refuses such a configuration if the
 current or the deployed version declares `migrations` or
 `durable_objects`.
 
-The deploy command now refuses a batch before any upload when a previous
-receipt has the same dry-run bundle hash and the same configuration bytes
-as the current build. This applies to all five names. A previous receipt
-must now carry a bundle hash.
+When a previous receipt has the same dry-run bundle hash and the same
+configuration bytes as the current build, the deploy command prints that
+name as `unchanged`. It sends nothing and writes no receipt for that name,
+deploys the other names and exits 0. This applies to all five names. A
+previous receipt must now carry a bundle hash.
 
 The new `smokeSandbox` takes the mapped screen host and a room scope from
 `--host` and `--room`. The source names no room. It makes five reads:
@@ -44,16 +45,16 @@ the sandbox smoke command.
 
 ## Decisions and why
 
-The request says the sandbox refuses "like the others" when the dry-run
-bundle equals the previous receipt's bundle. At main `28aa0446` no name
-had that refusal. This head adds it for all five names, so the five names
-behave the same. The refusal also compares configuration bytes. A sandbox
-mapping change edits only `SCREEN_HOSTS` and leaves the bundle unchanged;
-a bundle-only comparison would refuse that deployment.
+The request asked for the sandbox to refuse "like the others" when the
+dry-run bundle equals the previous receipt's bundle. At main `28aa0446` no
+name had that check. Planner ruling `c7585e08` replaces the refusal with a
+skip: an unchanged name sends nothing, and the run continues with the
+other names. The skip holds for all five names. It also compares
+configuration bytes. A sandbox mapping change edits only `SCREEN_HOSTS`
+and leaves the bundle unchanged, so that change still deploys.
 
-The refusal runs after every dry run and before any upload, as the other
-preflight checks do. A dry run never refuses, so an operator can still
-compare hashes.
+The comparison runs after every dry run, inside the deployment loop. A dry
+run never skips, so an operator can still compare hashes.
 
 The sandbox smoke derives the unmapped host from the mapped host: the
 label `unmapped-smoke` under the same parent domain. It refuses when that
@@ -72,14 +73,15 @@ dry-run bundle should equal the running bundle `be14bc37`.
 
 ## Final evidence
 
-UNRUN. The builder ran no test, gate, Wrangler or smoke command at this
-head; root schedules validation. Expected owners:
-`scripts/deploy.test.mjs` (12 cases) and `scripts/deploy-smoke.test.mjs`
-(10 cases), then `npm run gate` once.
+The builder ran the two owners once in the worktree, from the terminal
+output: 22 tests, 22 passed, 0 failed (`scripts/deploy.test.mjs` 12
+cases, `scripts/deploy-smoke.test.mjs` 10 cases). No output file was kept,
+so the table has no digest yet. Root schedules the gate and the evidence
+directory. The builder ran no Wrangler, deployment or smoke command.
 
 | Check | Command | Exit | Output and SHA-256 |
 | --- | --- | --- | --- |
-| Deploy and smoke owners | `node --test scripts/deploy.test.mjs scripts/deploy-smoke.test.mjs` | UNRUN | UNRUN |
+| Deploy and smoke owners | `node --test scripts/deploy.test.mjs scripts/deploy-smoke.test.mjs` | 0 (observed in terminal) | not retained |
 | Full gate | `npm run gate` | UNRUN | UNRUN |
 
 ## Open limits

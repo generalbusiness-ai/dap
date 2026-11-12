@@ -234,14 +234,12 @@ export async function deployMain(argv, { root = checkout, run = runProcess, env 
       emit({ config: plan.name, bundle: plan.bundle });
     }
     if (options.dryRun) return 0;
-    // A previous receipt with the same bundle and configuration bytes leaves
-    // nothing to deploy. Refuse the whole batch before any upload.
     for (const plan of plans) {
+      // A previous receipt with the same bundle and configuration bytes leaves
+      // nothing to deploy: send nothing and write no receipt for this name.
       if (plan.receipt && plan.receipt.bundle.sha256 === plan.bundle.sha256 && plan.receipt.configSha256 === sha256(plan.bytes)) {
-        throw new Error(`Bundle and configuration of ${plan.name} equal its previous receipt.`);
+        emit({ config: plan.name, unchanged: true, receipt: resolve(options.previous.get(plan.name)) }); continue;
       }
-    }
-    for (const plan of plans) {
       await unchanged();
       const live = await readConfig(root, plan.name);
       if (!live.bytes.equals(plan.bytes)) throw new Error("Configuration changed after dry run.");
