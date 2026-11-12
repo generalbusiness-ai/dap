@@ -25,7 +25,9 @@ export function toolsForHost(tools: readonly Tool[], ui: boolean): Tool[] {
   }).map((tool) => {
     if (!tool._meta?.["ui"]) return tool;
     const { ui: _ui, ...meta } = tool._meta;
-    return { ...tool, _meta: meta };
+    const visibility = (_ui as { visibility?: string[] }).visibility;
+    const modelOnly = visibility?.length === 1 && visibility[0] === "model";
+    return { ...tool, _meta: modelOnly ? { ...meta, ui: { visibility: ["model"] } } : meta };
   });
 }
 const result = (structuredContent: Record<string, unknown>, text: string, isError = false): CallResult => ({ structuredContent, content: [{ type: "text", text }], isError });
