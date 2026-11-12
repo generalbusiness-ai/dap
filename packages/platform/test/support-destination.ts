@@ -54,6 +54,14 @@ export const RECEIPT = "e".repeat(40);
 
 /** The admitted sequence of each stand-in scope and each fixture ledger that hand-made entries name, by scope ID. */
 const sequences = new Map<ScopeId, CheckedSequence>();
+/** The canonical genesis bytes of each stand-in scope, by scope ID, for a scripted resolver that admits them. */
+const births = new Map<ScopeId, string>();
+/** The canonical genesis bytes of a stand-in scope. */
+export const birthAt = (at: ScopeRef): string => {
+  const birth = births.get(at.scope);
+  if (birth === undefined || sequences.get(at.scope)?.at.genesis !== at.genesis) throw new Error("no stand-in genesis for this fixture address");
+  return birth;
+};
 /** Register a fixture ledger, so that entries made by hand at its address carry its admitted sequence. */
 export const admittedLedger = (ledger: Ledger): ScopeRef => { const sequence = fixtureSequence(ledger); sequences.set(sequence.at.scope, sequence); return sequence.at; };
 /** The admitted sequence of a stand-in scope or a registered fixture ledger. */
@@ -75,6 +83,7 @@ export const standIn = (kind: ScopeKind, fill: number, definition = d("f"), caus
   const sequence = admitSequenceGenesis(canonicalize(entry), { scope: scopeIdOf(seed), genesis: entryHash(entry) }, PROPOSED_BOUNDS.entryBytes);
   if (!sequence) throw new Error("the stand-in genesis must bind its address");
   sequences.set(sequence.at.scope, sequence);
+  births.set(sequence.at.scope, canonicalize(entry));
   return sequence.at;
 };
 /** STAND-IN: a membership scope and a rules scope that the hand-written observations name. Neither exists. */
