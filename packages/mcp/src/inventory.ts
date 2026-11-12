@@ -25,7 +25,7 @@ import { definitionDigest, isDigest, isPlatformDefinition, parseStrict } from "@
 
 import { ScopeHandle, partitionIndexes } from "@generalbusiness/dap-client";
 import type { Held, Inventory, Place, Standing } from "./catalogue.ts";
-import type { DefinitionLike } from "./describe.ts";
+import type { DefinitionLike } from "@generalbusiness/dap-client";
 import type { Reads } from "./reads.ts";
 
 /** What the server reads of the configuration. The command line's `config.json` holds these members, and more. */

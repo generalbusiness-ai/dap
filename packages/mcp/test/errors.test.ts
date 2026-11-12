@@ -1,13 +1,18 @@
+import { descriptions } from "../src/description-context.ts";
 import { describe, expect, test } from "vitest";
 import type { Answer, DeclaredDefinition, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { REFUSAL_REASONS, READ_REFUSALS, b64url, utf8 } from "@generalbusiness/dap-bytes";
 import { INVITATION_LINK, readApplicationInstallOptions, secretSigner, signedIntent, TransportError } from "@generalbusiness/dap-client";
 import { TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { projectAnswer, ACT_OUTPUT, type ActResult } from "../src/act-result.ts";
 import { earlierSaid } from "../src/errors.ts";
-import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, guardSentences, meaningOf, memoryStore, type DefinitionLike, type Finding } from "../src/index.ts";
+import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, meaningOf, memoryStore, type Finding } from "../src/index.ts";
+import { type DefinitionLike } from "@generalbusiness/dap-client";
 import { READ_CREDENTIAL, SERVICE, SESSION_TOKEN, StandIn } from "./support/standin.ts";
 import { fixedSigner } from "./fixtures.ts";
 import { PERSON_INVITATION, PERSON_INVITATION_CASES, PERSON_SERVICE } from "../../client/test/support/person-invitation-table.ts";
+
+const { guardSentences } = descriptions;
 
 const head = { seq: 41, hash: `sha256:${"c".repeat(64)}` } as const;
 const asked = { scope: "sc_the_scope", kind: "close-own", on: 3, action: "issue.close-own" };
@@ -28,6 +33,25 @@ test("archived submit and settlement stay explicit and terminal without inventin
   const signer = fixedSigner(21), stand = new StandIn(signer.key), store = memoryStore();
   const at = stand.destination, fact = { at, seq: 3, hash: head.hash };
   const archived = { floor: 5, commit: "b".repeat(40), through: { seq: 6, hash: head.hash } };
+  // The act, preparation-step and install projections use this same receipt owner.
+  const accepted: Extract<Answer, { answer: "accepted" }> = { answer: "accepted", receipt: { fact, definition: head.hash, intent: null, effects: [], sends: [], epoch: 0 } };
+  const said = { sentence: "The request was accepted.", next: "Read its installation." };
+  const act = projectAnswer({ answer: accepted }, { scope: at.scope, kind: "apply", tool: "act", retained: false, phase: "accepted", said });
+  const step = projectAnswer({ answer: accepted });
+  const install = projectAnswer({ answer: accepted }, { item: fact.seq, retained: false, phase: "accepted" });
+  expect([act.effects, step.effects, install.effects]).toEqual([0, 0, 0]);
+  expect(install).toMatchObject({ item: 3, phase: "accepted", fact });
+  expect(projectAnswer({ answer: { ...accepted, receipt: { ...accepted.receipt, effects: [{ effect: "state", item: 3, state: "active" }] } } }).effects).toBe(1);
+  const refusal = projectAnswer({ answer: { answer: "refused", reason: "guard-failed", judgedAt: head } }, { retained: true, phase: "refused", said: { sentence: "The scope refused the request.", next: "Read the named guard." } });
+  expect(refusal).toMatchObject({ sentence: "The scope refused the request. This outcome was kept under custody; this call sent nothing.", next: "Read the named guard. To send the same envelope again, deliberately: resubmit: true." });
+  const missing = projectAnswer({ archivedSettlement: { ok: false, reason: "archived", archived } });
+  expect(missing).toEqual({ answer: "archived", archived });
+  expect(ACT_OUTPUT.required).toEqual(["answer"]);
+  expect(ACT_OUTPUT.properties.answer.enum).toEqual(["accepted", "archived", "refused", "unavailable", "mismatch"]);
+  expect(ACT_OUTPUT.properties.phase.enum).toEqual(["prepared", "sent", "unknown", "accepted", "archived", "refused", "mismatch", "settled"]);
+  // @ts-expect-error Native custody has no recorded phase.
+  const synthetic: ActResult = { answer: "accepted", phase: "recorded" };
+  void synthetic;
   let posts = 0, settlements = 0;
   const service = new McpService({ service: SERVICE, signer, custody: store, now: () => Date.parse("2099-01-01T00:00:00Z"),
     config: { read: async () => stand.config(), addRoot: async () => { throw Error("must not grant a root"); } },

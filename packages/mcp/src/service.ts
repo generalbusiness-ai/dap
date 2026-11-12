@@ -1,3 +1,4 @@
+import { ACT_OUTPUT, projectAnswer, type ActResult } from "./act-result.ts";
 import { mcpApplicationRoomCohort, answersVersionQuestion, FAILED_CLAIM_COHORT, SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, OWN_AGENT_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/dap-client";
@@ -21,16 +22,18 @@ import { TransportError, ScopeHandle, ApplicationPackageError, actBodyText, orig
 
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
-import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
+import { actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "./custody.ts";
-import { describeAct, grantAction, onOf, type ActLike, type DefinitionLike } from "./describe.ts";
+import { effectiveFields, expectedOf, finalStates, viaLeft } from "@generalbusiness/dap-client";
+import { describeAct } from "./describe.ts";
+import { grantAction, onOf, type ActLike, type DefinitionLike } from "@generalbusiness/dap-client";
 import { AT_INPUT, schemaOf } from "./input-schema.ts";
 import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
 import { ReadSessions, Reads } from "./reads.ts";
 import { Recent } from "./recent.ts";
-import { Unshaped, capturedExpected, effectiveFields, expectedOf, finalStates, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces, viaLeft } from "./shape.ts";
+import { Unshaped, capturedExpected, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces } from "./shape.ts";
 import { WORDS, type Words } from "./words.ts";
 import { McpMetrics, observedFetch, type McpMetricOptions } from "./metrics.ts";
 import { ViewResources, type PresentationPackage } from "./views/resources.ts";
@@ -44,7 +47,7 @@ import type { ActSigner, ExactRead, ViewSource } from "./views/types.ts";
 import { DeclaredViewSource } from "./views/declared.ts";
 import { readMembershipDisplay } from "./views/member-reads.ts";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
-import type { CallResult, DispatchContext, DispatchSource } from "./results.ts";
+import { dataOf, type ExactReadData, type Failure, type Success, type CallOutcome, type CallResult, type DispatchContext, type DispatchSource } from "./results.ts";
 
 export interface ServerPort {
   /** Hosted calls require an explicit private dispatch context; local and stdio omit this flag. */
@@ -138,14 +141,17 @@ interface Snapshot {
   configured: Digest;
 }
 
+type Preparing = { resource: unknown; capability: string; step: string };
+type PreparedStep = { step: { resource: string; capability: string; step: string; phase: import("./custody.ts").Step["phase"]; answer: ActResult | null }; act: { phase: import("./custody.ts").Phase; intent: Digest }; sentence: string; next: string };
+type CustodyReport = { answer: Answer["answer"] | "not-found" | "unknown" | "settled"; sentence: string; next: string; phase?: import("./custody.ts").Phase; reason?: string; name?: string; checkAfter?: string; fact?: Receipt["fact"] };
 type Args = Record<string, unknown>;
 type Copies = ReturnType<typeof originalsAt>;
 type SentBefore = { earlier: boolean; stepped: boolean };
 type Run = (args: Args, dispatch?: DispatchContext) => Promise<CallResult>;
 type ReadCredential = { credential: string; remote: string; ends: string; entry: number };
-type CredentialRead = { ok: true; value: ReadCredential } | { ok: false; result: CallResult };
+type CredentialRead = { ok: true; value: ReadCredential } | { ok: false; result: Failure };
 
-const callResultText = (structured: Record<string, unknown>): string => JSON.stringify(structured);
+const callResultText = (structured: object): string => JSON.stringify(structured);
 /**
  * Response bounds of plan 031, section 8, for the whole CallResult as the service makes it: text, structured content and isError
  * together. Over 2026-07-28 the wire adds MODERN_RESULT_EXTRA bytes to each result, which these bounds do not count.
@@ -158,8 +164,8 @@ const pageOf = (bound: number): number => bound - PAGE_SPARE;
  * A result. The text repeats the structured content's JSON when the whole result fits its bound; otherwise the text says
  * where the result is, and the JSON is sent once. A single item larger than a page is the one result that exceeds its bound.
  */
-const ok = (structured: Record<string, unknown>, bound: number = BOUNDS.act): CallResult => {
-  const whole: CallResult = { content: [{ type: "text", text: callResultText(structured) }], structuredContent: structured, isError: false };
+const ok = <T extends Record<string, unknown>>(structured: T, bound: number = BOUNDS.act): Success<T> => {
+  const whole: Success<T> = { content: [{ type: "text", text: callResultText(structured) }], structuredContent: structured, isError: false };
   if (bytesOf(whole) <= bound) return whole;
   return { content: [{ type: "text", text: `The result is in structuredContent: ${bytesOf(structured)} bytes of JSON, which this text does not repeat.` }], structuredContent: structured, isError: false };
 };
@@ -171,13 +177,13 @@ export const ERROR_BYTES = Math.min(...Object.values(BOUNDS));
  * names is relative to ARTROOM_HOME), so the last check, on the result with no sentence at all, holds for each of them; were
  * one ever longer, the next step would be cut to fit, with its length, rather than the result pass its bound.
  */
-export const failed = (f: Finding | (Said & { error: string })): CallResult => {
+export const failed = (f: Finding | (Said & { error: string })): Failure => {
   const said = "sentence" in f ? f : finding(f);
-  const result = (message: string, next: string = said.next): CallResult => { const structured = { error: said.error, message, next }; return { content: [{ type: "text", text: callResultText(structured) }], structuredContent: structured, isError: true }; };
+  const result = (message: string, next: string = said.next): Failure => { const structured = { error: said.error, message, next }; return { content: [{ type: "text", text: callResultText(structured) }], structuredContent: structured, isError: true }; };
   const whole = result(said.sentence);
   if (bytesOf(whole) <= ERROR_BYTES) return whole;
   /** The longest marked cut of `full` that fits, or null when even the marked cut of nothing does not fit. */
-  const fit = (full: string, make: (part: string) => CallResult, says: (length: number) => string): CallResult | null => {
+  const fit = (full: string, make: (part: string) => Failure, says: (length: number) => string): Failure | null => {
     const cut = (n: number) => { const end = /[\uD800-\uDBFF]/.test(full[n - 1] ?? "") ? n - 1 : n; return make(`${full.slice(0, end)}… ${says(full.length)}`); };
     if (bytesOf(cut(0)) > ERROR_BYTES) return null;
     let lo = 0, hi = full.length;
@@ -192,22 +198,9 @@ export const failed = (f: Finding | (Said & { error: string })): CallResult => {
   return fit(said.sentence, (m) => result(m), cutNote) ?? fit(said.next, (n) => result(message, n), nextNote) ?? result(message, `… ${nextNote(said.next.length)}`);
 };
 
-/**
- * A native answer, projected for a result: its kind, the fact and the outbox IDs of an acceptance, the reason, name and judged head
- * of a refusal. The receipt's effects are counted, not repeated: `step` reads the entry whole.
- */
-export function projectAnswer(answer: Answer): Record<string, unknown> {
-  switch (answer.answer) {
-    case "archived": return { answer: "archived", archived: answer.archived, fact: answer.fact };
-    case "accepted": return { answer: "accepted", fact: answer.receipt.fact, outboxIds: answer.receipt.sends, effects: answer.receipt.effects.length };
-    case "refused": return { answer: "refused", reason: answer.reason, ...(answer.name ? { name: answer.name } : {}), judgedAt: answer.judgedAt };
-    default: return { answer: answer.answer, reason: answer.reason };
-  }
-}
-
 const configDigest = (config: McpConfig): Digest => digestBytes(utf8(canonicalize(config as never)));
 
-class Stop extends Error { constructor(readonly result: CallResult) { super("stop"); } }
+class Stop extends Error { constructor(readonly result: Failure) { super("stop"); } }
 const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
 export const VIEW_DIFF_POLLS = 8;
@@ -217,6 +210,8 @@ const DIFF_OUTPUT = { type: "object", properties: { base: { type: "string" }, in
 const READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const WRITE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false };
 const scopeArg = { type: ["string", "integer"], description: "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number." };
+const scopeRefArg = { type: "object", properties: { scope: { type: "string", pattern: "^sc_[a-z2-7]{52}$" }, inc: { type: "string", pattern: "^in_[a-z2-7]{26}$" }, kind: { enum: ["register", "directory", "membership", "rules", "destination", "inbox", "task", "lane", "commons"] } }, required: ["scope", "inc", "kind"], additionalProperties: false };
+const memberRefArg = { type: "object", properties: { membership: scopeRefArg, member: { type: "string", pattern: "^@.", minLength: 2 } }, required: ["membership", "member"], additionalProperties: false };
 const keyArg = { type: "string", minLength: 1, maxLength: 128, description: "Your key for this one meaning, 1 to 128 bytes. Keep it." };
 
 export class McpService {
@@ -490,10 +485,10 @@ export class McpService {
     return ((name !== "actions" && name !== "act") || this.mode !== "default") && (this.#genericPolicy === undefined || this.#genericPolicy.includes(name) || this.#viewTools.has(name));
   }
 
-  #dispatchUnavailable(): CallResult {
+  #dispatchUnavailable(): Failure {
     return failed({ error: "unavailable", sentence: "This delivery stopped before its Native transport call. A request may already be kept, and earlier sends under the same key may remain unresolved. This local stop records no Native outcome.", next: "Keep the same idempotencyKey and exact arguments. Reconcile the kept original with settle before starting another operation." });
   }
-  #finishDispatch(finish: (() => CallResult | null) | null): void {
+  #finishDispatch(finish: (() => Failure | null) | null): void {
     const refused = finish ? finish() : this.#port.dispatchRequired ? this.#dispatchUnavailable() : null;
     if (refused) {
       // Mark only a real finishing callback's exact result, never an early missing-context return.
@@ -502,7 +497,7 @@ export class McpService {
     }
   }
 
-  async #failure(error: unknown, given: Args): Promise<CallResult> {
+  async #failure(error: unknown, given: Args): Promise<Failure> {
     if (error instanceof Stop) return error.result;
     if (error instanceof CustodyError) {
       const result = failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
@@ -514,12 +509,17 @@ export class McpService {
   }
 
   /** A stop before signing: its base words say what this call did, and the words here add what custody holds under its key. */
+  #stoppedEarly(result: Failure, given: Args): Promise<Failure> | Failure;
+  #stoppedEarly<T extends Record<string, unknown>>(result: CallOutcome<T>, given: Args): Promise<CallOutcome<T>> | CallOutcome<T>;
+  #stoppedEarly(result: CallResult, given: Args): Promise<CallResult> | CallResult;
   #stoppedEarly(result: CallResult, given: Args): Promise<CallResult> | CallResult {
     const error = result.isError ? result.structuredContent["error"] : null;
     return error === "shape" || error === "stale-descriptor" || error === "target" || error === "commons-missing" || error === "read" || error === "unknown-tool" ? this.#stated(result, given) : result;
   }
 
   /** Each answer states what it knows: this call's words stay, and a record unresolved under the key is named, with the key to keep. */
+  #stated(result: Failure, given: Args): Promise<Failure>;
+  #stated(result: CallResult, given: Args): Promise<CallResult>;
   async #stated(result: CallResult, given: Args): Promise<CallResult> {
     const key = given["idempotencyKey"];
     if (typeof key !== "string") return result;
@@ -551,7 +551,7 @@ export class McpService {
     catch (error) { if (error instanceof TransportError) return stopCall({ error: "transport", scope, submitted: false, accepted: true }); throw error; }
   }
 
-  async #viewPerform(kind: string, args: Args, admit: () => void | Promise<void>, dispatch?: DispatchContext): Promise<CallResult> {
+  async #viewPerform(kind: string, args: Args, admit: () => void | Promise<void>, dispatch?: DispatchContext): Promise<CallOutcome<ActResult>> {
     try { return await this.#stoppedEarly(await this.#perform(null, args, kind, undefined, admit, undefined, dispatch), args); }
     catch (error) { return this.#stoppedEarly(await this.#failure(error, args), args); }
   }
@@ -560,7 +560,7 @@ export class McpService {
    * An exact read of a view: one signed read-token act, one credential, one bounded read. The act goes under custody, like any act,
    * and asks for nothing else; the credential stays in this function. The read stops after a bounded wait for the mint.
    */
-  async #viewExact(read: ExactRead, admit: () => void | Promise<void>, dispatch?: DispatchContext): Promise<CallResult> {
+  async #viewExact(read: ExactRead, admit: () => void | Promise<void>, dispatch?: DispatchContext): Promise<CallOutcome<ExactReadData | ActResult>> {
     const ready = read.kind === "diff" ? this.#port.readDiff : read.kind === "interdiff" ? this.#port.readInterdiff : this.#port.readFile;
     if (!ready) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
     const unreadable = commitIdFault(read.kind === "diff" ? { base: read.base, integration: read.integration } : read.kind === "file" ? { commit: read.commit } : { "from base": read.from.base, "from integration": read.from.integration, "to base": read.to.base, "to integration": read.to.integration });
@@ -571,8 +571,10 @@ export class McpService {
       const pinned = context.read.inventory.scopes.find(held => held.scope === read.target)?.pinned;
       const fields = answersVersionQuestion(pinned, "mcpReadTokenFixedHourDestination") ? {} : { hours: 1 };
       const signed = await this.#perform(null, { target: read.target, on: 0, fields, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit, context, dispatch);
-      if (signed.structuredContent["answer"] !== "accepted") return signed;
-      const entry = (signed.structuredContent["fact"] as { seq: number }).seq;
+      if (signed.isError) return signed;
+      const native = dataOf(signed);
+      if (native.answer !== "accepted") return signed;
+      const entry = native.fact!.seq;
       const pause = this.#port.pause ?? (() => new Promise<void>((resolve) => { setTimeout(resolve, 1000); }));
       for (let polls = 0; ; polls++) {
         const answer = await this.#exactAnswer(read, entry, context);
@@ -595,7 +597,7 @@ export class McpService {
   }
 
   /** Check only a server-retained view original; the public application catalogue still exposes no settle tool. */
-  async #viewSettle(args: Args, dispatch?: DispatchContext): Promise<CallResult> {
+  async #viewSettle(args: Args, dispatch?: DispatchContext): Promise<CallOutcome<CustodyReport>> {
     try { return await this.#stoppedEarly(await this.#settle(args, { resendExpired: true }, dispatch), args); }
     catch (error) { return this.#stoppedEarly(await this.#failure(error, args), args); }
   }
@@ -690,7 +692,9 @@ export class McpService {
 
   // ---------------------------------------------------------------- an act, under custody
 
-  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }, admit?: () => void | Promise<void>, suppliedSnapshot?: Snapshot, dispatch?: DispatchContext): Promise<CallResult> {
+  #perform(binding: Binding | null, args: Args, kind: string, preparing?: undefined, admit?: () => void | Promise<void>, suppliedSnapshot?: Snapshot, dispatch?: DispatchContext): Promise<CallOutcome<ActResult>>;
+  #perform(binding: Binding | null, args: Args, kind: string, preparing: Preparing, admit?: () => void | Promise<void>, suppliedSnapshot?: Snapshot, dispatch?: DispatchContext): Promise<CallOutcome<PreparedStep>>;
+  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: Preparing, admit?: () => void | Promise<void>, suppliedSnapshot?: Snapshot, dispatch?: DispatchContext): Promise<CallOutcome<ActResult | PreparedStep>> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes of UTF-8", declared: "a key you choose and keep" });
     // A named call or exact read passes the fresh context it just read for this attempt.
@@ -707,7 +711,7 @@ export class McpService {
     // The binding check, before anything is signed: the target's pinned definition and declaration are the ones this tool serves.
     const declaration = act && kind !== definition.genesis ? declarationDigest(definition, kind, summary.definition) : null;
     // A tool bound to other declarations refuses before anything is signed, and the list is derived again.
-    const stale = async (): Promise<CallResult> => {
+    const stale = async (): Promise<Failure> => {
       const fresh = await this.snapshot();
       const serving = fresh.bindings.find((b) => b.definition === definition.name && b.kind === kind && b.declaration === declaration && b.digests.includes(summary.definition));
       return failed({ error: "stale-descriptor", scope, runs: `${definition.name} ${summary.definition}`, tool: serving && this.mode !== "generic" ? serving.name : declaration ? "act, with this scope and kind" : null });
@@ -792,19 +796,19 @@ export class McpService {
       const said = stepped.answer === null
         ? { sentence: `The reply from ${resource.scope} to step ${preparing.step} of ${preparing.capability} was lost; this step's outcome is unknown. The act's phase is unchanged.`, next: "Call prepare again with the same arguments: the resource answers the same step with its first entry." }
         : { sentence: `${resource.scope} answered step ${preparing.step} of ${preparing.capability} for your intent: ${stepped.answer.answer}${stepped.answer.answer === "refused" ? ` (${stepped.answer.reason}${stepped.answer.name ? `, ${stepped.answer.name}` : ""})` : ""}. The act is not submitted by this; its phase is ${record.phase}.`, next: "Submit the act with the same idempotencyKey when the steps you need are answered; settle shows each step and the act apart." };
-      return ok({ step: { resource: resource.scope, capability: preparing.capability, step: preparing.step, phase: stepped.step.phase, answer: stepped.answer === null ? null : projectAnswer(stepped.answer) }, act: { phase: stepped.record.phase, intent: intentDigest(stepped.record.envelope.signed.intent) }, ...said });
+      return ok({ step: { resource: resource.scope, capability: preparing.capability, step: preparing.step, phase: stepped.step.phase, answer: stepped.answer === null ? null : projectAnswer({ answer: stepped.answer }) }, act: { phase: stepped.record.phase, intent: intentDigest(stepped.record.envelope.signed.intent) }, ...said });
     }
     const kept = await this.#sendAct(s, membership, scope, identity, meaning, build, { ...(args["resubmit"] === true ? { resubmit: true } : {}), notAfter, bytes: carried }, dispatch);
     const tool = binding?.name ?? "act";
     if ("lost" in kept) return this.#withSigner(failed({ error: "transport", scope, submitted: true }), kept.record, s);
-    if ("archivedSettlement" in kept) return this.#withSigner(ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope, kind, tool })), kept.record, s);
+    if ("archivedSettlement" in kept) return this.#withSigner(ok(projectAnswer({ archivedSettlement: kept.archivedSettlement }, { scope, kind, tool })), kept.record, s);
     const said = answered(kept.answer, asked, guards);
     if (kept.answer.answer === "accepted" && !kept.retained) {
       // An accepted act on a membership can change whether it gives this key a session: ask again on the next read.
       if (summary.scope.kind === "membership") this.#reads.forget(summary.scope.scope);
       void this.check();
     }
-    const result = ok(this.#answerOf(kept.answer, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
+    const result = ok(projectAnswer({ answer: kept.answer }, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
     if (kept.answer.answer === "accepted") this.#readReceipts.set(result, kept.answer.receipt);
     return this.#withSigner(result, kept.record, s);
   }
@@ -924,21 +928,6 @@ export class McpService {
     await this.#endOriginal(membership, intentDigest(signed.intent));
   }
 
-  #answerOf(answer: Answer, at: { scope: string; kind: string; tool: string; retained: boolean; said: { sentence: string; next: string }; phase: string }): Record<string, unknown> {
-    const base = { answer: answer.answer, sentence: at.retained ? `${at.said.sentence} This outcome was kept under custody; this call sent nothing.` : at.said.sentence, next: at.retained && answer.answer === "refused" ? `${at.said.next} To send the same envelope again, deliberately: resubmit: true.` : at.said.next, scope: at.scope, kind: at.kind, tool: at.tool, retained: at.retained, phase: at.phase };
-    switch (answer.answer) {
-      case "archived": return { ...base, archived: answer.archived, fact: answer.fact };
-      case "accepted": return { ...base, fact: answer.receipt.fact, outboxIds: answer.receipt.sends };
-      case "refused": return { ...base, reason: answer.reason, ...(answer.name ? { name: answer.name } : {}), judgedAt: answer.judgedAt };
-      default: return { ...base, reason: answer.reason };
-    }
-  }
-
-  #archivedSettlementOf(read: ArchivedSettlement, at: { scope: string; kind: string; tool: string }): Record<string, unknown> {
-    return { answer: "archived", phase: "archived", archived: read.archived, ...(read.fact ? { fact: read.fact } : {}),
-      ...at, retained: true, ...archivedAnswer(read.archived, read.fact) };
-  }
-
   /** The bytes of a value a field names by digest: a definition's, read from the rules scope that retained it. */
   async #valueBytes(s: Snapshot, place: { name: string; domain: string; digest: string }): Promise<string> {
     const room = s.read.room;
@@ -951,8 +940,8 @@ export class McpService {
   // ---------------------------------------------------------------- the generic tools
 
   #genericTools(): Record<string, { tool: Tool; run: Run }> {
-    const tool = (name: string, description: string, properties: Record<string, unknown>, required: string[], annotations: Record<string, unknown>, run: Run, output?: Record<string, unknown>, meta?: Tool["_meta"]): [string, { tool: Tool; run: Run }] =>
-      [name, { tool: { name, description, inputSchema: { type: "object", properties, required, additionalProperties: false }, ...(output ? { outputSchema: output } : {}), annotations, ...(annotations["readOnlyHint"] === false ? { _meta: { ui: { visibility: ["model"] } } } : {}), ...(meta ? { _meta: meta } : {}) }, run }];
+    const tool = (name: string, description: string, properties: Record<string, unknown>, required: string[], annotations: Record<string, unknown>, run: Run, output?: Record<string, unknown>, conditions?: Record<string, unknown>, meta?: Tool["_meta"]): [string, { tool: Tool; run: Run }] =>
+      [name, { tool: { name, description, inputSchema: { type: "object", properties, required, additionalProperties: false, ...conditions }, ...(output ? { outputSchema: output } : {}), annotations, ...(annotations["readOnlyHint"] === false ? { _meta: { ui: { visibility: ["model"] } } } : {}), ...(meta ? { _meta: meta } : {}) }, run }];
     return Object.fromEntries([
       tool("room", "Orientation. The service, your key, the scopes of the room by name, the issues and changes the directory lists, the applications its factory created (such as a Counter), the standalone scopes, your standing on each membership, the active definitions, and the act tools your role does not hold; paged by bytes, with a cursor. Start here.",
         { cursor: { type: "string" } }, [], READ, (a) => this.#room(a)),
@@ -961,18 +950,18 @@ export class McpService {
       tool("inspect", "One scope: its definition and digest, status, head, counts by item type and state, and its live items, paged by bytes at its head. With declaration: true, the definition's bytes, paged. With describe: <kind>, the complete derived text of one act, for an act whose tool description points here.",
         { scope: scopeArg, declaration: { type: "boolean" }, describe: { type: "string" }, cursor: { type: "string" }, offset: { type: "integer", minimum: 0 } }, ["scope"], READ, (a) => this.#inspect(a)),
       tool("create", "Creates a scope with no existing target, and records it in your configuration so later connections list its tools. definition: a platform name such as platform:register@18, a definition's JSON, or its digest; kind: the definition's genesis act; fields; texts and definitions beside it; membership: the membership scope standing for the new scope is read from. Kept under custody like an act: the idempotencyKey is required.",
-        { definition: { type: ["string", "object"] }, kind: { type: "string" }, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, definitions: { type: "array", items: { type: "object" } }, membership: { type: ["string", "object"] }, idempotencyKey: keyArg, resubmit: { type: "boolean" } },
+        { definition: { type: ["string", "object"] }, kind: { type: "string" }, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, definitions: { type: "array", items: { type: "object" } }, membership: { anyOf: [{ type: "string", pattern: "^sc_[a-z2-7]{52}$" }, scopeRefArg] }, idempotencyKey: keyArg, resubmit: { type: "boolean" } },
         ["definition", "kind", "idempotencyKey"], WRITE, (a, dispatch) => this.#create(a, dispatch), ACT_OUTPUT),
       tool("join", "Joins a room with an invitation link from dap invite (artroom-invite:...), as dap join does: signs membership's join with this server's key, keeps the exact request under custody before sending it, and on acceptance records the room in your configuration, so its tools are listed. After a lost reply, call again with the same link and idempotencyKey: the same request is sent again, never a new one. The link is private: this tool's result never repeats it. Legacy membership records the invitation secret in the join entry, visible through authorized history reads. The invitation-key cohort records a proof bound to this membership, invitation and joining key; its private invitation seed stays out of the entry.",
         { link: { type: "string", description: "The invitation link, artroom-invite:..." }, idempotencyKey: keyArg }, ["link", "idempotencyKey"], WRITE, (a, dispatch) => this.#join(a, dispatch), ACT_OUTPUT),
       tool("install_application", "Install an operator-trusted package in this room by immutable Git URI and independent expected release. Select default roles explicitly; values are the application genesis fields. Keeps one signed native envelope under idempotencyKey before submission. Repeating the same key and meaning retains that envelope. Acceptance records the install request; application_installation reads its pending, active or final refused result. The host fetches the URI independently.",
-        { owner: { type: "object", description: "Existing full MemberRef chosen for a device package. Native installation checks its current membership." }, uri: { type: "string", maxLength: 4096 }, release: { type: "string" }, roles: { type: "array", maxItems: 5, uniqueItems: true, items: { enum: ["admin", "maintainer", "member", "agent", "checker"] } }, values: { type: "object" }, idempotencyKey: keyArg },
+        { owner: { ...memberRefArg, description: "Existing full MemberRef chosen for a device package. Native installation checks its current membership." }, uri: { type: "string", maxLength: 4096 }, release: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" }, roles: { type: "array", maxItems: 5, uniqueItems: true, items: { enum: ["admin", "maintainer", "member", "agent", "checker"] } }, values: { type: "object" }, idempotencyKey: keyArg },
         ["uri", "release", "roles", "values", "idempotencyKey"], { ...WRITE, openWorldHint: true }, (a, dispatch) => this.#installApplication(a, dispatch)),
-      tool("application_installation", "Read one native installation in the configured room, including its recorded phase and final refusal reason. Earlier committed activation and grants can remain after a later refusal. Active results include the exact generic screen address. This read signs no install or continuation and changes no native state.",
-        { item: { type: "integer", minimum: 0 } }, ["item"], READ, a => this.#applicationInstallation(a)),
+      tool("application_installation", "Read one native installation in the configured room, including its state, installation workflow phase and final refusal reason. Earlier committed activation and grants can remain after a later refusal. Active results include the exact generic screen address. This read signs no install or continuation and changes no native state.",
+        { item: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER } }, ["item"], READ, a => this.#applicationInstallation(a)),
       tool("prepare", "Asks the scope that owns a resource for one step of a capability. With kind: for the intent an act will submit later under the same idempotencyKey; resource: the scope asked, which may differ from target; then the act's own target, kind, on, fields, texts, presented and values. Without kind: a step with no act, such as hold@1's instance, whose own intent (kind capability:step, with fields) goes to the resource. Returns the resource's answer for that step, never an act's receipt.",
-        { resource: scopeArg, capability: { type: "string" }, step: { type: "string" }, target: scopeArg, kind: { type: "string" }, on: { type: "integer", minimum: 0 }, at: AT_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg },
-        ["resource", "capability", "step", "idempotencyKey"], WRITE, (a, dispatch) => this.#prepare(a, dispatch)),
+        { resource: scopeArg, capability: { type: "string", maxLength: NAME_BYTES }, step: { type: "string", maxLength: NAME_BYTES }, target: scopeArg, kind: { type: "string" }, on: { type: "integer", minimum: 0 }, at: AT_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg },
+        ["resource", "capability", "step", "idempotencyKey"], WRITE, (a, dispatch) => this.#prepare(a, dispatch), undefined, { if: { required: ["kind"] }, then: { required: ["target"], properties: { on: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER } } } }),
       tool("items", "A page of one item type of a scope, in one of two traversals, each with its own cursor: the live items, from the scope's summary (the default); or, with final: true, the retained final items. The cursor is not checked against its traversal: to continue, call again with the same scope, type and final flag.",
         { scope: scopeArg, type: { type: "string" }, final: { type: "boolean", description: "true: the traversal of the retained final items, separate from the live one; the default is the live items" }, cursor: { type: "string" } }, ["scope", "type"], READ, (a) => this.#items(a)),
       tool("steps", "A page of a scope's entries, oldest first, one line each: seq, time, kind, signer, effects and sends counts.",
@@ -988,15 +977,15 @@ export class McpService {
       tool("wait", "Waits at most 60 seconds until one of: a scope's head reaches seq; an item reaches one of states; the scopes an entry created (entry) and the scopes their genesis created exist and are active; a send (outboxId) has a result. Returns what it saw and whether it timed out. Never writes.",
         { scope: scopeArg, seq: { type: "integer", minimum: 0 }, item: { type: "integer", minimum: 0 }, type: { type: "string", description: "the item's type; with item, a final item is found among the retained ones" }, states: { type: "array", items: { type: "string" } }, entry: { type: "integer", minimum: 0 }, outboxId: { type: "string" }, seconds: { type: "integer", minimum: 1, maximum: WAIT_MOST_SECONDS } }, ["scope"], READ, (a) => this.#wait(a)),
       tool("settle", "What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs nothing and sends no act.",
-        { target: scopeArg, definition: { type: ["string", "object"] }, idempotencyKey: keyArg, cursor: { type: "string" } }, ["idempotencyKey"], READ, (a, dispatch) => this.#settle(a, undefined, dispatch)),
+        { target: scopeArg, definition: { type: ["string", "object"] }, idempotencyKey: keyArg, cursor: { type: "string" } }, ["idempotencyKey"], READ, (a, dispatch) => this.#settle(a, undefined, dispatch), undefined, { anyOf: [{ required: ["target"] }, { required: ["definition"] }] }),
       tool("credential", "The one-time read credential for a read-token act your key signed (entry: its seq at the destination), read once from the destination's credential route with your session. Its result is a secret: the credential appears once in the text content. The structured content holds only the remote URL, expiry, and entry. Use it with Git; it is not kept here.",
-        { entry: { type: "integer", minimum: 1 }, target: scopeArg }, ["entry"], { ...READ, idempotentHint: false }, (a) => this.#credential(a), undefined, { ui: { visibility: ["model"] } }),
+        { entry: { type: "integer", minimum: 1 }, target: scopeArg }, ["entry"], { ...READ, idempotentHint: false }, (a) => this.#credential(a), undefined, undefined, { ui: { visibility: ["model"] } }),
       tool("diff", "The change between two exact commits, read with the one-time credential of a read-token act your key signed (entry: its seq at the destination). The server keeps the credential and spends it on this read. It signs nothing. The answer holds at most 40 KiB of text. Over a bound, truncated is true and the text says truncated. An object the host does not give is an error, and the answer shows no change it did not read. Sign another read-token for another diff.",
-        { entry: { type: "integer", minimum: 1 }, base: { type: "string", description: "The exact commit ID of the older side." }, integration: { type: "string", description: "The exact commit ID of the newer side." }, target: scopeArg }, ["entry", "base", "integration"], { ...READ, idempotentHint: false, openWorldHint: true }, (a) => this.#diff(a), DIFF_OUTPUT, { ui: { visibility: ["model"] } }),
+        { entry: { type: "integer", minimum: 1 }, base: { type: "string", pattern: "^[0-9a-f]{40}$", description: "The exact commit ID of the older side." }, integration: { type: "string", pattern: "^[0-9a-f]{40}$", description: "The exact commit ID of the newer side." }, target: scopeArg }, ["entry", "base", "integration"], { ...READ, idempotentHint: false, openWorldHint: true }, (a) => this.#diff(a), DIFF_OUTPUT, undefined, { ui: { visibility: ["model"] } }),
       tool("actions", "The acts of one scope, as act tools would describe them: each kind with its derived description, input schema, binding and the definition digest to give to act. For a host that lists few tools.",
         { scope: scopeArg, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#actions(a)),
       tool("act", "Signs one act of a scope by its native kind, under the same custody and binding checks as an act tool. digest: the definition digest actions gave; fields as actions describes; idempotencyKey required.",
-        { target: scopeArg, kind: { type: "string" }, digest: { type: "string" }, on: { type: "integer", minimum: 0 }, at: AT_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg, resubmit: { type: "boolean" } },
+        { target: scopeArg, kind: { type: "string" }, digest: { type: "string" }, on: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER }, at: AT_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg, resubmit: { type: "boolean" } },
         ["target", "kind", "digest", "idempotencyKey"], WRITE, (a, dispatch) => (typeof a["kind"] === "string" ? this.#perform(null, a, a["kind"], undefined, undefined, undefined, dispatch) : Promise.resolve(failed({ error: "shape", field: "kind", what: "is missing", declared: "a native act kind" }))), ACT_OUTPUT),
     ]);
   }
@@ -1235,7 +1224,7 @@ export class McpService {
     const said = stepped.answer === null
       ? { sentence: `The reply from ${resource.scope} to step ${step} of ${capability} was lost; this step's outcome is unknown.`, next: "Call prepare again with the same arguments: the same signed step is sent again, and the resource answers it with its first entry." }
       : { sentence: `${resource.scope} answered step ${step} of ${capability}, a step with no act: ${stepped.answer.answer}${stepped.answer.answer === "refused" ? ` (${stepped.answer.reason}${stepped.answer.name ? `, ${stepped.answer.name}` : ""})` : ""}.${stepped.retained ? " This answer was kept from before; nothing was sent." : ""}`, next: "settle with the resource as target and the same key shows this step." };
-    return ok({ step: { resource: resource.scope, capability, step, phase: stepped.step.phase, answer: stepped.answer === null ? null : projectAnswer(stepped.answer) }, intent: intentDigest(stepped.record.envelope.signed.intent), ...said });
+    return ok({ step: { resource: resource.scope, capability, step, phase: stepped.step.phase, answer: stepped.answer === null ? null : projectAnswer({ answer: stepped.answer }) }, intent: intentDigest(stepped.record.envelope.signed.intent), ...said });
   }
 
   /**
@@ -1245,7 +1234,7 @@ export class McpService {
    * the record under custody's rule. The passing of `notAfter` resolves nothing by itself, and this path signs nothing. If the
    * scope's clock lags by more than the margin, the scope accepts the act, and the answer says so.
    */
-  async #settle(args: Args, card?: { resendExpired: boolean }, dispatch?: DispatchContext): Promise<CallResult> {
+  async #settle(args: Args, card?: { resendExpired: boolean }, dispatch?: DispatchContext): Promise<CallOutcome<CustodyReport>> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes", declared: "the key you gave" });
     const s = await this.#current();
@@ -1301,11 +1290,11 @@ export class McpService {
     // Each step by its latest answer, projected, and how many it has had; the steps paged by bytes with a cursor.
     const allSteps = Object.entries(record.steps).sort(([a], [b]) => (a < b ? -1 : 1)).map(([, st]) => {
       const latest = st.answers.at(-1)?.answer ?? null;
-      return { resource: st.resource.scope, capability: st.capability, step: st.step, phase: st.phase, answer: latest?.answer ?? "unknown", last: latest ? projectAnswer(latest) : null, answers: st.answers.length };
+      return { resource: st.resource.scope, capability: st.capability, step: st.step, phase: st.phase, answer: latest?.answer ?? "unknown", last: latest ? projectAnswer({ answer: latest }) : null, answers: st.answers.length };
     });
     const fromStep = fromCursor<{ i: number }>(args["cursor"])?.i ?? 0;
     const { page: steps, next: nextStep } = pageBy(allSteps, fromStep, pageOf(BOUNDS.act) - 1536);
-    const answer = record.phase === "archived" ? "archived" : record.phase === "accepted" ? "accepted" : record.phase === "refused" ? "refused" : record.phase === "mismatch" ? "mismatch" : record.phase === "settled" ? "settled" : "unknown";
+    const answer: CustodyReport["answer"] = record.phase === "archived" ? "archived" : record.phase === "accepted" ? "accepted" : record.phase === "refused" ? "refused" : record.phase === "mismatch" ? "mismatch" : record.phase === "settled" ? "settled" : "unknown";
     const sentence = answer === "settled" ? `Under key ${String(key)}, every capability step is decided; no act is kept under this key.`
       : answer === "accepted" ? `The act under key ${String(key)} was accepted: entry ${receipt?.fact.seq}.`
       : answer === "refused" ? `The act under key ${String(key)} was refused; the refusal is kept.`
@@ -1318,13 +1307,13 @@ export class McpService {
       ...(card && answer === "unknown" && !expired ? { checkAfter: timeOf(expiry) } : {}),
       ...(archived ? { ...archivedAnswer(archived.archived, archived.fact), archived: archived.archived, ...(archived.fact ? { fact: archived.fact } : {}) } : {}),
       ...(receipt ? { fact: receipt.fact, outboxIds: receipt.sends } : {}), outcomes: record.count, attempt: record.attempt,
-      last: last ? { at: last.at, ...(last.archivedSettlement ? { answer: "archived", archived: last.archivedSettlement.archived, ...(last.archivedSettlement.fact ? { fact: last.archivedSettlement.fact } : {}) } : projectAnswer(last.answer)) } : null,
+      last: last ? { at: last.at, ...(last.archivedSettlement ? projectAnswer({ archivedSettlement: last.archivedSettlement }) : projectAnswer({ answer: last.answer })) } : null,
       steps, ...(nextStep !== null ? { cursor: cursorOf({ i: nextStep }), more: `Steps ${fromStep + 1} to ${nextStep} of ${allSteps.length}; call settle with cursor for the rest.` } : {}) });
     if (receipt) this.#readReceipts.set(result, receipt);
     return this.#withSigner(result, record, s);
   }
 
-  #withSigner(result: CallResult, record: CustodyRecord, snapshot: Snapshot): CallResult {
+  #withSigner<T extends CallResult>(result: T, record: CustodyRecord, snapshot: Snapshot): T {
     const key = record.envelope.signed.intent.actor, membership = record.identity.membership, room = snapshot.read.room;
     this.#actSigners.set(result, membership && room && canonicalize(room.membership) === canonicalize(membership)
       ? actSigner(room.membershipItems, membership, key) : { key, actor: null });
@@ -1384,7 +1373,7 @@ export class McpService {
       } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     }, { ...(args["resubmit"] === true ? { resubmit: true } : {}), notAfter, bytes: bytesOf({ definition: args["definition"], fields: fieldsGiven, texts: textsGiven, definitions }) });
     if ("lost" in kept) return failed({ error: "transport", scope: "the creation", submitted: true });
-    if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope: "the creation", kind, tool: "create" }));
+    if ("archivedSettlement" in kept) return ok(projectAnswer({ archivedSettlement: kept.archivedSettlement }, { scope: "the creation", kind, tool: "create" }));
     if (kept.answer.answer === "accepted") {
       const scope = kept.answer.receipt.fact.at.scope;
       const config = await this.#port.config.read();
@@ -1394,7 +1383,7 @@ export class McpService {
     const said = kept.answer.answer === "accepted"
       ? { sentence: `Created ${kept.answer.receipt.fact.at.kind} ${kept.answer.receipt.fact.at.scope} under ${data.name}; it is recorded in your configuration's standalone scopes.`, next: "Call wait with the scope and entry 0 to see what its genesis created; tools/list now lists its acts." }
       : answered(kept.answer, { scope: "the creation", kind }, null);
-    return ok(this.#answerOf(kept.answer, { scope: kept.answer.answer === "accepted" ? kept.answer.receipt.fact.at.scope : "the creation", kind, tool: "create", retained: kept.retained, said, phase: kept.record.phase }));
+    return ok(projectAnswer({ answer: kept.answer }, { scope: kept.answer.answer === "accepted" ? kept.answer.receipt.fact.at.scope : "the creation", kind, tool: "create", retained: kept.retained, said, phase: kept.record.phase }));
   }
 
   /**
@@ -1437,7 +1426,7 @@ export class McpService {
       definition: row.values["definition"], ids: { release: row.values["release"], semantic: row.values["semantic"], presentation: row.values["presentation"] }, membershipDefinition: room.cohort.membership };
   }
 
-  async #installApplication(args: Args, dispatch?: DispatchContext): Promise<CallResult> {
+  async #installApplication(args: Args, dispatch?: DispatchContext): Promise<CallOutcome<ActResult>> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing or invalid", declared: "a key you choose and keep" });
     const room = await this.#applicationRoom(), pin = room.cohort.rules;
@@ -1491,8 +1480,8 @@ export class McpService {
       return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds" : "the exact Git package could not be prepared" });
     }
     if ("lost" in kept) return failed({ error: "transport", scope: room.rules.scope, submitted: true });
-    if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope: room.rules.scope, kind: "install-application", tool: "install_application" }));
-    if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer(kept.answer), retained: kept.retained, phase: kept.record.phase });
+    if ("archivedSettlement" in kept) return ok(projectAnswer({ archivedSettlement: kept.archivedSettlement }, { scope: room.rules.scope, kind: "install-application", tool: "install_application" }));
+    if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer({ answer: kept.answer }), retained: kept.retained, phase: kept.record.phase });
     const receipt = kept.answer.receipt;
     if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", sent: "report", what: "the install acknowledgement does not match the retained native request" });
     const read = await this.#afterAccepted(room.rules.scope, () => this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } })));
@@ -1501,10 +1490,10 @@ export class McpService {
       || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
       || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", sent: "report", what: "the install receipt's native entry does not hold the exact retained request" });
     this.#invalidate();
-    return ok({ answer: "accepted", fact: receipt.fact, item: receipt.fact.seq, retained: kept.retained, phase: "recorded", next: "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused." });
+    return ok({ ...projectAnswer({ answer: kept.answer }, { item: receipt.fact.seq, retained: kept.retained, phase: kept.record.phase }), next: "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused." });
   }
 
-  async #applicationInstallation(args: Args): Promise<CallResult> {
+  async #applicationInstallation(args: Args) {
     const item = args["item"];
     if (typeof item !== "number" || !Number.isSafeInteger(item) || item < 0) return failed({ error: "shape", field: "item", what: "is not a native install item", declared: "a nonnegative integer" });
     const room = await this.#applicationRoom();
@@ -1547,9 +1536,9 @@ export class McpService {
       catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     }, { notAfter, bytes: bytesOf(fields) });
     if ("lost" in kept) return failed({ error: "transport", scope: M.scope, submitted: true });
-    if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope: M.scope, kind: "join", tool: "join" }));
+    if ("archivedSettlement" in kept) return ok(projectAnswer({ archivedSettlement: kept.archivedSettlement }, { scope: M.scope, kind: "join", tool: "join" }));
     const asked = { scope: M.scope, kind: "join", on: null, action: null };
-    if (kept.answer.answer !== "accepted") return ok(this.#answerOf(kept.answer, { scope: M.scope, kind: "join", tool: "join", retained: kept.retained, said: answered(kept.answer, asked, []), phase: kept.record.phase }));
+    if (kept.answer.answer !== "accepted") return ok(projectAnswer({ answer: kept.answer }, { scope: M.scope, kind: "join", tool: "join", retained: kept.retained, said: answered(kept.answer, asked, []), phase: kept.record.phase }));
     // The admitted entry, read as the member the join made: it must hold the exact request kept, and it names the inbox.
     this.#reads.forget(M.scope);
     const fact = kept.answer.receipt.fact;
@@ -1566,7 +1555,7 @@ export class McpService {
     else if (this.#port.config.setRepository) await this.#port.config.setRepository(repository);
     this.#invalidate();
     return ok({
-      ...this.#answerOf(kept.answer, { scope: M.scope, kind: "join", tool: "join", retained: kept.retained, said: { sentence: `Joined as ${link.handle} on key ${this.#port.signer.key}: entry ${M.scope}:${fact.seq}. The room is recorded in your configuration.`, next: "Call wait with scope inbox and seq 0 until your inbox exists; then room. tools/list now lists the room's acts for your role." }, phase: kept.record.phase }),
+      ...projectAnswer({ answer: kept.answer }, { scope: M.scope, kind: "join", tool: "join", retained: kept.retained, said: { sentence: `Joined as ${link.handle} on key ${this.#port.signer.key}: entry ${M.scope}:${fact.seq}. The room is recorded in your configuration.`, next: "Call wait with scope inbox and seq 0 until your inbox exists; then room. tools/list now lists the room's acts for your role." }, phase: kept.record.phase }),
       handle: link.handle, repository,
     });
   }
@@ -1757,18 +1746,18 @@ export class McpService {
   }
 
   /** One credential, spent on one bounded read that holds none of it. */
-  async #withCredential(args: Args, read: (credential: { remote: string; credential: string }) => Promise<Record<string, unknown> | { unavailable: string }>, context?: Snapshot): Promise<CallResult> {
+  async #withCredential<T extends Record<string, unknown>>(args: Args, read: (credential: { remote: string; credential: string }) => Promise<T | { unavailable: string }>, context?: Snapshot): Promise<CallOutcome<T>> {
     const got = await this.#readCredential(args, context);
     if (!got.ok) return got.result;
     let answer;
     try { answer = await read(got.value); }
     catch { return failed({ error: "diff", why: "the host gave no readable answer", spent: true }); }
-    if ("unavailable" in answer) return failed({ error: "diff", why: String(answer["unavailable"]), spent: true });
+    if ("unavailable" in answer) return failed({ error: "diff", why: String(answer.unavailable), spent: true });
     return ok(answer, BOUNDS.large);
   }
 
   /** The answer of a view's exact read. Its `commits` come from the read's own answer, so the page names what the read returned. */
-  #exactAnswer(read: ExactRead, entry: number, context: Snapshot): Promise<CallResult> {
+  #exactAnswer(read: ExactRead, entry: number, context: Snapshot): Promise<CallOutcome<ExactReadData>> {
     const args = { entry, target: read.target };
     if (read.kind === "diff") return this.#withCredential(args, async ({ remote, credential }) => {
       const diff = await this.#port.readDiff!({ remote, credential, base: read.base, integration: read.integration });
@@ -1812,7 +1801,7 @@ export class McpService {
 }
 
 /** The fault in a diff's two commit IDs, if it has one. */
-function commitIdFault(ids: Record<string, unknown>): CallResult | null {
+function commitIdFault(ids: Record<string, unknown>): Failure | null {
   for (const [field, value] of Object.entries(ids)) {
     if (typeof value !== "string" || !COMMIT_ID.test(value)) return failed({ error: "shape", field, what: "is not a SHA-1 commit ID of 40 hexadecimal characters", declared: "an exact SHA-1 commit ID" });
   }

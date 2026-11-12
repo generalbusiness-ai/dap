@@ -1,3 +1,4 @@
+import { descriptions } from "../src/description-context.ts";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, COMMONS_COHORT, platform } from "@generalbusiness/dap-platform";
 import { relaxedCounting } from "./support/definition-corpus-data.ts";
 import { readFileSync } from "node:fs";
@@ -8,12 +9,15 @@ import { lane as deriveLane } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { counting } from "../../../apps/counter/definition.ts";
 import type { DeclaredDefinition, ScopeId } from "@generalbusiness/dap-contract";
-import { DESCRIPTION_CHARS, McpService, memoryStore, actTool, bindingsOf, describeAct, describedOf, generationOf, guardSentences, inline, listed, schemaOf, WORDS, type ActLike, type DefinitionLike, type Held, type Inventory } from "../src/index.ts";
+import { DESCRIPTION_CHARS, McpService, memoryStore, actTool, bindingsOf, describeAct, describedOf, generationOf, listed, schemaOf, WORDS, type Held, type Inventory } from "../src/index.ts";
+import { inline, type ActLike, type DefinitionLike } from "@generalbusiness/dap-client";
 import { ACTIVE_DEMO, MEMBERSHIP, declared, demoInventory, heldOf, lane, standingOf } from "./support/catalogue.ts";
 import { garden } from "./support/garden.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";
 import { shapeFields, Unshaped } from "../src/shape.ts";
 import { fixedSigner } from "./fixtures.ts";
+
+const { guardSentences } = descriptions;
 
 const DOC = readFileSync(new URL("../../../docs/mcp.md", import.meta.url), "utf8");
 

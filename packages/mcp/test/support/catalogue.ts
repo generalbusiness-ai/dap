@@ -6,7 +6,8 @@ import type { DeclaredDefinition, Digest, PlatformDefinition, ScopeId, ScopeRef 
 import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { FIRST_ACTIONS_OF, platform } from "@generalbusiness/dap-platform";
 import { changeDemo, issueDemo } from "@generalbusiness/dap-lanes";
-import type { DefinitionLike, Held, Inventory, Place, Standing } from "../../src/index.ts";
+import type { DefinitionLike } from "@generalbusiness/dap-client";
+import type { Held, Inventory, Place, Standing } from "../../src/index.ts";
 
 export const MEMBERSHIP = "sc_membershipxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" as ScopeId;
 const ref = (scope: string, kind: ScopeRef["kind"]): ScopeRef => ({ scope: scope as ScopeId, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa", kind });

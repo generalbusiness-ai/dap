@@ -2,7 +2,8 @@
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, MemberRef, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
 import { changeFinding, changeJ4 } from "@generalbusiness/dap-lanes";
-import { signerWords, type ActLike, type ActSigner, type Card, type CardAction, type Projection } from "@generalbusiness/dap-mcp";
+import { signerWords, type ActSigner, type Card, type CardAction, type Projection } from "@generalbusiness/dap-mcp";
+import { type ActLike } from "@generalbusiness/dap-client";
 import { MERGE_STARTED, changeKicker, decidedLine, mergeHolds, reviewRecorded } from "./attention.ts";
 import { captureInput } from "./capture.ts";
 import { findingProfile, malformedRange, openFindings, requiredSource, shownText } from "./findings.ts";

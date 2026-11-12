@@ -10,7 +10,7 @@
 import type { FactRef, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { isFactRef, isRecord, textDigest } from "@generalbusiness/dap-bytes";
 import { FieldShapeError, shapeFieldsOf, type ShapeFaultCode, type ShapeField, type ShapeFieldType } from "@generalbusiness/dap-client";
-import type { ActLike } from "./describe.ts";
+import type { ActLike } from "@generalbusiness/dap-client";
 import { clip } from "./errors.ts";
 
 /** A value that is not of its declared shape. Nothing was signed. */
@@ -132,7 +132,6 @@ export function capturedExpected(at: Record<string, number> | undefined, fresh: 
   return at;
 }
 
-export { expectedOf, viaLeft, effectiveFields, finalStates } from "@generalbusiness/dap-client";
 
 /** The fields of an act that name a value beside the intent, with the domain each states. */
 export function valuePlaces(act: ActLike, fields: Readonly<Record<string, FieldValue>>): { name: string; domain: string; digest: string }[] {

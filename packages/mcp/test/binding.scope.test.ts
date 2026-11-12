@@ -1,9 +1,10 @@
+import type { DefinitionLike } from "@generalbusiness/dap-client";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, Digest, FactRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/dap-bytes";
 import { firstExtents, platform } from "@generalbusiness/dap-platform";
 import { change, change3 } from "@generalbusiness/dap-lanes";
-import { declarationDigest, variantOf, type DefinitionLike, type Tool } from "../src/index.ts";
+import { declarationDigest, variantOf, type Tool } from "../src/index.ts";
 import { issueLike, roomLike } from "./support/collisions.ts";
 import { mcpRoom, type Agent, exercises, created } from "./fixtures-native.ts";
 

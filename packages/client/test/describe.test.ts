@@ -2,6 +2,9 @@ import { describe, expect, test } from "vitest";
 import { describeActLine, descriptionsOf, formFor, inline, type ActLike, type DefinitionLike } from "../src/index.ts";
 
 const { guardSentences } = descriptionsOf({});
+// @ts-expect-error A neutral description context has no MCP character-bounded renderer.
+const mcpRenderer = descriptionsOf({}).describeAct;
+void mcpRenderer;
 
 // Pure declaration descriptions. Supplied records prove no read, admission,
 // caller standing or Native scope outcome.
