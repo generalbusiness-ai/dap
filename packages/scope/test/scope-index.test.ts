@@ -1,10 +1,10 @@
 import { expect, test, vi } from "vitest";
 import { env } from "cloudflare:workers";
-import type { ControlRequest, ScopeRef } from "@generalbusiness/dap-contract";
+import { RETIRED_ROOM_READER_COMMIT, type ControlRequest, type ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, newIncarnation, signControl, utf8 } from "@generalbusiness/dap-bytes";
 import { applicationScreenPath } from "@generalbusiness/dap-client/application";
 import { indexedScopes, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexPort, type ScopeRegistration } from "../src/scope-index.ts";
-import scopeWorker, { api, mcpRoute } from "../src/worker.ts";
+import scopeWorker, { api, mcpRoute, route } from "../src/worker.ts";
 import { applicationSandboxPage } from "../src/applications/route.ts";
 import { namespace, membershipIn, type Binding } from "../src/namespace.ts";
 import type { SourceReadContext } from "../src/ports.ts";
@@ -88,6 +88,45 @@ test("unknown foreign facts, site and application lookups and hosted registry re
     SCOPES: targets as unknown as DurableObjectNamespace, REGISTRIES: registries as unknown as DurableObjectNamespace, AGENTS: env.AGENTS });
   expect(otherKind?.status).toBe(404); // a known Directory ID is not a known Membership
   expect({ targetCalls, registryCalls, bodyReads }).toEqual({ targetCalls: 0, registryCalls: 0, bodyReads: 0 });
+
+  // This retired RPC stand-in proves routing and raw propagation only.
+  // It neither constructs an old database nor supplies Native authority.
+  let retiredNames = 0, retiredGets = 0, retiredRegistrations = 0, retiredReads = 0;
+  const rawStop = Object.freeze({ stop: "retired" } as const);
+  const retiredTarget: Binding<string> = {
+    idFromName(name) { expect(name).toBe(born.name); retiredNames++; return name; },
+    get() { retiredGets++; return {
+      registerKnown: async () => { retiredRegistrations++; return rawStop; },
+      summary: async () => { retiredReads++; return expect.fail("A retired registration must stop before summary"); },
+      observed: async () => { retiredReads++; return expect.fail("A retired registration must stop before observed work"); },
+    }; },
+  };
+  let newIndexReads = 0;
+  const emptyNewIndex: ScopeIndexPort = {
+    async has(name) { expect(name).toBe(born.name); newIndexReads++; return false; },
+    async register() { return expect.fail("A retired room must not seed the new index"); },
+    async list() { return expect.fail("A lookup must not scan the index"); },
+  };
+  const retirementSettings = { SCOPE_INDEX: {
+    idFromName(name: string) { expect(name).toBe("applied-genesis-v2"); return name; },
+    get() { return emptyNewIndex; },
+  } };
+  const enforced = indexedScopes(retiredTarget, { ...retirementSettings, SCOPE_INDEX_MODE: "enforce" });
+  const notFound = await route(new Request(`https://scope.test/v1/scopes/${born.name}`), enforced);
+  expect([notFound.status, await notFound.json()]).toEqual([404, { ok: false, reason: "not-found" }]);
+  expect({ retiredNames, retiredGets, retiredRegistrations, retiredReads, newIndexReads }).toEqual({ retiredNames: 0, retiredGets: 0, retiredRegistrations: 0, retiredReads: 0, newIndexReads: 1 });
+  const legacy = indexedScopes(retiredTarget, { ...retirementSettings, SCOPE_INDEX_MODE: "register" });
+  const raw = legacy.get(legacy.idFromName(born.name)) as { summary(reader: unknown): Promise<unknown> };
+  expect(await raw.summary(null)).toBe(rawStop);
+  expect(await api(legacy).summary(born.name, null)).toEqual({ ok: false, reason: "unavailable" });
+  const gone = await route(new Request(`https://scope.test/v1/scopes/${born.name}`), legacy);
+  expect([gone.status, gone.headers.get("cache-control")]).toEqual([410, "no-store"]);
+  expect(await gone.json()).toEqual({
+    error: "room-retired",
+    message: `This room retired at the identifier cutover. Commit ${RETIRED_ROOM_READER_COMMIT} reads its journal.`,
+    reader: RETIRED_ROOM_READER_COMMIT,
+  });
+  expect({ retiredNames, retiredGets, retiredRegistrations, retiredReads, newIndexReads }).toEqual({ retiredNames: 3, retiredGets: 3, retiredRegistrations: 3, retiredReads: 0, newIndexReads: 4 });
 
   // TEST transport/parser-work clock stand-in, not a Native peer or proof.
   // Both RPC replies arrive in time. The real strict parser fails on the same
