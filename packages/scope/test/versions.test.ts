@@ -65,7 +65,7 @@ describe("a room founded on version 1 of every definition, on the code that ship
 
     // The creation publication: the first head is version 1's creation commit, the empty tree, with no README.
     await initialPublication(G, lifetime);
-    const emptyTree = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, factRefOf((await R.entries())[1]!));
+    const emptyTree = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, (await R.fact(1)));
     expect(await G.item(0)).toMatchObject({ state: "ready", values: { head: emptyTree.commit } });
 
     // `read-token` is no act of `platform:destination@1`: the scope refuses it by name, and writes nothing.

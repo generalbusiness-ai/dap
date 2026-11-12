@@ -79,6 +79,12 @@ export class Platform {
     return read.value;
   }
   async entries(): Promise<Entry[]> { return (await this.sealed()).map((sealed) => sealed.entry); }
+  /** The fact of this scope's sealed entry at `seq`, under this scope's full reference. */
+  async fact(seq: number): Promise<FactRef> {
+    const entry = (await this.entries())[seq];
+    if (!entry) throw new Error(`no entry ${seq} in ${this.name}`);
+    return factRefOf(entry, await this.at());
+  }
   async last(): Promise<Entry> { return (await this.entries()).at(-1)!; }
   /** Item `id`, from the summary's live items. */
   async item(id: number): Promise<Item> {
@@ -137,8 +143,8 @@ export async function inboxConfirmation(repository: Repository) {
   const inboxes = await Promise.all([repository.ritasInbox, repository.unasInbox].map(async inbox => {
     const sealed = await inbox.sealed(), first = sealed[0];
     if (!first || first.entry.input.type !== "genesis") throw new Error("Inbox creation has no retained genesis");
-    const born = first.entry.input, genesis = factRefOf(first.entry);
-    if (born.seed.kind !== "inbox" || scopeIdOf(born.seed) !== genesis.at.scope || born.inc !== genesis.at.inc || genesis.at.kind !== "inbox") throw new Error("Inbox genesis has another full seed/incarnation");
+    const at = await inbox.at(), born = first.entry.input, genesis = factRefOf(first.entry, at);
+    if (born.seed.kind !== "inbox" || scopeIdOf(born.seed) !== at.scope || first.hash !== at.genesis) throw new Error("Inbox genesis has another full seed or genesis");
     if (!born.source || born.n === null || canonicalize(born.source.at) !== canonicalize(membership)) throw new Error("Inbox belongs to another creator");
     const creation = parent[born.source.seq];
     if (!creation || creation.hash !== born.source.hash || !creation.entry.sends.some(send => send.n === born.n && canonicalize(send.to) === canonicalize(born.seed) && canonicalize(send.message) === canonicalize(born.message))) throw new Error("Inbox genesis lacks its exact recorded creation");
@@ -147,11 +153,11 @@ export async function inboxConfirmation(repository: Repository) {
       const input = control.entry.input;
       if (input.type !== "delivery") throw new Error("Confirmation is no retained delivery");
       const sender = (await repository.M.sealed())[input.from.seq];
-      if (!sender || sender.hash !== input.from.hash || !sender.entry.sends.some(send => send.n === input.n && canonicalize(send.to) === canonicalize(first.entry.at) && canonicalize(send.message) === canonicalize(input.message))) throw new Error("Confirmation lacks its exact retained Native creator send");
+      if (!sender || sender.hash !== input.from.hash || !sender.entry.sends.some(send => send.n === input.n && canonicalize(send.to) === canonicalize(at) && canonicalize(send.message) === canonicalize(input.message))) throw new Error("Confirmation lacks its exact retained Native creator send");
     }
     const pairs: [Platform, string][] = [[repository.M, `${born.source.seq}.${born.n}`]];
     for (const send of first.entry.sends) if (send.message.class === "result" && canonicalize(send.to) === canonicalize(membership)) pairs.push([inbox, `0.${send.n}`]);
-    for (const row of parent) for (const send of row.entry.sends) if (send.message.class === "control" && canonicalize(send.message.genesis) === canonicalize(genesis) && canonicalize(send.to) === canonicalize(first.entry.at)) pairs.push([repository.M, `${row.entry.seq}.${send.n}`]);
+    for (const row of parent) for (const send of row.entry.sends) if (send.message.class === "control" && canonicalize(send.message.genesis) === canonicalize(genesis) && canonicalize(send.to) === canonicalize(at)) pairs.push([repository.M, `${row.entry.seq}.${send.n}`]);
     for (const [sender, id] of pairs) {
       const read = await sender.stub.outbox(reader);
       if (!read.ok) throw new Error("Creation protocol outbox unavailable");
@@ -162,8 +168,8 @@ export async function inboxConfirmation(repository: Repository) {
       if (timing.next !== null) retries.push({ scope: await sender.at(), inbox: genesis.at, genesis, outboxId: id, class: outboxId.class, next: timing.next, alarm: timing.alarm, attempts: outboxId.attempts.slice(-4) });
     }
     const summary = await inbox.summary();
-    if (canonicalize(summary.value.scope) !== canonicalize(genesis.at)) throw new Error("Inbox view has another full incarnation");
-    return { scope: summary.value.scope, status: summary.value.status, genesis, controls: controls.map(row => factRefOf(row.entry)) };
+    if (canonicalize(summary.value.scope) !== canonicalize(genesis.at)) throw new Error("Inbox view has another full genesis");
+    return { scope: summary.value.scope, status: summary.value.status, genesis, controls: controls.map(row => factRefOf(row.entry, at)) };
   }));
   return { clock: timeMs(net.clock.now)!, inboxes, retries };
 }

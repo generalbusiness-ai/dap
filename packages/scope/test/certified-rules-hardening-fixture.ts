@@ -113,8 +113,8 @@ export async function openHardeningCertificate(room: HardeningRoom, policy: Rule
   if (!proposal.ok) throw Error("Strict policy required");
   const { D, M, Q, G } = room;
   const signed = await G.intent(rita, RULES_CERTIFICATE_KIND, { on: 0, expected: await G.expected({ on: 0 }), fields: {
-    proposal: proposal.digest, directoryBirth: factRefOf((await D.entries())[0]!),
-    rulesBirth: factRefOf((await Q.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!),
+    proposal: proposal.digest, directoryBirth: (await D.fact(0)),
+    rulesBirth: (await Q.fact(0)), membershipBirth: (await M.fact(0)),
   } });
   const answer = await G.stub.submit(signed, [], { values: [canonicalize(proposal.policy)] });
   expect(answer, canonicalize(answer)).toMatchObject({ answer: "accepted" });
@@ -127,7 +127,7 @@ export async function publishHardeningCertificate(room: HardeningRoom, policy: R
   const { D, M, Q, G } = room;
   return Q.stub.submit(await Q.intent(rita, "publish", { on: 0, expected: await Q.expected({ on: 0 }),
     fields: JSON.parse(canonicalize({ ...proposed.policy, proposal: proposed.digest, proof, certificateRequest: request, certificate,
-      directoryBirth: factRefOf((await D.entries())[0]!), destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) })) }), [],
+      directoryBirth: (await D.fact(0)), destinationBirth: (await G.fact(0)), membershipBirth: (await M.fact(0)) })) }), [],
     { values: [canonicalize(proposed.policy), proofBytes] });
 }
 export async function configureHardeningRules(room: HardeningRoom, policy: RulesPolicyV11) {
@@ -139,7 +139,7 @@ export async function configureHardeningRules(room: HardeningRoom, policy: Rules
   if (!isRecord(body) || !isDigest(body["proof"])) throw Error("Actual proof digest required");
   const kept = await room.G.stub.retained(reader, "value", body["proof"], RULES_TREE_PROOF.domain);
   if (!kept.ok) throw Error("Actual retained proof required");
-  const certificate = factRefOf(outcome);
+  const certificate = factRefOf(outcome, await room.G.at());
   const published = await publishHardeningCertificate(room, policy, request, certificate, body["proof"], kept.value.bytes);
   expect(published, canonicalize(published)).toMatchObject({ answer: "accepted" });
   return { request, certificate, proof: body["proof"], proofBytes: kept.value.bytes };
@@ -191,5 +191,5 @@ export async function hardeningCertificate(room: HardeningRoom, policy: RulesPol
   if (!isRecord(body) || !isDigest(body["proof"])) return expect.fail("Selected native certificate must name its proof");
   const kept = await room.G.stub.retained(reader, "value", body["proof"], RULES_TREE_PROOF.domain);
   if (!kept.ok) return expect.fail("Selected native proof must be retained");
-  return { request, certificate: factRefOf(outcome), proof: body["proof"], proofBytes: kept.value.bytes, outcome };
+  return { request, certificate: factRefOf(outcome, await room.G.at()), proof: body["proof"], proofBytes: kept.value.bytes, outcome };
 }

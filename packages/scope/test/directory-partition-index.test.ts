@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type Item, type Seed } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type Item, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { applyEntry, PROFILES, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { directoryPartition1, directoryPartitionRules1, partitionGeneration, partitionLane, partitionNumber, PARTITION_COHORT } from "../../platform/src/directory-partitions.ts";
@@ -42,8 +42,10 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     // SCRIPTED source and direct native rule/fold specimen. The real
     // runtime's Authority/delivery is covered in the native journeys; this
     // storage fixture measures the actual index-update implementation.
-    const source = { ...JSON.parse(store.stored(0)!.bytes) as Entry, at: { scope: scopeIdOf(seed), kind: "lane" as const, genesis: `sha256:${"07".repeat(32)}` as const }, seq: 9, time: "2099-01-01T00:00:01Z" };
-    const from = factRefOf(source);
+    // The stand-in lane's address: its seed's scope ID and a stand-in genesis hash. Nothing admitted it.
+    const laneAt: ScopeRef = { scope: scopeIdOf(seed), genesis: `sha256:${"07".repeat(32)}` };
+    const source = { ...JSON.parse(store.stored(0)!.bytes) as Entry, genesis: laneAt.genesis, seq: 9, time: "2099-01-01T00:00:01Z" } as unknown as Entry;
+    const from = factRefOf(source, laneAt);
     const input = { type: "delivery" as const, from, n: 0, message: { class: "advisory" as const, type: "index" as const, body: { title: "Updated by point lookup" } } };
     const given: RuleGiven = { state: counted, input, time: source.time, uses: [{ fact: from, entry: source, under: "issue" }], own: () => null,
       resolved: { at: store.scope()!.at, self: store.scope()!.head.seq + 1, fields: { title: "Updated by point lookup" }, subjects: new Map(), signer: null, bounds: PROPOSED_BOUNDS },
@@ -57,7 +59,7 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     const updateRuleStats = { queries: queries.slice(stats.queries.length), rowsRead: rowsRead - stats.rowsRead, rowsWritten: rowsWritten - stats.rowsWritten, plans: plans.slice(stats.plans.length) };
     const beforeFold = { queries: queries.length, rowsRead, rowsWritten, plans: plans.length };
     const head = counted.scope()!;
-    const update: Entry = { ...source, at: head.at, seq: head.head.seq + 1, prev: head.head.hash, input, uses: [], effects, sends: [] };
+    const update = { ...source, genesis: head.at.genesis, seq: head.head.seq + 1, prev: head.head.hash, input, uses: [], effects, sends: [] } as Entry;
     // SCRIPTED journal append, outside the counted fold boundary, just as
     // the runtime stores a sealed entry before deriving its state.
     const bytes = canonicalize(update), hash = entryHash(update);

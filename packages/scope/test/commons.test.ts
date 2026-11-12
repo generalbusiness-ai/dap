@@ -43,7 +43,7 @@ test("new-room Commons notes preserve opaque citations and signer identity; nati
     };
     const settings = { DEPLOYMENT: "TEST-commons-lineage", REGISTER_SCOPE: R.name,
       SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } };
-    const delivered = { to: create.to, from: factRefOf(birth), n: create.n, message: create.message };
+    const delivered = { to: create.to, from: await D.fact(0), n: create.n, message: create.message };
     const beforeLineage = await Q.entries();
     expect(await life.wait(() => namespace(indexedScopes(binding, settings)).transport.send(delivered)))
       .toMatchObject({ answer: "recorded" });
@@ -100,7 +100,7 @@ test("new-room Commons notes preserve opaque citations and signer identity; nati
     expect(written.answer).toBe("accepted");
     if (written.answer !== "accepted") return;
     const entry = (await Q.entries()).find(row => row.seq === written.receipt.fact.seq)!;
-    expect(factRefOf(entry)).toEqual(written.receipt.fact);
+    expect(factRefOf(entry, await Q.at())).toEqual(written.receipt.fact);
     expect(entry.input).toMatchObject({ type: "act", signed: { intent: { actor: rita.key, fields: { about: citations } } } });
     expect(entry.effects).toEqual([]); expect(entry.sends).toEqual([]);
     expect(entry.uses.some(use => use.fact.hash === earlier.receipt.fact.hash)).toBe(false);

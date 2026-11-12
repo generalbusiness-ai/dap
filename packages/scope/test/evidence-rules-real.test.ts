@@ -432,7 +432,7 @@ test("real published holds survive newer counted passes and clear only through d
     if (!timedView || timedView.raw.admittedAt === null) throw Error('Actual literal timed job required');
     expect(timedView.raw.state).toBe('admitted');
     expect(timedView.current.state).toBe('timeout');
-    await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: factRefOf(await evidenceEntry(room.G, timedView.raw.admittedAt)), operation: third.operation },
+    await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: (await room.G.fact(timedView.raw.admittedAt)), operation: third.operation },
       expected: await room.G.expected({ on: 0 }) });
     await room.pause(room.nodes);
     const timed = await evidenceRecord(room, thirdJob.job);
@@ -518,7 +518,7 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
     expect(beforeJob.record.state).toBe('admitted');
     const admission = target.record.admittedAt;
     if (admission === null) throw Error('Actual target admission required');
-    const admissionFact = factRefOf(await evidenceEntry(room.G, admission));
+    const admissionFact = (await room.G.fact(admission));
     expect(await room.G.act(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact, operation: c.operation },
       expected: await room.G.expected({ on: 0 }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
     const due = timeMs(target.record.deadline);
@@ -578,7 +578,7 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
     expect((await evidenceRecord(room, target.job)).incident?.cause).toEqual(hydrated.incident?.cause);
     const liveAdmission = beforeJob.record.admittedAt;
     if (liveAdmission === null) throw Error('Actual still-running job admission required');
-    expect(await room.G.act(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: factRefOf(await evidenceEntry(room.G, liveAdmission)) },
+    expect(await room.G.act(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: (await room.G.fact(liveAdmission)) },
       expected: await room.G.expected({ on: 0 }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
     const stillRunning = (await evidenceNativeState(room)).jobs.find(row => row.item.id === liveAdmission);
     if (!stillRunning) throw Error('The actual unaffected running job must remain present');
@@ -690,7 +690,7 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
       const jobSeq = await change.lane.did(rita, "request-check", { fields: { manifest: change.manifest.seq, name: "unit", configuration: setup.configurationDigest,
         checker: setup.service.member, binding: canonicalize(proposed), bindingDigest, ...(earlier === undefined ? {} : { earlier }) },
         expected: await change.lane.expected({ manifest: change.manifest.seq, proposal: 0, rules: laneRules.id, ...(earlier === undefined ? {} : { earlier }) }) });
-      const memberJob = factRefOf(await evidenceEntry(change.lane, jobSeq));
+      const memberJob = (await change.lane.fact(jobSeq));
       await room.pause(room.nodes);
       expect(await evidenceRecord(room, memberJob)).toMatchObject({ state: "admitted", binding: { source: "member" } });
       return { jobSeq, memberJob, bindingDigest };
@@ -702,7 +702,7 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
         return binding !== null && canonicalize(binding.auditOf) === canonicalize(memberJob);
       });
       if (!audit || typeof audit.values['binding'] !== "string") throw Error("Actual fresh automatic audit job required");
-      const job = factRefOf(await evidenceEntry(change.lane, audit.id));
+      const job = (await change.lane.fact(audit.id));
       const binding = readEvidenceBinding(JSON.parse(audit.values['binding']));
       expect(binding).toMatchObject({ source: "room", auditOf: memberJob });
       const bindingDigest = audit.values['bindingDigest'];
@@ -729,7 +729,7 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     const oldResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: oldAudit.job.seq, jobFact: oldAudit.job,
       tree: reservedTree, configuration: setup.configurationDigest, bindingDigest: oldAudit.bindingDigest, outcome: "passed" },
       expected: await change.lane.expected({ job: oldAudit.job.seq, manifest: change.manifest.seq }) });
-    const oldResult = factRefOf(await evidenceEntry(change.lane, oldResultSeq));
+    const oldResult = (await change.lane.fact(oldResultSeq));
     await room.pause(room.nodes);
     expect(await evidenceRecord(room, oldAudit.job)).toMatchObject({ state: "passed", result: oldResult });
     await assertNativeCountedEvidence(room, change.lane, oldAudit.job, oldResult, 'passed');
@@ -739,14 +739,14 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     expect((await hardeningItems(room.G, "publication")).find(item => item.id === reserved.id)?.state).not.toBe("reserved");
     const retrySeq = await change.lane.did(rita, "merge", { fields: { manifest: change.manifest.seq, reports: [] },
       expected: await change.lane.expected({ manifest: change.manifest.seq, proposal: 0, rules: laneRules.id }) });
-    const retryOperation = factRefOf(await evidenceEntry(change.lane, retrySeq));
+    const retryOperation = (await change.lane.fact(retrySeq));
     await room.pause(room.nodes);
     const retry = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(retryOperation));
     expect(retry).toMatchObject({ state: "reserved", values: { tree: reservedTree } });
     if (!retry) throw Error("Actual same-tree retry reservation required");
     const retryTree = retry.values['tree'];
     if (!isObjectId(retryTree)) throw Error("Actual retry reservation tree required");
-    const retryPublication = factRefOf(await evidenceEntry(room.G, retry.id));
+    const retryPublication = (await room.G.fact(retry.id));
     const retryBinding: EvidenceBinding = { ...binding, subject: { kind: "landing", publication: retryPublication, manifest: change.manifest } };
     const { jobSeq, memberJob, bindingDigest } = await request(retryBinding, first.jobSeq);
     const freshAudit = await auditFor(memberJob);
@@ -756,14 +756,14 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     expect(await evidenceRecord(room, oldAudit.job)).toMatchObject({ state: "passed", result: oldResult });
     const memberResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: jobSeq, jobFact: memberJob,
       tree: retryTree, configuration: setup.configurationDigest, bindingDigest, outcome: "passed" }, expected: await change.lane.expected({ job: jobSeq, manifest: change.manifest.seq }) });
-    const memberResult = factRefOf(await evidenceEntry(change.lane, memberResultSeq));
+    const memberResult = (await change.lane.fact(memberResultSeq));
     await room.pause(room.nodes);
     expect(room.host.stand.refs.get("refs/heads/main")).toBe(before);
     const audit = freshAudit.audit, auditJob = freshAudit.job;
     expect(auditJob).not.toEqual(memberJob);
     const auditResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: audit.id, jobFact: auditJob,
       tree: retryTree, configuration: setup.configurationDigest, bindingDigest: freshAudit.bindingDigest, outcome: "failed" }, expected: await change.lane.expected({ job: audit.id, manifest: change.manifest.seq }) });
-    const auditResult = factRefOf(await evidenceEntry(change.lane, auditResultSeq));
+    const auditResult = (await change.lane.fact(auditResultSeq));
     await room.pause(room.nodes);
     const refused = (await hardeningItems(room.G, "publication")).find(item => item.id === retry.id);
     expect(["cleanup-aborted", "cleanup-deleted", "cleaned"]).toContain(refused?.state);

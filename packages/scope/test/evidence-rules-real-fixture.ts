@@ -360,13 +360,13 @@ export async function openEvidenceRulesCertificate(room: EvidenceRoom, policy: R
   if (!proposal.ok) throw Error("Strict policy required");
   const { D, M, Q, G } = room;
   const signed = await G.intent(rita, RULES_CERTIFICATE_KIND, { on: 0, expected: await G.expected({ on: 0 }), fields: {
-    proposal: proposal.digest, directoryBirth: factRefOf((await D.entries())[0]!),
-    rulesBirth: factRefOf((await Q.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!),
+    proposal: proposal.digest, directoryBirth: (await D.fact(0)),
+    rulesBirth: (await Q.fact(0)), membershipBirth: (await M.fact(0)),
   } });
   const answer = await G.stub.submit(signed, [], { values: [canonicalize(proposal.policy)] });
   expect(answer, canonicalize(answer)).toMatchObject({ answer: "accepted" });
   if (answer.answer !== "accepted") throw Error("Actual certificate opening required");
-  return factRefOf(await evidenceEntry(G, answer.receipt.fact.seq));
+  return (await G.fact(answer.receipt.fact.seq));
 }
 export async function publishEvidenceRulesCertificate(room: EvidenceRoom, policy: RulesPolicyV13, request: FactRef, certificate: FactRef, proof: Digest, proofBytes: string, actor: Actor = rita) {
   const proposed = rulesPolicyProposalV13(policy);
@@ -374,7 +374,7 @@ export async function publishEvidenceRulesCertificate(room: EvidenceRoom, policy
   const { D, M, Q, G } = room;
   return Q.stub.submit(await Q.intent(actor, "publish", { on: 0, expected: await Q.expected({ on: 0 }),
     fields: JSON.parse(canonicalize({ ...proposed.policy, roomService: canonicalize(proposed.policy.roomService), checkers: rulesPolicyCheckersV13(proposed.policy), proposal: proposed.digest, proof, certificateRequest: request, certificate,
-      directoryBirth: factRefOf((await D.entries())[0]!), destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) })) }), [],
+      directoryBirth: (await D.fact(0)), destinationBirth: (await G.fact(0)), membershipBirth: (await M.fact(0)) })) }), [],
     { values: [canonicalize(proposed.policy), proofBytes] });
 }
 export async function configureEvidenceRules(room: EvidenceRoom, policy: RulesPolicyV13) {
@@ -544,7 +544,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   room.nodes.push(lane); room.life.outside(lane.name, (given, sql) => evidenceWorkOutside(room, given, room.host.outside(given, sql, room.bindings)));
   await lane.restart(); await room.pause(room.nodes);
   expect((await lane.summary()).value.definition).toBe(definitions.issue);
-  const terms = factRefOf((await lane.entries())[0]!);
+  const terms = (await lane.fact(0));
   const commitment = await lane.did(rita, "offer", { fields: { offeree: { membership, member: "@rita" } }, expected: await lane.expected({ goal: 0 }) });
   await lane.did(rita, "accept", { on: commitment, expected: await lane.expected({ on: commitment }), fields: { terms } });
   const hold = await lane.did(rita, "take-hold", { fields: { commitment }, expected: await lane.expected({ commitment }) });
@@ -584,7 +584,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   const bindingDigest = evidenceBindingDigest(binding), commitProof = canonicalize({ v: 1, id: commit, data: b64url(commitBytes) });
   const job = await lane.did(rita, "request-work-check", { fields: { source: stagedSource, name: configuration.name, configuration: digest,
     checker: service.member, binding: canonicalize(binding), bindingDigest, commitProof, reuse: options.reuse === true }, expected: await lane.expected({ source: stagedSource.seq }) });
-  const jobFact = factRefOf(await evidenceEntry(lane, job));
+  const jobFact = (await lane.fact(job));
   await room.pause(room.nodes);
   const requested = (await hardeningItems(lane, 'job')).find(item => item.id === job), expected = { state: "requested", values: { tree, base, commit, reason: "admitted" } };
   try { expect(requested).toMatchObject(expected); }
@@ -743,7 +743,7 @@ export async function requestEvidenceWork(room: EvidenceRoom, prepared: Prepared
   const seq = await prepared.lane.did(rita, "request-work-check", { fields: { source: prepared.stagedSource, name: prepared.configuration.name,
     configuration: prepared.configurationDigest, checker: binding.checker, binding: canonicalize(binding), bindingDigest,
     commitProof: prepared.commitProof, reuse: options.reuse === true }, expected: await prepared.lane.expected({ source: prepared.stagedSource.seq }) });
-  const job = factRefOf(await evidenceEntry(prepared.lane, seq));
+  const job = (await prepared.lane.fact(seq));
   await room.pause(room.nodes);
   await assertEvidenceWorkAdmission(room, prepared.lane, job);
   return { job, binding, bindingDigest, record: () => evidenceRecord(room, job) };
@@ -754,7 +754,7 @@ export async function claimEvidenceWork(room: EvidenceRoom, prepared: PreparedEv
   job: { job: FactRef; bindingDigest: Digest }, outcome: "passed" | "failed", actor: Actor = prepared.service.actor) {
   const seq = await prepared.lane.did(actor, "check", { fields: { job: job.job.seq, jobFact: job.job, tree: prepared.tree,
     configuration: prepared.configurationDigest, bindingDigest: job.bindingDigest, outcome }, expected: await prepared.lane.expected({ job: job.job.seq }) });
-  const result = factRefOf(await evidenceEntry(prepared.lane, seq));
+  const result = (await prepared.lane.fact(seq));
   await room.pause(room.nodes);
   return result;
 }
@@ -849,14 +849,14 @@ export async function publishEvidenceFile(room: EvidenceRoom, setup: PreparedPub
   const files = [];
   for (const path of setup.paths) {
     const file = await lane.did(rita, "propose-file", { fields: { base, path, content, size, digest }, expected: await lane.expected({ proposal: 0 }) });
-    files.push({ path, entry: factRefOf(await evidenceEntry(lane, file)), digest });
+    files.push({ path, entry: (await lane.fact(file)), digest });
   }
   const manifest = await lane.did(rita, "propose-manifest", { fields: { base, files },
     expected: await lane.expected({ proposal: 0 }) });
   const merge = await lane.did(rita, "merge", { fields: { manifest, reports: [] }, expected: await lane.expected({ proposal: 0, manifest, rules: laneRules.id }) });
-  const operation = factRefOf(await evidenceEntry(lane, merge));
+  const operation = (await lane.fact(merge));
   await room.pause(room.nodes);
-  return { lane, manifest: factRefOf(await evidenceEntry(lane, manifest)), operation, base,
+  return { lane, manifest: (await lane.fact(manifest)), operation, base,
     job: async () => {
       const jobs = (await hardeningItems(lane, "job")).filter(item => item.values['stage'] === "published");
       const failure = jobs.length === 1 ? undefined
@@ -879,7 +879,7 @@ export async function claimPublishedEvidence(room: EvidenceRoom, setup: Prepared
   publication: EvidencePublication, job: PublishedEvidenceJob, outcome: "passed" | "failed") {
   const seq = await publication.lane.did(setup.service.actor, "check", { fields: { job: job.job.seq, jobFact: job.job, tree: job.record.tree!, configuration: setup.configurationDigest,
     bindingDigest: job.bindingDigest, outcome }, expected: await publication.lane.expected({ job: job.job.seq, manifest: publication.manifest.seq }) });
-  const result = factRefOf(await evidenceEntry(publication.lane, seq));
+  const result = (await publication.lane.fact(seq));
   await room.pause(room.nodes);
   return result;
 }
@@ -895,7 +895,7 @@ export async function requestLandingEvidence(room: EvidenceRoom, setup: Prepared
   const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: setup.service.member,
     policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.roomService,
     serviceGeneration: observed.serviceGeneration, auditOf: null,
-    subject: { kind: "landing", publication: factRefOf(await evidenceEntry(room.G, reserved.id)), manifest: publication.manifest } };
+    subject: { kind: "landing", publication: (await room.G.fact(reserved.id)), manifest: publication.manifest } };
   const bindingDigest = evidenceBindingDigest(binding), requested = await publication.lane.act(rita, "request-check", { fields: {
     manifest: publication.manifest.seq, name: setup.configuration.name, configuration: setup.configurationDigest, checker: setup.service.member,
     binding: canonicalize(binding), bindingDigest, reuse }, expected: await publication.lane.expected({ manifest: publication.manifest.seq, proposal: 0, rules: rules.id }) });
@@ -915,7 +915,7 @@ export async function claimLandingEvidence(room: EvidenceRoom, setup: PreparedPu
   try { expect(claimed).toMatchObject({ answer: 'accepted' }); }
   catch { expect(claimed, await evidenceNativeDiagnostic([publication.lane, room.G])).toMatchObject({ answer: 'accepted' }); }
   if (claimed.answer !== 'accepted') throw Error('Actual accepted landing result claim required');
-  const result = factRefOf(await evidenceEntry(publication.lane, claimed.receipt.fact.seq));
+  const result = (await publication.lane.fact(claimed.receipt.fact.seq));
   await room.pause(room.nodes);
   return result;
 }
