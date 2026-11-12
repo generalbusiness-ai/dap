@@ -682,6 +682,11 @@
         "destructiveHint": false,
         "idempotentHint": false,
         "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        }
       }
     },
     {
@@ -737,6 +742,11 @@
         "destructiveHint": false,
         "idempotentHint": false,
         "openWorldHint": true
+      },
+      "_meta": {
+        "ui": {
+          "visibility": ["model"]
+        }
       }
     },
     {
