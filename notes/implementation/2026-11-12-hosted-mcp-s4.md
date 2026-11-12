@@ -7,7 +7,8 @@ The comparison base remains main `221e11c3`.
 The fresh gate at `e708f454` exited 1.
 Its fixture-only follow-up passed the affected compiler and whole Hosted owner at `e4051271`.
 Neither follow-up chain turns either failed gate into a gate pass.
-New Card evidence and final source correspondence remain owed.
+Card push CI succeeded at `7841c856`, tree `5d4ffa8e8c264678dc4caf3c9145739ff95d6248`.
+This CI record changes only the note and repair manifest from that source.
 The successful push runs at `77ac8113` remain historical evidence for that earlier source.
 
 ## What changed
@@ -182,18 +183,26 @@ No repeated owner observations form a synthetic combined pass.
 | Credential visibility negative | Whole visibility owner on `6352d355` | 1; 5 tests passed and 1 intended failure in 6 tests; credential visibility was `undefined` instead of `["model"]`; this earlier failure masked the diff red | `visibility-negative-6352d355/owner.report.json`, SHA `b8c652efd73fb00301ca77240b93136fce50143fb953db35382136264a82fc2c` |
 | Fresh whole gate | `npm run gate`, `e708f454` | 1; only the H6 matrix failed in Native | `repair-gate-e708f454/gate.stdout`, SHA `9aa5957724f5f88f6fd81d438bd51393f1cb3b39d81b55beea16db97fd36561f`; END `388965df` |
 | Isolated H6 follow-up | MCP scope compiler and whole Hosted owner, `e4051271` | Both exits 0; 24 tests passed; no failures or skips | `h6-followup-e4051271/owner.report.json`, SHA `0d30295ccfc5f0039cf20cb2d9dbc5aecdb4881c0ff90e3be668055d9b8918a1`; END `62722920` |
-| Page source correspondence | `git diff --name-only 77ac8113 e4051271`, read against `.github/workflows/page-browser.yml` | Same 12 changed paths; 0 filter matches; retain Page run 43274401664 under `a8d2f83d` | Prior Page source receipt plus the one-file fixture delta; final source binding still owed |
-| Card push CI | Same source push | **PENDING** | **PENDING** |
+| Page source correspondence | `git diff --name-only 77ac8113 7841c856`, read against `.github/workflows/page-browser.yml` | 13 changed paths; 0 filter matches; retain Page run 43274401664 under `a8d2f83d` | Published-source correspondence indexed by the repair manifest |
+| Card push CI | Four browser commands in `.github/workflows/views-browser.yml`, `7841c856` | [43293238065](https://github.com/generalbusiness-ai/dap/actions/runs/43293238065), push attempt 1; 14 successful GitHub steps | `repair-push-ci-7841c856/card-job-verbatim.log`, SHA `980125178372156c44ca7693077345ab7a82dc67376e3215f3783a51bd9f8f8c` |
+| Source document checks | Whitespace, commit messages, JSON format, links and notes, `7841c856` | Five exits 0; 34 commit messages; 1,244 links; 0 broken links and note warnings | `repair-doc-checks-7841c856/links.stdout`, SHA `f90b71f006cb2174e66220512f6ab350d3d652d6dba486bead8397799324dd9c` |
 
 Ruling `3ae8a396` requires a fresh gate and repair CI evidence.
 Ruling `a8d2f83d` retains Page run 43274401664 from `77ac8113` when no Page-filter input differs.
-The command is `git diff --name-only 77ac8113 e4051271`, read against `.github/workflows/page-browser.yml`.
+The command is `git diff --name-only 77ac8113 7841c856`, read against `.github/workflows/page-browser.yml`.
+The published source comparison has 13 changed paths and no Page-filter match.
 All 12 changed paths at `e708f454` fall outside that workflow's two path lists.
 The sole later change at `e4051271` is the Hosted fixture, which also matches neither list.
 The note and repair manifest also match neither list.
-Final source and document-only tree correspondence remains owed.
+The review request binds both actual trees and the external postcommit correspondence receipt.
+Every other path retains the published source tree's exact bytes and modes.
 No Page dispatch or trigger-only edit is permitted.
-The changed service selects Card on push, so its new actual run remains owed.
+The changed service selected one Card run on push.
+It completed all four browser commands, including seven declared-view scenarios.
+The scripted host refused model-only and undeclared actions and admitted the retained declared action.
+Those observations do not establish external host compliance.
+The actual log retains five npm audit vulnerabilities (two moderate, three high), module-register deprecation and install-script allowlist warnings; no remediation ran.
+GitHub step statuses do not supply individual numeric child-exit receipts.
 Earlier baseline, association, and Transport records keep their original heads and qualifications.
 A changed witness owner needs its actual source correspondence and required current evidence.
 The prior-negative correspondence receipt is source reasoning only.
@@ -272,13 +281,14 @@ GitHub reports successful steps; those statuses do not supply separate numeric c
 
 ## Open limits and owners
 
-- S4 request `9a053402` requires the new Card push result, final source correspondence, checker review of the failed gate and isolated follow-up, and landing.
+- S4 request `9a053402` requires exact-head checker review of the failed gate and isolated follow-up, and landing.
   Checker `6fbde9b8` accepted the earlier isolated follow-up chain for `fe6fa9e7` but requested this repair.
 - External host enforcement remains **UNKNOWN** under S4 request `9a053402` and ruling `ec9ba020`.
   Card browser CI does not establish the four external hosts' behavior.
 - Rulings `3ec2bcad` and `3a5c4448` governed the two successful historical push runs and their document-only record.
   No workflow dispatch ran in that historical cycle.
-  The repair needs its own source push and Card observation before a document-only CI record under `3a5c4448`.
+  The repair source pushed once at `7841c856` and its Card run succeeded.
+  This note and repair-manifest record follows `3a5c4448`; it needs no CI run of its own.
   Ruling `a8d2f83d` retains Page evidence subject to the final path-filter comparison.
 - Failed focused windows retain ENDs `c08c82fc`, `b15604a3`, `e6dc87ef`, and `c57544cd`.
   The Native working failure under END `a1f16270` also remains an original failure.

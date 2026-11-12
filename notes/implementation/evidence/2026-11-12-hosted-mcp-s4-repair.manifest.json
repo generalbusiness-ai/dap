@@ -16,7 +16,7 @@
     "holdingHead": "6352d355",
     "sourceCheckpoint": "fe6fa9e7"
   },
-  "fileCount": 107,
+  "fileCount": 114,
   "files": [
     {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-visibility-negative-6352d355/stdout",
@@ -339,19 +339,9 @@
       "sha256": "d9db68d39b8d4a7f957ee2f9b30d29c564249a9e5b947032c95e111a28550942"
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/citations.time",
-      "bytes": 29,
-      "sha256": "c5b14f3ef3b19ae09b88aca8743357ec25bdea51bcc76020cdc10f5d7bfe1bd7"
-    },
-    {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/cite-test.log",
       "bytes": 763,
       "sha256": "8c617c0ee1b5b1a239dbafd64d588352703c1d86cd82259925cb6eee4d7f2130"
-    },
-    {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/cite-test.time",
-      "bytes": 29,
-      "sha256": "4888f1bb2d06f8a10868a54819bd92b9a3885a31551cc79710723df32ef023cd"
     },
     {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/commit-messages.log",
@@ -359,19 +349,9 @@
       "sha256": "bf93077c0c78107bb6293a7a0e4a52e16c93d8c4c157f7f24c4af6c2f4b13926"
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/commit-messages.time",
-      "bytes": 29,
-      "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
-    },
-    {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/commit-test.log",
       "bytes": 593,
       "sha256": "796c24ad1d3aa3617254cb3ff6c4b3753de1b7bc74612ae76f0f90546058995f"
-    },
-    {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/commit-test.time",
-      "bytes": 29,
-      "sha256": "910de338ef0cc6799006f270c9cb58dd9a52df562d156c70fca9ef08ff7d77e4"
     },
     {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/def-pins.log",
@@ -379,19 +359,9 @@
       "sha256": "507a98d58f18ed8d9534a23704364897afd63ef5d219ddcebc8fb04daf63f52a"
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/def-pins.time",
-      "bytes": 29,
-      "sha256": "c542190c6b5168b54b9b1c146ad2a0ef1e372876da32efc43aea3d02ef87e86e"
-    },
-    {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/doc-links.log",
       "bytes": 36,
       "sha256": "f90b71f006cb2174e66220512f6ab350d3d652d6dba486bead8397799324dd9c"
-    },
-    {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/doc-links.time",
-      "bytes": 29,
-      "sha256": "42bbd5f82f23d8630fd588bd0df2d18199f7d8ab9f1215d1a9e3e4e5f855b59f"
     },
     {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/format.log",
@@ -399,29 +369,14 @@
       "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79"
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/format.time",
-      "bytes": 29,
-      "sha256": "53cf00315d34ac4ac03ef44cb8e6e82423a896b1473e0913a3c88346a44e2f00"
-    },
-    {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/helpers.log",
       "bytes": 68,
       "sha256": "35c7d028a809718594b33e71e115e10334c3c64181c14db07724666168b43ace"
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/helpers.time",
-      "bytes": 29,
-      "sha256": "e43b6391898c83f262f11da3cdf3d7e1e56848fe36149e1c04bdda624168c886"
-    },
-    {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/notes.log",
       "bytes": 18,
       "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
-    },
-    {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/notes.time",
-      "bytes": 29,
-      "sha256": "21089e98a92f2e843b9342f6cd87de658cc9dd74bd39bd0f7e833e59d3fceea0"
     },
     {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/section-citations.json",
@@ -469,29 +424,14 @@
       "sha256": "696eaf8136ef8d73d834090bd45280d97b56a9e07cf225884f4b90cccf22464c"
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/test.time",
-      "bytes": 36,
-      "sha256": "3f309ce6493e7e2a544d8965ce691c5d90cdc08098248d4c0eaffdc1d3993fb4"
-    },
-    {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/typecheck.log",
       "bytes": 2218,
       "sha256": "808c1cacdb754403a1470d046090f319f2a65157619d867b7423c4788c4cbe15"
     },
     {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/typecheck.time",
-      "bytes": 31,
-      "sha256": "9e27e88d003ee69ddbab477922f8caab1becefb1767b8a8934119fbc37da06df"
-    },
-    {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/whitespace.log",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals/whitespace.time",
-      "bytes": 29,
-      "sha256": "671c1c2bf0d0aec9d195fcbec5cf1b2316261b5193c89d24c33e2baa5228cd68"
     },
     {
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-h6-followup-e4051271/compiler.exit",
@@ -552,6 +492,101 @@
       "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-curated-source-provenance/AUTHORED-SOURCE-INDEX.json",
       "bytes": 3748,
       "sha256": "b1a3aa91ed94823e2561d0fbccc03161012e4d6739c163fe79e3afddff3fcf17"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-push-ci-7841c856/push.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-push-ci-7841c856/run-final.json",
+      "bytes": 12641,
+      "sha256": "ae6eb4fa790c54fb0a06398948925d395936f6f74cfbd518a99627daa8c53901"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-push-ci-7841c856/run-final.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-push-ci-7841c856/jobs-final.json",
+      "bytes": 3524,
+      "sha256": "edd02cfeaca3ba0c77690ced4f7d191e090cd44e55a4951981c6d637fcfdd903"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-push-ci-7841c856/jobs-final.json.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-push-ci-7841c856/card-job-verbatim.log",
+      "bytes": 48364,
+      "sha256": "980125178372156c44ca7693077345ab7a82dc67376e3215f3783a51bd9f8f8c"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-push-ci-7841c856/card-job-verbatim.log.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-push-ci-7841c856/card-watch.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-doc-checks-7841c856/whitespace.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-doc-checks-7841c856/commit-messages.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-doc-checks-7841c856/format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-doc-checks-7841c856/links.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-doc-checks-7841c856/notes.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-doc-checks-7841c856/commit-messages.stdout",
+      "bytes": 39,
+      "sha256": "f7e1ebb63964b911955611cb2b8a16dc65c11631b69b99816fbac6f377d51c73"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-doc-checks-7841c856/format.stdout",
+      "bytes": 114,
+      "sha256": "6b858014bbe6926fbcfb41b3c9377ec28b3138bf83ce53de8790e5ed46af9d79"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-doc-checks-7841c856/links.stdout",
+      "bytes": 36,
+      "sha256": "f90b71f006cb2174e66220512f6ab350d3d652d6dba486bead8397799324dd9c"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-doc-checks-7841c856/notes.stdout",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-card-ci-independent-curated-readback-7841c856.json",
+      "bytes": 4955,
+      "sha256": "daa3d0187579d7ed4ec3510e1c70be067168f5ca0d48c9b495431e65693b1cce"
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-source-correspondence-7841c856.json",
+      "bytes": 2128,
+      "sha256": "b95993787db67b17a39e975b9e02bf48fcec4ad7c086e4d573ab7f81a09ba013"
     }
   ],
   "checks": [
@@ -654,24 +689,64 @@
       ],
       "result": "Compiler and owner literal exits 0, both stderr empty. The complete Hosted owner passed 24 tests with no failures or skips. No other owner, stage, or gate repeated.",
       "qualification": "Reproduction argv unless separately retained as an original command. Checker assesses the isolated-file exception. This does not convert the gate to success."
+    },
+    {
+      "name": "Source document checks",
+      "head": "7841c8569eac8d95cb52a64c8c7b70a0551ca0b5",
+      "start": "4cc6c3cf3803805c8f3e314f6b729c91d5840756",
+      "end": "293717c9dd472dab60daaf77a2a96ff426fc5b8e",
+      "result": "All five literal exits are 0: whitespace; 34 commit messages checked; JSON format; 1,244 links checked, none broken; notes, no warnings."
     }
   ],
   "newCI": {
-    "card": null,
-    "page": "Retained historical run subject to final source comparison"
+    "card": {
+      "head": "7841c8569eac8d95cb52a64c8c7b70a0551ca0b5",
+      "tree": "5d4ffa8e8c264678dc4caf3c9145739ff95d6248",
+      "event": "push",
+      "attempt": 1,
+      "run": 43293238065,
+      "job": 131444661010,
+      "conclusion": "success",
+      "successfulSteps": 14,
+      "runUrl": "https://github.com/generalbusiness-ai/dap/actions/runs/43293238065",
+      "log": {
+        "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-push-ci-7841c856/card-job-verbatim.log",
+        "bytes": 48364,
+        "sha256": "980125178372156c44ca7693077345ab7a82dc67376e3215f3783a51bd9f8f8c"
+      },
+      "end": "f6d6a3c1e1d8bf3c5c33b35564f2417abad50fc2",
+      "browserCommands": 4,
+      "declaredViewScenarios": 7,
+      "externalHostCompliance": "UNKNOWN"
+    },
+    "page": {
+      "retainedRun": 43274401664,
+      "head": "77ac811360192d76945a24a1c30568e9dfccae1b",
+      "ruling": "a8d2f83d95ccd47129f23372769f9c66e1431fd7",
+      "sourceComparisonMatches": 0
+    },
+    "dispatches": 0
   },
-  "finalDocumentCorrespondence": null,
+  "finalDocumentCorrespondence": {
+    "sourceHead": "7841c8569eac8d95cb52a64c8c7b70a0551ca0b5",
+    "sourceTree": "5d4ffa8e8c264678dc4caf3c9145739ff95d6248",
+    "changedPaths": [
+      "notes/implementation/2026-11-12-hosted-mcp-s4.md",
+      "notes/implementation/evidence/2026-11-12-hosted-mcp-s4-repair.manifest.json"
+    ],
+    "binding": "The review request names the actual committed review head and tree and the external postcommit correspondence receipt hash. No self-referential head is embedded here."
+  },
   "commandQualification": "Exact source reproduction and original argv qualifications must remain explicit. Metadata report existence does not imply reporter flags.",
   "notCompleteDirectoryCatalog": true,
   "pageCorrespondence": {
     "ruling": "a8d2f83d",
     "actualHistoricalRun": 43274401664,
     "observedHead": "77ac8113",
-    "sourceComparison": "git diff --name-only 77ac8113 e4051271",
-    "changedPaths": 12,
+    "sourceComparison": "git diff --name-only 77ac811360192d76945a24a1c30568e9dfccae1b 7841c8569eac8d95cb52a64c8c7b70a0551ca0b5",
+    "changedPaths": 13,
     "pageFilterMatches": 0,
-    "finalRepairHead": null,
-    "qualification": "The sole e708-to-e405 change is the Hosted fixture and matches neither Page paths list. Retain historical Page under the ruling. Root must bind final source and document-only heads. No Page dispatch."
+    "qualification": "Actual published source comparison has 13 paths and zero Page-filter matches. The later record changes only the note and repair manifest. The review request binds its committed head and tree. No Page dispatch.",
+    "publishedSourceHead": "7841c8569eac8d95cb52a64c8c7b70a0551ca0b5"
   },
   "priorControlCarry": {
     "ruling": "0528fc25db2d9f1957228bcb03301a28f3fe2460",
@@ -705,7 +780,7 @@
     "originalPreservationRef": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-gate-e708f454/internals-preservation.json",
     "policy": "63368b81"
   },
-  "resultQualification": "Both gates retain exit 1. The current isolated Hosted follow-up is a separate pass. Card and final source/document correspondence remain pending. Checker assesses the chain.",
+  "resultQualification": "Both gates retain exit 1. The isolated Hosted follow-up remains a separate pass. Card push CI completed success at its exact source head. The checker assesses the failed gate and isolated follow-up. External host compliance remains UNKNOWN.",
   "authoredSourceIndex": {
     "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s4-repair-curated-source-provenance/AUTHORED-SOURCE-INDEX.json",
     "bytes": 3748,
