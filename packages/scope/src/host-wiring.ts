@@ -6,8 +6,8 @@
  */
 import { same } from "@generalbusiness/dap-bytes";
 import type { Entry, FieldValue, ScopeId } from "@generalbusiness/dap-contract";
-import { entryHash, isDigest, isFactRef, isOperationId, parseStrict } from "@generalbusiness/dap-bytes";
-import { isEntryOf, valueDigest } from "@generalbusiness/dap-derive";
+import { isDigest, isEntryBodyOf, isFactRef, isOperationId, parseStrict } from "@generalbusiness/dap-bytes";
+import { valueDigest } from "@generalbusiness/dap-derive";
 import { DESTINATION_KINDS, destinationBranch, destinationWrite, directoryIdOf, isOf } from "@generalbusiness/dap-platform";
 import type { DestinationBinding, DestinationRepository } from "./destination-host.ts";
 import type { OutsideGiven } from "./given.ts";
@@ -25,12 +25,13 @@ export function destinationBirth(given: OutsideGiven, registerScope: ScopeId | r
     const genesis = given.own(0)?.entry;
     const branch = destinationBranch(given.state);
     const claim = branch?.refs["claim"];
-    if (genesis?.input.type !== "genesis" || genesis.input.seed.creator?.kind !== "directory" || !same(branch?.refs["directory"], genesis.input.seed.creator) || !isFactRef(claim) || claim.at.kind !== "register" || !registerScopes.includes(claim.at.scope)) return false;
+    // A reference names no kind: the creator's kind is the genesis's recorded source kind, and the claim's is its retained use's kind.
+    if (genesis?.input.type !== "genesis" || !genesis.input.seed.creator || genesis.input.sourceKind !== "directory" || !same(branch?.refs["directory"], genesis.input.seed.creator) || !isFactRef(claim) || !registerScopes.includes(claim.at.scope)) return false;
     const use = genesis.uses.find((use) => same(use.fact, claim));
-    const retained = use ? given.retained("entry", use.content) : null;
+    const retained = use?.kind === "register" ? given.retained("entry", use.content) : null;
     if (!retained) return false;
     const opening = parseStrict(retained.bytes) as unknown as Entry;
-    if (!isEntryOf(opening, claim) || opening.input.type !== "act" || opening.input.signed.intent.kind !== "found") return false;
+    if (!isEntryBodyOf(opening, claim) || opening.input.type !== "act" || opening.input.signed.intent.kind !== "found") return false;
     const seeds = opening.effects.filter((effect) => effect.effect === "value" && effect.item === claim.seq && effect.slot === "seed");
     const seed = seeds.length === 1 && seeds[0]?.effect === "value" ? seeds[0].value : null;
     return isDigest(seed) && directoryIdOf(seed) === genesis.input.seed.creator.scope;
@@ -87,7 +88,7 @@ export function credentialHandle(given: OutsideGiven, repository: DestinationRep
   const write = mint ? destinationWrite(given.state, given.own, mint) : null;
   const recorded = destinationBranch(given.state)?.values["repository"];
   const pinned = given.genesis()?.seed.definition;
-  if (!scope || scope.kind !== "destination" || !isOf(pinned, "platform:destination") || !same(scope.at, binding.scope) || !mint || mint.owner !== pinned || mint.kind !== DESTINATION_KINDS.mint || binding.attempt !== 1 || !origin || entryHash(origin.entry) !== origin.hash || !same(origin.entry.at, scope.at) || !write || write.write.id !== binding.write || write.attempt !== binding.writeAttempt || !same(recorded, repository)) throw new Error(label);
+  if (!scope || scope.kind !== "destination" || !isOf(pinned, "platform:destination") || !same(scope.at, binding.scope) || !mint || mint.owner !== pinned || mint.kind !== DESTINATION_KINDS.mint || binding.attempt !== 1 || !origin || !isEntryBodyOf(origin.entry, { at: scope.at, seq: origin.entry.seq, hash: origin.hash }) || !write || write.write.id !== binding.write || write.attempt !== binding.writeAttempt || !same(recorded, repository)) throw new Error(label);
   const effect = origin.entry.effects.find((effect) => effect.effect === "operation" && effect.k === Number(binding.mint.split(":")[1]));
   if (effect?.effect !== "operation" || effect.owner !== pinned || effect.kind !== DESTINATION_KINDS.mint || !mint.attempts.some((attempt) => attempt.attempt === binding.attempt)) throw new Error(label);
   const digest = valueDigest(domain, { scope: scope.at, operation: mint.id, attempt: binding.attempt, origin: origin.hash, repository, write: binding.write, writeAttempt: binding.writeAttempt } as unknown as FieldValue);
