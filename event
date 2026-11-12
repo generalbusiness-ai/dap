@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f2f6d34f172b3aa1c54ffbc6a4c4ee01114d6098","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/worker.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fcb5308e148ddc7a39fbae38761356d006a539d3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-12-serving-windows-s1.manifest.json."}
