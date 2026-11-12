@@ -1,3 +1,4 @@
+import { scopeWiring } from "../src/internal/room-hooks.ts";
 import { operationStagedChange } from "./definition-corpus-data.ts";
 import { describe, expect, test } from "vitest";
 import { abortAllDurableObjects } from "cloudflare:test";
@@ -162,7 +163,7 @@ describe("outside operations at a real scope (scope contract, section 4.3; autho
     let factory: ScopeObject;
     let factoryStore: SqliteStore;
     class FactoryScope extends ScopeObject {
-      protected override wiring(): Wiring {
+      protected override [scopeWiring](): Wiring {
         return {
           ports: { ...testPorts(s.c), outside: out, owners }, bounds: s.c.bounds,
           outside: (given) => {

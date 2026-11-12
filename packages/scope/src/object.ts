@@ -1,3 +1,6 @@
+import { scopeWiring, scopeMetricEnvironment, scopeGenesisEligibility, scopeSessionEligibility } from "./internal/room-hooks.ts";
+import { classifyRoomFormat, writeRoomFormat2 } from "./room-format.ts";
+import { ROOM_RETIRED_STOP, isRoomRetiredStop, type RoomRetiredStop } from "./room-retired.ts";
 import { answersVersionQuestion, applicationRoom, applicationInstallation, applicationProjectionDeclaration, compromisedKey, sourceName, evidenceIncidentAdmissionPositionV17, evidenceIncidentParentV17, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
 import { readMinimum } from "@generalbusiness/dap-bytes";
 import { ReadWait, type ReadWaitRefusal } from "./read-wait.ts";
@@ -132,51 +135,52 @@ export interface Wiring {
 }
 
 export class ScopeObject<Env = unknown> extends DurableObject<Env> {
-  readonly #archive: ArchiveDriver | null;
-  readonly #archiveRestart: unknown;
-  readonly #floorOffer: (() => import("@generalbusiness/dap-contract").FloorInput | null) | null;
-  readonly #archiveItem: (ask: ArchiveHostItemAsk) => import("./item-queries.ts").NativeItemQuery;
-  readonly #name: ScopeId | null;
-  readonly #store: SqliteStore;
-  readonly #registerGenesis: Wiring["registerGenesis"];
-  readonly #registrationBytes: number;
-  readonly #platformCreationPolicy: Wiring["platformCreationPolicy"];
-  readonly #readSql: Pick<Sql, "exec">;
-  readonly #queryFlights: PreparationFlights;
-  readonly #itemQueries: ItemQueries;
-  readonly #applicationProjections: ApplicationProjections;
-  readonly #applicationActAdmission: ApplicationActAdmission | null;
-  readonly #proofBytes: ProofBytes;
-  readonly #genesisProofs: GenesisProofs;
-  readonly #readPreparation: ReadPreparation;
-  readonly #sessionReferences: SessionReferences;
-  readonly #sessionPreparation: SessionPreparation;
-  readonly #scope: Scope;
-  readonly #reads: Reads;
-  readonly #readWait: ReadWait;
-  readonly #deliveries: Deliveries;
-  readonly #dispatcher: Dispatcher | null;
-  readonly #operations: Operations;
-  readonly #wakes: Wakes;
-  readonly #credentialExpiry: CredentialStore;
-  readonly #originals: Originals;
-  readonly #clock: Clock;
-  readonly #transport: Transport | null;
-  readonly #seconds: number;
-  readonly #fetchSeconds: number;
-  readonly #entryBytes: number;
-  readonly #resolver: Resolver;
-  readonly #record: OperatorRecord;
-  readonly #streams: Streams;
-  readonly #limits: JoinLimits;
-  readonly #sessions: () => Sessions | null;
-  readonly #requests: SessionRequests;
-  readonly #requestIndex: RequestIndex;
+  readonly #retired: boolean;
+  readonly #archive!: ArchiveDriver | null;
+  readonly #archiveRestart!: unknown;
+  readonly #floorOffer!: (() => import("@generalbusiness/dap-contract").FloorInput | null) | null;
+  readonly #archiveItem!: (ask: ArchiveHostItemAsk) => import("./item-queries.ts").NativeItemQuery;
+  readonly #name!: ScopeId | null;
+  readonly #store!: SqliteStore;
+  readonly #registerGenesis!: Wiring["registerGenesis"];
+  readonly #registrationBytes!: number;
+  readonly #platformCreationPolicy!: Wiring["platformCreationPolicy"];
+  readonly #readSql!: Pick<Sql, "exec">;
+  readonly #queryFlights!: PreparationFlights;
+  readonly #itemQueries!: ItemQueries;
+  readonly #applicationProjections!: ApplicationProjections;
+  readonly #applicationActAdmission!: ApplicationActAdmission | null;
+  readonly #proofBytes!: ProofBytes;
+  readonly #genesisProofs!: GenesisProofs;
+  readonly #readPreparation!: ReadPreparation;
+  readonly #sessionReferences!: SessionReferences;
+  readonly #sessionPreparation!: SessionPreparation;
+  readonly #scope!: Scope;
+  readonly #reads!: Reads;
+  readonly #readWait!: ReadWait;
+  readonly #deliveries!: Deliveries;
+  readonly #dispatcher!: Dispatcher | null;
+  readonly #operations!: Operations;
+  readonly #wakes!: Wakes;
+  readonly #credentialExpiry!: CredentialStore;
+  readonly #originals!: Originals;
+  readonly #clock!: Clock;
+  readonly #transport!: Transport | null;
+  readonly #seconds!: number;
+  readonly #fetchSeconds!: number;
+  readonly #entryBytes!: number;
+  readonly #resolver!: Resolver;
+  readonly #record!: OperatorRecord;
+  readonly #streams!: Streams;
+  readonly #limits!: JoinLimits;
+  readonly #sessions!: () => Sessions | null;
+  readonly #requests!: SessionRequests;
+  readonly #requestIndex!: RequestIndex;
   /** The roots of this scope's cause chains, each found once (`signed-reads.ts`). */
-  readonly #chains: Chains;
-  readonly #signed: SignedReading;
-  readonly #outside: Outside;
-  readonly #readers: Readers;
+  readonly #chains!: Chains;
+  readonly #signed!: SignedReading;
+  readonly #outside!: Outside;
+  readonly #readers!: Readers;
   /** True until this object's first turn: its first call or its alarm (`#first`). In memory, so a restart sets it again. */
   #fresh = true;
   #alarmRevision = 0;
@@ -189,8 +193,13 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
+    // No wiring, service, schema helper, data row, metric or alarm precedes this read.
+    const format = classifyRoomFormat(ctx.storage.sql);
+    this.#retired = format.kind === "retired";
+    if (this.#retired) return;
+    if (format.kind === "unavailable") throw new Error("Room storage format is unavailable.");
     const name = ctx.id.name;
-    const wiring = this.wiring(name);
+    const wiring = this[scopeWiring](name);
     this.#registerGenesis = wiring.registerGenesis;
     this.#platformCreationPolicy = wiring.platformCreationPolicy;
     const bounds = wiring.bounds ?? PROPOSED_BOUNDS;
@@ -201,10 +210,16 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#readSql = { exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) };
     this.#queryFlights = new PreparationFlights(wiring.queryTimer);
     this.#readWait = new ReadWait(bounds.readWaitMilliseconds, wiring.queryTimer);
-    const store = new SqliteStore({
+    const buildStore = () => new SqliteStore({
       ...this.#readSql,
       transaction: (closure) => ctx.storage.transactionSync(closure),
     }, spacing);
+    const store = format.kind === "fresh" ? ctx.storage.transactionSync(() => {
+      // Keep the store's own synchronous transactions nested, not flattened.
+      const candidate = buildStore();
+      writeRoomFormat2(this.#readSql);
+      return candidate;
+    }) : buildStore();
     // This object's one alarm. Its handler below starts the alarm's turn and a dispatch pass.
     const alarm: Alarm = { set: (at) => (at === null ? ctx.storage.deleteAlarm() : ctx.storage.setAlarm(timeMs(at)!)) };
     const given: Ports = { ...production(), alarm, ...wiring.ports };
@@ -370,9 +385,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
    * object's alarm, and the contract's proposed bounds. It is called once,
    * while the object is constructed.
    */
-  protected wiring(_name: string | undefined): Wiring { return {}; }
+  protected [scopeWiring](_name: string | undefined): Wiring { return {}; }
   /** Internal metadata probe. No public route, reader, native turn or head. */
-  readiness(): "ready" | "absent" | "not-ready" | "unavailable" {
+  readiness(): "ready" | "absent" | "not-ready" | "unavailable" | RoomRetiredStop {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     try {
       const scope = this.#store.scope();
       if (!scope) return "absent";
@@ -381,7 +397,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     } catch { return "unavailable"; }
   }
   /** Optional operational binding; it is never a native authority port. */
-  protected metricEnvironment(): MetricEnvironment { return this.env as MetricEnvironment; }
+  protected [scopeMetricEnvironment](): MetricEnvironment { return this.env as MetricEnvironment; }
 
   /**
    * After a call that may have committed: a dispatch pass that the caller
@@ -489,7 +505,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
 
   #context(place: string, identity: OperationalIdentity = { request: null, trace: null }) {
-    const context = operationContext(this.metricEnvironment(), this.#name, place, identity, {
+    const context = operationContext(this[scopeMetricEnvironment](), this.#name, place, identity, {
       recordEntry: seq => context.identity.request === null || this.#requestIndex.record(context.identity.request, context.identity.trace, Date.now(), seq, null),
       recordOutbox: outboxId => context.identity.request === null || this.#requestIndex.record(context.identity.request, context.identity.trace, Date.now(), null, outboxId),
     });
@@ -513,7 +529,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return operational() ? work() : this.#invoke(`rpc:${place}`, work);
   }
   /** The native answer travels untouched beside one operational turn flag. */
-  async observed(method: ObservedMethod, args: unknown[], identity: OperationalIdentity, httpPublic = false): Promise<{ value: unknown; turn: boolean }> {
+  async observed(method: ObservedMethod, args: unknown[], identity: OperationalIdentity, httpPublic = false): Promise<{ value: unknown; turn: boolean } | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     if (!(OBSERVED_METHODS as readonly string[]).includes(method) || !Array.isArray(args) || args.length > 5) throw Error("Unknown operational route");
     await this.#diagnoseArchive();
     const base = operationPlace(method), isPublic = ["create", "submit", "prepare"].includes(method);
@@ -524,7 +541,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
 
   /** No caller bytes or mutable summary establish index membership. */
-  async registerKnown(): Promise<boolean> {
+  async registerKnown(): Promise<boolean | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     // Temporary fixed-category observation. Never log native values or errors.
     let phase: "configuration" | "entry-missing" | "entry-size" | "scope" | "entry" | "entry-parse" | "entry-integrity"
       | "genesis-prev" | "genesis-type" | "genesis-decision" | "seed-address" | "sequence" | "kind" | "index-register" = "configuration";
@@ -589,7 +607,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return captured.current();
   }
 
-  async create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> {
+  async create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     return this.#publicInvoke("create", async () => {
       if (isPlatformDefinition(definition) && isSignedIntentShape(creation)) {
         const seed: Seed = { v: 1, kind: creationKind(definition), definition, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
@@ -604,7 +623,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
    * `address`: the caller's address as the Worker's route had it, or null. Only the serving limits of a join read it (`limits.ts`):
    * at a membership scope a join is served through them, and no other act and no other scope is.
    */
-  async submit(signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}, address: unknown = null): Promise<Answer> {
+  async submit(signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}, address: unknown = null): Promise<Answer | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     return this.#publicInvoke("acts", async () => {
     const scope = this.#store.scope();
     const judged = () => this.#scope.submit(signed, grants, beside);
@@ -614,8 +634,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     });
   }
   /** One step of a capability, asked for with the signed intent that it prepares for (section 5.5). */
-  async prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return this.#publicInvoke("preparations", async () => this.#sent(await this.#scope.prepare(signed, grants, capability, step))); }
-  settle(signed: SignedIntent): Settlement {
+  async prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#publicInvoke("preparations", async () => this.#sent(await this.#scope.prepare(signed, grants, capability, step))); }
+  settle(signed: SignedIntent): Settlement | RoomRetiredStop {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first();
     const settled = this.#scope.settle(signed);
     // The existing exact-original check grants no general item read. The new
@@ -627,14 +648,15 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       || claim.state === "failed" && ((claim.values["repository"] ?? null) !== null || (claim.refs["directory"] ?? null) !== null)) return settled;
     return { ...settled, claim: { fact: settled.value.fact, state: claim.state as "pending" | "failed" | "active" } };
   }
-  checkpoint(): Promise<Checkpointed> { return this.#invoke("dispatch", () => { this.#first(); return this.#scope.checkpoint(); }); }
+  checkpoint(): Promise<Checkpointed | RoomRetiredStop> { if (this.#retired) return Promise.resolve(ROOM_RETIRED_STOP); return this.#invoke("dispatch", () => { this.#first(); return this.#scope.checkpoint(); }); }
 
   /**
    * One delivery from another scope (section 7.4). The resolver of this
    * name answers first, from the scope's record alone: a refusal there
    * reached no judgment and recorded nothing.
    */
-  async deliver(envelope: Delivered, identity?: OperationalIdentity): Promise<Delivery> {
+  async deliver(envelope: Delivered, identity?: OperationalIdentity): Promise<Delivery | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     return this.#invoke("dispatch", async () => {
     const refusal = routed(this.#name, this.#store.scope(), envelope);
     if (refusal) return { answer: "routing", reason: refusal };
@@ -645,7 +667,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     }, identity);
   }
   /** One entry of this scope, for a scope that received a send of it and checks its source (section 7.4). */
-  async source(seq: number, origin: boolean, context: SourceReadContext): Promise<Sourced | null> {
+  async source(seq: number, origin: boolean, context: SourceReadContext): Promise<Sourced | null | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     const valid = sourceReadRemaining(context);
     if (!valid || typeof origin !== "boolean") return null;
     const maxBytes = Math.min(context.maxBytes, this.#entryBytes);
@@ -739,16 +762,18 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return remaining() === null ? null : answer;
   }
   /** Native query preparation only. The caller supplies fresh validated request checks; no HTTP route invokes this. */
-  protected genesisEligibility(request: () => { key: import("@generalbusiness/dap-contract").KeyId; since: number } | null) {
+  protected [scopeGenesisEligibility](request: () => { key: import("@generalbusiness/dap-contract").KeyId; since: number } | null) {
+    if (this.#retired) throw new Error("Room retired.");
     return this.#genesisProofs.eligible(request);
   }
   /** One owned bounded query; starts no activation turn or legacy read walk. */
-  queryItems(encoded: unknown, reader: unknown) { return this.#itemQueries.read(encoded, reader); }
+  queryItems(encoded: unknown, reader: unknown) { if (this.#retired) return Promise.resolve(ROOM_RETIRED_STOP); return this.#itemQueries.read(encoded, reader); }
   /** Namespace-only host capability; intentionally absent from HTTP routing. */
-  archiveItem(ask: ArchiveHostItemAsk) { return this.#archiveItem(ask); }
-  applicationProjection(encoded: unknown, reader: unknown, atLeast?: ReadMinimum) { return this.#applicationProjections.read(encoded, reader, atLeast); }
+  archiveItem(ask: ArchiveHostItemAsk) { if (this.#retired) return ROOM_RETIRED_STOP; return this.#archiveItem(ask); }
+  applicationProjection(encoded: unknown, reader: unknown, atLeast?: ReadMinimum) { if (this.#retired) return Promise.resolve(ROOM_RETIRED_STOP); return this.#applicationProjections.read(encoded, reader, atLeast); }
   /** Admission of identifiers precedes authority and storage work. */
   async requests(reader: unknown, request?: string, trace?: string, cursor?: string) {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     const query = requestQuery(request, trace, cursor);
     if (!query) return { ok: false, reason: "not-found" } as const;
     await this.#readers.prepare?.(reader, "requests");
@@ -756,6 +781,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** Exact internal causal-proof bytes. Read-only: deliberately bypasses #first/sourceOrigin. */
   proofSource(fact: unknown, maxBytes: number, milliseconds?: number) {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     if (milliseconds === undefined) return this.#proofBytes.exact(fact, maxBytes);
     const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
     if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
@@ -770,6 +796,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   /** Closed raw birth view with scheduling metadata recovery only; no native
    * turn, source identity, host I/O or authority work. */
   nativeBirth(at: unknown, milliseconds: number, maxBytes?: number) {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#recoverArchiveAlarm();
     const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
     if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
@@ -779,6 +806,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** Indexed internal discovery only. No turn, source fallback, or host I/O. */
   nativeBirthByName(name: unknown, kind: unknown, milliseconds: number, maxBytes?: number) {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     if (name !== this.#name) return null;
     const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
     if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
@@ -787,7 +815,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return active() ? result : null;
   }
   /** Immutable bounded custody only. No #first, turn, driver or authority. */
-  creationDeclaration(at: unknown, digest: unknown, maxBytes: number, milliseconds: number): string | null {
+  creationDeclaration(at: unknown, digest: unknown, maxBytes: number, milliseconds: number): string | null | RoomRetiredStop {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
     if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
     const active = () => { const now = this.#queryFlights.clock.now(); return now >= began && now < ends; };
@@ -795,33 +824,39 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     catch { return null; }
   }
   /** Authenticated small directory witness. No HTTP route or activation turn. */
-  sessionReference(request: unknown): string | null { return this.#sessionReferences.read(request); }
+  sessionReference(request: unknown): string | null | RoomRetiredStop { if (this.#retired) return ROOM_RETIRED_STOP; return this.#sessionReferences.read(request); }
   /** Future bounded query support only; existing public reads are unchanged. */
-  protected sessionEligibility(reader: unknown, visibility: QueryVisibility): Promise<boolean> { return this.#sessionPreparation.eligible(reader, visibility); }
+  protected [scopeSessionEligibility](reader: unknown, visibility: QueryVisibility): Promise<boolean> { if (this.#retired) throw new Error("Room retired."); return this.#sessionPreparation.eligible(reader, visibility); }
   /** Site reads publication selection and immutable proof; unlike ordinary reads these start no outside work. */
-  demoCreationOffer(config: DemoCreationConfig) { return demoCreationOffer(this.#store, this.#scope.pinned()?.named, config); }
-  siteDestination() { return siteDestination(this.#store, this.#scope.pinned()?.named); }
+  demoCreationOffer(config: DemoCreationConfig) { if (this.#retired) return ROOM_RETIRED_STOP; return demoCreationOffer(this.#store, this.#scope.pinned()?.named, config); }
+  siteDestination() { if (this.#retired) return ROOM_RETIRED_STOP; return siteDestination(this.#store, this.#scope.pinned()?.named); }
   siteRoom() {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     if ((this.#store.storedBytes(0) ?? 0) > 1024 * 1024 || (this.#store.scopeBytes() ?? 0) > 1024 * 1024) throw new Error("publication-history-limit");
     return sourced(this.#store, this.#scope.pinned(), 0);
   }
-  sitePublication(directory: unknown, repository: unknown) { return sitePublication(this.#store, this.#scope.pinned()?.named, directory, repository); }
-  sitePublishedCommit(directory: unknown, repository: unknown, commit: unknown) { return sitePublishedCommit(this.#store, this.#scope.pinned()?.named, directory, repository, commit); }
+  sitePublication(directory: unknown, repository: unknown) { if (this.#retired) return ROOM_RETIRED_STOP; return sitePublication(this.#store, this.#scope.pinned()?.named, directory, repository); }
+  sitePublishedCommit(directory: unknown, repository: unknown, commit: unknown) { if (this.#retired) return ROOM_RETIRED_STOP; return sitePublishedCommit(this.#store, this.#scope.pinned()?.named, directory, repository, commit); }
   /** The bytes of one declaration this scope retains, for a child that is about to write its genesis (sections 7.2 and 9.2). */
   /** Native, read-only routing metadata; no public scope-data bypass. */
   applicationRoom() {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first(); const pinned = this.#scope.pinned();
     return pinned?.definition ? applicationRoom(this.#store, pinned.named) : null;
   }
-  applicationRoomBytes(): string | null {
+  applicationRoomBytes(): string | null | RoomRetiredStop {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     const room = this.applicationRoom();
+    if (isRoomRetiredStop(room)) return room;
     return room === null ? null : applicationJson(room, 1024);
   }
   applicationInstallation(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number) {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first(); const pinned = this.#scope.pinned();
     return pinned?.definition ? applicationInstallation(this.#store, pinned.named, directory, item) : null;
   }
   applicationProjectionDeclaration(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string) {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first(); const pinned = this.#scope.pinned();
     if (!pinned?.definition) return null;
     return applicationProjectionDeclaration(this.#store, pinned.named, directory, item, name, (domain, digest, most) => {
@@ -832,57 +867,59 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       try { return parseStrict(retained.bytes); } catch { return undefined; }
     });
   }
-  applicationProjectionDeclarationBytes(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string): string | null {
+  applicationProjectionDeclarationBytes(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string): string | null | RoomRetiredStop {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     const declared = this.applicationProjectionDeclaration(directory, item, name);
+    if (isRoomRetiredStop(declared)) return declared;
     return declared === null ? null : applicationJson(declared, APPLICATION_DECLARATION_BYTES);
   }
-  declared(digest: Digest): string | null { this.#first(); return declaredBy(this.#store, digest, this.#scope.pinned()?.named); }
+  declared(digest: Digest): string | null | RoomRetiredStop { if (this.#retired) return ROOM_RETIRED_STOP; this.#first(); return declaredBy(this.#store, digest, this.#scope.pinned()?.named); }
   /** A detached text that a send of this scope's entry at `seq` names, for the scope that received that send (section 6.2). */
-  text(seq: number, digest: Digest): string | null { this.#first(); return sentText(this.#store, seq, digest); }
+  text(seq: number, digest: Digest): string | null | RoomRetiredStop { if (this.#retired) return ROOM_RETIRED_STOP; this.#first(); return sentText(this.#store, seq, digest); }
 
   /**
    * The standing of one key or of one member, for a scope of this repository that reads it before its turn (authority note,
    * section 3.3). Only a membership scope that is active answers. Nothing is written, and no caller is named or checked.
    */
-  observe(asked: unknown): unknown { this.#first(); return observedAt(this.#store, this.#scope.pinned(), asked); }
+  observe(asked: unknown): unknown { if (this.#retired) return ROOM_RETIRED_STOP; this.#first(); return observedAt(this.#store, this.#scope.pinned(), asked); }
 
   /**
    * A read session, for a device that asks with a signed request (authority note, section 3.9). Only an active membership scope
    * answers one, from its head and its own clock. It is an answer and no entry: nothing is written.
    */
-  session(asked: unknown): SessionIssueAnswer { return this.#invokeSync("sessions", () => {
+  session(asked: unknown): SessionIssueAnswer | RoomRetiredStop { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invokeSync("sessions", () => {
     this.#first();
     const answer = issueSession({ sessions: this.#sessions(), clock: this.#clock, requests: this.#requests }, this.#store, this.#scope.pinned(), asked);
     metric({ kind: "session", place: "sessions", end: answer.ok ? "issued" : "refused", reason: answer.ok ? "none" : answer.reason });
     return answer;
   }); }
   /** A stream of this scope's head, for a read session that may read the summary; or why none is opened (`sessions.ts`, `Streams`). */
-  async stream(reader: unknown): Promise<Opened | StreamRefusal> { return this.#invoke("stream", async () => {
+  async stream(reader: unknown): Promise<Opened | StreamRefusal | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("stream", async () => {
     this.#first(); await this.#prepared(reader, "summary"); const answer = this.#streams.open(reader);
     const streams = this.#streams.counts();
     metric({ kind: "stream", place: "stream", end: "ok", a: streams.open, b: streams.released });
     return answer;
   }); }
   /** Keep one member's original request, before the page sends it (`originals.ts`). A new row joins the object's one alarm. */
-  async keepOriginal(reader: unknown, bytes: unknown): Promise<OriginalKept> { return this.#invoke("originals", async () => {
+  async keepOriginal(reader: unknown, bytes: unknown): Promise<OriginalKept | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("originals", async () => {
     this.#first();
     const answer = this.#originals.keep(reader, bytes);
     if (answer.ok && answer.fresh) await this.#wakes.set();
     return answer;
   }); }
   /** The open copies of the session's member, without bodies. */
-  async listOriginals(reader: unknown): Promise<OriginalPage> { return this.#invoke("originals", async () => { this.#first(); return this.#originals.list(reader); }); }
+  async listOriginals(reader: unknown): Promise<OriginalPage | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("originals", async () => { this.#first(); return this.#originals.list(reader); }); }
   /** One copy's exact bytes, for a session of its member. */
-  async readOriginal(reader: unknown, digest: unknown): Promise<OriginalBytes> { return this.#invoke("originals", async () => { this.#first(); return this.#originals.read(reader, digest); }); }
+  async readOriginal(reader: unknown, digest: unknown): Promise<OriginalBytes | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("originals", async () => { this.#first(); return this.#originals.read(reader, digest); }); }
   /** End one copy, for a session of its member. */
-  async endOriginal(reader: unknown, digest: unknown): Promise<OriginalEnded> { return this.#invoke("originals", async () => { this.#first(); return this.#originals.end(reader, digest); }); }
+  async endOriginal(reader: unknown, digest: unknown): Promise<OriginalEnded | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("originals", async () => { this.#first(); return this.#originals.end(reader, digest); }); }
   /** The reader of the stream with that ID went away. Its subscription is released at once. */
-  release(id: unknown): void { this.#invokeSync("stream", () => {
+  release(id: unknown): void | RoomRetiredStop { if (this.#retired) return ROOM_RETIRED_STOP; this.#invokeSync("stream", () => {
     this.#streams.release(id); const streams = this.#streams.counts();
     metric({ kind: "stream", place: "stream", end: "ok", a: streams.open, b: streams.released });
   }); }
   /** The streams open now and the subscriptions released in this run, and the windows and waiting joins of the serving limits. Counts only. */
-  serving(): { streams: { open: number; released: number }; limits: { windows: number; waiting: number } } { return this.#invokeSync("stream", () => {
+  serving(): { streams: { open: number; released: number }; limits: { windows: number; waiting: number } } | RoomRetiredStop { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invokeSync("stream", () => {
     const streams = this.#streams.counts();
     metric({ kind: "stream", place: "stream", end: "ok", a: streams.open, b: streams.released });
     return { streams, limits: this.#limits.counts() };
@@ -892,12 +929,12 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
    * It has no route: who an operator is, and how one is authenticated, is the installation design's. It is reached over the
    * namespace binding, as `dispatch` is.
    */
-  resend(outboxId: unknown): Promise<Resent> { return this.#invoke("dispatch", () => { this.#first(); return sendAgain(this.#store, this.#transport, this.#clock, this.#record, outboxId, this.#seconds); }); }
+  resend(outboxId: unknown): Promise<Resent | RoomRetiredStop> { if (this.#retired) return Promise.resolve(ROOM_RETIRED_STOP); return this.#invoke("dispatch", () => { this.#first(); return sendAgain(this.#store, this.#transport, this.#clock, this.#record, outboxId, this.#seconds); }); }
 
   /** A dispatch pass now, or the one in flight. Resolves when it ends, with the number of dispatches and diagnoses it made. */
-  dispatch(): Promise<number> { return this.#invoke("dispatch", () => { this.#first(); return this.#dispatcher ? this.#dispatcher.run() : Promise.resolve(0); }); }
+  dispatch(): Promise<number | RoomRetiredStop> { if (this.#retired) return Promise.resolve(ROOM_RETIRED_STOP); return this.#invoke("dispatch", () => { this.#first(); return this.#dispatcher ? this.#dispatcher.run() : Promise.resolve(0); }); }
   /** A pass of the operations driver now, or the one in flight. Resolves when it ends, with the number of requests it sent and outcomes it offered. */
-  effect(): Promise<number> { return this.#invoke("dispatch", () => { this.#fresh = false; return this.#operations.run(); }); }
+  effect(): Promise<number | RoomRetiredStop> { if (this.#retired) return Promise.resolve(ROOM_RETIRED_STOP); return this.#invoke("dispatch", () => { this.#fresh = false; return this.#operations.run(); }); }
   #maintenanceAt() {
     let now = Date.now();
     try { now = Math.max(now, timeMs(this.#clock.read()) ?? now); } catch { /* scheduler retry grants no authority */ }
@@ -905,6 +942,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** The alarm: a turn with no waiting input, at the earliest deadline (section 5.2), then a dispatch pass, then a pass of the operations driver. */
   override async alarm(): Promise<void> {
+    if (this.#retired) return;
     this.#alarmRunning++;
     try {
       return await this.#invoke("alarm", async () => {
@@ -989,21 +1027,22 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       return summary.ok ? summary : this.#reads.minimum(reader, "items");
     }, seq => this.#store.stored(seq)?.hash ?? null, active, () => this.#store.floor()?.floor ?? 0);
   }
-  async summary(reader: unknown, atLeast?: ReadMinimum): Promise<Read<Summary>> { return this.#invoke("summary", async () => { this.#first(); await this.#prepared(reader, "summary"); if (atLeast === undefined) await this.#rooted(reader, "summary", "summary"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "summary", "summary", atLeast); return waiting ?? this.#reads.summary(reader); }); }
-  async items(reader: unknown, type: string, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Item[]>> { return this.#invoke("items", async () => { this.#first(); await this.#prepared(reader, "items"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "items", undefined, atLeast); return waiting ?? this.#reads.items(reader, type, cursor); }); }
-  async history(reader: unknown, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Sealed[]>> { return this.#invoke("history", async () => { this.#first(); await this.#prepared(reader, "history"); if (atLeast === undefined) await this.#rooted(reader, "history", cursor ?? "0"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "history", cursor ?? "0", atLeast); return waiting ?? this.#reads.history(reader, cursor); }); }
-  async entry(reader: unknown, seq: number, atLeast?: ReadMinimum): Promise<Read<Sealed>> { return this.#invoke("entries", async () => { this.#first(); await this.#prepared(reader, "entry"); if (atLeast === undefined) await this.#rooted(reader, "entry", String(seq)); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "entry", String(seq), atLeast); return waiting ?? this.#reads.entry(reader, seq); }); }
-  async outbox(reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return this.#invoke("outbox", async () => { this.#first(); await this.#prepared(reader, "outbox"); return this.#reads.outbox(reader, cursor); }); }
-  async outboxItem(reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { return this.#invoke("outboxItem", async () => { this.#first(); await this.#prepared(reader, "outbox"); return this.#reads.outboxItem(reader, outboxId); }); }
-  async operations(reader: unknown, cursor?: Cursor, open = false): Promise<Read<readonly OperationStatus[]>> { return this.#invoke("operations", async () => { this.#first(); await this.#prepared(reader, "operations"); return this.#reads.operations(reader, cursor, open); }); }
-  async operation(reader: unknown, operation: OperationId): Promise<Read<OperationStatus>> { return this.#invoke("operations", async () => { this.#first(); await this.#prepared(reader, "operations"); return this.#reads.operation(reader, operation); }); }
-  async log(reader: unknown, cursor?: Cursor): Promise<Read<LogPage>> { return this.#invoke("log", async () => { this.#first(); await this.#prepared(reader, "log"); await this.#rooted(reader, "log", cursor ?? "0"); return this.#reads.log(reader, cursor); }); }
-  async retained(reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>> { return this.#invoke("retained", async () => { this.#first(); await this.#prepared(reader, "retained"); await this.#rooted(reader, "retained", retainedReadArgument(kind, digest, domain)); return this.#reads.retained(reader, kind, digest, domain); }); }
-  async incidents(reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>> { return this.#invoke("incidents", async () => { this.#first(); await this.#prepared(reader, "incidents"); return this.#reads.incidents(reader, cursor); }); }
-  async waiting(reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return this.#invoke("waiting", async () => { this.#first(); await this.#prepared(reader, "waiting"); return this.#reads.waiting(reader, list, cursor); }); }
+  async summary(reader: unknown, atLeast?: ReadMinimum): Promise<Read<Summary> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("summary", async () => { this.#first(); await this.#prepared(reader, "summary"); if (atLeast === undefined) await this.#rooted(reader, "summary", "summary"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "summary", "summary", atLeast); return waiting ?? this.#reads.summary(reader); }); }
+  async items(reader: unknown, type: string, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Item[]> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("items", async () => { this.#first(); await this.#prepared(reader, "items"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "items", undefined, atLeast); return waiting ?? this.#reads.items(reader, type, cursor); }); }
+  async history(reader: unknown, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Sealed[]> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("history", async () => { this.#first(); await this.#prepared(reader, "history"); if (atLeast === undefined) await this.#rooted(reader, "history", cursor ?? "0"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "history", cursor ?? "0", atLeast); return waiting ?? this.#reads.history(reader, cursor); }); }
+  async entry(reader: unknown, seq: number, atLeast?: ReadMinimum): Promise<Read<Sealed> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("entries", async () => { this.#first(); await this.#prepared(reader, "entry"); if (atLeast === undefined) await this.#rooted(reader, "entry", String(seq)); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "entry", String(seq), atLeast); return waiting ?? this.#reads.entry(reader, seq); }); }
+  async outbox(reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("outbox", async () => { this.#first(); await this.#prepared(reader, "outbox"); return this.#reads.outbox(reader, cursor); }); }
+  async outboxItem(reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("outboxItem", async () => { this.#first(); await this.#prepared(reader, "outbox"); return this.#reads.outboxItem(reader, outboxId); }); }
+  async operations(reader: unknown, cursor?: Cursor, open = false): Promise<Read<readonly OperationStatus[]> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("operations", async () => { this.#first(); await this.#prepared(reader, "operations"); return this.#reads.operations(reader, cursor, open); }); }
+  async operation(reader: unknown, operation: OperationId): Promise<Read<OperationStatus> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("operations", async () => { this.#first(); await this.#prepared(reader, "operations"); return this.#reads.operation(reader, operation); }); }
+  async log(reader: unknown, cursor?: Cursor): Promise<Read<LogPage> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("log", async () => { this.#first(); await this.#prepared(reader, "log"); await this.#rooted(reader, "log", cursor ?? "0"); return this.#reads.log(reader, cursor); }); }
+  async retained(reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("retained", async () => { this.#first(); await this.#prepared(reader, "retained"); await this.#rooted(reader, "retained", retainedReadArgument(kind, digest, domain)); return this.#reads.retained(reader, kind, digest, domain); }); }
+  async incidents(reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("incidents", async () => { this.#first(); await this.#prepared(reader, "incidents"); return this.#reads.incidents(reader, cursor); }); }
+  async waiting(reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]> | RoomRetiredStop> { if (this.#retired) return ROOM_RETIRED_STOP; return this.#invoke("waiting", async () => { this.#first(); await this.#prepared(reader, "waiting"); return this.#reads.waiting(reader, list, cursor); }); }
 
   /** Internal namespace read of one exact job's current state. */
-  async jobState(fact: import("@generalbusiness/dap-contract").FactRef): Promise<{ state: string; decidedBy: import("@generalbusiness/dap-contract").FactRef | null } | null> {
+  async jobState(fact: import("@generalbusiness/dap-contract").FactRef): Promise<{ state: string; decidedBy: import("@generalbusiness/dap-contract").FactRef | null } | null | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first(); const scope = this.#store.scope(); const sealed = this.#store.stored(fact.seq);
     if (!scope || !sealed || fact.at.scope !== scope.at.scope || fact.at.inc !== scope.at.inc || sealed.hash !== fact.hash) return null;
     const item = this.#store.item(fact.seq);
@@ -1012,7 +1051,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return item?.type === "job" ? { state: item.state, decidedBy: entry ? { at: scope.at, seq: deciding as number, hash: entry.hash } : null } : null;
   }
   /** Internal namespace read of one retained work-source item's current state. */
-  async workSourceState(fact: import("@generalbusiness/dap-contract").FactRef): Promise<string | null> {
+  async workSourceState(fact: import("@generalbusiness/dap-contract").FactRef): Promise<string | null | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first();
     const scope = this.#store.scope(), kept = this.#store.stored(fact.seq);
     const sealed = kept ? { entry: JSON.parse(kept.bytes) as Entry, hash: kept.hash } : null;
@@ -1023,12 +1063,14 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       && effect.item === fact.seq && effect.type === "work-source") ? item.state : null;
   }
   /** Authenticated by the signed job-read request and current configured checker. */
-  async reservationSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null> {
+  async reservationSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first();
     try { return await this.#outside.snapshot?.(asked) ?? null; } catch { return null; }
   }
   /** Internal signed successor read; unsupported profiles return no proof. */
-  async stageSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply> {
+  async stageSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first();
     try { return await this.#outside.stageSnapshot?.(asked) ?? null; } catch { return null; }
   }
@@ -1039,7 +1081,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
    * judges the rest, and drops the plaintext as it answers. A second read, another key's session, a read after the end, a
    * handle that names nothing and a scope that is no destination are each `forbidden`. Nothing is written.
    */
-  async credential(reader: unknown, handle: unknown): Promise<Read<{ token: string; ends: string; remote: string }>> {
+  async credential(reader: unknown, handle: unknown): Promise<Read<{ token: string; ends: string; remote: string }> | RoomRetiredStop> {
+    if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first();
     await this.#prepared(reader, "credential");
     const key = this.#readers.holder?.(reader, "credential") ?? false;

@@ -1,3 +1,4 @@
+import { scopeGenesisEligibility } from "../src/internal/room-hooks.ts";
 import { expect, test } from "vitest";
 import type { Entry, OperationId } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, digestBytes, entryHash, isEntryBodyOf, isScopeId, utf8 } from "@generalbusiness/dap-bytes";
@@ -27,8 +28,8 @@ test("native proof source returns only exact admitted entry bytes and checks ful
       traced.exact({ ...identity.genesis, seq: 1 }, first.size),
       traced.exact(identity.genesis, first.size - 1), traced.exact(identity.genesis, NaN),
     ];
-    const owner = instance as { genesisEligibility(request: () => { key: typeof rita.key; since: number }): Promise<unknown> };
-    const eligibility = await owner.genesisEligibility(() => ({ key: rita.key, since: Date.parse(at(0)) }));
+    const owner = instance as { [scopeGenesisEligibility](request: () => { key: typeof rita.key; since: number }): Promise<unknown> };
+    const eligibility = await owner[scopeGenesisEligibility](() => ({ key: rita.key, since: Date.parse(at(0)) }));
     const sequence = admitSequenceGenesis(first.bytes, identity.genesis.at, first.size);
     if (!sequence) throw Error("Actual original genesis association required");
     const original = proofEntry({ fact: identity.genesis, bytes: first.bytes }, identity.genesis, first.size, sequence);

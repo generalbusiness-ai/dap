@@ -1,3 +1,4 @@
+import { scopeWiring, scopeMetricEnvironment, scopeNamespace } from "../src/internal/room-hooks.ts";
 /**
  * The Worker the workerd tests run. `TestScope` is the scope's object class
  * with the test ports, bounds and read bounds that the test set for its
@@ -132,8 +133,8 @@ export const roomArchiveConstructions = new Map<string, number>();
 export const scopeRegistrationWiring = new Map<string, NonNullable<Wiring["registerGenesis"]>>();
 
 export class TestScope extends ScopeObject {
-  protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
-  protected override wiring(name: string | undefined): Wiring {
+  protected override [scopeMetricEnvironment](): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super[scopeMetricEnvironment](); }
+  protected override [scopeWiring](name: string | undefined): Wiring {
     const c = controls(name ?? "");
     const fixtureArchive = fixtureArchiveWiring.get(name ?? "");
     const registerGenesis = scopeRegistrationWiring.get(name ?? "");
@@ -146,10 +147,10 @@ export class MetricControlScope extends TestScope {}
 type NetEnv = Env & { NET: DurableObjectNamespace };
 
 export class NetScope extends DeployedScope<NetEnv> {
-  protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
-  protected override scopes() { return this.env.NET; }
-  protected override wiring(name: string | undefined): Wiring {
-    const deployed = super.wiring(name);
+  protected override [scopeMetricEnvironment](): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super[scopeMetricEnvironment](); }
+  protected override [scopeNamespace]() { return this.env.NET; }
+  protected override [scopeWiring](name: string | undefined): Wiring {
+    const deployed = super[scopeWiring](name);
     const ports = { ...deployed.ports, ...netPorts(net, deployed.ports!.transport!, deployed.ports!.resolver) };
     // The definitions port is the deployed one, whose platform definitions are the platform package's, until a test takes their code away.
     return { platformCreationPolicy: historicalCreationPolicy, ...(deployed.registerGenesis ? { registerGenesis: deployed.registerGenesis } : {}), bounds: net.sized.get(name ?? "") ?? net.bounds, ports: { ...ports, definitions: codeLost(deployed.ports!.definitions!, () => !net.platformCode) } };
@@ -194,7 +195,7 @@ export const TEST_DEPLOYMENT = "artroom-scope-test";
 type PlatformEnv = Env & { PLATFORM: DurableObjectNamespace };
 
 export class PlatformScope extends DeployedScope<PlatformEnv> {
-  protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
+  protected override [scopeMetricEnvironment](): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super[scopeMetricEnvironment](); }
   readonly #scheduledCallbacks: Promise<unknown>[];
   #fixtureCallbackRelease: (() => void) | null = null;
   #fixtureCallbackFinished = false;
@@ -256,12 +257,12 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
     throw new Error("Native fixture scheduled callbacks exceeded 64 batches");
   }
 
-  protected override scopes() { return this.env.PLATFORM; }
-  protected override wiring(name: string | undefined): Wiring {
-    const deployed = super.wiring(name);
+  protected override [scopeNamespace]() { return this.env.PLATFORM; }
+  protected override [scopeWiring](name: string | undefined): Wiring {
+    const deployed = super[scopeWiring](name);
     const { resolver, definitions, transport } = deployed.ports as Required<NonNullable<Wiring["ports"]>>;
     // With a test secret the session configuration is the test's. With none it is the deployed one, from this Worker's bindings.
-    const session = sessionWiring(() => (platformNet.secret === null ? deployed.sessions!() : sessionsOf(platformNet.secret, TEST_DEPLOYMENT)), this.scopes());
+    const session = sessionWiring(() => (platformNet.secret === null ? deployed.sessions!() : sessionsOf(platformNet.secret, TEST_DEPLOYMENT)), this[scopeNamespace]());
     const outside = platformOutside.get(name ?? "");
     const ports = wired.get(name ?? "")?.();
     const { outside: _deployed, ...rest } = deployed;

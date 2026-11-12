@@ -1,3 +1,4 @@
+import { scopeSessionEligibility } from "../src/internal/room-hooks.ts";
 import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import type { SessionClaims } from "@generalbusiness/dap-contract";
@@ -22,12 +23,12 @@ test.each(sessionCohorts)("native %s session composition and directory RPC stay 
     const restricted = await life.wait(() => runInDurableObject(children[0]!.object, async instance => {
       // Test invokes the protected support entry directly. There is no public
       // query route or RPC authorization result in the production surface.
-      const local = instance as unknown as { sessionEligibility(reader: unknown, visibility: QueryVisibility): Promise<boolean> };
+      const local = instance as unknown as { [scopeSessionEligibility](reader: unknown, visibility: QueryVisibility): Promise<boolean> };
       const matrix: boolean[][] = [];
       for (const reads of [["summary"], ["items"], ["summary", "items"]] as SessionClaims["reads"][]) {
         const token = readerOf(mintSession(sessionsOf(secret, TEST_DEPLOYMENT)!, { ...claims, reads }));
         const row = [];
-        for (const visibility of ["live", "final", "mixed"] as const) row.push(await local.sessionEligibility(token, visibility));
+        for (const visibility of ["live", "final", "mixed"] as const) row.push(await local[scopeSessionEligibility](token, visibility));
         matrix.push(row);
       }
       return matrix;
@@ -36,12 +37,12 @@ test.each(sessionCohorts)("native %s session composition and directory RPC stay 
     const birthPaths = [];
     for (const child of children.slice(1)) {
       birthPaths.push(await life.wait(() => runInDurableObject(child.object, async instance => {
-        const local = instance as unknown as { sessionEligibility(reader: unknown, visibility: QueryVisibility): Promise<boolean> };
+        const local = instance as unknown as { [scopeSessionEligibility](reader: unknown, visibility: QueryVisibility): Promise<boolean> };
         const rows: boolean[][] = [];
         for (const reads of [["summary"], ["items"], ["summary", "items"]] as SessionClaims["reads"][]) {
           const token = readerOf(mintSession(sessionsOf(secret, TEST_DEPLOYMENT)!, { ...claims, reads }));
           const row = [];
-          for (const visibility of ["live", "final", "mixed"] as const) row.push(await local.sessionEligibility(token, visibility));
+          for (const visibility of ["live", "final", "mixed"] as const) row.push(await local[scopeSessionEligibility](token, visibility));
           rows.push(row);
         }
         return rows;
@@ -62,8 +63,8 @@ test.each(sessionCohorts)("native %s session composition and directory RPC stay 
         };
         try {
           const token = readerOf(mintSession(sessionsOf(secret, TEST_DEPLOYMENT)!, { ...claims, reads: ["summary", "items"] }));
-          const local = instance as unknown as { sessionEligibility(reader: unknown, visibility: QueryVisibility): Promise<boolean> };
-          return { allowed: await local.sessionEligibility(token, "mixed"), costs: [...costs.values()] };
+          const local = instance as unknown as { [scopeSessionEligibility](reader: unknown, visibility: QueryVisibility): Promise<boolean> };
+          return { allowed: await local[scopeSessionEligibility](token, "mixed"), costs: [...costs.values()] };
         } finally { PreparationBudget.prototype.spend = original; }
       })));
     }

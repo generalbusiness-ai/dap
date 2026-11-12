@@ -1,3 +1,4 @@
+import { scopeWiring } from "../src/internal/room-hooks.ts";
 /** Real native ScopeObject, turn, journal and SQLite. The first fixtures use
  * test authority/readers and a scripted clock. The expiry case uses the
  * production session reader over an actually created native room, with a
@@ -43,7 +44,7 @@ async function inside<T>(work: (object: ScopeObject, lane: Lane, timer: Timer, s
   return lane.inside(async state => {
     const timer = new Timer();
     class WaitScope extends ScopeObject {
-      protected override wiring(): Wiring { return { ports: testPorts(lane.c), bounds: lane.c.bounds, queryTimer: timer }; }
+      protected override [scopeWiring](): Wiring { return { ports: testPorts(lane.c), bounds: lane.c.bounds, queryTimer: timer }; }
     }
     return work(new WaitScope(state, {}), lane, timer, state);
   });
@@ -99,7 +100,7 @@ test("native wait rechecks actual session expiry before exposing timeout or inca
     await f.life.wait(() => runInDurableObject(child.object, async (_instance, state) => {
       const timer = new Timer(), c = controls(child.name); c.clock = net.clock;
       class WaitScope extends ScopeObject {
-        protected override wiring(): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
+        protected override [scopeWiring](): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
       }
       const object = new WaitScope(state, {}), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items", "history", "entry"] }));
       const before = await object.summary(token);
@@ -148,7 +149,7 @@ test("a future projection minimum leaves the shared flight available to a concur
       }
       const timer = new ProjectionTimer(), c = controls(child.name); c.clock = net.clock;
       class WaitScope extends ScopeObject {
-        protected override wiring(): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
+        protected override [scopeWiring](): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
       }
       const object = new WaitScope(state, {}), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items"] }));
       const before = await object.summary(token);
@@ -188,7 +189,7 @@ test("causal signed history and entry readers see a native delivery sealed durin
     await runInDurableObject(target.object, async (_instance, state) => {
       const timer = new Timer(), peers = namespace(env.NET);
       class WaitScope extends ScopeObject {
-        protected override wiring(): Wiring {
+        protected override [scopeWiring](): Wiring {
           return { ports: { ...netPorts(net, peers.transport, peers.resolver), definitions: peers.definitions, births: peers.births, proofs: peers.proofs }, bounds: { ...PROPOSED_BOUNDS, readWaitMilliseconds: 1000 }, queryTimer: timer };
         }
       }

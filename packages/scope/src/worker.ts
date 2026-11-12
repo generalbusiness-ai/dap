@@ -1,3 +1,4 @@
+import { scopeWiring, scopeNamespace } from "./internal/room-hooks.ts";
 import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 import { mcpRoute, type McpEnv } from "./worker-mcp.ts";
 import { readMinimumParameter } from "@generalbusiness/dap-bytes";
@@ -721,20 +722,20 @@ export function snapshotReaderOf(binding: Binding, context: import("./ports.ts")
 
 export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
   /** The one scope namespace. */
-  protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
-  protected override wiring(_name: string | undefined): Wiring {
+  protected [scopeNamespace](): Binding { return indexedScopes(this.env.SCOPES, this.env); }
+  protected override [scopeWiring](_name: string | undefined): Wiring {
     return {
       platformCreationPolicy: readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: this.env.PLATFORM_CREATION_PINS }),
       registerGenesis: async proof => scopeIndex(this.env)?.register(proof) ?? false,
-      ports: namespace(this.scopes()),
+      ports: namespace(this[scopeNamespace]()),
       applicationTrust: () => this.env.APPLICATION_TRUST,
-      authority: (given) => repositoryAuthority({ ...given, reader: membershipIn(this.scopes()) }),
+      authority: (given) => repositoryAuthority({ ...given, reader: membershipIn(this[scopeNamespace]()) }),
       // Wired whether or not a host is configured now: `outsideOf` reads the settings at each call, and with neither it sends nothing.
       outside: (given: OutsideGiven) => {
-        const scopes = this.scopes(), proofs = namespace(scopes);
+        const scopes = this[scopeNamespace](), proofs = namespace(scopes);
         return outsideOf(given, this.ctx.storage.sql, this.env, undefined, given.bounds ? snapshotReaderOf(scopes, { maxBytes: given.bounds.entryBytes, milliseconds: Math.floor(given.bounds.fetchSeconds * 1000) }) : undefined, { births: proofs.birthNames, proofs: proofs.proofs });
       },
-      ...sessionWiring(() => sessionsOf(this.env.SESSION_SECRET, this.env.DEPLOYMENT), this.scopes()),
+      ...sessionWiring(() => sessionsOf(this.env.SESSION_SECRET, this.env.DEPLOYMENT), this[scopeNamespace]()),
     };
   }
 }

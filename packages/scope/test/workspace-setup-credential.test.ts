@@ -1,3 +1,4 @@
+import { scopeWiring } from "../src/internal/room-hooks.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
@@ -148,7 +149,7 @@ async function fixture(mode: Mode, retainedRoot = false) {
   // SqliteStore. Test authority is explicit; deployed authority and application
   // admission are not claimed. No MemoryState or manual cleanup fold exists.
   class FactoryScope extends ScopeObject {
-    protected override wiring(): Wiring {
+    protected override [scopeWiring](): Wiring {
       return {
         bounds: { ...PROPOSED_BOUNDS, dispatchSeconds: 0.01 },
         ports: { ...testPorts(c), capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE,

@@ -107,20 +107,29 @@ export function environmentReads(source, file, { environmentTypes = new Set(), f
     while (target?.type === "MemberExpression") target = unwrap(target.object);
     if (bound.includes("Object") || target?.type === "Identifier" && target.name === "Object") globalObject = false;
   });
-  // One existing protected adapter. This is a Source tripwire, not return-flow inference.
+  // One exact internal symbol adapter, not a general computed setting escape.
   const metricReturns = new Set(), metricCalls = new Set();
   if (file === "packages/scope/src/object.ts") {
-    const method = "protected metricEnvironment(): MetricEnvironment { return this.env as MetricEnvironment; }";
-    const start = source.indexOf(method), references = [], consumers = [], returns = [];
+    const hook = "scopeMetricEnvironment";
+    const method = "protected [scopeMetricEnvironment](): MetricEnvironment { return this.env as MetricEnvironment; }";
+    const start = source.indexOf(method), references = [], consumers = [], returns = [], keys = [], identifiers = [];
+    const imports = tree.body.filter(n => n.type === "ImportDeclaration" && n.source.value === "./internal/room-hooks.ts")
+      .flatMap(n => n.specifiers.filter(p => p.type === "ImportSpecifier" && prop(p.imported) === hook && p.local.name === hook));
     walk(tree, n => {
-      if (n.type === "MemberExpression" && n.object.type === "ThisExpression" && prop(n.property) === "metricEnvironment") references.push(n);
+      if (n.type === "Identifier" && n.name === hook) identifiers.push(n);
+      if (n.type === "MethodDefinition" && n.computed && prop(n.key) === hook && n.start >= start && n.end <= start + method.length) keys.push(n.key);
+      if (n.type === "MemberExpression" && n.computed && n.object.type === "ThisExpression" && n.property.type === "Identifier" && n.property.name === hook) references.push(n);
       if (n.type === "CallExpression" && n.callee.type === "Identifier" && n.callee.name === "operationContext") {
         const first = n.arguments[0];
-        if (first?.type === "CallExpression" && first.arguments.length === 0 && first.callee.type === "MemberExpression" && first.callee.object.type === "ThisExpression" && prop(first.callee.property) === "metricEnvironment") consumers.push(first);
+        if (first?.type === "CallExpression" && first.arguments.length === 0 && first.callee.type === "MemberExpression" && first.callee.computed && first.callee.object.type === "ThisExpression" && first.callee.property.type === "Identifier" && first.callee.property.name === hook) consumers.push(first);
       }
       if (n.type === "ReturnStatement" && n.start >= start && n.end <= start + method.length) returns.push(n);
     });
-    if (start < 0 || source.indexOf(method, start + 1) !== -1 || references.length !== 1 || consumers.length !== 1 || references[0] !== consumers[0].callee || returns.length !== 1 || !environmentTypes.has("MetricEnvironment") || !forwarding.get("operationContext")?.has(0)) fail(file, tree, "metric environment adapter or its sole typed consumer changed");
+    const allowed = new Set([...imports.flatMap(p => [p.imported, p.local]), ...keys, ...references.map(n => n.property)]);
+    if (start < 0 || source.indexOf(method, start + 1) !== -1 || imports.length !== 1 || keys.length !== 1
+      || identifiers.some(n => !allowed.has(n)) || references.length !== 1 || consumers.length !== 1
+      || references[0] !== consumers[0].callee || returns.length !== 1 || !environmentTypes.has("MetricEnvironment")
+      || !forwarding.get("operationContext")?.has(0)) fail(file, tree, "metric environment adapter or its sole typed consumer changed");
     metricReturns.add(returns[0].argument.start); metricCalls.add(consumers[0].start);
   }
   const superPositions = Symbol("platform environment constructor");
