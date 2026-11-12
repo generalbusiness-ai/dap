@@ -121,7 +121,7 @@ export const covers = (within: unknown, scope: ScopeRef, membership: ScopeRef | 
 export function observationOf(answer: unknown, at: Timestamp): Observation | null {
   if (!isRecord(answer) || Object.keys(answer).length !== 13 || timeMs(at) === null) return null;
   const { of, head, key, keyState, member, memberState, role, actions, within, controller, controllerActive, notAfter, definition } = answer as Record<keyof Omit<Observation, "at">, unknown>;
-  if (!isScopeRef(of) || of.kind !== "membership" || !isHead(head) || !isKeyId(key) || !isMemberId(member) || typeof role !== "string") return null;
+  if (!isScopeRef(of) || !isHead(head) || !isKeyId(key) || !isMemberId(member) || typeof role !== "string") return null;
   if (keyState !== "active" && keyState !== "retired" && keyState !== "compromised" && keyState !== "unknown") return null;
   if (memberState !== "active" && memberState !== "removed") return null;
   // Section 16.1: `within` is a filter, and in an observation of a key its `membership` equals `of`. Another form is no answer.

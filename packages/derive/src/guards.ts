@@ -14,7 +14,7 @@ import { type Capabilities } from "./capability.ts";
 import type { Own, Snapshots } from "./fields.ts";
 import { type AtHand, type Declined, type JudgedInput, type PlatformRules } from "./marks.ts";
 import { copyEntry, operand, slotOf, type JudgmentCopy } from "./operand.ts";
-import type { Item, Party, ScopeState, StateView } from "./state.ts";
+import type { Item, Party, StateView } from "./state.ts";
 import { type Clock } from "./time.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";

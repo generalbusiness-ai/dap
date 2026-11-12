@@ -6,7 +6,7 @@
  * the state before them.
  */
 
-import type { Digest, FieldType, Input, Seed, Send, SendMark, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Digest, FieldType, GenesisSelfRef, Input, Seed, Send, SendMark, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isSend, resolveGenesisSelf, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { creationContextOf, type CreationContext } from "./creation-context.ts";
 import type { Derived } from "./effects.ts";
@@ -137,7 +137,7 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
    * `create`. A membership scope is its own, and every other scope reads it from its genesis entry (`membershipOf`). Null: the
    * scope records none, and its creations hold no such member. Undefined: its genesis entry cannot be read now.
    */
-  const recordedMembership = (declared: boolean): ScopeRef | null | undefined => {
+  const recordedMembership = (declared: boolean): ScopeRef | GenesisSelfRef | null | undefined => {
     if (j.scope.kind === "membership") return j.scope.at;
     // A legacy/platform genesis records no membership reference while it is written: a directory's slot `repository.membership` is set later, by
     // the clause `applied` of its own `create`. So a creation that a genesis sends holds no such member, and the scopes that are
@@ -148,7 +148,8 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
       return declared && context.kind === "marked" ? context.membership : null;
     }
     const genesis = j.own?.(0)?.entry.input;
-    return genesis?.type === "genesis" ? membershipOf(genesis, j.scope.at) : undefined;
+    const at = j.scope.at;
+    return genesis?.type === "genesis" && at.genesis !== null ? membershipOf(genesis, at) : undefined;
   };
 
   /** Shared reference encoding keeps production and prototype sends on one leaf. */

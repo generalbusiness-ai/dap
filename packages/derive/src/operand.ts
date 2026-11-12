@@ -7,7 +7,7 @@
  * none, which is `null` here. A part is never an error.
  */
 
-import type { ActType, Digest, Entry, EntryPart, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Operand, Part, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import type { ActType, Digest, Entry, EntryPart, FactRef, FactUse, FieldRecord, FieldType, FieldValue, GenesisSelfRef, Operand, Part, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalBytes, canonicalize, digestBytes, intentDigest, isEntry, isEntryBodyOf, isScopeKind, isSequenceRef, messageDigest, parseStrict, platformName, scopeIdOf, isSeed, utf8 } from "@generalbusiness/dap-bytes";
 import { creationFields, isEntryOf, isLocalFact, useOf, type Facts, type Local, type Reading } from "./fields.ts";
 import { bound } from "./handlers.ts";
@@ -126,8 +126,8 @@ function stagedMaterial(material: RetainedResultMaterial | null): RetainedResult
   if (!material || !isObject(material.origin) || !Array.isArray(material.operands)) return null;
   const operands: RetainedResultOperand[] = [];
   for (const operand of material.operands) {
-    if (!isObject(operand) || typeof operand.under !== "string") return null;
-    operands.push(Object.freeze({ classified: operand.classified, under: operand.under }));
+    if (!isObject(operand) || typeof operand["under"] !== "string") return null;
+    operands.push(Object.freeze({ classified: operand["classified"], under: operand["under"] }));
   }
   return Object.freeze({ localSequence: material.localSequence,
     origin: Object.freeze({ entry: material.origin.entry, hash: material.origin.hash }), operands: Object.freeze(operands) });
@@ -555,7 +555,7 @@ export type EntrySelection = { [K in EntryWord]: { readonly op: K } }[EntryWord]
   | { readonly op: "set"; readonly slot: string; readonly item: () => unknown };
 
 /** One shared entry-history primitive, for both declared operands and typed reads. */
-export function entryValue(j: Judging, ref: Held, at: ScopeRef, part: EntrySelection): unknown {
+export function entryValue(j: Judging, ref: Held, at: ScopeRef | GenesisSelfRef, part: EntrySelection): unknown {
   // Read from the reference. Nothing is fetched.
   if (part.op === "ref") return ref;
   if (part.op === "scope") return at;
@@ -585,7 +585,7 @@ export function entryValue(j: Judging, ref: Held, at: ScopeRef, part: EntrySelec
 }
 
 /** Adapt the remaining declared operand callers to the shared history primitive. */
-function entryPart(j: Judging, ref: Held, at: ScopeRef, part: EntryPart, item: Item | null): unknown {
+function entryPart(j: Judging, ref: Held, at: ScopeRef | GenesisSelfRef, part: EntryPart, item: Item | null): unknown {
   const selected: EntrySelection = typeof part === "string" ? { op: part }
     : "field" in part ? { op: "field", name: part.field }
     : "opened" in part ? { op: "opened", name: part.opened }
@@ -647,7 +647,7 @@ export function operand(j: Judging, o: Operand, item: Item | null): unknown {
 export type HashOf = (seq: number) => import("@generalbusiness/dap-contract").Digest | null;
 
 /** Equality's normal form, using only the local hashes available to its reader. */
-export function normalValue(value: unknown, at: ScopeRef, hashOf: HashOf): unknown {
+export function normalValue(value: unknown, at: ScopeRef | GenesisSelfRef, hashOf: HashOf): unknown {
   const normal = (v: unknown): unknown => {
     if (Array.isArray(v)) return v.map(normal);
     if (isFactRef(v)) return isLocalFact(v, at) && hashOf(v.seq) === v.hash ? v.seq : v;

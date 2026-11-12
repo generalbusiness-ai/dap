@@ -12,7 +12,7 @@
  */
 
 import { nativeMark } from "./program/native.ts";
-import type { Effect, Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Entry, FactRef, FactUse, Grant, Head, Input, MismatchReason, ObservationUse, Prepared, RefusalReason, RoutingRefusal, ScopeRef, Send, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { intentDigest, isEffect, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { withinCounts } from "./draws.ts";

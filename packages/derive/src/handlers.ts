@@ -19,7 +19,7 @@ import { boundTo, decisionCounts, selectedByIndex, selectorOf } from "./binding.
 import { creationFields, factsNamed, isEntryOf, isLocalFact, messageFields, presentedTypes, readFields, textsNamed, updateOf, type Reading, type Update } from "./fields.ts";
 import { signerOf } from "./fold.ts";
 import { slotOf, type Fetched, type Judging } from "./guards.ts";
-import { assumedSource, copyFact, copyKind, copyUnder, judgmentFacts, matchesCopy, readJudgmentFacts, verifiedCopy, type JudgmentCopy } from "./operand.ts";
+import { assumedSource, copyFact, judgmentFacts, matchesCopy, readJudgmentFacts, verifiedCopy, type JudgmentCopy } from "./operand.ts";
 import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
 import { sendOrigin } from "./program/send-origin.ts";
@@ -28,6 +28,7 @@ import { settlementForm, settlementMatches } from "./program/settlement.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isLocalId, isObject, own, same } from "./values.ts";
+import { sequenceEffects } from "./effects.ts";
 
 // ---------------------------------------------------------------- messages and handlers (sections 6.4 and 7.4)
 
@@ -165,7 +166,7 @@ export function decisionBinding(view: StateView, definition: ValidDefinition, en
     if (size === null) unknownSizes.add(digest);
     return size;
   } : undefined;
-  const ready = prepareHandler(view, definition, { ...context, texts }, scope, matched.handler, matched.kind, matched.fields, { source, update: null }, { type: "delivery", from: input.from, n: input.n, message: input.message });
+  const ready = prepareHandler(view, definition, { ...context, texts }, scope, matched.handler, matched.kind, matched.fields, { source, update: null }, { type: "delivery", from: input.from, sourceKind: input.sourceKind, n: input.n, message: input.message });
   if (ready.result === "unavailable") throw new RuleFault(`a decision binding cannot reconstruct its field and subject checks: ${ready.reason}`);
   // Owner disposition 4157eaa2: first exhaust structural checks under the
   // ordinary redaction assumptions. An early failure or no remaining
@@ -594,5 +595,5 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   if (ran.result === "unavailable") return ran;
   // Section 6.3: `max` bounds the live items of a type, whatever opens the item. In platform data a rule of the clause may open
   // one. Past the bound the clause's effects cannot apply now, and it changes nothing, as above.
-  return { result: "ran", effects: ran.result === "ran" ? ran.effects : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: ran.result === "ran" ? ran.judgesTime : (structure !== null && bodyJudgesClock(structure)) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
+  return { result: "ran", effects: ran.result === "ran" ? sequenceEffects(ran.effects) : [], uses: [...facts.uses, ...presented.uses.filter((use) => !facts.facts.has(use.fact.hash))], judgesTime: ran.result === "ran" ? ran.judgesTime : (structure !== null && bodyJudgesClock(structure)) || j.ran?.clock === true, ...(settled ? { rows: settled } : {}) };
 }

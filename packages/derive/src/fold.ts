@@ -325,8 +325,12 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
 /** The fold and receipt share this resolved view without changing sealed bytes. */
 export function resolvedEntryEffects(writer: Pick<StateView, "item">, definition: ValidDefinition, entry: Entry, at: ScopeRef): Effect[] {
   if (entry.input.type === "genesis") return resolvedGenesisEffects(writer, definition, entry.effects, { at, seq: 0, hash: at.genesis });
-  if (!entry.effects.every(isEffect)) throw new FoldError("a later entry retains an encoded self");
-  return [...entry.effects];
+  const effects: Effect[] = [];
+  for (const effect of entry.effects) {
+    if (!isEffect(effect)) throw new FoldError("a later entry retains an encoded self");
+    effects.push(effect);
+  }
+  return effects;
 }
 
 /** Resolve explicit effect reference positions using the declared slot types. */

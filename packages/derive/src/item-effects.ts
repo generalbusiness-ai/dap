@@ -1,5 +1,5 @@
 /** Shared item transformations for judgment, recorded fold and C1 projection. */
-import type { Digest, Effect, Entry, ItemType, MemberRef } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, FieldValue, GenesisEffect, ItemType, MemberRef } from "@generalbusiness/dap-contract";
 import { withActing, withMembers, withPrincipal, type Signer } from "./attribution.ts";
 import { HOLDER, changeHold } from "./hold.ts";
 import type { Item, Party } from "./state.ts";
@@ -7,14 +7,18 @@ import type { ValidDefinition } from "./validate/index.ts";
 import { own, same } from "./values.ts";
 import { declarationOf } from "./program/declaration.ts";
 
-/** The effects that change one item. */
-export type ItemEffect = Extract<Effect, { effect: "state" | "party" | "ref" | "value" | "list" | "hold" }>;
+/**
+ * The effects that change one item. A genesis draft's working items may hold
+ * an encoded self in a declared position; the fold resolves it after sealing
+ * (`resolvedEntryEffects`), and no later entry holds one.
+ */
+export type ItemEffect = Extract<GenesisEffect, { effect: "state" | "party" | "ref" | "value" | "list" | "hold" }>;
 
 /** The slot of a hold type whose member is the holder (section 6.8). */
 export { HOLDER };
 
 /** Section 6.3: a new item is in its initial state, each slot takes its default or is empty, and its revision is 1. */
-export function newItem(effect: Extract<Effect, { effect: "open" }>, type: ItemType, opened: Digest | null): Item {
+export function newItem(effect: Extract<GenesisEffect, { effect: "open" }>, type: ItemType, opened: Digest | null): Item {
   const each = <T, V>(slots: Record<string, T>, value: (slot: T) => V) => Object.fromEntries(Object.entries(slots).map(([name, slot]) => [name, value(slot)]));
   return {
     id: effect.item, type: effect.type, state: effect.state, revision: 1, opened,
@@ -48,20 +52,24 @@ function changeSlots(item: Item, effect: ItemEffect, definition: ValidDefinition
   const type = own(declarationOf(definition).items, item.type)!;
   const attributes = (slot: string) => own(type.parties, slot)?.author === true || (slot === HOLDER && definition.holdTypes.includes(item.type));
   const noted = (slot: string, member: MemberRef) => (attributes(slot) ? withMembers(item.attributed, withPrincipal(member, signer)) : item.attributed);
+  // A genesis draft's working item holds the encoded self as the entry encodes it. Only the
+  // judgment of that draft reads it, and the fold stores the resolved value (see ItemEffect).
+  const encoded = <T>(value: unknown): T => value as T;
   switch (effect.effect) {
     case "state": return { ...item, state: effect.state };
     case "party": {
-      const value: Party = effect.member ?? (own(type.parties, effect.slot)?.list ? [] : null);
-      return { ...item, parties: { ...item.parties, [effect.slot]: value }, attributed: effect.member ? noted(effect.slot, effect.member) : item.attributed };
+      const member = encoded<MemberRef | null>(effect.member);
+      const value: Party = member ?? (own(type.parties, effect.slot)?.list ? [] : null);
+      return { ...item, parties: { ...item.parties, [effect.slot]: value }, attributed: member ? noted(effect.slot, member) : item.attributed };
     }
     case "list": {
-      const held = own(item.parties, effect.slot);
+      const held = own(item.parties, effect.slot), member = encoded<MemberRef>(effect.member);
       const list = Array.isArray(held) ? (held as readonly MemberRef[]) : [];
-      const next = effect.change === "add" ? withMembers(list, [effect.member]) : list.filter((m) => !same(m, effect.member));
-      return { ...item, parties: { ...item.parties, [effect.slot]: next }, attributed: effect.change === "add" ? noted(effect.slot, effect.member) : item.attributed };
+      const next = effect.change === "add" ? withMembers(list, [member]) : list.filter((m) => !same(m, member));
+      return { ...item, parties: { ...item.parties, [effect.slot]: next }, attributed: effect.change === "add" ? noted(effect.slot, member) : item.attributed };
     }
-    case "ref": return { ...item, refs: { ...item.refs, [effect.slot]: effect.to } };
-    case "value": return { ...item, values: { ...item.values, [effect.slot]: effect.value } };
+    case "ref": return { ...item, refs: { ...item.refs, [effect.slot]: encoded<FieldValue | null>(effect.to) } };
+    case "value": return { ...item, values: { ...item.values, [effect.slot]: encoded<FieldValue | null>(effect.value) } };
     case "hold": return changeHold(item, effect, definition, signer);
   }
 }

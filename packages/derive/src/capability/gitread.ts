@@ -93,7 +93,9 @@ function checked(args: Readonly<Record<string, unknown>>, given: CapabilityGiven
     const only = carried.length === 1 ? carried[0]! : null;
     return only && only.effect === "record" ? { state: only.state, values: only.values, local: null } : null;
   }
-  const pin = isDigest(given.intent) ? given.view.record(owner, "pin", [given.scope.at, given.intent]) : null;
+  // A genesis judgment has no sealed lane yet, so it holds no pin.
+  const lane = given.scope.at.genesis === null ? null : given.scope.at;
+  const pin = lane && isDigest(given.intent) ? given.view.record(owner, "pin", [lane, given.intent]) : null;
   const root = pin ? given.view.record(owner, "root", [pin.values["root"] as number]) : null;
   const check = pin && root ? given.view.record(owner, "check", [given.intent as Digest, root.key[0]!]) : null;
   return pin && root && check ? { state: check.state, values: check.values, local: { pin, root } } : null;
@@ -129,7 +131,9 @@ function selectedInput(given: CapabilityGiven, fact: FactRef, under: unknown): b
 function fits(record: AncestryCheck, { pin, root }: { pin: RecordState; root: RecordState }, given: CapabilityGiven): boolean {
   // Guard 2: the root is the one that the entry relies on, and it is `live`.
   if (record.root.number !== root.key[0] || pin.values["root"] !== root.key[0] || root.state !== "live") return false;
-  const { roots, checks } = ledgerOf(given.view, given.own, given.scope.at, root.values["under"], given.self, workspaceOwner(given.definition) ?? "hold@1");
+  const lane = given.scope.at.genesis === null ? null : given.scope.at;
+  if (!lane) return false;
+  const { roots, checks } = ledgerOf(given.view, given.own, lane, root.values["under"], given.self, workspaceOwner(given.definition) ?? "hold@1");
   const prior = (commit: string, fact: FactRef): PriorCheck | undefined => checks.find((c) => c.commit === commit && same(c.checked, fact));
   // Guard 3: sorted at this commit, the staged refs of the snapshot on the commit give the same `foreign`, and the basis stands.
   // The snapshot's bytes are a retained input of this scope, stored before the check entry that names their digest (section 16.4).
@@ -138,7 +142,7 @@ function fits(record: AncestryCheck, { pin, root }: { pin: RecordState; root: Re
   const snapshot = pairs ? snapshotOf(pairs) : null;
   if (!snapshot || snapshot.digest !== record.snapshot.digest || snapshot.count !== record.snapshot.count) return false;
   const { start } = record;
-  if (foreignOn(snapshot.pairs, record.commit, given.scope.at, roots) !== start.foreign) return false;
+  if (foreignOn(snapshot.pairs, record.commit, lane, roots) !== start.foreign) return false;
   const row = record.F.some((f) => "start" in f);
   if ("basis" in start) {
     if (start.basis.kind === "input" && !selectedInput(given, start.basis.input, root.values["under"])) return false;

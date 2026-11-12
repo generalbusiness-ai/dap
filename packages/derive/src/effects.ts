@@ -117,6 +117,16 @@ const BY_RULE: readonly string[] = ["open", "state", "party", "list", "ref", "va
  * sets it.
  */
 type EffectResult = Derived<{ effects: GenesisEffect[]; working: Map<string, Item>; opened: Item | null }>;
+
+/** A later entry's effects. Judgment admits an encoded self only in a genesis draft, so this narrows and never drops one. */
+export function sequenceEffects(effects: readonly GenesisEffect[]): Effect[] {
+  const checked: Effect[] = [];
+  for (const effect of effects) {
+    if (!isEffect(effect)) throw new Error("a later entry's effects hold an encoded self");
+    checked.push(effect);
+  }
+  return checked;
+}
 type EffectInstruction = { readonly kind: "native"; readonly mark: Mark; readonly body?: BodyStructure; readonly node?: EffectNode }
   | { readonly kind: "written"; readonly body: BodyStructure; readonly node: EffectNode; readonly plan: EffectPlan };
 interface AttentionInstruction { readonly body: BodyStructure; readonly node: AttentionNode; readonly plan: AttentionPlan }
@@ -159,7 +169,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
    * checked here, on the effects that are applied. Such a conflict is a
    * fault of the rule, which leaves the input not judged.
    */
-  const sets = (effect: Effect, by: Mark | null): void => {
+  const sets = (effect: GenesisEffect, by: Mark | null): void => {
     if (effect.effect !== "state" && effect.effect !== "party" && effect.effect !== "list" && effect.effect !== "ref" && effect.effect !== "value") return;
     const what = JSON.stringify([effect.item, effect.effect === "state" ? null : effect.slot]);
     const [earlier, successive] = [set.get(what), effect.effect === "list"];

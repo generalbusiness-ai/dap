@@ -21,7 +21,7 @@ import { declarationOf } from "./program/declaration.ts";
 import { observeNativeCall, type OutcomeHook } from "./program/native-trace.ts";
 import type { Digest, OutcomeMark, PlatformData, Send } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
-import { joinReturnedEffects } from "./effects.ts";
+import { joinReturnedEffects, sequenceEffects } from "./effects.ts";
 import type { Own, Reading } from "./fields.ts";
 import { verifiedCopy } from "./operand.ts";
 import type { Fetched, Judging } from "./guards.ts";
@@ -224,7 +224,7 @@ function given(mark: OutcomeMark, j: Judging, kinds: Readonly<Record<string, Out
   if (joined.opened && overMax(j.view, j.definition, joined.opened.type, joined.opened.state) !== null) throw outside(mark, "effects that the entry cannot hold: type-full");
   const requests = joinReturnedSends(joining, sends.map((_, n) => ({ code: sendCodes[n]!, row: mark.row })), joined.working, NO_CAUSE, 0, undefined, joined.opened !== null);
   if (!requests.ok) throw outside(mark, `requests that the entry cannot hold: ${"reason" in requests ? requests.reason : requests.unavailable}`);
-  if (!mark.send) return { effects: joined.effects, sends: requests.sends satisfies Send[], opens };
+  if (!mark.send) return { effects: sequenceEffects(joined.effects), sends: requests.sends satisfies Send[], opens };
 
   // The send of the mark: its own rule, of the scope's pinned version, at ordinal 0. It reads the state before the entry, as every rule does.
   const opener = openerOf(j);
@@ -239,7 +239,7 @@ function given(mark: OutcomeMark, j: Judging, kinds: Readonly<Record<string, Out
     if (!opener) throw outside(mark.send, "a creation from the outcome of an operation that no act opened: no cause is stated for it");
     if (!fields.some((value) => isFactRef(value) && same(value, opener.fact))) throw outside(mark.send, "a creation that names no fact of the entry that opened its operation: its child could not verify its cause");
   }
-  return { effects: joined.effects, sends: made.sends satisfies Send[], opens };
+  return { effects: sequenceEffects(joined.effects), sends: made.sends satisfies Send[], opens };
 }
 
 /** No cause: the cause that is given where an entry may create nothing. No seed states it, so a creation there is a fault of its rule. */

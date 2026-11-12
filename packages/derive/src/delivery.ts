@@ -25,6 +25,7 @@ import type { ScopeState, StateView } from "./state.ts";
 import { nextDue } from "./timed.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isLocalId, isObject, isScopeRef, same } from "./values.ts";
+import { sequenceEffects } from "./effects.ts";
 
 /**
  * One delivery as it arrives: the send's address as the sender wrote it, a
@@ -170,7 +171,7 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
     // A handler that refuses leaves the entry with no effect. The entry still records each rule result its guards read, and each
     // foreign entry its fields named.
     const done = ran?.result === "ran" ? ran : { effects: [], sends: [], prepared: ran?.prepared ?? [], judgesTime: false };
-    return write({ type: "delivery", from, sourceKind, n, message: message as Advisory }, done.effects, done.sends, done.prepared, done.judgesTime, ran?.uses);
+    return write({ type: "delivery", from, sourceKind, n, message: message as Advisory }, sequenceEffects(done.effects), done.sends, done.prepared, done.judgesTime, ran?.uses);
   }
   if (message.class !== "request" || !isScopeRef(delivered.to)) return unverified("not a message of a class the contract defines");
 
@@ -257,7 +258,7 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
   // past a type's `max`. An update for a key that is already held is never refused for that reason.
   if (first && view.copies(b.kind, sourceKind) >= (handler.copies ?? 0)) return refuse({ code: "type-full" }, ran.prepared, ran.uses, item);
   // A refusal takes nothing out of a pending state, so it is new work (section 17.3). An applied update or message may settle.
-  return decide("applied", undefined, [...platform, ...ran.effects], ran.sends, ran.prepared, ran.judgesTime, ran.uses, ran.settles || settlesCopy || reserved !== null || item !== undefined, item);
+  return decide("applied", undefined, [...platform, ...sequenceEffects(ran.effects)], ran.sends, ran.prepared, ran.judgesTime, ran.uses, ran.settles || settlesCopy || reserved !== null || item !== undefined, item);
 }
 
 /**

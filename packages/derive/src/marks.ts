@@ -18,7 +18,7 @@
 
 import { nativeMark } from "./program/native.ts";
 import { observeNativeCall } from "./program/native-trace.ts";
-import type { ActType, AlsoMark, Attempt, Bounds, CapabilityName, Digest, DomainTag, Effect, Evidence, FactRef, FieldType, FieldValue, GenesisEffect, GenesisInput, GenesisSelfRef, Grant, GrantMark, Guard, KeyId, Mark, MemberId, MemberRef, Message, ObservationUse, OperationId, PlatformDefinition, Request, ScopeKind, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import type { ActType, AlsoMark, Attempt, Bounds, CapabilityName, Digest, DomainTag, Evidence, FactRef, FieldType, FieldValue, GenesisEffect, GenesisInput, GenesisSelfRef, Grant, GrantMark, Guard, KeyId, Mark, MemberId, MemberRef, Message, ObservationUse, OperationId, PlatformDefinition, Request, ScopeKind, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, domainBytes, isDigest, isFieldValue, isMemberRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import type { BindingSelect } from "./binding.ts";

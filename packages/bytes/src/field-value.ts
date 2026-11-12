@@ -5,7 +5,7 @@ import { isDigest } from "./hash.ts";
 import { isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef } from "./records.ts";
 import { utf8, wellFormed } from "./canonical.ts";
 /** A member handle within its bound. A slot never holds a longer one, so an entry that lists a slot's members has a known size. */
-export const memberFits = (v: MemberRef, bounds: Pick<Bounds, "memberBytes">): boolean => utf8(v.member).length <= bounds.memberBytes;
+export const memberFits = (v: Pick<MemberRef, "member">, bounds: Pick<Bounds, "memberBytes">): boolean => utf8(v.member).length <= bounds.memberBytes;
 
 /** A Git object ID: SHA-1 or SHA-256, lowercase hex. */
 const isObjectId = (v: unknown) => typeof v === "string" && /^([0-9a-f]{40}|[0-9a-f]{64})$/.test(v);

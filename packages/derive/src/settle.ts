@@ -183,7 +183,7 @@ export function settleOutcome(view: StateView, definition: ValidDefinition, outc
   // none was read. So an outcome whose rules read none has the bytes it had.
   const input = retained.length > 0 ? { ...judged.draft.input, observed: retained } : judged.draft.input;
   // Section 17.2a, "Past a count": an outcome whose entry would draw past a count of a holder is not judged. It stays offered.
-  return withinCounts(view, definition, { result: "write", draft: { ...judged.draft, input, uses: facts.map((fact) => useOf(fact.fact, fact.entry)), judgesTime, values: [...kept, ...retainedOf(beside).values.filter((value) => !kept.some((read) => read.domain === value.domain && read.digest === value.digest))] } } satisfies Judgment);
+  return withinCounts(view, definition, { result: "write", draft: { ...judged.draft, input, uses: facts.map((fact) => useOf(fact.fact, fact.entry, fact.sequence.kind)), judgesTime, values: [...kept, ...retainedOf(beside).values.filter((value) => !kept.some((read) => read.domain === value.domain && read.digest === value.digest))] } } satisfies Judgment);
 }
 
 /**
@@ -238,7 +238,7 @@ function byRows(view: StateView, definition: ValidDefinition, outcome: OutcomeOf
       uses = origin.entry.uses;
       const copies = uses.map((use) => context.retained?.(use, at as number) ?? (context.facts ?? []).find((fact) => fact.fact.hash === use.fact.hash) ?? null);
       // The scope retained each of those entries when it wrote the origin. One that is not at hand leaves the outcome not written now.
-      if (copies.some((copy, i) => !copy || useOf(copy.fact, copy.entry).content !== uses[i]!.content)) return { result: "unavailable", reason: "dependency-unavailable" };
+      if (copies.some((copy, i) => !copy || useOf(copy.fact, copy.entry, uses[i]!.kind).content !== uses[i]!.content)) return { result: "unavailable", reason: "dependency-unavailable" };
       reading.facts = copies as Fetched[];
     }
     if (rows.length > 0) {

@@ -23,7 +23,7 @@ import { executeBody } from "./program/body.ts";
 import { namedBody } from "./program/structure.ts";
 import { declarationOf } from "./program/declaration.ts";
 import { withinCounts } from "./draws.ts";
-import { fieldOutsideType, grantByRule, unjudged, type JudgedInput } from "./marks.ts";
+import { fieldOutsideType, grantByRule, unjudged } from "./marks.ts";
 import { directoryOf } from "./sends.ts";
 import { creationContextOf } from "./creation-context.ts";
 import type { Judgment } from "./judge.ts";
