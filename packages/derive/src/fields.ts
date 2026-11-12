@@ -35,6 +35,18 @@ export interface Own {
   archived?(seq: number): Archived | null;
 }
 
+/** Actual adjacent local retained row; producer metadata is not hashed. */
+export interface OwnRetainedRow {
+  readonly kind: "entry";
+  readonly digest: Digest;
+  readonly bytes: string;
+  readonly under?: string;
+}
+/** A real raw-row port, required only by the retained-use constructor. */
+export interface RetainedOwn extends Own {
+  retainedRow(content: Digest): OwnRetainedRow | null;
+}
+
 /**
  * The detached texts at hand for one input, by digest (section 6.2). A
  * number: the text came with the input, its bytes hash to that digest, and

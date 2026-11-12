@@ -44,3 +44,5 @@ export * from "./created-definitions.ts";
 export * from "./retained-plan.ts";
 
 export * from "./floor.ts";
+
+export { readRetainedUses, isRetainedUse, type RetainedUse, type SelectedRetainedUse, type ClassifiedRetainedUse, type RetainedUseRead, type RetainedUseProjection, type RetainedSelectionResult } from "./retained-use.ts";

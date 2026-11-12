@@ -11,7 +11,7 @@ import { countedEntries, archivedPosition, heldPositions, judgeFloor } from "@ge
 import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, Effect, FactRef, Created, Grant, Head, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, SequenceRef, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newGenesisNonce, parseStrict, sealedFactRef, platformName, retainedValueKey, scopeIdOf, textDigest, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, resolvedEntryEffects, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
-import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, Own, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, OwnRetainedRow, RetainedOwn, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ReceiverReads } from "./receiver-reads.ts";
 import { producerName } from "./receiver-facts.ts";
@@ -58,10 +58,13 @@ export function receiptOf({ entry, hash }: Sealed, definition: Digest | Platform
 /** The snapshots of staged refs that the scope retains, by digest, as the guard `ancestry` reads them (section 16.4). */
 export const snapshotsOf = (store: Store): Snapshots => (digest) => store.retained("snapshot", digest)?.bytes ?? null;
 
-export const ownOf = (store: Store, sequence: CheckedSequence): Own => Object.assign((seq: number) => {
+export const ownOf = (store: Store, sequence: CheckedSequence): RetainedOwn => Object.assign((seq: number) => {
   const kept = store.stored(seq);
   return kept ? { entry: JSON.parse(kept.bytes) as Entry, hash: kept.hash } : null;
-}, { sequence: () => sequence, retained: (use: import("@generalbusiness/dap-contract").FactUse) => { const held = store.retained("entry", use.content); const entry = held && rawRetainedJSON(use.content, held.bytes); return isEntry(entry) ? entry : null; }, positions: (before: number) => heldPositions(store, before), sizeProofs: () => store.floor?.()?.sizeProofs ?? [], archived: (seq: number) => archivedPosition(store, seq) });
+}, { sequence: () => sequence, retainedRow: (content: Digest): OwnRetainedRow | null => {
+  const held = store.retained("entry", content);
+  return held?.kind === "entry" ? { kind: "entry", digest: held.digest, bytes: held.bytes, ...(held.under === undefined ? {} : { under: held.under }) } : null;
+}, retained: (use: import("@generalbusiness/dap-contract").FactUse) => { const held = store.retained("entry", use.content); const entry = held && rawRetainedJSON(use.content, held.bytes); return isEntry(entry) ? entry : null; }, positions: (before: number) => heldPositions(store, before), sizeProofs: () => store.floor?.()?.sizeProofs ?? [], archived: (seq: number) => archivedPosition(store, seq) });
 
 /** Section 9.2: the bytes of each foreign entry the draft's `uses` name, under its content digest. */
 export function used(draft: Pick<Draft, "uses">, facts: readonly Fetched[]): Retained[] {

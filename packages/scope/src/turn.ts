@@ -21,13 +21,48 @@ import { countedEntries } from "@generalbusiness/dap-derive";
 import type { Bounds, ScopeBoundName, FactRef, Head, Prepared, SignedIntent } from "@generalbusiness/dap-contract";
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
 import { carryProducerName } from "./receiver-facts.ts";
-import { CanonicalError, admitSequenceGenesis, canonicalize, entryHash, scopeIdOf, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { CanonicalError, admitSequenceGenesis, isEntry, canonicalize, entryHash, scopeIdOf, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, same, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
-import type { Clock as Reading, Draft, Due, Fetched, Owners, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
+import type { Clock as Reading, Draft, Due, Fetched, RetainedOwn, Owners, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { ownOf, retainedFacts, snapshotsOf, type BirthCandidate, type PinCell, type Pinned, type ResolvedPin } from "./core.ts";
 import type { Ports, Resolver, SourceReadContext } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
 import { entryCorrelation, inOperation, measured, metric, operational, type Operational } from "./operational.ts";
+
+/** Current-position reads use the bytes already appended in this transaction.
+ * Each returns a fresh parsed body as ownOf did; other positions still SELECT.
+ * The view is invalid immediately after the synchronous fold callback returns. */
+function withAppendedOwn(store: Store, sequence: ResolvedPin["sequence"], sealed: Sealed, bytes: string, fold: (own: RetainedOwn) => void): void {
+  const base = ownOf(store, sequence);
+  let active = true;
+  const check = () => { if (!active) throw new Error("post-append Own escaped its synchronous fold"); };
+  const own = Object.assign((seq: number): Sealed | null => {
+    check();
+    if (seq !== sealed.entry.seq) return base(seq);
+    const entry: unknown = parseStrict(bytes);
+    if (!isEntry(entry) || !isEntryOf(entry, { at: sequence.at, seq, hash: sealed.hash }, sequence)) throw new PinUnavailable();
+    return { entry, hash: sealed.hash };
+  }, {
+    sequence: () => { check(); return base.sequence(); },
+    retainedRow: (content: Parameters<RetainedOwn["retainedRow"]>[0]) => { check(); return base.retainedRow(content); },
+    ...(base.retained ? { retained: (use: Parameters<NonNullable<RetainedOwn["retained"]>>[0]) => { check(); return base.retained!(use); } } : {}),
+    ...(base.positions ? { positions: (before: number) => {
+      check();
+      const source = base.positions!(before)[Symbol.iterator]();
+      const iterator: IterableIterator<number> = {
+        [Symbol.iterator]() { check(); return iterator; },
+        next() { check(); return source.next(); },
+        return() { check(); return source.return ? source.return() : { done: true, value: undefined }; },
+        throw(error?: unknown) { check(); if (source.throw) return source.throw(error); throw error; },
+      };
+      return iterator;
+    } } : {}),
+    ...(base.sizeProofs ? { sizeProofs: () => { check(); return base.sizeProofs!(); } } : {}),
+    ...(base.archived ? { archived: (seq: number) => { check(); return base.archived!(seq); } } : {}),
+  });
+  try { fold(own); }
+  finally { active = false; }
+}
 
 // ---------------------------------------------------------------- step 1: before the turn
 
@@ -457,11 +492,11 @@ export class Turns {
     // This is the old #platform read point. Resolve by value, not into the memo, until commit returns.
     const pin = this.#resolvePin(candidate);
     if (!pin) throw new PinUnavailable();
-    applyEntry(this.#store, definition, entry, hash, {
-      bounds: this.#bounds, platform: pin.pinned.platform ?? undefined, own: ownOf(this.#store, pin.sequence), facts: retainedFacts(this.#store, entry).map(read => facts?.find(fact => same(fact.fact, read.fact)) ?? read), snapshot: snapshotsOf(this.#store),
+    withAppendedOwn(this.#store, pin.sequence, { entry, hash }, bytes, own => applyEntry(this.#store, definition, entry, hash, {
+      bounds: this.#bounds, platform: pin.pinned.platform ?? undefined, own, facts: retainedFacts(this.#store, entry).map(read => facts?.find(fact => same(fact.fact, read.fact)) ?? read), snapshot: snapshotsOf(this.#store),
       values: draft.values?.map(value => value.bytes),
       texts: (digest) => { const kept = this.#store.retained("text", digest); if (!kept) return undefined; const text: unknown = parseStrict(kept.bytes); return typeof text === "string" ? utf8(text).length : undefined; },
-    });
+    }));
     // Section 6.6: a redaction removes the bytes of each text it lists from the retained inputs, in the commit that seals its tombstone.
     for (const effect of entry.effects) if (effect.effect === "redact") for (const text of effect.texts) this.#store.forget("text", text);
     return { sealed: { entry, hash }, pin };
