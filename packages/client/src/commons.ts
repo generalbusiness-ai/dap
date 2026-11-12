@@ -1,7 +1,7 @@
 /** Bounded readings of Commons entries. Citations grant no read authority. */
 import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 import type { Digest, FactRef, Head, KeyId, MemberRef, ReferenceValue, ScopeRef, Sealed, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, isDigest, isMemberRef, isReference, isScopeRef, same, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, factRefOf, isDigest, isMemberRef, isReference, isScopeRef, same, utf8, verifySignedIntent, isEntryBodyOf } from "@generalbusiness/dap-bytes";
 import type { ScopeHandle } from "./handle.ts";
 
 export const COMMONS_READ_LIMITS = { pages: 2, entries: 400, textBytes: 1024 * 1024 } as const;
@@ -45,7 +45,7 @@ export function notesAbout(view: CommonsView, reference: ReferenceValue): Common
 
 function noteOf(sealed: Sealed, scope: ScopeRef): Omit<CommonsNote, "text"> | null {
   const entry = sealed.entry, input = entry.input;
-  if (!same(entry.at, scope) || entryHash(entry) !== sealed.hash) throw Error("Commons entry identity is unavailable.");
+  if (!isEntryBodyOf(entry, { at: scope, seq: entry.seq, hash: sealed.hash })) throw Error("Commons entry identity is unavailable.");
   if (input.type !== "act" || input.signed.intent.kind !== "note") return null;
   const fields = input.signed.intent.fields;
   if (!verifySignedIntent(input.signed) || !same(input.signed.intent.to, scope) || !isDigest(fields["text"]) || typeof fields["media"] !== "string" || utf8(fields["media"]).length > 255 || !Array.isArray(fields["about"]) || fields["about"].length > 64 || !fields["about"].every(reference => isReference(reference, 512))) throw Error("Commons note fields are unavailable.");
@@ -75,7 +75,7 @@ export async function loadCommons(handle: ScopeHandle, scope: ScopeRef, options:
       const entry = sealed.entry;
       if (++entries > COMMONS_READ_LIMITS.entries || entry.seq > firstHead.seq) { view.unreadable.push("The history window exceeds its selected head or allowance."); return view; }
       try {
-        if (!same(entry.at, scope) || entryHash(entry) !== sealed.hash) throw Error();
+        if (!isEntryBodyOf(entry, { at: scope, seq: entry.seq, hash: sealed.hash })) throw Error();
       } catch { view.unreadable.push("A history entry hash or scope is unavailable."); return view; }
       if (last === -1 ? options.cursor === undefined && (entry.seq !== 0 || entry.prev !== null || entry.input.type !== "genesis") : entry.seq !== last + 1 || entry.prev !== previousHash) {
         view.unreadable.push("The history has a gap or lacks its genesis. Earlier or archived entries are not assumed."); return view;

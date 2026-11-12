@@ -287,7 +287,7 @@ export function descriptionsOf(catalogue: MarkCatalogue) {
       case "item": return `the ID of ${article(String(type["of"]))} item on this scope`;
       case "reference": return `a document digest or entry fact, as { document } or { entry }, with an optional opaque fragment up to ${String(type["fragment"])} UTF-8 bytes; this grants no read permission`;
       case "fact": return `an entry of kind ${or(type["kind"] as string[])} under ${String(type["under"])}, as { at, seq, hash }`;
-      case "scope": return `a reference to ${article(String(type["kind"]))} scope, as { scope, inc, kind }`;
+      case "scope": return `a reference to ${article(String(type["kind"]))} scope, as { scope, genesis }`;
       case "commit": return "a Git commit ID, 40 or 64 hex characters";
       case "tree": return "a Git tree ID, 40 or 64 hex characters";
       case "digest": {

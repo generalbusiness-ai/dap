@@ -18,7 +18,7 @@ import type {
   Archived, BehindRead, ReadMinimum, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxItem, OutboxId, Entry, Created, Grant, Head, Item, PlatformDefinition, Read, ReadRefusal, Receipt, ScopeApi, ScopeId, Sealed, Settlement,
   SignedIntent, Summary, ItemQuery, ItemQueryRead, ApplicationProjectionQuery, ApplicationProjectionRead,
 } from "@generalbusiness/dap-contract";
-import { readMinimum, isReceipt, definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
+import { readMinimum, isReceipt, definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
 
 /** How a handle reaches a scope service: the contract's `ScopeApi`. `http.ts` and `binding.ts` each make one. */
@@ -172,8 +172,9 @@ export class ScopeHandle {
     }
     if (!read.ok) return read.reason === "behind" ? read : read.reason === "archived" ? { ok: false, reason: "archived", archived: read.archived } : { ok: false, reason: read.reason };
     const entry = read.value.entry;
-    if (entry.at?.scope !== at.scope || entry.at.kind !== at.kind || entry.seq !== seq) return { ok: false, reason: "reference-mismatch" };
-    if (entry.at.inc !== at.inc) return { ok: false, reason: "wrong-incarnation" };
+    const born = entry.input.type === "genesis" ? entry.input : null;
+    if (entry.seq !== seq || born && scopeIdOf(born.seed) !== at.scope) return { ok: false, reason: "reference-mismatch" };
+    if ((born ? hash : "genesis" in entry ? entry.genesis : null) !== at.genesis) return { ok: false, reason: "wrong-incarnation" };
     let matched: Digest | null = null;
     try {
       matched = entryHash(entry);

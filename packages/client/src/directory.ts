@@ -97,7 +97,7 @@ export async function activeDirectory(reader: DirectoryReader, root: ScopeRef, m
     const rows = await selection(reader, read, root, "partition", ["active", "creating"], held.at, 2);
     if (rows.items.length !== 1 || rows.items[0]!.state !== "active") throw new Incomplete(rows.items.some(row => row.state === "creating") ? "partition-pending" : rows.items.length > 1 ? "partition-conflict" : "no-active-partition");
     const ref = rows.items[0]!.refs["scope"];
-    if (!isScopeRef(ref) || ref.kind !== "directory") throw new Incomplete("partition-mismatch");
+    if (!isScopeRef(ref)) throw new Incomplete("partition-mismatch");
     const part = await summary(reader, read, ref, "clientPartitionChildDirectory");
     affiliated(part.control, root, membership);
     if (part.control.values["sealed"] !== false) throw new Incomplete("partition-sealed");
@@ -119,7 +119,7 @@ export async function partitionIndexes(reader: DirectoryReader, root: ScopeRef, 
     const seen = new Set<ScopeId>();
     for (const row of rows.items) {
       const ref = row.refs["scope"];
-      if (!isScopeRef(ref) || ref.kind !== "directory" || seen.has(ref.scope)) throw new Incomplete("partition-mismatch");
+      if (!isScopeRef(ref) || seen.has(ref.scope)) throw new Incomplete("partition-mismatch");
       seen.add(ref.scope);
       const part = await summary(reader, read, ref, "clientPartitionChildDirectory");
       affiliated(part.control, root, membership);

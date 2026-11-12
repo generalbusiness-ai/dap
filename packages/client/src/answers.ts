@@ -45,7 +45,7 @@ function isSettlement(value: unknown): value is Settlement {
   if (!isRecord(value) || !Object.hasOwn(value, "claim")) return false;
   const { claim, ...read } = value;
   if (!ordinary(read) || !read.ok || read.complete !== true || read.next !== undefined
-    || !answersVersionQuestion(read.value.definition, "clientSettlementClaimProjectionRegister") || read.value.fact.at.kind !== "register" || read.at.seq < read.value.fact.seq
+    || !answersVersionQuestion(read.value.definition, "clientSettlementClaimProjectionRegister") || read.at.seq < read.value.fact.seq
     || !isRecord(claim) || !only(claim, "fact", "state") || !isFactRef(claim["fact"])
     || !["pending", "failed", "active"].includes(claim["state"] as string)) return false;
   return canonicalize(claim["fact"]) === canonicalize(read.value.fact);

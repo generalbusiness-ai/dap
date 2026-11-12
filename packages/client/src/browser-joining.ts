@@ -36,8 +36,8 @@ function configured(context: InvitationContext): boolean {
 }
 function validSeat(value: unknown, origin: string): value is Seat {
   return closed(value, ["origin", "directory", "membership", "handle"]) && value["origin"] === origin
-    && isScopeRef(value["directory"]) && value["directory"].kind === "directory"
-    && isScopeRef(value["membership"]) && value["membership"].kind === "membership" && isMemberId(value["handle"]);
+    && isScopeRef(value["directory"])
+    && isScopeRef(value["membership"]) && isMemberId(value["handle"]);
 }
 function offered(link: InvitationLink, context: InvitationContext): Invited {
   if (!configured(context) || !wellFormedInvitation(link)) return { ok: false, reason: "That is not an invitation for this browser." };
