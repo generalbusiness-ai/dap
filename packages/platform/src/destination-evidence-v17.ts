@@ -75,7 +75,7 @@ export interface EvidenceJobRecordV17 {
 const RECORD_FIELDS = ["v", "job", "name", "configuration", "binding", "bindingDigest", "state", "admittedAt", "commit", "tree", "base", "sourceFacts", "commitProof", "policy", "reuseOwner", "reuse", "holdOwner", "holds", "policyOwner", "incident", "result", "signer", "decidedAt", "reason", "observedGeneration", "funded", "countedJob", "reuseRequested", "deadline", "forJob", "noticeAt", "holder", "requestAt", "covered"];
 export function readEvidenceJobRecordV17(value: unknown): EvidenceJobRecordV17 | null {
   try {
-    if (!exact(value, RECORD_FIELDS) || value["v"] !== 1 || !isFactRef(value["job"]) || value["job"].at.kind !== "lane"
+    if (!exact(value, RECORD_FIELDS) || value["v"] !== 1 || !isFactRef(value["job"])
       || typeof value["name"] !== "string" || value["name"].length > 128 || utf8(value["name"]).length > 128 || !isDigest(value["configuration"])
       || !["pending", "admitted", "reused", "refused", "passed", "failed", "error", "timeout", "unknown"].includes(String(value["state"])) || typeof value["reuseRequested"] !== "boolean" || timeMs(value["deadline"]) === null
       || !natural(value["requestAt"]) || !natural(value["holder"]) || !["admittedAt", "reuseOwner", "holdOwner", "policyOwner", "decidedAt", "noticeAt"].every(field => value[field] === null || natural(value[field]))
@@ -94,12 +94,11 @@ export function readEvidenceJobRecordV17(value: unknown): EvidenceJobRecordV17 |
       || key.configuration !== value["configuration"] || key.source !== binding.source)
       || new Set(value["covered"].map(canonicalize)).size !== value["covered"].length
       || new Set(value["holds"].map(hold => canonicalize((hold as EvidenceHoldRecordV17).key))).size !== value["holds"].length) return null;
-    if (value["observedGeneration"] !== null && (!exact(value["observedGeneration"], ["rules", "seq"]) || !isScopeRef(value["observedGeneration"]["rules"])
-      || value["observedGeneration"]["rules"].kind !== "rules" || !natural(value["observedGeneration"]["seq"]))) return null;
+    if (value["observedGeneration"] !== null && (!exact(value["observedGeneration"], ["rules", "seq"]) || !isScopeRef(value["observedGeneration"]["rules"]) || !natural(value["observedGeneration"]["seq"]))) return null;
     if (value["state"] !== "pending" && value["state"] !== "refused" && (value["admittedAt"] === null || value["commit"] === null || value["tree"] === null || value["base"] === null || value["policy"] === null)) return null;
     const policy = value["policy"];
     if (policy !== null && (!exact(policy, ["rules", "head", "revision", "proposal", "certificate", "policy", "serviceGeneration"])
-      || !isScopeRef(policy["rules"]) || policy["rules"].kind !== "rules" || !isHead(policy["head"]) || !natural(policy["revision"]) || policy["revision"] > policy["head"].seq
+      || !isScopeRef(policy["rules"]) || !isHead(policy["head"]) || !natural(policy["revision"]) || policy["revision"] > policy["head"].seq
       || !isDigest(policy["proposal"]) || !readRulesPolicyV13(policy["policy"]).ok
       || !exact(policy["certificate"], ["request", "certificate", "proof", "commit"]) || !isFactRef(policy["certificate"]["request"]) || !isFactRef(policy["certificate"]["certificate"])
       || !isDigest(policy["certificate"]["proof"]) || !isObjectId(policy["certificate"]["commit"])
@@ -119,8 +118,7 @@ export function evidenceJobRecordWireV17(record: EvidenceJobRecordV17): string {
 export interface EvidenceServiceV17 { mark: EvidenceBinding["roomService"]; generation: ScopedRulesPosition }
 export function readEvidenceServiceWireV17(value: unknown): EvidenceServiceV17 | null {
   const read = readEvidenceWireV17(value, EVIDENCE_SERVICE_BYTES_V17), parsed = read.ok ? read.value : null;
-  if (!exact(parsed, ["mark", "generation"]) || !exact(parsed["generation"], ["rules", "seq"]) || !isScopeRef(parsed["generation"]["rules"])
-    || parsed["generation"]["rules"].kind !== "rules" || !natural(parsed["generation"]["seq"])) return null;
+  if (!exact(parsed, ["mark", "generation"]) || !exact(parsed["generation"], ["rules", "seq"]) || !isScopeRef(parsed["generation"]["rules"]) || !natural(parsed["generation"]["seq"])) return null;
   const mark = readServiceMarkV13(parsed["mark"]);
   return mark.ok ? { mark: mark.mark, generation: parsed["generation"] as unknown as ScopedRulesPosition } : null;
 }

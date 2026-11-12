@@ -27,9 +27,9 @@ export const evidenceCapacityPolicyKeyV17 = (generation: ScopedRulesPosition): D
 export function readEvidenceCapacityAnchorV17(value: unknown): EvidenceCapacityAnchorV17 | null {
   try {
   if (!exact(value, ["v", "owner", "generation", "holds", "incidents"]) || value["v"] !== 1 || !natural(value["owner"])
-    || !exact(value["generation"], ["rules", "seq"]) || !isScopeRef(value["generation"]["rules"]) || value["generation"]["rules"].kind !== "rules" || !natural(value["generation"]["seq"])
+    || !exact(value["generation"], ["rules", "seq"]) || !isScopeRef(value["generation"]["rules"]) || !natural(value["generation"]["seq"])
     || !Array.isArray(value["incidents"]) || value["incidents"].length > 8 || value["incidents"].some(row => !exact(row, ["name", "job"])
-      || typeof row["name"] !== "string" || utf8(row["name"]).length > 128 || !(row["job"] === null || isFactRef(row["job"]) && row["job"].at.kind === "lane"))
+      || typeof row["name"] !== "string" || utf8(row["name"]).length > 128 || !(row["job"] === null || isFactRef(row["job"])))
     || new Set(value["incidents"].map(row => row["name"])).size !== value["incidents"].length) return null;
   if (value["holds"] !== null && (!Array.isArray(value["holds"]) || value["holds"].length > 256 || value["holds"].some(row => !exact(row, ["key", "owner", "pending"])
     || !readEvidenceHoldKeyV17(row["key"]) || !same((row["key"] as EvidenceHoldKeyV17).generation, value["generation"]) || !(row["owner"] === null || natural(row["owner"])) || !readEvidenceHoldPendingV17(row["pending"]))

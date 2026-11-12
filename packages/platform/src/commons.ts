@@ -34,7 +34,7 @@ export const commons: PlatformData = {
 const control = (state: Pick<StateView, "page">) => state.page("commons", ["open"], null, 1).items[0];
 export const commonsDirectory = (state: Pick<StateView, "page">): ScopeRef | null => {
   const ref = control(state)?.refs["directory"];
-  return isScopeRef(ref) && ref.kind === "directory" ? ref : null;
+  return isScopeRef(ref) ? ref : null;
 };
 /** As in Rules, the first retained Membership observation fixes incarnation. */
 export const commonsMembership = (state: Pick<StateView, "page" | "geneses">): RecordedRef | null => {

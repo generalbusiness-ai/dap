@@ -46,7 +46,7 @@ export interface EvidenceCandidateV17 {
   outcome: "passed" | "failed";
 }
 export function readEvidenceCandidateV17(value: unknown): EvidenceCandidateV17 | null {
-  if (!exact(value, ["job", "keyDigest", "admission", "result", "decidedBy", "key", "checker", "binding", "outcome"]) || !factValue(value["job"]) || value["job"].at.kind !== "lane" || !isDigest(value["keyDigest"])
+  if (!exact(value, ["job", "keyDigest", "admission", "result", "decidedBy", "key", "checker", "binding", "outcome"]) || !factValue(value["job"]) || !isDigest(value["keyDigest"])
     || !natural(value["admission"]) || !factValue(value["result"]) || !natural(value["decidedBy"]) || value["decidedBy"] < value["admission"]
     || !same(value["job"].at, value["result"].at) || !isKeyId(value["key"]) || !member(value["checker"]) || (value["outcome"] !== "passed" && value["outcome"] !== "failed")) return null;
   const binding = readEvidenceBinding(value["binding"]);

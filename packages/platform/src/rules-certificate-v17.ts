@@ -119,7 +119,7 @@ export function readRulesCertificateDeclinedV17(value: unknown): RulesCertificat
     if (!exact(value, ["answer", "request", "interveningFact"]) || value["answer"] !== "certificate-declined"
       || !isFactRef(value["request"]) || !isFactRef(value["interveningFact"])) return null;
     const request = value["request"], intervening = value["interveningFact"];
-    if (request.at.kind !== "destination" || !same(request.at, intervening.at) || intervening.seq <= request.seq
+    if (!same(request.at, intervening.at) || intervening.seq <= request.seq
       || utf8(canonicalize(value)).length > RULES_CERTIFICATE_DECLINED_V17_MAX) return null;
     return { answer: "certificate-declined", request: { at: { ...request.at }, seq: request.seq, hash: request.hash },
       interveningFact: { at: { ...intervening.at }, seq: intervening.seq, hash: intervening.hash } };

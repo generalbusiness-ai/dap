@@ -46,7 +46,7 @@ export const directory11: PlatformData = {
 };
 function destination(given: RuleGiven): ScopeRef | null {
   const ref = given.state.page("repository", ["open"], null, 1).items[0]?.refs["destination"];
-  return isScopeRef(ref) && ref.kind === "destination" ? ref : null;
+  return isScopeRef(ref) ? ref : null;
 }
 function genesis(given: RuleGiven): Record<string, FieldValue> | null {
   const raw = given.resolved.fields["genesis"], member = given.resolved.fields["installer"], membership = directoryMembership(given.state);

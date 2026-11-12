@@ -79,7 +79,7 @@ export function obligationChecksV17(value: unknown, touched: readonly string[]):
  * Q13 observation/certificate and publication capture independently. */
 function readView(value: unknown): ReservationPolicyViewV17 | null {
   if (!exact(value, ["rules", "head", "revision", "proposal", "certificate", "policy", "serviceGeneration"])
-    || !isScopeRef(value["rules"]) || value["rules"].kind !== "rules" || !isHead(value["head"])
+    || !isScopeRef(value["rules"]) || !isHead(value["head"])
     || !natural(value["revision"]) || value["revision"] > value["head"].seq || !isDigest(value["proposal"])
     || !exact(value["certificate"], ["request", "certificate", "proof", "commit"])
     || !isFactRef(value["certificate"]["request"]) || !isFactRef(value["certificate"]["certificate"])
@@ -94,8 +94,8 @@ function readView(value: unknown): ReservationPolicyViewV17 | null {
 export function readEvidenceBatchV17(value: unknown): EvidenceBatchRecordV17 | null {
   try {
     if (!dataOnly(value) || !exact(value, ["v", "publication", "operation", "capture", "ordinal", "total", "touched", "checks", "policy", "jobs", "planAt"])
-      || value["v"] !== 1 || !isFactRef(value["publication"]) || value["publication"].at.kind !== "destination"
-      || !isFactRef(value["operation"]) || value["operation"].at.kind !== "lane" || !isFactRef(value["capture"])
+      || value["v"] !== 1 || !isFactRef(value["publication"])
+      || !isFactRef(value["operation"]) || !isFactRef(value["capture"])
       || !same(value["capture"].at, value["publication"].at) || value["capture"].seq < value["publication"].seq
       || !natural(value["ordinal"]) || !natural(value["total"]) || value["total"] < 1 || value["total"] > EVIDENCE_BATCH_ACCOUNTS_V17
       || value["ordinal"] >= value["total"] || !list(value["touched"], 8) || value["touched"].some(name => typeof name !== "string")

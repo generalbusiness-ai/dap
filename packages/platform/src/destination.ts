@@ -782,7 +782,7 @@ const matchesRecordMembers = (value: unknown, required: Readonly<Record<string, 
  * nothing of a link's entry.
  */
 const COLLECTED_RECORD: Readonly<Record<keyof typeof COLLECT_MOST, (value: unknown) => boolean>> = {
-  links: (value) => matchesRecordMembers(value, { link: isFactRef, issue: (issue) => isScopeRef(issue) && issue.kind === "lane" }),
+  links: (value) => matchesRecordMembers(value, { link: isFactRef, issue: (issue) => isScopeRef(issue) }),
 };
 
 // ---------------------------------------------------------------- what an operation is for
