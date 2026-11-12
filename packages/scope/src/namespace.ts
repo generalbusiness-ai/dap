@@ -73,7 +73,8 @@ export interface Binding<Id = unknown> {
  * summary/source fallback, separate timeout, peer discovery or retries. */
 export function sessionReferencesIn<Id>(binding: Binding<Id>): SessionReferenceSource {
   return { async read(directory, request) {
-    if (!isScopeRef(directory) || directory.kind !== "directory") return null;
+    // A reference names no kind. The caller names the recorded creator Directory, and the receiver answers only as a Directory.
+    if (!isScopeRef(directory)) return null;
     const parsed = sessionReferenceRequest(request);
     if (!parsed || canonicalize(parsed.to) !== canonicalize(directory)) return null;
     const bytes = encodeSessionReference(parsed);
