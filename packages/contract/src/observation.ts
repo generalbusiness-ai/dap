@@ -9,14 +9,14 @@
 
 import type { Head } from "./result.ts";
 import type { ScopedRulesPosition, ServiceMark } from "./evidence.ts";
-import type { Digest, KeyId, MemberId, PlatformDefinition, ScopeFilter, ScopeRef, Timestamp } from "./scope.ts";
+import type { Digest, KeyId, MemberId, PlatformDefinition, ScopeFilter, ScopeId, ScopeKind, ScopeRef, SequenceRef, Timestamp } from "./scope.ts";
 
 /** The scope's run: random, chosen when its process starts and held in memory (section 16.1). */
 export type RunId = string;
 
 /** One key's whole standing in the membership scope, at one head of it (section 16.1). */
 export interface Observation {
-  of: ScopeRef;                    // the membership scope, with its incarnation
+  of: ScopeRef;                    // the membership scope, with its sealed genesis
   head: Head;                      // the membership head that was read
   key: KeyId;
   keyState: "active" | "retired" | "compromised" | "unknown";
@@ -40,7 +40,7 @@ export interface Observation {
  */
 export interface MemberObservation {
   subject: "member";
-  of: ScopeRef;                    // the membership scope, with its incarnation
+  of: ScopeRef;                    // the membership scope, with its sealed genesis
   head: Head;                      // the membership head that was read
   member: MemberId;
   memberState: "active" | "removed" | "unknown";   // "unknown": membership holds no such member at that head
@@ -91,7 +91,7 @@ export type RulesContent =
 /** An observation of the rules scope (section 16.1). It stands only in the member `observed` of an input. */
 export interface RulesObservation {
   subject: "rules";
-  of: ScopeRef;                    // the rules scope, with its incarnation
+  of: ScopeRef;                    // the rules scope, with its sealed genesis
   head: Head;                      // the head of the rules scope that was read
   revision: number;                // the position of the latest `publish` at that head; 0 when there is none
   content: RulesContent;
@@ -112,7 +112,7 @@ export interface RulesObservation {
  */
 export interface HoldersObservation {
   subject: "holders";
-  of: ScopeRef;                    // the membership scope, with its incarnation
+  of: ScopeRef;                    // the membership scope, with its sealed genesis
   head: Head;                      // the membership head that was read
   action: string;
   count: number;
@@ -141,18 +141,18 @@ export interface ObservationUse {
  * 16.1, "The form of `within`, and of the read"; authority note, section
  * 3.3, step 2): the standing of one key, the standing of one member, or
  * what the rules scope holds. `of` is the observed scope as the asking
- * scope records it, with its incarnation. A request states no other member,
+ * scope records it, with its sealed genesis. A request states no other member,
  * and names no asker: the observed scope could not check who asks, and
  * answers the same for every scope of its repository (I3 deltas, entry ED1).
  *
  * A rules scope and a destination record the ID of the scope that they
- * observe and, before their first retained observation, no incarnation.
- * Their first read asks by the scope ID alone (authority note, revision 25,
- * section 12.1, "The first read"): `of` then has no member `inc`, and the
- * answer's `of` holds the incarnation of the scope that answered (I3
- * deltas, entry EY7).
+ * observe and, before their first retained observation, no genesis association.
+ * Their first read asks by scope ID and kind (authority note, revision 25,
+ * section 12.1, "The first read"): `of` then has no member `genesis`.
+ * The kind is request metadata, not birth proof. The answer's `of` holds
+ * the full sequence reference of the scope that answered (I3 deltas, entry EY7).
  */
-export type ObservedScope = ScopeRef | Pick<ScopeRef, "scope" | "kind">;
+export type ObservedScope = SequenceRef | { scope: ScopeId; kind: ScopeKind };
 export type ObservationRequest =
   | { of: ObservedScope; key: KeyId }
   | { of: ObservedScope; member: MemberId }
