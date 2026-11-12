@@ -70,12 +70,12 @@ import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
 import { type HostedMcpSettings } from "@generalbusiness/dap-mcp";
 
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
-import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, entryHash, isEntry, same, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { FactRef, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
+import { b64url, same, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { isObject, type Item } from "@generalbusiness/dap-derive";
 import { creationKind, type Created } from "./core.ts";
 import { repositorySessionMembership, fixedMembership, repositoryAuthority } from "./authority.ts";
-import { membershipIn, namespace, sessionReferencesIn, type Binding } from "./namespace.ts";
+import { admitSourced, membershipIn, namespace, sessionReferencesIn, type Binding } from "./namespace.ts";
 import { ScopeObject, type OutsideGiven, type Wiring } from "./object.ts";
 import type { Incident } from "./operator.ts";
 import type { OriginalBytes, OriginalEnded, OriginalKept, OriginalPage } from "./originals.ts";
@@ -763,34 +763,35 @@ export function snapshotReaderOf(binding: Binding, context: import("./ports.ts")
       return isRoomRetiredStop(result) ? null : result;
     },
     source: async (fact) => {
-      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number, origin: boolean, context: import("./ports.ts").SourceReadContext): Promise<{ bytes: string | null; under: string } | null> };
+      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number, origin: boolean, context: import("./ports.ts").SourceReadContext): Promise<unknown> };
       const remaining = sourceReadRemaining({ maxBytes, milliseconds });
       if (!remaining) return null;
       const allowance = remaining();
       if (allowance === null) return null;
       const read = await peer.source(fact.seq, false, { maxBytes, milliseconds: allowance });
       if (remaining() === null) return null;
-      if (isRoomRetiredStop(read) || !read?.bytes || utf8(read.bytes).length > maxBytes) return null;
-      const entry = parseStrict(read.bytes) as unknown as Entry;
-      if (!isEntry(entry) || !same(entry.at, fact.at) || entry.seq !== fact.seq || entryHash(entry) !== fact.hash) return null;
-      return remaining() === null ? null : { entry, hash: fact.hash };
+      // The answer's birth admits the full reference; one entry allowance funds body, birth and label.
+      const admitted = isRoomRetiredStop(read) ? null : admitSourced(read, fact, maxBytes);
+      if (!admitted) return null;
+      return remaining() === null ? null : { entry: admitted.entry, hash: fact.hash, sequence: admitted.sequence };
     },
     job: async (fact) => {
-      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number, origin: boolean, context: import("./ports.ts").SourceReadContext): Promise<{ bytes: string | null; under: string } | null>; summary(reader: unknown): Promise<unknown>; jobState(fact: FactRef): Promise<{ state: string; decidedBy: FactRef | null } | null> };
+      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number, origin: boolean, context: import("./ports.ts").SourceReadContext): Promise<unknown>; summary(reader: unknown): Promise<unknown>; jobState(fact: FactRef): Promise<{ state: string; decidedBy: FactRef | null } | null> };
       const remaining = sourceReadRemaining({ maxBytes, milliseconds });
       if (!remaining) return null;
       const allowance = remaining();
       if (allowance === null) return null;
       const read = await peer.source(fact.seq, false, { maxBytes, milliseconds: allowance });
       if (remaining() === null) return null;
-      if (isRoomRetiredStop(read) || !read?.bytes) return null;
-      const entry = parseStrict(read.bytes) as unknown as Entry;
+      const admitted = isRoomRetiredStop(read) ? null : admitSourced(read, fact, maxBytes);
+      if (!admitted) return null;
       const standing = await peer.jobState(fact);
       if (isRoomRetiredStop(standing)) return null;
-      return remaining() === null ? null : { entry, under: read.under, state: standing?.state ?? "absent", decidedBy: standing?.decidedBy ?? null };
+      return remaining() === null ? null : { entry: admitted.entry, under: admitted.under, sequence: admitted.sequence, state: standing?.state ?? "absent", decidedBy: standing?.decidedBy ?? null };
     },
     key: async (membership, key) => {
-      const result = await (binding.get(binding.idFromName(membership)) as { observe(ask: unknown): Promise<unknown> }).observe({ of: { scope: membership, kind: "membership" }, key });
+      // The caller's full reference, or its first-read form; nothing is made up from a string here.
+      const result = await (binding.get(binding.idFromName(membership.scope)) as { observe(ask: unknown): Promise<unknown> }).observe({ of: membership, key });
       return isRoomRetiredStop(result) ? null : result;
     },
   };

@@ -386,6 +386,24 @@ function withinAllowance(strings: readonly string[], maxBytes: number): boolean 
 }
 
 /**
+ * One entry from a source answer that carries no origin rows, admitted under
+ * the birth that the answer carries, within one entry allowance. Null: the
+ * answer names another reference, holds no entry, does not fit, or does not
+ * prove its entry.
+ */
+export function admitSourced(answer: unknown, fact: FactRef, maxBytes: number): { entry: Entry; under: string; sequence: CheckedSequence } | null {
+  try {
+    if (!isObject(answer) || !isFactRef(fact) || canonicalize(answer["at"]) !== canonicalize(fact.at)) return null;
+    const bytes = answer["bytes"], under = answer["under"], birth = fact.seq === 0 ? bytes : answer["birth"];
+    if (typeof bytes !== "string" || typeof under !== "string" || typeof birth !== "string") return null;
+    if (!withinAllowance(fact.seq === 0 ? [bytes, under] : [bytes, birth, under], maxBytes)) return null;
+    const sequence = admitSequenceGenesis(birth, fact.at, maxBytes);
+    const entry = sequence && proofEntry({ fact, bytes }, fact, maxBytes, sequence);
+    return sequence && entry ? { entry, under, sequence } : null;
+  } catch { return null; }
+}
+
+/**
  * The resolver, the transport, the definitions and the sent texts over one
  * namespace binding. A call that fails is no answer: the entry cannot be
  * read now, or the attempt is unanswered.

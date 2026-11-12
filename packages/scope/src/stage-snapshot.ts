@@ -9,7 +9,9 @@ import type { DestinationHostOptions, DestinationRepository } from "./destinatio
 import type { OutsideGiven } from "./given.ts";
 import type { Sealed } from "./store.ts";
 
-const boundFact = (sealed: Sealed): FactRef => ({ at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash });
+/** A source copy keeps the fact it was read for; the entry no longer names its scope. */
+type SourceSealed = Sealed & { fact: FactRef };
+const boundFact = (sealed: SourceSealed): FactRef => sealed.fact;
 
 function eligible(value: unknown, key: KeyId, admitted: NonNullable<ReturnType<typeof destinationEvidenceJob>>, at: number | null): boolean {
   if (!isRecord(value) || value["key"] !== key || value["keyState"] !== "active" || value["memberState"] !== "active" || value["role"] !== "checker" || value["controllerActive"] === false
@@ -36,17 +38,18 @@ function currentRoomRules(value: unknown, admitted: NonNullable<ReturnType<typeo
 export async function readStageSnapshot(given: OutsideGiven, options: DestinationHostOptions, asked: SignedIntent): Promise<StageSnapshotReply> {
   try {
     const reader = options.snapshotReader, scope = given.scope(), intent = asked?.intent;
-    if (!reader?.source || scope?.at.kind !== "destination" || !answersVersionQuestion(given.genesis()?.seed.definition, "evidenceStageSnapshot") || !verifySignedIntent(asked)
+    const local = given.localSequence();
+    if (!reader?.source || !local || scope?.kind !== "destination" || !answersVersionQuestion(given.genesis()?.seed.definition, "evidenceStageSnapshot") || !verifySignedIntent(asked)
       || intent.kind !== "git-read@1:job-read" || intent.on !== null || Object.keys(intent.expected).length !== 0 || Object.keys(intent.fields).join() !== "job" || !isFactRef(intent.fields["job"])
       || !same(intent.to, intent.fields["job"].at)) return null;
     const jobFact = intent.fields["job"], now = timeMs(given.clock.read()), retained = timeMs(scope.time), until = timeMs(intent.notAfter);
     if (now === null || retained === null || now < retained || until === null || until <= now || until - now > 900_000) return null;
     const job = await reader.job(jobFact), admitted = destinationEvidenceJob(given.state, given.own, jobFact);
-    if (!job || !["issue", "change"].includes(job.under) || !["requested", "timed-out"].includes(job.state) || !isEntryOf(job.entry, jobFact) || !admitted
+    if (!job || !["issue", "change"].includes(job.under) || !["requested", "timed-out"].includes(job.state) || !isEntryOf(job.entry, jobFact, job.sequence) || !admitted
       || !destinationEvidenceAdmissionCurrent(given.state, given.own, admitted, intent.actor)) return { refused: "wrong-source" };
     const admittedIdentity = canonicalize(admitted);
     const admission = given.own(admitted.admission.seq);
-    if (!admission || !same(boundFact(admission), admitted.admission) || !same(admitted.admission.at, scope.at) || admitted.sourceFacts.length > 32) return null;
+    if (!admission || !same({ at: scope.at, seq: admission.entry.seq, hash: admission.hash }, admitted.admission) || !isEntryOf(admission.entry, admitted.admission, local) || !same(admitted.admission.at, scope.at) || admitted.sourceFacts.length > 32) return null;
     const deadline = job.entry.effects.find(effect => effect.effect === "value" && effect.item === jobFact.seq && effect.slot === "deadline");
     const ends = deadline?.effect === "value" ? timeMs(deadline.value) : null;
     if (ends === null) return null;
@@ -55,18 +58,20 @@ export async function readStageSnapshot(given: OutsideGiven, options: Destinatio
       return effect?.effect === "value" ? effect.value : null;
     };
     const name = jobValue("name"), configuration = jobValue("configuration");
-    const membership = admitted.binding.checker.membership.scope;
+    // Keep the full Membership reference that the admission names.
+    const membership = admitted.binding.checker.membership;
     const roomRulesCurrent = async (): Promise<boolean> => {
       if (admitted.binding.source !== "room") return true;
       try { return !!reader.rules && currentRoomRules(await reader.rules(admitted.binding.policyGeneration.rules), admitted, name, configuration, scope.at, given.clock.read()); }
       catch { return false; }
     };
-    const sources: Sealed[] = [], ids = new Set<string>();
+    const sources: Sealed[] = [], bound: SourceSealed[] = [], ids = new Set<string>();
     for (const fact of admitted.sourceFacts) {
       if (!isFactRef(fact) || ids.has(canonicalize(fact))) return null;
       const sealed = same(fact.at, scope.at) ? given.own(fact.seq) : await reader.source(fact);
-      if (!sealed || !isEntryOf(sealed.entry, fact) || sealed.hash !== fact.hash) return null;
-      ids.add(canonicalize(fact)); sources.push(sealed);
+      const sequence = same(fact.at, scope.at) ? local : sealed && "sequence" in sealed ? sealed.sequence : null;
+      if (!sealed || !sequence || !isEntryOf(sealed.entry, fact, sequence) || sealed.hash !== fact.hash) return null;
+      ids.add(canonicalize(fact)); sources.push({ entry: sealed.entry, hash: sealed.hash }); bound.push({ entry: sealed.entry, hash: sealed.hash, fact });
       // Reserve the complete proof before fetching or copying object bodies.
       if (canonicalBytes({ v: 1, destination: scope.at, job: { entry: job.entry, hash: jobFact.hash }, admission, binding: admitted.binding, sources,
         base: admitted.base, commit: admitted.commit, tree: admitted.tree }).length > STAGE_SNAPSHOT_BOUNDS.proofBytes) return null;
@@ -96,9 +101,10 @@ export async function readStageSnapshot(given: OutsideGiven, options: Destinatio
       objects: objects.map(object => ({ id: object.id, type: object.kind, data: object.body })) });
     if (!overlay || !await verifyOwnedCheckoutSnapshot(overlay)) return null;
     // Re-read source identity and eligibility after every provider/object await.
-    for (const source of sources) {
+    for (const source of bound) {
       const fact = boundFact(source), current = same(fact.at, scope.at) ? given.own(fact.seq) : await reader.source(fact);
-      if (!current || !isEntryOf(current.entry, fact) || current.hash !== source.hash || !same(current.entry, source.entry)) return null;
+      const sequence = same(fact.at, scope.at) ? local : current && "sequence" in current ? current.sequence : null;
+      if (!current || !sequence || !isEntryOf(current.entry, fact, sequence) || current.hash !== source.hash || !same(current.entry, source.entry)) return null;
     }
     const currentJob = await reader.job(jobFact);
     began = timeMs(given.clock.read());
@@ -107,7 +113,7 @@ export async function readStageSnapshot(given: OutsideGiven, options: Destinatio
     if (workSource && (!reader.sourceState || await reader.sourceState(workSource) !== "staged")) return { refused: "stage-origin-mismatch" };
     const completed = timeMs(given.clock.read()), floor = timeMs(given.scope()?.time);
     const currentAdmission = destinationEvidenceJob(given.state, given.own, jobFact);
-    if (!currentJob || !["requested", "timed-out"].includes(currentJob.state) || !isEntryOf(currentJob.entry, jobFact) || !same(currentJob.entry, job.entry) || currentJob.under !== job.under
+    if (!currentJob || !["requested", "timed-out"].includes(currentJob.state) || !isEntryOf(currentJob.entry, jobFact, currentJob.sequence) || !same(currentJob.entry, job.entry) || currentJob.under !== job.under
       || !currentAdmission || canonicalize(currentAdmission) !== admittedIdentity || !destinationEvidenceAdmissionCurrent(given.state, given.own, currentAdmission, intent.actor)
       || !eligible(currentKey, intent.actor, admitted, completed) || began === null || completed === null || floor === null || completed < floor || completed < began || completed - began > 10_000 || completed >= until) return { refused: "wrong-source" };
     return { v: 1, destination: scope.at, job: { entry: job.entry, hash: entryHash(job.entry) }, admission, binding: admitted.binding, sources, ...overlay };
