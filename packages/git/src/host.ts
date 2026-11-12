@@ -154,7 +154,7 @@ export interface TokenDriverOptions {
 
 type Recorded = Extract<Effect, { effect: "record" }>;
 
-const attemptStorageKey = (at: AttemptOf): string => `${at.scope.scope}/${at.scope.inc}/${at.operation}#${at.attempt}`;
+const attemptStorageKey = (at: AttemptOf): string => `${at.scope.scope}/${at.scope.genesis}/${at.operation}#${at.attempt}`;
 const position = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 const isOperation = (value: unknown): value is OperationId => typeof value === "string" && /^(0|[1-9][0-9]{0,15}):(0|[1-9][0-9]{0,15})$/.test(value);
 
