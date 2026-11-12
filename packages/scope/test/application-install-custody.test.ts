@@ -128,7 +128,7 @@ test.each(installations)("$name: one signed native install settles through Direc
         result = await life.wait(() => installedService!.call("install_application", args));
       } else result = await life.wait(() => installedService!.call("install_application", args));
       expect(result.isError, JSON.stringify(result.structuredContent)).toBe(false);
-      expect(result.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+      expect(result.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
       expect(copyRoute).toEqual(specimen.application === "Lending" ? ["POST originals", "POST acts", "DELETE originals"] : expect.not.arrayContaining(["POST originals"]));
       job = Number(result.structuredContent["item"]);
       const kept = await installedService.custody.find({ service: port.service, membership, signer: rita.key, target: rulesAt, key });

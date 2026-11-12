@@ -52,7 +52,7 @@ async function fixture() {
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin", "agent"],
       values: { label: "TEST native demo", ...members }, owner: members.sensors, idempotencyKey: "TEST-demo-distinct-owner-install" }));
-    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
     const job = Number(installed.structuredContent["item"]);
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     const creation = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === siteId);

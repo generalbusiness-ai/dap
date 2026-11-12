@@ -41,7 +41,7 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
     expect(missing.structuredContent).toMatchObject({ answer: "refused", reason: "guard-failed", name: "device-owner-not-active" });
     const installed = await life.wait(() => mcp.call("install_application", args));
     expect(installed.isError, JSON.stringify(installed.structuredContent)).toBe(false);
-    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
     const job = Number(installed.structuredContent["item"]);
     const installEntry = (await life.wait(() => A.entries())).find(entry => entry.seq === job)!;
     // The signer's own member is served by its actual grant observation,

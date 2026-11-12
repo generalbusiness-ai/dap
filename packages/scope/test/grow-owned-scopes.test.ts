@@ -45,7 +45,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
       applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust), fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
     const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin"], values: { label: "Native grow site" }, owner: { membership, member: "@rita" }, idempotencyKey: "TEST-grow-site-install" }));
-    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "accepted" });
     const job = Number(installed.structuredContent["item"]);
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     const siteCreate = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === siteId);
