@@ -253,6 +253,20 @@ To roll back, run the version-list and rollback commands in
 an absolute path to the hosted configuration. A rollback cannot undo a
 Durable Object migration or remove records that the newer version wrote.
 
+## Cut over to the new journal format
+
+An old room link answers 404 on a Worker in enforce mode, because the new
+index does not list the room. A request that reaches a retired room answers
+410 and names the reader commit.
+
+Before deployment, the planner files an inventory act that lists each retired
+room and its reader commit. Use that act to find the reader for an old link.
+The Worker does not read the inventory act at runtime. Do not seed the new
+index with retired rooms or old index rows.
+
+The final reader commit remains unbound until S4 lands and the actual last
+old `main` is known.
+
 ## Roll back
 
 1. List the recent deployments and their versions.
