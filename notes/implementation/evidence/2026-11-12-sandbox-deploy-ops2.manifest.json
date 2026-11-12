@@ -1,0 +1,107 @@
+{
+  "qualification": "Index of unchanged raw originals for OPS-2. Each gate directory carries its own SHA256SUMS over its internals and is read-only. No command ran Wrangler, a deployment or a smoke against a Worker.",
+  "request": "60f5b7137e64ddbf6ff6c0461f4805f07f781b98",
+  "promise": "b5ad29e68c27963dbec522c097840438d5e78c38",
+  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "base": "28aa0446ab0f5cac2753fa802a186ecb7843daca",
+  "checkpointCommit": "fea6ab4d7b1344dfa9655eb55100fcb6adf0a618",
+  "checkpointTree": "265059ce522724ea0f49b45f1a4159e8d6b53f6f",
+  "fileCount": 19,
+  "files": [
+    {
+      "path": "2026-11-12-ops2-owners-fea6ab4d/head",
+      "bytes": 41,
+      "sha256": "2a7eacf52de6d00c686e100841036f9a2c5cb4aca89ba4a6d50434d1da45273e"
+    },
+    {
+      "path": "2026-11-12-ops2-owners-fea6ab4d/owners.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-ops2-owners-fea6ab4d/owners.stdout",
+      "bytes": 2274,
+      "sha256": "c29d93694553a182c9d94737cb8788e31b1c2e4d3e9e2cbaca71bd5e2cb68a2b"
+    },
+    {
+      "path": "2026-11-12-ops2-owners-fea6ab4d/owners.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-12-ops2-owners-fea6ab4d/SHA256SUMS",
+      "bytes": 317,
+      "sha256": "5e20926aac552343b41524f5ec8d51a3913e5ef28c0c77fb83da38a399c298a0"
+    },
+    {
+      "path": "2026-11-12-ops2-control-fea6ab4d/control.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-ops2-control-fea6ab4d/control.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-12-ops2-control-fea6ab4d/control.stderr",
+      "bytes": 544,
+      "sha256": "c56d7d93d3fb065b412c9c299aef37fdedcef2821c81e51bad311f064bcc836f"
+    },
+    {
+      "path": "2026-11-12-ops2-control-fea6ab4d/SHA256SUMS",
+      "bytes": 247,
+      "sha256": "bbaa824a8be681e3f1d4f3f26ed01ae32bdd4ee9ad54cfad14d7062021715641"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d/gate.exit",
+      "bytes": 4,
+      "sha256": "f5bde7eb9f6c71611dc5726e8aca3eb4eba3e386da49e0a4ed5c295a90a73a0d"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d/gate.stdout",
+      "bytes": 5756,
+      "sha256": "74b9ad06c09b35f84f9c23dba125318a1a775d40e0c83a432960a17bd380ab04"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d/gate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d/internals-move.json",
+      "bytes": 257,
+      "sha256": "7712b15b30ba5911646823e5b45adda9325e4484c9efa1a4809d11a05aa5d05e"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d/SHA256SUMS",
+      "bytes": 3172,
+      "sha256": "1254ab880b30e128dec5651251dc41f4e8c92a812460ce6638a5c6f4d35bac2c"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d-2/gate.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d-2/gate.stdout",
+      "bytes": 7178,
+      "sha256": "9b8e0f8120e14f44d238b49003b607f1e54ff12101e03b5b8b2a862b772b73ca"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d-2/gate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d-2/internals-move.json",
+      "bytes": 167,
+      "sha256": "cf5edae77e13733196d33e5d9de6f55c966295d4104f8e72a1b3078f7e56082b"
+    },
+    {
+      "path": "2026-11-12-ops2-gate-fea6ab4d-2/SHA256SUMS",
+      "bytes": 3622,
+      "sha256": "0c241013d0295575de79648aee99c1b89e5e3eb6e7964a25db220e75ce0be48d"
+    }
+  ]
+}
