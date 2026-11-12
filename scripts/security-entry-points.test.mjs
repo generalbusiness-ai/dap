@@ -99,11 +99,11 @@ const namedOwners = {
     "packages/cli/src/command-install.ts:executePlannedInstall": "2d3ba2a6ced07d65136848b2c3621751fce05f666de2f378fe65a699cea9132f"
   },
   "packages/cli/src/command-membership.ts": {
-    "packages/cli/src/command-membership.ts:$module": "f2f7f7c45d3c38230f8ba0e27985e24429e2884ace5ff87b1a097f440d0f42d7",
+    "packages/cli/src/command-membership.ts:$module": "02ddb501239e0af446ce07a4b88ad6098a4700ff1a75db1765da9f185ba01c32",
     "packages/cli/src/command-membership.ts:joinSent": "b8a644d194680aeaccda9873f7eb9ee6f9e71110cdefe87b0af35d5ce946d692",
     "packages/cli/src/command-membership.ts:invite": "0f89f53e82d14214cc46d83bb6df8e11516e328c5b54eacced4dcc67ae1c2d5b",
     "packages/cli/src/command-membership.ts:inviteDevice": "58940c0af841e2c88452ef724a83725ccbe75a65dfce3dd1ed5c828f3a0b26c6",
-    "packages/cli/src/command-membership.ts:join": "a2a90d71159e9137830499c09335073da02d47d77de1e50a82e8a99ecf1bd806"
+    "packages/cli/src/command-membership.ts:join": "010369bee04feb57bc5200e220cd623b6a81fd9a8e2c8ca866656e78c7d3ae11"
   },
   "packages/cli/src/command-scope.ts": {
     "packages/cli/src/command-scope.ts:$module": "45a4a2e30983d81ce76aa0ef0cc1dab3a07833fb7ed8c99376deba4613fcef95",
