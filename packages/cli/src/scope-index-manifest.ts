@@ -1,12 +1,13 @@
 /** Operator observations, not registration proof or a global scope inventory. */
-import type { Digest, ScopeRef, Seed, Sealed, Read } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, isDigest, isRecord, isScopeRef, isSeed, isSealed, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Digest, ScopeKind, ScopeRef, Seed, Sealed, Read } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, isDigest, isEntryBodyOf, isRecord, isScopeKind, isScopeRef, isSeed, isSealed, parseStrict, resolveGenesisSelf, scopeIdOf, sealedFactRef, utf8 } from "@generalbusiness/dap-bytes";
 import { cliScopeIndexCreationCohorts, answersVersionQuestion, platform } from "@generalbusiness/dap-platform";
 
 import { Stop } from "./command-support.ts";
 
 export const INDEX_INVENTORY_BOUNDS = Object.freeze({ scopes: 4096, pages: 4096, pagesPerScope: 1000, bytes: 16 * 1024 * 1024 });
-export interface IndexScope { readonly at: ScopeRef; readonly genesis: Digest }
+/** `at.genesis` is the hash of the scope's genesis entry; `kind` is the kind its seed names. */
+export interface IndexScope { readonly at: ScopeRef; readonly kind: ScopeKind }
 export interface IndexManifest { readonly v: 1; readonly service: string; readonly root: ScopeRef; readonly scopes: readonly IndexScope[] }
 export interface IndexReads {
   entry(scope: ScopeRef["scope"], seq: number): Promise<Read<Sealed>>;
@@ -24,38 +25,41 @@ export function readIndexManifest(bytes: Uint8Array, service: string, root: Scop
   const value: unknown = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
   if (!isRecord(value) || !exact(value, ["v", "service", "root", "scopes"]) || value["v"] !== 1
     || value["service"] !== indexService(service) || !isScopeRef(value["root"]) || canonicalize(value["root"]) !== canonicalize(root)
-    || root.kind !== "directory" || !Array.isArray(value["scopes"]) || value["scopes"].length === 0 || value["scopes"].length > INDEX_INVENTORY_BOUNDS.scopes) throw Error("Scope manifest does not match this configured room");
+    || !Array.isArray(value["scopes"]) || value["scopes"].length === 0 || value["scopes"].length > INDEX_INVENTORY_BOUNDS.scopes) throw Error("Scope manifest does not match this configured room");
   const scopes: IndexScope[] = []; let previous = "";
   for (const raw of value["scopes"]) {
-    if (!isRecord(raw) || !exact(raw, ["at", "genesis"]) || !isScopeRef(raw["at"]) || !isDigest(raw["genesis"]) || raw["at"].scope <= previous) throw Error("Invalid or duplicate scope manifest row");
-    previous = raw["at"].scope; scopes.push({ at: { ...raw["at"] }, genesis: raw["genesis"] });
+    if (!isRecord(raw) || !exact(raw, ["at", "kind"]) || !isScopeRef(raw["at"]) || !isScopeKind(raw["kind"]) || raw["at"].scope <= previous) throw Error("Invalid or duplicate scope manifest row");
+    previous = raw["at"].scope; scopes.push({ at: { scope: raw["at"].scope, genesis: raw["at"].genesis }, kind: raw["kind"] });
   }
-  if (!scopes.some(row => canonicalize(row.at) === canonicalize(root))) throw Error("Scope manifest omits its configured root");
+  if (!scopes.some(row => canonicalize(row.at) === canonicalize(root) && row.kind === "directory")) throw Error("Scope manifest omits its configured root");
   return { v: 1, service: indexService(service), root: { ...root }, scopes };
 }
+/** A genesis binds its scope by its seed and, where `at` is given, its hash; a later entry needs `at` and binds by its genesis. */
 function checked(sealed: Sealed, scope: ScopeRef["scope"], seq: number, at?: ScopeRef): Sealed {
-  if (!isSealed(sealed) || sealed.entry.at.scope !== scope || sealed.entry.seq !== seq || factRefOf(sealed.entry).hash !== sealed.hash
-    || at && canonicalize(sealed.entry.at) !== canonicalize(at)) return fail(`wrong entry identity/hash for ${scope}:${seq}`);
+  const entry = isSealed(sealed) ? sealed.entry : null;
+  if (!entry || entry.seq !== seq || entryHash(entry) !== sealed.hash || at && at.scope !== scope
+    || (entry.input.type === "genesis" ? seq !== 0 || scopeIdOf(entry.input.seed) !== scope || at && !isEntryBodyOf(entry, { at, seq, hash: sealed.hash })
+      : !at || !isEntryBodyOf(entry, { at, seq, hash: sealed.hash }))) return fail(`wrong entry identity/hash for ${scope}:${seq}`);
   return sealed;
 }
 function genesis(sealed: Sealed, scope: ScopeRef["scope"], at?: ScopeRef, seed?: Seed): IndexScope {
   checked(sealed, scope, 0, at);
   const entry = sealed.entry, input = entry.input;
-  if (entry.prev !== null || input.type !== "genesis" || input.decision !== "applied" || input.inc !== entry.at.inc
-    || input.seed.kind !== entry.at.kind || scopeIdOf(input.seed) !== scope || seed && canonicalize(input.seed) !== canonicalize(seed)) return fail(`no matching applied genesis for ${scope}`);
-  return { at: { ...entry.at }, genesis: sealed.hash };
+  if (entry.prev !== null || input.type !== "genesis" || input.decision !== "applied"
+    || scopeIdOf(input.seed) !== scope || seed && canonicalize(input.seed) !== canonicalize(seed)) return fail(`no matching applied genesis for ${scope}`);
+  return { at: { scope, genesis: sealed.hash }, kind: input.seed.kind };
 }
 /** Seed.ordinal counts creations, not all sends. A child genesis's result
  * can occupy send.n=0 before its first create at n=1/ordinal=0. */
-function creationEdge(source: Sealed, child: Sealed, n: number): IndexScope {
+function creationEdge(source: Sealed, sourceAt: ScopeRef, child: Sealed, n: number): IndexScope {
   const sends = source.entry.sends;
   if (!sends.every((send, index) => send.n === index)) return fail("unordered actual creation sends");
-  const send = sends[n], input = child.entry.input;
+  const send = sends[n], input = child.entry.input, sourceFact = sealedFactRef(source.entry, source.hash, sourceAt);
   if (!send || !isSeed(send.to) || send.message.class !== "request" || send.message.type !== "create"
     || input.type !== "genesis" || input.message?.class !== "request" || input.message.type !== "create"
     || canonicalize(input.message) !== canonicalize(send.message) || input.n !== n
-    || canonicalize(input.source) !== canonicalize(factRefOf(source.entry))
-    || canonicalize(send.to.creator) !== canonicalize(source.entry.at)) return fail("child does not match its actual creation envelope");
+    || canonicalize(input.source) !== canonicalize(sourceFact)
+    || canonicalize(resolveGenesisSelf(send.to.creator, sourceFact)) !== canonicalize(sourceAt)) return fail("child does not match its actual creation envelope");
   const ordinal = sends.slice(0, n).filter(prior => prior.message.class === "request" && prior.message.type === "create").length;
   if (send.to.ordinal !== ordinal) return fail("creation seed ordinal is not its creation rank");
   return genesis(child, scopeIdOf(send.to), undefined, send.to);
@@ -63,7 +67,7 @@ function creationEdge(source: Sealed, child: Sealed, n: number): IndexScope {
 /** No mutation is requested. The authenticated deployment's recorded applied
  * contents are observed; this is not independent replay of native judgment. */
 export async function captureIndexManifest(service: string, root: ScopeRef, reads: IndexReads): Promise<IndexManifest> {
-  if (!isScopeRef(root) || root.kind !== "directory") return fail("configured Directory full reference required");
+  if (!isScopeRef(root)) return fail("configured Directory full reference required");
   const canonicalService = indexService(service);
   const readGenesis = async (scope: ScopeRef["scope"]) => {
     const got = await reads.entry(scope, 0);
@@ -72,16 +76,19 @@ export async function captureIndexManifest(service: string, root: ScopeRef, read
   };
   const first = await readGenesis(root.scope), rootRow = genesis(first, root.scope, root);
   const rootInput = first.entry.input;
-  if (rootInput.type !== "genesis" || rootInput.seed.creator?.kind !== "register") return fail("Directory does not name its Register creator");
+  if (rootRow.kind !== "directory") return fail("configured Directory full reference required");
+  if (rootInput.type !== "genesis" || !isScopeRef(rootInput.seed.creator)) return fail("Directory does not name its Register creator");
   const register = rootInput.seed.creator;
   const rows = new Map<string, IndexScope>([[root.scope, rootRow]]);
   const registerBirth = await readGenesis(register.scope);
-  rows.set(register.scope, genesis(registerBirth, register.scope, register));
+  const registerRow = genesis(registerBirth, register.scope, register);
+  if (registerRow.kind !== "register") return fail("Directory does not name its Register creator");
+  rows.set(register.scope, registerRow);
   if (!rootInput.source || canonicalize(rootInput.source.at) !== canonicalize(register) || rootInput.n === null) return fail("Directory lacks its exact Register creation fact");
   const made = await reads.entry(register.scope, rootInput.source.seq);
   if (!made.ok) return fail(`Register creation fact unavailable: ${made.reason}`);
   checked(made.value, register.scope, rootInput.source.seq, register);
-  if (made.value.hash !== rootInput.source.hash || canonicalize(creationEdge(made.value, first, rootInput.n)) !== canonicalize(rootRow)) return fail("Directory seed does not match its actual Register send");
+  if (made.value.hash !== rootInput.source.hash || canonicalize(creationEdge(made.value, register, first, rootInput.n)) !== canonicalize(rootRow)) return fail("Directory seed does not match its actual Register send");
   const seeds = new Map<string, Seed>([[root.scope, rootInput.seed]]);
   const births = new Map<string, Sealed>([[root.scope, first], [register.scope, registerBirth]]);
   // Register's other room creations are intentionally never traversed.
@@ -104,20 +111,20 @@ export async function captureIndexManifest(service: string, root: ScopeRef, read
       if (!page.ok) return fail(`${owner.at.scope}: ${page.reason}`);
       for (const raw of page.value) {
         const sealed = checked(raw, owner.at.scope, next, owner.at), entry = sealed.entry;
-        if (entry.prev !== previous || next === 0 && sealed.hash !== owner.genesis) return fail(`broken discovery chain for ${owner.at.scope}:${next}`);
+        if (entry.prev !== previous || next === 0 && sealed.hash !== owner.at.genesis) return fail(`broken discovery chain for ${owner.at.scope}:${next}`);
         previous = sealed.hash; next++;
         for (const send of entry.sends) {
           if (!isSeed(send.to)) continue;
           const seed = send.to;
-          if (canonicalize(seed.creator) !== canonicalize(owner.at)) return fail("creation seed names another creator");
+          if (canonicalize(resolveGenesisSelf(seed.creator, { at: owner.at, seq: entry.seq, hash: sealed.hash })) !== canonicalize(owner.at)) return fail("creation seed names another creator");
           const id = scopeIdOf(seed);
           if (rows.has(id)) {
             if (canonicalize(seeds.get(id) ?? null) !== canonicalize(seed)) return fail("conflicting repeated creation seed");
-            creationEdge(sealed, births.get(id)!, send.n);
+            creationEdge(sealed, owner.at, births.get(id)!, send.n);
             continue;
           }
           if (rows.size >= INDEX_INVENTORY_BOUNDS.scopes) return fail("4096-scope bound reached");
-          const birth = await readGenesis(id), row = creationEdge(sealed, birth, send.n);
+          const birth = await readGenesis(id), row = creationEdge(sealed, owner.at, birth, send.n);
           seeds.set(id, seed); births.set(id, birth); add(row);
         }
       }
@@ -148,9 +155,9 @@ export async function verifyIndexManifest(manifest: IndexManifest, reads: IndexR
       const got = await reads.entry(row.at.scope, 0);
       if (!got.ok) { unavailable++; rows.push({ at: row.at, result: "unavailable", reason: got.reason }); continue; }
       let actual: IndexScope;
-      try { actual = genesis(got.value, row.at.scope, row.at); }
+      try { actual = genesis(got.value, row.at.scope); }
       catch { mismatch++; rows.push({ at: row.at, result: "mismatch", reason: "genesis-identity" }); continue; }
-      if (actual.genesis !== row.genesis) { mismatch++; rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
+      if (actual.at.genesis !== row.at.genesis || actual.kind !== row.kind) { mismatch++; rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
       verified++; rows.push({ at: row.at, result: "verified" });
     } catch (error) {
       if (error instanceof Stop) throw error;
@@ -170,14 +177,14 @@ export async function indexManifestVersions(manifest: IndexManifest, reads: Inde
       const got = await reads.entry(row.at.scope, 0);
       if (!got.ok) { rows.push({ at: row.at, result: "unavailable", reason: got.reason }); continue; }
       let actual: IndexScope;
-      try { actual = genesis(got.value, row.at.scope, row.at); }
+      try { actual = genesis(got.value, row.at.scope); }
       catch { rows.push({ at: row.at, result: "mismatch", reason: "genesis-identity" }); continue; }
-      if (actual.genesis !== row.genesis) { rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
+      if (actual.at.genesis !== row.at.genesis || actual.kind !== row.kind) { rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
       const input = got.value.entry.input;
       if (input.type !== "genesis") throw Error("checked genesis required");
       const definition = input.seed.definition;
       if (isDigest(definition)) { rows.push({ at: row.at, result: "verified", definition }); continue; }
-      if (!platform(definition) || !definition.startsWith(`platform:${row.at.kind}@`)) {
+      if (!platform(definition) || !definition.startsWith(`platform:${row.kind}@`)) {
         rows.push({ at: row.at, result: "unsupported", definition, reason: "unknown-platform-pin" }); continue;
       }
       observed.add(definition);
