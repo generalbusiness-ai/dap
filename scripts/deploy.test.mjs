@@ -13,6 +13,7 @@ const sandboxSettings = () => ({ name: "dap-application-sandbox", main: "worker.
 
 async function fixture(t, names = ["grow"]) {
   const directory = await mkdtemp(join(tmpdir(), "artroom-deploy-test-")), root = join(directory, "checkout"), receipts = join(directory, "receipts");
+  await mkdir(root, { recursive: true });
   const git = args => execFileSync("git", args, { cwd: root, encoding: "utf8", env: { ...process.env,
     GIT_AUTHOR_NAME: "TEST", GIT_AUTHOR_EMAIL: "test@example.invalid", GIT_COMMITTER_NAME: "TEST", GIT_COMMITTER_EMAIL: "test@example.invalid" } });
   git(["init", "--quiet"]);
