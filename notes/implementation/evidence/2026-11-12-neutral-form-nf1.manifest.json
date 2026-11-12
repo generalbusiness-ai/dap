@@ -1,0 +1,157 @@
+{
+  "qualification": "Index of unchanged raw originals for NF-1. Each evidence directory carries its own SHA256SUMS over every file it holds and is read-only. The first gate at 77e534cc failed and stays failed; the fresh gate at 1fa60702 passed.",
+  "request": "6050f6ea4758cb38fd7c643c35a2d77c3233c7c3",
+  "promise": "90c57c859211cdd55a48d075b2a14eb02d05669f",
+  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "base": "28aa0446ab0f5cac2753fa802a186ecb7843daca",
+  "checkpointCommit": "1fa60702d89440b2e4e2359000b584e985b88b4b",
+  "checkpointTree": "afbcc1364ae67518832eba6ed3400dcb826f57e3",
+  "fileCount": 29,
+  "files": [
+    {
+      "path": "2026-11-12-nf1-working-6d12e6cf-00c2bf16/04-focused-and-generated-reference.stdout",
+      "bytes": 879,
+      "sha256": "97fcbce4fa38c848360433d71621c2a9995477f8ed7e8d040cbbb17f37cfb6ce"
+    },
+    {
+      "path": "2026-11-12-nf1-working-6d12e6cf-00c2bf16/focused.report.json",
+      "bytes": 17744,
+      "sha256": "9fe5fb6af3431fc88167e2a143d81e82773cc42628311853af241d946a313bb6"
+    },
+    {
+      "path": "2026-11-12-nf1-working-6d12e6cf-00c2bf16/working.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-nf1-working-6d12e6cf-00c2bf16/SHA256SUMS",
+      "bytes": 12148,
+      "sha256": "3895e014b968f695ead97db1535253dd000b14420cde9f769d450e57364f51ab"
+    },
+    {
+      "path": "2026-11-12-nf1-maintained-seals-6be5a3ad/actual.json",
+      "bytes": 4391,
+      "sha256": "d05ea1aa72d8fd8b1f154b25dad1e53441a9e1cf91d330532fca83a7541bf0c1"
+    },
+    {
+      "path": "2026-11-12-nf1-maintained-seals-6be5a3ad/security-source.stdout",
+      "bytes": 3124,
+      "sha256": "307de1d8ed6100b6adb9e65d8d6917dd1256f09a421c819125d815a94ce958fb"
+    },
+    {
+      "path": "2026-11-12-nf1-maintained-seals-6be5a3ad/security-source.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-nf1-maintained-seals-6be5a3ad/SHA256SUMS",
+      "bytes": 2103,
+      "sha256": "ca017c1ddf2fa09f03cc0f94431b798065a38db2248b50ae22f2b5ed6165e0b3"
+    },
+    {
+      "path": "2026-11-12-nf1-control-77e534cc-f0e1b3c9/control.stderr",
+      "bytes": 1961,
+      "sha256": "053f3e1cf67894f9ba4492311b4c1337bfa1e0666a46e7c255053c14cb77242b"
+    },
+    {
+      "path": "2026-11-12-nf1-control-77e534cc-f0e1b3c9/control.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-nf1-control-77e534cc-f0e1b3c9/SHA256SUMS",
+      "bytes": 491,
+      "sha256": "b3feb6629dcfbd955b3b40beb0d45aa7ef77d0489b989e2c39609b4163f76a9e"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-77e534cc/gate.stdout",
+      "bytes": 8644,
+      "sha256": "99f66f2816379f17a3b4495326cac6c705356969d2b2a7ab0efd375ce4ca3cd0"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-77e534cc/gate.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-77e534cc/internals-move.json",
+      "bytes": 201,
+      "sha256": "bfb077f6ef96a0fb8251e5e87bae55eda457258ea9e51055f47204a39000cab5"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-77e534cc/SHA256SUMS",
+      "bytes": 3357,
+      "sha256": "8d7007f7e846361d65d6cc12e4fff8c1a596cc5d85b35ab02c34214b0b9da64d"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-repair-77e534cc/page-build.stdout",
+      "bytes": 212,
+      "sha256": "ba88e2f4c6c5917e31c4489348d15d6dc1583e1e91b23061c58a217471e7fb34"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-repair-77e534cc/page-build.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-repair-77e534cc/owners.stdout",
+      "bytes": 260,
+      "sha256": "0cf1fc14b707b2267e6e43fcaecede6d2f6922bae9dce99b637418a714e406b9"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-repair-77e534cc/owners.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-repair-77e534cc/SHA256SUMS",
+      "bytes": 500,
+      "sha256": "7c2abc4216112d2ace2f84edd350eb6a6e125f5c5691f0f1fd089269638a8a87"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-1fa60702/gate.stdout",
+      "bytes": 7096,
+      "sha256": "618e54eeddeaa854258e124e511151475985979233b34adf6761f64478d07744"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-1fa60702/gate.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-1fa60702/gate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-1fa60702/internals-move.json",
+      "bytes": 201,
+      "sha256": "01e2774180f86c6fa53688c82a95d16dc14738952b8b5af884654caa4ffa19c4"
+    },
+    {
+      "path": "2026-11-12-nf1-gate-1fa60702/SHA256SUMS",
+      "bytes": 3462,
+      "sha256": "3436032443bebdace0ca3de0f9a36ef64be48fc3cef8be1889fbd9b5b61aa2f1"
+    },
+    {
+      "path": "2026-11-12-nf1-ci-1fa60702/run-43305737220.json",
+      "bytes": 322,
+      "sha256": "866c490cfcafe79a472daf75a7b6d14a26f8920be8dd92dee8603ed2a86f0bc7"
+    },
+    {
+      "path": "2026-11-12-nf1-ci-1fa60702/run-43305737073.json",
+      "bytes": 322,
+      "sha256": "82f78ef3f97d4f26e538e2532ebad39cfac6905167d96697d3e774ab20575cef"
+    },
+    {
+      "path": "2026-11-12-nf1-ci-1fa60702/run-43306679834.json",
+      "bytes": 322,
+      "sha256": "83379d890618b1113eedfdb1509514243108dd0f1554e6f506274ddf3e701880"
+    },
+    {
+      "path": "2026-11-12-nf1-ci-1fa60702/SHA256SUMS",
+      "bytes": 267,
+      "sha256": "ff29617d8d8dfd0dc07e626261137a701ff1265510cf5c2d62ab6aeee6d0d5fb"
+    }
+  ]
+}
