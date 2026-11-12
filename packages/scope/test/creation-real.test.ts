@@ -1,15 +1,16 @@
 import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, inject, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Entry, Intent, Observation, ObservationUse, OperationId, Read, ScopeRef, Seed, SignedReadName } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, factRefOf, hex, intentDigest, newIncarnation, platformName, scopeIdOf, seedDigest, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Answer, Entry, GenesisEntry, Intent, Observation, ObservationUse, OperationId, Read, ScopeRef, Seed, SequenceEntry, SignedReadName } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, entryHash, factRefOf, hex, intentDigest, newGenesisNonce, platformName, scopeIdOf, seedDigest, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { requestSession, secretSigner, sessionRequest, signedReader, type Fetch } from "@generalbusiness/dap-client";
-import { PROFILES, grantFrom, localRetainedPlan, outcomeValueDomains, ownersOf, ruleAt, useOf, validateDefinition, valueDigest, type Fetched, type Item, type OperationRules } from "@generalbusiness/dap-derive";
+import { PROFILES, grantFrom, localRetainedPlan, outcomeValueDomains, ownersOf, ruleAt, useOf, validateDefinition, valueDigest, type Item, type OperationRules } from "@generalbusiness/dap-derive";
 import { d, keys, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { CONFIGURATION_DOMAIN, DESTINATION, DESTINATION_CHANGED_SET, DIRECTORY, PUBLISHING_LANE_DIGESTS, REGISTER, destinationReceipt, firstExtents, initialCommitObjects, platform, repositoryName, revokedToken, RULES_EXTENTS_VALUE } from "@generalbusiness/dap-platform";
 import { TRUSTS, httpSource, verify, type HistorySource, type MemoryScope } from "@generalbusiness/dap-replay";
 import { targetOf } from "../../../packages/platform/src/destination.ts";
 import { SqliteStore, type Sealed, type Summary } from "../src/index.ts";
+import type { OriginRow } from "../src/ports.ts";
 import { soon } from "./net.ts";
 import { outsideOf } from "./outside.ts";
 import { Platform, rita, routed, sam } from "./repository.ts";
@@ -121,9 +122,9 @@ describe("a founding on real scopes under the deployed class (authority note, se
     ]);
 
     // Each scope that came to exist, with its kind, its scope ID, the definition that it pins, its status, and the membership
-    // reference that it records. The register records none. The directory holds it in `repository.membership`, with the incarnation
+    // reference that it records. The register records none. The directory holds it in `repository.membership`, with the genesis
     // that it confirmed. Membership is its own. The rules scope holds the scope ID alone, as the value `rules.membership`: no entry
-    // of it retains an observation yet, so it records no incarnation.
+    // of it retains an observation yet, so it records no genesis.
     const membership = await membershipScope!.at();
     const rules = await rulesScope!.at();
     const G = destination!;
@@ -178,7 +179,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
     expect(((await D.stub.outbox(reader)) as { value: readonly { acknowledged: unknown }[] }).value.every((outboxId) => outboxId.acknowledged !== null)).toBe(true);
     // STAND-IN: the destination's Git host. It answers with the exact ID that the package computes for the creation commit.
     const destinationHost = outsideOf(G.name);
-    const firstHead = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, factRefOf(r[1]!), { name, handle: "@rita", directory: D.name }).commit;
+    const firstHead = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, factRefOf(r[1]!, register), { name, handle: "@rita", directory: D.name }).commit;
     lifetime.active();
     destinationHost.answer("0:0" as OperationId, 1, { result: "confirmed", evidence: { basis: "own-answer", body: { send: "accepted", seen: firstHead } } });
     let driving = "mint";
@@ -220,7 +221,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
     const seat = await membershipScope!.did(rita, "seat", { expected: await membershipScope!.expected({ roster: 0 }) });
     await membershipScope!.did(rita, "first-key", { fields: { member: seat }, expected: await membershipScope!.expected({ roster: 0, member: seat }) });
     // A read session of rita's, issued by membership under a TEST SECRET that this test generates. A scope accepts a session only
-    // when it names the membership reference that the scope itself records, with its incarnation. So what a reader with it is
+    // when it names the membership reference that the scope itself records, with its genesis. So what a reader with it is
     // answered at the rules scope shows what that scope records, as its own store holds it.
     // Age every creation history past the 900-second signed bootstrap window.
     lifetime.advance(901_000);
@@ -245,8 +246,8 @@ describe("a founding on real scopes under the deployed class (authority note, se
       expect([report.result, why]).toEqual(["consistent", null]);
     }
     const publish = async (approvals: number) => rulesScope!.act(rita, "publish", { on: 0, expected: await rulesScope!.expected({ on: 0 }), fields: { approvals, ownerMayReview: false, checks: [], labels: [], extents: firstExtents({ approvals, checks: [] }) as never } });
-    // The rules scope's first act that needs a grant. It holds membership's scope ID and no incarnation, so its first read asks by the
-    // ID alone. The answer's `of` holds the incarnation of the scope that answered, guard 1 takes it, and the entry that retains
+    // The rules scope's first act that needs a grant. It holds membership's scope ID and no genesis, so its first read asks by the
+    // ID alone. The answer's `of` holds the genesis of the scope that answered, guard 1 takes it, and the entry that retains
     // the observation fixes it: the grant covers this scope by that reference.
     // Before any `publish` the rules scope answers an observation of the rules with the revision 0 and the values of the genesis
     // (authority note, revision 28, section 12.1.4; I3 deltas, entries EQ8 and FB10). It is what another scope's object is answered:
@@ -365,9 +366,9 @@ describe("a founding on real scopes under the deployed class (authority note, se
       for (let offset = 0, part = 0; offset < encoded.length; offset += 65536, part++) console.log(`PUBLIC-SDK-NATIVE-CAPTURE ${part} ${encoded.slice(offset, offset + 65536)}`);
       console.log("PUBLIC-SDK-NATIVE-CAPTURE end");
     }
-    // From then on the incarnation is a function of the folded state: the rules scope records the reference with it, and accepts the
+    // From then on the genesis is a function of the folded state: the rules scope records the reference with it, and accepts the
     // session. A later read states it: after a restart the object holds no observation in memory, records the same reference from
-    // its store, reads again, and is answered by the same incarnation.
+    // its store, reads again, and is answered by the same genesis.
     expect(await reads(rulesScope!)).toBe(200);
     await rulesScope!.restart();
     lifetime.advance(10_000);
@@ -376,13 +377,13 @@ describe("a founding on real scopes under the deployed class (authority note, se
     expect(await publish(3)).toMatchObject({ answer: "accepted" });
     expect([proof(await rulesScope!.last()).observation.of, proof(await rulesScope!.last()).use, (await rulesScope!.item(0)).values["approvals"]]).toEqual([membership, "fresh", 3]);
     // After each `publish` the revision of the answer is the position of that entry, also after the restart, and its head is the
-    // scope's head. A request that states another incarnation of the rules scope's name is answered by nobody.
+    // scope's head. A request that states another genesis for the rules scope's name is answered by nobody.
     const published = (await rulesScope!.summary()).at;
-    expect([await observes(rules, "rules"), (await rulesScope!.item(0)).refs["published"], await observes({ ...rules, inc: register.inc }, "rules")]).toEqual([
+    expect([await observes(rules, "rules"), (await rulesScope!.item(0)).refs["published"], await observes({ ...rules, genesis: register.genesis }, "rules")]).toEqual([
       { subject: "rules", of: rules, head: published, revision: published.seq, content: { ...initialRules, approvals: 3, extents: valueDigest(RULES_EXTENTS_VALUE.domain, firstExtents({ approvals: 3, checks: [] })) }, definition: "platform:rules@2" }, published.seq, null,
     ]);
-    // A request that states another incarnation of membership's name is answered by nobody, and one by the ID alone is answered.
-    const asked = { ...membership, inc: register.inc };
+    // A request that states another genesis for membership's name is answered by nobody, and one by the ID alone is answered.
+    const asked = { ...membership, genesis: register.genesis };
     expect([await membershipScope!.stub.observe({ of: asked, key: rita.key }), await membershipScope!.stub.observe({ of: { scope: membership.scope, kind: "membership" }, key: rita.key })]).toMatchObject([null, { of: membership, key: rita.key }]);
 
     // Revision 28, section 3.3, rows 8 to 10: the deployed authority reads the real rules scope and membership before the turn.
@@ -392,7 +393,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
   expect(await D.stub.submit(inactive, [], { values: [canonicalize(ticket)] })).toMatchObject({ answer: "refused", reason: "guard-failed", name: "not-activated" });
     // Membership answers the unknown worker as unknown. No task is opened and no task creation is dispatched.
     const beforeTask = (await D.summary()).at;
-    expect(await D.act(rita, "open-task", { expected: await D.expected({ repository: 0 }), fields: { worker: { membership, member: "@missing" }, controller: { membership, member: "@rita" }, lane: { ...directory, kind: "lane" } } })).toMatchObject({ answer: "refused", reason: "guard-failed", name: "worker-not-active" });
+    expect(await D.act(rita, "open-task", { expected: await D.expected({ repository: 0 }), fields: { worker: { membership, member: "@missing" }, controller: { membership, member: "@rita" }, lane: directory } })).toMatchObject({ answer: "refused", reason: "guard-failed", name: "worker-not-active" });
     expect((await D.summary()).at).toEqual(beforeTask);
     const configuration = { name: "unit", image: d("a"), environment: {}, steps: [["npm", "test"]], judged: { passed: { exit: 0, line: "ok" }, failed: { exit: 1, line: "not ok" } }, limits: { seconds: 600, bytes: 65536 } };
     const digest = valueDigest(CONFIGURATION_DOMAIN, configuration);
@@ -428,34 +429,39 @@ describe("a founding on real scopes under the deployed class (authority note, se
       fields: { definition: PUBLISHING_LANE_DIGESTS[0] }, idempotencyKey: "scripted-source-origin", notAfter: soon(60) };
     const laneSeed: Seed = { v: 1, kind: "lane", definition: PUBLISHING_LANE_DIGESTS[0], creator: directory,
       cause: intentDigest(factoryIntent), ordinal: 0 };
-    const otherLane: ScopeRef = { scope: scopeIdOf(laneSeed), inc: newIncarnation(new Uint8Array(16).fill(29)), kind: "lane" };
     const creationMessage = { class: "request", type: "create", body: { directory, membership, fields: {
       opener: by, title: "scripted source", draft: false, destination: branchScope, rules: await rulesScope!.at(),
     } } } as const;
-    const creator: Entry = { v: 1, at: directory, seq: 1000000, prev: d("0"), time: timeOf(lifetime.now()), clamped: false, epoch: 0,
+    const creator: SequenceEntry = { v: 1, genesis: directory.genesis, seq: 1000000, prev: d("0"), time: timeOf(lifetime.now()), clamped: false, epoch: 0,
       input: { type: "act", signed: signIntent(factoryIntent, rita.secret), authority: [], presented: {} },
       uses: [], prepared: [], effects: [], sends: [{ n: 0, to: laneSeed, message: creationMessage }] };
-    const genesis: Entry = { v: 1, at: otherLane, seq: 0, prev: null, time: timeOf(lifetime.now()), clamped: false, epoch: 0,
-      input: { type: "genesis", seed: laneSeed, inc: otherLane.inc, kind: "open", "founding": null,
-        source: factRefOf(creator), n: 0, message: creationMessage, decision: "applied" },
-      uses: [useOf(factRefOf(creator), creator)], prepared: [], effects: [], sends: [] };
-    const origin: readonly Fetched[] = [{ fact: factRefOf(genesis), entry: genesis, under: "change" },
-      { fact: factRefOf(creator), entry: creator, under: "platform:directory" }];
+    const genesis: GenesisEntry = { v: 1, seq: 0, prev: null, time: timeOf(lifetime.now()), clamped: false, epoch: 0,
+      input: { type: "genesis", seed: laneSeed, nonce: newGenesisNonce(new Uint8Array(16).fill(29)), kind: "open", "founding": null,
+        source: factRefOf(creator, directory), sourceKind: "directory", n: 0, message: creationMessage, decision: "applied" },
+      uses: [useOf(factRefOf(creator, directory), creator)], prepared: [], effects: [], sends: [] };
+    // The lane's address follows from its hand-made genesis: its seed's scope ID and its hash.
+    const otherLane: ScopeRef = { scope: scopeIdOf(laneSeed), genesis: entryHash(genesis) };
+    const addressOf = (entry: Entry): ScopeRef => entry === creator ? directory : otherLane;
+    const origin: readonly OriginRow[] = [{ fact: factRefOf(genesis, otherLane), entry: genesis, under: "change", bytes: canonicalize(genesis) },
+      { fact: factRefOf(creator, directory), entry: creator, under: "platform:directory", bytes: canonicalize(creator) }];
     const signed = (kind: string, fields: Intent["fields"]) => signIntent({ v: 1, to: otherLane, actor: rita.key, kind, on: null, expected: {}, fields, idempotencyKey: kind, notAfter: soon(60) }, rita.secret);
-    const manifest: Entry = { v: 1, at: otherLane, seq: 1, prev: entryHash(genesis), time: timeOf(lifetime.now()), clamped: false, epoch: 0, input: { type: "act", signed: signed("propose-manifest", { base: firstHead, integration, tree, complete: true, selected: [] }), authority: [], presented: {} }, uses: [], prepared: [], effects: [{ effect: "party", item: 1, slot: "integrator", member: by }], sends: [] };
+    const manifest: SequenceEntry = { v: 1, genesis: otherLane.genesis, seq: 1, prev: entryHash(genesis), time: timeOf(lifetime.now()), clamped: false, epoch: 0, input: { type: "act", signed: signed("propose-manifest", { base: firstHead, integration, tree, complete: true, selected: [] }), authority: [], presented: {} }, uses: [], prepared: [], effects: [{ effect: "party", item: 1, slot: "integrator", member: by }], sends: [] };
     const checkerAnswer = await membershipScope!.stub.observe({ of: membership, key: paul.key }) as Omit<Observation, "at">;
     expect(checkerAnswer).toMatchObject({ of: membership, head: (await membershipScope!.summary()).at, key: paul.key, keyState: "active", member: "@check", memberState: "active", role: "checker", actions: expect.arrayContaining(["change.check"]), within: { membership } });
     const checkGrant = grantFrom({ observation: { ...checkerAnswer, at: timeOf(lifetime.now()) }, read: { run: "scripted-source-check-read", n: 1 }, use: "fresh", prior: null });
-    const job: Entry = { v: 1, at: otherLane, seq: 2, prev: entryHash(manifest), time: timeOf(lifetime.now()), clamped: false, epoch: 0, input: { type: "act", signed: signed("request-check", { manifest: 1, name: "unit", configuration: digest }), authority: [], presented: {} }, uses: [], prepared: [], effects: [{ effect: "value", item: 2, slot: "tree", value: tree }], sends: [] };
-    const decision: Entry = { v: 1, at: otherLane, seq: 3, prev: entryHash(job), time: timeOf(lifetime.now()), clamped: false, epoch: 0, input: { type: "act", signed: signIntent({ v: 1, to: otherLane, actor: paul.key, kind: "check", on: null, expected: {}, fields: { job: 2, tree, configuration: digest, outcome: "passed" }, idempotencyKey: "scripted-check", notAfter: soon(60) }, paul.secret), authority: [checkGrant], presented: {} }, uses: [], prepared: [], effects: [{ effect: "state", item: 2, state: "passed" }], sends: [] };
-    const request = { class: "request", type: "tell", body: { message: "reserve", fields: { operation: { self: true }, manifest: factRefOf(manifest), verdicts: [], jobs: [{ job: factRefOf(job), name: "unit", state: "passed", decidedBy: factRefOf(decision) }], links: [], reports: [] } } } as const;
-    const merge: Entry = { v: 1, at: otherLane, seq: 4, prev: entryHash(decision), time: timeOf(lifetime.now()), clamped: false, epoch: 0, input: { type: "act", signed: signed("merge", { manifest: 1 }), authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [{ n: 0, to: branchScope, message: request }] };
+    const job: SequenceEntry = { v: 1, genesis: otherLane.genesis, seq: 2, prev: entryHash(manifest), time: timeOf(lifetime.now()), clamped: false, epoch: 0, input: { type: "act", signed: signed("request-check", { manifest: 1, name: "unit", configuration: digest }), authority: [], presented: {} }, uses: [], prepared: [], effects: [{ effect: "value", item: 2, slot: "tree", value: tree }], sends: [] };
+    const decision: SequenceEntry = { v: 1, genesis: otherLane.genesis, seq: 3, prev: entryHash(job), time: timeOf(lifetime.now()), clamped: false, epoch: 0, input: { type: "act", signed: signIntent({ v: 1, to: otherLane, actor: paul.key, kind: "check", on: null, expected: {}, fields: { job: 2, tree, configuration: digest, outcome: "passed" }, idempotencyKey: "scripted-check", notAfter: soon(60) }, paul.secret), authority: [checkGrant], presented: {} }, uses: [], prepared: [], effects: [{ effect: "state", item: 2, state: "passed" }], sends: [] };
+    const request = { class: "request", type: "tell", body: { message: "reserve", fields: { operation: { self: true }, manifest: factRefOf(manifest, otherLane), verdicts: [], jobs: [{ job: factRefOf(job, otherLane), name: "unit", state: "passed", decidedBy: factRefOf(decision, otherLane) }], links: [], reports: [] } } } as const;
+    const merge: SequenceEntry = { v: 1, genesis: otherLane.genesis, seq: 4, prev: entryHash(decision), time: timeOf(lifetime.now()), clamped: false, epoch: 0, input: { type: "act", signed: signed("merge", { manifest: 1 }), authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [{ n: 0, to: branchScope, message: request }] };
     const sourceFacts = [genesis, creator, manifest, job, decision, merge];
+    // The genesis bytes of each scripted entry's sequence: the actual Directory's and the hand-made lane's.
+    const directoryBirth = canonicalize((await D.entries())[0]!), laneBirth = canonicalize(genesis);
     for (const entry of sourceFacts) {
-      const peer = { entry, under: entry === creator ? "platform:directory" : "change", origin: entry === creator ? [] : origin };
+      const birth = entry === creator ? directoryBirth : laneBirth;
+      const peer = { entry, under: entry === creator ? "platform:directory" : "change", ...(entry.seq === 0 ? {} : { birth }), origin: entry === creator ? [] : origin };
       lifetime.peer(entryHash(entry), peer);
     }
-    expect(await G.stub.deliver({ to: branchScope, from: factRefOf(merge), n: 0, message: request })).toMatchObject({ answer: "recorded" });
+    expect(await G.stub.deliver({ to: branchScope, from: factRefOf(merge, otherLane), n: 0, message: request })).toMatchObject({ answer: "recorded" });
     lifetime.active();
     driving = "judge";
     const queued = await G.last();
@@ -465,7 +471,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
       return { item: store.item(publication), held: store.holder(publication), operations: store.operationsFor(publication), owedReceipts: store.page("receipt", ["owed"], null, 130).items };
     }));
-    expect(await G.item(publication)).toMatchObject({ state: "queued", refs: { operation: factRefOf(merge), manifest: factRefOf(manifest), lane: otherLane } });
+    expect(await G.item(publication)).toMatchObject({ state: "queued", refs: { operation: factRefOf(merge, otherLane), manifest: factRefOf(manifest, otherLane), lane: otherLane } });
     expect(queued.uses.map((use) => use.fact.hash).sort()).toEqual(sourceFacts.slice(2).map(entryHash).sort());
     for (const use of queued.uses) expect(await G.stub.retained(reader, "entry", use.content)).toMatchObject({ ok: true, value: { bytes: canonicalize(sourceFacts.find((entry) => entryHash(entry) === use.fact.hash)) } });
     expect((await storedPublication()).held?.decisions?.["withdraw"]).toBe(1);
@@ -514,8 +520,8 @@ describe("a founding on real scopes under the deployed class (authority note, se
       } };
       const projector = new ArchiveObserved(definition.definition, budget, PROPOSED_BOUNDS), valueProjector = new ArchiveOutcomeValues(projectionOwners, budget, PROPOSED_BOUNDS);
       const position = { seq: judged.seq, hash: row.hash, bytes: row.size, input: "outcome" as const };
-      const projected = projector.project(sql, judged.at, position), projectedValues = valueProjector.project(sql, judged.at, position), before = budget.admitted();
-      const repeated = projector.project(sql, judged.at, position), repeatedValues = valueProjector.project(sql, judged.at, position), after = budget.admitted();
+      const projected = projector.project(sql, branchScope, position), projectedValues = valueProjector.project(sql, branchScope, position), before = budget.admitted();
+      const repeated = projector.project(sql, branchScope, position), repeatedValues = valueProjector.project(sql, branchScope, position), after = budget.admitted();
       const beforeUnknown = budget.admitted();
       expect(() => new ArchiveOutcomeValues(unknownProjectionOwners, budget, PROPOSED_BOUNDS)).toThrow("unsupported-archive-cohort");
       expect(budget.admitted().calls).toBe(beforeUnknown.calls); // Unknown callbacks run no SQL or value selector.
@@ -524,7 +530,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
         owners: projectionOwners, records: new Map(), preparations: new Map() }, PROPOSED_BOUNDS, budget);
       // Read actual context/uses as scalar metadata from this exact row.
       // The owning pass's privacy/declaration admission remains separate.
-      const composed = references.read(sql, judged.at, position);
+      const composed = references.read(sql, branchScope, position);
       return { projected, projectedValues, expected, expectedValues, repeated, repeatedValues, before, after, cells: fieldCells, composed, all };
     });
     expect(projection.projected).toEqual(projection.expected);
@@ -541,7 +547,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
     expect(new Set(projection.cells.filter(cell => typeof cell === "string"))).toEqual(new Set(["array", "rules", "confirmed", extents, changed]));
     expect((await storedPublication()).item).toMatchObject({ state: "reserved", values: { integration, reservedAt: judged.seq } });
     expect(await G.item(0)).toMatchObject({ refs: { slot: publication, judging: null } });
-    expect(judged.sends[0]!.message).toMatchObject({ type: "relate", body: { name: "publication", state: "reserved", detail: { operation: factRefOf(merge), outcome: "committed", rules: checked.seq } } });
+    expect(judged.sends[0]!.message).toMatchObject({ type: "relate", body: { name: "publication", state: "reserved", detail: { operation: factRefOf(merge, otherLane), outcome: "committed", rules: checked.seq } } });
     expect((await storedPublication()).operations.filter((operation) => ["judge", "push", "mint"].includes(operation.kind)).every((operation) => operation.for === publication)).toBe(true);
 
     // The labelled Git host answers the reserved compare-and-swap, then the exact receipt write. The real rules publish, release
@@ -564,15 +570,15 @@ describe("a founding on real scopes under the deployed class (authority note, se
 
     // A verifier reads the five histories as bytes and derives every entry again, with the platform package's data and rules: the
     // register's outcome entry with its creation, the directory's genesis under the fourth cause, the clause of the result, and
-    // the grants of the rules scope from their observations, the first of which fixed the incarnation. No grant is taken as current.
+    // the grants of the rules scope from their observations, the first of which fixed the genesis. No grant is taken as current.
     // Only the six explicitly scripted source/origin facts are anchored (no
     // membership or rules facts). Actual creation and authority entries are
     // replayed; the scripted Directory creation anchor supplies no native
     // factory claim, and the separate native-origin witness owns that check.
-    const options = { mode: "replay", platform, grants: "proven", anchors: sourceFacts.map((entry) => ({ scope: entry.at.scope, seq: entry.seq, hash: entryHash(entry) })) } as const;
+    const options = { mode: "replay", platform, grants: "proven", anchors: sourceFacts.map((entry) => ({ scope: addressOf(entry).scope, seq: entry.seq, hash: entryHash(entry) })) } as const;
     for (const node of [R, D, membershipScope!, rulesScope!, G]) {
       const { report, why } = await lifetime.wait(async () => verify(httpSource(SERVICE, { fetch }), { ...options, scope: node.name, head: (await node.summary()).at }));
-      expect([(await node.at()).kind, report.result, why]).toEqual([(await node.at()).kind, "consistent", null]);
+      expect([node.name, report.result, why]).toEqual([node.name, "consistent", null]);
     }
     } finally { lifetime.release(); }
   });
