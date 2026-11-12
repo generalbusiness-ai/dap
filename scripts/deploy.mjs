@@ -6,7 +6,7 @@ import { lstat, readFile, writeFile, mkdir, mkdtemp, realpath, readdir, rename, 
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkout, configPath, readConfig, parseConfig, migrationTags, commitPattern, digestPattern, uuidPattern, WRANGLER } from "./deploy-config.mjs";
+import { checkout, configPath, hasMigrations, hostedNames, readConfig, parseConfig, migrationTags, commitPattern, digestPattern, uuidPattern, WRANGLER } from "./deploy-config.mjs";
 import { deploymentVersion } from "./deploy-check.mjs";
 
 const execute = promisify(execFile);
@@ -113,6 +113,10 @@ export async function bundleManifest(directory, main) {
 }
 
 export function checkMigrations(previous, current, name, accepted) {
+  if (!hasMigrations(name)) {
+    if ([previous, current].some(config => Object.hasOwn(config, "migrations") || Object.hasOwn(config, "durable_objects"))) throw new Error("A Worker without Durable Objects declares migrations.");
+    return [];
+  }
   const before = migrationTags(previous), after = migrationTags(current);
   if (before.length > after.length || before.some((tag, i) => tag !== after[i]
       || JSON.stringify(previous.migrations[i]) !== JSON.stringify(current.migrations[i]))) throw new Error("Historical migrations changed.");
@@ -163,7 +167,7 @@ async function recoverDeploymentOutput(path, pending) {
 
 export async function deployMain(argv, { root = checkout, run = runProcess, env = process.env, now = () => new Date(), write = line => process.stdout.write(line), persist = atomicRecord } = {}) {
   if (argv.length === 1 && argv[0] === "--help") {
-    write("Usage: node scripts/deploy.mjs <grow|lending|demo|artroom-scope>... --deployed <name=full-commit> | --previous-receipt <name=path> [--accept-migration <name=tag>] [--dry-run] --receipt-dir <external-directory>\n"); return 0;
+    write(`Usage: node scripts/deploy.mjs <${hostedNames.join("|")}>... --deployed <name=full-commit> | --previous-receipt <name=path> [--accept-migration <name=tag>] [--dry-run] --receipt-dir <external-directory>\n`); return 0;
   }
   let options, head, scratch, receiptDir, roots, pending = null;
   const emit = value => write(JSON.stringify(value) + "\n");
@@ -203,7 +207,8 @@ export async function deployMain(argv, { root = checkout, run = runProcess, env 
         receipt = JSON.parse((await boundedFile(path, 256 * 1024)).toString("utf8"));
         if (receipt.format !== "dap-deployment-receipt-1" || receipt.status !== "deployed" || receipt.config !== name
             || receipt.configPath !== input.path || receipt.worker !== input.config.name || !commitPattern.test(receipt.commit)
-            || !uuidPattern.test(receipt.version) || !digestPattern.test(receipt.configSha256)) throw new Error("Invalid previous deployment receipt.");
+            || !uuidPattern.test(receipt.version) || !digestPattern.test(receipt.configSha256)
+            || !digestPattern.test(receipt.bundle?.sha256)) throw new Error("Invalid previous deployment receipt.");
         prior = receipt.commit;
       }
       if (await git(["rev-parse", "--verify", prior + "^{commit}"]) !== prior) throw new Error("Unknown deployed commit.");
@@ -213,7 +218,7 @@ export async function deployMain(argv, { root = checkout, run = runProcess, env 
       if (priorConfig.name !== input.config.name) throw new Error("Deployed baseline names another Worker.");
       const added = checkMigrations(priorConfig, input.config, name, options.accepted);
       for (const tag of added) used.add(`${name}=${tag}`);
-      plans.push({ name, ...input, prior, added });
+      plans.push({ name, ...input, prior, added, receipt });
     }
     if ([...options.accepted].some(tag => !used.has(tag))) throw new Error("Unused migration acceptance.");
     scratch = await mkdtemp(join(tmpdir(), "artroom-deploy-"));
@@ -230,6 +235,11 @@ export async function deployMain(argv, { root = checkout, run = runProcess, env 
     }
     if (options.dryRun) return 0;
     for (const plan of plans) {
+      // A previous receipt with the same bundle and configuration bytes leaves
+      // nothing to deploy: send nothing and write no receipt for this name.
+      if (plan.receipt && plan.receipt.bundle.sha256 === plan.bundle.sha256 && plan.receipt.configSha256 === sha256(plan.bytes)) {
+        emit({ config: plan.name, unchanged: true, receipt: resolve(options.previous.get(plan.name)) }); continue;
+      }
       await unchanged();
       const live = await readConfig(root, plan.name);
       if (!live.bytes.equals(plan.bytes)) throw new Error("Configuration changed after dry run.");

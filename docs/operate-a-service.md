@@ -130,6 +130,13 @@ the file holds and settings that `--keep-vars` keeps.
 
 ## Deploy the hosted Workers
 
+One command deploys five hosted Workers by name: `grow`, `lending`,
+`demo`, `artroom-scope` and `sandbox`. The first four are room Workers
+with configurations in `apps/room/wrangler.<name>.jsonc`. `sandbox` is the
+application sandbox `dap-application-sandbox`, with its configuration in
+`apps/sandbox/wrangler.rollout.jsonc`. It serves the screen hosts under
+`inguz.space` and calls the room Workers through service bindings.
+
 1. Check out the reviewed commit and confirm that the checkout is clean.
 
    ```sh
@@ -162,6 +169,9 @@ the file holds and settings that `--keep-vars` keeps.
      `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN` and
      `GITHUB_READ_TOKEN`. Keep `GITHUB_CLEANUP_TOKENS` if that host uses
      cleanup tokens. An Artifacts host needs none of these GitHub secrets.
+   - `sandbox` needs no secret. Its file sets `SCREEN_HOSTS`, the mapped
+     screen hosts, and binds the `ROOM`, `GROW` and `LENDING` services. It
+     has no Durable Objects and declares no migrations.
 
    The command changes no secret. Send a missing or replacement secret
    through standard input, as [Rotate secrets](#rotate-secrets) describes.
@@ -169,17 +179,19 @@ the file holds and settings that `--keep-vars` keeps.
    command sets. `--keep-vars` preserves only variables that the file omits.
    The command accepts no variable override.
 
-4. Set `GROW_DEPLOYED`, `LENDING_DEPLOYED`, `DEMO_DEPLOYED` and
-   `LEGACY_DEPLOYED` to their known full source commits. Choose an absolute
-   receipt directory outside every checkout. Build the dry-run bundles.
+4. Set `GROW_DEPLOYED`, `LENDING_DEPLOYED`, `DEMO_DEPLOYED`,
+   `LEGACY_DEPLOYED` and `SANDBOX_DEPLOYED` to their known full source
+   commits. Choose an absolute receipt directory outside every checkout.
+   Build the dry-run bundles.
 
    ```sh
    RECEIPTS=/absolute/operator/deploy-receipts
-   node scripts/deploy.mjs grow lending demo artroom-scope \
+   node scripts/deploy.mjs grow lending demo artroom-scope sandbox \
      --deployed "grow=$GROW_DEPLOYED" \
      --deployed "lending=$LENDING_DEPLOYED" \
      --deployed "demo=$DEMO_DEPLOYED" \
      --deployed "artroom-scope=$LEGACY_DEPLOYED" \
+     --deployed "sandbox=$SANDBOX_DEPLOYED" \
      --receipt-dir "$RECEIPTS" --dry-run
    ```
 
@@ -195,14 +207,16 @@ the file holds and settings that `--keep-vars` keeps.
    The command refuses a changed historical migration or an unused
    acceptance. [Roll back](#roll-back) gives the migration limit.
 
-5. Deploy in order: Grow, Lending, demo, then the legacy Worker.
+5. Deploy in order: Grow, Lending, demo, the legacy Worker, then the
+   sandbox. The sandbox goes last because it calls the room Workers.
 
    ```sh
-   node scripts/deploy.mjs grow lending demo artroom-scope \
+   node scripts/deploy.mjs grow lending demo artroom-scope sandbox \
      --deployed "grow=$GROW_DEPLOYED" \
      --deployed "lending=$LENDING_DEPLOYED" \
      --deployed "demo=$DEMO_DEPLOYED" \
      --deployed "artroom-scope=$LEGACY_DEPLOYED" \
+     --deployed "sandbox=$SANDBOX_DEPLOYED" \
      --receipt-dir "$RECEIPTS"
    ```
 
@@ -213,6 +227,12 @@ the file holds and settings that `--keep-vars` keeps.
    dry-run bundle hash, Worker version ID and time. Keep those receipts.
    On the next run, `--previous-receipt "grow=/absolute/receipt.json"`
    replaces `--deployed "grow=$GROW_DEPLOYED"`, and likewise for each name.
+   If a previous receipt has the same dry-run bundle hash and the same
+   configuration bytes as the current build, the command prints that name
+   as `unchanged`. It sends nothing and writes no receipt for that name,
+   deploys the other names and exits 0. Keep the previous receipt for that
+   name. A changed `SCREEN_HOSTS` changes the configuration bytes, so the
+   sandbox still deploys.
 
    Exit 3 means a partial result. Read its external partial record and
    reconcile the reported Worker version before another run. A failed
@@ -231,6 +251,7 @@ the file holds and settings that `--keep-vars` keeps.
    node scripts/deploy-smoke.mjs lending --url https://dap-lending.inguz.workers.dev
    node scripts/deploy-smoke.mjs demo --url https://dap-demo.inguz.workers.dev
    node scripts/deploy-smoke.mjs artroom-scope --url https://artroom-scope.inguz.workers.dev
+   node scripts/deploy-smoke.mjs sandbox --host https://grow.inguz.space --room "$GROW_ROOM"
    ```
 
    Each command uses a browser User-Agent. Health must answer 200 three
@@ -238,6 +259,18 @@ the file holds and settings that `--keep-vars` keeps.
    and closed MCP must answer 404. A declared creation offer must answer 200
    and name the exact configured register. An omitted offer must answer 404.
    A kept live offer that the tracked file omits fails this check.
+
+   The sandbox has no health route. `--host` must be a screen host that
+   `SCREEN_HOSTS` maps in the tracked file, and `--room` names an existing
+   room scope behind that host. The sandbox smoke checks five reads:
+
+   - `GET /`, `GET /site/x` and `GET /applications/x` on the mapped host
+     answer 404.
+   - `GET /v1/scopes/<room>` on the mapped host answers 403 with the body
+     `{"ok":false,"reason":"forbidden"}`. This read passes through the
+     sandbox to the bound room Worker, so it shows that the mapping and the
+     service binding work.
+   - `GET /` on `unmapped-smoke` under the same parent domain answers 404.
 
    A smoke failure leaves every deployment receipt intact and exits 1.
    Investigate before another deployment. The optional analytics check in
