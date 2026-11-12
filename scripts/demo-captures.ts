@@ -300,7 +300,8 @@ async function claimWitness(chromium: Chromium, executablePath: string, sitting:
     await name.fill("Field notebook");
     await tab.keyboard.press("Escape");
     await dialog.waitFor({ state: "hidden" });
-    if (!await opener.evaluate((element) => document.activeElement === element)) throw new Error("Escape did not return focus to the opener.");
+    // One page read: the room's own redraw can replace the opener between resolving a locator and reading its focus.
+    if (!await tab.evaluate(() => { const active = document.activeElement; return active?.tagName === "BUTTON" && active.textContent === "Create room" && !active.closest("dialog") && active.getClientRects().length > 0; })) throw new Error("Escape did not return focus to the opener.");
     await opener.click();
     if (await name.inputValue() !== "Field notebook") throw new Error("Escape discarded the local name draft.");
     const dialogCheck = await tab.evaluate(() => {
