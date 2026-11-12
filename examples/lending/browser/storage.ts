@@ -9,7 +9,7 @@ import { browserPrivateSlots } from "@generalbusiness/dap-client";
 import type { CustodyLock, Kept, KeptStore, LendingIdentity } from "./custody.ts";
 import type { DeviceKey, JoinStore, KeptJoin, Seat } from "./join.ts";
 
-const DATABASE = "dap-lending-private-1", STORE = "slots", LOCK = "dap-lending-custody";
+const DATABASE = "dap-lending-private-2", STORE = "slots", LOCK = "dap-lending-custody";
 /** What this browser remembers of its place in a room. `identity` is set once the lending scope is found. */
 export interface Remembered { v: 1; device: DeviceKey; seat?: Seat; identity?: LendingIdentity }
 

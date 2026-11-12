@@ -32,7 +32,7 @@ function privateDatabase(): Promise<IDBDatabase> {
   if(database)return database;
   const opening = new Promise<IDBDatabase>((resolve, reject) => {
     if (!globalThis.indexedDB) { reject(new Error("Private browser custody is unavailable.")); return; }
-    const request = indexedDB.open("artroom-counting-private-1", 2);
+    const request = indexedDB.open("artroom-counting-private-2", 2);
     let blocked = false;
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains("pending")) request.result.createObjectStore("pending");

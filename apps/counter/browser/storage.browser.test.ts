@@ -18,7 +18,7 @@ const seed=new Uint8Array(32).fill(41);
 const binding={origin:location.origin,deployment:"TEST durable Forget",scope,membership,member:{membership,member:"@ada"},publicKey:keyIdOfSecret(seed),definition:COUNTING_COMMITMENTS_DEFINITION,cohort:{directory:"platform:directory@6",membership:"platform:membership@5",rules:"platform:rules@3",destination:"platform:destination@2"}};
 async function rejected(work:()=>Promise<unknown>){try{await work();return false;}catch{return true;}}
 async function raw<T>(mode:IDBTransactionMode,work:(devices:IDBObjectStore,pending:IDBObjectStore,done:(value:T)=>void)=>void):Promise<T>{
-  const db=await new Promise<IDBDatabase>((resolve,reject)=>{const request=indexedDB.open("artroom-counting-private-1",2);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(Error("TEST database unavailable"));});
+  const db=await new Promise<IDBDatabase>((resolve,reject)=>{const request=indexedDB.open("artroom-counting-private-2",2);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(Error("TEST database unavailable"));});
   try{return await new Promise<T>((resolve,reject)=>{const tx=db.transaction(["devices","pending"],mode);let result:T;tx.oncomplete=()=>resolve(result!);tx.onabort=tx.onerror=()=>reject(Error("TEST transaction failed"));work(tx.objectStore("devices"),tx.objectStore("pending"),value=>{result=value;});});}finally{db.close();}
 }
 export const durableForgetWitness={
