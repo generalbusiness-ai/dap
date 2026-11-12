@@ -1939,6 +1939,24 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
       expect(answer.bearerExpires, `${fence}: only terminal issuance starts the lifetime`).toBe(fence === "complete" ? committedExpiry : timeOf(room.now() + BEARER_LIFETIME));
       if (fence === "complete") expect([answer.bearer, answer.bearerShown], "the committed plaintext was lost, never replayed").toEqual([undefined, true]);
       else expect(answer.bearer).toMatch(new RegExp(`^${reserved}\\.`));
+      if (fence === "complete") {
+        // The successful resume completed the Registry row before this retained-receipt request.
+        const object = () => env.AGENTS.get(env.AGENTS.idFromString(reserved!));
+        const missing = keyIdOfSecret(new Uint8Array(32).fill(251));
+        expect(missing).not.toBe(answer.key);
+        try {
+          await runInDurableObject(object(), (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET key = ? WHERE id = 1`, missing); });
+          const unknownReceiptKey = await room.wait(async () => {
+            const response = await post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body);
+            return { status: response.status, body: await response.json() };
+          });
+          expect(unknownReceiptKey.status, "a completed creation receipt refuses an enrolled Agent whose exact Native key is missing").toBe(403);
+          expect(unknownReceiptKey.body).toEqual({ error: "unauthorized", rule: "controller-role" });
+          expect((await agentStub(reserved!).durableFacts()).bearer, "the refused receipt does not mint or remove the committed bearer").toBe(true);
+        } finally {
+          await runInDurableObject(object(), (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET key = ? WHERE id = 1`, answer.key); });
+        }
+      }
       const again = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
       expect(await again.json(), `${fence}: only the stable receipt replays`).toEqual(shownReceipt(answer));
       // One key, one enrol entry signed by it: the envelope kept before the reset is the one admitted, never a second one.
