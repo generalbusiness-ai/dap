@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b9c892594f3e4527d02a733991e89e5b627273fa","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/join.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bdff5b9c6e610e51f1cb150ec265e50298b9c218","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-11-person-invitation-parity.md."}
