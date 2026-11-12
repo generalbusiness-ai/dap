@@ -73,7 +73,7 @@ export function applicationAnnouncement(state: StateView, own: Own, operation: s
   const job = announcedItem(state, own, operation);
   if (!job || !isScopeRef(job.refs["rules"]) || typeof job.values["installJob"] !== "number" || !["definition", "release", "semantic", "presentation"].every(key => isDigest(job.values[key]))) return null;
   const scope = job.refs["scope"];
-  if (job.state === "created" && (!isScopeRef(scope) || scope.kind !== "lane")) return null;
+  if (job.state === "created" && !isScopeRef(scope)) return null;
   return { job: job.values["installJob"], definition: job.values["definition"]!, release: job.values["release"]!, semantic: job.values["semantic"]!, presentation: job.values["presentation"]!, result: job.state,
     ...(job.state === "created" ? { scope: scope as unknown as FieldValue } : {}) };
 }

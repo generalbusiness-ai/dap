@@ -50,7 +50,7 @@ export const commonsDirectoryData: PlatformData = { ...unpublishedDirectory,
 export const commonsDirectoryRules: Rules = { ...unpublishedDirectoryRules,
   "has-commons": { place: "guard", refusals: ["commons-missing"], run: given => {
     const commons = given.resolved.subjects.get("also.repository")?.refs["commons"];
-    return given.resolved.fields["needsCommons"] === false || isScopeRef(commons) && commons.kind === "commons"
+    return given.resolved.fields["needsCommons"] === false || isScopeRef(commons)
       ? { holds: true } : { holds: false, name: "commons-missing" };
   } },
   "create-commons": { place: "send", run: given => {

@@ -233,7 +233,7 @@ export const applicationInstallRules: Rules = {
     const job = given.resolved.subjects.get("also.installation"), fields = given.resolved.fields;
     const matches = job?.state === "pending" && job.values["phase"] === "creation" && ["definition", "release", "semantic", "presentation"].every(key => fields[key] === job.values[key]);
     const created = fields["result"] === "created", scope = fields["scope"];
-    return matches && (created ? isScopeRef(scope) && scope.kind === "lane" : scope === undefined) ? { holds: true } : { holds: false, name: "invalid-application-result" };
+    return matches && (created ? isScopeRef(scope) : scope === undefined) ? { holds: true } : { holds: false, name: "invalid-application-result" };
   } },
   "application-keep-creation": { place: "effect", most: 2, run: given => {
     const job = given.resolved.subjects.get("also.installation")!;
