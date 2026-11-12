@@ -179,4 +179,74 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   expect(missingReads).toBe(2);
   expect(Reflect.apply(missing.reuseSelectedAt, undefined, [1, { status: "missing-use" }])).toEqual({ status: "invalid-use" });
   expect(missingReads).toBe(2);
+
+  // Each phase reads its actual origin, then explicitly re-owns held rows.
+  let phaseOriginReads = 0;
+  const phaseRows: Digest[] = [];
+  const phaseOwn: RetainedOwn = Object.assign((seq: number) => { phaseOriginReads++; return local.own(seq); }, {
+    sequence: () => local.own.sequence(),
+    retainedRow: (content: Digest) => { phaseRows.push(content); return rows.find(row => row.digest === content) ?? null; },
+  });
+  const firstPhase = readRetainedUses(phaseOwn, duplicateOrigin.seq);
+  if (firstPhase.status !== "ready") return expect.fail("the first phase must read the actual origin");
+  const phaseLater = firstPhase.read(0);
+  if (phaseLater.status !== "ready") return expect.fail("the first phase must read the actual later row");
+  const secondPhase = readRetainedUses(phaseOwn, duplicateOrigin.seq);
+  if (secondPhase.status !== "ready") return expect.fail("the second phase must read its actual origin again");
+  expect(phaseOriginReads).toBe(2); expect(phaseRows).toEqual([laterUse.content]);
+  expect(secondPhase.project([phaseLater.value], [])).toEqual({ status: "invalid-use" });
+  expect(secondPhase.reuseSelectedAt(1, phaseLater.value)).toEqual({ status: "invalid-use" });
+  const reownedLater = secondPhase.reuseHeldAt(1, phaseLater.value);
+  if (reownedLater.status !== "ready") return expect.fail("the same full origin and duplicate index must permit explicit handoff");
+  expect(reownedLater.value).not.toBe(phaseLater.value);
+  expect(reownedLater.value.use).not.toBe(phaseLater.value.use);
+  expect(reownedLater.value.mode).toBe("retained-later");
+  expect(reownedLater.value.use.useIndex).toBe(1);
+  expect(reownedLater.value.use.origin).toEqual(phaseLater.value.use.origin);
+  expect(reownedLater.value.use.originalBytes).toBe(laterBytes);
+  expect(reownedLater.value.use.entry).toBe(phaseLater.value.use.entry);
+  expect(reownedLater.value.use.producer).toBe(phaseLater.value.use.producer);
+  expect(reownedLater.value.use.producer).toEqual({ name: "original:test", provenance: "unhashed-retained-row" });
+  const bodyOnlyHandoff = secondPhase.project([reownedLater.value], []);
+  if (bodyOnlyHandoff.status !== "ready") return expect.fail("the handed-off later body must project without inventing birth evidence");
+  expect(bodyOnlyHandoff.values.map(value => value.mode)).toEqual(["local-retained-use"]);
+  expect(inspectClassifiedRetainedUse(bodyOnlyHandoff.values[0])).toMatchObject({ mode: "local-retained-use" });
+  expect(firstPhase.project([reownedLater.value], [])).toEqual({ status: "invalid-use" });
+  expect(secondPhase.reuseSelectedAt(0, reownedLater.value).status).toBe("ready");
+  expect(phaseOriginReads).toBe(2); expect(phaseRows).toEqual([laterUse.content]);
+
+  const phaseBirth = firstPhase.read(2);
+  if (phaseBirth.status !== "ready" || phaseBirth.value.mode !== "retained-birth") return expect.fail("the first phase must admit the actual birth row");
+  const reownedBirth = secondPhase.reuseHeldAt(3, phaseBirth.value);
+  if (reownedBirth.status !== "ready" || reownedBirth.value.mode !== "retained-birth") return expect.fail("birth handoff must retain the genuine association");
+  expect(reownedBirth.value.use.useIndex).toBe(3);
+  expect(reownedBirth.value.sequence).toBe(phaseBirth.value.sequence);
+  expect(reownedBirth.value.use.originalBytes).toBe(birthBytes);
+  expect(reownedBirth.value.use.producer).toBe(phaseBirth.value.use.producer);
+  expect(isEntryOf(reownedBirth.value.use.entry, birthUse.fact, reownedBirth.value.sequence)).toBe(true);
+  const handoffProjection = secondPhase.project([reownedLater.value, reownedBirth.value], []);
+  if (handoffProjection.status !== "ready") return expect.fail("the actual handed-off birth must associate the later body");
+  expect(handoffProjection.values.map(value => value.mode)).toEqual(["genuine", "genuine"]);
+  expect(handoffProjection.values.map(value => value.use.useIndex)).toEqual([1, 3]);
+  expect(phaseOriginReads).toBe(2); expect(phaseRows).toEqual([laterUse.content, birthUse.content]);
+
+  // Equal foreign bytes cannot transfer a row to a different real local origin.
+  expect(otherSelection.uses[0]!.fact).toEqual(phaseLater.value.use.fact);
+  expect(otherSelection.uses[0]!.content).toBe(phaseLater.value.use.content);
+  expect(otherSelection.reuseHeldAt(0, phaseLater.value)).toEqual({ status: "invalid-use" });
+  expect(secondPhase.reuseHeldAt(0, heldLater.value)).toEqual({ status: "invalid-use" });
+  expect(secondPhase.reuseHeldAt(2, phaseLater.value)).toEqual({ status: "invalid-use" });
+  expect(secondPhase.reuseHeldAt(1, phaseBirth.value)).toEqual({ status: "invalid-use" });
+  for (const index of [-1, 4, 0.5, NaN, Infinity]) {
+    expect(secondPhase.reuseHeldAt(index, phaseLater.value)).toEqual({ status: "invalid-index" });
+  }
+  for (const held of [phaseLater.value, phaseBirth.value]) {
+    for (const forged of [{ ...held }, Object.create(Object.getPrototypeOf(held)), Object.create(held), new Proxy(held, {}),
+      { mode: held.mode, use: held.use }, bodyOnlyHandoff.values[0], inspectClassifiedRetainedUse(bodyOnlyHandoff.values[0]),
+      { status: "missing-use" }, null, undefined]) {
+      expect(Reflect.apply(secondPhase.reuseHeldAt, undefined, [held.use.useIndex, forged])).toEqual({ status: "invalid-use" });
+    }
+    expect(() => Reflect.construct(held.constructor, [Symbol("wrong-token"), {}, held.use, sequence])).toThrow(TypeError);
+  }
+  expect(phaseOriginReads).toBe(2); expect(phaseRows).toEqual([laterUse.content, birthUse.content]);
 });
