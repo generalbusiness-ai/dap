@@ -1,0 +1,45 @@
+{
+  "label": "Curated provenance, not raw output",
+  "status": "EXACT_TWO_DOCS_ADOPTED_NO_NEW_RUN",
+  "head": "ab4367f9a8ce575f3b15f5dd4cb238309ad8edf8",
+  "tree": "1c6b1532ed3dc93160e2b19a313c381d9834c231",
+  "parent": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+  "runtimeHead": "acf797a70b254f4373465b3fb07476f80d943172",
+  "runtimeTree": "223e2c0b6e9bb2419acb0a8b1b5207e3a9dde8b7",
+  "actualCommitExit": 0,
+  "adoptionCommandOuterExit": 1,
+  "postCommitMetadataAssertionCorrection": "The commit succeeded, then the first postcommit metadata check wrongly required the runtime and final whole path sets to match. The canonical manifest is a new documentation path since runtime acf. This read-only follow-up excludes the exact two documented paths before comparing path sets, blobs and modes. No source repair or repeated commit occurred.",
+  "author": "builder <feb90d36627c7f44@actor.gitseq.invalid>",
+  "committer": "builder <feb90d36627c7f44@actor.gitseq.invalid>",
+  "owned": [
+    {
+      "path": "notes/implementation/2026-11-11-serving-windows-s1.md",
+      "sha256": "c2e95170228c0ea5d0a19a870331bb2abdee660e0e29063f1482eb4c4bb736d7",
+      "bytes": 20482,
+      "gitMode": "100644"
+    },
+    {
+      "path": "notes/implementation/evidence/2026-11-12-serving-windows-s1.manifest.json",
+      "sha256": "814d901685b2f40610e6406f1d0134cce39098eaa81c1e177a05b254c09416e4",
+      "bytes": 39800,
+      "gitMode": "100644"
+    }
+  ],
+  "runtimeToFinalDocChanges": [
+    "M\tnotes/implementation/2026-11-11-serving-windows-s1.md",
+    "A\tnotes/implementation/evidence/2026-11-12-serving-windows-s1.manifest.json"
+  ],
+  "nonownedEntriesExactAcrossRuntimeBfcAndFinal": 4670,
+  "trackedEntries": {
+    "runtime": 4671,
+    "bfc": 4672,
+    "final": 4672
+  },
+  "clean": true,
+  "sourceReadySha256": "f938ed0c9f16eb0de8e3fda77284632566a1a283bb22a984df5793cc3a7e7e5f",
+  "independentPeerSha256": "924933726baa33709a4be932ddfacfa081954ee48d1c923c02955432507f35cb",
+  "ciHead": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+  "ruling": "b5283835846713777cd40b7ad5b9863dff16115d",
+  "newGateControlOrCIRuns": 0,
+  "rawCopyFreezeSeal": false
+}
