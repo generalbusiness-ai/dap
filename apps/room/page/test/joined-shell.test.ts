@@ -69,7 +69,7 @@ test("joined room/account clicks disclose identity without leaving the room, and
   }));
   vi.stubGlobal("document", { title: "", activeElement: null, getElementById: () => root, createElement: (tag: string) => new Element(tag), createElementNS: (_ns: string, tag: string) => new Element(tag) });
   vi.stubGlobal("location", location);
-  vi.stubGlobal("localStorage", { getItem: (key: string) => key === "artroom-page" ? saved : null, setItem });
+  vi.stubGlobal("localStorage", { getItem: (key: string) => key === "artroom-page:v2" ? saved : null, setItem });
   let redraw!: () => void;
   vi.stubGlobal("window", { addEventListener: (_name: string, handler: () => void) => { redraw = handler; } });
   let main!: typeof import("../src/main.ts");

@@ -49,7 +49,7 @@ function publicOf(row: KeptStart, storage: ClaimStorage): StartStatus {
   } finally { secret?.fill(0); }
 }
 const custody = custodyKind<KeptStart, StartStatus>({
-  kind: "start", prefix: "artroom-page-start", most: 4096, sameOrigin: true,
+  kind: "start", prefix: "artroom-page-start:v2", most: 4096, sameOrigin: true,
   unavailable, bindingOf: row => row.origin, decode, publicOf
 });
 const { read, write: save, current, originOf, keyOf } = custody;
@@ -68,7 +68,7 @@ export async function migrateOriginalStart(origin: string, storage: ClaimStorage
   originOf(origin);
   const locks = (globalThis as { navigator?: { locks?: import("./claim.ts").ClaimLocks } }).navigator?.locks;
   if (!locks) throw unavailable();
-  await locks.request(`artroom-page-start:${origin}`, async () => {
+  await locks.request(`artroom-page-start:v2:${origin}`, async () => {
     const row = read(origin, storage); if (!row) return;
     const saved = await migrateStart(row, storage, { mode: "check", keys });
     const signer = await keys.load(publicOf(saved, storage).key);
@@ -80,7 +80,7 @@ export async function startRoom(origin: string, storage: ClaimStorage, options: 
   const browser = globalThis as { navigator?: { locks?: import("./claim.ts").ClaimLocks } };
   const locks = options.locks ?? browser.navigator?.locks;
   if (!locks) throw new Error("Private Start locking is unavailable. This step sent nothing. A saved Start stays kept, and an earlier send of it can have gone. A new creation can make a second room.");
-  return locks.request(`artroom-page-start:${origin}`, async () => {
+  return locks.request(`artroom-page-start:v2:${origin}`, async () => {
     current(options);
     let row = read(origin, storage);
     const keys = options.keys ?? pageKeyStore();

@@ -57,7 +57,7 @@ function locked<T>(origin: string, options: JoinOptions, work: () => Promise<T>)
     request<T>(name: string, work: () => Promise<T>): Promise<T>;
   } } }).navigator?.locks;
   if (!locks) throw new Error("Private enrollment locking is unavailable. This step sent nothing. A saved enrollment stays kept, and an earlier send of it can have gone. Do not use the invitation again.");
-  return locks.request(`artroom-page-enrollment:${origin}`, work);
+  return locks.request(`artroom-page-enrollment:v2:${origin}`, work);
 }
 function publicOf(row: RecordJoin): OriginalJoin {
   const seed = row.secret === undefined ? null : unb64url(row.secret)!;
@@ -65,7 +65,7 @@ function publicOf(row: RecordJoin): OriginalJoin {
   finally { seed?.fill(0); }
 }
 const custody = custodyKind<RecordJoin, OriginalJoin>({
-  kind: "join", prefix: "artroom-page-enrollment", most: MOST, sameOrigin: true,
+  kind: "join", prefix: "artroom-page-enrollment:v2", most: MOST, sameOrigin: true,
   unavailable: error, bindingOf: row => row.origin, decode, publicOf
 });
 const { read, write, current, originOf } = custody;

@@ -65,7 +65,7 @@ for (const { setting, storedInterval, interval } of [
   vi.stubGlobal("document", { title: "", activeElement: null, getElementById: () => root, createElement: (tag: string) => new Element(tag), createElementNS: (_namespace: string, tag: string) => new Element(tag) });
   vi.stubGlobal("location", location);
   const originalSettings = JSON.stringify({ place, publicKey: key, pollIntervalMs: storedInterval });
-  const setItem = vi.fn(), getItem = (name: string) => name === "artroom-page" ? originalSettings : null;
+  const setItem = vi.fn(), getItem = (name: string) => name === "artroom-page:v2" ? originalSettings : null;
   vi.stubGlobal("localStorage", { getItem, setItem });
   vi.stubGlobal("window", { addEventListener: (_name: string, listener: () => void) => { redraw = listener; } });
   try {
@@ -74,7 +74,7 @@ for (const { setting, storedInterval, interval } of [
     expect(loadKey).toHaveBeenCalledWith(key);
     expect(openRoom).toHaveBeenCalledWith({ service: context.origin, signer: room.session.signer }, place);
     expect(saveSettings).not.toHaveBeenCalled(); expect(setItem).not.toHaveBeenCalled();
-    expect(localStorage.getItem("artroom-page")).toBe(originalSettings);
+    expect(localStorage.getItem("artroom-page:v2")).toBe(originalSettings);
     expect(root.textContent).toContain(`Live updates unavailable. Checking every ${interval / 1_000} ${interval === 1_000 ? "second" : "seconds"}.`);
     expect(polls).toBe(0); seq = 1;
     await vi.advanceTimersByTimeAsync(interval - 1); expect(polls).toBe(0);
@@ -84,7 +84,7 @@ for (const { setting, storedInterval, interval } of [
     await vi.advanceTimersByTimeAsync(interval * 2); expect(polls).toBe(1);
     await main.workbenchLifecycle.retire(); await vi.advanceTimersByTimeAsync(interval * 2); expect(polls).toBe(1);
     expect(saveSettings).not.toHaveBeenCalled(); expect(setItem).not.toHaveBeenCalled();
-    expect(localStorage.getItem("artroom-page")).toBe(originalSettings);
+    expect(localStorage.getItem("artroom-page:v2")).toBe(originalSettings);
   } finally {
     await fixture.retire(); vi.useRealTimers(); vi.unstubAllGlobals();
     vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.resetModules();

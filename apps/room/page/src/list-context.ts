@@ -9,7 +9,7 @@ export type ListFilter = "open" | "closed" | "merged" | "all";
 export interface ListState { query: string; filter: ListFilter }
 export interface ListStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
 
-const STORAGE = "artroom-page-lists:v1";
+const STORAGE = "artroom-page-lists:v2";
 const MAX_CONTEXTS = 64;
 export const LIST_QUERY_LIMIT = 512;
 const MAX_RECORD = 128 * 1024;

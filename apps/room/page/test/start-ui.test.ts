@@ -243,11 +243,11 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     expect(root.textContent).toContain("new owner-only DAP_HOME directory");
     // A late ready-screen action cannot replace a newly selected connection.
     const changedSettings = JSON.stringify({ place: null, publicKey: keyIdOfSecret(new Uint8Array(32).fill(64)) });
-    values.set("artroom-page", changedSettings);
+    values.set("artroom-page:v2", changedSettings);
     opening = Promise.resolve(find("button", "Open room").fire("click"));
     await opening;
     expect(save).not.toHaveBeenCalled();
-    expect(values.get("artroom-page")).toBe(changedSettings);
+    expect(values.get("artroom-page:v2")).toBe(changedSettings);
   } finally {
     // Retain globals until the actual async click callback settles, even if
     // an assertion fails. A rejected callback remains a test failure.

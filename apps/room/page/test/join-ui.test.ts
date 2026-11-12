@@ -271,7 +271,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
     reason: "The original enrollment remains unknown.",
   });
   await wait(drain);
-  expect(values.has("artroom-page")).toBe(false);
+  expect(values.has("artroom-page:v2")).toBe(false);
   location.hash = "#/invitation";
   await wait(() => publication(root, () => redraw()));
   const restored = root.all().find((e) => e.attrs["name"] === "invitation")!;
@@ -318,7 +318,7 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
     answer: { answer: "accepted" },
   });
   await wait(drain);
-  expect(values.has("artroom-page")).toBe(false);
+  expect(values.has("artroom-page:v2")).toBe(false);
   expect(location.hash).toBe("#/join");
 }, cleanup));
 

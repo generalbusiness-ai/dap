@@ -15,14 +15,13 @@ import { WorkbenchWork } from "./workbench-work.ts";
  * The page is served by the scope Worker at `/page/` and reads that Worker.
  *
  * The signing key is nonextractable WebCrypto custody in IndexedDB. Settings
- * and resumable operations retain public key references; legacy seeds move
- * only after the same key commits and passes durable readback. Same-origin
- * trusted code can still invoke signing: screens must use the sandbox host.
+ * and resumable operations retain public key references. The new storage
+ * names leave old browser rows unread. Same-origin trusted code can still
+ * invoke signing: screens must use the sandbox host.
  */
 
 import { creationOffer, DEVICE_KEY_LINK, type Signer } from "@generalbusiness/dap-client";
-import { legacySettingsKey, pageKeyStore } from "./browser-key-store.ts";
-import { migratePageOperations } from "./page-key-migration.ts";
+import { pageKeyStore } from "./browser-key-store.ts";
 import { connectInvitation, originalConnection, creatorConnectionFiles, type CreatorBinding } from "./connection-custody.ts";
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, Head, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
@@ -44,7 +43,7 @@ import { controlKey, keepFocus, restoreFocus } from "./focus.ts";
 import { allowedClaim, claimRoom, claimStatus, type ClaimRegister } from "./claim.ts";
 import { joinInvitation, checkOriginal, originalJoin, type JoinResult } from "./join-custody.ts";
 
-const KEPT = "artroom-page";
+const KEPT = "artroom-page:v2";
 // This owner covers rendering, workbench submissions/source loads and native
 // creation-follow reads. Entry enrollment/connection and clipboard handlers
 // are not a whole-page shutdown contract.
@@ -87,7 +86,7 @@ function settings(): Settings | null {
   ignoredSavedAddress = false;
   try {
     const kept = JSON.parse(localStorage.getItem(KEPT) ?? "null") as (Settings & { service?: unknown; secret?: unknown }) | null;
-    // Migration only: an obsolete saved address never chooses where this page reads or signs.
+    // A saved address never chooses where this page reads or signs.
     ignoredSavedAddress = !!kept && Object.hasOwn(kept, "service");
     if (!kept || !isKeyId(kept.publicKey) || kept.secret !== undefined) return null;
     const place = kept.place ?? null;
@@ -119,14 +118,6 @@ const sessionOf = (kept: Settings): Session => {
   return { service: location.origin, signer };
 };
 async function prepareSettings(): Promise<void> {
-  await migratePageOperations(location.origin, localStorage, privateKeys);
-  const raw = localStorage.getItem(KEPT);
-  if (raw === null) return;
-  const value: unknown = JSON.parse(raw);
-  if (value && typeof value === "object" && typeof (value as { secret?: unknown }).secret === "string") {
-    const signer = await privateKeys.migrate(legacySettingsKey(localStorage, KEPT));
-    signers.set(signer.key, signer);
-  }
   const kept = settings();
   if (kept && isKeyId(kept.publicKey)) signers.set(kept.publicKey, await privateKeys.load(kept.publicKey));
 }

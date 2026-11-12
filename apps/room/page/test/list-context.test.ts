@@ -12,15 +12,25 @@ const storage = (): ListStorage & { records: Map<string, string> } => {
 };
 
 test("list queries and filters survive redraw and fresh tab-runtime reads without crossing room, membership, device or destination", () => {
-  const kept = storage();
-  const lists = new ListContexts(() => kept);
+  const kept = storage(), retiredName = "artroom-page-lists:v1", retiredBytes = "TEST old list preferences stay unread";
+  kept.records.set(retiredName, retiredBytes);
+  const reads: string[] = [];
+  const retiredAttempts = { get: [] as string[], set: [] as string[], remove: [] as string[], enumerate: [] as (string | number)[] };
+  const currentStorage: ListStorage & { readonly length: number; key(index: number): string | null; removeItem(name: string): void } = {
+    get length() { retiredAttempts.enumerate.push("length"); throw new Error("The new Page must not enumerate old list storage."); },
+    key: index => { retiredAttempts.enumerate.push(index); throw new Error("The new Page must not enumerate old list storage."); },
+    getItem: name => { reads.push(name); if (name === retiredName) { retiredAttempts.get.push(name); throw new Error("The new Page opened retired list storage."); } return kept.getItem(name); },
+    setItem: (name, value) => { if (name === retiredName) { retiredAttempts.set.push(name); throw new Error("The new Page changed retired list storage."); } kept.setItem(name, value); },
+    removeItem: name => { if (name === retiredName) retiredAttempts.remove.push(name); throw new Error("The new Page must not remove list storage in this scene."); },
+  };
+  const lists = new ListContexts(() => currentStorage);
   const here = context(), issue = { query: '<script>"guide"</script> & #12', filter: "closed" as const };
   lists.keepState(here, "issue", issue);
   lists.keepState(here, "change", { query: "policy", filter: "merged" });
   // A detail/back redraw uses the same context; a document refresh has a fresh
   // module instance but the same session storage. Query characters stay literal.
   expect(lists.stateOf(here, "issue")).toEqual(issue);
-  const refreshed = new ListContexts(() => kept);
+  const refreshed = new ListContexts(() => currentStorage);
   expect(refreshed.stateOf(here, "issue")).toEqual(issue);
   expect(refreshed.stateOf(here, "change")).toEqual({ query: "policy", filter: "merged" });
   for (const elsewhere of [
@@ -32,6 +42,9 @@ test("list queries and filters survive redraw and fresh tab-runtime reads withou
   const returned = lists.stateOf(here, "issue"); returned.query = "mutated caller copy";
   expect(lists.stateOf(here, "issue")).toEqual(issue);
   expect([...kept.records.values()].join("")).not.toContain('"secret"');
+  expect(reads).not.toContain(retiredName);
+  expect(kept.records.get(retiredName)).toBe(retiredBytes);
+  expect(retiredAttempts).toEqual({ get: [], set: [], remove: [], enumerate: [] });
 });
 
 test("invalid or excessive stored list state is ignored; bounded records and a storage failure keep the current tab usable", () => {
