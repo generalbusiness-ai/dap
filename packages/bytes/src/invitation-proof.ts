@@ -9,9 +9,9 @@ import { taggedBytes } from "./session.ts";
 
 export { INVITATION_PROOF_DOMAIN } from "@generalbusiness/dap-contract";
 
-/** The full incarnation, invitation item and joining key have one signed meaning. */
+/** The full membership reference, invitation item and joining key have one signed meaning. */
 export function invitationProofBytes(scope: ScopeRef, invitation: number, joiningKey: KeyId): Uint8Array {
-  if (!isScopeRef(scope) || scope.kind !== "membership" || !Number.isSafeInteger(invitation) || invitation < 1 || invitation > 1_000_000_000 || !isKeyId(joiningKey)) throw new Error("Invalid invitation proof subject.");
+  if (!isScopeRef(scope) || !Number.isSafeInteger(invitation) || invitation < 1 || invitation > 1_000_000_000 || !isKeyId(joiningKey)) throw new Error("Invalid invitation proof subject.");
   return taggedBytes(INVITATION_PROOF_DOMAIN, canonicalBytes([scope, invitation, joiningKey]));
 }
 
