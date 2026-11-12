@@ -86,8 +86,6 @@ function nativeOrigin(named: Digest, name: "change" | "issue", facts: readonly S
     if (!parent) return null;
     if (!genuine(parent) || parent.entry.input.type !== "genesis") return false;
     const birth = parent.entry.input;
-    // QUESTION (ruling 080e7c84, last paragraph): the old test `body["directory"].kind !== "directory"` read a kind that the
-    // message body states, which no row and no caller place gives. The reference now ties only to the parent's own birth body.
     if (!isSeed(birth.seed) || birth.seed.definition !== named || birth.decision !== "applied" || birth.kind !== "file"
       || parent.sequence.kind !== "lane" || scopeIdOf(birth.seed) !== parent.fact.at.scope
       || !birth.message || !isObject(birth.message.body) || !isScopeRef(body["directory"])
@@ -98,7 +96,6 @@ function nativeOrigin(named: Digest, name: "change" | "issue", facts: readonly S
     if (!(isObject(origin) && Object.keys(origin).length === 1 && origin["self"] === true)
       && !same(origin, born.source)) return false;
   } else if (!same(body["directory"], seed.creator)) return false;
-  // QUESTION (ruling 080e7c84, last paragraph): the old test also read `fields["destination"].kind`, a kind the message body states.
   if (name === "change" && !isScopeRef(fields["destination"])) return false;
   return sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message });
 }
@@ -160,7 +157,6 @@ export function applicationPublicationOrigin(from: FactRef, directory: ScopeRef,
       || !born.message || born.message.class !== "request" || born.message.type !== "create") return false;
     const body = born.message.body;
     if (!isObject(body) || !same(body["directory"], directory) || !isObject(body["fields"])
-      // QUESTION (ruling 080e7c84, last paragraph): the old test also read `body["membership"].kind`, a kind the body states.
       || !isScopeRef(body["membership"])
       || !same(body["creationContext"], { v: 1 })) return false;
     // An application need not declare destination. If it does, this exact
