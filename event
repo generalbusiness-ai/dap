@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:961caefaf88da4171cb89279d54921550cea0d74","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-11-serving-windows-s1.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:97b4c8736d96023e1aaab2613fbca4fa46148725","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/serving-limits.test.ts."}
