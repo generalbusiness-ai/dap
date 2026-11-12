@@ -279,6 +279,16 @@ test("signed grants recheck the current controller role and persist only the cod
         else {
           expect(redeemed?.body["access_token"]).toEqual(expect.any(String));
           expect(sql.exec(`SELECT state FROM oauth_grant WHERE id = ?`, kept["id"]).toArray()[0]!["state"]).toBe("active");
+          const consumed = sql.exec(`SELECT row, state FROM oauth_issuer WHERE id = ?`, kept["id"]).toArray();
+          expect(JSON.parse(String(consumed[0]!["row"]))).toMatchObject({ codeUsed: true });
+          const tokenRows = sql.exec(`SELECT row, state FROM oauth_grant WHERE id = ?`, kept["id"]).toArray();
+          const historical = await agent.grant(signed("grant", op, body), body, CONTEXT);
+          expect(historical.body).toMatchObject({ grant: kept["id"], codeShown: true });
+          expect(historical.body).not.toHaveProperty("code");
+          expect(historical.body).not.toHaveProperty("access_token");
+          expect(historical.body).not.toHaveProperty("refresh_token");
+          expect(sql.exec(`SELECT row, state FROM oauth_issuer WHERE id = ?`, kept["id"]).toArray()).toEqual(consumed);
+          expect(sql.exec(`SELECT row, state FROM oauth_grant WHERE id = ?`, kept["id"]).toArray()).toEqual(tokenRows);
         }
       }
 

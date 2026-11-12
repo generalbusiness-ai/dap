@@ -153,6 +153,22 @@ test("wrong connector, digest, expiry or retired agent never reaches standing; a
     agent.configuration = originalConfiguration;
     controllerActive = true;
 
+    // Capture the actual post-read checkpoint, not only the outer start.
+    const beforeCheckpoint = now, checkpoint: { at: number; until: number }[] = [];
+    now = START + 2000;
+    hold = new Promise<void>(resolve => { release = resolve; });
+    const checkpointed = access.standingResult(candidate, false, (at, until) => checkpoint.push({ at, until }));
+    now = START + 5000;
+    release!();
+    expect(await checkpointed).toEqual({ status: "active" });
+    expect(checkpoint).toEqual([{ at: START + 5000, until: START + 7000 }]);
+    // A Hosted continuation at 3000 clears the 2000 outer floor, but not
+    // this exact Access checkpoint. The HTTP consumer scene proves its use.
+    expect(START + 3000).toBeGreaterThanOrEqual(START + 2000);
+    expect(START + 3000).toBeLessThan(checkpoint[0]!.at);
+    expect(access.current(candidate, START + 3000)).toBe(true);
+    hold = null; now = beforeCheckpoint;
+
     // An older unavailable reply cannot erase a newer success for this candidate.
     now++;
     available = false;

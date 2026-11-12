@@ -88,6 +88,35 @@ function control(room: Room, secret: Uint8Array, action: ControlRequest["action"
   return `Control ${b64url(utf8(canonicalize(request)))}.${signed.sig}`;
 }
 const post = (path: string, authorization: string, body: string, method = "POST") => routed(`${SERVICE}${path}`, { method, headers: { authorization, "content-type": "application/json" }, body });
+/** Arm only on the second real admission reply. The next configuration
+ * await belongs to the tool body, after both synchronous HTTP checks. */
+function holdAfterAdmission(handle: string) {
+  let reached!: () => void, release!: () => void;
+  const entered = new Promise<void>(resolve => { reached = resolve; });
+  const waiting = new Promise<void>(resolve => { release = resolve; });
+  const gate = { then: <TResult1 = void, TResult2 = never>(yes?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null, no?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null) => {
+    reached(); return waiting.then(yes, no);
+  } } as Promise<void>;
+  const reads = { agent: handle, at: 2, calls: 0, entered: () => { hostedTest.configHold = gate; }, waiting: Promise.resolve() };
+  hostedTest.roleReply = reads;
+  return { entered, reads, release: () => { hostedTest.configHold = null; release(); } };
+}
+/** Decode the actual SQLite custody record without projecting away its envelope/outcomes. */
+const custodyFor = (agent: string, key: string, id?: string) => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(agent)), async (_instance, state) => {
+  const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
+  const store = sqliteStore(sql);
+  const rows = id ? [{ id }] : state.storage.sql.exec(`SELECT id FROM record WHERE key = ? UNION SELECT id FROM archive WHERE key = ?`, key, key).toArray();
+  expect(rows).toHaveLength(1);
+  const selected = String(rows[0]!["id"]), record = await store.read(selected);
+  if (!record) throw Error("The actual kept custody record is required");
+  return { id: selected, record };
+});
+async function commentTarget(rita: Agent, key: string): Promise<string> {
+  const opened = await rita.ok("issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: key, conditions: ["done"] }, values: [canonicalize(issueDemo)], idempotencyKey: key });
+  const created = await rita.ok("wait", { scope: "directory", entry: (opened["fact"] as FactRef).seq });
+  return (created["created"] as { scope: string; kind: string }[]).find(row => row.kind === "lane")!.scope;
+}
+
 const BEARER_LIFETIME = 30 * 86_400_000;
 type IssuedBearer = { agent: string; key: KeyId; bearer: string; bearerExpires: string };
 const shownReceipt = (answer: object) => {
@@ -232,7 +261,7 @@ async function roomWithIssues(): Promise<{ room: Room; rita: Agent }> {
   expect((await rita.ok("rules.activate", { fields: { digest: DEMO_DIGESTS.issue, name: "issue" }, values: [canonicalize(issueDemo)], idempotencyKey: "activate-issue" }))["answer"]).toBe("accepted");
   return { room, rita };
 }
-const done = (room: Room) => { hostedTest.metrics = null; hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.pause = null; hostedTest.lose = null; hostedTest.drop = null; hostedTest.controlBudget = null; hostedTest.custodyBounds = null; hostedTest.failWrite = null; hostedTest.faultAt = null; hostedTest.failSession = false; hostedTest.scheduleExpiry = null; hostedTest.roleReply = null; hostedTest.submitted = null; hostedTest.removalReply = null; room.done(); };
+const done = (room: Room) => { hostedTest.metrics = null; hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.pause = null; hostedTest.lose = null; hostedTest.drop = null; hostedTest.controlBudget = null; hostedTest.custodyBounds = null; hostedTest.failWrite = null; hostedTest.faultAt = null; hostedTest.failSession = false; hostedTest.scheduleExpiry = null; hostedTest.roleReply = null; hostedTest.submitted = null; hostedTest.nativeSubmit = null; hostedTest.issuerRandom = null; hostedTest.configHold = null; hostedTest.removalReply = null; room.done(); };
 /** A raw request to the agent's endpoint with a bearer. */
 const mcp = async (bearer: string, method: string, headers: Record<string, string>, body?: unknown): Promise<Response> => {
   const response = await routed(`${SERVICE}/mcp`, { method, headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json", ...headers }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
@@ -314,6 +343,74 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
     expect((await list(claude, first.token, "192.0.2.99")).status, "OAuth failures share the existing address window").toBe(429);
     expect((await list(claude, first.token, "192.0.2.100")).status).toBe(200);
     expect((await list(claude, bot.bearer)).status, "the static bearer still serves").toBe(200);
+    const roleRoster = (await allItems(rita, "membership")).find(item => item.type === "roster")!;
+    const baseAgentActions = [...roleRoster.values[ROLE_LISTS.agent] as string[]], controllerActions = roleRoster.values[ROLE_LISTS.member] as string[];
+    expect(baseAgentActions).toContain("issue.comment"); expect(controllerActions).toContain("issue.comment");
+    expect(controllerActions).not.toContain("membership.manage");
+    const widerActions = [...baseAgentActions, "membership.manage"];
+    const changeActions = async (actions: string[], key: string) => expect((await rita.ok("member.actions", { on: 0, fields: { role: "agent", actions }, idempotencyKey: key }))["answer"]).toBe("accepted");
+    const grantState = () => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(bot.agent)), (_instance, state) =>
+      state.storage.sql.exec(`SELECT row, state FROM oauth_grant WHERE id = ?`, first.id).toArray());
+    const exactGrant = await grantState(), finalTarget = await commentTarget(rita, "TEST-S4-oauth-final-issue");
+    const call = (key: string) => routed(claude, { method: "POST", headers: {
+      authorization: `Bearer ${first.token}`, "cf-connecting-ip": "192.0.2.78", "content-type": "application/json",
+      "mcp-protocol-version": MODERN, "mcp-method": "tools/call", "mcp-name": "issue.comment",
+    }, body: JSON.stringify({ jsonrpc: "2.0", id: 94, method: "tools/call", params: { name: "issue.comment",
+      arguments: { target: finalTarget, fields: { body: "An exact OAuth request keeps its original." }, idempotencyKey: key }, _meta: META } }) });
+    const finalKey = "TEST-S4-oauth-final-comment", gate = holdAfterAdmission("@oauth-agent"), finalPosts: string[] = [];
+    hostedTest.submitted = url => { finalPosts.push(new URL(url).pathname); };
+    try {
+      const pending = room.wait(() => call(finalKey));
+      await gate.entered; expect(gate.reads.calls).toBe(2);
+      await changeActions(widerActions, "TEST-S4-oauth-final-wider");
+      gate.release();
+      const response = await pending, stopped = await response.json() as { result: { structuredContent: Record<string, unknown> } };
+      expect(response.status).toBe(200);
+      expect(stopped.result.structuredContent).toMatchObject({ error: "unauthorized" });
+      expect(stopped.result.structuredContent).not.toHaveProperty("answer");
+      expect(stopped.result.structuredContent).not.toHaveProperty("submitted");
+      expect(finalPosts).toEqual([]); expect(await grantState()).toEqual(exactGrant);
+      const original = await custodyFor(bot.agent, finalKey), envelope = structuredClone(original.record.envelope);
+      expect(original.record.outcomes).toEqual([]);
+      await changeActions(baseAgentActions, "TEST-S4-oauth-final-restore");
+      const resumed = await room.wait(() => call(finalKey));
+      expect((await resumed.json() as { result: { structuredContent: { answer: string } } }).result.structuredContent.answer).toBe("accepted");
+      expect((await custodyFor(bot.agent, finalKey, original.id)).record.envelope).toEqual(envelope);
+      expect(finalPosts.filter(path => path.endsWith("/acts"))).toHaveLength(1);
+      expect(await grantState()).toEqual(exactGrant);
+      expect((await list(claude, first.token, "192.0.2.78")).status).toBe(200);
+    } finally {
+      gate.release(); hostedTest.roleReply = null; hostedTest.submitted = null;
+      await changeActions(baseAgentActions, "TEST-S4-oauth-final-cleanup");
+    }
+
+    // A real Access read captures 5000, while Host's later 3000 still
+    // clears its admitted/start floor 2000. Keep Native fixture time fixed.
+    const clockKey = "TEST-S4-oauth-checkpoint-comment", clockGate = holdAfterAdmission("@oauth-agent"), epoch = room.now();
+    const clockPosts: string[] = [], clockReads: number[] = [];
+    hostedTest.now = () => epoch + 2000;
+    hostedTest.submitted = url => { clockPosts.push(new URL(url).pathname); };
+    try {
+      const pending = room.wait(() => call(clockKey));
+      await clockGate.entered; expect(clockGate.reads.calls).toBe(2);
+      hostedTest.roleReply = { agent: "@oauth-agent", at: 1, calls: 0, waiting: Promise.resolve(), entered: () => {
+        hostedTest.now = () => { const value = epoch + (clockReads.length === 0 ? 5000 : 3000); clockReads.push(value); return value; };
+      } };
+      clockGate.release();
+      const response = await pending, stopped = await response.json() as { result: { structuredContent: Record<string, unknown> } };
+      expect(response.status).toBe(200);
+      expect(stopped.result.structuredContent).toMatchObject({ error: "unavailable" });
+      expect(clockReads.slice(0, 3)).toEqual([epoch + 5000, epoch + 3000, epoch + 3000]);
+      expect(clockReads.slice(1).every(at => at === epoch + 3000)).toBe(true);
+      expect(room.now(), "only the Hosted clock seam moved").toBe(epoch);
+      expect(clockPosts).toEqual([]); expect(await grantState()).toEqual(exactGrant);
+      const original = await custodyFor(bot.agent, clockKey);
+      expect(original.record.outcomes).toEqual([]);
+      expect(Date.parse(original.record.envelope.signed.intent.notAfter)).toBeGreaterThan(epoch + 5000);
+    } finally {
+      clockGate.release(); hostedTest.roleReply = null; hostedTest.submitted = null; hostedTest.now = () => room.now();
+    }
+
     const initialization = (resource: string, token: string) => room.wait(() => routed(resource, { method: "POST",
         headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "mcp-protocol-version": LEGACY },
         body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: LEGACY, capabilities: {}, clientInfo: { name: "TEST-oauth-resource", version: "1" } } }) }));
@@ -616,6 +713,11 @@ test("hosted production fetch preserves deployed parentless creation admission",
     const body = await response.json() as { result?: { structuredContent?: Record<string, unknown> }; error?: unknown };
     expect([response.status, body.error]).toEqual([200, undefined]);
     expect(body.result?.structuredContent).toMatchObject({ answer: "refused", reason: "unauthorized" });
+    const keptCreate = await custodyFor(agent.agent, "unplanned-hosted-install");
+    expect(keptCreate.record.identity).toMatchObject({ membership: null, signer: agent.key, target: { create: "platform:register@3" } });
+    expect(keptCreate.record.envelope.signed.intent.kind).toBe("install");
+    expect(keptCreate.record.envelope.creation?.definition).toBe("platform:register@3");
+    expect(keptCreate.record.outcomes).toHaveLength(1);
   } finally {
     creationTest.settings = previous.settings;
     creationTest.productionHostedFetch = previous.productionHostedFetch;
@@ -655,10 +757,20 @@ test("fresh MCP services' addressless native join failures count by verified key
     const before = (await room.platform(M.scope).summary()).at;
     // Actual hosted control/enrolment remains covered, but its known key must
     // not be mistaken for a wrong-secret failure that charges the join window.
+    const nativeJoins: Parameters<NonNullable<typeof hostedTest.nativeSubmit>>[1][] = [];
+    hostedTest.nativeSubmit = (scope, signed) => {
+      if (scope === M.scope && signed.intent.actor === agent.key && signed.intent.kind === "join") nativeJoins.push(structuredClone(signed));
+    };
     const enrolledResponse = await room.wait(() => modernCall(agent.bearer, "join", { link: wrongLink, idempotencyKey: "r12-enrolled-key" }));
     const enrolled = await enrolledResponse.json() as { error?: unknown; result?: { structuredContent?: Record<string, unknown> } };
     expect([enrolledResponse.status, enrolled.error, enrolled.result?.structuredContent?.["answer"], enrolled.result?.structuredContent?.["name"]])
       .toEqual([200, undefined, "refused", "key-in-use"]);
+    expect(nativeJoins).toHaveLength(1);
+    const keptJoin = await custodyFor(agent.agent, "r12-enrolled-key");
+    expect(keptJoin.record.envelope.signed).toEqual(nativeJoins[0]);
+    expect(keptJoin.record.identity).toMatchObject({ target: M, signer: agent.key });
+    expect(keptJoin.record.outcomes).toHaveLength(1);
+    hostedTest.nativeSubmit = null;
     const replies: Record<string, unknown>[] = [];
     for (let n = 0; n < 3; n++) {
       const reply = await room.wait(() => visitor.service.call("join", { link: wrongLink, idempotencyKey: `r12-bad-join-${n}` }));
@@ -957,6 +1069,39 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
       await setAgentActions(agentActions, "TEST-S4-ordinary-held-restore");
     }
     expect((await admittedList()).status, "a fresh read of narrowed actual roles restores ordinary admission without reminting").toBe(200);
+
+    // A distinct, valid comment reaches the body only after both HTTP admissions.
+    expect(agentActions).toContain("issue.comment"); expect(memberActions).toContain("issue.comment");
+    const lateTarget = await commentTarget(rita, "TEST-S4-ordinary-final-issue"), lateKey = "TEST-S4-ordinary-final-comment";
+    const lateArgs = { target: lateTarget, fields: { body: "The same valid original survives final role loss." }, idempotencyKey: lateKey };
+    const finalGate = holdAfterAdmission("@bot3"), actualPosts: string[] = [];
+    hostedTest.submitted = url => { actualPosts.push(new URL(url).pathname); };
+    try {
+      const pending = room.wait(() => modernCall(bot3Rotated, "issue.comment", lateArgs));
+      await finalGate.entered;
+      expect(finalGate.reads.calls).toBe(2);
+      await setAgentActions(wider, "TEST-S4-ordinary-final-wider");
+      finalGate.release();
+      const response = await pending;
+      const stopped = await response.json() as { result: { structuredContent: Record<string, unknown> } };
+      expect(response.status).toBe(200);
+      expect(stopped.result.structuredContent).toMatchObject({ error: "unauthorized" });
+      expect(stopped.result.structuredContent).not.toHaveProperty("answer");
+      expect(stopped.result.structuredContent).not.toHaveProperty("submitted");
+      expect(actualPosts).toEqual([]);
+      const original = await custodyFor(bot3.agent, lateKey);
+      expect(original.record.outcomes).toEqual([]);
+      const envelope = structuredClone(original.record.envelope);
+      await setAgentActions(agentActions, "TEST-S4-ordinary-final-restore");
+      const resumed = await room.wait(() => modernCall(bot3Rotated, "issue.comment", lateArgs));
+      expect((await resumed.json() as { result: { structuredContent: { answer: string } } }).result.structuredContent.answer).toBe("accepted");
+      expect((await custodyFor(bot3.agent, lateKey, original.id)).record.envelope).toEqual(envelope);
+      expect(actualPosts.filter(path => path.endsWith("/acts"))).toHaveLength(1);
+      expect(await ordinaryOwner()).toEqual(beforeRoleLoss);
+    } finally {
+      finalGate.release(); hostedTest.roleReply = null; hostedTest.submitted = null;
+      await setAgentActions(agentActions, "TEST-S4-ordinary-final-cleanup");
+    }
 
     const rotate = (op: string) => room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", op), ""));
     const rotationState = (op: string) => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(bot3.agent)), (_instance, state) => ({
@@ -2009,6 +2154,8 @@ test("H6 through the endpoint: a preparation step whose answer the store could n
     const hold = (worked["fact"] as FactRef).seq;
     const laneRef = (await rita.ok("inspect", { scope: lane }))["ref"] as { scope: string; inc: string; kind: string };
     const entriesBy = async () => (await allSteps(rita, lane)).filter((e) => e.signer === bot.key && e.kind !== null && e.kind.includes("instance")).length;
+    const preparationPosts: string[] = [];
+    hostedTest.submitted = url => { if (new URL(url).pathname.endsWith("/preparations")) preparationPosts.push(new URL(url).pathname); };
     // Standalone: a hold instance step, a step with no act. The lane accepts it; the store fails as the answer is written.
     const standalone = { resource: lane, capability: "hold@1", step: "instance", fields: { hold, task: { ...laneRef, kind: "task" }, instance: "i-1" }, idempotencyKey: "instance-bot" };
     hostedTest.failWrite = "result";
@@ -2030,6 +2177,7 @@ test("H6 through the endpoint: a preparation step whose answer the store could n
     expect([settled.intent, settled.phase, settled.steps, settled.reserved], "the same intent, settled, nothing reserved").toEqual([kept.intent, "settled", ["answered"], 0]);
     expect(stepPhases()).toEqual(["sent", "answered"]);
     expect(await entriesBy(), "one preparation entry").toBe(1);
+    expect(preparationPosts).toHaveLength(2);
     // Ordinary: an act prepared at a resource, the report staged at the lane, then its check step. The lane answers the check;
     // the store fails as that answer is written (the write of a prepared act's record, which the store's fault names `keep`);
     // the act's record stays prepared with the check step sent, and the same prepare is the recovery.
@@ -2037,9 +2185,11 @@ test("H6 through the endpoint: a preparation step whose answer the store could n
     const staged = await result(await room.wait(() => modernCall(bot.bearer, "prepare", { ...report, step: "stage" })));
     expect((staged["step"] as { phase: string; answer: { answer: string } }), JSON.stringify(staged)).toMatchObject({ phase: "answered", answer: { answer: "accepted" } });
     const held = (await stub.custodyRecord("report-bot"))!;
+    const beforeAttachedCheck = preparationPosts.length;
     hostedTest.failWrite = "keep";
     const checked = await result(await room.wait(() => modernCall(bot.bearer, "prepare", { ...report, step: "check" })));
     expect(checked["error"], JSON.stringify(checked)).toBe("custody");
+    expect(preparationPosts.length).toBe(beforeAttachedCheck + 1);
     expect(String(checked["message"]), JSON.stringify(checked)).toMatch(new RegExp(`^Step check of hold@1 for key report-bot was sent to ${lane} and ${lane} answered (accepted|refused), and the server could not keep that answer\\. The step may have changed the resource; the step is kept as sent, and the act is not submitted by this`));
     expect(String(checked["message"])).not.toMatch(/nothing was sent/);
     const unkeptCheck = (await stub.custodyRecord("report-bot"))!;
@@ -2089,6 +2239,28 @@ test("H6 matrix through the endpoint: prepared reset, concurrent send and settle
     // Repeated uncertain attempts with a reset between: two lost replies, then settle: one decisive result, one entry.
     hostedTest.lose = `/${rita.config.repository!.directory.scope}/acts`;
     expect((await result(await room.wait(() => open("uncertain"))))["error"]).toBe("transport");
+    const priorUncertain = await custodyFor(bot.agent, "uncertain");
+    expect(priorUncertain.record.outcomes.some(outcome => "lost" in outcome)).toBe(true);
+    const beforeActions = (await allItems(rita, "membership")).find(item => item.type === "roster")!.values;
+    const actualAgentActions = [...beforeActions[ROLE_LISTS.agent] as string[]], actualAdminActions = beforeActions[ROLE_LISTS.admin] as string[];
+    expect(actualAgentActions).not.toContain("change.check"); expect(actualAdminActions).not.toContain("change.check");
+    const gate = holdAfterAdmission("@bot"), noPosts: string[] = [];
+    hostedTest.submitted = url => { noPosts.push(new URL(url).pathname); };
+    try {
+      const pending = room.wait(() => open("uncertain"));
+      await gate.entered; expect(gate.reads.calls).toBe(2);
+      expect((await rita.ok("member.actions", { on: 0, fields: { role: "agent", actions: [...actualAgentActions, "change.check"] }, idempotencyKey: "TEST-S4-old-lost-wider" }))["answer"]).toBe("accepted");
+      gate.release();
+      expect((await result(await pending))["error"]).toBe("unauthorized");
+      expect(noPosts).toEqual([]);
+      const stopped = await custodyFor(bot.agent, "uncertain", priorUncertain.id);
+      expect(stopped.record.envelope).toEqual(priorUncertain.record.envelope);
+      expect(stopped.record.outcomes).toEqual(priorUncertain.record.outcomes);
+      expect(stopped.record.count).toBe(priorUncertain.record.count);
+    } finally {
+      gate.release(); hostedTest.roleReply = null; hostedTest.submitted = null;
+      expect((await rita.ok("member.actions", { on: 0, fields: { role: "agent", actions: actualAgentActions }, idempotencyKey: "TEST-S4-old-lost-restore" }))["answer"]).toBe("accepted");
+    }
     await stub.reset();
     hostedTest.lose = `/${rita.config.repository!.directory.scope}/acts`;
     expect((await result(await room.wait(() => open("uncertain"))))["error"]).toBe("transport");
