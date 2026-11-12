@@ -170,7 +170,7 @@ export interface CustodyStore {
 export const identityId = (identity: Identity): string => digestBytes(utf8(canonicalize(identity))).slice(7);
 export const meaningOf = (asked: unknown): Digest => digestBytes(utf8(canonicalize(asked)));
 export const stepId = (s: { intent: Digest; resource: ScopeRef; capability: string; step: string }): string =>
-  digestBytes(utf8(canonicalize([s.intent, s.resource.scope, s.resource.inc, s.capability, s.step]))).slice(7);
+  digestBytes(utf8(canonicalize([s.intent, s.resource.scope, s.resource.genesis, s.capability, s.step]))).slice(7);
 
 /** Why custody sent nothing. */
 export type HeldBack =

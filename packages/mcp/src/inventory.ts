@@ -94,7 +94,7 @@ export const readPartitionIndexes = (reads: Reads, root: ScopeRef, membership: S
   summary: scope => reads.read(membership, (transport, reader) => transport.summary(scope, reader)),
   query: (scope, query) => reads.read(membership, (transport, reader) => new ScopeHandle(transport, scope, reader).queryItems(query)),
 }, root, membership);
-const isRef = (v: unknown): v is ScopeRef => typeof v === "object" && v !== null && typeof (v as ScopeRef).scope === "string" && typeof (v as ScopeRef).inc === "string";
+const isRef = (v: unknown): v is ScopeRef => typeof v === "object" && v !== null && typeof (v as ScopeRef).scope === "string" && typeof (v as ScopeRef).genesis === "string";
 
 /** The caller's standing in a membership summary: the role of the active member whose active key signs here, and that role's actions. */
 export function standingIn(items: readonly Item[], key: string): Standing {

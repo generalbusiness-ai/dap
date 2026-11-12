@@ -115,7 +115,7 @@ const at = (head: Head): string => `judged at head ${head.seq}`;
 
 /** Archive location only; an absent settlement fact is never invented. */
 export function archivedAnswer(archived: Archived, fact?: FactRef): Said {
-  const original = fact ? `Original entry ${fact.at.scope}:${fact.seq}, hash ${fact.hash}, incarnation ${fact.at.inc}, is archived.`
+  const original = fact ? `Original entry ${fact.at.scope}:${fact.seq}, hash ${fact.hash}, genesis ${fact.at.genesis}, is archived.`
     : "The original entry is archived; the settlement supplied no fact.";
   return { sentence: `${original} Journal floor ${archived.floor}; archive commit ${archived.commit}, through entry ${archived.through.seq}, hash ${archived.through.hash}.`,
     next: "Verify the archive clone against this receipt before confirming the original result. Keep the original signed envelope; do not sign or resend a replacement request." };

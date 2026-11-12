@@ -803,7 +803,7 @@ export class McpService {
     const said = answered(kept.answer, asked, guards);
     if (kept.answer.answer === "accepted" && !kept.retained) {
       // An accepted act on a membership can change whether it gives this key a session: ask again on the next read.
-      if (summary.scope.kind === "membership") this.#reads.forget(summary.scope.scope);
+      if (isPlatformDefinition(summary.definition) && platform(summary.definition)?.data.name === "platform:membership") this.#reads.forget(summary.scope.scope);
       void this.check();
     }
     const result = ok(this.#answerOf(kept.answer, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
@@ -1047,7 +1047,7 @@ export class McpService {
     const snapshot = await this.#current();
     const { scope, membership } = await this.#scope(snapshot, args["scope"] ?? "commons");
     const { summary } = await this.#summary(scope, membership);
-    if (summary.scope.kind !== "commons" || !answersVersionQuestion(summary.definition, "mcpCommonsReadDefinition")) return failed({ error: "target", what: "the target is not Commons@1" });
+    if (!answersVersionQuestion(summary.definition, "mcpCommonsReadDefinition")) return failed({ error: "target", what: "the target is not Commons@1" });
     const cursor = fromCursor<{ c?: string; i: number; h: string }>(args["cursor"]);
     if (cursor && (!Number.isSafeInteger(cursor.i) || cursor.i < 0 || typeof cursor.h !== "string" || (cursor.c !== undefined && typeof cursor.c !== "string"))) return failed({ error: "shape", field: "cursor", what: "is not a Commons continuation", declared: "the cursor returned by commons" });
     const view = await this.#reads.read(membership, async (transport, reader) => {
@@ -1394,7 +1394,7 @@ export class McpService {
       this.#invalidate();
     }
     const said = kept.answer.answer === "accepted"
-      ? { sentence: `Created ${kept.answer.receipt.fact.at.kind} ${kept.answer.receipt.fact.at.scope} under ${data.name}; it is recorded in your configuration's standalone scopes.`, next: "Call wait with the scope and entry 0 to see what its genesis created; tools/list now lists its acts." }
+      ? { sentence: `Created ${kind} ${kept.answer.receipt.fact.at.scope} under ${data.name}; it is recorded in your configuration's standalone scopes.`, next: "Call wait with the scope and entry 0 to see what its genesis created; tools/list now lists its acts." }
       : answered(kept.answer, { scope: "the creation", kind }, null);
     return ok(this.#answerOf(kept.answer, { scope: kept.answer.answer === "accepted" ? kept.answer.receipt.fact.at.scope : "the creation", kind, tool: "create", retained: kept.retained, said, phase: kept.record.phase }));
   }
@@ -1415,8 +1415,8 @@ export class McpService {
 
     if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
-      || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
-      || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stopCall({ error: "target", what: "the configured room does not match its exact generic native siblings" });
+      || !isScopeRef(rules) || rules.scope !== repository.rules
+      || !isScopeRef(destination) || destination.scope !== repository.destination) return stopCall({ error: "target", what: "the configured room does not match its exact generic native siblings" });
     const { summary } = await this.#summary(rules.scope, repository.membership);
     if (summary.status !== "active" || summary.definition !== cohort.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stopCall({ error: "target", what: "the actual Rules sibling does not support native application installation" });
     if (answersVersionQuestion(cohort.directory, "mcpCommonsRoomDirectory")) {
@@ -1432,7 +1432,7 @@ export class McpService {
     const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active"], ids: [item], limit: 1, cursor: null }));
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const row = read.value.items[0];
-    if (!row || row.id !== item || row.type !== "installation" || row.state !== "active" || !isScopeRef(row.refs["scope"]) || row.refs["scope"].kind !== "lane"
+    if (!row || row.id !== item || row.type !== "installation" || row.state !== "active" || !isScopeRef(row.refs["scope"])
       || canonicalize(row.refs["membership"] ?? null) !== canonicalize(room.membership) || canonicalize(row.refs["destination"] ?? null) !== canonicalize(room.destination) || !isDigest(row.values["definition"])
       || !isDigest(row.values["release"]) || !isDigest(row.values["semantic"]) || !isDigest(row.values["presentation"])) return null;
     return { directory: room.directory, rules: room.rules, membership: room.membership, destination: room.destination, scope: row.refs["scope"], item,
@@ -1500,7 +1500,7 @@ export class McpService {
     const read = await this.#afterAccepted(room.rules.scope, () => this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } })));
     if (!read.ok || !read.complete || read.next !== undefined) return failed({ error: "target", sent: "read", what: "the read of the install receipt's native entry gave no entry" });
     if (read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
-      || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
+      || !("genesis" in read.value.entry) || read.value.entry.genesis !== room.rules.genesis || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
       || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", sent: "report", what: "the install receipt's native entry does not hold the exact retained request" });
     this.#invalidate();
     return ok({ answer: "accepted", fact: receipt.fact, item: receipt.fact.seq, retained: kept.retained, phase: "recorded", next: "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused." });
@@ -1634,7 +1634,7 @@ export class McpService {
       // The search reads a few entries a poll and goes on from where it stopped, with no limit on how far; once it finds the entry,
       // it starts there.
       const cause = intentDigest(entry.input.signed.intent);
-      const key = canonicalize(["created", this.#service, entry.at, seq, read.value.hash]);
+      const key = canonicalize(["created", this.#service, scope, seq, read.value.hash]);
       let next = this.#searches.get(key) ?? seq + 1;
       for (let n = 0; n < SEARCH_ENTRIES && seeds.length === 0; n++, next++) {
         const at = next;
@@ -1662,7 +1662,7 @@ export class McpService {
     }
     waiting(children.map((c) => c.scope));
     if (!children.every((c) => c.status === "active")) return null;
-    await this.#remember(entry, children);
+    await this.#remember(scope, entry, children);
     return { created: children.map(({ ref: _ref, ...c }) => c) };
   }
 
@@ -1670,7 +1670,7 @@ export class McpService {
    * A room the caller's own claim created, or the caller's own inbox, is recorded in the configuration, as `dap create` and
    * `join` record them, so the next list holds the room's scopes. Only an entry the caller's key signed is followed.
    */
-  async #remember(entry: Entry, children: readonly { ref: ScopeRef | null; kind: string }[]): Promise<void> {
+  async #remember(scope: ScopeId, entry: Entry, children: readonly { ref: ScopeRef | null; kind: string }[]): Promise<void> {
     const set = this.#port.config.setRepository;
     if (!set || entry.input.type !== "act" || entry.input.signed.intent.actor !== this.#port.signer.key) return;
     const of = (kind: string) => children.find((c) => c.kind === kind)?.ref ?? null;
@@ -1680,7 +1680,7 @@ export class McpService {
       await set({ directory, membership, rules: rules.scope, destination: destination.scope });
       this.#reads.forget(membership.scope);
       this.#invalidate();
-    } else if (config.repository && inbox && !config.repository.inbox && entry.at.scope === config.repository.membership.scope) {
+    } else if (config.repository && inbox && !config.repository.inbox && scope === config.repository.membership.scope) {
       await set({ ...config.repository, inbox: inbox.scope });
       this.#invalidate();
     }
@@ -1704,11 +1704,11 @@ export class McpService {
       const { summary, at } = await this.#summary(scope, membership);
       const branches = summary.items.filter(item => item.type === "branch");
       const branch = branches.length === 1 ? branches[0]! : null;
-      if (at.complete && summary.status === "active" && summary.scope.kind === "destination" && summary.scope.scope === scope
+      if (at.complete && summary.status === "active" && summary.scope.scope === scope
         && answersVersionQuestion(summary.definition, "mcpVerifyEmptyDestination") && branch?.state === "unpublished"
         && branch.values["repository"] == null && branch.values["head"] == null && typeof branch.values["name"] === "string"
         && isScopeId(branch.values["membership"]) && isScopeId(branch.values["rules"])
-        && isScopeRef(branch.refs["directory"]) && branch.refs["directory"].kind === "directory") return { ok: false, result: failed({ error: "credential", destination: scope, why: "no-repository" }) };
+        && isScopeRef(branch.refs["directory"])) return { ok: false, result: failed({ error: "credential", destination: scope, why: "no-repository" }) };
     }
     const opening = await this.#reads.read(membership, (t, r) => t.entry(scope, r, seq));
     if (!opening.ok) return { ok: false, result: failed({ error: "credential", destination: scope, why: `entry ${seq}: ${opening.reason}` }) };
@@ -1716,7 +1716,7 @@ export class McpService {
     if (input.type !== "act" || input.signed.intent.kind !== "read-token" || input.signed.intent.actor !== this.#port.signer.key) return { ok: false, result: failed({ error: "credential", destination: scope, why: `entry ${seq} is no read-token act your key signed` }) };
     // The mint's outcome: searched a few entries a call, going on from where the last call stopped, with no limit on how far.
     const operation = `${seq}:0`;
-    const key = canonicalize(["credential", this.#service, opening.value.entry.at, seq, opening.value.hash]);
+    const key = canonicalize(["credential", this.#service, scope, seq, opening.value.hash]);
     let handle: string | null = null;
     let ended: string | null = null;
     let next = this.#searches.get(key) ?? seq + 1;
