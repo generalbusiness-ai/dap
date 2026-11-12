@@ -42,7 +42,7 @@ import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Seed, Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeKind, ScopeRef, SequenceRef } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, isEntryOf, type CheckedSequence, rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isEntryBodyOf, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { AmountError, RuleFault, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeActForReplay, judgeCheckpoint, judgeDeliveryForReplay, archivedPosition, countedEntries, heldPositions, judgeFloor, judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesisForReplay, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds } from "@generalbusiness/dap-derive";
-import type { AnchoredJudgmentCopy, DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, Own, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import type { AnchoredJudgmentCopy, DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, SourceCopy, Observing, Owners, PlatformRules, PreparationJudgment, Own, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, RETAINED_REPLY_BYTES, hashOfBytes, type HistorySource, type Stored } from "./source.ts";
 import { IdentityEvidence, type IdentityFrame, type ReceiverIdentityCode } from "./identity.ts";
@@ -208,9 +208,9 @@ export interface Coded {
   /** The shared source-identity policy, using checked genesis and creator facts.
    * Null means that required origin proof is missing; anchored copies remain
    * explicitly trusted. This metadata changes no pinned data or judgment. */
-  sourceName?: ((named: Digest | PlatformDefinition, declaredName: string, origin?: readonly Fetched[]) => string | null) | undefined;
+  sourceName?: ((named: Digest | PlatformDefinition, declaredName: string, origin?: readonly SourceCopy[]) => string | null) | undefined;
   /** File publication admission uses the supplied version's application factory policy. */
-  applicationPublicationOrigin?: ((from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]) => boolean | null) | undefined;
+  applicationPublicationOrigin?: ((from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly SourceCopy[]) => boolean | null) | undefined;
   /**
    * Where a scope under this version records its membership reference,
    * when that is not its genesis entry (authority note, section 3.3, "Where
@@ -2041,18 +2041,19 @@ class Verifier {
     const direct = this.#sourceName(named, declared);
     if (direct !== null) return direct;
     const genesis = source.sealed[0];
-    const origin: Fetched[] = [];
+    // Each row is a replayed sealed entry under its admitted sequence, so each is a genuine copy.
+    const origin: SourceCopy[] = [];
     if (genesis?.entry.input.type === "genesis" && source.sequence) {
-      origin.push({ fact: { at: source.sequence.at, seq: 0, hash: genesis.hash }, entry: genesis.entry, sequence: source.sequence, under: declared });
+      origin.push({ fact: { at: source.sequence.at, seq: 0, hash: genesis.hash }, entry: genesis.entry, bytes: canonicalize(genesis.entry), sequence: source.sequence, under: declared });
       const from = genesis.entry.input.source;
       const creator = from && this.#runs.get(from.at.scope);
       const made = from && creator?.sealed[from.seq];
       if (from && creator?.at && sameScope(creator.at, from.at) && made?.hash === from.hash && creator.definition && creator.sequence) {
         const creatorUnder = this.#sourceIdentity(creator, where);
-        origin.push({ fact: from, entry: made.entry, sequence: creator.sequence, under: creatorUnder });
+        origin.push({ fact: from, entry: made.entry, bytes: canonicalize(made.entry), sequence: creator.sequence, under: creatorUnder });
         const parentGenesis = creator.sealed[0];
         if (creatorUnder === "issue" && parentGenesis?.entry.input.type === "genesis") origin.push({
-          fact: { at: creator.sequence.at, seq: 0, hash: parentGenesis.hash }, entry: parentGenesis.entry, sequence: creator.sequence, under: creatorUnder,
+          fact: { at: creator.sequence.at, seq: 0, hash: parentGenesis.hash }, entry: parentGenesis.entry, bytes: canonicalize(parentGenesis.entry), sequence: creator.sequence, under: creatorUnder,
         });
       }
     }
@@ -2116,16 +2117,16 @@ class Verifier {
     await this.#prove(from, where, depth);
     const source = this.#runs.get(from.at.scope);
     const first = source?.sealed[0];
-    const facts: Fetched[] = [];
+    const facts: SourceCopy[] = [];
     if (source?.at && source.sequence && sameScope(source.at, from.at) && first?.entry.input.type === "genesis") {
-      facts.push({ fact: { at: source.sequence.at, seq: 0, hash: first.hash }, entry: first.entry, sequence: source.sequence, under: this.#sourceIdentity(source, where) });
+      facts.push({ fact: { at: source.sequence.at, seq: 0, hash: first.hash }, entry: first.entry, bytes: canonicalize(first.entry), sequence: source.sequence, under: this.#sourceIdentity(source, where) });
       const cause = first.entry.input.source;
       if (cause) {
         await this.#prove(cause, where, depth);
         const creator = this.#runs.get(cause.at.scope), made = creator?.sealed[cause.seq], genesis = creator?.sealed[0];
         if (creator?.at && sameScope(creator.at, cause.at) && made?.hash === cause.hash && genesis && creator.sequence) {
           const under = this.#sourceIdentity(creator, where);
-          facts.push({ fact: cause, entry: made.entry, sequence: creator.sequence, under }, { fact: { at: creator.sequence.at, seq: 0, hash: genesis.hash }, entry: genesis.entry, sequence: creator.sequence, under });
+          facts.push({ fact: cause, entry: made.entry, bytes: canonicalize(made.entry), sequence: creator.sequence, under }, { fact: { at: creator.sequence.at, seq: 0, hash: genesis.hash }, entry: genesis.entry, bytes: canonicalize(genesis.entry), sequence: creator.sequence, under });
         }
       }
     }

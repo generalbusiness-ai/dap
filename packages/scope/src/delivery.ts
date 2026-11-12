@@ -34,6 +34,7 @@ import { carryProducerName } from "./receiver-facts.ts";
 import { ReceiverReads } from "./receiver-reads.ts";
 import { namedBy } from "./definitions.ts";
 import { readNativeBirth } from "./native-birth.ts";
+import { admittedOrigin } from "./namespace.ts";
 import type { DefinitionRead, Delivery, Ports } from "./ports.ts";
 import type { Retained, Store } from "./store.ts";
 import { LATE, SOURCE_TOO_LARGE, fetchFacts, within, type Verdict } from "./turn.ts";
@@ -204,7 +205,7 @@ export class Deliveries {
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
       const policy = answersVersionQuestion(destinationPin, "scopeDeliveryNativeApplicationOrigin")
         ? this.#ports.definitions.platform(destinationPin)?.applicationPublicationOrigin : applicationPublicationOrigin;
-      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, read.origin ?? []) ?? null;
+      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, admittedOrigin(read.origin ?? [], bounds.entryBytes)) ?? null;
       if (native === null) return retry("dependency-unavailable");
       if (!native) return UNVERIFIED;
     }
@@ -216,7 +217,7 @@ export class Deliveries {
       const directory = store.page("branch", publicationStates, null, 1).items[0]?.refs["directory"];
       const destination = store.scope()?.at;
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
-      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "change") : read.origin ? publishingLaneAffiliation(from, directory, destination, read.origin) : null;
+      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "change") : read.origin ? publishingLaneAffiliation(from, directory, destination, admittedOrigin(read.origin, bounds.entryBytes)) : null;
       if (native === null) return retry("dependency-unavailable");
       if (!native) return UNVERIFIED;
     }

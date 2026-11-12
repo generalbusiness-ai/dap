@@ -23,7 +23,7 @@ import { archivedPosition } from "@generalbusiness/dap-derive";
 import { ROLE_LISTS, isActions } from "@generalbusiness/dap-platform/membership-actions";
 import type { Archived, Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeKind, ScopeRef, SequenceRef } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, definitionDigest, isEntryBodyOf, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
-import { isObject, isScopeRef, type Delivered, type Fetched, type ScopeState } from "@generalbusiness/dap-derive";
+import { isObject, isScopeRef, type Delivered, type Fetched, type ScopeState, type SourceCopy } from "@generalbusiness/dap-derive";
 import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
 import type { Membership } from "./authority.ts";
 import type { Pinned } from "./core.ts";
@@ -129,7 +129,7 @@ export function routed(name: ScopeId | null, scope: ScopeState | null, delivered
  * version. Null: the scope pins a declaration that it cannot read now, so
  * it cannot say.
  */
-export function nameUnder(pinned: Pinned, origin: readonly Fetched[] = []): string | null {
+export function nameUnder(pinned: Pinned, origin: readonly SourceCopy[] = []): string | null {
   if (isPlatformDefinition(pinned.named)) return sourceName(pinned.named, "");
   const name = pinned.definition?.declared.name;
   if (name === undefined) return null;
@@ -146,7 +146,7 @@ export function nameUnder(pinned: Pinned, origin: readonly Fetched[] = []): stri
  * own bytes. A retained copy with no admitted birth keeps `sequence` null and
  * travels only as an origin row.
  */
-export interface SourceCopy { readonly fact: FactRef; readonly entry: Entry; readonly under: string; readonly bytes: string; readonly sequence: CheckedSequence | null }
+export type { SourceCopy } from "@generalbusiness/dap-derive";
 
 /** The copies that carry a genuine association, as `Fetched`, in their order. A copy with no association names no identity. */
 export function genuineCopies(copies: readonly SourceCopy[]): Fetched[] {
@@ -209,8 +209,8 @@ export function sourced(store: Store, pinned: Pinned | null, seq: number, origin
   const scope = store.scope();
   if (!scope || !pinned) return null;
   const proof = copies ?? [];
-  // Only a copy with an admitted association can name a native identity.
-  const under = nameUnder(pinned, genuineCopies(proof));
+  // The own first entry and the retained creator copy (rule b of ruling 080e7c84, item 2e) state the native name.
+  const under = nameUnder(pinned, proof);
   if (under === null) throw new Error("the pinned definition or native origin cannot be read, so its identity cannot be stated");
   const archived = archivedPosition(store, seq);
   const bytes = (Number.isSafeInteger(seq) ? store.stored(seq) : null)?.bytes ?? null;
@@ -494,7 +494,7 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
               rows.push({ fact: row.fact, entry: body, under: row.under, bytes: row.bytes });
             }
             if (rows.length === 9 && (answer.under !== "issue" || canonicalize(rows[0]!.fact.at) !== canonicalize(answer.at)
-              || sourceName(EVIDENCE_INCIDENT_PINS_V17.issue, "issue", genuineCopies(admittedOrigin(rows, maxBytes))) !== "issue")) return remaining() === null ? null : { absent: true };
+              || sourceName(EVIDENCE_INCIDENT_PINS_V17.issue, "issue", admittedOrigin(rows, maxBytes)) !== "issue")) return remaining() === null ? null : { absent: true };
           }
           return remaining() === null ? null : { entry, under: answer.under, sequence, ...(origin ? { origin: rows } : {}) };
         } catch {

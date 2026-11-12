@@ -46,6 +46,7 @@ import { clockOf, recordedOutcome, evidenceValues, isEntryOf, same, valueDigest,
 
 import { genuineRetained, ownOf, retainedUsesOf, valuesOf, type Scope } from "./core.ts";
 import { report } from "./diag.ts";
+import { admittedOrigin } from "./namespace.ts";
 import type { Wakes } from "./outbox.ts";
 import type { Clock, Ports, Resolver } from "./ports.ts";
 import type { Sealed, Sending, Store } from "./store.ts";
@@ -411,8 +412,8 @@ export class Operations {
       const read = await within(() => this.#resolver.read(asked.from, { maxBytes: this.#bounds.entryBytes, milliseconds: Math.floor(this.#bounds.fetchSeconds * 1000) }, true), this.#bounds.fetchSeconds);
       if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from, read.sequence)) return false;
       return asked.mode === "application"
-        ? (answersVersionQuestion(operation.owner, "scopeOperationNativeApplicationOrigin") ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
-        : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []);
+        ? (answersVersionQuestion(operation.owner, "scopeOperationNativeApplicationOrigin") ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, admittedOrigin(read.origin ?? [], this.#bounds.entryBytes)) === true
+        : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, admittedOrigin(read.origin ?? [], this.#bounds.entryBytes));
     } catch { return false; }
   }
 

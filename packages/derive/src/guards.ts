@@ -27,6 +27,15 @@ export { operand, slotOf };
 /** A foreign entry fetched before the turn, and the name of the definition its scope pins (section 6.2, the `fact` field). */
 export interface Fetched { fact: FactRef; entry: Entry; sequence: CheckedSequence; under: string }
 
+/**
+ * One admitted origin row (ruling 080e7c84, item 2): the entry, its label,
+ * its original bytes and, where the same rows prove its sequence from
+ * genesis bytes, that sequence. A `Fetched` is the case with a sequence. A
+ * row with no sequence names no identity; an algorithm reads it only as the
+ * creator that an admitted first entry names as its source.
+ */
+export interface SourceCopy { readonly fact: FactRef; readonly entry: Entry; readonly under: string; readonly bytes: string; readonly sequence: CheckedSequence | null }
+
 /** Staged existing result material. Only the late owned-context admission grants operands. */
 export interface RetainedResultOperand { readonly classified: unknown; readonly under: string }
 export interface RetainedResultMaterial {
