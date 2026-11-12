@@ -3,8 +3,8 @@
 For request `9a321a0a` (NF-2) and promise `b7f2ffaa`.
 Planner request `0916128e` states the six problems and the three parts.
 The base is main `33836693`, the NF-1 landing.
-The source for the gate is `38b395a3`, tree `833e6962f2db35b99c7e8cbff517d7c12dfb58ec`.
-The two note commits after it change only this note.
+The source for the gate is `10250c74`, tree `eef0f6be7ec7626c9999ace1c5df637fc44ba696`.
+The note commit after it changes only this note.
 
 ## What changed
 
@@ -90,7 +90,7 @@ The scope ID and incarnation patterns end in a character whose bits past the las
 `maxLength` on `capability` and `step` is a necessary character bound. The server still refuses more than `NAME_BYTES` (128) UTF-8 bytes. `budget.test.ts` checks a 65-character name of two-byte characters.
 
 **The schema stays inline.**
-The ruling says to report the bytes before trying `$defs`. The figures follow.
+Ruling `e1f2ef36` keeps `ACT_OUTPUT` inline and rules out `$defs`. A `$defs` block lives inside one tool's schema, so it cannot share `ACT_OUTPUT` between tools.
 
 ## Tool list size
 
@@ -105,7 +105,9 @@ The formatted file grows from 267,101 to 436,192 bytes.
 
 The MCP budget caps each `tools/list` page at 256 KiB (`LIST_PAGE_BYTES`) and puts no limit on the whole list.
 `the list per role, in bytes and tokens` in `packages/mcp/test/budget.test.ts` passed in `plain-3`.
-A shared `$defs` entry for the act output schema would remove most of the 73,573 bytes. That waits for the planner.
+Each new act tool adds its input schema and 1,854 bytes of output schema.
+The whole list is 16,071 bytes, 6 percent, under one 256 KiB page.
+The planner measures what a host puts in the model's context in the live window on the test Worker. Any reduction waits for that measurement.
 
 ## Schema audit
 
@@ -147,8 +149,9 @@ Paths are relative to `~/play/artroom-evidence`.
 | Typecheck | `38b395a3`: `npm run typecheck` | 0 | `2026-11-12-nf2-working-8d00dbbc/typecheck-5.stdout` |
 | Plain | `38b395a3`: the `plain-2` command | 0. 71 files, 698 passed, 1 skipped | `2026-11-12-nf2-working-8d00dbbc/plain-3.stdout` |
 | Native | `38b395a3`: the `native-1` command and files | 0. 26 files, 96 of 96 passed | `2026-11-12-nf2-working-8d00dbbc/native-2.stdout` |
-| Gate | `38b395a3` or later: `npm run gate` | PENDING | PENDING |
-| CI | `38b395a3` or later: branch push | PENDING | PENDING |
+| Plain, MCP | `10250c74`: `vitest run --config vitest.plain.config.ts --project mcp` | 0. 37 files, 350 passed, 1 skipped | `2026-11-12-nf2-working-8d00dbbc/plain-4.stdout` |
+| Gate | `10250c74` or later: `npm run gate` | PENDING | PENDING |
+| CI | `10250c74` or later: branch push | PENDING | PENDING |
 
 Each Vitest and Node test command ran with `env -u VITEST_MAX_WORKERS`. The Native command also set `ARTROOM_SCALE_MODE=omit`.
 The skipped Plain test is `a dead reclaimer under a long ARTROOM_HOME`, which skips on macOS.
@@ -187,13 +190,14 @@ The witnesses for the request are:
 
 - `ACT_OUTPUT` and `ActResult` agree. The `satisfies` clauses in `packages/mcp/src/act-result.ts` fail the typecheck when a member is missing. `archived submit and settlement stay explicit and terminal without inventing missing facts` in `packages/mcp/test/errors.test.ts` checks the `answer` and `phase` enums, `effects` on all three projections and the retained wording.
 - `the tool reference is the list as sent` in `packages/mcp/test/inventory.test.ts` compares `docs/mcp.md` and `docs/mcp-tools.json` with the served list. It failed in `plain-1` and passed in `plain-2` and `plain-3`.
-- `fixed-tool scope references: the ID patterns refuse set trailing bits, and settle takes a creation's membership` in `packages/mcp/test/describe.test.ts` checks that a scope ID and an incarnation with set trailing bits fail both the pattern and `isScopeId` or `isIncarnation`. It checks a creation's `settle` input against the schema's keys, `required`, `anyOf` and membership pattern. No JSON Schema validator runs in the test. It passed in `plain-3`.
+- `fixed-tool scope references: the ID patterns refuse set trailing bits, and settle takes a creation's membership` in `packages/mcp/test/describe.test.ts` checks that a scope ID and an incarnation with set trailing bits fail both the pattern and `isScopeId` or `isIncarnation`. It sends one creation input for `settle` through the schema's keys, `required`, `anyOf` and membership patterns, and through a real `settle` call, which reads `membership` with `#membershipRef`. A full `ScopeRef` passes both, and the call answers `not-found`. A scope ID with set trailing bits fails the pattern, and the call refuses `membership` as a shape. No JSON Schema validator runs in the test. It passed in `plain-4`.
 - `an over-long capability or step name is refused whole, within the bound` in `packages/mcp/test/budget.test.ts` checks the `prepare` `maxLength` and the byte refusal.
 
 ## Open limits
 
 - `@generalbusiness/dap-mcp` changes its public exports. It no longer exports `expectedOf`, `viaLeft`, `effectiveFields` and `finalStates`, or the Client names that `describe.ts` re-exported, such as `ActLike`, `DefinitionLike`, `inline`, `typeWords`, `fieldLines`, `sentence` and `guardSentences`. `projectAnswer` now takes `{ answer }` or `{ archivedSettlement }` and returns `ActResult`. `examples/repo-in-ai/review-control.ts` shows the change for a caller.
 - `@generalbusiness/dap-client` no longer exports `DESCRIPTION_CHARS` and `Described`, and `descriptionsOf` no longer returns `describeAct`.
-- The tool list grows by 75,183 bytes. The planner decides on `$defs`.
+- The tool list grows by 75,183 bytes. Each new act tool adds its input schema and 1,854 bytes of output schema, and the whole list is 6 percent under one page. Ruling `e1f2ef36` keeps the schema inline, and NF-2 does no more work on size.
+- The audit table lists the differences that remain: the character bounds of `idempotencyKey`, `capability` and `step` against their byte bounds, and the parsers that admit more than their schemas. NF-2 changes no code for them. Request item 3 names the `scopeRefArg` case, and ruling `e1f2ef36` has NF-2 fix the `settle` `membership` case.
 - Two in-process reads by string key remain: `result.structuredContent["error"]` in `#stoppedEarly` in `packages/mcp/src/service.ts`, and `result.structuredContent["localStatus"]` in `packages/mcp/src/views/session.ts`. Before NF-2 there were eight.
 - The planner deploys after the landing. `MCP_ENABLED` stays off.
