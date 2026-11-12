@@ -413,6 +413,7 @@ export function workerEntrypoints(source = readSource(scopeFile), hostedSource =
     return [node.declaration.id?.name, node.declaration.type, node.declaration.superClass?.name ?? null];
   }), [
     ["McpEnv", "TSInterfaceDeclaration", null], ["mcpRoute", "FunctionDeclaration", null],
+    ["roleStandingThrough", "FunctionDeclaration", null],
     ["McpRegistry", "ClassDeclaration", "DurableObject"], ["McpAgent", "ClassDeclaration", "DurableObject"],
   ], "Worker entry inventory: exact hosted declarations");
   assert.equal(bases.size, 1, "Worker entry inventory: exact platform base required");
