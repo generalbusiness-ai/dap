@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f616b77bec6a05ab98f3eb5477ec36dc9365a97","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/serving-admission.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:961caefaf88da4171cb89279d54921550cea0d74","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-11-serving-windows-s1.md."}
