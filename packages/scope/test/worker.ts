@@ -103,12 +103,61 @@ import { readPlatformCreationPolicy } from "../src/creation-versions.ts";
 // Historical-catalog compatibility scaffolding for existing native fixtures.
 // Production-default/invalid-policy witnesses use CreationVersionScope instead.
 const historicalCreationPolicy = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: JSON.stringify(Object.keys(VERSIONS)) });
-/** Env-only override: all wiring, clock, authority and genesis code is deployed code. */
+/** Env-only policy override. The optional trace below forwards actual SQL and transactions. */
 export const creationVersionSettings = new Map<string, unknown>();
+interface CreationFormatStart {
+  catalogReads: number;
+  wordReads: number;
+  formatWrites: number;
+  atFailure: { schema: number; word: number } | null;
+  tablesAfterFailure: number | null;
+}
+/** Name-scoped TEST storage observer and one setup fault. No returned row or transaction is replaced. */
+export const creationFormatStorage = new Map<string, { failAfterWord: boolean; starts: CreationFormatStart[] }>();
 export class CreationVersionScope extends DeployedScope {
   constructor(ctx: DurableObjectState, env: Env) {
-    const name = ctx.id.name ?? "";
-    super(ctx, { ...env, ...(creationVersionSettings.has(name) ? { PLATFORM_CREATION_PINS: creationVersionSettings.get(name) } : {}) });
+    const name = ctx.id.name ?? "", trace = creationFormatStorage.get(name);
+    const start: CreationFormatStart = { catalogReads: 0, wordReads: 0, formatWrites: 0, atFailure: null, tablesAfterFailure: null };
+    const exec = ctx.storage.sql.exec.bind(ctx.storage.sql);
+    let observed = ctx;
+    if (trace) {
+      if (trace.starts.length >= 4) throw new Error("TEST format start observation exceeded four starts");
+      trace.starts.push(start);
+      const sql = new Proxy(ctx.storage.sql, { get(target, property) {
+        if (property === "exec") return (query: string, ...bindings: unknown[]) => {
+          if (query.includes(" AS any_table") && query.includes(" AS format_table")) start.catalogReads++;
+          if (query.includes("END AS word FROM room_record_format LIMIT 2")) start.wordReads++;
+          if (query.startsWith("CREATE TABLE room_record_format") || query.startsWith("INSERT INTO room_record_format")) start.formatWrites++;
+          const cursor = Reflect.apply(target.exec, target, [query, ...bindings]);
+          if (trace.failAfterWord && query === "INSERT INTO room_record_format (id, v) VALUES (1, 2)") {
+            start.atFailure = {
+              schema: Number(exec("SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='entry') AS present").one()["present"]),
+              word: Number(exec("SELECT v FROM room_record_format WHERE id=1").one()["v"]),
+            };
+            throw new Error("TEST fresh schema and format word rollback");
+          }
+          return cursor;
+        };
+        const value = Reflect.get(target, property, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      } });
+      const storage = new Proxy(ctx.storage, { get(target, property) {
+        if (property === "sql") return sql;
+        const value = Reflect.get(target, property, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      } });
+      observed = new Proxy(ctx, { get(target, property) {
+        if (property === "storage") return storage;
+        const value = Reflect.get(target, property, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      } });
+    }
+    try {
+      super(observed, { ...env, ...(creationVersionSettings.has(name) ? { PLATFORM_CREATION_PINS: creationVersionSettings.get(name) } : {}) });
+    } catch (error) {
+      if (trace && start.atFailure) start.tablesAfterFailure = Number(exec("SELECT count(*) AS n FROM sqlite_master WHERE type='table'").one()["n"]);
+      throw error;
+    }
   }
 }
 import type { MetricEnvironment } from "../src/operational.ts";

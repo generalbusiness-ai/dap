@@ -1,7 +1,8 @@
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 /** Pure policy/transport witnesses plus actual DeployedScope SQLite genesis.
  * Index transport is a labelled stand-in only in the cache case. The native
- * cases override Env only: no clock, policy wiring or native authority port. */
+ * cases keep the deployed clock, policy wiring and native authority ports.
+ * One name-scoped storage observer injects a setup failure after the real word insert. */
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
@@ -13,7 +14,7 @@ import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
 import type { Binding } from "../src/namespace.ts";
 import type { ScopeObject } from "../src/object.ts";
-import { creationVersionSettings } from "./worker.ts";
+import { creationFormatStorage, creationVersionSettings } from "./worker.ts";
 
 const legacy = "platform:register@2";
 const newest = FAILED_CLAIM_COHORT.register;
@@ -125,16 +126,43 @@ test("actual deployed object defaults reject old new genesis and invalid policy 
     const signed = install(undefined, pin === COMMONS_COHORT.register ? "none" : "git.example"), name = scopeIdOf(seedOf(signed, pin));
     creationVersionSettings.set(name, raw); // own undefined must have the absent-setting meaning
     const object = objectOf(name), native = object as unknown as Native;
+    const trace: NonNullable<ReturnType<typeof creationFormatStorage.get>> | null = pin === newest && raw === undefined
+      ? { failAfterWord: true, starts: [] } : null;
+    if (trace) creationFormatStorage.set(name, trace);
     try {
+      if (trace) {
+        await expect(native.create(signed, pin)).rejects.toThrow("TEST fresh schema and format word rollback");
+        expect(trace.starts, "fresh setup rolls back the actual schema and inserted format word together").toEqual([
+          { catalogReads: 1, wordReads: 0, formatWrites: 2, atFailure: { schema: 1, word: 2 }, tablesAfterFailure: 0 },
+        ]);
+        trace.failAfterWord = false;
+      }
       const answer = await native.create(signed, pin);
       if ((pin === newest || pin === COMMONS_COHORT.register) && raw === undefined) {
         expect(answer).toMatchObject({ answer: "accepted", receipt: { definition: pin, fact: { at: { scope: name, kind: "register" }, seq: 0 } } });
         expect(await count(object)).toBe(1);
+        if (trace) {
+          const fresh = { catalogReads: 1, wordReads: 0, formatWrites: 2, atFailure: null, tablesAfterFailure: null };
+          expect(trace.starts.slice(1), "the rolled-back database retries as fresh with one catalog read").toEqual([fresh]);
+          expect(await native.create(signed, pin)).toEqual(answer);
+          expect(trace.starts.slice(1), "another request does not repeat the fresh format read or setup").toEqual([fresh]);
+          await evictDurableObject(object);
+          const restarted = objectOf(name) as unknown as Native;
+          expect(await restarted.create(signed, pin)).toEqual(answer);
+          const current = { catalogReads: 1, wordReads: 1, formatWrites: 0, atFailure: null, tablesAfterFailure: null };
+          expect(trace.starts.slice(1), "a current start reads the catalog and word once without rewriting the word").toEqual([fresh, current]);
+          expect(await restarted.create(signed, pin)).toEqual(answer);
+          expect(trace.starts.slice(1), "another request does not repeat the current format reads").toEqual([fresh, current]);
+        }
       } else {
         expect(answer).toEqual({ answer: "refused", reason: "unsupported-definition" });
         expect(await count(object)).toBe(0);
       }
-    } finally { await evictDurableObject(object); creationVersionSettings.delete(name); }
+    } finally {
+      if (trace) trace.failAfterWord = false;
+      try { await evictDurableObject(object); }
+      finally { creationVersionSettings.delete(name); creationFormatStorage.delete(name); }
+    }
   }
 });
 
