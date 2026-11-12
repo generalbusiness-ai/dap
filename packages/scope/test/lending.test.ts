@@ -312,7 +312,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       "The library could not be read.", "The library could not be read: unavailable.",
       "The library could not be read: forbidden.", "The library could not be read: sessions-unavailable.",
       "The library could not be read: clock-behind.", "The library could not be read: too-large.",
-      "The library could not be read: wrong-incarnation.",
+      "The library could not be read: wrong-genesis.",
       "The projection is behind the list.", "A newer read replaced this one.",
       ...["sessions-unavailable", "bad-request", "not-found", "misaddressed", "clock-behind", "expired", "unauthorized", "replayed", "rate-limited"]
         .map(reason => `The room refused a read session: ${reason}.`),

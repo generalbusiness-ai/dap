@@ -147,7 +147,7 @@ describe("a request that cannot be delivered (section 7.4)", () => {
     for (const seconds of [1, 2, 4]) await later(seconds, S);
 
     const diagnoses = (await S.entries()).flatMap((e) => (e.input.type === "diagnosis" ? [{ of: e.input.of.seq, finding: e.input.finding, log: e.input.attempts.map((a) => a.answer), effects: e.effects }] : []));
-    const wrong = "wrong-incarnation";
+    const wrong = "wrong-genesis";
     expect(diagnoses).toEqual([
       { of: refusedEach.fact.seq, finding: "undelivered", log: [wrong, wrong, wrong], effects: [{ effect: "state", item: refusedEach.fact.seq, state: "failed" }] },
       { of: unanswered.fact.seq, finding: "delivery-unavailable", log: ["none", wrong, wrong, wrong], effects: [] },

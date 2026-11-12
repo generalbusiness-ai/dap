@@ -48,7 +48,7 @@ test("canonical replies require the exact request binding and native row identit
   expect(readApplicationProjectionReply(utf8(canonicalize(behind)), { ...query(), scope: { ...scope, kind: "task" } })).toBeNull();
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "behind" })), query())).toBeNull();
   expect(readApplicationProjectionReply(utf8(canonicalize({ ...behind, reason: "unavailable" })), query())).toBeNull();
-  expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "wrong-incarnation" })), query())).toEqual({ ok: false, reason: "wrong-incarnation" });
+  expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "wrong-genesis" })), query())).toEqual({ ok: false, reason: "wrong-genesis" });
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "unknown" })))).toBeNull();
   expect(readApplicationProjectionReply(new Uint8Array(B.resultBytes + 1))).toBeNull();
 });

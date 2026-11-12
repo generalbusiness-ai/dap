@@ -64,7 +64,7 @@ test("behind requires the actual current fact and ordinary failures cannot carry
   for (const invalid of [
     { ok: false, reason: "behind" }, { ok: false, reason: "behind", current: head },
     { ...behind, detail: at }, { ...behind, current: { ...current, extra: true } },
-    { ok: false, reason: "unavailable", current }, { ok: false, reason: "wrong-incarnation", current },
+    { ok: false, reason: "unavailable", current }, { ok: false, reason: "wrong-genesis", current },
   ]) expect(read(invalid)).toBe(false);
   expect(read({ ok: false, reason: "unavailable" })).toBe(true);
   expect(read({ ok: true, at: head, complete: true, value: "unchanged" })).toBe(true);

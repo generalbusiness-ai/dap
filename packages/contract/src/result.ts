@@ -52,7 +52,7 @@ export type UnavailableReason = "dependency-unavailable" | "busy" | "clock-behin
 export type MismatchReason = "idempotency-mismatch";
 
 /** Why a read gave no value (section 9.1). */
-export type ReadRefusal = "behind" | "archived" | "not-found" | "wrong-incarnation" | "forbidden" | "scope-provisional" | "unsupported-definition" | "history-unavailable" | "too-large" | "unavailable"
+export type ReadRefusal = "behind" | "archived" | "not-found" | "wrong-genesis" | "forbidden" | "scope-provisional" | "unsupported-definition" | "history-unavailable" | "too-large" | "unavailable"
   | "sessions-unavailable"   // a read session was presented, and the scope has no usable session secret, so it accepts none (authority note, section 5.5)
   | "clock-behind"          // an authentic read session was presented, and the scope's clock reads earlier than its previous entry's time (authority note, sections 3.9 and 3.12, W6)
   | "rate-limited"          // serving protection before target/proof work; no native judgment or authority change (kernel section 7, R12)
@@ -62,13 +62,13 @@ export type ReadRefusal = "behind" | "archived" | "not-found" | "wrong-incarnati
 export type DeliveryRefusal = "source-unverified";
 
 /** How the resolver of a name refuses to route to it (section 7.4). */
-export type RoutingRefusal = "wrong-incarnation" | "not-found";
+export type RoutingRefusal = "wrong-genesis" | "not-found";
 
 /** Why the validator refuses a definition, as far as the contract names it (section 6.4). */
 export type DefinitionRefusal = "genesis-timed";
 
 /** A creator already holds a creation result with another incarnation (section 2.2). */
-export type CreationConflict = "incarnation-conflict";
+export type CreationConflict = "genesis-conflict";
 
 /** The head an answer was judged at. A refusal is a statement about that head only. */
 export interface Head { seq: number; hash: Digest }

@@ -79,11 +79,11 @@ export const REFUSAL_REASONS: Record<RefusalReason, true> = {
 export const READ_REFUSALS: Record<ReadRefusal, true> = {
   behind: true,
   archived: true,
-  "not-found": true, "wrong-incarnation": true, forbidden: true, "scope-provisional": true, "unsupported-definition": true, "history-unavailable": true, "too-large": true, unavailable: true,
+  "not-found": true, "wrong-genesis": true, forbidden: true, "scope-provisional": true, "unsupported-definition": true, "history-unavailable": true, "too-large": true, unavailable: true,
   "sessions-unavailable": true, "clock-behind": true, "rate-limited": true, "no-repository": true,
 };
 const STATUS: Record<Status, true> = { provisional: true, active: true, refused: true };
-const ATTEMPTED: Record<Attempt["answer"], true> = { none: true, "wrong-incarnation": true, "not-found": true, retry: true };
+const ATTEMPTED: Record<Attempt["answer"], true> = { none: true, "wrong-genesis": true, "not-found": true, retry: true };
 const DISPATCHED: Record<Dispatched["answer"], true> = { ...ATTEMPTED, acknowledged: true };
 const CLASS: Record<Message["class"], true> = { request: true, result: true, control: true, advisory: true };
 const DECISION: Record<Extract<Input, { decision: unknown; type: "delivery" }>["decision"], true> = { applied: true, refused: true, superseded: true };

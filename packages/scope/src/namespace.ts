@@ -104,7 +104,7 @@ export function nameOf(to: unknown): ScopeId | null {
  * nothing else, so a refusal here recorded nothing.
  *
  * - A reference to another scope ID, or to an empty store: `not-found`.
- *   Another genesis: `wrong-incarnation`.
+ *   Another genesis: `wrong-genesis`.
  * - A reference to a scope whose genesis was refused: `not-found`. That
  *   scope admits nothing but a repeat of its creation request, which is
  *   addressed by its seed.
@@ -116,7 +116,7 @@ export function routed(name: ScopeId | null, scope: ScopeState | null, delivered
   if (!name || nameOf(to) !== name) return "not-found";
   if (isScopeRef(to)) {
     if (!scope || scope.status === "refused") return "not-found";
-    return to.genesis === scope.at.genesis ? null : "wrong-incarnation";
+    return to.genesis === scope.at.genesis ? null : "wrong-genesis";
   }
   const message: unknown = delivered.message;
   return scope || (isObject(message) && message["class"] === "request" && message["type"] === "create") ? null : "not-found";

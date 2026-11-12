@@ -369,7 +369,7 @@ record. So an attempt with no recorded completion reads as unanswered.
 |---|---|
 | `recorded`, with the fact of the entry that recorded the message | Marks the send acknowledged with that fact. This is bookkeeping, not an entry. A request then waits for its result, which arrives as a delivery. |
 | `retry`, with any reason, or `source-unverified` | Logs `retry` and sends again after the delay. |
-| `routing`: `wrong-incarnation` or `not-found` | Logs it and sends again after the delay. When a request's log holds as many routing refusals as `routingRefusals`, it is given up. |
+| `routing`: `wrong-genesis` or `not-found` | Logs it and sends again after the delay. When a request's log holds as many routing refusals as `routingRefusals`, it is given up. |
 | No answer within `dispatchSeconds` | Leaves the record `none`. |
 
 A request that is given up becomes a `diagnosis` input with the log, in the
@@ -383,7 +383,7 @@ that records the confirmation clears the flag. No attempt of it starts.
 **Receiving.** `deliver(envelope)`:
 
 1. The resolver of the name answers first, from the scope's record:
-   `not-found` or `wrong-incarnation`. Nothing was judged or recorded.
+   `not-found` or `wrong-genesis`. Nothing was judged or recorded.
 2. The source entry is read from the source scope's object, by its scope
    ID. Not readable now: `retry`. Another incarnation, no such entry, or
    bytes that do not match the fact's hash: `source-unverified`.
@@ -410,7 +410,7 @@ contract's own answer.
 | `POST /v1/scopes/:scope/acts`, body `{ signed, grants, texts?, presented?, values? }`. `texts`: each detached text that a field of the intent names by digest. `presented`: the facts presented beside the intent, by name. `values`: each value that a place of the act names by digest, as its canonical bytes; only an act of a platform definition whose data states a place has one. The rules scope states a place for check configuration | `Answer` | 200 accepted; 403 refused `unauthorized`; 422 refused otherwise; 409 mismatch; 503 unavailable |
 | `POST /v1/scopes/:scope/preparations`, body `{ signed, grants, capability, step }`. One step of a capability, asked for with the signed intent that it prepares for. With no code for the step, as in production, nothing is judged: 503 `unavailable` | `Answer` | as an act |
 | `POST /v1/scopes/:scope/settle`, body `{ signed }` | `Settlement` | as a read |
-| `GET /v1/scopes/:scope` | The summary | 200; 404 `not-found`; 403 `forbidden`; 409 `wrong-incarnation`, `scope-provisional`; 413 `too-large`; 501 `unsupported-definition`; 503 otherwise |
+| `GET /v1/scopes/:scope` | The summary | 200; 404 `not-found`; 403 `forbidden`; 409 `wrong-genesis`, `scope-provisional`; 413 `too-large`; 501 `unsupported-definition`; 503 otherwise |
 | `GET /v1/scopes/:scope/items/:type?cursor=` | A page of retained final items | as above |
 | `GET /v1/scopes/:scope/history?cursor=` | A page of the history | as above |
 | `GET /v1/scopes/:scope/entries/:seq` | One entry | as above |

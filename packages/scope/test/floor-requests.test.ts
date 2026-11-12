@@ -130,7 +130,7 @@ test("Native delivery-unavailable request keeps its old sending entry for a legi
   let attempts = 0;
   // One unanswered send followed by actual logged routing refusals makes a
   // genuine delivery-unavailable diagnosis. No request row is injected.
-  wired.set(sender.name, () => ({ resolver: net.resolver, transport: { send: async () => ++attempts === 1 ? null : { answer: "routing" as const, reason: "wrong-incarnation" as const } } }));
+  wired.set(sender.name, () => ({ resolver: net.resolver, transport: { send: async () => ++attempts === 1 ? null : { answer: "routing" as const, reason: "wrong-genesis" as const } } }));
   wired.set(receiver.name, () => ({ resolver: net.resolver, transport: net.transport }));
   onTestFinished(() => { wired.delete(sender.name); wired.delete(receiver.name); });
   await sender.restart(); await receiver.restart();

@@ -43,7 +43,7 @@ function admitted(view: StateView, definition: ValidDefinition, context: Settlin
   return { scope };
 }
 
-const ROUTING: readonly Attempt["answer"][] = ["wrong-incarnation", "not-found"];
+const ROUTING: readonly Attempt["answer"][] = ["wrong-genesis", "not-found"];
 const ANSWERS: readonly Attempt["answer"][] = ["none", "retry", ...ROUTING];
 
 /**

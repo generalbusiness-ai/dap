@@ -436,7 +436,7 @@ const READ_STATUS: Record<ReadRefusal, number> = {
   behind: 503,
   "no-repository": 404,
   archived: 410,
-  "not-found": 404, "wrong-incarnation": 409, forbidden: 403, "scope-provisional": 409, "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503,
+  "not-found": 404, "wrong-genesis": 409, forbidden: 403, "scope-provisional": 409, "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503,
   "sessions-unavailable": 503, "clock-behind": 503,
 };
 const SESSION_STATUS: Record<SessionRefusal, number> = { "sessions-unavailable": 503, "bad-request": 400, "not-found": 404, misaddressed: 422, "clock-behind": 503, expired: 422, unauthorized: 403, replayed: 409, "rate-limited": 429 };
@@ -500,7 +500,7 @@ function queryResponse(result: NativeItemQuery): Response {
 }
 const PROJECTION_STATUS: Record<ApplicationProjectionRefusal, number> = {
   "invalid-query": 400, forbidden: 403, unavailable: 503, incomplete: 409, stale: 409, "too-large": 413,
-  "query-not-ready": 409, "clock-behind": 503, "sessions-unavailable": 503, "wrong-scope": 409, "wrong-incarnation": 409, behind: 503,
+  "query-not-ready": 409, "clock-behind": 503, "sessions-unavailable": 503, "wrong-scope": 409, "wrong-genesis": 409, behind: 503,
 };
 function projectionResponse(result: NativeApplicationProjection): Response {
   return new Response(result.ok ? result.serialized : JSON.stringify(result), { status: result.ok ? 200 : PROJECTION_STATUS[result.reason],

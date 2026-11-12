@@ -878,7 +878,7 @@ export class Scope {
     if (!pinned || !scope || !isSigned(signed)) return { ok: false, reason: "not-found" };
     const { to, actor, idempotencyKey } = signed.intent;
     if (to?.scope !== scope.at.scope) return { ok: false, reason: "not-found" };
-    if (to.genesis !== scope.at.genesis) return { ok: false, reason: "wrong-incarnation" };
+    if (to.genesis !== scope.at.genesis) return { ok: false, reason: "wrong-genesis" };
     const accepted = this.#store.accepted(actor, idempotencyKey);
     if (!accepted || accepted.intent !== intentDigest(signed.intent)) return { ok: false, reason: "not-found" };
     const archived = archivedPosition(this.#store, accepted.seq);

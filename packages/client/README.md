@@ -181,16 +181,16 @@ not reach it, and it is the value the signature covers.
 ## Following
 
 - `followReceipt(receipt)` reads the entry the receipt names and checks it
-  against the whole fact: scope, incarnation, kind, position and hash. The
+  against the whole fact: scope, genesis, position and hash. The
   hash is computed here. The identity is checked whether or not the hash
-  matches. Another incarnation is `wrong-incarnation`; another scope, kind
+  matches. Another genesis is `wrong-genesis`; another scope
   or position is `reference-mismatch`; another hash is `hash-mismatch`. In
   each case the receipt is not of this history.
   The first entry request carries the receipt's qualified sequence minimum.
   Only `unavailable` permits one ordinary entry read with the same reader and
   target, so the handle can diagnose a kind mismatch itself. This fallback
   does not poll. The handle rejects a successful reply below the receipt's
-  position and preserves `behind`, `forbidden`, `wrong-incarnation` and
+  position and preserves `behind`, `forbidden`, `wrong-genesis` and
   `archived` without a fallback.
 - `followOutbox(outboxId)` reads the outbox status of one send, by an outbox ID
   from a receipt's `sends`: whether it is held, its attempts, its

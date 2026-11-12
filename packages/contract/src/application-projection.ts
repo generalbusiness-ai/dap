@@ -35,6 +35,6 @@ export interface ApplicationProjectionData {
   readonly at: Readonly<Head>;
   readonly sources: Readonly<Record<string, readonly ApplicationProjectionRow[]>>;
 }
-export const APPLICATION_PROJECTION_REFUSALS = Object.freeze(["invalid-query", "forbidden", "unavailable", "incomplete", "stale", "too-large", "query-not-ready", "clock-behind", "sessions-unavailable", "wrong-scope", "wrong-incarnation", "behind"] as const);
+export const APPLICATION_PROJECTION_REFUSALS = Object.freeze(["invalid-query", "forbidden", "unavailable", "incomplete", "stale", "too-large", "query-not-ready", "clock-behind", "sessions-unavailable", "wrong-scope", "wrong-genesis", "behind"] as const);
 export type ApplicationProjectionRefusal = typeof APPLICATION_PROJECTION_REFUSALS[number];
 export type ApplicationProjectionRead = { ok: true; query: Digest; value: ApplicationProjectionData } | BehindRead | { ok: false; reason: Exclude<ApplicationProjectionRefusal, "behind"> };

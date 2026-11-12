@@ -90,7 +90,7 @@ export class Wakes {
   }
 }
 
-const ROUTING: readonly Dispatched["answer"][] = ["wrong-incarnation", "not-found"];
+const ROUTING: readonly Dispatched["answer"][] = ["wrong-genesis", "not-found"];
 
 export class Dispatcher {
   readonly #scope: Scope;

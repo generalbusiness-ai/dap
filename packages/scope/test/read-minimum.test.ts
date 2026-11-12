@@ -87,7 +87,7 @@ test("native wait timeout reports the authorized current fact and leaves no time
     expect(timer.tasks.size).toBe(0);
     expect(await object.summary(reader)).toEqual(before);
     expect(await state.storage.getAlarm()).toBe(alarm);
-    expect(await object.summary(reader, { at: { ...lane.at, genesis: `sha256:${"63".repeat(32)}` as const }, head: 99 })).toEqual({ ok: false, reason: "wrong-incarnation" });
+    expect(await object.summary(reader, { at: { ...lane.at, genesis: `sha256:${"63".repeat(32)}` as const }, head: 99 })).toEqual({ ok: false, reason: "wrong-genesis" });
     expect(await object.summary(reader, { at: { ...lane.at, kind: "lane" }, head: 99 })).toEqual({ ok: false, reason: "unavailable" });
     expect(timer.started).toBe(1);
   });

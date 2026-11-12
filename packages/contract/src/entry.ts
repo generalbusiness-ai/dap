@@ -117,7 +117,7 @@ export interface Control  { class: "control";  type: "confirm"; genesis: FactRef
 export interface Advisory { class: "advisory"; type: "index" | "notify"; body: unknown }
 
 /** One dispatch of a send and how it was answered. "none": no answer, or no recorded completion. */
-export interface Attempt  { at: Timestamp; answer: "none" | "wrong-incarnation" | "not-found" | "retry" }
+export interface Attempt  { at: Timestamp; answer: "none" | "wrong-genesis" | "not-found" | "retry" }
 
 export interface FactUse { fact: FactRef; content: Digest; kind: ScopeKind }
 

@@ -27,11 +27,11 @@ const REASONS: Record<RefusalReason | CreationUnavailableReason | MismatchReason
   "slot-full": true, "type-full": true, "entry-too-large": true, "send-unresolved": true, "unknown-message": true,
   "unsupported-definition": true, "bad-input": true, "dependency-unavailable": true, "source-response-too-large": true, busy: true, "clock-behind": true,
   "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true,
-  "rate-limited": true, "idempotency-mismatch": true, "not-found": true, "wrong-incarnation": true, forbidden: true,
+  "rate-limited": true, "idempotency-mismatch": true, "not-found": true, "wrong-genesis": true, forbidden: true,
   "history-unavailable": true, "too-large": true, "sessions-unavailable": true, "bad-request": true, replayed: true,
   "no-repository": true, misconfigured: true, "host-unavailable": true,
 };
-const INCIDENTS = ["outcome-conflict", "ref-mismatch", "incarnation-conflict", "pin-confirm-no-pin", "unpin-never-admitted", "token-unowned", "branch-moved", "bad-input", "sent-again"];
+const INCIDENTS = ["outcome-conflict", "ref-mismatch", "genesis-conflict", "pin-confirm-no-pin", "unpin-never-admitted", "token-unowned", "branch-moved", "bad-input", "sent-again"];
 const reasons = new Set([...Object.keys(REASONS), ...SCOPE_BOUNDS, ...EVENTS, ...INCIDENTS, "2xx", "3xx", "4xx", "5xx", "aggregated", "summary", "none"]);
 const places = new Set<string>(METRIC_PLACES);
 const kinds = new Set<string>(METRIC_KINDS);

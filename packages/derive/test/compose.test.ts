@@ -204,7 +204,7 @@ describe("a relationship update (section 7.3)", () => {
     const head = I.head;
     expect(judged(I, P, 2, 0, { from: sourceFact(twice), source: twice })).toMatchObject(unverified);
     // The address names this scope ID with another incarnation, or another scope. No source entry is needed to say so.
-    expect(judged(I, P, 2, 0, { to: { ...I.at, inc: P.at.inc }, source: null })).toEqual({ result: "routing", reason: "wrong-incarnation" });
+    expect(judged(I, P, 2, 0, { to: { ...I.at, inc: P.at.inc }, source: null })).toEqual({ result: "routing", reason: "wrong-genesis" });
     expect(judged(I, P, 2, 0, { to: P.at, source: null })).toEqual({ result: "routing", reason: "not-found" });
     expect(I.head).toEqual(head);
   });
@@ -375,7 +375,7 @@ describe("a diagnosis (section 7.4)", () => {
       return j.result === "write" && j.draft.input.type === "diagnosis" ? [j.draft.input.finding, j.draft.effects] : j;
     };
     // `undelivered` is terminal and runs the send's clause. The other finding runs none.
-    expect(diagnosisResult(answers("wrong-incarnation", "not-found", "wrong-incarnation"))).toEqual(["undelivered", [{ effect: "state", item: 2, state: "failed" }]]);
+    expect(diagnosisResult(answers("wrong-genesis", "not-found", "wrong-genesis"))).toEqual(["undelivered", [{ effect: "state", item: 2, state: "failed" }]]);
     expect(diagnosisResult(answers("retry", "not-found"))).toEqual(["delivery-unavailable", []]);
     const lost = diagnose(answers("none", "not-found"));
     if (lost.result === "write") S.seal(lost.draft);

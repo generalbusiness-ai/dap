@@ -25,7 +25,7 @@
  *
  * | Kind | Found by | Entry |
  * |---|---|---|
- * | `incarnation-conflict` | `follow`: a creation's result that ran the clause `conflict` (the contract's section 7.2). | That result's entry. |
+ * | `genesis-conflict` | `follow`: a creation's result that ran the clause `conflict` (the contract's section 7.2). | That result's entry. |
  * | `outcome-conflict` | The operations driver: an answer that contradicts a recorded outcome (`operations.ts`). | None is written. The row names the entry that is contradicted. |
  * | `sent-again` | `sendAgain`, below. It is an instruction and no incident. | None. |
  *
@@ -45,10 +45,10 @@ import { metric } from "./operational.ts";
 
 /** What an incident is (section 12, "What is one"), and the one instruction that the record also holds. */
 export type IncidentKind =
-  | "outcome-conflict" | "ref-mismatch" | "incarnation-conflict" | "pin-confirm-no-pin" | "unpin-never-admitted" | "token-unowned" | "branch-moved" | "bad-input"
+  | "outcome-conflict" | "ref-mismatch" | "genesis-conflict" | "pin-confirm-no-pin" | "unpin-never-admitted" | "token-unowned" | "branch-moved" | "bad-input"
   | "sent-again";
 const KINDS: ReadonlySet<string> = new Set<IncidentKind>([
-  "outcome-conflict", "ref-mismatch", "incarnation-conflict", "pin-confirm-no-pin", "unpin-never-admitted", "token-unowned", "branch-moved", "bad-input", "sent-again",
+  "outcome-conflict", "ref-mismatch", "genesis-conflict", "pin-confirm-no-pin", "unpin-never-admitted", "token-unowned", "branch-moved", "bad-input", "sent-again",
 ]);
 
 /** A reference to a fact in conflict. Each is a position or an ID of this scope, and none is text that a member or an outside system wrote. */
@@ -88,7 +88,7 @@ const FOLLOW_ENTRIES = 256;
 export function incidentsOf(entry: Entry, hash: Digest): { kind: IncidentKind; refs: IncidentRef[] }[] {
   const input = entry.input;
   if (input.type === "delivery" && input.message.class === "result" && "clause" in input && input.clause === "conflict") {
-    return [{ kind: "incarnation-conflict", refs: [{ entry: entry.seq, hash }, { entry: input.message.of.from.seq }] }];
+    return [{ kind: "genesis-conflict", refs: [{ entry: entry.seq, hash }, { entry: input.message.of.from.seq }] }];
   }
   return [];
 }

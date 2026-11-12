@@ -31,9 +31,9 @@ export class TransportError extends Error {
 
 /**
  * The entry a receipt names, checked against the whole fact reference: scope,
- * incarnation, kind, position and hash. `wrong-incarnation`: the entry at
- * that position is of another incarnation of the scope than the receipt
- * names. `reference-mismatch`: it is of another scope or kind, or at another
+ * genesis, position and hash. `wrong-genesis`: the entry at
+ * that position is of another genesis of the scope than the receipt
+ * names. `reference-mismatch`: it is of another scope, or at another
  * position. `hash-mismatch`: its bytes do not hash to the receipt's fact. In
  * each case the receipt is not of this history.
  */
@@ -174,7 +174,7 @@ export class ScopeHandle {
     const entry = read.value.entry;
     const born = entry.input.type === "genesis" ? entry.input : null;
     if (entry.seq !== seq || born && scopeIdOf(born.seed) !== at.scope) return { ok: false, reason: "reference-mismatch" };
-    if ((born ? hash : "genesis" in entry ? entry.genesis : null) !== at.genesis) return { ok: false, reason: "wrong-incarnation" };
+    if ((born ? hash : "genesis" in entry ? entry.genesis : null) !== at.genesis) return { ok: false, reason: "wrong-genesis" };
     let matched: Digest | null = null;
     try {
       matched = entryHash(entry);

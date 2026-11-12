@@ -64,7 +64,7 @@ export interface DeliveryContext extends Reading {
 /** How the resolver of this name answers an address that is not this scope and sequence (sections 2.3 and 7.4), or null. */
 function routing(scope: ScopeState | null, to: unknown): RoutingRefusal | null {
   if (!scope) return "not-found";
-  if (isScopeRef(to)) return to.scope !== scope.at.scope ? "not-found" : to.genesis !== scope.at.genesis ? "wrong-incarnation" : null;
+  if (isScopeRef(to)) return to.scope !== scope.at.scope ? "not-found" : to.genesis !== scope.at.genesis ? "wrong-genesis" : null;
   try {
     // A creation is addressed by a seed and names no incarnation.
     return scopeIdOf(to as Seed) === scope.at.scope ? null : "not-found";

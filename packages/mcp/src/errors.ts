@@ -98,7 +98,7 @@ export const READ_NOTES: Readonly<Record<ReadRefusal, Said>> = {
   behind: { sentence: "the scope has not reached the requested journal position", next: "Keep the accepted receipt. This read submitted no act." },
   archived: { sentence: "the entry is below the retained journal floor", next: "Read the verified archive clone named by the floor receipt; resume the live log at its floor." },
   "not-found": { sentence: "no such scope, entry or value is readable", next: "Check the ID; call room for the scopes of the room." },
-  "wrong-incarnation": { sentence: "the scope has another incarnation than the one named", next: "Call room; use the scope's current reference." },
+  "wrong-genesis": { sentence: "the scope has another genesis than the one named", next: "Call room; use the scope's current reference." },
   forbidden: { sentence: "your key may not read it", next: "Call room to see your standing; a signed read reads only what your key signed, within its window." },
   "scope-provisional": { sentence: "the scope is not confirmed yet", next: "Call wait, then read again." },
   "unsupported-definition": { sentence: "the scope pins a definition this runtime cannot run", next: "Nothing to do here; report it." },
