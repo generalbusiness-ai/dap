@@ -7,14 +7,15 @@
 import { env, evictDurableObject, runInDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ControlRequest, Digest, Entry, FactRef, Item, KeyId, MemberId, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, keyIdOfSecret, newIncarnation, signControl, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { addressKey, b64url, canonicalize, digestBytes, keyIdOf, keyIdOfSecret, newIncarnation, signControl, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { invitationIssueFields, encodeAgentKeyInvitation, requestSession, secretSigner, sessionRequest, signedIntent, signedLogReader, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, platform, FIRST_ACTIONS_OF, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, QUESTION_DIGESTS, changeDemo, issueDemo, issueQuestions } from "@generalbusiness/dap-lanes";
 import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
-import { McpService, memoryStore } from "../src/index.ts";
+import { McpService, memoryStore, OAuthClients, OAuthError } from "../src/index.ts";
+import { MCP_REQUEST_WINDOW_CALLS, MCP_REQUEST_WINDOW_IDENTITIES, MCP_REQUEST_WINDOW_MS } from "../src/request-window.ts";
 import worker from "../../../apps/room/worker.ts";
 import { creationTest, hostedRegistries, hostedTest, platformNet, type PlatformMcpAgent, type PlatformScope } from "../../scope/test/worker.ts";
 import { startupTest, StartupOwner, startupSnapshot, startupReport, type StartupServingIndex } from "../../scope/test/support/serving-startup.ts";
@@ -87,7 +88,7 @@ function control(room: Room, secret: Uint8Array, action: ControlRequest["action"
   const signed = signControl(request, secret);
   return `Control ${b64url(utf8(canonicalize(request)))}.${signed.sig}`;
 }
-const post = (path: string, authorization: string, body: string, method = "POST") => routed(`${SERVICE}${path}`, { method, headers: { authorization, "content-type": "application/json" }, body });
+const post = (path: string, authorization: string, body: string, method = "POST", address?: string) => routed(`${SERVICE}${path}`, { method, headers: { authorization, "content-type": "application/json", ...(address === undefined ? {} : { "cf-connecting-ip": address }) }, body });
 /** Arm only on the second real admission reply. The next configuration
  * await belongs to the tool body, after both synchronous HTTP checks. */
 function holdAfterAdmission(handle: string) {
@@ -2426,15 +2427,90 @@ test("retire erases the seed before an uncertain revoke, retries only its retain
     });
     expect(original?.signed).toEqual(before.input.signed);
     if (!original) throw new Error("The original custody envelope is missing.");
+    // Native invitation and join give this person a genuinely authorized key
+    // that has never entered the global hosted control window.
+    const freshSecret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+    const personInvite = await rita.ok("member.invite", { fields: { handle: "@window-owner", role: "member", ...invitationIssueFields("platform:membership@2", freshSecret), inviteEnds: timeOf(room.now() + 3_600_000) }, idempotencyKey: "TEST-window-person" });
+    expect(personInvite["answer"]).toBe("accepted");
+    const { inbox: _windowInbox, ...windowRepository } = rita.config.repository!;
+    const personLink = INVITATION_LINK + b64url(utf8(JSON.stringify({ v: 1, service: SERVICE, repository: windowRepository, invitation: (personInvite["fact"] as FactRef).seq, secret: freshSecret, handle: "@window-owner", definition: "platform:membership@2" })));
+    const freshPerson = room.agent("window-owner");
+    expect((await freshPerson.ok("join", { link: personLink, idempotencyKey: "TEST-window-person-join" }))["answer"]).toBe("accepted");
+    const freshInvitation = await invite(room, rita, "@window-agent", "platform:membership@2", "@window-owner");
+    const attackAddress = "198.51.100.44", legitimateAddress = "203.0.113.44", windowNow = room.now();
+    const publicBinding = hostedRegistries(env.REGISTRIES);
+    const publicRegistry = publicBinding.get(publicBinding.idFromName("oauth-public-clients-1"));
+    const freshActor = keyIdOfSecret(freshPerson.secret);
+    // Post-signature identity stand-in: these distinct, canonically encoded
+    // public-key words model already-verified actors. No signatures are claimed.
+    // The actual limiter, table, transaction and later Native controls stay real.
+    const attempts = MCP_REQUEST_WINDOW_IDENTITIES + MCP_REQUEST_WINDOW_CALLS;
+    const actors = Array.from({ length: attempts }, (_, n) => {
+      const bytes = new Uint8Array(32); new DataView(bytes.buffer).setUint32(0, n + 1);
+      return keyIdOf(bytes);
+    });
+    const flood = await room.wait(() => runInDurableObject(publicRegistry, (_instance, state) => {
+      const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
+      const clients = new OAuthClients(sql, { now: () => windowNow,
+        random: () => expect.fail("Window admission must not mint a client"),
+        fetch: async () => expect.fail("Window admission must not fetch client metadata"),
+      });
+      const freshBefore = Number(sql.exec(`SELECT count(*) AS n FROM mcp_request_window WHERE purpose = 'control' AND identity IN (?, ?)`, "identity:" + freshActor, "identity:key:" + freshActor).toArray()[0]!["n"]);
+      const purposes = [false, true].map(cleanup => {
+        const purpose = cleanup ? "cleanup" : "control";
+        const countKeys = () => Number(sql.exec(`SELECT count(*) AS n FROM mcp_request_window WHERE purpose = ? AND identity LIKE 'identity:key:%'`, purpose).toArray()[0]!["n"]);
+        const keysBefore = countKeys(); let allowed = 0, limited = 0;
+        for (const actor of actors) {
+          try {
+            // Both reviewed signatures reach the same real method. The old
+            // two-argument implementation ignores address and exhausts overflow.
+            Reflect.apply(clients.admitControl, clients, [actor, cleanup, attackAddress]);
+            allowed++;
+          } catch (error) {
+            if (!(error instanceof OAuthError) || error.status !== 429 || error.error !== "rate-limited") throw error;
+            limited++;
+          }
+        }
+        const addressCalls = sql.exec(`SELECT calls FROM mcp_request_window WHERE purpose = ? AND identity = ?`, purpose, "identity:address:" + (addressKey(attackAddress) ?? "addressless")).toArray()[0]?.["calls"] ?? null;
+        const overflowRows = Number(sql.exec(`SELECT count(*) AS n FROM mcp_request_window WHERE purpose = ? AND identity = ''`, purpose).toArray()[0]!["n"]);
+        // Probe an existing admitted key separately from the distinct-key flood.
+        const probeActor = actors[0]!;
+        const keyBefore = sql.exec(`SELECT calls FROM mcp_request_window WHERE purpose = ? AND identity IN (?, ?)`, purpose, "identity:" + probeActor, "identity:key:" + probeActor).toArray();
+        let probeLimited = false;
+        try { Reflect.apply(clients.admitControl, clients, [probeActor, cleanup, attackAddress]); }
+        catch (error) {
+          if (!(error instanceof OAuthError) || error.status !== 429 || error.error !== "rate-limited") throw error;
+          probeLimited = true;
+        }
+        const keyAfter = sql.exec(`SELECT calls FROM mcp_request_window WHERE purpose = ? AND identity IN (?, ?)`, purpose, "identity:" + probeActor, "identity:key:" + probeActor).toArray();
+        return { purpose, allowed, limited, allocatedKeys: countKeys() - keysBefore, addressCalls, overflowRows,
+          probeLimited, keyCallsBefore: keyBefore.length === 1 ? keyBefore[0]!["calls"] : null, keyCallsAfter: keyAfter.length === 1 ? keyAfter[0]!["calls"] : null };
+      });
+      const freshAfter = Number(sql.exec(`SELECT count(*) AS n FROM mcp_request_window WHERE purpose = 'control' AND identity IN (?, ?)`, "identity:" + freshActor, "identity:key:" + freshActor).toArray()[0]!["n"]);
+      return { freshBefore, freshAfter, purposes };
+    }));
+    const freshBody = JSON.stringify({ link: freshInvitation.link });
+    const freshCreate = await room.wait(async () => {
+      const response = await post("/mcp/agents", control(room, freshPerson.secret, "create", M, null, freshBody, "TEST-window-fresh-create"), freshBody, "POST", legitimateAddress);
+      const status = response.status; await response.body?.cancel(); return status;
+    });
     const items = await allItems(rita, "membership");
     const key = items.find(item => item.type === "key" && item.values["id"] === bot.key)!;
     const expected = { on: key.revision, roster: items.find(item => item.type === "roster")!.revision, member: items.find(item => item.type === "member" && item.values["handle"] === "@retire-admin")!.revision };
     const revoke = await signedIntent(secretSigner(rita.secret), { to: M, kind: "revoke-key", on: key.id, fields: { as: "retired" }, expected }, { idempotencyKey: "TEST-retire-exact-revoke", now: room.now() });
     const body = canonicalize({ revoke });
-    const retire = () => room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, body, "TEST-retire-admin"), body, "DELETE"));
+    const retire = () => room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, body, "TEST-retire-admin"), body, "DELETE", legitimateAddress));
     hostedTest.drop = `/${M.scope}/acts`;
     const first = await retire();
-    expect([first.status, await first.json()]).toEqual([202, expect.objectContaining({ retired: false, pending: true, seedErased: true, endpointDisabled: true, reason: "revoke-unresolved" })]);
+    const firstBody = await room.wait(() => first.json());
+    // Evaluate both actual member answers before any limiter-stat assertion.
+    expect([freshCreate, first.status], "S4: one address's minted-key flood cannot block another address's fresh create or retire").toEqual([201, 202]);
+    expect(flood.freshBefore, "the legitimate create actor starts outside both old and prefixed key windows").toBe(0);
+    expect(flood.freshAfter, "the legitimate create actor remains outside both key spellings immediately after flooding").toBe(0);
+    expect(room.now() - windowNow).toBeGreaterThanOrEqual(0);
+    expect(room.now() - windowNow).toBeLessThan(MCP_REQUEST_WINDOW_MS);
+    expect(flood.purposes).toEqual(["control", "cleanup"].map(purpose => ({ purpose, allowed: MCP_REQUEST_WINDOW_CALLS, limited: attempts - MCP_REQUEST_WINDOW_CALLS, allocatedKeys: MCP_REQUEST_WINDOW_CALLS, addressCalls: MCP_REQUEST_WINDOW_CALLS, overflowRows: 0, probeLimited: true, keyCallsBefore: 1, keyCallsAfter: 1 })));
+    expect([first.status, firstBody]).toEqual([202, expect.objectContaining({ retired: false, pending: true, seedErased: true, endpointDisabled: true, reason: "revoke-unresolved" })]);
     const stored = () => runInDurableObject(object, (_instance, state) => ({
       agent: state.storage.sql.exec("SELECT length(seed) AS bytes, state, bearer FROM agent WHERE id = 1").toArray(),
       revoke: state.storage.sql.exec("SELECT revoke FROM agent_retirement WHERE id = 1").toArray(),

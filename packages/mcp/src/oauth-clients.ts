@@ -105,8 +105,12 @@ export class OAuthClients {
     });
   }
   /** The trusted control adapter verifies signature/body/bindings/deadline first. */
-  admitControl(actor: string, cleanup: boolean): void {
-    const admission = this.#requestWindows.admit(cleanup ? "cleanup" : "control", actor, this.ports.now());
+  admitControl(actor: string, cleanup: boolean, address: string | null): void {
+    const now = this.ports.now(), purpose = cleanup ? "cleanup" : "control";
+    const addressIdentity = "address:" + (addressKey(typeof address === "string" ? address : null) ?? "addressless");
+    const addressAdmission = this.#requestWindows.admit(purpose, addressIdentity, now);
+    if (addressAdmission !== "allowed") throw new OAuthError(addressAdmission === "limited" ? "rate-limited" : "temporarily_unavailable", addressAdmission === "limited" ? 429 : 503);
+    const admission = this.#requestWindows.admit(purpose, "key:" + actor, now);
     if (admission !== "allowed") throw new OAuthError(admission === "limited" ? "rate-limited" : "temporarily_unavailable", admission === "limited" ? 429 : 503);
   }
   /** Anonymous context work is admitted before any client resolution or fetch. */

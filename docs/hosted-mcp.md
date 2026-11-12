@@ -75,12 +75,12 @@ server's own key, custody and native scope judgment.
 Explicit resource reads remain available to the same authenticated caller;
 resource replies omit UI metadata when the host declares no UI capability.
 
-Ordinary write tools and dynamic act tools declare model-only visibility.
-The host enforces that descriptor. Declared `view_act` and input tools stay
-callable from a trusted package's script for the actions that its view
-retains, even without a user click. The server still checks the declared
-bounds and current authority. This source checkpoint does not establish
-which external hosts enforce visibility; that observation remains owed.
+Ordinary write tools, dynamic act tools, `credential`, and `diff` declare
+model-only visibility. The `credential` and `diff` tools retain their
+read-only hints. The host must enforce the visibility descriptor. Declared
+`view_act` and input tools stay callable from a trusted package's script
+for the actions that its view retains, even without a user click. The
+server still checks the declared bounds and current authority.
 The `credential` tool returns its secret outside `structuredContent`.
 
 `MCP_CARD_ORIGINS` optionally binds remote resource metadata to exact
@@ -306,9 +306,17 @@ unknown answer. A view's `check-original` action keeps that same pending
 identity until an authoritative outcome settles it. Native still judges
 every request that reaches it.
 
-These rules describe the S4 source checkpoint. Its combined witnesses and
-validation remain owed, and hosted MCP stays disabled until the reviewed
-S4 head lands.
+Each stored control operation starts with a 4 KiB reservation. The
+registry and each Agent have 15 MiB for ordinary control state and a
+separate 1 MiB reserve for `retire`. A retention sweep after seven days
+past `notAfter` credits only the answer body's bytes. The remaining
+control-row charge persists with its tombstone. Passing `notAfter` does
+not release that row. One member with one Agent can therefore exhaust the
+room's ordinary control budget and leave new `create` and `grant`
+operations returning `507`. S10 request `af11896e` owns removal of this
+limit through row release and controller shares after S4 and the
+identifier cutover. S10 must land before hosted MCP opens for rooms with
+unknown members. It does not hold the O4 live window for known members.
 
 ### Routes
 
@@ -569,6 +577,12 @@ Read-only `connections` calls reserve no operation row and consume no
 permanent control-budget place. They still make fresh admission checks and
 spend request-window allowance. Existing rows retain their original
 custody and accounting rules.
+
+The public control adapter first charges the trusted transport address,
+then the verified key. Each address has separate 120-call windows for
+control and cleanup. Global IPv6 addresses share a `/64` window; missing
+or invalid addresses share one bucket. A denied address reaches no key
+admission or allocation.
 
 Each admission object permits 120 control calls per verified key in 60
 seconds. Cleanup gets a

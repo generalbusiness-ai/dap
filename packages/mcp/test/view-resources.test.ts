@@ -99,7 +99,7 @@ test("both revisions provide text fallback and bind paging to the host's UI capa
       const fallback = (await rpc("tools/call", { name: "view_needs_you", arguments: { view: `${version}-${ui}` } }))!.result as { content: { text: string }[] };
       expect(fallback.content[0]!.text).toContain("0 items");
       expect(tools.find(tool => tool.name === "view_read")?._meta?.ui?.visibility).toEqual(ui ? ["app"] : undefined);
-      for (const name of ["create", "join", "install_application"]) {
+      for (const name of ["create", "join", "install_application", "credential", "diff"]) {
         expect(tools.find(tool => tool.name === name)?._meta?.ui?.visibility, name).toEqual(["model"]);
       }
       const nativeActs = tools.filter(tool => tool._meta?.["dap/binding"] !== undefined);

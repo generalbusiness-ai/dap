@@ -54,12 +54,13 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
     return json(200, { resource, authorization_servers: [origin], scopes_supported: ["mcp"], bearer_methods_supported: ["header"] });
   }
   const { REGISTRIES, AGENTS } = env;
+  const address = request.headers.get("cf-connecting-ip");
   if (oauth) {
     const policy = oauthPolicy(env);
     if (!policy || resources.length === 0) return json(404, { error: "not-found" });
-    return await oauthRoute(request, { origin, resources, policy, read: boundedBytes, address: request.headers.get("cf-connecting-ip"),
+    return await oauthRoute(request, { origin, resources, policy, read: boundedBytes, address,
       clients: {
-        admitControl: (signed, service, action, agent) => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).admitControl(signed, service, action, agent),
+        admitControl: (signed, service, action, agent, address) => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).admitControl(signed, service, action, agent, address),
         admitContext: address => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).admitContext(address),
         registerClient: (bytes, given) => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).registerClient(bytes, given),
         resolveClient: (id, given) => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).resolveClient(id, given),
@@ -115,7 +116,7 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
   try {
     // No invitation/body plaintext enters the public-client registry. Its own
     // clock verifies the signed deadline before this actor spends a window.
-    const admission = await (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).admitControl(signed, origin, control.action, control.agent);
+    const admission = await (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).admitControl(signed, origin, control.action, control.agent, address);
     if (admission.status !== 200) return answered(admission);
   } catch { return answered({ status: 503, body: { error: "temporarily_unavailable" } }); }
   if (control.action === "grant") {
@@ -193,7 +194,7 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
   #registry: HostedRegistry | null = null;
   #clients: OAuthClients | null = null;
   #clientsOf(): OAuthClients { return this.#clients ??= new OAuthClients(sqlOf(this.ctx), { now: () => this.now(), random: n => crypto.getRandomValues(new Uint8Array(n)), fetch: (url, init) => fetch(url, init) }); }
-  async admitControl(signed: SignedControl, service: string, action: ControlAction, agent: string | null): Promise<ControlAnswer> {
+  async admitControl(signed: SignedControl, service: string, action: ControlAction, agent: string | null, address: string | null): Promise<ControlAnswer> {
     try {
       if (!verifyControl(signed)) return { status: 403, body: { error: "control", rule: "signature" } };
       const r = signed.request;
@@ -202,7 +203,7 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
       const now = this.now(), until = timeMs(r.notAfter);
       if (!Number.isSafeInteger(now) || now < 0 || !Number.isSafeInteger(now + 60_000)) return { status: 503, body: { error: "temporarily_unavailable" } };
       if (until === null || until <= now || until > now + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000) return { status: 400, body: { error: "control", rule: "notAfter" } };
-      this.#clientsOf().admitControl(r.actor, action === "retire" || action === "revoke-grant");
+      this.#clientsOf().admitControl(r.actor, action === "retire" || action === "revoke-grant", address);
       return { status: 200, body: {} };
     } catch (error) { return { status: error instanceof OAuthError ? error.status : 503, body: { error: error instanceof OAuthError ? error.error : "temporarily_unavailable" } }; }
   }
