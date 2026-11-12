@@ -50,12 +50,12 @@ const namedOwners = {
   },
   "packages/scope/src/worker-mcp.ts": {
     "packages/scope/src/worker-mcp.ts:$module": "ce4f069fd674de88949d3f07b4359c21dfea1f7469412d001af973f1a9f59e2f",
-    "packages/scope/src/worker-mcp.ts:mcpRoute": "799ea804666846e4d75a5653fcf59fef388ec5344e67c74aa92cad98db4ffdd9",
+    "packages/scope/src/worker-mcp.ts:mcpRoute": "0a3bd1e1d904a6502a52c889b52be7387268ae7d93a54e2b75879dd9854db08f",
     "packages/scope/src/worker-mcp.ts:boundedBytes": "6553fab5e2b9129266d64c02f7c3c9317095f1888fd12a10d12490d9f5d90f40",
     "packages/scope/src/worker-mcp.ts:observeThrough": "7e507f9bd9233223446711d089eb6d6b4236b69642eb9d39260e4712d81dab7a",
     "packages/scope/src/worker-mcp.ts:roleStandingThrough": "669398e6a2afe677dafebc39acb3c4bbf330824b013ea217ad949eb05a3110ed",
     "packages/scope/src/worker-mcp.ts:sqlOf": "5631baea8c5029d6ba93da6b3d199e63897c5f5ac05ae61e16b8d6f3e337f7fb",
-    "packages/scope/src/worker-mcp.ts:McpRegistry": "ce6f09f22fc8d83ac765f857ec0916a97e5a1e6f0335e3ebb02971c6d06271ff",
+    "packages/scope/src/worker-mcp.ts:McpRegistry": "50751525177639a7a0ca5bde758c9ced544cd0587c75e8a5afd3de35f7acc870",
     "packages/scope/src/worker-mcp.ts:McpAgent": "2e25a7729f084928fc5b88343fbdfcb5d0c90fab8e4ea878076be9118b52d2ea"
   },
   "packages/cli/src/commands.ts": {
@@ -203,7 +203,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:WRITE": "5920731b91c504f8bfb945b3edbe132bea0167ec1c9a44579e3dd658e5e9cd91",
     "packages/mcp/src/service.ts:scopeArg": "36e8957cdbc823f8e1bf9ab903a7a353df3b10d1292ed7d378362aabc41f6ef4",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "380903c68449cf8b5ff4e11ef3f0702159d951dafb679fda448f845ddb2ca78d", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:McpService": "31471582cbdcc6b26e0543c608870a2b030a835587f0650a4c609ce94060e581", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:commitIdFault": "3614f1add9efc0a6aa08e7afe8ec461e46d5728284a77e668fa67fb962614527",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -242,9 +242,9 @@ const seals = {
   "packages/scope/src/http-stream.ts": "ac798ac542c6295bda6495ef9c3f46f2c78511bfb89b88ee4b2d4df7711e2168", // Retain the exact existing close capability on observed HTTP disconnect.
   "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/mcp/src/oauth-parameters.ts": "b48c22470c29dfa7c11260fc874128859650791294ec93d8ae0007bdca95534c", // O3 OAuth authority, public-client policy or retained browser consent owner.
-  "packages/mcp/src/oauth-clients.ts": "79291196d436833f250c620954837129fe0ba0794e3ab83058d26f6b0dcd9562", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/mcp/src/oauth-clients.ts": "6a9a783055313436b3d4746df9cbf38817dc4cb03477fab607980eb98a60f55a", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/mcp/src/oauth-issuer.ts": "abfa05c1826d3d856a3e7bc2be7d265370e70171f6e7ee84cfc4dbd96379e32b", // O3 OAuth authority, public-client policy or retained browser consent owner.
-  "packages/scope/src/oauth-routes.ts": "9550092a5e91e7bce7fb5fd9a38efe6acb13b199cbda18f3fc8a2af97910da7d", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/scope/src/oauth-routes.ts": "2696e4f28843ff2dc63a34a76f9cddc09eb5d61c81f4faafa611f1137b425548", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "apps/room/page/oauth-route.ts": "859183c042ec2708d4d357ec49fffe0aae4fb9f4c44ea3cff734e9b2c33cbf1e", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "apps/room/page/src/oauth-context.ts": "15e8f1a89a49d4e403801efa2f9caefd83d6c3327ac897bb3b0475d4dbc37ff3", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "apps/room/page/src/oauth-custody.ts": "cedf10f00ac0135438b5cfba43056a2b78f86760f1ea9d528f7a81e78e3693dd", // O3 OAuth authority, public-client policy or retained browser consent owner.
