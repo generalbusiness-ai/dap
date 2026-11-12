@@ -791,7 +791,7 @@ export class Operations {
             return {
               // Section 16.1, "A value that a row may retain": each value that a retained observation names is kept with the entry.
               verdict: "write", draft: judged.draft, ...(interpreted ? { facts: interpreted } : {}), retain: [...retain.filter((given) => given.kind === "snapshot" && named.includes(given.digest)), ...valuesOf(judged.draft)],
-              sealed: (sealed) => { wrote.sealed = sealed; rows.sealed(sealed); return { recorded: "written", fact: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash } }; },
+              sealed: (sealed) => { wrote.sealed = sealed; rows.sealed(sealed); return { recorded: "written", fact: { at: store.scope()!.at, seq: sealed.entry.seq, hash: sealed.hash } }; },
               unfit: () => ({ recorded: "refused", detail: "the outcome cannot be an entry" }), full: (_head, bound) => ({ recorded: "unavailable", ...(definition.declared.capacity ? { reason: "scope-full", name: bound } : {}) }),
             };
           case "repeat": return said({ recorded: "repeat", seq: judged.seq });

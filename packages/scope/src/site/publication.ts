@@ -3,7 +3,7 @@
  * These reads do not start dispatchers, operations, sessions or provider calls.
  */
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isScopeRef } from "@generalbusiness/dap-bytes";
+import { canonicalize, isEntryBodyOf, isScopeRef } from "@generalbusiness/dap-bytes";
 import { isOf, destinationReceipt, initialCommitOf, usesFilePublicationProtocol } from "@generalbusiness/dap-platform";
 import { isObjectId, refName } from "@generalbusiness/dap-git";
 import type { DestinationRepository } from "../destination-host.ts";
@@ -91,7 +91,7 @@ export function sitePublishedCommit(store: import("../sqlite.ts").SqliteStore, d
     const row = store.stored(seq);
     if (!row) return null;
     const entry = JSON.parse(row.bytes) as import("@generalbusiness/dap-contract").Entry;
-    if (entry.seq !== seq || canonicalize(entry.at) !== canonicalize(current.at) || entryHash(entry) !== row.hash) return null;
+    if (entry.seq !== seq || !isEntryBodyOf(entry, { at: current.at, seq, hash: row.hash })) return null;
     return { entry, hash: row.hash };
   };
   let after: number | null = null;
@@ -143,8 +143,8 @@ export function sitePublishedCommit(store: import("../sqlite.ts").SqliteStore, d
         const blob = expected.objects.find(o => o.kind === "blob")?.id;
         if (!tree || !blob) continue;
         return { ok: true, proof: { at: current.at, head: current.head, directory, repository: repository as DestinationRepository, commit,
-          publication: { at: judged.entry.at, seq: judged.entry.seq, hash: judged.hash },
-          written: { at: written.entry.at, seq: written.entry.seq, hash: written.hash },
+          publication: { at: current.at, seq: judged.entry.seq, hash: judged.hash },
+          written: { at: current.at, seq: written.entry.seq, hash: written.hash },
           receipt: { ref: expected.ref, commit: expected.commit, tree, blob, file: canonicalize(expected.file) } } };
       }
       if (positions.length <= PUBLICATION_PROOF_BOUNDS.pageItems) return absent;

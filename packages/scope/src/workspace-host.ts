@@ -1,6 +1,6 @@
 /** Production workspace operations for the explicit hold@2 family. */
 import type { FactRef, FieldValue, KeyId, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isFactRef, isLocalId, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, isEntryBodyOf, isFactRef, isLocalId, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
 import { ANCESTRY_BOUNDS, ledgerOf, snapshotInput, stagedRefName, walk, type RecordState } from "@generalbusiness/dap-derive";
 import { TokenDriver, branchRef, isObjectId, type LiveToken, type MintAsk, type RevokeAsk } from "@generalbusiness/dap-git";
 import type { DestinationRepository, ReadCredential } from "./destination-host.ts";
@@ -172,7 +172,7 @@ export class WorkspaceHost implements Outside {
   async send(request: EffectRequest): Promise<EffectAnswer | null> {
     try {
       if (!this.accepts(request.owner, request.kind) || !same(request.scope, this.#given.scope()?.at)
-        || request.origin.hash !== entryHash(request.origin.entry) || !same(request.origin.entry.at, request.scope)
+        || !isEntryBodyOf(request.origin.entry, { at: request.scope, seq: request.origin.entry.seq, hash: request.origin.hash })
         || request.operation !== `${request.origin.entry.seq}:${request.operation.split(":")[1]}`
         || !request.origin.entry.effects.some(effect => effect.effect === "operation" && effect.owner === OWNER && effect.kind === request.kind && `${request.origin.entry.seq}:${effect.k}` === request.operation)) return null;
       if (request.kind === "mint" || request.kind === "revoke") {

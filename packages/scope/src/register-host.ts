@@ -3,8 +3,8 @@
  * operations driver owns sending and retrying; this adapter makes one provider
  * call and accepts only that call's own answer. No listing settles an attempt.
  */
-import type { FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, intentDigest, isDigest, isOperationId, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
+import type { FieldValue } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, intentDigest, isDigest, isEntryBodyOf, isOperationId, same, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { DIRECTORY_OF, isOf, repositoryName } from "@generalbusiness/dap-platform";
 import type { OutsideGiven } from "./given.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
@@ -22,7 +22,6 @@ export type RepositoryDeletion = { deleted: boolean; id: string };
 export type CredentialRevocation = { revoked: boolean; credential: string };
 export interface RegisterHostOptions { host: string; namespace: string; provider: RegisterProvider }
 
-const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;
 const registerText = (value: unknown): value is string => typeof value === "string" && utf8(value).length <= 256;
 
 /** Snapshot untrusted members once, including getters, then validate that snapshot. */
@@ -85,12 +84,12 @@ export class RegisterHost implements Outside {
     const given = this.#given;
     const scope = given.scope();
     const genesis = given.genesis();
-    if (!scope || !sameScope(scope.at, request.scope) || scope.at.kind !== "register" || genesis?.seed.definition !== request.owner || !this.accepts(request.owner, request.kind) || !isOperationId(request.operation) || !Number.isSafeInteger(request.attempt) || request.attempt < 1) return false;
+    if (!scope || !same(scope.at, request.scope) || scope.kind !== "register" || genesis?.seed.definition !== request.owner || !this.accepts(request.owner, request.kind) || !isOperationId(request.operation) || !Number.isSafeInteger(request.attempt) || request.attempt < 1) return false;
     const operation = given.state.operation(request.operation);
     if (!operation || operation.owner !== request.owner || operation.kind !== request.kind || !operation.attempts.some((attempt) => attempt.attempt === request.attempt)) return false;
     const [seq, k] = request.operation.split(":").map(Number);
     const origin = given.own(seq!);
-    if (!origin || origin.entry.seq !== seq || !sameScope(origin.entry.at, scope.at) || origin.hash !== request.origin.hash || entryHash(request.origin.entry) !== origin.hash || canonicalize(origin.entry) !== canonicalize(request.origin.entry)) return false;
+    if (!origin || origin.entry.seq !== seq || !isEntryBodyOf(origin.entry, { at: scope.at, seq, hash: origin.hash }) || origin.hash !== request.origin.hash || entryHash(request.origin.entry) !== origin.hash || canonicalize(origin.entry) !== canonicalize(request.origin.entry)) return false;
     const openings = origin.entry.effects.filter((effect) => effect.effect === "operation" && effect.k === k);
     if (openings.length !== 1 || openings[0]!.effect !== "operation" || openings[0]!.owner !== operation.owner || openings[0]!.kind !== operation.kind) return false;
     const register = given.state.page("register", ["open"], null, 1).items[0];
