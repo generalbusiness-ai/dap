@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:02c3e5399510cf9e59dcaa163c597e596ed6935d","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/shape.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:038c40b1b06b1a72c2a7352440a01bdbb511df46","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/input-schema.ts."}
