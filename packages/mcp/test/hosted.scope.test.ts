@@ -1769,18 +1769,18 @@ test("the control budget is one aggregate: operations, sessions and configuratio
     expect(agentWindowLimited).toBe(true);
     const publicClients = hostedRegistries(env.REGISTRIES);
     const publicClientObject = publicClients.get(publicClients.idFromName("oauth-public-clients-1"));
-    const keyCalls = (object: DurableObjectStub) => runInDurableObject(object, (_instance, state) =>
-      state.storage.sql.exec("SELECT calls FROM mcp_request_window WHERE purpose = 'control' AND identity = ?", "identity:" + rita.key).toArray()[0]?.["calls"]);
+    const keyCalls = (object: DurableObjectStub, identity = "identity:" + rita.key) => runInDurableObject(object, (_instance, state) =>
+      state.storage.sql.exec("SELECT calls FROM mcp_request_window WHERE purpose = 'control' AND identity = ?", identity).toArray()[0]?.["calls"]);
     expect(await keyCalls(agentObject)).toBe(120);
     // Real routed reads consume the remaining central allowance even though
     // this Agent already refuses. The exhausted central gate must also keep
     // its cleanup purpose separate.
-    for (let n = 0; n <= 120 && await keyCalls(publicClientObject) !== 120; n++) {
+    for (let n = 0; n <= 120 && await keyCalls(publicClientObject, "identity:key:" + rita.key) !== 120; n++) {
       const limited = await room.wait(() => post(`/mcp/agents/${bot.agent}/connections`, control(room, rita.secret, "connections", M, bot.agent, "{}", `window-route-${n}`), "{}"));
       expect(limited.status).toBe(429);
       expect(await limited.json()).toEqual({ error: "rate-limited" });
     }
-    expect(await keyCalls(publicClientObject)).toBe(120);
+    expect(await keyCalls(publicClientObject, "identity:key:" + rita.key)).toBe(120);
     expect(await keyCalls(agentObject)).toBe(120);
     expect(await stub.used()).toBe(beforeReset);
     const sameClientId = publicClients.idFromName("oauth-public-clients-1").toString();
@@ -1794,7 +1794,7 @@ test("the control budget is one aggregate: operations, sessions and configuratio
     } finally { hostedTest.now = () => room.now(); }
     await evictDurableObject(publicClientObject);
     expect(hostedRegistries(env.REGISTRIES).idFromName("oauth-public-clients-1").toString()).toBe(sameClientId);
-    expect(await keyCalls(publicClientObject)).toBe(120);
+    expect(await keyCalls(publicClientObject, "identity:key:" + rita.key)).toBe(120);
     // Retire draws on the reserve and its separate cleanup window after both
     // ordinary control windows refuse. No counter or budget is reset.
     expect((await room.wait(() => post(`/mcp/agents/${bot.agent}`, control(room, rita.secret, "retire", M, bot.agent, "", "retire-at-full"), "", "DELETE"))).status).toBe(202);
