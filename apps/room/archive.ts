@@ -9,6 +9,7 @@ import { readNativeBirth } from "../../packages/scope/src/native-birth.ts";
 import { FixtureArchiveSourcePins as ArchiveSourcePins, type FixtureArchiveSourceBirth } from "../../packages/scope/src/archive-source-pins.ts";
 import type { ArchiveHostConfiguration, ArchiveHostItemAsk } from "../../packages/scope/src/archive-host-item.ts";
 import type { NativeItemQuery } from "../../packages/scope/src/item-queries.ts";
+import { isRoomRetiredStop, type RoomRetiredStop } from "../../packages/scope/src/room-retired.ts";
 import type { ArchiveBudget } from "../../packages/scope/src/archive-budget.ts";
 import type { ArchivePolicyRegistry } from "../../packages/scope/src/archive-inventory.ts";
 import type { OutsideGiven } from "../../packages/scope/src/given.ts";
@@ -59,8 +60,9 @@ export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Bindin
       const target = archiveTarget({ births: { read: async (...args) => capture(args[0], await nativeBirths.read(...args)) },
         query: async (where, query, archiving, directory) => {
           if (directory.scope !== config.directory) return { ok: false, reason: "forbidden" };
-          const peer = binding.get(binding.idFromName(where.scope)) as unknown as { archiveItem(ask: ArchiveHostItemAsk): Promise<NativeItemQuery> };
+          const peer = binding.get(binding.idFromName(where.scope)) as unknown as { archiveItem(ask: ArchiveHostItemAsk): Promise<NativeItemQuery | RoomRetiredStop> };
           const answer = await peer.archiveItem({ query, archiving, directory });
+          if (isRoomRetiredStop(answer)) return { ok: false, reason: "unavailable" };
           const checked = readItemQueryParameter(query);
           const page = answer.ok && checked ? readItemQueryReply(utf8(answer.serialized), checked) : null;
           const row = page?.ok && page.complete && page.value.items.length === 1 ? page.value.items[0] : null;

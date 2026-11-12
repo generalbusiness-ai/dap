@@ -1,6 +1,7 @@
 /** The demo's HTTP route; the native read-only projection stays with ScopeObject. */
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import type { Binding } from "../../packages/scope/src/namespace.ts";
+import { isRoomRetiredStop, roomRetiredResponse, type RoomRetiredStop } from "../../packages/scope/src/room-retired.ts";
 import { readPublicOrigin, type PublicOriginBindings } from "../../packages/scope/src/public-origin.ts";
 import { demoCreationConfig, registerRef, type DemoCreationBindings, type DemoCreationConfig, type DemoCreationOffer } from "../../packages/scope/src/demo-creation.ts";
 export { demoCreationConfig, type DemoCreationOffer } from "../../packages/scope/src/demo-creation.ts";
@@ -23,7 +24,8 @@ export async function demoCreationRoute(request: Request, env: DemoCreationBindi
     || selected && canonicalize(selected) !== canonicalize(settings.current.register)) return reply(404, { error: "not-found" });
   const config = settings.current;
   if (request.method !== "GET") return reply(405, { error: "method-not-allowed" });
-  const stub = env.SCOPES.get(env.SCOPES.idFromName(config.register.scope)) as unknown as { demoCreationOffer(config: DemoCreationConfig): DemoCreationOffer | null | Promise<DemoCreationOffer | null> };
+  const stub = env.SCOPES.get(env.SCOPES.idFromName(config.register.scope)) as unknown as { demoCreationOffer(config: DemoCreationConfig): DemoCreationOffer | null | RoomRetiredStop | Promise<DemoCreationOffer | null | RoomRetiredStop> };
   const offer = await stub.demoCreationOffer(config);
+  if (isRoomRetiredStop(offer)) return roomRetiredResponse();
   return offer ? reply(200, offer) : reply(404, { error: "not-found" });
 }

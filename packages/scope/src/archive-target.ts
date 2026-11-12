@@ -7,6 +7,7 @@ import { admitSequenceGenesis, canonicalize, encodeItemQueryParameter, isDigest,
 
 import { ARCHIVE_NATIVE_DATA } from "@generalbusiness/dap-git/archive-policy";
 import type { ArchiveBudget } from "./archive-budget.ts";
+import { isRoomRetiredStop, type RoomRetiredStop } from "./room-retired.ts";
 import type { FixtureArchiveTarget } from "./archive-driver.ts";
 import type { DestinationRepository } from "./destination-host.ts";
 import type { NativeItemQuery } from "./item-queries.ts";
@@ -205,6 +206,9 @@ export function archiveTarget(reads: ArchiveTargetReads): Omit<FixtureArchiveDep
 export function fixtureArchiveTargetIn(binding: Binding, reader: { fixture: "archive-target-reader"; value: unknown }): FixtureArchiveDependencyTarget {
   if (reader.fixture !== "archive-target-reader") throw new Error("archive fixture reader required");
   return fixtureArchiveTarget({ fixture: "archive-target-reads", births: namespace(binding).births,
-    query: (at, encoded) => (binding.get(binding.idFromName(at.scope)) as { queryItems(encoded: string, reader: unknown): Promise<NativeItemQuery> }).queryItems(encoded, reader.value),
+    query: async (at, encoded) => {
+      const answer = await (binding.get(binding.idFromName(at.scope)) as { queryItems(encoded: string, reader: unknown): Promise<NativeItemQuery | RoomRetiredStop> }).queryItems(encoded, reader.value);
+      return isRoomRetiredStop(answer) ? { ok: false, reason: "unavailable" } : answer;
+    },
   });
 }

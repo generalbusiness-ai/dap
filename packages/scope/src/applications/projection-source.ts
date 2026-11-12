@@ -6,12 +6,14 @@ import { canonicalize, isRecord, isScopeRef, parseStrict, utf8 } from "@generalb
 import { applicationJson } from "@generalbusiness/dap-platform/application";
 import type { Binding } from "../namespace.ts";
 import type { PreparationRun } from "../preparation-flight.ts";
+import { isRoomRetiredStop, type RoomRetiredStop } from "../room-retired.ts";
 export const APPLICATION_DECLARATION_BYTES = 132 * 1024;
+const RETIRED_DECLARATION = Symbol("retired-application-declaration");
 export interface ApplicationDeclarationSource {
   read(directory: ScopeRef, install: number, name: string, run: PreparationRun): Promise<unknown>;
 }
-interface DirectoryPeer { applicationRoomBytes(): Promise<string | null> }
-interface RulesPeer { applicationProjectionDeclarationBytes(directory: ScopeRef, install: number, name: string): Promise<string | null> }
+interface DirectoryPeer { applicationRoomBytes(): Promise<string | null | RoomRetiredStop> }
+interface RulesPeer { applicationProjectionDeclarationBytes(directory: ScopeRef, install: number, name: string): Promise<string | null | RoomRetiredStop> }
 function owned(bytes: unknown, most: number): unknown {
   if (typeof bytes !== "string" || bytes.length > most || utf8(bytes).length > most) return null;
   const value: unknown = parseStrict(bytes);
@@ -25,6 +27,7 @@ export function applicationDeclarationsIn(binding: Binding): ApplicationDeclarat
       // task keeps the owner's flight occupied until it actually settles.
       const reply = await (binding.get(binding.idFromName(directory.scope)) as DirectoryPeer).applicationRoomBytes();
       if (!run.active()) return null;
+      if (isRoomRetiredStop(reply)) throw RETIRED_DECLARATION;
       const room = owned(reply, 1024);
       if (!isRecord(room)) return null;
       const keys = Object.keys(room).sort().join();
@@ -34,7 +37,8 @@ export function applicationDeclarationsIn(binding: Binding): ApplicationDeclarat
       if (!isScopeRef(room["directory"])
         || canonicalize(room["directory"]) !== canonicalize(directory) || !isScopeRef(room["rules"]) || room["rules"].kind !== "rules") return null;
       const declared = await (binding.get(binding.idFromName(room["rules"].scope)) as RulesPeer).applicationProjectionDeclarationBytes(directory, install, name);
+      if (run.active() && isRoomRetiredStop(declared)) throw RETIRED_DECLARATION;
       return run.active() ? owned(declared, APPLICATION_DECLARATION_BYTES) : null;
-    } catch { return null; }
+    } catch (failed) { if (failed === RETIRED_DECLARATION) throw failed; return null; }
   } };
 }

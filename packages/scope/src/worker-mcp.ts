@@ -12,7 +12,7 @@ import { parseStrict } from "@generalbusiness/dap-bytes";
 import type { SequenceRef } from "@generalbusiness/dap-contract";
 import { hostedRegistryName } from "./hosted-registry-name.ts";
 import { classifyRoomFormat, writeRoomFormat2, type RoomFormatStart } from "./room-format.ts";
-import { roomRetiredResponse } from "./room-retired.ts";
+import { isRoomRetiredStop, roomRetiredResponse } from "./room-retired.ts";
 import { registryAnswers, registryScopes, registryNow, registryPorts, registryEvict, hostedRegistryOwnsMembership, agentScopes, agentPorts, agentRetainClient, agentEvict, agentDurable, agentCustodyOf, agentHeld, agentControlUsed, agentAnswers, hostedAgentStart } from "./internal/hosted-hooks.ts";
 import { isObject } from "@generalbusiness/dap-derive";
 import { type Binding } from "./namespace.ts";
@@ -159,9 +159,20 @@ async function boundedBytes(request: Request, most: number): Promise<Uint8Array 
   } catch { return "unreadable"; }
 }
 
+/** A transport stop cannot become an inactive key or a refused authority read. */
+const RETIRED_MEMBERSHIP = Symbol("retired-membership");
+async function membershipControl(work: () => Promise<ControlAnswer>, error: "unavailable" | "temporarily_unavailable"): Promise<ControlAnswer> {
+  try { return await work(); }
+  catch (failed) { if (failed === RETIRED_MEMBERSHIP) return { status: 503, body: { error } }; throw failed; }
+}
+
 /** The membership object's observation read, as the hosted objects check authority: a real read of the membership now. */
 function observeThrough(binding: Binding): RegistryPorts["observe"] {
-  return (membership, ask) => (binding.get(binding.idFromName(membership.scope)) as unknown as { observe(asked: unknown): Promise<unknown> }).observe({ of: membership, ...ask });
+  return async (membership, ask) => {
+    const answer = await (binding.get(binding.idFromName(membership.scope)) as unknown as { observe(asked: unknown): Promise<unknown> }).observe({ of: membership, ...ask });
+    if (isRoomRetiredStop(answer)) throw RETIRED_MEMBERSHIP;
+    return answer;
+  };
 }
 
 const sqlOf = (ctx: DurableObjectState) => ({
@@ -233,10 +244,10 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
     this.#inspectionOwner = true;
     return candidate;
   }
-  async create(signed: Parameters<HostedRegistry["create"]>[0], body: Uint8Array, origin: string): Promise<ControlAnswer | RetiredStoreStop> { if (!this.#owns(signed?.request?.membership)) return RETIRED_STORE_STOP; return this.#of().create(signed, body, origin); }
-  async grant(signed: Parameters<HostedRegistry["grant"]>[0], body: Uint8Array, origin: string, context: Parameters<HostedRegistry["grant"]>[3]): Promise<ControlAnswer | RetiredStoreStop> { if (!this.#owns(signed?.request?.membership)) return RETIRED_STORE_STOP; return this.#of().grant(signed, body, origin, context); }
-  async grantExisting(signed: Parameters<HostedRegistry["grantExisting"]>[0], body: Uint8Array, origin: string, context: Parameters<HostedRegistry["grantExisting"]>[3]): Promise<ControlAnswer | RetiredStoreStop> { if (!this.#owns(signed?.request?.membership)) return RETIRED_STORE_STOP; return this.#of().grantExisting(signed, body, origin, context); }
-  async connections(signed: Parameters<HostedRegistry["connections"]>[0], body: Uint8Array, origin: string): Promise<ControlAnswer | RetiredStoreStop> { if (!this.#owns(signed?.request?.membership)) return RETIRED_STORE_STOP; return this.#of().connections(signed, body, origin); }
+  async create(signed: Parameters<HostedRegistry["create"]>[0], body: Uint8Array, origin: string): Promise<ControlAnswer | RetiredStoreStop> { if (!this.#owns(signed?.request?.membership)) return RETIRED_STORE_STOP; return membershipControl(() => this.#of().create(signed, body, origin), "unavailable"); }
+  async grant(signed: Parameters<HostedRegistry["grant"]>[0], body: Uint8Array, origin: string, context: Parameters<HostedRegistry["grant"]>[3]): Promise<ControlAnswer | RetiredStoreStop> { if (!this.#owns(signed?.request?.membership)) return RETIRED_STORE_STOP; return membershipControl(() => this.#of().grant(signed, body, origin, context), "unavailable"); }
+  async grantExisting(signed: Parameters<HostedRegistry["grantExisting"]>[0], body: Uint8Array, origin: string, context: Parameters<HostedRegistry["grantExisting"]>[3]): Promise<ControlAnswer | RetiredStoreStop> { if (!this.#owns(signed?.request?.membership)) return RETIRED_STORE_STOP; return membershipControl(() => this.#of().grantExisting(signed, body, origin, context), "unavailable"); }
+  async connections(signed: Parameters<HostedRegistry["connections"]>[0], body: Uint8Array, origin: string): Promise<ControlAnswer | RetiredStoreStop> { if (!this.#owns(signed?.request?.membership)) return RETIRED_STORE_STOP; return membershipControl(() => this.#of().connections(signed, body, origin), "unavailable"); }
   agents(membership: SequenceRef): ReturnType<HostedRegistry["agents"]> | RetiredStoreStop { if (!this.#owns(membership)) return RETIRED_STORE_STOP; return this.#of().agents(); }
   reservedAgent(op: string, membership: SequenceRef): string | null | RetiredStoreStop { if (!this.#owns(membership)) return RETIRED_STORE_STOP; return this.#of().reservedAgent(op); }
   async alarm(): Promise<void> { /* No registry alarm work, including on old names. */ }
@@ -304,18 +315,19 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
     this.#format = { kind: "current" };
     return candidate;
   }
-  async create(op: string, request: Parameters<HostedAgent["create"]>[1], link: Parameters<HostedAgent["create"]>[2]): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return this.#of().create(op, request, link); }
-  async grant(signed: Parameters<HostedAgent["grant"]>[0], body: Uint8Array, context: Parameters<HostedAgent["grant"]>[2]): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return this.#of().grant(signed, body, context); }
+  async create(op: string, request: Parameters<HostedAgent["create"]>[1], link: Parameters<HostedAgent["create"]>[2]): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().create(op, request, link), "unavailable"); }
+  async grant(signed: Parameters<HostedAgent["grant"]>[0], body: Uint8Array, context: Parameters<HostedAgent["grant"]>[2]): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().grant(signed, body, context), "unavailable"); }
   async agentState(): Promise<string | null | RetiredStoreStop> { if (this.#format.kind === "retired") return RETIRED_STORE_STOP; this.#admitted(); return this.#of().agentState(); }
-  async connectionControl(signed: Parameters<HostedAgent["connectionControl"]>[0], action: "connections" | "revoke-grant", body: Uint8Array): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return this.#of().connectionControl(signed, action, body); }
-  async exchangeCode(...args: Parameters<HostedAgent["exchangeCode"]>): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("temporarily_unavailable"); if (stopped) return stopped; return this.#of().exchangeCode(...args); }
-  async refreshGrant(...args: Parameters<HostedAgent["refreshGrant"]>): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("temporarily_unavailable"); if (stopped) return stopped; return this.#of().refreshGrant(...args); }
-  async revokeToken(...args: Parameters<HostedAgent["revokeToken"]>): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("temporarily_unavailable"); if (stopped) return stopped; return this.#of().revokeToken(...args); }
-  async control(signed: Parameters<HostedAgent["control"]>[0], action: "bearer" | "retire", body: Uint8Array): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return this.#of().control(signed, action, body); }
+  async connectionControl(signed: Parameters<HostedAgent["connectionControl"]>[0], action: "connections" | "revoke-grant", body: Uint8Array): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().connectionControl(signed, action, body), "unavailable"); }
+  async exchangeCode(...args: Parameters<HostedAgent["exchangeCode"]>): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("temporarily_unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().exchangeCode(...args), "temporarily_unavailable"); }
+  async refreshGrant(...args: Parameters<HostedAgent["refreshGrant"]>): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("temporarily_unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().refreshGrant(...args), "temporarily_unavailable"); }
+  async revokeToken(...args: Parameters<HostedAgent["revokeToken"]>): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("temporarily_unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().revokeToken(...args), "temporarily_unavailable"); }
+  async control(signed: Parameters<HostedAgent["control"]>[0], action: "bearer" | "retire", body: Uint8Array): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().control(signed, action, body), "unavailable"); }
   override async fetch(request: Request): Promise<Response> {
     if (this.#format.kind === "retired") return roomRetiredResponse();
     if (this.#format.kind === "unavailable") return json(503, { error: "unavailable" });
-    return this.#of().fetch(request);
+    try { return await this.#of().fetch(request); }
+    catch (failed) { if (failed === RETIRED_MEMBERSHIP) return json(503, { error: "unavailable" }); throw failed; }
   }
   async alarm(): Promise<void> {
     if (this.#format.kind === "retired" || this.#format.kind === "unavailable") return;

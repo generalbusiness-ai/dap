@@ -7,6 +7,7 @@ import { canonicalize, entryHash, isScopeRef } from "@generalbusiness/dap-bytes"
 import { isOf, destinationReceipt, initialCommitOf, usesFilePublicationProtocol } from "@generalbusiness/dap-platform";
 import { isObjectId, refName } from "@generalbusiness/dap-git";
 import type { DestinationRepository } from "../destination-host.ts";
+import type { RoomRetiredStop } from "../room-retired.ts";
 
 export interface Publication {
   at: ScopeRef;
@@ -48,9 +49,9 @@ export function sitePublication(store: import("../sqlite.ts").SqliteStore, defin
 }
 
 export interface SitePublicationPeer {
-  siteDestination(): Promise<ScopeRef | null>;
-  sitePublication(directory: ScopeRef, repository: DestinationRepository): Promise<Publication | null>;
-  sitePublishedCommit(directory: ScopeRef, repository: DestinationRepository, commit: string): Promise<PublishedCommitSelection>;
+  siteDestination(): Promise<ScopeRef | null | RoomRetiredStop>;
+  sitePublication(directory: ScopeRef, repository: DestinationRepository): Promise<Publication | null | RoomRetiredStop>;
+  sitePublishedCommit(directory: ScopeRef, repository: DestinationRepository, commit: string): Promise<PublishedCommitSelection | RoomRetiredStop>;
 }
 
 /** Finite work and allocation allowance for the internal native proof read. */

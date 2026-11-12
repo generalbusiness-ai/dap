@@ -13,6 +13,7 @@ import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { readInstalledRegisters } from "./register-setting.ts";
 
 import type { CreationAdmission } from "./creation-admission.ts";
+import { isRoomRetiredStop, type RoomRetiredStop } from "./room-retired.ts";
 import { readNativeBirth, type NativeBirth } from "./native-birth.ts";
 import type { Binding, Peer } from "./namespace.ts";
 import { proofEntry, type ProofBody } from "./proof-bytes.ts";
@@ -68,6 +69,7 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
     const target = await peer(at); active(); attempt();
     if (typeof target.nativeBirth !== "function") throw Error("creation-unavailable");
     const value = await target.nativeBirth(at, remaining(), cap); active();
+    if (isRoomRetiredStop(value)) throw Error("creation-unavailable");
     const checked = readNativeBirth(value, at, cap);
     if (!checked) { if (value === null) throw Error("creation-unavailable"); throw new InvalidCreation(); }
     body(checked.proof.bytes);
@@ -85,8 +87,8 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
     const cap = capacity();
     const target = await peer(fact.at); active(); attempt();
     if (typeof target.proofSource !== "function") throw Error("creation-unavailable");
-    const reply: ProofBody | null = await target.proofSource(fact, cap, remaining()); active();
-    if (!reply) throw Error("creation-unavailable");
+    const reply: ProofBody | null | RoomRetiredStop = await target.proofSource(fact, cap, remaining()); active();
+    if (!reply || isRoomRetiredStop(reply)) throw Error("creation-unavailable");
     body(reply.bytes);
     const entry = proofEntry(reply, fact, cap, content);
     if (!entry) throw new InvalidCreation();
@@ -164,6 +166,7 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
               const target = await peer(edge.from.at); active(); attempt();
               if (typeof target.creationDeclaration !== "function") return unavailable();
               const text = await target.creationDeclaration(edge.from.at, next, capacity(), remaining()); active();
+              if (isRoomRetiredStop(text)) throw Error("creation-unavailable");
               const rawDeclaration = body(text);
               const value = parseStrict(rawDeclaration);
               if (canonicalize(value) !== rawDeclaration || definitionDigest(value as never) !== next) return refused();
