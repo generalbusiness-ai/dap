@@ -1,3 +1,5 @@
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { net as sourceNet } from "../src/testing.ts";
 import { expect, test } from "vitest";
 import { definitionDigest, isRecord, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { Fetched } from "@generalbusiness/dap-derive";
@@ -37,7 +39,7 @@ test("real old and canonical evidence parents keep native incident identity whil
       const made = creator.sends.find(send => isSeed(send.to) && send.to.definition === setup.definitions.issue);
       if (!made || !isSeed(made.to)) throw Error("Actual native incident child creation required");
       const child = room.life.platform(scopeIdOf(made.to)); room.nodes.push(child); await room.pause(room.nodes);
-      const source = await (child.stub as unknown as { source(seq: number, origin: boolean): Promise<Sourced | null> }).source(0, true);
+      const source = await (child.stub as unknown as { source(seq: number, origin: boolean, context: import("../src/ports.ts").SourceReadContext): Promise<Sourced | null> }).source(0, true, { maxBytes: (sourceNet.sized.get(child.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(child.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) });
       expect(source?.under).toBe("issue");
       expect(source?.origin).toHaveLength(9);
       if (!source?.origin) throw Error("Actual full nine-fact origin required");

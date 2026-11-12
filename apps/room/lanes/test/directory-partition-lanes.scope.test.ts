@@ -1,3 +1,4 @@
+import { net as sourceNet } from "../../../../packages/scope/src/testing.ts";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { validateDefinition } from "@generalbusiness/dap-derive";
@@ -75,7 +76,7 @@ test("partition issue facts and bounded concern births use receiver lineage whil
     expect(partitionSourceName(DIGESTS.issue, issue.name, refusedAt, [frame])).toBe("declared:issue");
     const receiver = await ReceiverReads.open(namespace(env.PLATFORM), await P.at());
     expect(receiver).not.toBeNull();
-    expect(await receiver!.read(frame.fact, 10)).toBeNull();
+    expect(await receiver!.read(frame.fact, { maxBytes: (sourceNet.sized.get(frame.fact.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toBeNull();
     if (raw.input.type !== "genesis") return expect.fail("refused source is not genesis");
     const fakeSeed: Seed = { v: 1, kind: "lane", definition: DIGESTS.issue, creator: refusedAt, cause: seedDigest(raw.input.seed), ordinal: 0 };
     expect(partitionDeclaredCreationPolicy({ seed: fakeSeed, source: frame.fact, n: 0, message: { class: "request", type: "create", body: { directory: await P.at(), membership: await M!.at(), fields: { title: "No positive birth" } } } }, issue, [frame])).toBeNull();
@@ -89,7 +90,7 @@ test("partition issue facts and bounded concern births use receiver lineage whil
     const [A, B] = lanes as [Platform, Platform];
     const asked = await A.did(rita, "ask", { fields: { addressee: { membership: await M!.at(), member: "@rita" }, question: "Can this concern proceed?" } });
     const foreign = factRefOf((await A.entries())[asked]!);
-    expect(await namespace(env.PLATFORM).resolver.read(foreign, 10)).toMatchObject({ under: "declared:issue" });
+    expect(await namespace(env.PLATFORM).resolver.read(foreign, { maxBytes: (sourceNet.sized.get(foreign.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:issue" });
     const offer = await B.did(rita, "offer", { expected: await B.expected({ goal: 0 }) });
     await B.did(rita, "accept", { on: offer, expected: await B.expected({ on: offer }), fields: { terms: factRefOf((await B.entries())[0]!) } });
     const blocked = await B.act(rita, "block", { expected: await B.expected({ commitment: offer }), fields: { commitment: offer, on: foreign } });
@@ -103,7 +104,7 @@ test("partition issue facts and bounded concern births use receiver lineage whil
     const answered = await A.did(rita, "answer", { on: asked, expected: await A.expected({ on: asked }), fields: { answer: "Yes" } });
     const answer = factRefOf((await A.entries())[answered]!);
     expect(await B.act(rita, "release-block", { on: blocked.receipt.fact.seq, expected: await B.expected({ on: blocked.receipt.fact.seq, commitment: offer }), fields: { commitment: offer, answer } })).toMatchObject({ answer: "accepted" });
-    expect(await namespace(env.PLATFORM).resolver.read(foreign, 10)).toMatchObject({ under: "declared:issue" });
+    expect(await namespace(env.PLATFORM).resolver.read(foreign, { maxBytes: (sourceNet.sized.get(foreign.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:issue" });
     let parent = A;
     const nodes = [D, P, ...children, A, B];
     for (let depth = 1; depth <= 4; depth++) {
@@ -122,7 +123,7 @@ test("partition issue facts and bounded concern births use receiver lineage whil
       expect((await child.summary()).value.status).toBe("active");
       const birth = (await child.entries())[0]!;
       expect(birth.input).toMatchObject({ type: "genesis", decision: "applied", source: factRefOf((await parent.entries())[concern]!), message: { body: { directory: await P.at(), membership: await M!.at() } } });
-      expect(await namespace(env.PLATFORM).resolver.read(factRefOf(birth), 10)).toMatchObject({ under: "declared:issue" });
+      expect(await namespace(env.PLATFORM).resolver.read(factRefOf(birth), { maxBytes: (sourceNet.sized.get(factRefOf(birth).at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:issue" });
       expect((await parent.item(concern)).state).toBe("created");
       parent = child;
     }
@@ -210,7 +211,7 @@ test("two native partition roots keep cross-room block and restart release with 
     expect(calls).toHaveLength(18);
     expect(calls.slice(0, admissionCalls.length)).toEqual(admissionCalls);
     expect(calls.slice(admissionCalls.length)).toHaveLength(17);
-    expect(await actual.resolver.read(foreign, 10)).toMatchObject({ under: "declared:issue" });
+    expect(await actual.resolver.read(foreign, { maxBytes: (sourceNet.sized.get(foreign.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:issue" });
     const replayed = await verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: B.I.name, head: (await B.I.summary()).at, platform, grants: "proven", anchors: [], capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE });
     expect(replayed, canonicalize(replayed)).toMatchObject({ report: { result: "consistent" } });
     // Only retained metadata is altered by this transport stand-in. Neither
@@ -299,12 +300,12 @@ test("mixed native cohorts keep old receiver meaning and replay each target from
     };
     const freshOffer = await ready(fresh), oldOffer = await ready(old);
     const raw = namespace(env.PLATFORM);
-    expect(await raw.resolver.read(freshFact, 10)).toMatchObject({ under: "declared:issue" });
-    expect(await raw.resolver.read(oldFact, 10)).toMatchObject({ under: "issue" });
+    expect(await raw.resolver.read(freshFact, { maxBytes: (sourceNet.sized.get(freshFact.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:issue" });
+    expect(await raw.resolver.read(oldFact, { maxBytes: (sourceNet.sized.get(oldFact.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "issue" });
     const freshReader = await ReceiverReads.open(raw, await fresh.I.at()), oldReader = await ReceiverReads.open(raw, await old.I.at());
     expect(freshReader?.mode).toBe("partition-v1"); expect(oldReader?.mode).toBe("legacy");
-    expect(await freshReader!.read(oldFact, 10)).toMatchObject({ under: "issue" });
-    expect(await oldReader!.read(freshFact, 10)).toMatchObject({ under: "declared:issue" });
+    expect(await freshReader!.read(oldFact, { maxBytes: (sourceNet.sized.get(oldFact.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "issue" });
+    expect(await oldReader!.read(freshFact, { maxBytes: (sourceNet.sized.get(freshFact.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:issue" });
     expect(await fresh.I.act(rita, "block", { expected: await fresh.I.expected({ commitment: freshOffer }), fields: { commitment: freshOffer, on: oldFact } })).toMatchObject({ answer: "accepted" });
     const denied = await old.I.act(rita, "block", { expected: await old.I.expected({ commitment: oldOffer }), fields: { commitment: oldOffer, on: freshFact } });
     expect(denied, canonicalize(denied)).toMatchObject({ answer: "refused" });

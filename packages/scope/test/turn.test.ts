@@ -11,6 +11,7 @@ import { HOLD, at, definition, create, creation, objectOf, rita, una, vic } from
 import { controls, testAuthority, testPorts } from "../src/testing.ts";
 import { Scope } from "../src/core.ts";
 import type { FreshActAdmissionDecision } from "../src/applications/act-admission.ts";
+import type { SourceReadContext } from "../src/ports.ts";
 import { wired } from "./outside.ts";
 
 // The shared lane's unused link form names a dummy child digest. These
@@ -307,13 +308,18 @@ test("fresh application admission is rechecked after an async foreign read follo
   // resolver are scripted ports: no native release provenance is proved.
   const under = variant(definition.declared, data => {
     data.acts.remark.fields.proof = { type: "fact", kind: ["remark"], under: data.name, required: false };
+    data.acts.remark.fields.secondProof = { type: "fact", kind: ["remark"], under: data.name, required: false };
   });
   const peer = await create();
   const proof = (await peer.did(rita, "remark", { on: 0, fields: { text: "foreign evidence" } })).fact;
   const evidence = (await peer.entries(proof.seq))[0]!;
+  const secondProof = (await peer.did(rita, "remark", { on: 0, fields: { text: "second foreign evidence" } })).fact;
+  const secondEvidence = (await peer.entries(secondProof.seq))[0]!;
   const s = await create({}, {}, under), authority = testAuthority();
   let state: FreshActAdmissionDecision = "allowed", available = true, revokeDuringForeignRead = false;
   const reads = { admission: 0, current: 0, authority: 0 }, observed: FreshActAdmissionDecision[] = [];
+  type SourceCall = { hash: string; maxBytes: number; milliseconds: number; origin: boolean };
+  let sourceGroup: { firstAdvance: number; calls: SourceCall[]; secondReturned(): void } | null = null;
   wired.set(s.name, () => ({
     freshActAdmission: { read: async () => {
       reads.admission++;
@@ -325,7 +331,22 @@ test("fresh application admission is rechecked after an async foreign read follo
       const held = await authority.read(asked, seconds);
       return held;
     } },
-    resolver: { read: async asked => {
+    resolver: { read: async (asked, context: SourceReadContext, origin) => {
+      const group = sourceGroup;
+      if (group) {
+        group.calls.push({ hash: asked.hash, maxBytes: context.maxBytes, milliseconds: context.milliseconds, origin });
+        if (asked.hash === proof.hash) {
+          // Advance synchronously before the parallel map starts its second read.
+          vi.advanceTimersByTime(group.firstAdvance);
+          return { fact: proof, entry: evidence, under: definition.declared.name };
+        }
+        if (asked.hash === secondProof.hash) {
+          await s.c.gate.pass();
+          group.secondReturned();
+          return { fact: secondProof, entry: secondEvidence, under: definition.declared.name };
+        }
+        return null;
+      }
       await Promise.resolve();
       if (revokeDuringForeignRead) state = "application-revoked";
       return asked.hash === proof.hash ? { fact: proof, entry: evidence, under: definition.declared.name } : null;
@@ -354,6 +375,66 @@ test("fresh application admission is rechecked after an async foreign read follo
   expect(await s.submit(changed)).toEqual({ answer: "mismatch", reason: "idempotency-mismatch" });
   expect(reads).toEqual(beforeRepeat);
   expect(await s.head()).toEqual(before);
+
+  // The same real foreign-fact path must share one deadline. Authority and
+  // admission remain allowed; only the two resolver replies are held/scripted.
+  available = true; state = "allowed"; revokeDuringForeignRead = false;
+  const milliseconds = Math.floor(s.c.bounds.fetchSeconds * 1000);
+  const firstAdvance = Math.floor(milliseconds * 3 / 5);
+  const remaining = milliseconds - firstAdvance;
+  expect(firstAdvance > 0 && remaining > 1).toBe(true);
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
+  try {
+    const group = async (late: boolean) => {
+      const head = await s.head(), started = performance.now(), calls: SourceCall[] = [];
+      let secondReturned = () => {};
+      const returned = new Promise<void>(resolve => { secondReturned = resolve; });
+      sourceGroup = { firstAdvance, calls, secondReturned };
+      s.c.gate.hold();
+      const pending = s.submit(s.intent(rita, "remark", { on: 0,
+        fields: { text: late ? "source group passed its deadline" : "source group within its deadline", proof, secondProof } }));
+      try {
+        await s.c.gate.held();
+        // The late release crosses the shared deadline but stays before a
+        // freshly restarted second-read deadline. Release before asserting so
+        // that the wrong implementation differs by an answer, not a timeout.
+        await vi.advanceTimersByTimeAsync(late ? remaining + 1 : Math.floor(remaining / 2));
+        const releasedAt = performance.now() - started;
+        s.c.gate.release();
+        await returned;
+        const answer = await pending;
+        return { head, calls, releasedAt, answer, after: await s.head(), entries: await s.entries(head.seq + 1) };
+      } finally {
+        s.c.gate.release();
+        sourceGroup = null;
+        await pending;
+      }
+    };
+    const late = await group(true);
+    expect(late.calls).toEqual([
+      { hash: proof.hash, maxBytes: s.c.bounds.entryBytes, milliseconds, origin: false },
+      { hash: secondProof.hash, maxBytes: s.c.bounds.entryBytes, milliseconds: remaining, origin: false },
+    ]);
+    expect(late.calls.every(call => Number.isSafeInteger(call.maxBytes) && call.maxBytes > 0
+      && Number.isSafeInteger(call.milliseconds) && call.milliseconds > 0 && call.milliseconds <= milliseconds)).toBe(true);
+    expect(late.releasedAt).toBe(milliseconds + 1);
+    expect(late.answer).toEqual({ answer: "unavailable", reason: "dependency-unavailable" });
+    expect(late.after).toEqual(late.head);
+    expect(late.entries).toEqual([]);
+
+    // The same actual peer facts and allowed standing are valid when the
+    // second read finishes within the group's original allowance.
+    const inTime = await group(false);
+    expect(inTime.calls).toEqual(late.calls);
+    expect(inTime.releasedAt).toBe(firstAdvance + Math.floor(remaining / 2));
+    expect(inTime.answer).toMatchObject({ answer: "accepted" });
+    expect(inTime.after.seq).toBe(inTime.head.seq + 1);
+    expect(inTime.entries).toHaveLength(1);
+  } finally {
+    s.c.gate.release();
+    sourceGroup = null;
+    vi.useRealTimers();
+  }
 });
 
 describe("the head check (section 5.2, steps 4 to 6)", () => {

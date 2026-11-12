@@ -205,7 +205,7 @@ describe("signed reads on real registers (the planner's decisions 61cc5e50, c649
     // root. Invalid requests must fail before making any resolver call.
     const calls: FactRef[] = [];
     const resolver = namespace(env.PLATFORM).resolver;
-    wired.set(M.name, () => ({ transport: null, resolver: { read: (fact, seconds) => { calls.push(fact); return resolver.read(fact, seconds); } } }));
+    wired.set(M.name, () => ({ transport: null, resolver: { read: (fact, context, origin) => { calls.push(fact); return resolver.read(fact, context, origin); } } }));
     await M.restart();
     const request: ReadRequest = { v: 1, to: M.name, actor: rita.key, read: "summary", arg: "summary", notAfter: soon(60) };
     const header = (request: ReadRequest, secret = rita.secret) => `Signed ${b64url(canonicalBytes(signRead(request, secret)))}`;

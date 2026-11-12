@@ -1,3 +1,5 @@
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { net as sourceNet } from "../src/testing.ts";
 import { expect, inject, test } from "vitest";
 import { runDurableObjectAlarm } from "cloudflare:test";
 import type { Observation } from "@generalbusiness/dap-contract";
@@ -356,7 +358,7 @@ test("real published holds survive newer counted passes and clear only through d
     if (!create || !isSeed(create.to)) throw Error("Actual nested incident creation send required");
     const child = room.life.platform(scopeIdOf(create.to)); room.nodes.push(child); await room.pause(room.nodes);
     expect((await child.summary()).value.definition).toBe(setup.definitions.issue);
-    const childSource = await (child.stub as unknown as { source(seq: number, origin: boolean): Promise<{ under: string; origin?: readonly unknown[] } | null> }).source(0, true);
+    const childSource = await (child.stub as unknown as { source(seq: number, origin: boolean, context: import("../src/ports.ts").SourceReadContext): Promise<{ under: string; origin?: readonly unknown[] } | null> }).source(0, true, { maxBytes: (sourceNet.sized.get(child.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(child.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) });
     expect(childSource?.under).toBe("issue");
     expect(childSource?.origin).toHaveLength(9);
     const intent = await child.item(0);
@@ -471,7 +473,7 @@ test("real published holds survive newer counted passes and clear only through d
     const delayedEntry = await evidenceEntry(third.lane, delayed.id), delayedCreate = delayedEntry.sends.find(send => isSeed(send.to) && send.to.definition === setup.definitions.issue);
     if (!delayedCreate || !isSeed(delayedCreate.to)) throw Error("Actual timeout incident creation required");
     const delayedChild = room.life.platform(scopeIdOf(delayedCreate.to)); room.nodes.push(delayedChild); await room.pause(room.nodes);
-    const delayedSource = await (delayedChild.stub as unknown as { source(seq: number, origin: boolean): Promise<{ under: string; origin?: readonly unknown[] } | null> }).source(0, true);
+    const delayedSource = await (delayedChild.stub as unknown as { source(seq: number, origin: boolean, context: import("../src/ports.ts").SourceReadContext): Promise<{ under: string; origin?: readonly unknown[] } | null> }).source(0, true, { maxBytes: (sourceNet.sized.get(delayedChild.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(delayedChild.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) });
     expect(delayedSource?.under).toBe("issue");
     expect(delayedSource?.origin).toHaveLength(9);
     expect((await delayedChild.item(0)).refs['failedResult'] ?? null).toBeNull();

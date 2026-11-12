@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { env } from "cloudflare:workers";
 import type { ControlRequest, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, newIncarnation, signControl, utf8 } from "@generalbusiness/dap-bytes";
@@ -7,6 +7,7 @@ import { indexedScopes, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexPort, t
 import scopeWorker, { api, mcpRoute } from "../src/worker.ts";
 import { applicationSandboxPage } from "../src/applications/route.ts";
 import { namespace, membershipIn, type Binding } from "../src/namespace.ts";
+import type { SourceReadContext } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
 import { at, create, creation, definition, reader, rita, START } from "./fixtures-native.ts";
 import { scopeRegistrationWiring } from "./worker.ts";
@@ -48,7 +49,7 @@ test("unknown foreign facts, site and application lookups and hosted registry re
   };
   const settings = { SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } };
   const gated = indexedScopes(targets, settings), ports = namespace(gated);
-  expect(await ports.resolver.read(fact, 1)).toEqual({ absent: true });
+  expect(await ports.resolver.read(fact, { maxBytes: 1024, milliseconds: 1000 }, false)).toEqual({ absent: true });
   expect(await ports.proofs.read(fact, 1024, 1000)).toBeNull();
   expect(await ports.births.read(atRef, 1000, 1024)).toBeNull();
   expect(await ports.birthNames.read(atRef.scope, "directory", 1000, 1024)).toBeNull();
@@ -87,6 +88,53 @@ test("unknown foreign facts, site and application lookups and hosted registry re
     SCOPES: targets as unknown as DurableObjectNamespace, REGISTRIES: registries as unknown as DurableObjectNamespace, AGENTS: env.AGENTS });
   expect(otherKind?.status).toBe(404); // a known Directory ID is not a known Membership
   expect({ targetCalls, registryCalls, bodyReads }).toEqual({ targetCalls: 0, registryCalls: 0, bodyReads: 0 });
+
+  // TEST transport/parser-work clock stand-in, not a Native peer or proof.
+  // Both RPC replies arrive in time. The real strict parser fails on the same
+  // malformed bytes; only the synchronous validation work's elapsed time differs.
+  const malformed = '{"required-source-validation":';
+  const sourceCalls: { seq: number; origin: boolean; maxBytes: number; milliseconds: number }[] = [];
+  const direct = namespace({
+    idFromName: name => name,
+    get: () => ({ source: async (seq: number, origin: boolean, context: SourceReadContext) => {
+      sourceCalls.push({ seq, origin, maxBytes: context.maxBytes, milliseconds: context.milliseconds });
+      return { at: atRef, under: "TEST malformed source", bytes: malformed };
+    } }),
+  }).resolver;
+  const originalCharCodeAt = String.prototype.charCodeAt;
+  let elapsed = 2, charged = false;
+  const validationWork: number[] = [];
+  try {
+    vi.useFakeTimers({ toFake: ["performance"] });
+    const work = vi.spyOn(String.prototype, "charCodeAt").mockImplementation(function (this: string, index: number) {
+      if (String(this) === malformed && !charged) {
+        charged = true; validationWork.push(elapsed);
+        vi.advanceTimersByTime(elapsed);
+      }
+      return originalCharCodeAt.call(this, index);
+    });
+    try {
+      const started = performance.now();
+      expect(await direct.read(fact, { maxBytes: 1024, milliseconds: 10 }, false)).toEqual({ absent: true });
+      expect(charged).toBe(true);
+      expect(performance.now() - started).toBe(2);
+
+      elapsed = 11; charged = false;
+      const lateStarted = performance.now();
+      expect(await direct.read(fact, { maxBytes: 1024, milliseconds: 10 }, false)).toBeNull();
+      expect(charged).toBe(true);
+      expect(performance.now() - lateStarted).toBe(11);
+      expect(validationWork).toEqual([2, 11]);
+      expect(sourceCalls).toEqual([
+        { seq: fact.seq, origin: false, maxBytes: 1024, milliseconds: 10 },
+        { seq: fact.seq, origin: false, maxBytes: 1024, milliseconds: 10 },
+      ]);
+    } finally {
+      work.mockRestore();
+    }
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("unknown scope gate touches no target and only the native target's applied genesis registers", async () => {

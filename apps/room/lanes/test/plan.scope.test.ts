@@ -1,3 +1,5 @@
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { net as sourceNet } from "../../../../packages/scope/src/testing.ts";
 import { describe, expect, onTestFinished, test } from "vitest";
 import type { Entry, ScopeId, Seed } from "@generalbusiness/dap-contract";
 import { intentDigest, messageDigest, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
@@ -98,7 +100,7 @@ test("a Native issue concern child authenticates its inherited role and delivers
   const concern = created.receipt.fact, child = created.child;
   const birth = (await child.entry(0)).input;
   expect(birth).toMatchObject({ type: "genesis", kind: "file", source: concern, seed: { definition: DIGESTS.issue, creator: parent.at }, message: { body: { directory: await room.D.at() } } });
-  const sourced = await (child.object as unknown as { source(seq: number, origin: boolean): Promise<Sourced | null> }).source(0, true);
+  const sourced = await (child.object as unknown as { source(seq: number, origin: boolean, context: import("../../../../packages/scope/src/ports.ts").SourceReadContext): Promise<Sourced | null> }).source(0, true, { maxBytes: (sourceNet.sized.get(child.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(child.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) });
   Object.assign(task.meta, { normalRawScopeOrigin: sourced ? { at: sourced.at, under: sourced.under, originFacts: sourced.origin?.map(copy => copy.fact) ?? [] } : null });
   expect(sourced, "Native issue child source must be available").not.toBeNull();
   if (!sourced) throw new Error("Native child source closure unavailable");

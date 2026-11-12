@@ -1,3 +1,4 @@
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 /** Pure policy/transport witnesses plus actual DeployedScope SQLite genesis.
  * Index transport is a labelled stand-in only in the cache case. The native
  * cases override Env only: no clock, policy wiring or native authority port. */
@@ -151,7 +152,7 @@ test("old live deployed genesis needs sealed applied integrity for repeats while
     creationVersionSettings.set(name, null);
     expect(await native.create(signed, legacy)).toEqual(original);
     expect((await native.nativeBirth(at, 1000))?.named).toBe(legacy);
-    expect(parseStrict((await native.source(0))?.bytes ?? "null")).toMatchObject({ input: { type: "genesis", seed, decision: "applied" } });
+    expect(parseStrict((await native.source(0, false, { maxBytes: PROPOSED_BOUNDS.entryBytes, milliseconds: Math.floor(PROPOSED_BOUNDS.fetchSeconds * 1000) }))?.bytes ?? "null")).toMatchObject({ input: { type: "genesis", seed, decision: "applied" } });
     const changed = signIntent({ ...signed.intent, idempotencyKey: crypto.randomUUID() }, keys.paul.secret);
     expect(await native.create(changed, legacy)).toEqual({ answer: "refused", reason: "unsupported-definition" });
     // Corrupt only the retained body. Matching table/meta/index identity is not a sealed birth.
@@ -164,7 +165,7 @@ test("old live deployed genesis needs sealed applied integrity for repeats while
       notAfter: timeOf(Date.now() + 60_000) } satisfies Intent, keys.rita.secret);
     expect(await native.submit(found, [])).toMatchObject({ answer: "accepted", receipt: { definition: legacy, fact: { at, seq: 1 } } });
     const old = parseStrict(stored);
-    expect((await native.source(0))?.bytes).toBe(canonicalize(old));
+    expect((await native.source(0, false, { maxBytes: PROPOSED_BOUNDS.entryBytes, milliseconds: Math.floor(PROPOSED_BOUNDS.fetchSeconds * 1000) }))?.bytes).toBe(canonicalize(old));
   } finally { await evictDurableObject(object); creationVersionSettings.delete(name); }
 });
 

@@ -151,7 +151,7 @@ export class Deliveries {
     const probe = !receiving && creates && message.class === "request" ? await ReceiverReads.probeCreation(this.#ports, { seed: delivered.to as Seed, source: from, n: delivered.n, message }) : undefined;
     if (probe === null) return retry("dependency-unavailable");
     const read = probe?.source ? { entry: probe.source, under: "" }
-      : await within(() => reader && message.class === "result" ? reader.result(delivered, bounds.fetchSeconds) : (reader ?? this.#ports.resolver).read(from, bounds.fetchSeconds, !!reserve || file), bounds.fetchSeconds);
+      : await within(() => reader && message.class === "result" ? reader.result(delivered, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }) : (reader ?? this.#ports.resolver).read(from, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }, !!reserve || file), bounds.fetchSeconds);
     if (read === LATE || read === null) return retry("dependency-unavailable");
     if ("archived" in read && previous?.hash === from.hash) {
       // The original source hash/send ordinal were checked when this inbox
@@ -188,7 +188,7 @@ export class Deliveries {
         ? await ReceiverReads.forCreation(this.#ports, { seed: delivered.to as Seed, source: from, n: delivered.n, message }, isPlatformDefinition((delivered.to as Seed).definition) ? (delivered.to as Seed).definition as PlatformDefinition : creation.valid.declared, probe?.operation)
         : await this.#scope.receiverReads();
       if (!reader) return retry("dependency-unavailable");
-      const named = probe?.source ? await reader.read(from, bounds.fetchSeconds) : source;
+      const named = probe?.source ? await reader.read(from, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }, false) : source;
       if (named === null || !("entry" in named)) return retry("dependency-unavailable");
       source = carryProducerName({ fact: from, entry: named.entry, under: named.under }, named);
     }

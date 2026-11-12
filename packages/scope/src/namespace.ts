@@ -26,9 +26,10 @@ import { isEntryOf, isObject, isScopeRef, type Delivered, type Fetched, type Sco
 import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
 import type { Membership } from "./authority.ts";
 import type { Pinned } from "./core.ts";
-import type { Definitions, Delivery, Resolver, SentTexts, Transport } from "./ports.ts";
+import type { Definitions, Delivery, Resolver, SentTexts, SourceReadContext, Transport } from "./ports.ts";
 import { EXACT_PROOF_RECEIVER_BOUNDS, PROOF_BYTE_BOUNDS, type ProofBody, type ProofSource } from "./proof-bytes.ts";
 import type { Store } from "./store.ts";
+import { sourceReadRemaining } from "./turn.ts";
 import { encodeSessionReference, sessionReferenceRequest, SESSION_REFERENCE_BOUNDS, type SessionReferenceSource } from "./session-reference.ts";
 import { readNativeBirth, type NativeBirth, type NativeBirthSource, type NativeBirthNameSource } from "./native-birth.ts";
 import { operational, type OperationalIdentity } from "./operational.ts";
@@ -39,7 +40,7 @@ export interface Sourced { at: ScopeRef; under: string; bytes: string | null; ar
 /** The five calls one scope's object takes from another's. `observe` is asked of a membership scope or of a rules scope. */
 export interface Peer {
   deliver(envelope: Delivered, identity?: OperationalIdentity): Promise<Delivery>;
-  source(seq: number, origin?: boolean): Promise<Sourced | null>;
+  source(seq: number, origin: boolean, context: SourceReadContext): Promise<Sourced | null>;
   /** Optional: unsupported native senders never fall back to source(). */
   proofSource?(fact: FactRef, maxBytes: number, milliseconds?: number): Promise<ProofBody | null>;
   /** Raw checked birth only; never a producer-selected privileged identity. */
@@ -287,33 +288,40 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
       },
     },
     resolver: {
-      async read(fact, _seconds, origin = false) {
+      async read(fact, context, origin) {
+        const remaining = sourceReadRemaining(context);
+        if (!remaining || typeof origin !== "boolean") return null;
+        const maxBytes = context.maxBytes;
         let answer: Sourced | null;
         try {
-          answer = await peer(fact.at.scope).source(fact.seq, origin);
+          const milliseconds = remaining();
+          if (milliseconds === null) return null;
+          answer = await peer(fact.at.scope).source(fact.seq, origin, { maxBytes, milliseconds });
+          if (remaining() === null) return null;
         } catch {
           return null;
         }
         // Section 7.4: the incarnation in the answer is checked against the one the fact names.
-        if (!answer || answer.at.inc !== fact.at.inc) return { absent: true };
-        if (answer.archived) return { archived: answer.archived };
-        if (answer.bytes === null) return { absent: true };
+        if (!answer || answer.at.inc !== fact.at.inc) return remaining() === null ? null : { absent: true };
+        if (answer.archived) return remaining() === null ? null : { archived: answer.archived };
+        if (answer.bytes === null) return remaining() === null ? null : { absent: true };
         try {
           const proof: Fetched[] = [];
           if (origin && answer.origin) {
-            if (!Array.isArray(answer.origin) || answer.origin.length > 3 && answer.origin.length !== 9) return { absent: true };
+            if (!Array.isArray(answer.origin) || answer.origin.length > 3 && answer.origin.length !== 9) return remaining() === null ? null : { absent: true };
             for (const row of answer.origin) {
-              if (answer.origin.length === 9 && (typeof row.bytes !== "string" || row.bytes.length > PROPOSED_BOUNDS.entryBytes || utf8(row.bytes).length > PROPOSED_BOUNDS.entryBytes)) return { absent: true };
+              if (answer.origin.length === 9 && (typeof row.bytes !== "string" || row.bytes.length > PROPOSED_BOUNDS.entryBytes || utf8(row.bytes).length > PROPOSED_BOUNDS.entryBytes)) return remaining() === null ? null : { absent: true };
               const entry = parseStrict(row.bytes) as Entry;
-              if (!isEntryOf(entry, row.fact) || typeof row.under !== "string") return { absent: true };
+              if (!isEntryOf(entry, row.fact) || typeof row.under !== "string") return remaining() === null ? null : { absent: true };
               proof.push({ fact: row.fact, entry, under: row.under });
             }
             if (proof.length === 9 && (answer.under !== "issue" || canonicalize(proof[0]!.fact.at) !== canonicalize(answer.at)
-              || sourceName(EVIDENCE_INCIDENT_PINS_V17.issue, "issue", proof) !== "issue")) return { absent: true };
+              || sourceName(EVIDENCE_INCIDENT_PINS_V17.issue, "issue", proof) !== "issue")) return remaining() === null ? null : { absent: true };
           }
-          return { entry: parseStrict(answer.bytes) as Entry, under: answer.under, ...(origin ? { origin: proof } : {}) };
+          const entry = parseStrict(answer.bytes) as Entry;
+          return remaining() === null ? null : { entry, under: answer.under, ...(origin ? { origin: proof } : {}) };
         } catch {
-          return { absent: true };
+          return remaining() === null ? null : { absent: true };
         }
       },
     },

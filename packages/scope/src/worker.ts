@@ -83,7 +83,7 @@ import type { OutboxItem, Sealed } from "./store.ts";
 import type { ReadCredential } from "./destination-host.ts";
 import { gitHubOutside, type GitHubBindings } from "./github-wiring.ts";
 import type { DemoCreationBindings } from "./demo-creation.ts";
-import { within } from "./turn.ts";
+import { sourceReadRemaining, within } from "./turn.ts";
 import { ARTIFACTS_HOST, artifactsOutside, artifactsWorkspaceOutside, artifactsReadiness, type ArtifactsBindings } from "./artifacts-wiring.ts";
 import type { WorkspaceSources } from "./workspace-lineage.ts";
 import { recordedHost } from "./host-wiring.ts";
@@ -662,7 +662,8 @@ export function sessionWiring(sessions: () => Sessions | null, binding?: Binding
  * at every use: no session is issued, none is accepted, and no reader may
  * read (authority note, section 5.5).
  */
-export function snapshotReaderOf(binding: Binding): import("./destination-host.ts").SnapshotReader {
+export function snapshotReaderOf(binding: Binding, context: import("./ports.ts").SourceReadContext): import("./destination-host.ts").SnapshotReader {
+  const maxBytes = context.maxBytes, milliseconds = context.milliseconds;
   return {
     rules: async (rules) => {
       const peer = binding.get(binding.idFromName(rules.scope)) as { observe(ask: unknown): Promise<unknown> };
@@ -674,20 +675,30 @@ export function snapshotReaderOf(binding: Binding): import("./destination-host.t
       return peer.workSourceState(fact);
     },
     source: async (fact) => {
-      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number): Promise<{ bytes: string | null; under: string } | null> };
-      const read = await peer.source(fact.seq);
-      if (!read?.bytes || utf8(read.bytes).length > PROPOSED_BOUNDS.entryBytes) return null;
+      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number, origin: boolean, context: import("./ports.ts").SourceReadContext): Promise<{ bytes: string | null; under: string } | null> };
+      const remaining = sourceReadRemaining({ maxBytes, milliseconds });
+      if (!remaining) return null;
+      const allowance = remaining();
+      if (allowance === null) return null;
+      const read = await peer.source(fact.seq, false, { maxBytes, milliseconds: allowance });
+      if (remaining() === null) return null;
+      if (!read?.bytes || utf8(read.bytes).length > maxBytes) return null;
       const entry = parseStrict(read.bytes) as unknown as Entry;
       if (!isEntry(entry) || !same(entry.at, fact.at) || entry.seq !== fact.seq || entryHash(entry) !== fact.hash) return null;
-      return { entry, hash: fact.hash };
+      return remaining() === null ? null : { entry, hash: fact.hash };
     },
     job: async (fact) => {
-      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number): Promise<{ bytes: string | null; under: string } | null>; summary(reader: unknown): Promise<unknown>; jobState(fact: FactRef): Promise<{ state: string; decidedBy: FactRef | null } | null> };
-      const read = await peer.source(fact.seq);
+      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number, origin: boolean, context: import("./ports.ts").SourceReadContext): Promise<{ bytes: string | null; under: string } | null>; summary(reader: unknown): Promise<unknown>; jobState(fact: FactRef): Promise<{ state: string; decidedBy: FactRef | null } | null> };
+      const remaining = sourceReadRemaining({ maxBytes, milliseconds });
+      if (!remaining) return null;
+      const allowance = remaining();
+      if (allowance === null) return null;
+      const read = await peer.source(fact.seq, false, { maxBytes, milliseconds: allowance });
+      if (remaining() === null) return null;
       if (!read?.bytes) return null;
       const entry = parseStrict(read.bytes) as unknown as Entry;
       const standing = await peer.jobState(fact);
-      return { entry, under: read.under, state: standing?.state ?? "absent", decidedBy: standing?.decidedBy ?? null };
+      return remaining() === null ? null : { entry, under: read.under, state: standing?.state ?? "absent", decidedBy: standing?.decidedBy ?? null };
     },
     key: async (membership, key) => (binding.get(binding.idFromName(membership)) as { observe(ask: unknown): Promise<unknown> }).observe({ of: { scope: membership, kind: "membership" }, key }),
   };
@@ -706,7 +717,7 @@ export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
       // Wired whether or not a host is configured now: `outsideOf` reads the settings at each call, and with neither it sends nothing.
       outside: (given: OutsideGiven) => {
         const scopes = this.scopes(), proofs = namespace(scopes);
-        return outsideOf(given, this.ctx.storage.sql, this.env, undefined, snapshotReaderOf(scopes), { births: proofs.birthNames, proofs: proofs.proofs });
+        return outsideOf(given, this.ctx.storage.sql, this.env, undefined, given.bounds ? snapshotReaderOf(scopes, { maxBytes: given.bounds.entryBytes, milliseconds: Math.floor(given.bounds.fetchSeconds * 1000) }) : undefined, { births: proofs.birthNames, proofs: proofs.proofs });
       },
       ...sessionWiring(() => sessionsOf(this.env.SESSION_SECRET, this.env.DEPLOYMENT), this.scopes()),
     };

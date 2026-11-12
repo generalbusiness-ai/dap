@@ -151,11 +151,14 @@ export interface Further {
  * 7.4), with the name of the definition its scope pins. Null: it cannot be
  * read now, and may be later. `absent`: the object with that name answered,
  * and it does not hold that entry: it is empty, it is another incarnation,
- * or it has no entry there. The core also stops waiting after `seconds`,
- * and checks the entry against the fact's hash itself.
+ * or it has no entry there. The caller supplies a required byte allowance
+ * and remaining milliseconds. A logical timeout does not cancel a physical
+ * call. The core checks the entry against the fact's hash itself.
  */
 export type Foreign = { entry: Entry; under: string; origin?: readonly Fetched[] } | { absent: true } | { archived: Archived } | null;
-export interface Resolver { read(fact: FactRef, seconds: number, origin?: boolean): Promise<Foreign> }
+/** Limits for one existing source call. These values do not prove byte admission. */
+export interface SourceReadContext { readonly maxBytes: number; readonly milliseconds: number }
+export interface Resolver { read(fact: FactRef, context: SourceReadContext, origin: boolean): Promise<Foreign> }
 
 /**
  * How transport answers one delivery (section 7.4). None of these is an

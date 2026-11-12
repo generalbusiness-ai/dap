@@ -238,7 +238,8 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   let pendingMint: { request: import("../../../../packages/scope/src/operations.ts").EffectRequest; answer: import("../../../../packages/scope/src/operations.ts").EffectAnswer; late: import("../../../../packages/scope/src/operations.ts").LateAnswers | null } | null = null;
   let earlierDelete: { request: import("../../../../packages/scope/src/operations.ts").EffectRequest; late: import("../../../../packages/scope/src/operations.ts").LateAnswers | null } | null = null;
   const wire = (name: ScopeId) => { wired.add(name); platformOutside.set(name, (given, sql) => {
-    const nativeReader = snapshotReaderOf(env.PLATFORM);
+    if (!given.bounds) throw Error("Native snapshot fixture requires its configured bounds");
+    const nativeReader = snapshotReaderOf(env.PLATFORM, { maxBytes: given.bounds.entryBytes, milliseconds: Math.floor(given.bounds.fetchSeconds * 1000) });
     let keyReads = 0, jobReads = 0;
     const outside = artifactsOutside(given, sql, bindings(), at.stand.fetch, { ...nativeReader, job: async (fact) => {
       const answer = await nativeReader.job(fact);

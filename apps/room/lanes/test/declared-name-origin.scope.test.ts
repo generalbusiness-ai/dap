@@ -1,3 +1,4 @@
+import { net as sourceNet } from "../../../../packages/scope/src/testing.ts";
 import { env } from "cloudflare:workers";
 import { isEntryOf } from "@generalbusiness/dap-derive";
 import { namespace, type Sourced } from "@generalbusiness/dap-scope";
@@ -134,7 +135,7 @@ test("native reserve refuses declared-name applications across rooms and inside 
       const admissions = (await B.G.entries()).filter(e => e.seq > before.at.seq);
       const publications = after.value.items.filter(i => i.type === "publication" && i.id > before.at.seq);
       const from = await app.at();
-      const sourced = await lifetime.wait(() => (app.object as unknown as { source(seq: number): Promise<{ under: string; at: ScopeRef }> }).source(merge));
+      const sourced = await lifetime.wait(() => (app.object as unknown as { source(seq: number, origin: boolean, context: import("../../../../packages/scope/src/ports.ts").SourceReadContext): Promise<{ under: string; at: ScopeRef }> }).source(merge, false, { maxBytes: (sourceNet.sized.get(app.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(app.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) }));
       const reserveAdmissions = admissions.filter(e => e.input.type === "delivery"
         && e.input.from.at.scope === app.name && e.input.from.seq === merge);
       const checkpoint = { label, definition: digest, genesisKind: appGenesis.input.type === "genesis" ? appGenesis.input.kind : null, creationRoute: "establish-application", under: sourced.under, app: from, creator: await source.D.at(), membership: expectedMembership,
@@ -179,12 +180,12 @@ test("a genuine Native change extension cannot reserve another room's destinatio
   const before = await B.G.summary();
   const beforePublications = before.value.items.filter(item => item.type === "publication").map(item => ({ id: item.id, state: item.state }));
   const merged = (await lane.did(rita, "merge", { fields: { manifest: version, reports: [], foreign } })).fact;
-  const sourced = await (lane.object as unknown as { source(seq: number, origin: boolean): Promise<Sourced | null> }).source(merged.seq, true);
+  const sourced = await (lane.object as unknown as { source(seq: number, origin: boolean, context: import("../../../../packages/scope/src/ports.ts").SourceReadContext): Promise<Sourced | null> }).source(merged.seq, true, { maxBytes: (sourceNet.sized.get(lane.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(lane.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) });
   Object.assign(task.meta, { normalRawScopeOrigin: sourced ? { at: sourced.at, under: sourced.under, originFacts: sourced.origin?.map(copy => copy.fact) ?? [] } : null });
   expect(sourced, "Current source must retain its authentic Native closure").not.toBeNull();
   if (!sourced) throw new Error("Native source closure unavailable");
   expect([sourced.at, sourced.under]).toEqual([lane.at, "change"]);
-  const decoded = await namespace(env.PLATFORM).resolver.read(merged, PROPOSED_BOUNDS.fetchSeconds, true);
+  const decoded = await namespace(env.PLATFORM).resolver.read(merged, { maxBytes: (sourceNet.sized.get(lane.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(lane.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) }, true);
   expect(decoded && "entry" in decoded, "Production resolver must decode the Native origin facts").toBe(true);
   if (!decoded || !("entry" in decoded)) throw new Error("Decoded Native source closure unavailable");
   expect(isEntryOf(decoded.entry, merged)).toBe(true);

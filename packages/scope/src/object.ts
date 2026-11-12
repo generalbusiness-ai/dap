@@ -70,11 +70,11 @@ import { PreparationBudget } from "./preparation-budget.ts";
 import { SessionReferences, type SessionReferenceSource } from "./session-reference.ts";
 import { SessionPreparation, type QueryVisibility } from "./session-preparation.ts";
 import { SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
-import { production, type Alarm, type Authority, type Clock, type Delivery, type Ports, type ReadName, type Readers, type Resolver, type Transport } from "./ports.ts";
+import { production, type Alarm, type Authority, type Clock, type Delivery, type Foreign, type Ports, type ReadName, type Readers, type Resolver, type SourceReadContext, type Transport } from "./ports.ts";
 import { SessionRequests, Streams, issueSession, type Opened, type SessionIssueAnswer, type Sessions, type StreamRefusal } from "./sessions.ts";
 import { READ_BOUNDS, Reads, type ReadBounds, type Summary } from "./reads.ts";
 import { Chains, checkLocalSignedRead, checkSignedReadRequest, presentsSignedRead, signerOf, type SignedReading, type SignedReadObserver } from "./signed-reads.ts";
-import { LATE, within } from "./turn.ts";
+import { LATE, sourceReadRemaining, within } from "./turn.ts";
 import { SqliteStore, type Sql } from "./sqlite.ts";
 import type { OutboxItem, OperationStatus, Sealed } from "./store.ts";
 import type { AuthorityGiven, Given, OutsideGiven } from "./given.ts";
@@ -164,6 +164,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #transport: Transport | null;
   readonly #seconds: number;
   readonly #fetchSeconds: number;
+  readonly #entryBytes: number;
   readonly #resolver: Resolver;
   readonly #record: OperatorRecord;
   readonly #streams: Streams;
@@ -268,7 +269,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       const kept = own ?? store.retained("entry", use.content);
       const local = kept ? (JSON.parse(kept.bytes) as Entry) : null;
       if (local && isEntryOf(local, use.fact)) return local;
-      const read = await within(() => ports.resolver.read(use.fact, bounds.fetchSeconds), bounds.fetchSeconds);
+      const read = await within(() => ports.resolver.read(use.fact, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }, false), bounds.fetchSeconds);
       return read !== LATE && read !== null && "entry" in read && isEntryOf(read.entry, use.fact) ? read.entry : null;
     });
     this.#signed = { clock: ports.clock, window: bounds.intentLifetimeSeconds, chains: this.#chains, ...(wiring.signedReadObserver ? { observe: wiring.signedReadObserver } : {}) };
@@ -284,6 +285,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#transport = given.transport;
     this.#seconds = bounds.dispatchSeconds;
     this.#fetchSeconds = bounds.fetchSeconds;
+    this.#entryBytes = bounds.entryBytes;
     this.#resolver = ports.resolver;
     this.#record = record;
     this.#streams = new Streams(ports.readers, () => store.scope()?.head ?? null);
@@ -642,7 +644,23 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     }, identity);
   }
   /** One entry of this scope, for a scope that received a send of it and checks its source (section 7.4). */
-  async source(seq: number, origin = false): Promise<Sourced | null> {
+  async source(seq: number, origin: boolean, context: SourceReadContext): Promise<Sourced | null> {
+    const valid = sourceReadRemaining(context);
+    if (!valid || typeof origin !== "boolean") return null;
+    const maxBytes = Math.min(context.maxBytes, this.#entryBytes);
+    const milliseconds = valid();
+    if (milliseconds === null) return null;
+    const remaining = sourceReadRemaining({ maxBytes, milliseconds: Math.min(milliseconds, Math.floor(this.#fetchSeconds * 1000)) });
+    if (!remaining) return null;
+    const readSource = async (fact: FactRef, origin: boolean): Promise<Foreign | typeof LATE> => {
+      const milliseconds = remaining();
+      if (milliseconds === null) return null;
+      const read = await within(() => {
+        const milliseconds = remaining();
+        return milliseconds === null ? Promise.resolve(null) : this.#resolver.read(fact, { maxBytes, milliseconds }, origin);
+      }, milliseconds / 1000);
+      return remaining() === null ? null : read;
+    };
     this.#first();
     const pinned = this.#scope.pinned();
     if (!pinned) return null;
@@ -674,15 +692,15 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
         const creator = proof[1];
         if (creator.fact.at.kind !== "lane" || creator.fact.at.scope === this.#name || creatorInput.from.at.kind !== "destination"
           || creatorInput.from.at.scope === this.#name || creatorInput.from.at.scope === creator.fact.at.scope) return null;
-        const parent = await within(() => this.#resolver.read(creator.fact, this.#fetchSeconds, true), this.#fetchSeconds);
+        const parent = await readSource(creator.fact, true);
         if (parent === LATE || parent === null || !("entry" in parent) || parent.under !== "change" || !isEntryOf(parent.entry, creator.fact)
           || !parent.origin || parent.origin.length !== 3) return null;
-        const nativeFact = creatorInput.from, native = await within(() => this.#resolver.read(nativeFact, this.#fetchSeconds, true), this.#fetchSeconds);
+        const nativeFact = creatorInput.from, native = await readSource(nativeFact, true);
         if (native === LATE || native === null || !("entry" in native) || native.under !== "platform:destination" || !isEntryOf(native.entry, nativeFact)
           || !native.origin || native.origin.length !== 3) return null;
         const jobFact = incidentFields["job"];
         if (!isFactRef(jobFact) || canonicalize(jobFact.at) !== canonicalize(creator.fact.at)) return null;
-        const job = await within(() => this.#resolver.read(jobFact, this.#fetchSeconds), this.#fetchSeconds);
+        const job = await readSource(jobFact, false);
         if (job === LATE || job === null || !("entry" in job) || job.under !== "change" || !isEntryOf(job.entry, jobFact)) return null;
         const fixed: Fetched[] = [proof[0]!, { ...creator, under: parent.under }, ...parent.origin, { fact: nativeFact, entry: native.entry, under: native.under }];
         for (const copy of native.origin) {
@@ -691,14 +709,16 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
         }
         fixed.push({ fact: jobFact, entry: job.entry, under: job.under });
         if (fixed.length !== 9) return null;
-        return sourced(this.#store, pinned, seq, origin, fixed);
+        if (remaining() === null) return null;
+        const answer = sourced(this.#store, pinned, seq, origin, fixed);
+        return remaining() === null ? null : answer;
       } catch { return null; }
     }
     if (name !== undefined && (sourceName(pinned.named, name) === null || application) && proof[1]) {
       const creator = proof[1];
       if (creator.fact.at.scope === this.#name) return null;
       try {
-        const read = await within(() => this.#resolver.read(creator.fact, this.#fetchSeconds, true), this.#fetchSeconds);
+        const read = await readSource(creator.fact, true);
         if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, creator.fact)) return null;
         proof = [proof[0]!, { ...creator, under: read.under }];
         if (evidenceIncidentParentV17(pinned.named) && creatorInput?.type === "act" && creatorInput.signed.intent.kind === "open-pr") {
@@ -713,7 +733,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
         }
       } catch { return null; }
     }
-    return sourced(this.#store, pinned, seq, origin, proof);
+    if (remaining() === null) return null;
+    const answer = sourced(this.#store, pinned, seq, origin, proof);
+    return remaining() === null ? null : answer;
   }
   /** Native query preparation only. The caller supplies fresh validated request checks; no HTTP route invokes this. */
   protected genesisEligibility(request: () => { key: import("@generalbusiness/dap-contract").KeyId; since: number } | null) {

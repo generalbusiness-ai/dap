@@ -25,7 +25,7 @@ import { CanonicalError, admitSequenceGenesis, canonicalize, entryHash, scopeIdO
 import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, same, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, Due, Fetched, Owners, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { ownOf, retainedFacts, snapshotsOf, type BirthCandidate, type PinCell, type Pinned, type ResolvedPin } from "./core.ts";
-import type { Ports, Resolver } from "./ports.ts";
+import type { Ports, Resolver, SourceReadContext } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
 import { entryCorrelation, inOperation, measured, metric, operational, type Operational } from "./operational.ts";
 
@@ -52,21 +52,51 @@ export async function turnDeadline<T>(work: () => Promise<T>, seconds: number): 
   }
 }
 
+/** One logical source deadline. Invalid or backward clock readings stop it permanently.
+ * The caller still owns physical work after a timeout. This creates no timer. */
+export function sourceReadRemaining(context: SourceReadContext): (() => number | null) | null {
+  if (!context || !Number.isSafeInteger(context.maxBytes) || context.maxBytes <= 0
+    || !Number.isSafeInteger(context.milliseconds) || context.milliseconds <= 0) return null;
+  let previous = performance.now(), stopped = false;
+  const deadline = previous + context.milliseconds;
+  if (!Number.isFinite(previous) || previous < 0 || !Number.isFinite(deadline)) return null;
+  return () => {
+    const now = performance.now();
+    if (stopped || !Number.isFinite(now) || now < previous || now >= deadline) { stopped = true; return null; }
+    previous = now;
+    const milliseconds = Math.floor(deadline - now);
+    if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0) { stopped = true; return null; }
+    return milliseconds;
+  };
+}
+
 /**
  * The foreign entries an input names, each read through the resolver within
- * the fetch time limit and checked against the fact that names it. Null: one
+ * one shared fetch deadline and checked against the fact that names it. Null: one
  * could not be read, and the input is answered `dependency-unavailable`.
  * Nothing is held.
  */
 export const ARCHIVED_FACT = Symbol("archived-fact");
 export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: readonly FactRef[]): Promise<Fetched[] | typeof ARCHIVED_FACT | null> {
+  if (named.length === 0) return [];
+  const maxBytes = bounds.entryBytes;
+  const remaining = sourceReadRemaining({ maxBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) });
+  if (!remaining) return null;
   const read = await Promise.all(named.map(async (fact): Promise<Fetched | typeof ARCHIVED_FACT | null> => {
-    const matched = await turnDeadline(() => resolver.read(fact, bounds.fetchSeconds), bounds.fetchSeconds);
+    const milliseconds = remaining();
+    if (milliseconds === null) return null;
+    const matched = await turnDeadline(() => {
+      const milliseconds = remaining();
+      return milliseconds === null ? Promise.resolve(null) : resolver.read(fact, { maxBytes, milliseconds }, false);
+    }, milliseconds / 1000);
+    if (remaining() === null) return null;
     if (matched !== LATE && matched !== null && "archived" in matched) return ARCHIVED_FACT;
-    return matched !== LATE && matched !== null && "entry" in matched && isEntryOf(matched.entry, fact) ? carryProducerName({ fact, entry: matched.entry, under: matched.under }, matched) : null;
+    const accepted = matched !== LATE && matched !== null && "entry" in matched && isEntryOf(matched.entry, fact) ? carryProducerName({ fact, entry: matched.entry, under: matched.under }, matched) : null;
+    return remaining() === null ? null : accepted;
   }));
-  if (read.includes(ARCHIVED_FACT)) return ARCHIVED_FACT;
-  return read.every((f): f is Fetched => f !== null && f !== ARCHIVED_FACT) ? read : null;
+  const accepted: Fetched[] | typeof ARCHIVED_FACT | null = read.includes(ARCHIVED_FACT) ? ARCHIVED_FACT
+    : read.every((f): f is Fetched => f !== null && f !== ARCHIVED_FACT) ? read : null;
+  return remaining() === null ? null : accepted;
 }
 
 // ---------------------------------------------------------------- the waiting input

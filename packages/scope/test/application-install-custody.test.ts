@@ -1,3 +1,4 @@
+import { net as sourceNet } from "../src/testing.ts";
 /** Real native room scopes, production member authority, SQLite commits,
  * operation driver, eviction/recovery, detached-text transport and local R2.
  * Repository creation, Git objects, clock and read-session inspector are
@@ -177,7 +178,7 @@ test.each(installations)("$name: one signed native install settles through Direc
       expect(final).toMatchObject({ ok: true, value: [{ id: job, state: "refused", values: { phase: "creation", reason: "application-creation-refused" } }] });
       expect((await life.wait(() => M.item(0))).values["adminActions"]).toContain("counting.control");
       expect((await life.wait(() => A.summary())).value.items.find(item => item.type === "definition")).toMatchObject({ state: "active", values: { digest: f.packet.package.semantic.entry } });
-      const birth = await life.wait(() => (C.object as unknown as { source(seq: number): Promise<Sourced> }).source(0));
+      const birth = await life.wait(() => (C.object as unknown as { source(seq: number, origin: boolean, context: import("../src/ports.ts").SourceReadContext): Promise<Sourced> }).source(0, false, { maxBytes: (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) }));
       expect(parseStrict(birth.bytes!)).toMatchObject({ input: { type: "genesis", decision: "refused" } });
       expect((await nativeWorker.fetch(new Request("https://scopes.test" + applicationScreenPath(D.name, job, f.packet.ids.presentation)), applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX))).status).toBe(404);
       const history = await life.wait(() => A.entries());
@@ -219,7 +220,7 @@ test.each(installations)("$name: one signed native install settles through Direc
     expect(original[0]!.input).toMatchObject({ type: "act", signed });
     expect(history.filter(entry => entry.input.type === "outcome")).toHaveLength(2);
     const current = (await life.wait(() => C.summary())).at;
-    const provenance = await life.wait(() => (C.object as unknown as { source(seq: number, origin: boolean): Promise<Sourced> }).source(current.seq, true));
+    const provenance = await life.wait(() => (C.object as unknown as { source(seq: number, origin: boolean, context: import("../src/ports.ts").SourceReadContext): Promise<Sourced> }).source(current.seq, true, { maxBytes: (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) }));
     const facts: Fetched[] = provenance.origin!.map(copy => ({ fact: copy.fact, entry: parseStrict(copy.bytes) as Fetched["entry"], under: copy.under }));
     const from = { at: await life.wait(() => C.at()), seq: current.seq, hash: current.hash };
     const directory = await life.wait(() => D.at()), destination = await life.wait(() => G.at());

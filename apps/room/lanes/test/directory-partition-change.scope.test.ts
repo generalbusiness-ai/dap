@@ -1,3 +1,4 @@
+import { net as sourceNet } from "../../../../packages/scope/src/testing.ts";
 import { env } from "cloudflare:workers";
 import { namespace } from "../../../../packages/scope/src/namespace.ts";
 import { ReceiverReads } from "../../../../packages/scope/src/receiver-reads.ts";
@@ -114,8 +115,8 @@ test.each([true, false])("activated experimental change pin consumer keeps recei
     const first = await submitManifest(oid("c"));
     const readers = namespace(env.PLATFORM), own = await ReceiverReads.open(readers, I.at);
     expect(own?.mode).toBe(partitioned ? "partition-v1" : "legacy");
-    expect(await readers.resolver.read(first.fact, 10)).toMatchObject({ under: "declared:change" });
-    if (!partitioned) expect(await own!.read(first.fact, 10)).toMatchObject({ under: "declared:change" });
+    expect(await readers.resolver.read(first.fact, { maxBytes: (sourceNet.sized.get(first.fact.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:change" });
+    if (!partitioned) expect(await own!.read(first.fact, { maxBytes: (sourceNet.sized.get(first.fact.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:change" });
     const key = [C.at, intentDigest(first.signed.signed.intent)] as const;
     const record = async () => (await I.state()).record("hold@1", "pin", key);
     expect(await record()).toMatchObject({ state: "provisional", values: { commit: oid("c"), admitted: null } });

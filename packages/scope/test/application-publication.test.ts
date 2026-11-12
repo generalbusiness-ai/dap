@@ -1,3 +1,5 @@
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { net as sourceNet } from "../src/testing.ts";
 import { scopePublisher as publisher, publisherContainerData } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
@@ -116,7 +118,7 @@ test("a native application publishes once after missing proof, keeps later sourc
     expect((await G.item(0)).state).toBe("ready");
     expect((await C.item(0)).refs["destination"]).toEqual(await G.at());
     const genesis = factRefOf((await C.entries())[0]!);
-    const peer = await life.wait(() => namespace(env.PLATFORM).resolver.read(genesis, 30, true));
+    const peer = await life.wait(() => namespace(env.PLATFORM).resolver.read(genesis, { maxBytes: (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 30_000 }, true));
     expect(peer && "entry" in peer ? peer.origin?.length : null).toBe(3);
     expect(peer && "entry" in peer ? peer.under : null).toBe("declared:change");
     rooms.push(R, D, M, Q, G, C);
@@ -151,8 +153,8 @@ test("a native application publishes once after missing proof, keeps later sourc
     const a = await setup();
     let proofAvailable = false;
     const actual = namespace(env.PLATFORM).resolver;
-    life.wire(a.G.name, () => ({ resolver: { read: async (fact, seconds, origin) => {
-      const matched = await life.wait(() => actual.read(fact, seconds, origin));
+    life.wire(a.G.name, () => ({ resolver: { read: async (fact, context, origin) => {
+      const matched = await life.wait(() => actual.read(fact, context, origin));
       return matched && "entry" in matched && origin && !proofAvailable ? { ...matched, origin: matched.origin?.slice(0, 2) ?? [] } : matched;
     } } }));
     await a.G.restart();
@@ -452,7 +454,7 @@ test.each([
     const first = await report("# First device reading\n");
     await pause(nodes);
     const firstCause = factRefOf((await C.entries())[first]!);
-    const proof = await life.wait(() => namespace(env.PLATFORM).resolver.read(firstCause, 30, true));
+    const proof = await life.wait(() => namespace(env.PLATFORM).resolver.read(firstCause, { maxBytes: (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 30_000 }, true));
     const publicationOrigin = platform(cohort.destination)?.applicationPublicationOrigin;
     expect(proof && "entry" in proof ? publicationOrigin?.(firstCause, directory, await G.at(), proof.origin ?? []) : null).toBe(true);
     if (cohort.destination !== ARCHIVE_DEVICE_PUBLICATION_COHORT.destination)

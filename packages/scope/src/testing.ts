@@ -324,7 +324,7 @@ export function netPorts(n: Net, transport: Transport, resolver?: Resolver): Par
       return null;
     },
   };
-  const scripted: Partial<Ports> = resolver ? { resolver: { read: (fact, seconds, origin) => { const peer = n.peers.get(fact.hash); return peer ? Promise.resolve(peer) : resolver.read(fact, seconds, origin); } } } : {};
+  const scripted: Partial<Ports> = resolver ? { resolver: { read: (fact, context, origin) => { const peer = n.peers.get(fact.hash); return peer ? Promise.resolve(peer) : resolver.read(fact, context, origin); } } } : {};
   const capability = chosenCapability(() => n.capability);
   const outside: Outside = { accepts: (owner, kind) => n.outside?.accepts(owner, kind) ?? false, send: (request) => Promise.resolve(n.outside?.send(request) ?? null) };
   return { clock: n.clock, authority: testAuthority(), readers: testReaders, transport: disturbed, capabilities: capability, owners: capability, outside, ...scripted };

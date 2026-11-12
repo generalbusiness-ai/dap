@@ -6,7 +6,7 @@ import { isPlatformDefinition, isScopeRef, scopeIdOf } from "@generalbusiness/da
 
 import { isEntryOf, isFactRef, isLocalId, isObject, same, sentBy, type Delivered, type Fetched } from "@generalbusiness/dap-derive";
 import { PartitionProofOperation, type PartitionProofPorts } from "./partition-proof.ts";
-import type { Foreign, Ports, Resolver } from "./ports.ts";
+import type { Foreign, Ports, Resolver, SourceReadContext } from "./ports.ts";
 import { producerName, receiverName } from "./receiver-facts.ts";
 
 const positiveSource = (entry: Entry): boolean => entry.input.type !== "genesis" || entry.input.decision === "applied";
@@ -63,19 +63,19 @@ export class ReceiverReads implements Resolver {
     const selected = await this.proof?.source(read.fact);
     return selected && positiveSource(selected.source.entry) ? receiverName({ ...read, under: selected.producer }, selected.under) : null;
   }
-  async read(fact: FactRef, seconds: number, origin = false): Promise<Foreign> {
+  async read(fact: FactRef, context: SourceReadContext, origin: boolean): Promise<Foreign> {
     if (this.mode === "partition-v1") {
       const selected = await this.proof?.source(fact);
       return selected && positiveSource(selected.source.entry) ? receiverName({ entry: selected.source.entry, under: selected.producer }, selected.under) : null;
     }
-    const read = await this.resolver.read(fact, seconds, origin);
+    const read = await this.resolver.read(fact, context, origin);
     return read !== null && "entry" in read && !isEntryOf(read.entry, fact) ? null : read;
   }
   /** A refused genesis is only negative evidence for its exact parent send.
    * It receives no semantic source label and cannot enter ordinary fact reads. */
-  async result(delivered: Delivered, seconds: number): Promise<Foreign> {
+  async result(delivered: Delivered, context: SourceReadContext): Promise<Foreign> {
     if (delivered.message.class !== "result") return null;
-    if (this.mode === "legacy") return this.read(delivered.from, seconds);
+    if (this.mode === "legacy") return this.read(delivered.from, context, false);
     const selected = await this.proof?.source(delivered.from);
     if (!selected) return null;
     if (positiveSource(selected.source.entry)) return receiverName({ entry: selected.source.entry, under: selected.producer }, selected.under);

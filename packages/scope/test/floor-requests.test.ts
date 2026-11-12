@@ -94,7 +94,7 @@ test("Native ACK timing, completed request100/result150, archived resolver and s
   const checkpoint = await receiver.stub.checkpoint(); if (checkpoint.answer !== "written") throw Error(canonicalize(checkpoint));
   receiverJournal = await append(receiver, receiverJournal);
   await sender.restart(); await receiver.restart();
-  expect(await net.resolver.read(ask.receipt.fact, 1)).toMatchObject({ archived: { floor: 251, commit: "c".repeat(40) } });
+  expect(await net.resolver.read(ask.receipt.fact, { maxBytes: sender.c.bounds.entryBytes, milliseconds: 1000 }, false)).toMatchObject({ archived: { floor: 251, commit: "c".repeat(40) } });
   expect(await surface(receiver).deliver(envelope)).toEqual({ answer: "recorded", fact: decision.fact });
   expect(await surface(receiver).deliver({ ...envelope, from: { ...envelope.from, hash: `sha256:${"0".repeat(64)}` } })).toEqual({ answer: "source-unverified" });
   const journals = [senderJournal, receiverJournal];
