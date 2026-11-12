@@ -193,8 +193,11 @@ async function story(mode: "default" | "generic", lines: string[] = []): Promise
     const token = await step(paul, mode, { tool: "repository.read-token", scope: "destination", kind: "read-token" }, { on: 0, fields: { hours: 1 }, idempotencyKey: "token-1" });
     const seq = (token["fact"] as FactRef).seq;
     await paul.ok("wait", { scope: "destination", seq: seq + 1 });
-    const credential = await paul.ok("credential", { entry: seq });
-    expect(credential).toMatchObject({ credential: expect.any(String), remote: expect.stringMatching(/^https:/) });
+    const credential = await paul.call("credential", { entry: seq });
+    expect(credential.isError, JSON.stringify(credential.structuredContent)).toBe(false);
+    expect(credential.structuredContent).toEqual({ remote: expect.stringMatching(/^https:/), ends: expect.any(String), entry: seq });
+    expect(credential.content).toEqual([{ type: "text", text: expect.any(String) }]);
+    expect(JSON.parse(credential.content[0]!.text)).toEqual({ credential: expect.any(String), ...credential.structuredContent });
     await settled(paul, 0, "the end of the story");
     lines.push(`room story, ${mode}: requests to the scope service: rita ${rita.requests.length}, paul ${paul.requests.length}`);
     return { told: { creation: atCreation, rita: rita.told, paul: paul.told }, requests: rita.requests.length + paul.requests.length };

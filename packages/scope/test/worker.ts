@@ -91,7 +91,8 @@ export class ServingTestIndex extends ScopeIndex {
 export class ServingTestService extends TestApiEntry<Env & { SERVING_INDEX: DurableObjectNamespace }> {
   constructor(ctx: ExecutionContext, env: Env & { SERVING_INDEX: DurableObjectNamespace }) { super(ctx, { ...env, SCOPE_INDEX: env.SERVING_INDEX }); }
 }
-import type { AgentPorts, HostedAgent } from "@generalbusiness/dap-mcp";
+import { hostedRolePort, type AgentPorts, type HostedAgent } from "@generalbusiness/dap-mcp";
+import { roleStandingThrough } from "../src/worker-mcp.ts";
 import { outsideOf, owners, wired } from "./outside.ts";
 import type { CreationAdmission } from "../src/creation-admission.ts";
 import { readPlatformCreationPolicy } from "../src/creation-versions.ts";
@@ -192,6 +193,10 @@ type PlatformEnv = Env & { PLATFORM: DurableObjectNamespace };
 
 export class PlatformScope extends DeployedScope<PlatformEnv> {
   protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
+  override submit(...args: Parameters<DeployedScope<PlatformEnv>["submit"]>): ReturnType<DeployedScope<PlatformEnv>["submit"]> {
+    hostedTest.nativeSubmit?.(this.ctx.id.name ?? "", args[0]);
+    return super.submit(...args);
+  }
   readonly #scheduledCallbacks: Promise<unknown>[];
   #fixtureCallbackRelease: (() => void) | null = null;
   #fixtureCallbackFinished = false;
@@ -362,6 +367,8 @@ export default { fetch: async (request: Request, env: NetEnv & HostedEnv): Promi
 export const hostedTest: {
   /** Closed MCP reporter port; no provider or Analytics Engine request. */
   metrics: AgentPorts["metrics"] | null;
+  /** One actual client-registry object for this room, stable across clock changes and evictions. */
+  clientRegistry: DurableObjectId | null;
   now: (() => number) | null; pause: ((waiting: readonly string[]) => Promise<void>) | null;
   /** The next request whose path ends with this reaches the scope, and its reply is lost: a STAND-IN for a dropped reply. */
   lose: string | null;
@@ -379,6 +386,16 @@ export const hostedTest: {
   failSession: boolean;
   /** While set, every configuration read of an agent, and with it every listing and snapshot, waits on this promise. */
   configHold: Promise<void> | null;
+  /** Hold the selected reply of a real Native role read; never replace its facts. */
+  roleReply: { agent: string; at: number; calls: number; entered(): void; waiting: Promise<void> } | null;
+  /** Observe actual Agent HTTP submits; never intercept or replace their result. */
+  submitted: ((url: string) => void) | null;
+  /** Observe the actual Native entrypoint, including production-default Hosted fetch. */
+  nativeSubmit: ((scope: string, signed: Parameters<DeployedScope<PlatformEnv>["submit"]>[0]) => void) | null;
+  /** Observe unchanged real random bytes only in the owning test's bounded memory. */
+  issuerRandom: ((bytes: Uint8Array) => void) | null;
+  /** Hold completion of one real ordinary-generation session-removal callback. */
+  removalReply: { entered(): void; waiting: Promise<void> } | null;
   /** Hold only the reply of a real registration retention, after its SQL write. */
   clientRetention: { entered(): void; waiting: Promise<void> } | null;
   /** Scripted hosted credential timers. No wall-clock wait belongs in a witness. */
@@ -387,7 +404,21 @@ export const hostedTest: {
   toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string; MCP_CARD_ORIGINS?: string; MCP_RESOURCE_URLS?: string } | null;
   /** Raw deployment setting for the native constructor witness, never an AgentPorts override. */
   applicationSettings: Pick<McpEnv, "APPLICATION_TRUST"> | null;
-} = { metrics: null, now: null, pause: null, lose: null, drop: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, clientRetention: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
+} = { metrics: null, clientRegistry: null, now: null, pause: null, lose: null, drop: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, roleReply: null, submitted: null, nativeSubmit: null, issuerRandom: null, removalReply: null, clientRetention: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
+/** Bind public-client SQL to the explicit TEST room identity. Production
+ * retains its one fixed name. Clock callback changes cannot select another
+ * object or hide that object's durable counters and clock high-water. */
+export function hostedRegistries(registries: DurableObjectNamespace): DurableObjectNamespace {
+  const clientRegistry = hostedTest.clientRegistry;
+  if (clientRegistry === null) return registries;
+  return new Proxy(registries, {
+    get(target, property) {
+      if (property === "idFromName") return (given: string) => given === "oauth-public-clients-1" ? clientRegistry : target.idFromName(given);
+      const value = Reflect.get(target, property, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
+}
 /** The scripted reset: thrown at a fence, once. */
 export class ScriptedReset extends Error { constructor(fence: string) { super(`scripted reset at ${fence}`); } }
 type HostedEnv = McpEnv & { PLATFORM: DurableObjectNamespace };
@@ -405,7 +436,7 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
   #startupBinding: Binding | null = null;
   constructor(ctx: DurableObjectState, env: HostedEnv) {
     const index = startupTest.index;
-    super(ctx, { ...env, ...creationTest.settings, ...hostedTest.applicationSettings, ...(index ? { SCOPE_INDEX: index } : {}), ...(hostedTest.toolSettings ?? { MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","install_application","credential","prepare","join","record","step","text"]' }) });
+    super(ctx, { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES), ...creationTest.settings, ...hostedTest.applicationSettings, ...(index ? { SCOPE_INDEX: index } : {}), ...(hostedTest.toolSettings ?? { MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","install_application","credential","prepare","join","record","step","text"]' }) });
     this.#productionHostedFetch = creationTest.productionHostedFetch;
     this.#startup = index !== null;
   }
@@ -417,6 +448,18 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
   }
   /** The harness's instance reset: what an eviction leaves. */
   reset(): void { this.evict(); }
+  /** Test only: wrap one actual removal callback, preserving its work before holding its completion. */
+  holdRemoval(): void {
+    const http = this.held()?.inside().http;
+    if (!http || typeof http.port.remove !== "function" || hostedTest.removalReply === null) throw Error("No owned HTTP session-removal callback to hold");
+    const remove = http.port.remove;
+    http.port.remove = async id => {
+      http.port.remove = remove;
+      const held = hostedTest.removalReply;
+      await remove(id);
+      if (held) { held.entered(); await held.waiting; }
+    };
+  }
   /** Fire the service's watch once, as 30 seconds passing would. */
   async tick(): Promise<boolean> { const service = this.held()?.inside().service; if (!service) return false; await service.check(); return true; }
   heldAnswers(): { control: { op: string; answer: boolean }[]; agent: boolean } { return this.answers(); }
@@ -427,7 +470,7 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
   /** The open streams and sessions this instance holds. */
   counts(): { streams: number; sessions: number } { const http = this.held()?.inside().http; return { streams: http?.streams ?? 0, sessions: http?.sessions.size ?? 0 }; }
   protected override ports() {
-    const scopes = this.env.PLATFORM;
+    const scopes = this.env.PLATFORM, roleStanding = roleStandingThrough(this.scopes());
     return {
       ...(hostedTest.metrics ? { metrics: hostedTest.metrics } : {}),
       ...(hostedTest.controlBudget ? { controlBudget: hostedTest.controlBudget } : {}),
@@ -435,11 +478,22 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
       fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this.evict(); throw new ScriptedReset(fence); } },
       sessionFault: () => { if (hostedTest.failSession) { hostedTest.failSession = false; throw new Error("SQLITE_FULL: scripted session write"); } },
       configHold: () => hostedTest.configHold ?? undefined,
+      roleStanding: hostedRolePort(async asked => {
+        const read = await roleStanding(asked), held = hostedTest.roleReply;
+        if (held && "agent" in asked && asked.agent === held.agent && ++held.calls === held.at) { held.entered(); await held.waiting; }
+        return read;
+      }),
       ...(hostedTest.scheduleExpiry ? { scheduleExpiry: hostedTest.scheduleExpiry } : {}),
+      random: (n: number) => {
+        const bytes = crypto.getRandomValues(new Uint8Array(n));
+        hostedTest.issuerRandom?.(bytes.slice());
+        return bytes;
+      },
       now: () => hostedTest.now?.() ?? Date.now(), every: () => () => {},
       pause: (waiting: readonly string[]) => hostedTest.pause?.(waiting) ?? new Promise<void>((r) => setTimeout(r, 50)),
       ...(this.#productionHostedFetch ? {} : { fetch: (async (url: string, init?: RequestInit) => {
         if (hostedTest.drop !== null && new URL(url).pathname.endsWith(hostedTest.drop)) { hostedTest.drop = null; throw new Error("scripted failure before dispatch"); }
+        if (init?.method === "POST" && (new URL(url).pathname.endsWith("/acts") || new URL(url).pathname.endsWith("/preparations") || new URL(url).pathname === "/v1/scopes")) hostedTest.submitted?.(url);
         const response = await route(new Request(url, init), scopes, this.env);
         if (hostedTest.lose !== null && new URL(url).pathname.endsWith(hostedTest.lose)) { hostedTest.lose = null; await response.body?.cancel(); throw new Error("scripted loss of the reply"); }
         return response;

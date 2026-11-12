@@ -336,7 +336,7 @@ describe("errors say who said what, from what the judge returned", () => {
   });
 
   // Invariant: the sentence reports the head the scope judged at, never a state read afterwards; and no output of any tool carries
-  // the session token, the signing key or an invitation secret, while the read credential is in credential's one structured field.
+  // the session token, the signing key or an invitation secret, while the read credential appears once in credential's explicit text.
   test("the judged head is reported, and secrets appear nowhere but the credential's field (STAND-IN scope service)", async () => {
     const secret = new Uint8Array(32).fill(9);
     const signer = secretSigner(secret);
@@ -361,7 +361,11 @@ describe("errors say who said what, from what the judge returned", () => {
     const token = await call("repository.read-token", { on: 0, fields: { hours: 1 }, idempotencyKey: "token-1" });
     const seq = (token.structuredContent["fact"] as { seq: number }).seq;
     const credential = await call("credential", { entry: seq });
-    expect(credential.structuredContent["credential"]).toBe(READ_CREDENTIAL);
+    expect(credential.isError).toBe(false);
+    expect(credential.structuredContent).toEqual({ remote: expect.stringMatching(/^https:/), ends: expect.any(String), entry: seq });
+    expect(JSON.stringify(credential.structuredContent)).not.toContain(READ_CREDENTIAL);
+    expect(credential.content).toEqual([{ type: "text", text: expect.any(String) }]);
+    expect(JSON.parse(credential.content[0]!.text)).toEqual({ credential: READ_CREDENTIAL, ...credential.structuredContent });
     for (const scope of ["directory", "membership", "rules", "destination"]) {
       await call("inspect", { scope }); await call("steps", { scope }); await call("record", { scope: scope === "destination" ? "rules" : scope }); await call("sends", { scope }); await call("actions", { scope });
       await call("items", { scope, type: "member" }); await call("wait", { scope, seconds: 1 });
@@ -371,9 +375,9 @@ describe("errors say who said what, from what the judge returned", () => {
     const everything = outputs.join("\n");
     expect(everything).not.toContain(SESSION_TOKEN);
     expect(everything).not.toContain(b64url(secret));
-    // The credential appears once: in credential's structured field, and in no text, no other tool and no other field.
+    // The explicitly requested credential appears once, in text, and nowhere in structured content or another tool.
     expect(everything.split(READ_CREDENTIAL).length - 1).toBe(1);
-    expect(credential.content[0]!.text).not.toContain(READ_CREDENTIAL);
+    expect(credential.content[0]!.text).toContain(READ_CREDENTIAL);
     // The invitation secret is in no output but a read of the scope's own record of the join entry: membership keeps the signed
     // intent, secret and all, and record returns it as stored. No sentence, answer or other read carries it.
     expect(byTool.filter(([, out]) => out.includes(invitationSecret)).map(([asked]) => asked)).toEqual(['record {"scope":"membership"}']);

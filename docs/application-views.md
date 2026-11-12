@@ -454,10 +454,25 @@ keeps its API reference in a closure. It does not receive a signer, token
 or arbitrary tool callback. The kit runs the package's code as trusted
 code, in the same document as its own tool bridge. A package script can
 post its own `tools/call` message to the host through `window.parent`, as
-the bridge does. The service's write tools (`create`, `join`,
-`install_application`, `prepare` and `act`) declare no
-`_meta.ui.visibility`, so their metadata does not limit them to the model.
-Install only a package whose code you trust.
+the bridge does. Install only a package whose code you trust.
+
+A trusted package script can submit any action declared by one of the
+package's views without a click, using the member's authority. Release trust
+admits that code. The retained view, revision, current grants and native
+guards still constrain the action. A click is not an authority boundary.
+
+Ordinary write tools and dynamic Native act tools carry
+`_meta.ui.visibility: ["model"]`. The MCP Apps host must refuse an app call
+to those tools. `view_act` and declared input tools remain app-callable;
+they admit only the retained view's declared actions and inputs. The server
+receives the same authenticated tool call from either origin. It does not
+use visibility as proof of who called. If a host does not enforce this
+metadata, the server still applies its ordinary membership, grants and
+native guards; visibility adds no server-side refusal.
+
+The [MCP Apps Visibility section](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx#visibility)
+defines this host check. Omitting visibility exposes a tool to both model
+and app callers.
 
 The service resolves typed party and journal signer fields into
 `data.members.records`, keyed by the canonical full member reference.

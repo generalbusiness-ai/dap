@@ -13,7 +13,7 @@ import { ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS } from "@gen
 import { remoteCardOrigins } from "../packages/mcp/src/views/remote-origins.ts";
 import { configuredMcpResources, hostedMcpResources, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, mcpUnauthorized, mcpChallengeResponse } from "../packages/mcp/src/oauth-resource.ts";
 
-import { parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { digestBytes, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { oauthAuthorization, oauthRedirectPolicy, OAuthError, OAUTH_CLIENT_BYTES } from "../packages/mcp/src/oauth-parameters.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -236,19 +236,23 @@ async function hostedInventory(source, settings, oauthSource, consentSource) {
     assert.ok(choices.length && choices.every(value => /^[a-z-]+$/.test(value)) && new Set(choices).size === choices.length, "Finite hosted suffixes");
     paths.push(prefix + agent, ...choices.map(value => prefix + agent + "/" + value));
   });
-  const result = new Map(); let action, currentPath, dispatch;
+  const result = new Map(); let action, currentPath, dispatch, currentBody = "";
   const { mcpRoute } = load(source, ["mcpRoute", "boundedBytes"], {
     admittedRequestUrl: () => true, URL, Response, Uint8Array, TextDecoder, parseStrict, isObject: value => value !== null && typeof value === "object" && !Array.isArray(value),
-    CONTROL_BODY_BYTES: 64 * 1024, scopeIndex, hostedMcpTools, readPublicOrigin, oauthPolicy, OAuthError, ...wire,
+    CONTROL_BODY_BYTES: 64 * 1024, scopeIndex, hostedMcpTools, readPublicOrigin, oauthPolicy, OAuthError, digestBytes, ...wire,
+    // Explicit signature stand-in for structural dispatch, never caller proof.
+    verifyControl: () => true,
     hostedMcpResources, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, mcpUnauthorized, mcpChallengeResponse,
     json: status => new Response(null, { status }),
-    controlOf: () => ({ request: { action, agent: currentPath.startsWith("/mcp/agents/" + agent) ? agent : null, membership: { scope: "witness" } } }),
+    controlOf: () => ({ request: { action, agent: currentPath.startsWith("/mcp/agents/" + agent) ? agent : null, membership: { scope: "witness" }, service: "https://inventory.invalid", body: digestBytes(utf8(currentBody)) } }),
   });
   const client = { client_id: "dap-client-" + "A".repeat(43), client_name: "TEST inventory client", redirect_uris: ["https://claude.ai/api/mcp/auth_callback"], token_endpoint_auth_method: "none" };
   const reached = gate => { dispatch = gate; return { status: 200, body: {} }; };
   const object = {
     create: () => reached("control"), control: () => reached("control"), grant: () => reached("control"), grantExisting: () => reached("control"), connections: () => reached("control"), connectionControl: () => reached("control"),
     fetch: () => { dispatch = "bearer"; return new Response(); },
+    // Admission allows the real matcher to continue without marking a protected dispatch.
+    admitControl: () => ({ status: 200, body: {} }), admitContext: () => ({ status: 200, body: {} }),
     resolveClient: () => ({ status: 200, body: client }), registerClient: () => ({ status: 201, body: client }),
     exchangeCode: () => reached("oauth"), refreshGrant: () => reached("oauth"), revokeToken: () => reached("oauth"),
   };
@@ -276,6 +280,7 @@ async function hostedInventory(source, settings, oauthSource, consentSource) {
         if (["/oauth/token", "/oauth/revoke"].includes(path)) { headers["content-type"] = "application/x-www-form-urlencoded"; init.body = new URLSearchParams({ client_id: client.client_id, grant_type: grantType, code: token, refresh_token: token, token, redirect_uri: client.redirect_uris[0], code_verifier: "A".repeat(43), resource: binding.resource }).toString(); }
         else { headers["content-type"] = "application/json"; init.body = JSON.stringify(path === "/oauth/register" ? { client_name: client.client_name, redirect_uris: client.redirect_uris } : path.endsWith("/grant") ? { ...binding, link: "TEST invitation" } : {}); }
       }
+      currentBody = init.body ?? "";
       const request = new Request(url, init), response = consent.oauthPage(request, env) ?? await mcpRoute(request, env);
       if (dispatch !== null || response?.status >= 200 && response.status < 300 && (path.startsWith("/oauth/") || [RESOURCE_METADATA_PATH, wire.OAUTH_METADATA_PATH].includes(path))) {
         const route = row(method, path.replace(agent, ":agent"), dispatch ?? "none");
@@ -413,6 +418,7 @@ export function workerEntrypoints(source = readSource(scopeFile), hostedSource =
     return [node.declaration.id?.name, node.declaration.type, node.declaration.superClass?.name ?? null];
   }), [
     ["McpEnv", "TSInterfaceDeclaration", null], ["mcpRoute", "FunctionDeclaration", null],
+    ["roleStandingThrough", "FunctionDeclaration", null],
     ["McpRegistry", "ClassDeclaration", "DurableObject"], ["McpAgent", "ClassDeclaration", "DurableObject"],
   ], "Worker entry inventory: exact hosted declarations");
   assert.equal(bases.size, 1, "Worker entry inventory: exact platform base required");

@@ -2,18 +2,18 @@
  * WebCrypto is real and nonextractable. Its record store, browser settings,
  * lock, clock and dispatcher are TEST stand-ins, not IndexedDB proof. */
 import { expect, test } from "vitest";
-import { b64url, canonicalize, factRefOf, isScopeId, isSeed, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { env } from "cloudflare:test";
+import { b64url, canonicalize, digestBytes, factRefOf, isScopeId, isSeed, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { env, runInDurableObject } from "cloudflare:test";
 import { OWN_AGENT_COHORT } from "@generalbusiness/dap-platform";
 import { encodeAgentKeyInvitation, invitationIssueFields } from "@generalbusiness/dap-client";
 import { joinInvitation } from "../src/join-custody.ts";
-import { selectedOAuthRoom, oauthControl, loadOAuthAuthorization } from "../src/oauth-context.ts";
+import { selectedOAuthRoom, oauthControl, postOAuthControl, loadOAuthAuthorization } from "../src/oauth-context.ts";
 import { consentOAuth, preparedOAuthInvitation } from "../src/oauth-custody.ts";
 import { memoryPageKeys } from "./private-key-fixture.ts";
 import { sessionRoom } from "../../../../packages/scope/test/support/session-room.ts";
 import { drainScheduledFixture, driveFixture, type nativeFixtureLifetime } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
 import { rita, routed, type Platform } from "../../../../packages/scope/test/repository.ts";
-import { hostedTest } from "../../../../packages/scope/test/worker.ts";
+import { hostedRegistries, hostedTest } from "../../../../packages/scope/test/worker.ts";
 import worker from "../../worker.ts";
 
 test("consent retains lost grants and reuses each controller's Native agent in the selected unpublished room", async () => {
@@ -28,6 +28,7 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     };
     life.setHold(envelope => { if (isSeed(envelope.to)) track(scopeIdOf(envelope.to)); return false; });
     const pause = async (waiting: readonly string[] = []) => { for (const name of waiting) track(name); await driveFixture(life.platforms(), life.wait); };
+    hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
     hostedTest.now = life.now; hostedTest.pause = pause;
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
@@ -44,7 +45,7 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     const fetch = async (url: string, init?: Parameters<typeof routed>[1]) => {
       requests.push(url); const path = new URL(url).pathname;
       if (path.startsWith("/mcp/") || path.startsWith("/oauth/")) {
-        const response = await worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM, SCOPE_INDEX_MODE: "register", MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION: "on" });
+        const response = await worker.fetch(new Request(url, init), { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES), SCOPES: env.PLATFORM, SCOPE_INDEX_MODE: "register", MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION: "on" });
         if (path === "/mcp/agents/grant") {
           grantBodies.push(String(init?.body));
           if (loseGrant && response.status === 201) { loseGrant = false; await response.body?.cancel(); throw Error("TEST lost the completed first-grant reply"); }
@@ -82,6 +83,67 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     expect(callback.searchParams.get("state")).toBe("TEST browser state"); expect(callback.searchParams.get("iss")).toBe(origin);
     const code = callback.searchParams.get("code")!; expect(code).toMatch(/^[0-9a-f]{64}\.[A-Za-z0-9_-]{43}\.[A-Za-z0-9_-]{43}$/);
     expect([...values.values()].join("\n")).not.toContain(code);
+
+    // The actual enrolled Agent mints once, then its final caller-side
+    // Native role read waits while the original code is really redeemed.
+    if (!fresh.agent) throw Error("The accepted consent must name its actual Agent");
+    const relayAgent = fresh.agent, relayOp = crypto.randomUUID(), relayBody = canonicalize(authorization.binding);
+    const relaySigned = await oauthControl(selection, "grant", relayAgent, relayBody, relayOp);
+    const randomCandidates: string[] = [];
+    hostedTest.issuerRandom = bytes => {
+      if (randomCandidates.length >= 4) throw Error("The armed issuer random observation exceeded four candidates");
+      randomCandidates.push(b64url(bytes));
+    };
+    let reachedFinal!: () => void, releaseFinal!: () => void;
+    const atFinal = new Promise<void>(resolve => { reachedFinal = resolve; });
+    const finalHold = new Promise<void>(resolve => { releaseFinal = resolve; });
+    // Existing registered-client grant: initial authority, retention authority,
+    // Issuer pre-read, Issuer disclosure read, then caller's final authority.
+    hostedTest.roleReply = { agent: "@consent-agent", at: 5, calls: 0, entered: reachedFinal, waiting: finalHold };
+    try {
+      const pendingRelay = life.wait(() => postOAuthControl(selection, `/mcp/agents/${relayAgent}/grant`, relayBody, relaySigned));
+      await atFinal;
+      expect(hostedTest.roleReply.calls).toBe(5);
+      const issuer = await runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(relayAgent)), (_instance, state) =>
+        state.storage.sql.exec(`SELECT id, row, state FROM oauth_issuer WHERE op = ?`, relayOp).toArray());
+      expect(issuer).toHaveLength(1);
+      const id = String(issuer[0]!["id"]), details = JSON.parse(String(issuer[0]!["row"])) as { codeDigest: string; codeUsed: boolean };
+      expect(details.codeUsed).toBe(false);
+      const matching = randomCandidates.filter(candidate => digestBytes(utf8(candidate)) === details.codeDigest);
+      expect(matching.length).toBe(1);
+      const originalCode = `${relayAgent}.${id}.${matching[0]!}`;
+      hostedTest.issuerRandom = null;
+      // The held outer reply already owns finalHold. The token exchange must
+      // read actual Native roles normally rather than wait on that same gate.
+      hostedTest.roleReply = null;
+      const tokenResponse = await life.wait(() => fetch(origin + "/oauth/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ grant_type: "authorization_code", code: originalCode, client_id: client.client_id,
+          redirect_uri: authorization.binding.redirect_uri, code_verifier: "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk", resource: authorization.binding.resource }).toString() }));
+      expect(tokenResponse.status).toBe(200);
+      const tokens = await tokenResponse.json() as { access_token?: string; refresh_token?: string };
+      expect(typeof tokens.access_token).toBe("string"); expect(typeof tokens.refresh_token).toBe("string");
+      const consumed = await runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(relayAgent)), (_instance, state) => ({
+        issuer: state.storage.sql.exec(`SELECT row, state FROM oauth_issuer WHERE id = ?`, id).toArray(),
+        grant: state.storage.sql.exec(`SELECT row, state FROM oauth_grant WHERE id = ?`, id).toArray(),
+      }));
+      expect(JSON.parse(String(consumed.issuer[0]!["row"]))).toMatchObject({ codeUsed: true });
+      expect(consumed.grant[0]!["state"]).toBe("active");
+      releaseFinal();
+      const withheld = await pendingRelay;
+      expect([withheld.status, withheld.body["error"], withheld.body["rule"], withheld.body["grant"], withheld.body["codeShown"]]).toEqual([409, "op", "stale", id, true]);
+      expect(Object.hasOwn(withheld.body, "code")).toBe(false);
+      const historical = await life.wait(() => postOAuthControl(selection, `/mcp/agents/${relayAgent}/grant`, relayBody, relaySigned));
+      expect([historical.body["grant"], historical.body["codeShown"]]).toEqual([id, true]);
+      expect(Object.hasOwn(historical.body, "code")).toBe(false);
+      expect(await runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(relayAgent)), (_instance, state) => ({
+        issuer: state.storage.sql.exec(`SELECT row, state FROM oauth_issuer WHERE id = ?`, id).toArray(),
+        grant: state.storage.sql.exec(`SELECT row, state FROM oauth_grant WHERE id = ?`, id).toArray(),
+      }))).toEqual(consumed);
+      expect([...values.values()].some(value => value.includes(originalCode))).toBe(false);
+      expect([...values.values()].some(value => value.includes(tokens.access_token!))).toBe(false);
+      expect([...values.values()].some(value => value.includes(tokens.refresh_token!))).toBe(false);
+    } finally { releaseFinal(); hostedTest.roleReply = null; hostedTest.issuerRandom = null; randomCandidates.length = 0; }
+
     const history = await life.wait(() => M.entries());
     expect(history.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "enrol")).toHaveLength(1);
     expect(history.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "add-own-agent")).toHaveLength(1);
@@ -127,7 +189,7 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     await expect(oauthControl(selection, "grant", null, "{}", crypto.randomUUID())).rejects.toThrow("selected room or browser key changed");
     expect((await life.wait(() => M.entries())).filter(entry => entry.input.type === "act").length).toBe(before);
   } finally {
-    hostedTest.now = null; hostedTest.pause = null;
+    hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.pause = null; hostedTest.roleReply = null; hostedTest.issuerRandom = null;
     const life = ownedLife, M = ownedMembership;
     if (life) {
       if (!M) throw Error("OAuth context setup retained Native ownership");

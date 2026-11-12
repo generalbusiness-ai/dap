@@ -84,7 +84,7 @@ test("both revisions provide text fallback and bind paging to the host's UI capa
         await rpc("initialize", { protocolVersion: LEGACY, capabilities, clientInfo: { name: "profile-fixture", version: "1" } });
         await wire.handle({ jsonrpc: "2.0", method: "notifications/initialized" }, session, () => {});
       }
-      const tools: { name: string; _meta?: { ui?: { resourceUri?: string; visibility?: string[] } } }[] = [];
+      const tools: { name: string; _meta?: { ui?: { resourceUri?: string; visibility?: string[] }; "dap/binding"?: unknown } }[] = [];
       let cursor: string | undefined;
       do {
         const answer = await rpc("tools/list", cursor ? { cursor } : {});
@@ -99,6 +99,13 @@ test("both revisions provide text fallback and bind paging to the host's UI capa
       const fallback = (await rpc("tools/call", { name: "view_needs_you", arguments: { view: `${version}-${ui}` } }))!.result as { content: { text: string }[] };
       expect(fallback.content[0]!.text).toContain("0 items");
       expect(tools.find(tool => tool.name === "view_read")?._meta?.ui?.visibility).toEqual(ui ? ["app"] : undefined);
+      for (const name of ["create", "join", "install_application", "credential", "diff"]) {
+        expect(tools.find(tool => tool.name === name)?._meta?.ui?.visibility, name).toEqual(["model"]);
+      }
+      const nativeActs = tools.filter(tool => tool._meta?.["dap/binding"] !== undefined);
+      expect(nativeActs.length).toBeGreaterThan(0);
+      for (const tool of nativeActs) expect(tool._meta?.ui?.visibility, tool.name).toEqual(["model"]);
+      expect(tools.find(tool => tool.name === "view_act")?._meta?.ui?.visibility).toEqual(ui ? ["app"] : undefined);
       // Visibility describes host presentation, not a new caller authority.
       // The same authenticated wire can call the retained view directly.
       const direct = await rpc("tools/call", { name: "view_read", arguments: { view: `${version}-${ui}` } });

@@ -1,22 +1,22 @@
 /** Production Worker OAuth routes, registry, hosted agent and Native scopes.
  * Session inspector, clock, signer custody and scheduling are explicit TEST
  * ports. No browser, deployed host or real Git provider belongs here. */
-import { env, runInDurableObject } from "cloudflare:test";
+import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test, vi } from "vitest";
-import type { ControlAction, FactRef, MemberId } from "@generalbusiness/dap-contract";
+import type { ControlAction, FactRef, MemberId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, keyIdOfSecret, signControlWith, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { INVITATION_LINK, encodeAgentKeyInvitation, invitationIssueFields, secretSigner, signedIntent } from "@generalbusiness/dap-client";
 import { OWN_AGENT_COHORT } from "@generalbusiness/dap-platform";
 import { issueOwnAgentInvitation } from "../../cli/src/browser.ts";
 import { memoryStore } from "../../cli/src/store.ts";
-import { hostedTest } from "../../scope/test/worker.ts";
+import { hostedRegistries, hostedTest } from "../../scope/test/worker.ts";
 import { mcpRoute } from "../../scope/src/worker.ts";
 import worker from "../../../apps/room/worker.ts";
 import { created, mcpRoom, SERVICE, type Agent, type Room } from "./fixtures-native.ts";
 import type { OAuthBinding } from "../src/oauth-parameters.ts";
 
 const REDIRECT = "https://claude.ai/api/mcp/auth_callback", RESOURCE = SERVICE + "/mcp", VERIFIER = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
-const routed = (path: string, init?: RequestInit, dynamicRegistration?: string) => worker.fetch(new Request(SERVICE + path, init), { ...env, SCOPES: env.PLATFORM, MCP_ENABLED: "true", ...(dynamicRegistration === undefined ? {} : { OAUTH_DYNAMIC_REGISTRATION: dynamicRegistration }) });
+const routed = (path: string, init?: RequestInit, dynamicRegistration?: string) => worker.fetch(new Request(SERVICE + path, init), { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES), SCOPES: env.PLATFORM, MCP_ENABLED: "true", ...(dynamicRegistration === undefined ? {} : { OAUTH_DYNAMIC_REGISTRATION: dynamicRegistration }) });
 
 test("closed or malformed OAuth policy refuses new routes before namespace lookup", async () => {
   let lookups = 0;
@@ -53,6 +53,89 @@ test("default-off registration and metadata never obtain a registry or consume t
     expect(await enabled!.json()).toHaveProperty("registration_endpoint", SERVICE + "/oauth/register");
     expect(lookups).toBe(0); expect(reads).toBe(0);
   } finally { read.mockRestore(); }
+
+  // A unique real client-registry object keeps this scripted clock/window
+  // independent from the other OAuth stories. Only HTTPS metadata bytes are mocked.
+  const registryId = env.REGISTRIES.newUniqueId();
+  const registries = { idFromName: () => registryId, get: (id: DurableObjectId) => env.REGISTRIES.get(id) };
+  const registry = env.REGISTRIES.get(registryId);
+  let now = Date.parse("2099-01-01T00:00:00Z"), fetched = 0;
+  const previousClock = hostedTest.now; hostedTest.now = () => now;
+  const metadataFetch = vi.spyOn(globalThis, "fetch").mockImplementation(async input => {
+    fetched++; return new Response(JSON.stringify({ client_id: String(input), client_name: "TEST address window", redirect_uris: [REDIRECT], token_endpoint_auth_method: "none" }), { headers: { "content-type": "application/json" } });
+  });
+  const context = async (id: string, address: string) => {
+    const query = new URLSearchParams({ response_type: "code", client_id: id, redirect_uri: REDIRECT, scope: "mcp", state: "TEST address window", code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", code_challenge_method: "S256", resource: RESOURCE });
+    return mcpRoute(new Request(SERVICE + "/oauth/authorize/context?" + query, { headers: { "cf-connecting-ip": address } }), { ...env, REGISTRIES: registries, MCP_ENABLED: "true" } as unknown as Parameters<typeof mcpRoute>[1]);
+  };
+  const first = "https://claude.ai/TEST-address-" + crypto.randomUUID() + ".json", next = first + "?next";
+  try {
+    for (let n = 0; n < 120; n++) expect((await context(first, "2001:db8:12:34::1"))?.status).toBe(200);
+    expect(fetched).toBe(1);
+    await evictDurableObject(registry);
+    expect((await context(next, "2001:db8:12:34::2"))?.status).toBe(429);
+    expect(fetched).toBe(1); // Refusal precedes even a new client document fetch.
+    expect((await context(next, "2001:db8:12:35::1"))?.status).toBe(200);
+    expect(fetched).toBe(2);
+    now--;
+    expect((await context(first, "198.51.100.1"))?.status).toBe(503);
+    now += 60_001;
+    expect((await context(first, "2001:db8:12:34::3"))?.status).toBe(200);
+    expect(fetched).toBe(2);
+  } finally { metadataFetch.mockRestore(); hostedTest.now = previousClock; }
+});
+test("control signatures precede index registration and public client resolution", async () => {
+  let indexLookups = 0, registrations = 0, registryLookups = 0, agentLookups = 0;
+  const index = { idFromName: () => { indexLookups++; return "TEST index"; }, get: () => ({ has: async () => false }) };
+  const scopes = { idFromName: () => "TEST scope", get: () => ({ registerKnown: async () => { registrations++; return false; } }) };
+  const registries = { idFromName: () => { registryLookups++; throw Error("Unexpected client or registry resolution"); } };
+  const agents = { idFromString: () => { agentLookups++; throw Error("Unexpected agent lookup"); } };
+  const settings = { MCP_ENABLED: "true", SCOPE_INDEX_MODE: "register", SCOPE_INDEX: index, SCOPES: scopes, REGISTRIES: registries, AGENTS: agents } as unknown as Parameters<typeof mcpRoute>[1];
+  const secret = new Uint8Array(32).fill(42), address = "203.0.113.45";
+  const bytes = utf8(canonicalize({ client_id: "https://claude.ai/oauth/TEST-signature-order.json" }));
+  const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+  const call = async (action: "create" | "grant", agent: string | null, tamper: boolean, service = SERVICE, given = settings, payload = bytes) => {
+    const request = { v: 1 as const, action, service, membership, agent, actor: keyIdOfSecret(secret), body: digestBytes(bytes), op: "TEST signature order", notAfter: timeOf(Date.now() + 60_000) };
+    const signed = await signControlWith(request, secretSigner(secret));
+    const encoded = b64url(utf8(canonicalize(tamper ? { ...request, op: "TEST changed after signing" } : request)));
+    const path = action === "create" ? "/mcp/agents" : agent === null ? "/mcp/agents/grant" : `/mcp/agents/${agent}/grant`;
+    return mcpRoute(new Request(SERVICE + path, { method: "POST", headers: { authorization: `Control ${encoded}.${signed.sig}`, "content-type": "application/json", "cf-connecting-ip": address }, body: new Uint8Array(payload) }), given);
+  };
+  for (const [action, agent] of [["create", null], ["grant", null], ["grant", "a".repeat(64)]] as const) {
+    const response = await call(action, agent, true);
+    expect(response?.status).toBe(403);
+    expect(await response!.json()).toEqual({ error: "control", rule: "signature" });
+  }
+  const wrongService = await call("grant", null, false, "https://other.example");
+  expect(wrongService?.status).toBe(403);
+  expect(await wrongService!.json()).toEqual({ error: "control", rule: "service" });
+  expect({ indexLookups, registrations, registryLookups, agentLookups }).toEqual({ indexLookups: 0, registrations: 0, registryLookups: 0, agentLookups: 0 });
+  // A verified signature reaches the cheap unknown-membership rejection.
+  // Refusal consumes no body and addresses no client registry or Agent.
+  const knownOrder = await call("grant", null, false);
+  expect(knownOrder?.status).toBe(404);
+  expect({ indexLookups, registrations, registryLookups, agentLookups }).toEqual({ indexLookups: 1, registrations: 1, registryLookups: 0, agentLookups: 0 });
+  let admissions = 0, clientResolutions = 0;
+  const admittedAddresses: unknown[] = [];
+  const boundedRegistries = { idFromName: () => "TEST control window", get: () => ({
+    admitControl: async (...args: unknown[]) => { admissions++; admittedAddresses.push(args[4]); return { status: 429, body: { error: "rate-limited" } }; },
+    resolveClient: async () => { clientResolutions++; return { status: 400, body: { error: "invalid_client_metadata" } }; },
+  }) };
+  const bounded = { ...settings, REGISTRIES: boundedRegistries } as unknown as Parameters<typeof mcpRoute>[1];
+  const beforeRefusedIndex = { indexLookups, registrations };
+  const changedBody = await call("grant", "a".repeat(64), false, SERVICE, bounded, utf8("TEST changed body"));
+  expect(changedBody?.status).toBe(403); expect(await changedBody!.json()).toEqual({ error: "control", rule: "body" });
+  expect(admissions).toBe(0); expect(clientResolutions).toBe(0);
+  expect({ indexLookups, registrations }).toEqual(beforeRefusedIndex);
+  const beforeLimitedIndex = { indexLookups, registrations };
+  const limitedUnknown = await call("grant", null, false, SERVICE, bounded);
+  expect(limitedUnknown?.status).toBe(404);
+  expect(admissions).toBe(0); expect(clientResolutions).toBe(0);
+  expect({ indexLookups, registrations }).toEqual({ indexLookups: beforeLimitedIndex.indexLookups + 1, registrations: beforeLimitedIndex.registrations + 1 });
+  const limited = await call("grant", "a".repeat(64), false, SERVICE, bounded);
+  expect(limited?.status).toBe(429);
+  expect(admissions).toBe(1); expect(clientResolutions).toBe(0); expect(agentLookups).toBe(0);
+  expect(admittedAddresses, "the verified Worker path passes the actual transport address as admission argument five").toEqual([address]);
 });
 async function join(room: Room, admin: Agent, handle: string, definition: string): Promise<Agent> {
   const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
@@ -85,7 +168,7 @@ test.each([
   { own: false, dynamic: undefined, metadata: true },
   { own: false, dynamic: "on", metadata: true },
 ])("routed public-client grants enroll once (own-agent: $own, registration: $dynamic, metadata document: $metadata)", async ({ own, dynamic, metadata }) => {
-  const room = mcpRoom(); hostedTest.now = () => room.now(); hostedTest.pause = waiting => room.pause(waiting);
+  const room = mcpRoom(); hostedTest.clientRegistry = env.REGISTRIES.newUniqueId(); hostedTest.now = () => room.now(); hostedTest.pause = waiting => room.pause(waiting);
   const route = (path: string, init?: RequestInit) => routed(path, init, dynamic);
   const documentId = "https://claude.ai/oauth/" + crypto.randomUUID() + ".json";
   let metadataFetches = 0;
@@ -97,7 +180,7 @@ test.each([
     return new Response(JSON.stringify({ client_id: documentId, client_name: "TEST metadata host", redirect_uris: [REDIRECT], token_endpoint_auth_method: "none" }), { headers: { "content-type": "application/json" } });
   }) : null;
   try {
-    const registrationsBefore = metadata ? await room.wait(() => runInDurableObject(env.REGISTRIES.get(env.REGISTRIES.idFromName("oauth-public-clients-1")), (_instance, state) => {
+    const registrationsBefore = metadata ? await room.wait(() => runInDurableObject(hostedRegistries(env.REGISTRIES).get(hostedRegistries(env.REGISTRIES).idFromName("oauth-public-clients-1")), (_instance, state) => {
       const exists = state.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'oauth_client'`).toArray().length;
       return exists ? state.storage.sql.exec(`SELECT id FROM oauth_client ORDER BY id`).toArray() : [];
     })) : [];
@@ -201,10 +284,10 @@ test.each([
     }));
     if (metadata) {
       expect(metadataFetches).toBe(1);
-      await room.wait(() => runInDurableObject(env.REGISTRIES.get(env.REGISTRIES.idFromName("oauth-public-clients-1")), (_instance, state) => {
+      await room.wait(() => runInDurableObject(hostedRegistries(env.REGISTRIES).get(hostedRegistries(env.REGISTRIES).idFromName("oauth-public-clients-1")), (_instance, state) => {
         expect(state.storage.sql.exec(`SELECT id FROM oauth_client ORDER BY id`).toArray()).toEqual(registrationsBefore);
         expect(state.storage.sql.exec(`SELECT id FROM oauth_client_cache WHERE id = ?`, documentId).toArray()).toEqual([{ id: documentId }]);
       }));
     }
-  } finally { documentFetch?.mockRestore(); hostedTest.now = null; hostedTest.pause = null; hostedTest.faultAt = null; hostedTest.clientRetention = null; room.done(); }
+  } finally { documentFetch?.mockRestore(); hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.pause = null; hostedTest.faultAt = null; hostedTest.clientRetention = null; room.done(); }
 });

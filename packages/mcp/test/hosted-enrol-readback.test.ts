@@ -8,7 +8,7 @@ import { expect, test } from "vitest";
 import type { ControlRequest, Input, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, readMinimumParameter, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { encodeAgentKeyInvitation, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
-import { HostedAgent, type AgentPorts } from "../src/hosted.ts";
+import { HostedAgent, hostedRolePort, type AgentPorts } from "../src/hosted.ts";
 import { identityId, type Identity } from "../src/custody.ts";
 import { sqliteStore, type Sql, type SqlValue } from "../src/sqlite-custody.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
@@ -96,8 +96,48 @@ test.each([
       }
       return peer.fetch(url, init);
     };
+    // Role evidence is an explicit STAND-IN over this case's signed fixture
+    // entries and signers. Read fresh at each host boundary without fetch,
+    // so the retained-entry read counters keep their original meaning.
+    const memberSequence = member.receipt.fact.seq;
+    const invitationSequence = invitation.receipt.fact.seq;
+    const roleStanding = hostedRolePort(async asked => {
+      if (asked.membership.scope !== peer.membership.scope || asked.membership.inc !== peer.membership.inc
+        || asked.membership.kind !== peer.membership.kind) return { status: "unavailable" };
+      const head = peer.head(membership);
+      const memberInput = membership.entries[memberSequence]?.entry.input;
+      const invitationInput = membership.entries[invitationSequence]?.entry.input;
+      if (memberInput?.type !== "act" || memberInput.signed.intent.kind !== "add-member"
+        || memberInput.signed.intent.actor !== owner.key || memberInput.signed.intent.fields["handle"] !== link.handle
+        || memberInput.signed.intent.fields["kind"] !== "agent" || memberInput.signed.intent.fields["controller"] !== link.controller.member
+        || invitationInput?.type !== "act" || invitationInput.signed.intent.kind !== "invite-key"
+        || invitationInput.signed.intent.actor !== owner.key || invitationInput.signed.intent.fields["member"] !== memberSequence
+        || invitationInput.signed.intent.fields["kind"] !== "agent") return { status: "unavailable" };
+      const enrolled = membership.entries.some(({ entry }) => {
+        const input = entry.input;
+        return input.type === "act" && input.signed.intent.kind === "enrol"
+          && input.signed.intent.actor === agentSigner.key && input.signed.intent.idempotencyKey === `enrol:${OP}`
+          && input.signed.intent.to !== null
+          && input.signed.intent.to.scope === peer.membership.scope && input.signed.intent.to.inc === peer.membership.inc
+          && input.signed.intent.to.kind === peer.membership.kind;
+      });
+      const controller = { member: link.controller.member, state: "active", role: "member", activeKey: true, controller: null, actions: [] };
+      const agentRole = { member: link.handle, state: "active", role: "agent", activeKey: enrolled, controller: link.controller.member, actions: [] };
+      const actor = asked.actor === owner.key
+        ? { key: owner.key, keyState: "active", member: link.controller.member, memberState: "active", controller: null, actions: [] }
+        : asked.actor === agentSigner.key && enrolled
+          ? { key: agentSigner.key, keyState: "active", member: link.handle, memberState: "active", controller: link.controller.member, actions: [] }
+          : null;
+      if (!("agent" in asked)) return { status: "observed", of: peer.membership, head, actor };
+      if (asked.agent !== link.handle || asked.expectedController !== null && asked.expectedController !== link.controller.member)
+        return { status: "unavailable" };
+      const agentKey = asked.agentKey === agentSigner.key && enrolled
+        ? { key: agentSigner.key, keyState: "active", member: link.handle, memberState: "active", controller: link.controller.member, actions: [] }
+        : null;
+      return { status: "observed", of: peer.membership, head, agent: agentRole, agentKey, controller, actor };
+    });
     const ports: AgentPorts = {
-      id: "a".repeat(64), fetch, now: () => NOW,
+      id: "a".repeat(64), fetch, now: () => NOW, roleStanding,
       random: bytes => { randomCalls++; return new Uint8Array(bytes).fill(23); },
       observe: async () => ({ keyState: "active", memberState: "active", member: "@bot", actions: [], controller: "@owner" }),
     };

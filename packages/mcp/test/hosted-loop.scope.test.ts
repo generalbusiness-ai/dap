@@ -12,7 +12,7 @@ import { b64url, timeOf } from "@generalbusiness/dap-bytes";
 import { encodeAgentKeyInvitation, invitationIssueFields, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as cohort } from "@generalbusiness/dap-platform";
 import worker from "../../../apps/room/worker.ts";
-import { hostedTest } from "../../scope/test/worker.ts";
+import { hostedRegistries, hostedTest } from "../../scope/test/worker.ts";
 import { created as createRoom, mcpRoom, SERVICE, type Agent, type Room } from "./fixtures-native.ts";
 import { agentPhase } from "../../../examples/repo-in-ai/hosted-loop/agent.ts";
 import { createAgent } from "../../../examples/repo-in-ai/hosted-loop/control.ts";
@@ -25,7 +25,7 @@ import { LoopStop, TEXT, type AgentPhase, type PersonPhase } from "../../../exam
 // workerd's Request has no `redirect: "error"`. This fixture never redirects, and the script keeps that setting on a real network.
 const routed = (url: string | URL, init: RequestInit = {}): Promise<Response> => {
   const { redirect: _redirect, ...rest } = init;
-  return worker.fetch(new Request(url, rest), { ...env, SCOPES: env.PLATFORM, MCP_ENABLED: "true" } as never);
+  return worker.fetch(new Request(url, rest), { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES), SCOPES: env.PLATFORM, MCP_ENABLED: "true" } as never);
 };
 const AGENT = "@agent";
 
@@ -59,6 +59,7 @@ async function inviteLink(room: Room, rita: Agent): Promise<{ link: string; secr
 
 test("the hosted loop's phases reach a proposal on the default tools, each from a new session that holds only the bearer", async () => {
   const room = mcpRoom();
+  hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
   const previous = hostedTest.toolSettings;
   hostedTest.toolSettings = { MCP_ENABLED: "true" };
   hostedTest.now = () => room.now();
@@ -127,5 +128,5 @@ test("the hosted loop's phases reach a proposal on the default tools, each from 
     expect(sessions.every(id => id !== null)).toBe(true);
     const lines = transcript.map(publicLine).join("");
     expect(scanPublic(lines, [bearer, bearer.slice(bearer.indexOf(".") + 1), link, secret, b64url(secretKey), TEXT.body, TEXT.question, TEXT.comment, TEXT.content, ...TEXT.conditions, ...TEXT.newConditions])).toEqual([]);
-  } finally { hostedTest.toolSettings = previous; hostedTest.now = null; hostedTest.pause = null; room.done(); }
+  } finally { hostedTest.toolSettings = previous; hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.pause = null; room.done(); }
 }, 90_000);
