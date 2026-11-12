@@ -1,7 +1,7 @@
 /** Scenario v1 authoring over the maintained judges and fold, with scripted TEST grants. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, Digest, Entry, FieldType, FieldValue, Grant, Intent, KeyId, MemberId, MemberRef, ObservationUse, ScopeKind, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, intentDigest, keyIdOfSecret, newGenesisNonce, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { alsoItems, applyEntry, clockOf, entryOf, judgeAct, judgeGenesis, judgeTimed, MemoryState, nextDue, prepareRules, readFields, timeMs, timeOf, validateDefinition } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Draft, JudgeContext, ValidDefinition } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -164,7 +164,7 @@ export async function tell<const D extends DeclaredDefinition>(spec: StorySpec<D
     for (const who of actors.values()) if (who.principal !== null) actor(who.principal);
     const founding = signed(actor(held.founding.actor), "found", null, {}, resolve(held.founding.fields) as Record<string, FieldValue>, null);
     const seed: Seed = { v: 1, kind: "directory", definition: definition.digest, creator: null, cause: intentDigest(founding.intent), ordinal: 0 };
-    const creation = { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(1)), seed, creation: founding };
+    const creation = { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(1)), seed, creation: founding };
     const genesisContext = { clock: clockOf(state, now), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null };
     const prepared = await evaluateRules(prepareRules(state, definition, { genesis: creation, context: genesisContext }));
     const genesis = judgeGenesis(state, definition, creation, { ...genesisContext, prepared });
