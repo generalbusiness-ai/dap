@@ -13,7 +13,7 @@ export type CallOutcome<T extends Record<string, unknown>> = Success<T> | Failur
 
 /** Only the fields a view displays; this is not a Native Answer or receipt. */
 export type ViewOutcomeData = { answer?: string; reason?: string; name?: string; error?: string; message?: string; next?: string; checkAfter?: string; fact?: { seq?: number }; localStatus?: string };
-export type ExactReadData = ViewOutcomeData & { text?: string; truncated?: boolean; leftOut?: string | null; files?: number; paths?: { path: string; shown: string; commit: string }[]; commits?: { label: string; id: string }[] };
+export type ExactReadData = ViewOutcomeData & { text?: string; truncated?: boolean; leftOut?: string | null; files?: number; paths?: readonly { path: string; shown: string; commit: string }[]; commits?: { label: string; id: string }[] };
 export type LocalReviewData = { localStatus: "marked" | "already" | "refused" | "unavailable" | "stale" };
 
 /** Actual custody identity at a hosted delivery boundary; never client input. */

@@ -9,7 +9,7 @@ import { EXPIRY_MARGIN_MS, encodeAgentKeyInvitation, invitationIssueFields, secr
 import { DECLARED_APPLICATION_COHORT as C, REPOSITORY_BINDING_COHORT as B, ROLE_LISTS, isActions } from "@generalbusiness/dap-platform";
 import { packApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { CAPABILITIES_META, MODERN, PROTOCOL_META, McpService, claudeCardDomain, memoryStore, type ServerPort, type Tool } from "@generalbusiness/dap-mcp";
-import type { CallResult, DispatchContext } from "../../mcp/src/results.ts";
+import type { CallResult, DispatchContext, Failure } from "../../mcp/src/results.ts";
 import type { Display } from "@generalbusiness/dap-mcp";
 import { sqliteStore, type Sql } from "../../mcp/src/sqlite-custody.ts";
 import worker from "../../../apps/room/worker.ts";
@@ -167,9 +167,9 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
       fetch: (url, init) => { if (new URL(url).pathname.endsWith("/acts")) stoppedSubmits++; return port.fetch!(url, init); },
     }));
     const allow: DispatchContext = { prepare: async () => () => null };
-    const unavailable: CallResult = { content: [{ type: "text", text: "TEST callback stop" }],
+    const unavailable: Failure = { content: [{ type: "text", text: "TEST callback stop" }],
       structuredContent: { error: "unavailable", message: "TEST callback stop", next: "TEST check the original" }, isError: true };
-    const unauthorized: CallResult = { ...unavailable, structuredContent: { ...unavailable.structuredContent, error: "unauthorized" } };
+    const unauthorized: Failure = { ...unavailable, structuredContent: { ...unavailable.structuredContent, error: "unauthorized" } };
     const deny: DispatchContext = { prepare: async () => () => unauthorized };
     const denyCheck: DispatchContext = { prepare: async () => () => unavailable };
     const guardedCall = (name: string, args: Record<string, unknown>, dispatch?: DispatchContext) => life.wait(() => guarded.call(name, args, dispatch));

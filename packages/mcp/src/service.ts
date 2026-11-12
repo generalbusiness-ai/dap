@@ -1268,7 +1268,7 @@ export class McpService {
         return read.ok ? read.value : read.reason === "archived" ? read : null;
       } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     });
-    if (!settled) return ok({ answer: "not-found", sentence: `This server keeps no record under key ${String(key)} for that target.`, next: "That does not show that the act was not sent: another server or custody home can hold it. Ask the server that signed it." });
+    if (!settled) return ok<CustodyReport>({ answer: "not-found", sentence: `This server keeps no record under key ${String(key)} for that target.`, next: "That does not show that the act was not sent: another server or custody home can hold it. Ask the server that signed it." });
     const record = settled.record;
     const expiry = timeMs(record.envelope.signed.intent.notAfter)! + EXPIRY_MARGIN_MS;
     const expired = expiry <= this.#now();

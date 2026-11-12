@@ -35,8 +35,8 @@ test("archived submit and settlement stay explicit and terminal without inventin
   const archived = { floor: 5, commit: "b".repeat(40), through: { seq: 6, hash: head.hash } };
   // The act, preparation-step and install projections use this same receipt owner.
   const accepted: Extract<Answer, { answer: "accepted" }> = { answer: "accepted", receipt: { fact, definition: head.hash, intent: null, effects: [], sends: [], epoch: 0 } };
-  const said = { sentence: "The request was accepted.", next: "Read its installation." };
-  const act = projectAnswer({ answer: accepted }, { scope: at.scope, kind: "apply", tool: "act", retained: false, phase: "accepted", said });
+  const acceptedSaid = { sentence: "The request was accepted.", next: "Read its installation." };
+  const act = projectAnswer({ answer: accepted }, { scope: at.scope, kind: "apply", tool: "act", retained: false, phase: "accepted", said: acceptedSaid });
   const step = projectAnswer({ answer: accepted });
   const install = projectAnswer({ answer: accepted }, { item: fact.seq, retained: false, phase: "accepted" });
   expect([act.effects, step.effects, install.effects]).toEqual([0, 0, 0]);
