@@ -101,7 +101,7 @@ import { measuredRequest, OBSERVED_METHODS, operational, operationPlace, unknown
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
 import { parentlessCreationAdmission, type CreationAdmission } from "./creation-admission.ts";
 import { readRegisterScope } from "./register-setting.ts";
-import { indexedScopes, scopeIndex, ScopeIndexRows, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
+import { indexedScopes, scopeIndex, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
 import { ScopeIndexCensus, scopeIndexCensusRoute } from "./scope-index-census.ts";
 import { admitServing, boundedParentlessIntent, ServingAdmission, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
 import { SiteTokenReuse, type SiteTokenRequest } from "./site/token-reuse.ts";
@@ -118,31 +118,46 @@ export interface Env extends GitHubBindings, DemoCreationBindings, ArtifactsBind
 
 /** Fixed internal owner; HTTP exposes only its authenticated census page. */
 export class ScopeIndex extends DurableObject<Env> {
-  readonly #rows = new ScopeIndexRows(this.ctx.storage.sql);
-  readonly #serving = new ServingAdmission(this.env);
-  readonly #census = new ScopeIndexCensus({
-    sql: this.ctx.storage.sql,
-    register: () => { const register = readRegisterScope(this.env); return register.kind === "pinned" ? register.scope : null; },
-    mode: () => this.env.SCOPE_INDEX_MODE,
-    proof: async (fact, maxBytes, milliseconds) => {
-      const target = this.env.SCOPES.get(this.env.SCOPES.idFromName(fact.at.scope)) as unknown as {
-        proofSource(fact: FactRef, maxBytes: number, milliseconds: number): Promise<import("./proof-bytes.ts").ProofBody | null>;
-      };
-      return target.proofSource(fact, maxBytes, milliseconds);
-    },
-    now: () => Date.now(),
-  });
-  readonly #siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => {
-    // Decode current provider readiness afresh for every custody check.
-    const configuration = this.env.ARTIFACTS_CONFIG;
-    const namespace = this.env.ARTIFACTS_NAMESPACE;
-    const binding = this.env.ARTIFACTS;
-    return artifactsReadiness({
-      ...(configuration === undefined ? {} : { ARTIFACTS_CONFIG: configuration }),
-      ...(namespace === undefined ? {} : { ARTIFACTS_NAMESPACE: namespace }),
-      ARTIFACTS: binding,
+  readonly #active: boolean;
+  readonly #rows!: ScopeIndexRows;
+  readonly #serving!: ServingAdmission;
+  readonly #census!: ScopeIndexCensus;
+  readonly #siteTokens!: SiteTokenReuse;
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    let active = false;
+    try {
+      const selected = env.SCOPE_INDEX?.idFromName(SCOPE_INDEX_NAME);
+      active = selected !== undefined && selected !== null && String(selected) === String(ctx.id);
+    } catch { /* A missing fixed owner admits no helper or store work. */ }
+    this.#active = active;
+    if (!active) return;
+    this.#rows = new ScopeIndexRows(this.ctx.storage.sql);
+    this.#serving = new ServingAdmission(this.env);
+    this.#census = new ScopeIndexCensus({
+      sql: this.ctx.storage.sql,
+      register: () => { const register = readRegisterScope(this.env); return register.kind === "pinned" ? register.scope : null; },
+      mode: () => this.env.SCOPE_INDEX_MODE,
+      proof: async (fact, maxBytes, milliseconds) => {
+        const target = this.env.SCOPES.get(this.env.SCOPES.idFromName(fact.at.scope)) as unknown as {
+          proofSource(fact: FactRef, maxBytes: number, milliseconds: number): Promise<import("./proof-bytes.ts").ProofBody | null>;
+        };
+        return target.proofSource(fact, maxBytes, milliseconds);
+      },
+      now: () => Date.now(),
     });
-  }, () => Date.now(), () => this.#scheduleSiteTokens(), () => ({ REGISTER_SCOPE: this.env.REGISTER_SCOPE, INSTALLED_REGISTER_SCOPES: this.env.INSTALLED_REGISTER_SCOPES }));
+    this.#siteTokens = new SiteTokenReuse({ exec: (query, ...args) => this.ctx.storage.sql.exec(query, ...args), transaction: run => this.ctx.storage.transactionSync(run) }, () => {
+      // Decode current provider readiness afresh for every custody check.
+      const configuration = this.env.ARTIFACTS_CONFIG;
+      const namespace = this.env.ARTIFACTS_NAMESPACE;
+      const binding = this.env.ARTIFACTS;
+      return artifactsReadiness({
+        ...(configuration === undefined ? {} : { ARTIFACTS_CONFIG: configuration }),
+        ...(namespace === undefined ? {} : { ARTIFACTS_NAMESPACE: namespace }),
+        ARTIFACTS: binding,
+      });
+    }, () => Date.now(), () => this.#scheduleSiteTokens(), () => ({ REGISTER_SCOPE: this.env.REGISTER_SCOPE, INSTALLED_REGISTER_SCOPES: this.env.INSTALLED_REGISTER_SCOPES }));
+  }
   #siteAlarm: Promise<void> | null = null;
   #siteAlarmRevision = 0;
   async #scheduleSiteTokens(): Promise<void> {
@@ -162,14 +177,14 @@ export class ScopeIndex extends DurableObject<Env> {
     })();
     try { await this.#siteAlarm; } finally { this.#siteAlarm = null; }
   }
-  async acquireSiteRead(request: SiteTokenRequest) { return this.#siteTokens.acquire(request); }
-  override async alarm() { this.#siteTokens.maintain(Date.now()); await this.#scheduleSiteTokens(); }
+  async acquireSiteRead(request: SiteTokenRequest): ReturnType<SiteTokenReuse["acquire"]> { if (!this.#active) return { ok: false, reason: "unavailable" }; return this.#siteTokens.acquire(request); }
+  override async alarm() { if (!this.#active) return; this.#siteTokens.maintain(Date.now()); await this.#scheduleSiteTokens(); }
 
-  has(scope: string, kind?: ScopeKind) { return this.#rows.has(scope, kind); }
-  register(proof: ScopeRegistration) { return this.#rows.register(proof); }
-  list(after: string, limit: number, reader: unknown) { return this.#census.list(after, limit, reader); }
+  has(scope: string, kind?: ScopeKind) { if (!this.#active) return false; return this.#rows.has(scope, kind); }
+  register(proof: ScopeRegistration) { if (!this.#active) return false; return this.#rows.register(proof); }
+  list(after: string, limit: number, reader: unknown): ReturnType<ScopeIndexCensus["list"]> { if (!this.#active) return Promise.resolve({ ok: false, reason: "unavailable" }); return this.#census.list(after, limit, reader); }
   /** Separate synchronous memory-only action; has() remains SQL-read-only. */
-  admitServing(request: ServingRequest, address: string | null) { return this.#serving.admit(request, address, Date.now()); }
+  admitServing(request: ServingRequest, address: string | null): ReturnType<ServingAdmission["admit"]> { if (!this.#active) return "unavailable"; return this.#serving.admit(request, address, Date.now()); }
 }
 
 /** A scope's surface as a caller over RPC has it. */

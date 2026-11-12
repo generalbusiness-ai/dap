@@ -1,6 +1,6 @@
 /** One deployment-wide index. It proves reachability, never native authority. */
-import type { Digest, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isPlatformDefinition, isScopeId, isScopeRef, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { ScopeKind, SequenceRef } from "@generalbusiness/dap-contract";
+import { isPlatformDefinition, isRecord, isScopeId, isScopeKind, isScopeRef, isSequenceRef, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { Binding } from "./namespace.ts";
 import type { Sql } from "./sqlite.ts";
 import type { CreationAdmission } from "./creation-admission.ts";
@@ -8,8 +8,8 @@ import { admitChildCreation } from "./creation-lineage.ts";
 import { injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
 import type { ScopeCensusResult } from "./scope-index-census.ts";
 
-export const SCOPE_INDEX_NAME = "applied-genesis-v1";
-export interface ScopeRegistration { at: ScopeRef; genesis: Digest }
+export const SCOPE_INDEX_NAME = "applied-genesis-v2";
+export interface ScopeRegistration { at: SequenceRef; kind: ScopeKind }
 export interface ScopeIndexPort {
   has(scope: string, kind?: ScopeKind): Promise<boolean>;
   register(proof: ScopeRegistration): Promise<boolean>;
@@ -23,20 +23,25 @@ export class ScopeIndexRows {
   #exists(): boolean { return this.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='known_scope'").toArray().length === 1; }
   has(scope: string, kind?: ScopeKind): boolean {
     if (!isScopeId(scope) || !this.#exists()) return false;
-    const row = this.sql.exec("SELECT inc,genesis,kind FROM known_scope WHERE scope = ?", scope).toArray()[0];
-    return !!row && isDigest(row["genesis"]) && isScopeRef({ scope, inc: row["inc"], kind: row["kind"] }) && (kind === undefined || row["kind"] === kind);
+    const row = this.sql.exec("SELECT genesis,kind FROM known_scope WHERE scope = ?", scope).toArray()[0];
+    return !!row && isSequenceRef({ scope, genesis: row["genesis"] }) && isScopeKind(row["kind"])
+      && (kind === undefined || row["kind"] === kind);
   }
   register(proof: ScopeRegistration): boolean {
-    if (!proof || !isScopeRef(proof.at) || !isDigest(proof.genesis)) return false;
-    this.sql.exec("CREATE TABLE IF NOT EXISTS known_scope (scope TEXT PRIMARY KEY, inc TEXT NOT NULL, kind TEXT NOT NULL, genesis TEXT NOT NULL)");
-    this.sql.exec("INSERT INTO known_scope(scope,inc,kind,genesis) VALUES(?,?,?,?) ON CONFLICT(scope) DO NOTHING", proof.at.scope, proof.at.inc, proof.at.kind, proof.genesis);
-    const row = this.sql.exec("SELECT inc,kind,genesis FROM known_scope WHERE scope = ?", proof.at.scope).toArray()[0];
-    return row?.["genesis"] === proof.genesis && row["inc"] === proof.at.inc && row["kind"] === proof.at.kind;
+    if (!isRecord(proof) || Object.keys(proof).sort().join() !== "at,kind" || !isSequenceRef(proof.at) || !isScopeKind(proof.kind)) return false;
+    this.sql.exec("CREATE TABLE IF NOT EXISTS known_scope (scope TEXT PRIMARY KEY, genesis TEXT NOT NULL, kind TEXT NOT NULL)");
+    this.sql.exec("INSERT INTO known_scope(scope,genesis,kind) VALUES(?,?,?) ON CONFLICT(scope) DO NOTHING", proof.at.scope, proof.at.genesis, proof.kind);
+    const row = this.sql.exec("SELECT genesis,kind FROM known_scope WHERE scope = ?", proof.at.scope).toArray()[0];
+    return row?.["genesis"] === proof.at.genesis && row["kind"] === proof.kind;
   }
   list(after = "", limit = 100): ScopeRegistration[] {
     if (typeof after !== "string" || !Number.isSafeInteger(limit) || limit < 1 || limit > 100 || !this.#exists()) return [];
-    return this.sql.exec("SELECT scope,inc,kind,genesis FROM known_scope WHERE scope > ? ORDER BY scope LIMIT ?", after, limit).toArray()
-      .map(row => ({ at: { scope: row["scope"], inc: row["inc"], kind: row["kind"] }, genesis: row["genesis"] })) as ScopeRegistration[];
+    return this.sql.exec("SELECT scope,genesis,kind FROM known_scope WHERE scope > ? ORDER BY scope LIMIT ?", after, limit).toArray()
+      .map(row => {
+        const at = { scope: row["scope"], genesis: row["genesis"] }, kind = row["kind"];
+        if (!isSequenceRef(at) || !isScopeKind(kind)) throw new Error("Invalid scope index row");
+        return { at, kind };
+      });
   }
 }
 

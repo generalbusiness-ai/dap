@@ -39,7 +39,7 @@ import { demoCreationOffer, type DemoCreationConfig } from "./demo-creation.ts";
 import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, ReadMinimum, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, isFactRef, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 
 import type { Delivered, Fetched, StateView } from "@generalbusiness/dap-derive";
@@ -527,7 +527,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   async registerKnown(): Promise<boolean> {
     // Temporary fixed-category observation. Never log native values or errors.
     let phase: "configuration" | "entry-missing" | "entry-size" | "scope" | "entry" | "entry-parse" | "entry-integrity"
-      | "genesis-prev" | "genesis-type" | "genesis-decision" | "seed-address" | "incarnation" | "kind" | "index-register" = "configuration";
+      | "genesis-prev" | "genesis-type" | "genesis-decision" | "seed-address" | "sequence" | "kind" | "index-register" = "configuration";
     const observe = (outcome: "refused" | "error"): void => {
       try { console.info("scope-index-registration", { phase, outcome }); }
       catch { /* Observation cannot change registration. */ }
@@ -551,7 +551,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       const entry = parseStrict(stored.bytes) as Entry;
       const fact = { at: scope.at, seq: 0, hash: stored.hash };
       phase = "entry-integrity";
-      if (!isEntryOf(entry, fact)) return refused();
+      const sequence = admitSequenceGenesis(stored.bytes, scope.at, this.#registrationBytes);
+      if (!sequence || stored.hash !== scope.at.genesis || scope.genesis.hash !== stored.hash || !isEntryOf(entry, fact, sequence)) return refused();
       phase = "genesis-prev";
       if (entry.prev !== null) return refused();
       phase = "genesis-type";
@@ -560,12 +561,12 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       if (entry.input.decision !== "applied") return refused();
       phase = "seed-address";
       if (scopeIdOf(entry.input.seed) !== this.#name) return refused();
-      phase = "incarnation";
-      if (entry.input.inc !== scope.at.inc) return refused();
+      phase = "sequence";
+      if (sequence.at.scope !== scope.at.scope || sequence.at.genesis !== scope.at.genesis) return refused();
       phase = "kind";
-      if (entry.input.seed.kind !== scope.at.kind) return refused();
+      if (sequence.kind !== entry.input.seed.kind || sequence.kind !== scope.kind) return refused();
       phase = "index-register";
-      const registered = await this.#registerGenesis({ at: scope.at, genesis: stored.hash });
+      const registered = await this.#registerGenesis({ at: sequence.at, kind: sequence.kind });
       if (registered !== true) observe("refused");
       return registered;
     } catch { observe("error"); return false; }
