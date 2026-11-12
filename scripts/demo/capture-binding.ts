@@ -107,13 +107,3 @@ export async function observeCaptures(ctx: Context, room: Room): Promise<Record<
   }
   return births;
 }
-
-/** Serialized by Playwright: keep this self-contained. It runs for every
- * document, including redirected pages/frames; only the configured page's
- * top-level document receives the key. Public site pages need no key. */
-export function initializeCapture(kept: { service: string; place: { directory: string; membership: unknown }; secret: string }): void {
-  const allowed = new URL(`${kept.service}/page/`);
-  const document = globalThis as unknown as { window: { top: unknown }; location: { origin: string; pathname: string }; localStorage: { setItem(key: string, value: string): void } };
-  if (document.window.top !== document.window || document.location.origin !== allowed.origin || document.location.pathname !== allowed.pathname) return;
-  document.localStorage.setItem("artroom-page", JSON.stringify({ place: kept.place, secret: kept.secret }));
-}

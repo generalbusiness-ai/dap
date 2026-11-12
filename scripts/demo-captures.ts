@@ -11,8 +11,8 @@
 // request by request, as `apps/room/page/test/screens.mjs` does; a request the recorder did not make fails the script.
 //
 // It saves six captures in the output directory, each at most 300 kB: the room, the issue, the refused change, the published
-// change, the rules view, and the page that the edit published as the site renders it. The key goes only into the browser's
-// local storage, as the page keeps it; it is never printed.
+// change, the rules view, and the page that the edit published as the site renders it. The key stays nonextractable in the
+// browser's key-only IndexedDB store; public settings hold its ID. It is never printed.
 //
 // playwright-core is not a dependency of this repository: install it in a scratch directory, outside the checkout. The browser
 // is CHROMIUM, or the chromium under PLAYWRIGHT_BROWSERS_PATH (default /opt/pw-browsers). Without either, the script names what
@@ -59,6 +59,9 @@ interface Tab {
   getByText(text: string | RegExp): Locator;
   screenshot(options: { path: string }): Promise<unknown>;
   evaluate<T>(f: () => T): Promise<T>;
+  evaluate<T, A>(f: (arg: A) => T | Promise<T>, arg: A): Promise<T>;
+  route(pattern: string | ((url: URL) => boolean), handler: (route: Route) => unknown): Promise<void>;
+  close(): Promise<void>;
   setViewportSize(size: { width: number; height: number }): Promise<void>;
 }
 interface Route { abort(reason: string): Promise<void>; request(): { url(): string; method(): string; postData(): string | null; headers(): Record<string, string> }; fulfill(answer: { status: number; headers?: Record<string, string>; contentType?: string; body: string | Buffer }): Promise<void> }
@@ -140,8 +143,8 @@ async function captures(chromium: Chromium, executablePath: string, sitting: Sit
         return route.fulfill({ status: answer.status, headers: answer.headers, body: answer.body });
       });
     }
-    // The page's settings, as it keeps them: the page's own origin, the room, and the key.
-    await context.addInitScript(initializeCapture, { service, place: sitting.place, secret: sitting.secret });
+    // Finish key custody before the first production Page can load it.
+    await initializeCapture(context, { service, place: sitting.place, secret: sitting.secret });
     const tab = await context.newPage();
     const posted: string[] = [];
     tab.on("request", (request) => { if (request.method() === "POST") posted.push(request.url()); });
@@ -278,9 +281,7 @@ async function claimWitness(chromium: Chromium, executablePath: string, sitting:
       }
       await route.fulfill({ status: answer.status, headers: answer.headers, body: answer.body });
     });
-    await context.addInitScript((kept) => {
-      if (location.origin === kept.service && location.pathname === "/page/" && window.top === window) localStorage.setItem("artroom-page", JSON.stringify({ place: kept.place, secret: kept.secret, register: kept.register }));
-    }, { service: sitting.service, place: actor.place, secret: actor.secret, register: native.register });
+    await initializeCapture(context, { service: sitting.service, place: actor.place, secret: actor.secret, register: native.register });
     return context;
   };
   try {
@@ -378,9 +379,9 @@ async function claimWitness(chromium: Chromium, executablePath: string, sitting:
     await queuedTab.getByRole("dialog", { name: "Create room" }).getByRole("button", { name: "Create room", exact: true }).click();
     if (!await queuedTab.getByRole("dialog", { name: "Create room" }).getByRole("button", { name: "Create room", exact: true }).isDisabled() || guardAttempts.length !== 1) throw new Error("The settings-change control did not enter the actual Web Lock queue.");
     await queuedTab.evaluate(() => {
-      const settings = JSON.parse(localStorage.getItem("artroom-page")!);
-      settings.register.inc = settings.place.membership.inc;
-      localStorage.setItem("artroom-page", JSON.stringify(settings));
+      const settings = JSON.parse(localStorage.getItem("artroom-page:v2")!);
+      settings.register.genesis = settings.place.membership.genesis;
+      localStorage.setItem("artroom-page:v2", JSON.stringify(settings));
     });
     releaseGuard!();
     for (const page of [firstTab, queuedTab]) await page.waitForFunction(() => {
@@ -436,10 +437,7 @@ async function labelWitness(chromium: Chromium, executablePath: string, sitting:
         if (!answer || request.method() === "POST" && !path.endsWith("/sessions")) { unanswered.push(`${request.method()} ${path}`); await route.abort("failed"); return; }
         await route.fulfill({ status: answer.status, headers: answer.headers, body: answer.body });
       });
-      await context.addInitScript((kept) => {
-        if (location.origin !== kept.service || location.pathname !== "/page/" || window.top !== window) return;
-        if (localStorage.getItem("artroom-page") === null) localStorage.setItem("artroom-page", JSON.stringify({ place: kept.place, secret: kept.secret, register: kept.register, label: { text: "Field notebook", place: kept.place, register: kept.register } }));
-      }, { service: sitting.service, place: actor.place, secret: actor.secret, register: native.register });
+      await initializeCapture(context, { service: sitting.service, place: actor.place, secret: actor.secret, register: native.register, label: "Field notebook" });
       const tab = await context.newPage();
       tab.on("pageerror", (error) => errors.push(error.message));
       tab.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
@@ -462,9 +460,9 @@ async function labelWitness(chromium: Chromium, executablePath: string, sitting:
       await tab.screenshot({ path: join(out, `local-label-${colorScheme}-320.png`) });
       // Change only the label's binding, not the actual configured native room.
       await tab.evaluate(() => {
-        const kept = JSON.parse(localStorage.getItem("artroom-page")!);
-        kept.label.place.membership.inc = kept.register.inc;
-        localStorage.setItem("artroom-page", JSON.stringify(kept));
+        const kept = JSON.parse(localStorage.getItem("artroom-page:v2")!);
+        kept.label.place.membership.genesis = kept.register.genesis;
+        localStorage.setItem("artroom-page:v2", JSON.stringify(kept));
       });
       await tab.reload();
       await tab.getByRole("heading", { name: "Issues" }).waitFor({ state: "attached" });
