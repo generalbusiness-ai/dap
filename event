@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4c6dfe295008ec6848240029e3173de0328c83b7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-11-deploy-ops1.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4eec542f3bf7250f42ae804e4211bcf9e9b2e34e","text":"Merge retired a covered predecessor; the successor is at docs/operate-a-service.md."}
