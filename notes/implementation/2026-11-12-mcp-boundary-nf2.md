@@ -39,6 +39,7 @@ The input schemas in `#genericTools` gain these conditions and patterns:
 | Tool | Field | Before | After |
 |---|---|---|---|
 | `create` | `membership` | string or object | a scope ID pattern, or a `ScopeRef` object (`scopeRefArg`) |
+| `settle` | `membership` | refused: not a property | the same schema as `create` |
 | `install_application` | `owner` | any object | a `MemberRef` object (`memberRefArg`) |
 | `install_application` | `release` | any string | `^sha256:[0-9a-f]{64}$` |
 | `application_installation` | `item` | integer, minimum 0 | adds maximum `Number.MAX_SAFE_INTEGER` |
@@ -82,8 +83,10 @@ Before, `ACT_OUTPUT` required all three, although these results omitted two of t
 `projectAnswer` puts the context members before `archived`, `fact`, `phase` and `retained`.
 The members and their values are unchanged. The text content is JSON, so its bytes change order.
 
-**A schema change fixes only a schema that admits a value the parser refuses.**
+**A schema change fixes only a schema that admits a value the parser refuses, and one schema that refuses an input its parser reads.**
 Each row of the table above narrows a schema to its parser: `isScopeId` and `isScopeRef` for `membership`, `isMemberRef` for `owner`, `isDigest` for `release`, `Number.isSafeInteger` for `item` and `on`, `COMMIT_ID` for `diff`, and the `target` refusal of `settle`.
+The scope ID and incarnation patterns end in a character whose bits past the last byte are zero. `isScopeId` and `isIncarnation` decode base32 with the alphabet `abcdefghijklmnopqrstuvwxyz234567` and refuse set bits there. A scope ID has 52 characters, 260 bits for 32 bytes, so its last character is `a` or `q`. An incarnation has 26 characters, 130 bits for 16 bytes, so its last character is one of `aeimquy4`.
+`settle` now admits `membership`, because `#settle` reads it through `#membershipRef` for a creation. `create` and `settle` share one membership schema in `#genericTools`.
 `maxLength` on `capability` and `step` is a necessary character bound. The server still refuses more than `NAME_BYTES` (128) UTF-8 bytes. `budget.test.ts` checks a 65-character name of two-byte characters.
 
 **The schema stays inline.**
@@ -108,14 +111,15 @@ A shared `$defs` entry for the act output schema would remove most of the 73,573
 
 Request part 3 asks for each fixed tool's input schema against its parser.
 The table lists every difference I found at `9d3a4fd5`, apart from the fixes above.
+Commit `c2377a06` fixes the two rows marked fixed.
 "Parser admits more" means that the schema is stricter than the parser.
 
 | Tool | Field | Schema admits | Parser admits | Kind |
 |---|---|---|---|---|
 | all keyed tools | `idempotencyKey` | 1 to 128 characters | 1 to 128 UTF-8 bytes (`keyBytes`) | Schema admits more. JSON Schema counts characters |
 | `prepare` | `capability`, `step` | at most 128 characters | at most 128 UTF-8 bytes | Schema admits more. JSON Schema counts characters |
-| `create`, `install_application` | scope IDs in `scopeRefArg` | `^sc_[a-z2-7]{52}$`, `^in_[a-z2-7]{26}$` | the same, with zero bits past the last byte (`decodeBits`) | Schema admits more. A pattern can fix it: the last character is `a` or `q` for a scope ID, and one of `aeimquy4` for an incarnation |
-| `settle` | `membership` | refused: not a property, and `additionalProperties` is false | `#settle` reads it for a creation | Parser admits more |
+| `create`, `install_application` | scope IDs in `scopeRefArg` | `^sc_[a-z2-7]{52}$`, `^in_[a-z2-7]{26}$` | the same, with zero bits past the last byte (`decodeBits`) | Fixed in `c2377a06`: `^sc_[a-z2-7]{51}[aq]$`, `^in_[a-z2-7]{25}[aeimquy4]$` |
+| `settle` | `membership` | refused: not a property, and `additionalProperties` is false | `#settle` reads it for a creation | Fixed in `c2377a06`: the `create` membership schema |
 | `inspect`, `step`, `text` | `offset` | integer, minimum 0 | `Number(...)` of any value | Parser admits more |
 | `wait` | `seconds` | integer 1 to 60 | any value, clamped to 1 to `WAIT_MOST_SECONDS` | Parser admits more |
 | `step` | `seq` | integer, minimum 0 | `Number(...)` of any value | Parser admits more |
@@ -182,7 +186,6 @@ The witnesses for the request are:
 - `@generalbusiness/dap-mcp` changes its public exports. It no longer exports `expectedOf`, `viaLeft`, `effectiveFields` and `finalStates`, or the Client names that `describe.ts` re-exported, such as `ActLike`, `DefinitionLike`, `inline`, `typeWords`, `fieldLines`, `sentence` and `guardSentences`. `projectAnswer` now takes `{ answer }` or `{ archivedSettlement }` and returns `ActResult`. `examples/repo-in-ai/review-control.ts` shows the change for a caller.
 - `@generalbusiness/dap-client` no longer exports `DESCRIPTION_CHARS` and `Described`, and `descriptionsOf` no longer returns `describeAct`.
 - The tool list grows by 74,746 bytes. The planner decides on `$defs`.
-- The audit found one more schema that admits values the parser refuses: the scope ID and incarnation patterns of `scopeRefArg`. A pattern fix is in the audit table.
-- The `settle` schema refuses `membership`, which `#settle` reads for a creation.
+- Commit `c2377a06` fixes the two audit faults in source and adds `fixed-tool scope references: the ID patterns refuse set trailing bits, and settle takes a creation's membership` to `packages/mcp/test/describe.test.ts`. No test or compiler has run on it yet. `docs/mcp.md`, `docs/mcp-tools.json` and the seals for `service.ts:scopeRefArg` and `service.ts:McpService` follow after the gate at `9d3a4fd5` ends. The tool list figures above are at `9d3a4fd5`.
 - Two in-process reads by string key remain: `result.structuredContent["error"]` in `#stoppedEarly` in `packages/mcp/src/service.ts`, and `result.structuredContent["localStatus"]` in `packages/mcp/src/views/session.ts`. Before NF-2 there were eight.
 - The planner deploys after the landing. `MCP_ENABLED` stays off.
