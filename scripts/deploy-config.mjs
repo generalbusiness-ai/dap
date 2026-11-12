@@ -4,16 +4,31 @@ import { fileURLToPath } from "node:url";
 
 export const checkout = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const WRANGLER = "4.147.0";
-const names = new Set(["grow", "lending", "demo", "artroom-scope"]);
+// Each hosted name has one tracked configuration. Only the room Workers own
+// Durable Objects and therefore a migration history.
+const configs = new Map([
+  ["grow", { path: "apps/room/wrangler.grow.jsonc", migrations: true }],
+  ["lending", { path: "apps/room/wrangler.lending.jsonc", migrations: true }],
+  ["demo", { path: "apps/room/wrangler.demo.jsonc", migrations: true }],
+  ["artroom-scope", { path: "apps/room/wrangler.artroom-scope.jsonc", migrations: true }],
+  ["sandbox", { path: "apps/sandbox/wrangler.rollout.jsonc", migrations: false }],
+]);
+export const hostedNames = Object.freeze([...configs.keys()]);
 export const digestPattern = /^[0-9a-f]{64}$/;
 export const commitPattern = /^[0-9a-f]{40}$/;
 export const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export const record = value => value !== null && typeof value === "object" && !Array.isArray(value);
 
-export function configPath(name) {
-  if (!names.has(name)) throw new Error("Unknown hosted configuration.");
-  return `apps/room/wrangler.${name}.jsonc`;
+function hosted(name) {
+  const entry = configs.get(name);
+  if (!entry) throw new Error("Unknown hosted configuration.");
+  return entry;
 }
+
+export function configPath(name) { return hosted(name).path; }
+
+/** False for a Worker without Durable Objects, whose configuration must declare no migrations. */
+export function hasMigrations(name) { return hosted(name).migrations; }
 
 /** Remove JSONC comments and trailing commas without changing string bytes. */
 export function parseConfig(source) {
@@ -86,4 +101,18 @@ export function smokePolicy(config) {
         || typeof offer.definition !== "string") throw new Error("Invalid creation offer configuration.");
   }
   return { mcpStatus: mcpOpen ? 401 : 404, offer };
+}
+
+/** The screen origins that the tracked sandbox configuration maps. */
+export function sandboxScreenOrigins(config) {
+  const setting = config.vars?.SCREEN_HOSTS;
+  if (typeof setting !== "string" || Buffer.byteLength(setting) > 32 * 4096) throw new Error("Invalid sandbox mapping configuration.");
+  const rows = JSON.parse(setting);
+  if (!Array.isArray(rows) || rows.length < 1 || rows.length > 32) throw new Error("Invalid sandbox mapping configuration.");
+  const origins = rows.map(row => {
+    if (!record(row) || !record(row.host) || typeof row.host.screenOrigin !== "string") throw new Error("Invalid sandbox mapping configuration.");
+    return row.host.screenOrigin;
+  });
+  if (new Set(origins).size !== origins.length) throw new Error("Invalid sandbox mapping configuration.");
+  return origins;
 }
