@@ -8,9 +8,8 @@
  * has a rendering. Unknown guards use a plain label; their original bytes
  * remain available through inspect declaration.
  *
- * The same derivation gives the input schema of an act tool, so the host
- * can validate what it sends, and the complete text that `inspect` returns
- * with `describe`. A tool description is bounded at 1,000 characters: it
+ * The complete text of an act is available to consumers that render its
+ * fields and guards. A tool description is bounded at 1,000 characters: it
  * keeps the sentence, the fields and as many whole guard sentences as fit,
  * then one pointer line to the complete text.
  */
@@ -251,8 +250,6 @@ export interface Bound {
 
 // ---------------------------------------------------------------- the input schema
 
-type Schema = Record<string, unknown>;
-
 const isDetached = (type: FieldLike): boolean => type.type === "text" ? type["detached"] === true
   : type.type === "list" ? isDetached(type["of"] as FieldLike)
   : type.type === "record" ? Object.values(type["of"] as Record<string, FieldLike>).some(isDetached) : false;
@@ -268,33 +265,6 @@ export function besideOf(act: ActLike): { texts: boolean; presented: boolean; va
 export function onOf(act: ActLike): "required" | "absent" {
   return act.step === "transition" || (act.step === "comment" && act.on !== null) ? "required" : "absent";
 }
-
-/** A presented fact: an entry by its scope reference, its position and its hash. */
-const FACT_SCHEMA = {
-  type: "object",
-  properties: {
-    at: { type: "object", properties: { scope: { type: "string" }, inc: { type: "string" }, kind: { type: "string" } }, required: ["scope", "inc", "kind"], additionalProperties: false },
-    seq: { type: "integer", minimum: 0 },
-    hash: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" },
-  },
-  required: ["at", "seq", "hash"],
-  additionalProperties: false,
-} as const;
-
-/** The facts an act presents, each by the name it declares, with the kinds and the definition it must be under; closed. */
-function presentedSchema(act: ActLike): Schema {
-  const presents = Object.entries(act.presents ?? {});
-  return {
-    type: "object",
-    description: "Facts presented beside the intent, by the names the act declares.",
-    properties: Object.fromEntries(presents.map(([name, p]) => [name, { ...FACT_SCHEMA, description: `an entry of kind ${or(p.kind)} under ${p.under}${p.required ? "" : "; optional"}` }])),
-    required: presents.filter(([, p]) => p.required).map(([name]) => name),
-    additionalProperties: false,
-  };
-}
-
-/** The controls of an act tool, at the top level; the declared fields under `fields`, so no field can collide with a control. */
-export const AT_INPUT = { type: "object", additionalProperties: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER }, description: "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides." };
 
 /** Bind the full derivations to one explicit catalogue. Nested descriptions
  * retain this binding; another factory call cannot replace it. */
@@ -499,66 +469,8 @@ export function descriptionsOf(catalogue: MarkCatalogue) {
   }
 
 
-  /** The JSON Schema of one field type. It carries the same facts as the words, for a host that validates. */
-  function schemaOf(type: FieldLike, setting: Setting): Schema {
-    const description = typeWords(type, setting);
-    if (typeof type["code"] === "string" && (type.type === "code" || type.type === undefined)) return { description };
-    switch (type.type) {
-      case "text": return type["detached"] ? { type: "string", description } : { type: "string", maxLength: type["max"], description };
-      case "int": return { type: "integer", minimum: type["min"], maximum: type["max"] };
-      case "bool": return { type: "boolean" };
-      case "time": return { type: "string", format: "date-time" };
-      case "enum": return { type: "string", enum: type["of"] };
-      case "member": return { anyOf: [{ type: "string", pattern: "^@" }, { type: "object", required: ["membership", "member"] }], description };
-      case "item": return { type: "integer", minimum: 0, description };
-      case "reference": {
-        const fragment = { type: "string", description: `At most ${String(type["fragment"])} UTF-8 bytes` };
-        const entry = { type: "object", required: ["at", "seq", "hash"], additionalProperties: false, properties: {
-          at: { type: "object", required: ["scope", "inc", "kind"], additionalProperties: false, properties: {
-            scope: { type: "string" }, inc: { type: "string" }, kind: { type: "string" },
-          } },
-          seq: { type: "integer", minimum: 0 }, hash: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" },
-        } };
-        return { oneOf: [
-          { type: "object", properties: { document: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" }, fragment }, required: ["document"], additionalProperties: false },
-          { type: "object", properties: { entry, fragment }, required: ["entry"], additionalProperties: false },
-        ], description };
-      }
-      case "fact": return { type: "object", required: ["at", "seq", "hash"], description };
-      case "scope": return { type: "object", required: ["scope", "inc", "kind"], properties: { kind: { const: type["kind"] } }, description };
-      case "commit": case "tree": return { type: "string", pattern: "^([0-9a-f]{40}|[0-9a-f]{64})$" };
-      case "digest": return { type: "string", pattern: "^sha256:[0-9a-f]{64}$", ...(isRecord(type["value"]) ? { description } : {}) };
-      case "record": {
-        const members = type["of"] as Record<string, FieldLike>;
-        return { type: "object", properties: Object.fromEntries(Object.entries(members).map(([n, m]) => [n, schemaOf(m, setting)])), required: Object.entries(members).filter(([, m]) => m.required).map(([n]) => n), additionalProperties: false };
-      }
-      case "list": return { type: "array", maxItems: type["max"], items: schemaOf(type["of"] as FieldLike, setting) };
-      default: return { description };
-    }
-  }
-
-
-  function actInputSchema(act: ActLike, setting: Setting, target: "required" | "optional"): Schema {
-    const beside = besideOf(act);
-    const fields = Object.entries(act.fields);
-    const properties: Record<string, unknown> = {
-      target: { type: ["string", "integer"], description: target === "optional" ? "The scope: its ID. Leave it out: the room's own scope of this kind." : "The scope: its ID, or for a lane the issue or change number." },
-      ...(onOf(act) === "required" ? { on: { type: "integer", minimum: 0, description: `The local ID of the ${act.on ?? "item"} this act is on.` } } : {}),
-      idempotencyKey: { type: "string", minLength: 1, maxLength: 128, description: "Your key for this one meaning, 1 to 128 bytes. Keep it: settle with it after a lost reply." },
-      resubmit: { type: "boolean", description: "Send a refused envelope again, deliberately. The default is false." },
-      at: AT_INPUT,
-      fields: { type: "object", properties: Object.fromEntries(fields.map(([n, f]) => [n, schemaOf(f, setting)])), required: fields.filter(([, f]) => f.required).map(([n]) => n), additionalProperties: false },
-      ...(beside.texts ? { texts: { type: "array", items: { type: "string" }, description: "Detached texts whose digests the fields name." } } : {}),
-      ...(beside.presented ? { presented: presentedSchema(act) } : {}),
-      ...(beside.values ? { values: { type: "array", items: { type: "string" }, description: "Values beside the intent, each its canonical JSON text." } } : {}),
-    };
-    const required = ["idempotencyKey", ...(target === "required" ? ["target"] : []), ...(onOf(act) === "required" ? ["on"] : []), ...(fields.some(([, f]) => f.required) ? ["fields"] : []),
-      ...(Object.values(act.presents ?? {}).some((p) => p.required) ? ["presented"] : [])];
-    return { type: "object", properties, required, additionalProperties: false };
-  }
-
   return { MARK_TEXTS, markText, markRefusals, typeWords, fieldLines,
-    sentence, guardSentences, describeAct, schemaOf, actInputSchema };
+    sentence, guardSentences, describeAct };
 }
 
 // The compact declaration line reads no native marks or refusal metadata.

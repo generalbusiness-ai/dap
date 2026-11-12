@@ -173,7 +173,7 @@ const namedOwners = {
     "packages/cli/src/command-issues.ts:linking": "e425a12db2c6e4da95f28b73f366215f4347592d6b868d3fd943fab497766280"
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "991cd84801b00534108f6bd24c4325e95db7025043f255818690f1d2f90ef2ee", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:$module": "0ad79a64b4242488e713e69cc9622c846c3a97dbca549d97bc79dca7cf4db666", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -330,7 +330,8 @@ const seals = {
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
   "packages/mcp/src/hosted-tools.ts": "bea3d3cea128bd76102e36d0876992c1b77a5bf2263f376082c1f329d2035a60", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
-  "packages/mcp/src/catalogue.ts": "ad74db16392454f5bf07c5453dcc10590bbf68bea58b6443b4a66d5de3445bfe", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/catalogue.ts": "f2100e668ebf984cef9472f9c3ca5923ec55d293272c4b85f951ef7500243e92", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/input-schema.ts": "c86a7a0bd03d5a4677a0041f775d1d657b4b40000a39131cfd99f6e939cbb5c5", // Moved MCP schema derivation; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "9128f3b2f0dd46ece17460e45904b5a3a6d45738468a39db233a8414ef6dedad", // Reviewed parallel authority reads and target-only discovery; standing still reads fresh.
   "packages/mcp/src/http.ts": "773765a2edab34cfd675038a9bf5bbd51ef671379a0ce379d48725ea1b61b3b9", // Reviewed Mcp-Name binding for prompts/get.
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
@@ -377,7 +378,7 @@ const pendingR8Seals = {
   "packages/cli/src/command-change.ts": namedOwners["packages/cli/src/command-change.ts"],
   "packages/cli/src/command-issues.ts": namedOwners["packages/cli/src/command-issues.ts"],
   "packages/cli/src/browser-helpers.ts": "0b3ff6a2b25e714cb86cdc12854f77b71a3c90215e1c7bb652a380a38eb9c194", // Shared declaration line and expected forwards; actual maintained parser output.
-  "packages/client/src/describe.ts": "1583520baf30f89bf0059b63fdc6022bf704e25a5394b09a2861f7dc2b809cbd", // Moved portable full/compact declaration and schema derivations; actual maintained parser output.
+  "packages/client/src/describe.ts": "2ea35fc7e5aad3e724d4e8ecd103ceb5467b70bb520549d7b290e90b0fa44d4c", // Moved portable full/compact declaration and schema derivations; actual maintained parser output.
   "packages/client/src/mark-descriptions.ts": "7e22b5140e2a808e091b02d80acaa439f3d57d8c323a2480bfb994db9c063664", // Moved platform mark descriptions, own-property fallbacks and refusal names; actual maintained parser output.
   "packages/mcp/src/description-context.ts": "d249472e0f84ef0984c884685d85ba287a9bc35f1fce6800874b896eac138a41", // Private native-to-plain catalogue binding; actual maintained parser output.
   "packages/client/src/expected.ts": "bdbfca2345390f4db5ae2ed39dce352ff11348e2ef28adc5d62206b28b4e6d80", // Moved prototype-safe expected/via subject resolution; actual maintained parser output.

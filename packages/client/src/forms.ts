@@ -1,6 +1,6 @@
 /** Shared declared forms and conservative state candidates. The scope still judges every act. */
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { actSentence, onOf, type DefinitionLike, type Setting, type Who, type descriptionsOf } from "./describe.ts";
+import { actSentence, besideOf, onOf, type DefinitionLike, type Setting, type Who, type descriptionsOf } from "./describe.ts";
 import type { Kind } from "./declared.ts";
 
 /** The same bound description functions and context the consumer already holds. This performs no membership read. */
@@ -8,7 +8,6 @@ export interface FormContext {
   describe: ReturnType<typeof descriptionsOf>;
   setting: Setting;
   who: Who;
-  target: "required" | "optional";
 }
 
 export interface Form<D extends DefinitionLike, K extends keyof D["acts"] & string> {
@@ -18,7 +17,8 @@ export interface Form<D extends DefinitionLike, K extends keyof D["acts"] & stri
   sentence: string;
   fieldLines: string[];
   guards: ReturnType<FormContext["describe"]["guardSentences"]>;
-  inputSchema: ReturnType<FormContext["describe"]["actInputSchema"]>;
+  presents: NonNullable<D["acts"][K]["presents"]>;
+  beside: ReturnType<typeof besideOf>;
 }
 
 /** Wrap the shared description derivation. Field declarations retain their literal names and bounds. */
@@ -29,7 +29,8 @@ export function formFor<const D extends DefinitionLike, const K extends keyof D[
     kind, on: onOf(act), fields: act.fields as D["acts"][K]["fields"], sentence: actSentence(kind, act, context.who),
     fieldLines: context.describe.fieldLines(act, context.setting),
     guards: context.describe.guardSentences(definition, act, context.setting),
-    inputSchema: context.describe.actInputSchema(act, context.setting, context.target),
+    presents: (act.presents ?? {}) as NonNullable<D["acts"][K]["presents"]>,
+    beside: besideOf(act),
   };
 }
 

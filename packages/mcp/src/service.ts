@@ -24,7 +24,8 @@ import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob 
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "./custody.ts";
 import { StoreFormatError } from "./store-format-error.ts";
-import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type ActLike, type DefinitionLike } from "./describe.ts";
+import { describeAct, grantAction, onOf, type ActLike, type DefinitionLike } from "./describe.ts";
+import { AT_INPUT, schemaOf } from "./input-schema.ts";
 import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";

@@ -8,8 +8,9 @@
  */
 
 import type { FactRef, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isMemberRef, isRecord, isReference, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
-import type { ActLike, FieldLike } from "./describe.ts";
+import { isFactRef, isRecord, textDigest } from "@generalbusiness/dap-bytes";
+import { FieldShapeError, shapeFieldsOf, type ShapeFaultCode, type ShapeField, type ShapeFieldType } from "@generalbusiness/dap-client";
+import type { ActLike } from "./describe.ts";
 import { clip } from "./errors.ts";
 
 /** A value that is not of its declared shape. Nothing was signed. */
@@ -17,7 +18,7 @@ export class Unshaped extends Error {
   constructor(readonly field: string, readonly what: string, readonly declared: string) { super(`${field} ${what}`); }
 }
 
-const declaredOf = (type: FieldLike): string => (typeof type["code"] === "string" && (type.type === undefined || type.type === "code") ? `the platform type ${type["code"]}` : String(type.type));
+const declaredOf = (type: ShapeFieldType | null): string => type === null ? "no such field" : type.type === undefined || type.type === "code" ? `the platform type ${type.code}` : type.type;
 
 /**
  * Sets a name a definition chose as an own, enumerable property. A plain assignment would treat `__proto__` as the prototype
@@ -36,73 +37,48 @@ function ownValue(record: Readonly<Record<string, unknown>> | undefined, name: s
   return record !== undefined && Object.hasOwn(record, name) ? record[name] : undefined;
 }
 
-interface Shaping { membership: ScopeRef | null; texts: Map<string, string> }
+/** Fault data is declaration data, not an input value or a second field check. */
+const property = (error: FieldShapeError, key: string): unknown => error.type === null ? undefined : Reflect.get(error.type, key);
+const wordsOf = (error: FieldShapeError): string => (property(error, "of") as readonly string[]).join(", ");
 
-function shaped(type: FieldLike, value: unknown, path: string, at: Shaping): FieldValue {
-  const not = (what: string): never => { throw new Unshaped(path, what, declaredOf(type)); };
-  // A field whose type is a platform mark: the scope's rule decides; it is signed as given.
-  if (typeof type["code"] === "string" && (type.type === undefined || type.type === "code")) return value as FieldValue;
-  switch (type.type) {
-    case "text": {
-      if (typeof value !== "string" || !wellFormed(value)) return not("is not a text");
-      if (type["detached"]) {
-        // The digest of a text given in texts, or the text itself.
-        if (isDigest(value) && at.texts.has(value)) return value;
-        if (utf8(value).length > Number(type["max"])) return not(`is longer than ${String(type["max"])} bytes`);
-        const digest = textDigest(value);
-        at.texts.set(digest, value);
-        return digest;
-      }
-      if (utf8(value).length > Number(type["max"])) return not(`is longer than ${String(type["max"])} bytes`);
-      return value;
-    }
-    case "int": return typeof value === "number" && Number.isSafeInteger(value) && value >= Number(type["min"]) && value <= Number(type["max"]) ? value : not(`is not a whole number from ${String(type["min"])} to ${String(type["max"])}`);
-    case "bool": return typeof value === "boolean" ? value : not("is not true or false");
-    case "time": return typeof value === "string" && timeMs(value) !== null ? value : not("is not a time in RFC 3339 UTC with Z");
-    case "enum": return typeof value === "string" && (type["of"] as string[]).includes(value) ? value : not(`is not one of ${(type["of"] as string[]).join(", ")}`);
-    case "member": {
-      if (typeof value === "string" && value.startsWith("@") && at.membership) return { membership: at.membership, member: value } as MemberRef as unknown as FieldValue;
-      return isMemberRef(value) ? value as unknown as FieldValue : not("is not a member: give @handle, or { membership, member }");
-    }
-    case "item": return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : not("is not a local item ID");
-    case "reference": return isReference(value, Number(type["fragment"])) ? value as FieldValue : not("is not a document or entry reference with a bounded optional fragment");
-    case "fact": return isFactRef(value) ? value as FactRef as unknown as FieldValue : not("is not a fact: { at, seq, hash }");
-    case "scope": return isScopeRef(value) && value.kind === type["kind"] ? value as unknown as FieldValue : not(`is not a reference to a ${String(type["kind"])} scope: { scope, inc, kind }`);
-    case "digest": return isDigest(value) ? value : not("is not a digest: sha256: and 64 hex characters");
-    case "commit": case "tree": return typeof value === "string" && /^([0-9a-f]{40}|[0-9a-f]{64})$/.test(value) ? value : not("is not a Git object ID");
-    case "list": {
-      if (!Array.isArray(value)) return not("is not a list");
-      if (value.length > Number(type["max"])) return not(`has more than ${String(type["max"])} elements`);
-      return value.map((v, i) => shaped(type["of"] as FieldLike, v, `${path}.${i}`, at));
-    }
-    case "record": {
-      if (!isRecord(value)) return not("is not a record");
-      return named(type["of"] as Record<string, FieldLike>, value, path, at);
-    }
-    default: return value as FieldValue;
-  }
-}
-
-function named(types: Readonly<Record<string, FieldLike>>, given: Readonly<Record<string, unknown>>, path: string, at: Shaping): Record<string, FieldValue> {
-  for (const name of Object.keys(given)) if (!Object.hasOwn(types, name)) throw new Unshaped(`${path}.${clip(name)}`, "is not declared", "no such field");
-  const out: Record<string, FieldValue> = {};
-  for (const [name, type] of Object.entries(types)) {
-    const value = ownValue(given, name);
-    if (value === undefined) { if (type.required) throw new Unshaped(`${path}.${name}`, "is required", declaredOf(type)); continue; }
-    put(out, name, shaped(type, value, `${path}.${name}`, at));
-  }
-  return out;
-}
+/** Preserve MCP's refusal words while Client owns every field check. */
+const FIELD_REFUSALS = {
+  text: () => "is not a text",
+  "text-bytes": (error) => `is longer than ${String(property(error, "max"))} bytes`,
+  int: (error) => `is not a whole number from ${String(property(error, "min"))} to ${String(property(error, "max"))}`,
+  bool: () => "is not true or false",
+  time: () => "is not a time in RFC 3339 UTC with Z",
+  enum: (error) => `is not one of ${wordsOf(error)}`,
+  member: () => "is not a member: give @handle, or { membership, member }",
+  item: () => "is not a local item ID",
+  reference: () => "is not a document or entry reference with a bounded optional fragment",
+  fact: () => "is not a fact: { at, seq, hash }",
+  scope: (error) => `is not a reference to a ${String(property(error, "kind"))} scope: { scope, inc, kind }`,
+  digest: () => "is not a digest: sha256: and 64 hex characters",
+  git: () => "is not a Git object ID",
+  list: () => "is not a list",
+  "list-length": (error) => `has more than ${String(property(error, "max"))} elements`,
+  record: () => "is not a record",
+  unknown: () => "is not declared",
+  required: () => "is required",
+  platform: () => "is not a declared field type",
+} satisfies Record<ShapeFaultCode, (error: FieldShapeError) => string>;
 
 /** The fields as the intent holds them, and the detached texts that go beside it. */
 export function shapeFields(act: ActLike, fields: Readonly<Record<string, unknown>>, texts: readonly string[], membership: ScopeRef | null): { fields: Record<string, FieldValue>; texts: string[] } {
-  const at: Shaping = { membership, texts: new Map(texts.map((t) => [textDigest(t), t])) };
-  const shapedFields = named(act.fields, fields, "fields", at);
-  // Only the texts that a field names travel; the scope keeps no other.
-  const named_ = new Set<string>();
-  const walk = (v: unknown) => { if (typeof v === "string" && at.texts.has(v)) named_.add(v); else if (Array.isArray(v)) v.forEach(walk); else if (isRecord(v)) Object.values(v).forEach(walk); };
-  walk(shapedFields);
-  return { fields: shapedFields, texts: [...named_].map((d) => at.texts.get(d)!) };
+  try {
+    // ActLike is the description view of an already admitted declared definition or native platform data, not a wire schema.
+    // The Contract union keeps the shared checker exhaustive; this adapter adds no declaration parser or permissive fallback.
+    return shapeFieldsOf(act.fields as Readonly<Record<string, ShapeField>>, fields, {
+      member: (handle) => membership === null ? null : { membership, member: handle } as MemberRef,
+      texts: new Map(texts.map((text) => [textDigest(text), text])),
+      platformMarks: true,
+    });
+  } catch (error) {
+    if (!(error instanceof FieldShapeError)) throw error;
+    const path = error.segments.map((part, i) => error.code === "unknown" && i === error.segments.length - 1 ? clip(String(part)) : String(part)).join(".");
+    throw new Unshaped(path, FIELD_REFUSALS[error.code](error), declaredOf(error.type));
+  }
 }
 
 /** The facts presented beside the intent, by the names the act declares. */
