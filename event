@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:af79f1a77a0d98894dd52c8d6366d40b4bd92a61","text":"Merge retired a covered predecessor; the successor is at docs/application-views.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b0a53e8c44b96ce443bdac038dd96a12cbca46b8","text":"Merge retired a covered predecessor; the successor is at .github/workflows/views-browser.yml."}
