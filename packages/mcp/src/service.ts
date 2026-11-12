@@ -951,8 +951,8 @@ export class McpService {
   // ---------------------------------------------------------------- the generic tools
 
   #genericTools(): Record<string, { tool: Tool; run: Run }> {
-    const tool = (name: string, description: string, properties: Record<string, unknown>, required: string[], annotations: Record<string, unknown>, run: Run, output?: Record<string, unknown>): [string, { tool: Tool; run: Run }] =>
-      [name, { tool: { name, description, inputSchema: { type: "object", properties, required, additionalProperties: false }, ...(output ? { outputSchema: output } : {}), annotations, ...(annotations["readOnlyHint"] === false ? { _meta: { ui: { visibility: ["model"] } } } : {}) }, run }];
+    const tool = (name: string, description: string, properties: Record<string, unknown>, required: string[], annotations: Record<string, unknown>, run: Run, output?: Record<string, unknown>, meta?: Tool["_meta"]): [string, { tool: Tool; run: Run }] =>
+      [name, { tool: { name, description, inputSchema: { type: "object", properties, required, additionalProperties: false }, ...(output ? { outputSchema: output } : {}), annotations, ...(annotations["readOnlyHint"] === false ? { _meta: { ui: { visibility: ["model"] } } } : {}), ...(meta ? { _meta: meta } : {}) }, run }];
     return Object.fromEntries([
       tool("room", "Orientation. The service, your key, the scopes of the room by name, the issues and changes the directory lists, the applications its factory created (such as a Counter), the standalone scopes, your standing on each membership, the active definitions, and the act tools your role does not hold; paged by bytes, with a cursor. Start here.",
         { cursor: { type: "string" } }, [], READ, (a) => this.#room(a)),
@@ -990,9 +990,9 @@ export class McpService {
       tool("settle", "What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs nothing and sends no act.",
         { target: scopeArg, definition: { type: ["string", "object"] }, idempotencyKey: keyArg, cursor: { type: "string" } }, ["idempotencyKey"], READ, (a, dispatch) => this.#settle(a, undefined, dispatch)),
       tool("credential", "The one-time read credential for a read-token act your key signed (entry: its seq at the destination), read once from the destination's credential route with your session. Its result is a secret: the credential appears once in the text content. The structured content holds only the remote URL, expiry, and entry. Use it with Git; it is not kept here.",
-        { entry: { type: "integer", minimum: 1 }, target: scopeArg }, ["entry"], { ...READ, idempotentHint: false }, (a) => this.#credential(a)),
+        { entry: { type: "integer", minimum: 1 }, target: scopeArg }, ["entry"], { ...READ, idempotentHint: false }, (a) => this.#credential(a), undefined, { ui: { visibility: ["model"] } }),
       tool("diff", "The change between two exact commits, read with the one-time credential of a read-token act your key signed (entry: its seq at the destination). The server keeps the credential and spends it on this read. It signs nothing. The answer holds at most 40 KiB of text. Over a bound, truncated is true and the text says truncated. An object the host does not give is an error, and the answer shows no change it did not read. Sign another read-token for another diff.",
-        { entry: { type: "integer", minimum: 1 }, base: { type: "string", description: "The exact commit ID of the older side." }, integration: { type: "string", description: "The exact commit ID of the newer side." }, target: scopeArg }, ["entry", "base", "integration"], { ...READ, idempotentHint: false, openWorldHint: true }, (a) => this.#diff(a), DIFF_OUTPUT),
+        { entry: { type: "integer", minimum: 1 }, base: { type: "string", description: "The exact commit ID of the older side." }, integration: { type: "string", description: "The exact commit ID of the newer side." }, target: scopeArg }, ["entry", "base", "integration"], { ...READ, idempotentHint: false, openWorldHint: true }, (a) => this.#diff(a), DIFF_OUTPUT, { ui: { visibility: ["model"] } }),
       tool("actions", "The acts of one scope, as act tools would describe them: each kind with its derived description, input schema, binding and the definition digest to give to act. For a host that lists few tools.",
         { scope: scopeArg, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#actions(a)),
       tool("act", "Signs one act of a scope by its native kind, under the same custody and binding checks as an act tool. digest: the definition digest actions gave; fields as actions describes; idempotencyKey required.",
@@ -1522,13 +1522,12 @@ export class McpService {
   async #join(args: Args, dispatch?: DispatchContext): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes of UTF-8", declared: "a key you choose and keep" });
-    const link = typeof args["link"] === "string" ? invitationOf(args["link"].trim()) : null;
+    const link = typeof args["link"] === "string" ? invitationOf(args["link"].trim(), this.#service || undefined) : null;
     if (!link || !wellFormedInvitation(link)) return failed({ error: "shape", field: "link", what: "is no invitation link from dap invite, or its repository references are not well formed", declared: "artroom-invite:..." });
     const config = await this.#port.config.read();
     if (config.repository && config.repository.membership.scope !== link.repository.membership.scope) return failed({ error: "target", what: `this configuration has a room already (directory ${config.repository.directory.scope}); use another ARTROOM_HOME to join another` });
-    if (this.#service !== "" && this.#service !== link.service) return failed({ error: "target", what: `the link names the service ${clip(link.service)}, and this server serves ${this.#service}` });
     if (this.#service === "") { this.#service = link.service; this.#reads = this.#readsOf(link.service); }
-    const named = (link.definition ?? "platform:membership@1") as PlatformDefinition;
+    const named = link.definition as PlatformDefinition;
     const membershipData = platform(named)?.data as unknown as DefinitionLike | undefined;
     const act = membershipData?.name === "platform:membership" ? membershipData.acts["join"] : undefined;
     if (!act) return failed({ error: "target", what: `the invitation is in ${clip(named)}, which this server does not know as membership` });

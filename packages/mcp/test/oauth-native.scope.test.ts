@@ -3,7 +3,7 @@
  * ports. No browser, deployed host or real Git provider belongs here. */
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test, vi } from "vitest";
-import type { ControlAction, FactRef, MemberId } from "@generalbusiness/dap-contract";
+import type { ControlAction, FactRef, MemberId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, keyIdOfSecret, signControlWith, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { INVITATION_LINK, encodeAgentKeyInvitation, invitationIssueFields, secretSigner, signedIntent } from "@generalbusiness/dap-client";
 import { OWN_AGENT_COHORT } from "@generalbusiness/dap-platform";
@@ -91,15 +91,15 @@ test("control signatures precede index registration and public client resolution
   const registries = { idFromName: () => { registryLookups++; throw Error("Unexpected client or registry resolution"); } };
   const agents = { idFromString: () => { agentLookups++; throw Error("Unexpected agent lookup"); } };
   const settings = { MCP_ENABLED: "true", SCOPE_INDEX_MODE: "register", SCOPE_INDEX: index, SCOPES: scopes, REGISTRIES: registries, AGENTS: agents } as unknown as Parameters<typeof mcpRoute>[1];
-  const secret = new Uint8Array(32).fill(42);
+  const secret = new Uint8Array(32).fill(42), address = "203.0.113.45";
   const bytes = utf8(canonicalize({ client_id: "https://claude.ai/oauth/TEST-signature-order.json" }));
-  const membership = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" as const };
+  const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
   const call = async (action: "create" | "grant", agent: string | null, tamper: boolean, service = SERVICE, given = settings, payload = bytes) => {
     const request = { v: 1 as const, action, service, membership, agent, actor: keyIdOfSecret(secret), body: digestBytes(bytes), op: "TEST signature order", notAfter: timeOf(Date.now() + 60_000) };
     const signed = await signControlWith(request, secretSigner(secret));
     const encoded = b64url(utf8(canonicalize(tamper ? { ...request, op: "TEST changed after signing" } : request)));
     const path = action === "create" ? "/mcp/agents" : agent === null ? "/mcp/agents/grant" : `/mcp/agents/${agent}/grant`;
-    return mcpRoute(new Request(SERVICE + path, { method: "POST", headers: { authorization: `Control ${encoded}.${signed.sig}`, "content-type": "application/json" }, body: new Uint8Array(payload) }), given);
+    return mcpRoute(new Request(SERVICE + path, { method: "POST", headers: { authorization: `Control ${encoded}.${signed.sig}`, "content-type": "application/json", "cf-connecting-ip": address }, body: new Uint8Array(payload) }), given);
   };
   for (const [action, agent] of [["create", null], ["grant", null], ["grant", "a".repeat(64)]] as const) {
     const response = await call(action, agent, true);
@@ -116,8 +116,9 @@ test("control signatures precede index registration and public client resolution
   expect(knownOrder?.status).toBe(404);
   expect({ indexLookups, registrations, registryLookups, agentLookups }).toEqual({ indexLookups: 1, registrations: 1, registryLookups: 0, agentLookups: 0 });
   let admissions = 0, clientResolutions = 0;
+  const admittedAddresses: unknown[] = [];
   const boundedRegistries = { idFromName: () => "TEST control window", get: () => ({
-    admitControl: async () => { admissions++; return { status: 429, body: { error: "rate-limited" } }; },
+    admitControl: async (...args: unknown[]) => { admissions++; admittedAddresses.push(args[4]); return { status: 429, body: { error: "rate-limited" } }; },
     resolveClient: async () => { clientResolutions++; return { status: 400, body: { error: "invalid_client_metadata" } }; },
   }) };
   const bounded = { ...settings, REGISTRIES: boundedRegistries } as unknown as Parameters<typeof mcpRoute>[1];
@@ -134,6 +135,7 @@ test("control signatures precede index registration and public client resolution
   const limited = await call("grant", "a".repeat(64), false, SERVICE, bounded);
   expect(limited?.status).toBe(429);
   expect(admissions).toBe(1); expect(clientResolutions).toBe(0); expect(agentLookups).toBe(0);
+  expect(admittedAddresses, "the verified Worker path passes the actual transport address as admission argument five").toEqual([address]);
 });
 async function join(room: Room, admin: Agent, handle: string, definition: string): Promise<Agent> {
   const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));

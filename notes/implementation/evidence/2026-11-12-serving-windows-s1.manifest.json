@@ -1,0 +1,980 @@
+{
+  "version": 1,
+  "kind": "CURATED_PROVENANCE",
+  "label": "Curated provenance, not raw output",
+  "request": "8bd2c9d2208811e7540a64d570515394d487c83a",
+  "promise": "75b128e9f86b452f70c156e9f5c00b1d5545c069",
+  "candidate": {
+    "runtimeHead": "acf797a70b254f4373465b3fb07476f80d943172",
+    "runtimeTree": "223e2c0b6e9bb2419acb0a8b1b5207e3a9dde8b7",
+    "base": "d4cfae052a3d92aaeff28f8e986f59414807c233",
+    "finalDocumentHead": null
+  },
+  "historical": {
+    "compilers": {
+      "initialReference": "initialCompilerResults",
+      "initialActualExit": 1,
+      "passedContexts": [
+        6,
+        18,
+        26
+      ],
+      "failedContexts": [
+        27
+      ],
+      "thenUnrunContexts": [
+        31,
+        34,
+        41
+      ],
+      "repairedReference": "repairedCompilerResults",
+      "repairedActualExit": 0,
+      "repairedPassedContexts": [
+        27,
+        31,
+        34,
+        41
+      ],
+      "qualification": "Historical standalone results retain their actual heads. Current 45-context evidence comes from gate 947c, not this seven-context union."
+    },
+    "ast": {
+      "reference": "ast31",
+      "records": 31,
+      "owners": 5,
+      "adoptionReference": "astAdoption",
+      "qualification": "Maintained AST production at df500. Adoption and current selector/owner correspondence support retained values. Source hashes do not substitute for AST production. No repeat or new parser result is inferred."
+    },
+    "focus": {
+      "rootReference": "focusRoot",
+      "peerReference": "focusPeer",
+      "nodePassed": 24,
+      "nativePassed": 28,
+      "skipped": 0,
+      "unknownWrappers": 6,
+      "end": "e80a8de2f06412256c429b0b9769eb6ec87bb27d",
+      "priorFailure": "a22 focus FAILED1/e20 remains historical; no overwrite",
+      "qualification": "Actual c2a9 observations, not an integrated-head pass or full-gate carry."
+    },
+    "producers": {
+      "pageReference": "pageProducerRoot",
+      "remainingReference": "remainingProducersRoot",
+      "inputComparisonReference": "integration",
+      "closureReference": "producerClosure",
+      "qualification": "Original JP1 producer heads stay unchanged. Reviewed literal input correspondence selects retained outputs, not fresh observations."
+    },
+    "namespace": {
+      "reference": "namespaceSetup",
+      "qualification": "Historical owned setup 10d only. Current gate physical guards separately checked actual dependencies; no relabel, install or copy."
+    }
+  },
+  "current": {
+    "ordinary": {
+      "reference": "ordinaryIntegration5",
+      "commands": 5,
+      "actualExit": 0,
+      "end": "55cd000c41d58b941e52a9ec17ce60baae66ac48",
+      "qualification": "Plain external originals remain in place."
+    },
+    "gate": {
+      "booking": "947c3701f9163d6975ba597673b8a89ba12c0300",
+      "end": "66e3dc611c605770a410ecee84dec552c712a955",
+      "rootReference": "gateRoot",
+      "peerReference": "gatePeer",
+      "actualExits": {
+        "gate": 0,
+        "innerDriver": 0,
+        "outerDriver": 0,
+        "launcher": 0,
+        "analyzer": 0
+      },
+      "cases": 5903,
+      "passed": 5900,
+      "plannedSkipped": 3,
+      "wholeOwners": 713,
+      "compilerContexts": 45,
+      "typecheckScripts": 16,
+      "unknownWrapperRecords": 117,
+      "scaleOmittedCases": 6,
+      "scaleOmittedOwners": 4,
+      "issues": 0,
+      "qualification": "Complete same-run current observations. UNKNOWN wrappers are not cases. Screenshot-only skipped owner keeps null/partial timing. No deployment or cutover result follows."
+    },
+    "rss": {
+      "samples": 90,
+      "nodeWorkerdRows": 519,
+      "errors": 0,
+      "sampledNodeMaximumKiB": 2463888,
+      "sampledWorkerdMaximumKiB": 2663776,
+      "lifetimeUpperBound": "UNKNOWN",
+      "qualification": "Ten-second sampled RSS per PID/start; not heap, instantaneous peaks, aggregate memory or a qualified historical baseline."
+    }
+  },
+  "controls": [
+    {
+      "group": "address-and-site",
+      "status": "DISTINGUISHED",
+      "plannedWholeOwnerCases": 7,
+      "plannedNamedFailures": 2,
+      "plannedOtherPasses": 5,
+      "booking": "f6f9a8c88a77d360ee67246e285ff1f811640d92",
+      "end": "e940cc623eaaa431d6151b22005ad51df9b8cb4b",
+      "actualChildExit": 1,
+      "actualControllerExit": 0,
+      "curatedResultReference": "addressAndSiteRoot",
+      "independentReference": "addressAndSitePeer",
+      "actualWholeOwners": 2,
+      "actualCases": 7,
+      "actualNamedAssertionFailures": 2,
+      "actualPassed": 5,
+      "actualExits": {
+        "mutantChild": 1,
+        "innerController": 0,
+        "outerDriver": 0,
+        "launcher": 0
+      },
+      "positiveBodiesRepeated": 0,
+      "restorationAndBothCleanupsAccepted": true,
+      "assertionScope": [
+        {
+          "owner": "packages/scope/test/serving-limits.test.ts",
+          "line": 31,
+          "expected": 31,
+          "received": 8192,
+          "qualification": "The first key-count assertion distinguishes address-before-key. Later fresh-address, full-table, overflow/rollover and stale-reservation arms in that case are masked."
+        },
+        {
+          "owner": "packages/scope/test/site-window.test.ts",
+          "line": 26,
+          "expected": 240,
+          "received": 4096,
+          "qualification": "The first IPv6 /64 assertion distinguishes canonical grouping. Later dedicated-capacity, overflow, rollover and visitor arms in that case are masked."
+        }
+      ],
+      "rss": {
+        "rawStatus": "complete",
+        "samples": 3,
+        "ownedNodeWorkerdRows": 2,
+        "sampledNodeMaximumKiB": 683152,
+        "sampledWorkerdMaximumKiB": null,
+        "workerdStatus": "UNKNOWN/no owned sample",
+        "lifetimeUpperBound": "UNKNOWN",
+        "errors": 0
+      },
+      "qualification": "Curated provenance, not raw output. Root and independent receipts retain original path/hash references. Pure counter distinction does not establish Native authorization or transport custody. END supplied by root; no canonical event capture is produced here."
+    },
+    {
+      "group": "ingress-boundaries",
+      "status": "DISTINGUISHED",
+      "plannedWholeOwnerCases": 11,
+      "plannedNamedFailures": 3,
+      "plannedOtherPasses": 8,
+      "booking": "577d4520230b0eedc8ca26a4e4cdc562b8dfaf10",
+      "end": "390b1bf324bde9fb3e41bcc4f79494291430d91e",
+      "actualChildExit": 1,
+      "actualControllerExit": 0,
+      "curatedResultReference": "ingressBoundariesRoot",
+      "independentReference": "ingressBoundariesPeer",
+      "actualWholeOwners": 1,
+      "actualCases": 11,
+      "actualNamedAssertionFailures": 3,
+      "actualPassed": 8,
+      "actualExits": {
+        "mutantChild": 1,
+        "innerController": 0,
+        "outerDriver": 0,
+        "launcher": 0
+      },
+      "positiveBodiesRepeated": 0,
+      "assertions": [
+        {
+          "line": 246,
+          "expected": 404,
+          "received": 429
+        },
+        {
+          "line": 260,
+          "expectedReason": "rate-limited",
+          "receivedReason": "unavailable"
+        },
+        {
+          "line": 281,
+          "expected": [
+            429,
+            {
+              "answer": "unavailable",
+              "reason": "rate-limited"
+            },
+            0
+          ],
+          "received": [
+            400,
+            {
+              "error": "bad-request"
+            },
+            1
+          ]
+        }
+      ],
+      "rss": {
+        "samples": 3,
+        "ownedNodeWorkerdRows": 2,
+        "sampledNodeMaximumKiB": 680112,
+        "sampledWorkerdMaximumKiB": null,
+        "workerdStatus": "UNKNOWN/no owned sample",
+        "lifetimeUpperBound": "UNKNOWN",
+        "rawStatus": "complete",
+        "errors": 0
+      },
+      "qualification": "Curated provenance, not raw output. Root and independent receipts retain original path/hash references. Found first same-key failure masks later address and submits assertions; the creation control distinguishes body access before refusal, not parser CPU or signature work. Sandbox headers/ExecutionContext are explicit stand-ins; no Cloudflare custody, Native authorization or deployment claim. END supplied by root; no canonical event capture is produced here.",
+      "restorationAndBothCleanupsAccepted": true
+    }
+  ],
+  "finalCI": {
+    "kind": "CURATED_PROVENANCE",
+    "label": "Curated provenance, not raw output",
+    "status": "ACTUAL_BFC_PUSH_SUCCESSES_WITH_SEPARATE_FAILED_MANUAL_RUN",
+    "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+    "tree": "83b4c4186393f110ca7d8453f2f1249614221dab",
+    "repository": "generalbusiness-ai/dap",
+    "ruling": "b5283835846713777cd40b7ad5b9863dff16115d",
+    "selectedExactHeadCIRuns": [
+      43201044890,
+      43201044687
+    ],
+    "runs": [
+      {
+        "workflow": "Page browser scripts",
+        "workflowPath": ".github/workflows/page-browser.yml",
+        "run": 43201044890,
+        "job": 131124242674,
+        "event": "push",
+        "attempt": 1,
+        "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+        "branch": "builder/serving-windows-s1-20261111",
+        "status": "completed",
+        "conclusion": "success",
+        "totalJobs": 1,
+        "steps": 12,
+        "successfulSteps": 12,
+        "createdAt": "2026-11-12T10:30:58Z",
+        "jobStartedAt": "2026-11-12T10:31:00Z",
+        "jobCompletedAt": "2026-11-12T10:36:41Z",
+        "url": "https://github.com/generalbusiness-ai/dap/actions/runs/43201044890",
+        "originals": {
+          "run": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044890-run.json",
+            "sha256": "055d4eb29ee9ca88f6e4ced079198cd990adc747f3971f76b659eb6e3aca485a",
+            "bytes": 13029,
+            "mode": 384
+          },
+          "jobs": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044890-jobs.json",
+            "sha256": "2e2f99e25036d6ca6e71b9a807b5aa25056c23d7a765efa57b1d08e6eeef746c",
+            "bytes": 3120,
+            "mode": 384
+          },
+          "jobLog": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/job-131124242674-original.log",
+            "sha256": "bc81aa8d8ff619c6ae6c3821329a64240b9d4e8a396783b6e16c6c080c0ab91d",
+            "bytes": 43894,
+            "mode": 384
+          }
+        },
+        "logCompletionObserved": true,
+        "successfulProcessQualification": "GitHub job and all step statuses are success; independent full-log readback observed maintained completion markers. No individual numeric child-zero receipt is claimed."
+      },
+      {
+        "workflow": "Card browser scripts",
+        "workflowPath": ".github/workflows/views-browser.yml",
+        "run": 43201044687,
+        "job": 131124242198,
+        "event": "push",
+        "attempt": 1,
+        "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+        "branch": "builder/serving-windows-s1-20261111",
+        "status": "completed",
+        "conclusion": "success",
+        "totalJobs": 1,
+        "steps": 13,
+        "successfulSteps": 13,
+        "createdAt": "2026-11-12T10:30:58Z",
+        "jobStartedAt": "2026-11-12T10:31:00Z",
+        "jobCompletedAt": "2026-11-12T10:34:13Z",
+        "url": "https://github.com/generalbusiness-ai/dap/actions/runs/43201044687",
+        "originals": {
+          "run": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044687-run.json",
+            "sha256": "f2278571ea953d0fa94fa908dc1f285779c6ab3112f31e9eeafc2562e7a2a8f8",
+            "bytes": 13029,
+            "mode": 384
+          },
+          "jobs": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/43201044687-jobs.json",
+            "sha256": "45f347f27789f188c62e61ba6919207a4ac30227073e161225bbdc5a8fbd6f9e",
+            "bytes": 3343,
+            "mode": 384
+          },
+          "jobLog": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-push-ci-originals/job-131124242198-original.log",
+            "sha256": "643216dc0bf4a1575bd9cdc2e8a066ee581fc5926bb0050a99c7e1f4b9783639",
+            "bytes": 46045,
+            "mode": 384
+          }
+        },
+        "logCompletionObserved": true,
+        "successfulProcessQualification": "GitHub job and all step statuses are success; independent full-log readback observed maintained completion markers. No individual numeric child-zero receipt is claimed."
+      },
+      {
+        "workflow": "Page browser scripts",
+        "workflowPath": ".github/workflows/page-browser.yml",
+        "run": 43201184843,
+        "job": 131124731653,
+        "event": "workflow_dispatch",
+        "attempt": 1,
+        "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+        "branch": "builder/serving-windows-s1-20261111",
+        "status": "completed",
+        "conclusion": "failure",
+        "totalJobs": 1,
+        "steps": 12,
+        "failedSteps": 1,
+        "skippedSteps": 2,
+        "failedWitness": "create-room Escape focus assertion",
+        "sourceLocation": "scripts/demo-captures.ts:303",
+        "observedFailedProcessExit": 1,
+        "createdAt": "2026-11-12T10:31:54Z",
+        "jobStartedAt": "2026-11-12T10:31:58Z",
+        "jobCompletedAt": "2026-11-12T10:35:35Z",
+        "url": "https://github.com/generalbusiness-ai/dap/actions/runs/43201184843",
+        "originals": {
+          "run": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/run-observation-2.json",
+            "sha256": "8012a5f17c3fe13ab79f94997662b8e3fa78d2adb03f6d2d56fc9ce949ce10f0",
+            "bytes": 13027,
+            "mode": 420
+          },
+          "jobs": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/jobs-observation-2.json",
+            "sha256": "aba37dd76b37b9a94bf26cd2dcfea90efea699eb313d355420fde55adff2b387",
+            "bytes": 3120,
+            "mode": 420
+          },
+          "jobLog": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/job-131124731653-original.log",
+            "sha256": "e262952cd00a2db0831f6835413d9ab85bb4e9548c0194878ebfd08a544b8c47",
+            "bytes": 43628,
+            "mode": 420
+          },
+          "curatedFailure": {
+            "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-bfc67122-page-ci/failure-curated-readback.json",
+            "sha256": "8844b363df6faad2f4d816144d6aa66a27de4995dfc0b1b346a2e4c123451e74",
+            "bytes": 4578,
+            "mode": 384
+          }
+        },
+        "qualification": "The run remains failed. Push success does not turn this invocation or its skipped steps into passes."
+      }
+    ],
+    "sourceEqualMain": {
+      "head": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+      "comparisonHead": "d4cfae052a3d92aaeff28f8e986f59414807c233",
+      "owners": 18,
+      "paths": [
+        "scripts/demo-captures.ts",
+        "apps/room/page/src/main.ts",
+        "apps/room/page/src/focus.ts",
+        "apps/room/page/src/popups.ts",
+        "apps/room/page/src/index.html",
+        "apps/room/page/src/page-observation.ts",
+        "apps/room/page/src/workbench-work.ts",
+        "apps/room/page/src/claim.ts",
+        "apps/room/page/src/data.ts",
+        "apps/room/page/src/index.ts",
+        "apps/room/page/route.ts",
+        "apps/room/page/assets.ts",
+        "apps/room/page/test/focus.test.ts",
+        "apps/room/page/test/claim-ui.test.ts",
+        "apps/room/page/test/screens.mjs",
+        "apps/room/page/test/workbench-fixture.ts",
+        "scripts/demo/recorder-output.ts",
+        ".github/workflows/page-browser.yml"
+      ],
+      "gitComparison": {
+        "argvPrefix": [
+          "git",
+          "diff",
+          "--quiet",
+          "d4cfae052a3d92aaeff28f8e986f59414807c233",
+          "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+          "--"
+        ],
+        "appendPaths": "Append the exact paths array above, in its listed order.",
+        "rootObservedActualExit": 0,
+        "comparison": "Tracked blobs and Git modes; no browser/project body.",
+        "observation": "Root executed this exact comparison. V1 author independently compared each of the 18 Git blob/mode/byte inputs."
+      },
+      "qualification": "Durable commits and exact finite paths reproduce the comparison without a scratch source inventory. Equality does not establish equal dynamic data, browser timing or the observed runtime cause."
+    },
+    "separateFocusRequest": "0f327b6b207defe01cb9a4a3fab743e3d6fc89aa",
+    "failurePreserved": true,
+    "additionalS1Runs": 0,
+    "documentarySuccessor": {
+      "baseHead": "bfc67122c8116f736c8a2577ae0c3ce124c2d609",
+      "head": null,
+      "tree": null,
+      "scope": "Only this existing S1 note and canonical manifest change. Runtime source remains acf797a7.",
+      "qualification": "CI ran at bfc, not at the later documentary successor. Ruling b528 selects those actual push runs; external correspondence must verify the exact two-doc-only successor. No new run is claimed or requested."
+    },
+    "checkerDisposition": null,
+    "independentCIReadback": {
+      "path": "/private/tmp/artroom-s1-bfc-push-ci-originals-independent-curated-readback-20261112.json",
+      "sha256": "05c5d0101ff5d9dd943d76bd6280d8959a77d41df9949addcd3b5a56aa848194",
+      "bytes": 14651,
+      "mode": 420
+    },
+    "custody": "Original API responses and complete logs remain at their original HOME locators with unchanged bytes and modes. This object contains authored identifiers, statuses, aggregate counts and file references only; no raw row/line copy, link, freeze or seal."
+  },
+  "custody": {
+    "rawPolicy": "All ordinary and validation raw files remain plain external originals. No copies, selected-line projections, hardlinks, symlinks, chmod or raw sealing. References record path/hash/head/actual exit and derived facts only.",
+    "newArchive": null,
+    "rawCopies": 0,
+    "rawLinks": 0,
+    "rawModeChanges": 0
+  },
+  "status": "CURATED_METADATA_COMPOSITION",
+  "qualification": "Curated provenance, not raw output. Fourteen exact normalized metadata/small-summary afterimages accompany nineteen unchanged original references. Raw and source originals stay at their locators with unchanged hashes and modes. This is no raw archive, seal or copied validation output. Adopt only after root verifies the exact metadata afterimages at directory; actual publication and final-doc correspondence receipts stay external.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance",
+  "checkpointCommit": "acf797a70b254f4373465b3fb07476f80d943172",
+  "checkpointTree": "223e2c0b6e9bb2419acb0a8b1b5207e3a9dde8b7",
+  "fileCount": 14,
+  "files": [
+    {
+      "path": "prerequisites.json",
+      "bytes": 5104,
+      "sha256": "d32054b6fcdf776da758dfb26bcb4bc2972edbe963e0ce9bb08f83c37668fcd4",
+      "mode": 256
+    },
+    {
+      "path": "input-correspondence.json",
+      "bytes": 5315,
+      "sha256": "4f2d098a29cba6e246136ee6fc81aed63181eb7cd399c83a56065e65aad0aa6b",
+      "mode": 256
+    },
+    {
+      "path": "gate-root.json",
+      "bytes": 9643,
+      "sha256": "fc042eb4cd5e894b752675a338d751899e95432c81e59c883c22cf148d5db49a",
+      "mode": 256
+    },
+    {
+      "path": "gate-independent-readback.json",
+      "bytes": 7584,
+      "sha256": "bce05034a462cabfcca688ad05110b8e2f109b2c83073500a333f2112ae1d434",
+      "mode": 256
+    },
+    {
+      "path": "historical-focus-root.json",
+      "bytes": 3220,
+      "sha256": "f16bce1201e9461d7098a0d2ccd33d7c009cdf09ab84970382e5d452ef29508c",
+      "mode": 256
+    },
+    {
+      "path": "historical-focus-independent-readback.json",
+      "bytes": 3740,
+      "sha256": "fd9bdd295ab210c7a1c27f8d17efed6a7738a2381b83d80988110b9535f801ad",
+      "mode": 256
+    },
+    {
+      "path": "historical-page-producer.json",
+      "bytes": 3601,
+      "sha256": "1f3a3a7023d7f1e65bfa3a02b69a071bd9213ba765c886a38c4f21f9ab94a022",
+      "mode": 256
+    },
+    {
+      "path": "historical-remaining-producers.json",
+      "bytes": 3170,
+      "sha256": "e34d95800ecb3f1e5a3f3336af02b16fc19ce9c322b2cd1a773b10937f24c19a",
+      "mode": 256
+    },
+    {
+      "path": "address-and-site-root.json",
+      "bytes": 4485,
+      "sha256": "c11cd1dba6416287146337887c8d76012a8b9a419bcf27f4aaf9c2ec383fd013",
+      "mode": 256
+    },
+    {
+      "path": "address-and-site-independent-readback.json",
+      "bytes": 6681,
+      "sha256": "30f3217856e25f945c6d90ccc62c87f7eeed2cc0bf0f1d3c736483f35c55cd7e",
+      "mode": 256
+    },
+    {
+      "path": "ingress-boundaries-root.json",
+      "bytes": 4707,
+      "sha256": "13d538ac09ab2e0038307beb79ea1980068ae56e5e11701a030758ec4af8f67a",
+      "mode": 256
+    },
+    {
+      "path": "ingress-boundaries-independent-readback.json",
+      "bytes": 7374,
+      "sha256": "4f66fefe628d4f9d15a0672b954d0a7ca517377d51eca65a64ee445f6708fd3e",
+      "mode": 256
+    },
+    {
+      "path": "ast-adoption-correspondence.json",
+      "bytes": 1751,
+      "sha256": "5029fa625df766991f3f1c62dcd44fbe3911466e9cb9cb9d30ea6beef802aa14",
+      "mode": 256
+    },
+    {
+      "path": "producer-input-correspondence.json",
+      "bytes": 1551,
+      "sha256": "3db2ffd66430815df6915e5288bbc271dbcd5aa01cf93747ee1f633ab9b4e304",
+      "mode": 256
+    }
+  ],
+  "originalReferences": [
+    {
+      "role": "prerequisites",
+      "origin": "curated-metadata",
+      "head": "acf797a70b254f4373465b3fb07476f80d943172",
+      "file": {
+        "path": "/private/tmp/artroom-s1-acf797a7-prerequisites-root-ack-20261112.json",
+        "sha256": "86405bd295d28af66914d81d7b3abbcf44fd273962b79955c94c1bb5939e97d9",
+        "bytes": 6376,
+        "mode": 256
+      }
+    },
+    {
+      "role": "integration",
+      "origin": "curated-metadata",
+      "head": "acf797a70b254f4373465b3fb07476f80d943172",
+      "file": {
+        "path": "/private/tmp/artroom-s1-acf797a7-current-input-correspondence-root-20261112.json",
+        "sha256": "a4d34b64ad0cb18bcbd44da1e100c5f86ac46105055a150c3758240177115ac6",
+        "bytes": 4353,
+        "mode": 420
+      }
+    },
+    {
+      "role": "gateRoot",
+      "origin": "curated-metadata",
+      "head": "acf797a70b254f4373465b3fb07476f80d943172",
+      "file": {
+        "path": "/private/tmp/artroom-s1-acf797a7-gate-947c3701-root-actual-proof-20261112.json",
+        "sha256": "1057ae77d51be7a6808d4ea13a935b0a338b12948fddda3a49208fa5eba38ced",
+        "bytes": 9932,
+        "mode": 256
+      }
+    },
+    {
+      "role": "gatePeer",
+      "origin": "curated-metadata",
+      "head": "acf797a70b254f4373465b3fb07476f80d943172",
+      "file": {
+        "path": "/private/tmp/artroom-s1-acf797a7-gate-actual-independent-readback-20261112.json",
+        "sha256": "de9960fba3b7b5f07ff1a211f9cccfdba503d186e4c6dbebb33ccf7ab2e63a2f",
+        "bytes": 17980,
+        "mode": 256
+      }
+    },
+    {
+      "role": "namespaceSetup",
+      "origin": "external-original",
+      "head": "10d0cc387ad9019bf5475f2320d2d43bc932191c",
+      "file": {
+        "path": "/private/tmp/artroom-s1-owned-dependencies-10d0cc38-20261111/namespace.actual.json",
+        "sha256": "b2706faf2d0bebb4e99ca055a15581983587f3ef3dc8d6fd1d2bc7fd005a52a4",
+        "bytes": 60162,
+        "mode": 384
+      }
+    },
+    {
+      "role": "initialCompilerResults",
+      "origin": "external-original",
+      "head": "10d0cc387ad9019bf5475f2320d2d43bc932191c",
+      "file": {
+        "path": "/Users/hughpyle/play/artroom-evidence/2026-11-11-s1-10d-working-91a0e94c/results.json",
+        "sha256": "c58bd29c8a77f1e544194b77ef392b9a86791310c96b2e3062cd2e5235b9bb8d",
+        "bytes": 3182,
+        "mode": 384
+      }
+    },
+    {
+      "role": "repairedCompilerResults",
+      "origin": "external-original",
+      "head": "df50066b7b5f0b15ac78b835c986c5ee1eccc4d2",
+      "file": {
+        "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-df500-working-90b99d8c/results.json",
+        "sha256": "e6d4d39bdfa97cfc6bc37fcfc3cb1c6f822bded3e2b10ba37da781611ba49fea",
+        "bytes": 2935,
+        "mode": 384
+      }
+    },
+    {
+      "role": "ast31",
+      "origin": "external-original",
+      "head": "df50066b7b5f0b15ac78b835c986c5ee1eccc4d2",
+      "file": {
+        "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-df500-maintained-ast-90b99d8c/actual.json",
+        "sha256": "718b44d8a6dc9bf8ae3eabf4aa4921b1efa12d9c471b9b42f194eea171918465",
+        "bytes": 7860,
+        "mode": 384
+      }
+    },
+    {
+      "role": "astAdoption",
+      "origin": "curated-metadata",
+      "head": null,
+      "file": {
+        "path": "/private/tmp/artroom-s1-df500-actual31-table-adoption-source-v1-20261112/CORRESPONDENCE.json",
+        "sha256": "71aee65cb052ae22260215b385835004f5af2107aa75e72022efdfb7a92faf70",
+        "bytes": 12115,
+        "mode": 256
+      }
+    },
+    {
+      "role": "focusRoot",
+      "origin": "curated-metadata",
+      "head": "c2a9de7ecf5383bd9e957892f4d23d3df62a1d8d",
+      "file": {
+        "path": "/private/tmp/artroom-s1-c2a9-e51-continuation-actual-root-readback-20261112.json",
+        "sha256": "a4189c2c3386d1420e637b1328471c0ca90eec3f87f8897c66458d9e25c10a68",
+        "bytes": 2213,
+        "mode": 256
+      }
+    },
+    {
+      "role": "focusPeer",
+      "origin": "curated-metadata",
+      "head": "c2a9de7ecf5383bd9e957892f4d23d3df62a1d8d",
+      "file": {
+        "path": "/private/tmp/artroom-s1-c2a9-e51d6913-actual-independent-curated-readback-20261112.json",
+        "sha256": "89c46b47111004f19c994f5c52a2d02f3f1e36c306c826a78cd5fe1f63fbb934",
+        "bytes": 10609,
+        "mode": 256
+      }
+    },
+    {
+      "role": "ordinaryIntegration5",
+      "origin": "external-original",
+      "head": "acf797a70b254f4373465b3fb07476f80d943172",
+      "file": {
+        "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-acf797a7-working-ce36f2aa/results.json",
+        "sha256": "d52900fa5b544bc9cd699a73ce909f2376ed54880690f07f027dbe69ccef5d33",
+        "bytes": 1610,
+        "mode": 384
+      }
+    },
+    {
+      "role": "pageProducerRoot",
+      "origin": "curated-metadata",
+      "head": "1b974a44ca861d410fa9162113cfdb6a1657f151",
+      "file": {
+        "path": "/private/tmp/artroom-jp1-1b974a44-page-build-root-readback-20261111.json",
+        "sha256": "ac7520a2174effb1f5a3b9c47770ce83d8ec8a46c875fd3b247b7d7e256e4a8f",
+        "bytes": 2177,
+        "mode": 420
+      }
+    },
+    {
+      "role": "remainingProducersRoot",
+      "origin": "curated-metadata",
+      "head": "babfb07a32e17f7e54686f932d236d8a4de9a835",
+      "file": {
+        "path": "/private/tmp/artroom-jp1-babfb07a-remaining-producers-root-readback-20261111.json",
+        "sha256": "87ed6cdfdd22381c81ddaadda8396ba5f01f77e20d8bb85dde5ea6a64b523a6a",
+        "bytes": 1763,
+        "mode": 420
+      }
+    },
+    {
+      "role": "producerClosure",
+      "origin": "curated-metadata",
+      "head": null,
+      "file": {
+        "path": "/private/tmp/artroom-r3b-design-b7f-generator-input-trace-20261111/PATHS.json",
+        "sha256": "a63cda02e413cc513c670c38b778577e77a20ba9dcb7abbbec0ca563ec9d5987",
+        "bytes": 1096207,
+        "mode": 256
+      }
+    },
+    {
+      "role": "addressAndSiteRoot",
+      "origin": "curated-metadata",
+      "head": "acf797a70b254f4373465b3fb07476f80d943172",
+      "file": {
+        "path": "/private/tmp/artroom-s1-address-and-site-f6f9a8c8-root-actual-proof-20261112.json",
+        "sha256": "f955aaed49fa3fd95d377da779ff0e74fc31b453d89482703be6d8cdd9c53dda",
+        "bytes": 6941,
+        "mode": 256
+      }
+    },
+    {
+      "role": "addressAndSitePeer",
+      "origin": "curated-metadata",
+      "head": "acf797a70b254f4373465b3fb07476f80d943172",
+      "file": {
+        "path": "/private/tmp/artroom-s1-address-and-site-f6f9a8c8-actual-independent-readback-20261112.json",
+        "sha256": "da7ce79e1273027307e211f916caba3ab1ce0324cf2c8f8f95e864b4780e56e9",
+        "bytes": 15976,
+        "mode": 256
+      }
+    },
+    {
+      "role": "ingressBoundariesRoot",
+      "origin": "curated-metadata",
+      "head": "acf797a70b254f4373465b3fb07476f80d943172",
+      "file": {
+        "path": "/private/tmp/artroom-s1-ingress-boundaries-577d4520-root-actual-proof-20261112.json",
+        "sha256": "0e0bc504f577bc148384a0e5b1f37fa55efab009306f309bc6dfae53c13c0068",
+        "bytes": 7166,
+        "mode": 256
+      }
+    },
+    {
+      "role": "ingressBoundariesPeer",
+      "origin": "curated-metadata",
+      "head": "acf797a70b254f4373465b3fb07476f80d943172",
+      "file": {
+        "path": "/private/tmp/artroom-s1-ingress-boundaries-577d4520-actual-independent-readback-20261112.json",
+        "sha256": "8c35bf25f49e06e6765a4f71e87e4ef3d50d742afa835f25d27f6bfe1aa1bf73",
+        "bytes": 16692,
+        "mode": 256
+      }
+    }
+  ],
+  "curatedDestinations": [
+    {
+      "role": "prerequisites",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/prerequisites.json",
+      "bytes": 5104,
+      "sha256": "d32054b6fcdf776da758dfb26bcb4bc2972edbe963e0ce9bb08f83c37668fcd4",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-acf797a7-prerequisites-root-ack-20261112.json",
+        "sha256": "86405bd295d28af66914d81d7b3abbcf44fd273962b79955c94c1bb5939e97d9",
+        "bytes": 6376,
+        "mode": 256
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "integration",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/input-correspondence.json",
+      "bytes": 5315,
+      "sha256": "4f2d098a29cba6e246136ee6fc81aed63181eb7cd399c83a56065e65aad0aa6b",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-acf797a7-current-input-correspondence-root-20261112.json",
+        "sha256": "a4d34b64ad0cb18bcbd44da1e100c5f86ac46105055a150c3758240177115ac6",
+        "bytes": 4353,
+        "mode": 420
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "gateRoot",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/gate-root.json",
+      "bytes": 9643,
+      "sha256": "fc042eb4cd5e894b752675a338d751899e95432c81e59c883c22cf148d5db49a",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-acf797a7-gate-947c3701-root-actual-proof-20261112.json",
+        "sha256": "1057ae77d51be7a6808d4ea13a935b0a338b12948fddda3a49208fa5eba38ced",
+        "bytes": 9932,
+        "mode": 256
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "gatePeer",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/gate-independent-readback.json",
+      "bytes": 7584,
+      "sha256": "bce05034a462cabfcca688ad05110b8e2f109b2c83073500a333f2112ae1d434",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-acf797a7-gate-actual-independent-readback-20261112.json",
+        "sha256": "de9960fba3b7b5f07ff1a211f9cccfdba503d186e4c6dbebb33ccf7ab2e63a2f",
+        "bytes": 17980,
+        "mode": 256
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "focusRoot",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-focus-root.json",
+      "bytes": 3220,
+      "sha256": "f16bce1201e9461d7098a0d2ccd33d7c009cdf09ab84970382e5d452ef29508c",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-c2a9-e51-continuation-actual-root-readback-20261112.json",
+        "sha256": "a4189c2c3386d1420e637b1328471c0ca90eec3f87f8897c66458d9e25c10a68",
+        "bytes": 2213,
+        "mode": 256
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "focusPeer",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-focus-independent-readback.json",
+      "bytes": 3740,
+      "sha256": "fd9bdd295ab210c7a1c27f8d17efed6a7738a2381b83d80988110b9535f801ad",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-c2a9-e51d6913-actual-independent-curated-readback-20261112.json",
+        "sha256": "89c46b47111004f19c994f5c52a2d02f3f1e36c306c826a78cd5fe1f63fbb934",
+        "bytes": 10609,
+        "mode": 256
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "pageProducerRoot",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-page-producer.json",
+      "bytes": 3601,
+      "sha256": "1f3a3a7023d7f1e65bfa3a02b69a071bd9213ba765c886a38c4f21f9ab94a022",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-jp1-1b974a44-page-build-root-readback-20261111.json",
+        "sha256": "ac7520a2174effb1f5a3b9c47770ce83d8ec8a46c875fd3b247b7d7e256e4a8f",
+        "bytes": 2177,
+        "mode": 420
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "remainingProducersRoot",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/historical-remaining-producers.json",
+      "bytes": 3170,
+      "sha256": "e34d95800ecb3f1e5a3f3336af02b16fc19ce9c322b2cd1a773b10937f24c19a",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-jp1-babfb07a-remaining-producers-root-readback-20261111.json",
+        "sha256": "87ed6cdfdd22381c81ddaadda8396ba5f01f77e20d8bb85dde5ea6a64b523a6a",
+        "bytes": 1763,
+        "mode": 420
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "addressAndSiteRoot",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/address-and-site-root.json",
+      "bytes": 4485,
+      "sha256": "c11cd1dba6416287146337887c8d76012a8b9a419bcf27f4aaf9c2ec383fd013",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-address-and-site-f6f9a8c8-root-actual-proof-20261112.json",
+        "sha256": "f955aaed49fa3fd95d377da779ff0e74fc31b453d89482703be6d8cdd9c53dda",
+        "bytes": 6941,
+        "mode": 256
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "addressAndSitePeer",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/address-and-site-independent-readback.json",
+      "bytes": 6681,
+      "sha256": "30f3217856e25f945c6d90ccc62c87f7eeed2cc0bf0f1d3c736483f35c55cd7e",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-address-and-site-f6f9a8c8-actual-independent-readback-20261112.json",
+        "sha256": "da7ce79e1273027307e211f916caba3ab1ce0324cf2c8f8f95e864b4780e56e9",
+        "bytes": 15976,
+        "mode": 256
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "ingressBoundariesRoot",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/ingress-boundaries-root.json",
+      "bytes": 4707,
+      "sha256": "13d538ac09ab2e0038307beb79ea1980068ae56e5e11701a030758ec4af8f67a",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-ingress-boundaries-577d4520-root-actual-proof-20261112.json",
+        "sha256": "0e0bc504f577bc148384a0e5b1f37fa55efab009306f309bc6dfae53c13c0068",
+        "bytes": 7166,
+        "mode": 256
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "ingressBoundariesPeer",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/ingress-boundaries-independent-readback.json",
+      "bytes": 7374,
+      "sha256": "4f66fefe628d4f9d15a0672b954d0a7ca517377d51eca65a64ee445f6708fd3e",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-ingress-boundaries-577d4520-actual-independent-readback-20261112.json",
+        "sha256": "8c35bf25f49e06e6765a4f71e87e4ef3d50d742afa835f25d27f6bfe1aa1bf73",
+        "bytes": 16692,
+        "mode": 256
+      },
+      "kind": "NORMALIZED_EXISTING_CURATED_OBSERVATIONS"
+    },
+    {
+      "role": "astAdoption",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/ast-adoption-correspondence.json",
+      "bytes": 1751,
+      "sha256": "5029fa625df766991f3f1c62dcd44fbe3911466e9cb9cb9d30ea6beef802aa14",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-s1-df500-actual31-table-adoption-source-v1-20261112/CORRESPONDENCE.json",
+        "sha256": "71aee65cb052ae22260215b385835004f5af2107aa75e72022efdfb7a92faf70",
+        "bytes": 12115,
+        "mode": 256
+      },
+      "kind": "NEW_SMALL_CORRESPONDENCE_SUMMARY"
+    },
+    {
+      "role": "producerClosure",
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-s1-final-curated-provenance/producer-input-correspondence.json",
+      "bytes": 1551,
+      "sha256": "3db2ffd66430815df6915e5288bbc271dbcd5aa01cf93747ee1f633ab9b4e304",
+      "mode": 256,
+      "original": {
+        "path": "/private/tmp/artroom-r3b-design-b7f-generator-input-trace-20261111/PATHS.json",
+        "sha256": "a63cda02e413cc513c670c38b778577e77a20ba9dcb7abbbec0ca563ec9d5987",
+        "bytes": 1096207,
+        "mode": 256
+      },
+      "kind": "NEW_SMALL_CORRESPONDENCE_SUMMARY"
+    }
+  ],
+  "finalDocumentCorrespondence": {
+    "commit": null,
+    "tree": null,
+    "location": "External post-commit correspondence receipt",
+    "qualification": "The document-only follow-up leaves source and tests unchanged from checkpointCommit/checkpointTree. The external receipt records actual final commit/tree and exact two-path difference, avoiding a self-referential committed hash."
+  },
+  "retention": {
+    "minimumDaysAfterLanding": 30,
+    "historicalNamespaceOriginal": {
+      "path": "/private/tmp/artroom-s1-owned-dependencies-10d0cc38-20261111/namespace.actual.json",
+      "sha256": "b2706faf2d0bebb4e99ca055a15581983587f3ef3dc8d6fd1d2bc7fd005a52a4",
+      "bytes": 60162,
+      "mode": 384
+    },
+    "historicalNamespaceTemporaryOriginalGap": "namespace.actual.json remains an unchanged historical external original under /private/tmp. This packet does not persist, relabel or replace it. Its original-location retention risk remains explicit under request8bd2c9d2208811e7540a64d570515394d487c83a. Current gate/control dependency checks are separate actual evidence.",
+    "sourceOriginalReferencesRemainUnchanged": [
+      "astAdoption",
+      "producerClosure"
+    ],
+    "otherTemporaryOriginalLocators": "Original curated/source locators remain unchanged; the fourteen HOME metadata files retain their pins and selected reliance facts. They do not preserve the complete source originals."
+  },
+  "open": [
+    {
+      "request": "8bd2c9d2208811e7540a64d570515394d487c83a",
+      "limit": "Actual final document commit/tree and exact two-document source correspondence belong in an external post-commit receipt."
+    },
+    {
+      "request": "8bd2c9d2208811e7540a64d570515394d487c83a",
+      "limit": "Actual Page/Card push successes at bfc67122 and the separately failed manual Page invocation are recorded in finalCI under ruling b528. The checker judges their review use; CI did not run at the later documentary successor, whose exact two-document correspondence remains an external receipt."
+    },
+    {
+      "request": "8bd2c9d2208811e7540a64d570515394d487c83a",
+      "limit": "Historical namespace.actual temporary-original retention remains unresolved; no raw/namespace copy or relabeling is authorized here."
+    }
+  ]
+}

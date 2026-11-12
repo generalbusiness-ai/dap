@@ -1,7 +1,7 @@
 /** Production Worker route, registry, agent, membership, custody, native
  * application and local R2. Git package transport, clock and scheduling are
  * explicit fixtures. This runs no browser, deployed Worker or live provider. */
-import { env } from "cloudflare:test";
+import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { ControlRequest, DeclaredDefinition, FactRef, KeyId } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, isSeed, readItemQueryParameter, scopeIdOf, signControl, timeOf, utf8 } from "@generalbusiness/dap-bytes";
@@ -11,6 +11,7 @@ import { packApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { CAPABILITIES_META, MODERN, PROTOCOL_META, McpService, claudeCardDomain, memoryStore, type ServerPort, type Tool } from "@generalbusiness/dap-mcp";
 import type { CallResult, DispatchContext } from "../../mcp/src/results.ts";
 import type { Display } from "@generalbusiness/dap-mcp";
+import { sqliteStore, type Sql } from "../../mcp/src/sqlite-custody.ts";
 import worker from "../../../apps/room/worker.ts";
 import { outsideOf } from "../src/worker.ts";
 import { applicationCounterPacket2, deviceApplicationPacket, applicationResolverFixture, applicationHttpPeer, applicationWorkerBindings, sessionRoom, effectFixture, dispatchFixture, driveFixture } from "./fixtures-native.ts";
@@ -19,7 +20,8 @@ import { rita, routed } from "./repository.ts";
 import { hostedRegistries, hostedTest } from "./worker.ts";
 
 // Invariant: a hosted card press uses the exact installed declaration and the
-// agent's own native key; a host without UI sees no app tools or card metadata.
+// agent's own native key; a host without UI sees no app-only tools or card metadata.
+// Ordinary writes keep their model-only descriptor on either host.
 test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the hosted agent's card press ($register)", async cohort => {
   const device = cohort.register === B.register, screen = device ? "root" : "board", state = device ? "ready" : "open";
   const cardUri = `ui://dap/declared/${screen}`;
@@ -97,8 +99,9 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     if (!admittedRoster) throw Error("The installed application needs the native roster.");
     const adminActions = admittedRoster.values[ROLE_LISTS.admin], agentActions = admittedRoster.values[ROLE_LISTS.agent];
     if (!isActions(adminActions) || !isActions(agentActions)) throw Error("The installed native role action lists must stay valid.");
-    expect(adminActions).toEqual([...new Set([...beforeAdmin, ...adminAdditions])]);
-    expect(agentActions).toEqual([...new Set([...beforeAgent, ...agentAdditions])]);
+    // Installation appends the packed release's sorted defaults to the native roster.
+    expect(adminActions).toEqual([...new Set([...beforeAdmin, ...packet.package.semantic.roles["admin"]!])]);
+    expect(agentActions).toEqual([...new Set([...beforeAgent, ...packet.package.semantic.roles["agent"]!])]);
     expect(agentActions.filter(action => !adminActions.includes(action))).toEqual([]);
     expect(admittedMembers.find(item => item.type === "member" && item.values["handle"] === "@rita"))
       .toMatchObject({ state: "active", values: { role: "admin" } });
@@ -173,7 +176,7 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     const view = "TEST-stopped-declared-original";
     const missingContext = await guardedCall(`view_${screen}`, { view });
     expect(missingContext).toMatchObject({ isError: true, structuredContent: { error: "unavailable" } });
-    expect(await guarded.custody.unresolved()).toEqual([]);
+    expect(await guarded.custody.store.unresolved()).toEqual([]);
     expect(stoppedSubmits).toBe(0);
     await guardedCall(`view_${screen}`, { view }, allow);
     const stoppedOpening = await guardedCall("view_read", { view, ...(device ? {} : { cut: 0, page: "item" }) }, allow);
@@ -185,7 +188,7 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     expect(pendingStop.receipt).toContain("outcome unknown; check the original request");
     expect(pendingStop.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
     expect(stoppedSubmits).toBe(0);
-    const openOriginals = await guarded.custody.unresolved();
+    const openOriginals = await guarded.custody.store.unresolved();
     expect(openOriginals).toHaveLength(1);
     const originalKey = openOriginals[0]!.key, appRef = await life.wait(() => app.at());
     const originalIdentity = { service, membership, signer: rita.key, target: appRef, key: originalKey };
@@ -205,14 +208,14 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     expect([unchanged.identity, unchanged.meaning, unchanged.binding, unchanged.outcomes, unchanged.count, unchanged.attempt])
       .toEqual([original.identity, original.meaning, original.binding, [], 0, original.attempt]);
     expect(stoppedSubmits).toBe(0);
-    expect((await guarded.custody.unresolved()).map(row => [row.id, row.key])).toEqual(openOriginals.map(row => [row.id, row.key]));
+    expect((await guarded.custody.store.unresolved()).map(row => [row.id, row.key])).toEqual(openOriginals.map(row => [row.id, row.key]));
     const restored = await guardedCall("view_act", { view, cut: stillPending.cut, action: stillPending.card!.actions[0]!.id }, allow);
     expect((restored.structuredContent["result"] as CallResult).structuredContent).toMatchObject({ answer: "refused", reason: "expired" });
     expect(stoppedSubmits).toBe(1);
     const settledStop = restored.structuredContent["display"] as Display;
     expect(settledStop.receipt).toContain("refused (expired)");
     expect(settledStop.card!.actions).toEqual([]);
-    expect(await guarded.custody.unresolved()).toEqual([]);
+    expect(await guarded.custody.store.unresolved()).toEqual([]);
     const finalOriginal = (await guarded.custody.find(originalIdentity))!;
     expect(finalOriginal.envelope).toEqual(envelope);
     expect(finalOriginal.phase).toBe("refused");
@@ -233,12 +236,19 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     } }, async () => { ambiguousLoads++; return packet.bytes; }));
     expect((await life.wait(() => ambiguous.page(undefined, true))).tools.some(tool => tool.name === `view_${screen}`)).toBe(false);
     expect(ambiguousLoads).toBe(0);
-    const localCards = (await life.wait(() => local.page(undefined, true))).tools.filter(tool => tool.name.startsWith("view_"));
+    const localTools = (await life.wait(() => local.page(undefined, true))).tools;
+    const localCards = localTools.filter(tool => tool.name.startsWith("view_"));
     const remoteCards = ((await rpc("tools/list"))["tools"] as Tool[]).filter(tool => tool.name.startsWith("view_"));
     expect(remoteCards).toEqual(localCards); expect(remoteCards.map(tool => tool.name)).toContain(`view_${screen}`);
     const plain = (await rpc("tools/list", {}, false))["tools"] as Tool[];
     expect(plain.some(tool => tool.name === "view_read" || tool.name === "view_act")).toBe(false);
-    expect(plain.every(tool => tool._meta?.["ui"] === undefined)).toBe(true);
+    for (const tool of plain) {
+      const original = localTools.find(candidate => candidate.name === tool.name);
+      expect(original, tool.name).toBeDefined();
+      const visibility = (original!._meta?.["ui"] as { visibility?: string[] } | undefined)?.visibility;
+      const modelOnly = visibility?.length === 1 && visibility[0] === "model";
+      expect(tool._meta?.["ui"], tool.name).toEqual(modelOnly ? { visibility: ["model"] } : undefined);
+    }
     const plainResources = (await rpc("resources/list", {}, false))["resources"] as { _meta?: { ui?: unknown } }[];
     expect(plainResources.every(resource => resource._meta?.ui === undefined)).toBe(true);
     const plainRead = (await rpc("resources/read", { uri: cardUri }, false))["contents"] as typeof plainResources;
@@ -261,6 +271,80 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
       const refused = (await call("view_act", { view: "hosted-card", cut: shown.display.cut, action: "pause" }))["structuredContent"];
       expect(refused).toMatchObject({ result: { structuredContent: { answer: "refused", reason: "guard-failed" } } });
     }
+    // Separate from the scripted local contexts above: this view uses
+    // real Hosted HTTP admission, actual Native roles and Agent SQLite custody.
+    const nativeView = "TEST-hosted-native-original", appRefForOriginal = await life.wait(() => app.at());
+    await call(`view_${screen}`, { view: nativeView });
+    const nativeRead = (await call("view_read", { view: nativeView, ...(device ? {} : { cut: 0, page: "item" }) }))["structuredContent"] as { display: Display };
+    expect(nativeRead.display.card!.actions.map(action => action.id)).toContain("acknowledge");
+    const nativePosts: string[] = [];
+    hostedTest.submitted = url => { nativePosts.push(new URL(url).pathname); };
+    hostedTest.drop = `/${app.name}/acts`;
+    const unknownPress = (await call("view_act", { view: nativeView, cut: nativeRead.display.cut, action: "acknowledge" }))["structuredContent"] as { result: CallResult; display: Display };
+    expect(hostedTest.drop).toBeNull();
+    expect(unknownPress.result.structuredContent["error"]).toBe("transport");
+    expect(nativePosts).toEqual([]);
+    expect(unknownPress.display.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
+    const keptOriginal = await runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(agent.agent)), async (_instance, state) => {
+      const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
+      const store = sqliteStore(sql), candidates = await store.unresolved();
+      const records = await Promise.all(candidates.map(async row => ({ id: row.id, record: await store.read(row.id) })));
+      const selected = records.filter(row => row.record?.identity.signer === agent.key && canonicalize(row.record.identity.target) === canonicalize(appRefForOriginal));
+      expect(selected).toHaveLength(1);
+      return { id: selected[0]!.id, record: selected[0]!.record! };
+    });
+    const readOriginal = () => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(agent.agent)), async (_instance, state) => {
+      const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
+      return sqliteStore(sql).read(keptOriginal.id);
+    });
+    const nativeEnvelope = structuredClone(keptOriginal.record.envelope), nativeOutcomes = structuredClone(keptOriginal.record.outcomes);
+    expect(nativeOutcomes.some(outcome => "lost" in outcome)).toBe(true);
+    expect(nativeEnvelope.signed.intent).toMatchObject({ actor: agent.key, to: appRefForOriginal, kind: "acknowledge" });
+    life.advance(Date.parse(nativeEnvelope.signed.intent.notAfter) + EXPIRY_MARGIN_MS + 1 - life.now());
+    expect(Date.parse(renewedBearer.bearerExpires)).toBeGreaterThan(life.now());
+    expect(adminActions).not.toContain("change.check"); expect(agentActions).not.toContain("change.check");
+    let atBody!: () => void, releaseBody!: () => void;
+    const bodyReached = new Promise<void>(resolve => { atBody = resolve; }), bodyHeld = new Promise<void>(resolve => { releaseBody = resolve; });
+    const bodyGate = { then: (yes, no) => { atBody(); return bodyHeld.then(yes, no); } } as Promise<void>;
+    const admissions = { agent: "@card-agent", at: 2, calls: 0, waiting: Promise.resolve(), entered: () => { hostedTest.configHold = bodyGate; } };
+    hostedTest.roleReply = admissions;
+    let pendingCheck: Promise<Record<string, unknown>> | undefined;
+    try {
+      pendingCheck = call("view_act", { view: nativeView, cut: unknownPress.display.cut, action: unknownPress.display.card!.actions[0]!.id });
+      await bodyReached; expect(admissions.calls).toBe(2);
+      expect((await ok("member.actions", { on: 0, fields: { role: "agent", actions: [...agentActions, "change.check"] }, idempotencyKey: "TEST-card-final-role-wider" }))["answer"]).toBe("accepted");
+      hostedTest.configHold = null; releaseBody();
+      const localStop = (await pendingCheck)["structuredContent"] as { result: CallResult; display: Display };
+      expect(localStop.result).toMatchObject({ isError: true, structuredContent: { error: "unauthorized" } });
+      expect(localStop.result.structuredContent).not.toHaveProperty("answer");
+      expect(localStop.result.structuredContent).not.toHaveProperty("submitted");
+      expect(localStop.display.receipt).toContain("outcome unknown; check the original request");
+      expect(localStop.display.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
+      expect(nativePosts).toEqual([]);
+      const afterStop = (await readOriginal())!;
+      expect(afterStop.envelope).toEqual(nativeEnvelope);
+      expect(afterStop.outcomes).toEqual(nativeOutcomes);
+      expect(afterStop.count).toBe(keptOriginal.record.count);
+      expect(afterStop.identity).toEqual(keptOriginal.record.identity);
+      expect(afterStop.meaning).toEqual(keptOriginal.record.meaning);
+      hostedTest.roleReply = null;
+      expect((await ok("member.actions", { on: 0, fields: { role: "agent", actions: agentActions }, idempotencyKey: "TEST-card-final-role-restore" }))["answer"]).toBe("accepted");
+      const nativeRefusal = (await call("view_act", { view: nativeView, cut: localStop.display.cut, action: localStop.display.card!.actions[0]!.id }))["structuredContent"] as { result: CallResult; display: Display };
+      expect(nativeRefusal.result).toMatchObject({ isError: false, structuredContent: { answer: "refused", reason: "expired" } });
+      expect(nativePosts.filter(path => path.endsWith("/acts"))).toHaveLength(1);
+      expect(nativeRefusal.display.card!.actions).toEqual([]);
+      const decidedOriginal = (await readOriginal())!;
+      expect(decidedOriginal.envelope).toEqual(nativeEnvelope);
+      expect(decidedOriginal.phase).toBe("refused");
+      expect(decidedOriginal.outcomes.slice(0, nativeOutcomes.length)).toEqual(nativeOutcomes);
+      expect(decidedOriginal.count).toBe(keptOriginal.record.count + 1);
+      expect((await life.wait(() => app.summary())).value.items.find(item => item.type === screen)?.state).toBe(device ? "ready" : "open");
+    } finally {
+      releaseBody(); hostedTest.configHold = null; hostedTest.roleReply = null; hostedTest.submitted = null; hostedTest.drop = null;
+      await pendingCheck?.catch(() => {});
+      expect((await ok("member.actions", { on: 0, fields: { role: "agent", actions: agentActions }, idempotencyKey: "TEST-card-final-role-cleanup" }))["answer"]).toBe("accepted");
+    }
+
     await call(`view_${screen}`, { view: "hosted-acknowledgement" });
     const current = (await call("view_read", { view: "hosted-acknowledgement", ...(device ? {} : { cut: 0, page: "item" }) }))["structuredContent"] as typeof shown;
     const pressed = (await call("view_act", { view: "hosted-acknowledgement", cut: current.display.cut, action: "acknowledge" }))["structuredContent"];
@@ -275,7 +359,7 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
   } finally {
     releaseOpening();
     await opening?.catch(() => {});
-    hostedTest.applicationSettings = null; hostedTest.toolSettings = null; hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.configHold = null;
+    hostedTest.applicationSettings = null; hostedTest.toolSettings = null; hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.configHold = null; hostedTest.roleReply = null; hostedTest.submitted = null; hostedTest.drop = null; hostedTest.nativeSubmit = null; hostedTest.issuerRandom = null;
     life.release();
   }
 }, 30000);

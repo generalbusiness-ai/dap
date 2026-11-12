@@ -4,7 +4,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { MemberId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, keyIdOfSecret, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, keyIdOfSecret, same, utf8 } from "@generalbusiness/dap-bytes";
 import { OAuthAccess, OAUTH_STANDING_MS, type OAuthAccessGrant, type OAuthAgentIdentity } from "../src/oauth-access.ts";
 import type { Sql } from "../src/sqlite-custody.ts";
 import { hostedRolePort, HostedAgent, type HostedRoleRead } from "../src/hosted.ts";
@@ -153,6 +153,22 @@ test("wrong connector, digest, expiry or retired agent never reaches standing; a
     agent.configuration = originalConfiguration;
     controllerActive = true;
 
+    // Capture the actual post-read checkpoint, not only the outer start.
+    const beforeCheckpoint = now, checkpoint: { at: number; until: number }[] = [];
+    now = START + 2000;
+    hold = new Promise<void>(resolve => { release = resolve; });
+    const checkpointed = access.standingResult(candidate, false, (at, until) => checkpoint.push({ at, until }));
+    now = START + 5000;
+    release!();
+    expect(await checkpointed).toEqual({ status: "active" });
+    expect(checkpoint).toEqual([{ at: START + 5000, until: START + 7000 }]);
+    // A Hosted continuation at 3000 clears the 2000 outer floor, but not
+    // this exact Access checkpoint. The HTTP consumer scene proves its use.
+    expect(START + 3000).toBeGreaterThanOrEqual(START + 2000);
+    expect(START + 3000).toBeLessThan(checkpoint[0]!.at);
+    expect(access.current(candidate, START + 3000)).toBe(true);
+    hold = null; now = beforeCheckpoint;
+
     // An older unavailable reply cannot erase a newer success for this candidate.
     now++;
     available = false;
@@ -197,10 +213,20 @@ test("unavailable standing returns a retryable response without revoking or rate
     const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
     let now = START, standing: "unavailable" | "active" | "removed" = "unavailable";
     const seed = new Uint8Array(32).fill(3), id = state.id.toString();
+    const identity: OAuthAgentIdentity = { op: "TEST", configuration: canonicalize({ service: "https://room.example" }),
+      state: "enrolled", membership: MEMBERSHIP, key: keyIdOfSecret(seed), handle: "@agent" };
     // Durable SQL and the production HTTP admission are real. Identity rows,
     // authority answers and clock are explicit stand-ins, not enrollment proof.
     const agent = new HostedAgent(sql, { id, now: () => now, random: n => crypto.getRandomValues(new Uint8Array(n)), oauthResource: () => RESOURCE,
       fetch: async () => { throw new Error("This admission witness performs no Native transport read."); },
+      roleStanding: hostedRolePort(async asked => {
+        if (!("agent" in asked) || !same(asked.membership, identity.membership) || asked.agent !== identity.handle
+          || asked.agentKey !== identity.key || asked.expectedController !== "@owner" || asked.actor !== null
+          || standing === "unavailable") return { status: "unavailable" };
+        // Explicit same-head STAND-IN facts for the exact SQL agent/grant below.
+        // A removed controller is recorded as removed, never replaced by active defaults.
+        return roleFacts(identity, standing === "active");
+      }),
       observe: async (_membership, ask) => standing === "unavailable" ? null : "key" in ask
         ? { keyState: "active", memberState: "active", member: "@agent", controller: "@owner" }
         : { memberState: standing },

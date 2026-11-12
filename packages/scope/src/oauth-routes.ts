@@ -5,7 +5,7 @@ import type { ControlAction, SignedControl } from "@generalbusiness/dap-contract
 export const OAUTH_METADATA_PATH = "/.well-known/oauth-authorization-server";
 export const OAUTH_CLIENT_REGISTRY = "oauth-public-clients-1";
 export interface OAuthPublicClients {
-  admitControl(signed: SignedControl, service: string, action: ControlAction, agent: string | null): Promise<ControlAnswer>;
+  admitControl(signed: SignedControl, service: string, action: ControlAction, agent: string | null, address: string | null): Promise<ControlAnswer>;
   admitContext(address: string | null): Promise<ControlAnswer>;
   registerClient(bytes: Uint8Array, policy: OAuthPolicy): Promise<ControlAnswer>;
   resolveClient(id: string, policy: OAuthPolicy): Promise<ControlAnswer>;

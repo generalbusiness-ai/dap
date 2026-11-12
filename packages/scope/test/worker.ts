@@ -193,6 +193,10 @@ type PlatformEnv = Env & { PLATFORM: DurableObjectNamespace };
 
 export class PlatformScope extends DeployedScope<PlatformEnv> {
   protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
+  override submit(...args: Parameters<DeployedScope<PlatformEnv>["submit"]>): ReturnType<DeployedScope<PlatformEnv>["submit"]> {
+    hostedTest.nativeSubmit?.(this.ctx.id.name ?? "", args[0]);
+    return super.submit(...args);
+  }
   readonly #scheduledCallbacks: Promise<unknown>[];
   #fixtureCallbackRelease: (() => void) | null = null;
   #fixtureCallbackFinished = false;
@@ -386,6 +390,10 @@ export const hostedTest: {
   roleReply: { agent: string; at: number; calls: number; entered(): void; waiting: Promise<void> } | null;
   /** Observe actual Agent HTTP submits; never intercept or replace their result. */
   submitted: ((url: string) => void) | null;
+  /** Observe the actual Native entrypoint, including production-default Hosted fetch. */
+  nativeSubmit: ((scope: string, signed: Parameters<DeployedScope<PlatformEnv>["submit"]>[0]) => void) | null;
+  /** Observe unchanged real random bytes only in the owning test's bounded memory. */
+  issuerRandom: ((bytes: Uint8Array) => void) | null;
   /** Hold completion of one real ordinary-generation session-removal callback. */
   removalReply: { entered(): void; waiting: Promise<void> } | null;
   /** Hold only the reply of a real registration retention, after its SQL write. */
@@ -396,7 +404,7 @@ export const hostedTest: {
   toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string; MCP_CARD_ORIGINS?: string; MCP_RESOURCE_URLS?: string } | null;
   /** Raw deployment setting for the native constructor witness, never an AgentPorts override. */
   applicationSettings: Pick<McpEnv, "APPLICATION_TRUST"> | null;
-} = { metrics: null, clientRegistry: null, now: null, pause: null, lose: null, drop: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, roleReply: null, submitted: null, removalReply: null, clientRetention: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
+} = { metrics: null, clientRegistry: null, now: null, pause: null, lose: null, drop: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, roleReply: null, submitted: null, nativeSubmit: null, issuerRandom: null, removalReply: null, clientRetention: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
 /** Bind public-client SQL to the explicit TEST room identity. Production
  * retains its one fixed name. Clock callback changes cannot select another
  * object or hide that object's durable counters and clock high-water. */
@@ -476,11 +484,16 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
         return read;
       }),
       ...(hostedTest.scheduleExpiry ? { scheduleExpiry: hostedTest.scheduleExpiry } : {}),
+      random: (n: number) => {
+        const bytes = crypto.getRandomValues(new Uint8Array(n));
+        hostedTest.issuerRandom?.(bytes.slice());
+        return bytes;
+      },
       now: () => hostedTest.now?.() ?? Date.now(), every: () => () => {},
       pause: (waiting: readonly string[]) => hostedTest.pause?.(waiting) ?? new Promise<void>((r) => setTimeout(r, 50)),
       ...(this.#productionHostedFetch ? {} : { fetch: (async (url: string, init?: RequestInit) => {
         if (hostedTest.drop !== null && new URL(url).pathname.endsWith(hostedTest.drop)) { hostedTest.drop = null; throw new Error("scripted failure before dispatch"); }
-        if (init?.method === "POST" && new URL(url).pathname.endsWith("/acts")) hostedTest.submitted?.(url);
+        if (init?.method === "POST" && (new URL(url).pathname.endsWith("/acts") || new URL(url).pathname.endsWith("/preparations") || new URL(url).pathname === "/v1/scopes")) hostedTest.submitted?.(url);
         const response = await route(new Request(url, init), scopes, this.env);
         if (hostedTest.lose !== null && new URL(url).pathname.endsWith(hostedTest.lose)) { hostedTest.lose = null; await response.body?.cancel(); throw new Error("scripted loss of the reply"); }
         return response;

@@ -259,14 +259,17 @@ test("signed grants recheck the current controller role and persist only the cod
         const pending = agent.grant(signed("grant", op, body), body, CONTEXT);
         await finalEntered;
         const kept = sql.exec(`SELECT id, row FROM oauth_issuer WHERE op = ?`, op).toArray()[0]!;
+        const keptId = kept["id"];
+        if (typeof keptId !== "string") expect.fail("The committed fixture must hold its actual issuer id.");
         const secret = f.lastRandom; // In-memory TEST random stand-in only.
         const originalConfig = sql.exec(`SELECT config FROM agent WHERE id = 1`).toArray()[0]!["config"];
+        if (typeof originalConfig !== "string") expect.fail("The committed fixture must hold its original configuration bytes.");
         let redeemed: Awaited<ReturnType<typeof agent.exchangeCode>> | null = null;
         try {
           if (change === "configuration") sql.exec(`UPDATE agent SET config = ? WHERE id = 1`, canonicalize({ service: SERVICE, tools: [] }));
           else {
             f.roleHold = null; // The prior read already captured finalRelease.
-            redeemed = await agent.exchangeCode(String(kept["id"]), secret, BINDING.client_id, BINDING.redirect_uri, VERIFIER, RESOURCE);
+            redeemed = await agent.exchangeCode(keptId, secret, BINDING.client_id, BINDING.redirect_uri, VERIFIER, RESOURCE);
             expect(redeemed.status).toBe(200);
           }
         } finally { releaseFinal(); f.roleHold = null; f.onRole = null; }
@@ -278,7 +281,17 @@ test("signed grants recheck the current controller role and persist only the cod
         if (change === "configuration") sql.exec(`UPDATE agent SET config = ? WHERE id = 1`, originalConfig);
         else {
           expect(redeemed?.body["access_token"]).toEqual(expect.any(String));
-          expect(sql.exec(`SELECT state FROM oauth_grant WHERE id = ?`, kept["id"]).toArray()[0]!["state"]).toBe("active");
+          expect(sql.exec(`SELECT state FROM oauth_grant WHERE id = ?`, keptId).toArray()[0]!["state"]).toBe("active");
+          const consumed = sql.exec(`SELECT row, state FROM oauth_issuer WHERE id = ?`, keptId).toArray();
+          expect(JSON.parse(String(consumed[0]!["row"]))).toMatchObject({ codeUsed: true });
+          const tokenRows = sql.exec(`SELECT row, state FROM oauth_grant WHERE id = ?`, keptId).toArray();
+          const historical = await agent.grant(signed("grant", op, body), body, CONTEXT);
+          expect(historical.body).toMatchObject({ grant: kept["id"], codeShown: true });
+          expect(historical.body).not.toHaveProperty("code");
+          expect(historical.body).not.toHaveProperty("access_token");
+          expect(historical.body).not.toHaveProperty("refresh_token");
+          expect(sql.exec(`SELECT row, state FROM oauth_issuer WHERE id = ?`, keptId).toArray()).toEqual(consumed);
+          expect(sql.exec(`SELECT row, state FROM oauth_grant WHERE id = ?`, keptId).toArray()).toEqual(tokenRows);
         }
       }
 
@@ -320,6 +333,7 @@ test("refresh retains its own sessions and revocation removes only that grant's 
       expect((await agent.connectionControl(signed("revoke-grant", "revoke-a", revoke), "revoke-grant", revoke)).status).toBe(200);
       expect(sql.exec(`SELECT id FROM oauth_session`).toArray().map(r => r["id"])).toEqual([bSession]);
       const refused = await agent.fetch(new Request(RESOURCE, { headers: { authorization: `Bearer ${next.body["access_token"]}` } })); expect(refused.status).toBe(401); await refused.body?.cancel();
+      f.wider = false;
       expect(await initialize(b.tokens.body["access_token"])).not.toBe(aSession);
       const empty = utf8("{}");
       const listed = await agent.connectionControl(signed("connections", "list", empty), "connections", empty);

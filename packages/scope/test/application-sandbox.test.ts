@@ -133,11 +133,11 @@ test("named sandbox RPC binds its configured public origin over internal HTTP, c
       }
     },
     screen(...args) { return Reflect.apply(original.screen, original, args); },
-    nativeStream(origin, request) { return Reflect.apply(original.nativeStream, original, [origin, internalRequest(request)]); },
+    nativeStream(origin, request, address) { return Reflect.apply(original.nativeStream, original, [origin, internalRequest(request), address]); },
     native(...args) {
       console.info("R8 sandbox RPC", { stage: "native", event: "entered" });
       try {
-        return Reflect.apply(original.native, original, [args[0], internalRequest(args[1])]).then((value: Response) => {
+        return Reflect.apply(original.native, original, [args[0], internalRequest(args[1]), args[2]]).then((value: Response) => {
           console.info("R8 sandbox RPC", { stage: "native", event: "resolved" });
           return value;
         }, (error: unknown) => {
@@ -192,10 +192,10 @@ test("named sandbox RPC binds its configured public origin over internal HTTP, c
         [host.screenOrigin, `/v1/scopes/${M.name}/stream`, "POST"],
         [host.screenOrigin, `/v1/scopes/${M.name}/stream?extra=1`, "GET"],
       ] as const) {
-        const refused = await original.native(screenOrigin, new Request(internalOrigin + path, { method, headers }));
+        const refused = await original.native(screenOrigin, new Request(internalOrigin + path, { method, headers }), null);
         expect([refused.status, await refused.json()]).toEqual([404, { error: "not-found" }]);
       }
-      const refusedStream = await original.nativeStream(host.screenOrigin, new Request(`${internalOrigin}/v1/scopes/${M.name}/stream?extra=1`, { headers }));
+      const refusedStream = await original.nativeStream(host.screenOrigin, new Request(`${internalOrigin}/v1/scopes/${M.name}/stream?extra=1`, { headers }), null);
       try {
         expect([refusedStream.response.status, await refusedStream.response.json()]).toEqual([404, { error: "not-found" }]);
       } finally {

@@ -7,6 +7,7 @@ import { earlierSaid } from "../src/errors.ts";
 import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, guardSentences, meaningOf, memoryStore, type DefinitionLike, type Finding } from "../src/index.ts";
 import { READ_CREDENTIAL, SERVICE, SESSION_TOKEN, StandIn } from "./support/standin.ts";
 import { fixedSigner } from "./fixtures.ts";
+import { PERSON_INVITATION, PERSON_INVITATION_CASES, PERSON_SERVICE } from "../../client/test/support/person-invitation-table.ts";
 
 const head = { seq: 41, hash: `sha256:${"c".repeat(64)}` } as const;
 const asked = { scope: "sc_the_scope", kind: "close-own", on: 3, action: "issue.close-own" };
@@ -419,4 +420,38 @@ test("join validates its service before signing or changing an empty configurati
     expect(answer.structuredContent, service).toMatchObject({ answer: "refused", reason: "guard-failed" });
   }
   expect([signed, fetched, configWrites]).toEqual([6, 6, 0]);
+  // The same five encoding rows use the actual configured MCP join entry.
+  // A scripted native refusal proves one submission, never membership acceptance.
+  for (const row of PERSON_INVITATION_CASES) {
+    if (row.surface !== "all") continue;
+    let posts = 0, signatures = 0, writes = 0;
+    const held = memoryStore(), write = held.write.bind(held);
+    held.write = async (id, record) => { writes++; await write(id, record); };
+    const actual = new McpService({ service: PERSON_SERVICE,
+      signer: { key: real.key, sign: bytes => { signatures++; return real.sign(bytes); } },
+      custody: held, now: () => Date.parse("2099-01-01T00:00:00Z"),
+      config: { read: async () => ({ service: PERSON_SERVICE }), addRoot: async () => { throw Error("No root write"); } },
+      fetch: async (url, init) => {
+        posts++;
+        expect(url, row.name).toBe(`${PERSON_SERVICE}/v1/scopes/${PERSON_INVITATION.repository.membership.scope}/acts`);
+        expect(init?.method, row.name).toBe("POST");
+        const signed = JSON.parse(init!.body!).signed;
+        expect([signed.intent.to, signed.intent.kind, signed.intent.fields], row.name).toEqual([
+          PERSON_INVITATION.repository.membership, "join", { invitation: 5, secret: PERSON_INVITATION.secret },
+        ]);
+        return Response.json({ answer: "refused", reason: "guard-failed", judgedAt: { seq: 0, hash: `sha256:${"c".repeat(64)}` } });
+      },
+    });
+    const answer = await actual.call("join", { link: row.text, idempotencyKey: "TEST-person-parity" });
+    expect(posts === 1, row.name).toBe(row.admitted);
+    if (row.admitted) {
+      expect(answer.structuredContent, row.name).toMatchObject({ answer: "refused", reason: "guard-failed" });
+      expect(signatures, row.name).toBe(1);
+      expect(writes, row.name).toBeGreaterThan(0);
+    } else {
+      expect(answer.isError, row.name).toBe(true);
+      expect([signatures, writes], row.name).toEqual([0, 0]);
+      expect(held.records.size, row.name).toBe(0);
+    }
+  }
 });

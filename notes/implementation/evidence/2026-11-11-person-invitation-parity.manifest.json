@@ -1,0 +1,344 @@
+{
+  "qualification": "JP1 final public metadata and CURATED PROVENANCE atb614. Original ordinary outputs stay plain/external. Failures62/51/963, focus27, full gate and MCP-only continuation remain separate; no older private payload is opened/copied. Page distinction remains under cd42 with original963 failed2. Final document-head CI belongs to external review attachments.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-b614-final-public-8726d6cf",
+  "checkpoint": "b614c87d141239701c5ecd99bb0f25fca8e9a733",
+  "tree": "48479bcd12c39f77510ed02c5d74e87ccedfbe0a",
+  "request": "3c9a0f81bf21428b3613cd710a0ad57da8184101",
+  "promise": "89e47999ce8ba13bd6cd5af6a7c499dffbb5cd88",
+  "fileCount": 30,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3089,
+      "sha256": "1db35e89f72d623f93fffca803db521355396e7ef81049f691cfee1c9a641af7",
+      "mode": 256
+    },
+    {
+      "path": "producers/ast-lazy-cli5-actual.json",
+      "bytes": 2572,
+      "sha256": "b697451d407fad83e420de09168fdcf336c8506cbebe43ff59aeb103e202b101",
+      "mode": 256
+    },
+    {
+      "path": "producers/ast-original41-actual.json",
+      "bytes": 7241,
+      "sha256": "569610cb59425775a508bdaca885737c568c3578a5bf4fafb1d542abcac06d3d",
+      "mode": 256
+    },
+    {
+      "path": "proofs/card-custody.json",
+      "bytes": 1008,
+      "sha256": "5f22b740384d25aef5d56f2cdb256181dbb5395e832bbf6fc2e909da8217004c",
+      "mode": 256
+    },
+    {
+      "path": "proofs/gate-prerequisites-root-reviewed.json",
+      "bytes": 6632,
+      "sha256": "3cc4c68558c6045277df386e7d3105d6f5e327d0f5965d890926029712b7e1cb",
+      "mode": 256
+    },
+    {
+      "path": "proofs/integration-inputs-root-comparison.json",
+      "bytes": 14784,
+      "sha256": "15e9611e70d81503ce396108d232dadaf81f247fea5e67688c080b8ab9360371",
+      "mode": 256
+    },
+    {
+      "path": "proofs/mcp-only-independent-custody-readback.json",
+      "bytes": 3150,
+      "sha256": "5c47c9c48d398ec11df0c0aacd851f6e850b25c4a66cc9f2495ccb67fde732c0",
+      "mode": 256
+    },
+    {
+      "path": "proofs/mcp-only-root-terminal-readback.json",
+      "bytes": 2611,
+      "sha256": "b688a3d8efe10fab319279957633064b181f5de08fedb4ca0773fdb48e8212ef",
+      "mode": 256
+    },
+    {
+      "path": "proofs/original-ast-root-readback.json",
+      "bytes": 1581,
+      "sha256": "6a2b93451cf328559e231b46b5fa8cdb3974823d78783d8c3f47209a34af0d83",
+      "mode": 256
+    },
+    {
+      "path": "proofs/page-controller-result.json",
+      "bytes": 1444,
+      "sha256": "84b048d52a05acae223458a7b56c0826787a94f34f6c21417cbfca166c722042",
+      "mode": 256
+    },
+    {
+      "path": "proofs/page-root-readback.json",
+      "bytes": 2177,
+      "sha256": "ac7520a2174effb1f5a3b9c47770ce83d8ec8a46c875fd3b247b7d7e256e4a8f",
+      "mode": 256
+    },
+    {
+      "path": "proofs/page-served-dist-custody.json",
+      "bytes": 1016,
+      "sha256": "180c06174ead90bcc25df6fe0edb38dec4f47ea0c6029981474c915b426bf11a",
+      "mode": 256
+    },
+    {
+      "path": "proofs/remaining-producers-controller-result.json",
+      "bytes": 1427,
+      "sha256": "d5105b9e88523877886df0e31e433bcab18115f4e7321c5df3a6cafe4efafacc",
+      "mode": 256
+    },
+    {
+      "path": "proofs/remaining-producers-reconciliation.json",
+      "bytes": 2966,
+      "sha256": "d2826e8ab660e4b7c4a5def4fdc33a5dafcd631a45645be22f20e8a083cc21dc",
+      "mode": 256
+    },
+    {
+      "path": "proofs/remaining-producers-root-readback.json",
+      "bytes": 1763,
+      "sha256": "87ed6cdfdd22381c81ddaadda8396ba5f01f77e20d8bb85dde5ea6a64b523a6a",
+      "mode": 256
+    },
+    {
+      "path": "provenance/existing-output-locators.json",
+      "bytes": 81944,
+      "sha256": "780112dcaf22aba662fb79ab0163521c0c5944c5c8260f60777fc7fb1b2c49fa",
+      "mode": 256
+    },
+    {
+      "path": "provenance/ordinary-working-curated.json",
+      "bytes": 17354,
+      "sha256": "8ae42cf139643b073e24f5792806bd2873ca921a9f57ed0be80e63f2d1e933ed",
+      "mode": 256
+    },
+    {
+      "path": "provenance/source-copy-map.json",
+      "bytes": 26273,
+      "sha256": "7e06563ec56f99240310fe59deaad4c3c9714caf6ccedf339cf92600c9351f41",
+      "mode": 256
+    },
+    {
+      "path": "units/continuation27-passed/manifest.json",
+      "bytes": 1782,
+      "sha256": "5c0719e30713c11c4630e90ce608d17a86ed8270959289e7f591cb39db8a4a89",
+      "mode": 256
+    },
+    {
+      "path": "units/continuation27-passed/terminal-summary.json",
+      "bytes": 3109,
+      "sha256": "13b68ee73f36f81d58320555077d2d6d8de8be7fae38e9c42f39c4dc3029182b",
+      "mode": 256
+    },
+    {
+      "path": "units/continuation51-refused/manifest.json",
+      "bytes": 2093,
+      "sha256": "0d1cfa8ed9d374fdc2e726775ef2a23ff318559a9f55b09b60f307f4fa985628",
+      "mode": 256
+    },
+    {
+      "path": "units/continuation51-refused/terminal-summary.json",
+      "bytes": 4787,
+      "sha256": "496873ea5c51b0e94c8edb2781c92e2524c9a993a9da02f5f9f826f27095282b",
+      "mode": 256
+    },
+    {
+      "path": "units/focus62-failed/manifest.json",
+      "bytes": 1929,
+      "sha256": "280c3521db42afed29b21867cb97f175219f604d21303d98d0788b99d530447c",
+      "mode": 256
+    },
+    {
+      "path": "units/focus62-failed/terminal-summary.json",
+      "bytes": 3674,
+      "sha256": "e7140921398c7fab9090a2f2ff40ec91eb9913194d2d873dbce9f2b01f7fe743",
+      "mode": 256
+    },
+    {
+      "path": "units/full-gate/manifest.json",
+      "bytes": 2660,
+      "sha256": "1b07f1318eb6c62ae260b1022932f07069eaddc3af930086ad244dff5bafc73c",
+      "mode": 256
+    },
+    {
+      "path": "units/full-gate/terminal-summary.json",
+      "bytes": 8947,
+      "sha256": "e83bae887d1aa18d0af696c411924bda4a29289632a44edf5940b58c395f5b96",
+      "mode": 256
+    },
+    {
+      "path": "units/mcp-only/manifest.json",
+      "bytes": 3101,
+      "sha256": "bdfc35d1f5dba0ac6e736a939868e0cbcae7f9adc06f130233356cfd924c3258",
+      "mode": 256
+    },
+    {
+      "path": "units/mcp-only/terminal-summary.json",
+      "bytes": 3190,
+      "sha256": "5500ac30bfabdf5f0cdbb32f569ae117034cfbaf3840db4e3c389d0c0e5b95ec",
+      "mode": 256
+    },
+    {
+      "path": "units/page-control963-failed/manifest.json",
+      "bytes": 1908,
+      "sha256": "7f0e01308cfd356b5753874ab6f589be9f9db118fd34e8b4ec78df7ea5bf0613",
+      "mode": 256
+    },
+    {
+      "path": "units/page-control963-failed/terminal-summary.json",
+      "bytes": 2587,
+      "sha256": "bf99e54636e4b55bf02dd6494d025088555ed66425eca3718aa9dd456273c96e",
+      "mode": 256
+    }
+  ],
+  "historicalUnits": [
+    {
+      "label": "focus62-failed",
+      "head": "babfb07a32e17f7e54686f932d236d8a4de9a835",
+      "tree": "88ab91fd3e1564fcc6947f4c4e267de1af8431b6",
+      "originalOutcome": "FAILED",
+      "actualExits": {
+        "runner": 1,
+        "outerDriver": 1,
+        "launcher": 1,
+        "externalToolObserved": 1,
+        "nodeChild": 0,
+        "plainChild": 1
+      },
+      "actualChildExits": null,
+      "descriptorSha256": "280c3521db42afed29b21867cb97f175219f604d21303d98d0788b99d530447c",
+      "descriptorTarget": "units/focus62-failed/manifest.json",
+      "privateCustody": {
+        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-babfb07a-focus62-failed-sealed/private",
+        "manifestSha256": "8cc9b4be625ba50b374f02635d36cab9f77836adc5c9f38029f7dd6784f1399f",
+        "files": 87,
+        "minimumRetentionDays": 30
+      },
+      "privateReadOrCopy": false
+    },
+    {
+      "label": "continuation51-refused",
+      "head": "cb79e7faef924821931e855ee666d10b574f2072",
+      "tree": "b8eff6e2cf9999c8374429bcd1284b5086a5e25a",
+      "originalOutcome": "FAILED",
+      "actualExits": {
+        "runner": 2,
+        "outerDriver": 2,
+        "launcher": 2,
+        "externalToolObserved": 2,
+        "nodeChild": 0,
+        "plainHelper": 2
+      },
+      "actualChildExits": null,
+      "descriptorSha256": "0d1cfa8ed9d374fdc2e726775ef2a23ff318559a9f55b09b60f307f4fa985628",
+      "descriptorTarget": "units/continuation51-refused/manifest.json",
+      "privateCustody": {
+        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-cb79e7fa-continuation51-guard-refusal-sealed/private",
+        "manifestSha256": "bda949f2f03d67b97787640148f05f3445afc472e74ccde1ecdcee2debde0a82",
+        "files": 81,
+        "minimumRetentionDays": 30
+      },
+      "privateReadOrCopy": false
+    },
+    {
+      "label": "continuation27-passed",
+      "head": "cb79e7faef924821931e855ee666d10b574f2072",
+      "tree": "b8eff6e2cf9999c8374429bcd1284b5086a5e25a",
+      "originalOutcome": "PASSED",
+      "actualExits": {
+        "external": 0,
+        "driver": 0,
+        "launcher": 0,
+        "runner": 0,
+        "plainHelper": 0,
+        "plainBody": 0,
+        "native": 0,
+        "nativeAnalysis": 0
+      },
+      "actualChildExits": null,
+      "descriptorSha256": "5c0719e30713c11c4630e90ce608d17a86ed8270959289e7f591cb39db8a4a89",
+      "descriptorTarget": "units/continuation27-passed/manifest.json",
+      "privateCustody": {
+        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-cb79e7fa-continuation27-success-sealed/private",
+        "manifestSha256": "46250ed2e9436b8a9d2caac09dbfd119cfdebd2772ec7922685cb1554783d6b7",
+        "files": 439,
+        "minimumRetentionDays": 30
+      },
+      "privateReadOrCopy": false
+    },
+    {
+      "label": "full-gate",
+      "head": "b614c87d141239701c5ecd99bb0f25fca8e9a733",
+      "tree": "48479bcd12c39f77510ed02c5d74e87ccedfbe0a",
+      "originalOutcome": "PASSED",
+      "actualExits": {
+        "gate": 0,
+        "innerDriver": 0,
+        "outerDriver": 0,
+        "launcher": 0,
+        "external": 0,
+        "analysis": 0
+      },
+      "actualChildExits": null,
+      "descriptorSha256": "1b07f1318eb6c62ae260b1022932f07069eaddc3af930086ad244dff5bafc73c",
+      "descriptorTarget": "units/full-gate/manifest.json",
+      "privateCustody": {
+        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-b614-one-full-gate-sealed-ab77/private",
+        "manifestSha256": "6854e5fd570a4e70dab580730a896a97b504831b28ed3ea1719d2cd93eed3012",
+        "files": 2608,
+        "minimumRetentionDays": 30
+      },
+      "privateReadOrCopy": false
+    },
+    {
+      "label": "page-control963-failed",
+      "head": "b614c87d141239701c5ecd99bb0f25fca8e9a733",
+      "tree": "48479bcd12c39f77510ed02c5d74e87ccedfbe0a",
+      "originalOutcome": "FAILED",
+      "actualExits": {
+        "runner": 2,
+        "outerDriver": 2,
+        "launcher": 2,
+        "external": 2
+      },
+      "actualChildExits": {
+        "missing-person-pin": 1,
+        "mcp-expected-service": null
+      },
+      "descriptorSha256": "7f0e01308cfd356b5753874ab6f589be9f9db118fd34e8b4ec78df7ea5bf0613",
+      "descriptorTarget": "units/page-control963-failed/manifest.json",
+      "privateCustody": {
+        "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-b614-controls963-failed-sealed-c7e6b68b/private",
+        "manifestSha256": "38853e2d1f0c47fbd9a326471b0b532110c9560e546aff8c10eb68100189ce6f",
+        "files": 10315,
+        "minimumRetentionDays": 30
+      },
+      "privateReadOrCopy": false
+    }
+  ],
+  "mcpOnlyUnit": {
+    "head": "b614c87d141239701c5ecd99bb0f25fca8e9a733",
+    "tree": "48479bcd12c39f77510ed02c5d74e87ccedfbe0a",
+    "originalOutcome": "PASSED",
+    "actualExits": {
+      "runner": 0,
+      "outerDriver": 0,
+      "launcher": 0,
+      "external": 0
+    },
+    "actualChildExits": {
+      "mcp-expected-service": 1
+    },
+    "descriptorSha256": "bdfc35d1f5dba0ac6e736a939868e0cbcae7f9adc06f130233356cfd924c3258",
+    "descriptorTarget": "units/mcp-only/manifest.json",
+    "privateCustody": {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-11-jp1-b614-mcp-only-sealed-dcbd8963/private",
+      "manifestSha256": "d98c961b2df5556b06ea510eedd9110c16973c02dc3b57d26317c7bdb340d5bd",
+      "files": 10325,
+      "minimumRetentionDays": 30
+    },
+    "retainedPageOriginalOutcome": "FAILED"
+  },
+  "minimumRetentionDaysAfterLanding": 30,
+  "metadataBooking": "8726d6cf0b98398347d4c69a385c8077957894ad",
+  "sourceReadySha256": "bc0ccb54fd9d0755fc860a57900bceec1f2fe7076166beb585570f2ac3929f4a",
+  "manifestCopyCount": 1,
+  "followupQualification": "One final note/manifest documentation follow-up over this unchanged source/test checkpoint; exact final head/tree and CI are external review records, never inferred here."
+}

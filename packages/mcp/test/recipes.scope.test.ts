@@ -182,7 +182,11 @@ async function recipes(mode: Mode): Promise<Map<string, Ran>> {
       fresh(paul);
       const token = accepted(await act(paul, "repository.read-token", "destination", "read-token", { on: 0, fields: { hours: 1 }, idempotencyKey: "token-1" }));
       expect((await paul.ok("wait", { scope: "destination", seq: seqOf(token) + 1 }))["timedOut"]).toBe(false);
-      expect(await paul.ok("credential", { entry: seqOf(token) })).toMatchObject({ credential: expect.any(String), remote: expect.stringMatching(/^https:/) });
+      const credential = await paul.call("credential", { entry: seqOf(token) });
+      expect(credential.isError).toBe(false);
+      expect(credential.structuredContent).toEqual({ remote: expect.stringMatching(/^https:/), ends: expect.any(String), entry: seqOf(token) });
+      expect(credential.content).toEqual([{ type: "text", text: expect.any(String) }]);
+      expect(JSON.parse(credential.content[0]!.text)).toEqual({ credential: expect.any(String), ...credential.structuredContent });
     });
 
     // A change from the page: opened with the definition's bytes read from the rules scope, its rules asked, one file proposed.
