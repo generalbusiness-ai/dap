@@ -1,3 +1,4 @@
+import { isRoomRetiredStop, roomRetiredResponse, type RoomRetiredStop } from "./room-retired.ts";
 import { scopeWiring, scopeNamespace } from "./internal/room-hooks.ts";
 import { answersVersionQuestion } from "@generalbusiness/dap-platform";
 import { mcpRoute, type McpEnv } from "./worker-mcp.ts";
@@ -143,7 +144,8 @@ export class ScopeIndex extends DurableObject<Env> {
         const target = this.env.SCOPES.get(this.env.SCOPES.idFromName(fact.at.scope)) as unknown as {
           proofSource(fact: FactRef, maxBytes: number, milliseconds: number): Promise<import("./proof-bytes.ts").ProofBody | null>;
         };
-        return target.proofSource(fact, maxBytes, milliseconds);
+        const result = await target.proofSource(fact, maxBytes, milliseconds);
+        return isRoomRetiredStop(result) ? null : result;
       },
       now: () => Date.now(),
     });
@@ -249,7 +251,24 @@ export interface Api extends ScopeApi {
  * scope ID names nothing. `address`: the caller's address, for the serving
  * limits of a join, or null when the caller has none.
  */
+const RETIRED_HTTP = Symbol("retired HTTP room");
+const ROOM_RPC_METHODS = new Set([
+  "reservationSnapshot", "stageSnapshot", "create", "submit", "prepare", "settle", "summary", "items", "history", "entry",
+  "outbox", "outboxItem", "log", "retained", "queryItems", "applicationProjection", "session", "stream", "release",
+  "incidents", "waiting", "credential", "requests", "keepOriginal", "listOriginals", "readOriginal", "endOriginal",
+]);
+function retiredRoomAnswer(method: string): unknown {
+  if (["create", "submit", "prepare"].includes(method)) return { answer: "unavailable", reason: "unavailable" };
+  if (["reservationSnapshot", "stageSnapshot"].includes(method)) return null;
+  if (["session", "keepOriginal", "listOriginals", "readOriginal", "endOriginal"].includes(method)) return { ok: false, reason: "sessions-unavailable" };
+  if (method === "release") throw new Error("Room release is unavailable.");
+  if (ROOM_RPC_METHODS.has(method)) return { ok: false, reason: "unavailable" };
+  throw new Error("Unknown retired room operation.");
+}
 export function api(binding: Binding, address: string | null = null, creationAdmission: CreationAdmission & ServingEnvironment = {}): Api {
+  return roomApi(binding, address, creationAdmission, retiredRoomAnswer);
+}
+function roomApi(binding: Binding, address: string | null, creationAdmission: CreationAdmission & ServingEnvironment, retired: (method: string) => unknown): Api {
   const creationPolicy = injectedPlatformCreationPolicy(creationAdmission);
   const readGate = async (reader: unknown): Promise<{ ok: false; reason: "rate-limited" | "unavailable" | "forbidden" } | null> => {
     if (!presentsSignedRead(reader)) return null;
@@ -261,22 +280,38 @@ export function api(binding: Binding, address: string | null = null, creationAdm
   const at = (scope: string): Remote | null => {
     if (!isScopeId(scope)) return null;
     const remote = binding.get(binding.idFromName(scope)) as Remote, context = operational();
-    if (!context) return remote;
-    context.invocation.metrics.scope(scope);
+    if (context) context.invocation.metrics.scope(scope);
+    // This adapter preserves ordinary results. Only the exact closed wire stop
+    // enters its method-specific nonjudgment or HTTP retirement mapping.
     return new Proxy(remote, { get(target, key) {
-      if (typeof key !== "string" || !(OBSERVED_METHODS as readonly string[]).includes(key)) return Reflect.get(target, key);
+      if (typeof key !== "string" || !ROOM_RPC_METHODS.has(key)) return Reflect.get(target, key);
       return async (...args: unknown[]) => {
-        const httpPublic = context.httpPublic && context.place === operationPlace(key as ObservedMethod) && ["create", "submit", "prepare"].includes(key);
-        if (typeof target.observed !== "function") {
-          if (httpPublic) unknownTurnMark(context);
-          return Reflect.apply(Reflect.get(target, key) as (...args: unknown[]) => unknown, target, args);
-        }
-        try {
-          const reply = await target.observed(key as ObservedMethod, args, context.identity, httpPublic);
-          if (typeof reply?.turn === "boolean") context.turn.entered ||= reply.turn;
-          else if (httpPublic) unknownTurnMark(context);
-          return reply.value;
-        } catch (error) { if (httpPublic) unknownTurnMark(context); throw error; }
+        let result: unknown;
+        if (context && (OBSERVED_METHODS as readonly string[]).includes(key)) {
+          const httpPublic = context.httpPublic && context.place === operationPlace(key as ObservedMethod) && ["create", "submit", "prepare"].includes(key);
+          if (typeof target.observed !== "function") {
+            if (httpPublic) unknownTurnMark(context);
+            result = await Reflect.apply(Reflect.get(target, key) as (...args: unknown[]) => unknown, target, args);
+          } else {
+            let roomRetired = false;
+            try {
+              const reply: { value: unknown; turn: boolean } | RoomRetiredStop = await target.observed(key as ObservedMethod, args, context.identity, httpPublic);
+              if (isRoomRetiredStop(reply)) roomRetired = true;
+              else {
+                result = reply.value;
+                roomRetired = isRoomRetiredStop(result);
+                if (!roomRetired) {
+                  if (typeof reply?.turn === "boolean") context.turn.entered ||= reply.turn;
+                  else if (httpPublic) unknownTurnMark(context);
+                }
+              }
+            } catch (error) { if (httpPublic) unknownTurnMark(context); throw error; }
+            // Invoke this mapping outside the original RPC/shape-error catch.
+            // A retired room supplies no operational turn to unwrap.
+            if (roomRetired) return retired(key);
+          }
+        } else result = await Reflect.apply(Reflect.get(target, key) as (...args: unknown[]) => unknown, target, args);
+        return isRoomRetiredStop(result) ? retired(key) : result;
       };
     } });
   };
@@ -463,7 +498,10 @@ function projectionResponse(result: NativeApplicationProjection): Response {
  * fetch. Synthetic/service/hosted callers leave it null; forwarded headers
  * are not promoted into trusted identities here. */
 export async function route(request: Request, binding: Binding, env: MetricEnvironment & CreationAdmission & ServingEnvironment = {}, address: string | null = null, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> {
-  return measuredRequest(request, env, () => routedRequest(request, binding, env, address, ctx));
+  return measuredRequest(request, env, async () => {
+    try { return await routedRequest(request, binding, env, address, ctx); }
+    catch (error) { if (error === RETIRED_HTTP) return roomRetiredResponse(); throw error; }
+  });
 }
 async function routedRequest(request: Request, binding: Binding, env: CreationAdmission & ServingEnvironment, address: string | null, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> {
   if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
@@ -471,7 +509,12 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
   // Section 5.3: a credential in a URL is refused before anything is routed, and is not used. That does not undo the exposure.
   if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
   if (url.pathname === "/v1/scope-index/census") return scopeIndexCensusRoute(request, env, address);
-  const scopes = api(binding, address, env);
+  const scopes = roomApi(binding, address, env, method => {
+    // A stream close can run after this request returns; keep its existing
+    // failed-close channel rather than an uncaught HTTP-only sentinel.
+    if (method === "release") return retiredRoomAnswer(method);
+    throw RETIRED_HTTP;
+  });
   let parts: string[];
   try {
     parts = url.pathname.split("/").slice(1).map(decodeURIComponent);
@@ -492,7 +535,8 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     if (!wire.ok) return projectionResponse(wire);
     if (typeof reader !== "string" || reader.length > APPLICATION_PROJECTION_WIRE_BOUNDS.sessionChars || reader.startsWith("Signed ")) return projectionResponse({ ok: false, reason: "forbidden" });
     const object = binding.get(binding.idFromName(scope!)) as Remote;
-    return projectionResponse(await object.applicationProjection(wire.encoded, reader, wire.atLeast));
+    const result = await object.applicationProjection(wire.encoded, reader, wire.atLeast);
+    return isRoomRetiredStop(result) ? roomRetiredResponse() : projectionResponse(result);
   }
   if (what === "query-items") {
     const wire = itemQueryWire(request, scope ?? "");
@@ -505,7 +549,8 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
       if (decision !== "admitted") return queryResponse({ ok: false, reason: decision === "invalid" ? "forbidden" : decision });
     }
     const object = binding.get(binding.idFromName(scope!)) as Remote;
-    return queryResponse(await object.queryItems(wire.encoded, reader));
+    const result = await object.queryItems(wire.encoded, reader);
+    return isRoomRetiredStop(result) ? roomRetiredResponse() : queryResponse(result);
   }
   if (what === "originals" && scope !== undefined) {
     if (request.method === "POST" && which === undefined) {
@@ -655,7 +700,10 @@ export function sessionWiring(sessions: () => Sessions | null, binding?: Binding
   return {
     readers: (given) => sessionReaders({
       sessions, clock: given.clock, scope: given.scope, membership: (scope) => fixedMembership(given, scope),
-      ...(binding ? { membershipPreparation: repositorySessionMembership(given, (directory, reader) => within(() => (binding.get(binding.idFromName(directory.scope)) as Remote).summary(reader), fetchSeconds)) } : {}),
+      ...(binding ? { membershipPreparation: repositorySessionMembership(given, (directory, reader) => within(async () => {
+        const result = await (binding.get(binding.idFromName(directory.scope)) as Remote).summary(reader);
+        return isRoomRetiredStop(result) ? { ok: false, reason: "unavailable" } as const : result;
+      }, fetchSeconds)) } : {}),
     }), sessions, ...(binding ? { sessionReferenceSource: sessionReferencesIn(binding), applicationDeclarationSource: applicationDeclarationsIn(binding) } : {}),
   };
 }
@@ -684,11 +732,13 @@ export function snapshotReaderOf(binding: Binding, context: import("./ports.ts")
     rules: async (rules) => {
       const peer = binding.get(binding.idFromName(rules.scope)) as { observe(ask: unknown): Promise<unknown> };
       // Keep the authenticated retained policy beside its digest-naming answer.
-      return peer.observe({ of: rules, asked: "rules" });
+      const result = await peer.observe({ of: rules, asked: "rules" });
+      return isRoomRetiredStop(result) ? null : result;
     },
     sourceState: async (fact) => {
       const peer = binding.get(binding.idFromName(fact.at.scope)) as { workSourceState(fact: FactRef): Promise<string | null> };
-      return peer.workSourceState(fact);
+      const result = await peer.workSourceState(fact);
+      return isRoomRetiredStop(result) ? null : result;
     },
     source: async (fact) => {
       const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number, origin: boolean, context: import("./ports.ts").SourceReadContext): Promise<{ bytes: string | null; under: string } | null> };
@@ -698,7 +748,7 @@ export function snapshotReaderOf(binding: Binding, context: import("./ports.ts")
       if (allowance === null) return null;
       const read = await peer.source(fact.seq, false, { maxBytes, milliseconds: allowance });
       if (remaining() === null) return null;
-      if (!read?.bytes || utf8(read.bytes).length > maxBytes) return null;
+      if (isRoomRetiredStop(read) || !read?.bytes || utf8(read.bytes).length > maxBytes) return null;
       const entry = parseStrict(read.bytes) as unknown as Entry;
       if (!isEntry(entry) || !same(entry.at, fact.at) || entry.seq !== fact.seq || entryHash(entry) !== fact.hash) return null;
       return remaining() === null ? null : { entry, hash: fact.hash };
@@ -711,12 +761,16 @@ export function snapshotReaderOf(binding: Binding, context: import("./ports.ts")
       if (allowance === null) return null;
       const read = await peer.source(fact.seq, false, { maxBytes, milliseconds: allowance });
       if (remaining() === null) return null;
-      if (!read?.bytes) return null;
+      if (isRoomRetiredStop(read) || !read?.bytes) return null;
       const entry = parseStrict(read.bytes) as unknown as Entry;
       const standing = await peer.jobState(fact);
+      if (isRoomRetiredStop(standing)) return null;
       return remaining() === null ? null : { entry, under: read.under, state: standing?.state ?? "absent", decidedBy: standing?.decidedBy ?? null };
     },
-    key: async (membership, key) => (binding.get(binding.idFromName(membership)) as { observe(ask: unknown): Promise<unknown> }).observe({ of: { scope: membership, kind: "membership" }, key }),
+    key: async (membership, key) => {
+      const result = await (binding.get(binding.idFromName(membership)) as { observe(ask: unknown): Promise<unknown> }).observe({ of: { scope: membership, kind: "membership" }, key });
+      return isRoomRetiredStop(result) ? null : result;
+    },
   };
 }
 

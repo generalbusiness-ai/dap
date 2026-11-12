@@ -1,3 +1,4 @@
+import { isRoomRetiredStop, type RoomRetiredStop } from "./room-retired.ts";
 import { archivedPosition } from "@generalbusiness/dap-derive";
 /**
  * The one scope namespace (scope contract, section 2.3): a scope's Durable
@@ -39,19 +40,19 @@ export interface Sourced { at: ScopeRef; under: string; bytes: string | null; ar
 
 /** The five calls one scope's object takes from another's. `observe` is asked of a membership scope or of a rules scope. */
 export interface Peer {
-  deliver(envelope: Delivered, identity?: OperationalIdentity): Promise<Delivery>;
-  source(seq: number, origin: boolean, context: SourceReadContext): Promise<Sourced | null>;
+  deliver(envelope: Delivered, identity?: OperationalIdentity): Promise<Delivery | RoomRetiredStop>;
+  source(seq: number, origin: boolean, context: SourceReadContext): Promise<Sourced | null | RoomRetiredStop>;
   /** Optional: unsupported native senders never fall back to source(). */
-  proofSource?(fact: FactRef, maxBytes: number, milliseconds?: number): Promise<ProofBody | null>;
+  proofSource?(fact: FactRef, maxBytes: number, milliseconds?: number): Promise<ProofBody | null | RoomRetiredStop>;
   /** Raw checked birth only; never a producer-selected privileged identity. */
-  nativeBirth?(at: ScopeRef, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null>;
-  nativeBirthByName?(name: ScopeId, kind: ScopeKind, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null>;
+  nativeBirth?(at: ScopeRef, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null | RoomRetiredStop>;
+  nativeBirthByName?(name: ScopeId, kind: ScopeKind, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null | RoomRetiredStop>;
   /** Bounded immutable declaration bytes, only from an authenticated native Directory. */
-  creationDeclaration?(at: ScopeRef, digest: Digest, maxBytes: number, milliseconds: number): Promise<string | null>;
+  creationDeclaration?(at: ScopeRef, digest: Digest, maxBytes: number, milliseconds: number): Promise<string | null | RoomRetiredStop>;
   /** Optional bounded native directory witness; never fall back to summary. */
-  sessionReference?(request: string): Promise<string | null>;
-  declared(digest: Digest): Promise<string | null>;
-  text(seq: number, digest: Digest): Promise<string | null>;
+  sessionReference?(request: string): Promise<string | null | RoomRetiredStop>;
+  declared(digest: Digest): Promise<string | null | RoomRetiredStop>;
+  text(seq: number, digest: Digest): Promise<string | null | RoomRetiredStop>;
   observe(asked: ObservationRequest): Promise<unknown>;
 }
 
@@ -74,6 +75,7 @@ export function sessionReferencesIn<Id>(binding: Binding<Id>): SessionReferenceS
       const peer = binding.get(binding.idFromName(directory.scope)) as Peer;
       if (typeof peer.sessionReference !== "function") return null;
       const reply = await peer.sessionReference(bytes), cap = Math.min(parsed.maxBytes, SESSION_REFERENCE_BOUNDS.reply);
+      if (isRoomRetiredStop(reply)) return null;
       return typeof reply === "string" && reply.length <= cap && utf8(reply).length <= cap ? reply : null;
     } catch { return null; }
   } };
@@ -261,6 +263,7 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
         try {
           const source = peer(name);
           const got = typeof source.nativeBirthByName === "function" ? await source.nativeBirthByName(name, kind, milliseconds, maxBytes) : null;
+          if (isRoomRetiredStop(got)) return null;
           const at = got?.proof?.fact?.at;
           return isScopeRef(at) && at.scope === name && at.kind === kind ? readNativeBirth(got, at, maxBytes) : null;
         } catch { return null; }
@@ -273,8 +276,9 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
         try {
           const source = peer(fact.at.scope);
           if (typeof source.proofSource !== "function") return null;
-          return milliseconds === undefined ? await source.proofSource(fact, Math.min(maxBytes, PROOF_BYTE_BOUNDS.body))
+          const result = milliseconds === undefined ? await source.proofSource(fact, Math.min(maxBytes, PROOF_BYTE_BOUNDS.body))
             : await source.proofSource(fact, Math.min(maxBytes, PROOF_BYTE_BOUNDS.body), milliseconds);
+          return isRoomRetiredStop(result) ? null : result;
         } catch { return null; }
       },
     },
@@ -283,7 +287,9 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
         if (!isScopeRef(at) || !Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isSafeInteger(maxBytes) || maxBytes <= 0 || maxBytes > PROOF_BYTE_BOUNDS.body) return null;
         try {
           const source = peer(at.scope);
-          return typeof source.nativeBirth === "function" ? readNativeBirth(await source.nativeBirth(at, milliseconds, maxBytes), at, maxBytes) : null;
+          if (typeof source.nativeBirth !== "function") return null;
+          const result = await source.nativeBirth(at, milliseconds, maxBytes);
+          return isRoomRetiredStop(result) ? null : readNativeBirth(result, at, maxBytes);
         } catch { return null; }
       },
     },
@@ -292,7 +298,7 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
         const remaining = sourceReadRemaining(context);
         if (!remaining || typeof origin !== "boolean") return null;
         const maxBytes = context.maxBytes;
-        let answer: Sourced | null;
+        let answer: Sourced | null | RoomRetiredStop;
         try {
           const milliseconds = remaining();
           if (milliseconds === null) return null;
@@ -301,6 +307,8 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
         } catch {
           return null;
         }
+        // Retirement is unavailable, never absent evidence or a source proof.
+        if (isRoomRetiredStop(answer)) return null;
         // Section 7.4: the incarnation in the answer is checked against the one the fact names.
         if (!answer || answer.at.inc !== fact.at.inc) return remaining() === null ? null : { absent: true };
         if (answer.archived) return remaining() === null ? null : { archived: answer.archived };
@@ -331,7 +339,8 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
         // An address that names nothing reaches no resolver, so it is no routing refusal: the attempt is unanswered.
         if (!name) return null;
         try {
-          return await peer(name).deliver(envelope, operational()?.identity);
+          const result = await peer(name).deliver(envelope, operational()?.identity);
+          return isRoomRetiredStop(result) ? { answer: "retry", reason: "dependency-unavailable" } : result;
         } catch {
           return null;
         }
@@ -343,6 +352,7 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
         if (!holder) return { ok: false, reason: "unavailable" };
         try {
           const bytes = await peer(holder.scope).declared(named);
+          if (isRoomRetiredStop(bytes)) return { ok: false, reason: "unavailable" };
           return bytes === null ? { ok: false, reason: "absent" } : { ok: true, bytes };
         } catch {
           return { ok: false, reason: "unavailable" };
@@ -356,6 +366,7 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
       async read(from, digest) {
         try {
           const bytes = await peer(from.at.scope).text(from.seq, digest);
+          if (isRoomRetiredStop(bytes)) return { ok: false, reason: "unavailable" };
           const text: unknown = bytes === null ? null : parseStrict(bytes);
           return typeof text === "string" ? { ok: true, text } : { ok: false, reason: "absent" };
         } catch {
@@ -379,7 +390,8 @@ export function membershipIn<Id>(binding: Binding<Id>): Membership {
       try {
         // The answering side is the object's method `observe` (`observedAt`): a membership scope answers from its head, and answers
         // nothing while it is provisional. An object of another kind answers null.
-        return await (binding.get(binding.idFromName(asked.of.scope)) as Peer).observe(asked);
+        const result = await (binding.get(binding.idFromName(asked.of.scope)) as Peer).observe(asked);
+        return isRoomRetiredStop(result) ? null : result;
       } catch {
         return null;
       }

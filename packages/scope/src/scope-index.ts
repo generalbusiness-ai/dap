@@ -1,3 +1,4 @@
+import { isRoomRetiredStop } from "./room-retired.ts";
 /** One deployment-wide index. It proves reachability, never native authority. */
 import type { ScopeKind, SequenceRef } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition, isRecord, isScopeId, isScopeKind, isScopeRef, isSequenceRef, scopeIdOf } from "@generalbusiness/dap-bytes";
@@ -153,7 +154,11 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
           : { answer: "retry", reason: "dependency-unavailable" };
         const target = binding.get(binding.idFromName(name)) as Record<string, (...values: unknown[]) => Promise<unknown>>;
         if (!creating && !known) {
-          try { if (await target["registerKnown"]!() !== true) return missing(); }
+          try {
+            const registered = await target["registerKnown"]!();
+            if (isRoomRetiredStop(registered)) return registered;
+            if (registered !== true) return missing();
+          }
           catch {
             // The native method may never have entered (for example, activation failed).
             // Fixed words only; logging failure cannot change the original refusal.

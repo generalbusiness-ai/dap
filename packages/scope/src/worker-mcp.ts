@@ -104,7 +104,9 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
       known = await index.has(signed.request.membership.scope, "membership") === true;
       if (!known && env.SCOPE_INDEX_MODE === "register" && env.SCOPES) {
         const target = env.SCOPES.get(env.SCOPES.idFromName(signed.request.membership.scope)) as unknown as { registerKnown(): Promise<boolean> };
-        known = await target.registerKnown() === true && await index.has(signed.request.membership.scope, "membership") === true;
+        const registered = await target.registerKnown();
+        if (isRetiredStoreStop(registered)) return roomRetiredResponse();
+        known = registered === true && await index.has(signed.request.membership.scope, "membership") === true;
       }
     } catch { return json(404, { error: "not-found" }); }
     if (!known) return json(404, { error: "not-found" });
