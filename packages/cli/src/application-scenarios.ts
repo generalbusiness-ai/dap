@@ -1,8 +1,9 @@
 /** Declarative local scenarios. No scenario module or application server code
  * is imported. TEST keys and authority are local stand-ins, stated in reports. */
 import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
-import { CAPABILITIES, type Answer, type CapabilityName, type Digest, type FactRef, type FieldValue, type MemberId, type MemberRef, type ScopeKind, type ScopeRef, type SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, newIncarnation, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { CAPABILITIES, type Answer, type CapabilityName, type Digest, type FactRef, type FieldValue, type MemberId, type MemberRef, type ScopeKind, type ScopeRef, type SignedIntent, type Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
+import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import { secretSigner, signedIntent, type Asked, type Signer } from "@generalbusiness/dap-client";
 import { timeMs } from "@generalbusiness/dap-derive";
 import type { Verification } from "@generalbusiness/dap-replay";
@@ -30,8 +31,9 @@ export function supportsLocalSqlite(version: string): boolean {
   const major = Number(parts[1]), minor = Number(parts[2]);
   return major >= 24 || major === 23 && minor >= 4 || major === 22 && minor >= 13;
 }
-function reference(kind: ScopeKind): ScopeRef {
-  return { scope: scopeIdOf({ v: 1, kind, definition: `sha256:${"0".repeat(64)}`, creator: null, cause: `sha256:${"1".repeat(64)}`, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(2)), kind };
+/** A labelled TEST scope of `kind`: a scripted sequence whose genesis is sealed at the scenario's start time (ruling 97583e65, item 9). */
+function reference(kind: ScopeKind, start: Timestamp): ScopeRef {
+  return scriptedSequence({ v: 1, kind, definition: `sha256:${"0".repeat(64)}`, creator: null, cause: `sha256:${"1".repeat(64)}`, ordinal: 0 }, start, 2).at;
 }
 interface Actor { signer: Signer; member: MemberRef; actions: string[]; principal: string | null }
 export interface ScenarioOwnerRecord { readonly label: "non-native-scenario-owner"; readonly owner: string; readonly command: FactRef; readonly outcome: "confirmed" | "refused" | "unknown" }
@@ -61,6 +63,7 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
   const scenario = object(parseStrict(canonicalize(value)), ["v", "name", "time", "actors", "founding", "steps"], ["definition", "deviceOwner"]);
   if (scenario["v"] !== 1) return scenarioFailure("Expected scenario version 1.");
   const name = label(scenario["name"]); let time = timestamp(scenario["time"]);
+  const start = time;
   const selected = Object.hasOwn(scenario, "definition") ? scenario["definition"] : packet.package.semantic.entry;
   if (typeof selected !== "string" || !packet.package.semantic.definitions.some(part => part.id === selected)) return scenarioFailure("Select a local definition from the verified package closure.");
   const definition = selected as Digest;
@@ -82,7 +85,7 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
       const seed = Uint8Array.from(body["seed"].match(/../g)!, byte => Number.parseInt(byte, 16)); seeds.push(seed);
       const signer = secretSigner(seed);
       if (keys.has(signer.key)) return scenarioFailure("TEST actor keys must be distinct."); keys.add(signer.key);
-      actors.set(name, { signer, member: { membership: reference("membership"), member: body["member"] as MemberId }, actions: [...actions], principal: Object.hasOwn(body, "principal") ? label(body["principal"]) : null });
+      actors.set(name, { signer, member: { membership: reference("membership", start), member: body["member"] as MemberId }, actions: [...actions], principal: Object.hasOwn(body, "principal") ? label(body["principal"]) : null });
     }
     const actor = (name: unknown): Actor => actors.get(label(name)) ?? scenarioFailure("The scenario names an unknown TEST actor.");
     for (const who of actors.values()) if (who.principal !== null) actor(who.principal);
@@ -98,7 +101,7 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
         if (Object.hasOwn(value, "$scope")) return value["$scope"] === "self" && scope ? scope.at : scenarioFailure("Only an existing local self scope can be named.");
         if (Object.hasOwn(value, "$reference")) {
           const kind = value["$reference"];
-          return kind === "destination" || kind === "membership" ? reference(kind) : scenarioFailure("Only labelled membership/destination reference stand-ins are supported.");
+          return kind === "destination" || kind === "membership" ? reference(kind, start) : scenarioFailure("Only labelled membership/destination reference stand-ins are supported.");
         }
         if (Object.hasOwn(value, "$revision")) {
           const id = resolve(value["$revision"], depth + 1);
