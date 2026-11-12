@@ -48,6 +48,9 @@ import type { Binding } from "../src/namespace.ts";
 import { indexedScopes } from "../src/scope-index.ts";
 export { StartupServingIndex } from "./support/serving-startup.ts";
 import scopeWorker, { api, ApplicationScreenService, DeployedScope, McpAgent, McpRegistry, ScopeIndex as DeployedScopeIndex, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
+import { RETIRED_STORE_STOP, type RetiredStoreStop } from "@generalbusiness/dap-mcp";
+import type { SequenceRef } from "@generalbusiness/dap-contract";
+import { registryAnswers, registryScopes, registryNow, registryPorts, registryEvict, hostedRegistryOwnsMembership, agentScopes, agentPorts, agentRetainClient, agentEvict, agentDurable, agentCustodyOf, agentHeld, agentControlUsed, agentAnswers, hostedAgentStart } from "../src/internal/hosted-hooks.ts";
 /** Test-only binding surface. Authority and serving behavior stay in api().
  * Raw fixture namespaces override scopes(); the default keeps indexed lookup. */
 class TestApiEntry<E extends Env = Env> extends WorkerEntrypoint<E> implements ScopeApi {
@@ -392,11 +395,11 @@ export const hostedTest: {
 export class ScriptedReset extends Error { constructor(fence: string) { super(`scripted reset at ${fence}`); } }
 type HostedEnv = McpEnv & { PLATFORM: DurableObjectNamespace };
 export class PlatformMcpRegistry extends McpRegistry<HostedEnv> {
-  protected override scopes() { return this.env.PLATFORM; }
-  protected override now(): number { return hostedTest.now?.() ?? Date.now(); }
-  protected override ports() { return { ...(hostedTest.controlBudget ? { controlBudget: hostedTest.controlBudget } : {}), fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this.evict(); throw new ScriptedReset(fence); } } }; }
-  reset(): void { this.evict(); }
-  heldAnswers(): { op: string; answer: boolean }[] { return this.answers(); }
+  protected override [registryScopes]() { return this.env.PLATFORM; }
+  protected override [registryNow](): number { return hostedTest.now?.() ?? Date.now(); }
+  protected override [registryPorts]() { return { ...(hostedTest.controlBudget ? { controlBudget: hostedTest.controlBudget } : {}), fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this[registryEvict](); throw new ScriptedReset(fence); } } }; }
+  reset(membership: SequenceRef): void | RetiredStoreStop { if (!this[hostedRegistryOwnsMembership](membership)) return RETIRED_STORE_STOP; this[registryEvict](); }
+  heldAnswers(membership: SequenceRef): { op: string; answer: boolean }[] | RetiredStoreStop { if (!this[hostedRegistryOwnsMembership](membership)) return RETIRED_STORE_STOP; return this[registryAnswers](); }
 }
 export class PlatformMcpAgent extends McpAgent<HostedEnv> {
   readonly #productionHostedFetch: boolean;
@@ -409,30 +412,30 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
     this.#productionHostedFetch = creationTest.productionHostedFetch;
     this.#startup = index !== null;
   }
-  protected override scopes() { return this.#startup ? this.#startupBinding ??= startupScopes(this.env.PLATFORM, this.startupReads) : this.env.PLATFORM; }
-  protected override async retainClient(client: Parameters<McpAgent["grant"]>[2]["client"]): Promise<number> {
-    const expires = await super.retainClient(client), held = hostedTest.clientRetention;
+  protected override [agentScopes]() { return this.#startup ? this.#startupBinding ??= startupScopes(this.env.PLATFORM, this.startupReads) : this.env.PLATFORM; }
+  protected override async [agentRetainClient](client: Parameters<McpAgent["grant"]>[2]["client"]): Promise<number> {
+    const expires = await super[agentRetainClient](client), held = hostedTest.clientRetention;
     if (held) { held.entered(); await held.waiting; }
     return expires;
   }
   /** The harness's instance reset: what an eviction leaves. */
-  reset(): void { this.evict(); }
+  reset(): void | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); this[agentEvict](); }
   /** Fire the service's watch once, as 30 seconds passing would. */
-  async tick(): Promise<boolean> { const service = this.held()?.inside().service; if (!service) return false; await service.check(); return true; }
-  heldAnswers(): { control: { op: string; answer: boolean }[]; agent: boolean } { return this.answers(); }
-  used(): number { return this.controlUsed(); }
-  durableFacts(): ReturnType<HostedAgent["durable"]> { return this.durable(); }
+  async tick(): Promise<boolean | RetiredStoreStop> { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); const service = this[agentHeld]()?.inside().service; if (!service) return false; await service.check(); return true; }
+  heldAnswers(): { control: { op: string; answer: boolean }[]; agent: boolean } | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); return this[agentAnswers](); }
+  used(): number | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); return this[agentControlUsed](); }
+  durableFacts(): ReturnType<HostedAgent["durable"]> | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); return this[agentDurable](); }
   /** The custody record under an idempotency key: its intent digest, attempt and outcomes. */
-  custodyRecord(key: string): ReturnType<HostedAgent["custodyOf"]> { return this.custodyOf(key); }
+  custodyRecord(key: string): ReturnType<HostedAgent["custodyOf"]> | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); return this[agentCustodyOf](key); }
   /** The open streams and sessions this instance holds. */
-  counts(): { streams: number; sessions: number } { const http = this.held()?.inside().http; return { streams: http?.streams ?? 0, sessions: http?.sessions.size ?? 0 }; }
-  protected override ports() {
+  counts(): { streams: number; sessions: number } | RetiredStoreStop { const start = this[hostedAgentStart](); if (start === "retired") return RETIRED_STORE_STOP; if (start === "unavailable") throw new Error("Hosted agent store is unavailable."); const http = this[agentHeld]()?.inside().http; return { streams: http?.streams ?? 0, sessions: http?.sessions.size ?? 0 }; }
+  protected override [agentPorts]() {
     const scopes = this.env.PLATFORM;
     return {
       ...(hostedTest.metrics ? { metrics: hostedTest.metrics } : {}),
       ...(hostedTest.controlBudget ? { controlBudget: hostedTest.controlBudget } : {}),
       ...(hostedTest.custodyBounds ? { custodyBounds: { ...hostedTest.custodyBounds, fail: (point: "keep" | "dispatch" | "result" | "segment") => { if (hostedTest.failWrite === point) { hostedTest.failWrite = null; throw new Error("SQLITE_FULL: scripted"); } } } } : {}),
-      fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this.evict(); throw new ScriptedReset(fence); } },
+      fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this[agentEvict](); throw new ScriptedReset(fence); } },
       sessionFault: () => { if (hostedTest.failSession) { hostedTest.failSession = false; throw new Error("SQLITE_FULL: scripted session write"); } },
       configHold: () => hostedTest.configHold ?? undefined,
       ...(hostedTest.scheduleExpiry ? { scheduleExpiry: hostedTest.scheduleExpiry } : {}),

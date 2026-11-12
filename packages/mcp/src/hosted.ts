@@ -1,5 +1,6 @@
 import { addressKey, isMemberId, isRecord, same } from "@generalbusiness/dap-bytes";
 import { invitationRedemptionFields } from "@generalbusiness/dap-client";
+import { isRetiredStoreStop, type RetiredStoreStop } from "./hosted-store-stop.ts";
 /**
  * The hosted MCP endpoint (notes/2026-10-13-hosted-mcp-endpoint.md): the
  * registry of one repository's agents and the object of one agent, each over
@@ -30,7 +31,7 @@ import { invitationRedemptionFields } from "@generalbusiness/dap-client";
 
 import type { ControlAction, ControlRequest, Digest, KeyId, MemberId, ScopeRef, Seed, SignedControl, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, isKeyId, isScopeRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, isKeyId, isSequenceRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
 import { TransportError, agentKeyInvitationOf, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity } from "./custody.ts";
 import { enrolledKeyItem, retirementBody } from "./hosted-retirement.ts";
@@ -118,7 +119,8 @@ export function controlOf(authorization: string | null): SignedControl | null {
     const request = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
     if (!closed(request, ["v", "action", "service", "membership", "agent", "actor", "body", "op", "notAfter"]) || request["v"] !== 1) return null;
     if (!["create", "bearer", "retire", "grant", "connections", "revoke-grant"].includes(request["action"] as string) || typeof request["service"] !== "string") return null;
-    if (!isScopeRef(request["membership"]) || (request["membership"] as ScopeRef).kind !== "membership") return null;
+    // This fixed protocol place names Membership; a reference supplies no kind proof.
+    if (!isSequenceRef(request["membership"])) return null;
     if (request["agent"] !== null && (typeof request["agent"] !== "string" || !/^[0-9a-f]{64}$/.test(request["agent"]))) return null;
     if (!isKeyId(request["actor"]) || typeof request["body"] !== "string" || !/^sha256:[0-9a-f]{64}$/.test(request["body"])) return null;
     if (typeof request["op"] !== "string" || utf8(request["op"]).length < 1 || utf8(request["op"]).length > OP_BYTES || typeof request["notAfter"] !== "string" || timeMs(request["notAfter"]) === null) return null;
@@ -282,7 +284,7 @@ export interface RegistryPorts extends Authority {
   /** A fresh, unique agent object ID. */
   mintId(): string;
   /** The agent object by its ID: its `create`. */
-  agent(id: string): { create(op: string, request: ControlRequest, link: AgentKeyInvitation): Promise<ControlAnswer>; grant?(signed: SignedControl, body: Uint8Array, context: OAuthGrantContext): Promise<ControlAnswer>; agentState?(): Promise<string | null> };
+  agent(id: string): { create(op: string, request: ControlRequest, link: AgentKeyInvitation): Promise<ControlAnswer | RetiredStoreStop>; grant?(signed: SignedControl, body: Uint8Array, context: OAuthGrantContext): Promise<ControlAnswer | RetiredStoreStop>; agentState?(): Promise<string | null | RetiredStoreStop> };
 }
 
 /** One repository's registry: the only place that creates an agent object. Named by the membership scope ID. */
@@ -342,6 +344,7 @@ export class HostedRegistry {
     });
     if (held) return held;
     const result = await this.ports.agent(request.agent).grant?.(signed, body, context) ?? answer(503, { error: "unavailable" });
+    if (isRetiredStoreStop(result)) return answer(503, { error: "unavailable" });
     if (result.status !== 503) this.sql.transaction(() => { if (this.#control.row(request.op)?.state === "reserved") this.#control.complete(request.op, result.status < 300 ? "complete" : "refused", result); });
     return result;
   }
@@ -383,10 +386,17 @@ export class HostedRegistry {
     if (!authority.ok || (authority.by === "controller" && authority.member !== link.controller.member)) return answer(403, { error: "unauthorized" });
     if (context && !this.#control.row(r.op)) {
       const mapping = this.sql.exec(`SELECT * FROM oauth_agent WHERE controller = ? AND client_id = ?`, link.controller.member, context.client.client_id).toArray()[0];
-      if (mapping && await this.ports.agent(String(mapping["agent"])).agentState?.() === "retired") this.sql.transaction(() => {
-        const current = this.sql.exec(`SELECT * FROM oauth_agent WHERE controller = ? AND client_id = ?`, link!.controller.member, context.client.client_id).toArray()[0];
-        if (current && current["agent"] === mapping["agent"]) { this.sql.exec(`DELETE FROM oauth_agent WHERE controller = ? AND client_id = ?`, link!.controller.member, context.client.client_id); this.#control.charge(-this.#mappingBytes(current), "retire"); }
-      });
+      if (mapping) {
+        let state: string | null | RetiredStoreStop | undefined;
+        try { state = await this.ports.agent(String(mapping["agent"])).agentState?.(); }
+        catch { return answer(503, { error: "unavailable" }); }
+        // Whole-store retirement cannot authorize deletion or replacement.
+        if (isRetiredStoreStop(state)) return answer(503, { error: "unavailable" });
+        if (state === "retired") this.sql.transaction(() => {
+          const current = this.sql.exec(`SELECT * FROM oauth_agent WHERE controller = ? AND client_id = ?`, link!.controller.member, context.client.client_id).toArray()[0];
+          if (current && current["agent"] === mapping["agent"]) { this.sql.exec(`DELETE FROM oauth_agent WHERE controller = ? AND client_id = ?`, link!.controller.member, context.client.client_id); this.#control.charge(-this.#mappingBytes(current), "retire"); }
+        });
+      }
     }
     const fingerprint = fingerprintOf(r);
     if (context) { const expired = bound(signed, service, action, null, body, this.ports.now()); if (expired) return expired; }
@@ -415,7 +425,14 @@ export class HostedRegistry {
     this.ports.fault?.("reservation");
     const target = this.ports.agent(reserved.agent);
     const given = context ? await target.grant?.(signed, body, context) ?? answer(503, { error: "unavailable" }) : await target.create(r.op, r, link);
-    const enrolled = context && await target.agentState?.() === "enrolled";
+    if (isRetiredStoreStop(given)) return answer(503, { error: "unavailable" });
+    let state: string | null | RetiredStoreStop | undefined;
+    if (context) {
+      try { state = await target.agentState?.(); }
+      catch { return answer(503, { error: "unavailable" }); }
+      if (isRetiredStoreStop(state)) return answer(503, { error: "unavailable" });
+    }
+    const enrolled = context && state === "enrolled";
     const result = enrolled ? answer(given.status, { ...given.body, agent: reserved.agent, handle: link.handle }) : given;
     this.ports.fault?.("complete");
     // Unresolved: the reservation stays, and the next request with the same op resumes it.
