@@ -15,6 +15,7 @@ import { certifiedBoundFenceBudgetV17, evidenceCarryingBudgetV17 } from "./desti
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import type { EvidenceJobRecordV17 } from "./destination-evidence-v17.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
+import { sealedAt } from "@generalbusiness/dap-derive";
 
 export interface EvidenceCapacityAnchorV17 {
   v: 1; owner: number; generation: ScopedRulesPosition;
@@ -65,7 +66,7 @@ function maximumCapacity(value: EvidenceCapacityAnchorV17, publicationAt: FactRe
 export function evidencePendingCapacityForecastV17(given: RuleGiven, owner: number, jobAt: FactRef["at"]): readonly RuleEffect[] {
   const item = given.state.item(owner), capacity = readEvidenceCapacityWireV17(item?.values["capacity"]), batch = readEvidenceBatchWireV17(item?.values["batch"]);
   if (!capacity || !capacity.holds || !batch) throw Error("The future pending capacity record is unavailable");
-  return [{ effect: "value", item: owner, slot: "capacity", value: evidenceCapacityWireV17(maximumCapacity(capacity, given.resolved.at, jobAt, batch.policy.policy)) }];
+  return [{ effect: "value", item: owner, slot: "capacity", value: evidenceCapacityWireV17(maximumCapacity(capacity, sealedAt(given.resolved.at), jobAt, batch.policy.policy)) }];
 }
 function policyAnchor(state: StateView, generation: ScopedRulesPosition): { item: Item; capacity: EvidenceCapacityAnchorV17 } | null {
   const ids = state.lookup("evidence-batch", "policyKey", canonicalize(evidenceCapacityPolicyKeyV17(generation)), 2);

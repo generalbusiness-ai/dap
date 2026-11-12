@@ -1,11 +1,13 @@
 /** Q13/G17 certificate custody. Every earlier certificate family stays exact. */
 import type { Digest, Entry, FactRef, Head, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isFactRef, isHead, isRecord, same, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
+import type { CheckedSequence } from '@generalbusiness/dap-bytes';
 import { isEntryOf, sentBy, type Fetched, type Operation, type Own, type RuleGiven } from "@generalbusiness/dap-derive";
 import type { RulesTreeBinding } from "./rules-policy-tree.ts";
 import { EVIDENCE_RULES_COHORT } from "./evidence-cohort.ts";
 import { RULES_CERTIFICATE_KIND, readRulesCertificateBinding, type RulesCertificateProvenanceV11 } from "./rules-certificate.ts";
 import { evidenceOperationOpeningV17 } from "./evidence-opening-v17.ts";
+import { sealedAt } from "@generalbusiness/dap-derive";
 
 export type RulesCertificateProvenanceV17 = RulesCertificateProvenanceV11;
 const exact = (value: unknown, names: readonly string[]): value is Record<string, unknown> => isRecord(value)
@@ -32,7 +34,7 @@ export function rulesCertificateOpeningV17(own:Own,operation:Operation,at:ScopeR
   }catch{return null;}
 }
 
-interface Birth { fact:FactRef; entry:Entry; seed:Seed; fields:Record<string,unknown> }
+interface Birth { fact:FactRef; entry:Entry; sequence:CheckedSequence; seed:Seed; fields:Record<string,unknown> }
 function birth(copy:Fetched|undefined,pin:string,kind:ScopeKind):Birth|null {
   if(!copy || copy.under!==`platform:${kind}` || copy.fact.seq!==0 || !isEntryOf(copy.entry,copy.fact,copy.sequence) || copy.entry.seq!==0 || copy.entry.prev!==null
     || copy.entry.input.type!=='genesis' || copy.entry.input.decision!=='applied' || copy.entry.input.kind!=='establish')return null;
@@ -40,7 +42,7 @@ function birth(copy:Fetched|undefined,pin:string,kind:ScopeKind):Birth|null {
   if(input.seed.definition!==pin || input.seed.kind!==kind || copy.sequence.kind!==kind
     || scopeIdOf(input.seed)!==copy.fact.at.scope || !input.message || input.message.class!=='request' || input.message.type!=='create'
     || !isRecord(input.message.body) || !isRecord(input.message.body['fields']))return null;
-  return {fact:copy.fact,entry:copy.entry,seed:input.seed,fields:input.message.body['fields']};
+  return {fact:copy.fact,entry:copy.entry,sequence:copy.sequence,seed:input.seed,fields:input.message.body['fields']};
 }
 const find=(given:RuleGiven,fact:FactRef):Fetched|undefined=>given.uses.find(copy=>same(copy.fact,fact));
 /** Fixed admitted fact set; no arbitrary graph walk or incarnation inference. */
@@ -49,7 +51,7 @@ export function rulesCertificateFamilyV17(given:RuleGiven,otherKind:'rules'|'des
   try {
     const own=given.own(0),ownKind=given.state.scope()?.kind,ownSequence=given.own.sequence();
     if(!own || !ownSequence || !ownKind || !['rules','destination'].includes(ownKind))return null;
-    const ownCopy:Fetched={fact:{at:given.resolved.at,seq:0,hash:own.hash},entry:own.entry,sequence:ownSequence,under:`platform:${ownKind}`};
+    const ownCopy:Fetched={fact:{at:sealedAt(given.resolved.at),seq:0,hash:own.hash},entry:own.entry,sequence:ownSequence,under:`platform:${ownKind}`};
     const directoryFact=fields['directoryBirth'],memberFact=fields['membershipBirth'],otherFact=fields[otherKind+'Birth'];
     if(!isFactRef(directoryFact)||!isFactRef(memberFact)||!isFactRef(otherFact))return null;
     const directory=birth(find(given,directoryFact),EVIDENCE_RULES_COHORT.directory,'directory');
@@ -60,7 +62,7 @@ export function rulesCertificateFamilyV17(given:RuleGiven,otherKind:'rules'|'des
     for(const [child,ordinal] of [[membership,0],[rules,1],[destination,2]] as const){
       const input=child.entry.input;if(input.type!=='genesis'||!same(child.seed.creator,directory.fact.at)||!same(input.source,directory.fact)
         ||child.seed.ordinal!==ordinal||child.seed.cause!==seedDigest(directory.seed)||input.n===null||!input.message
-        ||!sentBy(directory.entry,{from:directory.fact,n:input.n,to:child.seed,message:input.message}))return null;
+        ||!sentBy(directory.entry,{from:directory.fact,n:input.n,to:child.seed,message:input.message},directory.sequence))return null;
     }
     if(!same(rules.fields['directory'],directory.fact.at)||!same(destination.fields['directory'],directory.fact.at)
       ||rules.fields['membership']!==membership.fact.at.scope||destination.fields['membership']!==membership.fact.at.scope
@@ -81,7 +83,7 @@ export function rulesPublishedCertificateV17(given:RuleGiven,proposal:Digest,pro
     if(!family||!isFactRef(request)||!isFactRef(certificate)||!same(request.at,family.destination.fact.at)||!same(certificate.at,request.at))return null;
     const opening=find(given,request),answer=find(given,certificate);
     if(!opening||!answer||opening.under!=='platform:destination'||answer.under!=='platform:destination'
-      ||!isEntryOf(opening.entry,request)||!isEntryOf(answer.entry,certificate)||opening.entry.input.type!=='act'
+      ||!isEntryOf(opening.entry,request,opening.sequence)||!isEntryOf(answer.entry,certificate,answer.sequence)||opening.entry.input.type!=='act'
       ||opening.entry.input.signed.intent.kind!==RULES_CERTIFICATE_KIND||answer.entry.input.type!=='outcome')return null;
     const input=answer.entry.input,op=`${request.seq}:0`;
     if(input.owner!=='platform:destination@17'||input.kind!==RULES_CERTIFICATE_KIND||input.operation!==op||input.attempt!==1
@@ -94,7 +96,7 @@ export function rulesPublishedCertificateV17(given:RuleGiven,proposal:Digest,pro
     if(!openingEffect||openingEffect.effect!=='operation'||typeof openingEffect.for!=='number')return null;
     const operation:Operation={id:op as Operation['id'],owner:'platform:destination@17',kind:RULES_CERTIFICATE_KIND,most:1,for:openingEffect.for,
       attempts:[{attempt:1,opened:request.seq,outcomes:[]}],selected:null};
-    const captured=rulesCertificateOpeningV17(seq=>seq===request.seq?{entry:opening.entry,hash:request.hash}:null,operation,request.at);
+    const captured=rulesCertificateOpeningV17(Object.assign((seq:number)=>seq===request.seq?{entry:opening.entry,hash:request.hash}:null,{sequence:()=>opening.sequence}),operation,request.at);
     if(!captured||!same(captured.binding.rules,given.resolved.at)||captured.binding.proposal!==proposal
       ||!same(captured.binding.repository,family.destination.fields['repository'])
       ||captured.binding.ref!==`refs/heads/${family.destination.fields['branch']}`)return null;

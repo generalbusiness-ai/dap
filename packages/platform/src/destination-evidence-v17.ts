@@ -1,10 +1,10 @@
 /** G17 native job records. Every full native fact below is resolved only
  * after its entry was sealed. Indexes contain live and decided anchors. */
 import type { ActType, Bounds, Digest, Entry, FactRef, FieldValue, KeyId, Observation, PlatformData, ScopedRulesPosition, Timestamp } from "@generalbusiness/dap-contract";
-import { natural, canonicalize, entryHash, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, same as equalCanonical, textDigest, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, entryHash, isDigest, isEntryBodyOf, type CheckedSequence, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, same as equalCanonical, textDigest, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from "./evidence.ts";
 import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git/tree-proof";
-import { isEntryOf, messageFields, observedOf, sentBy, useOf, RuleFault, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { isEntryOf, messageFields, observedOf, sentBy, sentByBody, useOf, RuleFault, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition, sealedAt } from "@generalbusiness/dap-derive";
 import { readEvidenceDecisionV17 } from "./evidence-decision-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
@@ -223,7 +223,7 @@ export function evidencePolicyV17(given: RuleGiven): ReservationPolicyViewV17 | 
   if (!rules || !observation || !("subject" in observation) || observation.subject !== "rules" || observation.content.asked !== "rules"
     || !observedOf(observation.of, rules) || !observation.content.extents) return null;
   const extents = given.value(RULES_EXTENTS_VALUE_V13.domain, observation.content.extents, RULES_EXTENTS_VALUE_V13.max);
-  const read = readRulesPolicyObservationV17(observation, { rules: observation.of, destination: given.resolved.at, extents }, given.time);
+  const read = readRulesPolicyObservationV17(observation, { rules: observation.of, destination: sealedAt(given.resolved.at), extents }, given.time);
   return read.ok ? read.view : null;
 }
 export function evidenceCountsV17(state: StateView): EvidenceCountsV17 {
@@ -297,11 +297,17 @@ export const evidenceBlocksV17 = (given: RuleGiven, paths: readonly string[]): b
 
 const foreign = (given: RuleGiven, fact: FactRef): Entry | null => {
   const copy = given.uses.find(copy => sameDefined(copy.fact, fact));
-  return copy && isEntryOf(copy.entry, fact) ? copy.entry : null;
+  return copy && isEntryOf(copy.entry, fact, copy.sequence) ? copy.entry : null;
+};
+/** The admitted sequence of a foreign fact the rule was given. */
+const sourceSequence = (given: RuleGiven, fact: FactRef): CheckedSequence => {
+  const copy = given.uses.find(copy => sameDefined(copy.fact, fact));
+  if (!copy) throw new RuleFault("The source entry's admitted sequence is unavailable");
+  return copy.sequence;
 };
 const local = (given: RuleGiven, fact: FactRef): Entry | null => {
-  const sealed = sameDefined(fact.at, given.resolved.at) ? given.own(fact.seq) : null;
-  return sealed && sealed.hash === fact.hash && isEntryOf(sealed.entry, fact) ? sealed.entry : null;
+  const sealed = sameDefined(fact.at, given.resolved.at) ? given.own(fact.seq) : null, sequence = given.own.sequence();
+  return sealed && sequence && sealed.hash === fact.hash && isEntryOf(sealed.entry, fact, sequence) ? sealed.entry : null;
 };
 /** readFacts normalizes an authenticated local Fact field to its position.
  * Recover only the actual sealed fact and require the arriving full ref to
@@ -314,8 +320,8 @@ function localFactField(given: RuleGiven, name: string): FactRef | null {
       && isRecord(given.input.message.body["fields"]) ? given.input.message.body["fields"] : null;
   const stated = fields?.[name];
   if (!isFactRef(stated) || !sameDefined(stated.at, given.resolved.at) || !(natural(resolved) && resolved === stated.seq || isFactRef(resolved) && sameDefined(resolved, stated))) return null;
-  const sealed = given.own(stated.seq);
-  return sealed && sealed.hash === stated.hash && isEntryOf(sealed.entry, stated) ? copy(stated) : null;
+  const sealed = given.own(stated.seq), sequence = given.own.sequence();
+  return sealed && sequence && sealed.hash === stated.hash && isEntryOf(sealed.entry, stated, sequence) ? copy(stated) : null;
 }
 const effectValue = (entry: Entry, slot: string, item = entry.seq): unknown => {
   const rows = entry.effects.filter(effect => effect.effect === "value" && effect.item === item && effect.slot === slot);
@@ -381,8 +387,8 @@ function proposed(given: RuleGiven): EvidenceJobRecordV17 | null {
   if (!entry || !birth || !binding || holder === undefined || entryHash(birth.entry) !== birth.hash) return null;
   const batch = binding.stage === "work" ? null : given.own(holder);
   if (binding.stage !== "work" && (!batch || entryHash(batch.entry) !== batch.hash)) return null;
-  return proposedRecord({ at: given.resolved.at, seq: given.resolved.self, holder, from: given.input.from, fields: given.resolved.fields, entry,
-    birth: { at: given.resolved.at, seq: 0, hash: birth.hash }, ...(batch ? { batchFact: { at: given.resolved.at, seq: holder, hash: batch.hash } } : {}) });
+  return proposedRecord({ at: sealedAt(given.resolved.at), seq: given.resolved.self, holder, from: given.input.from, fields: given.resolved.fields, entry,
+    birth: { at: sealedAt(given.resolved.at), seq: 0, hash: birth.hash }, ...(batch ? { batchFact: { at: sealedAt(given.resolved.at), seq: holder, hash: batch.hash } } : {}) });
 }
 function boundPendingRecord(state: StateView, own: Own, operation: Operation, bounds: Bounds): { item: Item; record: EvidenceJobRecordV17 } | null {
   const source = readEvidenceBoundFenceV17(state, own, operation, bounds);
@@ -399,12 +405,12 @@ export function evidenceSubjectV17(given: RuleGiven, record: EvidenceJobRecordV1
   const subject = record.binding.subject;
   if (subject.kind === "work") {
     const source = foreign(given, subject.source), job = foreign(given, record.job);
-    if (!source || source.input.type !== "act" || source.input.signed.intent.kind !== "stage-work" || !sameDefined(source.at, record.job.at)
+    if (!source || source.input.type !== "act" || source.input.signed.intent.kind !== "stage-work" || !sameDefined(subject.source.at, record.job.at)
       || !source.effects.some(effect => effect.effect === "open" && effect.item === source.seq && effect.type === "work-source")) return null;
     const fields = source.input.signed.intent.fields, commit = fields["commit"];
     const pin = source.effects.filter(effect => effect.effect === "record" && effect.capability === "hold@1" && effect.kind === "pin" && effect.state === "held");
     if (!isObjectId(commit) || pin.length !== 1 || pin[0]!.effect !== "record" || pin[0]!.values["admitted"] !== source.seq || pin[0]!.values["commit"] !== commit
-      || !sameDefined(pin[0]!.key[0], source.at) || !source.input.authority.some(grant => grant.actions.includes("issue.work"))) return null;
+      || !sameDefined(pin[0]!.key[0], subject.source.at) || !source.input.authority.some(grant => grant.actions.includes("issue.work"))) return null;
     const proofText = job?.input.type === "act" ? job.input.signed.intent.fields["commitProof"] : null;
     if (typeof proofText !== "string" || proofText.length > WORK_COMMIT_PROOF_V17.max || utf8(proofText).length > WORK_COMMIT_PROOF_V17.max) return null;
     try {
@@ -889,7 +895,7 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
   Object.assign(record, triple, { commitProof: triple.proof, policy: view, admittedAt: given.resolved.self, state: "admitted", reason: null, observedGeneration: view.serviceGeneration });
   delete (record as unknown as Record<string, unknown>)["proof"];
   const opening = given.own(record.requestAt); if (!opening) return refuse("evidence-invalid");
-  record.sourceFacts = [...record.sourceFacts, { at: given.resolved.at, seq: record.requestAt, hash: opening.hash }];
+  record.sourceFacts = [...record.sourceFacts, { at: sealedAt(given.resolved.at), seq: record.requestAt, hash: opening.hash }];
   if (record.reuseOwner !== null) {
     const owner = working(record.reuseOwner);
     if (!owner.record.reuse) return refuse("evidence-invalid");
@@ -998,8 +1004,8 @@ export function evidenceResultMessageFieldsV17(state: StateView, own: Own, opera
   const copies = entry.uses.filter(use => sameDefined(use.fact, fields["result"]));
   if (copies.length !== 1 || !own.retained) return null;
   const result = own.retained(copies[0]!);
-  if (!result || !isEntryOf(result, fields["result"]) || !sameDefined(useOf(fields["result"], result), copies[0])
-    || !sentBy(result, { to: at, from: input.from, n: input.n, message: input.message })) return null;
+  if (!result || !isEntryBodyOf(result, fields["result"]) || !sameDefined(useOf(fields["result"], result, copies[0]!.kind), copies[0])
+    || !sentByBody(result, { to: at, from: input.from, n: input.n, message: input.message })) return null;
   const item = state.item(fields["admission"].seq), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const admitted = record && destinationEvidenceJob(state, own, record.job);
   if (!item || item.type !== "evidence-job" || !record || !admitted || record.holder !== operation.for
@@ -1027,7 +1033,7 @@ function resultSource(given: RuleGiven, value: unknown): boolean {
   if (!record || !admitted || !sameDefined(admitted.admission, admission) || !sameDefined(fields["job"], record.job)
     || value !== record.bindingDigest || !["admitted", "timeout", "unknown"].includes(record.state)
     || input.message.body["message"] !== (record.binding.stage === "work" ? "work-checked" : "checked")
-    || !source || !sentBy(source, { to: given.resolved.at, from: input.from, n: input.n, message: input.message })) return false;
+    || !source || !sentBy(source, { to: sealedAt(given.resolved.at), from: input.from, n: input.n, message: input.message }, sourceSequence(given, input.from))) return false;
   const key = record.binding.source === "room" ? record.binding.roomService?.key : undefined;
   if (record.binding.source === "room" && !key) return false;
   return readEvidenceDecisionV17({ entry: source, hash: input.from.hash }, input.from.at, { job: record.job, admission: admitted.admission,
@@ -1361,7 +1367,7 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
         const observation = first?.observed({ asked: "rules" })?.observation;
         if (observation && "subject" in observation && observation.subject === "rules" && observation.content.asked === "rules" && observation.content.extents) {
           const extents = given.value(RULES_EXTENTS_VALUE_V13.domain, observation.content.extents, RULES_EXTENTS_VALUE_V13.max);
-          const read = readRulesPolicyObservationV17(observation, { rules: observation.of, destination: given.resolved.at, extents }, given.time);
+          const read = readRulesPolicyObservationV17(observation, { rules: observation.of, destination: sealedAt(given.resolved.at), extents }, given.time);
           if (read.ok && read.view.policy.roomService) keys.add(read.view.policy.roomService.key);
         }
       }

@@ -4,7 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { natural, canonicalize, deliveryCauseDigest, intentDigest, isDigest, isEntryOf, isFactRef, isMemberRef, isRecord, isSeed, messageDigest, same, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding } from "./evidence.ts";
-import { sentBy, type SourceCopy } from "@generalbusiness/dap-derive";
+import { sentBySource, type SourceCopy } from "@generalbusiness/dap-derive";
 import { EVIDENCE_LANE_PINS } from "./evidence-lane-pins.generated.ts";
 import { EVIDENCE_RULES_COHORT as C } from "./evidence-cohort.ts";
 import { readEvidenceWireV17 } from "./evidence-wire-v17.ts";
@@ -111,7 +111,7 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly SourceC
     if (opened.under !== "platform:directory" || made.type !== "act" || made.signed.intent.kind !== "open-pr" || !verifySignedIntent(made.signed)
       || made.signed.intent.fields["definition"] !== parentBirth.seed.definition || !same(made.signed.intent.to, opened.fact.at)
       || !same(parentBirth.seed.creator, opened.fact.at) || parentBirth.seed.cause !== intentDigest(made.signed.intent)
-      || !sentBy(opened.entry, { from: opened.fact, n: parentBirth.n, to: parentBirth.seed, message: parentBirth.message })) return false;
+      || !sentBySource(opened, { from: opened.fact, n: parentBirth.n, to: parentBirth.seed, message: parentBirth.message })) return false;
     const directory = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, opened.fact.at));
     if (!directory) return missing;
     const office = directory.entry.input;
@@ -123,7 +123,7 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly SourceC
     if (!native) return missing;
     const position = evidenceIncidentAdmissionPositionV17(native.entry);
     if (native.under !== "platform:destination" || position === null || !selfOr(fields["decision"], native.fact)
-      || !sentBy(native.entry, { from: native.fact, n: creator.entry.input.n, to: creator.fact.at, message: creator.entry.input.message })) return false;
+      || !sentBySource(native, { from: native.fact, n: creator.entry.input.n, to: creator.fact.at, message: creator.entry.input.message })) return false;
     const destination = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, native.fact.at));
     if (!destination) return missing;
     const target = destination.entry.input;
@@ -131,7 +131,7 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly SourceC
       || !isSeed(target.seed) || target.seed.definition !== C.destination || target.seed.kind !== "destination" || target.seed.ordinal !== 2
       || destination.sequence?.kind !== "destination" || scopeIdOf(target.seed) !== destination.fact.at.scope || !same(target.seed.creator, directory.fact.at)
       || target.seed.cause !== seedDigest(office.seed) || !same(target.source, directory.fact) || target.n === null || !target.message
-      || !sentBy(directory.entry, { from: directory.fact, n: target.n, to: target.seed, message: target.message })
+      || !sentBySource(directory, { from: directory.fact, n: target.n, to: target.seed, message: target.message })
       || !same(parentBirth.message.body["fields"]["destination"], destination.fact.at)) return false;
     const held = record(native.entry)!, binding = readEvidenceBinding(held["binding"]);
     if (!binding || binding.stage !== "published" || binding.subject.kind !== "published" || binding.auditOf !== null || !isDigest(held["bindingDigest"])
@@ -166,7 +166,7 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly SourceC
       || !(fields["result"] === undefined ? childFields["failedResult"] === undefined : same(childFields["failedResult"], fields["result"]))
       || childFields["publishedCommit"] !== held["commit"] || !same(childFields["triagers"], fields["triagers"])
       || birth.seed.cause !== deliveryCauseDigest({ v: 1, from: creator.entry.input.from, n: creator.entry.input.n, message: messageDigest(creator.entry.input.message) })
-      || !sentBy(creator.entry, { from: creator.fact, n: birth.n, to: birth.seed, message: birth.message })) return false;
+      || !sentBySource(creator, { from: creator.fact, n: birth.n, to: birth.seed, message: birth.message })) return false;
     const required = [child, creator, parent, opened, directory, native, destination, admitted, job];
     return facts.length === 9 && new Set(required).size === 9 && facts.every(copy => required.includes(copy));
   } catch { return false; }

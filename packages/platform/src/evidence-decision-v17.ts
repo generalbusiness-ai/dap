@@ -1,7 +1,7 @@
 /** Read a provisional successor-lane result, not a runner's answer.
  * Admission independently proves the retained job and its commit/tree/base;
  * current signing authority is checked by the Native source guard. */
-import type { Digest, Effect, FactRef, KeyId, Sealed } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, GenesisEffect, KeyId, Sealed } from "@generalbusiness/dap-contract";
 import { entryHash, isDigest, isEntry, isFactRef, isRecord, same, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 
 export interface EvidenceDecisionExpectedV17 {
@@ -42,7 +42,7 @@ export function readEvidenceDecisionV17(sealed: Sealed, at: FactRef["at"], expec
     if (entry.effects.some(effect => "item" in effect && effect.item === expected.job.seq)) return null;
     // These rows distinguish a recorded result from an unrelated act that
     // happens to carry the same signed fields. Each relevant slot is unique.
-    const one = (predicate: (effect: Effect) => boolean) => entry.effects.filter(predicate).length === 1;
+    const one = (predicate: (effect: GenesisEffect) => boolean) => entry.effects.filter(predicate).length === 1;
     const value = (slot: string, expectedValue: unknown) => {
       const rows = entry.effects.filter(effect => effect.effect === "value" && effect.item === entry.seq && effect.slot === slot);
       return rows.length === 1 && rows[0]!.effect === "value" && same(rows[0]!.value, expectedValue);

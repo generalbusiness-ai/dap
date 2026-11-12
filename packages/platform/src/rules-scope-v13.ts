@@ -12,6 +12,7 @@ import { RULES_TREE_PROOF, verifyRulesTree } from './rules-policy-tree.ts';
 import type { RulesCertificateProvenanceV11 } from './rules-certificate.ts';
 import { rulesPublishedCertificateV17 } from './rules-certificate-v17.ts';
 import { evidenceWireV17, readEvidenceWireV17 } from './evidence-wire-v17.ts';
+import { sealedAt } from "@generalbusiness/dap-derive";
 
 const TRANSPORT=['proposal','proof','certificateRequest','certificate','directoryBirth','destinationBirth','membershipBirth','checkers'];
 const birthField=(under:string,kind:string)=>({type:'fact' as const,kind:[kind],under,required:true});
@@ -75,7 +76,7 @@ function publication(given:RuleGiven) {
   if(previousGeneration===null||previousGeneration>given.resolved.self)return {ok:false as const,reason:'rules-content-too-large' as const};
   const envelope={configured:true,policy:owned.policy,proposal,certificate:certificate.provenance};
   if(!bounded(envelope,RULES_EXTENTS_VALUE_V13.max))return {ok:false as const,reason:'invalid-policy' as const};
-  if(!bounded(content(owned.policy,envelope,given.resolved.at,changed?given.resolved.self:previousGeneration),RULES_CONTENT_BYTES_V13))return {ok:false as const,reason:'rules-content-too-large' as const};
+  if(!bounded(content(owned.policy,envelope,sealedAt(given.resolved.at),changed?given.resolved.self:previousGeneration),RULES_CONTENT_BYTES_V13))return {ok:false as const,reason:'rules-content-too-large' as const};
   return {ok:true as const,policy:owned.policy,proposal,certificate:certificate.provenance};
 }
 const oldRules=archiveDeviceRulesScope.items['rules']!,oldEstablish=archiveDeviceRulesScope.acts['establish']!,oldPublish=archiveDeviceRulesScope.acts['publish']!;

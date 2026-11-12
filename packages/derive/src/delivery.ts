@@ -8,12 +8,12 @@ import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import type { Advisory, CapabilityName, Control, Digest, Effect, Entry, FactRef, FactUse, Message, ObservationUse, PlatformDefinition, Prepared, Reason, Request, Result, RoutingRefusal, ScopeKind, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
 import { deliveryCauseDigest, messageDigest, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { declaredBy, type Recorded } from "./capability.ts";
-import { isEntryOf, updateOf, useOf, type Reading } from "./fields.ts";
+import { isEntryBodyOf, isEntryOf, updateOf, useOf, type Reading } from "./fields.ts";
 import { bound, runClause, runHandler, type Clause, type Handled, type Sent } from "./handlers.ts";
 import { handlerBranch } from "./handler-branch.ts";
 import { declarationOf } from "./program/declaration.ts";
 import { timeMs } from "./time.ts";
-import type { ReplayAssumptions } from "./guards.ts";
+import type { ReplayAssumptions, SourceCopy } from "./guards.ts";
 import { admitRetainedResultContext, assumedSource, copyEntry, copyKind, copyUnder, replayContext, sourceCopy, sentByCopy, verifiedContext, withJudgmentSource } from "./operand.ts";
 import type { Judgment } from "./judge.ts";
 import { heldOpenings } from "./ledger.ts";
@@ -86,6 +86,25 @@ export function sentBy(entry: Entry, delivered: Delivered, sequence: CheckedSequ
     return false; // Bytes that do not parse to canonical values.
   }
 }
+
+/**
+ * As `sentBy`, for a body with no admitted sequence: an entry this scope
+ * retained when it wrote an earlier entry, or an origin row that an
+ * admitted first entry names as its source. The body matches the fact, as a
+ * local retained judgment copy does (`matchesCopy`).
+ */
+export function sentByBody(entry: Entry, delivered: Delivered): boolean {
+  try {
+    const send = isEntryBodyOf(entry, delivered.from) ? entry.sends.find((s) => s.n === delivered.n) : undefined;
+    return !!send && same(send.to, delivered.to) && messageDigest(send.message) === messageDigest(delivered.message);
+  } catch {
+    return false;
+  }
+}
+
+/** An origin row (ruling 080e7c84): by its admitted sequence where the rows prove one, and else by its body. */
+export const sentBySource = (copy: SourceCopy, delivered: Delivered): boolean =>
+  copy.sequence ? sentBy(copy.entry, delivered, copy.sequence) : sentByBody(copy.entry, delivered);
 
 /** Section 7.3: one owner entry sends at most one update for each key: the target, the owner's item and the name. */
 function oneUpdateForKey(source: Entry, from: FactRef, to: ScopeRef, name: string, item: number): boolean {

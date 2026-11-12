@@ -461,6 +461,16 @@ export class RuleFault extends Error {
   override readonly name = "RuleFault";
 }
 
+/**
+ * The judging scope's sealed sequence. A rule that names the scope's own
+ * facts, records or certificates runs after its genesis seals. At a genesis
+ * draft the scope has no sealed hash, and such a read is a fault of the rule.
+ */
+export function sealedAt(at: ScopeRef | GenesisSelfRef): ScopeRef {
+  if (at.genesis === null) throw new RuleFault("the rule reads the scope's sealed sequence while its genesis is judged");
+  return at;
+}
+
 /** A fault of a rule leaves the input not judged. Every other failure is the judge's own, and is thrown on. */
 export function unjudged<T>(judge: () => T): T | { result: "unavailable"; reason: "unavailable" } {
   try {

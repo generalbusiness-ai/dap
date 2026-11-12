@@ -2,7 +2,7 @@
  * including future generations, must fit before the first capture. */
 import type { Bounds, Effect, Entry, FactRef, FactUse, KeyId, RulesObservation } from '@generalbusiness/dap-contract';
 import { canonicalize, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, memberFits, parseStrict, same, timeMs, utf8 } from '@generalbusiness/dap-bytes';
-import { observationBytes, operationOpening, type Opening, type RuleEffect, type RuleGiven, type RuleRequest } from '@generalbusiness/dap-derive';
+import { observationBytes, operationOpening, sealedAt, sequenceEffects, type Opening, type RuleEffect, type RuleGiven, type RuleRequest } from '@generalbusiness/dap-derive';
 import { isObjectId } from './reservation.ts';
 import { readRulesPolicyObservationV15, requiredChecksV15, type ReservationPolicyInputV15 } from './reservation-v15.ts';
 import type { RulesCheckV11 } from './rules-policy-v11.ts';
@@ -173,9 +173,9 @@ export function certifiedCaptureBudgetV15(record: CertifiedPublicationStateV15, 
  * already known. Only the observation cohort uses its declared maxima. */
 export function certifiedReservationBudgetV15(given: RuleGiven, record: CertifiedPublicationStateV15, capture: CaptureEnvelopeV15) {
   if (given.input.type !== 'outcome') throw Error('A certified capture is an outcome');
-  const effects: Effect[] = [{ effect: 'attempt', operation: given.input.operation, attempt: given.input.attempt, result: given.input.result, selected: null },
-    ...capture.effects, ...capture.opens.flatMap((open, n) => operationOpening(n, open))];
-  const entry: Entry = { v: 1, at: given.resolved.at, seq: given.resolved.self, prev: given.state.scope()!.head.hash, time: given.time, clamped: false, epoch: 0,
+  const effects: Effect[] = sequenceEffects([{ effect: 'attempt', operation: given.input.operation, attempt: given.input.attempt, result: given.input.result, selected: null },
+    ...capture.effects, ...capture.opens.flatMap((open, n) => operationOpening(n, open))]);
+  const entry: Entry = { v: 1, genesis: sealedAt(given.resolved.at).genesis, seq: given.resolved.self, prev: given.state.scope()!.head.hash, time: given.time, clamped: false, epoch: 0,
     input: given.input, uses: capture.uses, prepared: [], effects, sends: capture.sends.map((send, n) => ({ n, ...send })) };
   return certifiedCaptureBudgetV15(record, given.resolved.bounds, entry);
 }

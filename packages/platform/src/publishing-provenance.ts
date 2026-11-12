@@ -4,7 +4,7 @@ import { evidenceIncidentOriginV17 } from "./evidence-incident-origin-v17.ts";
 import { same } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, GenesisInput, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, deliveryCauseDigest, intentDigest, isEntryBodyOf, isEntryOf, isMemberRef, messageDigest, parseStrict, isDigest, isPlatformDefinition, isSeed, platformName, scopeIdOf, verifySignedIntent, type CheckedSequence } from "@generalbusiness/dap-bytes";
-import { creationContextOf, isFactRef, isObject, isScopeRef, sentBy, type SourceCopy } from "@generalbusiness/dap-derive";
+import { creationContextOf, isFactRef, isObject, isScopeRef, sentBySource, type SourceCopy } from "@generalbusiness/dap-derive";
 
 export const PUBLISHING_LANE_DIGESTS = [
   "sha256:bdeba17b698c5c56b8ab9255ce190d69df146e7b2784d2a636de832c86c2ba60",
@@ -97,7 +97,7 @@ function nativeOrigin(named: Digest, name: "change" | "issue", facts: readonly S
       && !same(origin, born.source)) return false;
   } else if (!same(body["directory"], seed.creator)) return false;
   if (name === "change" && !isScopeRef(fields["destination"])) return false;
-  return sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message });
+  return sentBySource(creator, { from: born.source, n: born.n, to: seed, message: born.message });
 }
 
 /** Reserved roles require authenticated native creation, including activated extensions. */
@@ -163,7 +163,7 @@ export function applicationPublicationOrigin(from: FactRef, directory: ScopeRef,
     // factory injects the room reference, and caller values cannot choose it.
     const fields = body["fields"];
     if ("destination" in fields && !same(fields["destination"], destination)) return false;
-    return sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message });
+    return sentBySource(creator, { from: born.source, n: born.n, to: seed, message: born.message });
   } catch { return false; }
 }
 
@@ -210,7 +210,7 @@ function installedApplicationOrigin(from: FactRef, directory: ScopeRef, destinat
     if (!isObject(fields) || canonicalize(fields) !== requested["genesis"] || Object.hasOwn(fields, "destination")
       || Object.hasOwn(fields, "opener") && !same(fields["opener"], requested["installer"])) return false;
     const expected = { ...fields, ...(requested["needsDestination"] ? { destination } : {}) };
-    return same(body["fields"], expected) && sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message });
+    return same(body["fields"], expected) && sentBySource(creator, { from: born.source, n: born.n, to: seed, message: born.message });
   } catch { return false; }
 }
 

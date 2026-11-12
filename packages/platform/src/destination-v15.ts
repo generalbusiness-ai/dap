@@ -9,6 +9,7 @@ import { RULES_TREE_PROOF, verifyRulesTree } from './rules-policy-tree.ts';
 import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, readRulesCertificateBinding, rulesCertificateBranchMatches } from './rules-certificate.ts';
 import { rulesCertificateEvidenceValues } from './destination-v14.ts';
 import { rulesCertificateFamilyV15, rulesCertificateOpeningV15, rulesCertificateDeclineV15, readRulesCertificateDeclinedV15 } from './rules-certificate-v15.ts';
+import { sealedAt } from "@generalbusiness/dap-derive";
 
 const birthField=(under:string)=>({type:'fact' as const,kind:['establish'],under,required:true});
 const branch=(given:RuleGiven)=>given.resolved.subjects.get('branch') ?? given.state.page('branch',['ready'],null,1).items[0];
@@ -39,7 +40,7 @@ function readRecord(value:unknown,keys:readonly string[]):Record<string,unknown>
 
 function validConfirmed(given:RuleGiven,operation:import('@generalbusiness/dap-derive').Operation) {
   if(given.input.type!=='outcome'||given.input.result!=='confirmed'||!evidence(given.input.evidence.body))return null;
-  const opened=rulesCertificateOpeningV15(given.own,operation,given.resolved.at);
+  const opened=rulesCertificateOpeningV15(given.own,operation,sealedAt(given.resolved.at));
   if(!opened)return null;
   const request=given.own(opened.started.seq);if(request?.entry.input.type!=='act')return null;
   const family=rulesCertificateFamilyV15(given,'rules',request.entry.input.signed.intent.fields);
@@ -102,7 +103,7 @@ export const destinationRulesV15:Rules={...destinationRules4,
       if(readRecord(answer.body,[])!==null)return true;
       if(result!=='refused'||answer.basis!=='own-answer'||given.input.type!=='outcome')return false;
       const declined=readRulesCertificateDeclinedV15(answer.body),operation=given.state.operation(given.input.operation);
-      const opened=operation&&rulesCertificateOpeningV15(given.own,operation,given.resolved.at),scope=given.state.scope();
+      const opened=operation&&rulesCertificateOpeningV15(given.own,operation,sealedAt(given.resolved.at)),scope=given.state.scope();
       // Own-answer evidence carries the host's bounded observation. Only the
       // independently derived native fact below can enter branch state.
       return !!declined&&!!opened&&!!scope&&same(declined.request,opened.started)
@@ -115,12 +116,12 @@ export const destinationRulesV15:Rules={...destinationRules4,
     },most:{effects:1,requests:0,operations:0},
     derives:(given,operation,selected)=>{
       if(given.input.type!=='outcome'||operation.for===undefined)return {effects:[],sends:[],opens:[]};
-      const opened=rulesCertificateOpeningV15(given.own,operation,given.resolved.at),scope=given.state.scope();
+      const opened=rulesCertificateOpeningV15(given.own,operation,sealedAt(given.resolved.at)),scope=given.state.scope();
       if(!opened||!scope)return {effects:[],sends:[],opens:[]};
       const hostDeclined=given.input.result==='refused'&&readRulesCertificateDeclinedV15(given.input.evidence.body)!==null;
       const finalRace=given.input.result==='confirmed'&&selected===false&&validConfirmed(given,operation)!==null;
       if(!hostDeclined&&!finalRace)return {effects:[],sends:[],opens:[]};
-      const declined=rulesCertificateDeclineV15(given.own,given.resolved.at,scope.head,opened.started);
+      const declined=rulesCertificateDeclineV15(given.own,sealedAt(given.resolved.at),scope.head,opened.started);
       if(!declined)return {effects:[],sends:[],opens:[]};
       // Every real decline remains in its own immutable outcome entry. This
       // value is the latest completed answer, never a consumed certificate.

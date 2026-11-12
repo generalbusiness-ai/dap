@@ -4,7 +4,7 @@
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, Digest, Entry, FactRef, GenesisInput, PlatformDefinition, Request, ScopeKind, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, deliveryCauseDigest, intentDigest, isDigest, isPlatformDefinition, isScopeKind, isSeed, messageDigest, platformName, scopeIdOf, seedDigest, utf8, verifySignedIntent, resolveGenesisSelf, type CheckedSequence } from "@generalbusiness/dap-bytes";
-import { isEntryOf, isFactRef, isObject, isScopeRef, same, sentBy, type Fetched } from "@generalbusiness/dap-derive";
+import { isEntryOf, isFactRef, isObject, isScopeRef, same, sentBy, type Fetched, type SourceCopy } from "@generalbusiness/dap-derive";
 import { sourceName as legacySourceName } from "./publishing-provenance.ts";
 import { PARTITION_COHORT as COHORT, MAX_GENERATIONS, PARTITION_SPAN } from "./directory-partitions.ts";
 
@@ -28,7 +28,7 @@ const creatorOf = (born: Pick<GenesisInput, "seed" | "source">): ScopeRef | null
 const creationCreator = (born: PartitionCreation): ScopeRef | null =>
   born.seed.creator ? resolveGenesisSelf(born.seed.creator, born.source) : null;
 /** The recorded scalar must agree with actual birth before Native identity. */
-const recordedKind = (input: Entry["input"], source: Fetched): boolean =>
+const recordedKind = (input: Entry["input"], source: Pick<Fetched, "sequence">): boolean =>
   "sourceKind" in input && input.sourceKind === source.sequence.kind;
 
 /** Called only after every frame passed full association and byte checks.
@@ -491,18 +491,19 @@ export function partitionProducerName(at: ScopeRef, frames: readonly PartitionNa
       const key = canonicalize(scope);
       if (depth > PARTITION_IDENTITY_BOUNDS.laneDepth || seen.has(key)) return null;
       seen.add(key);
-      const origin: Fetched[] = [{ fact: own.fact, entry: own.entry, sequence: own.sequence, under: own.declarationName }];
+      // A sealed entry's bytes are its canonical form, which every frame passed.
+      const origin: SourceCopy[] = [{ fact: own.fact, entry: own.entry, sequence: own.sequence, under: own.declarationName, bytes: canonicalize(own.entry) }];
       const from = own.entry.input.source;
       if (from) {
         const creating = frame(facts, from);
         if (!creating) return null;
         const parentName = name(from.at, depth + 1);
         if (parentName === null) return null;
-        origin.push({ ...creating, under: parentName });
+        origin.push({ ...creating, under: parentName, bytes: canonicalize(creating.entry) });
         if (parentName === "issue") {
           const parent = first(facts, from.at);
           if (!parent) return null;
-          origin.push({ ...parent, under: parentName });
+          origin.push({ ...parent, under: parentName, bytes: canonicalize(parent.entry) });
         }
       }
       return legacySourceName(own.named, own.declarationName, origin);

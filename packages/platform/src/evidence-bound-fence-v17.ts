@@ -2,7 +2,7 @@
  * synthetic item or later result substitutes for its sealed source. */
 import type { ActType, Bounds, Entry, FactRef } from "@generalbusiness/dap-contract";
 import { entryHash, isEntry, isFactRef, isOperationId, isRecord, same } from "@generalbusiness/dap-bytes";
-import { isEntryBodyOf, messageFields, sentBy, useOf, type Item, type Operation, type Own, type StateView } from "@generalbusiness/dap-derive";
+import { isEntryBodyOf, messageFields, sentByBody, useOf, type Item, type Operation, type Own, type StateView } from "@generalbusiness/dap-derive";
 import { claimEvidenceBatchJobV17, readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
 import { evidenceFundedBatchV17 } from "./destination-evidence-funding-v17.ts";
 import { evidenceOperationOpeningV17 } from "./evidence-opening-v17.ts";
@@ -62,7 +62,7 @@ export function readEvidenceBoundFenceV17(state: StateView, own: Own, operation:
     const job = own.retained(uses[0]!);
     // A retained use is a body only (ruling a94bfa4d): its content matches the use, and no sequence is claimed for it.
     if (!job || !isEntry(job) || !isEntryBodyOf(job, jobFact) || !same(useOf(jobFact, job, uses[0]!.kind), uses[0])
-      || !sentBy(job, { to: scope.at, from: input.from, n: input.n, message: input.message })) return null;
+      || !sentByBody(job, { to: scope.at, from: input.from, n: input.n, message: input.message })) return null;
     return { entry, source: { at: scope.at, seq: entry.seq, hash: sealed.hash }, holder, batch, fields, job,
       birth: { at: scope.at, seq: 0, hash: genesis.hash }, batchFact: { at: scope.at, seq: holder.id, hash: batchBirth.hash } };
   } catch { return null; }

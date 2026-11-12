@@ -1,8 +1,8 @@
 /** G17 only. Canonical record bytes plus the complete carrying entry,
  * including future generations, must fit before the first capture. */
-import type { Bounds, Effect, Entry, FactRef, FactUse, KeyId, RulesObservation } from '@generalbusiness/dap-contract';
+import type { Bounds, Effect, Entry, FactRef, FactUse, KeyId, RulesObservation, SequenceEntry } from '@generalbusiness/dap-contract';
 import { canonicalize, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, memberFits, parseStrict, same, timeMs, utf8 } from '@generalbusiness/dap-bytes';
-import { amountMath, naturalAmount, NOTHING, observationBytes, operationOpening, type Opening, type OperationRules, type RuleEffect, type RuleGiven, type RuleRequest } from '@generalbusiness/dap-derive';
+import { amountMath, naturalAmount, NOTHING, observationBytes, operationOpening, sealedAt, sequenceEffects, type Opening, type OperationRules, type RuleEffect, type RuleGiven, type RuleRequest } from '@generalbusiness/dap-derive';
 import { isObjectId } from './reservation.ts';
 import { readRulesPolicyObservationV17, requiredChecksV17, type ReservationPolicyInputV17 } from './reservation-v17.ts';
 import { EVIDENCE_BATCH_JOBS_V17, EVIDENCE_BATCH_ACCOUNTS_V17, evidenceBatchWireV17, obligationChecksV17, readEvidenceBatchV17, type EvidenceBatchRecordV17 } from './evidence-batch-v17.ts';
@@ -146,7 +146,7 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds, captured: Evidence
   if (!Number.isSafeInteger(uses) || uses < 0) return { admitted: false, entryBytes: 0, effects: 0, variants: [] };
   const attempt: Effect = { effect: 'attempt', operation: OPERATION, attempt: MAX, result: 'confirmed', selected: false };
   const opening = (k: number, kind: string, attempts: number) => operationOpening(k, { owner: 'platform:destination@17', kind, attempts, for: MAX });
-  const input = (kind: string, body: import('@generalbusiness/dap-contract').FieldValue): Entry['input'] => ({
+  const input = (kind: string, body: import('@generalbusiness/dap-contract').FieldValue): SequenceEntry['input'] => ({
     type: 'outcome', operation: OPERATION, attempt: MAX, owner: 'platform:destination@17', kind, result: 'confirmed',
     evidence: { basis: 'own-answer', body },
   });
@@ -235,7 +235,7 @@ export function certifiedBoundFenceBudgetV17(bounds: Bounds, batch: EvidenceBatc
     let entryBytes = 0, admitted = true;
     const variants: Entry[] = [];
     for (const check of batch.checks) {
-      const input: Entry['input'] = { type: 'delivery', from: job, n: MAX, decision: 'applied', message: { class: 'request', type: 'tell', body: {
+      const input: SequenceEntry['input'] = { type: 'delivery', from: job, sourceKind: 'lane', n: MAX, decision: 'applied', message: { class: 'request', type: 'tell', body: {
         message: 'check-fence', fields: { operation: batch.operation, manifest: { ...job, at: manifest.at }, job, name: check.name,
           earlier: job, reuse: false, forJob: job, binding: null, bindingDigest: HASH },
       } } };
@@ -365,9 +365,9 @@ export function certifiedCaptureBudgetV17(record: CertifiedPublicationStateV17, 
  * already known. Only the observation cohort uses its declared maxima. */
 export function certifiedReservationBudgetV17(given: RuleGiven, record: CertifiedPublicationStateV17, capture: CaptureEnvelopeV17) {
   if (given.input.type !== 'outcome') throw Error('A certified capture is an outcome');
-  const effects: Effect[] = [{ effect: 'attempt', operation: given.input.operation, attempt: given.input.attempt, result: given.input.result, selected: null },
-    ...capture.effects, ...capture.opens.flatMap((open, n) => operationOpening(n, open))];
-  const entry: Entry = { v: 1, at: given.resolved.at, seq: given.resolved.self, prev: given.state.scope()!.head.hash, time: given.time, clamped: false, epoch: 0,
+  const effects: Effect[] = sequenceEffects([{ effect: 'attempt', operation: given.input.operation, attempt: given.input.attempt, result: given.input.result, selected: null },
+    ...capture.effects, ...capture.opens.flatMap((open, n) => operationOpening(n, open))]);
+  const entry: Entry = { v: 1, genesis: sealedAt(given.resolved.at).genesis, seq: given.resolved.self, prev: given.state.scope()!.head.hash, time: given.time, clamped: false, epoch: 0,
     input: given.input, uses: capture.uses, prepared: [], effects, sends: capture.sends.map((send, n) => ({ n, ...send })) };
   return certifiedCaptureBudgetV17(record, given.resolved.bounds, entry);
 }

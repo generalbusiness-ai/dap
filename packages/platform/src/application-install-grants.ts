@@ -14,7 +14,7 @@ import { INSTALL_DEFINITIONS, installDefinitionTextFields, installDeclarationsTy
 const repository = { repository: { item: "repository", one: true } } as const;
 function ref(given: RuleGiven, kind: "membership" | "destination" | "rules"): ScopeRef | null {
   const held = given.state.page("repository", ["open"], null, 1).items[0]?.refs[kind];
-  return isScopeRef(held) && held.kind === kind ? held : null;
+  return isScopeRef(held) ? held : null;
 }
 const catalog = (given: RuleGiven) => given.state.page("application-catalog", ["retained"], null, 16).items.find(item => item.values["definition"] === given.resolved.fields["definition"]);
 const fieldsOf = (given: RuleGiven) => Object.fromEntries(Object.keys(installGrantFields).map(key => [key, given.resolved.fields[key]]));
