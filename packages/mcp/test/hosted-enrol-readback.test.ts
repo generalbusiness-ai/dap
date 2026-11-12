@@ -117,6 +117,7 @@ test.each([
         const input = entry.input;
         return input.type === "act" && input.signed.intent.kind === "enrol"
           && input.signed.intent.actor === agentSigner.key && input.signed.intent.idempotencyKey === `enrol:${OP}`
+          && input.signed.intent.to !== null
           && input.signed.intent.to.scope === peer.membership.scope && input.signed.intent.to.inc === peer.membership.inc
           && input.signed.intent.to.kind === peer.membership.kind;
       });
