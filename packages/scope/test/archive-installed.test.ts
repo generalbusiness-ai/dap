@@ -5,7 +5,7 @@
 import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test, vi } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FactRef, type Head, type Input, type PlatformDefinition, type ScopeId, type ScopeRef, type Sealed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, encodeItemQueryParameter, isDigest, isEntry, isFactRef, isScopeId, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, b64url, canonicalize, digestBytes, encodeItemQueryParameter, isDigest, isEntry, isFactRef, isScopeId, isRecord, isSeed, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { packApplication2, readApplicationPackage2, readPublishedApplicationPackage2, type ApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -132,8 +132,9 @@ class TESTCeilingChargeBudget extends ArchiveBudget {
 }
 function archiveGiven(store: SqliteStore): OutsideGiven {
   const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: parseStrict(row.bytes) as Sealed["entry"], hash: row.hash } : null; };
-  const input = own(0)?.entry.input;
-  return { ...production(), clock: net.clock, state: store, scope: () => store.scope(),
+  const first = store.stored(0), input = first ? (parseStrict(first.bytes) as Sealed["entry"]).input : null;
+  const sequence = first && input?.type === "genesis" ? admitSequenceGenesis(first.bytes, { scope: scopeIdOf(input.seed), genesis: first.hash }, PROPOSED_BOUNDS.entryBytes) : null;
+  return { localSequence: () => sequence, ...production(), clock: net.clock, state: store, scope: () => store.scope(),
     genesis: () => input?.type === "genesis" ? input : null, own, retained: (...args) => store.retained(...args) };
 }
 // Finite actual declaration/native-owner metadata. This explicit TEST

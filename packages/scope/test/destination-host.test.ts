@@ -52,7 +52,7 @@ function fixture(sql: SqlStorage, importing = false) {
   const provider = new Provider();
   const retained = new Map<Digest, RetainedInput>();
   const given: OutsideGiven = {
-    state: branch.state, own: branch.own, retained: (_kind, digest) => retained.get(digest) ?? null,
+    localSequence: () => branch.own.sequence(), state: branch.state, own: branch.own, retained: (_kind, digest) => retained.get(digest) ?? null,
     scope: () => branch.state.scope(),
     genesis: () => { const input = branch.own(0)?.entry.input; return input?.type === "genesis" ? input : null; },
     clock: { read: () => branch.now }, random: { bytes: (length) => new Uint8Array(length) },
@@ -392,7 +392,7 @@ test.each([
     const journey = publicationJourney(data, named, rules);
     const make = () => {
       const ledger = journey.make(), provider = new Provider(), retained = new Map<Digest, RetainedInput>();
-      const given: OutsideGiven = { state: ledger.state, own: ledger.own, scope: () => ledger.state.scope(),
+      const given: OutsideGiven = { localSequence: () => ledger.own.sequence(), state: ledger.state, own: ledger.own, scope: () => ledger.state.scope(),
         genesis: () => { const input = ledger.own(0)?.entry.input; return input?.type === "genesis" ? input : null; },
         retained: (_kind, digest) => retained.get(digest) ?? null, clock: { read: () => ledger.now }, random: { bytes: n => new Uint8Array(n) } };
       const custody = new CredentialStore(state.storage.sql, () => ledger.at);

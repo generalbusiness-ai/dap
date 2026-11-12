@@ -242,6 +242,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     };
     const outsideGiven: OutsideGiven = {
       ...made, state: outsideState, bounds,
+      localSequence: () => this.#scope?.localSequence() ?? null,
       definition: () => this.#scope.pinned()?.definition ?? null,
       retained: (...args) => store.retained(...args),
       own: (seq) => {
@@ -651,7 +652,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     // The parent Directory genesis is already its ordinary source origin.
     if (origin && pinned.named === EVIDENCE_INCIDENT_PINS_V17.destination) {
       if (!Number.isSafeInteger(seq) || seq < 0) return null;
-      const own = ownOf(this.#store), actual = own(seq), position = actual && evidenceIncidentAdmissionPositionV17(actual.entry);
+      const own = ownOf(this.#store, this.#scope.localSequence()!), actual = own(seq), position = actual && evidenceIncidentAdmissionPositionV17(actual.entry);
       if (typeof position === "number") {
         const admitted = own(position), at = this.#store.scope()?.at;
         if (!admitted || !at) return null;
@@ -990,7 +991,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   /** Internal namespace read of one retained work-source item's current state. */
   async workSourceState(fact: import("@generalbusiness/dap-contract").FactRef): Promise<string | null> {
     this.#first();
-    const scope = this.#store.scope(), sealed = ownOf(this.#store)(fact.seq);
+    const scope = this.#store.scope(), kept = this.#store.stored(fact.seq);
+    const sealed = kept ? { entry: JSON.parse(kept.bytes) as Entry, hash: kept.hash } : null;
     if (!scope || !sealed || fact.at.kind !== scope.at.kind || fact.at.scope !== scope.at.scope
       || fact.at.inc !== scope.at.inc || sealed.hash !== fact.hash) return null;
     const item = this.#store.item(fact.seq);

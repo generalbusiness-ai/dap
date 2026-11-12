@@ -256,8 +256,10 @@ export class Deliveries {
     // the scope reads one observation for each subject of the rows of the clause that runs, before the turn, and the commit
     // derives the list again (`Observes`). No other delivery may hold `observed`, so nothing is read for one.
     const rows = message.class === "result" && !known ? this.#scope.observes() : new Observes(null, bounds);
-    const context = (clock: Reading): Omit<DeliveryContext, "prepared"> =>
-      ({ clock, bounds, facts, own: ownOf(store), snapshot: snapshotsOf(store), texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: (this.#scope.pinned() ?? creation)?.platform ?? undefined, source: { entry: source.entry, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, origin, ...rows.hand() });
+    const context = (clock: Reading): Omit<DeliveryContext, "prepared"> => {
+      const sequence = this.#scope.localSequence();
+      return ({ clock, bounds, facts, own: sequence ? ownOf(store, sequence) : undefined, snapshot: snapshotsOf(store), texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: (this.#scope.pinned() ?? creation)?.platform ?? undefined, source: { entry: source.entry, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, origin, ...rows.hand() });
+    };
     /** The definition a section of the turn runs under: the pinned one, or before the genesis the one the seed names. */
     const definition = (): ValidDefinition => this.#scope.pinned()?.definition ?? creation!.valid;
     /** A `create` goes to the genesis judge, which answers a repeat from the genesis when the scope exists. */
@@ -314,7 +316,7 @@ export class Deliveries {
           case "refused": return said(retry("unavailable"));
         }
       },
-    }, creation?.valid));
+    }, creation ? { named: (delivered.to as Seed).definition, definition: creation.valid, platform: creation.platform } : undefined));
     return end.end === "answer" ? end.answer : retry(end.end === "idle" ? "unavailable" : end.end);
   }
 }

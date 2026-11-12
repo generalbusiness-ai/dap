@@ -27,7 +27,7 @@ function fixture() {
   const register = new Register();
   const provider = new Provider();
   const given: OutsideGiven = {
-    state: register.state, own: register.own, retained: () => null, scope: () => register.state.scope(),
+    localSequence: () => register.own.sequence(), state: register.state, own: register.own, retained: () => null, scope: () => register.state.scope(),
     genesis: () => { const input = register.own(0)?.entry.input; return input?.type === "genesis" ? input : null; },
     clock: { read: () => register.now }, random: { bytes: (length) => new Uint8Array(length) },
   };

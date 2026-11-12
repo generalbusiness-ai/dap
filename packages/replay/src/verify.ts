@@ -2281,7 +2281,9 @@ class Verifier {
     // inputs or in the caller's bounds.
     // Section 16.4: the guard `ancestry` reads a snapshot of staged refs from the bytes that the scope retains. Here they are the
     // bytes that an earlier outcome entry of this scope named, which were read and checked against their digest at that entry.
-    const ownEntry: Own = Object.assign(floorOwn(state, run.sealed, use => run.retainedEntries.get(use.content) ?? null), { sequence: () => run.sequence });
+    const sequence = run.sequence;
+    if (!sequence) throw new Stop("incomplete", "the replay has no admitted local genesis", where);
+    const ownEntry: Own = floorOwn(state, run.sealed, sequence, use => run.retainedEntries.get(use.content) ?? null);
     const reading = {
       clock, bounds, facts, prepared: entry.prepared, own: ownEntry, texts: (digest: Digest) => texts.get(digest) ?? null, snapshot: (digest: Digest) => run.snapshots.get(digest) ?? null,
       capabilities: this.#capabilities, platform: run.platform ?? undefined,

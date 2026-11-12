@@ -86,6 +86,7 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
     bounds: options.bounds ?? PROPOSED_BOUNDS, facts: options.facts ?? [], prepared: entry.prepared,
     clock: { reading: entry.time, asOf: entry.time, behind: entry.clamped === true },
     own: options.own ? Object.assign((seq: number) => seq < entry.seq ? options.own!(seq) : null, {
+      sequence: () => options.own!.sequence(),
       ...(options.own.retained ? { retained: options.own.retained } : {}),
       ...(options.own.positions ? { positions: (before: number) => options.own!.positions!(Math.min(before, entry.seq)) } : {}),
       ...(options.own.sizeProofs ? { sizeProofs: () => options.own!.sizeProofs!().filter(proof => proof.seq < entry.seq) } : {}),

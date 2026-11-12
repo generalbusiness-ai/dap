@@ -9,7 +9,7 @@ import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS, type Entry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, utf8 } from "@generalbusiness/dap-bytes";
 import { applyEntry, clockOf, fixedRowsOf, stateDigest, type Item } from "@generalbusiness/dap-derive";
-import { variant } from "@generalbusiness/dap-derive/testing";
+import { fixtureSequence, variant } from "@generalbusiness/dap-derive/testing";
 import { structuralFloorHistory } from "../../derive/test/fixed-slot-fixture.ts";
 import { ownOf } from "../src/core.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
@@ -277,7 +277,7 @@ test("a fixture-judged floor rekeys a retained final structural value before act
         const bytes = canonicalize(sealed.entry);
         store.append(sealed.entry, sealed.hash, bytes, utf8(bytes).length);
         if (sealed.entry.seq === 0) store.retain({ kind: "definition", digest: history.definition.digest, bytes: canonicalize(history.definition.declared) });
-        applyEntry(store, history.definition, sealed.entry, sealed.hash, { own: ownOf(store) });
+        applyEntry(store, history.definition, sealed.entry, sealed.hash, { own: ownOf(store, fixtureSequence(history.scope)) });
       });
     }
     expect(store.stored(1)).toBeNull();

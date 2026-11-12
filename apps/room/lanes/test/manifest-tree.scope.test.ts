@@ -3,7 +3,7 @@ import { customRequiredChangeData } from "./support/definition-corpus-data.ts";
 import { runInDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import { inject, expect, test, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, timeOf, unb64url, definitionDigest, sign, keyIdOfSecret, digestBytes, factRefOf, scopeIdOf, timeMs, utf8, textDigest } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, b64url, canonicalize, timeOf, unb64url, definitionDigest, sign, keyIdOfSecret, digestBytes, factRefOf, scopeIdOf, timeMs, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, signedReader, type Fetch } from "@generalbusiness/dap-client";
 import { FAILED_CLAIM_COHORT, firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
@@ -68,7 +68,9 @@ async function publicationCheckpoint(node: Platform) {
       const rule = code && mark && operation.owner === definition ? ruleAt(code.rules, mark.code, "outcome") : null;
       const callback = rule?.rules.publicationOrigin;
       try {
-        const asked = callback?.(store, operation, ownOf(store));
+        const sequence = first && scope ? admitSequenceGenesis(first.bytes, scope.at, PROPOSED_BOUNDS.entryBytes) : null;
+        if (!sequence) throw new Error("the diagnostic scope has no admitted genesis");
+        const asked = callback?.(store, operation, ownOf(store, sequence));
         return { callback: !!callback, result: asked === undefined ? "absent" : asked === null ? "not-required" : asked === false ? "denied" : "required",
           ...(asked && { from: asked.from, directory: asked.directory, destination: asked.destination }) };
       } catch (error) { return { callback: !!callback, result: "threw", errorCategory: error instanceof Error ? error.name.slice(0, 80) : "non-error" }; }

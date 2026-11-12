@@ -1,6 +1,7 @@
 /** Structural reads supplied to host adapters. No Worker class or ambient
  * storage type belongs to this shared type boundary. */
 import type { Bounds, Input, KeyId } from "@generalbusiness/dap-contract";
+import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import type { ScopeState, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Ports } from "./ports.ts";
 import type { Sealed, Store } from "./store.ts";
@@ -16,6 +17,8 @@ export interface AuthorityGiven extends Given {
   named(key: KeyId): boolean;
 }
 export interface OutsideGiven extends Given {
+  /** Deferred memory-only association. Null before the local birth is admitted. */
+  localSequence(): CheckedSequence | null;
   /** Exact declaration already admitted by this scope's native runtime. */
   definition?(): ValidDefinition | null;
   /** Native scopes supply their actual configured bounds. Optional only for

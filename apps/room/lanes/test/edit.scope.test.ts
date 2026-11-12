@@ -1,8 +1,8 @@
 import { runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { describe, expect, test, onTestFinished } from "vitest";
-import type { Entry, FactRef, Item, Read, ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, entryHash, scopeIdOf, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type Entry, type FactRef, type Item, type Read, type ScopeId } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, b64url, canonicalize, definitionDigest, entryHash, scopeIdOf, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { firstExtents, initialCommitObjects, platform } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
@@ -57,7 +57,9 @@ async function publicationCheckpoint(node: Platform) {
       const rule = code && mark && operation.owner === definition ? ruleAt(code.rules, mark.code, "outcome") : null;
       const callback = rule?.rules.publicationOrigin;
       try {
-        const asked = callback?.(store, operation, ownOf(store));
+        const sequence = first && scope ? admitSequenceGenesis(first.bytes, scope.at, PROPOSED_BOUNDS.entryBytes) : null;
+        if (!sequence) throw new Error("the diagnostic scope has no admitted genesis");
+        const asked = callback?.(store, operation, ownOf(store, sequence));
         return { callback: !!callback, result: asked === undefined ? "absent" : asked === null ? "not-required" : asked === false ? "denied" : "required",
           ...(asked && { from: asked.from, directory: asked.directory, destination: asked.destination }) };
       } catch (error) { return { callback: !!callback, result: "threw", errorCategory: error instanceof Error ? error.name.slice(0, 80) : "non-error" }; }

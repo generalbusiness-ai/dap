@@ -104,6 +104,7 @@ export class DestinationHost implements Outside {
     // The outside port exposes retained bytes separately from own history.
     // Reconstruct only an already retained entry, with Core's hash/parser checks.
     this.#evidenceOwn = Object.assign((seq: number) => given.own(seq), {
+      sequence: () => given.localSequence(),
       retained: (use: FactUse) => {
         const held = given.retained("entry", use.content), entry = held && rawRetainedJSON(use.content, held.bytes);
         return isEntry(entry) ? entry : null;

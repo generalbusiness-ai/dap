@@ -87,7 +87,7 @@ export function drawsOf(view: StateView, definition: ValidDefinition, entry: Dra
   const deciding = input.type === "delivery" && input.message.class === "request" && input.message.type === "tell";
   const decided = binding === undefined && deciding && scope ? decisionBinding(view, definition, entry, {
     ...options, bounds: options.bounds ?? PROPOSED_BOUNDS, platform: options.platform, facts: options.facts ?? [], prepared: [],
-    own: options.own ? (seq) => seq < entry.seq ? options.own!(seq) : null : undefined,
+    own: options.own ? Object.assign((seq: number) => seq < entry.seq ? options.own!(seq) : null, { sequence: () => options.own!.sequence() }) : undefined,
     clock: { reading: entry.time ?? scope.time, asOf: entry.time ?? scope.time, behind: entry.clamped === true },
   }) : binding ?? null;
   const working = new Map<number, Counts>();

@@ -1,3 +1,4 @@
+import { storedSequenceOf } from "./support/local-sequence.ts";
 import { describe, expect, onTestFinished, test } from "vitest";
 import { abortAllDurableObjects, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
@@ -276,7 +277,9 @@ describe("read sessions (authority note, sections 3.9, 3.12 row W6, 5.3 and 5.5;
         const checked = validateDefinition(parseStrict(canonicalize(platform("platform:membership@1")!.data)), PROPOSED_BOUNDS, RULE_PROFILES, { platform: true });
         if (!checked.ok) throw new Error("membership's data is not valid");
         const wakes = new Wakes(store, { set: (time) => (time === null ? state.storage.deleteAlarm() : state.storage.setAlarm(timeMs(time)!)) }, false);
-        const turns = new Turns(store, { clock: net.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, PROPOSED_BOUNDS, () => checked.definition, () => undefined);
+        // Fixture setup admission is separate from the turn's reads.
+        const pin = { pinned: { named: "platform:membership@1" as const, definition: checked.definition, platform: null }, sequence: storedSequenceOf(store, PROPOSED_BOUNDS.entryBytes) };
+        const turns = new Turns(store, { clock: net.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, PROPOSED_BOUNDS, () => checked.definition, () => undefined, { value: pin }, () => pin);
         return turns.run<string>({ asks: () => [], judge: (view) => ({ verdict: "write", retain: [small, large], draft: { input: { type: "checkpoint", ...checkpointOf(view) }, uses: [], prepared: [], effects: [], sends: [], judgesTime: false }, sealed: () => "written", unfit: () => "unfit", full: () => "full" }) });
       });
       const held = await session(owner, M, una);

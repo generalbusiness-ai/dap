@@ -58,7 +58,7 @@ function fixture(laneIncarnation = 4) {
   const own = new Map<number, Entry>([[0, born]]);
   const state = new MemoryState();
   state.setScope({ held: [], at: lane, status: "active", creator: directory, head: { seq: 0, hash: entryHash(born) }, time, genesis: { hash: entryHash(born), source: born.input.type === "genesis" ? born.input.source : null, n: 0 } });
-  const given: OutsideGiven = { definition: () => definition, state, scope: () => state.scope(), own: seq => { const entry = own.get(seq); return entry ? { entry, hash: entryHash(entry) } : null; },
+  const given: OutsideGiven = { localSequence: () => null, definition: () => definition, state, scope: () => state.scope(), own: seq => { const entry = own.get(seq); return entry ? { entry, hash: entryHash(entry) } : null; },
     genesis: () => born.input.type === "genesis" ? born.input : null, retained: () => null, clock: { read: () => now }, random: { bytes: n => new Uint8Array(n) } };
   return { state, given, sources, repository, register, born, own, sealed, now: () => now, clock: (value: string) => { now = value; } };
 }

@@ -394,7 +394,9 @@ export class Operations {
   /** Forward security check only: it changes neither old entries nor their derivation. */
   async #publicationReady(operation: Operation, reader?: ReceiverReads): Promise<boolean> {
     const rules = this.#scope.owners()?.rules(operation.owner, operation.kind);
-    const asked = rules?.publicationOrigin?.(this.#store, operation, ownOf(this.#store));
+    const sequence = this.#scope.localSequence();
+    if (rules?.publicationOrigin && !sequence) return false;
+    const asked = rules?.publicationOrigin?.(this.#store, operation, ownOf(this.#store, sequence!));
     if (asked === undefined || asked === null) return true;
     if (asked === false) return false;
     try {
@@ -510,7 +512,7 @@ export class Operations {
       // A stale file is judged as known not sent, before the durable mark.
       // Recovery and late answers above concern an original request that may
       // already have left and never enter this branch.
-      const local = rules.beforeSend?.(store, operation, attempt, ownOf(store));
+      const local = rules.beforeSend?.(store, operation, attempt, ownOf(store, this.#scope.localSequence()!));
       if (local) {
         const recorded = await this.#record({ type: "outcome", operation: id, attempt, result: "refused", evidence: local }, false);
         if (recorded.recorded === "written") { localRefusals++; this.#again = true; }
@@ -646,7 +648,9 @@ export class Operations {
     let body: unknown = null;
     try {
       const of = this.#store.operation(operation);
-      body = (of && this.#scope.owners()?.rules(of.owner, of.kind)?.unknown?.(this.#store, of, attempt, ownOf(this.#store))) ?? null;
+      const rules = of && this.#scope.owners()?.rules(of.owner, of.kind);
+      const sequence = this.#scope.localSequence();
+      body = (of && sequence && rules?.unknown?.(this.#store, of, attempt, ownOf(this.#store, sequence))) ?? null;
     } catch {
       body = null;
     }
@@ -757,7 +761,7 @@ export class Operations {
     };
     let interpreted: readonly Fetched[] | undefined;
     let readRetained = retained;
-    const context = (clock: Reading) => ({ clock, bounds, owners: this.#owners, platform: this.#scope.pinned()?.platform ?? undefined, own: ownOf(store), ...(definition.observing ? { retained: readRetained, ...rows.hand() } : {}), values: [...bytes, ...(rows.hand().values ?? [])] });
+    const context = (clock: Reading) => ({ clock, bounds, owners: this.#owners, platform: this.#scope.pinned()?.platform ?? undefined, own: ownOf(store, this.#scope.localSequence()!), ...(definition.observing ? { retained: readRetained, ...rows.hand() } : {}), values: [...bytes, ...(rows.hand().values ?? [])] });
     if (receiver?.mode === "partition-v1" && definition.observing) {
       // The pure origin preamble asks for every use before it judges rows or
       // effects. Returning no copy discovers that exact immutable dependency

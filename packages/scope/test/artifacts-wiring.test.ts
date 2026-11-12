@@ -58,7 +58,7 @@ function registerFixture(host: string, namespace: string, installKey = "install"
   expect(genesis.result).toBe("write");
   if (genesis.result === "write") register.seal(genesis.draft);
   const given: OutsideGiven = {
-    state: register.state, own: register.own, retained: () => null, scope: () => register.state.scope(),
+    localSequence: () => register.own.sequence(), state: register.state, own: register.own, retained: () => null, scope: () => register.state.scope(),
     genesis: () => { const input = register.own(0)?.entry.input; return input?.type === "genesis" ? input : null; },
     clock: { read: () => register.now }, random: { bytes: (length) => new Uint8Array(length) },
   };
@@ -96,7 +96,7 @@ function destinationGiven(register: Ledger, creator: ScopeRef): OutsideGiven {
   const state = new MemoryState();
   state.setScope({ ...register.state.scope()!, at, creator, head: { seq: 0, hash }, genesis: { hash, source: null, n: null } });
   state.putItem({ id: 0, type: "branch", state: "empty", revision: 0, opened: hash, parties: {}, attributed: [], refs: { directory: creator as unknown as FieldValue, claim: claim as unknown as FieldValue }, values: { repository: register.item(1).values["repository"]!, name: "main" } });
-  return {
+  return { localSequence: () => null,
     state, own: (seq) => seq === 0 ? { entry, hash } : null,
     retained: (kind, digest) => kind === "entry" && digest === content ? { kind, digest, bytes, under: "platform:register" } : null,
     scope: () => state.scope(), genesis: () => entry.input.type === "genesis" ? entry.input : null,

@@ -1,3 +1,4 @@
+import { storedSequenceOf } from "./support/local-sequence.ts";
 import { floorSizeProofsData as data } from "../../derive/test/definition-corpus/scope-capacity-floor.ts";
 /** Native storage, admitted receiver inputs and restart. The platform data,
  * its invalid-value rule, authority, clock and sender are labelled fixtures.
@@ -72,7 +73,8 @@ test("Native archived proof200 cannot bind deciding100 while proof50 can, includ
       const store = new SqliteStore(archiveSql(state));
       expect(store.retained("text", digest)).toBeNull(); expect(store.stored(proving)).toBeNull();
       expect(store.floor()!.sizeProofs).toEqual([{ digest, seq: proving, bound: utf8(text).length }]);
-      const view = before(pre), run = () => decisionBinding(view, definition, deciding, { clock: clockOf(view, deciding.time), bounds: c.bounds, own: ownOf(store), facts: retainedFacts(store, deciding), texts: () => null, prepared: [], platform: { named: NAMED, rules } });
+      const sequence = storedSequenceOf(store, c.bounds.entryBytes); // fixture setup only
+      const view = before(pre), run = () => decisionBinding(view, definition, deciding, { clock: clockOf(view, deciding.time), bounds: c.bounds, own: ownOf(store, sequence), facts: retainedFacts(store, deciding), texts: () => null, prepared: [], platform: { named: NAMED, rules } });
       if (proving === 200) { let failure: unknown; try { run(); } catch (error) { failure = error; } expect(isUnprovenDecisionBinding(failure)).toBe(true); }
       else expect(run()).toEqual({ item: 1, message: "stop" });
     });

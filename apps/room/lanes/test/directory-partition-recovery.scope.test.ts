@@ -1,3 +1,4 @@
+import { storedSequenceOf } from "./support/local-sequence.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
@@ -131,9 +132,10 @@ test("native root keeps a lost create answer pending and explicitly resends its 
       const native = platform(C.directory)!;
       const checked = validateDefinition(native.data, PROPOSED_BOUNDS, PROFILES, { platform: true });
       if (!checked.ok) throw new Error("native Root definition is invalid");
+      const sequence = storedSequenceOf(store, PROPOSED_BOUNDS.entryBytes); // receiver fixture setup only
       const reply = synthetic.sends.find(send => send.message.class === "result")!;
       const judged = judgeDelivery(store, checked.definition, { to: reply.to, from: factRefOf(synthetic), n: reply.n, message: reply.message }, {
-        clock: clockOf(store, net.clock.now), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], own: ownOf(store),
+        clock: clockOf(store, net.clock.now), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], own: ownOf(store, sequence),
         source: { entry: synthetic, under: "platform:directory-partition" },
         origin: JSON.parse(store.stored(opened.receipt.fact.seq)!.bytes) as Entry,
         platform: { named: C.directory, rules: native.rules },

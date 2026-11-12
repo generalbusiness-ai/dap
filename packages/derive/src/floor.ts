@@ -53,7 +53,7 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
     if (!found) missing = true;
     return found;
   }, {
-    archived, positions: (before: number) => heldPositions({ floor: () => previous ?? null, scope: () => snapshot.scope }, Math.min(before, (snapshot.scope?.head.seq ?? -1) + 1)),
+    sequence: () => history.sequence(), archived, positions: (before: number) => heldPositions({ floor: () => previous ?? null, scope: () => snapshot.scope }, Math.min(before, (snapshot.scope?.head.seq ?? -1) + 1)),
     ...(history.retained ? { retained: history.retained } : {}),
     ...(history.sizeProofs ? { sizeProofs: history.sizeProofs } : {}),
   });

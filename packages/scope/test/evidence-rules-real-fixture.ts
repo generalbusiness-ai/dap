@@ -1,8 +1,9 @@
+import { storedSequenceOf } from "./support/local-sequence.ts";
 import { expect } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, DeclaredDefinition, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isFactRef, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isFactRef, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ANCESTRY_BOUNDS, CAPABILITY_CODE, countedEntries, holding, ledgerOf, localRetainedPlan, outcomeValueDomains, ownersOf, reserved, snapshotInput, stagedRefName, validateDefinition, valueDigest, walk, type Item, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
@@ -279,8 +280,11 @@ export async function evidenceIntentRoot(room: EvidenceRoom, node: Platform): Pr
   const before = (await node.summary()).at;
   return room.life.wait(() => runInDurableObject(node.object, (_instance, state) => {
     const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
-    expect(store.scope()?.head).toEqual(before);
-    const entry = ownOf(store)(0)?.entry, birth = entry?.input;
+    const scope = store.scope();
+    expect(scope?.head).toEqual(before);
+    const first = store.stored(0), entry = first ? JSON.parse(first.bytes) as import("@generalbusiness/dap-contract").Entry : null, birth = entry?.input;
+    const sequence = first && scope ? admitSequenceGenesis(first.bytes, scope.at, PROPOSED_BOUNDS.entryBytes) : null;
+    if (!sequence) throw new Error("the intent root has no admitted genesis");
     const text = (value: unknown) => typeof value === 'string' ? value.slice(0, 512) : null;
     const results = entry?.sends.flatMap(send => {
       const message = send.message;
@@ -299,7 +303,7 @@ export async function evidenceIntentRoot(room: EvidenceRoom, node: Platform): Pr
     expect(page.more, context).toBe(false); expect(page.items, context).toHaveLength(1);
     const root = page.items[0];
     if (!root) throw Error('Actual singleton Issue intent required');
-    expect(ownOf(store)(root.id)?.entry.effects).toContainEqual({ effect: 'open', item: root.id, type: 'intent', state: 'open' });
+    expect(ownOf(store, sequence)(root.id)?.entry.effects).toContainEqual({ effect: 'open', item: root.id, type: 'intent', state: 'open' });
     expect(store.scope()?.head).toEqual(before);
     return root;
   }));
@@ -633,7 +637,8 @@ async function evidenceNativeCapacity(room: EvidenceRoom) {
   const before = (await room.G.summary()).at;
   return room.life.wait(() => runInDurableObject(room.G.object, (_instance, state) => {
     const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
-    const own = ownOf(store), head = store.scope()?.head, native = nativePlatform(EVIDENCE_RULES_COHORT.destination);
+    const sequence = storedSequenceOf(store, PROPOSED_BOUNDS.entryBytes); // fixture setup only
+    const own = ownOf(store, sequence), head = store.scope()?.head, native = nativePlatform(EVIDENCE_RULES_COHORT.destination);
     if (!head || !same(head, before) || !native) throw Error('Actual unchanged G17 head required for capacity context');
     const checked = validateDefinition(native.data, PROPOSED_BOUNDS, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
     if (!checked.ok || !checked.definition.reserving) throw Error('Actual validated Native reservation data required');
@@ -677,7 +682,8 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
   const before = (await room.G.summary()).at;
   const inspected = await room.life.wait(() => runInDurableObject(room.G.object, (_instance, state) => {
     const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
-    const own = ownOf(store), head = store.scope()?.head;
+    const sequence = storedSequenceOf(store, PROPOSED_BOUNDS.entryBytes); // fixture setup only
+    const own = ownOf(store, sequence), head = store.scope()?.head;
     expect(head).toEqual(before);
     const project = (view: StateView) => {
       const items = view.all().items;

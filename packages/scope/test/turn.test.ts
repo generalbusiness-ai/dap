@@ -1,12 +1,15 @@
+import { storedSequenceOf } from "./support/local-sequence.ts";
 import { turnWholeChange, turnAbandonChange, turnTargetChange, turnRequestsChange } from "./definition-corpus-data.ts";
 import { describe, expect, onTestFinished, test, vi } from "vitest";
+import { runInDurableObject } from "cloudflare:test";
 import { DOMAINS, PROPOSED_BOUNDS, type Receipt} from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
-import { HOLD, at, definition, create, rita, una, vic } from "./fixtures-native.ts";
-import { testAuthority } from "../src/testing.ts";
+import { HOLD, at, definition, create, creation, objectOf, rita, una, vic } from "./fixtures-native.ts";
+import { controls, testAuthority, testPorts } from "../src/testing.ts";
+import { Scope } from "../src/core.ts";
 import type { FreshActAdmissionDecision } from "../src/applications/act-admission.ts";
 import { wired } from "./outside.ts";
 
@@ -42,6 +45,58 @@ test("holder settlement bookkeeping survives actual eviction, rolls back atomica
     return { settled: store.holderSettled(900), rolledBack: store.holderSettled(901), snapshot: store.all() };
   });
   expect(reopened).toEqual({ settled: true, rolledBack: false, snapshot: written.after });
+
+  // The first fold fails after its real pin read. The same Scope retries;
+  // a rolled-back candidate must never become its committed association.
+  const asked = creation(at(60), under);
+  await runInDurableObject(objectOf(asked.name), async (_instance, state) => {
+    const backing = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    expect(backing.scope()).toBeNull();
+    let failOnce = true;
+    const reads = { absent: 0, present: 0 };
+    const store = new Proxy(backing, {
+      get(target, key) {
+        if (key === "stored") return (seq: number) => {
+          const held = target.stored(seq);
+          if (seq === 0) reads[held ? "present" : "absent"]++;
+          return held;
+        };
+        if (key === "setScope") return (scope: Parameters<SqliteStore["setScope"]>[0]) => {
+          if (failOnce) {
+            failOnce = false;
+            expect(reads).toEqual({ absent: 1, present: 1 });
+            throw new Error("first genesis fold rollback");
+          }
+          target.setScope(scope);
+        };
+        const value: unknown = Reflect.get(target, key, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
+    const c = controls(asked.name), ports = { ...production(), ...testPorts(c) };
+    const scope = new Scope(asked.name, store, ports, c.bounds);
+    await expect(scope.create(asked.signed, under.declared)).rejects.toThrow("first genesis fold rollback");
+    expect(reads).toEqual({ absent: 1, present: 1 });
+    // Observation reads use backing directly and are outside the recorded
+    // Scope pipeline. Neither the failed append nor its token survived.
+    expect([backing.scope(), backing.stored(0), scope.localSequence()]).toEqual([null, null, null]);
+    expect(await scope.create(asked.signed, under.declared)).toMatchObject({ answer: "accepted" });
+    expect(reads).toEqual({ absent: 2, present: 2 });
+    const sequence = scope.localSequence();
+    expect(sequence).not.toBeNull();
+    expect(sequence!.at).toEqual(backing.scope()!.at);
+    expect(scope.pinned()?.named).toBe(under.digest);
+    expect(scope.localSequence()).toBe(sequence);
+    expect(reads).toEqual({ absent: 2, present: 2 });
+    const cold = new Scope(asked.name, store, ports, c.bounds);
+    expect(cold.localSequence()).toBeNull();
+    expect(cold.pinned()?.named).toBe(under.digest);
+    expect(cold.localSequence()!.at).toEqual(sequence!.at);
+    const coldSequence = cold.localSequence();
+    expect(cold.pinned()?.named).toBe(under.digest);
+    expect(cold.localSequence()).toBe(coldSequence);
+    expect(reads).toEqual({ absent: 2, present: 3 });
+  });
 });
 
 test("opt-in report duty survives an ordinary final transition and actual object eviction; at a filled scope only its real settlement spends that room", async () => {
@@ -96,7 +151,9 @@ test("the opt-in foreign-entry retained-writer ceiling accepts exact bytes and r
     const s = await create({}, {}, under);
     const results = await s.inside(async (state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
-      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined);
+      // One fixture setup admission; not a read of the Turns path below.
+      const pin = { pinned: { named: under.digest, definition: under, platform: null }, sequence: storedSequenceOf(store, s.c.bounds.entryBytes) };
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined, { value: pin }, () => pin);
       const run = async (size: number) => {
         const bytes = canonicalize("x".repeat(size - 2)), digest = digestBytes(utf8(bytes));
         const end = await turns.run({ asks: () => [], judge: (view) => ({ verdict: "write", retain: [{ kind: "entry", digest, bytes }], draft: { input: { type: "checkpoint", ...checkpointOf(view) }, uses: [], prepared: [], effects: [], sends: [], judgesTime: false }, sealed: () => "written", unfit: () => "unfit", full: () => "full" }) });
@@ -119,7 +176,9 @@ test("the opt-in rule-input writer ceiling accepts exact canonical bytes and ref
     const s = await create({}, {}, under);
     const result = await s.inside(async (state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
-      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined);
+      // One fixture setup admission; not a read of the Turns path below.
+      const pin = { pinned: { named: under.digest, definition: under, platform: null }, sequence: storedSequenceOf(store, s.c.bounds.entryBytes) };
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined, { value: pin }, () => pin);
       const limit = 262_144;
       const run = (bytes: number) => {
         const input = "x".repeat(bytes - 2), canonical = canonicalize(input), digest = digestBytes(utf8(canonical));
@@ -353,7 +412,9 @@ describe("what follows the head is told of each commit (`Turns.onSealed`)", () =
     const told = await s.inside(async (state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
       const wakes = new Wakes(store, { set: (time) => (time === null ? state.storage.deleteAlarm() : state.storage.setAlarm(timeMs(time)!)) }, false);
-      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, s.c.bounds, () => definition, () => undefined);
+      // One fixture setup admission; not a read of the Turns path below.
+      const pin = { pinned: { named: definition.digest, definition: definition, platform: null }, sequence: storedSequenceOf(store, s.c.bounds.entryBytes) };
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, s.c.bounds, () => definition, () => undefined, { value: pin }, () => pin);
       const heads: number[] = [];
       turns.onSealed(() => { heads.push(store.scope()!.head.seq); });
       // An input that writes one entry: a checkpoint, as the scope's own `checkpoint` drafts it.
@@ -407,7 +468,9 @@ describe("the budget of timed attempts, here 2 for a turn (section 5.2, step 7)"
     const ended = await s.inside(async state => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
       const wakes = new Wakes(store, { set: time => time === null ? state.storage.deleteAlarm() : state.storage.setAlarm(timeMs(time)!) }, false);
-      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, s.c.bounds, () => definition, () => undefined);
+      // One fixture setup admission; not a read of the Turns path below.
+      const pin = { pinned: { named: definition.digest, definition: definition, platform: null }, sequence: storedSequenceOf(store, s.c.bounds.entryBytes) };
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, s.c.bounds, () => definition, () => undefined, { value: pin }, () => pin);
       return turns.run(null);
     });
     expect([ended, s.c.clock.script, await s.head()]).toEqual([{ end: "busy" }, [], head]);
