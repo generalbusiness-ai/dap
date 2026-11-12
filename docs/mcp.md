@@ -676,18 +676,18 @@ Creates a scope with no existing target, and records it in your configuration so
         "anyOf": [
           {
             "type": "string",
-            "pattern": "^sc_[a-z2-7]{52}$"
+            "pattern": "^sc_[a-z2-7]{51}[aq]$"
           },
           {
             "type": "object",
             "properties": {
               "scope": {
                 "type": "string",
-                "pattern": "^sc_[a-z2-7]{52}$"
+                "pattern": "^sc_[a-z2-7]{51}[aq]$"
               },
               "inc": {
                 "type": "string",
-                "pattern": "^in_[a-z2-7]{26}$"
+                "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
               },
               "kind": {
                 "enum": [
@@ -1528,6 +1528,46 @@ What is known about the envelope under idempotencyKey on target (or the creation
           "object"
         ]
       },
+      "membership": {
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^sc_[a-z2-7]{51}[aq]$"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string",
+                "pattern": "^sc_[a-z2-7]{51}[aq]$"
+              },
+              "inc": {
+                "type": "string",
+                "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
+              },
+              "kind": {
+                "enum": [
+                  "register",
+                  "directory",
+                  "membership",
+                  "rules",
+                  "destination",
+                  "inbox",
+                  "task",
+                  "lane",
+                  "commons"
+                ]
+              }
+            },
+            "required": [
+              "scope",
+              "inc",
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
       "idempotencyKey": {
         "type": "string",
         "minLength": 1,
@@ -1969,11 +2009,11 @@ Install an operator-trusted package in this room by immutable Git URI and indepe
             "properties": {
               "scope": {
                 "type": "string",
-                "pattern": "^sc_[a-z2-7]{52}$"
+                "pattern": "^sc_[a-z2-7]{51}[aq]$"
               },
               "inc": {
                 "type": "string",
-                "pattern": "^in_[a-z2-7]{26}$"
+                "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
               },
               "kind": {
                 "enum": [

@@ -109,18 +109,18 @@
             "anyOf": [
               {
                 "type": "string",
-                "pattern": "^sc_[a-z2-7]{52}$"
+                "pattern": "^sc_[a-z2-7]{51}[aq]$"
               },
               {
                 "type": "object",
                 "properties": {
                   "scope": {
                     "type": "string",
-                    "pattern": "^sc_[a-z2-7]{52}$"
+                    "pattern": "^sc_[a-z2-7]{51}[aq]$"
                   },
                   "inc": {
                     "type": "string",
-                    "pattern": "^in_[a-z2-7]{26}$"
+                    "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
                   },
                   "kind": {
                     "enum": [
@@ -498,11 +498,11 @@
                 "properties": {
                   "scope": {
                     "type": "string",
-                    "pattern": "^sc_[a-z2-7]{52}$"
+                    "pattern": "^sc_[a-z2-7]{51}[aq]$"
                   },
                   "inc": {
                     "type": "string",
-                    "pattern": "^in_[a-z2-7]{26}$"
+                    "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
                   },
                   "kind": {
                     "enum": [
@@ -917,6 +917,42 @@
           },
           "definition": {
             "type": ["string", "object"]
+          },
+          "membership": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^sc_[a-z2-7]{51}[aq]$"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "scope": {
+                    "type": "string",
+                    "pattern": "^sc_[a-z2-7]{51}[aq]$"
+                  },
+                  "inc": {
+                    "type": "string",
+                    "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
+                  },
+                  "kind": {
+                    "enum": [
+                      "register",
+                      "directory",
+                      "membership",
+                      "rules",
+                      "destination",
+                      "inbox",
+                      "task",
+                      "lane",
+                      "commons"
+                    ]
+                  }
+                },
+                "required": ["scope", "inc", "kind"],
+                "additionalProperties": false
+              }
+            ]
           },
           "idempotencyKey": {
             "type": "string",
