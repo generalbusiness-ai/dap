@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6f69a7f942304b37804a0a9f3f58bcb7e48b3b6f","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/invitation-link.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:73af5c8151279661bff5d3320f6d5a1260b26d4c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-11-person-invitation-parity.manifest.json."}
