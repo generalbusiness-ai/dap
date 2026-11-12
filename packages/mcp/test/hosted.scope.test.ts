@@ -2330,19 +2330,22 @@ test("H6 matrix through the endpoint: prepared reset, concurrent send and settle
     expect(actualAgentActions).not.toContain("change.check"); expect(actualAdminActions).not.toContain("change.check");
     const gate = holdAfterAdmission("@bot"), noPosts: string[] = [];
     hostedTest.submitted = url => { noPosts.push(new URL(url).pathname); };
+    const pending = room.wait(async () => result(await open("uncertain")));
+    void pending.catch(() => {});
     try {
-      const pending = room.wait(() => open("uncertain"));
       await gate.entered; expect(gate.reads.calls).toBe(2);
       expect((await rita.ok("member.actions", { on: 0, fields: { role: "agent", actions: [...actualAgentActions, "change.check"] }, idempotencyKey: "TEST-S4-old-lost-wider" }))["answer"]).toBe("accepted");
       gate.release();
-      expect((await result(await pending))["error"]).toBe("unauthorized");
+      expect((await pending)["error"]).toBe("unauthorized");
       expect(noPosts).toEqual([]);
       const stopped = await custodyFor(bot.agent, "uncertain", priorUncertain.id);
       expect(stopped.record.envelope).toEqual(priorUncertain.record.envelope);
       expect(stopped.record.outcomes).toEqual(priorUncertain.record.outcomes);
       expect(stopped.record.count).toBe(priorUncertain.record.count);
     } finally {
-      gate.release(); hostedTest.roleReply = null; hostedTest.submitted = null;
+      gate.release();
+      await pending.catch(() => {});
+      hostedTest.roleReply = null; hostedTest.submitted = null;
       expect((await rita.ok("member.actions", { on: 0, fields: { role: "agent", actions: actualAgentActions }, idempotencyKey: "TEST-S4-old-lost-restore" }))["answer"]).toBe("accepted");
     }
     await stub.reset();
