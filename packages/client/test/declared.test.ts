@@ -2,7 +2,7 @@ import { clientNotes as notes, clientNotesWithMax } from "./definition-corpus-da
 import { expect, test } from "vitest";
 import type { FactRef, Grant, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { definitionDigest, textDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { ScopeHandle, ShapeError, declaredHandle, shapeDeclaredAct, secretSigner, type Signer, type Transport } from "../src/index.ts";
+import { ScopeHandle, ShapeError, FieldShapeError, shapeFieldsOf, declaredHandle, shapeDeclaredAct, secretSigner, type Signer, type Transport } from "../src/index.ts";
 
 /** A made-up definition with one act: a note's body is a detached text, and the act is presented one fact. */
 
@@ -57,6 +57,16 @@ test("a declared handle signs an act of its definition: each field is checked ag
   // The genesis act is no act of an existing scope.
   expect(await refusedAt(handle.intent(signer, "start" as never, {} as never))).toBe("start");
   expect(signatures).toBe(1);
+  // The default checker retains Client's words and exposes a transport-neutral code/path, without enabling MCP adaptations.
+  let fault: unknown;
+  try { shapeFieldsOf({ outer: { type: "record", required: true, of: { amount: { type: "int", min: 0, max: 4, required: true } } } }, { outer: { amount: -0 } }); }
+  catch (error) { fault = error; }
+  expect(fault).toBeInstanceOf(ShapeError);
+  expect(fault).toBeInstanceOf(FieldShapeError);
+  expect(fault).toMatchObject({ code: "int", path: "fields.outer.amount", segments: ["fields", "outer", "amount"], message: "fields.outer.amount is not an integer from 0 to 4" });
+  expect(() => shapeFieldsOf({ reader: { type: "member" } }, { reader: "@reader" })).toThrow("fields.reader is not a member reference");
+  // A digest is still the given text in the default API; only the explicit supplied-text option resolves it.
+  expect(() => shapeFieldsOf({ body: { type: "text", max: 40, detached: true } }, { body: textDigest(text) })).toThrow("fields.body is longer than 40 bytes");
 
   // The act kinds and the fields are typed from the definition's own data. These lines are checked by the compiler, and never run.
   void (async () => {

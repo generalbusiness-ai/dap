@@ -25,6 +25,7 @@ import { canonicalize, digestBytes, hex, isPlatformDefinition, sha256, utf8 } fr
 import { formFor } from "@generalbusiness/dap-client";
 import { describeAct, grantAction, type ActLike, type DefinitionLike, type Described, type Who } from "./describe.ts";
 import { descriptions } from "./description-context.ts";
+import { actInputSchema } from "./input-schema.ts";
 import { surfaceOf, wordsDigest, type Words } from "./words.ts";
 import { markRefusals, markText } from "./marks.ts";
 
@@ -237,12 +238,13 @@ export const ACT_OUTPUT: Record<string, unknown> = {
 /** The act tool of one binding. */
 export function actTool(binding: Binding, inventory: Inventory, mode: Mode): Tool {
   const text = describedOf(binding, inventory, mode);
-  const form = formFor(binding.holder, binding.kind, { describe: descriptions, setting: { pinned: binding.pinned, active: inventory.active }, who: whoOf(binding, inventory), target: binding.singleton ? "optional" : "required" });
+  const setting = { pinned: binding.pinned, active: inventory.active };
+  const form = formFor(binding.holder, binding.kind, { describe: descriptions, setting, who: whoOf(binding, inventory) });
   return {
     name: binding.name,
     title: `${binding.kind} (${binding.definition})`,
     description: text.description,
-    inputSchema: form.inputSchema,
+    inputSchema: actInputSchema(form, setting, binding.singleton ? "optional" : "required", binding.act.on),
     outputSchema: ACT_OUTPUT,
     // Truthful annotations: an act can close, remove or redact declared state; a repeat under the required key is idempotent.
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },

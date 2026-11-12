@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
-import type { FactRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { FactRef, FieldType, ScopeRef } from "@generalbusiness/dap-contract";
 import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { effectiveFields, expectedOf, finalStates, viaLeft, type ActLike } from "../src/index.ts";
-import { capturedExpected, shapeAt } from "../src/shape.ts";
+import { capturedExpected, shapeAt, shapeFields, Unshaped } from "../src/shape.ts";
 
 const scopeOf = (cause: string) => scopeIdOf({ v: 1, kind: "lane", definition: "platform:issue@1", creator: null, cause: textDigest(cause), ordinal: 0 } as never);
 const incOf = (n: number) => newIncarnation(new Uint8Array(16).fill(n));
@@ -74,4 +74,43 @@ test("viaLeft names an item a via rule selects that the summary lacks, and no it
   expect(viaLeft(act, [] as Items, 9, {}), "A subject that is itself absent selects nothing").toEqual([]);
   expect(finalStates({ states: { open: { final: false }, resolved: { final: true }, irrelevant: { final: true } } })).toEqual(["irrelevant", "resolved"]);
   expect(finalStates(undefined)).toEqual([]);
+});
+
+
+// The adapter must preserve the MCP input contract while the same Client checker serves typed handles.
+test("MCP field shaping preserves its words, nested paths and explicit value adaptations", () => {
+  const text = "A detached text supplied beside the intent.";
+  const digest = textDigest(text);
+  const declaration = { ...act, fields: {
+    payload: { type: "record", required: true, of: {
+      reader: { type: "member", required: true },
+      // A supplied digest takes the existing early path; the scope still owns the text's full bounds check.
+      body: { type: "text", max: 4, detached: true, required: true },
+      counts: { type: "list", max: 2, of: { type: "int", min: 0, max: 4 }, required: true },
+    } },
+    marked: { type: "code", code: "example", row: "E1", required: true },
+    ...JSON.parse('{"__proto__":{"type":"bool","required":false}}'),
+  } } as ActLike;
+  const given = JSON.parse('{"payload":{"reader":"@reader","counts":[0,4]},"marked":{"asGiven":true},"__proto__":true}');
+  given.payload.body = digest;
+  const shaped = shapeFields(declaration, given, [text, "unused"], here);
+  expect(shaped).toEqual({ fields: { payload: { reader: { membership: here, member: "@reader" }, body: digest, counts: [0, 4] }, marked: { asGiven: true }, ...JSON.parse('{"__proto__":true}') }, texts: [text] });
+  expect(Object.hasOwn(shaped.fields, "__proto__")).toBe(true);
+  expect(given.payload.reader).toBe("@reader");
+  const refused = (fields: Record<string, unknown>, expected: { field: string; what: string; declared: string }): void => {
+    let caught: unknown;
+    try { shapeFields(declaration, fields, [text], here); } catch (error) { caught = error; }
+    expect(caught).toBeInstanceOf(Unshaped);
+    expect(caught).toMatchObject(expected);
+  };
+  refused({ ...given, payload: { ...given.payload, counts: [1, -0] } }, { field: "fields.payload.counts.1", what: "is not a whole number from 0 to 4", declared: "int" });
+  refused({ ...given, payload: { ...given.payload, counts: [1, 2, 3] } }, { field: "fields.payload.counts", what: "has more than 2 elements", declared: "list" });
+  refused({ ...given, payload: { ...given.payload, reader: 7 } }, { field: "fields.payload.reader", what: "is not a member: give @handle, or { membership, member }", declared: "member" });
+  const { body: _body, ...missingBody } = given.payload;
+  refused({ ...given, payload: missingBody }, { field: "fields.payload.body", what: "is required", declared: "text" });
+  const name = "x".repeat(200);
+  refused({ ...given, [name]: true }, { field: `fields.${name.slice(0, 128)}… (200 characters)`, what: "is not declared", declared: "no such field" });
+
+  // This call is compiled but not run: MCP must accept the whole Contract union, not a duplicated list of known types.
+  void ((type: FieldType) => shapeFields({ ...act, fields: { field: { ...type, required: true } } }, { field: null }, [], here));
 });

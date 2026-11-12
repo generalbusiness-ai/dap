@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { describeActLine, descriptionsOf, inline, type ActLike, type DefinitionLike } from "../src/index.ts";
+import { describeActLine, descriptionsOf, formFor, inline, type ActLike, type DefinitionLike } from "../src/index.ts";
 
 const { guardSentences } = descriptionsOf({});
 
@@ -67,4 +67,14 @@ test("catalogue bindings keep nested refusals independent and prototype-like pin
     .toBe("one of: [each check's checker is an active member whose role is checker (second-catalogue)]");
   expect(first.markText("constructor@1", { code: "name", row: "P1" }))
     .toBe("the platform rule name (row P1) holds");
+  const offered = { ...act, fields: { body: { type: "text", max: 12, detached: true, required: true }, value: { type: "digest", value: { domain: "example", max: 32 } } }, presents: { proof: { kind: ["seen"], under: "example", required: true } } } as const;
+  const neutral = formFor({ ...definition, acts: { write: offered } }, "write", { describe: first, setting: { pinned: pin }, who: { standing: "unknown" } });
+  expect([neutral.fields, neutral.presents, neutral.beside]).toEqual([offered.fields, offered.presents, { texts: true, presented: true, values: true }]);
+  expect(Object.hasOwn(neutral, "inputSchema")).toBe(false);
+  const noBeside = formFor(definition, "write", { describe: first, setting: { pinned: pin }, who: { standing: "unknown" } });
+  expect([noBeside.presents, noBeside.beside]).toEqual([{}, { texts: false, presented: false, values: false }]);
+  void (() => {
+    // @ts-expect-error: a transport-neutral form has no MCP envelope schema.
+    return neutral.inputSchema;
+  });
 });

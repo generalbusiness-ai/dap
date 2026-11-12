@@ -2,16 +2,17 @@ import { ARCHIVE_DEVICE_APPLICATION_COHORT, COMMONS_COHORT, platform } from "@ge
 import { relaxedCounting } from "./support/definition-corpus-data.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { definitionDigest } from "@generalbusiness/dap-bytes";
+import { definitionDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { change, issueDemo } from "@generalbusiness/dap-lanes";
 import { lane as deriveLane } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { counting } from "../../../apps/counter/definition.ts";
 import type { DeclaredDefinition, ScopeId } from "@generalbusiness/dap-contract";
-import { DESCRIPTION_CHARS, McpService, memoryStore, actTool, bindingsOf, describeAct, describedOf, generationOf, guardSentences, inline, listed, WORDS, type ActLike, type DefinitionLike, type Held, type Inventory } from "../src/index.ts";
+import { DESCRIPTION_CHARS, McpService, memoryStore, actTool, bindingsOf, describeAct, describedOf, generationOf, guardSentences, inline, listed, schemaOf, WORDS, type ActLike, type DefinitionLike, type Held, type Inventory } from "../src/index.ts";
 import { ACTIVE_DEMO, MEMBERSHIP, declared, demoInventory, heldOf, lane, standingOf } from "./support/catalogue.ts";
 import { garden } from "./support/garden.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";
+import { shapeFields, Unshaped } from "../src/shape.ts";
 import { fixedSigner } from "./fixtures.ts";
 
 const DOC = readFileSync(new URL("../../../docs/mcp.md", import.meta.url), "utf8");
@@ -166,6 +167,20 @@ describe("descriptions are derived from the whole declaration", () => {
     const requiredManifest = bindingsOf(requiredInventory, WORDS).find((x) => x.definition === "change" && x.kind === "propose-manifest" && x.digests.includes(requiredPin))!;
     const schema = actTool(requiredManifest, requiredInventory, "default").inputSchema;
     expect([(schema["required"] as string[]).includes("presented"), ((schema["properties"] as Record<string, Record<string, unknown>>)["presented"]!["required"])]).toEqual([true, ["pin"]]);
+    const timeSchema = schemaOf({ type: "time" }, { pinned: "example" });
+    expect(timeSchema).toMatchObject({ type: "string", format: "date-time", description: "UTC, ending in Z; no fraction for whole seconds, otherwise three digits." });
+    const pattern = new RegExp(timeSchema["pattern"] as string);
+    const offset = "2026-11-11T13:00:00+01:00", wholeWithFraction = "2026-11-11T12:00:00.000Z";
+    expect([pattern.test(offset), pattern.test(wholeWithFraction), timeMs(offset), timeMs(wholeWithFraction)]).toEqual([false, true, null, null]);
+    expect(pattern.test("2026-11-11T12:00:00Z")).toBe(true);
+    // The lexical pattern deliberately permits .000Z. Canonical time still gets the server's field-path refusal.
+    for (const when of [offset, wholeWithFraction]) {
+      let badTime: unknown;
+      try { shapeFields({ ...requiredManifest.act, fields: { when: { type: "time", required: true } } }, { when }, [], null); }
+      catch (error) { badTime = error; }
+      expect(badTime).toBeInstanceOf(Unshaped);
+      expect(badTime).toMatchObject({ field: "fields.when", what: "is not a time in RFC 3339 UTC with Z", declared: "time" });
+    }
     // A capability argument over an item range keeps the range's exception.
     const range = { type: "t", states: ["a"], except: ["also.x"] };
     const act: ActLike = { step: "transition", on: "t", grant: "g", also: { x: { item: "t", by: "f" } }, fields: { f: { type: "text", max: 9, required: true } }, guards: [{ capability: { name: "hold", guard: "staged", with: { c: { items: range, slot: "s" } } } }], effects: [] };
