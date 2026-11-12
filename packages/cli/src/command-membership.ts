@@ -2,13 +2,13 @@
 import { type DefinitionShape, expectedOf, type Link, LINK, linkOf } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./command-context.ts";
 import { standing } from "./command-scope.ts";
-import { accepted, active, configOf, done, failed, fresh, handleOf, run, signerOf, signing, stopCommand, summaryOf, usage, validStep, waitFor } from "./command-support.ts";
+import { accepted, active, configOf, done, failed, fresh, handleOf, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, validStep, waitFor } from "./command-support.ts";
 import { definitionOf } from "./command-targets.ts";
 import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey } from "./invitations.ts";
 import { newStoredSigner } from "./store-signer.ts";
 import type { Config, PendingJoin } from "./store.ts";
 import { b64url, canonicalize, factRefOf, intentDigest, isFactRef, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK, type DeviceKeyInvitation, encodeDeviceKeyInvitation, invitationIssueFields, invitationRedemptionFields, isAgentKeyMembership, isDeviceKeyInvitation, isInvitationMembership, signedIntent, TransportError, wellFormedInvitation } from "@generalbusiness/dap-client";
+import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK, type DeviceKeyInvitation, encodeDeviceKeyInvitation, invitationIssueFields, invitationRedemptionFields, isAgentKeyMembership, isDeviceKeyInvitation, isInvitationMembership, signedIntent, ScopeHandle, TransportError, wellFormedInvitation } from "@generalbusiness/dap-client";
 import type { FactRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { platform, ROLE_LISTS } from "@generalbusiness/dap-platform";
 
@@ -89,9 +89,9 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
   if (text.startsWith(CHECKER_KEY_LINK)) return enrolCheckerKey(ctx, text);
   if (text.startsWith(DEVICE_KEY_LINK)) return enrolDeviceKey(ctx, text);
   return run(async () => {
-    const link = linkOf(text) ?? stopCommand(usage("That is not an invitation link from dap invite."));
-    if (!wellFormedInvitation(link)) return usage("That invitation link has invalid repository references.");
     const before = await ctx.store.config();
+    const link = linkOf(text, before?.service) ?? stopCommand(usage("That is not an invitation link from dap invite, or it names another service."));
+    if (!wellFormedInvitation(link)) return usage("That invitation link has invalid repository references.");
     if (before?.join?.kind === "enrol") return failed("An original agent enrollment is retained; a person invitation cannot replace it.");
     if (before?.join?.kind === "checker-enrol") return failed("An original checker enrollment is retained; a person invitation cannot replace it.");
     if (before?.join?.kind === "device-enrol") return failed("An original device enrollment is retained; a person invitation cannot replace it.");
@@ -108,9 +108,8 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     if (!pending) {
       // No pre-join membership reads are authorized. Its pinned definition
       // names the invitation by a mark, with no revision in expected.
-      // Main's untagged links named native membership@1. New links carry
-      // their exact pin; missing tags never select the newest alias.
-      const named = link.definition ?? "platform:membership@1";
+      // Every person invitation names the exact supported Membership pin.
+      const named = link.definition;
       const loaded = platform(named);
       if (!isInvitationMembership(named) || !loaded || loaded.data.name !== "platform:membership" || loaded.data.acts["join"] === undefined) return failed(`The invitation is in ${named}, which this command does not know as membership.`);
       const shape = loaded.data as unknown as DefinitionShape;
@@ -129,9 +128,10 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     }
     const at = link.repository.membership;
     if (!validStep({ signed, ...(pending!.accepted ? { accepted: pending!.accepted } : {}) }, at, signer.key, "join")
-      || intentDigest(signed.intent) !== pending!.intent || canonicalize(signed.intent.fields) !== canonicalize(invitationRedemptionFields(link.definition ?? "platform:membership@1", at, link.invitation, signer.key, link.secret))) return failed(`The saved join does not match this invitation, membership and signing key. ${joinSent(pending!)}`);
+      || intentDigest(signed.intent) !== pending!.intent || canonicalize(signed.intent.fields) !== canonicalize(invitationRedemptionFields(link.definition, at, link.invitation, signer.key, link.secret))) return failed(`The saved join does not match this invitation, membership and signing key. ${joinSent(pending!)}`);
     const config: Config = { ...base, repository: link.repository };
-    const M = await handleOf(ctx, config, at.scope, null);
+    // Submit/settle forward the retained signed envelope without read authority.
+    const M = new ScopeHandle(transportOf(ctx, config.service), at.scope, null);
     const digest = intentDigest(signed.intent);
     let fact: FactRef;
     if (pending!.accepted) {
@@ -145,7 +145,9 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
       fact = receipt.fact;
       await keep({ ...pending!, accepted: fact });
     }
-    const entry = await M.entry(fact.seq);
+    // Construct the existing signed-read handle only after acceptance.
+    const joined = await handleOf(ctx, config, at.scope, null);
+    const entry = await joined.entry(fact.seq);
     if (!entry.ok) return failed(`Cannot read entry ${M.scope}:${fact.seq}: ${entry.reason}. The join remains pending; retry the original invitation link.`);
     if (canonicalize(factRefOf(entry.value.entry)) !== canonicalize(fact) || entry.value.hash !== fact.hash
       || entry.value.entry.input.type !== "act" || canonicalize(entry.value.entry.input.signed) !== canonicalize(signed)) return failed("The admitted entry does not match this exact join. The join request went ahead, and the join remains pending. Retry the original invitation link.");

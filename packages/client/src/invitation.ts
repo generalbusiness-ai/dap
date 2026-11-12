@@ -5,25 +5,29 @@
  * invitation signing seed that stays private and creates a key-bound proof.
  */
 import { invitationServiceUrl } from "./invitation-service.ts";
-import { usesInvitationKey } from "./invitation-fields.ts";
+import { isInvitationMembership, usesInvitationKey } from "./invitation-fields.ts";
 import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
 
 /** The repository's scopes as a link names them: no inbox, which `join` creates. */
 export interface InvitedRepository { directory: ScopeRef; membership: ScopeRef; rules: ScopeId; destination: ScopeId }
 
-/** `definition`: the version of membership that the invitation is in. A link made before it was carried names none. */
-export interface InvitationLink { v: 1; service: string; repository: InvitedRepository; invitation: number; secret: string; handle: string; definition?: string }
+/** `definition`: the explicit supported Membership pin of this invitation. */
+export interface InvitationLink { v: 1; service: string; repository: InvitedRepository; invitation: number; secret: string; handle: string; definition: string }
 
 export const INVITATION_LINK = "artroom-invite:";
 
-/** The invitation that a link holds, or null when the text is no such link. */
-export function invitationOf(text: string): InvitationLink | null {
+/** Read one person link, normalize terminal service slashes, and check an expected service when present. */
+export function invitationOf(text: string, expectedService?: string): InvitationLink | null {
   if (!text.startsWith(INVITATION_LINK)) return null;
   try {
     const bytes = unb64url(text.slice(INVITATION_LINK.length));
     const link = bytes && (JSON.parse(new TextDecoder().decode(bytes)) as InvitationLink);
-    return link && link.v === 1 && typeof link.secret === "string" && Number.isSafeInteger(link.invitation) ? link : null;
+    if (!link || link.v !== 1 || typeof link.secret !== "string" || !Number.isSafeInteger(link.invitation)
+      || typeof link.definition !== "string" || typeof link.service !== "string") return null;
+    const service = link.service.replace(/\/+$/, "");
+    if (service.length === 0 || (expectedService !== undefined && service !== expectedService.replace(/\/+$/, ""))) return null;
+    return { ...link, service };
   } catch {
     return null;
   }
@@ -31,6 +35,7 @@ export function invitationOf(text: string): InvitationLink | null {
 
 /** Validate the public context and, for invitation-key memberships, the private seed before retaining custody or signing. */
 export function wellFormedInvitation(link: InvitationLink): boolean {
+  if (!isInvitationMembership(link.definition)) return false;
   if (usesInvitationKey(link.definition)) {
     if (typeof link.secret !== "string" || link.secret.length !== 43 || link.invitation > 1_000_000_000) return false;
     const seed = unb64url(link.secret);

@@ -25,7 +25,7 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
     await settle(O, M, await M.created(seat));
     const invitationSecret = definition !== "platform:membership@2" ? b64url(new Uint8Array(32).fill(79)) : "the private invitation secret of at least 32 bytes";
     const invitation = await M.did(rita, "invite-member", { fields: { handle: "@joiner", role: "member", ...invitationIssueFields(definition, invitationSecret), inviteEnds: timeOf(timeMs(net.clock.now)! + 3600_000) } });
-    const linkData = { v: 1, service: "https://scopes.test", repository: { directory: await O.at(), membership: await M.at(), rules: O.name, destination: O.name }, invitation, secret: invitationSecret, handle: "@joiner", ...(definition !== "platform:membership@2" ? { definition } : {}) };
+    const linkData = { v: 1, service: "https://scopes.test", repository: { directory: await O.at(), membership: await M.at(), rules: O.name, destination: O.name }, invitation, secret: invitationSecret, handle: "@joiner", definition };
     const link = `artroom-invite:${b64url(utf8(JSON.stringify(linkData)))}`;
     if (definition !== "platform:membership@2") {
       const before = (await M.summary()).at;

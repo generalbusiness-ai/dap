@@ -301,12 +301,9 @@ export function placeOf(typed: string): Place | null {
 
 /** Encoding checks before signing, not provenance or server authority.
  * Routing stays on the configured service; normalization matches httpTransport. */
-function admittedInvitation(session: Pick<Session, "service">, link: NonNullable<ReturnType<typeof linkOf>>): boolean {
+function admittedInvitation(link: NonNullable<ReturnType<typeof linkOf>>): boolean {
   const membership = isInvitationMembership(link.definition) ? platform(link.definition) : null;
-  return typeof session.service === "string" && typeof link.service === "string"
-    && session.service.replace(/\/+$/, "").length > 0
-    && link.service.replace(/\/+$/, "") === session.service.replace(/\/+$/, "")
-    && typeof link.handle === "string" && link.invitation > 0
+  return typeof link.handle === "string" && link.invitation > 0
     && fullScopeRef(link.repository?.directory) && link.repository.directory.kind === "directory"
     && fullScopeRef(link.repository?.membership) && link.repository.membership.kind === "membership"
     && isScopeId(link.repository?.rules) && isScopeId(link.repository?.destination)
@@ -324,8 +321,8 @@ export function enrollmentAssociation(session: Session, membership: ScopeRef): s
 export function joinAssociation(session: Session, typed: string): string {
   const device = deviceLinkOf(session.service, typed);
   if (device) return enrollmentAssociation(session, device.repository.membership);
-  const link = linkOf(typed.trim());
-  if (!link || !admittedInvitation(session, link)) throw new Unreadable("The invitation does not match this configured service, complete repository references and an explicit supported membership version.");
+  const link = linkOf(typed.trim(), session.service);
+  if (!link || !admittedInvitation(link)) throw new Unreadable("The invitation does not match this configured service, complete repository references and an explicit supported membership version.");
   return enrollmentAssociation(session, link.repository.membership);
 }
 
@@ -349,9 +346,9 @@ export function invitationTarget(service: string, typed: string): Omit<PreparedJ
   if (typed.length > 16 * 1024) throw new Unreadable("The invitation exceeds its bound.");
   const device = deviceLinkOf(service, typed);
   if (device) return { place: { directory: device.repository.directory.scope, membership: device.repository.membership }, definition: device.definition, handle: device.handle, link: textDigest(canonicalize(device)) };
-  const link = linkOf(typed.trim());
-  if (!link || !admittedInvitation({ service }, link)) throw new Unreadable("The invitation does not match this configured service, complete repository references and an explicit supported membership version.");
-  return { place: { directory: link.repository.directory.scope, membership: link.repository.membership }, definition: link.definition!, handle: link.handle, link: textDigest(canonicalize(link)) };
+  const link = linkOf(typed.trim(), service);
+  if (!link || !admittedInvitation(link)) throw new Unreadable("The invitation does not match this configured service, complete repository references and an explicit supported membership version.");
+  return { place: { directory: link.repository.directory.scope, membership: link.repository.membership }, definition: link.definition, handle: link.handle, link: textDigest(canonicalize(link)) };
 }
 /** Retain the exact signed request privately; legacy fields contain the invitation secret. */
 export async function prepareJoin(session: Session, typed: string): Promise<PreparedJoin> {
@@ -361,7 +358,7 @@ export async function prepareJoin(session: Session, typed: string): Promise<Prep
     const signed = await signedIntent(sessionSigner(session), { to: device.repository.membership, kind: "enrol", on: 0, fields, expected: device.expected }, session.now ? { now: session.now() } : {});
     return { ...target, signed };
   }
-  const link = linkOf(typed.trim())!;
+  const link = linkOf(typed.trim(), session.service)!;
   const shape = platform(target.definition)!.data as unknown as DefinitionShape;
   const fields = invitationRedemptionFields(target.definition, target.place.membership, link.invitation, sessionKey(session), link.secret);
   const signing: Signing = session.now ? { now: session.now() } : {};
