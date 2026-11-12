@@ -173,7 +173,7 @@ const namedOwners = {
     "packages/cli/src/command-issues.ts:linking": "e425a12db2c6e4da95f28b73f366215f4347592d6b868d3fd943fab497766280"
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "d1cd323e3e00f2ebcfec11b77a705887aa51b8edb3432ab36ef4608a53542e33", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:$module": "381909028d0f917fe836b3d05a55f40ef6290a741f0f8dff07ff3dcd7268d58b", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -204,7 +204,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "b1d77904c4c34f4e134b6732b42ea8612d4c8f30da9f6cd1bfa7fd874674bb2d",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "aa4fddb5cb0af77bcd49299e5678cd73eef74bad02b7f42bdd79c89d5100776d", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:McpService": "fa45fc1a54ef308edc8c4cc774e00437aae26bbff3db694e3f28b0ef0bd1c960", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -325,15 +325,15 @@ const seals = {
   "packages/mcp/src/oauth-resource.ts": "895d3a1b241e5fe0d5228febff46fe6c921899110fef99056dd1b53199d341ae", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-access.ts": "96679465b97286aa2babe6e3b670bf51b202427300cea836e9be9da744884b78", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-http.ts": "6a2668b96a105b077cd07528897b0ed6f6d7aec8cec619a26a535bcb5adb6707", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/index.ts": "3758cff2791d786d180b809101f05fb1b1fd843f29bb4c3f56e73bce73354ab0", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/hosted.ts": "64f14a288dd9005620cbac3a903b5cf99712792e85d001c8d38054241bfece32",
-  "packages/mcp/src/hosted-retirement.ts": "8707c99fe68ac3cf7af20a343f92c36b3bb81237b3681ae2a03169df5513882b", // R15 caller-envelope and verified enrollment target owner.
+  "packages/mcp/src/index.ts": "a47dac62009a93316fbbfc8994abb2e08543bec2824fe8ca7db5e554f47e78f6", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/hosted.ts": "0d49c3519ec2d2843fc6e5627719989b3de2c7e7322c7f037997736ff22db961",
+  "packages/mcp/src/hosted-retirement.ts": "3c6f4653e80ea848d5eb45e66e8dd943e7f0088c8f5a3d922d94fd29b6d7967c", // R15 caller-envelope and verified enrollment target owner.
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
   "packages/mcp/src/hosted-tools.ts": "bea3d3cea128bd76102e36d0876992c1b77a5bf2263f376082c1f329d2035a60", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "32f361d456a36b46fc828b030b1cc5969dc2bee1ebe77aa26f8bd7c4c025fec7", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/input-schema.ts": "c86a7a0bd03d5a4677a0041f775d1d657b4b40000a39131cfd99f6e939cbb5c5", // Moved MCP schema derivation; actual maintained parser output.
-  "packages/mcp/src/act-result.ts": "df3f07460866a98ae567dba786e9f143218184758fe423c63f91774667dedcbf", // Moved MCP answer projection and act output schema; actual maintained parser output.
+  "packages/mcp/src/act-result.ts": "be9a341b24eebbda9248615f8d185b44607c9f7c55b7fa2a8a31e47903ca3d9a", // Moved MCP answer projection and act output schema; actual maintained parser output.
   "packages/mcp/src/describe.ts": "a1708220ef2656a34c466037223cf0ab31133bc442919d92d04fe8a37ebada92", // Moved bounded MCP tool description; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "dad209ef8960de581efb010769f9307908dddf6aa49214d275303f55b35dab7f", // Reviewed parallel authority reads and target-only discovery; standing still reads fresh.
   "packages/mcp/src/http.ts": "773765a2edab34cfd675038a9bf5bbd51ef671379a0ce379d48725ea1b61b3b9", // Reviewed Mcp-Name binding for prompts/get.

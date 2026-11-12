@@ -24,8 +24,17 @@ The MCP root re-exports these 16 values from Client: `UNRESOLVED_MOST`, `OUTCOME
 
 MCP's Node entry re-exports `FILE_STORE_BOUNDS`, `releaseLock`, `blockedBy`, `takeLock`, `fileStore`, `FileStoreBounds`, and `Holding` from Client. No private custody path remains in MCP. Source consumers import the Client files directly.
 
-NF4 moves the CLI package imports. NF5 moves the remaining importers, removes the aliases, and retires `Kept` and `AttemptJournal`. NF3 leaves `Kept`, `AttemptJournal`, and their record domains unchanged.
+NF5 removes the named MCP aliases after NF4 and NF5 move their importers to Client. NF5 also retires `Kept` and `AttemptJournal`. NF3 leaves both, and their record domains, unchanged.
 
 ## Changed security seals
 
-The import edits change the reviewed seals of `packages/mcp/src/index.ts`, `hosted.ts`, `hosted-retirement.ts`, `act-result.ts`, and the `$module` and `McpService` seals of `service.ts`. Root reviews these files and adopts the new parser values in `scripts/security-entry-points.test.mjs`.
+The custody import edits change six seals in `scripts/security-entry-points.test.mjs`. The builder computed each new value with the test's own seal functions, `sourceSeal` and `namedSourceSeals`, and adopted it.
+
+| Seal | Old | New |
+|---|---|---|
+| `packages/mcp/src/index.ts` | `3758cff2` | `a47dac62` |
+| `packages/mcp/src/hosted.ts` | `64f14a28` | `0d49c351` |
+| `packages/mcp/src/hosted-retirement.ts` | `8707c99f` | `3c6f4653` |
+| `packages/mcp/src/act-result.ts` | `df3f0746` | `be9a341b` |
+| `packages/mcp/src/service.ts:$module` | `d1cd323e` | `38190902` |
+| `packages/mcp/src/service.ts:McpService` | `aa4fddb5` | `fa45fc1a` |
