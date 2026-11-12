@@ -1076,17 +1076,23 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     const roleReached = new Promise<void>(resolve => { roleEntered = resolve; });
     hostedTest.roleReply = { agent: "@bot3", at: 1, calls: 0, entered: roleEntered, waiting: new Promise<void>(resolve => { roleRelease = resolve; }) };
     hostedTest.submitted = () => { submitted++; };
+    const pendingRole = room.wait(async () => {
+      const response = await admittedList();
+      return { status: response.status, body: await response.text() };
+    });
+    void pendingRole.catch(() => {});
     try {
-      const pending = room.wait(() => admittedList());
       await roleReached;
       await setAgentActions(wider, "TEST-S4-ordinary-held-wider");
       roleRelease();
-      const denied = await pending;
-      expect([denied.status, await denied.text()], "the post-setup admission reads actual current Native roles").toEqual([401, ""]);
+      const denied = await pendingRole;
+      expect([denied.status, denied.body], "the post-setup admission reads actual current Native roles").toEqual([401, ""]);
       expect(submitted, "a denied ordinary MCP list performs no Agent native act").toBe(0);
       expect(await ordinaryOwner()).toEqual(beforeRoleLoss);
     } finally {
-      roleRelease(); hostedTest.roleReply = null; hostedTest.submitted = null;
+      roleRelease();
+      await pendingRole.catch(() => {});
+      hostedTest.roleReply = null; hostedTest.submitted = null;
       await setAgentActions(agentActions, "TEST-S4-ordinary-held-restore");
     }
     expect((await admittedList()).status, "a fresh read of narrowed actual roles restores ordinary admission without reminting").toBe(200);
@@ -1097,14 +1103,18 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     const lateArgs = { target: lateTarget, fields: { body: "The same valid original survives final role loss." }, idempotencyKey: lateKey };
     const finalGate = holdAfterAdmission("@bot3"), actualPosts: string[] = [];
     hostedTest.submitted = url => { actualPosts.push(new URL(url).pathname); };
+    const pendingFinal = room.wait(async () => {
+      const response = await modernCall(bot3Rotated, "issue.comment", lateArgs);
+      const stopped = await response.json() as { result: { structuredContent: Record<string, unknown> } };
+      return { response: { status: response.status }, stopped };
+    });
+    void pendingFinal.catch(() => {});
     try {
-      const pending = room.wait(() => modernCall(bot3Rotated, "issue.comment", lateArgs));
       await finalGate.entered;
       expect(finalGate.reads.calls).toBe(2);
       await setAgentActions(wider, "TEST-S4-ordinary-final-wider");
       finalGate.release();
-      const response = await pending;
-      const stopped = await response.json() as { result: { structuredContent: Record<string, unknown> } };
+      const { response, stopped } = await pendingFinal;
       expect(response.status).toBe(200);
       expect(stopped.result.structuredContent).toMatchObject({ error: "unauthorized" });
       expect(stopped.result.structuredContent).not.toHaveProperty("answer");
@@ -1120,39 +1130,47 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
       expect(actualPosts.filter(path => path.endsWith("/acts"))).toHaveLength(1);
       expect(await ordinaryOwner()).toEqual(beforeRoleLoss);
     } finally {
-      finalGate.release(); hostedTest.roleReply = null; hostedTest.submitted = null;
+      finalGate.release();
+      await pendingFinal.catch(() => {});
+      hostedTest.roleReply = null; hostedTest.submitted = null;
       await setAgentActions(agentActions, "TEST-S4-ordinary-final-cleanup");
     }
 
-    const rotate = (op: string) => room.wait(() => post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", op), ""));
+    const rotate = (op: string) => room.wait(async () => {
+      const response = await post(`/mcp/agents/${bot3.agent}/bearer`, control(room, rita.secret, "bearer", M, bot3.agent, "", op), "");
+      return { status: response.status, body: await response.json() };
+    });
     const rotationState = (op: string) => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(bot3.agent)), (_instance, state) => ({
       agent: state.storage.sql.exec(`SELECT bearer, bearer_expires FROM agent WHERE id = 1`).toArray()[0],
       control: state.storage.sql.exec(`SELECT op, fingerprint, state, answer, not_after FROM control WHERE op = ?`, op).toArray()[0],
     }));
     // A local replacement during the actual pre-mint Native reply consumes no bearer or control owner.
-    const preOp = "TEST-S4-rotation-pre-owner", object = env.AGENTS.get(env.AGENTS.idFromString(bot3.agent));
-    const originalRotationConfig = await runInDurableObject(object, (_instance, state) => String(state.storage.sql.exec(`SELECT config FROM agent WHERE id = 1`).toArray()[0]!["config"]));
+    const preOp = "TEST-S4-rotation-pre-owner", object = () => env.AGENTS.get(env.AGENTS.idFromString(bot3.agent));
+    const originalRotationConfig = await runInDurableObject(object(), (_instance, state) => String(state.storage.sql.exec(`SELECT config FROM agent WHERE id = 1`).toArray()[0]!["config"]));
     const preOwner = await ordinaryOwner(), preBudget = await agentStub(bot3.agent).used();
     let preEntered!: () => void, preRelease!: () => void;
     const preReached = new Promise<void>(resolve => { preEntered = resolve; });
     hostedTest.roleReply = { agent: "@bot3", at: 1, calls: 0, entered: preEntered, waiting: new Promise<void>(resolve => { preRelease = resolve; }) };
+    const pendingPre = rotate(preOp);
+    void pendingPre.catch(() => {});
     try {
-      const pending = rotate(preOp);
       await preReached;
-      await runInDurableObject(object, (_instance, state) => { state.storage.sql.exec(`UPDATE agent SET config = json_set(config, '$.service', ?) WHERE id = 1`, "https://TEST-configuration-owner.invalid"); });
+      await runInDurableObject(object(), (_instance, state) => { state.storage.sql.exec(`UPDATE agent SET config = json_set(config, '$.service', ?) WHERE id = 1`, "https://TEST-configuration-owner.invalid"); });
       preRelease();
-      const denied = await pending;
-      expect([denied.status, await denied.json()]).toEqual([409, { error: "op", rule: "stale" }]);
+      const denied = await pendingPre;
+      expect([denied.status, denied.body]).toEqual([409, { error: "op", rule: "stale" }]);
       expect(await ordinaryOwner()).toEqual(preOwner);
       expect((await rotationState(preOp)).control).toBeUndefined();
       expect(await agentStub(bot3.agent).used()).toBe(preBudget);
     } finally {
-      preRelease(); hostedTest.roleReply = null;
-      await runInDurableObject(object, (_instance, state) => { state.storage.sql.exec(`UPDATE agent SET config = ? WHERE id = 1`, originalRotationConfig); });
+      preRelease();
+      await pendingPre.catch(() => {});
+      hostedTest.roleReply = null;
+      await runInDurableObject(object(), (_instance, state) => { state.storage.sql.exec(`UPDATE agent SET config = ? WHERE id = 1`, originalRotationConfig); });
     }
     const preRetry = await rotate(preOp);
     expect(preRetry.status).toBe(200);
-    bot3Rotated = (await preRetry.json() as IssuedBearer).bearer;
+    bot3Rotated = (preRetry.body as IssuedBearer).bearer;
 
     const armRemoval = async () => {
       await legacySession(bot3Rotated); // A real generation and session make graceful await an actual removal callback.
@@ -1164,8 +1182,9 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     };
     // Native role loss while actual post-mint disposal waits must withhold the already-minted plaintext.
     const heldSubset = await armRemoval(), heldOp = "TEST-S4-rotation-held-subset";
+    const pendingSubset = rotate(heldOp);
+    void pendingSubset.catch(() => {});
     try {
-      const pending = rotate(heldOp);
       await heldSubset.reached;
       const committed = await rotationState(heldOp);
       expect(committed.control).toMatchObject({ state: "complete" });
@@ -1173,22 +1192,24 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
       expect(JSON.parse(String(committed.control!["answer"])).body).not.toHaveProperty("bearer");
       await setAgentActions(wider, "TEST-S4-rotation-held-wider");
       heldSubset.release();
-      const response = await pending, result = await response.json();
+      const response = await pendingSubset, result = response.body;
       expect(response.status).toBe(403);
       expect(result).toMatchObject({ error: "unauthorized", rule: "controller-role", bearerShown: true, bearerExpires: committed.agent!["bearer_expires"] });
       expect(result).not.toHaveProperty("bearer");
       expect(await rotationState(heldOp), "postcommit withholding neither rolls back nor rewrites the committed issuance").toEqual(committed);
       await setAgentActions(agentActions, "TEST-S4-rotation-held-narrow");
       const replay = await rotate(heldOp);
-      expect([replay.status, await replay.json()]).toEqual([200, JSON.parse(String(committed.control!["answer"])).body]);
+      expect([replay.status, replay.body]).toEqual([200, JSON.parse(String(committed.control!["answer"])).body]);
       expect(await rotationState(heldOp), "same-operation replay cannot remint or recover the withheld secret").toEqual(committed);
     } finally {
-      heldSubset.release(); hostedTest.removalReply = null;
+      heldSubset.release();
+      await pendingSubset.catch(() => {});
+      hostedTest.removalReply = null;
       await setAgentActions(agentActions, "TEST-S4-rotation-held-cleanup");
     }
     const nextIssuance = await rotate("TEST-S4-rotation-new-disclosure");
     expect(nextIssuance.status).toBe(200);
-    bot3Rotated = (await nextIssuance.json() as IssuedBearer).bearer;
+    bot3Rotated = (nextIssuance.body as IssuedBearer).bearer;
     expect((await admittedList()).status).toBe(200);
 
     // Epoch-only loss: reset/abrupt changes the old instance, while the exact SQL candidate stays unchanged.
@@ -1204,8 +1225,9 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
       };
     });
     const heldEpoch = await armRemoval();
+    const pendingEpoch = rotate(epochOp);
+    void pendingEpoch.catch(() => {});
     try {
-      const pending = rotate(epochOp);
       await heldEpoch.reached;
       const committed = await epochOwnerSQL();
       expect(committed.control[0]).toMatchObject({ state: "complete" });
@@ -1213,41 +1235,50 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
       await agentStub(bot3.agent).reset(); // Actual evict calls old HostedAgent.abrupt; no new rotation or SQL write follows.
       expect(await epochOwnerSQL(), "epoch loss alone preserves every private Agent/control/budget SQL field").toEqual(committed);
       heldEpoch.release();
-      const response = await pending, result = await response.json();
+      const response = await pendingEpoch, result = response.body;
       expect(response.status, "an obsolete HTTP epoch cannot disclose even an unchanged SQL candidate").toBe(409);
       expect(result).toMatchObject({ error: "op", rule: "stale", bearerShown: true });
       expect(result).not.toHaveProperty("bearer");
       expect(await epochOwnerSQL(), "old completion cannot rewrite the committed issuance").toEqual(committed);
       const replay = await rotate(epochOp);
-      expect([replay.status, await replay.json()]).toEqual([200, JSON.parse(String(committed.control[0]!["answer"])).body]);
+      expect([replay.status, replay.body]).toEqual([200, JSON.parse(String(committed.control[0]!["answer"])).body]);
       expect(await epochOwnerSQL(), "historical replay cannot redisclose or remint the epoch-withheld bearer").toEqual(committed);
-    } finally { heldEpoch.release(); hostedTest.removalReply = null; }
+    } finally {
+      heldEpoch.release();
+      await pendingEpoch.catch(() => {});
+      hostedTest.removalReply = null;
+    }
     const afterEpoch = await rotate("TEST-S4-rotation-after-epoch-loss");
     expect(afterEpoch.status).toBe(200);
-    bot3Rotated = (await afterEpoch.json() as IssuedBearer).bearer;
+    bot3Rotated = (afterEpoch.body as IssuedBearer).bearer;
     expect((await admittedList()).status).toBe(200);
 
     // Reset creates a newer owner while the old instance's real disposal still waits.
     const heldOwner = await armRemoval(), olderOp = "TEST-S4-rotation-older-owner";
+    const pendingOlder = rotate(olderOp);
+    void pendingOlder.catch(() => {});
     try {
-      const older = rotate(olderOp);
       await heldOwner.reached;
       const committedOlder = await rotationState(olderOp);
       await agentStub(bot3.agent).reset();
       const newer = await rotate("TEST-S4-rotation-newer-owner");
       expect(newer.status).toBe(200);
-      const next = await newer.json() as IssuedBearer;
+      const next = newer.body as IssuedBearer;
       bot3Rotated = next.bearer;
       const newerState = await ordinaryOwner();
       heldOwner.release();
-      const obsolete = await older, result = await obsolete.json();
+      const obsolete = await pendingOlder, result = obsolete.body;
       expect(obsolete.status).toBe(409);
       expect(result).toMatchObject({ error: "op", rule: "stale", bearerShown: true });
       expect(result).not.toHaveProperty("bearer");
       expect((await rotationState(olderOp)).control, "the older mint keeps only its original history").toEqual(committedOlder.control);
       expect(await ordinaryOwner(), "old completion cannot replace or erase the newer legitimate bearer").toEqual(newerState);
       expect((await admittedList()).status).toBe(200);
-    } finally { heldOwner.release(); hostedTest.removalReply = null; }
+    } finally {
+      heldOwner.release();
+      await pendingOlder.catch(() => {});
+      hostedTest.removalReply = null;
+    }
     // Keep a persisted session so the later revoked-key/retention controls must preserve it too.
     const retentionSession = await legacySession(bot3Rotated);
 
