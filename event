@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4f4096b1d3c2d6e3b5af16715e20633d3548a11d","text":"Merge retired a covered predecessor; the successor is at docs/operate-a-service.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:58130d02cf03055a59fa0ec97626f2ce879d0572","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-12-sandbox-deploy-ops2.md."}
