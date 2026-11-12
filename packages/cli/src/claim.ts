@@ -2,7 +2,7 @@
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { readFields } from "@generalbusiness/dap-derive";
 import type { ActType, Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Settlement, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, isDigest, isFactRef, isHead, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isIncarnation, isScopeId, parseStrict, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, factRefOf, intentDigest, isDigest, isFactRef, isHead, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isScopeId, parseStrict, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, creationOffer, isCreationOffer, isCurrentCreationOffer, signedIntent, signedReads, type CreationOffer } from "@generalbusiness/dap-client";
 import { answersVersionQuestion, DIRECTORY_OF, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
 import type { Context, Outcome } from "./commands.ts";
@@ -39,7 +39,7 @@ function retainedRegisterSelector(config: Config, register: ScopeRef, key: KeyId
     if (!shaped.ok || canonicalize(shaped.fields) !== canonicalize(intent.fields)) return null;
     if (answersVersionQuestion(plan.definition, "cliRetainedUnpublishedNamespaceRegister") && intent.fields["host"] === "none" && intent.fields["namespace"] !== "") return null;
     const seed: Seed = { v: 1, kind: "register", definition: plan.definition, creator: null, cause: intentDigest(intent), ordinal: 0 };
-    if (scopeIdOf(seed) !== plan.register || plan.register !== register.scope || register.kind !== "register" || !isIncarnation(register.inc)) return null;
+    if (scopeIdOf(seed) !== plan.register || plan.register !== register.scope || !isDigest(register.genesis)) return null;
     const attempted = textDigest(canonicalize({ service: plan.service, operator: intent.actor, founding: plan.founding, definition: plan.definition, register: plan.register }));
     if (plan.attempted !== attempted) return null;
     const acknowledged = plan.acknowledged;
@@ -60,8 +60,8 @@ function validRepository(repository: Repository, directory: Seed): boolean {
     // The pinned directory creates these three exact siblings in order. Both its exact
     // seed and full confirmed reference determine their IDs; the same creator
     // key/handle in another room cannot authorize a substituted cache.
-    return repository.directory.scope === scopeIdOf(directory) && repository.directory.kind === "directory" && isIncarnation(repository.directory.inc)
-      && isScopeId(repository.membership.scope) && repository.membership.kind === "membership" && isIncarnation(repository.membership.inc)
+    return repository.directory.scope === scopeIdOf(directory) && isDigest(repository.directory.genesis)
+      && isScopeId(repository.membership.scope) && isDigest(repository.membership.genesis)
       && repository.membership.scope === sibling("membership", 0) && repository.rules === sibling("rules", 1) && repository.destination === sibling("destination", 2)
       && (repository.inbox === undefined || isScopeId(repository.inbox));
   } catch { return false; }
@@ -275,7 +275,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         }
         return step.accepted;
       }
-      const receipt = accepted(await handle.submit(step.signed), at.scope, took, step.signed.intent.kind === "found" && at.kind === "register" ? registerFull : undefined).receipt;
+      const receipt = accepted(await handle.submit(step.signed), at.scope, took, step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register) ? registerFull : undefined).receipt;
       if (!isFactRef(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(at) || receipt.intent !== digest) throw new TransportError("The accepted reply does not match this exact claim step; its saved request remains pending.");
       if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) {
         if (registerDefinition !== null && receipt.definition !== registerDefinition) throw new TransportError("The accepted reply names another register definition; its exact saved request remains pending.");
@@ -327,7 +327,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         const all = await Promise.all(handles.map(active));
         return all.every((s) => s !== null) ? (all as Summary[]) : null;
       }, "membership, the rules scope and the destination", steps.children(name));
-      if (directory.scope.scope !== D.scope || directory.scope.kind !== "directory" || directory.definition !== directoryDefinition || summaries.some((summary, n) => summary.scope.scope !== children[n] || summary.scope.kind !== ["membership", "rules", "destination"][n] || summary.definition !== [siblings.membership, siblings.rules, siblings.destination][n])) return failed("A creation read names another scope; the claim remains pending.");
+      if (directory.scope.scope !== D.scope || directory.definition !== directoryDefinition || summaries.some((summary, n) => summary.scope.scope !== children[n] || summary.definition !== [siblings.membership, siblings.rules, siblings.destination][n])) return failed("A creation read names another scope; the claim remains pending.");
       repository = { directory: directory.scope, membership: summaries[0]!.scope, rules: children[1]!, destination: children[2]! };
       await keep({ ...pending, repository });
     }
