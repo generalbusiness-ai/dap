@@ -1,6 +1,6 @@
 import { canonicalize, isHead, isKeyId, isMemberRef, isRecord, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Receipt, ScopeRef } from "@generalbusiness/dap-contract";
-import { validKey } from "../custody.ts";
+import { validKey } from "@generalbusiness/dap-client";
 import { decodeViewParameters } from "@generalbusiness/dap-platform/application-v2";
 import { shapeAt } from "../shape.ts";
 import { dataOf, type CallResult, type TypedCallResult, type ViewOutcomeData, type ExactReadData, type LocalReviewData, type DispatchContext } from "../results.ts";

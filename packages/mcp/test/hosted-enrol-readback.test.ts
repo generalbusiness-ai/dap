@@ -9,7 +9,7 @@ import type { ControlRequest, Input, Receipt, SignedIntent } from "@generalbusin
 import { b64url, canonicalize, digestBytes, readMinimumParameter, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { encodeAgentKeyInvitation, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { HostedAgent, hostedRolePort, type AgentPorts } from "../src/hosted.ts";
-import { identityId, type Identity } from "../src/custody.ts";
+import { identityId, type Identity } from "@generalbusiness/dap-client";
 import { sqliteStore, type Sql, type SqlValue } from "../src/sqlite-custody.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
 

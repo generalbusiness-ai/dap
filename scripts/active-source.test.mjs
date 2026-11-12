@@ -230,7 +230,7 @@ test("MCP relative imports stay inside tracked server source", () => {
   for (const specifier of ["@generalbusiness/dap-git", "@generalbusiness/dap-git/node", "@generalbusiness/dap-git/http", "@generalbusiness/dap-git/github", "@generalbusiness/dap-git/application/../node"]) {
     assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", specifier), false, specifier);
   }
-  assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", "../custody.ts"), true);
+  assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", "../shape.ts"), true);
   for (const specifier of ["../../test/support/room.ts", "../../browser/main.ts", "../../../scope/src/object.ts", "/tmp/other.ts", "@generalbusiness/dap-lanes", "@generalbusiness/dap-client/../scope"]) {
     assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", specifier), false, specifier);
   }

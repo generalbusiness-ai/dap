@@ -1,6 +1,6 @@
 /** Native answers projected for MCP without changing their authority or custody. */
 import type { Answer, Archived, FactRef, Head, OutboxId } from "@generalbusiness/dap-contract";
-import type { ArchivedSettlement, Phase } from "./custody.ts";
+import type { ArchivedSettlement, Phase } from "@generalbusiness/dap-client";
 import { archivedAnswer } from "./errors.ts";
 
 export type ActResult = {

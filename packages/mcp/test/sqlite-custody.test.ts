@@ -3,15 +3,17 @@
  * hosted design's H6 states them at the store's level. The object-level cases (resets, interleaving, the budget across control
  * requests) run in the Workers runtime, in the hosted stories.
  */
+import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, test } from "vitest";
 import type { Receipt } from "@generalbusiness/dap-contract";
 import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { COMPLETION_BYTES, SEGMENT_ROW_BYTES, SQLITE_CUSTODY_BOUNDS, chargedOf, sqliteStore, type Sql, type SqlValue, type SqliteCustodyBounds } from "../src/sqlite-custody.ts";
-import { Custody, CustodyError, Lost, RECORD_BYTES, TERMINAL, identityId, memoryStore, type CustodyRecord, type CustodyStore, type Outcome } from "../src/custody.ts";
+import { Custody, CustodyError, Lost, RECORD_BYTES, TERMINAL, identityId, memoryStore, type CustodyRecord, type CustodyStore, type Outcome } from "@generalbusiness/dap-client";
 import { McpService } from "../src/service.ts";
 import { fixedSigner } from "./fixtures.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";
+import { goldenRecord, T0 } from "../../client/test/support/custody.ts";
 
 /** Node's SQLite as the store sees a Durable Object's: `exec` with bindings, and a transaction that rolls back on a throw. */
 function nodeSql(): Sql & { db: DatabaseSync } {
@@ -71,6 +73,16 @@ describe("the custody store over SQLite", () => {
     expect(await store.read("a")).toEqual(small);
     expect([store.used(), store.reserved()]).toEqual([used, reserved]);
     expect((await store.unresolved()).map((r) => r.key)).toEqual(["small", "large"]);
+
+    const golden = readFileSync(new URL("../../client/test/fixtures/custody-record-v1.json.txt", import.meta.url), "utf8");
+    const goldenSql = nodeSql();
+    const scene = await goldenRecord(now => sqliteStore(goldenSql, SQLITE_CUSTODY_BOUNDS, now));
+    const chunks = goldenSql.exec("SELECT bytes FROM chunk WHERE id = ? ORDER BY idx", scene.id).toArray();
+    expect(Buffer.concat(chunks.map(row => Buffer.from(row["bytes"] as Uint8Array))).toString("utf8")).toBe(golden);
+    const reopened = sqliteStore(goldenSql, SQLITE_CUSTODY_BOUNDS, () => T0 + 3000);
+    expect(await reopened.read(scene.id)).toEqual(JSON.parse(golden));
+    expect(scene.record).toEqual(JSON.parse(golden));
+    expect([scene.builds, scene.steps, scene.sends, scene.settlements]).toEqual([1, 1, 1, 1]);
   });
 
   test("the default 256-record count and a smaller configured count refuse before signing; settlement frees one slot", async () => {

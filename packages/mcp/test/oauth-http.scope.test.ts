@@ -12,7 +12,7 @@ import { OAuthAccess, OAUTH_GRANTS_MOST, type OAuthAccessGrant, type OAuthAgentI
 import { OAuthHttpLayers } from "../src/oauth-http.ts";
 import { hostedRolePort } from "../src/hosted.ts";
 import { McpService } from "../src/service.ts";
-import { memoryStore } from "../src/custody.ts";
+import { memoryStore } from "@generalbusiness/dap-client";
 import type { Sql } from "../src/sqlite-custody.ts";
 import { LEGACY, Wire } from "../src/wire.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";

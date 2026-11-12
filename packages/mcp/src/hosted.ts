@@ -34,7 +34,7 @@ import type { ControlAction, ControlRequest, Digest, Head, KeyId, MemberId, Scop
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, isHead, isKeyId, isScopeRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
 import { TransportError, agentKeyInvitationOf, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
-import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity, type CustodyRecord } from "./custody.ts";
+import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity, type CustodyRecord } from "@generalbusiness/dap-client";
 import { enrolledKeyItem, retirementBody } from "./hosted-retirement.ts";
 import { HttpGeneration, McpHttp, SESSIONS_MOST, SessionFull, type SessionRow } from "./http.ts";
 import type { McpConfig, Root } from "./inventory.ts";
