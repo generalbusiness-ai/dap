@@ -30,7 +30,7 @@ export interface ScopeState {
 }
 
 /** This scope's copy of a relationship another scope owns (section 7.3). `revision` is the `seq` of the owner's entry. */
-export interface Relation { owner: ScopeRef; name: string; item: number; state: string; revision: number }
+export interface Relation { owner: ScopeRef; ownerKind: ScopeKind; name: string; item: number; state: string; revision: number }
 
 /** An accepted intent: the entry that holds it, and its digest (section 4.2). */
 export interface Accepted { seq: number; intent: Digest }
@@ -178,7 +178,7 @@ export interface StateSnapshot {
   scope: ScopeState | null;
   items: readonly Item[];                                               // by ID
   counts: readonly (readonly [type: string, state: string, n: number])[];   // by type, then state
-  relations: readonly Relation[];                                       // by owner scope, owner incarnation, name, item
+  relations: readonly Relation[];                                       // by owner scope, owner genesis, name, item
   accepted: readonly (readonly [actor: KeyId, idempotencyKey: string, accepted: Accepted])[];   // by actor, then key
   requests: readonly OwnRequest[];                                      // by seq, then n
   decided: readonly Decided[];                                          // by source scope, incarnation, seq, n
@@ -516,11 +516,11 @@ export class MemoryState implements StateWriter {
       items.push(this.#items.get(next.ids[next.at++]!)!);
     }
   }
-  relation(owner: ScopeRef, name: string, item: number) { return this.#relations.get(key(owner.scope, owner.inc, name, item)) ?? null; }
+  relation(owner: ScopeRef, name: string, item: number) { return this.#relations.get(key(owner.scope, owner.genesis, name, item)) ?? null; }
   copies(name: string, kind: ScopeKind, states?: readonly string[]) {
     if (this.tally) this.tally.steps += states ? this.#relations.size : 1;
     if (!states) return this.#copies.get(key(name, kind)) ?? 0;
-    return [...this.#relations.values()].filter((r) => r.name === name && r.owner.kind === kind && states.includes(r.state)).length;
+    return [...this.#relations.values()].filter((r) => r.name === name && r.ownerKind === kind && states.includes(r.state)).length;
   }
   accepted(actor: KeyId, idempotencyKey: string) { return this.#accepted.get(key(actor, idempotencyKey))?.[2] ?? null; }
   request(seq: number, n: number) { return this.#requests.get(key(seq, n)) ?? null; }
@@ -609,8 +609,8 @@ export class MemoryState implements StateWriter {
   }
   addCount(type: string, state: string, by: number) { this.#counts.set(key(type, state), [type, state, this.count(type, state) + by]); }
   putRelation(r: Relation) {
-    const at = key(r.owner.scope, r.owner.inc, r.name, r.item);
-    if (!this.#relations.has(at)) this.#copies.set(key(r.name, r.owner.kind), (this.#copies.get(key(r.name, r.owner.kind)) ?? 0) + 1);
+    const at = key(r.owner.scope, r.owner.genesis, r.name, r.item);
+    if (!this.#relations.has(at)) this.#copies.set(key(r.name, r.ownerKind), (this.#copies.get(key(r.name, r.ownerKind)) ?? 0) + 1);
     this.#relations.set(at, r);
   }
   putAccepted(actor: KeyId, idempotencyKey: string, accepted: Accepted) { this.#accepted.set(key(actor, idempotencyKey), [actor, idempotencyKey, accepted]); }
@@ -648,7 +648,7 @@ export class MemoryState implements StateWriter {
       ...(this.#floor === null ? {} : { floor: this.#floor }),
       items: sorted(this.#items.values(), (i) => [i.id]),
       counts: sorted(this.#counts.values(), ([type, state]) => [type, state]).filter(([, , n]) => n !== 0),
-      relations: sorted(this.#relations.values(), (r) => [r.owner.scope, r.owner.inc, r.name, r.item]),
+      relations: sorted(this.#relations.values(), (r) => [r.owner.scope, r.owner.genesis, r.name, r.item]),
       accepted: sorted(this.#accepted.values(), ([actor, k]) => [actor, k]),
       requests: sorted(this.#requests.values(), (r) => [r.seq, r.n]),
       decided: sorted(this.#decided.values(), (d) => [d.from.scope, d.from.inc, d.seq, d.n]),

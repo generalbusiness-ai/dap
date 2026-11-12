@@ -3,7 +3,7 @@ import { replayReservedSource, replayReservedReceiver, replayQualifiedReceiver }
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report, type ScopeKind } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, entryHash, isEntry, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { grantFrom, namedBy, observationOf, validateDefinition } from "@generalbusiness/dap-derive";
+import { grantFrom, namedBy, observationOf, stateDigest, validateDefinition } from "@generalbusiness/dap-derive";
 import { created, keys, notesDefinition, on, otherLane, t, type Actor, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { C, cap, clean } from "../../derive/test/fixtures-hold.ts";
 import { MEMBERSHIP, RULES_SCOPE as RULES, firstExtents, platform, sourceName, standingOf } from "../../../packages/platform/src/index.ts";
@@ -769,6 +769,28 @@ describe("the value of an observation is derived once from the history of its so
       const last = ledger.entries.length - 1;
       // From the last head down, and then an early head after a late one.
       for (const seq of [...ledger.entries.map((_, i) => last - i), last, 0]) expect([ledger.definition.declared.name, seq, canonicalize(view.at(seq).state.all())]).toEqual([ledger.definition.declared.name, seq, ledger.replay(seq + 1).snapshot()]);
+      if (ledger === I) {
+        const original = ledger.state.all().relations[0];
+        if (!original || last === 0) throw new Error("the existing relation history must hold its copied row");
+        const owner = [D, P, I].find(scope => scope.at.scope === original.owner.scope && scope.at.genesis === original.owner.genesis);
+        if (!owner) throw new Error("the relation owner must be one of the actual fixture histories");
+        expect(original.ownerKind).toBe(owner.state.scope()!.kind);
+        // Raw derived writer plus a synthetic checkpoint fold. This probes
+        // the history log; it is not another valid Native relation judgment.
+        const additional = { ...original, owner: { ...original.owner, genesis: textDigest("historical alternate relation genesis") } };
+        view.putRelation(additional);
+        expect(view.relation(original.owner, original.name, original.item)).toEqual(original);
+        expect(view.relation(additional.owner, additional.name, additional.item)).toEqual(additional);
+        const tail = ledger.entries[last]!;
+        const checkpoint: Entry = { v: 1, genesis: ledger.at.genesis, seq: last + 1, prev: tail.hash, time: tail.entry.time, clamped: false, epoch: 0,
+          input: { type: "checkpoint", through: last, state: stateDigest(view.all()) }, uses: [], prepared: [], effects: [], sends: [] };
+        view.fold(ledger.definition, checkpoint, entryHash(checkpoint));
+        const historical = view.at(last).state;
+        expect(historical.relation(original.owner, original.name, original.item)).toEqual(original);
+        expect(historical.relation(additional.owner, additional.name, additional.item)).toEqual(additional);
+        expect(historical.copies(original.name, original.ownerKind)).toBe(view.copies(original.name, original.ownerKind));
+        expect(view.at(last - 1).state.relation(additional.owner, additional.name, additional.item)).toBeNull();
+      }
     }
   });
 });

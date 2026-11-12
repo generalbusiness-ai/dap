@@ -417,11 +417,11 @@ export class SqliteStore implements Store {
     return { items: matched.slice(0, limit), more: matched.length > limit };
   }
 
-  relation(owner: ScopeRef, name: string, item: number): Relation | null { return this.#folded("relation", canonicalize([owner.scope, owner.inc, name, item])); }
+  relation(owner: ScopeRef, name: string, item: number): Relation | null { return this.#folded("relation", canonicalize([owner.scope, owner.genesis, name, item])); }
   /** Counted from the copies themselves. A `relate` handler bounds how many its scope keeps, so the rows read are bounded by the definition. */
   copies(name: string, kind: ScopeKind, states?: readonly string[]): number {
     const among = states ? ` AND json_extract(value, '$.state') IN (${states.map(() => "?").join(", ")})` : "";
-    return this.#one(`SELECT COUNT(*) AS n FROM folded WHERE kind = 'relation' AND json_extract(value, '$.name') = ? AND json_extract(value, '$.owner.kind') = ?${among}`, name, kind, ...(states ?? []))!["n"] as number;
+    return this.#one(`SELECT COUNT(*) AS n FROM folded WHERE kind = 'relation' AND json_extract(value, '$.name') = ? AND json_extract(value, '$.ownerKind') = ?${among}`, name, kind, ...(states ?? []))!["n"] as number;
   }
   accepted(actor: KeyId, idempotencyKey: string): Accepted | null {
     const row = this.#one("SELECT seq,intent FROM entry WHERE actor=? AND idem=? UNION ALL SELECT seq,intent FROM accepted_key WHERE actor=? AND idem=? LIMIT 1", actor, idempotencyKey, actor, idempotencyKey);
@@ -584,7 +584,7 @@ export class SqliteStore implements Store {
   addCount(type: string, state: string, by: number): void {
     this.#run("INSERT INTO item_count (type, state, n) VALUES (?, ?, ?) ON CONFLICT (type, state) DO UPDATE SET n = n + excluded.n", type, state, by);
   }
-  putRelation(r: Relation): void { this.#fold("relation", canonicalize([r.owner.scope, r.owner.inc, r.name, r.item]), r); }
+  putRelation(r: Relation): void { this.#fold("relation", canonicalize([r.owner.scope, r.owner.genesis, r.name, r.item]), r); }
   putAccepted(actor: KeyId, idempotencyKey: string, accepted: Accepted): void {
     this.#run("UPDATE entry SET actor = ?, idem = ?, intent = ? WHERE seq = ?", actor, idempotencyKey, accepted.intent, accepted.seq);
   }

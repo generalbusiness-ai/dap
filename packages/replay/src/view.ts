@@ -93,7 +93,7 @@ export class View extends MemoryState {
     const count = this.count(type, state);
     this.#keep("count", [type, state], (to) => to.addCount(type, state, count));
   }
-  override putRelation(...given: Put<"putRelation">) { super.putRelation(...given); const [r] = given; this.#keep("relation", [r.owner.scope, r.owner.inc, r.name, r.item], (state) => state.putRelation(...given)); }
+  override putRelation(...given: Put<"putRelation">) { super.putRelation(...given); const [r] = given; this.#keep("relation", [r.owner.scope, r.owner.genesis, r.name, r.item], (state) => state.putRelation(...given)); }
   override putAccepted(...given: Put<"putAccepted">) { super.putAccepted(...given); this.#keep("accepted", [given[0] as KeyId, given[1]], (state) => state.putAccepted(...given)); }
   override putRequest(...given: Put<"putRequest">) { super.putRequest(...given); this.#keep("request", [given[0].seq, given[0].n], (state) => state.putRequest(...given)); }
   override putDecided(...given: Put<"putDecided">) { super.putDecided(...given); const [from, n] = given; this.#keep("decided", [from.at.scope, from.at.inc, from.seq, n], (state) => state.putDecided(...given)); }

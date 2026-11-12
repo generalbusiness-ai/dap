@@ -11,8 +11,8 @@
  * using the pinned selector rule where the definition states one.
  */
 
-import type { Digest, Effect, Entry, FactRef, GenesisEffect, OperationId, ScopeRef } from "@generalbusiness/dap-contract";
-import { intentDigest, isEffect, resolveGenesisSelf, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import type { Digest, Effect, Entry, FactRef, GenesisEffect, OperationId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import { intentDigest, isEffect, isScopeKind, resolveGenesisSelf, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { UNDER, historyOf } from "./attribution.ts";
 import { drawsOf, released, type DrawOptions } from "./draws.ts";
 import { indexRows } from "./binding.ts";
@@ -54,6 +54,24 @@ export function headsOf(proof: unknown): ObservedHead[] {
   // Revision 20 (section 16.1, "An observation of the holders of one action"): its subject, for the order of heads, is the action.
   if (o["subject"] === "holders") return typeof o["action"] === "string" ? [{ of, subject: `holders:${o["action"]}`, seq }] : [];
   return [o["key"], o["member"]].flatMap((subject) => (typeof subject === "string" ? [{ of, subject, seq }] : []));
+}
+
+/** A relation keeps the kind recorded for this exact full owner, never an address label. */
+function relationOwnerKind(entry: Entry, at: ScopeRef, localKind: ScopeKind | null, owner: ScopeRef): ScopeKind {
+  let found: ScopeKind | null = null;
+  const take = (candidate: ScopeRef, kind: ScopeKind | null) => {
+    if (!same(candidate, owner)) return;
+    if (!isScopeKind(kind)) throw new FoldError("a relation owner has no recorded kind");
+    if (found !== null && found !== kind) throw new FoldError("a relation owner has contradictory recorded kinds");
+    found = kind;
+  };
+  take(at, localKind);
+  const input = entry.input;
+  if (input.type === "delivery") take(input.from.at, input.sourceKind);
+  else if (input.type === "genesis" && input.source) take(input.source.at, input.sourceKind);
+  for (const use of entry.uses) take(use.fact.at, use.kind);
+  if (found === null) throw new FoldError("a relation owner has no recorded kind");
+  return found;
 }
 
 export function applyEntry(writer: StateWriter, definition: ValidDefinition, entry: Entry, hash: Digest, options: DrawOptions = {}): void {
@@ -138,9 +156,11 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
         now.set(effect.item, touch(effect.item));
         writer.putTexts(effect.item, effect.slot, []);
         break;
-      case "relation":
-        writer.putRelation({ owner: effect.owner, name: effect.name, item: effect.item, state: effect.state, revision: effect.revision });
+      case "relation": {
+        const ownerKind = relationOwnerKind(entry, at, input.type === "genesis" ? input.seed.kind : scope?.kind ?? null, effect.owner);
+        writer.putRelation({ owner: effect.owner, ownerKind, name: effect.name, item: effect.item, state: effect.state, revision: effect.revision });
         break;
+      }
       case "activate":
         status = "active";
         held = [];

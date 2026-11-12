@@ -270,7 +270,7 @@ test("logical key counts in real SQLite retain final keys, ignore transport ACKs
     const store = open(), before = store.keyCounts(), scope = store.scope()!;
     const item = { ...store.all().items[0]!, id: 900, type: "count-probe", state: "open" };
     const record = { capability: "hold@1" as const, kind: "count-probe", key: ["one"], state: "live", values: {}, seq: 900 };
-    const relation = { owner: scope.at, name: "count-probe", item: 900, state: "live", revision: 900 };
+    const relation = { owner: scope.at, ownerKind: scope.kind, name: "count-probe", item: 900, state: "live", revision: 900 };
     store.transaction(() => { store.putItem(item); store.putRecord(record); store.putRelation(relation); });
     const inserted = store.keyCounts();
     store.transaction(() => {
@@ -301,6 +301,38 @@ test("logical key counts in real SQLite retain final keys, ignore transport ACKs
   expect([counts.acknowledged, counts.unavailable]).toEqual([pending, pending]);
   expect([counts.undelivered, counts.answered, counts.afterRollback, counts.reopened]).toEqual([retained, retained, retained, retained]);
   expect(counts.rolledBack).toBe(true);
+
+  const relationRows = await s.inside(state => {
+    // Raw writer/reopen/rollback scene, not a judged foreign delivery.
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    const scope = store.scope()!, owner = { ...scope.at, genesis: textDigest("SQLite alternate relation genesis") };
+    const other = { owner, ownerKind: scope.kind, name: "count-probe", item: 900, state: "live", revision: 901 };
+    store.transaction(() => { store.putRelation(other); store.putRelation({ ...other, revision: 902 }); });
+    const snapshot = store.all();
+    let rolledBack = false;
+    try {
+      store.transaction(() => { store.putRelation({ ...other, state: "final" }); store.putRelation({ ...other, item: 902 }); throw new Error("rollback relation rows"); });
+    } catch (error) { rolledBack = error instanceof Error && error.message === "rollback relation rows"; }
+    const wrongKind: typeof scope.kind = scope.kind === "directory" ? "lane" : "directory";
+    return { owner: scope.at, other: owner, kind: scope.kind, wrongKind, snapshot, after: store.all(), rolledBack,
+      count: store.copies("count-probe", scope.kind), final: store.copies("count-probe", scope.kind, ["final"]), live: store.copies("count-probe", scope.kind, ["live"]), wrong: store.copies("count-probe", wrongKind),
+      first: store.relation(scope.at, "count-probe", 900), second: store.relation(owner, "count-probe", 900) };
+  });
+  expect([relationRows.count, relationRows.final, relationRows.live, relationRows.wrong, relationRows.rolledBack]).toEqual([2, 1, 1, 0, true]);
+  expect(relationRows.after).toEqual(relationRows.snapshot);
+  expect([relationRows.first?.ownerKind, relationRows.second?.ownerKind]).toEqual([relationRows.kind, relationRows.kind]);
+  expect(relationRows.first?.owner).toEqual(relationRows.owner);
+  expect(relationRows.second?.owner).toEqual(relationRows.other);
+  expect([relationRows.first?.state, relationRows.second?.state]).toEqual(["final", "live"]);
+  await s.restart();
+  const reopenedRelations = await s.inside(state => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    return { snapshot: store.all(), count: store.copies("count-probe", relationRows.kind), wrong: store.copies("count-probe", relationRows.wrongKind),
+      first: store.relation(relationRows.owner, "count-probe", 900), second: store.relation(relationRows.other, "count-probe", 900) };
+  });
+  expect(reopenedRelations.snapshot).toEqual(relationRows.snapshot);
+  expect([reopenedRelations.count, reopenedRelations.wrong]).toEqual([2, 0]);
+  expect([reopenedRelations.first, reopenedRelations.second]).toEqual([relationRows.first, relationRows.second]);
 });
 
 test("fresh application admission is rechecked after an async foreign read following standing; accepted keys bypass unavailable admission", async () => {

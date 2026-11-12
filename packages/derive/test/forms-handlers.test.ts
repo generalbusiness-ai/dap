@@ -2,9 +2,11 @@ import { handlerFormCases } from "./definition-corpus/forms-handlers-cases.ts";
 import { forms_handlers_change0, forms_handlers_change1, forms_handlers_change2 } from "./definition-corpus/forms-handlers-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { FieldValue, Request, Result } from "@generalbusiness/dap-contract";
-import { MemoryState, messageFacts, validateDefinition, type Fetched } from "../src/index.ts";
-import { Scope, arrive, decided, deliver, fields, keys, on, ticket, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
+import type { Entry, FactRef, FactUse, FieldValue, GenesisEffect, GenesisSelfRef, Request, Result, ScopeKind } from "@generalbusiness/dap-contract";
+import { applyEntry, FoldError, MemoryState, messageFacts, stateDigest, validateDefinition, type Fetched } from "../src/index.ts";
+import { Scope, arrive, created, decided, deliver, fields, keys, on, ticket, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
+
+import { canonicalBytes, digestBytes, entryHash, isEntry, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 
 const { rita } = keys;
 
@@ -69,6 +71,8 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
     const [first, second] = [link(), link()];
     deliver(I, P, first);
     expect([decided(I), I.state.copies("closes", "lane")]).toEqual([["applied"], 1]);
+    expect(I.state.relation(P.at, "closes", first)?.ownerKind).toBe(P.state.scope()!.kind);
+    expect(I.state.copies("closes", "directory")).toBe(0);
     // A second key is one more than the handler keeps. The deciding entry has no effect, and no copy is kept.
     deliver(I, P, second);
     expect([decided(I), I.last.effects, I.state.relation(P.at, "closes", second), I.item(0).values["linked"]]).toEqual([["refused", "type-full"], [], null, "set"]);
@@ -80,8 +84,8 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
     // all 1,000 copies for each, by reading it, as a count by state still does.
     const counted = { steps: 0 };
     const many = new MemoryState(counted);
-    for (let item = 0; item < 1000; item++) many.putRelation({ owner: P.at, name: item % 2 === 0 ? "follows" : "closes", item, state: "set", revision: 1 });
-    many.putRelation({ owner: P.at, name: "closes", item: 1, state: "removed", revision: 2 });
+    for (let item = 0; item < 1000; item++) many.putRelation({ owner: P.at, ownerKind: P.state.scope()!.kind, name: item % 2 === 0 ? "follows" : "closes", item, state: "set", revision: 1 });
+    many.putRelation({ owner: P.at, ownerKind: P.state.scope()!.kind, name: "closes", item: 1, state: "removed", revision: 2 });
     expect([many.copies("closes", "lane"), many.copies("closes", "directory"), counted.steps, many.copies("closes", "lane", ["set"]), counted.steps]).toEqual([500, 0, 2, 499, 1002]);
 
     // No handler is for the relationship `follows`. And one whose `from` names another definition is not for this sender.
@@ -90,6 +94,41 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
     deliver(other, P, P.did(rita, "link", fields({ target: other.at, about: 0 })).seq);
     for (const s of [I, other]) expect([decided(s), s.last.effects, s.state.all().relations.length]).toEqual([["refused", "unknown-message"], [], s === I ? 1 : 0]);
     expect(I.replay().snapshot()).toBe(I.state.snapshot());
+
+    // Closed-shape/fold subscenes only. These synthetic relation effects
+    // do not assert that a genesis judgment may create such a relation.
+    const born = created(), birth = born.entries[0]!.entry;
+    if (birth.input.type !== "genesis") throw new Error("the fixture must hold its genesis");
+    const rootInput = birth.input;
+    const row = { effect: "relation" as const, item: 0, name: "genesis-copy", state: "kept", revision: 0 };
+    const useOf = (ledger: typeof P): FactUse => ({ fact: ledger.fact(0), content: digestBytes(canonicalBytes(ledger.entries[0]!.entry)), kind: ledger.state.scope()!.kind });
+    const folded = (effects: readonly GenesisEffect[], uses: readonly FactUse[] = [], source: { fact: FactRef; kind: ScopeKind } | null = null) => {
+      const provenance = source ? { source: source.fact, sourceKind: source.kind } : { source: null, sourceKind: null } as const;
+      const entry: Entry = { ...birth, seq: 0, prev: null, input: { ...rootInput, ...provenance }, uses, effects, sends: [] };
+      if (!isEntry(entry)) throw new Error("the scripted genesis must retain its closed shape");
+      const state = new MemoryState(), hash = entryHash(entry);
+      applyEntry(state, born.definition, entry, hash);
+      return { state, entry, hash, at: { scope: scopeIdOf(rootInput.seed), genesis: hash } };
+    };
+    const self: GenesisSelfRef = { scope: scopeIdOf(rootInput.seed), genesis: null };
+    const own = folded([{ ...row, owner: self }]);
+    expect(own.state.relation(own.at, row.name, 0)?.ownerKind).toBe(rootInput.seed.kind);
+    expect(own.state.relation(own.at, row.name, 0)?.owner).toEqual(own.at);
+    const ownLater: Entry = { ...own.entry, genesis: own.hash, seq: 1, prev: own.hash,
+      input: { type: "checkpoint", through: 0, state: stateDigest(own.state.all()) }, uses: [], effects: [{ ...row, owner: own.at, revision: 1 }] };
+    expect(isEntry(ownLater)).toBe(true);
+    applyEntry(own.state, born.definition, ownLater, entryHash(ownLater));
+    expect([own.state.relation(own.at, row.name, 0)?.ownerKind, own.state.relation(own.at, row.name, 0)?.revision, own.state.copies(row.name, rootInput.seed.kind)]).toEqual([rootInput.seed.kind, 1, 1]);
+
+    const source = { fact: P.fact(0), kind: P.state.scope()!.kind }, use = useOf(P);
+    const fromSource = folded([{ ...row, owner: P.at }], [use], source);
+    expect(fromSource.state.relation(P.at, row.name, 0)?.ownerKind).toBe(source.kind);
+    const named = useOf(I), fromUse = folded([{ ...row, owner: I.at }], [named]);
+    expect(fromUse.state.relation(I.at, row.name, 0)?.ownerKind).toBe(named.kind);
+    expect(() => folded([{ ...row, owner: I.at }])).toThrow(FoldError);
+    expect(() => folded([{ ...row, owner: { ...P.at, genesis: textDigest("another genesis at the same address") } }], [use], source)).toThrow(FoldError);
+    expect(() => folded([{ ...row, owner: P.at }], [{ ...use, kind: "directory" }], source)).toThrow(FoldError);
+    expect(() => folded([{ ...row, owner: I.at }], [named, { ...named, kind: "directory" }])).toThrow(FoldError);
   });
 
   test("a handler reads the fields it declares, and opens its item: one for each delivery of a type that is `many`, up to its `max`; the one item of a type that is not, once", () => {
