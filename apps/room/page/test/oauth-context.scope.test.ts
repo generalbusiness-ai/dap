@@ -13,7 +13,7 @@ import { memoryPageKeys } from "./private-key-fixture.ts";
 import { sessionRoom } from "../../../../packages/scope/test/support/session-room.ts";
 import { drainScheduledFixture, driveFixture, type nativeFixtureLifetime } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
 import { rita, routed, type Platform } from "../../../../packages/scope/test/repository.ts";
-import { hostedTest } from "../../../../packages/scope/test/worker.ts";
+import { hostedRegistries, hostedTest } from "../../../../packages/scope/test/worker.ts";
 import worker from "../../worker.ts";
 
 test("consent retains lost grants and reuses each controller's Native agent in the selected unpublished room", async () => {
@@ -28,6 +28,7 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     };
     life.setHold(envelope => { if (isSeed(envelope.to)) track(scopeIdOf(envelope.to)); return false; });
     const pause = async (waiting: readonly string[] = []) => { for (const name of waiting) track(name); await driveFixture(life.platforms(), life.wait); };
+    hostedTest.clientRegistry = env.REGISTRIES.newUniqueId();
     hostedTest.now = life.now; hostedTest.pause = pause;
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
@@ -44,7 +45,7 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     const fetch = async (url: string, init?: Parameters<typeof routed>[1]) => {
       requests.push(url); const path = new URL(url).pathname;
       if (path.startsWith("/mcp/") || path.startsWith("/oauth/")) {
-        const response = await worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM, SCOPE_INDEX_MODE: "register", MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION: "on" });
+        const response = await worker.fetch(new Request(url, init), { ...env, REGISTRIES: hostedRegistries(env.REGISTRIES), SCOPES: env.PLATFORM, SCOPE_INDEX_MODE: "register", MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION: "on" });
         if (path === "/mcp/agents/grant") {
           grantBodies.push(String(init?.body));
           if (loseGrant && response.status === 201) { loseGrant = false; await response.body?.cancel(); throw Error("TEST lost the completed first-grant reply"); }
@@ -127,7 +128,7 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     await expect(oauthControl(selection, "grant", null, "{}", crypto.randomUUID())).rejects.toThrow("selected room or browser key changed");
     expect((await life.wait(() => M.entries())).filter(entry => entry.input.type === "act").length).toBe(before);
   } finally {
-    hostedTest.now = null; hostedTest.pause = null;
+    hostedTest.now = null; hostedTest.clientRegistry = null; hostedTest.pause = null;
     const life = ownedLife, M = ownedMembership;
     if (life) {
       if (!M) throw Error("OAuth context setup retained Native ownership");

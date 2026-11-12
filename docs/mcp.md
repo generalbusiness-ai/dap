@@ -1854,6 +1854,39 @@ it on.
 [Connect through a hosted endpoint](connect-an-ai-app.md#connect-through-a-hosted-endpoint)
 gives a member's steps.
 
+### Retirement and retained operations
+
+Retirement erases the hosted Agent's seed, bearer and sessions and ends its
+access credentials before outside cleanup. Those effects stay if a later
+read or callback stops completion. A temporary postcommit refusal says that
+cleanup may already be in effect and asks you to send the same operation
+again. It does not roll back cleanup or create another credential.
+
+A committed retirement cannot finish through this control path after its
+original signer's key becomes retired or compromised. That key receives
+its existing refusal. Another signer cannot take over the operation:
+every fingerprint conflict keeps its existing two-field response. A member
+with `membership.manage`, or the recovery key, runs Native `revoke-key` on
+the Agent's key if that revocation still needs to finish. This independent
+Native action does not complete the old local operation or replace its
+first retained signed revoke.
+
+Hosted retirement and `revoke-key` leave the Agent's member active in the
+room. On the ordinary-member own-Agent path, that member keeps one of its
+controller's eight places until a member with `membership.manage`, or the
+recovery key, records `remove-member`. An ordinary controller that holds
+only `membership.own-agent` cannot free the place itself. Retirement adds
+no automatic member removal, permission or counter change.
+
+The Registry connection list keeps an OAuth Agent's row without a retired
+mark. The Agent's own list reports state `retired`; after issuer revocation
+its connections are empty. A stop before issuer revocation can leave
+unexpired issuer metadata in that list, even though the Agent cannot use
+those credentials. A later distinct creation can replace a confirmed OAuth
+mapping only through the existing retired-identity and fresh-authority
+checks; that creates a different Agent, not a new retirement operation on
+the old one. Unknown legacy or provisional mappings do not gain that path.
+
 ## Compact cards
 
 An embedding application can supply `ServerPort.views`, a trusted

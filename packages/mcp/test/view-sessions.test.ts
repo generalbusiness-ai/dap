@@ -3,6 +3,7 @@ import { TOOL_WAIT_MS } from "../src/views/waits.ts";
 import { REPLY_SECONDS } from "@generalbusiness/dap-client";
 import { readFileSync } from "node:fs";
 import { VIEW_DIFF_POLLS, type CallResult } from "../src/service.ts";
+import type { DispatchContext } from "../src/results.ts";
 import { cardOpens } from "../src/views/opens.ts";
 import { actSigner } from "../src/views/actor.ts";
 import { ViewSessions } from "../src/views/session.ts";
@@ -17,22 +18,38 @@ const answer = (value: string): CallResult => ({ content: [{ type: "text", text:
 // Invariant: a full mounted-view cache refuses another write before dispatch, but can still check the original requests
 // already admitted. This is the session/cache boundary; scope answers and custody below it are explicit test doubles.
 test("a full view retains original-request checks without admitting another write", async () => {
-  const source: ViewSource = { read: async (query) => ({ status: "ready", position: query.position, count: 33, fallback: "Inspect the item.", card: {
+  const source: ViewSource = { read: async (query, access) => {
+    await access.call("inspect", { target: "fixture-scope" });
+    return ({ status: "ready", position: query.position, count: 33, fallback: "Inspect the item.", card: {
     identity: { kind: "fixture", item: String(query.position), revision: "0", subject: { scope: "fixture-scope", item: query.position }, at: { on: 0 } },
     title: "Fixture item", summary: "A cache boundary fixture", actor: { kind: "person", name: "Fixture" }, reasons: [],
     projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "Inspect the item.",
     actions: [{ id: "apply", label: "Apply", purpose: "act", kind: "apply", args: { target: "fixture-scope", on: query.position, at: { on: 0 } } }],
-  } }) };
+  } }); } };
   const sent: Record<string, unknown>[] = [], checked: Record<string, unknown>[] = [];
-  const sessions = new ViewSessions(source, { call: async () => { throw new Error("The fixture reads no scope."); } }, async (_kind, args, admit) => {
-    await admit(); sent.push(structuredClone(args)); return answer("unavailable");
-  }, async (args) => { checked.push(structuredClone(args)); return answer("accepted"); });
-  await sessions.open("bounded", "needs-you");
+  // Context identity witnesses private plumbing, not Hosted admission.
+  const opened: DispatchContext = { prepare: async () => () => null }, reading: DispatchContext = { prepare: async () => () => null };
+  const writing: DispatchContext = { prepare: async () => () => null }, checking: DispatchContext = { prepare: async () => () => null };
+  const replaying: DispatchContext = { prepare: async () => () => null };
+  const nested: (DispatchContext | undefined)[] = [], performed: (DispatchContext | undefined)[] = [], settledContexts: (DispatchContext | undefined)[] = [];
+  const sessions = new ViewSessions(source, dispatchContext => ({ call: async () => { nested.push(dispatchContext); return answer("read"); } }), async (_kind, args, admit, dispatchContext) => {
+    await admit(); performed.push(dispatchContext); sent.push(structuredClone(args)); return answer("unavailable");
+  }, async (args, dispatchContext) => { settledContexts.push(dispatchContext); checked.push(structuredClone(args)); return answer("accepted"); });
+  const tools = viewTools(sessions);
+  await tools["view_needs_you"]!.run({ view: "bounded" }, opened);
+  expect(nested.at(-1)).toBe(opened);
   let display = sessions.display("bounded");
   for (let position = 0; position < 32; position++) {
-    display = await sessions.read("bounded", display.cut, { page: "item", position });
-    const result = await sessions.act("bounded", display.cut, "apply");
-    display = result.display;
+    const read = await tools["view_read"]!.run({ view: "bounded", cut: display.cut, page: "item", position }, reading);
+    display = read.structuredContent["display"] as Display;
+    expect(nested.at(-1)).toBe(reading);
+    const cut = display.cut;
+    const result = await tools["view_act"]!.run({ view: "bounded", cut, action: "apply" }, writing);
+    display = result.structuredContent["display"] as Display;
+    expect(performed.at(-1)).toBe(writing);
+    const beforeReplay = performed.length;
+    await tools["view_act"]!.run({ view: "bounded", cut, action: "apply" }, replaying);
+    expect(performed).toHaveLength(beforeReplay);
     expect(display.card!.actions.map((action) => action.purpose)).toEqual(["check-original"]);
   }
   display = await sessions.read("bounded", display.cut, { page: "item", position: 32 });
@@ -41,11 +58,46 @@ test("a full view retains original-request checks without admitting another writ
   display = await sessions.read("bounded", display.cut, { page: "item", position: 0 });
   const original = display.card!.actions[0]!;
   expect(original.purpose).toBe("check-original");
-  const settled = await sessions.act("bounded", display.cut, original.id);
+  const settled = await sessions.act("bounded", display.cut, original.id, checking);
+  expect(settledContexts).toEqual([checking]);
   expect(settled.result.structuredContent["answer"]).toBe("accepted");
   expect(checked).toHaveLength(1);
   expect(checked[0]!["idempotencyKey"]).toBe(sent[0]!["idempotencyKey"]);
   expect(sent).toHaveLength(32);
+  expect(JSON.stringify(settled.display)).not.toContain("prepare");
+
+  // These two results have equal JSON. Only the exact privately marked object
+  // came from a stopped delivery; arbitrary error fields do not mean unknown.
+  for (const error of ["unauthorized", "unavailable"]) {
+    const marked: CallResult = { content: [{ type: "text", text: "TEST local stop" }],
+      structuredContent: { error, message: "TEST local stop", next: "TEST check the original" }, isError: true };
+    const unmarked = structuredClone(marked), stopped = new WeakSet([marked]);
+    expect(JSON.stringify(marked)).toBe(JSON.stringify(unmarked));
+    let returned = marked, classifications = 0;
+    const checkArgs: Record<string, unknown>[] = [];
+    const declared = new ViewSessions({ ...source, declared: true }, () => ({ call: async () => answer("read") }),
+      async () => answer("unavailable"), async args => { checkArgs.push(structuredClone(args)); return returned; }, () => null,
+      { dispatchStopped: result => { classifications++; return stopped.has(result); } });
+    await declared.open(`marked-${error}`, "needs-you");
+    const detail = await declared.read(`marked-${error}`, declared.display(`marked-${error}`).cut, { page: "item" });
+    const pending = await declared.act(`marked-${error}`, detail.cut, "apply");
+    const check = pending.display.card!.actions[0]!;
+    expect(check.purpose).toBe("check-original");
+    const beforeMarked = classifications;
+    const held = await declared.act(`marked-${error}`, pending.display.cut, check.id);
+    expect(classifications).toBe(beforeMarked + 1);
+    expect(held.result).toBe(marked);
+    expect(held.display.receipt).toContain("outcome unknown; check the original request");
+    expect(held.display.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
+    returned = unmarked;
+    const beforeUnmarked = classifications;
+    const plain = await declared.act(`marked-${error}`, held.display.cut, held.display.card!.actions[0]!.id);
+    expect(classifications).toBe(beforeUnmarked + 1);
+    expect(plain.result).toBe(unmarked);
+    expect(plain.display.receipt).not.toContain("outcome unknown");
+    expect(plain.display.card!.actions).toEqual([]);
+    expect(checkArgs[1]).toEqual(checkArgs[0]);
+  }
 });
 
 function reviewedFixture() {
@@ -74,7 +126,7 @@ test("local Mark reviewed retains its exact cut without native custody and keeps
     await context.admit(); marks++; seen.push({ capture: held, view: context.view, cut: context.cut }); return localAnswer(held);
   } };
   const access = { call: async () => { throw Error("No native tool read."); } };
-  const sessions = new ViewSessions(source, access, async () => { performed++; return answer("accepted"); }, async () => { settled++; return answer("accepted"); });
+  const sessions = new ViewSessions(source, () => access, async () => { performed++; return answer("accepted"); }, async () => { settled++; return answer("accepted"); });
   await sessions.open("local", "needs-you");
   const display = sessions.display("local");
   expect(display.card!.actions).toEqual([{ id: "review", label: "Mark reviewed", purpose: "mark-reviewed" }]);
@@ -87,7 +139,7 @@ test("local Mark reviewed retains its exact cut without native custody and keeps
   expect(first.result.structuredContent).not.toHaveProperty("fact");
   expect({ marks, performed, settled }).toEqual({ marks: 1, performed: 0, settled: 0 });
 
-  const absent = new ViewSessions({ initialPage: () => "updates", read: source.read }, access, async () => { performed++; return answer("accepted"); }, async () => answer("accepted"));
+  const absent = new ViewSessions({ initialPage: () => "updates", read: source.read }, () => access, async () => { performed++; return answer("accepted"); }, async () => answer("accepted"));
   await absent.open("absent", "needs-you");
   await expect(absent.act("absent", 0, "review")).rejects.toMatchObject({ reason: "unavailable" });
   expect(performed).toBe(0);
@@ -95,7 +147,7 @@ test("local Mark reviewed retains its exact cut without native custody and keeps
   const legacy = structuredClone(projection);
   legacy.card!.actions = [{ id: "native-review", label: "Mark reviewed", purpose: "mark-reviewed", kind: "review", args: { target: capture.heads[0]!.scope.scope, at: { on: 1 } } }];
   const nativeCalls: { kind: string; args: Record<string, unknown> }[] = [];
-  const native = new ViewSessions({ ...source, read: async () => legacy }, access, async (kind, args, admit) => { await admit(); nativeCalls.push({ kind, args }); return answer("accepted"); }, async () => answer("accepted"));
+  const native = new ViewSessions({ ...source, read: async () => legacy }, () => access, async (kind, args, admit) => { await admit(); nativeCalls.push({ kind, args }); return answer("accepted"); }, async () => answer("accepted"));
   await native.open("legacy", "needs-you");
   expect((await native.act("legacy", 0, "native-review")).result.structuredContent["answer"]).toBe("accepted");
   expect(nativeCalls).toHaveLength(1);
@@ -110,7 +162,7 @@ test("a local callback must re-admit the active cut before writing", async () =>
   const waiting = new Promise<void>(resolve => { release = resolve; }), started = new Promise<void>(resolve => { entered = resolve; });
   const sessions = new ViewSessions({ initialPage: () => "updates", read: async () => structuredClone(projection), markReviewed: async (capture, { admit }) => {
     entered(); await waiting; await admit(); writes++; return localAnswer(capture);
-  } }, { call: async () => { throw Error("No native read."); } }, async () => { native++; return answer("accepted"); }, async () => { native++; return answer("accepted"); });
+  } }, () => ({ call: async () => { throw Error("No native read."); } }), async () => { native++; return answer("accepted"); }, async () => { native++; return answer("accepted"); });
   await sessions.open("old", "needs-you");
   const dispatch = sessions.act("old", 0, "review");
   await started;
@@ -125,7 +177,7 @@ test("malformed captures and native-shaped callback answers cannot pass as local
   const { projection } = reviewedFixture();
   let marks = 0, native = 0;
   const make = (read: ViewSource["read"], markReviewed: NonNullable<ViewSource["markReviewed"]>) => new ViewSessions({ initialPage: () => "updates", read, markReviewed },
-    { call: async () => { throw Error("No native read."); } }, async () => { native++; return answer("accepted"); }, async () => { native++; return answer("accepted"); });
+    () => ({ call: async () => { throw Error("No native read."); } }), async () => { native++; return answer("accepted"); }, async () => { native++; return answer("accepted"); });
   const malformed = structuredClone(projection), action = malformed.card!.actions[0]!;
   if (!action.local) throw Error("Fixture needs the local variant.");
   action.capture = { ...action.capture, ranges: [{ ...action.capture.ranges[0]!, to: 1 }] };
@@ -148,7 +200,7 @@ test("an agent card needs its controller before it can offer a write", async () 
     reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "Inspect the item.",
     actions: [{ id: "apply", label: "Apply", purpose: "act", kind: "apply", args: { target: "fixture-scope", on: 0, at: { on: 0 } } }],
   } }) };
-  const sessions = new ViewSessions(source, { call: async () => { throw Error("No native read belongs to this projection fixture."); } },
+  const sessions = new ViewSessions(source, () => ({ call: async () => { throw Error("No native read belongs to this projection fixture."); } }),
     async kind => { performed.push(kind); return answer("accepted"); }, async () => { throw Error("No original request exists."); });
   await sessions.open("controlled", "work", "controlled");
   const controlled = await sessions.read("controlled", sessions.display("controlled").cut, { page: "item" });
@@ -167,7 +219,7 @@ test("an agent card needs its controller before it can offer a write", async () 
 test("an action's own at signs, a card's at fills in for none, and an at the card did not display makes the card unavailable", async () => {
   const card = (actions: Record<string, unknown>[]): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2, proposal: 3, rules: 4 } }, title: "TEST", summary: "TEST", reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: actions.map(action => ({ label: "TEST", purpose: "act", kind: "k", ...action })) as Card["actions"] } });
   const signed: unknown[] = [];
-  const session = (projection: Projection) => new ViewSessions({ initialPage: () => "item", read: async () => structuredClone(projection) }, { call: async () => { throw Error("No native tool read."); } }, async (_kind, args, admit) => { await admit(); signed.push(args["at"]); return answer("accepted"); }, async () => answer("accepted"));
+  const session = (projection: Projection) => new ViewSessions({ initialPage: () => "item", read: async () => structuredClone(projection) }, () => ({ call: async () => { throw Error("No native tool read."); } }), async (_kind, args, admit) => { await admit(); signed.push(args["at"]); return answer("accepted"); }, async () => answer("accepted"));
   const good = session(card([{ id: "own", args: { target: "sc_a", at: { manifest: 2, proposal: 3 } } }, { id: "none", args: { target: "sc_a" } }]));
   await good.open("v", "change");
   await good.act("v", 0, "own");
@@ -186,7 +238,7 @@ test("View diff goes through its port once per cut, keeps the card's two acts, a
   const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", body: "TEST body", reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", diffAvailable: true, diffRead: { target: "sc_d", base: "a", integration: "b" },
     actions: [{ id: "one", label: "TEST", purpose: "act", kind: "k", args: { target: "sc_a" } }, { id: "two", label: "TEST", purpose: "act", kind: "k", args: { target: "sc_a" } }] } });
   const reads: unknown[] = []; let fail = true;
-  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, { readExact: async (read, admit) => { await admit(); reads.push(read); return fail ? { content: [], isError: true, structuredContent: { error: "diff", message: "TEST no diff." } } : { content: [], isError: false, structuredContent: { text: "TEST text\ntruncated: TEST\n", truncated: true } }; } });
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, () => ({ call: async () => { throw Error("No native tool read."); } }), async () => answer("accepted"), async () => answer("accepted"), () => null, { readExact: async (read, admit) => { await admit(); reads.push(read); return fail ? { content: [], isError: true, structuredContent: { error: "diff", message: "TEST no diff." } } : { content: [], isError: false, structuredContent: { text: "TEST text\ntruncated: TEST\n", truncated: true } }; } });
   await sessions.open("v", "change");
   const item = sessions.display("v");
   expect(item.card!.actions.map(action => action.id)).toEqual(["one", "two"]);
@@ -222,29 +274,32 @@ test("a stopped interdiff runs again on the next press and its complete answer t
   const leftOut = "every changed path, because the read stopped before it reached one";
   const complete = "@@ TEST complete interdiff @@\n-before\n+after\n";
   const reads: unknown[] = [];
-  const views = new ViewSessions({ initialPage: () => "item", read: async () => structuredClone(projection) }, { call: async () => { throw Error("No scope read in this stand-in."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
-    readExact: async (read, admit) => {
-      await admit(); reads.push(read);
+  const firstContext: DispatchContext = { prepare: async () => () => null }, nextContext: DispatchContext = { prepare: async () => () => null }, replayContext: DispatchContext = { prepare: async () => () => null };
+  const readContexts: (DispatchContext | undefined)[] = [];
+  const views = new ViewSessions({ initialPage: () => "item", read: async () => structuredClone(projection) }, () => ({ call: async () => { throw Error("No scope read in this stand-in."); } }), async () => answer("accepted"), async () => answer("accepted"), () => null, {
+    readExact: async (read, admit, dispatchContext) => {
+      await admit(); readContexts.push(dispatchContext); reads.push(read);
       return { content: [], isError: false, structuredContent: reads.length === 1
         ? { text: stopped, truncated: true, paths: [], leftOut, commits: [from, to].map(value => ({ label: value.label, id: value.integration })) }
         : { text: complete, truncated: false, paths: [{ path: "file.txt", shown: "file.txt", commit: to.integration }], commits: [from, to].map(value => ({ label: value.label, id: value.integration })) } };
     },
   });
   await views.open("v", "change");
-  const first = await views.act("v", views.display("v").cut, "view-interdiff-0");
+  const first = await views.act("v", views.display("v").cut, "view-interdiff-0", firstContext);
   expect(first.display.card!.body).toBe(stopped);
   expect(first.display.card!.shownRead).toMatchObject({ truncated: true, leftOut, files: [] });
   expect(first.display.card!.readers).toContainEqual({ action: "view-interdiff-0", label: "Interdiff from Version 1", current: true });
-  const again = await views.act("v", first.display.cut, "view-interdiff-0");
+  const again = await views.act("v", first.display.cut, "view-interdiff-0", nextContext);
   expect(reads).toEqual([{ kind: "interdiff", target: "sc_d", from, to }, { kind: "interdiff", target: "sc_d", from, to }]);
   expect(again.result.structuredContent).not.toHaveProperty("held");
   expect(again.display.card!.body).toBe(complete);
   expect(again.display.card!.shownRead).toMatchObject({ truncated: false, leftOut: null });
   const item = await views.read("v", again.display.cut, { page: "item" });
-  const replay = await views.act("v", item.cut, "view-interdiff-0");
+  const replay = await views.act("v", item.cut, "view-interdiff-0", replayContext);
   expect(replay.result.structuredContent).toMatchObject({ held: true, truncated: false });
   expect(replay.display.card!.body).toBe(complete);
   expect(reads).toHaveLength(2);
+  expect(readContexts).toEqual([firstContext, nextContext]);
 });
 
 // Invariant: an answer that no longer fits is not reported as shown, and replay failure spends no new credential.
@@ -256,7 +311,7 @@ test("a retained answer that no longer fits reports no new signature and can rep
     identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } },
     title: "TEST", summary, reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: [],
     diffAvailable: true, diffRead: { target: "sc_d", base: "a".repeat(40), integration: "b".repeat(40) },
-  } }) }, { call: async () => { throw Error("No scope read in this stand-in."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
+  } }) }, () => ({ call: async () => { throw Error("No scope read in this stand-in."); } }), async () => answer("accepted"), async () => answer("accepted"), () => null, {
     readExact: async (_read, admit) => { await admit(); reads++; return { content: [], structuredContent: { text, truncated: false }, isError: false }; },
   });
   await views.open("v", "change");
@@ -283,7 +338,7 @@ test("a view_act frame and a view_read frame hold a read's text once", async () 
   const MARK = "TEST-LINE-OF-THE-READ", body = `${MARK}\n`.repeat(1800);
   const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", actor: { kind: "person", name: "TEST" }, reasons: [],
     projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: [], diffAvailable: true, diffRead: { target: "sc_a", base: "a".repeat(40), integration: "b".repeat(40) } } });
-  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null,
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, () => ({ call: async () => { throw Error("No native tool read."); } }), async () => answer("accepted"), async () => answer("accepted"), () => null,
     { readExact: async () => ({ content: [{ type: "text", text: JSON.stringify({ text: body }) }], structuredContent: { text: body, files: 1, truncated: false, commits: [{ label: "Base", id: "a".repeat(40) }] }, isError: false }) });
   await sessions.open("v", "change");
   const tools = viewTools(sessions), copies = (frame: unknown) => JSON.stringify(frame).split(MARK).length - 1;
@@ -304,7 +359,7 @@ test("a card with no exact read dispatches its own act whose ID resembles a read
   const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST",
     actions: [{ id: "view-file-report", label: "TEST", purpose: "act", kind: "k", args: { target: "sc_a", at: { manifest: 2 } } }] } });
   const acts: unknown[] = [];
-  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async (args) => { acts.push(args); return answer("accepted"); }, async () => answer("accepted"), () => null, {});
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, () => ({ call: async () => { throw Error("No native tool read."); } }), async (args) => { acts.push(args); return answer("accepted"); }, async () => answer("accepted"), () => null, {});
   await sessions.open("v", "change");
   const said = await sessions.act("v", sessions.display("v").cut, "view-file-report").then(() => "dispatched", (error: { reason?: string }) => error.reason);
   expect([said, acts.length]).toEqual(["dispatched", 1]);
@@ -315,7 +370,7 @@ test("a file action before any read is refused as no such read", async () => {
   const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", actor: { kind: "person", name: "TEST" }, reasons: [],
     projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: [], diffAvailable: true, diffRead: { target: "sc_a", base: "a".repeat(40), integration: "b".repeat(40) } } });
   let reads = 0;
-  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, { readExact: async () => { reads++; return answer("read"); } });
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, () => ({ call: async () => { throw Error("No native tool read."); } }), async () => answer("accepted"), async () => answer("accepted"), () => null, { readExact: async () => { reads++; return answer("read"); } });
   await sessions.open("v", "change");
   for (const action of ["view-file", "view-file-0"]) {
     const said = await sessions.act("v", sessions.display("v").cut, action).then(() => "dispatched", (error: { reason?: string }) => error.reason);
@@ -334,7 +389,7 @@ test("View diff: a retained card admits nothing while an original is open, and a
     diffAvailable: true, diffRead: { target: "destination", base: "a".repeat(40), integration: "b".repeat(40) },
   } }) };
   let spends = 0;
-  const views = new ViewSessions(source, { call: async () => answer("read") }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
+  const views = new ViewSessions(source, () => ({ call: async () => answer("read") }), async () => answer("accepted"), async () => answer("accepted"), () => null, {
     unresolved: async () => open ? { idempotencyKey: "open" } : null,
     readExact: async (_read, admit) => { await admit(); spends++; return { content: [], structuredContent: { text: "t".repeat(32 * 1024) }, isError: false }; },
   });
@@ -361,7 +416,7 @@ test("a read that a newer card supersedes says that it signed", async () => {
   } }) };
   let answer_: CallResult = { content: [], structuredContent: { text: "the diff" }, isError: false };
   let signed = 0;
-  const views: ViewSessions = new ViewSessions(source, { call: async () => answer("read") }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
+  const views: ViewSessions = new ViewSessions(source, () => ({ call: async () => answer("read") }), async () => answer("accepted"), async () => answer("accepted"), () => null, {
     readExact: async (_read, admit) => { await admit(); signed++; await views.open(`newer-${signed}`, "change", "subject"); return answer_; },
   });
   await views.open("v", "change", "subject");
@@ -390,7 +445,7 @@ test("an incomplete card opens its available entries and offers no act", async (
     ...(query.page === "updates" ? { entries: [{ scope: "fixture-scope", seq: 1, text: "Entry 1" }] } : {}),
     actions: [{ id: "primary", label: "Mark reviewed", purpose: "mark-reviewed", kind: "publish", args: { target: "fixture-scope", on: 0, at: { on: 0 } } }],
   } }) };
-  const sessions = new ViewSessions(source, { call: async () => { throw new Error("The fixture reads no scope."); } }, async () => answer("unavailable"), async () => answer("unavailable"));
+  const sessions = new ViewSessions(source, () => ({ call: async () => { throw new Error("The fixture reads no scope."); } }), async () => answer("unavailable"), async () => answer("unavailable"));
   await sessions.open("partial", "needs-you");
   const detail = await sessions.read("partial", sessions.display("partial").cut, { page: "updates" });
   expect(detail.status).toBe("incomplete");
@@ -402,7 +457,7 @@ test("an incomplete card opens its available entries and offers no act", async (
 test("a first card offers acts only with its whole text; a person reads the act's words and the model's context keeps the entry", async () => {
   const projection = (wholeText: boolean, body: string | undefined, page: string): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, kicker: "Change 2, version 3", title: "TEST", summary: "TEST", actor: { kind: "person", name: "TEST" }, reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", ...(body === undefined ? {} : { body }), ...(wholeText ? { wholeText: true as const } : {}),
     actions: page === "summary" && !wholeText ? [] : [{ id: "approve", label: "Approve", purpose: "approve", kind: "k", done: "Review recorded: approved.", args: { target: "sc_a", at: { manifest: 2 } } }, { id: "plain", label: "Plain", purpose: "act", kind: "k", args: { target: "sc_a", at: { manifest: 2 } } }] } });
-  const sessionOf = (wholeText: boolean, body: string | undefined) => new ViewSessions({ read: async query => projection(wholeText, body, query.page) }, { call: async () => { throw Error("No native tool read."); } }, async () => ({ content: [{ type: "text", text: "accepted" }], structuredContent: { answer: "accepted", fact: { seq: 39 } }, isError: false }), async () => { throw Error("No settlement here."); });
+  const sessionOf = (wholeText: boolean, body: string | undefined) => new ViewSessions({ read: async query => projection(wholeText, body, query.page) }, () => ({ call: async () => { throw Error("No native tool read."); } }), async () => ({ content: [{ type: "text", text: "accepted" }], structuredContent: { answer: "accepted", fact: { seq: 39 } }, isError: false }), async () => { throw Error("No settlement here."); });
 
   const whole = sessionOf(true, "TEST text");
   await whole.open("v", "decision");
@@ -426,7 +481,7 @@ test("a first card offers acts only with its whole text; a person reads the act'
 test("a first card's press with an unknown outcome offers only the check of the original, and paging away and back keeps it so", async () => {
   const projection = (position: number): Projection => ({ status: "ready", position, count: 2, fallback: "TEST", card: { identity: { item: String(position + 1), kind: "ask", revision: "2", subject: { scope: "sc_a", item: position + 1 }, at: { on: 2 } }, kicker: `Question ${position + 1}`, title: "TEST", summary: "TEST", actor: { kind: "person", name: "TEST" }, reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", body: "TEST text", wholeText: true,
     actions: [{ id: "approve", label: "Approve", purpose: "approve", kind: "k", done: "Review recorded: approved.", args: { target: "sc_a", at: { on: 2 } } }] } });
-  const sessions = new ViewSessions({ read: async query => projection(query.position) }, { call: async () => { throw Error("No native tool read."); } }, async () => ({ content: [{ type: "text", text: "unknown" }], structuredContent: { answer: "unknown" }, isError: false }), async () => { throw Error("No settlement here."); });
+  const sessions = new ViewSessions({ read: async query => projection(query.position) }, () => ({ call: async () => { throw Error("No native tool read."); } }), async () => ({ content: [{ type: "text", text: "unknown" }], structuredContent: { answer: "unknown" }, isError: false }), async () => { throw Error("No settlement here."); });
   await sessions.open("v", "decision");
   const pressed = await sessions.act("v", sessions.display("v").cut, "approve");
   expect(pressed.display.card!.actions.map(action => action.purpose), "UNKNOWN: the card offers the check").toEqual(["check-original"]);
