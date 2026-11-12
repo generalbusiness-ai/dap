@@ -25,7 +25,7 @@ function listStorageKey(context: ListContext, kind: ListKind): string | null {
   try {
     const { origin, directory, membership, key } = context;
     if (origin.length > 2048 || new URL(origin).origin !== origin || !isScopeId(directory)
-      || !isScopeRef(membership) || membership.kind !== "membership" || !isKeyId(key) || !validKind(kind)) return null;
+      || !isScopeRef(membership) || !isKeyId(key) || !validKind(kind)) return null;
     return JSON.stringify([origin, directory, membership.scope, membership.inc, membership.kind, key, kind]);
   } catch { return null; }
 }

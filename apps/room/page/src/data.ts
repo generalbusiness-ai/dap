@@ -291,8 +291,8 @@ export function placeOf(typed: string): Place | null {
     const parsed = (trimmed.startsWith(LINK) ? linkOf(trimmed) : JSON.parse(trimmed)) as { repository?: { directory?: unknown; membership?: unknown }; directory?: unknown; membership?: unknown } | null;
     const repository = parsed?.repository ?? parsed;
     // Encoding only: a syntactically valid Place proves no birth or authority.
-    if (!fullScopeRef(repository?.directory) || repository.directory.kind !== "directory"
-      || !fullScopeRef(repository?.membership) || repository.membership.kind !== "membership") return null;
+    if (!fullScopeRef(repository?.directory)
+      || !fullScopeRef(repository?.membership)) return null;
     return { directory: repository.directory.scope, membership: repository.membership };
   } catch {
     return null;
@@ -304,8 +304,8 @@ export function placeOf(typed: string): Place | null {
 function admittedInvitation(link: NonNullable<ReturnType<typeof linkOf>>): boolean {
   const membership = isInvitationMembership(link.definition) ? platform(link.definition) : null;
   return typeof link.handle === "string" && link.invitation > 0
-    && fullScopeRef(link.repository?.directory) && link.repository.directory.kind === "directory"
-    && fullScopeRef(link.repository?.membership) && link.repository.membership.kind === "membership"
+    && fullScopeRef(link.repository?.directory)
+    && fullScopeRef(link.repository?.membership)
     && isScopeId(link.repository?.rules) && isScopeId(link.repository?.destination)
     && membership?.data.name === "platform:membership" && membership.data.acts["join"] !== undefined;
 }
@@ -314,7 +314,7 @@ function admittedInvitation(link: NonNullable<ReturnType<typeof linkOf>>): boole
  * of whichever room the Page currently selects. Another invitation does not
  * settle an unknown enrollment under that same identity. */
 export function enrollmentAssociation(session: Session, membership: ScopeRef): string {
-  if (!fullScopeRef(membership) || membership.kind !== "membership") throw new Unreadable("Enrollment requires a complete membership reference.");
+  if (!fullScopeRef(membership)) throw new Unreadable("Enrollment requires a complete membership reference.");
   return canonicalize([session.service.replace(/\/+$/, ""), membership, sessionKey(session)]);
 }
 
@@ -408,7 +408,7 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   room.rules = rules;
   room.destination = destination;
   const commons = repository.refs["commons"];
-  if (fullScopeRef(commons) && commons.kind === "commons") room.commons = commons;
+  if (fullScopeRef(commons)) room.commons = commons;
   else if (commons !== undefined && commons !== null) throw new Unreadable("The directory has an invalid Commons reference.");
   const recordedRepository = repository.values["repository"];
   if (answersVersionQuestion(summary.definition, "pageUnpublishedDirectory") && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
@@ -739,7 +739,7 @@ export interface ChangeView {
 async function reviewPolicyOf(room: Room, change: ScopeRef, proposal: Item, held: Item | undefined, manifest: number): Promise<NonNullable<ChangeView["reviewPolicy"]> | null> {
   try {
     const source = held?.refs["source"], named = proposal.refs["rulesScope"];
-    if (!held || !isFactRef(source) || !fullScopeRef(named) || source.at.scope !== room.rules || source.at.kind !== "rules"
+    if (!held || !isFactRef(source) || !fullScopeRef(named) || source.at.scope !== room.rules
       || canonicalize(source.at) !== canonicalize(named) || held.values["revision"] !== source.seq) return null;
     const handle = handleOf(room, source.at.scope);
     const { summary, at } = await summaryOf(handle);
@@ -1034,8 +1034,8 @@ export async function roomInitialization(room: Room): Promise<RoomInitialization
     const directory = await summaryOf(handleOf(room, room.directory));
     const repository = directory.summary.items.find(item => item.type === "repository");
     const named = repository?.refs["rules"];
-    if (directory.summary.status !== "active" || directory.summary.scope.scope !== room.directory || directory.summary.scope.kind !== "directory"
-      || !fullScopeRef(named) || named.kind !== "rules" || named.scope !== room.rules
+    if (directory.summary.status !== "active" || directory.summary.scope.scope !== room.directory
+      || !fullScopeRef(named) || named.scope !== room.rules
       || canonicalize(repository?.refs["membership"]) !== canonicalize(room.membership)) return unavailable;
     const handle = handleOf(room, room.rules), { summary, at } = await summaryOf(handle);
     if (summary.status !== "active" || canonicalize(summary.scope) !== canonicalize(named)
@@ -1096,7 +1096,7 @@ export async function loadRules(room: Room): Promise<RulesView> {
   const rules = summary.items.find((item) => item.type === "rules");
   if (!rules) throw new Unreadable(`${room.rules} holds no rules.`);
   if (isCertifiedRules(summary.definition)) {
-    if (summary.status !== "active" || summary.scope.kind !== "rules" || summary.scope.scope !== room.rules
+    if (summary.status !== "active" || summary.scope.scope !== room.rules
       || summary.items.filter(item => item.type === "rules").length !== 1) throw new Unreadable("The complete certified rules could not be read.");
     const read = rulesSummaryV11(rules, room.destination);
     if (!read) throw new Unreadable("The certified rules summary is inconsistent or unavailable.");
@@ -1288,7 +1288,7 @@ export async function issueCreation(room: Room, result: Acted, current: () => bo
       return unavailable;
     };
     if (child === undefined || child === null) return await pending(false);
-    if (!fullScopeRef(child) || child.kind !== "lane" || child.scope !== scopeIdOf(seed)) return unavailable;
+    if (!fullScopeRef(child) || child.scope !== scopeIdOf(seed)) return unavailable;
     if (!current()) return unavailable;
     const read = await summaryOf(handleOf(room, child.scope));
     if (!current()) return unavailable;

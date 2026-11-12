@@ -68,7 +68,7 @@ const PAGE_STEPS: ClaimSteps = {
 const CREATION_UNKNOWN = "This step sent nothing, and this browser cannot say whether an earlier send of this creation went. Report it. A new creation can make a second room.";
 
 function bindingOf(session: Session | ClaimIdentity, configured: ClaimRegister): string {
-  if (!isScopeRef(configured.register) || configured.register.kind !== "register" || !DIRECTORY_OF[configured.definition]) throw new Error("A valid key and an explicitly supported configured register are required.");
+  if (!isScopeRef(configured.register) || !DIRECTORY_OF[configured.definition]) throw new Error("A valid key and an explicitly supported configured register are required.");
   // The browser caller passes location.origin; an arbitrary remote connection
   // is not selected from a saved setting, invitation, or claim record.
   originOf(session);
@@ -167,7 +167,7 @@ export async function migrateAllClaimCustody(origin: string, storage: ClaimStora
     const tuple: unknown = JSON.parse(binding);
     if (!Array.isArray(tuple) || tuple.length !== 4 || tuple[0] !== origin) continue;
     const [service, register, definition, publicKey] = tuple;
-    if (!isScopeRef(register) || register.kind !== "register" || typeof definition !== "string" || !Object.hasOwn(DIRECTORY_OF, definition) || !isKeyId(publicKey)) throw new Error("The original claim binding is invalid.");
+    if (!isScopeRef(register) || typeof definition !== "string" || !Object.hasOwn(DIRECTORY_OF, definition) || !isKeyId(publicKey)) throw new Error("The original claim binding is invalid.");
     const configured = { register, definition: definition as PlatformDefinition };
     const identity = { service: service as string, publicKey };
     if (bindingOf(identity, configured) !== binding) throw new Error("The original claim binding changed.");
@@ -222,7 +222,7 @@ function storeFor(session: Session, configured: ClaimRegister, storage: ClaimSto
  * version guess is used. The register still judges the eventual signed act. */
 export async function allowedClaim(session: Session, register: ScopeRef): Promise<ClaimRegister> {
   originOf(session);
-  if (!isScopeRef(register) || register.kind !== "register") throw new Error("A valid browser key and full configured register reference are required.");
+  if (!isScopeRef(register)) throw new Error("A valid browser key and full configured register reference are required.");
   const transport = signedReads(httpTransport(session.service, session.fetch ? { fetch: session.fetch } : {}), sessionSigner(session), session.now ? { now: session.now } : {});
   const read = await new ScopeHandle(transport, register.scope).summary();
   if (!read.ok) throw new Error(`The configured register cannot be read: ${read.reason}. Nothing was submitted.`);

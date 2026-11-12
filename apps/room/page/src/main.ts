@@ -90,7 +90,7 @@ function settings(): Settings | null {
     ignoredSavedAddress = !!kept && Object.hasOwn(kept, "service");
     if (!kept || !isKeyId(kept.publicKey) || kept.secret !== undefined) return null;
     const place = kept.place ?? null;
-    const register = isScopeRef(kept.register) && kept.register.kind === "register" ? kept.register : undefined;
+    const register = isScopeRef(kept.register) ? kept.register : undefined;
     const label = labelFor(kept.label, place, register);
     const selected = kept.claimSelection;
     const claimSelection = selected && typeof selected.operation === "string" && selected.operation.length > 0 && selected.origin === location.origin && selected.key === kept.publicKey && labelFor({ text: "selection", place: selected.place, register: selected.register }, place, register) ? selected : undefined;
@@ -920,7 +920,7 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
         const secret = decodedSecret;
         if (!typed || typed.startsWith("artroom-invite:") || !place || !secret || secret.length !== 32) { tell("Refused because config.json and its matching 32-byte device key are both required. Use the invitation path for an invitation link.", true); return; }
         const parsed = JSON.parse(typed) as { register?: unknown };
-        if (parsed.register !== undefined && (!isScopeRef(parsed.register) || parsed.register.kind !== "register")) { tell("Refused because the config register reference is invalid.", true); return; }
+        if (parsed.register !== undefined && !isScopeRef(parsed.register)) { tell("Refused because the config register reference is invalid.", true); return; }
         const signer = await privateKeys.migrate({ seed: b64url(secret), current, removeSecret: () => {} });
         signers.set(signer.key, signer);
         if (await selectRoom({ place, publicKey: signer.key, ...(parsed.register ? { register: parsed.register as ScopeRef } : {}) })) key.value = "";
