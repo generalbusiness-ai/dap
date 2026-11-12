@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, PlatformDefinition, ScopeRef, SessionClaims } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, newIncarnation, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { SIBLINGS_OF } from "@generalbusiness/dap-platform";
 import { Scope } from "../src/core.ts";
 import { production } from "../src/ports.ts";
@@ -22,8 +22,8 @@ function fixture(scope: Lane, state: DurableObjectState, named: PlatformDefiniti
   if (source.input.type !== "genesis") return expect.fail("missing native sample genesis");
   const seed = { ...source.input.seed, kind: "directory" as const, definition: named };
   const directory: ScopeRef = { ...source.at, kind: "directory", scope: scopeIdOf(seed) };
-  const membership: ScopeRef = { scope: scopeIdOf({ ...seed, kind: "membership", ordinal: 100 }), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "membership" };
-  const rules: ScopeRef = { scope: scopeIdOf({ ...seed, kind: "rules", ordinal: 101 }), inc: newIncarnation(new Uint8Array(16).fill(2)), kind: "rules" };
+  const membership: ScopeRef = { scope: scopeIdOf({ ...seed, kind: "membership", ordinal: 100 }), genesis: `sha256:${"01".repeat(32)}` as const };
+  const rules: ScopeRef = { scope: scopeIdOf({ ...seed, kind: "rules", ordinal: 101 }), genesis: `sha256:${"02".repeat(32)}` as const };
   const entry: Entry = { ...source, at: directory, input: { ...source.input, seed } }, bytes = canonicalize(entry), hash = entryHash(entry);
   state.storage.sql.exec("DELETE FROM entry"); state.storage.sql.exec("INSERT INTO entry(seq,hash,time,bytes,size) VALUES(0,?,?,?,?)", hash, entry.time, bytes, utf8(bytes).length);
   store.setScope({ ...old, at: directory, head: { seq: 0, hash }, genesis: { hash, source: null, n: 0 }, status: "active" });
@@ -63,10 +63,10 @@ test("small reference receiver admits every current directory cohort, authentica
 test("reference receiver refuses wrong identity/repository, expiry, clock drift and duplicate open records without a second body", async () => {
   const scope = await create();
   const got = await scope.inside(state => {
-    const f = fixture(scope, state), otherInc = newIncarnation(new Uint8Array(16).fill(9));
+    const f = fixture(scope, state), otherGenesis = `sha256:${"09".repeat(32)}` as const;
     const refused = [
-      f.receiver.read(f.request(f.token(), { ...f.directory, inc: otherInc })),
-      f.receiver.read(f.request(f.token({ membership: { ...f.membership, inc: otherInc } }))),
+      f.receiver.read(f.request(f.token(), { ...f.directory, genesis: otherGenesis })),
+      f.receiver.read(f.request(f.token({ membership: { ...f.membership, genesis: otherGenesis } }))),
       f.receiver.read(f.request(f.token({ ends: at(1) }))),
     ];
     f.clock(at(-1)); refused.push(f.receiver.read(f.request())); f.clock(at(1));
@@ -124,7 +124,7 @@ test("native sender clamps request and reply bytes and optional capability witho
     const request = encodeSessionReference({ v: 1, to: f.directory, reader: f.token(), milliseconds: Number.MAX_SAFE_INTEGER, maxBytes: Number.MAX_SAFE_INTEGER })!;
     const rejected = [];
     rejected.push(await source.read(f.directory, "x".repeat(B.request + 1)));
-    rejected.push(await source.read({ ...f.directory, inc: newIncarnation(new Uint8Array(16).fill(9)) }, request));
+    rejected.push(await source.read({ ...f.directory, genesis: `sha256:${"09".repeat(32)}` as const }, request));
     const beforeLookup = lookups, small = await source.read(f.directory, request);
     for (const raw of ["x".repeat(B.reply + 1), "é".repeat(B.reply), {}, null]) { answer = raw; rejected.push(await source.read(f.directory, request)); }
     supported = false; rejected.push(await source.read(f.directory, request));

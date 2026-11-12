@@ -1,7 +1,7 @@
 /** Retired hosted routes have no public assets. Generic exact-release serving
  * is witnessed on real installed scopes in application-install-custody. */
 import { env } from "cloudflare:test";
-import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { applicationScreenPath, readApplicationScreenHost } from "@generalbusiness/dap-client/application";
 import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationResolverFixture, applicationWorkerBindings } from "./fixtures-native.ts";
@@ -40,7 +40,7 @@ test("Room refuses retired application paths and still rejects URL credentials b
 test("two pending packet loads coalesce while a third distinct release refuses before another R2 read", async () => {
   const fixtures = await Promise.all([{}, { admin: ["counting.control"] }, { member: ["counting.fulfill"] }].map(roles => applicationResolverFixture("sha1", undefined, roles)));
   const trust = JSON.stringify(fixtures.flatMap(f => f.trust));
-  const ref = (kind: ScopeKind, ordinal: number): ScopeRef => ({ kind, scope: scopeIdOf({ v: 1, kind, definition: textDigest("TEST route binding"), creator: null, cause: textDigest("TEST cache " + kind), ordinal }), inc: newIncarnation(new Uint8Array(16).fill(ordinal)) });
+  const ref = (kind: ScopeKind, ordinal: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: textDigest("TEST route binding"), creator: null, cause: textDigest("TEST cache " + kind), ordinal }), genesis: `sha256:${ordinal.toString(16).padStart(2, "0").repeat(32)}` });
   const directory = ref("directory", 1), rules = ref("rules", 2), membership = ref("membership", 3), destination = ref("destination", 4);
   const scopes = { idFromName: (name: string) => name, get: (name: string) => name === directory.scope ? { applicationRoom: async () => ({ directory, rules }) }
     : { applicationInstallation: async (_directory: ScopeRef, item: number) => ({ directory, rules, membership, destination, scope: ref("lane", item + 5), item, definition: fixtures[item]!.packet.package.semantic.entry, ids: fixtures[item]!.packet.ids }) } };

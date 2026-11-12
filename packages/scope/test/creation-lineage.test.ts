@@ -5,7 +5,7 @@ import { lineageDeviceRoot, lineageBudgetDefinitions } from "./definition-corpus
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { DEVICE_COMMAND, type Entry, type Intent, type PlatformDefinition, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isSeed, newIncarnation, parseStrict, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isSeed, parseStrict, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import type { Delivered } from "@generalbusiness/dap-derive";
@@ -96,7 +96,7 @@ test("three approved native cohorts admit only operator-listed roots and preserv
 
       // A forged unknown ancestor must not reach even idFromName in register
       // mode. The index is a stand-in; every actual native answer above is not.
-      const unknown: ScopeRef = { ...await D.at(), scope: scopeIdOf({ ...(nativeChild.to as Seed), ordinal: 77 }), inc: newIncarnation(crypto.getRandomValues(new Uint8Array(16))) };
+      const unknown: ScopeRef = { ...await D.at(), scope: scopeIdOf({ ...(nativeChild.to as Seed), ordinal: 77 }), genesis: digestBytes(crypto.getRandomValues(new Uint8Array(16))) };
       const unknownTo = { ...(nativeChild.to as Seed), creator: unknown };
       const trap = recorded([R, D], scopeIdOf(unknownTo));
       expect(await namespace(indexedScopes(trap.binding, { ...trap.env, ...config(R.name), SCOPE_INDEX_MODE: "register" })).transport.send({ ...delivered, to: unknownTo, from: { ...delivered.from, at: unknown } }))
@@ -128,7 +128,7 @@ test("three approved native cohorts admit only operator-listed roots and preserv
       for (const [label, altered, expected] of [
         ["ordinal contradicted by source", { ...delivered, n: delivered.n + 99 }, { answer: "routing", reason: "not-found" }],
         ["exact source hash unavailable", { ...delivered, from: { ...delivered.from, hash: digestBytes(utf8("wrong fact")) } }, { answer: "retry", reason: "dependency-unavailable" }],
-        ["creator incarnation mismatch", { ...delivered, from: { ...delivered.from, at: { ...delivered.from.at, inc: newIncarnation(crypto.getRandomValues(new Uint8Array(16))) } } }, { answer: "routing", reason: "not-found" }],
+        ["creator genesis mismatch", { ...delivered, from: { ...delivered.from, at: { ...delivered.from.at, genesis: digestBytes(crypto.getRandomValues(new Uint8Array(16))) } } }, { answer: "routing", reason: "not-found" }],
         ["message contradicted by source", { ...delivered, message: { ...delivered.message, body: { fields: {} } } } as Delivered, { answer: "routing", reason: "not-found" }],
       ] as const) {
         const denied = recorded([R, D, ...children], scopeIdOf(altered.to as Seed));

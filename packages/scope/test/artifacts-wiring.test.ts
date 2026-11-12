@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FieldValue, type OperationId, type ScopeId, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, clockOf, judgeGenesis, judgeOutcome } from "@generalbusiness/dap-derive";
 import { Ledger, T0, d } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION, DIRECTORY, REGISTER, directoryIdOf, repositoryName } from "@generalbusiness/dap-platform";
@@ -54,7 +54,7 @@ function registerFixture(host: string, namespace: string, installKey = "install"
   const intent = installing(paul, "keys", [rita.key]).intent;
   const install = signIntent({ ...intent, idempotencyKey: installKey, fields: { ...intent.fields, host, namespace } }, paul.secret);
   const seed: Seed = { v: 1, kind: "register", definition: REGISTER, creator: null, cause: intentDigest(install.intent), ordinal: 0 };
-  const genesis = judgeGenesis(register.state, registerDefinition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), seed, creation: install }, { clock: clockOf(register.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: registerPlatform });
+  const genesis = judgeGenesis(register.state, registerDefinition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(0x07)), seed, creation: install }, { clock: clockOf(register.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: registerPlatform });
   expect(genesis.result).toBe("write");
   if (genesis.result === "write") register.seal(genesis.draft);
   const given: OutsideGiven = {
@@ -86,7 +86,7 @@ function destinationGiven(register: Ledger, creator: ScopeRef): OutsideGiven {
   const bytes = canonicalize(register.own(1)!.entry);
   const content = digestBytes(utf8(bytes));
   const seed: Seed = { v: 1, kind: "destination", definition: DESTINATION, creator, cause: d("e"), ordinal: 3 };
-  const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(3)), kind: "destination" };
+  const at: ScopeRef = { scope: scopeIdOf(seed), genesis: `sha256:${"03".repeat(32)}` as const };
   const entry: Entry = {
     ...register.own(0)!.entry, at,
     input: { type: "genesis", seed, inc: at.inc, kind: "establish", "founding": null, source: null, n: null, message: null, decision: "applied" },
@@ -135,7 +135,7 @@ test("explicit configuration creates the claim's exact name through the scripted
     expect(denied.accepts(REGISTER, "create-repository")).toBe(false);
     expect(await denied.send(other.claim())).toBeNull();
     // A destination born of this claim's directory takes effect; a forged creator, or a missing retained claim, does not.
-    const expected: ScopeRef = { scope: directoryIdOf(f.register.item(1).values["seed"] as never), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "directory" };
+    const expected: ScopeRef = { scope: directoryIdOf(f.register.item(1).values["seed"] as never), genesis: `sha256:${"01".repeat(32)}` as const };
     const unrelated: ScopeRef = { ...expected, scope: scopeIdOf({ v: 1, kind: "directory", definition: DIRECTORY, creator: null, cause: d("8"), ordinal: 0 }) };
     expect(artifactsOutside(destinationGiven(f.register, unrelated), state.storage.sql, env).accepts(DESTINATION, "mint")).toBe(false);
     const birth = destinationGiven(f.register, expected);

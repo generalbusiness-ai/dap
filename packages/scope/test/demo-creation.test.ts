@@ -121,7 +121,7 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     expect([after.status,projection.at,calls]).toEqual([200,{seq:1,hash:answer.receipt.fact.hash},0]);
     expect(Object.keys(projection).sort()).toEqual(["at","definition","origin","register","registerItem","v"]);
     expect(JSON.stringify(projection)).not.toContain(newcomer.key);
-    const wrong={...bindings,DEMO_START_CONFIG:canonicalize({...config,register:{...at,inc:newIncarnation(new Uint8Array(16).fill(11))}})};
+    const wrong={...bindings,DEMO_START_CONFIG:canonicalize({...config,register:{...at,genesis: `sha256:${"0b".repeat(32)}` as const}})};
     // Config has the right scope but wrong inc: one native read rejects actual-state mismatch.
     const beforeInc = { ...lookups };
     expect((await lifetime.wait(()=>demoCreationRoute(new Request(origin+"/v1/demo/creation-offer"),wrong))).status).toBe(404);

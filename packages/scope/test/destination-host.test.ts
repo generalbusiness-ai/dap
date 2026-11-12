@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Digest, FieldValue, OperationId, RetainedInput, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, utf8, factRefOf, newIncarnation, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, factRefOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { t } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION_5, destination4, destinationRules4, destination5, destinationRules5, destinationReceipt, initialCommitObjects, type DestinationObject, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { idOf, snapshotCommit } from "@generalbusiness/dap-git";
@@ -242,7 +242,7 @@ describe("destination outside adapter; scripted host, platform judgments in memo
       const changed = structuredClone(request.origin.entry);
       changed.time = t(4);
       const forged: EffectRequest[] = [
-        { ...request, scope: { ...request.scope, inc: newIncarnation(new Uint8Array(16).fill(9)) } },
+        { ...request, scope: { ...request.scope, genesis: `sha256:${"09".repeat(32)}` as const } },
         { ...request, owner: "hold@1" }, { ...request, kind: "push" }, { ...request, attempt: 2 },
         { ...request, origin: { entry: changed, hash: entryHash(changed) } },
         { ...request, origin: { entry: changed, hash: request.origin.hash } },

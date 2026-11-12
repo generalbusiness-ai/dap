@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Entry, OperationId } from "@generalbusiness/dap-contract";
-import { entryHash, newIncarnation } from "@generalbusiness/dap-bytes";
+import { entryHash } from "@generalbusiness/dap-bytes";
 import { d } from "@generalbusiness/dap-derive/testing";
 import { repositoryName } from "@generalbusiness/dap-platform";
 import { Register, rita } from "../../../packages/platform/test/support-creation.ts";
@@ -68,7 +68,7 @@ describe("register outside adapter; provider is a STAND-IN, register judgments a
     const f = fixture();
     const original = f.request();
     const unbound: EffectRequest[] = [
-      { ...original, scope: { ...original.scope, inc: newIncarnation(new Uint8Array(16).fill(4)) } },
+      { ...original, scope: { ...original.scope, genesis: `sha256:${"04".repeat(32)}` as const } },
       { ...original, owner: "platform:destination@1" },
       { ...original, kind: "delete-repository" },
       { ...original, operation: "1:1" },

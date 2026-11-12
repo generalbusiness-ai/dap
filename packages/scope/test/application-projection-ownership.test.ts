@@ -2,8 +2,8 @@
  * are constructed bytes, not a native creation or authority witness. The real
  * ownership/creation/replay witness is application-owned-scopes.test.ts. */
 import { expect, test } from "vitest";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, newGenesisNonce, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { created, directory } from "@generalbusiness/dap-derive/testing";
 import { APPLICATION_OWNERSHIP_BOUNDS as B, projectionScopeOwned } from "../src/applications/projection-ownership.ts";
 import { readNativeBirth, type NativeBirth } from "../src/native-birth.ts";
@@ -11,18 +11,19 @@ import type { PreparedRead } from "../src/read-preparation.ts";
 import { PreparationFlights, PREPARATION_MILLISECONDS } from "../src/preparation-flight.ts";
 const fixture = created(), original = fixture.entries[0]!.entry, digest = fixture.definition.digest;
 const run = { ends: 10_000, active: () => true, remaining: () => 10_000 };
-function node(parent: ScopeRef, tag: number, oversized = false) {
+function node(parent: ScopeRef, tag: number, oversized = false, parentKind: ScopeKind = parent === directory ? "directory" : "lane") {
   const entry = structuredClone(original);
   if (entry.input.type !== "genesis") throw Error("The protocol fixture needs genesis bytes.");
   entry.input.seed = { ...entry.input.seed, kind: "lane", creator: parent, cause: textDigest(`TEST ancestry ${tag}`) };
-  entry.input.inc = newIncarnation(new Uint8Array(16).fill(tag));
-  entry.at = { kind: "lane", scope: scopeIdOf(entry.input.seed), inc: entry.input.inc };
-  entry.input.founding = null; entry.input.source = { at: parent, seq: 0, hash: textDigest("TEST parent fact") }; entry.input.n = 0;
+  entry.input.nonce = newGenesisNonce(new Uint8Array(16).fill(tag));
+  entry.input.founding = null; entry.input.source = { at: parent, seq: 0, hash: textDigest("TEST parent fact") }; entry.input.sourceKind = parentKind; entry.input.n = 0;
   if (oversized) entry.effects = [...entry.effects, { effect: "value", item: 0, slot: "text", value: "x".repeat(B.birthBytes) }];
+  // The address follows from the changed genesis: its seed's scope ID and its hash.
+  const at: ScopeRef = { scope: scopeIdOf(entry.input.seed), genesis: entryHash(entry) };
   const birth: NativeBirth = { v: 1, native: false, named: digest, declarationName: fixture.definition.declared.name,
-    proof: { fact: { at: entry.at, seq: 0, hash: entryHash(entry) }, bytes: canonicalize(entry) } };
-  const frame = { scope: { at: entry.at }, pinned: { named: digest }, genesis: entry.input } as unknown as PreparedRead;
-  return { at: entry.at, birth, frame };
+    proof: { fact: { at, seq: 0, hash: entryHash(entry) }, bytes: canonicalize(entry) } };
+  const frame = { scope: { at }, pinned: { named: digest }, genesis: entry.input } as unknown as PreparedRead;
+  return { at, birth, frame };
 }
 
 // Invariant: ownership stops at the admitted ancestor count/body cap; matching

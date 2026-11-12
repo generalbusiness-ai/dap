@@ -376,7 +376,7 @@ export class ArchiveRows {
         if (!dataShape(row, ["v", "at", "repository", "format", "confirmed", "pending", "attempts", "next", "stopped"])
           || data("pending") !== null || data("stopped") !== null
           || data("at") !== this.#ownedAt || data("repository") !== this.#ownedRepository || data("confirmed") !== this.#ownedConfirmed
-          || !dataShape(this.#ownedAt!, ["scope", "inc", "kind"]) || !dataShape(this.#ownedRepository!, ["host", "id", "name", "namespace"])
+          || !dataShape(this.#ownedAt!, ["scope", "genesis"]) || !dataShape(this.#ownedRepository!, ["host", "id", "name", "namespace"])
           || this.#ownedConfirmed !== null && (!dataShape(this.#ownedConfirmed, ["commit", "through",
             ...(Object.hasOwn(this.#ownedConfirmed, "layout") ? ["layout"] : []), ...(Object.hasOwn(this.#ownedConfirmed, "anchorsPublished") ? ["anchorsPublished"] : [])])
             || Object.getOwnPropertyDescriptor(this.#ownedConfirmed, "through")?.value !== this.#ownedThrough

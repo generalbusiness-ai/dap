@@ -3,7 +3,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation } from "@generalbusiness/dap-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { Scope } from "../src/core.ts";
 import { sessionReferencesIn } from "../src/namespace.ts";
 import { production } from "../src/ports.ts";
@@ -73,11 +73,11 @@ test("composed birth checks bind cohort, identity and membership while preservin
             if (fault === "unavailable") return null;
             if (fault === "oversized") return "x".repeat(2049);
             if (fault === "malformed") return "{";
-            const reply = JSON.parse(raw), wrong = newIncarnation(new Uint8Array(16).fill(9));
-            if (fault === "directory") reply.directory.inc = wrong;
-            if (fault === "membership") reply.membership.inc = wrong;
+            const reply = JSON.parse(raw), wrong = `sha256:${"09".repeat(32)}` as const;
+            if (fault === "directory") reply.directory.genesis = wrong;
+            if (fault === "membership") reply.membership.genesis = wrong;
             if (fault === "cohort") reply.definition = "platform:directory@1";
-            if (fault === "rules") reply.rules.inc = wrong;
+            if (fault === "rules") reply.rules.genesis = wrong;
             if (fault === "schema") reply.v = 2;
             return canonicalize(reply);
           } });
@@ -152,7 +152,7 @@ test("malformed or oversized native preparation rows and ambiguous observed inca
       const sql: Sql = { exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) };
       const store = new SqliteStore(sql), scope = store.scope()!, genesis = store.stored(0)!, branch = store.page("branch", ["empty", "ready"], null, 1).items[0]!;
       const reader = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items"] })), results = [];
-      const other = { ...f.membership, inc: newIncarnation(new Uint8Array(16).fill(9)) }, subject = "g2pb-ambiguous-fixture";
+      const other = { ...f.membership, genesis: `sha256:${"09".repeat(32)}` as const }, subject = "g2pb-ambiguous-fixture";
       for (const fault of ["scope", "scope-malformed", "genesis", "branch", "branch-malformed", "ambiguous"] as const) {
         // Explicit storage faults over a genuine creation, not judged rows.
         if (fault.startsWith("scope")) sql.exec("UPDATE meta SET v=? WHERE k='scope'", fault === "scope" ? "x".repeat(4097) : "{");

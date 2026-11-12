@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { env } from "cloudflare:workers";
 import { RETIRED_ROOM_READER_COMMIT, type ControlRequest, type ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, newIncarnation, signControl, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, signControl, utf8 } from "@generalbusiness/dap-bytes";
 import { applicationScreenPath } from "@generalbusiness/dap-client/application";
 import { indexedScopes, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexPort, type ScopeRegistration } from "../src/scope-index.ts";
 import scopeWorker, { api, mcpRoute, route } from "../src/worker.ts";
@@ -31,7 +31,7 @@ test("index lookup writes no schema and registration on real SQLite is idempoten
 
 test("unknown foreign facts, site and application lookups and hosted registry reach no target", async () => {
   const born = creation();
-  const atRef: ScopeRef = { scope: born.name, inc: newIncarnation(crypto.getRandomValues(new Uint8Array(16))), kind: "membership" };
+  const atRef: ScopeRef = { scope: born.name, genesis: digestBytes(crypto.getRandomValues(new Uint8Array(16))) };
   const fact = { at: atRef, seq: 0, hash: digestBytes(utf8("unknown")) };
   let targetCalls = 0, registryCalls = 0, bodyReads = 0, indexReads = 0;
   const targets: Binding = { idFromName() { targetCalls++; throw Error("unknown target namespace touched"); }, get() { targetCalls++; throw Error("unknown target instantiated"); } };

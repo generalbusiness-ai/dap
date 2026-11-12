@@ -210,7 +210,7 @@ export interface WalkInput {
   commit: string;                                  // the start: the commit that the act names
   head: string;                                    // the destination branch's head, as read for this check
   snapshot: readonly StagedRef[];                  // the staged refs, as the host returned them then
-  lane: Pick<ScopeRef, "scope" | "inc">;           // the staging lane
+  lane: ScopeRef;                            // the staging lane
   root: number;                                    // the lane's `live` root for the commit, which the act relies on
   roots: readonly OwnRoot[];                       // the lane's roots under the source commitment
   checks: readonly PriorCheck[];                   // the prior checks under the source commitment, each an earlier entry

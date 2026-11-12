@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FieldValue, type PlatformDefinition, type ScopeId, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, PROFILES, clockOf, judgeGenesis, judgeOutcome, validateDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, d } from "@generalbusiness/dap-derive/testing";
 import { REPOSITORY_BINDING_COHORT as B, DEMO_REGISTER, WEB_DEMO_REGISTER, DESTINATION, DIRECTORY, REGISTER, directoryIdOf, platform, repositoryName } from "@generalbusiness/dap-platform";
@@ -25,7 +25,7 @@ const bindings = (registerScope: ScopeId): GitHubBindings => ({ GITHUB_APP_CONFI
 // Pure configuration boundary: no scope, GitHub App or HTTP request runs here.
 test("later repository authorization names one destination incarnation, stable repository and branch", () => {
   const destination: ScopeRef = { scope: "sc_" + "a".repeat(52) as ScopeId,
-    inc: newIncarnation(new Uint8Array(16).fill(3)), kind: "destination" };
+    genesis: `sha256:${"03".repeat(32)}` as const };
   const repository = { host: "github.com", namespace: ACCOUNT.login, name: "TEST-witness", id: "71" };
   const row = { destination, repository, branch: "main" };
   const allowed = gitHubRepositoryBindings(canonicalize([row]), ACCOUNT.login)!;
@@ -33,7 +33,7 @@ test("later repository authorization names one destination incarnation, stable r
   expect(gitHubRepositoryBindings(undefined, ACCOUNT.login)).toEqual([]);
   expect(gitHubRepositoryBindingAllowed([], destination, repository, "main")).toBe(false);
   expect(gitHubRepositoryBindingAllowed(allowed, destination, repository, "main")).toBe(true);
-  expect(gitHubRepositoryBindingAllowed(allowed, { ...destination, inc: newIncarnation(new Uint8Array(16).fill(4)) }, repository, "main")).toBe(false);
+  expect(gitHubRepositoryBindingAllowed(allowed, { ...destination, genesis: `sha256:${"04".repeat(32)}` as const }, repository, "main")).toBe(false);
   expect(gitHubRepositoryBindingAllowed(allowed, destination, { ...repository, id: "72" }, "main")).toBe(false);
   expect(gitHubRepositoryBindingAllowed(allowed, destination, { ...repository, name: "TEST-other" }, "main")).toBe(false);
   expect(gitHubRepositoryBindingAllowed(allowed, destination, repository, "other")).toBe(false);
@@ -55,7 +55,7 @@ test("later repository authorization names one destination incarnation, stable r
   // unbounded input cannot become deployment authority.
   for (const rows of [
     [row, { ...row }],
-    [row, { ...row, destination: { ...destination, inc: newIncarnation(new Uint8Array(16).fill(4)) } }],
+    [row, { ...row, destination: { ...destination, genesis: `sha256:${"04".repeat(32)}` as const } }],
     [{ ...row, repository: { ...repository, namespace: "another-account" } }],
     [{ ...row, destination: { ...destination, inc: "in_invalid" } }],
     [{ ...row, branch: "../main" }],
@@ -81,7 +81,7 @@ function registerFixture(installKey = "install", demo: typeof DEMO_REGISTER | ty
   const intent = installing(paul, "keys", [rita.key]).intent;
   const install = signIntent({ ...intent, idempotencyKey: installKey, fields: demo ? { host: "github.com", namespace: ACCOUNT.login, policy: "open", purpose: "demo-start" } : { ...intent.fields, host: "github.com", namespace: ACCOUNT.login } }, paul.secret);
   const seed: Seed = { v: 1, kind: "register", definition: demo ? demo : REGISTER, creator: null, cause: intentDigest(install.intent), ordinal: 0 };
-  const genesis = judgeGenesis(register.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), seed, creation: install }, { clock: clockOf(register.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: rules });
+  const genesis = judgeGenesis(register.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(0x07)), seed, creation: install }, { clock: clockOf(register.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: rules });
   expect(genesis.result).toBe("write");
   if (genesis.result === "write") register.seal(genesis.draft);
   const given: OutsideGiven = {
@@ -108,7 +108,7 @@ function destinationGiven(register: Ledger, creator: ScopeRef, definition: Platf
   const bytes = canonicalize(copy);
   const content = digestBytes(utf8(bytes));
   const seed: Seed = { v: 1, kind: "destination", definition, creator, cause: d("e"), ordinal: 3 };
-  const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(3)), kind: "destination" };
+  const at: ScopeRef = { scope: scopeIdOf(seed), genesis: `sha256:${"03".repeat(32)}` as const };
   const entry: Entry = {
     ...register.own(0)!.entry, at,
     input: { type: "genesis", seed, inc: at.inc, kind: "establish", "founding": null, source: null, n: null, message: null, decision: "applied" },
@@ -138,7 +138,7 @@ test("later-bound destination authority requires the reviewed full reference, re
     expect(result.result).toBe("write");
     if (result.result !== "write") return;
     f.register.seal(result.draft);
-    const creator: ScopeRef = { scope: directoryIdOf(f.register.item(1).values["seed"] as never), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "directory" };
+    const creator: ScopeRef = { scope: directoryIdOf(f.register.item(1).values["seed"] as never), genesis: `sha256:${"01".repeat(32)}` as const };
     const given = destinationGiven(f.register, creator, B.destination), at = given.scope()!.at;
     const repository = given.state.page("branch", ["empty"], null, 1).items[0]!.values["repository"];
     const row = { destination: at, repository, branch: "main" };
@@ -147,7 +147,7 @@ test("later-bound destination authority requires the reviewed full reference, re
     const { GITHUB_READ_TOKEN: _read, ...withoutRead } = bindings(f.register.at.scope);
     const env = { ...withoutRead, GITHUB_APP_CONFIG: canonicalize({ ...configuration(f.register.at.scope), installationReads: true }) };
     for (const rows of [undefined, [],
-      [{ ...row, destination: { ...at, inc: newIncarnation(new Uint8Array(16).fill(5)) } }],
+      [{ ...row, destination: { ...at, genesis: `sha256:${"05".repeat(32)}` as const } }],
       [{ ...row, repository: { ...(repository as Record<string, unknown>), id: "72" } }],
       [{ ...row, branch: "other" }],
     ]) {
@@ -214,7 +214,7 @@ test("explicit factory configuration creates the claim's exact name through scri
     expect(requests).toHaveLength(1);
     // A creator-null directory could cite this authentic claim but supply
     // another repository. Its child's factory cannot acquire App authority.
-    const expected: ScopeRef = { scope: directoryIdOf(f.register.item(1).values["seed"] as never), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "directory" };
+    const expected: ScopeRef = { scope: directoryIdOf(f.register.item(1).values["seed"] as never), genesis: `sha256:${"01".repeat(32)}` as const };
     const transport = async (request: Request) => { requests.push(request); return json({}); };
     const unrelated: ScopeRef = { ...expected, scope: scopeIdOf({ v: 1, kind: "directory", definition: DIRECTORY, creator: null, cause: d("8"), ordinal: 0 }) };
     const forged = gitHubOutside(destinationGiven(f.register, unrelated), state.storage.sql, env, transport);
@@ -279,7 +279,7 @@ test("absent, malformed or contradictory configuration disables effects, and abs
     expect(unrelated.accepts(DEMO_REGISTER,"create-repository")).toBe(false);
     expect(await unrelated.send(demoRequest)).toBeNull();
     expect(gitHubOutside(f.given,state.storage.sql,unrelatedSettings,transport).accepts(REGISTER,"create-repository")).toBe(true);
-    const changedInc={...demoConfig,register:{...demo.register.at,inc:newIncarnation(new Uint8Array(16).fill(11))}};
+    const changedInc={...demoConfig,register:{...demo.register.at,genesis: `sha256:${"0b".repeat(32)}` as const}};
     const changedIncSettings = { ...opted, DEMO_START_CONFIG: canonicalize(changedInc) };
     expect(gitHubOutside(demo.given,state.storage.sql,changedIncSettings,transport).accepts(DEMO_REGISTER,"create-repository")).toBe(false);
     const fresh=registerFixture("TEST fresh WebDemo adapter",WEB_DEMO_REGISTER);
@@ -296,10 +296,10 @@ test("absent, malformed or contradictory configuration disables effects, and abs
     const unlisted=registerFixture("TEST unlisted WebDemo adapter",WEB_DEMO_REGISTER);
     expect(gitHubOutside(unlisted.given,state.storage.sql,twoRoots,transport).accepts(WEB_DEMO_REGISTER,"create-repository")).toBe(false);
     expect(gitHubOutside(fresh.given,state.storage.sql,twoRoots,transport).accepts(DEMO_REGISTER,"create-repository")).toBe(false);
-    const wrongFresh={...v2,register:{...fresh.register.at,inc:newIncarnation(new Uint8Array(16).fill(12))}};
+    const wrongFresh={...v2,register:{...fresh.register.at,genesis: `sha256:${"0c".repeat(32)}` as const}};
     const wrongFreshSettings = { ...twoRoots, DEMO_START_CONFIG: canonicalize(wrongFresh) };
     expect(gitHubOutside(fresh.given,state.storage.sql,wrongFreshSettings,transport).accepts(WEB_DEMO_REGISTER,"create-repository")).toBe(false);
-    const wrongLegacy={...v2,legacy:{...v2.legacy,register:{...demo.register.at,inc:newIncarnation(new Uint8Array(16).fill(13))}}};
+    const wrongLegacy={...v2,legacy:{...v2.legacy,register:{...demo.register.at,genesis: `sha256:${"0d".repeat(32)}` as const}}};
     const wrongLegacySettings = { ...twoRoots, DEMO_START_CONFIG: canonicalize(wrongLegacy) };
     expect(gitHubOutside(demo.given,state.storage.sql,wrongLegacySettings,transport).accepts(DEMO_REGISTER,"create-repository")).toBe(false);
     // The deployed same-object router must never restore retired roots when

@@ -647,7 +647,7 @@ export function operand(j: Judging, o: Operand, item: Item | null): unknown {
 export type HashOf = (seq: number) => import("@generalbusiness/dap-contract").Digest | null;
 
 /** Equality's normal form, using only the local hashes available to its reader. */
-export function normalValue(value: unknown, at: Pick<ScopeRef, "scope" | "inc">, hashOf: HashOf): unknown {
+export function normalValue(value: unknown, at: ScopeRef, hashOf: HashOf): unknown {
   const normal = (v: unknown): unknown => {
     if (Array.isArray(v)) return v.map(normal);
     if (isFactRef(v)) return isLocalFact(v, at) && hashOf(v.seq) === v.hash ? v.seq : v;

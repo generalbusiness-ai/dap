@@ -4,7 +4,7 @@
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { canonicalize, isSeed, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, isSeed, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { DECLARED_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
@@ -63,7 +63,7 @@ test("native installed roots and children keep exact release ownership after tru
     const query = { v: 1 as const, scope: childAt, directory, install: job, projection: "child", items: {} };
     const projected = await life.owner.required(() => handle.applicationProjection(query));
     expect(projected).toMatchObject({ ok: true, value: { scope: childAt, at: read.ok ? read.at : null, sources: { row: [{ id: 0, revision: 1, fields: { count: 0 } }] } } });
-    expect(await life.owner.required(() => handle.applicationProjection({ ...query, scope: { ...childAt, inc: newIncarnation(new Uint8Array(16).fill(91)) } })))
+    expect(await life.owner.required(() => handle.applicationProjection({ ...query, scope: { ...childAt, genesis: `sha256:${"5b".repeat(32)}` as const } })))
       .toEqual({ ok: false, reason: "wrong-scope" });
     expect(await life.owner.required(() => handle.applicationProjection({ ...query, projection: "root" }))).toEqual({ ok: false, reason: "query-not-ready" });
 

@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC, ARCHIVE_DEVICE_PUBLICATION_COHORT as PC } from "@generalbusiness/dap-platform";
 import { expect, test } from "vitest";
 import { ITEM_QUERY_BOUNDS, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, encodeItemQueryParameter, entryHash, itemQueryArgument, itemQueryDigest, newIncarnation, parseStrict, readItemQueryParameter, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, encodeItemQueryParameter, entryHash, itemQueryArgument, itemQueryDigest, parseStrict, readItemQueryParameter, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
 import { fixtureArchiveTarget, fixtureArchiveTargetIn, type FixtureArchiveTargetReads } from "../src/archive-target.ts";
@@ -57,7 +57,7 @@ test.each([["archive", C], ["device/archive", DC], ["device/publication/archive"
     // Resolving the existing target never grants a Membership journal.
     expect(await resolver.discover(await child.at(), childBirth.input.seed, new ArchiveBudget())).toBeNull();
     expect((await room.D.summary()).at).toEqual(head);
-    expect(await resolver.resolve({ ...directory, inc: newIncarnation(new Uint8Array(16).fill(12)) }, genesis.input.seed, new ArchiveBudget())).toBeNull();
+    expect(await resolver.resolve({ ...directory, genesis: `sha256:${"0c".repeat(32)}` as const }, genesis.input.seed, new ArchiveBudget())).toBeNull();
     const unowned = (await room.R.entries())[0]!;
     if (unowned.input.type !== "genesis") return expect.fail("native register birth missing");
     expect(await resolver.resolve(await room.R.at(), unowned.input.seed, new ArchiveBudget())).toBeNull();
@@ -82,8 +82,7 @@ test.each([["archive", C], ["device/archive", DC], ["device/publication/archive"
     const mixedEntry = parseStrict(originalBirth.proof.bytes) as any;
     const mixedPin = C === PC ? DC.destination : PC.destination;
     mixedEntry.input.seed.definition = mixedPin;
-    const mixedDestination = { ...destination, scope: scopeIdOf(mixedEntry.input.seed) };
-    mixedEntry.at = mixedDestination;
+    const mixedDestination = { scope: scopeIdOf(mixedEntry.input.seed), genesis: entryHash(mixedEntry) };
     const mixedBirth = { ...originalBirth, named: mixedPin,
       proof: { fact: { at: mixedDestination, seq: 0, hash: entryHash(mixedEntry) }, bytes: canonicalize(mixedEntry) } };
     let calls = 0, fault = "";
@@ -100,14 +99,14 @@ test.each([["archive", C], ["device/archive", DC], ["device/publication/archive"
         const result = await (env.PLATFORM.get(env.PLATFORM.idFromName(source.scope)) as unknown as { queryItems(encoded: string, reader: unknown): Promise<NativeItemQuery> }).queryItems(sourceQuery, reader);
         if (!result.ok) return result;
         const body = parseStrict(result.serialized) as any;
-        if (fault === "cohort" && at.kind === "directory") body.value.items[0].refs.destination = mixedDestination;
+        if (fault === "cohort" && at.scope === directory.scope) body.value.items[0].refs.destination = mixedDestination;
         if (mixed) { body.value.scope = at; body.value.query = itemQueryDigest(query); body.value.argument = itemQueryArgument(query); }
         if (fault === "truncated") body.complete = false;
         if (fault === "missing") body.value.items = [];
         if (fault === "ambiguous") body.value.items.push({ ...body.value.items[0], id: body.value.items[0].id + 1 });
-        if (fault === "repository" && at.kind === "destination") body.value.items[0].values.repository.id = "different-repository";
-        if (fault === "directory" && at.kind === "destination") body.value.items[0].refs.directory.inc = newIncarnation(new Uint8Array(16).fill(2));
-        if (fault === "rules" && at.kind === "directory") body.value.items[0].refs.rules.inc = newIncarnation(new Uint8Array(16).fill(3));
+        if (fault === "repository" && at.scope === destination.scope) body.value.items[0].values.repository.id = "different-repository";
+        if (fault === "directory" && at.scope === destination.scope) body.value.items[0].refs.directory.genesis = `sha256:${"02".repeat(32)}`;
+        if (fault === "rules" && at.scope === directory.scope) body.value.items[0].refs.rules.genesis = `sha256:${"03".repeat(32)}`;
         if (fault === "oversized") return { ok: true, serialized: "x".repeat(256 * 1024 + 1) };
         return { ok: true, serialized: canonicalize(body) };
       },
@@ -194,7 +193,7 @@ test("one locate reuses only its identical checked Rules birth and keeps final f
       metadataSettled: resolved.cost.metadata, unsettledMetadata: 0, settlementRefusal: "none" });
     expect(resolved.result?.publicScopes).toEqual([rules, directory, destination]);
     // These full-ref coherence fences refuse before a substituted birth read.
-    for (const replacement of [{ ...rules, inc: newIncarnation(new Uint8Array(16).fill(37)) }, { ...rules, kind: "directory" as const }]) {
+    for (const replacement of [{ ...rules, genesis: `sha256:${"25".repeat(32)}` as const }, { ...rules, scope: directory.scope }]) {
       const refused = await run(replacement);
       expect(refused.result).toBeNull(); expect(refused.requested).toEqual([rules, directory, destination]);
     }

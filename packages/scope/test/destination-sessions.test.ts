@@ -1,6 +1,5 @@
 import { expect, test } from "vitest";
 import type { SessionClaims, Timestamp } from "@generalbusiness/dap-contract";
-import { newIncarnation } from "@generalbusiness/dap-bytes";
 import { t } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY } from "@generalbusiness/dap-platform";
 import { Branch, MEMBERSHIP, rita } from "../../../packages/platform/test/support-destination.ts";
@@ -61,7 +60,7 @@ test("destination session preparation refuses invalid, expired, unrelated or dis
   await f.readers.prepare!(valid, "history");
   expect(f.calls()).toBe(0);
   f.clock(f.branch.now);
-  const wrongInc = f.token({ membership: { ...MEMBERSHIP, inc: newIncarnation(new Uint8Array(16).fill(9)) } });
+  const wrongInc = f.token({ membership: { ...MEMBERSHIP, genesis: `sha256:${"09".repeat(32)}` as const } });
   await f.readers.prepare!(wrongInc, "history");
   expect(f.calls()).toBe(1);
   expect(f.readers.allows(wrongInc, "history")).toBe(false);
@@ -74,7 +73,7 @@ test("destination session preparation accepts only the verified creator's active
   const f = fixture();
   const valid = f.token();
   for (const value of [
-    { scope: { ...f.branch.bureau.at, inc: newIncarnation(new Uint8Array(16).fill(9)) }, definition: DIRECTORY, status: "active", items: [{ type: "repository", state: "open", refs: { membership: MEMBERSHIP } }] },
+    { scope: { ...f.branch.bureau.at, genesis: `sha256:${"09".repeat(32)}` as const }, definition: DIRECTORY, status: "active", items: [{ type: "repository", state: "open", refs: { membership: MEMBERSHIP } }] },
     { scope: f.branch.bureau.at, definition: DIRECTORY, status: "provisional", items: [{ type: "repository", state: "open", refs: { membership: MEMBERSHIP } }] },
     { scope: f.branch.bureau.at, definition: DIRECTORY, status: "active", items: [{ type: "repository", state: "open", refs: { membership: { ...MEMBERSHIP, scope: f.branch.at.scope } } }] },
   ]) {
@@ -104,7 +103,7 @@ test("destination session preparation accepts only the verified creator's active
   legacy.answer({ ok: true, value: { scope: legacy.branch.bureau.at, definition: "platform:directory@1", status: "active", items: [{ type: "repository", state: "open", refs: { membership: MEMBERSHIP } }] } });
   await legacy.readers.prepare!(legacyReader, "history");
   expect(legacy.readers.allows(legacyReader, "history")).toBe(true);
-  const another = legacy.token({ membership: { ...MEMBERSHIP, inc: newIncarnation(new Uint8Array(16).fill(9)) } });
+  const another = legacy.token({ membership: { ...MEMBERSHIP, genesis: `sha256:${"09".repeat(32)}` as const } });
   expect(legacy.readers.allows(another, "history")).toBe(false);
 });
 
@@ -119,11 +118,11 @@ test("rules session preparation requires its directory's exact confirmed rules a
   expect(f.calls()).toBe(0);
   const repository = (rules: unknown, membership: unknown = MEMBERSHIP) => ({ type: "repository", state: "open", refs: { rules, membership } });
   const value = (scope: unknown, items: unknown[]) => ({ ok: true, value: { scope, definition: DIRECTORY, status: "active", items } });
-  const wrong = newIncarnation(new Uint8Array(16).fill(9));
+  const wrong = `sha256:${"09".repeat(32)}` as const;
   for (const reply of [
-    value({ ...f.branch.bureau.at, inc: wrong }, [repository(f.at)]),
-    value(f.branch.bureau.at, [repository({ ...f.at, inc: wrong })]),
-    value(f.branch.bureau.at, [repository(f.at, { ...MEMBERSHIP, inc: wrong })]),
+    value({ ...f.branch.bureau.at, genesis: wrong }, [repository(f.at)]),
+    value(f.branch.bureau.at, [repository({ ...f.at, genesis: wrong })]),
+    value(f.branch.bureau.at, [repository(f.at, { ...MEMBERSHIP, genesis: wrong })]),
     value(f.branch.bureau.at, [repository(f.at), repository(f.at)]),
   ]) {
     f.answer(reply);

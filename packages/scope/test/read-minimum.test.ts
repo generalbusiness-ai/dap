@@ -8,7 +8,7 @@ import { expect, test } from "vitest";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ItemQuery, type ReadMinimum } from "@generalbusiness/dap-contract";
-import { encodeReadMinimumParameter, encodeItemQueryParameter, isScopeRef, newIncarnation, textDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { encodeItemQueryParameter, encodeReadMinimumParameter, isScopeRef, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { ScopeObject, type Wiring } from "../src/object.ts";
 import { api, route, sessionWiring } from "../src/worker.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";
@@ -87,7 +87,7 @@ test("native wait timeout reports the authorized current fact and leaves no time
     expect(timer.tasks.size).toBe(0);
     expect(await object.summary(reader)).toEqual(before);
     expect(await state.storage.getAlarm()).toBe(alarm);
-    expect(await object.summary(reader, { at: { ...lane.at, inc: newIncarnation(new Uint8Array(16).fill(99)) }, head: 99 })).toEqual({ ok: false, reason: "wrong-incarnation" });
+    expect(await object.summary(reader, { at: { ...lane.at, genesis: `sha256:${"63".repeat(32)}` as const }, head: 99 })).toEqual({ ok: false, reason: "wrong-incarnation" });
     expect(await object.summary(reader, { at: { ...lane.at, kind: "lane" }, head: 99 })).toEqual({ ok: false, reason: "unavailable" });
     expect(timer.started).toBe(1);
   });
@@ -110,7 +110,7 @@ test("native wait rechecks actual session expiry before exposing timeout or inca
       net.clock.now = f.claims.ends;
       timer.advance(1000);
       expect(await pending).toEqual({ ok: false, reason: "forbidden" });
-      expect(await object.summary(token, { at: { ...f.rules, inc: newIncarnation(new Uint8Array(16).fill(99)) }, head: 9999 })).toEqual({ ok: false, reason: "forbidden" });
+      expect(await object.summary(token, { at: { ...f.rules, genesis: `sha256:${"63".repeat(32)}` as const }, head: 9999 })).toEqual({ ok: false, reason: "forbidden" });
       expect(timer.tasks.size).toBe(0);
       expect(timer.started).toBe(1);
     }));

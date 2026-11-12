@@ -3,7 +3,7 @@
  * separate Native owner witnesses admission and the actual adapter path. */
 import { expect, test } from "vitest";
 import type { Entry, MemberRef, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, keyIdOfSecret, newIncarnation, signIntent, timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, keyIdOfSecret, signIntent, timeOf } from "@generalbusiness/dap-bytes";
 import { LAST_MS, timeMs } from "@generalbusiness/dap-derive";
 import { d, grantOf, keys, t, type Actor } from "@generalbusiness/dap-derive/testing";
 import { Branch } from "../../platform/test/support-destination.ts";
@@ -54,8 +54,8 @@ test("private read reservations retain actual expiry after plaintext take, prese
   const end = timeMs(t(0))! + (24 * 60 + 10) * 60_000;
   expect(initial).toEqual({ old: "legacy", reserved: end, bound: "bound", actual: true, took: true, wakeAfterTake: t(10), beforeExpiry: [{ mint: "10:0", ends_ms: timeMs(t(10)) }, { mint: "12:0", ends_ms: end }], cannotRemint: "closed", cannotRevive: false, remaining: [{ mint: "12:0", ends_ms: end }], legacyStillUnassigned: "legacy" });
   await scope.restart();
-  const otherMembership = { ...rita.member, membership: { ...rita.member.membership, inc: newIncarnation(new Uint8Array(16).fill(23)) } };
-  const otherDestination: ScopeRef = { ...destination, inc: newIncarnation(new Uint8Array(16).fill(24)) };
+  const otherMembership = { ...rita.member, membership: { ...rita.member.membership, genesis: `sha256:${"17".repeat(32)}` as const } };
+  const otherDestination: ScopeRef = { ...destination, genesis: `sha256:${"18".repeat(32)}` as const };
   const isolated = await scope.inside(state => {
     const old = new CredentialStore(state.storage.sql, () => destination).readTokens;
     const retained = old.nextExpiry();

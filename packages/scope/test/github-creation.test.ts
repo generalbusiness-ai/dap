@@ -1,7 +1,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
 import type { Entry, Intent, ScopeId, Seed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, factRefOf, intentDigest, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, REGISTER, destinationMembership, destinationReceipt, destinationTarget, initialCommitObjects } from "@generalbusiness/dap-platform";
@@ -270,7 +270,7 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
     // MAC-authentic controls under the TEST SECRET, not membership-issued
     // tokens: neither another membership ID nor another incarnation reads.
     const configured = sessionsOf(platformNet.secret, TEST_DEPLOYMENT)!;
-    for (const membershipRef of [{ ...issued.session.claims.membership, scope: R.name }, { ...issued.session.claims.membership, inc: newIncarnation(new Uint8Array(16).fill(9)) }]) {
+    for (const membershipRef of [{ ...issued.session.claims.membership, scope: R.name }, { ...issued.session.claims.membership, genesis: `sha256:${"09".repeat(32)}` as const }]) {
       const wrong = readerOf(mintSession(configured, { ...issued.session.claims, membership: membershipRef }));
       expect(await G.stub.history(wrong)).toMatchObject({ ok: false, reason: "forbidden" });
     }

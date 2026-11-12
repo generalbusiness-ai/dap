@@ -2,7 +2,7 @@
  * signed and hash checked; no Native judgment or export authority is claimed. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Head, type Intent, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, intentDigest, keyIdOfSecret, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { GitRefusal, objectId, parseCommit, parseTree, Reader } from "@generalbusiness/dap-git";
 import { buildJournalPass, captureJournalParentFrontier, JOURNAL_PARENT_FRONTIER_BYTES, JOURNAL_PARENT_FRONTIER_OBJECTS,
   journalRef, journalV2PassPath, journalV2RetainedPath, journalV2SegmentPath, type JournalInputSource,
@@ -30,7 +30,7 @@ function selectedPasses(count: number) {
     idempotencyKey: "TEST fixed parent frontier", notAfter: "2030-01-01T00:00:00Z" };
   const seed: Seed = { v: 1, kind: "register", definition: "platform:register@1", creator: null,
     cause: intentDigest(intent), ordinal: 0 };
-  const at = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(29)), kind: "register" as const };
+  const at = { scope: scopeIdOf(seed), genesis: `sha256:${"1d".repeat(32)}` as const };
   const entries: { body: string; head: Head }[] = [];
   const retained = new Map<string, string>();
   const passes: {

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Item, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, newIncarnation, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, factRefOf, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { applyEntry, PROFILES, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { directoryPartition1, directoryPartitionRules1, partitionGeneration, partitionLane, partitionNumber, PARTITION_COHORT } from "../../platform/src/directory-partitions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
@@ -17,7 +17,7 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     store.transaction(() => {
       for (let n = 0; n <= 3000; n++) {
         const digest = seedDigest({ ...seed, ordinal: n });
-        const item: Item = { ...sample, id: n + 100, type: "lane", state: "listed", refs: { scope: { scope: scopeIdOf({ ...seed, ordinal: n }), kind: "lane", inc: newIncarnation(new Uint8Array(16).fill(7)) } }, values: { seed: digest, number: n + 1 } };
+        const item: Item = { ...sample, id: n + 100, type: "lane", state: "listed", refs: { scope: { scope: scopeIdOf({ ...seed, ordinal: n }), genesis: `sha256:${"07".repeat(32)}` as const } }, values: { seed: digest, number: n + 1 } };
         store.putItem(item); store.addCount(item.type, item.state, 1);
         store.putIndexed("lane", "seed", canonicalize(digest), item.id);
         store.putIndexed("lane", "number", String(n + 1), item.id);
@@ -42,7 +42,7 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     // SCRIPTED source and direct native rule/fold specimen. The real
     // runtime's Authority/delivery is covered in the native journeys; this
     // storage fixture measures the actual index-update implementation.
-    const source = { ...JSON.parse(store.stored(0)!.bytes) as Entry, at: { scope: scopeIdOf(seed), kind: "lane" as const, inc: newIncarnation(new Uint8Array(16).fill(7)) }, seq: 9, time: "2099-01-01T00:00:01Z" };
+    const source = { ...JSON.parse(store.stored(0)!.bytes) as Entry, at: { scope: scopeIdOf(seed), kind: "lane" as const, genesis: `sha256:${"07".repeat(32)}` as const }, seq: 9, time: "2099-01-01T00:00:01Z" };
     const from = factRefOf(source);
     const input = { type: "delivery" as const, from, n: 0, message: { class: "advisory" as const, type: "index" as const, body: { title: "Updated by point lookup" } } };
     const given: RuleGiven = { state: counted, input, time: source.time, uses: [{ fact: from, entry: source, under: "issue" }], own: () => null,

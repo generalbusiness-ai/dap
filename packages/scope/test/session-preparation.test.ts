@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { ScopeRef, SessionClaims } from "@generalbusiness/dap-contract";
-import { newIncarnation } from "@generalbusiness/dap-bytes";
+import {  } from "@generalbusiness/dap-bytes";
 import { Scope } from "../src/core.ts";
 import { production } from "../src/ports.ts";
 import { ReadPreparation } from "../src/read-preparation.ts";
@@ -28,7 +28,7 @@ test("bounded session policy preserves manually restricted live/final/mixed and 
       return (["live", "final", "mixed"] as QueryVisibility[]).map(visibility => [preparedSessionAllows(config, frame, reader, visibility, membership), preparedSessionAllows(config, frame, reader, visibility, membership, true)]);
     });
     const valid = token({ reads: ["summary", "items"] });
-    const wrong = preparedSessionAllows(config, frame, token({ reads: ["summary"], membership: { ...membership, inc: newIncarnation(new Uint8Array(16).fill(9)) } }), "live", membership);
+    const wrong = preparedSessionAllows(config, frame, token({ reads: ["summary"], membership: { ...membership, genesis: `sha256:${"09".repeat(32)}` as const } }), "live", membership);
     now = claims.ends; const expired = preparedSessionAllows(config, frame, valid, "mixed", membership);
     now = at(-1); const behind = preparedSessionAllows(config, frame, valid, "mixed", membership);
     now = at(1); sessions = null; const changedSecret = preparedSessionAllows(config, frame, valid, "mixed", membership);
