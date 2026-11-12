@@ -174,7 +174,7 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     const view = "TEST-stopped-declared-original";
     const missingContext = await guardedCall(`view_${screen}`, { view });
     expect(missingContext).toMatchObject({ isError: true, structuredContent: { error: "unavailable" } });
-    expect(await guarded.custody.unresolved()).toEqual([]);
+    expect(await guarded.custody.store.unresolved()).toEqual([]);
     expect(stoppedSubmits).toBe(0);
     await guardedCall(`view_${screen}`, { view }, allow);
     const stoppedOpening = await guardedCall("view_read", { view, ...(device ? {} : { cut: 0, page: "item" }) }, allow);
@@ -186,7 +186,7 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     expect(pendingStop.receipt).toContain("outcome unknown; check the original request");
     expect(pendingStop.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
     expect(stoppedSubmits).toBe(0);
-    const openOriginals = await guarded.custody.unresolved();
+    const openOriginals = await guarded.custody.store.unresolved();
     expect(openOriginals).toHaveLength(1);
     const originalKey = openOriginals[0]!.key, appRef = await life.wait(() => app.at());
     const originalIdentity = { service, membership, signer: rita.key, target: appRef, key: originalKey };
@@ -206,14 +206,14 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     expect([unchanged.identity, unchanged.meaning, unchanged.binding, unchanged.outcomes, unchanged.count, unchanged.attempt])
       .toEqual([original.identity, original.meaning, original.binding, [], 0, original.attempt]);
     expect(stoppedSubmits).toBe(0);
-    expect((await guarded.custody.unresolved()).map(row => [row.id, row.key])).toEqual(openOriginals.map(row => [row.id, row.key]));
+    expect((await guarded.custody.store.unresolved()).map(row => [row.id, row.key])).toEqual(openOriginals.map(row => [row.id, row.key]));
     const restored = await guardedCall("view_act", { view, cut: stillPending.cut, action: stillPending.card!.actions[0]!.id }, allow);
     expect((restored.structuredContent["result"] as CallResult).structuredContent).toMatchObject({ answer: "refused", reason: "expired" });
     expect(stoppedSubmits).toBe(1);
     const settledStop = restored.structuredContent["display"] as Display;
     expect(settledStop.receipt).toContain("refused (expired)");
     expect(settledStop.card!.actions).toEqual([]);
-    expect(await guarded.custody.unresolved()).toEqual([]);
+    expect(await guarded.custody.store.unresolved()).toEqual([]);
     const finalOriginal = (await guarded.custody.find(originalIdentity))!;
     expect(finalOriginal.envelope).toEqual(envelope);
     expect(finalOriginal.phase).toBe("refused");
