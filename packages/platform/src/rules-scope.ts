@@ -343,20 +343,20 @@ export const membershipId = (state: Pick<StateView, "page">): ScopeId | null => 
 };
 
 /**
- * A reference that a scope holds as a scope ID alone, with the incarnation
- * that its entries have fixed (section 12.1, "Where the rules scope and the
+ * A reference that a scope holds as a scope ID alone, with the genesis that
+ * its entries have fixed (section 12.1, "Where the rules scope and the
  * destination record their membership reference", decided in revision 25).
- * The incarnation is no slot: it is the incarnation in `of` of the
- * observations of that scope ID that the scope's entries retain, which the
- * folded state holds. Before any entry retains one, the scope records the
- * ID and no incarnation. Null: it holds no ID. Guard 1 lets an entry
- * retain an observation of one incarnation only, so the state holds at most
- * one. With more than one the history is not a valid one, and no reference
- * is read from it: null.
+ * The genesis is no slot: it is the genesis in `of` of the observations of
+ * that scope ID that the scope's entries retain, which the folded state
+ * holds. Before any entry retains one, the reference is pending. Null: it
+ * holds no ID. Guard 1 lets an entry retain an observation of one sequence
+ * only, so the state holds at most one. With more than one the history is
+ * not a valid one, and no reference is read from it: null.
  */
-export function referenceOf(state: Pick<StateView, "incarnations">, id: ScopeId | null, kind: "membership" | "rules"): RecordedRef | null {
-  const fixed = id === null ? [] : state.incarnations(id);
-  return id === null || fixed.length > 1 ? null : { scope: id, kind, inc: fixed[0] ?? null };
+export function referenceOf(state: Pick<StateView, "geneses">, id: ScopeId | null, _kind: "membership" | "rules"): RecordedRef | null {
+  // The place fixes the kind (ruling 080e7c84, item 2c). The reference holds the scope ID and the genesis only.
+  const fixed = id === null ? [] : state.geneses(id);
+  return id === null || fixed.length > 1 ? null : fixed[0] ? { scope: id, genesis: fixed[0] } : { scope: id, pending: true };
 }
 
 /**
@@ -364,7 +364,7 @@ export function referenceOf(state: Pick<StateView, "incarnations">, id: ScopeId 
  * code of the version, beside its rules, as the production authority and a
  * replay read it (I3 deltas, entries EM21, EQ7 and EU6).
  */
-export const rulesMembership = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => referenceOf(state, membershipId(state), "membership");
+export const rulesMembership = (state: Pick<StateView, "page" | "geneses">): RecordedRef | null => referenceOf(state, membershipId(state), "membership");
 
 /**
  * The extents of a repository, from its rules scope's folded state (section

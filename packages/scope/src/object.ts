@@ -251,7 +251,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       sourceOrder: (...args) => store.sourceOrder(...args),
       operation: (...args) => store.operation(...args), texts: (...args) => store.texts(...args), prepared: (...args) => store.prepared(...args),
       preparations: (...args) => store.preparations(...args), record: (...args) => store.record(...args), records: (...args) => store.records(...args),
-      recordCount: (...args) => store.recordCount(...args), observed: (...args) => store.observed(...args), incarnations: (...args) => store.incarnations(...args),
+      recordCount: (...args) => store.recordCount(...args), observed: (...args) => store.observed(...args), geneses: (...args) => store.geneses(...args),
       outstanding: () => store.outstanding(), holder: (...args) => store.holder(...args), holders: () => store.holders(), itemDuties: (...args) => store.itemDuties(...args), holderSettled: (...args) => store.holderSettled(...args),
       operationsFor: (...args) => store.operationsFor(...args), account: (...args) => store.account(...args), accountsOf: (...args) => store.accountsOf(...args),
       lookup: (...args) => store.lookup(...args), all: () => store.all(),

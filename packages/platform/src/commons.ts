@@ -37,7 +37,7 @@ export const commonsDirectory = (state: Pick<StateView, "page">): ScopeRef | nul
   return isScopeRef(ref) && ref.kind === "directory" ? ref : null;
 };
 /** As in Rules, the first retained Membership observation fixes incarnation. */
-export const commonsMembership = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => {
+export const commonsMembership = (state: Pick<StateView, "page" | "geneses">): RecordedRef | null => {
   const id = control(state)?.values["membership"];
   return referenceOf(state, isScopeId(id) ? id as ScopeId : null, "membership");
 };

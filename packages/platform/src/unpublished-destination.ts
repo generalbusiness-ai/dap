@@ -16,8 +16,8 @@ const heldId = (state: Pick<StateView, "page">, slot: "membership" | "rules"): S
   const id = unpublishedDestinationBranch(state)?.values[slot];
   return typeof id === "string" ? (id as ScopeId) : null;
 };
-export const unpublishedDestinationMembership = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => referenceOf(state, heldId(state, "membership"), "membership");
-export const unpublishedDestinationRulesScope = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => referenceOf(state, heldId(state, "rules"), "rules");
+export const unpublishedDestinationMembership = (state: Pick<StateView, "page" | "geneses">): RecordedRef | null => referenceOf(state, heldId(state, "membership"), "membership");
+export const unpublishedDestinationRulesScope = (state: Pick<StateView, "page" | "geneses">): RecordedRef | null => referenceOf(state, heldId(state, "rules"), "rules");
 
 const branch = destination4.items["branch"]!, establish = destination4.acts["establish"]!;
 const certificate = destinationV14.acts[RULES_CERTIFICATE_KIND]!;

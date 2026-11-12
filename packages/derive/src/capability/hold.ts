@@ -657,7 +657,7 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
    * Its handle names the same exact attempt as the host's private custody. */
   function setupToken(view: StateView, hold: number, operation: OperationId, attempt: number, numbered = 0): Recorded {
     const scope = view.scope()!.at;
-    const name = `h-${scope.scope.slice(3, 35)}-${scope.inc.slice(3)}-${hold}-${operation.split(":")[0]}-${attempt}`;
+    const name = `h-${scope.scope.slice(3, 35)}-${scope.genesis.slice(7, 33)}-${hold}-${operation.split(":")[0]}-${attempt}`;
     return { kind: "token", key: [nextNumber(view, "token") + numbered], state: "minting", values: {
       purpose: "setup", hold, operation, attempt, mint: operation, id: `workspace:${name}`, ends: null, revocation: null,
     } };

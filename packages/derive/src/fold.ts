@@ -48,7 +48,7 @@ export class FoldError extends Error {
 export function headsOf(proof: unknown): ObservedHead[] {
   const o = isObject(proof) ? proof["observation"] : null;
   if (!isObject(o) || !isScopeRef(o["of"]) || !isObject(o["head"]) || !isLocalId(o["head"]["seq"])) return [];
-  const [of, seq] = [{ scope: o["of"].scope, inc: o["of"].inc }, o["head"]["seq"]];
+  const [of, seq] = [{ scope: o["of"].scope, genesis: o["of"].genesis }, o["head"]["seq"]];
   // A key is `key_` and more, and a member is `@` and more, so the one name of the rules is neither.
   if (o["subject"] === "rules") return [{ of, subject: "rules", seq }];
   // Revision 20 (section 16.1, "An observation of the holders of one action"): its subject, for the order of heads, is the action.
@@ -242,17 +242,17 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
     if ("decision" in input && input.decision === "applied" && input.message.type === "tell" && isObject(input.message.body)) {
       const message = input.message.body["message"];
       const handler = Object.values(definition.declared.receives).find(handler => handler.class === "tell" && handler.message === message && handler.from.kind === input.sourceKind);
-      if (handler?.order === "source") writer.putSourceOrder({ from: { scope: input.from.at.scope, inc: input.from.at.inc }, handler: handler.message, seq: input.from.seq, n: input.n });
+      if (handler?.order === "source") writer.putSourceOrder({ from: { scope: input.from.at.scope, genesis: input.from.at.genesis }, handler: handler.message, seq: input.from.seq, n: input.n });
     }
     if ("clause" in input) {
       const of = input.message.of;
       const request = writer.request(of.from.seq, of.n);
       if (!request) throw new FoldError(`entry ${entry.seq} records a result of a request this scope did not send`);
       if (drawn.account !== null) touched.add(drawn.account);
-      // A request has one result. A conflict is a second incarnation's answer to a creation: it is recorded and replaces nothing.
+      // A request has one result. A conflict is a second sequence's answer to a creation: it is recorded and replaces nothing.
       if (request.result === null) writer.putRequest({ ...request, result: { seq: entry.seq, clause: input.clause } });
-      // Section 7.2: the first applied result of a creation is the incarnation this scope holds for that seed.
-      if (input.clause === "applied" && !("scope" in request.to)) writer.putCreation(seedDigest(request.to), { inc: input.from.at.inc, seq: entry.seq });
+      // Section 7.2: the first applied result of a creation is the sequence this scope holds for that seed.
+      if (input.clause === "applied" && !("scope" in request.to)) writer.putCreation(seedDigest(request.to), { genesis: input.from.at.genesis, seq: entry.seq });
     }
   } else if (input.type === "diagnosis") {
     const request = writer.request(input.of.seq, input.of.n);

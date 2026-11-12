@@ -45,7 +45,7 @@ function referenceView(frame: PreparedRead): StateView {
     // Reuse the captured scope so G16's extra state seek fits the same budget.
     // The caller still revalidates the full frame after any peer read.
     scope: () => (answersVersionQuestion(frame.pinned.named, "scopeSessionPreparationOwnScope")) ? frame.scope : frame.view.scope(),
-    incarnations: (scope: Parameters<StateView["incarnations"]>[0]) => frame.view.incarnations(scope),
+    geneses: (scope: Parameters<StateView["geneses"]>[0]) => frame.view.geneses(scope),
     page(type: string, states: readonly string[], after: number | null, limit: number): Page {
       if (!Array.isArray(states) || after !== null || limit !== 1 || !(
         (type === "branch" && states.length === 2 && states[0] === "empty" && states[1] === "ready")

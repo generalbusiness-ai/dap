@@ -639,9 +639,9 @@ const heldId = (state: Pick<StateView, "page">, slot: "membership" | "rules"): S
  * It is code of the version, as the production authority and a replay
  * read it.
  */
-export const destinationMembership = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => referenceOf(state, heldId(state, "membership"), "membership");
+export const destinationMembership = (state: Pick<StateView, "page" | "geneses">): RecordedRef | null => referenceOf(state, heldId(state, "membership"), "membership");
 /** The same, for the rules scope that a destination observes: the value `branch.rules` (the same table). Guard 1 of an observation of the rules reads it, in a replay (`Platform.rulesScope`). The outcome rows read this reference before their turn. */
-export const destinationRulesScope = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => referenceOf(state, heldId(state, "rules"), "rules");
+export const destinationRulesScope = (state: Pick<StateView, "page" | "geneses">): RecordedRef | null => referenceOf(state, heldId(state, "rules"), "rules");
 
 /**
  * "The next `judge`" (section 12.1.5, "The rule `open-judge`, and one `judge`

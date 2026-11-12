@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
-import { incarnationEvidence } from "../src/incarnation-evidence.ts";
+import { genesisEvidence } from "../src/genesis-evidence.ts";
 import { PREPARATION_BOUNDS as B, PreparationBudget } from "../src/preparation-budget.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { create } from "./fixtures-native.ts";
@@ -27,12 +27,12 @@ test("native incarnation proof skips all same-incarnation subjects and unrelated
       else plans.push(...state.storage.sql.exec("EXPLAIN QUERY PLAN " + query, ...args).toArray().map(row => row["detail"] as string));
       return { toArray: () => rows };
     } };
-    const one = incarnationEvidence(sql, current.at.scope, new PreparationBudget()), oneCost = { rowsRead, bodies, queries: queries.length };
+    const one = genesisEvidence(sql, current.at.scope, new PreparationBudget()), oneCost = { rowsRead, bodies, queries: queries.length };
     store.putObserved({ of: { scope: current.at.scope, inc: inc(2) }, subject: "member", seq: 0 });
     rowsRead = 0; bodies = 0; queries.length = 0;
-    const many = incarnationEvidence(sql, current.at.scope, new PreparationBudget()), manyCost = { rowsRead, bodies, queries: queries.length };
+    const many = genesisEvidence(sql, current.at.scope, new PreparationBudget()), manyCost = { rowsRead, bodies, queries: queries.length };
     const missing = scopeIdOf({ ...sample.input.seed, ordinal: 99999 });
-    const none = incarnationEvidence(sql, missing, new PreparationBudget());
+    const none = genesisEvidence(sql, missing, new PreparationBudget());
     return { one, oneCost, many, manyCost, none, plans };
   });
   expect(got.one).toEqual({ kind: "one", incarnation: inc(1) });
@@ -54,12 +54,12 @@ test("incarnation proof reserves shared calls and body bytes before transfer and
     let bodies = 0;
     const sql: Pick<Sql, "exec"> = { exec(query, ...args) { if (query.startsWith("SELECT value FROM")) bodies++; return state.storage.sql.exec(query, ...args); } };
     const budget = new PreparationBudget({ ...B, calls: 3 }); let failed = false, later = false;
-    try { incarnationEvidence(sql, at.scope, budget); } catch { failed = true; }
+    try { genesisEvidence(sql, at.scope, budget); } catch { failed = true; }
     try { budget.spend({}); } catch { later = true; }
     const bodyBefore = bodies;
     state.storage.sql.exec("UPDATE folded SET value=? WHERE kind='observed'", canonicalize({ padding: "x".repeat(B.bytes + 1) }));
     let oversized = false;
-    try { incarnationEvidence(sql, at.scope, new PreparationBudget()); } catch { oversized = true; }
+    try { genesisEvidence(sql, at.scope, new PreparationBudget()); } catch { oversized = true; }
     return { failed, later, available: budget.available, bodyBefore, bodies, oversized };
   });
   expect(got).toEqual({ failed: true, later: true, available: false, bodyBefore: 1, bodies: 1, oversized: true });
@@ -81,7 +81,7 @@ test("incarnation metadata keys are capped before transfer and malformed or mism
         return { toArray: () => rows };
       } };
       let unavailable = false;
-      try { incarnationEvidence(sql, at.scope, new PreparationBudget()); } catch { unavailable = true; }
+      try { genesisEvidence(sql, at.scope, new PreparationBudget()); } catch { unavailable = true; }
       return { unavailable, bodyQueries, noKeyTransfer: transferred === null };
     });
     expect(got.unavailable).toBe(true);

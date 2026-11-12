@@ -60,10 +60,10 @@ export interface DeliveryContext extends Reading {
   values?: readonly string[] | undefined;
 }
 
-/** How the resolver of this name answers an address that is not this scope and incarnation (sections 2.3 and 7.4), or null. */
+/** How the resolver of this name answers an address that is not this scope and sequence (sections 2.3 and 7.4), or null. */
 function routing(scope: ScopeState | null, to: unknown): RoutingRefusal | null {
   if (!scope) return "not-found";
-  if (isScopeRef(to)) return to.scope !== scope.at.scope || to.kind !== scope.at.kind ? "not-found" : to.inc !== scope.at.inc ? "wrong-incarnation" : null;
+  if (isScopeRef(to)) return to.scope !== scope.at.scope ? "not-found" : to.genesis !== scope.at.genesis ? "wrong-incarnation" : null;
   try {
     // A creation is addressed by a seed and names no incarnation.
     return scopeIdOf(to as Seed) === scope.at.scope ? null : "not-found";
@@ -207,7 +207,7 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
   if (!given) return refuse({ code: "bad-field" });
 
   // A handler's dispatch is unique for this message and sender kind. Keep
-  // source incarnations separate; arrival order remains the default.
+  // source sequences separate; arrival order remains the default.
   if (message.type === "tell" && handler.order === "source") {
     const highest = view.sourceOrder(from.at, b.kind);
     if (highest && (from.seq < highest.seq || (from.seq === highest.seq && n < highest.n))) {
@@ -297,7 +297,7 @@ function confirmation(view: StateView, scope: ScopeState, { from, n }: Delivered
   const genesis: FactRef = { at: scope.at, seq: 0, hash: scope.genesis.hash };
   const recorded = source.input;
   const admitted = message.type === "confirm" && scope.status === "provisional" && scope.creator !== null && scope.genesis.source !== null
-    && from.at.scope === scope.creator.scope && from.at.inc === scope.creator.inc
+    && same(from.at, scope.creator)
     && recorded.type === "delivery" && "clause" in recorded && recorded.clause === "applied"
     && same(recorded.message.of, { from: scope.genesis.source, n: scope.genesis.n }) && same(recorded.from, genesis)
     && same(message.genesis, genesis);
@@ -321,8 +321,8 @@ function result(view: StateView, definition: ValidDefinition, context: DeliveryC
   const of = message.of;
   const request = isObject(of) && isFactRef(of.from) && isLocalId(of.n) && same(of.from.at, scope.at) ? view.request(of.from.seq, of.n) : null;
   if (!request || request.hash !== of.from.hash) return unverified("the result names no request send of this scope");
-  const target = isScopeRef(request.to) ? from.at.scope === request.to.scope && from.at.inc === request.to.inc : from.at.scope === scopeIdOf(request.to) && judged.sourceKind === request.to.kind;
-  if (!target) return unverified("the source is not the scope and incarnation the request addressed");
+  const target = isScopeRef(request.to) ? same(from.at, request.to) : from.at.scope === scopeIdOf(request.to) && judged.sourceKind === request.to.kind;
+  if (!target) return unverified("the source is not the sequence the request addressed");
   const decided = source.input;
   const deciding = decided.type === "delivery" ? "decision" in decided && decided.decision === message.outcome && same(decided.from, of.from) && decided.n === of.n
     : decided.type === "genesis" && request.type === "create" && decided.decision === message.outcome && decided.source !== null && same(decided.source, of.from) && decided.n === of.n;
@@ -332,9 +332,9 @@ function result(view: StateView, definition: ValidDefinition, context: DeliveryC
   if (request.diagnosis?.finding === "undelivered") return { result: "repeat", seq: request.diagnosis.seq };
   let clause: Exclude<Clause, "undelivered"> = message.outcome;
   if (request.result) {
-    // Section 7.2: an applied creation result that carries another incarnation than the one held for that seed is a conflict.
+    // Section 7.2: an applied creation result from another sequence than the one held for that seed is a conflict.
     const held = isScopeRef(request.to) ? null : view.creation(seedDigest(request.to));
-    if (!held || message.outcome !== "applied" || held.inc === from.at.inc) return { result: "repeat", seq: request.result.seq };
+    if (!held || message.outcome !== "applied" || held.genesis === from.at.genesis) return { result: "repeat", seq: request.result.seq };
     clause = "conflict";
   }
   // Retained-body admission cannot replace any earlier routing/source/result/repeat answer.
