@@ -42,9 +42,9 @@ import { countedEntries } from "@generalbusiness/dap-derive";
 import type { Bounds, CapabilityName, DecisiveEvidence, Entry, Evidence, FactRef, FactUse, KeyId, OperationId, PlatformDefinition, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import type { ReceiverReads } from "./receiver-reads.ts";
 import { canonicalize, isEvidence, isPlatformDefinition, isOperationId, isRetainedInput, parseStrict, retainedValueKey, utf8 } from "@generalbusiness/dap-bytes";
-import { clockOf, recordedOutcome, evidenceValues, isEntryOf, valueDigest, settleOutcome, snapshotInput, snapshotRead, timeMs, timeOf, type Clock as Reading, type Fetched, type Operation, type OutcomeOffered, type Owners } from "@generalbusiness/dap-derive";
+import { clockOf, recordedOutcome, evidenceValues, isEntryOf, same, valueDigest, settleOutcome, snapshotInput, snapshotRead, timeMs, timeOf, type ClassifiedRetainedUse, type Clock as Reading, type Fetched, type Operation, type OutcomeOffered, type Owners } from "@generalbusiness/dap-derive";
 
-import { ownOf, valuesOf, type Scope } from "./core.ts";
+import { genuineRetained, ownOf, retainedUsesOf, valuesOf, type Scope } from "./core.ts";
 import { report } from "./diag.ts";
 import type { Wakes } from "./outbox.ts";
 import type { Clock, Ports, Resolver } from "./ports.ts";
@@ -755,9 +755,18 @@ export class Operations {
     // needs one then has a fault, and its outcome stays offered: the destination's `judge`.
     const rows = this.#scope.observes();
     const store = this.#store;
-    const retained = (use: FactUse): Fetched | null => {
-      const kept = store.retained("entry", use.content);
-      return kept ? { fact: use.fact, entry: JSON.parse(kept.bytes) as Entry, under: kept.under ?? "" } : null;
+    // The retained uses of an origin, read once through Own for this record (ruling a94bfa4d, item 1c). Sealed history does not
+    // change, and the map ends with this call. The judge reads a genuine use as a fact. A local statement is no Fetched (item 1b):
+    // the judge finds it not at hand and leaves the outcome not written now (item 1d).
+    const sequence = this.#scope.localSequence();
+    const origins = new Map<number, ReturnType<typeof retainedUsesOf>>();
+    const classifiedOf = (use: FactUse, origin: number): ClassifiedRetainedUse | null => {
+      if (!origins.has(origin)) origins.set(origin, sequence ? retainedUsesOf(ownOf(store, sequence), origin) : null);
+      return origins.get(origin)?.uses.find(value => same(value.use.fact, use.fact) && value.use.content === use.content && value.use.kind === use.kind) ?? null;
+    };
+    const retained = (use: FactUse, origin: number): Fetched | null => {
+      const classified = classifiedOf(use, origin);
+      return classified ? genuineRetained([classified])[0] ?? null : null;
     };
     let interpreted: readonly Fetched[] | undefined;
     let readRetained = retained;
@@ -766,14 +775,19 @@ export class Operations {
       // The pure origin preamble asks for every use before it judges rows or
       // effects. Returning no copy discovers that exact immutable dependency
       // set without giving producer labels to a receiver judgment.
-      const needed = new Map<string, FactUse>();
-      settleOutcome(store, definition, input, { ...context(clockOf(store, this.#clock.read())), retained: use => { needed.set(canonicalize([use.fact, use.content]), use); return null; } });
-      const raw = [...needed.values()].map(retained);
+      const needed = new Map<string, { use: FactUse; origin: number }>();
+      settleOutcome(store, definition, input, { ...context(clockOf(store, this.#clock.read())), retained: (use, origin) => { needed.set(canonicalize([use.fact, use.content]), { use, origin }); return null; } });
+      const raw = [...needed.values()].map(({ use, origin }) => classifiedOf(use, origin));
       if (raw.some(copy => copy === null)) return { recorded: "unavailable" };
-      const selected = await receiver.retained(raw as Fetched[]);
+      const selected = await receiver.retained(raw as ClassifiedRetainedUse[]);
       if (!selected) return { recorded: "unavailable" };
-      interpreted = selected;
-      const copies = new Map([...needed.keys()].map((key, n) => [key, selected[n]!]));
+      // The receiver's name replaces the producer's for this judgment only; the retained row keeps its producer.
+      const named = selected.map(({ classified, under }) => {
+        const [fact] = genuineRetained([classified as ClassifiedRetainedUse]);
+        return fact ? { ...fact, under } : null;
+      });
+      interpreted = named.filter((fact): fact is Fetched => fact !== null);
+      const copies = new Map([...needed.keys()].map((key, n) => [key, named[n] ?? null]));
       readRetained = use => copies.get(canonicalize([use.fact, use.content])) ?? null;
     }
     await rows.before(() => { const planned = settleOutcome(store, definition, input, context(clockOf(store, this.#clock.read()))); return planned.result === "unavailable" ? planned.missing : undefined; }, 2);

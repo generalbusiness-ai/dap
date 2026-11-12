@@ -24,10 +24,18 @@ import { carryProducerName } from "./receiver-facts.ts";
 import { CanonicalError, admitSequenceGenesis, isEntry, canonicalize, entryHash, scopeIdOf, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, same, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, Due, Fetched, RetainedOwn, Owners, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
-import { ownOf, retainedFacts, snapshotsOf, type BirthCandidate, type PinCell, type Pinned, type ResolvedPin } from "./core.ts";
+import { genuineRetained, ownOf, retainedUsesOf, snapshotsOf, type BirthCandidate, type PinCell, type Pinned, type ResolvedPin } from "./core.ts";
 import type { Ports, Resolver, SourceReadContext } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
 import { entryCorrelation, inOperation, measured, metric, operational, type Operational } from "./operational.ts";
+
+/** The facts that the fold reads for one just-sealed entry. Its retained uses must read whole: a sealed entry whose own
+ * retained rows do not read is not folded (the transaction rolls back). */
+function sealedFacts(own: RetainedOwn, seq: number, fresh: readonly Fetched[]): Fetched[] {
+  const read = retainedUsesOf(own, seq);
+  if (!read) throw new PinUnavailable();
+  return genuineRetained(read.uses, fresh);
+}
 
 /** Current-position reads use the bytes already appended in this transaction.
  * Each returns a fresh parsed body as ownOf did; other positions still SELECT.
@@ -492,8 +500,10 @@ export class Turns {
     // This is the old #platform read point. Resolve by value, not into the memo, until commit returns.
     const pin = this.#resolvePin(candidate);
     if (!pin) throw new PinUnavailable();
+    // The post-append Own reads this entry's retained uses without another stored read. The fold reads genuine uses only:
+    // a fresh fact of this turn where fact, content and kind agree, else a retained use that its origin holds a birth for.
     withAppendedOwn(this.#store, pin.sequence, { entry, hash }, bytes, own => applyEntry(this.#store, definition, entry, hash, {
-      bounds: this.#bounds, platform: pin.pinned.platform ?? undefined, own, facts: retainedFacts(this.#store, entry).map(read => facts?.find(fact => same(fact.fact, read.fact)) ?? read), snapshot: snapshotsOf(this.#store),
+      bounds: this.#bounds, platform: pin.pinned.platform ?? undefined, own, facts: sealedFacts(own, entry.seq, facts ?? []), snapshot: snapshotsOf(this.#store),
       values: draft.values?.map(value => value.bytes),
       texts: (digest) => { const kept = this.#store.retained("text", digest); if (!kept) return undefined; const text: unknown = parseStrict(kept.bytes); return typeof text === "string" ? utf8(text).length : undefined; },
     }));

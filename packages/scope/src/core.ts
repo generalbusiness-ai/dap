@@ -9,9 +9,9 @@ import { countedEntries, archivedPosition, heldPositions, judgeFloor } from "@ge
  */
 
 import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, Effect, FactRef, Created, Grant, Head, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, SequenceRef, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newGenesisNonce, parseStrict, sealedFactRef, platformName, retainedValueKey, scopeIdOf, textDigest, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
-import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, resolvedEntryEffects, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
-import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, OwnRetainedRow, RetainedOwn, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import { admitSequenceGenesis, canonicalBytes, canonicalize, digestBytes, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newGenesisNonce, parseStrict, sealedFactRef, platformName, retainedValueKey, scopeIdOf, textDigest, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { readRetainedUses, same, actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, resolvedEntryEffects, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
+import type { ClassifiedRetainedUse, RetainedResultOperand, SelectedRetainedUse, ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, OwnRetainedRow, RetainedOwn, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ReceiverReads } from "./receiver-reads.ts";
 import { producerName } from "./receiver-facts.ts";
@@ -66,26 +66,59 @@ export const ownOf = (store: Store, sequence: CheckedSequence): RetainedOwn => O
   return held?.kind === "entry" ? { kind: "entry", digest: held.digest, bytes: held.bytes, ...(held.under === undefined ? {} : { under: held.under }) } : null;
 }, retained: (use: import("@generalbusiness/dap-contract").FactUse) => { const held = store.retained("entry", use.content); const entry = held && rawRetainedJSON(use.content, held.bytes); return isEntry(entry) ? entry : null; }, positions: (before: number) => heldPositions(store, before), sizeProofs: () => store.floor?.()?.sizeProofs ?? [], archived: (seq: number) => archivedPosition(store, seq) });
 
-/** Section 9.2: the bytes of each foreign entry the draft's `uses` name, under its content digest. */
-export function used(draft: Pick<Draft, "uses">, facts: readonly Fetched[]): Retained[] {
+/**
+ * Section 9.2: the bytes of each foreign entry the draft's `uses` name, under its content digest. A use that the turn fetched
+ * retains the fetched body under its producer's name. A use that continues a retained use of the origin keeps that use's
+ * original row: the same bytes and the same stored producer (rulings a94bfa4d and 74d0455f).
+ */
+export function used(draft: Pick<Draft, "uses">, facts: readonly Fetched[], retained: readonly ClassifiedRetainedUse[] = []): Retained[] {
   return draft.uses.map((use) => {
     const read = facts.find((f) => f.fact.hash === use.fact.hash);
-    if (!read) throw new Error(`the foreign entry ${use.fact.hash} was not fetched before the turn`);
-    return { kind: "entry", digest: use.content, bytes: canonicalize(read.entry), under: producerName(read) };
+    if (read) return { kind: "entry", digest: use.content, bytes: canonicalize(read.entry), under: producerName(read) };
+    const kept = retained.find((value) => same(value.use.fact, use.fact) && value.use.content === use.content && value.use.kind === use.kind);
+    if (!kept || typeof kept.use.producer.name !== "string") throw new Error(`the foreign entry ${use.fact.hash} was not fetched before the turn`);
+    return { kind: "entry", digest: use.content, bytes: kept.use.originalBytes, under: kept.use.producer.name };
   });
 }
 
 /**
- * The foreign entries an entry of this scope read, from the scope's own
- * retained inputs (section 9.2). A clause run in a later entry reads them
- * again (sections 6.6 and 7.4). One that is missing is left out, and the
- * clause is then not judged.
+ * The retained uses of one entry of this scope, from its own store (section 9.2; rulings a94bfa4d, 74d0455f and b7c58915).
+ * One read of the origin through `Own`, then each use's retained row. A use whose sequence the same origin holds a birth for is
+ * genuine; any other is a local statement with its body. Null: the origin, or one of its uses, is missing or invalid. No list of
+ * part of the uses is given.
  */
-export function retainedFacts(store: Pick<Store, "retained">, entry: Pick<Entry, "uses">): Fetched[] {
-  return entry.uses.flatMap((use): Fetched[] => {
-    const kept = store.retained("entry", use.content);
-    return kept ? [{ fact: use.fact, entry: JSON.parse(kept.bytes) as Entry, under: kept.under ?? "" }] : [];
+export function retainedUsesOf(own: RetainedOwn, originSeq: number): { readonly origin: Sealed; readonly uses: readonly ClassifiedRetainedUse[] } | null {
+  const selection = readRetainedUses(own, originSeq);
+  if (selection.status !== "ready") return null;
+  const selected: SelectedRetainedUse[] = [];
+  for (const use of selection.uses) {
+    const read = selection.read(use.index);
+    if (read.status !== "ready") return null;
+    selected.push(read.value);
+  }
+  const projected = selection.project(selected, []);
+  return projected.status === "ready" ? { origin: selection.origin, uses: projected.values } : null;
+}
+
+/**
+ * The genuine retained uses as fetched facts, under the producer's stored name. A local statement is never a Fetched (ruling
+ * a94bfa4d, item 1b). A fresh fact of the turn replaces a retained one only when its fact, content and kind all agree.
+ */
+export function genuineRetained(uses: readonly ClassifiedRetainedUse[], fresh: readonly Fetched[] = []): Fetched[] {
+  return uses.flatMap((value): Fetched[] => {
+    const use = value.use;
+    const held = fresh.find((fact) => same(fact.fact, use.fact) && fact.sequence.kind === use.kind
+      && digestBytes(canonicalBytes(fact.entry)) === use.content);
+    if (held) return [held];
+    if (value.mode !== "genuine" || typeof use.producer.name !== "string") return [];
+    return [{ fact: use.fact, entry: use.entry, sequence: value.sequence, under: use.producer.name }];
   });
+}
+
+/** The receiver name of each retained use where no receiver reader is open: the producer's stored name. Null: a row has none. */
+export function retainedOperands(uses: readonly ClassifiedRetainedUse[]): RetainedResultOperand[] | null {
+  const operands = uses.map((classified) => typeof classified.use.producer.name === "string" ? { classified, under: classified.use.producer.name } : null);
+  return operands.every((operand): operand is RetainedResultOperand => operand !== null) ? operands : null;
 }
 
 /**

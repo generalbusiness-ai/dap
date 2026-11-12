@@ -27,9 +27,9 @@ import { countedEntries } from "@generalbusiness/dap-derive";
  * commit and from the object's alarm.
  */
 
-import type { Attempt, Bounds, Entry, Timestamp } from "@generalbusiness/dap-contract";
+import type { Attempt, Bounds, Timestamp } from "@generalbusiness/dap-contract";
 import { judgeDiagnosis, timeMs, timeOf, type Capabilities } from "@generalbusiness/dap-derive";
-import { ownOf, retainedFacts, used, type Scope } from "./core.ts";
+import { genuineRetained, ownOf, retainedUsesOf, used, type Scope } from "./core.ts";
 import type { Alarm, Clock, Transport } from "./ports.ts";
 import type { Dispatched, Outgoing, Store } from "./store.ts";
 import { LATE, within } from "./turn.ts";
@@ -203,22 +203,26 @@ export class Dispatcher {
     const store = this.#store;
     const bounds = this.#bounds;
     const definition = this.#scope.pinned()?.definition;
-    const kept = store.stored(seq);
+    // One read of the origin through Own, with its retained uses (ruling a94bfa4d, item 1c). A missing or invalid origin or use
+    // writes nothing now, as a missing origin did.
+    const sequence = this.#scope.localSequence();
+    const kept = sequence ? retainedUsesOf(ownOf(store, sequence), seq) : null;
     // The log as the contract's entry holds it. A request that was acknowledged is never given up.
     const attempts = send.attempts.map((a): Attempt => ({ at: a.at, answer: a.answer === "acknowledged" ? "none" : a.answer }));
     let written = false;
-    if (definition && kept) {
-      const origin = JSON.parse(kept.bytes) as Entry;
-      const facts = retainedFacts(store, origin);
+    if (definition && kept && sequence) {
+      const origin = kept.origin.entry;
+      // The judge reads genuine retained uses as facts. A local statement is no Fetched; a clause that names one finds it missing.
+      const facts = genuineRetained(kept.uses);
       const end = await this.#scope.turns.run<boolean>({
         asks: () => [],
         judge: (view, clock) => {
-          const judged = judgeDiagnosis(view, definition, { of: { seq, n }, attempts }, { clock, bounds, facts, prepared: [], origin, own: ownOf(store, this.#scope.localSequence()!), capabilities: this.#capabilities, platform: this.#scope.pinned()?.platform ?? undefined });
+          const judged = judgeDiagnosis(view, definition, { of: { seq, n }, attempts }, { clock, bounds, facts, prepared: [], origin, own: ownOf(store, sequence), capabilities: this.#capabilities, platform: this.#scope.pinned()?.platform ?? undefined });
           switch (judged.result) {
             case "write":
               // Room for this entry was counted when the request was sent (section 9.2).
               if (countedEntries(view) >= bounds.scopeEntries) return { verdict: "answer", answer: false };
-              return { verdict: "write", draft: judged.draft, retain: used(judged.draft, facts), sealed: () => true, unfit: () => false, full: () => false };
+              return { verdict: "write", draft: judged.draft, retain: used(judged.draft, facts, kept.uses), sealed: () => true, unfit: () => false, full: () => false };
             case "repeat": return { verdict: "answer", answer: true };
             case "due": return { verdict: "stop" };
             default: return { verdict: "answer", answer: false };

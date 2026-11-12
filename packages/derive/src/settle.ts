@@ -104,7 +104,8 @@ export type OutcomeContext = Settling & {
    * Revision 20, under a definition whose data states rows or an `origin`
    * (`ValidDefinition.observing`). `retained`: the scope's retained copy of
    * one foreign entry that an entry of it names in `uses`, with the name of
-   * the definition that its scope pins. The judge asks it for each entry
+   * the definition that its scope pins, given the use and the origin's
+   * position. The judge asks it for each entry
    * in the `uses` of the outcome's origin: nothing is fetched (section 6.1,
    * "The origin of an outcome"). Absent: `facts` is searched. `observing`:
    * what the commit holds for the rows of the kind, beside `observed`,
@@ -112,7 +113,7 @@ export type OutcomeContext = Settling & {
    * window and the use of each row. `values`: canonical bytes beside an
    * observation or named by evidence in an owner-declared domain.
    */
-  retained?: ((use: FactUse) => Fetched | null) | undefined;
+  retained?: ((use: FactUse, origin: number) => Fetched | null) | undefined;
   observing?: Observing | undefined;
   values?: readonly string[] | undefined;
 };
@@ -235,7 +236,7 @@ function byRows(view: StateView, definition: ValidDefinition, outcome: OutcomeOf
       // A position that is no entry of the scope is a fault of the rule.
       if (!origin) throw new RuleFault(`the origin of an outcome of ${operation.kind} is no earlier entry of the scope`);
       uses = origin.entry.uses;
-      const copies = uses.map((use) => context.retained?.(use) ?? (context.facts ?? []).find((fact) => fact.fact.hash === use.fact.hash) ?? null);
+      const copies = uses.map((use) => context.retained?.(use, at as number) ?? (context.facts ?? []).find((fact) => fact.fact.hash === use.fact.hash) ?? null);
       // The scope retained each of those entries when it wrote the origin. One that is not at hand leaves the outcome not written now.
       if (copies.some((copy, i) => !copy || useOf(copy.fact, copy.entry).content !== uses[i]!.content)) return { result: "unavailable", reason: "dependency-unavailable" };
       reading.facts = copies as Fetched[];

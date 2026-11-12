@@ -4,10 +4,10 @@ import { answersVersionQuestion, partitionPublicationOrigin, type PartitionCreat
 import type { DeclaredDefinition, Digest, Entry, FactRef, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition, isScopeRef, scopeIdOf, type CheckedSequence } from "@generalbusiness/dap-bytes";
 
-import { isEntryOf, isFactRef, isLocalId, isObject, same, sentBy, type Delivered, type Fetched } from "@generalbusiness/dap-derive";
+import { isEntryOf, isFactRef, isLocalId, isObject, same, sentBy, type ClassifiedRetainedUse, type Delivered, type RetainedResultOperand } from "@generalbusiness/dap-derive";
 import { PartitionProofOperation, type PartitionProofPorts } from "./partition-proof.ts";
 import type { Foreign, Ports, Resolver, SourceReadContext } from "./ports.ts";
-import { producerName, receiverName } from "./receiver-facts.ts";
+import { receiverName } from "./receiver-facts.ts";
 
 const positiveSource = (entry: Entry): boolean => entry.input.type !== "genesis" || entry.input.decision === "applied";
 
@@ -59,10 +59,11 @@ export class ReceiverReads implements Resolver {
     const result = proof ? partitionPublicationOrigin(from, root, destination, kind, proof.frames) : null;
     return this.proof.active() ? result : null;
   }
-  async #interpret(read: Fetched): Promise<Fetched | null> {
-    if (this.mode === "legacy") return receiverName(read, producerName(read));
-    const selected = await this.proof?.source(read.fact);
-    return selected && positiveSource(selected.source.entry) ? receiverName({ ...read, under: selected.producer }, selected.under) : null;
+  /** The receiver's name for one retained fact: its stored producer in legacy mode, or the partition proof's receiver label. */
+  async #interpret(fact: FactRef, producer: string | undefined): Promise<string | null> {
+    if (this.mode === "legacy") return typeof producer === "string" ? producer : null;
+    const selected = await this.proof?.source(fact);
+    return selected && positiveSource(selected.source.entry) ? selected.under : null;
   }
   async read(fact: FactRef, context: SourceReadContext, origin: boolean): Promise<Foreign> {
     if (this.mode === "partition-v1") {
@@ -87,9 +88,14 @@ export class ReceiverReads implements Resolver {
     return receiverName({ entry: selected.source.entry, under: selected.producer, sequence: selected.source.sequence }, "");
   }
   /** A retained alias is checked metadata, never a receiver policy. Each use
-   * derives its label again; the retained object and bytes stay unchanged. */
-  async retained(facts: readonly Fetched[]): Promise<Fetched[] | null> {
-    const interpreted = await Promise.all(facts.map(fact => isEntryOf(fact.entry, fact.fact, fact.sequence) ? this.#interpret(fact) : null));
-    return interpreted.every((fact): fact is Fetched => fact !== null) ? interpreted : null;
+   * derives its receiver name again; the retained use, its bytes and its stored
+   * producer stay unchanged. Legacy reads name a use by its stored producer. A
+   * partition receiver keeps its paid proof.source lookup (ruling 222a5b21). */
+  async retained(uses: readonly ClassifiedRetainedUse[]): Promise<RetainedResultOperand[] | null> {
+    const operands = await Promise.all(uses.map(async (classified): Promise<RetainedResultOperand | null> => {
+      const under = await this.#interpret(classified.use.fact, classified.use.producer.name);
+      return under === null ? null : { classified, under };
+    }));
+    return operands.every((operand): operand is RetainedResultOperand => operand !== null) ? operands : null;
   }
 }
