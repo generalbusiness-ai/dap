@@ -85,13 +85,24 @@ already removed that dialog at this point.
 
 ## Final evidence
 
-| Check | Command | Exit | Output digest |
-| --- | --- | --- | --- |
-| Scripts type check | `npx tsc -p scripts/tsconfig.json` | TODO | TODO |
-| Create-room witness | `node --import tsx --no-warnings scripts/demo-captures.ts --recorded --claim-witness --out <dir>` with `PLAYWRIGHT_CORE` and `CHROMIUM` set as in `.github/workflows/page-browser.yml` | TODO | TODO |
-| Page browser workflow | `.github/workflows/page-browser.yml`, push run at this head | TODO | TODO |
+The [manifest](evidence/2026-11-12-focus-return-f2.manifest.json) lists each
+cited file with its bytes and SHA-256. Paths are relative to
+`~/play/artroom-evidence`. The gated head is `e3563420`, tree
+`8800c4b3018f6a7295f2212b69ffda11fb982706`. It is the witness repair
+`0a62e2cb` plus the custody test clock fix, cherry-picked from NF-1 under
+ruling `0f1ef8ea`. Main `33836693` now carries that fix.
 
-The evidence directory and manifest follow once root runs these checks.
+| Check | Head and command | Exit and result | Output |
+| --- | --- | --- | --- |
+| Scripts type check | `0a62e2cb`: `node node_modules/typescript/bin/tsc -p scripts/tsconfig.json` | 0 | `2026-11-12-ops2-f2-working/f2-tsc-scripts.exit` |
+| Page browser workflow, create-room witness included | `0a62e2cb`: branch push, run 43306959043 | Success. The step "Run the create room witness" runs `scripts/demo-captures.ts --recorded --claim-witness` | `2026-11-12-f2-ci-0a62e2cb/page-job.log` |
+| Gate | `e3563420`: `npm run gate` | 0. Node 169 of 169, Counting 56 of 56, Plain 4,545 of 4,546 with 1 skip, Native 1,132 of 1,134 with 2 skips. START `73186e52`, END `0eb72306` | `2026-11-12-f2-gate-e3563420/gate.stdout` |
+
+The Page run stands for `e3563420`: from `0a62e2cb` to `e3563420` only
+`packages/mcp/test/sqlite-custody.test.ts` changes, and the Page workflow's
+path filter does not include it. The witness ran once in CI and passed. The
+failure it repairs was intermittent, so one pass does not show the race is
+gone. The source trace above carries that claim.
 
 ## Open limits
 
