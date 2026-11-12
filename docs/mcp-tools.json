@@ -4890,7 +4890,9 @@
               },
               "inviteEnds": {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{3}))?Z$",
+                "description": "UTC, ending in Z; no fraction for whole seconds, otherwise three digits."
               }
             },
             "required": ["member", "kind", "inviteHash", "inviteEnds"],
@@ -5374,7 +5376,9 @@
               },
               "inviteEnds": {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{3}))?Z$",
+                "description": "UTC, ending in Z; no fraction for whole seconds, otherwise three digits."
               }
             },
             "required": ["handle", "role", "inviteHash", "inviteEnds"],
