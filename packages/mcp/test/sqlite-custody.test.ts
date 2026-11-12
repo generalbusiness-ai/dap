@@ -140,7 +140,8 @@ describe("the custody store over SQLite", () => {
 
   test("terminal records past the count move to the archive, with the same bytes, and nothing is deleted", async () => {
     const sql = nodeSql();
-    const store = sqliteStore(sql, { budget: 64 * 1024 * 1024, identityMost: 64 * 1024 * 1024, terminalMost: 2, ageDays: 30 });
+    // The test clock stands at T, so no record is older than ageDays and only the count moves one.
+    const store = sqliteStore(sql, { budget: 64 * 1024 * 1024, identityMost: 64 * 1024 * 1024, terminalMost: 2, ageDays: 30 }, () => Date.parse(T));
     const records = ["p", "q", "r"].map((key) => recordOf(key, "accepted", 0, [settled(1)]));
     for (const [i, r] of records.entries()) { r.updated = `2026-10-13T20:0${i}:00Z`; await store.write(r.identity.key, r); }
     expect(store.archived()).toBe(1);
