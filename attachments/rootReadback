@@ -1,0 +1,31 @@
+{
+  "status": "FAILED_CONTINUATION_METADATA_REFUSAL",
+  "head": "cb79e7faef924821931e855ee666d10b574f2072",
+  "tree": "b8eff6e2cf9999c8374429bcd1284b5086a5e25a",
+  "start": "8df79baeec264af6762bc50b469bbb347e9ee93f",
+  "actualExternalDriverLauncherRunnerExitsRead": [
+    2,
+    2,
+    2,
+    2
+  ],
+  "phaseExitsRead": {
+    "node": 0,
+    "plainHelper": 2,
+    "plainBody": null,
+    "native": null
+  },
+  "acceptedNodeCases": 24,
+  "unknownWrappers": 6,
+  "plainStates": {
+    "unrun": 23
+  },
+  "nativeUnrun": 4,
+  "failure": "plan.sources is an object; maintained guard requires iterable array. Plain body never launched.",
+  "sourceFenceAccepted": true,
+  "sourceBytesUnchanged": true,
+  "bothCleanupsClosedEmpty": true,
+  "fullRawStreamsRead": true,
+  "noAutomaticRetry": true,
+  "next": "Repair only external plan schema; new bounded27 body excludes completed24Node. No production patch/guard weakening."
+}
