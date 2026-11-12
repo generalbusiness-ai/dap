@@ -1,0 +1,43 @@
+{
+  "label": "Curated provenance, not raw output",
+  "status": "S1_GIT_AND_CANONICAL_LANDING_SUCCESSION_EXACT",
+  "main": "221e11c33428068e0b95ffaa30aa0d294186b3c0",
+  "tree": "1c6b1532ed3dc93160e2b19a313c381d9834c231",
+  "parents": [
+    "d4cfae052a3d92aaeff28f8e986f59414807c233",
+    "ab4367f9a8ce575f3b15f5dd4cb238309ad8edf8"
+  ],
+  "authorAndCommitter": "builder <feb90d36627c7f44@actor.gitseq.invalid>",
+  "mergeActualExit": 0,
+  "toolSession": 29437,
+  "approval": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c6fcf62eccf1abe3cb216cba9dfed49c4934f3f2",
+  "ratification": "e0417ced54d4780b66060102d0682b571dd5f451",
+  "mergeReceipt": "b730b85127bb92d50b9919d81d5026bc82aa1c17",
+  "retirementsExact": 26,
+  "successorPathsExact": 14,
+  "carriedExact": 62,
+  "signedRelevantEventsChecked": 41,
+  "canonicalSuccessors": {
+    "apps/sandbox/worker.ts": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1a3e73bdb3dfb62dd3481f0cd6c6afeab4c81ac4",
+    "docs/security/entry-points.md": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d544e2b01063abf63be10a089b50445caacc5db0",
+    "notes/implementation/2026-11-11-serving-windows-s1.md": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1cdc6298157dc9661efa8abf1c485190f2a6822c",
+    "notes/implementation/evidence/2026-11-12-serving-windows-s1.manifest.json": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:64fbb31241d7a59d3d29b49bbe0ea61202bc22c5",
+    "packages/scope/src/serving-admission.ts": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b2adeb15cfc25861876d5e4536f8c80dde59dd28",
+    "packages/scope/src/serving-limits.ts": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:966890be0bb595687d73ea8ed53bb0160ed2a716",
+    "packages/scope/src/site/window.ts": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0f617014cc117dff3c268ef39f98341350420398",
+    "packages/scope/src/worker.ts": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c9ae618f3506a502f2fda7c85d817f1c25d6638e",
+    "packages/scope/test/application-sandbox.test.ts": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0b4ea37d9f04e8499a815d32e1bb322e581976c2",
+    "packages/scope/test/serving-admission.test.ts": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b69d76f108f3b966d496deb1334fd90e1e9cc225",
+    "packages/scope/test/serving-limits.test.ts": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:af36e0778d50308182339c78eae65d6cf2b4e6c2",
+    "packages/scope/test/site-window.test.ts": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b7b4276d496cc0da0530a53e3ff78cfa8231b687",
+    "scripts/security-entry-points.mjs": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ad7359b8c351d5fb606f063495e815d7c000219",
+    "scripts/security-entry-points.test.mjs": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6632e05f4f04db8043d2af52e70f093c39d42f23"
+  },
+  "changedPathsExact": 14,
+  "clean": true,
+  "candidateTreeExact": true,
+  "warning": "Legacy phase-one compatibility permits merge without optional structured authorization; user authorized routine landings and governing request has no hold.",
+  "mainPush": "NOT_YET",
+  "deployment": "Planner-owned, Workers still d4cfae05 until actual deploy.",
+  "rawCopyFreezeSeal": false
+}
