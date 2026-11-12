@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"d4cfae052a3d92aaeff28f8e986f59414807c233","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0619bcf27855ab64f03116f8e66a98fdb8025e1e","text":"Merge retired a covered predecessor; the successor is at packages/client/src/browser-joining.ts."}
