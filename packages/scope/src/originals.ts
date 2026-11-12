@@ -72,11 +72,11 @@ const SWEEP_MEMBERS = 16, SWEEP_ROWS = 64;
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS original_copy (
-  digest TEXT PRIMARY KEY, inc TEXT NOT NULL, member TEXT NOT NULL, actor TEXT NOT NULL,
+  digest TEXT PRIMARY KEY, genesis TEXT NOT NULL, member TEXT NOT NULL, actor TEXT NOT NULL,
   target TEXT NOT NULL, kind TEXT NOT NULL, item INTEGER, not_after TEXT NOT NULL,
   drop_ms INTEGER NOT NULL, size INTEGER NOT NULL, bytes TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS original_copy_member ON original_copy (inc, member, size);
+CREATE INDEX IF NOT EXISTS original_copy_member ON original_copy (genesis, member, size);
 CREATE INDEX IF NOT EXISTS original_copy_due ON original_copy (drop_ms);
 `;
 
@@ -127,8 +127,8 @@ export class Originals {
     this.#sql.exec(SCHEMA).toArray();
   }
 
-  /** Who asks: the scope's incarnation and the session's member. A refusal: this is no active membership scope, or the session or its standing fails. */
-  #asker(reader: unknown): { inc: string; member: string; key: string; named: string; at: NonNullable<ReturnType<StateView["scope"]>> } | { refused: OriginalRefusal } {
+  /** Who asks: the scope's genesis hash and the session's member. A refusal: this is no active membership scope, or the session or its standing fails. */
+  #asker(reader: unknown): { genesis: string; member: string; key: string; named: string; at: NonNullable<ReturnType<StateView["scope"]>> } | { refused: OriginalRefusal } {
     const scope = this.#config.state.scope();
     const pinned = this.#config.pinned();
     if (!scope || scope.status !== "active" || scope.kind !== "membership" || !pinned || typeof pinned.named !== "string" || !platform(pinned.named)) return { refused: "not-found" };
@@ -137,17 +137,17 @@ export class Originals {
     if (key === "sessions-unavailable" || key === "clock-behind") return { refused: key };
     const standing = standingOf(this.#config.state, { of: scope.at, key }, pinned.named as never);
     if (!standing || !("key" in standing) || standing.keyState !== "active" || standing.memberState !== "active" || standing.controllerActive === false) return { refused: "forbidden" };
-    return { inc: scope.at.inc, member: standing.member, key, named: pinned.named, at: scope };
+    return { genesis: scope.at.genesis, member: standing.member, key, named: pinned.named, at: scope };
   }
 
   /** One bounded quantum on a full object: the rows of members who are no longer active or who hold no active key. */
-  #sweep(asker: { inc: string; named: string; at: NonNullable<ReturnType<StateView["scope"]>> }): void {
-    const members = this.#sql.exec("SELECT DISTINCT member FROM original_copy WHERE inc = ? AND member > ? ORDER BY member LIMIT ?", asker.inc, this.#sweptTo, SWEEP_MEMBERS).toArray().map(row => row["member"] as string);
+  #sweep(asker: { genesis: string; named: string; at: NonNullable<ReturnType<StateView["scope"]>> }): void {
+    const members = this.#sql.exec("SELECT DISTINCT member FROM original_copy WHERE genesis = ? AND member > ? ORDER BY member LIMIT ?", asker.genesis, this.#sweptTo, SWEEP_MEMBERS).toArray().map(row => row["member"] as string);
     let left = SWEEP_ROWS, after = this.#sweptTo, finished = true;
     for (const member of members) {
       const standing = standingOf(this.#config.state, { of: asker.at.at, member: member as never }, asker.named as never);
       if (standing && "memberState" in standing && (standing.memberState !== "active" || !("activeKey" in standing) || standing.activeKey !== true)) {
-        const doomed = this.#sql.exec("SELECT digest FROM original_copy WHERE inc = ? AND member = ? LIMIT ?", asker.inc, member, left).toArray();
+        const doomed = this.#sql.exec("SELECT digest FROM original_copy WHERE genesis = ? AND member = ? LIMIT ?", asker.genesis, member, left).toArray();
         for (const row of doomed) this.#sql.exec("DELETE FROM original_copy WHERE digest = ?", row["digest"] as string).toArray();
         left -= doomed.length;
         if (left === 0) { finished = false; break; } // This member can hold more rows, so the next sweep starts with it.
@@ -181,17 +181,17 @@ export class Originals {
     if (now === null || ends === null || now >= ends) return { ok: false, reason: "expired" };
     if (ends - now > this.#config.lifetimeSeconds * 1000) return { ok: false, reason: "bad-request" };
     const digest = intentDigest(intent);
-    const held = this.#sql.exec("SELECT bytes FROM original_copy WHERE digest = ? AND inc = ?", digest, asker.inc).toArray()[0];
+    const held = this.#sql.exec("SELECT bytes FROM original_copy WHERE digest = ? AND genesis = ?", digest, asker.genesis).toArray()[0];
     if (held) return held["bytes"] === bytes ? { ok: true, fresh: false } : { ok: false, reason: "conflict" };
-    const mine = this.#sql.exec("SELECT COUNT(*) AS n, COALESCE(SUM(size), 0) AS total FROM original_copy WHERE inc = ? AND member = ?", asker.inc, asker.member).toArray()[0]!;
+    const mine = this.#sql.exec("SELECT COUNT(*) AS n, COALESCE(SUM(size), 0) AS total FROM original_copy WHERE genesis = ? AND member = ?", asker.genesis, asker.member).toArray()[0]!;
     if ((mine["n"] as number) >= this.#limits.rows || (mine["total"] as number) + size > this.#limits.memberBytes) return { ok: false, reason: "full" };
-    const toThisScope = intent.to?.scope === asker.at.at.scope && intent.to.inc === asker.at.at.inc;
+    const toThisScope = intent.to?.scope === asker.at.at.scope && intent.to.genesis === asker.at.at.genesis;
     if (!toThisScope && this.#objectFull(size)) {
       this.#sweep(asker);
       if (this.#objectFull(size)) return { ok: false, reason: "room-full" };
     }
-    this.#sql.exec("INSERT INTO original_copy (digest, inc, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      digest, asker.inc, asker.member, intent.actor, canonicalize(intent.to), intent.kind, intent.on, intent.notAfter, ends + DROP_MS, size, bytes).toArray();
+    this.#sql.exec("INSERT INTO original_copy (digest, genesis, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      digest, asker.genesis, asker.member, intent.actor, canonicalize(intent.to), intent.kind, intent.on, intent.notAfter, ends + DROP_MS, size, bytes).toArray();
     return { ok: true, fresh: true };
   }
 
@@ -199,7 +199,7 @@ export class Originals {
   list(reader: unknown): OriginalPage {
     const asker = this.#asker(reader);
     if ("refused" in asker) return { ok: false, reason: asker.refused };
-    const rows = this.#sql.exec("SELECT digest, actor, target, kind, item, not_after FROM original_copy WHERE inc = ? AND member = ? ORDER BY not_after, digest", asker.inc, asker.member).toArray();
+    const rows = this.#sql.exec("SELECT digest, actor, target, kind, item, not_after FROM original_copy WHERE genesis = ? AND member = ? ORDER BY not_after, digest", asker.genesis, asker.member).toArray();
     const value = rows.map((row): OriginalRow => ({ digest: row["digest"] as Digest, to: JSON.parse(row["target"] as string) as ScopeRef, kind: row["kind"] as string, on: row["item"] as number | null, actor: row["actor"] as string, notAfter: row["not_after"] as Timestamp }));
     return { ok: true, at: asker.at.head, value, complete: true };
   }
@@ -208,7 +208,7 @@ export class Originals {
   read(reader: unknown, digest: unknown): OriginalBytes {
     const asker = this.#asker(reader);
     if ("refused" in asker) return { ok: false, reason: asker.refused };
-    const row = isDigest(digest) ? this.#sql.exec("SELECT bytes FROM original_copy WHERE digest = ? AND inc = ? AND member = ?", digest, asker.inc, asker.member).toArray()[0] : undefined;
+    const row = isDigest(digest) ? this.#sql.exec("SELECT bytes FROM original_copy WHERE digest = ? AND genesis = ? AND member = ?", digest, asker.genesis, asker.member).toArray()[0] : undefined;
     return row ? { ok: true, bytes: row["bytes"] as string } : { ok: false, reason: "not-found" };
   }
 
@@ -216,7 +216,7 @@ export class Originals {
   end(reader: unknown, digest: unknown): OriginalEnded {
     const asker = this.#asker(reader);
     if ("refused" in asker) return { ok: false, reason: asker.refused };
-    if (!isDigest(digest) || this.#sql.exec("SELECT 1 AS x FROM original_copy WHERE digest = ? AND inc = ? AND member = ?", digest, asker.inc, asker.member).toArray().length === 0) return { ok: false, reason: "not-found" };
+    if (!isDigest(digest) || this.#sql.exec("SELECT 1 AS x FROM original_copy WHERE digest = ? AND genesis = ? AND member = ?", digest, asker.genesis, asker.member).toArray().length === 0) return { ok: false, reason: "not-found" };
     this.#sql.exec("DELETE FROM original_copy WHERE digest = ?", digest).toArray();
     return { ok: true };
   }
