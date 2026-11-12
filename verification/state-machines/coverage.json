@@ -19,7 +19,7 @@
     },
     "syncCommit": "8faa38dcf31855a0a6264e5912b58061b5eda223",
     "sha256": {
-      "packages/mcp/src/http.ts": "f6644b9962dc21e351462d51c2fdede5d4481265c95834f86c9c40a1386d8e77",
+      "packages/mcp/src/http.ts": "0ceef9abc8a033831d56de6933351d6cc4506e1566800f9440f0575a6037fe0d",
       "packages/mcp/src/oauth-http.ts": "f60fcf6dda90457e0d97c351c91c4641d4ec174674ec4becee6c643a6e4aa383"
     }
   },

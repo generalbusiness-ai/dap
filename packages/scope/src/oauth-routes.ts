@@ -1,9 +1,12 @@
 /** OAuth wire bounds and public-client routing. The caller admits the hosted
  * deployment, public origin, resource list and OAuth policy first. */
 import { oauthAuthorization, OAuthError, OAUTH_CLIENT_BYTES, isRetiredStoreStop, type RetiredStoreStop, type ControlAnswer, type OAuthClient, type OAuthPolicy } from "@generalbusiness/dap-mcp";
+import type { ControlAction, SignedControl } from "@generalbusiness/dap-contract";
 export const OAUTH_METADATA_PATH = "/.well-known/oauth-authorization-server";
 export const OAUTH_CLIENT_REGISTRY = "oauth-public-clients-1";
 export interface OAuthPublicClients {
+  admitControl(signed: SignedControl, service: string, action: ControlAction, agent: string | null, address: string | null): Promise<ControlAnswer | RetiredStoreStop>;
+  admitContext(address: string | null): Promise<ControlAnswer | RetiredStoreStop>;
   registerClient(bytes: Uint8Array, policy: OAuthPolicy): Promise<ControlAnswer | RetiredStoreStop>;
   resolveClient(id: string, policy: OAuthPolicy): Promise<ControlAnswer | RetiredStoreStop>;
 }
@@ -13,7 +16,7 @@ export interface OAuthTokenAgent {
   revokeToken(id: string, secret: string, client: string): Promise<ControlAnswer | RetiredStoreStop>;
 }
 interface Ports {
-  origin: string; resources: readonly string[]; policy: OAuthPolicy; clients: OAuthPublicClients;
+  origin: string; resources: readonly string[]; policy: OAuthPolicy; clients: OAuthPublicClients; address: string | null;
   agent(id: string): OAuthTokenAgent | null;
   read(request: Request, most: number): Promise<Uint8Array | "too-large" | "unreadable">;
 }
@@ -43,6 +46,9 @@ export async function oauthRoute(request: Request, ports: Ports): Promise<Respon
     if (path === "/oauth/authorize/context") {
       if (request.method !== "GET") return error(405, "method_not_allowed");
       for (const key of url.searchParams.keys()) if (url.searchParams.getAll(key).length !== 1) return error(400, "invalid_request");
+      const admission = await ports.clients.admitContext(ports.address);
+      if (isRetiredStoreStop(admission)) return oauthAnswer(admission);
+      if (admission.status !== 200) return oauthAnswer(admission);
       const client = await resolvedOAuthClient(ports.clients, url.searchParams.get("client_id") ?? "", ports.policy);
       const authorization = oauthAuthorization(url.searchParams, client, ports.resources, ports.policy.redirects);
       return oauthAnswer({ status: 200, body: { issuer: ports.origin, client, ...authorization } });

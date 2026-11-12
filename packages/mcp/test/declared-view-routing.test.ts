@@ -59,7 +59,7 @@ async function fixture(condition = rule, related = false, outcome: "accepted" | 
     } }; },
   });
   let signed = 0;
-  const sessions = new ViewSessions(source, { call: async () => { throw Error("No host application code runs."); } }, async (_kind, _args, admit) => {
+  const sessions = new ViewSessions(source, () => ({ call: async () => { throw Error("No host application code runs."); } }), async (_kind, _args, admit) => {
     await admit(); signed++;
     return { structuredContent: { answer: outcome }, content: [], isError: false } satisfies CallResult;
   }, async () => { throw Error("No original request is unresolved."); });

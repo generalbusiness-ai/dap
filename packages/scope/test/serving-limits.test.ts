@@ -4,7 +4,7 @@ import { expect, test } from "vitest";
 import { keyIdOf } from "@generalbusiness/dap-bytes";
 import { DEFAULT_SERVING_LIMITS, ServingLimits, servingLimitConfig } from "../src/serving-limits.ts";
 
-const actor = (n: number) => keyIdOf(new Uint8Array(32).fill(n));
+const actor = (n: number) => { const bytes = new Uint8Array(32); new DataView(bytes.buffer).setUint32(0, n); return keyIdOf(bytes); };
 const A = "192.0.2.1", B = "192.0.2.2";
 const fixture = { creationKey: 2, creationAddress: 3, readKey: 2, readAddress: 3, windows: 8 };
 
@@ -22,22 +22,44 @@ test("serving windows count a verified key across addresses and an address acros
     reads.account("signed-read", actor(4), A, 0)]).toEqual([true, true, false]);
 });
 
-test("fresh-key churn cannot evict a live address window; capacity refuses before partial key/address allocation", () => {
-  const limits = new ServingLimits({ ...fixture, creationKey: 5, creationAddress: 1, windows: 4 });
-  expect(limits.account("creation", actor(1), A, 0)).toBe(true);
-  expect(limits.account("creation", actor(2), A, 0)).toBe(false);
-  expect(limits.account("creation", actor(3), A, 0)).toBe(false);
-  expect(limits.counts().total).toBe(4);
-  for (let n = 4; n < 30; n++) expect(limits.account("creation", actor(n), A, 0)).toBe(false);
-  // Neither churn nor capacity refusal removes or resets the first address.
-  expect(limits.account("creation", actor(1), A, 0)).toBe(false);
-  expect(limits.account("creation", actor(4), B, 0)).toBe(false);
-  expect(limits.counts().total).toBe(4);
-  // Existing key-only requests still use their existing counter, not space.
-  expect(limits.account("creation", actor(1), null, 0)).toBe(true);
-  // Both absent identities fit after actual expiry; no live entry is evicted.
-  expect(limits.account("creation", actor(4), B, 3_600_000)).toBe(true);
-  expect(limits.counts().total).toBe(2);
+test("one sender's 8191 fresh keys leave another creator and returning reader admitted; full tables use bounded overflow", () => {
+  const limits = new ServingLimits(), start = 1_000_000;
+  expect(limits.account("signed-read", actor(9000), B, start)).toBe(true);
+  let admitted = 0;
+  for (let n = 0; n < 8191; n++) if (limits.account("creation", actor(n), A, start)) admitted++;
+  expect(admitted).toBe(30);
+  expect(limits.counts().creation).toBe(31); // denied addresses allocate no fresh key
+  expect(limits.account("creation", actor(9001), B, start + 1000)).toBe(true);
+  expect(limits.account("signed-read", actor(9002), B, start + 1000)).toBe(true);
+  // Trace 2: a sender cannot take the returning reader's expired read slots.
+  expect(limits.account("creation", actor(9003), A, start + 90_000)).toBe(false);
+  expect(limits.account("signed-read", actor(9000), B, start + 120_000)).toBe(true);
+
+  const capped = new ServingLimits({ ...fixture, windows: 1 });
+  expect(capped.account("creation", actor(1), null, 0)).toBe(true);
+  expect(capped.account("creation", actor(2), null, 0)).toBe(true);
+  expect(capped.account("creation", actor(3), null, 0)).toBe(true);
+  expect(capped.account("creation", actor(4), null, 0)).toBe(false);
+  expect(capped.account("signed-read", actor(4), null, 0)).toBe(true);
+  expect(capped.account("creation", actor(1), null, 0)).toBe(true);
+  expect(capped.counts()).toEqual({ creation: 2, reads: 1, found: 0, total: 3 });
+  expect(capped.account("creation", actor(4), null, 3_600_000)).toBe(true);
+  const twoPhase = new ServingLimits({ ...fixture, creationKey: 1, windows: 1 });
+  expect(twoPhase.account("creation", actor(1), null, 0)).toBe(true);
+  const reserved = twoPhase.creationAddress(B, 0);
+  expect(reserved.admitted).toBe(true);
+  expect(reserved.overflow).not.toBeNull();
+  expect(twoPhase.account("creation", actor(2), null, 0, reserved.overflow)).toBe(true);
+  expect(twoPhase.creationAddress("192.0.2.3", 0).admitted).toBe(false);
+  // The old address charge cannot pay for a later hour's overflow window.
+  expect(twoPhase.account("creation", actor(10), null, 3_600_000)).toBe(true);
+  expect(twoPhase.account("creation", actor(11), null, 3_600_000, reserved.overflow)).toBe(true);
+  expect(twoPhase.account("creation", actor(12), null, 3_600_000)).toBe(false);
+  // A fixed-owner restart likewise creates a different counter instance.
+  const restarted = new ServingLimits({ ...fixture, creationKey: 1, windows: 1 });
+  expect(restarted.account("creation", actor(10), null, 0)).toBe(true);
+  expect(restarted.account("creation", actor(11), null, 0, reserved.overflow)).toBe(true);
+  expect(restarted.account("creation", actor(12), null, 0)).toBe(false);
 });
 
 test("operation expiry, canonical addresses, null address, backward clock and instance reset have explicit bounds", () => {

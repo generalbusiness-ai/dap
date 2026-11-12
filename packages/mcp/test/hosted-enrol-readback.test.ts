@@ -8,7 +8,7 @@ import { expect, test } from "vitest";
 import type { ControlRequest, Input, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, readMinimumParameter, signControlWith, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { encodeAgentKeyInvitation, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
-import { HostedAgent, type AgentPorts } from "../src/hosted.ts";
+import { HostedAgent, hostedRolePort, type AgentPorts } from "../src/hosted.ts";
 import { RETIRED_STORE_STOP } from "../src/hosted-store-stop.ts";
 import { enrolledKeyItem, retirementBody } from "../src/hosted-retirement.ts";
 import { identityId, type Identity } from "../src/custody.ts";
@@ -104,8 +104,46 @@ test.each([
       }
       return peer.fetch(url, init);
     };
+    // Role evidence is an explicit STAND-IN over this case's signed fixture
+    // entries and signers. Read fresh at each host boundary without fetch,
+    // so the retained-entry read counters keep their original meaning.
+    const memberSequence = member.receipt.fact.seq;
+    const invitationSequence = invitation.receipt.fact.seq;
+    const roleStanding = hostedRolePort(async asked => {
+      if (asked.membership.scope !== peer.membership.scope || asked.membership.genesis !== peer.membership.genesis) return { status: "unavailable" };
+      const head = peer.head(membership);
+      const memberInput = membership.entries[memberSequence]?.entry.input;
+      const invitationInput = membership.entries[invitationSequence]?.entry.input;
+      if (memberInput?.type !== "act" || memberInput.signed.intent.kind !== "add-member"
+        || memberInput.signed.intent.actor !== owner.key || memberInput.signed.intent.fields["handle"] !== link.handle
+        || memberInput.signed.intent.fields["kind"] !== "agent" || memberInput.signed.intent.fields["controller"] !== link.controller.member
+        || invitationInput?.type !== "act" || invitationInput.signed.intent.kind !== "invite-key"
+        || invitationInput.signed.intent.actor !== owner.key || invitationInput.signed.intent.fields["member"] !== memberSequence
+        || invitationInput.signed.intent.fields["kind"] !== "agent") return { status: "unavailable" };
+      const enrolled = membership.entries.some(({ entry }) => {
+        const input = entry.input;
+        return input.type === "act" && input.signed.intent.kind === "enrol"
+          && input.signed.intent.actor === agentSigner.key && input.signed.intent.idempotencyKey === `enrol:${OP}`
+          && input.signed.intent.to !== null
+          && input.signed.intent.to.scope === peer.membership.scope && input.signed.intent.to.genesis === peer.membership.genesis;
+      });
+      const controller = { member: link.controller.member, state: "active", role: "member", activeKey: true, controller: null, actions: [] };
+      const agentRole = { member: link.handle, state: "active", role: "agent", activeKey: enrolled, controller: link.controller.member, actions: [] };
+      const actor = asked.actor === owner.key
+        ? { key: owner.key, keyState: "active", member: link.controller.member, memberState: "active", controller: null, actions: [] }
+        : asked.actor === agentSigner.key && enrolled
+          ? { key: agentSigner.key, keyState: "active", member: link.handle, memberState: "active", controller: link.controller.member, actions: [] }
+          : null;
+      if (!("agent" in asked)) return { status: "observed", of: peer.membership, head, actor };
+      if (asked.agent !== link.handle || asked.expectedController !== null && asked.expectedController !== link.controller.member)
+        return { status: "unavailable" };
+      const agentKey = asked.agentKey === agentSigner.key && enrolled
+        ? { key: agentSigner.key, keyState: "active", member: link.handle, memberState: "active", controller: link.controller.member, actions: [] }
+        : null;
+      return { status: "observed", of: peer.membership, head, agent: agentRole, agentKey, controller, actor };
+    });
     const ports: AgentPorts = {
-      id: "a".repeat(64), fetch, now: () => NOW,
+      id: "a".repeat(64), fetch, now: () => NOW, roleStanding,
       random: bytes => { randomCalls++; return new Uint8Array(bytes).fill(23); },
       observe: async () => ({ keyState: "active", memberState: "active", member: "@bot", actions: [], controller: "@owner" }),
     };
@@ -164,7 +202,7 @@ test.each([
       expect(await store.read(identityId(identity))).toEqual(record);
       const retirement = await signControlWith({ ...request, action: "retire", agent: ports.id,
         op: `${OP}-late-retire`, body: digestBytes(retireBytes) }, owner);
-      const originalObserve = ports.observe;
+      const originalRoleStanding = ports.roleStanding;
       type ReadMode = "retired-stop" | "error" | "active" | "missing" | "retired" | "compromised";
       let readMode: ReadMode = "retired-stop", authorityReads = 0;
       const keyReads: unknown[] = [];
@@ -172,19 +210,21 @@ test.each([
       const entered = new Promise<void>(resolve => { enter = resolve; });
       const waiting = new Promise<void>(resolve => { release = resolve; });
       const ordinaryError = new Error("TEST observation failed after shutdown");
-      ports.observe = async (at, asked) => {
-        if ("key" in asked && asked.key === owner.key) {
+      ports.roleStanding = hostedRolePort(async asked => {
+        if (asked.actor === owner.key) {
           authorityReads++;
-          return { keyState: "active", memberState: "active", member: "@owner", actions: ["membership.manage"], controller: null };
+          return originalRoleStanding(asked);
         }
-        // Only the agent-key read is held. Owner authority above remains
-        // fresh. This is a labelled port fault, not a mutated format word.
-        keyReads.push({ at, asked });
+        // Only the exact cleanup role read is held. Management authority
+        // retains this case's signed-fixture role port, not Native evidence.
+        if (!("agent" in asked) || asked.actor !== null || asked.agentKey !== agentSigner.key) return { status: "unavailable" };
+        keyReads.push(asked);
         if (readMode === "retired-stop") { enter(); await waiting; throw RETIRED_STORE_STOP; }
         if (readMode === "error") throw ordinaryError;
-        if (readMode === "missing") return null;
-        return { keyState: readMode, memberState: "active", member: "@bot", actions: [], controller: "@owner" };
-      };
+        const read = await originalRoleStanding(asked);
+        if (read.status !== "observed" || read.agentKey === null) return { status: "unavailable" };
+        return { ...read, agentKey: readMode === "missing" ? null : { ...read.agentKey, keyState: readMode } };
+      });
       try {
         const postsBefore = postedActs.length;
         expect(postsBefore).toBe(1);
@@ -195,7 +235,8 @@ test.each([
           // An earlier refusal must fail immediately, not hang on the gate.
           expect(await Promise.race([entered.then(() => true), settled.then(() => false)])).toBe(true);
           expect(authorityReads).toBe(1);
-          expect(keyReads).toEqual([{ at: peer.membership, asked: { key: agentSigner.key } }]);
+          expect(keyReads).toEqual([{ membership: peer.membership, agent: link.handle,
+            agentKey: agentSigner.key, expectedController: null, actor: null }]);
           expect(sql.exec("SELECT state, length(seed) AS seedBytes, bearer FROM agent WHERE id = 1").toArray())
             .toEqual([{ state: "retired", seedBytes: 0, bearer: null }]);
           expect(sql.exec("SELECT state, answer FROM control WHERE op = ?", retirement.request.op).toArray())
@@ -204,26 +245,23 @@ test.each([
             .toEqual([{ revoke: canonicalize(revoke) }]);
           expect(postedActs).toHaveLength(postsBefore);
         } finally { release(); await settled; }
-        expect(returned).toBeUndefined();
-        expect(failure).toBe(RETIRED_STORE_STOP);
+        expect(failure).toBeUndefined();
+        expect(returned).toMatchObject({ status: 503, body: { error: "temporarily_unavailable" } });
         expect(postedActs).toHaveLength(postsBefore);
         expect(sql.exec("SELECT state FROM control WHERE op = ?", retirement.request.op).toArray())
           .toEqual([{ state: "pending" }]);
         expect(agent.durable()).toMatchObject({ state: "retired", bearer: false });
         expect(await store.read(identityId(identity))).toEqual(record);
 
-        // A normal rejected read still reaches the original valid revoke.
-        // This comparator fails if zero posts came from unrelated bad input.
+        // An ordinary role-read rejection also withholds the fallback POST.
+        // Active and missing observations below still reach the valid revoke.
         readMode = "error";
         const ordinary = await agent.control(retirement, "retire", retireBytes);
-        expect(ordinary.status).toBe(202);
-        expect(ordinary.body).toMatchObject({ retired: false, endpointDisabled: true, seedErased: true,
-          pending: true, reason: "revocation-unobserved" });
-        expect(postedActs).toHaveLength(postsBefore + 1);
-        expect(JSON.parse(postedActs.at(-1)!)).toMatchObject({ signed: revoke });
+        expect(ordinary.status).toBe(503);
+        expect(ordinary.body).toMatchObject({ error: "temporarily_unavailable" });
+        expect(postedActs).toHaveLength(postsBefore);
         expect(keyReads.slice(1)).toEqual([
-          { at: peer.membership, asked: { key: agentSigner.key } },
-          { at: peer.membership, asked: { key: agentSigner.key } },
+          { membership: peer.membership, agent: link.handle, agentKey: agentSigner.key, expectedController: null, actor: null },
         ]);
 
         // Ordinary key values keep their old no-confirmation/confirmation
@@ -236,9 +274,10 @@ test.each([
           expect(answer.status).toBe(confirmed ? 200 : 202);
           expect(answer.body).toMatchObject({ retired: confirmed, endpointDisabled: true, seedErased: true });
           expect(postedActs.length - beforePosts).toBe(confirmed ? 0 : 1);
+          if (!confirmed) expect(JSON.parse(postedActs.at(-1)!)).toMatchObject({ signed: revoke });
         }
         expect(await store.read(identityId(identity))).toEqual(record);
-      } finally { release(); ports.observe = originalObserve; }
+      } finally { release(); ports.roleStanding = originalRoleStanding; }
     }
   } finally { agent?.abrupt(); sql.db.close(); }
 });

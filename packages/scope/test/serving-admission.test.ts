@@ -11,6 +11,7 @@ import { api, route, type Api } from "../src/worker.ts";
 import type { Binding } from "../src/namespace.ts";
 import { StartupReadTrace, startupScopes } from "./support/serving-startup.ts";
 import { SCREEN_TEST_HOST } from "./worker.ts";
+import sandbox, { type SandboxEnv } from "../../../apps/sandbox/worker.ts";
 
 const small = { SERVING_CREATION_KEY_PER_HOUR: "2", SERVING_CREATION_ADDRESS_PER_HOUR: "3",
   SERVING_READ_KEY_PER_MINUTE: "2", SERVING_READ_ADDRESS_PER_MINUTE: "3" };
@@ -28,8 +29,8 @@ function fixed(settings = small) {
   const binding: Binding<string> = { idFromName(name) { expect(name).toBe(SCOPE_INDEX_NAME); return name; },
     get() { return { admitServing: async (request: ServingRequest, address: string | null) => {
       calls.push(request); return serving.admit(request, address, 0);
-    } }; } };
-  return { environment: { SCOPE_INDEX: binding }, calls };
+    }, creationAddress: async (address: string) => serving.creationAddress(address, 0) }; } };
+  return { environment: { SCOPE_INDEX: binding }, calls, serving };
 }
 
 test("a forged actor signature never drains a victim's key; valid and address-only attempts reach their own exact limits", async () => {
@@ -215,4 +216,67 @@ test("the named sandbox service shares indexed signed-read accounting and ignore
   }
   const extra = await signedReader(secretSigner(crypto.getRandomValues(new Uint8Array(32))), target, "summary", "summary", { now: () => 0 });
   expect(await serving.admitServing({ kind: "signed-read", reader: extra }, address)).toBe("rate-limited");
+});
+
+test("sandbox Site exhaustion follows the explicit visitor address through the real service binding", async () => {
+  // The request edge header and ExecutionContext are stand-ins. Gateway,
+  // named service RPC and fixed Site counter are the maintained real path.
+  const backgrounds: Promise<unknown>[] = [];
+  const execution = { waitUntil: (work: Promise<unknown>) => { backgrounds.push(work); } };
+  const bindings: SandboxEnv = {
+    SCREEN_HOSTS: JSON.stringify([{ host: SCREEN_TEST_HOST, service: "ROOM" }]),
+    ROOM: env.SERVING_SCREEN_API as unknown as NonNullable<SandboxEnv["ROOM"]>,
+  };
+  const visit = async (address: string) => {
+    const response = await sandbox.fetch(new Request(`${SCREEN_TEST_HOST.screenOrigin}/site/${SCREEN_TEST_HOST.directory}/HEAD/README.md`, {
+      headers: { "cf-connecting-ip": address },
+    }), bindings, execution);
+    await response.text(); return response.status;
+  };
+  // Other addressless callers may already have used the old shared bucket.
+  // The exact minute bound belongs to the pure Site counter witness; this
+  // witness distinguishes visitors after the real gateway reports exhaustion.
+  let exhausted = false;
+  for (let n = 0; n <= 240; n++) {
+    const status = await visit("198.51.100.201");
+    if (status === 429) { exhausted = true; break; }
+    expect(status).toBe(404);
+  }
+  expect(exhausted).toBe(true);
+  expect(await visit("198.51.100.202")).toBe(404);
+  await Promise.all(backgrounds);
+});
+
+test("found custody windows stop one key across addresses and one address across keys before target work", async () => {
+  const owner = fixed(); let submits = 0;
+  // Target stand-in: proves serving admission, never native founding authority.
+  const binding: Binding<string> = { idFromName: name => name, get: () => ({
+    submit: async () => { submits++; return { answer: "unavailable", reason: "unavailable" }; },
+  }) };
+  const found = (n: number) => signIntent({ ...creation(secret(n)).intent, to: { scope: target, inc: newIncarnation(new Uint8Array(16).fill(9)), kind: "register" }, kind: "found" }, secret(n));
+  const attempt = (n: number, address: string) => api(binding, address, owner.environment).submit(target, found(n), []);
+  expect(await attempt(21, "192.0.2.1")).toEqual({ answer: "unavailable", reason: "unavailable" });
+  expect(await attempt(21, "192.0.2.2")).toEqual({ answer: "unavailable", reason: "unavailable" });
+  expect(await attempt(21, "192.0.2.3")).toEqual({ answer: "unavailable", reason: "rate-limited" });
+  expect(await attempt(22, "192.0.2.1")).toEqual({ answer: "unavailable", reason: "unavailable" });
+  expect(await attempt(23, "192.0.2.1")).toEqual({ answer: "unavailable", reason: "unavailable" });
+  expect(await attempt(24, "192.0.2.1")).toEqual({ answer: "unavailable", reason: "rate-limited" });
+  expect(submits).toBe(4);
+  // Native authority has not changed, and founding consumes no read window.
+  const reader = await signedReader(secretSigner(secret(21)), target, "summary", "summary", { now: () => 0 });
+  expect(owner.serving.admit({ kind: "signed-read", reader }, "192.0.2.1", 0)).toBe("admitted");
+});
+
+test("an exhausted creation address is refused before its HTTP body is read or parsed", async () => {
+  const owner = fixed(), address = "203.0.113.90";
+  for (let n = 31; n < 34; n++) expect(owner.serving.admit({ kind: "creation", signed: creation(secret(n)) }, address, 0)).toBe("admitted");
+  let bodyReads = 0;
+  const request = new Request("https://serving.test/v1/scopes", { method: "POST" });
+  Object.defineProperty(request, "body", { get() { bodyReads++; throw Error("blocked body must remain unread"); } });
+  const binding: Binding<string> = {
+    idFromName() { return expect.fail("blocked creation addresses no target"); },
+    get() { return expect.fail("blocked creation selects no object"); },
+  };
+  const response = await route(request, binding, owner.environment, address);
+  expect([response.status, await response.json(), bodyReads]).toEqual([429, { answer: "unavailable", reason: "rate-limited" }, 0]);
 });

@@ -1,9 +1,10 @@
 /** Bounded public-client registration and metadata cache. Listed origins and
  * their DNS are trusted. This policy does not inspect the socket address. */
-import { b64url, canonicalize, LATE, parseStrict, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
+import { addressKey, b64url, canonicalize, digestBytes, LATE, parseStrict, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { OAUTH_GRANT_MS } from "./oauth-access.ts";
 import { isRegisteredOAuthClient, OAUTH_CLIENT_UNUSED_MS, oauthClient, oauthRedirectPolicy, OAuthError, OAUTH_CLIENT_BYTES, OAUTH_CLIENT_CACHE_MS, OAUTH_CLIENTS_MOST, type OAuthClient, type OAuthRedirectPolicy } from "./oauth-parameters.ts";
 import type { Sql } from "./sqlite-custody.ts";
+import { McpRequestWindows } from "./request-window.ts";
 
 export interface OAuthSettings { OAUTH_REDIRECT_URIS?: string; OAUTH_CLIENT_METADATA_ORIGINS?: string; OAUTH_DYNAMIC_REGISTRATION?: string }
 export interface OAuthPolicy { redirects: OAuthRedirectPolicy; origins: readonly string[]; dynamicRegistration: boolean }
@@ -47,9 +48,13 @@ export interface OAuthClientPorts {
 const decode = (bytes: Uint8Array): unknown => parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
 const invalid = (): never => { throw new OAuthError("invalid_client_metadata"); };
 
+const INVALID_CLIENT_MS = 60_000;
+type DocumentResult = { ok: true; client: OAuthClient } | { ok: false; error: OAuthError; cacheInvalid: boolean };
 export class OAuthClients {
   readonly #pending = new Map<string, Promise<OAuthClient>>();
+  readonly #requestWindows: McpRequestWindows;
   constructor(private readonly sql: Sql, private readonly ports: OAuthClientPorts) {
+    this.#requestWindows = new McpRequestWindows(sql);
     sql.exec(`CREATE TABLE IF NOT EXISTS oauth_client (id TEXT PRIMARY KEY, row TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL)`);
     // One persisted conservative deadline covers pre-upgrade grants. Object
     // reconstruction never renews an existing row.
@@ -61,6 +66,7 @@ export class OAuthClients {
       });
     }
     sql.exec(`CREATE TABLE IF NOT EXISTS oauth_client_cache (id TEXT PRIMARY KEY, row TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL)`);
+    sql.exec(`CREATE TABLE IF NOT EXISTS oauth_client_invalid (key TEXT PRIMARY KEY, error TEXT NOT NULL CHECK (error IN ('invalid_client_metadata','invalid_redirect_uri')), created INTEGER NOT NULL, expires INTEGER NOT NULL)`);
   }
   #now(): number { const now = this.ports.now(); if (!Number.isSafeInteger(now) || now < 0 || !Number.isSafeInteger(now + OAUTH_GRANT_MS)) throw new OAuthError("temporarily_unavailable", 503); return now; }
   #read(table: "oauth_client" | "oauth_client_cache", id: string, policy: OAuthRedirectPolicy): OAuthClient | null {
@@ -98,23 +104,56 @@ export class OAuthClients {
       return expires;
     });
   }
+  /** The trusted control adapter verifies signature/body/bindings/deadline first. */
+  admitControl(actor: string, cleanup: boolean, address: string | null): void {
+    const now = this.ports.now(), purpose = cleanup ? "cleanup" : "control";
+    const addressIdentity = "address:" + (addressKey(typeof address === "string" ? address : null) ?? "addressless");
+    const addressAdmission = this.#requestWindows.admit(purpose, addressIdentity, now);
+    if (addressAdmission !== "allowed") throw new OAuthError(addressAdmission === "limited" ? "rate-limited" : "temporarily_unavailable", addressAdmission === "limited" ? 429 : 503);
+    const admission = this.#requestWindows.admit(purpose, "key:" + actor, now);
+    if (admission !== "allowed") throw new OAuthError(admission === "limited" ? "rate-limited" : "temporarily_unavailable", admission === "limited" ? 429 : 503);
+  }
+  /** Anonymous context work is admitted before any client resolution or fetch. */
+  admitContext(address: string | null): void {
+    const admission = this.#requestWindows.admit("context", addressKey(address) ?? "addressless", this.ports.now());
+    if (admission !== "allowed") throw new OAuthError(admission === "limited" ? "rate-limited" : "temporarily_unavailable", admission === "limited" ? 429 : 503);
+  }
   async resolve(id: string, policy: OAuthPolicy): Promise<OAuthClient> {
+    const redirects: OAuthRedirectPolicy = { exact: [...policy.redirects.exact], loopback: policy.redirects.loopback };
     if (typeof id !== "string" || utf8(id).length > 2048) return invalid();
     if (isRegisteredOAuthClient(id)) {
       const expires = this.sql.exec(`SELECT expires FROM oauth_client WHERE id = ?`, id).toArray()[0]?.["expires"];
       if (typeof expires !== "number" || !Number.isSafeInteger(expires) || expires <= this.#now()) return invalid();
-      return this.#read("oauth_client", id, policy.redirects) ?? invalid();
+      return this.#read("oauth_client", id, redirects) ?? invalid();
     }
     const url = oauthMetadataUrl(id, policy.origins); if (url === null) return invalid();
     const now = this.#now();
     const held = this.sql.exec(`SELECT created, expires FROM oauth_client_cache WHERE id = ?`, id).toArray()[0];
     if (held && typeof held["created"] === "number" && typeof held["expires"] === "number" && held["created"] <= now && held["expires"] > now && held["expires"] <= held["created"] + OAUTH_CLIENT_CACHE_MS) {
-      const client = this.#read("oauth_client_cache", id, policy.redirects); if (client) return client;
+      const client = this.#read("oauth_client_cache", id, redirects); if (client) return client;
     }
-    const prior = this.#pending.get(id); if (prior) return oauthClient(await prior, id, policy.redirects, true);
+    // Policy identity also separates in-flight failures: an incompatible
+    // redirect policy must not lend its negative result to another caller.
+    const cacheKey = digestBytes(utf8(canonicalize([url, redirects])));
+    this.sql.exec(`DELETE FROM oauth_client_invalid WHERE expires <= ? OR created > ?`, now, now);
+    const negative = this.sql.exec(`SELECT error, created, expires FROM oauth_client_invalid WHERE key = ?`, cacheKey).toArray()[0];
+    if (negative && typeof negative["created"] === "number" && Number.isSafeInteger(negative["created"]) && negative["created"] <= now
+      && typeof negative["expires"] === "number" && Number.isSafeInteger(negative["expires"]) && negative["expires"] > now && negative["expires"] === negative["created"] + INVALID_CLIENT_MS
+      && (negative["error"] === "invalid_client_metadata" || negative["error"] === "invalid_redirect_uri")) throw new OAuthError(negative["error"]);
+    const prior = this.#pending.get(cacheKey); if (prior) return oauthClient(await prior, id, redirects, true);
     if (this.#pending.size >= OAUTH_CLIENTS_MOST) throw new OAuthError("temporarily_unavailable", 503);
-    const loading = this.#document(url, policy.redirects).then(client => {
-      const saved = this.#now(), text = canonicalize(client as never); if (utf8(text).length > 8192) return invalid();
+    const loading = this.#document(url, redirects).then(outcome => {
+      const saved = this.#now();
+      if (saved < now) throw new OAuthError("temporarily_unavailable", 503);
+      if (!outcome.ok) {
+        if (outcome.cacheInvalid) this.sql.transaction(() => {
+          this.sql.exec(`DELETE FROM oauth_client_invalid WHERE expires <= ? OR created > ?`, saved, saved);
+          const n = Number(this.sql.exec(`SELECT count(*) AS n FROM oauth_client_invalid`).toArray()[0]!["n"]);
+          if (n < OAUTH_CLIENTS_MOST) this.sql.exec(`INSERT INTO oauth_client_invalid (key, error, created, expires) VALUES (?, ?, ?, ?) ON CONFLICT (key) DO UPDATE SET error = excluded.error, created = excluded.created, expires = excluded.expires`, cacheKey, outcome.error.error, saved, saved + INVALID_CLIENT_MS);
+        });
+        throw outcome.error;
+      }
+      const client = outcome.client, text = canonicalize(client as never); if (utf8(text).length > 8192) return invalid();
       this.sql.transaction(() => {
         this.sql.exec(`DELETE FROM oauth_client_cache WHERE expires <= ? OR created > ?`, saved, saved);
         const existing = this.sql.exec(`SELECT id FROM oauth_client_cache WHERE id = ?`, id).toArray()[0];
@@ -123,23 +162,26 @@ export class OAuthClients {
       });
       return client;
     });
-    this.#pending.set(id, loading);
-    try { return await loading; } finally { if (this.#pending.get(id) === loading) this.#pending.delete(id); }
+    this.#pending.set(cacheKey, loading);
+    try { return await loading; } finally { if (this.#pending.get(cacheKey) === loading) this.#pending.delete(cacheKey); }
   }
-  async #document(id: string, policy: OAuthRedirectPolicy): Promise<OAuthClient> {
+  async #document(id: string, policy: OAuthRedirectPolicy): Promise<DocumentResult> {
     const abort = new AbortController(); let stop = () => {};
     const timeout = new Promise<never>((_resolve, reject) => {
       const end = () => { abort.abort(); reject(new OAuthError("temporarily_unavailable", 503)); };
       if (this.ports.deadline) stop = this.ports.deadline(5000, end);
       else { const timer = setTimeout(end, 5000); stop = () => clearTimeout(timer); }
     });
-    const request = async (): Promise<OAuthClient> => {
+    const rejected = (cacheInvalid: boolean, error = new OAuthError("invalid_client_metadata")): DocumentResult => ({ ok: false, error, cacheInvalid });
+    const request = async (): Promise<DocumentResult> => {
       const response = await this.ports.fetch(id, { redirect: "manual", credentials: "omit", signal: abort.signal, headers: { accept: "application/json" } });
-      if (response.status !== 200 || response.redirected || !/^application\/json(?:\s*;|$)/i.test(response.headers.get("content-type") ?? "") || Number(response.headers.get("content-length") ?? 0) > OAUTH_CLIENT_BYTES || !response.body) { void response.body?.cancel().catch(() => {}); return invalid(); }
+      if (response.status !== 200) { void response.body?.cancel().catch(() => {}); return rejected(false); }
+      if (response.redirected || !/^application\/json(?:\s*;|$)/i.test(response.headers.get("content-type") ?? "") || Number(response.headers.get("content-length") ?? 0) > OAUTH_CLIENT_BYTES || !response.body) { void response.body?.cancel().catch(() => {}); return rejected(true); }
       const bytes = await takeBytes(response.body, OAUTH_CLIENT_BYTES, abort.signal);
       if (bytes === LATE) throw new OAuthError("temporarily_unavailable", 503);
-      if (bytes === null) return invalid();
-      try { return oauthClient(decode(bytes), id, policy, true); } catch (error) { if (error instanceof OAuthError) throw error; return invalid(); }
+      if (bytes === null) return rejected(true);
+      try { return { ok: true, client: oauthClient(decode(bytes), id, policy, true) }; }
+      catch (error) { return rejected(error instanceof OAuthError ? error.status === 400 && (error.error === "invalid_client_metadata" || error.error === "invalid_redirect_uri") : true, error instanceof OAuthError ? error : new OAuthError("invalid_client_metadata")); }
     };
     try { return await Promise.race([timeout, request()]); }
     catch (error) { if (error instanceof OAuthError) throw error; throw new OAuthError("temporarily_unavailable", 503); }

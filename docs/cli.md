@@ -633,6 +633,11 @@ link can enroll a key for that member, so give it to that member only.
 dap join <link> [--check for an agent-key, checker-key or device-key invitation]
 ```
 
+A person invitation names its exact supported Membership pin. A missing
+pin is refused. Terminal slashes on its service do not change the service.
+A fresh config learns the link's service. A pending join requires that
+same service and the same normalized link.
+
 With an `artroom-invite:` link, signs membership's person `join` with a
 new key that the command makes and keeps. Before it sends, it saves the
 signed request in an owner-only `private/<name>.data` file. The

@@ -9,8 +9,8 @@ interface NativeStreamExchange { response: Response; lifetime: { close(): Promis
 interface ScreenService {
   screenHost(origin: string): Promise<ApplicationScreenHost | null>;
   screen(origin: string, request: Request): Promise<Response>;
-  native(origin: string, request: Request): Promise<Response>;
-  nativeStream(origin: string, request: Request): Promise<NativeStreamExchange>;
+  native(origin: string, request: Request, address: string | null): Promise<Response>;
+  nativeStream(origin: string, request: Request, address: string | null): Promise<NativeStreamExchange>;
 }
 export interface SandboxEnv {
   SCREEN_HOSTS?: string;
@@ -59,10 +59,9 @@ export default {
       const value = request.headers.get(name);
       if (value !== null && (!screen || name !== "authorization")) headers.set(name, value);
     }
-    // Cloudflare supplies this address at the public edge. It is not a
-    // browser credential; preserve existing native per-address limits.
+    // Cloudflare supplies the edge address. Pass it as an explicit service
+    // argument; the room never treats a forwarded header as address custody.
     const address = request.headers.get("cf-connecting-ip");
-    if (address !== null && !screen) headers.set("cf-connecting-ip", address);
     // Request RPC serialization includes an explicitly supplied AbortSignal,
     // which workerd cannot transfer. Carry only the HTTP message across this
     // boundary; the local header deadline and returned-body cancellation below
@@ -84,8 +83,8 @@ export default {
         owned[Symbol.dispose]?.();
       }
     })();
-    const pending = stream ? service.nativeStream(host.screenOrigin, forwarded).then(owned => { exchange = owned; return owned.response; })
-      : screen ? service.screen(host.screenOrigin, forwarded) : service.native(host.screenOrigin, forwarded);
+    const pending = stream ? service.nativeStream(host.screenOrigin, forwarded, address).then(owned => { exchange = owned; return owned.response; })
+      : screen ? service.screen(host.screenOrigin, forwarded) : service.native(host.screenOrigin, forwarded, address);
     let response;
     try { response = await within(replySeconds, () => pending); } catch { return refused(503); }
     if (response === LATE) {

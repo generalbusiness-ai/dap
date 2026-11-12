@@ -152,7 +152,7 @@ test('nine lanes: repeated calls reach every lane, each call says what it left o
   assert.equal('next' in (await f.app.work()).structuredContent, false, 'The Work tool answer has no next');
 
   // The session and its tool take that scope on a list.
-  const sessions = new ViewSessions(source, { call: async () => { throw Error('TEST no generic read'); } }, async () => { throw Error('TEST no act'); }, async () => { throw Error('TEST no settle'); });
+  const sessions = new ViewSessions(source, () => ({ call: async () => { throw Error('TEST no generic read'); } }), async () => { throw Error('TEST no act'); }, async () => { throw Error('TEST no settle'); });
   assert.equal((await sessions.open('TEST-window', 'change', undefined, undefined, after.next).catch(error => ({ status: error.message }))).status, 'incomplete', 'The session opens a list at its next window');
   await assert.rejects(() => sessions.open('TEST-bad-window', 'change', undefined, undefined, 'TEST not a scope'), /selected scope/);
 
@@ -424,7 +424,7 @@ test('an accepted Decision receipt floors the next actual app read; an older coh
     f.peer.scopes.set(q.state.ref.scope, older);
     try { return await f.options.fetch(url, init); } finally { f.peer.scopes.set(q.state.ref.scope, q.state); }
   } });
-  const source = decisionSource(app), sessions = new ViewSessions(source, { call: async () => { throw Error('Unexpected generic read.'); } }, async (kind, args, admit) => {
+  const source = decisionSource(app), sessions = new ViewSessions(source, () => ({ call: async () => { throw Error('Unexpected generic read.'); } }), async (kind, args, admit) => {
     await admit(); assert.equal(kind, 'approve'); performed++;
     const signed = await signedIntent(f.signer, { to: q.state.ref, kind, on: args.on, fields: args.fields, expected: args.at }, { now: NOW });
     const sealed = f.peer.append(q.state, { type: 'act', signed, authority: [], presented: {} });
@@ -647,7 +647,7 @@ test('a Question detail at the UTF-8 card budget remains reachable through a sum
     body += 'x'.repeat(60 * 1024 - bytes(seed.card));
     const exact = body, detail = await read('item');
     assert.equal(bytes(detail.card), 60 * 1024, 'The complete detail reaches the canonical UTF-8 byte limit exactly.');
-    const sessions = new ViewSessions(source, { call: unexpected }, unexpected, unexpected);
+    const sessions = new ViewSessions(source, () => ({ call: unexpected }), unexpected, unexpected);
     assert.equal((await sessions.open('TEST-budget', 'decision', subject)).status, 'ready', 'A detail that fits remains reachable.');
     const summary = sessions.display('TEST-budget');
     assert.deepEqual(summary.context.navigation, ['open']);

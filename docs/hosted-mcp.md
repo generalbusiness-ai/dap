@@ -75,6 +75,14 @@ server's own key, custody and native scope judgment.
 Explicit resource reads remain available to the same authenticated caller;
 resource replies omit UI metadata when the host declares no UI capability.
 
+Ordinary write tools, dynamic act tools, `credential`, and `diff` declare
+model-only visibility. The `credential` and `diff` tools retain their
+read-only hints. The host must enforce the visibility descriptor. Declared
+`view_act` and input tools stay callable from a trusted package's script
+for the actions that its view retains, even without a user click. The
+server still checks the declared bounds and current authority.
+The `credential` tool returns its secret outside `structuredContent`.
+
 `MCP_CARD_ORIGINS` optionally binds remote resource metadata to exact
 connector URLs. It accepts at most two distinct host rows and 8,192 UTF-8
 bytes. Each row has only `host`, `url` and `domain`. URLs must be canonical
@@ -181,13 +189,20 @@ and requests a one-hour invitation. On an earlier pin, an admin prepares
 an agent-key invitation for the controller. Paste that invitation and
 press **Check invitation** before **Allow**. An admin can also use an
 invitation for another controller. The server checks the signer's current
-admin or controller authority and, for a non-admin, the current role subset.
+admin or controller authority. Hosted credential issuance and use also
+require the Agent's current actions to remain a subset of its recorded
+controller's current actions. An admin's request does not waive that check.
 
 One controller and client reuse one hosted agent in that room. A fresh
 consent grants new access to that agent. The page lists connected clients
 and provides **Revoke**. An admin can check another controller's
 connections through that controller's invitation; ordinary members can
 list only their own connections.
+
+A legacy controller/client mapping whose origin is unknown refuses new
+consent with `503` until the cutover retires that room. Creating another
+Agent does not repair that same mapping. A distinct new client binding can
+progress from provisional to confirmed independently.
 
 The browser keeps each original operation before sending it. An unknown
 answer offers **Check invitation**, when Native invitation work remains,
@@ -259,6 +274,50 @@ HTTP loopback paths on `localhost` or `127.0.0.1`, on any port. A redirect
 must pass both the deployment policy and the client's registered list.
 See [hosted settings](security/settings.md) for configuration bounds.
 
+### Fresh admission and one-time delivery
+
+Bearer issuance and rotation, OAuth code exchange, refresh and access use
+fresh role facts for the exact Agent and its recorded controller. A wider
+Agent role gives no additional authority. Temporary unavailable facts or a
+subset failure withhold admission; they do not turn that temporary result
+into a new grant or a permission cache. Key revocation and other definitive
+ends keep their existing effects.
+
+The issuer checks the current operation, configuration, candidate, clock and
+deadline after its awaited callbacks before returning new plaintext. A
+committed mint can therefore finish with a secret-free receipt whose
+`codeShown` flag consumes the one-time disclosure. The receipt does not
+prove that the caller received plaintext. That receipt permits no second mint
+or later plaintext disclosure. A bearer rotation also checks the same HTTP
+epoch after graceful cleanup. A reset can withhold the new token even when
+the stored candidate did not change.
+
+The Agent releases a private code when it hands that code to the trusted
+Registry. The Registry then checks fresh membership and settles its own
+rows. It promises no validity at delivery and holds no lease on the code.
+Another allowed operation can consume the code or change configuration
+before relay. Every subsequent credential use makes its own fresh admission
+check. There is no cross-object candidate-lock protocol.
+
+Mutation tools check their current owner and standing again at the actual
+custody dispatch callback. A local stop preserves the original signed
+request and unresolved custody. It is not a Native refusal or a fabricated
+unknown answer. A view's `check-original` action keeps that same pending
+identity until an authoritative outcome settles it. Native still judges
+every request that reaches it.
+
+Each stored control operation starts with a 4 KiB reservation. The
+registry and each Agent have 15 MiB for ordinary control state and a
+separate 1 MiB reserve for `retire`. A retention sweep after seven days
+past `notAfter` credits only the answer body's bytes. The remaining
+control-row charge persists with its tombstone. Passing `notAfter` does
+not release that row. One member with one Agent can therefore exhaust the
+room's ordinary control budget and leave new `create` and `grant`
+operations returning `507`. S10 request `af11896e` owns removal of this
+limit through row release and controller shares after S4 and the
+identifier cutover. S10 must land before hosted MCP opens for rooms with
+unknown members. It does not hold the O4 live window for known members.
+
 ### Routes
 
 | Route | Authorization | What it does |
@@ -291,7 +350,8 @@ kind and role `agent`, the signer's controller reference, fewer than eight
 active agents under that controller, and an agent role no wider than the
 signer's current role. `invite-own-agent-key` requires that active agent
 and controller and repeats the role-subset check. Admin signers are exempt
-from the subset check. The own-agent invitation step permits only one live
+from this Native creation check. Hosted credential admission separately
+checks the Agent/controller subset at each use. The own-agent invitation step permits only one live
 key per agent, invited and active together, and bounds its expiry to the
 next 24 hours after the act time. An expired or later deadline refuses.
 An admin or recovery key must revoke an active key before this path
@@ -512,6 +572,39 @@ server tells once more of a list change that the client has not listed.
 | Custody, per agent | 1 GiB | A new act whose completion need (its record up to 2 MiB plus a 512 KiB segment row) cannot be reserved is refused `full` before anything is signed. A resubmit, repeat step or settle that cannot reserve is refused before anything is dispatched. Retained answers stay readable. |
 | One identity's history | 64 MiB | Further attempts on that identity refuse `full`. Its retained answer stays readable. |
 | Control, per registry and per agent | 16 MiB, the last 1 MiB for `retire` alone. One total covers every persisted row: each operation (4 KiB reserved, its answer charged beyond that), static and grant session rows (declared capabilities at most 16 KiB), grant rows (at most 4,096 UTF-8 bytes), and the agent's configuration. | `create` and `bearer` refuse `507`. A session cannot be issued (`507`, error `-32001`). A root cannot be added. `retire` still succeeds. If the reserve is also used up, the admin's `key.revoke` ends the agent's authority in the scope, whatever the hosted objects hold. |
+
+Read-only `connections` calls reserve no operation row and consume no
+permanent control-budget place. They still make fresh admission checks and
+spend request-window allowance. Existing rows retain their original
+custody and accounting rules.
+
+The public control adapter first charges the trusted transport address,
+then the verified key. Each address has separate 120-call windows for
+control and cleanup. Global IPv6 addresses share a `/64` window; missing
+or invalid addresses share one bucket. A denied address reaches no key
+admission or allocation.
+
+Each admission object permits 120 control calls per verified key in 60
+seconds. Cleanup gets a
+separate 120-call window. Each purpose holds at most 4,096 live identity
+counters and one shared overflow counter. Expiry reclaims these counters;
+reconstruction preserves them. An exhausted window returns `429`. Unsafe
+or backward clocks return `503` without resetting the window. Independent
+cleanup capacity does not make cleanup or storage unlimited.
+
+The Worker verifies signature, service and route before unknown-membership
+index rejection or legacy registration. A signed unknown membership gets
+`404` before body or client-registry work. For an admitted route, the Worker
+bounds and hashes the body, then checks the signed deadline and key window
+before client resolution and the Hosted handoff. Each Hosted object repeats
+its own admission before authority checks and effects.
+
+Anonymous `/oauth/authorize/context` reads spend an address window before
+client resolution. IPv6 uses its `/64`; missing or malformed addresses share
+one bounded bucket. A semantically invalid successful client-document reply
+can enter a finite 60-second cache keyed by its URL and copied redirect
+policy. Network failures, timeouts and non-200 replies do not enter that
+negative cache.
 
 The endpoint retains custody records. Retirement erases the signing seed
 and deletes sessions. Terminal custody records move to an archive

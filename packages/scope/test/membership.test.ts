@@ -1,7 +1,7 @@
 import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
 import type { Entry, Observation, ObservationUse } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeRef, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, isRecord, isScopeRef, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
 import { grantFrom } from "@generalbusiness/dap-derive";
 import { MEMBERSHIP, actionsIn, platform } from "@generalbusiness/dap-platform";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
@@ -9,6 +9,9 @@ import { MemorySource, TRUSTS, httpSource, platformCode, verify, type MemoryScop
 import { later, net, soon } from "./net.ts";
 import { copied, inboxConfirmation, notify, office, repository, rewritten, rita, routed, settle, una, vic, type Platform } from "./repository.ts";
 import { reader } from "./fixtures-native.ts";
+import { ROLE_LISTS } from "@generalbusiness/dap-platform/membership-actions";
+import { hostedRoleRead, type HostedActorRequest } from "@generalbusiness/dap-mcp";
+import { roleStandingThrough } from "../src/worker-mcp.ts";
 import { platformNet } from "./worker.ts";
 
 // Every scope here is on real Durable Object storage, in the namespace `PLATFORM`, under the PRODUCTION authority: no test authority
@@ -28,6 +31,49 @@ describe("authority on real scopes, under the production wiring (authority note,
   test("an act at an inbox is judged on a real observation of the signing key, read from the membership scope that the inbox's genesis records; after the key is revoked the next act on a fresh read is refused, and another member's key is not", async ({ task }) => {
     const { O, M, ritasInbox, unasInbox, unasKey } = await repository();
     const m = await M.at();
+
+    // Real synchronous Native facts for one signing key, with no Agent or raw roster in the actor reply.
+    const actorRequest: HostedActorRequest = { membership: m, actor: una.key };
+    let roleRpcReads = 0;
+    const nativeRole = roleStandingThrough({ idFromName: (name: string) => name, get: (name: string) => {
+      expect(name).toBe(M.name);
+      return { hostedRoleStanding: (asked: unknown) => { roleRpcReads++; return M.stub.hostedRoleStanding(asked); } };
+    } }); // Only the namespace adapter is a stand-in; the reply comes from this real Native membership.
+    const actorReply = await M.stub.hostedRoleStanding(actorRequest);
+    const actorFacts = await nativeRole(actorRequest);
+    expect(roleRpcReads).toBe(1);
+    expect(actorFacts).toEqual({ status: "observed", of: m, head: await head(M), actor: {
+      key: una.key, keyState: "active", member: "@una", memberState: "active", controller: null, actions: actionsIn("member"),
+    } });
+    const unknownRequest: HostedActorRequest = { membership: m, actor: vic.key };
+    expect(await nativeRole(unknownRequest))
+      .toEqual({ status: "observed", of: m, head: await head(M), actor: null });
+    const oldRequest = { membership: m, agent: "@una" as const, agentKey: una.key, expectedController: null, actor: una.key };
+    const oldFacts = await nativeRole(oldRequest);
+    expect(roleRpcReads).toBe(3);
+    expect(oldFacts.status).toBe("observed");
+    if (oldFacts.status !== "observed" || actorFacts.status !== "observed") return expect.fail("Native role facts unavailable");
+    expect(oldFacts.actor).toEqual(actorFacts.actor);
+    expect(Object.keys(oldFacts).sort()).toEqual(["actor", "agent", "agentKey", "controller", "head", "of", "status"]);
+    for (const malformed of [{ membership: m }, { actor: una.key }, { ...actorRequest, actor: null },
+      { ...actorRequest, extra: true }, { ...actorRequest, agent: "@una" }, { ...oldRequest, extra: true },
+      { ...actorRequest, membership: { ...m, kind: "lane" } },
+    ]) expect(await M.stub.hostedRoleStanding(malformed)).toEqual({ status: "unavailable" });
+    // These raw storage edits are corruption stand-ins. They exercise all five list guards and restore exact bytes.
+    const savedRoster = await runInDurableObject(M.object, (_instance, state) => state.storage.sql.exec("SELECT record FROM item WHERE id=0").toArray()[0]?.["record"]);
+    if (typeof savedRoster !== "string") throw Error("Missing Native roster fixture");
+    const roster: unknown = parseStrict(savedRoster);
+    if (!isRecord(roster) || !isRecord(roster["values"])) throw Error("Malformed Native roster fixture");
+    try {
+      for (const slot of Object.values(ROLE_LISTS)) {
+        const bad = canonicalize({ ...roster, values: { ...roster["values"], [slot]: ["issue.open", "issue.open"] } });
+        await runInDurableObject(M.object, (_instance, state) => state.storage.sql.exec("UPDATE item SET record=? WHERE id=0", bad).toArray());
+        expect(await M.stub.hostedRoleStanding(actorRequest)).toEqual({ status: "unavailable" });
+      }
+    } finally {
+      await runInDurableObject(M.object, (_instance, state) => state.storage.sql.exec("UPDATE item SET record=? WHERE id=0", savedRoster).toArray());
+    }
+    expect(await M.stub.hostedRoleStanding(actorRequest)).toEqual(actorReply);
 
     // Step 11: membership created each inbox by the entry that made its member active, with the membership scope in the body of the
     // creation. The inbox's genesis records it, and its owner is the member.
@@ -84,6 +130,11 @@ describe("authority on real scopes, under the production wiring (authority note,
     await M.did(rita, "revoke-key", { on: unasKey, expected: await M.expected({ on: unasKey, roster: 0, member: (await M.item(unasKey)).refs["member"] as number }), fields: { as: "retired" } });
     await settle(M, unasInbox);
     expect([(await M.item(0)).revision > 0, await M.stub.observe({ of: m, key: una.key })]).toMatchObject([true, { keyState: "retired", head: await head(M) }]);
+    expect(hostedRoleRead(actorRequest, await M.stub.hostedRoleStanding(actorRequest))).toEqual({
+      status: "observed", of: m, head: await head(M), actor: {
+        key: una.key, keyState: "retired", member: "@una", memberState: "active", controller: null, actions: actionsIn("member"),
+      },
+    });
 
     // Inside the window the inbox still holds the observation that it read before the revocation, and may use it: 300 seconds is a
     // stated limit on how stale a judgment may be (section 3.3). The entry records the reuse, and the entry before it.

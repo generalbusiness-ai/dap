@@ -7,6 +7,7 @@ import { earlierSaid } from "../src/errors.ts";
 import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, guardSentences, meaningOf, memoryStore, type DefinitionLike, type Finding } from "../src/index.ts";
 import { READ_CREDENTIAL, SERVICE, SESSION_TOKEN, StandIn } from "./support/standin.ts";
 import { fixedSigner } from "./fixtures.ts";
+import { PERSON_INVITATION, PERSON_INVITATION_CASES, PERSON_SERVICE } from "../../client/test/support/person-invitation-table.ts";
 
 const head = { seq: 41, hash: `sha256:${"c".repeat(64)}` } as const;
 const asked = { scope: "sc_the_scope", kind: "close-own", on: 3, action: "issue.close-own" };
@@ -335,7 +336,7 @@ describe("errors say who said what, from what the judge returned", () => {
   });
 
   // Invariant: the sentence reports the head the scope judged at, never a state read afterwards; and no output of any tool carries
-  // the session token, the signing key or an invitation secret, while the read credential is in credential's one structured field.
+  // the session token, the signing key or an invitation secret, while the read credential appears once in credential's explicit text.
   test("the judged head is reported, and secrets appear nowhere but the credential's field (STAND-IN scope service)", async () => {
     const secret = new Uint8Array(32).fill(9);
     const signer = secretSigner(secret);
@@ -360,7 +361,11 @@ describe("errors say who said what, from what the judge returned", () => {
     const token = await call("repository.read-token", { on: 0, fields: { hours: 1 }, idempotencyKey: "token-1" });
     const seq = (token.structuredContent["fact"] as { seq: number }).seq;
     const credential = await call("credential", { entry: seq });
-    expect(credential.structuredContent["credential"]).toBe(READ_CREDENTIAL);
+    expect(credential.isError).toBe(false);
+    expect(credential.structuredContent).toEqual({ remote: expect.stringMatching(/^https:/), ends: expect.any(String), entry: seq });
+    expect(JSON.stringify(credential.structuredContent)).not.toContain(READ_CREDENTIAL);
+    expect(credential.content).toEqual([{ type: "text", text: expect.any(String) }]);
+    expect(JSON.parse(credential.content[0]!.text)).toEqual({ credential: READ_CREDENTIAL, ...credential.structuredContent });
     for (const scope of ["directory", "membership", "rules", "destination"]) {
       await call("inspect", { scope }); await call("steps", { scope }); await call("record", { scope: scope === "destination" ? "rules" : scope }); await call("sends", { scope }); await call("actions", { scope });
       await call("items", { scope, type: "member" }); await call("wait", { scope, seconds: 1 });
@@ -370,9 +375,9 @@ describe("errors say who said what, from what the judge returned", () => {
     const everything = outputs.join("\n");
     expect(everything).not.toContain(SESSION_TOKEN);
     expect(everything).not.toContain(b64url(secret));
-    // The credential appears once: in credential's structured field, and in no text, no other tool and no other field.
+    // The explicitly requested credential appears once, in text, and nowhere in structured content or another tool.
     expect(everything.split(READ_CREDENTIAL).length - 1).toBe(1);
-    expect(credential.content[0]!.text).not.toContain(READ_CREDENTIAL);
+    expect(credential.content[0]!.text).toContain(READ_CREDENTIAL);
     // The invitation secret is in no output but a read of the scope's own record of the join entry: membership keeps the signed
     // intent, secret and all, and record returns it as stored. No sentence, answer or other read carries it.
     expect(byTool.filter(([, out]) => out.includes(invitationSecret)).map(([asked]) => asked)).toEqual(['record {"scope":"membership"}']);
@@ -415,4 +420,38 @@ test("join validates its service before signing or changing an empty configurati
     expect(answer.structuredContent, service).toMatchObject({ answer: "refused", reason: "guard-failed" });
   }
   expect([signed, fetched, configWrites]).toEqual([6, 6, 0]);
+  // The same five encoding rows use the actual configured MCP join entry.
+  // A scripted native refusal proves one submission, never membership acceptance.
+  for (const row of PERSON_INVITATION_CASES) {
+    if (row.surface !== "all") continue;
+    let posts = 0, signatures = 0, writes = 0;
+    const held = memoryStore(), write = held.write.bind(held);
+    held.write = async (id, record) => { writes++; await write(id, record); };
+    const actual = new McpService({ service: PERSON_SERVICE,
+      signer: { key: real.key, sign: bytes => { signatures++; return real.sign(bytes); } },
+      custody: held, now: () => Date.parse("2099-01-01T00:00:00Z"),
+      config: { read: async () => ({ service: PERSON_SERVICE }), addRoot: async () => { throw Error("No root write"); } },
+      fetch: async (url, init) => {
+        posts++;
+        expect(url, row.name).toBe(`${PERSON_SERVICE}/v1/scopes/${PERSON_INVITATION.repository.membership.scope}/acts`);
+        expect(init?.method, row.name).toBe("POST");
+        const signed = JSON.parse(init!.body!).signed;
+        expect([signed.intent.to, signed.intent.kind, signed.intent.fields], row.name).toEqual([
+          PERSON_INVITATION.repository.membership, "join", { invitation: 5, secret: PERSON_INVITATION.secret },
+        ]);
+        return Response.json({ answer: "refused", reason: "guard-failed", judgedAt: { seq: 0, hash: `sha256:${"c".repeat(64)}` } });
+      },
+    });
+    const answer = await actual.call("join", { link: row.text, idempotencyKey: "TEST-person-parity" });
+    expect(posts === 1, row.name).toBe(row.admitted);
+    if (row.admitted) {
+      expect(answer.structuredContent, row.name).toMatchObject({ answer: "refused", reason: "guard-failed" });
+      expect(signatures, row.name).toBe(1);
+      expect(writes, row.name).toBeGreaterThan(0);
+    } else {
+      expect(answer.isError, row.name).toBe(true);
+      expect([signatures, writes], row.name).toEqual([0, 0]);
+      expect(held.records.size, row.name).toBe(0);
+    }
+  }
 });

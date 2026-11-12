@@ -421,7 +421,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const invited = await M.did(neighbour, "invite-member", { fields: { handle: "@visitor", role: "member", inviteHash: textDigest(inviteSecret), inviteEnds: soon(60) } });
     const linkText = INVITATION_LINK + b64url(utf8(JSON.stringify({ v: 1, service: SERVICE, repository: { directory: await D.at(), membership, rules: Q.name, destination: G.name },
       invitation: invited, secret: inviteSecret, handle: "@visitor", definition: FILE_PUBLICATION_COHORT.membership })));
-    expect(readInvitation(linkText, "https://elsewhere.test")).toEqual({ ok: false, reason: "This invitation is for another service." });
+    expect(readInvitation(linkText, "https://elsewhere.test")).toEqual({ ok: false, reason: "That is not an invitation link." });
     expect(readInvitation("artroom-invite:AAAA", SERVICE)).toEqual({ ok: false, reason: "That is not an invitation link." });
     const read = readInvitation(` ${linkText}\n`, SERVICE);
     if (!read.ok) throw new Error(read.reason);

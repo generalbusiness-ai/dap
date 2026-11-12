@@ -20,9 +20,10 @@ import { archivedPosition } from "@generalbusiness/dap-derive";
  * read of a membership scope.
  */
 
+import { ROLE_LISTS, isActions } from "@generalbusiness/dap-platform/membership-actions";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Archived, Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { isEntryOf, isObject, isScopeRef, type Delivered, type Fetched, type ScopeState } from "@generalbusiness/dap-derive";
 import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
 import type { Membership } from "./authority.ts";
@@ -247,6 +248,71 @@ export function observedAt(store: Store, pinned: Pinned | null, asked: unknown):
   if (holders) return answers(store, { of, holders: asked["holders"] as string, most: asked["most"] as number });
   if (isKeyId(asked["key"])) return answers(store, { of, key: asked["key"] });
   return isMemberId(asked["member"]) ? answers(store, { of, member: asked["member"] }) : null;
+}
+
+/** Hosted admission facts from one synchronous state read. No Native observation field or grant is added. */
+export function hostedRoleStandingAt(store: Store, pinned: Pinned | null, asked: unknown, sequence: CheckedSequence | null): unknown {
+  const unavailable = { status: "unavailable" } as const;
+  if (!isObject(asked) || !isScopeRef(asked["membership"]) || !sequence || sequence.kind !== "membership"
+    || canonicalize(sequence.at) !== canonicalize(asked["membership"])) return unavailable;
+  const fields = Object.keys(asked).sort().join(","), actorOnly = fields === "actor,membership";
+  if (actorOnly ? !isKeyId(asked["actor"])
+    : fields !== "actor,agent,agentKey,expectedController,membership" || !isMemberId(asked["agent"])
+      || (asked["agentKey"] !== null && !isKeyId(asked["agentKey"]))
+      || (asked["expectedController"] !== null && !isMemberId(asked["expectedController"]))
+      || (asked["actor"] !== null && !isKeyId(asked["actor"]))) return unavailable;
+  const of = asked["membership"], scope = store.scope();
+  const supplied = pinned?.definition && isOf(pinned.named, "platform:membership") ? platform(pinned.named) : null;
+  const observe = supplied?.observed;
+  if (!scope || scope.status !== "active" || !observe || canonicalize(scope.at) !== canonicalize(of)) return unavailable;
+  const rosterPage = store.page("roster", ["open"], null, 2);
+  if (rosterPage.more || rosterPage.items.length !== 1) return unavailable;
+  const roster = rosterPage.items[0]!;
+  if (Object.values(ROLE_LISTS).some(slot => !isActions(roster.values[slot]))) return unavailable;
+  const actionsOf = (role: unknown): readonly string[] | null => {
+    if (typeof role !== "string" || !Object.hasOwn(ROLE_LISTS, role)) return null;
+    const list = roster.values[ROLE_LISTS[role as keyof typeof ROLE_LISTS]];
+    return isActions(list) ? [...list] : null;
+  };
+  const common = (value: unknown): value is Record<string, unknown> => isObject(value)
+    && canonicalize(value["of"]) === canonicalize(of) && canonicalize(value["head"]) === canonicalize(scope.head);
+  const member = (who: import("@generalbusiness/dap-contract").MemberId) => {
+    const value = observe(store, { of, member: who });
+    if (!common(value) || value["member"] !== who) return null;
+    const state = value["memberState"], controller = value["controller"];
+    if (state === "unknown") return value["role"] === null && value["activeKey"] === null && controller === null
+      ? { member: who, state, role: null, activeKey: null, controller: null, actions: [] } : null;
+    const actions = actionsOf(value["role"]);
+    if ((state !== "active" && state !== "removed") || !actions || typeof value["activeKey"] !== "boolean"
+      || (controller !== null && !isMemberId(controller))) return null;
+    return { member: who, state, role: value["role"], activeKey: value["activeKey"], controller, actions };
+  };
+  const key = (id: unknown) => {
+    if (id === null) return null;
+    if (!isKeyId(id)) return false;
+    const value = observe(store, { of, key: id });
+    if (!common(value) || value["key"] !== id) return false;
+    const keyState = value["keyState"];
+    // Native unknown-key observations contain a placeholder member; never propagate that binding.
+    if (keyState === "unknown") return null;
+    const actions = actionsOf(value["role"]), memberState = value["memberState"], controller = value["controller"];
+    if ((keyState !== "active" && keyState !== "retired" && keyState !== "compromised")
+      || !isMemberId(value["member"]) || (memberState !== "active" && memberState !== "removed")
+      || (controller !== null && !isMemberId(controller)) || !actions || !isActions(value["actions"])
+      || canonicalize(actions) !== canonicalize(value["actions"])) return false;
+    return { key: id, keyState, member: value["member"], memberState, controller, actions };
+  };
+  if (actorOnly) {
+    const actor = key(asked["actor"]);
+    return actor === false ? unavailable : { status: "observed", of: { ...of }, head: { ...scope.head }, actor };
+  }
+  if (!isMemberId(asked["agent"])) return unavailable;
+  const agent = member(asked["agent"]);
+  if (!agent) return unavailable;
+  const controller = agent.controller === null ? null : member(agent.controller);
+  const agentKey = key(asked["agentKey"]), actor = key(asked["actor"]);
+  if ((agent.controller !== null && !controller) || agentKey === false || actor === false) return unavailable;
+  return { status: "observed", of: { ...of }, head: { ...scope.head }, agent, agentKey, controller, actor };
 }
 
 /**

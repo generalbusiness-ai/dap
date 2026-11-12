@@ -29,7 +29,7 @@ async function fixture(navigation = false) {
     } }),
   });
   let signed = 0;
-  const sessions = new ViewSessions(source, { call: async () => { throw Error("No application read adapter runs."); } }, async (_kind, _args, admit) => {
+  const sessions = new ViewSessions(source, () => ({ call: async () => { throw Error("No application read adapter runs."); } }), async (_kind, _args, admit) => {
     await admit(); signed++;
     return { structuredContent: { answer: "accepted" }, content: [{ type: "text", text: "Fixture accepted." }], isError: false } satisfies CallResult;
   }, async () => { throw Error("No original is unresolved."); });
@@ -119,7 +119,7 @@ test("declared controls capture different subject sets and repeat secondary revi
       },
     } }),
   });
-  const sessions = new ViewSessions(source, { call: async () => { throw Error("No adapter."); } }, async (_kind, args, admit) => {
+  const sessions = new ViewSessions(source, () => ({ call: async () => { throw Error("No adapter."); } }), async (_kind, args, admit) => {
     await admit(); signed++; sent.push(args["at"]);
     return { structuredContent: { answer: "accepted" }, content: [], isError: false };
   }, async () => { throw Error("No unresolved original."); });
@@ -130,6 +130,8 @@ test("declared controls capture different subject sets and repeat secondary revi
   revision = 8;
   const stale = await sessions.act("old", old.cut, "hold-pledge").then(() => ({ reason: "signed" }), error => ({ reason: error.reason }));
   expect(stale).toEqual({ reason: "stale" });
+  expect(signed).toBe(0);
+  await expect(sessions.act("old", old.cut, "TEST undeclared action")).rejects.toMatchObject({ reason: "shape" });
   expect(signed).toBe(0);
   expect((await sessions.act("old", old.cut, "pause")).result.structuredContent["answer"]).toBe("accepted");
   await sessions.open("fresh", "board");
@@ -147,7 +149,7 @@ test("declared opening tool names preserve exact names without reserved-name col
   const names = ["alpha-beta", "alpha.beta", "alpha_beta", "read", "act", "A".repeat(128), "board"];
   const screens = names.map(name => ({ name, resource: `ui://fixture/${name}` }));
   const sessions = new ViewSessions({ declared: true, read: async query => ({ status: "empty", count: 0, position: 0, fallback: query.screen }) },
-    { call: async () => { throw Error("No read adapter."); } }, async () => { throw Error("No act."); }, async () => { throw Error("No original."); });
+    () => ({ call: async () => { throw Error("No read adapter."); } }), async () => { throw Error("No act."); }, async () => { throw Error("No original."); });
   const tools = viewTools(sessions, screens), openings = names.map(name => viewToolName(name, true));
   expect(new Set(openings).size).toBe(names.length);
   expect(openings.every(name => /^[A-Za-z0-9_-]{1,128}$/.test(name) && name !== "view_read" && name !== "view_act")).toBe(true);

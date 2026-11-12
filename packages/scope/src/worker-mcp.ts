@@ -5,10 +5,10 @@ import { jsonReply as json } from "./response.ts";
 import { ApplicationContentStore } from "./applications/content.ts";
 import { readApplicationTrust } from "./applications/admission.ts";
 import { DurableObject } from "cloudflare:workers";
-import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, OAuthClients, OAuthError, oauthPolicy, controlOf, hostedMcpTools, hostedMcpResources, mcpChallengeResponse, mcpUnauthorized, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, remoteCardOrigins, type OAuthPolicy, type OAuthClient, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts, RETIRED_STORE_STOP, isRetiredStoreStop, type RetiredStoreStop } from "@generalbusiness/dap-mcp";
+import { hostedRolePort, CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, OAuthClients, OAuthError, oauthPolicy, controlOf, hostedMcpTools, hostedMcpResources, mcpChallengeResponse, mcpUnauthorized, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, remoteCardOrigins, type OAuthPolicy, type OAuthClient, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts, type HostedRolePorts, type HostedRolePeer, RETIRED_STORE_STOP, isRetiredStoreStop, type RetiredStoreStop } from "@generalbusiness/dap-mcp";
 import { OAUTH_METADATA_PATH, OAUTH_CLIENT_REGISTRY, oauthRoute, resolvedOAuthClient, oauthAnswer, type OAuthPublicClients, type OAuthTokenAgent } from "./oauth-routes.ts";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { parseStrict } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type ControlAction, type SignedControl } from "@generalbusiness/dap-contract";
+import { digestBytes, parseStrict, timeMs, verifyControl } from "@generalbusiness/dap-bytes";
 import type { SequenceRef } from "@generalbusiness/dap-contract";
 import { hostedRegistryName } from "./hosted-registry-name.ts";
 import { classifyRoomFormat, writeRoomFormat2, type RoomFormatStart } from "./room-format.ts";
@@ -59,11 +59,14 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
     return json(200, { resource, authorization_servers: [origin], scopes_supported: ["mcp"], bearer_methods_supported: ["header"] });
   }
   const { REGISTRIES, AGENTS } = env;
+  const address = request.headers.get("cf-connecting-ip");
   if (oauth) {
     const policy = oauthPolicy(env);
     if (!policy || resources.length === 0) return json(404, { error: "not-found" });
-    return await oauthRoute(request, { origin, resources, policy, read: boundedBytes,
+    return await oauthRoute(request, { origin, resources, policy, read: boundedBytes, address,
       clients: {
+        admitControl: (signed, service, action, agent, address) => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).admitControl(signed, service, action, agent, address),
+        admitContext: address => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).admitContext(address),
         registerClient: (bytes, given) => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).registerClient(bytes, given),
         resolveClient: (id, given) => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).resolveClient(id, given),
       },
@@ -96,6 +99,8 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
   const signed = controlOf(request.headers.get("authorization"));
   if (!signed) return json(400, { error: "control", rule: "header" });
   if (signed.request.action !== control.action || signed.request.agent !== control.agent) return json(400, { error: "control", rule: "binding" });
+  if (signed.request.service !== origin) return json(403, { error: "control", rule: "service" });
+  if (!verifyControl(signed)) return json(403, { error: "control", rule: "signature" });
   if (control.agent === null) {
     let known = false;
     try {
@@ -116,6 +121,14 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
   const bytes = await boundedBytes(request, CONTROL_BODY_BYTES);
   if (bytes === "too-large") return json(413, { error: "too-large" });
   if (bytes === "unreadable") return json(400, { error: "bad-request" });
+  if (digestBytes(bytes) !== signed.request.body) return json(403, { error: "control", rule: "body" });
+  try {
+    // No invitation/body plaintext enters the public-client registry. Its own
+    // clock verifies the signed deadline before this actor spends a window.
+    const admission = await (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).admitControl(signed, origin, control.action, control.agent, address);
+    if (isRetiredStoreStop(admission)) return answered({ status: 503, body: { error: "temporarily_unavailable" } });
+    if (admission.status !== 200) return answered(admission);
+  } catch { return answered({ status: 503, body: { error: "temporarily_unavailable" } }); }
   if (control.action === "grant") {
     try {
       const body = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
@@ -124,7 +137,8 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
       const client = await resolvedOAuthClient(clients, body["client_id"], policy!);
       const context = { client, resources, redirects: policy!.redirects };
       const registry = REGISTRIES.get(REGISTRIES.idFromName(hostedRegistryName(signed.request.membership))) as unknown as Pick<McpRegistry, "grant" | "grantExisting">;
-      return oauthAnswer(control.agent === null ? await registry.grant(signed, bytes, origin, context) : await registry.grantExisting(signed, bytes, origin, context));
+      const result = control.agent === null ? await registry.grant(signed, bytes, origin, context) : await registry.grantExisting(signed, bytes, origin, context);
+      return oauthAnswer(isRetiredStoreStop(result) ? { status: 503, body: { error: "temporarily_unavailable" } } : result);
     } catch (error) { return oauthAnswer({ status: error instanceof OAuthError ? error.status : 503, body: { error: error instanceof OAuthError ? error.error : "temporarily_unavailable" } }); }
   }
   if (control.agent === null) {
@@ -174,6 +188,23 @@ function observeThrough(binding: Binding): RegistryPorts["observe"] {
   };
 }
 
+/** Fresh internal facts only; callers still own all authority and final-owner checks. */
+export function roleStandingThrough(binding: Binding): HostedRolePorts["roleStanding"] {
+  return hostedRolePort(async request => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const peer = binding.get(binding.idFromName(request.membership.scope)) as HostedRolePeer;
+      if (typeof peer.hostedRoleStanding !== "function") return { status: "unavailable" };
+      const reply = await Promise.race([
+        peer.hostedRoleStanding(request),
+        new Promise<null>(resolve => { timer = setTimeout(() => resolve(null), 5000); }),
+      ]);
+      return isRoomRetiredStop(reply) ? { status: "unavailable" } : reply;
+    } catch { return { status: "unavailable" }; }
+    finally { if (timer !== undefined) clearTimeout(timer); }
+  });
+}
+
 const sqlOf = (ctx: DurableObjectState) => ({
   exec: (query: string, ...bindings: (string | number | null | ArrayBuffer | Uint8Array)[]) => ctx.storage.sql.exec(query, ...bindings),
   transaction: <T>(closure: () => T): T => ctx.storage.transactionSync(closure),
@@ -200,6 +231,25 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
     if (!this.#inspectionOwner) throw new Error("Hosted registry inspection is unavailable.");
   }
   #clientsOf(): OAuthClients { return this.#clients ??= new OAuthClients(sqlOf(this.ctx), { now: () => this[registryNow](), random: n => crypto.getRandomValues(new Uint8Array(n)), fetch: (url, init) => fetch(url, init) }); }
+  async admitControl(signed: SignedControl, service: string, action: ControlAction, agent: string | null, address: string | null): Promise<ControlAnswer | RetiredStoreStop> {
+    if (!this.#publicClients) return RETIRED_STORE_STOP;
+    try {
+      if (!verifyControl(signed)) return { status: 403, body: { error: "control", rule: "signature" } };
+      const r = signed.request;
+      if (r.service !== service) return { status: 403, body: { error: "control", rule: "service" } };
+      if (r.action !== action || r.agent !== agent) return { status: 400, body: { error: "control", rule: "binding" } };
+      const now = this[registryNow](), until = timeMs(r.notAfter);
+      if (!Number.isSafeInteger(now) || now < 0 || !Number.isSafeInteger(now + 60_000)) return { status: 503, body: { error: "temporarily_unavailable" } };
+      if (until === null || until <= now || until > now + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000) return { status: 400, body: { error: "control", rule: "notAfter" } };
+      this.#clientsOf().admitControl(r.actor, action === "retire" || action === "revoke-grant", address);
+      return { status: 200, body: {} };
+    } catch (error) { return { status: error instanceof OAuthError ? error.status : 503, body: { error: error instanceof OAuthError ? error.error : "temporarily_unavailable" } }; }
+  }
+  async admitContext(address: string | null): Promise<ControlAnswer | RetiredStoreStop> {
+    if (!this.#publicClients) return RETIRED_STORE_STOP;
+    try { this.#clientsOf().admitContext(address); return { status: 200, body: {} }; }
+    catch (error) { return { status: error instanceof OAuthError ? error.status : 503, body: { error: error instanceof OAuthError ? error.error : "temporarily_unavailable" } }; }
+  }
   async registerClient(bytes: Uint8Array, policy: OAuthPolicy): Promise<ControlAnswer | RetiredStoreStop> {
     if (!this.#publicClients) return RETIRED_STORE_STOP;
     try { return { status: 201, body: { ...this.#clientsOf().register(bytes, policy.redirects) } }; }
@@ -231,7 +281,7 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
     const agents = this.env.AGENTS;
     let candidate: HostedRegistry;
     try { candidate = new HostedRegistry(sqlOf(this.ctx), {
-      now: () => this[registryNow](), observe: observeThrough(this[registryScopes]()), ...this[registryPorts](),
+      now: () => this[registryNow](), observe: observeThrough(this[registryScopes]()), roleStanding: roleStandingThrough(this[registryScopes]()), ...this[registryPorts](),
       mintId: () => agents.newUniqueId().toString(),
       agent: (id) => agents.get(agents.idFromString(id)) as unknown as ReturnType<RegistryPorts["agent"]>,
     }); } catch (error) {
@@ -298,7 +348,7 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
         return (await store.get(release))?.bytes ?? null;
       },
       applicationTrust: this.env.APPLICATION_TRUST,
-      id: this.ctx.id.toString(), now: () => Date.now(), random: (n) => crypto.getRandomValues(new Uint8Array(n)), observe: observeThrough(scopes),
+      id: this.ctx.id.toString(), now: () => Date.now(), random: (n) => crypto.getRandomValues(new Uint8Array(n)), observe: observeThrough(scopes), roleStanding: roleStandingThrough(scopes),
       ...(this.env.METRICS ? { metrics: { deployment: readDeployment(this.env.DEPLOYMENT) ?? "unknown", version: this.env.VERSION_METADATA?.id ?? "unknown", report: (point: MetricPoint) => this.env.METRICS?.writeDataPoint(point) } } : {}),
       fetch: ((url: string, init?: RequestInit) => route(new Request(url, init), scopes, this.env)) as unknown as AgentPorts["fetch"],
       ...this[agentPorts](),
@@ -317,6 +367,11 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
   async create(op: string, request: Parameters<HostedAgent["create"]>[1], link: Parameters<HostedAgent["create"]>[2]): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().create(op, request, link), "unavailable"); }
   async grant(signed: Parameters<HostedAgent["grant"]>[0], body: Uint8Array, context: Parameters<HostedAgent["grant"]>[2]): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().grant(signed, body, context), "unavailable"); }
   async agentState(): Promise<string | null | RetiredStoreStop> { if (this.#format.kind === "retired") return RETIRED_STORE_STOP; this.#admitted(); return this.#of().agentState(); }
+  async roleIdentity(): Promise<ReturnType<HostedAgent["roleIdentity"]> | RetiredStoreStop> {
+    if (this.#format.kind === "retired") return RETIRED_STORE_STOP;
+    if (this.#format.kind === "unavailable") return { status: "unavailable" };
+    return this.#of().roleIdentity();
+  }
   async connectionControl(signed: Parameters<HostedAgent["connectionControl"]>[0], action: "connections" | "revoke-grant", body: Uint8Array): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().connectionControl(signed, action, body), "unavailable"); }
   async exchangeCode(...args: Parameters<HostedAgent["exchangeCode"]>): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("temporarily_unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().exchangeCode(...args), "temporarily_unavailable"); }
   async refreshGrant(...args: Parameters<HostedAgent["refreshGrant"]>): Promise<ControlAnswer | RetiredStoreStop> { const stopped = this.#entry("temporarily_unavailable"); if (stopped) return stopped; return membershipControl(() => this.#of().refreshGrant(...args), "temporarily_unavailable"); }

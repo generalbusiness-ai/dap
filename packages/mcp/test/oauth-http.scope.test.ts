@@ -1,20 +1,37 @@
 /** Production HTTP, Wire, grant checker and grant-layer manager with actual
- * Durable Object SQLite. Scope replies, standing, session persistence and
+ * Durable Object SQLite. Scope replies, agent identity, standing, session persistence and
  * timers are explicit stand-ins. No RPC cancellation or membership judgment
  * belongs to this component witness. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test, vi } from "vitest";
 import type { MemberId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, same, utf8 } from "@generalbusiness/dap-bytes";
 import { secretSigner } from "@generalbusiness/dap-client";
 import { McpHttp, type SessionRow } from "../src/http.ts";
-import { OAuthAccess, OAUTH_GRANTS_MOST, type OAuthAccessGrant } from "../src/oauth-access.ts";
+import { OAuthAccess, OAUTH_GRANTS_MOST, type OAuthAccessGrant, type OAuthAgentIdentity } from "../src/oauth-access.ts";
 import { OAuthHttpLayers } from "../src/oauth-http.ts";
+import { hostedRolePort } from "../src/hosted.ts";
 import { McpService } from "../src/service.ts";
 import { memoryStore } from "../src/custody.ts";
 import type { Sql } from "../src/sqlite-custody.ts";
 import { LEGACY, Wire } from "../src/wire.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
+
+/** Explicit component STAND-IN for this exact agent/grant owner. It answers
+ * only Access's closed Agent request; actor management and other identities
+ * remain unavailable. No Native membership or enrollment is inferred. */
+function roleStandingFor(agent: OAuthAgentIdentity, beforeRead: () => Promise<void> = async () => {}) {
+  return hostedRolePort(async asked => {
+    if (!("agent" in asked) || !same(asked.membership, agent.membership) || asked.agent !== agent.handle
+      || asked.agentKey !== agent.key || asked.expectedController !== "@owner" || asked.actor !== null)
+      return { status: "unavailable" };
+    await beforeRead();
+    return { status: "observed", of: { ...agent.membership }, head: { seq: 0, hash: digestBytes(utf8("TEST HTTP layer role head")) },
+      agent: { member: agent.handle, state: "active", role: "agent", activeKey: true, controller: "@owner", actions: [] },
+      agentKey: { key: agent.key, keyState: "active", member: agent.handle, memberState: "active", controller: "@owner", actions: [] },
+      controller: { member: "@owner", state: "active", role: "member", activeKey: false, controller: null, actions: [] }, actor: null };
+  });
+}
 
 test("grant stream cancellation releases timers and a held standing refresh cannot extend the previous read deadline", async () => {
   const stub = env.AGENTS.get(env.AGENTS.newUniqueId());
@@ -29,11 +46,12 @@ test("grant stream cancellation releases timers and a held standing refresh cann
     const standingEntered = new Promise<void>(resolve => { entered = resolve; });
     const standingRelease = new Promise<void>(resolve => { release = resolve; });
     let hold = false;
-    const access = new OAuthAccess(sql, { now: () => now, agent: () => ({ state: "enrolled", membership, key: signer.key, handle: "@agent" }), charge: () => {},
-      observe: async (_membership, ask) => {
+    const identity: OAuthAgentIdentity = { op: "TEST HTTP layer", configuration: canonicalize({ service: SERVICE }),
+      state: "enrolled", membership, key: signer.key, handle: "@agent" };
+    const access = new OAuthAccess(sql, { now: () => now, agent: () => identity, charge: () => {},
+      roleStanding: roleStandingFor(identity, async () => {
         if (hold) { entered(); await standingRelease; }
-        return "key" in ask ? { keyState: "active", memberState: "active", member: "@agent", controller: "@owner" } : { memberState: "active" };
-      } });
+      }) });
     const id = b64url(new Uint8Array(32).fill(1)), secret = b64url(new Uint8Array(32).fill(2));
     const grant: OAuthAccessGrant = { controller: "@owner" as MemberId, resource: SERVICE + "/mcp", created: start, ends: start + 86_400_000,
       accessIssued: start, accessExpires: start + 3_600_000, accessDigest: digestBytes(utf8(secret)) };
@@ -99,10 +117,10 @@ test("abrupt disposal of a held OAuth opening rejects the late layer and retains
     const signer = secretSigner(new Uint8Array(32).fill(23));
     const scopes = new StandIn(signer.key);
     const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
-    const access = new OAuthAccess(sql, { now: () => now, agent: () => ({ state: "enrolled", membership, key: signer.key, handle: "@agent" }), charge: () => {},
-      observe: async (_membership, ask) => "key" in ask
-        ? { keyState: "active", memberState: "active", member: "@agent", controller: "@owner" }
-        : { memberState: "active" } });
+    const identity: OAuthAgentIdentity = { op: "TEST HTTP layer", configuration: canonicalize({ service: SERVICE }),
+      state: "enrolled", membership, key: signer.key, handle: "@agent" };
+    const access = new OAuthAccess(sql, { now: () => now, agent: () => identity, charge: () => {},
+      roleStanding: roleStandingFor(identity) });
     const id = b64url(new Uint8Array(32).fill(3)), secret = b64url(new Uint8Array(32).fill(4));
     const grant: OAuthAccessGrant = { controller: "@owner" as MemberId, resource: SERVICE + "/mcp", created: now, ends: now + 86_400_000,
       accessIssued: now, accessExpires: now + 3_600_000, accessDigest: digestBytes(utf8(secret)) };
@@ -159,10 +177,10 @@ test("closing a detached OAuth layer again preserves its first disposition and r
     const now = Date.parse("2099-01-01T00:00:00Z"), signer = secretSigner(new Uint8Array(32).fill(24));
     const scopes = new StandIn(signer.key);
     const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
-    const access = new OAuthAccess(sql, { now: () => now, agent: () => ({ state: "enrolled", membership, key: signer.key, handle: "@agent" }), charge: () => {},
-      observe: async (_membership, ask) => "key" in ask
-        ? { keyState: "active", memberState: "active", member: "@agent", controller: "@owner" }
-        : { memberState: "active" } });
+    const identity: OAuthAgentIdentity = { op: "TEST HTTP layer", configuration: canonicalize({ service: SERVICE }),
+      state: "enrolled", membership, key: signer.key, handle: "@agent" };
+    const access = new OAuthAccess(sql, { now: () => now, agent: () => identity, charge: () => {},
+      roleStanding: roleStandingFor(identity) });
     const id = b64url(new Uint8Array(32).fill(5)), secret = b64url(new Uint8Array(32).fill(6));
     const grant: OAuthAccessGrant = { controller: "@owner" as MemberId, resource: SERVICE + "/mcp", created: now, ends: now + 86_400_000,
       accessIssued: now, accessExpires: now + 3_600_000, accessDigest: digestBytes(utf8(secret)) };
@@ -203,10 +221,10 @@ test("self-retired OAuth generations release stale grant layers so a new grant c
     const now = Date.parse("2099-01-01T00:00:00Z"), signer = secretSigner(new Uint8Array(32).fill(25));
     const scopes = new StandIn(signer.key);
     const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
-    const access = new OAuthAccess(sql, { now: () => now, agent: () => ({ state: "enrolled", membership, key: signer.key, handle: "@agent" }), charge: () => {},
-      observe: async (_membership, ask) => "key" in ask
-        ? { keyState: "active", memberState: "active", member: "@agent", controller: "@owner" }
-        : { memberState: "active" } });
+    const identity: OAuthAgentIdentity = { op: "TEST HTTP layer", configuration: canonicalize({ service: SERVICE }),
+      state: "enrolled", membership, key: signer.key, handle: "@agent" };
+    const access = new OAuthAccess(sql, { now: () => now, agent: () => identity, charge: () => {},
+      roleStanding: roleStandingFor(identity) });
     const layers = new OAuthHttpLayers(access, { now: () => now });
     const service = new McpService({ service: SERVICE, signer, fetch: scopes.fetch, custody: memoryStore(), now: () => now, every: () => () => {},
       config: { read: async () => scopes.config(), addRoot: async () => {} } });

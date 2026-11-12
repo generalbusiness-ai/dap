@@ -46,6 +46,7 @@ interface Surface {
   deliver(envelope: Delivered): Promise<Delivery>;
   dispatch(): Promise<number>;
   observe(asked: unknown): Promise<unknown>;
+  hostedRoleStanding(asked: unknown): Promise<unknown>;
 }
 
 /** The Worker's routes over the namespace `PLATFORM`, called in the test's isolate, for a verifier that reads a history as bytes. */
