@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2ac98fe24985c9c2f97c307521b164e143eca0cf","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-12-sandbox-deploy-ops2.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2b958ffb0588658bfe2af1ca6afd800f6677ad5e","text":"Merge retired a covered predecessor; the successor is at scripts/deploy-smoke.mjs."}
