@@ -111,7 +111,7 @@ describe("authority on real scopes, under the production wiring (authority note,
     expect([first.answer.answer, (await unasInbox.stub.deliver(first.envelope)), (await unasInbox.summary()).value.counts.find(([type, state]) => type === "notice" && state === "unread")?.[2]])
       .toEqual(["recorded", first.answer, 2]);
     const [one, two] = [(first.answer as { fact: { seq: number } }).fact.seq, (second.answer as { fact: { seq: number } }).fact.seq];
-    expect((await unasInbox.item(one)).values["source"]).toEqual({ scope: first.envelope.from.at.scope, incarnation: first.envelope.from.at.inc, seq: 4, hash: first.envelope.from.hash });
+    expect((await unasInbox.item(one)).values["source"]).toEqual({ scope: first.envelope.from.at.scope, genesis: first.envelope.from.at.genesis, seq: 4, hash: first.envelope.from.hash });
 
     // una marks her notice read. The inbox read her key's standing from M before the turn, and the entry retains that observation: of
     // M with its incarnation, at M's head, with the actions of her role there, and `within` as the repository.
