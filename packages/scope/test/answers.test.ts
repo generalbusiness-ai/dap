@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { canonicalBytes, canonicalize, digestBytes, intentDigest, signIntent } from "@generalbusiness/dap-bytes";
 import { Scope, grantOf, laneDefinition } from "@generalbusiness/dap-derive/testing";
 import { at, definition, create, rita, una } from "./fixtures-native.ts";
+import { ledgerSource } from "../src/testing.ts";
 
 describe("the answers to a submitted act, on real storage (section 4.2)", () => {
   test("accepted, with a receipt that an exact retry and a settlement return again; mismatch; refused, which writes nothing and consumes no key; and, with the test authority, a stand-in, silent, a new act is not judged while an accepted key keeps its receipt", async () => {
@@ -65,7 +66,7 @@ describe("the answers to a submitted act, on real storage (section 4.2)", () => 
     const remark = s.intent(rita, "remark", { on: 0, fields: { text: "see the proof", proof } });
     expect([await s.submit(remark), (await s.head()).seq]).toEqual([{ answer: "unavailable", reason: "dependency-unavailable" }, 0]);
 
-    s.c.foreign.set(proof.hash, { entry, under: "lane" });
+    s.c.foreign.set(proof.hash, ledgerSource(l, entry.seq, "lane"));
     const accepted = await s.submit(remark);
     expect(accepted).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 1 } } });
     // The key is now on a sealed entry, and its answers come from history with no fetch: when the dependency is lost, the exact

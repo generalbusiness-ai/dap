@@ -59,8 +59,8 @@ test("T5b, a merge closes a linked issue once: the issue closes by its own decid
   const C = await r.lane(rita, "open-pr", change, DIGESTS.change, { title: "A change", draft: false });
   // Actual native factory and member authority; only these two peer entries
   // are scripted. They are not admitted histories of the native objects.
-  const rulesPeer = new Peer("rules", "platform:rules", await r.rules.at());
-  const destinationPeer = new Peer("destination", "platform:destination", await r.G.at());
+  const rulesPeer = await Peer.of("rules", "platform:rules", r.rules);
+  const destinationPeer = await Peer.of("destination", "platform:destination", r.G);
   const peer = (e: Delivered) => "scope" in e.to && (e.to.scope === destinationPeer.at.scope || e.to.scope === rulesPeer.at.scope);
   // Native destination/rules deliveries are held. The update "set" to G is
   // also held, so the scripted publication's "merged" update arrives first.

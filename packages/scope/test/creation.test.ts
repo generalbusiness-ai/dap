@@ -3,12 +3,12 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
 import type { DeclaredDefinition, Entry, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { definitionDigest, factRefOf, intentDigest, isIncarnation, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { definitionDigest, intentDigest, isIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { timeOf, type Delivered } from "@generalbusiness/dap-derive";
-import { Scope, forged, grantOf, laneDefinition, variant } from "@generalbusiness/dap-derive/testing";
+import { Scope, grantOf, laneDefinition, variant } from "@generalbusiness/dap-derive/testing";
 import { inbox, platform } from "@generalbusiness/dap-platform";
 import { httpSource, platformCode, verify } from "@generalbusiness/dap-replay";
-import { controls, scriptedCapability, type CapabilityScript } from "../src/testing.ts";
+import { controls, scriptedCapability, type CapabilityScript, ledgerSource, scriptedSequence } from "../src/testing.ts";
 import { Node, creation as creationIn, net, routed, soon } from "./net.ts";
 import { HOLD, START, at, definition, create, creation, reader, rita, stubOf, una } from "./fixtures-native.ts";
 
@@ -81,7 +81,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
     // The first creation reads the fact. Unread, it waits and records nothing.
     expect(await stub.create(signed, naming.declared)).toEqual({ answer: "unavailable", reason: "dependency-unavailable" });
     expect(await stub.summary(reader)).toEqual({ ok: false, reason: "not-found" });
-    c.foreign.set(proof.hash, { entry, under: "lane" });
+    c.foreign.set(proof.hash, ledgerSource(l, entry.seq, "lane"));
     const first = await stub.create(signed, naming.declared);
     expect(first).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 0 } } });
     // The fact is lost. The same creation again is a repeat: it reads no fact, and is answered from the genesis.
@@ -150,11 +150,11 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
       // the inbox's side of the delivery and nothing about a lane. The handler's written effects set `reason`, `item` and `at`.
       // The mark `notice-source` stands after them, and its rule, the platform package's own, sets `source`: the record of the source
       // fact's scope ID, incarnation, position and hash (authority note, section 12.1.6, case a).
-      const lane: ScopeRef = { scope: scopeIdOf(seedOf(asked(soon(60)), NAMED)), inc: newIncarnation(new Uint8Array(16).fill(7)), kind: "lane" };
+      const lane = scriptedSequence({ ...seedOf(asked(soon(60)), NAMED), kind: "lane" }, net.clock.now);
       const message = { class: "advisory", type: "notify", body: { fields: { reason: "review", item: 4 } } } as const;
-      const source = forged(lane, 3, { type: "checkpoint", through: 2, state: `sha256:${"0".repeat(64)}` }, [{ n: 0, to: ref, message }]);
-      const from = factRefOf(source.entry);
-      net.peers.set(from.hash, { entry: source.entry, under: "issue" });
+      const entry = lane.entry(3, { type: "checkpoint", through: 2, state: `sha256:${"0".repeat(64)}` }, [{ n: 0, to: ref, message }]);
+      const from = lane.fact(entry);
+      net.peers.set(from.hash, lane.source(entry, "issue"));
       const notified: Delivered = { to: ref, from, n: 0, message };
       const recorded = await I.stub.deliver(notified);
       expect(recorded).toMatchObject({ answer: "recorded", fact: { at: ref, seq: 1 } });
@@ -162,7 +162,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
         input: { type: "delivery", from, n: 0, message },
         effects: [
           { effect: "open", item: 1, type: "notice", state: "unread" }, { effect: "value", item: 1, slot: "reason", value: "review" }, { effect: "value", item: 1, slot: "item", value: 4 },
-          { effect: "value", item: 1, slot: "at", value: net.clock.now }, { effect: "value", item: 1, slot: "source", value: { scope: lane.scope, incarnation: lane.inc, seq: 3, hash: from.hash } },
+          { effect: "value", item: 1, slot: "at", value: net.clock.now }, { effect: "value", item: 1, slot: "source", value: { scope: lane.at.scope, genesis: lane.at.genesis, seq: 3, hash: from.hash } },
         ],
         sends: [],
       });

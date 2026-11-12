@@ -2,7 +2,7 @@ import { scopeWiring } from "../src/internal/room-hooks.ts";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { Entry, OperationId, ScopeRef, Seed, SendForm, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Entry, OperationId, ScopeRef, Seed, SendForm, SequenceEntry, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, platformName, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { RecordState } from "@generalbusiness/dap-derive";
@@ -42,7 +42,8 @@ function ancestors(definition: ReturnType<typeof variant>) {
   const time = START;
   const hash = digestBytes(utf8(crypto.randomUUID()));
   const seed = (kind: Seed["kind"], named: Seed["definition"], creator: ScopeRef | null, cause = hash, ordinal = 0): Seed => ({ v: 1, kind, definition: named, creator, cause, ordinal });
-  const entry = (at: ScopeRef, seq: number, input: Entry["input"], effects: Entry["effects"] = [], sends: Entry["sends"] = []): Entry => ({ v: 1, at, seq, prev: seq === 0 ? null : hash, time, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
+  // A later entry of an actual judged sequence, written by hand: it names that sequence's genesis, and nothing judged it.
+  const entry = (at: ScopeRef, seq: number, input: SequenceEntry["input"], effects: SequenceEntry["effects"] = [], sends: SequenceEntry["sends"] = []): SequenceEntry => ({ v: 1, genesis: at.genesis, seq, prev: hash, time, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
   const signed = (at: ScopeRef, kind: string, fields: SignedIntent["intent"]["fields"]): SignedIntent => signIntent({ v: 1, to: at, actor: keys.rita.key, kind, on: null, fields, expected: {}, idempotencyKey: crypto.randomUUID(), notAfter: timeOf(timeMs(time)! + 60_000) }, keys.rita.secret);
   const judged = workspaceAncestors(time, NAMESPACE, crypto.randomUUID());
   const { register, directory } = judged;
@@ -50,14 +51,14 @@ function ancestors(definition: ReturnType<typeof variant>) {
   const laneSeed = seed("lane", definition.digest, directory, intentDigest(open.intent));
   const laneMessage = { class: "request", type: "create", body: { fields: { title: "Setup custody", opener: keys.rita.member } } } as const;
   const opening = entry(directory, 5, { type: "act", signed: open, authority: [], presented: {} }, [], [{ n: 0, to: laneSeed, message: laneMessage }]);
-  const entries = [...judged.entries, opening];
-  const bodies = new Map(entries.map(value => [entryHash(value), { fact: factRefOf(value), bytes: canonicalize(value) }]));
+  const rows: { at: ScopeRef; entry: Entry }[] = [...judged.rows, { at: directory, entry: opening }];
+  const bodies = new Map(rows.map(row => [entryHash(row.entry), { fact: factRefOf(row.entry, row.at), bytes: canonicalize(row.entry) }]));
   let reads = 0;
   const trace: Array<{ kind: string; found: boolean }> = [];
   const count = () => { if (++reads > 256) throw new Error("Scripted lineage read bound exceeded"); };
   const sources: WorkspaceSources = {
     births: { async read(name, kind) {
-      count(); const value = entries.find(value => value.at.scope === name && value.at.kind === kind && value.seq === 0);
+      count(); const value = rows.find(row => row.at.scope === name && row.entry.input.type === "genesis" && row.entry.input.seed.kind === kind)?.entry;
       trace.push({ kind, found: value?.input.type === "genesis" });
       if (!value || value.input.type !== "genesis") return null;
       const named = value.input.seed.definition as `platform:${string}@${number}`;
@@ -68,12 +69,15 @@ function ancestors(definition: ReturnType<typeof variant>) {
   const confirmation = (born: Entry): Entry => {
     const result = born.sends.find(send => send.message.class === "result");
     if (!result || result.message.class !== "result") throw new Error("Native genesis has no creation result");
-    const genesis = factRefOf(born), message = { class: "control", type: "confirm", genesis } as const;
+    const laneAt: ScopeRef = { scope: scopeIdOf(laneSeed), genesis: entryHash(born) };
+    const genesis = factRefOf(born, laneAt), message = { class: "control", type: "confirm", genesis } as const;
     // Explicit creator STAND-IN, bound to the actual judged child's result.
     // It supplies no fork, token, revoke or other cleanup outcome.
-    return entry(directory, 6, { type: "delivery", from: genesis, n: result.n, message: result.message, clause: "applied" }, [], [{ n: 0, to: born.at, message }]);
+    return entry(directory, 6, { type: "delivery", from: genesis, sourceKind: "lane", n: result.n, message: result.message, clause: "applied" }, [], [{ n: 0, to: laneAt, message }]);
   };
-  return { register, laneSeed, opening, laneMessage, sources, confirmation, readMetadata: () => ({ count: reads, last: trace.slice(-16) }) };
+  /** What the scope's scripted resolver reads for a hand-written directory entry: the entry and the directory's actual genesis bytes. */
+  const directorySource = (value: Entry) => ({ fact: factRefOf(value, directory), source: { entry: value, under: "platform:directory", birth: judged.births.directory } });
+  return { register, directory, laneSeed, opening, laneMessage, sources, confirmation, directorySource, readMetadata: () => ({ count: reads, last: trace.slice(-16) }) };
 }
 
 async function fixture(mode: Mode, retainedRoot = false) {
@@ -174,7 +178,8 @@ async function fixture(mode: Mode, retainedRoot = false) {
       };
     }
   }
-  c.foreign.set(entryHash(lineage.opening), { entry: lineage.opening, under: "platform:directory" });
+  const opened = lineage.directorySource(lineage.opening);
+  c.foreign.set(opened.fact.hash, opened.source);
   const metadata = () => inside(() => {
     if (!given) throw new Error("Native outside factory was not constructed");
     return { scope: given.scope(), born: given.own(0)?.entry };
@@ -267,15 +272,16 @@ async function fixture(mode: Mode, retainedRoot = false) {
       state.waitUntil = promise => { scheduled.push(promise); originalWaitUntil!.call(state, promise); };
       factory = new FactoryScope(state, {});
     });
-    const genesis = await life.wait(() => surface.deliver({ to: lineage.laneSeed, from: factRefOf(lineage.opening), n: 0, message: lineage.laneMessage }));
+    const genesis = await life.wait(() => surface.deliver({ to: lineage.laneSeed, from: lineage.directorySource(lineage.opening).fact, n: 0, message: lineage.laneMessage }));
     expect(genesis, `native fixture genesis reply: ${JSON.stringify(genesis)}`).toMatchObject({ answer: "recorded" });
     const initial = await metadata();
     expect(initial.born?.input, JSON.stringify(initial.born?.input)).toMatchObject({ type: "genesis", decision: "applied" });
     expect(initial.scope?.status).toBe("provisional");
     if (!initial.born) return expect.fail("Native genesis is unavailable");
     const confirmation = lineage.confirmation(initial.born), send = confirmation.sends[0]!;
-    c.foreign.set(entryHash(confirmation), { entry: confirmation, under: "platform:directory" });
-    const activated = await life.wait(() => surface.deliver({ to: send.to, from: factRefOf(confirmation), n: send.n, message: send.message }));
+    const confirmed = lineage.directorySource(confirmation);
+    c.foreign.set(confirmed.fact.hash, confirmed.source);
+    const activated = await life.wait(() => surface.deliver({ to: send.to, from: confirmed.fact, n: send.n, message: send.message }));
     expect(activated, JSON.stringify(activated)).toMatchObject({ answer: "recorded" });
     const active = await metadata();
     expect(active.scope?.status).toBe("active");

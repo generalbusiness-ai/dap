@@ -66,7 +66,7 @@ test("selected merge facts are native ISSUE reports in admitted order, independe
   const owner = beginSessionFixture({ secret: "Native task-data witness session secret of at least thirty-two bytes", sessions: true, inspector: "a test reader" });
   onTestFinished(() => owner.close());
   const { r } = await delegatedRoom();
-  const rulesPeer = new Peer("rules", "platform:rules", await r.rules.at());
+  const rulesPeer = await Peer.of("rules", "platform:rules", r.rules);
   net.hold = e => "scope" in e.to && e.to.scope === rulesPeer.at.scope;
   const G = await r.lane(rita, "open-issue", issue, DIGESTS.issue, { title: "A goal", conditions: ["it works"] });
   // Everything below names the entry that filed the goal as the goal's conditions: the genesis of the issue lane, of the kind `file`.

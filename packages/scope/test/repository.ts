@@ -18,7 +18,7 @@
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import type { Answer, Beside, Digest, Entry, FactRef, FieldValue, Grant, Intent, PlatformDefinition, Read, RetainedInput, ScopeId, ScopeRef, Seed, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, isDigest, isScopeRef, newIncarnation, scopeIdOf, signIntent, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, factRefOf, intentDigest, isDigest, isScopeRef, scopeIdOf, signIntent, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { hashOfBytes, type MemoryScope } from "@generalbusiness/dap-replay";
 import type { Delivered, Item } from "@generalbusiness/dap-derive";
 import { d, keys, type Actor } from "@generalbusiness/dap-derive/testing";
@@ -27,7 +27,7 @@ import { officeDefinitionFor } from "@generalbusiness/dap-platform/testing";
 import type { Delivery, OutboxItem, Sealed, Summary } from "../src/index.ts";
 import { route } from "../src/worker.ts";
 import { startupTest } from "./support/serving-startup.ts";
-import { net } from "../src/testing.ts";
+import { net, scriptedSequence } from "../src/testing.ts";
 import { quiet, settle, settleDriving, soon } from "./net.ts";
 import { reader } from "./support.ts";
 
@@ -237,11 +237,11 @@ let lanes = 0;
  */
 export async function notify(inbox: Platform, fields: Record<string, FieldValue>): Promise<{ envelope: Delivered; answer: Delivery }> {
   const seed: Seed = { v: 1, kind: "lane", definition: d("e"), creator: null, cause: d("f"), ordinal: lanes++ };
-  const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), kind: "lane" };
+  const lane = scriptedSequence(seed, net.clock.now);
   const send = { n: 0, to: await inbox.at(), message: { class: "advisory", type: "notify", body: { fields } } } as const;
-  const entry: Entry = { v: 1, at, seq: 4, prev: d("0"), time: net.clock.now, clamped: false, epoch: 0, input: { type: "checkpoint", through: 3, state: d("1") }, uses: [], prepared: [], effects: [], sends: [send] };
-  const from: FactRef = { at, seq: 4, hash: entryHash(entry) };
-  net.peers.set(from.hash, { entry, under: "issue" });
+  const entry = lane.entry(4, { type: "checkpoint", through: 3, state: d("1") }, [send]);
+  const from: FactRef = lane.fact(entry);
+  net.peers.set(from.hash, lane.source(entry, "issue"));
   const envelope: Delivered = { to: send.to, from, n: 0, message: send.message };
   return { envelope, answer: await inbox.stub.deliver(envelope) };
 }

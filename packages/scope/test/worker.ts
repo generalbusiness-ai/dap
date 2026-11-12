@@ -40,7 +40,7 @@ import { scopeIdOf } from "@generalbusiness/dap-bytes";
 import { readApplicationScreenHost } from "@generalbusiness/dap-client/application";
 import { ScopeObject, type Outside, type OutsideGiven, type Wiring } from "../src/index.ts";
 import { sessionsOf, type LimitConfig } from "../src/index.ts";
-import { codeLost, controls, net, netPorts, testPorts } from "../src/testing.ts";
+import { codeLost, controls, net, netPorts, scriptedSource, testPorts } from "../src/testing.ts";
 import { signedDiagnosticFor } from "./signed-read-diagnostic.ts";
 import { sessionFields, testSessionBypass } from "./session-settings.ts";
 import { startupTest, startupScopes, StartupReadTrace } from "./support/serving-startup.ts";
@@ -349,7 +349,7 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
         // A send waits at `platformNet.pause` first, while its dispatcher's pass stays in flight.
         transport: { send: async (envelope) => { if (net.hold?.(envelope)) return null; await platformNet.pause?.(envelope); return transport!.send(envelope); } },
         // A scripted peer: an entry that a test wrote by hand, for a lane that sends a notice. Every other entry is read from the real object.
-        resolver: { read: (fact, context, origin) => { const peer = net.peers.get(fact.hash); return peer ? Promise.resolve(peer) : resolver.read(fact, context, origin); } },
+        resolver: { read: (fact, context, origin) => { const peer = net.peers.get(fact.hash); return peer ? Promise.resolve(scriptedSource(fact, peer, context)) : resolver.read(fact, context, origin); } },
         definitions: { read: (named, holder) => definitions.read(named, holder), platform: (named) => (platformNet.without === null ? platform(named) : lacking(named, platformNet.without)) },
         // The ports that one test wired for this name: the STAND-IN host of `outside.ts`, for a register, whose one outside effect is
         // the creation of a repository at the Git host. With none wired the outside port is the production one, which sends nothing.
