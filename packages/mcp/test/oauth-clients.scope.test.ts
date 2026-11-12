@@ -7,8 +7,8 @@ import { OAuthClients, oauthMetadataOrigins, oauthPolicy, type OAuthClientPorts 
 import { OAUTH_GRANT_MS } from "../src/oauth-access.ts";
 import { OAUTH_CLIENT_UNUSED_MS, OAuthError, oauthRedirectPolicy } from "../src/oauth-parameters.ts";
 import type { Sql } from "../src/sqlite-custody.ts";
-import { HostedRegistry } from "../src/hosted.ts";
-import type { MemberId, ScopeRef } from "@generalbusiness/dap-contract";
+import { hostedRolePort, HostedRegistry } from "../src/hosted.ts";
+import type { ScopeRef } from "@generalbusiness/dap-contract";
 
 const ID = "https://claude.ai/oauth/client.json", REDIRECT = "https://claude.ai/api/mcp/auth_callback", START = Date.parse("2099-01-01T00:00:00Z");
 const document = (id = ID) => ({ client_id: id, client_name: "Claude", redirect_uris: [REDIRECT], token_endpoint_auth_method: "none", logo_uri: "http://127.0.0.1/private" });
@@ -109,8 +109,14 @@ test("metadata refuses unknown origins before fetch and caches only exact, bound
     const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
     let observations = 0;
     const registryPorts = { now: () => now, mintId: (): never => { throw Error("A read cannot allocate an Agent"); }, agent: (): never => { throw Error("A read cannot call an Agent"); },
-      ...{ roleStanding: async () => ({ status: "unavailable" as const }) },
-      observe: async () => { observations++; return { keyState: "active", memberState: "active", member: "@owner" as MemberId, controller: null, actions: [] }; } };
+      observe: async () => expect.fail("A connection listing must use current actor-role facts"),
+      roleStanding: hostedRolePort(async request => {
+        observations++;
+        if ("agent" in request) return { status: "unavailable" };
+        return { status: "observed", of: membership, head: { seq: 0, hash: digestBytes(body) }, actor: {
+          key: request.actor, keyState: "active", memberState: "active", member: "@owner", controller: null, actions: [],
+        } };
+      }) };
     let registry = new HostedRegistry(sql, registryPorts);
     const signedRead = (op: string, secret = key) => signControl({ v: 1, action: "connections", service, membership, agent: null, actor: keyIdOfSecret(secret), body: digestBytes(body), op, notAfter: timeOf(now + 60_000) }, secret);
     const read = (op: string, secret = key) => registry.connections(signedRead(op, secret), body, service);
