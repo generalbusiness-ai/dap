@@ -97,7 +97,7 @@ test("a detached text in a creation message: the child reads the bytes from its 
     const result = await runInDurableObject(node.object, (_instance, state) => {
       const row = state.storage.sql.exec<{ bytes: string; hash: Digest; size: number }>("SELECT bytes, hash, size FROM entry WHERE seq = 0 LIMIT 1").one();
       const entry = parseStrict(row.bytes); if (!isEntry(entry)) return expect.fail("The native genesis is required.");
-      const expected = localRetainedPlan(notes, entry, row.hash, null, PROPOSED_BOUNDS).dependencies.filter(({ dependency }) => dependency.mode === "text");
+      const expected = localRetainedPlan(notes, entry, { at: { scope: node.name, genesis: row.hash }, seq: 0, hash: row.hash }, null, PROPOSED_BOUNDS).dependencies.filter(({ dependency }) => dependency.mode === "text");
       const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
         const rows = state.storage.sql.exec(query, ...args).toArray();
         for (const held of rows) cells.push(...Object.values(held));
@@ -192,7 +192,7 @@ test("a repeat of a decided send is answered from the entry that recorded it, an
   // alone cannot give a differently pinned sender's fields this meaning.
   const projected = await runInDurableObject(B.object, (_instance, state) => {
     const row = state.storage.sql.exec<{ size: number }>("SELECT size FROM entry WHERE seq = ? LIMIT 1", told.entry.seq).one();
-    const all = localRetainedPlan(notes, told.entry, told.hash, null, PROPOSED_BOUNDS, "notes").dependencies;
+    const all = localRetainedPlan(notes, told.entry, { at: toldAt, seq: told.entry.seq, hash: told.hash }, null, PROPOSED_BOUNDS, "notes").dependencies;
     const expected = all.filter(({ dependency }) => dependency.mode === "text");
     const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {
       const rows = state.storage.sql.exec(query, ...args).toArray();
@@ -271,7 +271,7 @@ test("native related-text projection follows self and earlier owner items, and i
     expect(index === 0 ? item : isFactRef(item)).toEqual(index === 0 ? { self: true } : true);
     const result = await runInDurableObject(B.object, (_instance, state) => {
       const row = state.storage.sql.exec<{ bytes: string; size: number }>("SELECT bytes, size FROM entry WHERE seq = ? LIMIT 1", sealed.entry.seq).one();
-      const expected = localRetainedPlan(linked, sealed.entry, sealed.hash, null, PROPOSED_BOUNDS, "notes").dependencies.filter(({ dependency }) => dependency.mode === "text");
+      const expected = localRetainedPlan(linked, sealed.entry, { at: sealedAt, seq: sealed.entry.seq, hash: sealed.hash }, null, PROPOSED_BOUNDS, "notes").dependencies.filter(({ dependency }) => dependency.mode === "text");
       const cells: unknown[] = [], sql = { exec(query: string, ...args: SqlValue[]) {
         const rows = state.storage.sql.exec(query, ...args).toArray();
         for (const held of rows) cells.push(...Object.values(held));

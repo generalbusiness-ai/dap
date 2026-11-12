@@ -251,7 +251,7 @@ const failed = (detail: string): { refused: StepRefusal } => ({ refused: { reaso
 
 /** The job that a fact names: the item that this scope's entry of that hash opened, of the type `job`. Null: the fact names none here. */
 function jobOf(given: Pick<StepGiven, "view" | "scope">, fact: FactRef): Item | null {
-  const item = isLocalFact(fact, given.scope.at) && fact.at.kind === given.scope.at.kind ? given.view.item(fact.seq) : null;
+  const item = isLocalFact(fact, given.scope.at) ? given.view.item(fact.seq) : null;
   return item !== null && item.type === JOB.type && item.opened === fact.hash ? item : null;
 }
 

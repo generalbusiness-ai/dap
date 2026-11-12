@@ -510,7 +510,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
     const unknownProjectionOwners = new Map<string, ReadonlyMap<string, OperationRules>>([[judged.input.owner, new Map([[judged.input.kind, { ...projectionOwner, values: () => [] }]])]]);
     const projection = await runInDurableObject(G.object, (_instance, state) => {
       const row = state.storage.sql.exec<{ hash: `sha256:${string}`; size: number }>("SELECT hash, size FROM entry WHERE seq = ? LIMIT 1", judged.seq).one();
-      const all = localRetainedPlan(definition.definition, judged, row.hash, projectionOwner, PROPOSED_BOUNDS).dependencies;
+      const all = localRetainedPlan(definition.definition, judged, { at: branchScope, seq: judged.seq, hash: row.hash }, projectionOwner, PROPOSED_BOUNDS).dependencies;
       const expected = all.filter(({ dependency }) => dependency.mode === "probe");
       const expectedValues = all.filter(({ dependency }) => dependency.mode === "required" && dependency.consumer === "outcome-value");
       const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {

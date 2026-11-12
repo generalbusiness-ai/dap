@@ -707,7 +707,7 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
         if (!sealed) throw Error('Complete actual local history required');
         const { entry, hash } = sealed, operation = entry.input.type === 'outcome' ? view.operation(entry.input.operation) : null;
         const rules = operation ? owners?.rules(operation.owner, operation.kind) ?? null : null;
-        const plan = localRetainedPlan(checked.definition, entry, hash, rules, PROPOSED_BOUNDS);
+        const plan = localRetainedPlan(checked.definition, entry, { at: store.scope()!.at, seq: entry.seq, hash }, rules, PROPOSED_BOUNDS);
         const values = plan.dependencies.flatMap(({ dependency }) => {
           if (dependency.mode !== 'required' || dependency.key.kind !== 'value') return [];
           const kept = store.retained('value', dependency.key.digest, dependency.key.domain);

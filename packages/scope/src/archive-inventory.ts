@@ -115,7 +115,7 @@ function inventoryArchiveInternal(coupled: boolean, sql: Sql, at: ScopeRef, thro
           }
           const rules = entry.input.type === "outcome" ? rootPolicy.support.owners.get(entry.input.owner)?.get(entry.input.kind) ?? null : null;
           const origin: DependencyOrigin = { at: { at, seq: entry.seq, hash: position.hash }, input: entry.input.type };
-          const plan = localRetainedPlan(definition, entry, position.hash, rules, bounds, deliveryUnder);
+          const plan = localRetainedPlan(definition, entry, origin.at, rules, bounds, deliveryUnder);
           forecast?.check(position, plan);
           budget.check();
           plans.push({ origin, plan });

@@ -127,7 +127,7 @@ test("T4, a handover: the same accepted commitment gets a new performer only whe
   if (!rules) return expect.fail("The native hold rules are required.");
   const origin = { at: { at: G.at, seq: sealed.entry.seq, hash: sealed.hash }, input: "outcome" as const };
   const expected = outcomeSnapshotDependencies(origin, input, () => rules);
-  const native = localRetainedPlan(G.valid, sealed.entry, sealed.hash, rules, PROPOSED_BOUNDS);
+  const native = localRetainedPlan(G.valid, sealed.entry, origin.at, rules, PROPOSED_BOUNDS);
   const projection = await runInDurableObject(G.object, (_instance, stored) => {
     const row = stored.storage.sql.exec<{ size: number; bytes: string }>("SELECT size, bytes FROM entry WHERE seq = ?", sealed.entry.seq).one();
     const cells: unknown[] = [], budget = new ArchiveBudget(), sql = { exec(query: string, ...args: SqlValue[]) {

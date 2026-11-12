@@ -122,7 +122,7 @@ test("certified native policy and proof plus its consumed single policy envelope
     const gPolicy = policies.get(C.destination)!;
     const rules = gPolicy.support.owners.get(C.destination)?.get(outcome.entry.input.kind);
     if (!rules) throw Error("Actual certificate owner selector required");
-    const nativePlan = localRetainedPlan(gPolicy.support.definition, outcome.entry, outcome.hash, rules, PROPOSED_BOUNDS);
+    const nativePlan = localRetainedPlan(gPolicy.support.definition, outcome.entry, { at: await G.at(), seq: outcome.entry.seq, hash: outcome.hash }, rules, PROPOSED_BOUNDS);
     const outcomeValues = nativePlan.dependencies.flatMap(({ dependency }) => dependency.mode === "required" && dependency.consumer === "outcome-value" && dependency.key.kind === "value" ? [dependency.key] : []);
     expect(outcomeValues).toEqual([
       { kind: "value", domain: RULES_POLICY_VALUE_V11.domain, digest: proposal.digest },

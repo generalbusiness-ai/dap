@@ -27,7 +27,7 @@ test.each([false, true])("native act field projection shares the byte selector w
     // own SQL port below records exactly what crossed its boundary.
     const row = state.storage.sql.exec<{ bytes: string; size: number; hash: typeof digest }>("SELECT bytes, size, hash FROM entry WHERE seq = 1 LIMIT 1").one();
     const entry = parseStrict(row.bytes); if (!isEntry(entry)) return expect.fail("Native fixture must have a genuine entry.");
-    const expected = localRetainedPlan(declared, entry, row.hash, null, PROPOSED_BOUNDS).dependencies.filter(({ dependency }) => dependency.mode === "text" || dependency.mode === "required" && dependency.consumer === "act-value");
+    const expected = localRetainedPlan(declared, entry, { at: lane.at, seq: entry.seq, hash: row.hash }, null, PROPOSED_BOUNDS).dependencies.filter(({ dependency }) => dependency.mode === "text" || dependency.mode === "required" && dependency.consumer === "act-value");
     const budget = new ArchiveBudget(), cells: unknown[] = [];
     let firstCalls = 0, secondCalls = 0;
     const read = (query: string, args: SqlValue[]) => {
@@ -82,7 +82,7 @@ test("native Rules activation projects the definition key under the owning defin
     const result = await life.wait(() => runInDurableObject(rules.object, (_instance, state) => {
       const row = state.storage.sql.exec<{ bytes: string; hash: typeof notesDefinition.digest; size: number }>("SELECT bytes, hash, size FROM entry WHERE seq = ? LIMIT 1", answer.receipt.fact.seq).one();
       const entry = parseStrict(row.bytes); if (!isEntry(entry)) return expect.fail("The actual native activation entry is required.");
-      const expected = localRetainedPlan(checked.definition, entry, row.hash, null, bounds).dependencies.filter(({ dependency }) => dependency.mode === "required" && dependency.consumer === "act-value");
+      const expected = localRetainedPlan(checked.definition, entry, { at: rulesAt, seq: entry.seq, hash: row.hash }, null, bounds).dependencies.filter(({ dependency }) => dependency.mode === "required" && dependency.consumer === "act-value");
       const cells: unknown[] = [], sql = { exec(query: string, ...args: SqlValue[]) {
         const rows = state.storage.sql.exec(query, ...args).toArray();
         for (const held of rows) cells.push(...Object.values(held));

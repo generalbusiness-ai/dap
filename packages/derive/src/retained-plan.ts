@@ -163,8 +163,9 @@ export interface LocalRetainedPlan {
 /** Composition for local inventory, using the same selectors as replay's
  * actual reads above. This does not prove judgments, foreign histories,
  * current authority, owner evidence or the ancestry walk. */
-export function localRetainedPlan(definition: ValidDefinition, entry: Entry, hash: Digest, rules: OperationRules | null, bounds: Bounds, deliveryUnder?: string): LocalRetainedPlan {
-  const input = entry.input, origin: DependencyOrigin = { at: { at: entry.at, seq: entry.seq, hash }, input: input.type };
+export function localRetainedPlan(definition: ValidDefinition, entry: Entry, fact: FactRef, rules: OperationRules | null, bounds: Bounds, deliveryUnder?: string): LocalRetainedPlan {
+  if (fact.seq !== entry.seq) throw new Error("A retained plan names the fact of its own entry.");
+  const input = entry.input, origin: DependencyOrigin = { at: { at: fact.at, seq: fact.seq, hash: fact.hash }, input: input.type };
   originOf(origin);
   const dependencies: PlannedRetainedDependency[] = [];
   const add = (dependency: RetainedDependency, max: number) => dependencies.push({ dependency, max });
