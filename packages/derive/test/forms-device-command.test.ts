@@ -1,6 +1,5 @@
 import { deviceConditions, wholeDeviceData, conditionalDeviceData, deviceParentData } from "./definition-corpus/forms-device-variants.ts";
 import { expect, test } from "vitest";
-import { newIncarnation } from "@generalbusiness/dap-bytes";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeviceCommandGrant, type EffectForm, type FactRef, type FieldValue, type Grant, type SignedIntent } from "@generalbusiness/dap-contract";
 import { capabilitiesOf, clockOf, deviceCommand, fits, holdCapability, judgeGenesis, judgePreparation, ownerReservations, reserved, validateDefinition, type Own, type PreparationJudgment, type Steps, type ValidDefinition } from "../src/index.ts";
 import { Ledger, T0, creation, created, deliver, grantOf, keys, valid, deviceCommandFixture as scope } from "./fixtures-entry.ts";
@@ -111,11 +110,11 @@ test("only the full granted owner can answer an exact local command, within gran
   expect(command(device).result).toBe("write");
   const fact = s.fact(s.last.seq), head = s.head;
   expect(answer(fact, "confirmed", keys.vic).judgment).toMatchObject({ result: "refused", name: "device-command-not-owner" });
-  const foreignInc = newIncarnation(new Uint8Array(16).fill(94));
+  const foreignGenesis = `sha256:${"5e".repeat(32)}` as const;
   expect(answer(fact, "confirmed", keys.rita, { grant: { ...grantOf(keys.rita, s.at, []),
-    subject: { ...keys.rita.member, membership: { ...keys.rita.member.membership, inc: foreignInc } } } }).judgment)
+    subject: { ...keys.rita.member, membership: { ...keys.rita.member.membership, genesis: foreignGenesis } } } }).judgment)
     .toMatchObject({ result: "refused", name: "device-command-not-owner" });
-  expect(answer({ ...fact, at: { ...fact.at, inc: foreignInc } }).judgment).toMatchObject({ result: "refused", name: "device-command-unknown" });
+  expect(answer({ ...fact, at: { ...fact.at, genesis: foreignGenesis } }).judgment).toMatchObject({ result: "refused", name: "device-command-unknown" });
   expect(answer({ ...fact, seq: 0 }).judgment).toMatchObject({ result: "refused", name: "device-command-unknown" });
   expect(answer({ ...fact, hash: s.fact(0).hash }).judgment).toMatchObject({ result: "refused", name: "device-command-unknown" });
   expect(answer(fact, "confirmed", keys.rita, { own: seq => seq === fact.seq ? null : s.own(seq) }).judgment).toEqual({ result: "unavailable", reason: "unavailable" });

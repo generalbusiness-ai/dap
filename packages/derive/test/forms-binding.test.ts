@@ -1,11 +1,11 @@
 import { bindingChanges, bindingBoundOperandsData, bindingLateGuardData, bindingLateEffectData, bindingPreFailureData, bindingClockData, bindingAuditData, bindingCountsData, bindingRequestData, bindingProtoData, bindingLocalFactData, bindingIntegerData } from "./definition-corpus/binding-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { FactRef, FieldValue, Input, PlatformDefinition, ScopeKind, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
-import { canonicalBytes, entryHash, factRefOf, newIncarnation, parseStrictBytes, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { FactRef, FieldValue, Input, PlatformDefinition, ScopeRef, Send } from "@generalbusiness/dap-contract";
+import { canonicalBytes, entryHash, factRefOf, parseStrictBytes } from "@generalbusiness/dap-bytes";
 import { MemoryState, PROFILES, applyEntry, clockOf, decisionCounts, entryOf, fits, indexItems, itemAwaits, judgeDelivery, keyOf, owed, validateDefinition } from "../src/index.ts";
 import type { Counts, Draft, Fetched, Indexed, Judgment, PlatformRule, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
-import { Scope, arriving, d, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";
+import { Scope, arriving, d, fixtureScope, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";
 import { observeNativeCalls } from "../src/program/native-trace.ts";
 
 /**
@@ -21,10 +21,7 @@ import { observeNativeCalls } from "../src/program/native-trace.ts";
  * The platform data and selector rules remain stand-ins.
  */
 
-const lane = (n: number): ScopeRef => {
-  const seed: Seed = { v: 1, kind: "lane" as ScopeKind, definition: d("e"), creator: null, cause: d("c"), ordinal: n };
-  return { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(n)), kind: "lane" };
-};
+const lane = (n: number): ScopeRef => fixtureScope("lane", n);
 const [P, Q, R] = [lane(31), lane(32), lane(33)];
 import { JOB_OF, M, M51 } from "./definition-corpus/forms-binding-data.ts";
 
@@ -86,8 +83,8 @@ let made = 1000;
 /** A ticket: the fact of an entry of that lane, with the entry as the receiver fetches it. */
 function ticket(of: ScopeRef, seq = ++made): Fetched {
   // The entry says that it recorded an act of the kind `merge`. Nothing signed it.
-  const { entry } = forged(of, seq, { type: "act", signed: { intent: { kind: "merge" } }, authority: [] } as unknown as Input, []);
-  return { fact: factRefOf(entry), entry, under: "ticket" };
+  const { entry, sequence } = forged(of, seq, { type: "act", signed: { intent: { kind: "merge" } }, authority: [] } as unknown as Input, []);
+  return { fact: factRefOf(entry, of), entry, sequence, under: "ticket" };
 }
 
 /** A scope under made-up platform data, with a real reservation ledger and a budget of entries. */
@@ -111,7 +108,7 @@ class Jobs extends Scope {
   request(from: ScopeRef, message: string, fields: Record<string, FieldValue>, facts: Fetched[] = []): Arrival {
     const send: Send = { n: 0, to: this.at, message: { class: "request", type: "tell", body: { message, fields } } };
     const source = forged(from, ++made, { type: "checkpoint", through: 0, state: d("0") }, [send]);
-    return { send, from: factRefOf(source.entry), source, facts };
+    return { send, from: factRefOf(source.entry, source.sequence.at), source, facts };
   }
   judged(a: Arrival, state: MemoryState = this.state, using = this.using): Judgment {
     const arrival = { ...a.send, from: a.from };
@@ -484,8 +481,8 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
     const { G, t, b } = three();
     // Case 25. Forty more jobs of Q, each with a ticket in the same scope as the ticket of B and at another position.
     for (let i = 0; i < 40; i++) G.start(Q, ticket(Q, 5000 + i));
-    // Another hash at the position of B's ticket, and the same hash under another incarnation, are other keys.
-    const near = [{ ...t.b.fact, hash: d("1") }, { ...t.b.fact, at: { ...Q, inc: P.inc } }];
+    // Another hash at the position of B's ticket, and the same hash under another genesis, are other keys.
+    const near = [{ ...t.b.fact, hash: d("1") }, { ...t.b.fact, at: { ...Q, genesis: P.genesis } }];
     expect([G.state.lookup("job", "ticket", keyOf(t.b.fact, G.at)!, 9), ...near.map((fact) => G.state.lookup("job", "ticket", keyOf(fact, G.at)!, 9))]).toEqual([[b], [], []]);
     // Case 23. A start is written and fills G, and the next entry is a stop with that ticket: the row was written with the item.
     const fresh = ticket(Q);

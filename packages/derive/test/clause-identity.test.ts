@@ -43,7 +43,7 @@ for (const { name, identical, distinct, conditional, choices } of clauseMatrices
       const request = { from: s.fact(origin.seq), n: sent.n };
       const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
       const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
-      const arrival = { ...answer, from: factRefOf(source.entry) };
+      const arrival = { ...answer, from: factRefOf(source.entry, source.sequence.at) };
       s.now = t(8);
       const record = (observed: readonly ObservationUse[]) => judgeDelivery(s.state, s.definition, arrival, {
         ...arriving(s, arrival, source), platform: weigherRules(), observed, observing: { membership },
@@ -78,7 +78,7 @@ for (const cohort of ["legacy", "whole-scope"] as const) for (const effectList o
   const request = { from: s.fact(origin.seq), n: sent.n };
   const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
   const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
-  const arrival = { ...answer, from: factRefOf(source.entry) };
+  const arrival = { ...answer, from: factRefOf(source.entry, source.sequence.at) };
   s.now = t(8);
   const record = (observed: readonly ObservationUse[]) => judgeDelivery(s.state, s.definition, arrival, {
     ...arriving(s, arrival, source), platform: weigherRules(), observed, observing: { membership },
@@ -121,7 +121,7 @@ for (const cohort of ["legacy", "whole-scope"] as const) for (const mode of ["mu
     const request = { from: s.fact(origin.seq), n: sent.n };
     const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
     const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
-    const arrival = { ...answer, from: factRefOf(source.entry) };
+    const arrival = { ...answer, from: factRefOf(source.entry, source.sequence.at) };
     s.now = t(8);
     const right = memberSeen(keys.una.member.member, 1, t(3));
     const wrong = memberSeen(keys.vic.member.member, 2, t(3));

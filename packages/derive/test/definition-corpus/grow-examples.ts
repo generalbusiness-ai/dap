@@ -1,7 +1,7 @@
 /** Grow examples' complete positive declarations and native launcher variants.
  * All construction is lazy; this shard imports no validated fixture or history. */
-import { PROPOSED_BOUNDS, type FieldValue, type ScopeRef } from "@generalbusiness/dap-contract";
-import { newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type FieldValue } from "@generalbusiness/dap-contract";
+import { membership } from "./fixture-identities.ts";
 import { RULE_PROFILES } from "../../src/rule/index.ts";
 import { demoDefinitions } from "../../../../examples/grow/demo-definitions.ts";
 import { deviceTestDefinition, zoneTestDefinition, simulatorTickParentDefinition, growSiteLauncherDefinition, siteForRoomDefinition, misaddressedRoomDefinition } from "../../../../examples/grow/definition-corpus-data.ts";
@@ -10,13 +10,9 @@ import { room } from "../../../../examples/grow/room.ts";
 import { preFailureRelationData } from "./package-graph-data.ts";
 import type { DefinitionCorpusRow } from "./row.ts";
 
-/** Exact public fixture identity recipe from fixtures.ts ref('membership', 1),
- * then member() for keys.vic, keys.una and keys.paul. No actor keys are made. */
+/** The public fixture membership, then member() for keys.vic, keys.una and
+ * keys.paul. No actor keys are made. */
 function simulatorFields(): Record<string, FieldValue> {
-  const membership: ScopeRef = {
-    scope: scopeIdOf({ v: 1, kind: "membership", definition: `sha256:${"e".repeat(64)}`, creator: null, cause: `sha256:${"c".repeat(64)}`, ordinal: 1 }),
-    inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "membership",
-  };
   return { label: "TEST hosted room", sensors: { membership, member: "@vic" }, climate: { membership, member: "@una" }, operator: { membership, member: "@paul" } };
 }
 

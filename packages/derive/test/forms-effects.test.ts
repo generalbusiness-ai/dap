@@ -21,7 +21,7 @@ import { runClause } from "../src/handlers.ts";
 import { bodyStructure, namedBody } from "../src/program/structure.ts";
 import { executeBody } from "../src/program/body.ts";
 import { judgeGuardNodes } from "../src/program/guard-value.ts";
-import { otherLane, t } from "./fixtures-entry.ts";
+import { otherLane, sequenceAt, t } from "./fixtures-entry.ts";
 
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
 
@@ -155,10 +155,10 @@ const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Re
   const probe = checked.declared.acts["probe"]!;
   if (s.last.input.type !== "act") return expect.fail("the effect probe requires an act entry template");
   // Explicit fetched-entry stand-in, hashed as production requires. It proves no provider judgment or authority.
-  const entry = { ...s.last, at: otherLane, input: { ...s.last.input, signed: s.intent(rita, "test-input", { to: otherLane, ...fields(more.given ?? {}) }) }, effects: [], sends: [] };
-  const fact = factRefOf(entry);
+  const entry = { ...s.last, genesis: otherLane.genesis, input: { ...s.last.input, signed: s.intent(rita, "test-input", { to: otherLane, ...fields(more.given ?? {}) }) }, effects: [], sends: [] };
+  const fact = factRefOf(entry, otherLane);
   const j: Judging = { ...judging(s, kind, bound, more), definition: checked, kind: "probe", fieldTypes: probe.fields,
-    fields: { ...more.given, "test-proof": fact }, facts: new Map([[fact.hash, { fact, entry, under: "test-effects-source" }]]) };
+    fields: { ...more.given, "test-proof": fact }, facts: new Map([[fact.hash, { fact, entry, sequence: sequenceAt(otherLane), under: "test-effects-source" }]]) };
   return evaluateEffects(j, bodyStructure(checked, probe, "probe"), more.opens ?? null);
 };
 
@@ -314,7 +314,7 @@ describe("effects in a handler and in a result clause (sections 6.6 and 7.4)", (
     X.did(una, "ask", fields({ desk: D.at }));   // X.2: an `ask` act of a ticket
     const tell: Send = { n: 0, to: D.at, message: { class: "request", type: "tell", body: { message: "audit", fields: { repo: 0 } } } };
     const source = forged(X.at, 2, X.entries[2]!.entry.input, [tell]);
-    const arrival = { ...tell, from: factRefOf(source.entry) };
+    const arrival = { ...tell, from: factRefOf(source.entry, source.sequence.at) };
     const decided = (kind: string, under = "ticket") => {
       const j = judgeDelivery(D.state, audited(kind, under), arrival, arriving(D, arrival, source));
       return j.result === "write" && j.draft.input.type === "delivery" && "decision" in j.draft.input ? [j.draft.input.decision, j.draft.input.reason?.code, j.draft.effects] : j.result;

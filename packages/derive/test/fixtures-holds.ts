@@ -113,7 +113,7 @@ export class Works extends Scope {
   start(): string {
     const send = { n: 0, to: this.at, message: { class: "request", type: "tell", body: { message: "start", fields: {} } } } as const;
     const source = forged(otherLane, ++this.#made, { type: "checkpoint", through: 0, state: this.entries[0]!.hash }, [send]);
-    const arrival = { ...send, from: factRefOf(source.entry) };
+    const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
     return this.commit(judgeDelivery(this.state, this.definition, arrival, { ...arriving(this, arrival, source), platform: this.rules }));
   }
   /** One outcome of one attempt. */
@@ -130,7 +130,7 @@ export class Works extends Scope {
     const request = { from: this.fact(seq), n: 0 };
     const send = { n: 0, to: this.at, message: { class: "result", of: request, outcome: "applied" } } as const;
     const source = forged(otherLane, ++this.#made, { type: "delivery", ...request, message: this.entries[seq]!.entry.sends[0]!.message as Request, decision: "applied" }, [send]);
-    const arrival = { ...send, from: factRefOf(source.entry) };
+    const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
     return this.commit(judgeDelivery(this.state, this.definition, arrival, { ...arriving(this, arrival, source), platform: this.rules }));
   }
   /** The operations that the last entry opened, by their ordinals. */

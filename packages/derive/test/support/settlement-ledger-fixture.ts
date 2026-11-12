@@ -82,7 +82,7 @@ export class SettlementFixture {
         this.#replies.set(key, source);
       }
       if (scope instanceof Works) scope.script.after = () => opened(0, "audit", 1);
-      const arrival = { ...send, from: factRefOf(source.entry) };
+      const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
       return scope.commit(judgeDelivery(scope.state, scope.definition, arrival,
         { ...arriving(scope, arrival, source), ...(scope instanceof Works ? { platform: scope.rules } : {}) }));
     }

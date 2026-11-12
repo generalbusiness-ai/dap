@@ -174,7 +174,7 @@ test("at B a handoff exchanges three standing entries for one entry and two requ
   const requestMessage = origin.sends[0]!.message;
   if (requestMessage.class !== "request") return expect.fail("advance sent no request");
   const source = forged(peer.at, 2, { type: "delivery", from: s.fact(request.seq), n: 0, message: requestMessage, decision: "applied" }, [{ n: 0, to: s.at, message }]);
-  const delivered = { to: s.at, from: factRefOf(source.entry), n: 0, message };
+  const delivered = { to: s.at, from: factRefOf(source.entry, source.sequence.at), n: 0, message };
   const resultContext = { ...arriving(s, delivered, source), platform };
   const bad = judgeDelivery(s.state, s.definition, delivered, resultContext);
   expect(bad).toEqual({ result: "unavailable", reason: "unavailable" });

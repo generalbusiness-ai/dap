@@ -104,7 +104,7 @@ describe("the list forms (section 6.5)", () => {
     const D = created();
     const tell: Send = { n: 0, to: D.at, message: { class: "request", type: "tell", body: { message: "audit", fields: {} } } };
     const source = forged(new Scope(ticketDefinition).at, 1, D.entries[0]!.entry.input, [tell]);
-    const arrival = { ...tell, from: factRefOf(source.entry) };
+    const arrival = { ...tell, from: factRefOf(source.entry, source.sequence.at) };
     D.now = t(-10);
     const judged = (second: Guard) => { const j = judgeDelivery(D.state, timed(second), arrival, arriving(D, arrival, source)); return j.result === "unavailable" ? j.reason : j.result; };
     expect([judged({ unset: "due" }), judged({ before: { slot: "due" } })]).toEqual(["write", "clock-behind"]);
@@ -117,7 +117,7 @@ describe("the list forms (section 6.5)", () => {
     const decision = (barred: string, checks: unknown = [{ name: "lint", required: true }, { name: "docs", required: false }]) => {
       const tell: Send = { n: 0, to: D.at, message: { class: "request", type: "tell", body: { message: "audit", fields: { barred, checks } } } };
       const source = forged(X.at, 1, X.entries[1]!.entry.input, [tell]);
-      const arrival = { ...tell, from: factRefOf(source.entry) };
+      const arrival = { ...tell, from: factRefOf(source.entry, source.sequence.at) };
       const j = judgeDelivery(D.state, auditing, arrival, arriving(D, arrival, source));
       return j.result === "write" && j.draft.input.type === "delivery" && "decision" in j.draft.input ? [j.draft.input.decision, j.draft.input.reason] : j.result;
     };

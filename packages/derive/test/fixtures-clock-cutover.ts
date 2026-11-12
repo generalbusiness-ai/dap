@@ -9,7 +9,7 @@ export function clockScene(definition: ValidDefinition, given: Record<string, Fi
   const connected = receiver.act(keys.rita, "connect", { ...on(receiver, 0), ...fields({ peer: sender.at }) }, platform ? { platform } : {});
   if (connected.result !== "write") throw new Error(`clock fixture connect failed: ${JSON.stringify(connected)}`);
   const send: Send = { n: 0, to: receiver.at, message: { class: "request", type: "tell", body: { message: "clock", fields: given } } };
-  const source = forged(sender.at, 1, sender.entries[1]!.entry.input, [send]), arrival = { ...send, from: factRefOf(source.entry) };
+  const source = forged(sender.at, 1, sender.entries[1]!.entry.input, [send]), arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
   const judge = (behind = true) => {
     receiver.now = behind ? t(-10) : T0;
     return judgeDelivery(receiver.state, definition, arrival, { ...arriving(receiver, arrival, source), ...(platform ? { platform } : {}) });

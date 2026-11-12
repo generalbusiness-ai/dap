@@ -83,7 +83,7 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
       const message = advisory ? { class: "advisory", type: "index", body: { fields: {} } } as const : { class: "request", type: "tell", body: { message: name, fields: { job: scope.fact(id) } } } as const;
       const send = { n: 0, to: scope.at, message };
       const source = forged(directory, seq, { type: "checkpoint", through: 0, state: entryHash(scope.last) }, [send]);
-      const arrival = { ...send, from: factRefOf(source.entry) };
+      const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
       const judged = judgeDelivery(scope.state, definition, arrival, arriving(scope, arrival, { ...source, under: "desk" }));
       expect(judged.result).toBe("write");
       if (judged.result === "write") scope.seal(judged.draft);
@@ -371,7 +371,7 @@ describe("18.54 cases 13 and 14: a rule of a form that declares settles", () => 
   const flag = (G: Full, id: number, platform: PlatformRules, seq: number) => {
     const send = { n: 0, to: G.at, message: { class: "request", type: "tell", body: { message: "flag", fields: { job: G.fact(id) } } } } as const;
     const source = forged(directory, seq, { type: "checkpoint", through: 0, state: entryHash(G.last) }, [send]);
-    const arrival = { ...send, from: factRefOf(source.entry) };
+    const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
     return G.commit(judgeDelivery(G.state, G.definition, arrival, { ...arriving(G, arrival, { ...source, under: "desk" }), platform }));
   };
 
