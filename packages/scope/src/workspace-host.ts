@@ -62,7 +62,8 @@ export class WorkspaceHost implements Outside {
   #scope(): string { return canonicalize(this.#given.scope()!.at); }
   #forkName(hold: number, opening: number, attempt: number): string {
     const at = this.#given.scope()!.at;
-    return `h-${at.scope.slice(3, 35)}-${at.inc.slice(3)}-${hold}-${opening}-${attempt}`;
+    // Twenty-six hex digits of the genesis digest take the place of the incarnation's twenty-six characters.
+    return `h-${at.scope.slice(3, 35)}-${at.genesis.slice(7, 33)}-${hold}-${opening}-${attempt}`;
   }
   #record(kind: string, key: number): RecordState | null { return this.#given.state.record(OWNER, kind, [key]); }
   #records(kind: string, member: string, value: FieldValue): readonly RecordState[] { return this.#given.state.records(OWNER, kind, { member, value }); }

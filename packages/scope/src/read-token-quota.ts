@@ -64,7 +64,10 @@ export class ReadTokenQuota implements ReadTokenAdmission {
   sealed(entry: Entry): void {
     const mint = mintOf(entry);
     if (!mint) return;
-    const scope = canonicalize(entry.at), at = timeMs(entry.time);
+    // A sealed entry names no scope: it is an entry of this scope.
+    const own = this.#current();
+    if (!own) throw new Error("read-token reservation requires the current scope");
+    const scope = canonicalize(own), at = timeMs(entry.time);
     if (at === null) throw new Error("read-token reservation requires the sealed time");
     // The bucket index bounds this deletion to its eight prior slots.
     this.#sql.exec("DELETE FROM private_read_quota WHERE scope=? AND bucket=? AND ends_ms<=?", scope, mint.bucket, at).toArray();
