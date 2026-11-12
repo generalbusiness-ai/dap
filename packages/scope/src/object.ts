@@ -43,7 +43,7 @@ import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, ReadMinimum, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, isEntryBodyOf, isFactRef, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
+import { isEntryOf, same, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 
 import type { Delivered, StateView } from "@generalbusiness/dap-derive";
 import { Scope, creationKind, ownOf, type Checkpointed, type Created } from "./core.ts";
@@ -396,7 +396,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       const scope = this.#store.scope();
       if (!scope) return "absent";
       if (!isScopeRef(scope.at) || scope.at.scope !== this.#name || !isHead(scope.head) || !["provisional", "active", "refused"].includes(scope.status)) return "unavailable";
-      return scope.at.kind === "register" && scope.status === "active" ? "ready" : "not-ready";
+      return scope.kind === "register" && scope.status === "active" ? "ready" : "not-ready";
     } catch { return "unavailable"; }
   }
   /** Optional operational binding; it is never a native authority port. */
@@ -603,7 +603,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     if (!captured || captured.scope.status !== "active" || captured.genesis.decision !== "applied"
       || captured.pinned.named !== seed.definition || captured.pinned.platform === null
       || captured.scope.at.scope !== this.#name || captured.scope.at.scope !== scopeIdOf(captured.genesis.seed)
-      || captured.scope.at.kind !== captured.genesis.seed.kind || captured.scope.at.inc !== captured.genesis.inc
+      || captured.scope.kind !== captured.genesis.seed.kind || captured.scope.at.genesis !== captured.birth.fact.hash
       || canonicalize(captured.genesis.seed) !== canonicalize(seed)) return false;
     // The admitted canonical body is bounded and hash-checked by birth().
     if ((parseStrict(captured.birth.bytes) as Entry).prev !== null) return false;
@@ -631,7 +631,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return this.#publicInvoke("acts", async () => {
     const scope = this.#store.scope();
     const judged = () => this.#scope.submit(signed, grants, beside);
-    if (scope?.at.kind !== "membership" || !isJoin(signed)) return this.#sent(await judged());
+    if (scope?.kind !== "membership" || !isJoin(signed)) return this.#sent(await judged());
     return this.#sent(await this.#limits.serve({ address: typeof address === "string" ? address : null, now: timeMs(this.#clock.read()) ?? 0, head: scope.head, invitationProof: () => answersVersionQuestion(this.#scope.pinned()?.named, "scopeInvitationProofMembership") }, signed, judged));
 
     });
@@ -1001,7 +1001,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       if (!("key" in checkSignedReadRequest(this.#signed.observe ? { ...this.#signed, phase: "rooted-request" } : this.#signed, this.#store, reader as string, read, arg))) return;
       const local = checkLocalSignedRead(this.#signed.observe ? { ...this.#signed, phase: "rooted-local" } : this.#signed, this.#store, reader as string, read, arg);
       // The register's recent local signers read its whole history (ca8ad1cf).
-      if ("key" in local && this.#store.scope()?.at.kind === "register") return;
+      if ("key" in local && this.#store.scope()?.kind === "register") return;
       if (read === "summary" || read === "entry") {
         if ("key" in local) {
           if (read === "summary" || arg === "0") return;
@@ -1010,7 +1010,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
         }
       }
     } else {
-      if (this.#store.scope()?.at.kind !== "register" || this.#readers.allows(reader, read) !== false) return;
+      if (this.#store.scope()?.kind !== "register" || this.#readers.allows(reader, read) !== false) return;
       const chained = this.#readers.chained?.(reader, read);
       if (typeof chained !== "object" || chained === null) return;
     }
@@ -1062,7 +1062,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   async jobState(fact: import("@generalbusiness/dap-contract").FactRef): Promise<{ state: string; decidedBy: import("@generalbusiness/dap-contract").FactRef | null } | null | RoomRetiredStop> {
     if (this.#retired) return ROOM_RETIRED_STOP;
     this.#first(); const scope = this.#store.scope(); const sealed = this.#store.stored(fact.seq);
-    if (!scope || !sealed || fact.at.scope !== scope.at.scope || fact.at.inc !== scope.at.inc || sealed.hash !== fact.hash) return null;
+    if (!scope || !sealed || !same(fact.at, scope.at) || sealed.hash !== fact.hash) return null;
     const item = this.#store.item(fact.seq);
     const deciding = item?.refs["decidedBy"];
     const entry = typeof deciding === "number" ? this.#store.stored(deciding) : null;
@@ -1074,8 +1074,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#first();
     const scope = this.#store.scope(), kept = this.#store.stored(fact.seq);
     const sealed = kept ? { entry: JSON.parse(kept.bytes) as Entry, hash: kept.hash } : null;
-    if (!scope || !sealed || fact.at.kind !== scope.at.kind || fact.at.scope !== scope.at.scope
-      || fact.at.inc !== scope.at.inc || sealed.hash !== fact.hash) return null;
+    if (!scope || !sealed || !same(fact.at, scope.at) || sealed.hash !== fact.hash) return null;
     const item = this.#store.item(fact.seq);
     return item?.type === "work-source" && sealed.entry.effects.some(effect => effect.effect === "open"
       && effect.item === fact.seq && effect.type === "work-source") ? item.state : null;
@@ -1106,7 +1105,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const key = this.#readers.holder?.(reader, "credential") ?? false;
     if (key === "sessions-unavailable" || key === "clock-behind") return { ok: false, reason: key };
     const scope = this.#store.scope();
-    if (key !== false && typeof handle === "string" && scope?.status === "active" && scope.at.kind === "destination"
+    if (key !== false && typeof handle === "string" && scope?.status === "active" && scope.kind === "destination"
       && (answersVersionQuestion(this.#scope.pinned()?.named, "scopeCredentialUnpublishedBranch"))) {
       const positions = this.#store.itemPositions("branch", null, 2);
       const branch = positions.length === 1 && positions[0]!.size <= 1024 * 1024 ? this.#store.item(positions[0]!.id) : null;
@@ -1114,8 +1113,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
         && typeof branch.values["name"] === "string" && isScopeId(branch.values["membership"]) && isScopeId(branch.values["rules"])
         && isScopeRef(branch.refs["directory"]) && branch.refs["directory"].kind === "directory") return { ok: false, reason: "no-repository" };
     }
-    const workspace = scope?.at.kind === "lane" && this.#scope.pinned()?.definition?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2) === true;
-    const answer = key !== false && typeof handle === "string" && (scope?.at.kind === "destination" || workspace) ? this.#outside.credential?.(handle, key) ?? null : null;
+    const workspace = scope?.kind === "lane" && this.#scope.pinned()?.definition?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2) === true;
+    const answer = key !== false && typeof handle === "string" && (scope?.kind === "destination" || workspace) ? this.#outside.credential?.(handle, key) ?? null : null;
     return answer && scope ? { ok: true, at: scope.head, value: answer, complete: true } : { ok: false, reason: "forbidden" };
   }
 }

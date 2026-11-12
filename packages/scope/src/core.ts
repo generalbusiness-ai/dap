@@ -615,7 +615,7 @@ export class Scope {
     // Native grant marks keep their own fallback, including recovery keys and
     // action-null rows. The commit still checks every authority path afresh.
     const given = (Array.isArray(grants) ? grants : []).filter(isGrant);
-    const read = known ? null : await this.#standing({ scope: scope.at, signed, action: act ? actionOf(act, definition) : null, grants: given, window: windowOf(definition, scope.at.kind, intent.kind) });
+    const read = known ? null : await this.#standing({ scope: scope.at, signed, action: act ? actionOf(act, definition) : null, grants: given, window: windowOf(definition, scope.kind, intent.kind) });
     known = known || this.#store.accepted(intent.actor, intent.idempotencyKey) !== null;
     if (!known && read === "limit") return { answer: "refused", reason: "limit", judgedAt: this.#store.scope()?.head ?? scope.head };
     const standing = read === "limit" ? null : read;
@@ -843,7 +843,7 @@ export class Scope {
     if (!pinned || !scope || !isSigned(signed)) return { ok: false, reason: "not-found" };
     const { to, actor, idempotencyKey } = signed.intent;
     if (to?.scope !== scope.at.scope) return { ok: false, reason: "not-found" };
-    if (to.inc !== scope.at.inc) return { ok: false, reason: "wrong-incarnation" };
+    if (to.genesis !== scope.at.genesis) return { ok: false, reason: "wrong-incarnation" };
     const accepted = this.#store.accepted(actor, idempotencyKey);
     if (!accepted || accepted.intent !== intentDigest(signed.intent)) return { ok: false, reason: "not-found" };
     const archived = archivedPosition(this.#store, accepted.seq);

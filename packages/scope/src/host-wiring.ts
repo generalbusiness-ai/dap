@@ -49,11 +49,11 @@ export function hostBound(given: OutsideGiven, registerScope: ScopeId | readonly
     const scope = given.scope();
     const genesis = given.genesis();
     // The owner is a version of the register or of the destination, and the one that this scope pinned at its genesis.
-    if (isOf(owner, "platform:register") && scope?.at.kind === "register" && registerScopes.includes(scope.at.scope) && genesis?.seed.definition === owner) {
+    if (isOf(owner, "platform:register") && scope?.kind === "register" && registerScopes.includes(scope.at.scope) && genesis?.seed.definition === owner) {
       const item = given.state.page("register", ["open"], null, 1).items[0];
       return item?.values["host"] === host && item.values["namespace"] === namespace;
     }
-    if (isOf(owner, "platform:destination") && scope?.at.kind === "destination" && genesis?.seed.definition === owner) {
+    if (isOf(owner, "platform:destination") && scope?.kind === "destination" && genesis?.seed.definition === owner) {
       const repository = destinationBranch(given.state)?.values["repository"] as Record<string, unknown> | undefined;
       return destinationBirth(given, registerScopes) && repository?.["host"] === host && repository["namespace"] === namespace;
     }
@@ -66,8 +66,8 @@ export function recordedHost(given: OutsideGiven): string | null {
   try {
     const scope = given.scope();
     const definition = given.genesis()?.seed.definition;
-    const host = scope?.at.kind === "register" && isOf(definition, "platform:register") ? given.state.page("register", ["open"], null, 1).items[0]?.values["host"]
-      : scope?.at.kind === "destination" && isOf(definition, "platform:destination") ? (destinationBranch(given.state)?.values["repository"] as Record<string, unknown> | undefined)?.["host"]
+    const host = scope?.kind === "register" && isOf(definition, "platform:register") ? given.state.page("register", ["open"], null, 1).items[0]?.values["host"]
+      : scope?.kind === "destination" && isOf(definition, "platform:destination") ? (destinationBranch(given.state)?.values["repository"] as Record<string, unknown> | undefined)?.["host"]
       : null;
     return typeof host === "string" ? host : null;
   } catch { return null; }
@@ -87,7 +87,7 @@ export function credentialHandle(given: OutsideGiven, repository: DestinationRep
   const write = mint ? destinationWrite(given.state, given.own, mint) : null;
   const recorded = destinationBranch(given.state)?.values["repository"];
   const pinned = given.genesis()?.seed.definition;
-  if (!scope || scope.at.kind !== "destination" || !isOf(pinned, "platform:destination") || !same(scope.at, binding.scope) || !mint || mint.owner !== pinned || mint.kind !== DESTINATION_KINDS.mint || binding.attempt !== 1 || !origin || entryHash(origin.entry) !== origin.hash || !same(origin.entry.at, scope.at) || !write || write.write.id !== binding.write || write.attempt !== binding.writeAttempt || !same(recorded, repository)) throw new Error(label);
+  if (!scope || scope.kind !== "destination" || !isOf(pinned, "platform:destination") || !same(scope.at, binding.scope) || !mint || mint.owner !== pinned || mint.kind !== DESTINATION_KINDS.mint || binding.attempt !== 1 || !origin || entryHash(origin.entry) !== origin.hash || !same(origin.entry.at, scope.at) || !write || write.write.id !== binding.write || write.attempt !== binding.writeAttempt || !same(recorded, repository)) throw new Error(label);
   const effect = origin.entry.effects.find((effect) => effect.effect === "operation" && effect.k === Number(binding.mint.split(":")[1]));
   if (effect?.effect !== "operation" || effect.owner !== pinned || effect.kind !== DESTINATION_KINDS.mint || !mint.attempts.some((attempt) => attempt.attempt === binding.attempt)) throw new Error(label);
   const digest = valueDigest(domain, { scope: scope.at, operation: mint.id, attempt: binding.attempt, origin: origin.hash, repository, write: binding.write, writeAttempt: binding.writeAttempt } as unknown as FieldValue);

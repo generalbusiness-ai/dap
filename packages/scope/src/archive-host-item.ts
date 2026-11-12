@@ -26,7 +26,7 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
     const query = typeof ask.query === "string" ? readItemQueryParameter(ask.query) : null;
     const scope = given.scope(), genesis = given.genesis();
     if (!query || !scope || !pinned || !same(query.scope, scope.at) || query.limit !== 1 || query.cursor !== null || query.ids !== null) return refused;
-    if (scope.at.kind === "directory") {
+    if (scope.kind === "directory") {
       if (!same(scope.at, ask.directory) || (!answersVersionQuestion(pinned.named, "scopeArchiveHostDirectory")) || query.type !== "repository" || query.states.join() !== "open") return refused;
       const row = given.state.page("repository", ["open"], null, 1).items[0];
       const claim = row?.refs["claim"], repository = row?.values["repository"] as Record<string, unknown> | undefined;
@@ -40,7 +40,7 @@ export function archiveHostItem(sql: Pick<Sql, "exec">, given: OutsideGiven, pin
       const seeds = opening.effects.filter(effect => effect.effect === "value" && effect.item === claim.seq && effect.slot === "seed");
       const seed = seeds.length === 1 && seeds[0]?.effect === "value" ? seeds[0].value : null;
       if (!isDigest(seed) || directoryIdOf(seed) !== scope.at.scope) return refused;
-    } else if (scope.at.kind === "destination") {
+    } else if (scope.kind === "destination") {
       if ((!answersVersionQuestion(pinned.named, "scopeArchiveHostDestination")) || query.type !== "branch" || query.states.join() !== "empty,ready"
         || !same(genesis?.seed.creator, ask.directory) || !hostBound(given, config.registerScope, config.host, config.namespace)(pinned.named)) return refused;
     } else return refused;
