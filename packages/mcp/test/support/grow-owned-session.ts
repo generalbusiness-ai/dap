@@ -42,7 +42,7 @@ export async function openOwnedGrowScenario(packet: AnyPackedApplication, value:
         if (!send) throw Error("The native source holds no selected send.");
         const name = isSeed(send.to) ? scopeIdOf(send.to) : isScopeRef(send.to) ? send.to.scope : null;
         if (!name) throw Error("The native send has no scope address.");
-        const target = peer(name), answer = await target.deliver({ ...send, from: factRefOf(entry) });
+        const target = peer(name), answer = await target.deliver({ ...send, from: factRefOf(entry, sender.at) });
         if (answer.answer !== "recorded") throw Error(`Native fixture delivery ${answer.answer}.`);
         return scopes.get(name)!;
       };
@@ -58,7 +58,7 @@ export async function openOwnedGrowScenario(packet: AnyPackedApplication, value:
       if (opening.answer !== "accepted") throw Error(`Native Site create-room ${opening.answer}: ${"reason" in opening ? opening.reason : "unknown"}.`);
       const room = await deliver(site, opening.receipt.fact.seq, 0); await deliver(room, 0, 0);
       await deliver(site, site.state.scope()!.head.seq, 0);
-      if (room.at.kind !== "lane" || site.at.kind !== "lane" || room.definition !== selected) throw Error("The native path selected another application definition.");
+      if (room.state.scope()?.kind !== "lane" || site.state.scope()?.kind !== "lane" || room.definition !== selected) throw Error("The native path selected another application definition.");
       return room;
     });
     const reportSite = async (time: Timestamp = session.time) => {
