@@ -877,8 +877,6 @@ export class HostedRegistry {
     const result = after.status === "observed" && after.identity.state === "enrolled" ? answer(given.status, { ...given.body, agent: reserved.agent, handle }) : given;
     if (!final.ok) return this.#withheldGrant(result, final.result);
     if (final.at < identityAt) return this.#withheldGrant(result, answer(503, { error: "temporarily_unavailable" }));
-    if (after.status === "observed" && after.identity.state === "enrolled" && !final.keyAssociated)
-      return this.#withheldGrant(result, answer(403, { error: "unauthorized", rule: "controller-role" }));
     expired = bound(signed, service, action, null, body, final.at); if (expired) return this.#withheldGrant(result, expired);
     this.ports.fault?.("complete");
     return this.sql.transaction(() => {

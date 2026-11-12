@@ -1844,15 +1844,21 @@ test("H1 fences: a reset at each adopted fence of a creation resumes with the sa
         await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET op = ? WHERE id = 1`, op); });
       }
       if (fence === "complete") {
-        const object = env.AGENTS.get(env.AGENTS.idFromString(reserved!));
+        const object = () => env.AGENTS.get(env.AGENTS.idFromString(reserved!));
         const missing = keyIdOfSecret(new Uint8Array(32).fill(251));
         expect(missing).not.toBe(before.key);
-        await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET key = ? WHERE id = 1`, missing); });
-        const unknownEnrolledKey = await room.wait(() => post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body));
-        expect(unknownEnrolledKey.status, "an enrolled Agent with a missing exact Native key cannot use pre-enrollment permission").toBe(403);
-        expect(await unknownEnrolledKey.json()).toEqual({ error: "unauthorized", rule: "controller-role" });
-        expect((await agentStub(reserved!).durableFacts()).bearer, "the refused read does not mint or remove the committed bearer").toBe(true);
-        await runInDurableObject(object, (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET key = ? WHERE id = 1`, before.key!); });
+        try {
+          await runInDurableObject(object(), (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET key = ? WHERE id = 1`, missing); });
+          const unknownEnrolledKey = await room.wait(async () => {
+            const response = await post("/mcp/agents", control(room, rita.secret, "create", M, null, body, op), body);
+            return { status: response.status, body: await response.json() };
+          });
+          expect(unknownEnrolledKey.status, "an enrolled Agent with a missing exact Native key cannot use pre-enrollment permission").toBe(403);
+          expect(unknownEnrolledKey.body).toEqual({ error: "unauthorized", rule: "controller-role" });
+          expect((await agentStub(reserved!).durableFacts()).bearer, "the refused read does not mint or remove the committed bearer").toBe(true);
+        } finally {
+          await runInDurableObject(object(), (_agent, state) => { state.storage.sql.exec(`UPDATE agent SET key = ? WHERE id = 1`, before.key!); });
+        }
       }
       if (fence === "kept") {
         // This is an actual local owner race across a real Native reply, not a Native role-loss witness.
