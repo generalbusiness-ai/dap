@@ -3,8 +3,8 @@
 For request `9a321a0a` (NF-2) and promise `b7f2ffaa`.
 Planner request `0916128e` states the six problems and the three parts.
 The base is main `33836693`, the NF-1 landing.
-The gated source is `9d3a4fd5`, tree `3dd5e0283c14f1c51ade2bcd2e8a99a42516e483`.
-This note changes only documents from that source.
+The source for the gate is `38b395a3`, tree `833e6962f2db35b99c7e8cbff517d7c12dfb58ec`.
+The two note commits after it change only this note.
 
 ## What changed
 
@@ -38,7 +38,7 @@ The input schemas in `#genericTools` gain these conditions and patterns:
 
 | Tool | Field | Before | After |
 |---|---|---|---|
-| `create` | `membership` | string or object | a scope ID pattern, or a `ScopeRef` object (`scopeRefArg`) |
+| `create` | `membership` | string or object | a scope ID, or a `ScopeRef` object (`scopeRefArg`) whose scope ID ends in `a` or `q` and whose incarnation ends in one of `aeimquy4` |
 | `settle` | `membership` | refused: not a property | the same schema as `create` |
 | `install_application` | `owner` | any object | a `MemberRef` object (`memberRefArg`) |
 | `install_application` | `release` | any string | `^sha256:[0-9a-f]{64}$` |
@@ -94,23 +94,23 @@ The ruling says to report the bytes before trying `$defs`. The figures follow.
 
 ## Tool list size
 
-The tool list grows by 74,746 bytes in compact JSON, from 170,890 to 245,636 bytes.
-I measured both sizes with `jq -c . docs/mcp-tools.json` minus its newline, at `33836693` and at `9d3a4fd5`.
-The formatted file grows from 267,101 to 435,063 bytes.
+The tool list grows by 75,183 bytes in compact JSON, from 170,890 to 246,073 bytes.
+I measured both sizes with `jq -c . docs/mcp-tools.json` minus its newline, at `33836693` and at `38b395a3`.
+The formatted file grows from 267,101 to 436,192 bytes.
 
 - The act output schema grows from 607 to 1,854 bytes in compact JSON. It appears 59 times: 73,573 bytes.
-- The input schemas grow by 1,153 bytes.
+- The input schemas grow by 1,590 bytes.
 - The `application_installation` description grows by 20 bytes.
 - The largest tool grows from 5,276 to 6,523 bytes.
 
 The MCP budget caps each `tools/list` page at 256 KiB (`LIST_PAGE_BYTES`) and puts no limit on the whole list.
-`the list per role, in bytes and tokens` in `packages/mcp/test/budget.test.ts` passed in `plain-2`.
+`the list per role, in bytes and tokens` in `packages/mcp/test/budget.test.ts` passed in `plain-3`.
 A shared `$defs` entry for the act output schema would remove most of the 73,573 bytes. That waits for the planner.
 
 ## Schema audit
 
 Request part 3 asks for each fixed tool's input schema against its parser.
-The table lists every difference I found at `9d3a4fd5`, apart from the fixes above.
+The table lists every difference I found at `9d3a4fd5`, apart from the fixes in the first table.
 Commit `c2377a06` fixes the two rows marked fixed.
 "Parser admits more" means that the schema is stricter than the parser.
 
@@ -142,8 +142,13 @@ Paths are relative to `~/play/artroom-evidence`.
 | Node checks | `70ab6509`: `node --test` on `apps/views/test/s4.test.mjs`, `apps/views/test/decision.test.mjs`, `examples/repo-in-ai/test/custody.test.mjs` and `examples/repo-in-ai/test/session.test.mjs` | 0. 36 of 36 passed | `2026-11-12-nf2-working-8d00dbbc/node-1.stdout` |
 | Native | `9b2ee641`: `vitest run --config vitest.native.config.ts --project scope --project scope-stories` on `hosted-cards.test.ts`, the 24 MCP `*.scope.test.ts` files and `host-none.scope.test.ts` | 0. 26 files, 96 of 96 passed | `2026-11-12-nf2-working-8d00dbbc/native-1.stdout` |
 | Page build | `9d3a4fd5`: `npm run build --workspace @generalbusiness/dap-page` | 0. The module is 2,428,953 bytes, SHA `ff6cb448` | `2026-11-12-nf2-working-8d00dbbc/page-build.stdout` |
-| Gate | `9d3a4fd5`: `npm run gate` | PENDING | `2026-11-12-nf2-gate-9d3a4fd5/gate.stdout` |
-| CI | `9d3a4fd5`: branch push | PENDING | PENDING |
+| Seals before the second refresh | `9c6da486`: `node --test scripts/security-entry-points.test.mjs` | 1. 11 of 12 passed. The owner test stopped at `service.ts:$module` | `2026-11-12-nf2-working-8d00dbbc/seal-3.stdout` |
+| Seals after the second refresh | `38b395a3` (before its commit): the three security scripts | 0. 27 of 27 passed | `2026-11-12-nf2-working-8d00dbbc/seal-4.stdout` |
+| Typecheck | `38b395a3`: `npm run typecheck` | 0 | `2026-11-12-nf2-working-8d00dbbc/typecheck-5.stdout` |
+| Plain | `38b395a3`: the `plain-2` command | 0. 71 files, 698 passed, 1 skipped | `2026-11-12-nf2-working-8d00dbbc/plain-3.stdout` |
+| Native | `38b395a3`: the `native-1` command and files | 0. 26 files, 96 of 96 passed | `2026-11-12-nf2-working-8d00dbbc/native-2.stdout` |
+| Gate | `38b395a3` or later: `npm run gate` | PENDING | PENDING |
+| CI | `38b395a3` or later: branch push | PENDING | PENDING |
 
 Each Vitest and Node test command ran with `env -u VITEST_MAX_WORKERS`. The Native command also set `ARTROOM_SCALE_MODE=omit`.
 The skipped Plain test is `a dead reclaimer under a long ARTROOM_HOME`, which skips on macOS.
@@ -153,21 +158,24 @@ The rebase from NF-1 intermediate `d3cbab38` onto `33836693` conflicted only in 
 The first source commit `8d00dbbc` failed the typecheck with seven errors. Main caused none of them.
 Commit `2ef00924` repairs them without casts: `ok<CustodyReport>` at the not-found settle answer, a readonly `ExactReadData.paths`, `Failure` stops in `hosted-cards.test.ts`, one renamed `said` in `errors.test.ts`, and the new imports and `projectAnswer` input in `examples/repo-in-ai/review-control.ts`.
 
-The seal changes in `scripts/security-entry-points.test.mjs` come from the test's failure output. Each one names a reviewed source change.
+A gate started at `9d3a4fd5`. The coordinator stopped it, because commit `c2377a06` supersedes that head. It records no result.
+`plain-3` has one more test than `plain-2`: the new scope-reference test.
+
+The seal changes in `scripts/security-entry-points.test.mjs` come from the test's failure output in two refreshes, `70ab6509` and `38b395a3`. Each one names a reviewed source change. The table shows each seal from main to `38b395a3`.
 
 | Seal | Before | After | Change |
 |---|---|---|---|
 | `packages/mcp/src/index.ts` | `e8381ad3` | `3758cff2` | exports `input-schema.ts`, `act-result.ts` and the result types |
 | `packages/mcp/src/hosted.ts` | `edc37968` | `64f14a28` | `denied` returns `Failure` |
-| `service.ts:$module` | `0ad79a64` | `e969bd8c` | imports from their owners; new types |
+| `service.ts:$module` | `0ad79a64` | `d1cd323e` | imports from their owners; new types; the narrowed patterns. `e969bd8c` at `70ab6509` |
 | `service.ts:callResultText` | `7a858143` | `fc1a4824` | parameter type `object` |
 | `service.ts:ok` | `0c1818e2` | `d01886e7` | returns `Success<T>` |
 | `service.ts:failed` | `2e151881` | `077c51d8` | returns `Failure` |
 | `service.ts:Stop` | `be559905` | `3840d5e6` | holds a `Failure` |
-| `service.ts:McpService` | `31471582` | `120cb251` | `projectAnswer`, typed outcomes, the schema fixes |
+| `service.ts:McpService` | `31471582` | `aa4fddb5` | `projectAnswer`, typed outcomes, the schema fixes, `membershipArg`. `120cb251` at `70ab6509` |
 | `service.ts:commitIdFault` | `3614f1ad` | `36b75703` | returns `Failure` |
 | `service.ts:projectAnswer` | `ab287949` | removed | moved to `act-result.ts` |
-| `service.ts:scopeRefArg` | new | `54297e6f` | new schema constant |
+| `service.ts:scopeRefArg` | new | `b1d77904` | new schema constant with the narrowed patterns. `54297e6f` at `70ab6509` |
 | `service.ts:memberRefArg` | new | `80b4a763` | new schema constant |
 | `packages/mcp/src/catalogue.ts` | `f2100e66` | `32f361d4` | `ACT_OUTPUT` moved out |
 | `packages/mcp/src/inventory.ts` | `9128f3b2` | `dad209ef` | type import from the Client |
@@ -178,14 +186,14 @@ The seal changes in `scripts/security-entry-points.test.mjs` come from the test'
 The witnesses for the request are:
 
 - `ACT_OUTPUT` and `ActResult` agree. The `satisfies` clauses in `packages/mcp/src/act-result.ts` fail the typecheck when a member is missing. `archived submit and settlement stay explicit and terminal without inventing missing facts` in `packages/mcp/test/errors.test.ts` checks the `answer` and `phase` enums, `effects` on all three projections and the retained wording.
-- `the tool reference is the list as sent` in `packages/mcp/test/inventory.test.ts` compares `docs/mcp.md` and `docs/mcp-tools.json` with the served list. It failed in `plain-1` and passed in `plain-2`.
+- `the tool reference is the list as sent` in `packages/mcp/test/inventory.test.ts` compares `docs/mcp.md` and `docs/mcp-tools.json` with the served list. It failed in `plain-1` and passed in `plain-2` and `plain-3`.
+- `fixed-tool scope references: the ID patterns refuse set trailing bits, and settle takes a creation's membership` in `packages/mcp/test/describe.test.ts` checks that a scope ID and an incarnation with set trailing bits fail both the pattern and `isScopeId` or `isIncarnation`. It checks a creation's `settle` input against the schema's keys, `required`, `anyOf` and membership pattern. No JSON Schema validator runs in the test. It passed in `plain-3`.
 - `an over-long capability or step name is refused whole, within the bound` in `packages/mcp/test/budget.test.ts` checks the `prepare` `maxLength` and the byte refusal.
 
 ## Open limits
 
 - `@generalbusiness/dap-mcp` changes its public exports. It no longer exports `expectedOf`, `viaLeft`, `effectiveFields` and `finalStates`, or the Client names that `describe.ts` re-exported, such as `ActLike`, `DefinitionLike`, `inline`, `typeWords`, `fieldLines`, `sentence` and `guardSentences`. `projectAnswer` now takes `{ answer }` or `{ archivedSettlement }` and returns `ActResult`. `examples/repo-in-ai/review-control.ts` shows the change for a caller.
 - `@generalbusiness/dap-client` no longer exports `DESCRIPTION_CHARS` and `Described`, and `descriptionsOf` no longer returns `describeAct`.
-- The tool list grows by 74,746 bytes. The planner decides on `$defs`.
-- Commit `c2377a06` fixes the two audit faults in source and adds `fixed-tool scope references: the ID patterns refuse set trailing bits, and settle takes a creation's membership` to `packages/mcp/test/describe.test.ts`. No test or compiler has run on it yet. `docs/mcp.md`, `docs/mcp-tools.json` and the seals for `service.ts:scopeRefArg` and `service.ts:McpService` follow after the gate at `9d3a4fd5` ends. The tool list figures above are at `9d3a4fd5`.
+- The tool list grows by 75,183 bytes. The planner decides on `$defs`.
 - Two in-process reads by string key remain: `result.structuredContent["error"]` in `#stoppedEarly` in `packages/mcp/src/service.ts`, and `result.structuredContent["localStatus"]` in `packages/mcp/src/views/session.ts`. Before NF-2 there were eight.
 - The planner deploys after the landing. `MCP_ENABLED` stays off.
