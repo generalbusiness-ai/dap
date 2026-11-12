@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { ownerReservations, reserved, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { b64url, canonicalize, definitionDigest, isSeed, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, b64url, canonicalize, definitionDigest, isSeed, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { DEVICE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as AC, platform } from "@generalbusiness/dap-platform";
 import { packApplication2, readApplicationPackage2, readApplicationProjection } from "@generalbusiness/dap-platform/application-v2";
@@ -141,10 +141,14 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
     const command = await life.wait(async () => app.did(rita, "command", { on: device, expected: await app.expected({ on: device }), fields: { target: "on", level: 80 } }));
     const commandFact = (await life.wait(() => app.sealed())).find(sealed => sealed.entry.seq === command);
     if (!commandFact) throw Error("Exact command fact required.");
-    const facts = (await Promise.all([R, D, M, A, G, app].map(node => life.wait(() => node.sealed())))).flatMap(entries => entries.map(sealed => ({
-      fact: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash }, entry: sealed.entry,
-      under: sealed.entry.at.kind === "lane" ? deviceCommandFixture.name : `platform:${sealed.entry.at.kind}`,
-    })));
+    const facts = (await Promise.all([R, D, M, A, G, app].map(async node => ({ at: await node.at(), sealed: await life.wait(() => node.sealed()) })))).flatMap(({ at, sealed: entries }) => {
+      const sequence = admitSequenceGenesis(canonicalize(entries[0]!.entry), at, PROPOSED_BOUNDS.entryBytes);
+      if (!sequence) throw Error("Admitted genesis entry required.");
+      return entries.map(sealed => ({
+        fact: { at, seq: sealed.entry.seq, hash: sealed.hash }, entry: sealed.entry, bytes: canonicalize(sealed.entry), sequence,
+        under: sequence.kind === "lane" ? deviceCommandFixture.name : `platform:${sequence.kind}`,
+      }));
+    });
     const origin = platform(C.destination)!.applicationPublicationOrigin!;
     expect(origin({ at: scope, seq: command, hash: commandFact.hash }, directory, await life.wait(() => G.at()), facts)).toBe(true);
     expect(platform("platform:destination@8")!.applicationPublicationOrigin!({ at: scope, seq: command, hash: commandFact.hash }, directory, await life.wait(() => G.at()), facts)).toBe(false);
