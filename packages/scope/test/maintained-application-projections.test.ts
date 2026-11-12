@@ -114,7 +114,7 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
         expect(requests.length, `${kind}: one actual publish-file request`).toBe(1);
         const request = requests[0];
         if (!request || !isScopeRef(request.to)) throw Error("The recorded publication request is missing.");
-        const cause = factRefOf(act);
+        const cause = factRefOf(act, scope);
         // The existing finite scheduler joins real in-flight dispatches and
         // their result sends. No outside effects, clock advance or sleep.
         await dispatchFixture([app, G], life.wait);

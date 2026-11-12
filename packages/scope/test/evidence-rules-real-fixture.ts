@@ -234,7 +234,7 @@ export async function evidenceHeldDuty(room: EvidenceRoom, job: FactRef) {
 /** A bad frozen room key refuses before selecting a holder or opening work. */
 export async function assertNativePrebindingRefusal(room: EvidenceRoom, lane: Platform, result: FactRef) {
   const source = await evidenceEntry(lane, result.seq);
-  expect(factRefOf(source)).toEqual(result);
+  expect(factRefOf(source, await lane.at())).toEqual(result);
   const deliveries = (await hardeningSealed(room.G)).filter(({ entry }) => entry.input.type === 'delivery' && same(entry.input.from, result));
   expect(deliveries).toHaveLength(1);
   const entry = deliveries[0]?.entry;
@@ -259,7 +259,7 @@ export async function assertNativeCountedEvidence(room: EvidenceRoom, lane: Plat
   if (!isFactRef(decision)) throw Error('Actual counted Native decision reference required');
   expect(decision.at).toEqual(await room.G.at());
   const native = await evidenceEntry(room.G, decision.seq);
-  expect(factRefOf(native)).toEqual(decision);
+  expect(factRefOf(native, await room.G.at())).toEqual(decision);
   expect(native.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-result', result: 'confirmed' });
   const sends = native.sends.filter(send => same(send.to, job.at) && send.message.class === 'request' && send.message.type === 'tell'
     && isRecord(send.message.body) && send.message.body['message'] === 'check-decision' && isRecord(send.message.body['fields'])
@@ -386,7 +386,7 @@ export async function configureEvidenceRules(room: EvidenceRoom, policy: RulesPo
   if (!isRecord(body) || !isDigest(body["proof"])) throw Error("Actual proof digest required");
   const kept = await room.G.stub.retained(reader, "value", body["proof"], RULES_TREE_PROOF.domain);
   if (!kept.ok) throw Error("Actual retained proof required");
-  const certificate = factRefOf(outcome);
+  const certificate = factRefOf(outcome, await room.G.at());
   const published = await publishEvidenceRulesCertificate(room, policy, request, certificate, body["proof"], kept.value.bytes);
   expect(published, canonicalize(published)).toMatchObject({ answer: "accepted" });
   return { request, certificate, proof: body["proof"] };
@@ -402,7 +402,7 @@ export async function evidenceCertificate(room: EvidenceRoom, policy: RulesPolic
   if (!isRecord(body) || !isDigest(body['proof'])) throw Error("Actual retained proof identity required");
   const read = await room.G.stub.retained(reader, "value", body['proof'], RULES_TREE_PROOF.domain);
   if (!read.ok) throw Error("Actual retained certificate proof required");
-  return { request, certificate: factRefOf(outcome), proof: body['proof'], proofBytes: read.value.bytes };
+  return { request, certificate: factRefOf(outcome, await room.G.at()), proof: body['proof'], proofBytes: read.value.bytes };
 }
 
 export function evidenceRulesPolicy(roomService: RulesPolicyV13['roomService'], checks: RulesPolicyV13['checks'] = []): RulesPolicyV13 {
@@ -601,7 +601,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
     await room.pause(room.nodes);
     const actual = await record();
     expect(actual).toMatchObject({ state: "passed", signer: service.actor.key });
-    const result = (await hardeningSealed(lane)).find(sealed => actual.result && canonicalize(factRefOf(sealed.entry)) === canonicalize(actual.result));
+    const laneAt = await lane.at(), result = (await hardeningSealed(lane)).find(sealed => actual.result && canonicalize(factRefOf(sealed.entry, laneAt)) === canonicalize(actual.result));
     expect(result?.entry.input).toMatchObject({ type: "act", signed: { intent: { kind: "check", actor: service.actor.key } } });
     return actual;
   };
@@ -628,7 +628,7 @@ async function assertEvidenceWorkAdmission(room: EvidenceRoom, lane: Platform, j
   if (record.admittedAt === null) throw Error('Actual Native admission position required for an admitted or reused work job');
   const admission = await evidenceEntry(room.G, record.admittedAt);
   expect(admission.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-admit', result: 'confirmed' });
-  expect(item.refs['admission']).toEqual(factRefOf(admission));
+  expect(item.refs['admission']).toEqual(factRefOf(admission, await room.G.at()));
 }
 
 /** Failure-only capacity read at one actual Native head. All emitted rows
@@ -868,7 +868,7 @@ export async function publishEvidenceFile(room: EvidenceRoom, setup: PreparedPub
       if (!sealed) throw Error("Actual automatic published job entry required");
       const binding = typeof held.values['binding'] === "string" ? readEvidenceBinding(JSON.parse(held.values['binding'])) : null;
       if (!binding || binding.stage !== "published" || binding.subject.kind !== "published") throw Error("Actual published subject binding required");
-      const job = factRefOf(sealed.entry), record = await evidenceRecord(room, job);
+      const job = factRefOf(sealed.entry, await lane.at()), record = await evidenceRecord(room, job);
       expect(record).toMatchObject({ state: "admitted", job, binding });
       expect(room.host.stand.refs.get("refs/heads/main")).toBe(record.commit);
       return { job, binding, bindingDigest: record.bindingDigest, record };
@@ -922,11 +922,12 @@ export async function claimLandingEvidence(room: EvidenceRoom, setup: PreparedPu
 
 /** Exact retained native send, for transport reordering without inventing a peer or outcome. */
 export async function evidenceFailureNotice(room: EvidenceRoom, job: FactRef) {
+  const destination = await room.G.at();
   for (const { entry } of await hardeningSealed(room.G)) {
     const send = entry.sends.find(send => canonicalize(send.to) === canonicalize(job.at) && send.message.class === "request" && send.message.type === "tell"
       && isRecord(send.message.body) && send.message.body['message'] === "published-check-failure" && isRecord(send.message.body['fields'])
       && canonicalize(send.message.body['fields']['job']) === canonicalize(job));
-    if (send) return { from: factRefOf(entry), n: send.n, to: job.at, message: send.message };
+    if (send) return { from: factRefOf(entry, destination), n: send.n, to: job.at, message: send.message };
   }
   throw Error("Actual native failure notice required");
 }

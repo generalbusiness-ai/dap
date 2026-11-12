@@ -181,7 +181,7 @@ test("actual landing reuse follows the tree key and a fresh passed job still pub
     if (!isFactRef(nativeDecision)) throw Error('Actual Native refusal decision reference required');
     expect(nativeDecision.at).toEqual(await room.G.at());
     const refusedEntry = await evidenceEntry(room.G, nativeDecision.seq);
-    expect(factRefOf(refusedEntry)).toEqual(nativeDecision);
+    expect(factRefOf(refusedEntry, await room.G.at())).toEqual(nativeDecision);
     expect(refusedEntry.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-admit', result: 'confirmed' });
     const decisions = refusedEntry.sends.filter(send => canonicalize(send.to) === canonicalize(refused.job.at)
       && send.message.class === 'request' && send.message.type === 'tell' && isRecord(send.message.body)
@@ -218,7 +218,7 @@ test("observed room-key rotation refuses both keys for the frozen real work job 
     expect(await newKeyJob.record()).toMatchObject({ state: 'admitted', result: null, binding: work.binding });
     const provisionalClaim = async (result: typeof work.job, job: typeof work.job, actor: typeof work.service.actor.key) => {
       const entry = await evidenceEntry(work.lane, result.seq);
-      expect(factRefOf(entry)).toEqual(result);
+      expect(factRefOf(entry, await work.lane.at())).toEqual(result);
       expect(entry.input).toMatchObject({ type: 'act', signed: { intent: { kind: 'check', actor, fields: { job: job.seq, jobFact: job } } } });
       expect(entry.effects).toContainEqual({ effect: 'open', item: result.seq, type: 'result', state: 'recorded' });
       expect(entry.effects.some(effect => 'item' in effect && effect.item === job.seq
@@ -228,7 +228,7 @@ test("observed room-key rotation refuses both keys for the frozen real work job 
       if (!isFactRef(decision)) throw Error('Actual wrong-source Native decision required');
       expect(decision.at).toEqual(await room.G.at());
       const entry = await evidenceEntry(room.G, decision.seq);
-      expect(factRefOf(entry)).toEqual(decision);
+      expect(factRefOf(entry, await room.G.at())).toEqual(decision);
       expect(entry.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-result', result: 'confirmed' });
       if (entry.input.type !== 'outcome') throw Error('Actual Native result outcome required');
       expect((await evidenceEntry(room.G, Number(entry.input.operation.split(':')[0]))).input)
@@ -372,7 +372,7 @@ test("real published holds survive newer counted passes and clear only through d
     const notice = noticeEntry?.sends.find(send => send.message.class === "request" && send.message.type === "tell" && isRecord(send.message.body) && send.message.body['message'] === "published-check-failure");
     if (!notice || !noticeEntry) throw Error("Actual native failure notice required");
     // Redeliver the exact sealed source send. No peer or fact is synthesized.
-    await second.lane.stub.deliver({ from: factRefOf(noticeEntry), n: notice.n, to: await second.lane.at(), message: notice.message });
+    await second.lane.stub.deliver({ from: factRefOf(noticeEntry, await room.G.at()), n: notice.n, to: await second.lane.at(), message: notice.message });
     await room.pause(room.nodes);
     expect(await hardeningItems(second.lane, "incident")).toHaveLength(1);
     await unchangedActiveHold();
@@ -683,7 +683,7 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     const observed = await observedRules(room);
     const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: setup.service.member,
       policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.roomService,
-      serviceGeneration: observed.serviceGeneration, auditOf: null, subject: { kind: "landing", publication: factRefOf(opening.entry), manifest: change.manifest } };
+      serviceGeneration: observed.serviceGeneration, auditOf: null, subject: { kind: "landing", publication: factRefOf(opening.entry, await room.G.at()), manifest: change.manifest } };
     const laneRules = (await hardeningItems(change.lane, "rules"))[0]!;
     const request = async (proposed: EvidenceBinding, earlier?: number) => {
       const bindingDigest = evidenceBindingDigest(proposed);
@@ -714,7 +714,7 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     const unmarkedError = await change.lane.did(keys.vic, 'check-error', { fields: { job: oldAudit.job.seq, jobFact: oldAudit.job,
       tree: reservedTree, configuration: setup.configurationDigest, bindingDigest: oldAudit.bindingDigest, reason: 'TEST unmarked same-member key' },
       expected: await change.lane.expected({ job: oldAudit.job.seq, manifest: change.manifest.seq }) });
-    const unmarkedEntry = await evidenceEntry(change.lane, unmarkedError), unmarkedResult = factRefOf(unmarkedEntry);
+    const unmarkedEntry = await evidenceEntry(change.lane, unmarkedError), unmarkedResult = factRefOf(unmarkedEntry, await change.lane.at());
     expect(unmarkedEntry.input).toMatchObject({ type: 'act', signed: { intent: { kind: 'check-error', actor: keys.vic.key, fields: { jobFact: oldAudit.job } } } });
     expect(unmarkedEntry.effects).toContainEqual({ effect: 'open', item: unmarkedError, type: 'result', state: 'recorded' });
     expect(unmarkedEntry.effects.some(effect => 'item' in effect && effect.item === oldAudit.job.seq

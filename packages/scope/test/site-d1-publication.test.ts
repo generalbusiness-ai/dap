@@ -32,7 +32,7 @@ test("D1 immutable publication selects the file receipt's integer publication po
     });
     const changes = () => state.storage.sql.exec<{ n: number }>("SELECT total_changes() AS n").one().n;
     const before = changes();
-    expect(sitePublishedCommit(store, DESTINATION_5, branch.refs["directory"], branch.values["repository"], integration)).toMatchObject({ ok: true, proof: { publication: factRefOf(reservation), commit: integration } });
+    expect(sitePublishedCommit(store, DESTINATION_5, branch.refs["directory"], branch.values["repository"], integration)).toMatchObject({ ok: true, proof: { publication: ledger.fact(reservation.seq), commit: integration } });
     expect(changes()).toBe(before);
     // Explicitly corrupted projection: pending receipt cannot authorize content.
     const written = store.item(receipt.id)!;

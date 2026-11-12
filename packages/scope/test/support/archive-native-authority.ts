@@ -199,13 +199,13 @@ export async function nativeArchiveFixture() {
           const send = sends[0]!;
           if (!isSeed(send.to)) throw Error("Actual native child seed required");
           const child = life.platform(scopeIdOf(send.to));
-          creator = factRefOf(sealed.entry); expect(creator).toEqual(accepted.receipt.fact);
+          creator = factRefOf(sealed.entry, await life.wait(() => room.D.at())); expect(creator).toEqual(accepted.receipt.fact);
           expect(send.message).toMatchObject({ class: "request", type: "create", body: { membership: at, directory: await life.wait(() => room.D.at()), fields: { title: "A lane", opener } } });
           await dispatchFixture([room.D, child], life.wait);
           const childHistory = await life.wait(() => child.sealed()), born = childHistory[0];
           if (!born || born.entry.input.type !== "genesis" || born.entry.input.decision !== "applied") throw Error("Applied native child genesis required");
           expect(born.entry.input).toMatchObject({ source: creator, seed: send.to, n: send.n, message: send.message });
-          const bornFact = factRefOf(born.entry); expect(bornFact.hash).toBe(born.hash);
+          const bornFact = factRefOf(born.entry, await life.wait(() => child.at())); expect(bornFact.hash).toBe(born.hash);
           const results = (await life.wait(() => room.D.sealed())).filter(value => {
             const input = value.entry.input;
             return input.type === "delivery" && "clause" in input && input.clause === "applied"
@@ -215,7 +215,7 @@ export async function nativeArchiveFixture() {
           });
           if (results.length !== 1) throw Error("One actual Directory result of this child birth required");
           const result = results[0]!;
-          confirmation = factRefOf(result.entry); expect(confirmation.hash).toBe(result.hash);
+          confirmation = factRefOf(result.entry, await life.wait(() => room.D.at())); expect(confirmation.hash).toBe(result.hash);
           const confirms = result.entry.sends.filter(value => value.message.class === "control" && value.message.type === "confirm"
             && canonicalize(value.to) === canonicalize(born.entry.at) && canonicalize(value.message.genesis) === canonicalize(bornFact));
           if (confirms.length !== 1) throw Error("One actual Directory confirmation send required");

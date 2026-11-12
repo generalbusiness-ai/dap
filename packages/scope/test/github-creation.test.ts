@@ -203,7 +203,7 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
     const registerEntries = await R.entries();
     const genesis = (await G.entries())[0]!;
     // The creation commit of `platform:destination@2`: one README that names the repository, the creator's handle and the directory.
-    const first = initialCommitObjects("sha1", G.name, genesis.time, factRefOf(registerEntries[1]!), { name: host.name!, handle: "@rita", directory: D.name });
+    const first = initialCommitObjects("sha1", G.name, genesis.time, factRefOf(registerEntries[1]!, await R.at()), { name: host.name!, handle: "@rita", directory: D.name });
     expect(host.creates).toBe(1);
     expect(host.emptyAdvertisements).toBeGreaterThan(0);
     expect(await G.item(0)).toMatchObject({ state: "ready", values: { head: first.commit } });
