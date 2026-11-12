@@ -150,7 +150,7 @@ export class Deliveries {
     // the actual native parent create before any label reaches a judge.
     const probe = !receiving && creates && message.class === "request" ? await ReceiverReads.probeCreation(this.#ports, { seed: delivered.to as Seed, source: from, n: delivered.n, message }) : undefined;
     if (probe === null) return retry("dependency-unavailable");
-    const read = probe?.source ? { entry: probe.source, under: "" }
+    const read = probe?.source ? { entry: probe.source.entry, under: "", sequence: probe.source.sequence }
       : await within(() => reader && message.class === "result" ? reader.result(delivered, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }) : (reader ?? this.#ports.resolver).read(from, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }, !!reserve || file), bounds.fetchSeconds);
     if (read === LATE || read === null) return retry("dependency-unavailable");
     if ("archived" in read && previous?.hash === from.hash) {
@@ -160,8 +160,8 @@ export class Deliveries {
       const receipt = store.stored(previous.by) ?? store.decidedReceipt?.(from, delivered.n);
       if (receipt && receipt.seq === previous.by) return { answer: "recorded", fact: { at: store.scope()!.at, seq: receipt.seq, hash: receipt.hash } };
     }
-    if (!("entry" in read) || !isEntryOf(read.entry, from)) return UNVERIFIED;
-    let source: Fetched = carryProducerName({ fact: from, entry: read.entry, under: read.under }, read);
+    if (!("entry" in read) || !isEntryOf(read.entry, from, read.sequence)) return UNVERIFIED;
+    let source: Fetched = carryProducerName({ fact: from, entry: read.entry, under: read.under, sequence: read.sequence }, read);
 
     // The definition is read only after authenticating the source bytes.
     const declared = this.#scope.pinned() || !creates ? null : await this.#declared(delivered.to as Seed);
@@ -190,7 +190,7 @@ export class Deliveries {
       if (!reader) return retry("dependency-unavailable");
       const named = probe?.source ? await reader.read(from, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }, false) : source;
       if (named === null || !("entry" in named)) return retry("dependency-unavailable");
-      source = carryProducerName({ fact: from, entry: named.entry, under: named.under }, named);
+      source = carryProducerName({ fact: from, entry: named.entry, under: named.under, sequence: named.sequence }, named);
     }
     const resolver = reader ?? this.#ports.resolver;
     const destinationPin = pinned?.platform?.named;
@@ -237,9 +237,10 @@ export class Deliveries {
     } else if (!known && pinned?.definition && (message.class === "request" || message.class === "advisory")) {
       if (bound(pinned.definition, message, from, source.under)?.handler?.from.pin) {
         const birth = await within(() => this.#ports.births?.read(from.at, bounds.fetchSeconds * 1000, bounds.entryBytes) ?? Promise.resolve(null), bounds.fetchSeconds);
-        const checked = birth === LATE ? null : readNativeBirth(birth, from.at, bounds.entryBytes);
+        // This one read has its own fetch deadline and entry allowance and no preparation ledger, so nothing else is debited.
+        const checked = birth === LATE ? null : readNativeBirth(birth, from.at, bounds.entryBytes, () => {});
         if (!checked) return retry("dependency-unavailable");
-        sourcePin = checked.named;
+        sourcePin = checked.birth.named;
       }
       // Section 6.4: the foreign entries that the declared fields of the message name. More than one entry may use are not fetched:
       // the judge refuses that message, `bad-field`, before it reads any.

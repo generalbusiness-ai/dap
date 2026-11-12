@@ -404,12 +404,12 @@ export class Operations {
       if (!receiver) return false;
       if (receiver.mode === "partition-v1") {
         const read = await within(() => receiver.read(asked.from, { maxBytes: this.#bounds.entryBytes, milliseconds: Math.floor(this.#bounds.fetchSeconds * 1000) }, false), this.#bounds.fetchSeconds);
-        if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from)) return false;
+        if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from, read.sequence)) return false;
         if (asked.mode !== "application" && read.under !== "change") return false;
         return await receiver.publication(asked.from, asked.directory, asked.destination, asked.mode === "application" ? "application" : "change") === true;
       }
       const read = await within(() => this.#resolver.read(asked.from, { maxBytes: this.#bounds.entryBytes, milliseconds: Math.floor(this.#bounds.fetchSeconds * 1000) }, true), this.#bounds.fetchSeconds);
-      if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from)) return false;
+      if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from, read.sequence)) return false;
       return asked.mode === "application"
         ? (answersVersionQuestion(operation.owner, "scopeOperationNativeApplicationOrigin") ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
         : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []);

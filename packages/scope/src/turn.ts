@@ -126,7 +126,7 @@ export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: read
     }, milliseconds / 1000);
     if (remaining() === null) return null;
     if (matched !== LATE && matched !== null && "archived" in matched) return ARCHIVED_FACT;
-    const accepted = matched !== LATE && matched !== null && "entry" in matched && isEntryOf(matched.entry, fact) ? carryProducerName({ fact, entry: matched.entry, under: matched.under }, matched) : null;
+    const accepted = matched !== LATE && matched !== null && "entry" in matched && isEntryOf(matched.entry, fact, matched.sequence) ? carryProducerName({ fact, entry: matched.entry, under: matched.under, sequence: matched.sequence }, matched) : null;
     return remaining() === null ? null : accepted;
   }));
   const accepted: Fetched[] | typeof ARCHIVED_FACT | null = read.includes(ARCHIVED_FACT) ? ARCHIVED_FACT

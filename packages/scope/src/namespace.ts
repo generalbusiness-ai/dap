@@ -21,23 +21,29 @@ import { archivedPosition } from "@generalbusiness/dap-derive";
  */
 
 import { ROLE_LISTS, isActions } from "@generalbusiness/dap-platform/membership-actions";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Archived, Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
-import { isEntryOf, isObject, isScopeRef, type Delivered, type Fetched, type ScopeState } from "@generalbusiness/dap-derive";
+import type { Archived, Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeKind, ScopeRef, SequenceRef } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, definitionDigest, isEntryBodyOf, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { isObject, isScopeRef, type Delivered, type Fetched, type ScopeState } from "@generalbusiness/dap-derive";
 import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
 import type { Membership } from "./authority.ts";
 import type { Pinned } from "./core.ts";
-import type { Definitions, Delivery, Resolver, SentTexts, SourceReadContext, Transport } from "./ports.ts";
-import { EXACT_PROOF_RECEIVER_BOUNDS, PROOF_BYTE_BOUNDS, type ProofBody, type ProofSource } from "./proof-bytes.ts";
+import type { Definitions, Delivery, OriginRow, Resolver, SentTexts, SourceReadContext, Transport } from "./ports.ts";
+import { EXACT_PROOF_RECEIVER_BOUNDS, PROOF_BYTE_BOUNDS, proofEntry, type ProofBody, type ProofSource } from "./proof-bytes.ts";
 import type { Store } from "./store.ts";
 import { sourceReadRemaining } from "./turn.ts";
 import { encodeSessionReference, sessionReferenceRequest, SESSION_REFERENCE_BOUNDS, type SessionReferenceSource } from "./session-reference.ts";
 import { readNativeBirth, type NativeBirth, type NativeBirthSource, type NativeBirthNameSource } from "./native-birth.ts";
 import { operational, type OperationalIdentity } from "./operational.ts";
 
-/** What the object at a name answers to a read of one of its entries. `bytes` null: it has no entry at that sequence number. */
-export interface Sourced { at: ScopeRef; under: string; bytes: string | null; archived?: Archived; origin?: readonly { fact: FactRef; under: string; bytes: string }[] }
+/**
+ * What the object at a name answers to a read of one of its entries. `bytes`
+ * null: it has no entry at that sequence number. A later entry travels with
+ * `birth`, the original bytes of this sequence's first entry, so that the
+ * reader admits the full reference itself. A first entry is its own birth and
+ * carries none. Every string is the original stored string, never a
+ * re-serialization.
+ */
+export interface Sourced { at: SequenceRef; under: string; bytes: string | null; birth?: string; archived?: Archived; origin?: readonly { fact: FactRef; under: string; bytes: string }[] }
 
 /** The five calls one scope's object takes from another's. `observe` is asked of a membership scope or of a rules scope. */
 export interface Peer {
@@ -96,8 +102,8 @@ export function nameOf(to: unknown): ScopeId | null {
  * delivery reaches the scope's judgment, from the scope's own record and
  * nothing else, so a refusal here recorded nothing.
  *
- * - A reference to another scope ID or another kind, or to an empty store:
- *   `not-found`. Another incarnation: `wrong-incarnation`.
+ * - A reference to another scope ID, or to an empty store: `not-found`.
+ *   Another genesis: `wrong-incarnation`.
  * - A reference to a scope whose genesis was refused: `not-found`. That
  *   scope admits nothing but a repeat of its creation request, which is
  *   addressed by its seed.
@@ -108,8 +114,8 @@ export function routed(name: ScopeId | null, scope: ScopeState | null, delivered
   const to: unknown = isObject(delivered) ? delivered.to : null;
   if (!name || nameOf(to) !== name) return "not-found";
   if (isScopeRef(to)) {
-    if (!scope || to.kind !== scope.at.kind || scope.status === "refused") return "not-found";
-    return to.inc === scope.at.inc ? null : "wrong-incarnation";
+    if (!scope || scope.status === "refused") return "not-found";
+    return to.genesis === scope.at.genesis ? null : "wrong-incarnation";
   }
   const message: unknown = delivered.message;
   return scope || (isObject(message) && message["class"] === "request" && message["type"] === "create") ? null : "not-found";
@@ -132,18 +138,65 @@ export function nameUnder(pinned: Pinned, origin: readonly Fetched[] = []): stri
   return sourceName(pinned.named, name, origin);
 }
 
-/** Immutable copies only; a historical retained name is not an authenticated identity. */
-export function sourceOrigin(store: Store, pinned: Pinned): readonly Fetched[] {
+/**
+ * A copy that a source answer can carry: the body, its label and its original
+ * bytes. `sequence` is the genuine association when this scope admitted one:
+ * its own local sequence, a primary read, or a first entry admitted from its
+ * own bytes. A retained copy with no admitted birth keeps `sequence` null and
+ * travels only as an origin row.
+ */
+export interface SourceCopy { readonly fact: FactRef; readonly entry: Entry; readonly under: string; readonly bytes: string; readonly sequence: CheckedSequence | null }
+
+/** The copies that carry a genuine association, as `Fetched`, in their order. A copy with no association names no identity. */
+export function genuineCopies(copies: readonly SourceCopy[]): Fetched[] {
+  return copies.flatMap(copy => copy.sequence ? [{ fact: copy.fact, entry: copy.entry, under: copy.under, sequence: copy.sequence }] : []);
+}
+
+/**
+ * The genuine copy of a primary read. The resolver admitted only canonical
+ * bytes, so the canonical form of the entry is the original string.
+ */
+export function primaryCopy(fact: FactRef, read: { entry: Entry; under: string; sequence: CheckedSequence }): SourceCopy {
+  return { fact, entry: read.entry, under: read.under, bytes: canonicalize(read.entry), sequence: read.sequence };
+}
+
+/**
+ * Origin rows of one answer, with the association that the same rows prove.
+ * A first entry proves its own sequence from its original bytes. A later row
+ * associates only with a birth of its sequence that the same rows hold. Every
+ * other row stays a raw copy. No row is read again or made up.
+ */
+export function admittedOrigin(rows: readonly OriginRow[], maxBytes: number): SourceCopy[] {
+  const births = new Map<string, CheckedSequence>();
+  for (const row of rows) {
+    if (row.fact.seq !== 0) continue;
+    const sequence = admitSequenceGenesis(row.bytes, row.fact.at, maxBytes);
+    if (sequence && proofEntry({ fact: row.fact, bytes: row.bytes }, row.fact, maxBytes, sequence)) births.set(canonicalize(row.fact.at), sequence);
+  }
+  return rows.map(row => {
+    const sequence = births.get(canonicalize(row.fact.at)) ?? null;
+    const proved = sequence !== null && proofEntry({ fact: row.fact, bytes: row.bytes }, row.fact, maxBytes, sequence) !== null;
+    return { fact: row.fact, entry: row.entry, under: row.under, bytes: row.bytes, sequence: proved ? sequence : null };
+  });
+}
+
+/**
+ * This scope's own genesis, with its local association, and the retained copy
+ * of its creator's entry. The creator copy carries no association: a
+ * historical retained name is not an authenticated identity. Both keep the
+ * original stored strings.
+ */
+export function sourceOrigin(store: Store, pinned: Pinned, local: CheckedSequence | null): readonly SourceCopy[] {
   const at = store.scope()?.at;
-  if (!at) return [];
+  if (!at || !local) return [];
   const first = store.stored(0);
   if (!first) return [];
   const genesis = parseStrict(first.bytes) as Entry;
   const source = genesis.input.type === "genesis" ? genesis.input.source : null;
   const use = source ? genesis.uses.find(row => canonicalize(row.fact) === canonicalize(source)) : undefined;
   const creation = use ? store.retained("entry", use.content) : null;
-  const own: Fetched = { fact: { at, seq: 0, hash: first.hash }, entry: genesis, under: pinned.definition?.declared.name ?? "" };
-  return source && creation ? [own, { fact: source, entry: parseStrict(creation.bytes) as Entry, under: creation.under ?? "" }] : [own];
+  const own: SourceCopy = { fact: { at, seq: 0, hash: first.hash }, entry: genesis, under: pinned.definition?.declared.name ?? "", bytes: first.bytes, sequence: local };
+  return source && creation ? [own, { fact: source, entry: parseStrict(creation.bytes) as Entry, under: creation.under ?? "", bytes: creation.bytes, sequence: null }] : [own];
 }
 
 /**
@@ -151,16 +204,20 @@ export function sourceOrigin(store: Store, pinned: Pinned): readonly Fetched[] {
  * definition this scope pins. A scope that cannot state that name gives no
  * answer: the call fails, and the reader's entry cannot be read now.
  */
-export function sourced(store: Store, pinned: Pinned | null, seq: number, origin = false, authenticatedOrigin?: readonly Fetched[]): Sourced | null {
+export function sourced(store: Store, pinned: Pinned | null, seq: number, origin = false, copies?: readonly SourceCopy[]): Sourced | null {
   const scope = store.scope();
   if (!scope || !pinned) return null;
-  const proof = authenticatedOrigin ?? [];
-  const under = nameUnder(pinned, proof);
+  const proof = copies ?? [];
+  // Only a copy with an admitted association can name a native identity.
+  const under = nameUnder(pinned, genuineCopies(proof));
   if (under === null) throw new Error("the pinned definition or native origin cannot be read, so its identity cannot be stated");
   const archived = archivedPosition(store, seq);
-  const answer: Sourced = { at: scope.at, under, ...(archived ? { archived } : {}), bytes: (Number.isSafeInteger(seq) ? store.stored(seq) : null)?.bytes ?? null };
+  const bytes = (Number.isSafeInteger(seq) ? store.stored(seq) : null)?.bytes ?? null;
+  // A later entry travels with the original first entry of this sequence; a first entry is its own birth.
+  const birth = bytes !== null && seq !== 0 ? store.stored(0)?.bytes : undefined;
+  const answer: Sourced = { at: scope.at, under, ...(archived ? { archived } : {}), bytes, ...(birth !== undefined ? { birth } : {}) };
   if (origin) {
-    answer.origin = proof.map((copy, index) => ({ fact: copy.fact, under: index === 0 ? under : copy.under, bytes: canonicalize(copy.entry) }));
+    answer.origin = proof.map((copy, index) => ({ fact: copy.fact, under: index === 0 ? under : copy.under, bytes: copy.bytes }));
   }
   return answer;
 }
@@ -316,6 +373,19 @@ export function hostedRoleStandingAt(store: Store, pinned: Pinned | null, asked:
 }
 
 /**
+ * Whether the strings of one source answer fit one entry allowance together.
+ * UTF-16 lengths are checked before any conversion, then actual UTF-8.
+ * Repeated strings count each time they appear.
+ */
+function withinAllowance(strings: readonly string[], maxBytes: number): boolean {
+  let length = 0;
+  for (const text of strings) if ((length += text.length) > maxBytes) return false;
+  let bytes = 0;
+  for (const text of strings) if ((bytes += utf8(text).length) > maxBytes) return false;
+  return true;
+}
+
+/**
  * The resolver, the transport, the definitions and the sent texts over one
  * namespace binding. A call that fails is no answer: the entry cannot be
  * read now, or the attempt is unanswered.
@@ -331,7 +401,10 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
           const got = typeof source.nativeBirthByName === "function" ? await source.nativeBirthByName(name, kind, milliseconds, maxBytes) : null;
           if (isRoomRetiredStop(got)) return null;
           const at = got?.proof?.fact?.at;
-          return isScopeRef(at) && at.scope === name && at.kind === kind ? readNativeBirth(got, at, maxBytes) : null;
+          if (!isScopeRef(at) || at.scope !== name) return null;
+          // The transport only checks the closed reply; the caller debits its own budget when it admits the birth.
+          const admitted = readNativeBirth(got, at, maxBytes, () => {});
+          return admitted && admitted.sequence.kind === kind ? admitted.birth : null;
         } catch { return null; }
       },
     },
@@ -355,7 +428,8 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
           const source = peer(at.scope);
           if (typeof source.nativeBirth !== "function") return null;
           const result = await source.nativeBirth(at, milliseconds, maxBytes);
-          return isRoomRetiredStop(result) ? null : readNativeBirth(result, at, maxBytes);
+          // The transport only checks the closed reply; the caller debits its own budget when it admits the birth.
+          return isRoomRetiredStop(result) ? null : readNativeBirth(result, at, maxBytes, () => {})?.birth ?? null;
         } catch { return null; }
       },
     },
@@ -375,25 +449,34 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
         }
         // Retirement is unavailable, never absent evidence or a source proof.
         if (isRoomRetiredStop(answer)) return null;
-        // Section 7.4: the incarnation in the answer is checked against the one the fact names.
-        if (!answer || answer.at.inc !== fact.at.inc) return remaining() === null ? null : { absent: true };
+        // Section 7.4: the full reference in the answer is checked against the one the fact names, before any bytes are used.
+        if (!answer || !isObject(answer) || canonicalize(answer.at) !== canonicalize(fact.at)) return remaining() === null ? null : { absent: true };
         if (answer.archived) return remaining() === null ? null : { archived: answer.archived };
         if (answer.bytes === null) return remaining() === null ? null : { absent: true };
         try {
-          const proof: Fetched[] = [];
+          // One entry allowance funds the whole answer: body, birth, label and any origin rows, each counted where it appears.
+          const strings = [answer.bytes, ...(fact.seq === 0 ? [] : [answer.birth]), answer.under,
+            ...(origin && Array.isArray(answer.origin) ? answer.origin.flatMap(row => [row?.bytes, row?.under]) : [])];
+          if (strings.some(text => typeof text !== "string")) return remaining() === null ? null : { absent: true };
+          if (!withinAllowance(strings as string[], maxBytes)) return null;
+          // A first entry is its own birth. A later entry needs the original first entry of its sequence.
+          const sequence = admitSequenceGenesis(fact.seq === 0 ? answer.bytes : answer.birth!, fact.at, maxBytes);
+          const entry = sequence && proofEntry({ fact, bytes: answer.bytes }, fact, maxBytes, sequence);
+          if (!sequence || !entry) return remaining() === null ? null : { absent: true };
+          const rows: OriginRow[] = [];
           if (origin && answer.origin) {
             if (!Array.isArray(answer.origin) || answer.origin.length > 3 && answer.origin.length !== 9) return remaining() === null ? null : { absent: true };
             for (const row of answer.origin) {
-              if (answer.origin.length === 9 && (typeof row.bytes !== "string" || row.bytes.length > PROPOSED_BOUNDS.entryBytes || utf8(row.bytes).length > PROPOSED_BOUNDS.entryBytes)) return remaining() === null ? null : { absent: true };
-              const entry = parseStrict(row.bytes) as Entry;
-              if (!isEntryOf(entry, row.fact) || typeof row.under !== "string") return remaining() === null ? null : { absent: true };
-              proof.push({ fact: row.fact, entry, under: row.under });
+              if (!isObject(row) || !isFactRef(row.fact)) return remaining() === null ? null : { absent: true };
+              const body = parseStrict(row.bytes) as Entry;
+              // Body integrity only; a row associates later only through a birth that the same rows hold.
+              if (!isEntryBodyOf(body, row.fact)) return remaining() === null ? null : { absent: true };
+              rows.push({ fact: row.fact, entry: body, under: row.under, bytes: row.bytes });
             }
-            if (proof.length === 9 && (answer.under !== "issue" || canonicalize(proof[0]!.fact.at) !== canonicalize(answer.at)
-              || sourceName(EVIDENCE_INCIDENT_PINS_V17.issue, "issue", proof) !== "issue")) return remaining() === null ? null : { absent: true };
+            if (rows.length === 9 && (answer.under !== "issue" || canonicalize(rows[0]!.fact.at) !== canonicalize(answer.at)
+              || sourceName(EVIDENCE_INCIDENT_PINS_V17.issue, "issue", genuineCopies(admittedOrigin(rows, maxBytes))) !== "issue")) return remaining() === null ? null : { absent: true };
           }
-          const entry = parseStrict(answer.bytes) as Entry;
-          return remaining() === null ? null : { entry, under: answer.under, ...(origin ? { origin: proof } : {}) };
+          return remaining() === null ? null : { entry, under: answer.under, sequence, ...(origin ? { origin: rows } : {}) };
         } catch {
           return remaining() === null ? null : { absent: true };
         }

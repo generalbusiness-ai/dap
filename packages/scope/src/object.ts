@@ -42,13 +42,13 @@ import { demoCreationOffer, type DemoCreationConfig } from "./demo-creation.ts";
 import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, ReadMinimum, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, isFactRef, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, isEntryBodyOf, isFactRef, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 
-import type { Delivered, Fetched, StateView } from "@generalbusiness/dap-derive";
+import type { Delivered, StateView } from "@generalbusiness/dap-derive";
 import { Scope, creationKind, ownOf, type Checkpointed, type Created } from "./core.ts";
 import { Deliveries } from "./delivery.ts";
-import { declaredBy, observedAt, hostedRoleStandingAt, routed, sentText, sourced, sourceOrigin, type Sourced } from "./namespace.ts";
+import { admittedOrigin, declaredBy, observedAt, hostedRoleStandingAt, primaryCopy, routed, sentText, sourced, sourceOrigin, type SourceCopy, type Sourced } from "./namespace.ts";
 import { JoinLimits, isJoin, type LimitConfig } from "./limits.ts";
 import { Operations, type Outside } from "./operations.ts";
 import { OperatorRecord, sendAgain, type Incident, type Resent } from "./operator.ts";
@@ -280,12 +280,15 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     // A signed read is judged on this scope's clock, within the authority window of an intent (`signed-reads.ts`).
     // An entry that an entry of a cause chain names: one of this scope's own, one it retains, or one read from its own scope.
     this.#chains = new Chains(store, async (use) => {
-      const own = use.fact.at.scope === this.#name ? store.stored(use.fact.seq) : null;
+      // This scope's own entry matches under its local association. A retained copy matches its fact by body only: the
+      // chain needs its body, and a retained row holds no birth of the other sequence.
+      const local = use.fact.at.scope === this.#name ? this.#scope.localSequence() : null;
+      const own = local ? store.stored(use.fact.seq) : null;
       const kept = own ?? store.retained("entry", use.content);
-      const local = kept ? (JSON.parse(kept.bytes) as Entry) : null;
-      if (local && isEntryOf(local, use.fact)) return local;
+      const entry = kept ? (JSON.parse(kept.bytes) as Entry) : null;
+      if (entry && (own && local ? isEntryOf(entry, use.fact, local) : !own && isEntryBodyOf(entry, use.fact))) return entry;
       const read = await within(() => ports.resolver.read(use.fact, { maxBytes: bounds.entryBytes, milliseconds: Math.floor(bounds.fetchSeconds * 1000) }, false), bounds.fetchSeconds);
-      return read !== LATE && read !== null && "entry" in read && isEntryOf(read.entry, use.fact) ? read.entry : null;
+      return read !== LATE && read !== null && "entry" in read && isEntryOf(read.entry, use.fact, read.sequence) ? read.entry : null;
     });
     this.#signed = { clock: ports.clock, window: bounds.intentLifetimeSeconds, chains: this.#chains, ...(wiring.signedReadObserver ? { observe: wiring.signedReadObserver } : {}) };
     this.#readers = ports.readers;
@@ -688,17 +691,20 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#first();
     const pinned = this.#scope.pinned();
     if (!pinned) return null;
-    let proof = sourceOrigin(this.#store, pinned);
+    let proof: readonly SourceCopy[] = sourceOrigin(this.#store, pinned, this.#scope.localSequence());
     const name = pinned.definition?.declared.name;
     // A G17 incident source carries only its one actual local admission.
     // The parent Directory genesis is already its ordinary source origin.
     if (origin && pinned.named === EVIDENCE_INCIDENT_PINS_V17.destination) {
       if (!Number.isSafeInteger(seq) || seq < 0) return null;
-      const own = ownOf(this.#store, this.#scope.localSequence()!), actual = own(seq), position = actual && evidenceIncidentAdmissionPositionV17(actual.entry);
+      const local = this.#scope.localSequence();
+      if (!local) return null;
+      const own = ownOf(this.#store, local), actual = own(seq), position = actual && evidenceIncidentAdmissionPositionV17(actual.entry);
       if (typeof position === "number") {
         const admitted = own(position), at = this.#store.scope()?.at;
         if (!admitted || !at) return null;
-        proof = [...proof, { fact: { at, seq: position, hash: admitted.hash }, entry: admitted.entry, under: "platform:destination" }];
+        // A sealed local entry is stored canonically, so its canonical form is its original string; no second read.
+        proof = [...proof, { fact: { at, seq: position, hash: admitted.hash }, entry: admitted.entry, under: "platform:destination", bytes: canonicalize(admitted.entry), sequence: local }];
       }
     }
     // A retained historical name is not authority. Authenticate the creator
@@ -714,24 +720,26 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     if (pinned.named === EVIDENCE_INCIDENT_PINS_V17.issue && proof[1] && creatorInput?.type === "delivery" && incidentFields) {
       try {
         const creator = proof[1];
-        if (creator.fact.at.kind !== "lane" || creator.fact.at.scope === this.#name || creatorInput.from.at.kind !== "destination"
+        // The kinds come from the records: this scope's genesis states its creator's kind, and the creator's delivery states its sender's.
+        const born = proof[0]!.entry.input;
+        if (born.type !== "genesis" || born.sourceKind !== "lane" || creator.fact.at.scope === this.#name || creatorInput.sourceKind !== "destination"
           || creatorInput.from.at.scope === this.#name || creatorInput.from.at.scope === creator.fact.at.scope) return null;
         const parent = await readSource(creator.fact, true);
-        if (parent === LATE || parent === null || !("entry" in parent) || parent.under !== "change" || !isEntryOf(parent.entry, creator.fact)
+        if (parent === LATE || parent === null || !("entry" in parent) || parent.under !== "change" || !isEntryOf(parent.entry, creator.fact, parent.sequence)
           || !parent.origin || parent.origin.length !== 3) return null;
         const nativeFact = creatorInput.from, native = await readSource(nativeFact, true);
-        if (native === LATE || native === null || !("entry" in native) || native.under !== "platform:destination" || !isEntryOf(native.entry, nativeFact)
+        if (native === LATE || native === null || !("entry" in native) || native.under !== "platform:destination" || !isEntryOf(native.entry, nativeFact, native.sequence)
           || !native.origin || native.origin.length !== 3) return null;
         const jobFact = incidentFields["job"];
         if (!isFactRef(jobFact) || canonicalize(jobFact.at) !== canonicalize(creator.fact.at)) return null;
         const job = await readSource(jobFact, false);
-        if (job === LATE || job === null || !("entry" in job) || job.under !== "change" || !isEntryOf(job.entry, jobFact)) return null;
-        const fixed: Fetched[] = [proof[0]!, { ...creator, under: parent.under }, ...parent.origin, { fact: nativeFact, entry: native.entry, under: native.under }];
-        for (const copy of native.origin) {
+        if (job === LATE || job === null || !("entry" in job) || job.under !== "change" || !isEntryOf(job.entry, jobFact, job.sequence)) return null;
+        const fixed: SourceCopy[] = [proof[0]!, primaryCopy(creator.fact, parent), ...admittedOrigin(parent.origin, maxBytes), primaryCopy(nativeFact, native)];
+        for (const copy of admittedOrigin(native.origin, maxBytes)) {
           if (fixed.some(existing => canonicalize(existing.fact) === canonicalize(copy.fact))) continue;
           fixed.push(copy);
         }
-        fixed.push({ fact: jobFact, entry: job.entry, under: job.under });
+        fixed.push(primaryCopy(jobFact, job));
         if (fixed.length !== 9) return null;
         if (remaining() === null) return null;
         const answer = sourced(this.#store, pinned, seq, origin, fixed);
@@ -743,16 +751,18 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       if (creator.fact.at.scope === this.#name) return null;
       try {
         const read = await readSource(creator.fact, true);
-        if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, creator.fact)) return null;
-        proof = [proof[0]!, { ...creator, under: read.under }];
+        if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, creator.fact, read.sequence)) return null;
+        proof = [proof[0]!, primaryCopy(creator.fact, read)];
+        // The creator's own first entry in its origin proves itself from its bytes.
+        const origin = admittedOrigin(read.origin ?? [], maxBytes);
         if (evidenceIncidentParentV17(pinned.named) && creatorInput?.type === "act" && creatorInput.signed.intent.kind === "open-pr") {
-          const directory = read.origin?.find(copy => copy.fact.seq === 0 && canonicalize(copy.fact.at) === canonicalize(creator.fact.at));
-          if (!directory || !isEntryOf(directory.entry, directory.fact) || directory.entry.input.type !== "genesis") return null;
+          const directory = origin.find(copy => copy.fact.seq === 0 && canonicalize(copy.fact.at) === canonicalize(creator.fact.at));
+          if (!directory?.sequence || !isEntryOf(directory.entry, directory.fact, directory.sequence) || directory.entry.input.type !== "genesis") return null;
           proof = [...proof, directory];
         }
         if (read.under === "issue" || application) {
-          const parent = read.origin?.find(copy => copy.fact.seq === 0 && canonicalize(copy.fact.at) === canonicalize(creator.fact.at));
-          if (!parent || !isEntryOf(parent.entry, parent.fact) || parent.entry.input.type !== "genesis") return null;
+          const parent = origin.find(copy => copy.fact.seq === 0 && canonicalize(copy.fact.at) === canonicalize(creator.fact.at));
+          if (!parent?.sequence || !isEntryOf(parent.entry, parent.fact, parent.sequence) || parent.entry.input.type !== "genesis") return null;
           proof = [...proof, { ...parent, under: read.under }];
         }
       } catch { return null; }
