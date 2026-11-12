@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { smokeWorker, deploySmokeMain, BROWSER_USER_AGENT } from "./deploy-smoke.mjs";
-import { parseConfig, smokePolicy } from "./deploy-config.mjs";
+import { smokeWorker, smokeSandbox, deploySmokeMain, BROWSER_USER_AGENT } from "./deploy-smoke.mjs";
+import { parseConfig, sandboxScreenOrigins, smokePolicy } from "./deploy-config.mjs";
 
 const origin = "https://TEST.invalid".toLowerCase();
 const register = { kind: "register", scope: "sc_" + "a".repeat(52), inc: "in_" + "a".repeat(26) };
@@ -106,4 +106,44 @@ test("the four tracked configs define three absent offers and one pinned demo of
   }
   assert.deepEqual(policies.map(row => row.mcpStatus), [404, 404, 404, 404]);
   assert.deepEqual(policies.map(row => row.offer !== null), [false, false, true, false]);
+});
+
+const screen = "https://test.inguz.space", room = "sc_" + "c".repeat(52);
+const sandboxConfig = { name: "dap-application-sandbox", main: "worker.ts", vars: { SCREEN_HOSTS: JSON.stringify([{ host: { screenOrigin: screen }, service: "GROW" }]) } };
+
+/** Scripted sandbox answers; each key overrides one read by its full URL. */
+function scriptedSandbox(overrides = {}) {
+  const calls = [];
+  const fetch = async (url, init) => {
+    calls.push(url);
+    assert.equal(init.method, "GET"); assert.equal(init.headers["User-Agent"], BROWSER_USER_AGENT);
+    assert.equal(init.redirect, "error"); assert.equal(init.credentials, "omit");
+    if (Object.hasOwn(overrides, url)) return overrides[url]();
+    if (url === `${screen}/v1/scopes/${room}`) return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+    return new Response(null, { status: 404 });
+  };
+  return { calls, fetch };
+}
+
+test("sandbox smoke passes only on four 404 reads and the room's exact forbidden read", async () => {
+  const valid = scriptedSandbox(), result = await smokeSandbox({ config: sandboxConfig, host: screen, room }, valid);
+  assert.equal(result.pass, true);
+  assert.deepEqual(valid.calls, [`${screen}/`, `${screen}/site/x`, `${screen}/applications/x`, `${screen}/v1/scopes/${room}`, "https://unmapped-smoke.inguz.space/"]);
+  for (const [url, answer] of [
+    [`${screen}/site/x`, () => new Response("TEST page", { status: 200 })],
+    [`${screen}/v1/scopes/${room}`, () => new Response(null, { status: 503 })],
+    [`${screen}/v1/scopes/${room}`, () => Response.json({ ok: false, reason: "not-found" }, { status: 403 })],
+    ["https://unmapped-smoke.inguz.space/", () => new Response(null, { status: 503 })],
+  ]) assert.equal((await smokeSandbox({ config: sandboxConfig, host: screen, room }, scriptedSandbox({ [url]: answer }))).pass, false);
+});
+
+test("sandbox smoke refuses an untracked host or an invalid room before fetch and takes no --url", async () => {
+  let calls = 0; const ports = { fetch: async () => { calls++; throw new Error("TEST unexpected fetch"); } };
+  assert.equal((await smokeSandbox({ config: sandboxConfig, host: "https://other.inguz.space", room }, ports)).pass, false);
+  assert.equal((await smokeSandbox({ config: sandboxConfig, host: screen, room: "TEST" }, ports)).pass, false);
+  assert.equal(await deploySmokeMain(["sandbox", "--url", screen], { ...ports, write: () => {} }), 2);
+  assert.equal(await deploySmokeMain(["sandbox", "--host", screen, "--room", room, "--url", screen], { ...ports, write: () => {} }), 2);
+  assert.equal(calls, 0);
+  const tracked = await readFile(new URL("../apps/sandbox/wrangler.rollout.jsonc", import.meta.url), "utf8");
+  assert.deepEqual(sandboxScreenOrigins(parseConfig(tracked)), ["https://grow.inguz.space"]);
 });

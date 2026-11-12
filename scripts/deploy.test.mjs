@@ -3,21 +3,24 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { deployMain, bundleManifest } from "./deploy.mjs";
-import { parseConfig } from "./deploy-config.mjs";
+import { configPath, parseConfig } from "./deploy-config.mjs";
 
 const version = "11111111-1111-1111-1111-111111111111";
 const settings = () => ({ name: "dap-grow", main: "worker.ts", vars: {}, migrations: [{ tag: "v1", new_sqlite_classes: ["Room"] }] });
+const sandboxSettings = () => ({ name: "dap-application-sandbox", main: "worker.ts", vars: { SCREEN_HOSTS: "[]" } });
 
 async function fixture(t, names = ["grow"]) {
   const directory = await mkdtemp(join(tmpdir(), "artroom-deploy-test-")), root = join(directory, "checkout"), receipts = join(directory, "receipts");
-  await mkdir(join(root, "apps/room"), { recursive: true });
   const git = args => execFileSync("git", args, { cwd: root, encoding: "utf8", env: { ...process.env,
     GIT_AUTHOR_NAME: "TEST", GIT_AUTHOR_EMAIL: "test@example.invalid", GIT_COMMITTER_NAME: "TEST", GIT_COMMITTER_EMAIL: "test@example.invalid" } });
   git(["init", "--quiet"]);
-  const path = name => join(root, `apps/room/wrangler.${name}.jsonc`);
-  for (const name of names) await writeFile(path(name), JSON.stringify({ ...settings(), name: `dap-${name}` }) + "\n");
+  const path = name => join(root, configPath(name));
+  for (const name of names) {
+    await mkdir(dirname(path(name)), { recursive: true });
+    await writeFile(path(name), JSON.stringify(name === "sandbox" ? sandboxSettings() : { ...settings(), name: `dap-${name}` }) + "\n");
+  }
   const commit = () => { git(["add", "."]); git(["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "--quiet", "-m", "TEST deployment source"]); return git(["rev-parse", "HEAD"]).trim(); };
   const baseline = commit(), calls = [], outputs = [], scratch = new Set();
   let behavior = {};
@@ -117,6 +120,28 @@ test("a completed scripted deployment writes an external receipt that supplies t
   assert.equal(receipt.worker, "dap-grow"); assert.equal(receipt.version, version); assert.equal(receipt.status, "deployed");
   assert.match(receipt.qualification, /not uploaded bytes/); assert.match(receipt.qualification, /Smoke has not run/);
   assert.equal(await deployMain(["grow", "--previous-receipt", `grow=${path}`, "--dry-run"], { root: f.root, run: f.run, write: f.write }), 0);
+});
+
+test("the sandbox deploys its own configuration and an unchanged bundle and configuration refuse before upload", async t => {
+  const f = await fixture(t, ["grow", "sandbox"]); assert.equal(await f.invoke(), 0);
+  const uploads = () => f.calls.filter(call => !call.args.includes("--dry-run"));
+  assert.equal(uploads().length, 2);
+  assert.ok(uploads()[1].args.at(-1).endsWith(join("apps", "sandbox", "wrangler.rollout.jsonc")));
+  const receipts = await Promise.all((await readdir(f.receipts)).map(async name => ({ path: join(f.receipts, name), ...JSON.parse(await readFile(join(f.receipts, name), "utf8")) })));
+  const sandbox = receipts.find(row => row.config === "sandbox"), grow = receipts.find(row => row.config === "grow");
+  assert.equal(sandbox.worker, "dap-application-sandbox"); assert.equal(sandbox.configPath, "apps/sandbox/wrangler.rollout.jsonc");
+  assert.equal(sandbox.commit, f.baseline); assert.equal(sandbox.version, version); assert.equal(sandbox.time, "2026-11-10T21:00:00.000Z");
+  assert.match(sandbox.bundle.sha256, /^[a-f0-9]{64}$/); assert.deepEqual(sandbox.acceptedMigrations, []);
+  const again = name => ["--previous-receipt", `${name}=${(name === "sandbox" ? sandbox : grow).path}`];
+  const ports = { root: f.root, run: f.run, write: f.write };
+  assert.equal(await deployMain(["grow", "sandbox", ...again("grow"), ...again("sandbox"), "--receipt-dir", f.receipts], ports), 1);
+  assert.match(f.outputs.at(-1).failure, /grow equal its previous receipt/); assert.equal(uploads().length, 2);
+  await writeFile(f.path("sandbox"), JSON.stringify({ ...sandboxSettings(), vars: { SCREEN_HOSTS: "[ ]" } }) + "\n"); f.commit();
+  assert.equal(await deployMain(["sandbox", ...again("sandbox"), "--receipt-dir", f.receipts], ports), 0);
+  assert.equal(uploads().length, 3);
+  await writeFile(f.path("sandbox"), JSON.stringify({ ...sandboxSettings(), migrations: [] }) + "\n"); f.commit();
+  assert.equal(await deployMain(["sandbox", ...again("sandbox"), "--receipt-dir", f.receipts], ports), 1);
+  assert.match(f.outputs.at(-1).failure, /declares migrations/); assert.equal(uploads().length, 3);
 });
 
 test("an upload with a malformed result preserves its reported version and stops later Workers", async t => {
