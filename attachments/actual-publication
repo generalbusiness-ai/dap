@@ -1,0 +1,57 @@
+{
+  "label": "Curated provenance, not raw output",
+  "status": "APPROVED_JP1_SNAPSHOT_PUBLISHED_AND_REMOTE_CONFIRMED",
+  "jp1Head": "1e2dae29124e8d75d0bdf2a85d3cc212c8acb09e",
+  "snapshot": "9a6686ce42618bd7ef6254c1f454c6106b19ebce",
+  "repository": "generalbusiness-ai/dap",
+  "destinationRef": "refs/seq/589bca982736a2361d15d53f7572375ef2f7aaf3",
+  "pushActualExit": 0,
+  "remoteReadbackActualExit": 0,
+  "originalCaptureToolSession": 75913,
+  "toolSessionClosedExit": 0,
+  "exactJp1HeadQueryActualExit": 0,
+  "existingPagePushRun": 43162619378,
+  "existingCardPushRun": 43162622935,
+  "bothStatus": "completed/success, attempt1, exactJP1head",
+  "newCIRuns": 0,
+  "userApproval": "Approve JP1 publication and CI; explicit reply received in this session. Prior snapshot-only auto-review block is cleared for this publication.",
+  "futureQuestions": "User directs all future questions/approval decisions to planner session; do not pause to ask user.",
+  "originalReferences": [
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-approved-publication/exact-head-runs-original.json",
+      "sha256": "b5d3f3905d38c498d769d3e3779ec7f77f3ccc405d3e125e51c578d926643af8",
+      "bytes": 25467
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-approved-publication/exact-head-runs.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-approved-publication/publication-binding.json",
+      "sha256": "e6292fc7e985c471292f50f67dcdfcc201289342df09e069a8797147534cce13",
+      "bytes": 600
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-approved-publication/remote-readback.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-approved-publication/remote-readback.stdout",
+      "sha256": "bfb3112adcbf3fb27bb7fb514d593d2b3ca7f202e6b4a68a2bd903998f6747ee",
+      "bytes": 91
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-approved-publication/snapshot-push.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-11-12-jp1-approved-publication/snapshot-push.stdout",
+      "sha256": "f671313186dcc10bbf95c4b009532dffba752f0f46d18c50b47aa699039fbbb0",
+      "bytes": 170
+    }
+  ],
+  "rawCopyFreezeSeal": false
+}
