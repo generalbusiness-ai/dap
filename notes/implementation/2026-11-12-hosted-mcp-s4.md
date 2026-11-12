@@ -6,7 +6,7 @@ Its tree is `a80d999cb8ffcadd985dce0f40d71ae4e6f96a21`.
 The comparison base is main `221e11c3`.
 The gate at `12c24841` failed.
 The isolated follow-ups below do not turn that result into a gate pass.
-Exact-head push CI remains pending.
+Page and Card push CI succeeded at `77ac8113`, tree `489b1b24db7f80d24cb06ab37406d454f8a984c9`.
 
 ## What changed
 
@@ -110,7 +110,7 @@ Counts come from the original reports, without adding repeated owner observation
 Commands below document reproduction, rather than claim a complete original argv receipt.
 `V(P, F)` denotes `node node_modules/vitest/vitest.mjs run --config vitest.config.ts --project P F`.
 The recipe run also retained the default and JSON reporters; its literal command appears in the manifest.
-The manifest retains each command's START, END, original streams, reports, and literal exit-file references.
+The manifest retains START and END identifiers, original stream and report references, and literal exit-file references.
 Native scale omission came from the unchanged gate selection, `outside-scale-paths`; no worker or test deadline override applied.
 All output paths below start with `~/play/artroom-evidence/2026-11-12-s4-`.
 
@@ -139,8 +139,9 @@ All output paths below start with `~/play/artroom-evidence/2026-11-12-s4-`.
 | Transport statechart | Retained `statechart.ts` with `model/Transport.tla`, `--config model/Transport.cfg`, `--view model/view.mjs`, `--out chart`; full recipe in manifest | 0; 5 reached states | `transport-60283b41/chart.stdout`, SHA `cf0ea3bb51f64684a576a5b859b22ac513c38435c432b6552d1b20827f94dc02` |
 | Maintained source inventory | Maintained `sourceSeal` and `namedSourceSeals`, `1674484d` | 0; 53 records for 11 owners | `maintained-ast11-078b9f98/actual.json`, SHA `42c8d3b59f8cd03f1d8140f7c61f1bbce217507c55ba59fa6e7927d6be65098d` |
 | Hosted inventory successor | Maintained `sourceSeal`, `3211339e` | 0; 1 record | `maintained-hosted-ast1-3211339e/actual.json`, SHA `8f642e19d9729a867a52108103e96000c10a2204535ecd938dd84d2cd44d929c` |
-| Page push CI | Completed source, tests, workflow, and note head; push only | Pending | Pending |
-| Card push CI | Same head; includes declared-view script; push only | Pending | Pending |
+| Document checks | Whitespace; commit messages; JSON format; links; notes, `77ac8113`; commands in manifest | Five actual exits 0; 27 commit messages; 1,244 local links; 0 broken links; 0 note warnings | `doc-checks-77ac8113/links.stdout`, SHA `f90b71f006cb2174e66220512f6ab350d3d652d6dba486bead8397799324dd9c` |
+| Page push CI | [43274401664](https://github.com/generalbusiness-ai/dap/actions/runs/43274401664), push attempt 1 at `77ac8113` | Success; all 12 GitHub steps succeeded | `push-ci-77ac8113/page-job-verbatim.log`, SHA `1232a2bba2c3ac42e95dbfc3bb7ad6be3d0830cf53b5e900dccc7afa86bace47` |
+| Card push CI | [43274401667](https://github.com/generalbusiness-ai/dap/actions/runs/43274401667), push attempt 1 at `77ac8113` | Success; all 14 GitHub steps succeeded | `push-ci-77ac8113/card-job-verbatim.log`, SHA `7dbe64881a94ae070f36b037c7206c68a7567c336dc9180fc13fb2151e16cf04` |
 
 Planner ruling `63368b81` authorized one preservation rename of the gate internals.
 The old path was `/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.B7C5Syb8Cc`.
@@ -148,17 +149,21 @@ The current path is `~/play/artroom-evidence/2026-11-12-s4-gate-12c24841/interna
 Root act `f059af51` records unchanged inode identity, modes, and bytes for all 30 entries.
 These internals show the failed gate and supply no acceptance claim.
 
+The push checked source head `77ac811360192d76945a24a1c30568e9dfccae1b`, tree `489b1b24db7f80d24cb06ab37406d454f8a984c9`.
+This follow-up changes only this note and its manifest; every other path equals that CI source tree.
+The post-commit correspondence receipt at `~/play/artroom-evidence/2026-11-12-s4-final-document-correspondence.json` records both actual trees and the exact two-path difference.
+The review request also names those trees, avoiding a self-referential hash in the committed note.
+The first Card log retrieval exited 1 because the CLI refused ANSI bytes.
+The explicit verbatim capture exited 0 and retained the original bytes.
+GitHub reports successful steps; those statuses do not supply separate numeric child-exit receipts.
+
 ## Open limits and owners
 
-- S4 request `9a053402` still requires exact-head push CI, final evidence filing, and checker review.
+- S4 request `9a053402` requires checker review and landing. The failed gate and limited follow-ups remain subject to the checker's assessment.
 - External host enforcement remains **UNKNOWN** under S4 request `9a053402` and ruling `ec9ba020`.
   Card browser CI does not establish the four external hosts' behavior.
-- Rulings `3ec2bcad` and `3a5c4448` require one push of the completed source, tests, workflow, and note.
-  Read that head's Page and Card push runs without dispatch.
-  One document-only follow-up adds the actual results to the note and manifest.
-  That follow-up needs no push run of its own.
-  Every other path must equal the CI source head, with both trees named for checker comparison.
-  A failed push run requires repair and evidence from the new source head.
+- Rulings `3ec2bcad` and `3a5c4448` govern the two successful push runs and this one document-only record.
+  No workflow dispatch ran. This follow-up needs no push run of its own.
 - Failed focused windows retain ENDs `c08c82fc`, `b15604a3`, `e6dc87ef`, and `c57544cd`.
   The Native working failure under END `a1f16270` also remains an original failure.
   Later success does not rewrite these failures.
