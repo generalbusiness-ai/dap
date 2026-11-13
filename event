@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c8fbcadf42e90c5860939518a41b5707811a7120","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/effects.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c942087fbf65627f38526870c94b29c6229f83c4","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/install-without-mcp.test.ts."}
