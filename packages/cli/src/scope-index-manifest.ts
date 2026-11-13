@@ -157,7 +157,9 @@ export async function verifyIndexManifest(manifest: IndexManifest, reads: IndexR
       let actual: IndexScope;
       try { actual = genesis(got.value, row.at.scope); }
       catch { mismatch++; rows.push({ at: row.at, result: "mismatch", reason: "genesis-identity" }); continue; }
-      if (actual.at.genesis !== row.at.genesis || actual.kind !== row.kind) { mismatch++; rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
+      if (actual.at.genesis !== row.at.genesis) { mismatch++; rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
+      // The row's kind must be the kind of the genesis it admits.
+      if (actual.kind !== row.kind) { mismatch++; rows.push({ at: row.at, result: "mismatch", reason: "genesis-kind" }); continue; }
       verified++; rows.push({ at: row.at, result: "verified" });
     } catch (error) {
       if (error instanceof Stop) throw error;
@@ -179,7 +181,8 @@ export async function indexManifestVersions(manifest: IndexManifest, reads: Inde
       let actual: IndexScope;
       try { actual = genesis(got.value, row.at.scope); }
       catch { rows.push({ at: row.at, result: "mismatch", reason: "genesis-identity" }); continue; }
-      if (actual.at.genesis !== row.at.genesis || actual.kind !== row.kind) { rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
+      if (actual.at.genesis !== row.at.genesis) { rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
+      if (actual.kind !== row.kind) { rows.push({ at: row.at, result: "mismatch", reason: "genesis-kind" }); continue; }
       const input = got.value.entry.input;
       if (input.type !== "genesis") throw Error("checked genesis required");
       const definition = input.seed.definition;
