@@ -1,6 +1,6 @@
 import { customRequiredChangeData } from "./support/definition-corpus-data.ts";
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type DeclaredDefinition, type OutboxId, type Entry, type FactRef, type Item, type Receipt, type ScopeRef, type Seed, type SignedIntent, type SignedSessionRequest, type Summary } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition, type OutboxId, type Entry, type SequenceEntry, type FactRef, type Item, type Receipt, type ScopeRef, type Seed, type SignedIntent, type SignedSessionRequest, type Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { changeDemo3 } from "../src/index.ts";
 import { validateDefinition } from "@generalbusiness/dap-derive";
@@ -88,7 +88,7 @@ async function fixture(category: Category, declared: DeclaredDefinition = change
     const target = signed.intent.to!;
     const prior = entries.get(target.scope) ?? [];
     const seq = prior.length + 1;
-    const entry: Entry = { v: 1, genesis: target.genesis, seq, prev: prior.length ? entryHash(prior.at(-1)!) : textDigest("scripted prior head"), time: TIME, clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
+    const entry: SequenceEntry = { v: 1, genesis: target.genesis, seq, prev: prior.length ? entryHash(prior.at(-1)!) : textDigest("scripted prior head"), time: TIME, clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
     if (kind === "open-pr") {
       const seed: Seed = { v: 1, kind: "lane", definition: pin, creator: D, cause: intentDigest(signed.intent), ordinal: 0 };
       lane = { scope: scopeIdOf(seed), genesis: textDigest("TEST genesis opened lane") };
@@ -105,7 +105,7 @@ async function fixture(category: Category, declared: DeclaredDefinition = change
       }
     }
     prior.push(entry); entries.set(target.scope, prior);
-    if (kind === "merge") prior.push({ ...entry, seq: seq + 1, prev: entryHash(entry), input: { type: "delivery", from: { at: G, seq: 1, hash: textDigest("scripted reservation") }, n: 0, message: { class: "result", of: { from: factRefOf(entry), n: 0 }, outcome: "applied" }, clause: "applied" }, effects: [{ effect: "state", item: seq, state: "committed" }], sends: [] });
+    if (kind === "merge") prior.push({ ...entry, seq: seq + 1, prev: entryHash(entry), input: { type: "delivery", from: { at: G, seq: 1, hash: textDigest("scripted reservation") }, sourceKind: "destination", n: 0, message: { class: "result", of: { from: factRefOf(entry, target), n: 0 }, outcome: "applied" }, clause: "applied" }, effects: [{ effect: "state", item: seq, state: "committed" }], sends: [] });
     const fact = factRefOf(entry, target);
     accepted.push({ kind, ...(typeof signed.intent.fields["path"] === "string" ? { path: signed.intent.fields["path"] } : {}), fact, signed });
     const receipt: Receipt = { fact, definition: summaries.get(target.scope)!.definition, intent: intentDigest(signed.intent), effects: entry.effects, sends: entry.sends.map(s => `${seq}.${s.n}` as OutboxId), epoch: 0 };

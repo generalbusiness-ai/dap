@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import type { Entry, Read, ScopeKind, ScopeRef, Seed, Sealed, Summary } from "@generalbusiness/dap-contract";
+import type { Entry, Read, ScopeKind, ScopeRef, Seed, Sealed, SequenceEntry, Summary } from "@generalbusiness/dap-contract";
 import { entryHash, intentDigest, keyIdOfSecret, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { memoryStore, type Context, type Outcome } from "@generalbusiness/dap-cli";
 import { TRUSTS, platformCode } from "@generalbusiness/dap-replay";
@@ -42,7 +42,7 @@ async function context(): Promise<Context> {
   ports.session.mockResolvedValue({ ok: true, session: { reader: () => "SCRIPTED reader" } });
   return { store, tries: 1, now: () => Date.parse(TIME), pause: async () => {} };
 }
-function opening(definition: Seed["definition"]): Entry {
+function opening(definition: Seed["definition"]): SequenceEntry {
   const signed = signIntent({ v: 1, to: D, actor: keyIdOfSecret(secret), kind: "open-pr", on: null, expected: {}, fields: {}, idempotencyKey: "scripted opening", notAfter: TIME }, secret);
   const seed: Seed = { v: 1, kind: "lane", definition, creator: D, cause: intentDigest(signed.intent), ordinal: 0 };
   return { v: 1, genesis: D.genesis, seq: 1, prev: null, time: TIME, clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [{ n: 0, to: seed, message: { class: "request", type: "create", body: { fields: {} } } }] };
@@ -59,7 +59,7 @@ test("the rehearsal requires shared proof provenance before accepting the origin
   // Output correspondence only: these lines do not stand for a replay or
   // native authority. The four demo.scope journeys exercise the actual CLI.
   const digest = textDigest("scripted shared text");
-  const span = (scope: ScopeRef, from: number, through: number, root: ScopeRef, kind = from === 0 ? kinds.get(scope.scope) : undefined) =>
+  const span = (scope: ScopeRef, from: number, through: number, root: ScopeRef, kind: string | undefined = from === 0 ? kinds.get(scope.scope) : undefined) =>
     `Shared coverage: ${scope.scope}, genesis ${scope.genesis}${kind ? `, kind ${kind}` : ""}, entries ${from} to ${through}; proving root ${root.scope}.`;
   const checked = `Shared checked text: ${digest}; source ${D.scope}, genesis ${D.genesis}; proving root ${D.scope}; consumers ${M.scope}, ${G.scope}.`;
   const prefix = [
