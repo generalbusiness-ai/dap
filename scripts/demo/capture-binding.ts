@@ -1,6 +1,6 @@
 /** Capture identity checks over trusted home references and native returned facts. */
 import type { KeyId, ScopeId, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, isEntry, isKeyId, isScopeId, isScopeRef, scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, entryHash, isEntry, isKeyId, isScopeId, isScopeRef, resolveGenesisSelf, scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, signedReads } from "@generalbusiness/dap-client";
 import type { Config } from "../../packages/cli/src/store.ts";
 import type { Context } from "../../packages/cli/src/commands.ts";
@@ -72,7 +72,8 @@ export function captureBinding(config: Config, observed: CaptureObservations, se
     const { self, creator } = observed.births[name];
     const input = self.entry.input;
     const parent = name === "directory" ? refs.register : r.directory;
-    if (input.type !== "genesis" || !same(input.seed.creator, parent) || !input.source || !creator || !sealed(creator)
+    // A creator that sends in its own genesis names itself `{ scope, genesis: null }`. Its sealed source fact resolves it.
+    if (input.type !== "genesis" || !input.source || !same(resolveGenesisSelf(input.seed.creator, input.source), parent) || !creator || !sealed(creator)
       || ("decision" in creator.entry.input && creator.entry.input.decision !== "applied") || !same(input.source.at, parent) || !factOf(creator, parent) || input.source.seq !== creator.entry.seq || input.source.hash !== creator.hash) return stop();
     const send = creator.entry.sends.find((s) => s.n === input.n);
     if (!send || !same(send.to, input.seed) || !same(send.message, input.message)) return stop();

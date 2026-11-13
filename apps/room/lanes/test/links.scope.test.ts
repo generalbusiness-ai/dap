@@ -38,7 +38,7 @@ test("T5a, a link is the change lane's and the issue keeps a copy of it: set the
     await r.settle();
     // In the issue: one deciding entry for each update, in the order of arrival. The copy is the link at its higher revision.
     expect(decided(await G.entries(), C.at)).toEqual(late ? [[removed, "removed", "applied"], [set, "set", "superseded"]] : [[set, "set", "applied"], [removed, "removed", "applied"]]);
-    expect([(await G.state()).relation(C.at, "closes", set), (await G.item(0)).state]).toEqual([{ owner: C.at, name: "closes", item: set, state: "removed", revision: removed }, "open"]);
+    expect([(await G.state()).relation(C.at, "closes", set), (await G.item(0)).state]).toEqual([{ owner: C.at, ownerKind: "lane", name: "closes", item: set, state: "removed", revision: removed }, "open"]);
     // In the change lane: one result for each request, by the request it names. It says how the update was decided, and no more.
     expect(results(await C.entries())).toEqual([[set, late ? "superseded" : "applied"], [removed, "applied"]]);
   }

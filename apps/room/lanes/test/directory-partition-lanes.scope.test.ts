@@ -128,15 +128,15 @@ test("partition issue facts and bounded concern births use receiver lineage whil
       expect((await parent.item(concern)).state).toBe("created");
       parent = child;
     }
-    // Deep receiver and an unrelated current source share only six base
-    // frames. The whole operation is seventeen; each identity view is small.
+    // Deep receiver and an unrelated current source share only seven base
+    // frames. The whole operation is eighteen; each identity view is small.
     const extraAsk = await B.did(rita, "ask", { fields: { addressee: { membership: await M!.at(), member: "@rita" }, question: "A separate lineage" } });
     const combined = new PartitionProofOperation(namespace(env.PLATFORM));
     const deep = await combined.receiver(await parent.at());
-    expect(deep?.proof.frames).toHaveLength(14);
+    expect(deep?.proof.frames).toHaveLength(15);
     const other = await combined.source((await B.fact(extraAsk)));
-    expect(other).toMatchObject({ under: "issue", producer: "declared:issue", proof: { calls: 17, reads: 17, totalFrames: 17, pending: 0 } });
-    expect(other?.proof.frames).toHaveLength(9);
+    expect(other).toMatchObject({ under: "issue", producer: "declared:issue", proof: { calls: 18, reads: 18, totalFrames: 18, pending: 0 } });
+    expect(other?.proof.frames).toHaveLength(10);
     const negativeReplay = await verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: P.name, head: (await P.summary()).at, platform, grants: "proven", anchors: [], capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE });
     expect(negativeReplay, canonicalize(negativeReplay)).toMatchObject({ report: { result: "consistent" } });
   } finally { life.release(); }
@@ -172,7 +172,7 @@ async function preparedIssue(life: Awaited<ReturnType<typeof sessionRoom>>["life
 // Both repositories and lanes are real and use the same native namespace.
 // The shared fixture owns the clock, scheduler, setup inspector and register
 // Git stand-in. The counters below forward every actual bounded RPC unchanged.
-test("two native partition roots keep cross-room block and restart release with one seventeen-frame admission", async () => {
+test("two native partition roots keep cross-room block and restart release with one nineteen-call admission", async () => {
   const first = await sessionRoom(C.register), { life } = first;
   try {
     const second = await sessionRepository(life, C.register);
@@ -198,10 +198,10 @@ test("two native partition roots keep cross-room block and restart release with 
     const blocked = await B.I.act(rita, "block", { expected: await B.I.expected({ commitment: offered }), fields: { commitment: offered, on: foreign } });
     expect(blocked).toMatchObject({ answer: "accepted" });
     if (blocked.answer !== "accepted") return;
-    expect(calls).toHaveLength(18);
+    expect(calls).toHaveLength(20);
     expect(calls.slice(0, admissionCalls.length)).toEqual(admissionCalls);
     const blockProofCalls = calls.slice(admissionCalls.length);
-    expect(blockProofCalls).toHaveLength(17); expect(new Set(blockProofCalls).size).toBe(17);
+    expect(blockProofCalls).toHaveLength(19); expect(new Set(blockProofCalls).size).toBe(19);
     const entry = (await B.I.entries())[blocked.receipt.fact.seq]!, use = entry.uses.find(use => use.fact.hash === foreign.hash);
     if (!use) return expect.fail("cross-root block retained no source");
     expect(await B.I.stub.retained(reader, "entry", use.content)).toMatchObject({ ok: true, value: { under: "declared:issue" } });
@@ -209,9 +209,9 @@ test("two native partition roots keep cross-room block and restart release with 
     const answered = await A.I.did(rita, "answer", { on: asked, expected: await A.I.expected({ on: asked }), fields: { answer: "Yes" } });
     calls.length = 0;
     expect(await B.I.act(rita, "release-block", { on: blocked.receipt.fact.seq, expected: await B.I.expected({ on: blocked.receipt.fact.seq, commitment: offered }), fields: { commitment: offered, answer: (await A.I.fact(answered)) } })).toMatchObject({ answer: "accepted" });
-    expect(calls).toHaveLength(18);
+    expect(calls).toHaveLength(20);
     expect(calls.slice(0, admissionCalls.length)).toEqual(admissionCalls);
-    expect(calls.slice(admissionCalls.length)).toHaveLength(17);
+    expect(calls.slice(admissionCalls.length)).toHaveLength(19);
     expect(await actual.resolver.read(foreign, { maxBytes: (sourceNet.sized.get(foreign.at.scope) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: 10_000 }, false)).toMatchObject({ under: "declared:issue" });
     const replayed = await verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: B.I.name, head: (await B.I.summary()).at, platform, grants: "proven", anchors: [], capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE });
     expect(replayed, canonicalize(replayed)).toMatchObject({ report: { result: "consistent" } });
@@ -259,11 +259,11 @@ test("two native partition roots keep cross-room block and restart release with 
       births: { read: (at, ms, max) => { physical.push(`birth:${canonicalize(at)}`); return actual.births.read(at, ms, max); } },
       proofs: { read: (fact, max, ms) => { physical.push(`fact:${canonicalize(fact)}`); return actual.proofs.read(fact, max, ms); } },
     });
-    expect((await operation.receiver(await deepestB.at()))?.proof.frames).toHaveLength(14);
+    expect((await operation.receiver(await deepestB.at()))?.proof.frames).toHaveLength(15);
     const separate = await operation.source((await deepestA.fact(deepAsk)));
-    expect(separate).toMatchObject({ under: "issue", producer: "declared:issue", proof: { calls: 29, reads: 29, totalFrames: 29, pending: 0 } });
-    expect(separate?.proof.frames).toHaveLength(15);
-    expect(physical).toHaveLength(29); expect(new Set(physical).size).toBe(29);
+    expect(separate).toMatchObject({ under: "issue", producer: "declared:issue", proof: { calls: 31, reads: 31, totalFrames: 31, pending: 0 } });
+    expect(separate?.proof.frames).toHaveLength(16);
+    expect(physical).toHaveLength(31); expect(new Set(physical).size).toBe(31);
     const deepOffer = await deepestB.did(rita, "offer", { expected: await deepestB.expected({ goal: 0 }) });
     await deepestB.did(rita, "accept", { on: deepOffer, expected: await deepestB.expected({ on: deepOffer }), fields: { terms: (await deepestB.fact(0)) } });
     life.wire(deepestB.name, () => ({
@@ -272,10 +272,10 @@ test("two native partition roots keep cross-room block and restart release with 
     }));
     await deepestB.restart(); physical.length = 0;
     expect(await deepestB.act(rita, "block", { expected: await deepestB.expected({ commitment: deepOffer }), fields: { commitment: deepOffer, on: (await deepestA.fact(deepAsk)) } })).toMatchObject({ answer: "accepted" });
-    expect(physical).toHaveLength(36);
+    expect(physical).toHaveLength(38);
     expect(physical.slice(0, deepAdmissionCalls.length)).toEqual(deepAdmissionCalls);
     const deepProofCalls = physical.slice(deepAdmissionCalls.length);
-    expect(deepProofCalls).toHaveLength(29); expect(new Set(deepProofCalls).size).toBe(29);
+    expect(deepProofCalls).toHaveLength(31); expect(new Set(deepProofCalls).size).toBe(31);
     const deepReplay = await verify(httpSource("https://scopes.test", { fetch: routed, reader }), { mode: "replay", scope: deepestB.name, head: (await deepestB.summary()).at, platform, grants: "proven", anchors: [], capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE });
     expect(deepReplay, canonicalize(deepReplay)).toMatchObject({ report: { result: "consistent" } });
   } finally { life.release(); }

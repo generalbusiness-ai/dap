@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type ScopeId, type Seed } from "@generalbusiness/dap-contract";
@@ -39,7 +40,7 @@ test("a foreign native directory-kind partition cannot redirect its seal into an
     const entry = (await P.entries())[sealing]!, send = entry.sends[0]!;
     expect(send).toMatchObject({ to: await foreign.root.at(), message: { class: "request", type: "tell", body: { message: "seal" } } });
     const from = await P.fact(sealing), before = await receiving.root.summary();
-    const fetched = await foreignOf(from, "platform:directory-partition");
+    const fetched = await foreignOf(from, "platform:directory-partition", env.PLATFORM);
     if (!fetched) throw new Error("The foreign source must admit its genesis");
     expect(await receiving.root.stub.deliver({ to: await receiving.root.at(), from, n: send.n, message: send.message })).toEqual({ answer: "source-unverified" });
     expect((await receiving.root.summary()).at).toEqual(before.at);

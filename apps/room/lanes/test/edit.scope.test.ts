@@ -22,6 +22,7 @@ import { Platform, routed } from "../../../../packages/scope/test/repository.ts"
 import { command, memoryStore, type Context, type Outcome } from "../../../../packages/cli/src/index.ts";
 import { DEMO_DIGESTS, changeDemo } from "../src/index.ts";
 import { editChangeDefinitions } from "./definition-corpus-data.ts";
+import { normalizeDefinition } from "../../../../packages/derive/src/validate/spelling.ts";
 
 const SERVICE = "https://scopes.test";
 /** The test's own reader, which the command never presents. */
@@ -127,7 +128,9 @@ async function story(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)[
   // An older valid change definition has no one-file proposal. Another
   // valid definition has that name but carries detached content, unlike the
   // command's signed-text protocol. Neither supports this edit workflow.
-  const { legacy, detached, extended } = editChangeDefinitions();
+  // Ruling f2f2a7ea: activation admits only the canonical spelling, so the room receives the extension without its redundant `on` selectors.
+  const { legacy, detached, extended: authored } = editChangeDefinitions();
+  const extended = normalizeDefinition(authored);
   const files: Record<string, Uint8Array> = {
     "change-demo.json": utf8(canonicalize(changeDemo)),
     "legacy.json": utf8(canonicalize(legacy)),
