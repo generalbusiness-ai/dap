@@ -505,6 +505,7 @@ export class McpService {
 
   async #failure(error: unknown, given: Args): Promise<CallResult> {
     if (error instanceof Stop) return error.result;
+    // HELD Q-S4: `failed` takes a Finding or a Said; the S4 merge passes reason and reader, which neither holds.
     if (error instanceof StoreFormatError) return failed({ error: error.code, reason: error.reason, reader: error.reader, message: error.message });
     if (error instanceof CustodyError) {
       const result = failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });

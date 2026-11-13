@@ -1,4 +1,5 @@
 /** Retired-room HTTP refusal. The shared reader constant is not bound yet. */
+// HELD Q-S4: no commit of the contract defines RETIRED_ROOM_READER_COMMIT; the S4 merge imports it.
 import { RETIRED_ROOM_READER_COMMIT } from "@generalbusiness/dap-contract";
 import { jsonReply } from "./response.ts";
 

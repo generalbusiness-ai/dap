@@ -33,7 +33,7 @@ import { McpRequestWindows } from "./request-window.ts";
 import { ROLE_LISTS, isActions } from "@generalbusiness/dap-platform/membership-actions";
 import type { ControlAction, ControlRequest, Digest, Head, KeyId, MemberId, ScopeRef, Seed, SignedControl, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, isHead, isKeyId, isScopeRef, isSequenceRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, isHead, isKeyId, isSequenceRef, keyIdOfSecret, parseStrict, scopeIdOf, sign, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
 import { TransportError, agentKeyInvitationOf, httpTransport, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { CustodyError, Lost, identityId, meaningOf, type Envelope, type Identity, type CustodyRecord } from "./custody.ts";
 import { enrolledKeyItem, retirementBody } from "./hosted-retirement.ts";

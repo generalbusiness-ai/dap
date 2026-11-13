@@ -1,4 +1,5 @@
 /** Named local-store refusals; no record, Node or authority dependency. */
+// HELD Q-S4: no commit of the contract defines RETIRED_ROOM_READER_COMMIT; the S4 merge imports it.
 import { RETIRED_ROOM_READER_COMMIT } from "@generalbusiness/dap-contract";
 
 export function retiredStoreMessage(store: string): string {
