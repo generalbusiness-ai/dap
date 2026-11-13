@@ -4,10 +4,11 @@
 import { env } from "cloudflare:workers";
 import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC, ARCHIVE_DEVICE_PUBLICATION_COHORT as PC } from "@generalbusiness/dap-platform";
 import { expect, test } from "vitest";
-import { ITEM_QUERY_BOUNDS, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
+import { ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, encodeItemQueryParameter, entryHash, itemQueryArgument, itemQueryDigest, parseStrict, readItemQueryParameter, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
+import { FixtureArchiveSourcePins } from "../src/archive-source-pins.ts";
 import { fixtureArchiveTarget, fixtureArchiveTargetIn, type FixtureArchiveTargetReads } from "../src/archive-target.ts";
 import { namespace } from "../src/namespace.ts";
 import type { NativeItemQuery } from "../src/item-queries.ts";
@@ -48,8 +49,13 @@ test.each([["archive", C], ["device/archive", DC], ["device/publication/archive"
       expect(claim.at).toEqual(await room.R.at());
       // Classification of an already selected genuine root reference only;
       // this neither exports the Register nor proves a complete archive pass.
-      expect(archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: C.register } }] }, [directory], new ArchiveBudget())).toEqual([claim]);
-      expect(() => archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: "platform:register@21" } }] }, [directory], new ArchiveBudget())).toThrow("unsupported-foreign-copy");
+      // A scope reference names no kind, so classification reads the
+      // Register's own genesis through the fixture source pins.
+      const registerBirth = (await room.R.entries())[0]!;
+      const sources = new FixtureArchiveSourcePins([{ at: claim.at, birth: { bytes: canonicalize(registerBirth), hash: entryHash(registerBirth) } }], PROPOSED_BOUNDS, new ArchiveBudget());
+      expect(archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: C.register } }] }, [directory], new ArchiveBudget(), sources)).toEqual([claim]);
+      expect(() => archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: "platform:register@21" } }] }, [directory], new ArchiveBudget(), sources)).toThrow("foreign-source-mismatch");
+      expect(() => archiveReplayAnchors({ at: directory, objects: [{ foreign: { fact: claim, pin: C.register } }] }, [directory], new ArchiveBudget())).toThrow("foreign-source-unavailable");
     } else expect(discovered).toBeNull();
     const child = room.children[0]!, childBirth = (await child.entries())[0]!;
     if (childBirth.input.type !== "genesis") return expect.fail("native child birth missing");
@@ -142,7 +148,9 @@ test("one locate reuses only its identical checked Rules birth and keeps final f
     const opening = (await room.children[1]!.entries())[0]!;
     if (opening.input.type !== "genesis") return expect.fail("actual applied Rules birth required");
     const otherRules = await other.children[1]!.at(), legacyRules = await legacy.children[1]!.at();
-    expect((await other.children[1]!.entries())[0]).toMatchObject({ input: { seed: { definition: DC.rules, creator: await other.D.at() } } });
+    // The Directory's genesis creates Rules, so the seed names its creator by
+    // the genesis self reference: the scope, with no genesis hash.
+    expect((await other.children[1]!.entries())[0]).toMatchObject({ input: { seed: { definition: DC.rules, creator: { scope: (await other.D.at()).scope, genesis: null } } } });
     expect((await legacy.children[1]!.entries())[0]).toMatchObject({ input: { seed: { definition: C.rules } } });
     expect(C.rules).not.toBe(DC.rules);
     const births = namespace(env.PLATFORM).births;
@@ -186,10 +194,11 @@ test("one locate reuses only its identical checked Rules birth and keeps final f
     const actualItemBytes = resolved.itemBytes.reduce<number>((sum, size) => sum + size!, 0);
     expect(resolved.cost).toEqual({ entries: 0, attempts: 0, nodes: 3, calls: 5,
       // Three distinct checked births and two serialized replies settle to
-      // their actual UTF8 sizes. Full-ref copies/comparisons stay charged.
-      metadata: actualBirthBytes + actualItemBytes + 6 * 512,
-      inputWork: actualBirthBytes * 8 + actualItemBytes * 4 + 8 * 1024 });
-    expect(resolved.reservations).toEqual({ metadataReserved: 3 * B + 2 * P + 6 * 512,
+      // their actual UTF8 sizes. Each birth also pays its genesis validation
+      // pass at its actual size. Full-ref copies/comparisons stay charged.
+      metadata: 2 * actualBirthBytes + actualItemBytes + 6 * 512,
+      inputWork: 2 * actualBirthBytes * 8 + actualItemBytes * 4 + 8 * 1024 });
+    expect(resolved.reservations).toEqual({ metadataReserved: 3 * B + 2 * P + actualBirthBytes + 6 * 512,
       metadataSettled: resolved.cost.metadata, unsettledMetadata: 0, settlementRefusal: "none" });
     expect(resolved.result?.publicScopes).toEqual([rules, directory, destination]);
     // These full-ref coherence fences refuse before a substituted birth read.
