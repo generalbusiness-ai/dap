@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/README.md","body":{"commit":"8cbd3c6172b5aa68403d45d3545d2a156dd86dc0","path":"packages/scope/README.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0ea5328a12d57cb9a3844fc0e93eca1021b107cd","text":"Merge retired a covered predecessor; the successor is at docs/testing-reference.md."}
