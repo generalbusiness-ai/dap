@@ -28,6 +28,16 @@ export class StartupServingIndex extends ScopeIndex {
     const actual = { ...env };
     delete actual.SERVING_CREATION_KEY_PER_HOUR; delete actual.SERVING_CREATION_ADDRESS_PER_HOUR;
     delete actual.SERVING_READ_KEY_PER_MINUTE; delete actual.SERVING_READ_ADDRESS_PER_MINUTE;
+    // A ScopeIndex works only as the fixed owner: the ID that its own
+    // SCOPE_INDEX gives for SCOPE_INDEX_NAME. This TEST owner lives in the
+    // STARTUP_INDEX namespace, under whatever name its test chose, so the
+    // stand-in namespace names this object as the owner. ScopeIndex reads
+    // SCOPE_INDEX for that check alone.
+    actual.SCOPE_INDEX = new Proxy(env.SCOPE_INDEX, { get(target, key) {
+      if (key === "idFromName") return () => ctx.id;
+      const value = Reflect.get(target, key, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    } });
     super(ctx, actual);
   }
   override admitServing(request: ServingRequest, address: string | null): ServingDecision {

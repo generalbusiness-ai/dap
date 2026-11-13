@@ -56,7 +56,7 @@ async function recovering(): Promise<void> {
     const store = memoryStore();
     const submissions: string[] = [];
     let fault = true;
-    let badReceipt: "hash" | "genesis" | "definition" | "intent" | "scope" | "position" | "malformed-genesis" | "malformed-hash" | null = null;
+    let badReceipt: "hash" | "genesis" | "another-genesis" | "definition" | "intent" | "scope" | "position" | "malformed-genesis" | "malformed-hash" | null = null;
     let entryReads = 0;
     const ctx: Context = {
       now: () => timeMs(net.clock.now)!,
@@ -82,6 +82,8 @@ async function recovering(): Promise<void> {
           if (badReceipt === "scope") answer.receipt.fact.at.scope = scopeIdOf({ v: 1, kind: "register", definition: "platform:register@1", creator: null, cause: textDigest("TEST another register"), ordinal: 0 });
           if (badReceipt === "position") answer.receipt.fact.seq = 1;
           if (badReceipt === "genesis") answer.receipt.fact.at.genesis = textDigest("TEST another genesis");
+          // A whole other genesis: its address names its own hash, so only the retained accepted fact can tell it apart.
+          if (badReceipt === "another-genesis") answer.receipt.fact.at.genesis = answer.receipt.fact.hash = textDigest("TEST another genesis");
           if (badReceipt === "malformed-genesis") answer.receipt.fact.at.genesis = "malformed" as never;
           if (badReceipt === "malformed-hash") answer.receipt.fact.hash = "malformed" as never;
           return new Response(JSON.stringify(answer), { headers: { "content-type": "application/json" } });
@@ -127,11 +129,15 @@ async function recovering(): Promise<void> {
     } else {
       // Acceptance was durably retained before the injected final-save loss.
       expect(pending.plan!.acknowledged).toMatchObject({ status: "service-acknowledged", service: SERVICE, receipt: { definition: original.definition, intent: intentDigest(original["founding"].intent) } });
+      // A genesis receipt names its own hash as its genesis. A change to one of the two is not the planned register's identity.
       for (const field of ["hash", "genesis"] as const) {
         s.receipt(field);
-        expect((await command(s.ctx, ["install", "--planned"])).lines[0]).toMatch(/^Held: the install acknowledgement conflicts/);
+        expect((await command(s.ctx, ["install", "--planned"])).lines[0]).toMatch(/^Held: the install acknowledgement does not match the planned register's exact identity/);
         expect(await s.store.config()).toEqual(pending);
       }
+      s.receipt("another-genesis");
+      expect((await command(s.ctx, ["install", "--planned"])).lines[0]).toMatch(/^Held: the install acknowledgement conflicts/);
+      expect(await s.store.config()).toEqual(pending);
       s.receipt(null);
     }
     const recovered = await command(s.ctx, ["install", "--planned"]);
