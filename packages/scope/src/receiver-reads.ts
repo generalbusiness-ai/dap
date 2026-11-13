@@ -2,7 +2,7 @@ import { answersVersionQuestion, partitionPublicationOrigin, type PartitionCreat
 /** One receiver's read interpretation. The receiver's checked native birth
  * selects its policy, and all promotion proofs share that operation's budget. */
 import type { DeclaredDefinition, Digest, Entry, FactRef, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { isPlatformDefinition, isScopeRef, scopeIdOf, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { isPlatformDefinition, isScopeRef, resolveGenesisSelf, scopeIdOf, type CheckedSequence } from "@generalbusiness/dap-bytes";
 
 import { isEntryOf, isFactRef, isLocalId, isObject, same, sentBy, type ClassifiedRetainedUse, type Delivered, type RetainedResultOperand } from "@generalbusiness/dap-derive";
 import { PartitionProofOperation, type PartitionProofPorts } from "./partition-proof.ts";
@@ -83,7 +83,7 @@ export class ReceiverReads implements Resolver {
     if (positiveSource(selected.source.entry)) return receiverName({ entry: selected.source.entry, under: selected.producer, sequence: selected.source.sequence }, selected.under);
     const born = selected.source.entry.input, message = delivered.message;
     if (born.type !== "genesis" || born.decision !== "refused" || !this.at || !isScopeRef(delivered.to) || !same(delivered.to, this.at)
-      || !same(born.seed.creator, this.at) || !isFactRef(born.source) || !isObject(message.of) || !isFactRef(message.of.from) || !isLocalId(message.of.n) || !same(message.of.from, born.source) || message.of.n !== born.n
+      || !isFactRef(born.source) || !same(resolveGenesisSelf(born.seed.creator, born.source), this.at) || !isObject(message.of) || !isFactRef(message.of.from) || !isLocalId(message.of.n) || !same(message.of.from, born.source) || message.of.n !== born.n
       || message.outcome !== "refused" || !sentBy(selected.source.entry, delivered, selected.source.sequence)) return null;
     return receiverName({ entry: selected.source.entry, under: selected.producer, sequence: selected.source.sequence }, "");
   }
