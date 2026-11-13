@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0ef085f9fa0c811f746caafee9b733dc58b994b7","text":"Merge retired a covered predecessor; the successor is at scripts/security-settings.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0f533d35abc6fbbfaded3ec8aa870849d4b14efe","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/github-host.test.ts."}
