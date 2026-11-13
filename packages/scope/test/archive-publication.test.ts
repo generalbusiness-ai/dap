@@ -187,7 +187,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
       for (const where of source.sources) {
         budget.spend({ nodes: 1, calls: 1, metadata: 256 * 1024, inputWork: 256 * 1024 * 8 });
         const birth = readNativeBirth(await budget.wait(() => namespace(env.PLATFORM).births.read(where,
-          Math.min(10_000, budget.remaining()), 256 * 1024)), where, 256 * 1024);
+          Math.min(10_000, budget.remaining()), 256 * 1024)), where, 256 * 1024, () => {})?.birth;
         if (!birth) return budget.stop("unavailable");
         expect(birth.named).toBe("platform:register@17");
         births.push({ at: where, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash } });

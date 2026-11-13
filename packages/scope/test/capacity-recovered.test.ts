@@ -10,7 +10,7 @@ import { controls } from "../src/testing.ts";
 import { SqliteStore } from "../src/index.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, reader, rita, stubOf } from "./fixtures-native.ts";
+import { Lane, START, at, foreignOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 const NAMED = "platform:task@1" as PlatformDefinition;
 
@@ -23,8 +23,7 @@ async function birth(under: ValidDefinition, platform?: PlatformData): Promise<L
     // This adapter reads the other real object's entry. Definition names and
     // authority are fixture choices; the journal and copied bytes are real.
     resolver: { read: async fact => {
-      const got = await stubOf(fact.at.scope).entry(reader, fact.seq);
-      return got.ok && got.value.hash === fact.hash ? { fact, entry: got.value.entry, under: "notes" } : null;
+      return foreignOf(fact, "notes");
     } },
   }));
   const answer = await stubOf(name).create(signed, platform ? NAMED : under.declared);

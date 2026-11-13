@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { env } from "cloudflare:workers";
-import { RETIRED_ROOM_READER_COMMIT, type ControlRequest, type ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, signControl, utf8 } from "@generalbusiness/dap-bytes";
+import type { ControlRequest, ScopeRef } from "@generalbusiness/dap-contract";
+import { RETIRED_ROOM_READER_COMMIT, b64url, canonicalize, digestBytes, signControl, utf8 } from "@generalbusiness/dap-bytes";
 import { applicationScreenPath } from "@generalbusiness/dap-client/application";
 import { indexedScopes, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexPort, type ScopeRegistration } from "../src/scope-index.ts";
 import scopeWorker, { api, mcpRoute, route } from "../src/worker.ts";
@@ -13,13 +13,13 @@ import { at, create, creation, definition, reader, rita, START } from "./fixture
 import { scopeRegistrationWiring } from "./worker.ts";
 
 test("index lookup writes no schema and registration on real SQLite is idempotent and conflict closed", async () => {
-  const holder = await create(), proof = { at: holder.at, genesis: holder.genesis.fact.hash };
+  const holder = await create(), proof: ScopeRegistration = { at: holder.at, kind: "directory" };
   const result = await holder.inside(state => {
     const queries: string[] = [];
     const rows = new ScopeIndexRows({ exec: (query, ...args) => { queries.push(query); return state.storage.sql.exec(query, ...args); } });
     const before = rows.has(proof.at.scope), reads = [...queries]; queries.length = 0;
     const first = rows.register(proof), again = rows.register(proof);
-    const conflict = rows.register({ ...proof, genesis: `sha256:${"0".repeat(64)}` });
+    const conflict = rows.register({ ...proof, at: { ...proof.at, genesis: `sha256:${"0".repeat(64)}` } });
     queries.length = 0;
     const after = rows.has(proof.at.scope), wrongKind = rows.has(proof.at.scope, "membership"), listed = rows.list();
     return { before, reads, first, again, conflict, after, wrongKind, listed, lookups: queries };
@@ -224,7 +224,7 @@ test("unknown scope gate touches no target and only the native target's applied 
     expect((await backfill.summary(born.name, reader)).ok).toBe(false);
     failRegistration = false;
     await scopes.create(born.signed, definition.declared);
-    expect(known.get(born.name)?.genesis).toBe(answer.receipt.fact.hash);
+    expect(known.get(born.name)?.at.genesis).toBe(answer.receipt.fact.hash);
     known.delete(born.name);
     expect((await backfill.summary(born.name, reader)).ok).toBe(true);
     expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, genesis: answer.receipt.fact.hash });

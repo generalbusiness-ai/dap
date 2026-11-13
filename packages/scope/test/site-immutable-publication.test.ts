@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { takeBytes } from "@generalbusiness/dap-bytes";
 import { demo } from "../../../apps/room/page/test/support/demo.ts";
+import { live } from "./support.ts";
 import { PUBLICATION_PROOF_BOUNDS, type SitePublicationPeer } from "../src/site/publication.ts";
 
 // Real CLI, lanes, destination judgments, receipt writes and production Git wiring.
@@ -56,7 +57,7 @@ test("two native publications retain older immutable content and deny pending/co
     }
     console.info("native-stage", "immutable", "completed", performance.now() - stageOrigin, lastStarted, lastCompleted = "receipt-refusals");
     console.info("native-stage", "immutable", "started", performance.now() - stageOrigin, lastStarted = "cleanup-and-opening-proof", lastCompleted);
-    const peer = d.G.stub as unknown as SitePublicationPeer;
+    const peer = live(d.G.stub as unknown as SitePublicationPeer);
     const directory = d.config.repository!.directory;
     const repo = await d.wait(() => runInDurableObject(d.D.object, (_instance, state) => { d.active(); return JSON.parse(state.storage.sql.exec<{ record: string }>("SELECT record FROM item WHERE type = 'repository'").one().record).values.repository; }));
     expect(await peer.sitePublishedCommit(directory, repo as never, "e".repeat(40))).toEqual({ ok: false, reason: "not-published" });

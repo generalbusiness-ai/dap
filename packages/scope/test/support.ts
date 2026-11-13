@@ -8,8 +8,8 @@ import { scopeLaneChange } from "./definition-corpus-data.ts";
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Bounds, Entry, Grant, Head, Intent, MemberRef, Read, Receipt, ScopeId, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import type { Answer, Bounds, Entry, FactRef, Grant, Head, Intent, MemberRef, Read, Receipt, ScopeId, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, intentDigest, isEntryOf, scopeIdOf, signIntent, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { timeMs, timeOf, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { grantOf, keys, lane, variant, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
 import { READ_BOUNDS, type ReadBounds, type Sealed, type Summary } from "../src/index.ts";
@@ -66,6 +66,20 @@ export type Live<T> = { [K in keyof T]: T[K] extends (...args: infer A) => infer
 /** Each method of a test scope, local or a stub, with a retired stop thrown as a test failure. */
 export function live<T extends object>(object: T): Live<T> {
   return current(object) as unknown as Live<T>;
+}
+/**
+ * A fixture resolver's answer for one fact of a test scope in the pool: the
+ * entry the scope holds at that position, with the sequence that the scope's
+ * own genesis bytes establish. A fact the scope does not hold gives null.
+ */
+export async function foreignOf(fact: FactRef, under: string, namespace?: DurableObjectNamespace, maxBytes: number = PROPOSED_BOUNDS.entryBytes): Promise<{ entry: Entry; under: string; sequence: CheckedSequence } | null> {
+  const stub = stubOf(fact.at.scope, namespace);
+  const read = await stub.entry(reader, fact.seq);
+  if (!read.ok || read.value.hash !== fact.hash) return null;
+  const birth = fact.seq === 0 ? read : await stub.entry(reader, 0);
+  if (!birth.ok) return null;
+  const sequence = admitSequenceGenesis(canonicalize(birth.value.entry), fact.at, maxBytes);
+  return sequence && isEntryOf(read.value.entry, fact, sequence) ? { entry: read.value.entry, under, sequence } : null;
 }
 /** Each method of the stub, with a retired stop thrown as a test failure. */
 function current(stub: object): Remote {

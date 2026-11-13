@@ -10,7 +10,7 @@ import { SqliteStore, type Delivery } from "../src/index.ts";
 import { controls } from "../src/testing.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
+import { Lane, START, at, foreignOf, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 const definition = platformRequests(true, true), data = definition.declared as PlatformData;
 const names: string[] = [];
@@ -19,8 +19,7 @@ function wire(name: string, entries: number, items: number, under = definition, 
   const c = controls(name, START);
   c.bounds = { ...PROPOSED_BOUNDS, scopeEntries: entries, scopeItems: items };
   wired.set(name, () => ({ definitions: { read: async () => ({ ok: false, reason: "absent" }), platform: named => named === platformRequestRules.named ? { data, rules } : null }, resolver: { read: async fact => {
-    const read = await stubOf(fact.at.scope).entry(reader, fact.seq);
-    return read.ok && read.value.hash === fact.hash ? { fact, entry: read.value.entry, under: "platform:task" } : null;
+    return foreignOf(fact, "platform:task");
   } } }));
   names.push(name);
   return c;

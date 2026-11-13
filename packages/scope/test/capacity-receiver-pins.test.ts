@@ -12,7 +12,7 @@ import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, creation, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
+import { Lane, START, at, foreignOf, creation, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 test("native receiver pins fund item and request transfers at full scope ceilings, retain an over-limit body once, and replay their real child results after eviction", async () => {
   // Two actual scopes and journals, native hold code, SQLite and routes.
@@ -33,8 +33,7 @@ test("native receiver pins fund item and request transfers at full scope ceiling
     wired.set(name, () => ({ capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE,
       definitions: { read: async () => ({ ok: false, reason: "absent" }), platform: named => named === "platform:task@1" ? { data: childData, rules: {} } : null },
       resolver: { read: async (fact: FactRef) => {
-        const entry = await stubOf(fact.at.scope).entry(reader, fact.seq);
-        return entry.ok && entry.value.hash === fact.hash ? { fact, entry: entry.value.entry, under: peers.get(fact.at.scope)!.declared.name } : null;
+        return foreignOf(fact, peers.get(fact.at.scope)!.declared.name);
       } },
       texts: { read: async (from: FactRef, digest: Digest) => {
         const text = await (stubOf(from.at.scope) as unknown as { text(seq: number, digest: Digest): Promise<string | null> }).text(from.seq, digest);
