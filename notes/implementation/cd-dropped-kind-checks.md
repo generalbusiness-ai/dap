@@ -234,27 +234,55 @@ A ruling decides what replaces each one.
 | `packages/cli/test/scope-index-applications.test.ts` | the recorded `fixtures/application-release-listing.json` names `inc` and `kind` in its references | a new recording of the listing |
 | `packages/cli/test/verify.test.ts` | the shared coverage line states `kind register` | what replaces the kind column of the coverage |
 
-## Page browser rows (ruling 4393b366 P1)
+## Browser store list (rulings e7787de0 items 5 and 6, 4393b366 P1)
 
-The Page claim journal, the connection custody rows and the OAuth connection
-rows take new storage names: `dap-page-claim-2:`, `dap-page-connections-2` and
-`dap-oauth-connection-2`. The Page reads none of the old names. The claim
-journal no longer carries a legacy record or a recovery seed, so the claim
-recovery key migration (`migrateClaimKeys`, `migrateRecoveryCustody`,
-`migrateAllClaimCustody`) and its test are removed. The custody compatibility
-test now shows that an old connection row stays in the browser, unread.
+Ruling e7787de0 item 5: "Page (rows 14, 15 and 18): case A. The settings
+slot, the Start and enrollment originals and the tab list record take new
+storage names. The new Page reads none of the old names, so the legacy key
+migration has nothing to read: remove that path from the new code. The key
+store holds keys and no reference, and it stays."
+
+Ruling e7787de0 item 6: Counter and Lending (rows 20 to 22): their browser
+databases take new names, no capacity is shared with an old row, and no
+default or address-only slot can load one.
+
+Ruling 4393b366 P1 adds the claim journal, the connection custody rows and the
+OAuth connection rows to case A.
+
+| Row | Store | Old name | New name |
+|---|---|---|---|
+| 14 | Page settings slot | `artroom-page:v2` | `dap-page-settings-2` |
+| 15 | Page Start original | `artroom-page-start:v2:<origin>` | `dap-page-start-2:<origin>` |
+| 15 | Page enrollment original | `artroom-page-enrollment:v2:<origin>` | `dap-page-enrollment-2:<origin>` |
+| 18 | Page tab list record | `artroom-page-lists:v2` | `dap-page-lists-2` |
+| P1 | Page claim journal | `artroom-page-claim:<binding>` | `dap-page-claim-2:<binding>` |
+| P1 | Page connection custody | `artroom-page-connections` | `dap-page-connections-2` |
+| P1 | Page OAuth connection | `artroom-oauth-connection-1` | `dap-oauth-connection-2` |
+| — | Page key store | `artroom-page-private-1` | unchanged: it holds keys and no reference |
+| 20–22 | Counter database | `artroom-counting-private-1` | `artroom-counting-private-2` (a9c4badb23) |
+| 20–22 | Lending database | `dap-lending-private-1` | `dap-lending-private-2` (a9c4badb23) |
+
+The Page reads none of the old names. The legacy key migration is removed:
+`migrateStart`, `migrateOriginalStart`, `migrateOriginalJoin`,
+`legacySettingsKey`, `migratePageOperations`, the claim recovery migration and
+their tests. Start and enrollment rows are version 2 only and hold a public
+key, never a secret.
 
 A person who returns with an old link gets `room-retired` from the Worker. The
 old browser rows stay in the browser, unread.
 
-Open: the Start row (`artroom-page-start:v2`), the join row and the settings
-slot still use their old names and still migrate a retained secret into the
-key store. Ruling e7787de0 item 5 names them; ruling 4393b366 P1 names only the
-three files above.
+Release text: "Rooms made before this release are retired: an old link
+answers `room-retired`, and the browser keeps its old rows but no longer
+reads them."
+
+Held: the "Join with config and key" screen (`apps/room/page/src/main.ts`)
+imports a pasted `device.key` through the key store's `migrate`. It reads no
+stored row, so it is not the legacy migration. The join path imports a
+supplied `secret` the same way. Both stay until a ruling says otherwise.
 
 ## Grow and lending examples
 
 The grow examples check each entry with `isEntryBodyOf` against the room's
 sequence reference. The simulator host reads the room kind `lane` from the
 room genesis seed, not from the binding. The lending `memberForKey` check
-`summary.scope.kind !== "membership"` is held: see the open questions.
+`summary.scope.kind !== "membership"` is HELD for a planner ruling.
