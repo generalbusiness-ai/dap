@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:33f21e480a80d0f63e2b34cf91def6ca91185df3","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-04-scope-and-replay-contract/corrections.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:348cb87b0e5503cf08e8ae3b64143981f84c90ca","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/item-queries.test.ts."}
