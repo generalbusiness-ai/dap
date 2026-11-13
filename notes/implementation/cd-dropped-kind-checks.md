@@ -192,6 +192,14 @@ kind with a variable or a declared type:
 | `packages/checkers/src/job.ts` (`originOf`) | `lane.kind !== "lane"` | the place fixes the kind | `f71673d50c` |
 | `packages/checkers/src/job.ts` (`reservationOrigin`) | `snapshot.destination.kind !== "destination"` | the place fixes the kind | `f71673d50c` |
 | `packages/checkers/src/stage-origin.ts` | `snapshot.destination.kind !== "destination"` and the source genesis's `at.kind` | reads the kind of the destination genesis among the sources | `f71673d50c` |
+| `packages/bytes/src/field-value.ts` (`fitsFieldType`, line 39) | a `scope` value's kind against the declared `type.kind`: `isScopeRef(v) && v.kind === type.kind` became `isScopeRef(v)` | the room checks the kind where it reads that sequence (ruling 429c1be7, sites a to d): the sender of a delivery, the parent source of a creation, the source of each named foreign fact use, and a membership that a grant or a creation context reads | `23e0c92d04` |
+
+Every act, genesis and slot value passes through `fitsFieldType`
+(`packages/derive/src/values.ts:25`, `packages/derive/src/effects.ts:93`).
+One consequence: a member with `task.control` can store a Membership
+reference in the Directory's `task.lane` slot through `open-task`
+(`packages/platform/src/directory.ts:307`). Main refused that act. A read
+of that slot meets the kind check at the site that reads the sequence.
 
 ## Comparisons that chose a behaviour
 
@@ -573,7 +581,7 @@ two existing W1 tests had failed with `input-room`.
 
 ## Anchors and genesis copies
 
-Behaviour change: main's verify accepted a caller anchor of any kind; this head limits anchors to the register and membership kinds under 5a642337 and 066e49b3.
+Behaviour change, in `archive-alias` mode only: main's verify accepted a caller anchor of any kind, and this head limits anchors to the register and membership kinds under 5a642337 and 066e49b3 (`privatePin` and `#anchoredPrivateName`, `packages/replay/src/verify.ts:85-86` and `:1648-1655`). In the default `retained-name` mode, `#anchor` (`:1603`) and `#privateCopy` (`:1662-1667`) still accept a caller anchor of any kind, as main did.
 
 A Directory fact that main took on an anchor is now proved by replay: the
 archive source serves the Directory journal.
@@ -983,7 +991,7 @@ Commit `70c3431750` cut the branches that only this case reached:
 | `mcp` inventory and `docs/mcp-tools.json` | vector | A scope reference reads `{ scope, genesis }`. The same text in `docs/roadmap.md`, `docs/use-cases.md` and `docs/deploy.md` changed. |
 | Grow example tests | fixture shape | Scripted entries name their genesis. Entry 0 of the command journal is a fixture genesis. Foreign copies carry their sequence, and receipts take the scope and effects. |
 | lending browser storage | fixture shape | References are `{ scope, genesis }`. |
-| repo-in-ai example and tests | fixture shape | References are `{ scope, genesis }`, and home configs are version 2. An entry binds to its sequence by genesis (`isEntryBodyOf`, `sentByBody`), and a genesis binds by its seed and hash. The example drops its register kind checks, because the place fixes the kind. Fixture refs that differed only by kind now differ by genesis. `hosted-loop.test.ts` reads the example input, and with the new register the suite passes, 243/243. No workflow or gate step runs that suite: it has its own `vitest.config.ts`, no `.github` workflow names repo-in-ai, and `scripts/test.mjs:33-35` runs only the three `.mjs` tests. The planner files a request to put it under a check. |
+| repo-in-ai example and tests | fixture shape | References are `{ scope, genesis }`, and home configs are version 2. An entry binds to its sequence by genesis (`isEntryBodyOf`, `sentByBody`), and a genesis binds by its seed and hash. The example drops its register kind checks, because the place fixes the kind. Fixture refs that differed only by kind now differ by genesis. `hosted-loop.test.ts` reads the example input, and with the new register the suite passes, 243/243. The gate runs that suite: the Plain project `repo-in-ai` in `vitest.projects.mjs` includes `examples/repo-in-ai/test/*.test.ts` (builder act e1844d08, ruling 7bf2c93b). |
 | `archive-driver` resume, sha1 and sha256 | fixture shape | The Directory takes deliveries from the Rules and Destination geneses. Under 5a642337 and 066e49b3 neither kind may be an anchor, so the test also serves the Rules and Destination journals, and Replay proves those facts by replay. The anchors include the Membership facts of all three journals. The test compares the reported anchors as a set, because Replay reports them in the order of use. The fixture is `archiveAuthorityReplay`, which B10 shares. |
 | `mcp` `wire` and `lost-reply`, `cli` `install-without-mcp` | fixture shape | The test home config is version 2. A version 1 home now raises `RetiredHomeError`. |
 | `mcp` `reads` | fixture shape | The case that varied the Membership reference's `kind` goes: a reference has no `kind`, and the genesis and scope cases still vary the reference. |
@@ -1031,3 +1039,33 @@ passed. The evidence directories are
 `~/play/artroom-evidence/2026-11-13-identifiers-cutover-effects-control`.
 The model, its config and its view are unchanged since `13e704a4`, so the
 committed chart stands.
+
+## Fixes after the first review (15f2b78a)
+
+The checker's verdict f6778205 asked for three changes at `33d1eddf`.
+
+The browser workflows failed for four reasons:
+
+- The Card work list showed Issue 2 first. `laneRefs`
+  (`apps/views/src/needs-you.ts:34`) sorts lanes by `canonicalize(ref)`. At
+  main the stand-in's first key `inc` rose with creation order. Now the first
+  key is the genesis digest. `packages/mcp/test/views-browser.mjs` now finds
+  which issue comes first and pages to the other.
+- The Page opened with no room. eed02514 renamed the settings slot to
+  `dap-page-settings-2` and the claim journal to `dap-page-claim-2:`.
+  `scripts/demo/page-key-custody.ts` and `scripts/demo-captures.ts` still
+  wrote `artroom-page:v2` and read `artroom-page-claim:`.
+- Every recorded demo capture stopped with `ReferenceError: __name is not
+  defined`. Under tsx, esbuild wraps named functions in `__name`, and the
+  setup body of `initializeCapture` carried those calls into the page. The
+  setup now defines `__name` in the page first. The Page step stopped before
+  the capture steps, so CI did not show this fault.
+- `declared-views-browser.mjs` looked for the text `42` in model contexts,
+  and a random view UUID can hold those digits. The check now looks for the
+  JSON number 42. This fault exists at main too.
+
+B19 left two races in `packages/client/src/store-format.ts`. The emptiness
+listing now skips the format file, so a word that another initializer links in
+after the first look meets EEXIST and is read. `readWord` scans for the
+temporary name once and reuses the answer. `packages/client/test/store-format-race.test.ts`
+forces each order. Both tests fail at `33d1eddf` and pass at the fix.
