@@ -72,4 +72,8 @@ unchanged.
 | `node --test scripts/security-entry-points.test.mjs`, before the seal update | 11 of 12 passed; the `scopedApi` seal failed |
 | `node --test scripts/security-entry-points.test.mjs`, after the seal update | 12 of 12 passed |
 
-I did not run the gate.
+## The gate passes at `c717f9b4`
+
+The gate at `c717f9b4bdab5ef380e17ee0462083a8afae4b55` exited 0 under ruling `19a509a5`. Node passed 172 tests and Counting passed 56. Plain passed 4,547 of 4,548 with 1 skip. Native passed 1,133 of 1,135 with 2 skips. The evidence is in `2026-11-12-s1f-gate-c717f9b4`.
+
+No path on this head is in the Page or Card browser workflow filters, so no push run applies.

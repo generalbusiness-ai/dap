@@ -1,0 +1,62 @@
+{
+  "qualification": "Index of unchanged raw originals for S1-F. The evidence directory carries its own SHA256SUMS and is read-only. The gate at c717f9b4 passed. Gate internals sit under gate-internals and are not listed here.",
+  "request": "17eb790dcf3d168fdf9f5aafeaecdb6ca5766bd2",
+  "promise": "00e3230dee0fe8af5a9d4823ca47720cee265ddf",
+  "directory": "/Users/hughpyle/play/artroom-evidence",
+  "base": "a76764a793ee518c85c3dedafe8103da040c1847",
+  "checkpointCommit": "c717f9b4bdab5ef380e17ee0462083a8afae4b55",
+  "checkpointTree": "b541c9e9d282e3125f0ab0137a384d8c807052f7",
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/SHA256SUMS",
+      "bytes": 3960,
+      "sha256": "1ed2ad5084f935abb6b30c21ae30969529973c8a2e88d82165a36246a42d7712"
+    },
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/gate.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/gate.pid",
+      "bytes": 6,
+      "sha256": "8b045419adc6e121fe97ba6c8cc5ec4eb743107f865db5dc468e2bbcfc325eae"
+    },
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/gate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/gate.stdout",
+      "bytes": 7132,
+      "sha256": "37d26da492d52bc35f1644ce31b45dfab1b8cbe9cfd8dcfd4247eda1ef96df93"
+    },
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/head",
+      "bytes": 41,
+      "sha256": "b253b7c3d4556f638fa6157c00990f5e7a18c816291837ee9779e5a86698b0b0"
+    },
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/internals-move.json",
+      "bytes": 184,
+      "sha256": "4ae966a228ef4fa4d2f98bd4116891f735b532c755551a31be1d2848c65eadee"
+    },
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/pmset-batt-end.txt",
+      "bytes": 107,
+      "sha256": "4ccca389f434c9a0047e7adb8e4c1ca79ba80dc51679cdbad3b1eed76bb42289"
+    },
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/pmset-batt-start.txt",
+      "bytes": 106,
+      "sha256": "f4e29116733274c9e95c9bd16fbf1a59c1ffdab95cdba1aef6be5e2940ebc783"
+    },
+    {
+      "path": "2026-11-12-s1f-gate-c717f9b4/pmset-sleep-wake.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
