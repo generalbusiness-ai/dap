@@ -14,6 +14,7 @@ import { growArchivePolicies } from "../../../apps/room/archive-policy.ts";
 import { buildJournalPass, captureJournalParentFrontier } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "../src/archive-budget.ts";
 import { planLegacyArchiveAnchors, planPublishedArchivePass, planRootPublishedArchivePass, rebuildArchivePass } from "../src/archive-build.ts";
+import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
 import { archiveSourceReferences } from "../src/archive-source-window.ts";
 import { FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
@@ -217,7 +218,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
       if (!discovered) throw Error("Actual native target metadata required");
       const pins = await prepare(sql, budget);
       const result = await planRootPublishedArchivePass(sql, { at: directoryAt, through, after: null, bounds: PROPOSED_BOUNDS,
-        policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources: pins, replayScopes: discovered.publicScopes }, budget);
+        policies, format: "sha1", parent: null, markedAt: timeOf(life.now()), fixtureSources: pins, replayScopes: discovered.publicScopes, replayContext: discovered.replayContext }, budget);
       if (!result.ok) throw Error(canonicalize({ result, cost: budget.admitted() }));
       expect(result.archive.manifest.anchors).toEqual(expectedAnchors);
       expect(result.mark.anchorPublication).toBe(canonicalize({ anchors: expectedAnchors }));
@@ -241,7 +242,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
         if (/\bFROM entry\b/.test(query)) expect(args[0]).toBe(0);
         return sql.exec(query, ...args);
       } };
-      const result = await rebuildArchivePass(selectedOnly, row, null, budget, pins);
+      const result = await rebuildArchivePass(selectedOnly, row, null, budget, pins, discovered!.replayContext);
       if (!result.ok) throw Error(canonicalize({ result, cost: budget.admitted() }));
       expect(result.archive.manifest.anchors).toEqual(expectedAnchors);
       expect(result.archive.commit).toBe(planned.result.archive.commit);
@@ -324,7 +325,8 @@ test("Native published Mark rebuilds its exact bytes after a later turn and evic
   const planned = await lane.inside(async state => {
     const sql = archiveSql(state), budget = new ArchiveBudget();
     const result = await planPublishedArchivePass(sql, { at: lane.at, through, after: null, bounds: lane.c.bounds,
-      policies: archiveAuthorityPolicies(lane), fixtureSources: archiveAuthorityBasis(lane)!.pins, format: "sha1", parent: null, markedAt: lane.c.clock.now }, budget);
+      policies: archiveAuthorityPolicies(lane), fixtureSources: archiveAuthorityBasis(lane)!.pins, format: "sha1", parent: null, markedAt: lane.c.clock.now,
+      replayContext: archiveOwnReplayContext(sql, lane.at, lane.c.bounds.entryBytes, new ArchiveBudget()) }, budget);
     if (!result.ok) throw Error(canonicalize(result));
     expect(result.archive.cost).toEqual(budget.admitted());
     expect(result.archive.manifest.anchors).toEqual(archiveAuthorityAnchors(lane));
@@ -343,7 +345,8 @@ test("Native published Mark rebuilds its exact bytes after a later turn and evic
       if (/\bFROM entry\b/.test(query)) expect([0, 1]).toContain(args[0]);
       return sql.exec(query, ...args);
     } };
-    const result = await rebuildArchivePass(exact, row, null, new ArchiveBudget(), archiveAuthorityBasis(lane)!.pins);
+    const result = await rebuildArchivePass(exact, row, null, new ArchiveBudget(), archiveAuthorityBasis(lane)!.pins,
+      archiveOwnReplayContext(sql, lane.at, lane.c.bounds.entryBytes, new ArchiveBudget()));
     expect(row.pending?.anchorPublication).toBe(planned.mark.anchorPublication);
     expect(row.pending?.replayScopes).toEqual([lane.at]);
     if (result.ok) expect(rows.confirm(result.archive.commit).confirmed).toMatchObject({ anchorsPublished: true, through });

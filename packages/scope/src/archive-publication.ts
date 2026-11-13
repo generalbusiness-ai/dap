@@ -1,9 +1,10 @@
 /** Pending publication bytes are descriptive metadata, not admission proof.
  * Rebuild checks the actual collected list before reproducing its commit. */
-import { canonicalize, isScopeRef, parseStrict, same, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, isScopeRef, parseStrict, same, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { JOURNAL_SELECTION_BYTES, JournalWork, journalAnchorPublication, journalPublicationUnits, type JournalAnchorPublication } from "@generalbusiness/dap-git/journal";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
+import type { Sql } from "./sqlite.ts";
 
 /** Full refs/digests and the finite private catalog are bounded ASCII.
  * One fact plus its distinct source record occupies at most 473 bytes
@@ -22,6 +23,16 @@ export interface ExpectedDirectoryRulesRoot {
 export interface ArchiveReplayContext {
   readonly checked: readonly CheckedSequence[];
   readonly directoryRules?: ExpectedDirectoryRulesRoot;
+}
+/** The replay context of a pass over its own sequence alone: this scope's
+ * stored genesis entry, admitted against the full `at`. One native read
+ * charges metadata 128 and inputWork `entryBytes`. Undefined when the
+ * stored genesis is absent or does not admit. */
+export function archiveOwnReplayContext(sql: Pick<Sql, "exec">, at: ScopeRef, entryBytes: number, budget: ArchiveBudget): ArchiveReplayContext | undefined {
+  const rows = budget.native(sql, () => ({ metadata: 128, inputWork: entryBytes })).exec("SELECT bytes FROM entry WHERE seq = 0 AND typeof(bytes) = 'text' AND octet_length(bytes) <= ? LIMIT 1", entryBytes).toArray();
+  const bytes = rows[0]?.["bytes"];
+  const own = rows.length === 1 && typeof bytes === "string" ? admitSequenceGenesis(bytes, at, entryBytes) : null;
+  return own ? Object.freeze({ checked: Object.freeze([own]) }) : undefined;
 }
 /** Shape-only owned snapshots for stored Mark refs. No kind or authority
  * follows from these bytes. Actual publication requires the separate guard. */

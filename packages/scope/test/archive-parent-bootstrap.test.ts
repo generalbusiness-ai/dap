@@ -14,6 +14,7 @@ import { ArchiveFrontiers } from "../src/archive-frontier-store.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { writeArchivePublication } from "../src/archive-publication.ts";
 import { planRootArchivePass, type ArchiveFixedFinish } from "../src/archive-build.ts";
+import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import { ArchiveArtifactsPeer } from "./support/archive-artifacts.ts";
 import { archiveAuthorityAnchors, archiveAuthorityBasis, archiveAuthorityPolicies, nativeArchiveFixture } from "./support/archive-native-authority.ts";
@@ -480,7 +481,7 @@ test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after 
   expect(birth.input.type).toBe("genesis");
   if (birth.input.type !== "genesis") throw Error("Actual native birth required");
   expect(birth.input.decision).toBe("applied"); expect(scopeIdOf(birth.input.seed)).toBe(lane.at.scope);
-  expect(entryHash(birth)).toBe(lane.at.genesis); expect(birth.input.seed.kind).toBe("lane");
+  expect(entryHash(birth)).toBe(lane.at.genesis); expect(birth.input.seed.kind).toBe("directory");
   const birthSeed = canonicalize(birth.input.seed);
   const diagnostics: { state: string; cost: ArchiveCost; fixedFinish: ArchiveFixedFinish | null; capacityRefusal: ArchiveCapacityRefusal | null }[] = [];
   const info = console.info, log = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
@@ -498,12 +499,16 @@ test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after 
       }, clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
       policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) },
       admit: (at, admittedSeed) => canonicalize(at) === canonicalize(lane.at)
-        && admittedSeed.kind === "lane" && scopeIdOf(admittedSeed) === lane.at.scope && canonicalize(admittedSeed) === birthSeed,
+        && admittedSeed.kind === "directory" && scopeIdOf(admittedSeed) === lane.at.scope && canonicalize(admittedSeed) === birthSeed,
       provider: host.provider, budget: () => budget,
       target: { resolve: async () => { order.push("target"); return repository; } },
       sources: async (_after, _through, sameBudget, exact) => {
         expect(sameBudget).toBe(budget); order.push(exact ? "sources:pending" : "sources:plan");
-        return { pins: archiveAuthorityBasis(lane)!.pins, prepare: async (seq, actualBudget) => {
+        // Production takes the replay context from its target read; this
+        // stand-in admits the lane's own genesis outside the pass budget.
+        return { pins: archiveAuthorityBasis(lane)!.pins,
+          replayContext: archiveOwnReplayContext(archiveSql(state), lane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
+          prepare: async (seq, actualBudget) => {
           expect(actualBudget).toBe(budget); order.push(`prepare:${seq}`);
         } };
       },

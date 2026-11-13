@@ -8,7 +8,7 @@ import type { ArchiveBudget } from "./archive-budget.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 
-type Selection = { readonly at: ScopeRef; readonly objects: readonly { readonly foreign?: NonNullable<JournalSelection["objects"][number]["foreign"]> }[] };
+type Selection = { readonly at: ScopeRef; readonly objects: readonly { readonly key?: { readonly kind: string }; readonly foreign?: NonNullable<JournalSelection["objects"][number]["foreign"]> }[] };
 
 /** `archived` is the exact producer closure selected for this repository.
  * Its copied facts must be replayed. Only the finite reviewed Register and Membership
@@ -35,7 +35,10 @@ export class ArchiveReplayAnchors {
       if (!object.foreign) continue;
       const { fact, pin } = object.foreign, key = canonicalize(fact.at), prior = this.#pins.get(key);
       if (prior && prior !== pin) return stop("foreign-source-mismatch");
-      this.#pins.set(key, pin); this.#add(fact);
+      this.#pins.set(key, pin);
+      // A birth copy proves itself: its entry hash is the genesis of its
+      // `at`. Replay admits it by genesis and never consults it as an anchor.
+      if (object.key?.kind !== "birth") this.#add(fact);
     }
   }
   #add(fact: FactRef): void {

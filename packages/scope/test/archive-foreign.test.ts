@@ -22,6 +22,7 @@ import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/d
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
 import { readJournalArchive } from "@generalbusiness/dap-git/journal-reader";
 import { planArchive, planPublishedArchivePass, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
+import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import type { FixtureArchiveProvider } from "../src/archive-driver.ts";
 import { archiveRepository, archiveSql } from "./support/archive.ts";
@@ -548,6 +549,7 @@ test("published replay closure adds only admitted public-copy producers and rebu
   const plan = (replayScopes = targetScopes) => f.consumer.inside(state => planPublishedArchivePass(archiveSql(state), {
     at: f.consumer.at, through, after: null, bounds: PROPOSED_BOUNDS, policies: f.policies,
     format: "sha1", parent: null, markedAt: at(0), fixtureSources: f.sources, replayScopes,
+    replayContext: archiveOwnReplayContext(archiveSql(state), f.consumer.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
   }, new ArchiveBudget()));
   const conflicting = { ...f.producer.at, genesis: digestBytes(new Uint8Array(16).fill(73)) };
   expect(conflicting.genesis).not.toBe(f.producer.at.genesis);
@@ -571,9 +573,10 @@ test("published replay closure adds only admitted public-copy producers and rebu
   const rebuilt = await f.consumer.inside(async state => {
     const sql = archiveSql(state), rows = new ArchiveRows(sql, f.consumer.at), row = rows.load()!;
     expect(row.pending).toEqual(planned.mark);
+    const context = archiveOwnReplayContext(sql, f.consumer.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget());
     expect(await rebuildArchivePass(sql, { ...row, pending: { ...row.pending!, replayScopes: targetScopes } },
-      null, new ArchiveBudget(), f.sources)).toEqual({ ok: false, reason: "rebuild-mismatch" });
-    const result = await rebuildArchivePass(sql, row, null, new ArchiveBudget(), f.sources);
+      null, new ArchiveBudget(), f.sources, context)).toEqual({ ok: false, reason: "rebuild-mismatch" });
+    const result = await rebuildArchivePass(sql, row, null, new ArchiveBudget(), f.sources, context);
     expect(rows.load()!.pending).toEqual(planned.mark);
     return result;
   });

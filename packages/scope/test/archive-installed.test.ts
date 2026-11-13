@@ -48,6 +48,7 @@ import { Scope, type Checkpointed } from "../src/core.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { archiveReplayAnchors } from "../src/archive-anchors.ts";
 import { planArchive, planArchivePass, planPublishedArchivePass, type ArchiveFixedFinish } from "../src/archive-build.ts";
+import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { ARCHIVE_SOURCE_PINS, FixtureArchiveSourcePins, type FixtureArchiveSourceBirth } from "../src/archive-source-pins.ts";
 import type { ReviewedArchivePolicy } from "../src/archive-inventory.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
@@ -731,7 +732,8 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
           const base = parent === null ? null : await frontiers.readConfirmed({ ...identity, commit: parent, through: prior! }, budget);
           const made = await planPublishedArchivePass(sql, { at, through, after: prior, bounds: PROPOSED_BOUNDS,
             policies, format: "sha1", parent: parent === null ? null : { id: parent, source: archivePeer.source },
-            markedAt: timeOf(life.now()), fixtureSources, replayScopes }, budget);
+            markedAt: timeOf(life.now()), fixtureSources, replayScopes,
+            replayContext: archiveOwnReplayContext(sql, at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()) }, budget);
           if (!made.ok) return { ok: false as const, result: made, cost: budget.admitted() };
           expect(made.archive.manifest.anchors).toEqual(JSON.parse(made.mark.anchorPublication!).anchors);
           // TEST remote accepts genuine writer objects; no actual provider.

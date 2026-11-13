@@ -1,6 +1,6 @@
 /** One bounded asynchronous archive pass. No entry, operation or public RPC.
  * Configuration and reviewed policy belong to the trusted object owner. */
-import { admitSequenceGenesis, canonicalize, digestBytes, isDigest, same, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isDigest, same, utf8 } from "@generalbusiness/dap-bytes";
 import type { Bounds, Head, SequenceRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isSequenceRef, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { captureJournalParentFrontier, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
@@ -12,7 +12,7 @@ import { admitArchiveMigration } from "./archive-bootstrap-cost.ts";
 import { planPublishedArchiveConversion, rebuildArchive, rebuildArchivePass, type ArchiveFixedFinish } from "./archive-build.ts";
 import { planAdaptiveArchivePass, planRootAdaptiveArchivePass, planRootFixedArchivePass, planRootFixedUnpublishedArchivePass } from "./archive-adaptive.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
-import type { ArchiveReplayContext } from "./archive-publication.ts";
+import { archiveOwnReplayContext, type ArchiveReplayContext } from "./archive-publication.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveMark, type ArchiveRow } from "./archive-row.ts";
@@ -89,16 +89,6 @@ export class ArchiveDriver {
   #running: Promise<ArchivePass> | null = null;
   #disabled = false;
   #fallback: Timestamp | null = null;
-  /** A fixture pass has no target to read its sequences. It classifies its
-   * own sequence from its own genesis bytes, the one root that needs no
-   * outside read. Copied sources come from the fixture pins. */
-  #ownReplayContext(at: SequenceRef, budget: ArchiveBudget): ArchiveReplayContext | undefined {
-    const max = this.#options.bounds.entryBytes;
-    const rows = budget.native(this.#options.sql, () => ({ metadata: 128, inputWork: max })).exec("SELECT bytes FROM entry WHERE seq = 0 AND typeof(bytes) = 'text' AND octet_length(bytes) <= ? LIMIT 1", max).toArray();
-    const bytes = rows[0]?.["bytes"];
-    const own = rows.length === 1 && typeof bytes === "string" ? admitSequenceGenesis(bytes, at, max) : null;
-    return own ? Object.freeze({ checked: Object.freeze([own]) }) : undefined;
-  }
   constructor(options: FixtureArchiveDriverOptions | RoomArchiveDriverOptions) {
     if (!("production" in options) && (options.policies.fixture !== "archive-policies" || options.target.fixture !== "archive-target" || options.provider.fixture !== "archive-provider")) throw new Error("archive fixture ports required");
     if ("production" in options && options.production !== "room-binding") throw new Error("archive room binding required");
@@ -334,7 +324,10 @@ export class ArchiveDriver {
         }
       }) : null;
       const sources = preparedSources?.pins ?? this.#options.fixtureSources;
-      const replayContext = preparedSources?.replayContext ?? (!("production" in this.#options) ? this.#ownReplayContext(at, budget) : undefined);
+      // A fixture pass has no target to read its sequences. It classifies
+      // its own sequence from its own genesis, the one root that needs no
+      // outside read. Copied sources come from the fixture pins.
+      const replayContext = preparedSources?.replayContext ?? (!("production" in this.#options) ? archiveOwnReplayContext(this.#options.sql, at, this.#options.bounds.entryBytes, budget) : undefined);
       let archive: JournalArchive | JournalPassArchive;
       let mark: ArchiveMark;
       let selectedParentObjects: readonly string[] | undefined;
