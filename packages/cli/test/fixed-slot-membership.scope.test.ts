@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import { HISTORY_PAGE_ENTRIES, type FactRef, type ScopeId } from "@generalbusiness/dap-contract";
 import { b64url, factRefOf, isReceipt, isRecord, isScopeId, isSeed, LATE, same, scopeIdOf, timeOf, within } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
-import { UNPUBLISHED_COHORT as C } from "@generalbusiness/dap-platform";
+import { BASE_COHORT as C } from "@generalbusiness/dap-platform";
 import { SCOPE_INDEX_NAME } from "../../scope/src/scope-index.ts";
 import { route } from "../../scope/src/worker.ts";
 import { net, ScriptedClock } from "../../scope/src/testing.ts";
