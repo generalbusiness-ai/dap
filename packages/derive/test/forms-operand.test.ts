@@ -120,7 +120,7 @@ describe("operands, parts and a local fact (sections 6.2 and 6.5; witness 18.1)"
     const named = (name: string, change: (d: any) => void = () => {}) => valid(validateDefinition(namedOperandData(name, change), PROPOSED_BOUNDS));
     const elsewhere = (change: (d: any) => void = () => {}) => valid(validateDefinition(elsewhereOperandData(change), PROPOSED_BOUNDS));
     const P = new Scope(elsewhere());
-    expect([(M.entries[0]!.entry.input as { kind?: string }).kind, trace(P, M).result, P.last.uses]).toEqual(["start", "write", [{ fact: M.fact(0), content: expect.any(String) }]]);
+    expect([(M.entries[0]!.entry.input as { kind?: string }).kind, trace(P, M).result, P.last.uses]).toEqual(["start", "write", [{ fact: M.fact(0), content: expect.any(String), kind: "lane" }]]);
     // Q differs from P in one thing: the kinds of the field omit that genesis act.
     const Q = new Scope(elsewhere((d) => { d.acts.trace.fields.origin.kind = ["ask"]; }));
     expect(trace(Q, M)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
