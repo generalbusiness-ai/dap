@@ -469,7 +469,7 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
         const readback = await ctx.store.secret(keyName);
         if (!readback || !sameOptional([...readback], [...own])) { own.fill(0); return bad(); }
       }
-      config = { v: 1, service: link.service, key: keyName };
+      config = { v: 2, service: link.service, key: keyName };
     }
     if (!own || own.length !== 32) return bad();
     const key = own.slice();

@@ -101,7 +101,7 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     let pending: PendingJoin | undefined = before?.join;
     const shared = pending && (({ inbox: _inbox, ...repository }) => repository)(pending.repository);
     if (pending && (pending.link !== linkDigest || before!.service !== link.service || canonicalize(shared) !== canonicalize(link.repository) || pending.handle !== link.handle)) return failed(`The invitation link does not match the pending join. ${joinSent(pending)} Retry the original invitation link.`);
-    const base: Config = before ? { v: 1, service: before.service, key: before.key } : { v: 1, service: link.service, key: "device" };
+    const base: Config = before ? { v: 2, service: before.service, key: before.key } : { v: 2, service: link.service, key: "device" };
     const signer = pending ? await signerOf(ctx, base) : await newStoredSigner(ctx.store, base.key);
     let signed: SignedIntent;
     const keep = async (next: PendingJoin) => { await ctx.store.save({ ...base, join: next }); pending = next; };

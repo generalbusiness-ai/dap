@@ -103,7 +103,7 @@ export function install(ctx: Context, service: string, options: InstallOptions =
     const { signed, key } = await installing(ctx, options, signing(ctx));
     const { answer } = await create(transportOf(ctx, service), signed, NEW_REGISTER);
     const receipt = accepted(answer, null, "Installed").receipt;
-    await ctx.store.save({ v: 1, service, key: "operator", register: receipt.fact.at });
+    await ctx.store.save({ v: 2, service, key: "operator", register: receipt.fact.at });
     return done(`Installed: register ${receipt.fact.at.scope}, under ${NEW_REGISTER}.`, `The operator key ${key} is kept in the config directory, readable only by you. It is the one creator key.`);
   });
 }
@@ -194,7 +194,7 @@ async function cohortPlan(ctx: Context, service: string, options: InstallOptions
   }
   const { signed } = await installing(ctx, options, { ...signing(ctx), lifetimeSeconds: PROPOSED_BOUNDS.intentLifetimeSeconds - 60 });
   const plan: PlannedInstall = { service, definition, "founding": signed, register: registerIdOf(signed, definition), selected: true };
-  await saveCohortConfig(ctx, { ...before, v: 1, service, key: "operator", plan });
+  await saveCohortConfig(ctx, { ...before, v: 2, service, key: "operator", plan });
   return plan;
 }
 
@@ -224,7 +224,7 @@ export function planInstall(ctx: Context, service: string, options: InstallOptio
     if (before?.plan?.attempted !== undefined) return failed("Refused: install-pending. Retry dap install --planned with the original plan; an attempted install cannot be replaced silently.");
     const { signed } = await installing(ctx, options, { ...signing(ctx), lifetimeSeconds: PROPOSED_BOUNDS.intentLifetimeSeconds - 60 });
     const register = registerIdOf(signed, NEW_REGISTER);
-    await ctx.store.save({ v: 1, service, key: "operator", plan: { service, definition: NEW_REGISTER, "founding": signed, register } });
+    await ctx.store.save({ v: 2, service, key: "operator", plan: { service, definition: NEW_REGISTER, "founding": signed, register } });
     const { host, namespace } = signed.intent.fields as { host: string; namespace: string };
     return done(
       `Planned: register ${register}, under ${NEW_REGISTER}, on host ${host}, namespace ${namespace}. The seed's time is ${signed.intent.notAfter}.`,

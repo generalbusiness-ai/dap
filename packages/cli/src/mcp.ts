@@ -94,7 +94,7 @@ export async function mcp(ctx: Context, home: string, argv: readonly string[]): 
     },
     joined: async (room: { service: string; repository: NonNullable<McpConfig["repository"]>; handle: string }): Promise<void> => {
       const c = await ctx.store.config();
-      await ctx.store.save({ ...(c ?? { v: 1 as const, key: keyName }), service: room.service, repository: room.repository, handle: room.handle });
+      await ctx.store.save({ ...(c ?? { v: 2 as const, key: keyName }), service: room.service, repository: room.repository, handle: room.handle });
     },
     addRoot: async (root: Root): Promise<void> => {
       const c = (await ctx.store.config())!;

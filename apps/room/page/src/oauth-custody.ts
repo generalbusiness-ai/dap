@@ -47,7 +47,7 @@ function decode(raw: string, binding: string): Journal {
     if (!uuid(operation) || !closed(row, ["operation", "authorization", "actor", "controller", "native", "handle", "config", "private", "agent", "link", "grant", "state"], ["reason"]) || row.operation !== operation || !isKeyId(row.actor) || !isMemberRef(row.controller)
       || !["own", "prepared", "existing"].includes(row.native) || typeof row.handle !== "string" || utf8(row.handle).length > 256 || !["inviting", "ready", "unknown", "done", "refused"].includes(row.state)
       || row.reason !== undefined && (typeof row.reason !== "string" || row.reason.length > 2048) || !agentId(row.agent) || row.link !== null && (typeof row.link !== "string" || utf8(row.link).length > 48 * 1024)
-      || !isRecord(row.config) || row.config.v !== 1 || row.config.key !== "browser" || !row.config.repository || !isScopeRef(row.config.repository.membership) || !same(row.controller.membership, row.config.repository.membership)
+      || !isRecord(row.config) || row.config.v !== 2 || row.config.key !== "browser" || !row.config.repository || !isScopeRef(row.config.repository.membership) || !same(row.controller.membership, row.config.repository.membership)
       || !isRecord(row.private) || Object.keys(row.private).length > 32 || Object.entries(row.private).some(([name, bytes]) => !/^i-[0-9a-f]{30}$/.test(name) || typeof bytes !== "string" || utf8(bytes).length > 64 * 1024)) throw unavailable();
     const authorization = row.authorization, b = authorization?.binding;
     if (!closed(authorization, ["issuer", "client", "binding", "state"]) || typeof authorization.state !== "string" || utf8(authorization.state).length > 2048 || authorization.issuer !== row.config.service
@@ -82,7 +82,7 @@ export async function consentOAuth(selection: OAuthSelection, authorization: OAu
   return locks.request("artroom-oauth-connection:" + selection.binding, async () => {
     currentOAuth(selection);
     let journal = custody.read(selection.binding, storage), row: Row;
-    const base: Config = { v: 1, service: selection.origin, key: "browser", handle: selection.room.me!.handle,
+    const base: Config = { v: 2, service: selection.origin, key: "browser", handle: selection.room.me!.handle,
       repository: { directory: selection.room.directoryIndex!.scope, membership: selection.room.membership, rules: selection.room.rules, destination: selection.room.destination } };
     for (const stored of Object.values(journal?.rows ?? {})) {
       const { invitationIssue: _pointer, ...configuration } = stored.config;

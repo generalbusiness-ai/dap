@@ -46,7 +46,7 @@ export async function scopeIndexCensusCommand(ctx: Context, argv: readonly strin
       };
       check();
       const config = await ctx.store.config(); check();
-      if (!config || config.v !== 1 || typeof config.service !== "string" || typeof config.key !== "string" || !config.key
+      if (!config || config.v !== 2 || typeof config.service !== "string" || typeof config.key !== "string" || !config.key
         || !isSequenceRef(config.register)) return stop("page-failed", "configuration-unavailable");
       const service = indexService(config.service), root = config.repository?.directory;
       if (root === undefined) return stop("root-unregistered");

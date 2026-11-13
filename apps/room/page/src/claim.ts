@@ -78,7 +78,7 @@ function bindingOf(session: Session | ClaimIdentity, configured: ClaimRegister):
 function readKept(raw: string, binding: string, session: { service: string }, configured: ClaimRegister): Kept {
   let got: Kept | null;
   try { got = parseStrict(raw) as unknown as Kept | null; } catch { throw new Error(`The private claim record cannot be read. It is kept. ${CREATION_UNKNOWN}`); }
-  if (!got || got.v !== 1 || got.binding !== binding || typeof got.label !== "string" || !got.config || got.config.v !== 1
+  if (!got || got.v !== 1 || got.binding !== binding || typeof got.label !== "string" || !got.config || got.config.v !== 2
     || got.config.service !== session.service || got.config.key !== "browser" || canonicalize(got.config.register) !== canonicalize(configured.register)
     || got.config.plan !== undefined || got.config.join !== undefined
     || (got.recovery !== undefined && (unb64url(got.recovery)?.length !== 32 || got.recoveryKey !== undefined))
@@ -183,7 +183,7 @@ function storeFor(session: Session, configured: ClaimRegister, storage: ClaimSto
   if (fresh && Object.keys(journal.claims).length >= MAX_CLAIMS) throw new Error("This browser's claim journal is full. Original proofs are kept; no new creation was submitted.");
   const raw = journal.claims[operation];
   if (fresh && raw !== undefined || !fresh && raw === undefined) throw new Error(`The creation operation does not match the private journal. ${CREATION_UNKNOWN}`);
-  let record: Kept = raw !== undefined ? readKept(raw, binding, session, configured) : { v: 1, binding, label, config: { v: 1, service: session.service, key: "browser", register: configured.register } };
+  let record: Kept = raw !== undefined ? readKept(raw, binding, session, configured) : { v: 1, binding, label, config: { v: 2, service: session.service, key: "browser", register: configured.register } };
   const write = (next: Kept): void => {
     const nextJournal: Journal = { ...journal, ...(fresh ? { active: operation } : {}), claims: { ...journal.claims, [operation]: canonicalize(next) } };
     const bytes = canonicalize(nextJournal);
