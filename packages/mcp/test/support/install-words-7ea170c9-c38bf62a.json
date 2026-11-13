@@ -44,11 +44,10 @@
     "structuredContent": {
       "rules": {
         "scope": "sc_jr4toexa26eig4jb7vojz4iylvm7cq6sc6a3o2p5bmlrgs5yyreq",
-        "inc": "in_aibaeaqcaibaeaqcaibaeaqcai",
-        "kind": "rules"
+        "genesis": "sha256:89d44c5afba194c786faf373e9197d4f446bc0e67b63a667f71501d5ca4cd943"
       },
       "at": {
-        "hash": "sha256:879f4f08c31ba60e09725743ed56dbade47fa6e200383555c8c6f08b157c6a24",
+        "hash": "sha256:371cad72caf36b92c0cf08b84d1bfe55ab0167cba25fd493700cf844bd04c40f",
         "seq": 1
       },
       "item": 1,
@@ -139,11 +138,10 @@
       "phase": "accepted",
       "fact": {
         "at": {
-          "inc": "in_aibaeaqcaibaeaqcaibaeaqcai",
-          "kind": "rules",
+          "genesis": "sha256:89d44c5afba194c786faf373e9197d4f446bc0e67b63a667f71501d5ca4cd943",
           "scope": "sc_jr4toexa26eig4jb7vojz4iylvm7cq6sc6a3o2p5bmlrgs5yyreq"
         },
-        "hash": "sha256:879f4f08c31ba60e09725743ed56dbade47fa6e200383555c8c6f08b157c6a24",
+        "hash": "sha256:371cad72caf36b92c0cf08b84d1bfe55ab0167cba25fd493700cf844bd04c40f",
         "seq": 1
       },
       "outboxIds": [],
@@ -161,11 +159,10 @@
       "fact": {
         "at": {
           "scope": "sc_jr4toexa26eig4jb7vojz4iylvm7cq6sc6a3o2p5bmlrgs5yyreq",
-          "inc": "in_aibaeaqcaibaeaqcaibaeaqcai",
-          "kind": "rules"
+          "genesis": "sha256:89d44c5afba194c786faf373e9197d4f446bc0e67b63a667f71501d5ca4cd943"
         },
         "seq": 1,
-        "hash": "sha256:879f4f08c31ba60e09725743ed56dbade47fa6e200383555c8c6f08b157c6a24"
+        "hash": "sha256:371cad72caf36b92c0cf08b84d1bfe55ab0167cba25fd493700cf844bd04c40f"
       },
       "outboxIds": [],
       "effects": 0,

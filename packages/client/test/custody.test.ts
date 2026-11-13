@@ -83,7 +83,8 @@ describe("custody keeps the exact envelope under the caller's key", { timeout: 6
     expect(points).toEqual(["prepared", "sent", "unknown", "accepted"]);
 
     // A throwing observation port cannot replace a completed record or step write.
-    // These are predecessor bytes, not an expected value serialized by this implementation.
+    // These are predecessor bytes, not an expected value serialized by this implementation: the NF-3 capture,
+    // run again at the cutover head c38bf62a, before the move, because the cutover changes reference bytes.
     const golden = readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8");
     let transitions = 0, stepTransitions = 0;
     const memoryRun = goldenRecord(() => memoryStore(), {
