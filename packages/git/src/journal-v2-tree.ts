@@ -328,7 +328,9 @@ export class JournalV2TreePatch {
       this.work.check();
       const rows = node.rows;
       if (rows === null) return refuseJournal("tree", node.prefix);
-      for (const [name, child] of node.children) {
+      // Emit children in name order, not preparation order: a resumed
+      // build prepares paths in different steps and must send the same pack.
+      for (const [name, child] of [...node.children].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
         if (child.active) rows.set(name, { name, mode: "40000", id: emit(child) });
       }
       for (const [name, id] of node.files) if (id !== null) rows.set(name, { name, mode: "100644", id });
