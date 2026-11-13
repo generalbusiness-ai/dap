@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/cli/src/main.ts","body":{"commit":"e7db3872dbb239d0c42bb67720f614425a68e9cc","path":"packages/cli/src/main.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/cli/test/install-without-mcp.test.ts","body":{"commit":"e7db3872dbb239d0c42bb67720f614425a68e9cc","path":"packages/cli/test/install-without-mcp.test.ts"}}
