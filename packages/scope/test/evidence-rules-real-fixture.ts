@@ -549,7 +549,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   await lane.did(rita, "accept", { on: commitment, expected: await lane.expected({ on: commitment }), fields: { terms } });
   const hold = await lane.did(rita, "take-hold", { fields: { commitment }, expected: await lane.expected({ commitment }) });
   const instance: Intent = { v: 1, to: await lane.at(), actor: rita.key, kind: "hold@1:instance", on: null, expected: {},
-    fields: { hold, task: { ...(await lane.at()), kind: "task" }, instance: "TEST-native-evidence-instance" }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
+    fields: { hold, task: await lane.at(), instance: "TEST-native-evidence-instance" }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
   expect(await (lane.stub as NativeReadPort).prepare(signIntent(instance, rita.secret), [], "hold@1", "instance")).toMatchObject({ answer: "accepted" });
   const base = room.host.stand.refs.get("refs/heads/main");
   const initial = base && room.host.stand.objects.get(base);

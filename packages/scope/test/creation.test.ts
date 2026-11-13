@@ -223,7 +223,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
     const at = created.receipt.fact.at;
     const intent = (kind: string, more: Partial<Intent>): Intent => ({ v: 1, to: at, actor: rita.key, kind, on: null, expected: {}, fields: {}, idempotencyKey: crypto.randomUUID(), notAfter: timeOf(Date.now() + 60_000), ...more });
     const offer = signIntent(intent("offer", { expected: { intent: 1 }, fields: { intent: 0 } }), rita.secret);
-    const step = signIntent(intent("hold@1:instance", { fields: { hold: 2, task: { ...at, kind: "task" }, instance: "i1" } }), rita.secret);
+    const step = signIntent(intent("hold@1:instance", { fields: { hold: 2, task: at, instance: "i1" } }), rita.secret);
     const all = [grantOf(rita, at, [...new Set(Object.values(staged.declared.acts).map((act) => act.grant as string))])];
     const entries = () => runInDurableObject(env.AS_DEPLOYED.get(env.AS_DEPLOYED.idFromName(scopeIdOf(seed))), (_instance, state) => state.storage.sql.exec("SELECT (SELECT COUNT(*) FROM entry) AS entries, (SELECT COUNT(*) FROM operation) AS operations").toArray());
     expect([await deployed.submit(offer, all), await deployed.prepare(step, all, "hold@1", "instance"), await (deployed as unknown as { effect(): Promise<number> }).effect(), await deployed.summary(reader), await entries()]).toMatchObject([
