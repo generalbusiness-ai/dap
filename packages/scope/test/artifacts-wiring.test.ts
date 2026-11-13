@@ -12,6 +12,7 @@ import type { OutsideGiven } from "../src/object.ts";
 import { NO_OUTSIDE, type EffectAnswer, type EffectRequest } from "../src/operations.ts";
 import { outsideOf } from "../src/worker.ts";
 import { create } from "./fixtures-native.ts";
+import { withSequence } from "../src/testing.ts";
 
 // Cloudflare Artifacts is a STAND-IN here: a scripted binding
 // double whose every answer the test writes. No repository or token exists.
@@ -97,7 +98,7 @@ function destinationGiven(register: Ledger, creator: ScopeRef): OutsideGiven {
   state.setScope({ ...register.state.scope()!, at, kind: "destination", creator, head: { seq: 0, hash }, genesis: { hash, source: null, n: null } });
   state.putItem({ id: 0, type: "branch", state: "empty", revision: 0, opened: hash, parties: {}, attributed: [], refs: { directory: creator as unknown as FieldValue, claim: claim as unknown as FieldValue }, values: { repository: register.item(1).values["repository"]!, name: "main" } });
   return { localSequence: () => null,
-    state, own: (seq) => seq === 0 ? { entry, hash } : null,
+    state, own: withSequence((seq: number) => seq === 0 ? { entry, hash } : null, null),
     retained: (kind, digest) => kind === "entry" && digest === content ? { kind, digest, bytes, under: "platform:register" } : null,
     scope: () => state.scope(), genesis: () => entry.input.type === "genesis" ? entry.input : null,
     clock: { read: () => register.now }, random: { bytes: (length) => new Uint8Array(length) },

@@ -34,6 +34,7 @@ import type { Actor as Signer } from "@generalbusiness/dap-derive/testing";
 import type { Item } from "@generalbusiness/dap-derive";
 import { DIGESTS, change, issue, type changeDemo } from "../../src/index.ts";
 import { Host, Node, net, reader, soon } from "./graph.ts";
+import { storedOwn } from "../../../../../packages/scope/src/testing.ts";
 
 export { Platform, copied, rewritten, routed, settle, soon };
 export const { rita, una, vic, paul, sam } = keys;
@@ -93,7 +94,7 @@ export class Room {
     const changed = valueDigest(DESTINATION_CHANGED_SET.domain, changes);
     const answers = await runInDurableObject(this.G.object, (_instance, state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
-      const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: JSON.parse(row.bytes) as Entry, hash: row.hash } : null; };
+      const own = storedOwn(store);
       const head = store.item(0)?.values["head"] as string;
       return store.all().operations.filter((operation) => operation.kind === kind).flatMap((operation) => operation.attempts.filter((attempt) => attempt.outcomes.length === 0).map((attempt) => {
         const publication = operation.for === null || operation.for === undefined ? null : store.item(operation.for);

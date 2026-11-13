@@ -68,6 +68,7 @@ import type {} from "./support/maintained-applications.ts";
 import { fixedSigner } from "./fixtures-core.ts";
 import retainedGrowRoom from "./support/retained-archive-grow-room.json.txt?raw";
 import retainedGrowSite from "./support/retained-archive-grow-site.json.txt?raw";
+import { withSequence } from "../src/testing.ts";
 /** The address of a history's scope: its scope ID and the hash of its genesis entry. */
 const historyAt = (scope: ScopeId, history: readonly Sealed[]): ScopeRef => ({ scope, genesis: history[0]!.hash });
 
@@ -137,7 +138,7 @@ function archiveGiven(store: SqliteStore): OutsideGiven {
   const first = store.stored(0), input = first ? (parseStrict(first.bytes) as Sealed["entry"]).input : null;
   const sequence = first && input?.type === "genesis" ? admitSequenceGenesis(first.bytes, { scope: scopeIdOf(input.seed), genesis: first.hash }, PROPOSED_BOUNDS.entryBytes) : null;
   return { localSequence: () => sequence, ...production(), clock: net.clock, state: store, scope: () => store.scope(),
-    genesis: () => input?.type === "genesis" ? input : null, own, retained: (...args) => store.retained(...args) };
+    genesis: () => input?.type === "genesis" ? input : null, own: withSequence(own, sequence), retained: (...args) => store.retained(...args) };
 }
 // Finite actual declaration/native-owner metadata. This explicit TEST
 // registry is separate from source identity and supplies no certificate.

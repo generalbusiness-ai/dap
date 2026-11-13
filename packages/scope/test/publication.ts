@@ -19,7 +19,7 @@ import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { destinationReceipt, initialCommitOf, revokedToken } from "@generalbusiness/dap-platform";
 import { targetOf } from "../../../packages/platform/src/destination.ts";
 import { SqliteStore } from "../src/index.ts";
-import { net } from "../src/testing.ts";
+import { net, storedOwn } from "../src/testing.ts";
 import { outsideOf, wired } from "./outside.ts";
 import type { Platform } from "./repository.ts";
 import type { nativeFixtureLifetime } from "./support/native-fixture-lifetime.ts";
@@ -42,7 +42,7 @@ export async function initialPublication(G: Platform, lifetime?: ReturnType<type
     const answers = await wait(() => runInDurableObject(G.object, (_instance, state) => {
       lifetime?.active();
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
-      const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: JSON.parse(row.bytes) as Entry, hash: row.hash } : null; };
+      const own = storedOwn(store);
       return store.all().operations.filter((operation) => operation.kind === kind).flatMap((operation) => operation.attempts.filter((attempt) => attempt.outcomes.length === 0).map((attempt) => {
         const body = kind === "mint" ? { token: `token-${operation.id}`, ends: timeOf(timeMs(net.clock.now)! + 60_000) }
           : kind === "revoke" ? { token: revokedToken(store, own, operation) }

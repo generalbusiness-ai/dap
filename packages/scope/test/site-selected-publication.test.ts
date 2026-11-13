@@ -9,7 +9,7 @@ import { buildPack, type RawGitObject } from "@generalbusiness/dap-git/http";
 import { SqliteStore } from "../src/index.ts";
 import { site } from "../src/site/route.ts";
 import type { SiteEnv } from "../src/site/host.ts";
-import { net } from "../src/testing.ts";
+import { net, storedOwn } from "../src/testing.ts";
 import { soon } from "./net.ts";
 import { outsideOf, wired } from "./outside.ts";
 import { initialPublication } from "./publication.ts";
@@ -70,7 +70,7 @@ beforeAll(async () => {
   const f = await creation(true); R = f.r; D = f.d; G = f.g; repository = f.repo;
   const commit = await runInDurableObject(G.object, (_instance, state) => {
     const store = new SqliteStore({ exec: (q, ...b) => state.storage.sql.exec(q, ...b), transaction: (f) => state.storage.transactionSync(f) });
-    const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: JSON.parse(row.bytes) as Entry, hash: row.hash } : null; };
+    const own = storedOwn(store);
     const first = initialCommitOf(store, own, "sha1");
     const receipt = destinationReceipt(store, own, store.page("receipt", ["written"], null, 1).items[0]!, "sha1");
     return { ...first, receipt };

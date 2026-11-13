@@ -16,6 +16,7 @@ import { workspaceAncestors } from "./support/workspace-ancestors.ts";
 import type { Diagnosis } from "../src/diag.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import { measured, operationContext } from "../src/operational.ts";
+import { withSequence } from "../src/testing.ts";
 
 // Register, Directory and Destination entries pass their actual creation and
 // outcome judges in memory. Lane creation and trusted proof readers remain
@@ -58,7 +59,7 @@ function fixture(laneNonce = 4) {
   };
   const state = new MemoryState();
   state.setScope({ held: [], at: lane, kind: "lane", status: "active", creator: directory, head: { seq: 0, hash: entryHash(born) }, time, genesis: { hash: entryHash(born), source: born.input.type === "genesis" ? born.input.source : null, n: 0 } });
-  const given: OutsideGiven = { localSequence: () => local, definition: () => definition, state, scope: () => state.scope(), own: seq => seq === 0 ? { entry: born, hash: entryHash(born) } : null,
+  const given: OutsideGiven = { localSequence: () => local, definition: () => definition, state, scope: () => state.scope(), own: withSequence((seq: number) => seq === 0 ? { entry: born, hash: entryHash(born) } : null, local),
     genesis: () => born.input.type === "genesis" ? born.input : null, retained: () => null, clock: { read: () => time }, random: { bytes: n => new Uint8Array(n) } };
   // A later lane entry written by hand, as an operation's origin: it names the lane's genesis, and nothing judged it.
   const later = (seq: number, effects: Effect[]): SequenceEntry => sealed(lane, seq, { type: "checkpoint", through: 0, state: entryHash(born) }, effects);
@@ -204,7 +205,7 @@ test("workspace lineage diagnoses a failed immutable proof read without changing
 
 test("workspace lineage diagnoses an absorbed local read failure without reading its private error text", async () => {
   const f = fixture(), secret = "synthetic-private-local-state";
-  const observed = await observeDiagnosis(f.lane.scope, () => workspaceRepository({ ...f.given, own() { throw new Error(secret); } }, f.sources, f.register.scope, "artifacts", "actual-room-space"));
+  const observed = await observeDiagnosis(f.lane.scope, () => workspaceRepository({ ...f.given, own: withSequence(() => { throw new Error(secret); }, f.given.own.sequence()) }, f.sources, f.register.scope, "artifacts", "actual-room-space"));
   expect(observed.result).toBeNull();
   expect(observed.diagnoses).toEqual([{ event: "outside-call-failed", step: "workspace-lineage", name: "Error", request: "0123456789abcdef" }]);
   expect(observed.points.filter(point => point.blobs[0] === "diagnosis").map(point => point.blobs.slice(3, 6))).toEqual([["workspace-lineage", "error", "outside-call-failed"]]);

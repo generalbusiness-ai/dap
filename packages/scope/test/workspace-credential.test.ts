@@ -13,6 +13,7 @@ import type { Sql } from "../src/sqlite.ts";
 import { START, at, create } from "./fixtures-native.ts";
 import { staged } from "./hosted.ts";
 import { workspaceAncestors } from "./support/workspace-ancestors.ts";
+import { withSequence } from "../src/testing.ts";
 
 // Ancestor journals use actual Register, Directory and Destination rules in
 // memory. Proof ports, lane creation, preparations, grants and folded state are
@@ -63,7 +64,7 @@ function fixture(laneNonce = 4) {
   const own = new Map<number, Entry>([[0, born]]);
   const state = new MemoryState();
   state.setScope({ held: [], at: lane, kind: "lane", status: "active", creator: directory, head: { seq: 0, hash: entryHash(born) }, time, genesis: { hash: entryHash(born), source: born.input.type === "genesis" ? born.input.source : null, n: 0 } });
-  const given: OutsideGiven = { localSequence: () => local, definition: () => definition, state, scope: () => state.scope(), own: seq => { const entry = own.get(seq); return entry ? { entry, hash: entryHash(entry) } : null; },
+  const given: OutsideGiven = { localSequence: () => local, definition: () => definition, state, scope: () => state.scope(), own: withSequence((seq: number) => { const entry = own.get(seq); return entry ? { entry, hash: entryHash(entry) } : null; }, local),
     genesis: () => born.input.type === "genesis" ? born.input : null, retained: () => null, clock: { read: () => now }, random: { bytes: n => new Uint8Array(n) } };
   return { state, given, sources, repository, register, born, lane, own, sealed, now: () => now, clock: (value: string) => { now = value; } };
 }

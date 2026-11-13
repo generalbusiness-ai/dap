@@ -9,7 +9,7 @@ import { ZERO_ID } from "@generalbusiness/dap-git";
 import { decodePack, type DecodedObject } from "@generalbusiness/dap-git/http-read";
 import { SqliteStore, mintSession, readerOf, sessionsOf } from "../src/index.ts";
 import { gitHubOutside, type GitHubBindings } from "../src/github-wiring.ts";
-import { net } from "../src/testing.ts";
+import { net, storedOwn } from "../src/testing.ts";
 import { soon } from "./net.ts";
 import { Platform, quiet, rita, routed, sam, settle } from "./repository.ts";
 import { reader } from "./fixtures-native.ts";
@@ -216,7 +216,7 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
     expect(outboxItems.ok && outboxItems.value.every((outboxId) => outboxId.acknowledged !== null)).toBe(true);
     const privateState = () => runInDurableObject(G.object, (_instance, state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (closure) => state.storage.transactionSync(closure) });
-      const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: JSON.parse(row.bytes) as Entry, hash: row.hash } : null; };
+      const own = storedOwn(store);
       const receipts = store.all().operations.filter((operation) => operation.kind === "receipt").map((operation) => destinationReceipt(store, own, destinationTarget(store, own, operation)!, "sha1"));
       return {
         receipts,

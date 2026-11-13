@@ -11,8 +11,9 @@
 
 import { CAPABILITIES, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, Capability, CapabilityName, Digest, Entry, FactRef, ObservationRequest, PlatformDefinition, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, isEntryOf } from "@generalbusiness/dap-bytes";
-import type { Capabilities, ContentStates, Delivered, Owners, Recorded, StateView, Steps, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import { admitSequenceGenesis, canonicalize, isEntryOf, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import type { Capabilities, ContentStates, Delivered, Own, Owners, Recorded, StateView, Steps, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import type { Store } from "./store.ts";
 import { ownerReservations, NOTHING } from "@generalbusiness/dap-derive";
 import { observing } from "./authority.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
@@ -231,6 +232,25 @@ export function scriptedSource(fact: FactRef, given: ScriptedSource | undefined,
  * read and nothing about the source.
  */
 export { scriptedSequence, type ScriptedSequence } from "@generalbusiness/dap-derive/scripted";
+
+/**
+ * A store's own entries, with the sequence that its genesis bytes admit
+ * through the real `admitSequenceGenesis`. The sequence is null until the
+ * store holds a genesis.
+ */
+/** A test's own read, with the sequence the test admitted, or null where it admitted none. */
+export function withSequence<T extends (seq: number) => ReturnType<Own>>(read: T, sequence: CheckedSequence | null): T & { sequence(): CheckedSequence | null } {
+  return Object.assign(read, { sequence: () => sequence });
+}
+
+export function storedOwn(store: Store): Own {
+  const at = store.scope()?.at, genesis = store.stored(0);
+  const sequence = at && genesis ? admitSequenceGenesis(genesis.bytes, at, PROPOSED_BOUNDS.entryBytes) : null;
+  return Object.assign((seq: number) => {
+    const row = store.stored(seq);
+    return row ? { entry: JSON.parse(row.bytes) as Entry, hash: row.hash } : null;
+  }, { sequence: () => sequence });
+}
 
 /**
  * What a scripted resolver reads for an entry of a fixture ledger that a

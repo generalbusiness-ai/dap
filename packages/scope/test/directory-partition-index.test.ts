@@ -5,6 +5,7 @@ import { applyEntry, PROFILES, validateDefinition, type RuleGiven } from "@gener
 import { directoryPartition1, directoryPartitionRules1, partitionGeneration, partitionLane, partitionNumber, PARTITION_COHORT } from "../../platform/src/directory-partitions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { create } from "./fixtures-native.ts";
+import { withSequence } from "../src/testing.ts";
 
 // Actual Durable Object SQLite and production lookup code. Item/index rows
 // are explicit storage fixtures; no new factory or Authority path ran here.
@@ -47,7 +48,7 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     const source = { ...JSON.parse(store.stored(0)!.bytes) as Entry, genesis: laneAt.genesis, seq: 9, time: "2099-01-01T00:00:01Z" } as unknown as Entry;
     const from = factRefOf(source, laneAt);
     const input = { type: "delivery" as const, from, n: 0, message: { class: "advisory" as const, type: "index" as const, body: { title: "Updated by point lookup" } } };
-    const given: RuleGiven = { state: counted, input, time: source.time, uses: [{ fact: from, entry: source, under: "issue" }], own: () => null,
+    const given: RuleGiven = { state: counted, input, time: source.time, uses: [{ fact: from, entry: source, under: "issue" }], own: withSequence(() => null, null),
       resolved: { at: store.scope()!.at, self: store.scope()!.head.seq + 1, fields: { title: "Updated by point lookup" }, subjects: new Map(), signer: null, bounds: PROPOSED_BOUNDS },
       observed: () => null, value: () => undefined, placed: () => undefined };
     const ready = directoryPartitionRules1["index-ready"]!, row = directoryPartitionRules1["index-row"]!, numbered = directoryPartitionRules1["index-number"]!;

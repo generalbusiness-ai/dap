@@ -16,6 +16,7 @@ import type { OutsideGiven } from "../src/object.ts";
 import type { RulesTreeObjects } from "../src/rules-tree-provider.ts";
 import type { EffectAnswer, EffectRequest } from "../src/operations.ts";
 import { create } from "./fixtures-native.ts";
+import { withSequence } from "../src/testing.ts";
 
 /** STAND-IN: provider replies and object reads are scripts. No host or transport runs. */
 class Provider implements DestinationProvider {
@@ -303,7 +304,7 @@ describe("destination outside adapter; scripted host, platform judgments in memo
       const given: OutsideGiven = { ...f.given, state: view,
         scope: () => ({ ...f.given.scope()!, status: "active", head: currentHead }),
         genesis: () => ({ ...genesis, seed: { ...genesis.seed, definition: owner } }),
-        own: seq => seq === entry.seq ? origin : f.given.own(seq),
+        own: withSequence((seq: number) => seq === entry.seq ? origin : f.given.own(seq), f.given.own.sequence()),
         retained: (kind, digest, domain) => kind === "value" && digest === proposal.digest && domain === RULES_POLICY_VALUE_V11.domain
           ? { kind: "value", digest, domain, bytes: policyBytes } : null,
       };

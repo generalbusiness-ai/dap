@@ -11,6 +11,7 @@ import { outsideOf } from "../src/worker.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import { NO_OUTSIDE, type EffectRequest } from "../src/operations.ts";
 import { create } from "./fixtures-native.ts";
+import { withSequence } from "../src/testing.ts";
 
 const ACCOUNT = { id: 285042784, login: "generalbusiness-ai", type: "Organization" } as const;
 const CONFIG = { issuer: "Iv1.scripted", installationId: 99, account: ACCOUNT, maxBytes: 1024 * 1024, privateRepositories: true, publicReads: false, credentialIdentity: "adapter-attempt" };
@@ -119,7 +120,7 @@ function destinationGiven(register: Ledger, creator: ScopeRef, definition: Platf
   state.setScope({ ...register.state.scope()!, at, kind: "destination", creator, head: { seq: 0, hash }, genesis: { hash, source: null, n: null } });
   state.putItem({ id: 0, type: "branch", state: "empty", revision: 0, opened: hash, parties: {}, attributed: [], refs: { directory: creator as unknown as FieldValue, claim: claim as unknown as FieldValue }, values: { repository: register.item(1).values["repository"]!, name: "main" } });
   return { localSequence: () => null,
-    state, own: (seq) => seq === 0 ? { entry, hash } : null,
+    state, own: withSequence((seq: number) => seq === 0 ? { entry, hash } : null, null),
     retained: (kind, digest) => kind === "entry" && digest === content ? { kind, digest, bytes, under: "platform:register" } : null,
     scope: () => state.scope(), genesis: () => entry.input.type === "genesis" ? entry.input : null,
     clock: { read: () => register.now }, random: { bytes: (length) => new Uint8Array(length) },
