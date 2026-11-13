@@ -37,6 +37,7 @@ function projected(s: Ledger) {
 // A STAND-IN for a complete authenticated membership summary, not a native authority observation.
 const roster = (role: "member" | "admin"): Summary => ({
   scope: keys.rita.member.membership,
+  definition: "platform:membership@13",
   items: [
     { id: 0, type: "roster", state: "open", values: { memberActions: ["lending.member"], adminActions: ["lending.member", "lending.staff"] } },
     { id: 1, type: "member", state: "active", values: { handle: "@rita", role, kind: "person" }, parties: { member: keys.rita.member }, refs: {} },
@@ -78,6 +79,7 @@ test("the view lists every thing in order, live from the summary and gone from t
   expect(memberForKey(contradictory, keys.rita.key)).toBeNull();
   const ambiguous = { ...original, items: [...original.items, structuredClone(original.items[2]!)] };
   expect(memberForKey(ambiguous, keys.rita.key)).toBeNull();
+  expect(memberForKey({ ...original, definition: "platform:directory@3" }, keys.rita.key)).toBeNull();
   const unknown = [null, membershipActions(roster("admin"), keys.una.member, keys.una.key)];
   expect(unknown).toEqual([null, null]);
   for (const state of ["available", "lent"] as const) {

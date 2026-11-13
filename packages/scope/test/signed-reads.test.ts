@@ -135,7 +135,7 @@ describe("signed reads on real registers (the planner's decisions 61cc5e50, c649
     expect([(await get(owner, R.name)).status, (await get(owner, `${R.name}/history`)).status]).toEqual([403, 403]);
     // The recent install signer reads the whole register, including another key's claim.
     const summary = await get(owner, R.name, await signed(paul, R.name, "summary", "summary"));
-    expect([summary.status, (summary.body.value as { scope: { kind: string } }).scope.kind]).toEqual([200, "register"]);
+    expect([summary.status, (summary.body.value as { definition: string }).definition]).toEqual([200, expect.stringMatching(/^platform:register@\d+$/)]);
     expect(metrics.some(p => p.blobs[0] === "signed-read" && p.blobs[3] === "summary" && p.blobs[4] === "ok")).toBe(true);
     const mine = await get(owner, `${R.name}/history`, await signed(paul, R.name, "history", "0"));
     expect([mine.status, seqs(mine.body)]).toEqual([200, [0, 1]]);

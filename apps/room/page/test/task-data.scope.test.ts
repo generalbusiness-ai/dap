@@ -55,7 +55,7 @@ async function completeIssue(d: Demo, room: Room, fact: FactRef, kind: "open-iss
   expect(row, "Accepted opening must retain its native directory lane row").toBeDefined();
   expect(["refused", "conflict"]).not.toContain(row?.state);
   expect(row?.refs["scope"], "Parent must have confirmed its actual child after scheduler idle").toEqual(childRead.value.scope);
-  expect([childRead.value.scope.scope, childRead.value.scope.kind, childRead.value.definition]).toEqual([child, "lane", definition]);
+  expect([childRead.value.scope.scope, childRead.value.definition]).toEqual([child, definition]);
   return child;
 }
 

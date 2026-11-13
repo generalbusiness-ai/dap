@@ -113,7 +113,7 @@ export function actsFor(thing: ShownThing): LendingAct[] {
 /** This key's active member in an authenticated membership summary.
  * The invitation's proposed handle supplies no identity evidence. */
 export function memberForKey(summary: Summary, key: KeyId): MemberRef | null {
-  if (summary.scope.kind !== "membership") return null;
+  if (!/^platform:membership@\d+$/.test(summary.definition)) return null;
   const keys = summary.items.filter(item => item.type === "key" && item.state === "active" && item.values["id"] === key);
   if (keys.length !== 1) return null;
   const seats = summary.items.filter(item => item.type === "member" && item.state === "active" && item.id === keys[0]!.refs["member"]);
