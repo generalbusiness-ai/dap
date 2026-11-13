@@ -5,7 +5,7 @@ import { b64url, canonicalize, isKeyId, isRecord, isScopeRef, keyIdOfSecret, unb
 import { isCreationOffer, type CreationOffer, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { pageKeyStore } from "./browser-key-store.ts";
 import { custodyKind } from "./custody.ts";
-import { claimRoom, claimStatus, migrateRecoveryCustody, type ClaimOptions, type ClaimRegister, type ClaimStorage, type ClaimedRoom } from "./claim.ts";
+import { claimRoom, claimStatus, type ClaimOptions, type ClaimRegister, type ClaimStorage, type ClaimedRoom } from "./claim.ts";
 
 interface KeptStart { v: 1 | 2; origin: string; secret?: string; publicKey?: KeyId; configured: ClaimRegister; label: string; handle: "@founder"; operation?: string; recoverySaved?: true }
 export interface StartStatus { key: KeyId; configured: ClaimRegister; label: string; handle: "@founder"; state: "prepared" | "pending" | "complete" | "failed"; operation?: string; recoverySaved?: true }
@@ -70,9 +70,7 @@ export async function migrateOriginalStart(origin: string, storage: ClaimStorage
   if (!locks) throw unavailable();
   await locks.request(`artroom-page-start:v2:${origin}`, async () => {
     const row = read(origin, storage); if (!row) return;
-    const saved = await migrateStart(row, storage, { mode: "check", keys });
-    const signer = await keys.load(publicOf(saved, storage).key);
-    await migrateRecoveryCustody({ service: origin, signer }, saved.configured, storage, keys);
+    await migrateStart(row, storage, { mode: "check", keys });
   });
 }
 export async function startRoom(origin: string, storage: ClaimStorage, options: StartOptions): Promise<StartedRoom> {

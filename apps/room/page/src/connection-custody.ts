@@ -34,7 +34,7 @@ function decode(bytes: string, binding: string): Journal {
   return journal as unknown as Journal;
 }
 const custody = custodyKind<Journal, ConnectionStatus>({
-  kind: "connection", prefix: "artroom-page-connections", most: MOST,
+  kind: "connection", prefix: "dap-page-connections-2", most: MOST,
   unavailable, full: () => new Error("Private connection custody is full. Originals are retained; nothing further was submitted."),
   bindingOf: journal => journal.binding, decode, readBack: "clone",
   publicOf: journal => {
@@ -65,7 +65,7 @@ export async function connectInvitation(origin: string, storage: ClaimStorage, e
   const locks = options.locks ?? browser.navigator?.locks;
   if (!locks) throw unavailable();
   const binding = bindingOf(origin, expected);
-  return locks.request(`artroom-page-connections:${binding}`, () => withCreator(origin, storage, expected, options, async (room, base) => {
+  return locks.request(`dap-page-connections-2:${binding}`, () => withCreator(origin, storage, expected, options, async (room, base) => {
     let journal = read(storage, binding) ?? { v: 1 as const, binding, active: "", rows: {} };
     const active = journal.active ? journal.rows[journal.active] : undefined;
     for (const stored of Object.values(journal.rows)) {

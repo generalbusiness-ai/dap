@@ -80,7 +80,7 @@ test("scripted retained Start keeps its founder key before the CLI boundary; rel
   // claim. The separate descriptor still carries its exact operation.
   const descriptorBeforeLoss = f.values.get(`artroom-page-start:v2:${origin}`)!;
   expect((JSON.parse(descriptorBeforeLoss) as { operation: string }).operation).toBe(status.operation);
-  for (const name of [...f.values.keys()]) if (name.startsWith("artroom-page-claim:")) f.values.delete(name);
+  for (const name of [...f.values.keys()]) if (name.startsWith("dap-page-claim-2:")) f.values.delete(name);
   const uuid = vi.spyOn(crypto, "randomUUID"), randomness = vi.spyOn(crypto, "getRandomValues");
   try {
     expect(() => originalStart(origin, reload)).toThrow("private Start");

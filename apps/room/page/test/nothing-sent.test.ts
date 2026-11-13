@@ -14,7 +14,7 @@ const session = { service: origin, signer: secretSigner(secret) };
 const register = { kind: "register" as const, inc: newIncarnation(new Uint8Array(16).fill(2)), scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@8", creator: null, cause: textDigest("TEST nothing sent"), ordinal: 0 }) };
 const configured: ClaimRegister = { register, definition: "platform:register@8" };
 const binding = canonicalize([origin, register, "platform:register@8", keyIdOfSecret(secret)]);
-const name = `artroom-page-claim:${binding}`;
+const name = `dap-page-claim-2:${binding}`;
 const operation = "60000000-0000-4000-8000-000000000001";
 const locks: ClaimLocks = { request: async (_name, run) => run() };
 const record = canonicalize({ v: 1, binding, label: "Room", config: { v: 1, service: origin, key: "browser", register } });

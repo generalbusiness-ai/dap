@@ -66,7 +66,7 @@ function decode(raw: string, binding: string): Journal {
   }
   return journal;
 }
-const custody = custodyKind<Journal, OAuthOriginal>({ kind: "connection", prefix: "artroom-oauth-connection-1", most: 512 * 1024, unavailable, bindingOf: row => row.binding, decode, publicOf: row => publicRow(row.rows[row.active]!), readBack: "clone" });
+const custody = custodyKind<Journal, OAuthOriginal>({ kind: "connection", prefix: "dap-oauth-connection-2", most: 512 * 1024, unavailable, bindingOf: row => row.binding, decode, publicOf: row => publicRow(row.rows[row.active]!), readBack: "clone" });
 export function originalOAuthConnection(selection: OAuthSelection, storage: CustodyStorage, authorization?: OAuthAuthorization): OAuthOriginal | null {
   currentOAuth(selection);
   const journal = custody.read(selection.binding, storage); if (!journal) return null;
