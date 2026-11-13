@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c942087fbf65627f38526870c94b29c6229f83c4","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/install-without-mcp.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c9757acb5077149850a0728889becb576fe2e99d","text":"Merge retired a covered predecessor; the successor is at packages/client/test/signed-read.test.ts."}
