@@ -350,11 +350,12 @@ test("two index rows of one lane, in either order, give the same row; a concern'
   // next number: the lane's own `number` is not taken. The repeat is the same advisory, and opens nothing.
   const { d, index } = a;
   const concernSequence = fixtureScope("lane", 70), concern = concernSequence.at;
-  const first: Row = [0, t(30), { kind: "issue", author: una.member, title: "A concern", state: "open", number: 99 }];
+  // A later entry of the concern sends the row: a scripted entry at position 0 would have to be the concern's genesis.
+  const first: Row = [1, t(30), { kind: "issue", author: una.member, title: "A concern", state: "open", number: 99 }];
   expect(index(concernSequence, ...first).result).toBe("write");
   const opened = d.head.seq;
   expect([d.item(opened).type, d.item(opened).refs["scope"], d.item(opened).parties["author"], d.item(opened).values, d.item(0).values["lastNumber"]])
-    .toMatchObject(["lane", concern, una.member, { number: 2, kind: "issue", title: "A concern", state: "open", first: t(30), latest: t(30), seen: { title: 0, state: 0 } }, 2]);
+    .toMatchObject(["lane", concern, una.member, { number: 2, kind: "issue", title: "A concern", state: "open", first: t(30), latest: t(30), seen: { title: 1, state: 1 } }, 2]);
   expect([index(concernSequence, ...first), d.head.seq]).toEqual([{ result: "repeat", seq: opened }, opened]);
   // A later row of the concern changes its row, and takes no number.
   index(concernSequence, 4, t(40), { title: "Renamed", kind: "pr" });
