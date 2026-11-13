@@ -143,7 +143,7 @@ async function recovering(): Promise<void> {
     const entries = await new Platform(original.register).entries();
     const genesis = entries[0]!;
     expect([entries.length, genesis.input.type === "genesis" && canonicalize(genesis.input["founding"])]).toEqual([1, canonicalize(original["founding"])]);
-    expect(installed.plan!.acknowledged!.receipt.fact).toEqual({ at: genesis.at, seq: 0, hash: entryHash(genesis) });
+    expect(installed.plan!.acknowledged!.receipt.fact).toEqual({ at: { scope: original.register, genesis: entryHash(genesis) }, seq: 0, hash: entryHash(genesis) });
     expect(timeMs(net.clock.now)! - timeMs(genesis.time)!).toBeGreaterThan(900_000);
   }
   const unsent = scenario("unsent");

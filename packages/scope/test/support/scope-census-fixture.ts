@@ -108,7 +108,7 @@ export async function scopeCensusFixture(options: { members?: boolean; registerO
     };
     return { life, ...first, other, register, root, membership, rows, nodes, id, stub, index, settings, environment,
       service, fetch, request, reading, operator, member, memberSession,
-      config: { v: 1 as const, service, key: "TEST-census-operator", register, repository: {
+      config: { v: 2 as const, service, key: "TEST-census-operator", register, repository: {
         directory: root, membership, rules: (await life.wait(() => first.children[1]!.at())).scope,
         destination: (await life.wait(() => first.children[2]!.at())).scope,
       } },
