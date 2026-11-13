@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { parseAst } from "rolldown/parseAst";
 import { ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import { remoteCardOrigins } from "../packages/mcp/src/views/remote-origins.ts";
+import { isRetiredStoreStop } from "../packages/mcp/src/hosted-store-stop.ts";
 import { configuredMcpResources, hostedMcpResources, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, mcpUnauthorized, mcpChallengeResponse } from "../packages/mcp/src/oauth-resource.ts";
 
 import { digestBytes, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
@@ -219,7 +220,7 @@ export async function scopeRows(text, snapshotDispatches = []) {
 async function hostedInventory(source, settings, oauthSource, consentSource) {
   const { hostedMcpTools } = load(readSource("packages/mcp/src/hosted-tools.ts"), ["GENERIC_TOOL_NAMES", "HOSTED_TOOL_OMISSIONS", "hostedMcpTools"], { remoteCardOrigins, configuredMcpResources });
   const { readPublicOrigin } = load(readSource("packages/scope/src/public-origin.ts"), ["PUBLIC_ORIGIN_MAX_BYTES", "readPublicOrigin"], { URL });
-  const wire = load(oauthSource, ["OAUTH_METADATA_PATH", "OAUTH_CLIENT_REGISTRY", "oauthAnswer", "error", "resolvedOAuthClient", "oauthRoute"], { oauthAuthorization, OAuthError, OAUTH_CLIENT_BYTES, URL, URLSearchParams, Response, TextDecoder });
+  const wire = load(oauthSource, ["OAUTH_METADATA_PATH", "OAUTH_CLIENT_REGISTRY", "oauthAnswer", "error", "resolvedOAuthClient", "oauthRoute"], { oauthAuthorization, OAuthError, OAUTH_CLIENT_BYTES, URL, URLSearchParams, Response, TextDecoder, isRetiredStoreStop });
   const consent = load(consentSource, ["POLICY", "oauthPage"], { hostedMcpTools, hostedMcpResources, oauthPolicy, readPublicOrigin, OAUTH_HTML: "TEST consent HTML", OAUTH_JS: "TEST consent script", URL, Response });
   const text = declaration(source, "mcpRoute"), agent = "a".repeat(64), paths = strings(text, value => value.startsWith("/") && !value.endsWith("/"));
   paths.push(RESOURCE_METADATA_PATH, wire.OAUTH_METADATA_PATH, ...strings(declaration(oauthSource, "oauthRoute"), value => value.startsWith("/oauth/")), ...strings(declaration(consentSource, "oauthPage"), value => value.startsWith("/oauth/")));
@@ -242,6 +243,10 @@ async function hostedInventory(source, settings, oauthSource, consentSource) {
   const { mcpRoute } = load(source, ["mcpRoute", "boundedBytes"], {
     admittedRequestUrl: () => true, URL, Response, Uint8Array, TextDecoder, parseStrict, isObject: value => value !== null && typeof value === "object" && !Array.isArray(value),
     CONTROL_BODY_BYTES: 64 * 1024, scopeIndex, hostedMcpTools, readPublicOrigin, oauthPolicy, OAuthError, digestBytes, ...wire,
+    // The actual closed-stop predicate: the route model passes no retired-store stop.
+    isRetiredStoreStop,
+    // Store-selection stand-in: the model names no real Membership, and the name selects no authority.
+    hostedRegistryName: () => "hosted-registry-2:witness",
     // Explicit signature stand-in for structural dispatch, never caller proof.
     verifyControl: () => true,
     hostedMcpResources, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, mcpUnauthorized, mcpChallengeResponse,
