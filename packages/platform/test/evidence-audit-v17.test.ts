@@ -50,7 +50,7 @@ function fixture(marked: number | null = null) {
   const own = Object.assign((seq: number) => seq === 20 ? { entry: admission, hash: entryHash(admission) } : seq === 30 ? { entry: progress, hash: entryHash(progress) } : null,
     { sequence: () => atSequence });
   const state = { item: (id: number) => id === 20 ? item : null, lookup: (type: string, index: string, key: string) =>
-    type === "evidence-job" && index === "jobKey" && key === canonicalize(evidenceJobKeyV17(record.job)) ? [20] : [], operation: () => operation } as unknown as StateView;
+    type === "evidence-job" && index === "jobKey" && key === canonicalize(evidenceJobKeyV17(record.job)) ? [20] : [], operation: () => operation, scope: () => ({ at }) } as unknown as StateView;
   const given = { state, own, resolved: { at, self: 30, bounds: PROPOSED_BOUNDS } } as unknown as RuleGiven;
   return { record, item, operation, admission, progress, own, state, given };
 }

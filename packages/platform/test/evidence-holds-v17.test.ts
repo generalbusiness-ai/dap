@@ -71,7 +71,7 @@ test("a truthful native timeout cause and unknown creation retain one original i
   if (!started.ok) throw Error("Fixture creation refused");
   expect(finishEvidenceIncidentV17(started.incident, creation, { state: "unknown" })).toEqual({ ok: true, incident: started.incident });
   expect(startEvidenceIncidentV17(started.incident, { ...creation, seq: 81 })).toEqual({ ok: false, reason: "incident-conflict" });
-  const child = { ...otherLane, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" as const };
+  const child = { scope: otherLane.scope, genesis: d("a") };
   const created = finishEvidenceIncidentV17(started.incident, creation, { state: "created", child });
   expect(created.ok && created.incident.state).toBe("created");
   expect(decideEvidenceIncidentV17(started.incident, { ...cause, kind: "failed", result: fact(99) })).toEqual({ ok: false, reason: "incident-conflict" });

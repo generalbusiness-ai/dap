@@ -349,12 +349,12 @@ test("a rules scope answers an observation from its folded state at its head: th
   expect([said(publish(r, [check(lint)], [standing("@check", 7)])), said(r.act(rita, "retire-definition", { on: ticketItem, expected: { on: r.item(ticketItem).revision } }))]).toEqual([["refused", "guard-failed", "configuration-unknown"], WRITTEN]);
   expect([second > first, revisionOf(r.state), answer(r, { of: r.at, asked: "definitions" })]).toMatchObject([true, second, { revision: second, content: { active: [{ name: "desk" }] } }]);
 
-  // No answer: a provisional rules scope (section 12.1); a request that states another incarnation, or another kind; one for a key
+  // No answer: a provisional rules scope (section 12.1); a request that states another genesis, or by scope ID another kind; one for a key
   // or for a member; and a state that holds no rules.
   const provisional = new Rulebook(false);
   const reborn = { ...r.at, genesis: textDigest("TEST genesis 77") };
   expect([
-    answer(provisional, { of: provisional.at, asked: "rules" }), answer(r, { of: reborn, asked: "rules" }), answer(r, { of: { ...r.at, kind: "membership" }, asked: "rules" }),
+    answer(provisional, { of: provisional.at, asked: "rules" }), answer(r, { of: reborn, asked: "rules" }), answer(r, { of: { scope: r.at.scope, kind: "membership" }, asked: "rules" }),
     answer(r, { of: r.at, key: rita.key }), answer(r, { of: r.at, member: "@check" }), answer(r.registrar as never, { of: r.registrar.at, asked: "rules" }), revisionOf(r.registrar.state),
   ]).toEqual([null, null, null, null, null, null, null]);
   // What an entry may retain: the answer with the asking scope's `at` is an observation of the rules, by the record check.

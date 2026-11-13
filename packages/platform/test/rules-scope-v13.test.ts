@@ -11,11 +11,11 @@ import { bodyStructure } from "../../derive/src/program/structure.ts";
 
 // Folded state and membership observations are explicit stand-ins. No certificate or native turn runs here.
 const rules: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
-const membership: ScopeRef = { scope: `sc_${"b".repeat(52)}`, genesis: `sha256:${"b".repeat(64)}` };
+const membership: ScopeRef = { scope: `sc_${"b".repeat(51)}a`, genesis: `sha256:${"b".repeat(64)}` };
 const checker: MemberRef = { membership, member: "@checker" };
 const digest = `sha256:${"1".repeat(64)}` as Digest;
 const item = { id: 0, refs: {}, values: { configured: false, membership: membership.scope, approvals: 1, ownerMayReview: false } };
-const state = { page: () => ({ items: [item] }), geneses: () => [membership.genesis], scope: () => ({ status: "active", at: rules, head: { seq: 0, hash: digest } }) } as unknown as StateView;
+const state = { page: () => ({ items: [item] }), geneses: () => [membership.genesis], scope: () => ({ status: "active", at: rules, kind: "rules", head: { seq: 0, hash: digest } }) } as unknown as StateView;
 
 test("a native service-generation effect holds its real local position, without fabricating a self fact", () => {
   const row: Item = { ...item, type: "rules", state: "current", revision: 0, opened: digest, parties: {}, attributed: [] };
@@ -85,7 +85,7 @@ test("Q13 observes scoped service metadata under revision21 and preserves earlie
   expect(parsed.ok).toBe(true);
   if (!parsed.ok) throw Error("Expected individually bounded policy");
   const fact = { at: rules, seq: 1, hash: digest };
-  const huge = { ...state, scope: () => ({ status: "active", at: rules, head: { seq: 8, hash: digest } }),
+  const huge = { ...state, scope: () => ({ status: "active", at: rules, kind: "rules", head: { seq: 8, hash: digest } }),
     page: () => ({ items: [{ ...item, refs: { published: 8, roomServiceChanged: 8 }, values: { ...item.values, configured: true,
       policy: canonicalize(parsed.policy), proposal: parsed.digest, certificate: { request: fact, certificate: { ...fact, seq: 2 }, proof: digest, commit: "a".repeat(40) } } }] }) } as unknown as StateView;
   const oldProjection = { asked: "rules", approvals: policy.approvals, ownerMayReview: policy.ownerMayReview,
@@ -97,7 +97,7 @@ test("Q13 observes scoped service metadata under revision21 and preserves earlie
   else expect(rulesObservedValuesV13(huge, { of: rules, asked: "rules" })).toEqual([]);
   const withdrawn = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, roomService: null, checks: [], labels: [], extents: firstExtentsV13({ approvals: 1, checks: [] }) });
   if (!withdrawn.ok) throw Error("Expected withdrawn policy");
-  const later = { ...state, scope: () => ({ status: "active", at: rules, head: { seq: 10, hash: digest } }),
+  const later = { ...state, scope: () => ({ status: "active", at: rules, kind: "rules", head: { seq: 10, hash: digest } }),
     page: () => ({ items: [{ ...item, refs: { published: 10, roomServiceChanged: 7 }, values: { ...item.values, configured: true,
       policy: canonicalize(withdrawn.policy), proposal: withdrawn.digest, certificate: { request: fact, certificate: { ...fact, seq: 2 }, proof: digest, commit: "a".repeat(40) } } }] }) } as unknown as StateView;
   const observed = rulesAnswerV13(later, { of: rules, asked: "rules" });
