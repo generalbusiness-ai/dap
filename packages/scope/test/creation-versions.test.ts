@@ -117,6 +117,9 @@ type Native = {
   nativeBirth(...args: Parameters<ScopeObject["nativeBirth"]>): Promise<ReturnType<ScopeObject["nativeBirth"]>>;
 };
 const objectOf = (name: string) => env.CREATION_VERSIONS.get(env.CREATION_VERSIONS.idFromName(name));
+/** Restart an object as production does after a fault: abort its instance, keep its storage. */
+const restart = (object: ReturnType<typeof objectOf>) => runInDurableObject(object, (_instance, state) => { state.abort("TEST restart"); })
+  .then(() => { throw new Error("The aborted object answered."); }, (error: unknown) => { if (String(error).includes("The aborted object answered")) throw error; });
 const count = (object: ReturnType<typeof objectOf>) => runInDurableObject(object, (_instance, state) => {
   if (state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='entry'").toArray().length === 0) return 0;
   return state.storage.sql.exec("SELECT seq FROM entry").toArray().length;
@@ -147,7 +150,7 @@ test("actual deployed object defaults reject old new genesis and invalid policy 
           expect(trace.starts.slice(1), "the rolled-back database retries as fresh with one catalog read").toEqual([fresh]);
           expect(await native.create(signed, pin)).toEqual(answer);
           expect(trace.starts.slice(1), "another request does not repeat the fresh format read or setup").toEqual([fresh]);
-          await evictDurableObject(object);
+          await restart(object);
           const restarted = objectOf(name) as unknown as Native;
           expect(await restarted.create(signed, pin)).toEqual(answer);
           const current = { catalogReads: 1, wordReads: 1, formatWrites: 0, atFailure: null, tablesAfterFailure: null };
@@ -161,7 +164,7 @@ test("actual deployed object defaults reject old new genesis and invalid policy 
       }
     } finally {
       if (trace) trace.failAfterWord = false;
-      try { await evictDurableObject(object); }
+      try { await (trace ? restart(object) : evictDurableObject(object)); }
       finally { creationVersionSettings.delete(name); creationFormatStorage.delete(name); }
     }
   }
