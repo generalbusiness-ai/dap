@@ -7,7 +7,7 @@ import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@g
 import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
-import { HOLD, at, definition, create, creation, objectOf, rita, una, vic } from "./fixtures-native.ts";
+import { HOLD, at, definition, create, creation, foreignOf, objectOf, rita, una, vic } from "./fixtures-native.ts";
 import { controls, testAuthority, testPorts } from "../src/testing.ts";
 import { Scope } from "../src/core.ts";
 import type { FreshActAdmissionDecision } from "../src/applications/act-admission.ts";
@@ -346,6 +346,8 @@ test("fresh application admission is rechecked after an async foreign read follo
   const proof = (await peer.did(rita, "remark", { on: 0, fields: { text: "foreign evidence" } })).fact;
   const evidence = (await peer.entries(proof.seq))[0]!;
   const secondProof = (await peer.did(rita, "remark", { on: 0, fields: { text: "second foreign evidence" } })).fact;
+  // The peer's sequence, admitted from its own genesis bytes before any timed read.
+  const peerSequence = (await foreignOf(proof, definition.declared.name))!.sequence;
   const secondEvidence = (await peer.entries(secondProof.seq))[0]!;
   const s = await create({}, {}, under), authority = testAuthority();
   let state: FreshActAdmissionDecision = "allowed", available = true, revokeDuringForeignRead = false;
@@ -370,12 +372,12 @@ test("fresh application admission is rechecked after an async foreign read follo
         if (asked.hash === proof.hash) {
           // Advance synchronously before the parallel map starts its second read.
           vi.advanceTimersByTime(group.firstAdvance);
-          return { fact: proof, entry: evidence, under: definition.declared.name };
+          return { entry: evidence, under: definition.declared.name, sequence: peerSequence };
         }
         if (asked.hash === secondProof.hash) {
           await s.c.gate.pass();
           group.secondReturned();
-          return { fact: secondProof, entry: secondEvidence, under: definition.declared.name };
+          return { entry: secondEvidence, under: definition.declared.name, sequence: peerSequence };
         }
         return null;
       }

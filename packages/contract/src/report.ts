@@ -4,12 +4,13 @@
  * mode, target, coverage and set of trusts.
  */
 
-import type { Digest, FactRef, ScopeRef } from "./scope.ts";
+import type { Digest, FactRef, ScopeKind, ScopeRef } from "./scope.ts";
 
 export interface Report {
   mode: "integrity" | "replay";
   target: FactRef;                          // the head verified through
-  coverage: readonly { scope: ScopeRef; from: number; through: number }[];
+  /** `kind`: the kind that the scope's genesis names. Only a row that covers entry 0 carries it. */
+  coverage: readonly { scope: ScopeRef; kind?: ScopeKind; from: number; through: number }[];
   anchors: readonly FactRef[];              // heads taken on trust, or none
   /** Present when `anchors` holds other rooms' creation results on a shared register: the service's word stands for them, not the caller's. */
   otherRooms?: true;

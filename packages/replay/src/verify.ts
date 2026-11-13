@@ -54,6 +54,9 @@ import { floorOwn } from "./floor.ts";
  * with what was covered. Each is counted as the source's replies arrive,
  * before anything in them is kept.
  */
+/** The kind that a covered sequence's genesis names, as a coverage row states it. A row whose first entry is not a genesis carries none. */
+const genesisKind = (entry: Entry | undefined): { kind?: ScopeKind } => entry?.input.type === "genesis" ? { kind: entry.input.seed.kind } : {};
+
 export interface Limits {
   scopes: number;    // scopes whose history is read
   entries: number;   // entries checked, over all scopes
@@ -818,7 +821,7 @@ class Verifier {
     for (const root of roots) if (root.result !== "not-read") for (const fact of root.missing) missing.set(canonicalize(fact), fact);
     const coverage = [...this.#segments].flatMap(([id, rows]) => {
       const run = this.#runs.get(id)!;
-      return rows.filter(row => row.from < run.sealed.length).map(row => ({ scope: run.at!, ...row, through: Math.min(row.through, run.sealed.length - 1) }));
+      return rows.filter(row => row.from < run.sealed.length).map(row => ({ scope: run.at!, ...(row.from === 0 ? genesisKind(run.sealed[0]?.entry) : {}), ...row, through: Math.min(row.through, run.sealed.length - 1) }));
     });
     const texts = [...this.#sharedTexts].flatMap(([digest, users]) => {
       const origin = this.#textOrigin(digest);
@@ -1059,7 +1062,7 @@ class Verifier {
       mode: this.#mode,
       // Consistent: the head checked through. Otherwise: the head the check was aiming for.
       target: stop || !through ? { at, seq: target.head.seq, hash: target.head.hash } : { at, seq: through.entry.seq, hash: through.hash },
-      coverage: covered.map((run) => ({ scope: run.at!, from: 0, through: run.sealed.length - 1 })),
+      coverage: covered.map((run) => ({ scope: run.at!, ...genesisKind(run.sealed[0]?.entry), from: 0, through: run.sealed.length - 1 })),
       anchors: this.#anchored,
       ...(this.#trusts.has("otherRooms") ? { otherRooms: true as const } : {}),
       dependencies: { verified: proven.filter((how) => how === "replayed").length, anchored: proven.filter((how) => how === "anchored").length, missing: stop?.missing ? [stop.missing] : [] },

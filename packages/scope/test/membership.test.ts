@@ -224,7 +224,7 @@ describe("authority on real scopes, under the production wiring (authority note,
     // The inbox's replay covers membership as far as the highest head that an entry observed, and what membership used that far: the
     // office, and the genesis of rita's inbox, whose result membership recorded.
     const observed = ((await unasInbox.entries())[third]!.input as Extract<Entry["input"], { type: "act" }>).authority[0]!.fresh.observation.head.seq;
-    expect(report.coverage.map((covered) => [covered.scope.kind, covered.through])).toEqual([["inbox", third], ["membership", observed], ["directory", 1], ["inbox", 0]]);
+    expect(report.coverage.map((covered) => [covered.kind, covered.through])).toEqual([["inbox", third], ["membership", observed], ["directory", 1], ["inbox", 0]]);
     // What stays on trust: that each read was made as recorded, and that the rules which ran are those of each name and version. The
     // label of a stand-in's grant is not there: no grant was taken as recorded.
     expect([report.trusts.includes(TRUSTS.observed), report.trusts.includes(TRUSTS.authority), report.trusts.filter((trust) => trust.startsWith("platform-code"))])

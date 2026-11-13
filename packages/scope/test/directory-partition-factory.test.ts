@@ -111,7 +111,7 @@ test("native root creates its partition with exact confirmed refs and real membe
     expect(inboxEntry?.input.type === "genesis" ? inboxEntry.input.message?.body : null).toMatchObject({ membership: refs.membership, fields: { membership: refs.membership } });
     expect(inboxPolicy?.policy).toMatchObject({ mode: "partition-v1", lineage: { at: inboxAt, root: refs.root } });
     expect(inboxPolicy?.proof.calls).toBe(4);
-    const frames = proof!.frames.map(frame => ({ fact: frame.fact, entry: frame.entry, sequence: frame.sequence, under: isPlatformDefinition(frame.named) ? platformName(frame.named) : frame.declarationName }));
+    const frames = proof!.frames.map(frame => ({ fact: frame.fact, entry: frame.entry, bytes: canonicalize(frame.entry), sequence: frame.sequence, under: isPlatformDefinition(frame.named) ? platformName(frame.named) : frame.declarationName }));
     expect(partitionApplicationPublicationOrigin(factRefOf(genesis, applicationAt), refs.root, refs.destination, frames)).toBeNull();
     expect(partitionPublicationOrigin(factRefOf(genesis, applicationAt), refs.root, refs.destination, "application", proof!.frames)).toBe(true);
     expect(applicationPublicationOrigin(factRefOf(genesis, applicationAt), refs.root, refs.destination, frames)).toBe(false);

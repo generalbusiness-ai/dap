@@ -159,7 +159,7 @@ async function roomScopes(ctx: Context, config: Config, budget: Verification): P
 /** Disclose the shared proof once, including the actual root of each prefix. */
 function sharedProofLines(proof: FinishedRoom): string[] {
   const lines = [...proof.otherRooms && !proof.dependencies.missing.length ? [otherRoomsLine(proof.anchors.length)] : [], `Shared room proof: ${proof.roots.length} roots; ${proof.dependencies.verified} verified dependencies; ${proof.dependencies.anchored} anchored dependencies; ${proof.dependencies.missing.length} missing dependencies.`];
-  for (const row of proof.coverage) lines.push(`Shared coverage: ${row.scope.scope}, genesis ${row.scope.genesis}, entries ${row.from} to ${row.through}; proving root ${row.root}.`);
+  for (const row of proof.coverage) lines.push(`Shared coverage: ${row.scope.scope}, genesis ${row.scope.genesis}${row.kind ? `, kind ${row.kind}` : ""}, entries ${row.from} to ${row.through}; proving root ${row.root}.`);
   for (const row of proof.texts) lines.push(`Shared checked text: ${row.digest}; source ${row.source.scope}, genesis ${row.source.genesis}; proving root ${row.root}; consumers ${row.consumers.join(", ") || "none"}.`);
   for (const trust of proof.trusts) lines.push(`Shared trust: ${trust}.`);
   for (const fact of proof.anchors) lines.push(`Shared anchor: ${canonicalize(fact)}.`);

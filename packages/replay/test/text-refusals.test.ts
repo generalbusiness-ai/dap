@@ -1,5 +1,6 @@
 import { earlierFieldProof } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { expect, test } from "vitest";
+import { coverageRow } from "./coverage-rows.ts";
 import { canonicalize, factRefOf, textDigest } from "@generalbusiness/dap-bytes";
 import { judgeDelivery } from "@generalbusiness/dap-derive";
 import { arriving, created, forged, keys, notesDefinition, on, otherLane, variant } from "@generalbusiness/dap-derive/testing";
@@ -31,5 +32,5 @@ test("an earlier successful field check rules out a later fabricated size refusa
   };
   const result = await verify(new MemorySource([served]), { mode: "replay", scope: scope.at.scope, grants: "as-recorded", anchors: [{ scope: fact.at.scope, seq: fact.seq, hash: fact.hash }] });
   expect([result.report.result, result.report.at?.seq, result.why]).toEqual(["mismatch", deciding, "the recorded input, with its decision, is not the one derived again"]);
-  expect(result.report.coverage).toEqual([{ scope: scope.at, from: 0, through: deciding - 1 }]);
+  expect(result.report.coverage).toEqual([coverageRow(scope.at, scope.entries[0]?.entry, deciding - 1)]);
 });

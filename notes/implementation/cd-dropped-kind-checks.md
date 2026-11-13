@@ -227,12 +227,10 @@ A ruling decides what replaces each one.
 
 | File | Assertion | Question |
 |---|---|---|
-| `packages/replay/test/verify.test.ts` | coverage rows state each scope's kind | what replaces the kind column of the coverage |
 | `packages/replay/test/verify.test.ts` | a reference to another genesis fails with `wrong incarnation` | which reason the replay now gives |
 | `packages/checkers/test/reservation-origin.test.ts`, `reservation-record.test.ts` | the frozen `fixtures/reservation-record.json` names `at` and `inc` in its entries | a new recording from the Scope recorder |
 | `packages/mcp/test/room.scope.test.ts` | the hold `task` field value is the lane reference with `kind: "task"` | what form that field value takes |
 | `packages/cli/test/scope-index-applications.test.ts` | the recorded `fixtures/application-release-listing.json` names `inc` and `kind` in its references | a new recording of the listing |
-| `packages/cli/test/verify.test.ts` | the shared coverage line states `kind register` | what replaces the kind column of the coverage |
 
 ## Browser store list (rulings e7787de0 items 5 and 6, 4393b366 P1)
 
@@ -287,3 +285,11 @@ The grow examples check each entry with `isEntryBodyOf` against the room's
 sequence reference. The simulator host reads the room kind `lane` from the
 room genesis seed, not from the binding. The lending `memberForKey` check
 `summary.scope.kind !== "membership"` is HELD for a planner ruling.
+
+## Coverage kind (ruling 4393b366 T3(a))
+
+A report coverage row keeps the kind as its own member beside the reference.
+The replay reads it from the genesis of the covered sequence. Only a row that
+covers entry 0 carries a kind. The `dap verify` shared coverage line states
+`kind register` again. The replay tests build their expected rows with
+`coverageRow`, which reads the kind from the same genesis.

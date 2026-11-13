@@ -6,7 +6,7 @@ import { archiveInventoryChange, archiveLeafData, archiveInventoryParentChange, 
  * No inventory result proves authority, replay, ancestry or host custody. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Digest, Entry, Head, Input, Seed} from "@generalbusiness/dap-contract";
+import type { Digest, Entry, GenesisEntry, Head, Input, Seed} from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { OperationRules, ValidDefinition } from "@generalbusiness/dap-derive";
 import { MemorySource, verify } from "@generalbusiness/dap-replay";
@@ -432,10 +432,11 @@ test("archive-only closure requires a missing unused child; later bytes complete
  * Native SQLite, canonical/hash binding and inventory reads remain real. */
 async function appendInputs(lane: Lane, inputs: readonly Input[], prepared?: Digest): Promise<Head> {
   return lane.inside(state => {
-    const genesis = JSON.parse(state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM entry WHERE seq = 0").one().bytes) as Entry;
+    const genesis = JSON.parse(state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM entry WHERE seq = 0").one().bytes) as GenesisEntry;
     let head: Head = lane.genesis.fact;
     for (const [index, input] of inputs.entries()) {
-      const entry: Entry = { ...genesis, seq: index + 1, prev: head.hash, input, effects: [], sends: [], uses: [], prepared: prepared && index === 0 ? [{ rule: "always", input: prepared, result: true }] : [] };
+      if (input.type === "genesis") throw new Error("a later entry cannot hold a genesis input");
+      const entry: Entry = { ...genesis, genesis: lane.at.genesis, seq: index + 1, prev: head.hash, input, effects: [], sends: [], uses: [], prepared: prepared && index === 0 ? [{ rule: "always", input: prepared, result: true }] : [] };
       const bytes = canonicalize(entry), hash = entryHash(entry);
       state.storage.sql.exec("INSERT INTO entry (seq, hash, time, bytes, size) VALUES (?, ?, ?, ?, ?)", entry.seq, hash, entry.time, bytes, utf8(bytes).length);
       head = { seq: entry.seq, hash };

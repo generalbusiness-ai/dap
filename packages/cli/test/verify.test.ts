@@ -145,7 +145,7 @@ test("verify --all replays a Register with 65 sibling dependencies under CLI wor
   // other 64 children. A requested-root head refresh may reread Directory 0.
   for (const child of wide.children.slice(1)) expect(logPages.get(`${child.at.scope}:0`)).toBe(1);
   expect(outcome.lines.filter(line => line.startsWith("Shared room proof:"))).toHaveLength(1);
-  // HELD: the coverage names each scope by its reference, which names no kind. Ruling needed on what replaces the kind column.
+  // A row that covers entry 0 states the kind that its genesis names (ruling 4393b366 T3(a)).
   expect(outcome.lines).toContain(`Shared coverage: ${wide.R.at.scope}, genesis ${wide.R.at.genesis}, kind register, entries 0 to ${wide.R.head.seq}; proving root ${wide.R.at.scope}.`);
   // Only two top-level targets were selected by the SCRIPTED discovery;
   // the 65 sibling proofs are actual judged journal dependencies, not 65 targets.

@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import { judgeGuardNode } from "../../derive/src/program/guard-value.ts";
 import { namedBody } from "../../derive/src/program/structure.ts";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
-import { PROPOSED_BOUNDS, type Entry, type GenesisEntry } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Effect, type Entry, type GenesisEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, utf8 } from "@generalbusiness/dap-bytes";
 import { applyEntry, clockOf, fixedRowsOf, stateDigest, type Item } from "@generalbusiness/dap-derive";
 import { fixtureSequence, variant } from "@generalbusiness/dap-derive/testing";
@@ -385,7 +385,7 @@ for (const [orderIndex, commands] of historyOrders.entries()) for (const [values
         } else {
           const scope = store.scope()!, template = JSON.parse(store.stored(0)!.bytes) as GenesisEntry;
           expect(scope.head.seq + 1).toBe(nextSeq);
-          const effects: Entry["effects"][number][] = [];
+          const effects: Effect[] = [];
           if (opening) {
             effects.push({ effect: "open", item: nextSeq, type: "job", state: "live" });
             if (descriptor.name !== null) effects.push({ effect: "value", item: nextSeq, slot: "name", value: descriptor.name });

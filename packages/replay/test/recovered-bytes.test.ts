@@ -1,6 +1,7 @@
 import { recoveredText, recoveredChild, recoveredTransitiveTarget, recoveredSmallChild, recoveredSender, recoveredRefusalTarget } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { replayRecoveredAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
+import { coverageRow } from "./coverage-rows.ts";
 import { DOMAINS, PROPOSED_BOUNDS, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeGenesis, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
@@ -44,12 +45,12 @@ test("a later checked text-domain alias recovers earlier byte totals at equality
   const tally = { folds: 0, values: 0, states: 0, runs: 0, owed: 0 };
   const exact = await verify(w.source, { ...w.options, bounds: { ...PROPOSED_BOUNDS, scopeBytes: w.ceiling } }, tally);
   expect([exact.report.result, exact.why, exact.report.incompleteBytes]).toEqual(["consistent", null, undefined]);
-  expect(exact.report.coverage).toEqual([{ scope: w.alias.at, from: 0, through: 2 }, { scope: w.original.at, from: 0, through: w.referred }]);
+  expect(exact.report.coverage).toEqual([coverageRow(w.alias.at, w.alias.entries[0]?.entry, 2), coverageRow(w.original.at, w.original.entries[0]?.entry, w.referred)]);
   expect(exact.report.trusts).not.toContain(TRUSTS.redacted);
   expect(tally.folds).toBeLessThanOrEqual(exact.report.coverage.reduce((n, span) => n + span.through - span.from + 1, 0));
   const over = await verify(w.source, { ...w.options, bounds: { ...PROPOSED_BOUNDS, scopeBytes: w.ceiling - 1 } });
   expect([over.report.result, over.report.at?.at.scope, over.report.at?.seq, over.why]).toEqual(["mismatch", w.original.at.scope, w.referred, "the entry exceeds scopeBytes: Used plus Reserved is over its ceiling"]);
-  expect(over.report.coverage).toEqual([{ scope: w.alias.at, from: 0, through: 0 }, { scope: w.original.at, from: 0, through: w.referred - 1 }]);
+  expect(over.report.coverage).toEqual([coverageRow(w.alias.at, w.alias.entries[0]?.entry, 0), coverageRow(w.original.at, w.original.entries[0]?.entry, w.referred - 1)]);
   expect(over.report.dependencies.verified).toBe(0);
 });
 
@@ -60,7 +61,7 @@ test.each([
   const w = aliasWorld(body, 40);
   const result = await verify(w.source, w.options);
   expect([result.report.result, result.report.at?.at.scope, result.report.at?.seq, result.why]).toEqual(["mismatch", w.original.at.scope, 1, why]);
-  expect(result.report.coverage).toEqual([{ scope: w.alias.at, from: 0, through: 0 }, { scope: w.original.at, from: 0, through: 0 }]);
+  expect(result.report.coverage).toEqual([coverageRow(w.alias.at, w.alias.entries[0]?.entry, 0), coverageRow(w.original.at, w.original.entries[0]?.entry, 0)]);
   expect(result.report.dependencies.verified).toBe(0);
 });
 
@@ -86,10 +87,10 @@ test("recovered overflow retracts transitive consumers and a foreign prefix admi
   const result = await verify(source, { ...w.options, scope: target.at.scope, bounds: { ...PROPOSED_BOUNDS, scopeBytes: w.ceiling - 1 } });
   expect([result.report.result, result.report.at?.at.scope, result.report.at?.seq]).toEqual(["mismatch", w.original.at.scope, w.referred]);
   expect(result.report.coverage).toEqual([
-    { scope: target.at, from: 0, through: 0 },
-    { scope: w.alias.at, from: 0, through: 0 },
-    { scope: w.original.at, from: 0, through: w.referred - 1 },
-    { scope: child.at, from: 0, through: 0 },
+    coverageRow(target.at, target.entries[0]?.entry, 0),
+    coverageRow(w.alias.at, w.alias.entries[0]?.entry, 0),
+    coverageRow(w.original.at, w.original.entries[0]?.entry, w.referred - 1),
+    coverageRow(child.at, child.entries[0]?.entry, 0),
   ]);
   expect(result.report.dependencies.verified).toBe(0);
 });

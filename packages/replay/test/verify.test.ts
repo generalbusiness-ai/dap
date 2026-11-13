@@ -1,6 +1,7 @@
 import { replayHolding, replayChained } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { replayReservedSource, replayReservedReceiver, replayQualifiedReceiver } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { describe, expect, test } from "vitest";
+import { coverageRow } from "./coverage-rows.ts";
 import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report, type ScopeKind } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, entryHash, isEntry, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { grantFrom, namedBy, observationOf, stateDigest, validateDefinition, type RecordedRef } from "@generalbusiness/dap-derive";
@@ -29,7 +30,7 @@ describe("replay of a good history (sections 9.3 to 9.5)", () => {
     const { report, why } = await replay(w);
     expect([report.result, why, report.target]).toEqual(["consistent", null, { at: w.I.scope, seq: 2, hash: w.I.entries[2]!.hash }]);
     // I.0 used D.4, I.1 used D.5, I.2 used P.2. D.5 used I.0, D.2 used P.0, P.1 used D.2: each prefix advanced as needed, and no further.
-    expect(report.coverage).toEqual([{ scope: w.I.scope, from: 0, through: 2 }, { scope: w.D.scope, from: 0, through: 5 }, { scope: w.P.scope, from: 0, through: 2 }]);
+    expect(report.coverage).toEqual([coverageRow(w.I.scope, entryOf(w.I, 0), 2), coverageRow(w.D.scope, entryOf(w.D, 0), 5), coverageRow(w.P.scope, entryOf(w.P, 0), 2)]);
     // Seven distinct foreign facts: D.1, D.2, D.4, D.5, P.0, P.2 and I.0, which D.5 used and which was already checked.
     expect([report.dependencies, report.anchors]).toEqual([{ verified: 7, anchored: 0, missing: [] }, []]);
     expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.sources, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.authority, TRUSTS.bounds]);
@@ -300,7 +301,7 @@ describe("a detached text whose bytes are gone (section 9.3)", () => {
     const whole = histories(true);
     const matched = await verify(whole.source, { mode: "replay", scope: whole.T.at.scope, ...AS_RECORDED });
     expect([matched.report.result, matched.why, matched.report.redacted.map((r) => r.tombstone)]).toEqual(["consistent", null, [whole.S.fact(3), whole.U.fact(2)]]);
-    expect(matched.report.coverage).toEqual([whole.T, whole.S, whole.U].map((L) => ({ scope: L.at, from: 0, through: L.head.seq })));
+    expect(matched.report.coverage).toEqual([whole.T, whole.S, whole.U].map((L) => coverageRow(L.at, L.entries[0]?.entry, L.head.seq)));
 
     // The limit on depth counts foreign facts from the target, also in the settlement. S is one fact from T, so U.1, which S.2 uses, is two.
     const within = async (depth: number) => { const { report, why } = await verify(histories(true).source, { mode: "replay", ...AS_RECORDED, scope: whole.T.at.scope, limits: { depth } }); return [report.result, report.at?.seq ?? null, why]; };
@@ -383,7 +384,7 @@ describe("a history that is not consistent is reported with the right result, at
     // Whatever stopped it, the report claims only what it covered: in the scope of the entry it names, nothing at or after that entry.
     const covered = matched.report.coverage.find((c) => c.scope.scope === matched.report.at?.at.scope)?.through ?? -1;
     expect(covered).toBeLessThan(matched.report.at?.seq ?? 0);
-    if (stated) expect(matched.report.coverage).toEqual(stated.map(([scope, through]) => ({ scope: w[scope].scope, from: 0, through })));
+    if (stated) expect(matched.report.coverage).toEqual(stated.map(([scope, through]) => coverageRow(w[scope].scope, entryOf(w[scope], 0), through)));
   });
 });
 
@@ -392,7 +393,7 @@ describe("integrity mode (section 9.5)", () => {
     const w = world();
     altered(w);
     const { report, why } = await replay(w, { mode: "integrity" });
-    expect([report.result, report.coverage, report.dependencies.verified]).toEqual(["consistent", [{ scope: w.I.scope, from: 0, through: 2 }], 0]);
+    expect([report.result, report.coverage, report.dependencies.verified]).toEqual(["consistent", [coverageRow(w.I.scope, entryOf(w.I, 0), 2)], 0]);
     expect(report.trusts).toEqual([TRUSTS.judgments, TRUSTS.facts, TRUSTS.clock, TRUSTS.head]);
     const text = render(report, why);
     expect(text).toMatch(/Mode: integrity\..* No judgment was derived again\./);
@@ -722,8 +723,8 @@ describe("the value of an observation is derived once from the history of its so
     const tally = tallied();
     const { report, why } = await replayed(scopes(), r, tally);
     // What the code before this change answered for this history, taken from it: the result, the coverage, the facts and the trusts.
-    // HELD: the coverage names each scope by its reference, which names no kind. Ruling needed on what replaces the kind column.
-    expect([L, H, report.result, why, report.coverage.map((covered) => [(covered.scope as { kind?: string }).kind, covered.through]), report.dependencies]).toEqual([
+    // Each row that covers entry 0 states the kind that its genesis names (ruling 4393b366 T3(a)).
+    expect([L, H, report.result, why, report.coverage.map((covered) => [covered.kind, covered.through]), report.dependencies]).toEqual([
       5, 45, "consistent", null, [["rules", 42], ["directory", 1], ["membership", 45], ["directory", 1]], { verified: 8, anchored: 0, missing: [] },
     ]);
     expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.sources, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.bounds, platformCode(MEMBERSHIP), platformCode(RULES)]);
