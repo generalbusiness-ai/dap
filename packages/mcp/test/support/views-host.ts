@@ -108,10 +108,10 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore(), ide
 /** Pure declared-view browser fixture. Native projection, install and role
  * answers are scripted; the real native controls have a separate witness. */
 async function declaredFixture() {
-  const base = fixture("empty"), packet = await applicationCounterNavigationPacket2(true), scope = { ...base.scope.rules, kind: "lane" as const };
+  const base = fixture("empty"), packet = await applicationCounterNavigationPacket2(true), scope = base.scope.rules;
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
-    installation: async () => ({ scope, directory: { ...scope, kind: "directory" }, rules: { ...scope, kind: "rules" },
-      membership: { ...scope, kind: "membership" }, destination: { ...scope, kind: "destination" }, item: 7, definition: packet.package.semantic.entry, ids: packet.ids }),
+    installation: async () => ({ scope, directory: scope, rules: scope,
+      membership: scope, destination: scope, item: 7, definition: packet.package.semantic.entry, ids: packet.ids }),
     actions: async () => [],
     projection: async query => query.projection === "person" && ![11, 12, 13].includes(query.items["participant"]!) ? { ok: false, reason: "incomplete" }
       : query.projection === "empty-people" ? ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
