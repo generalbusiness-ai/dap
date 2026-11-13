@@ -393,7 +393,8 @@ export class Scope {
    */
   validate(bytes: string): ValidDefinition | null {
     try {
-      const checked = validateDefinition(parseStrict(bytes), this.#bounds, RULE_PROFILES);
+      // The authored spelling replay admits (section 9.3): one canonical spelling, so scope and replay pin the same bytes.
+      const checked = validateDefinition(parseStrict(bytes), this.#bounds, RULE_PROFILES, { canonical: true });
       return checked.ok && this.#derives(checked.definition) ? checked.definition : null;
     } catch {
       return null;

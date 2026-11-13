@@ -590,7 +590,8 @@ export const directoryRules: Rules = {
         // A value is at hand only when its bytes hash to the digest in the domain. Without one, the bytes cannot be read now.
         const bytes = given.value(DEFINITION_DOMAIN, next, bounds.definitionBytes);
         if (bytes === undefined) return unavailable;
-        const checked = validateDefinition(bytes, bounds, PROFILES);
+        // A lane definition enters the room here: only its one canonical spelling, as the lane's genesis admits it (scope `validate`).
+        const checked = validateDefinition(bytes, bounds, PROFILES, { canonical: true });
         if (!checked.ok) return unsupported;
         if (checked.definition.digest !== next) return unavailable;
         queue.push(...namedIn(checked.definition.declared));

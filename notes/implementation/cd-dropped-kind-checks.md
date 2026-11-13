@@ -860,6 +860,84 @@ The cutover changes 78 plain seals and 55 named-owner seals in `scripts/security
 - `isRetiredStoreStop`: the model passes the real predicate from `packages/mcp/src/hosted-store-stop.ts` to the MCP and OAuth routes. No model reply is a retired-store stop, so every route takes its ordinary branch.
 - `hostedRegistryName`: the model names no real Membership. The stand-in returns a fixed witness name that selects no authority.
 
+## Canonical admission at the cutover (ruling f2f2a7ea)
+
+A new-format room admits a definition only in its one canonical spelling:
+no redundant subjects and no empty optional filters. Replay already checked
+that spelling. The survey in act 8620d15b ran canonical mode over every pinned
+and generated definition. It found two that change: Counting and the retained
+Grow demo Room.
+
+### Counting
+
+Counting moves from `sha256:435d9f57…` to
+`sha256:3512c1e4ff01f097f06bbdd05c5897ae7d589420a92b74f10a4dbb53af6094fb`.
+`apps/counter/definition.ts` exports the normalized declaration, and
+`apps/counter/scripts/pin-definition.mjs` rewrote `definition.json`. `pin.ts`, the
+definition README and `commitments.test.ts` name the new digest.
+
+The canonical-spelling test in `derive` did not cover Counting before this
+change. Counting was a retained exclusion with `canonicalAdmission: false`,
+recorded as "retained historical data until the identifiers cutover". The
+cutover is that point, so the test now checks Counting like every other
+definition. The two Counting exclusions and their support file,
+`derive/test/support/fresh-counting-source.ts`, are gone.
+
+### Admission sites
+
+These three sites admit a definition into a new-format room, and each now
+validates in canonical mode:
+
+| Site | What it admits |
+|---|---|
+| `scope/src/core.ts:396` `validate` | The definition that a genesis or a creation pins for a new scope. |
+| `platform/src/directory.ts:593` `definition-active` | A lane definition and its closure, before the Directory opens an issue or a pull request under it. |
+| `platform/src/definition-input.ts:38` `definitionClosure` | A definition and its closure at Rules activation, Directory `application-ready` and the evidence `definition-active` guard. |
+
+`directory.ts:593` and `definition-input.ts:38` are rule code of existing
+platform versions, and a platform pin does not cover rule code. The change in
+place is safe only at the cutover. The cutover starts a new creation family,
+so no new-format room has recorded an activation that the change could refuse
+on replay.
+
+Each of these sites already passed canonical mode before this change:
+`cli/src/application-files.ts:80`, `define/src/index.ts:686`,
+`platform/src/application-install.ts:103`,
+`platform/src/application-install-v2.ts:40`,
+`platform/src/device-application-rules.ts:51`,
+`platform/src/validate-package.ts:28`, `replay/src/verify.ts:1522`, `:1550`
+and `:2187`, `scope/src/applications/admission.ts:41` and
+`scope/src/archive-source-pins.ts:85`.
+
+### Reading sites
+
+These sites read a definition that a room recorded, or that this runtime
+supplies. They stay as they are:
+
+| Site | Why it stays |
+|---|---|
+| `scope/src/core.ts:428` `platform` | It validates platform data from this runtime's own catalog, and no input reaches it. Every catalog version passes canonical mode. |
+| `scope/src/archive-declarations.ts:68` | It re-reads recorded definition bytes in an archive and matches them to the reviewed policy byte for byte. |
+| `scope/src/archive-native-root.ts:21` | It validates this runtime's platform data for an archive root against the reviewed policy. |
+| `scope/src/creation-lineage.ts:180` | It proves a lane's creation edge from the Directory's recorded closure. The lane's own genesis admits the definition through `core.ts:396`. |
+| `platform/src/rules-scope.ts:660` `definitionBytes` | Only `platform:rules@1` and `@2` run it; later versions use `definitionClosure`. |
+| `define/src/story.ts:84` `tell` | It runs an author's story in memory and admits nothing into a room. |
+| `apps/room/archive-policy.ts:32` | It builds archive policies for the retained, signed Grow packet. |
+
+### The retained Grow demo packet
+
+The packet `examples/grow/demo/application.dap.json` keeps its bytes and its
+pins: Room `b89e7f84…` and Site `d2bc830e…`. The Room is not canonical. A path
+that pins `b89e7f84` through scope `validate` refuses it. So between the
+cutover deployment and the planner's configuration head, the scheduled
+Worker's demo install fails. No Grow room exists in that window.
+
+### Other rulings
+
+- The planner accepted B19, the store-format publish, in act d2e3f2cb.
+- NF-5 does not gain this item.
+- The allowance to rerun the gate is withdrawn.
+
 ## Pending rulings
 
 None.
