@@ -209,7 +209,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "54eb8fcb90bd3e5dbacec1eb71f853e5a3b578aae10d11a24d3c0ee0d69a88b3",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "9bf30f83a4e5263ba0e384402500980050b2850a97fc2af85c93cd28288b0813", // Reviewed exact-read context; NF-4 maps client install refusals; admission stays here.
+    "packages/mcp/src/service.ts:McpService": "271683948dce913852f2adfac032dcda692f0e0b335d8ae97db2fd90b89659c3", // Reviewed exact-read context; NF-4 maps client install refusals; admission stays here.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -334,8 +334,8 @@ const seals = {
   "packages/mcp/src/oauth-access.ts": "96679465b97286aa2babe6e3b670bf51b202427300cea836e9be9da744884b78", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-http.ts": "6a2668b96a105b077cd07528897b0ed6f6d7aec8cec619a26a535bcb5adb6707", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/index.ts": "4b7c10621b87ff3d8ca88e046e9d8e15fd52affd8e0479460c24c39ccf434b8a", // O1 resource discovery and grant transport boundary; NF-4 reader aliases from the client.
-  "packages/mcp/src/hosted.ts": "93456b882e0459bd50585d881edff8bd8cae29492d915bb1739e1a44f9381d84",
-  "packages/mcp/src/hosted-retirement.ts": "3c6f4653e80ea848d5eb45e66e8dd943e7f0088c8f5a3d922d94fd29b6d7967c", // R15 caller-envelope and verified enrollment target owner.
+  "packages/mcp/src/hosted.ts": "5c15a72a095227e6d0896e80884e9fdcf5b2f1549832a1a36cc3ee6cd2759a39",
+  "packages/mcp/src/hosted-retirement.ts": "ca631baf28f180b8d64e988ab7c5e5583ce0c96e0b374be1acee7c8723ef2a8d", // R15 caller-envelope and verified enrollment target owner.
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
   "packages/mcp/src/hosted-tools.ts": "bea3d3cea128bd76102e36d0876992c1b77a5bf2263f376082c1f329d2035a60", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],

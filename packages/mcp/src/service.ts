@@ -817,6 +817,8 @@ export class McpService {
     const tool = binding?.name ?? "act";
     if ("lost" in kept) return this.#withSigner(failed({ error: "transport", scope, submitted: true }), kept.record, s);
     if ("archivedSettlement" in kept) return this.#withSigner(ok(projectAnswer({ archivedSettlement: kept.archivedSettlement }, { scope, kind, tool })), kept.record, s);
+    // This server never folds a record. A record that another client folded has no answer to project here.
+    if ("folded" in kept) throw new CustodyError({ held: "unreadable" });
     const said = answered(kept.answer, asked, guards);
     if (kept.answer.answer === "accepted" && !kept.retained) {
       // An accepted act on a membership can change whether it gives this key a session: ask again on the next read.
@@ -1299,6 +1301,8 @@ export class McpService {
       return this.#settle(args, { resendExpired: false }, dispatch);
     }
     const last = settled.decided;
+    // This server never folds a record. A record that another client folded has no answer to project here.
+    if (last?.folded) throw new CustodyError({ held: "unreadable" });
     if (last && scope !== null && membership !== null && !record.standalone && this.#keepsOriginals(s, membership)) await this.#endAnswered(membership, scope, record.envelope.signed, last.answer ?? null);
     const receipt: Receipt | null = settled.receipt ?? (last?.answer?.answer === "accepted" ? last.answer.receipt : null);
     const archived: ArchivedSettlement | null = last?.archivedSettlement ?? (last?.answer?.answer === "archived"
@@ -1391,6 +1395,8 @@ export class McpService {
     }, { ...(args["resubmit"] === true ? { resubmit: true } : {}), notAfter, bytes: bytesOf({ definition: args["definition"], fields: fieldsGiven, texts: textsGiven, definitions }) });
     if ("lost" in kept) return failed({ error: "transport", scope: "the creation", submitted: true });
     if ("archivedSettlement" in kept) return ok(projectAnswer({ archivedSettlement: kept.archivedSettlement }, { scope: "the creation", kind, tool: "create" }));
+    // This server never folds a record. A record that another client folded has no answer to project here.
+    if ("folded" in kept) throw new CustodyError({ held: "unreadable" });
     if (kept.answer.answer === "accepted") {
       const scope = kept.answer.receipt.fact.at.scope;
       const config = await this.#port.config.read();
@@ -1538,6 +1544,8 @@ export class McpService {
     }, { notAfter, bytes: bytesOf(fields) });
     if ("lost" in kept) return failed({ error: "transport", scope: M.scope, submitted: true });
     if ("archivedSettlement" in kept) return ok(projectAnswer({ archivedSettlement: kept.archivedSettlement }, { scope: M.scope, kind: "join", tool: "join" }));
+    // This server never folds a record. A record that another client folded has no answer to project here.
+    if ("folded" in kept) throw new CustodyError({ held: "unreadable" });
     const asked = { scope: M.scope, kind: "join", on: null, action: null };
     if (kept.answer.answer !== "accepted") return ok(projectAnswer({ answer: kept.answer }, { scope: M.scope, kind: "join", tool: "join", retained: kept.retained, said: answered(kept.answer, asked, []), phase: kept.record.phase }));
     // The admitted entry, read as the member the join made: it must hold the exact request kept, and it names the inbox.
