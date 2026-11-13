@@ -13,7 +13,7 @@
 
 import type { DeclaredDefinition, Entry, RetainedInput } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import { born, deliver, fields, created, keys, notesDefinition, type Ledger } from "@generalbusiness/dap-derive/testing";
+import { born, deliver, fields, created, genesisOnly, keys, notesDefinition, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, hashOfBytes, type MemoryScope } from "../src/index.ts";
 
 function written(judgment: { result: string }): void {
@@ -58,9 +58,9 @@ export function unsupportedDefinitionHistory(declared: DeclaredDefinition, key: 
   const genesis = entryOf(history, 0);
   if (history.entries.length !== 1 || genesis.input.type !== "genesis") throw new Error("unsupported definition fixture needs one genesis");
   const digest = definitionDigest(declared), seed = { ...genesis.input.seed, definition: digest };
-  const at = { ...history.scope, scope: scopeIdOf(seed) };
-  const entry: Entry = { ...genesis, at, input: { ...genesis.input, seed } };
+  const entry: Entry = { ...genesisOnly(genesis), input: { ...genesis.input, seed } };
   const bytes = canonicalize(entry);
+  const at = { scope: scopeIdOf(seed), genesis: hashOfBytes(bytes) };
   return { scope: at, entries: [{ seq: 0, hash: hashOfBytes(bytes), bytes }],
     retained: [{ kind: "definition", digest, bytes: canonicalize(declared) }] };
 }

@@ -2,9 +2,9 @@ import { recoveredText, recoveredChild, recoveredTransitiveTarget, recoveredSmal
 import { replayRecoveredAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeGenesis, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
-import { Ledger, T0, creation as childCreation, created, keys, notesDefinition, on, t, valid, variant } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, creation as childCreation, created, keys, notesDefinition, on, t, valid, variant, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, TRUSTS, verify } from "../src/index.ts";
 import { served } from "./world.ts";
 
@@ -25,11 +25,11 @@ function aliasWorld(body: unknown, max: number) {
   const alias = new Ledger(definition), platform = { named: NAMED, rules: {} };
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: "alias", notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: NAMED, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-  const genesis = judgeGenesis(alias.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(2)), seed, creation }, { clock: clockOf(alias.state, T0), bounds: PROPOSED_BOUNDS, source: null, facts: [], prepared: [], platform });
+  const genesis = judgeGenesis(alias.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(2)), seed, creation }, { clock: clockOf(alias.state, T0), bounds: PROPOSED_BOUNDS, source: null, facts: [], prepared: [], platform });
   if (genesis.result !== "write") throw new Error(`the alias fixture must create: ${JSON.stringify(genesis)}`);
   alias.seal(genesis.draft);
   const fact = original.fact(referred);
-  expect(alias.act(keys.rita, "vouch", { ...on(alias, 0), fields: {} }, { platform, presented: { proof: fact }, facts: [{ fact, entry: original.entries[referred]!.entry, under: "notes" }] }).result).toBe("write");
+  expect(alias.act(keys.rita, "vouch", { ...on(alias, 0), fields: {} }, { platform, presented: { proof: fact }, facts: [{ fact, entry: original.entries[referred]!.entry, sequence: fixtureSequence(original), under: "notes" }] }).result).toBe("write");
   expect(alias.act(keys.rita, "retain", { ...on(alias, 0), fields: { proof: digest } }, { platform, values: [bytes] }).result).toBe("write");
   const all = [original, alias], a = served(original, all), b = served(alias, all);
   // Platform declarations come from code, and no text-store source remains.
@@ -69,12 +69,12 @@ test("recovered overflow retracts transitive consumers and a foreign prefix admi
   const w = aliasWorld("é".repeat(10000), 32768);
   const childDefinition = variant(notesDefinition.declared, recoveredChild);
   const child = created(childDefinition, {}, "cached-consumer"), originalFact = w.original.fact(w.referred);
-  expect(child.act(keys.rita, "vouch", { ...on(child, 0), fields: {} }, { presented: { proof: originalFact }, facts: [{ fact: originalFact, entry: w.original.entries[w.referred]!.entry, under: "notes" }] }).result).toBe("write");
+  expect(child.act(keys.rita, "vouch", { ...on(child, 0), fields: {} }, { presented: { proof: originalFact }, facts: [{ fact: originalFact, entry: w.original.entries[w.referred]!.entry, sequence: fixtureSequence(w.original), under: "notes" }] }).result).toBe("write");
   const targetDefinition = variant(notesDefinition.declared, recoveredTransitiveTarget);
   const target = created(targetDefinition, {}, "transitive-target");
   const use = (kind: string, from: Ledger, seq: number) => {
     const fact = from.fact(seq);
-    expect(target.act(keys.rita, kind, { ...on(target, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: from.entries[seq]!.entry, under: from.definition.declared.name }] }).result).toBe("write");
+    expect(target.act(keys.rita, kind, { ...on(target, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: from.entries[seq]!.entry, sequence: fixtureSequence(from), under: from.definition.declared.name }] }).result).toBe("write");
   };
   // Reading alias.1 first proves original.20. Reading child.1 then reuses
   // that cached proof. Only the last read reaches alias.2's retained body.
@@ -110,7 +110,7 @@ test("recovering an oversized body preserves a child's correctly recorded bad-fi
   const target = created(targetDefinition, {}, "refusal-target");
   for (const [kind, from, seq] of [["vouch-alias", w.alias, 2], ["vouch", child, 0]] as const) {
     const fact = from.fact(seq);
-    expect(target.act(keys.rita, kind, { ...on(target, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: from.entries[seq]!.entry, under: from.definition.declared.name }] }).result).toBe("write");
+    expect(target.act(keys.rita, kind, { ...on(target, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: from.entries[seq]!.entry, sequence: fixtureSequence(from), under: from.definition.declared.name }] }).result).toBe("write");
   }
   const all = [w.original, w.alias, sender, child, target];
   const source = new MemorySource([...w.scopes, served(child, all), served(target, all)]);
@@ -128,7 +128,7 @@ test("recovering one body leaves another body's historical byte span incomplete"
   const written = w.original.last.seq, fact = w.original.fact(written);
   w.original.did(keys.rita, "strike", on(w.original, note));
   const platform = { named: NAMED, rules: {} };
-  expect(w.alias.act(keys.rita, "vouch", { ...on(w.alias, 0), fields: {} }, { platform, presented: { proof: fact }, facts: [{ fact, entry: w.original.entries[written]!.entry, under: "notes" }] }).result).toBe("write");
+  expect(w.alias.act(keys.rita, "vouch", { ...on(w.alias, 0), fields: {} }, { platform, presented: { proof: fact }, facts: [{ fact, entry: w.original.entries[written]!.entry, sequence: fixtureSequence(w.original), under: "notes" }] }).result).toBe("write");
   const all = [w.original, w.alias], original = served(w.original, all), alias = served(w.alias, all);
   alias.retained = [...alias.retained.filter(input => input.kind !== "definition"), ...w.scopes[1]!.retained.filter(input => input.kind === "value")];
   const result = await verify(new MemorySource([original, alias]), w.options);

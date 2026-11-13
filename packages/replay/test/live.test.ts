@@ -3,7 +3,7 @@
 import { expect, test } from "vitest";
 import type { Archived, ScopeRef } from "@generalbusiness/dap-contract";
 import { cloneTailSource, hashOfBytes, httpSource, MemorySource, type HistorySource } from "../src/index.ts";
-const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}`};
 const row = (seq: number) => ({ seq, bytes: `scripted bytes ${seq}`, hash: hashOfBytes(`scripted bytes ${seq}`) });
 const head = (seq: number) => ({ seq, hash: row(seq).hash });
 const receipt = (seq: number): Archived => ({ floor: seq, commit: seq.toString(16).padStart(40, "0"), through: head(seq) });

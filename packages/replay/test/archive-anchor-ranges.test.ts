@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef, type Seed, type Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, grantFrom, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
-import { keys, Ledger, membership, on, t } from "@generalbusiness/dap-derive/testing";
+import { keys, Ledger, membership, on, t, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { buildJournalPass, type JournalAnchorPublication, type JournalObject } from "@generalbusiness/dap-git/journal";
 import { readJournalArchiveV2 } from "@generalbusiness/dap-git/journal-reader";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
@@ -158,10 +158,10 @@ test("nested public proofs use their own published ranges and name their own unu
     const dependency = remarks(1, "TEST dependency"), target = remarks(0, "TEST target");
     const fact = dependency.ledger.fact(1), entry = dependency.ledger.entries[1]!.entry;
     target.ledger.now = t(2);
-    target.ledger.remember([{ fact, entry, under: "platform:task" }]);
+    target.ledger.remember([{ fact, entry, sequence: fixtureSequence(dependency.ledger), under: "platform:task" }]);
     const vouched = target.ledger.act(keys.rita, "vouch", on(target.ledger, 0), { membership,
       grants: [{ grant: freshGrant(1, target.ledger.now), current: true }], platform: { named: NAMED, rules: target.rules },
-      presented: { proof: fact }, facts: [{ fact, entry, under: "platform:task" }] });
+      presented: { proof: fact }, facts: [{ fact, entry, sequence: fixtureSequence(dependency.ledger), under: "platform:task" }] });
     expect(vouched.result).toBe("write");
     expect(target.ledger.last.uses).toEqual([{ fact, kind: "directory", content: digestBytes(utf8(canonicalize(entry))) }]);
     const prior = await journal(dependency), own = await journal(target, [dependency]);

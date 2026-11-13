@@ -1,7 +1,7 @@
 import { replayChildAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeGenesis, normalizeDefinition, validateDefinition } from "@generalbusiness/dap-derive";
 import { created, keys, Ledger, on, T0, t, valid } from "@generalbusiness/dap-derive/testing";
 import { childDeclaration } from "../../derive/test/definition-corpus/child-definitions-data.ts";
@@ -51,7 +51,7 @@ test("a later definition-domain value is charged at its actual entry and an alia
   const history = new Ledger(definition), platform = { named: "platform:task@1" as const, rules: {} };
   const signed = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: "definition-values", notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: platform.named, creator: null, cause: intentDigest(signed.intent), ordinal: 0 };
-  const genesis = judgeGenesis(history.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(3)), seed, creation: signed }, { clock: clockOf(history.state, T0), bounds: PROPOSED_BOUNDS, source: null, facts: [], prepared: [], platform });
+  const genesis = judgeGenesis(history.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(3)), seed, creation: signed }, { clock: clockOf(history.state, T0), bounds: PROPOSED_BOUNDS, source: null, facts: [], prepared: [], platform });
   if (genesis.result !== "write") throw new Error("the made-up platform genesis must write");
   history.seal(genesis.draft);
   for (const declaration of [extra, leaf]) expect(history.act(keys.rita, "retain", { ...on(history, 0), fields: { declaration: declaration.digest } }, { platform, values: [canonicalize(declaration.declared)] }).result).toBe("write");

@@ -209,3 +209,14 @@ asks for this list. No other pin changed.
 `packages/platform/test/versions.test.ts` states the new pins. The I5 note,
 `notes/implementation/2026-10-07-i5-definition-versions-delivery.md`, keeps
 the old inbox digest as the record of its time.
+
+## Held test assertions
+
+These test assertions read a reference's kind, or a reason that names the
+incarnation, and no row above covers them. Each site has a `// HELD` comment.
+A ruling decides what replaces each one.
+
+| File | Assertion | Question |
+|---|---|---|
+| `packages/replay/test/verify.test.ts` | coverage rows state each scope's kind | what replaces the kind column of the coverage |
+| `packages/replay/test/verify.test.ts` | a reference to another genesis fails with `wrong incarnation` | which reason the replay now gives |

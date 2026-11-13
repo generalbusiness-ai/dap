@@ -3,8 +3,8 @@ import { replayReservedSource, replayReservedReceiver, replayQualifiedReceiver }
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report, type ScopeKind } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, entryHash, isEntry, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { grantFrom, namedBy, observationOf, stateDigest, validateDefinition } from "@generalbusiness/dap-derive";
-import { created, keys, notesDefinition, on, otherLane, t, type Actor, type Ledger } from "@generalbusiness/dap-derive/testing";
+import { grantFrom, namedBy, observationOf, stateDigest, validateDefinition, type RecordedRef } from "@generalbusiness/dap-derive";
+import { created, keys, notesDefinition, on, otherLane, t, type Actor, type Ledger, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { C, cap, clean } from "../../derive/test/fixtures-hold.ts";
 import { MEMBERSHIP, RULES_SCOPE as RULES, firstExtents, platform, sourceName, standingOf } from "../../../packages/platform/src/index.ts";
 import { Roster } from "../../../packages/platform/test/support.ts";
@@ -73,7 +73,7 @@ test("a replay without native identity policy leaves a reserved declared source 
   const written = S.act(keys.rita, "write", { ...on(S, 0), fields: { body: textDigest(body) } }, { texts: () => body.length });
   expect(written.result).toBe("write");
   const fact = S.fact(S.last.seq);
-  const vouched = T.act(keys.rita, "vouch", { ...on(T, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: S.last, under: "change" }] });
+  const vouched = T.act(keys.rita, "vouch", { ...on(T, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: S.last, sequence: fixtureSequence(S), under: "change" }] });
   expect(vouched.result).toBe("write");
   const all = [S, T], source = () => new MemorySource(all.map(L => served(L, all)));
   const options = { mode: "replay" as const, scope: T.at.scope, ...AS_RECORDED };
@@ -88,7 +88,7 @@ test("a replay without native identity policy leaves a reserved declared source 
   const qualifiedReceiver = validateDefinition(replayQualifiedReceiver(), PROPOSED_BOUNDS);
   if (!qualifiedReceiver.ok) throw new Error("the qualified fixture definition must validate");
   const Q = created(qualifiedReceiver.definition, {}, "qualified-receiving-note");
-  expect(Q.act(keys.rita, "vouch", { ...on(Q, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: S.last, under: "declared:change" }] }).result).toBe("write");
+  expect(Q.act(keys.rita, "vouch", { ...on(Q, 0), fields: {} }, { presented: { proof: fact }, facts: [{ fact, entry: S.last, sequence: fixtureSequence(S), under: "declared:change" }] }).result).toBe("write");
   const qualifiedHistory = served(Q, [S, Q]);
   // served() normally reconstructs fixture metadata from the declaration's
   // raw name. This retention records the qualified name actually given to Q.
@@ -279,7 +279,7 @@ describe("a detached text whose bytes are gone (section 9.3)", () => {
       return L.last.seq;
     };
     const wrote = (L: Ledger, body: string) => did(L, "write", { body: textDigest(body) }, { texts: () => body.length });
-    const vouched = (L: Ledger, from: Ledger, seq: number) => did(L, "vouch", {}, { presented: { proof: from.fact(seq) }, facts: [{ fact: from.fact(seq), entry: from.entries[seq]!.entry, under: from.under }] });
+    const vouched = (L: Ledger, from: Ledger, seq: number) => did(L, "vouch", {}, { presented: { proof: from.fact(seq) }, facts: [{ fact: from.fact(seq), entry: from.entries[seq]!.entry, sequence: fixtureSequence(from), under: from.under }] });
     const [s, u] = [wrote(S, "the body of S"), wrote(U, "the body of U")];
     vouched(T, S, s);
     vouched(S, U, u);
@@ -354,8 +354,9 @@ describe("a history that is not consistent is reported with the right result, at
       change: (w) => rewrite(w.I, 2, (entry) => { entry.input = preparing(w); }), result: "mismatch", at: ["I", 2], why: /bytes are not an entry/ },
     // I.0 used D.4, and D.2, on the way to it, used P.0: the entry named is the one that used the history that cannot be read.
     { name: "a source history that cannot be read", change: (w) => { w.P.entries.length = 0; }, result: "missing-dependency", at: ["D", 2], why: /cannot be read, and no anchor/ },
-    { name: "a wrong incarnation in a reference: the source scope's genesis minted another",
-      change: (w) => rewrite(w.I, 1, (entry) => { entry.input.from.at.inc = w.P.scope.inc; entry.uses[0].fact.at.inc = w.P.scope.inc; }), result: "mismatch", at: ["I", 1], why: /wrong incarnation/ },
+    // HELD: the reason this replay now gives for a reference to another genesis is unknown until the test runs.
+    { name: "a wrong genesis in a reference: the source scope's genesis is another",
+      change: (w) => rewrite(w.I, 1, (entry) => { entry.input.from.at.genesis = w.P.scope.genesis; entry.uses[0].fact.at.genesis = w.P.scope.genesis; }), result: "mismatch", at: ["I", 1], why: /wrong incarnation/ },
     { name: "a history cut short of the head the caller holds", change: (w) => { const head = w.I.entries.pop()!; return { head: { seq: head.seq, hash: head.hash } }; }, result: "mismatch", at: ["I", 1], why: /does not reach the expected head/ },
     { name: "a history that forks from the head the caller holds: sealed again, and consistent with itself",
       change: (w) => { const head = w.I.entries[2]!; rewrite(w.I, 2, (entry) => { entry.time = "2026-10-04T12:00:01Z"; }); return { head: { seq: 2, hash: head.hash } }; }, result: "mismatch", at: ["I", 2], why: /forks from the expected head/ },
@@ -565,7 +566,7 @@ describe("an outcome entry of a platform definition, and where a scope records i
       return [matched.report.result, matched.report.at?.seq, matched.why];
     };
     expect(await changed((o) => { o.at = "2026-10-04T11:55:00Z"; })).toEqual(["mismatch", 2, "derived again on the entry's time, a retained observation is outside its window of 300 seconds"]);
-    expect(await changed((o) => { o.of.inc = otherLane.inc; })).toEqual(["mismatch", 2, "a retained observation is not of the membership scope that the scope records, with that incarnation"]);
+    expect(await changed((o) => { o.of.genesis = otherLane.genesis; })).toEqual(["mismatch", 2, "a retained observation is not of the membership scope that the scope records, with that incarnation"]);
   });
 
   // Sections 4.1 and 16.1; witness 18.34, cases 3, 9 and 10 (I3 deltas, entries EU4 and FC4). The rule and the observation are STAND-INS.
@@ -599,12 +600,12 @@ describe("an outcome entry of a platform definition, and where a scope records i
     // an incarnation, or with the scope ID alone, which the entry's own observation then fixes. Its value is taken on the anchor
     // of that head: no version of a rules scope answers a read yet. With no such rule the entry is `unsupported-definition`.
     const ruled = new Gate(((given: Parameters<typeof reads>[0]) => { if (!given.observed({ asked: "rules" })) throw new Error("the rules are not at hand"); return opens(given); }) as never, true);
-    const under = async (rulesScope?: () => { scope: string; kind: string; inc: string | null }) => {
+    const under = async (rulesScope?: () => RecordedRef) => {
       const matched = await replayed(ruled, ruled.served(), ruled.coded(ruled.rules, undefined, rulesScope as never));
       return [matched.report.result, matched.report.at?.seq ?? null, matched.why];
     };
     expect(entryOf(ruled.served(), 3).input).toMatchObject({ observed: [{ observation: { subject: "rules", of: RULES_SCOPE } }] });
-    expect([await under(() => RULES_SCOPE), await under(() => ({ ...RULES_SCOPE, inc: null })), await under(() => ({ ...RULES_SCOPE, inc: otherLane.inc })), await under()]).toEqual([
+    expect([await under(() => RULES_SCOPE), await under(() => ({ scope: RULES_SCOPE.scope, pending: true })), await under(() => ({ ...RULES_SCOPE, genesis: otherLane.genesis })), await under()]).toEqual([
       ["consistent", null, null], ["consistent", null, null],
       ["mismatch", 3, "a retained observation of the rules is not of the rules scope that the scope records, with that incarnation"],
       ["unsupported-definition", 3, "the entry retains an observation of the rules, and this replay has no rule for where a scope records its rules reference"],
@@ -721,7 +722,8 @@ describe("the value of an observation is derived once from the history of its so
     const tally = tallied();
     const { report, why } = await replayed(scopes(), r, tally);
     // What the code before this change answered for this history, taken from it: the result, the coverage, the facts and the trusts.
-    expect([L, H, report.result, why, report.coverage.map((covered) => [covered.scope.kind, covered.through]), report.dependencies]).toEqual([
+    // HELD: the coverage names each scope by its reference, which names no kind. Ruling needed on what replaces the kind column.
+    expect([L, H, report.result, why, report.coverage.map((covered) => [(covered.scope as { kind?: string }).kind, covered.through]), report.dependencies]).toEqual([
       5, 45, "consistent", null, [["rules", 42], ["directory", 1], ["membership", 45], ["directory", 1]], { verified: 8, anchored: 0, missing: [] },
     ]);
     expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.sources, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.bounds, platformCode(MEMBERSHIP), platformCode(RULES)]);

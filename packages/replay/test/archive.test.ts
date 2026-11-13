@@ -1,7 +1,7 @@
 // Judged in-memory fixture authority and owner/host replies remain stand-ins.
 // This witnesses the portable adapter; local Git parsing has separate tests.
 import { expect, test, vi } from "vitest";
-import { PROPOSED_BOUNDS, type Digest, type FactRef, type PlatformDefinition, type Request, type ScopeId, type ScopeRef, type ScopeKind } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Digest, type FactRef, type PlatformDefinition, type Request, type ScopeId, type ScopeKind } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, entryHash, isEntry, isSeed, newGenesisNonce, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, isObject, judgeGenesis, judgeOutcome, type Rules } from "@generalbusiness/dap-derive";
 import { keys, Ledger, T0 } from "@generalbusiness/dap-derive/testing";
@@ -237,7 +237,7 @@ test("exact caller anchors classify reviewed private Register copies without adm
       const original = native.rules["create-directory"];
       if (!original || original.place !== "send") throw Error("the existing Register has its send rule");
       for (const kind of ["directory", "lane"] as const) {
-        const rules: Rules = { ...native.rules, "create-directory": { ...original, run: given => {
+        const rules: Rules = { ...native.rules, "create-directory": { ...original, run: (given: Parameters<typeof original.run>[0]) => {
           const sent = original.run(given);
           if (!sent || !isSeed(sent.to) || !isObject(sent.message.body)) throw Error("the source rule must return its actual create");
           return { ...sent, to: { ...sent.to, kind }, message: { ...sent.message,

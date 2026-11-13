@@ -2,9 +2,9 @@ import { genesisQuietActs } from "../../derive/test/definition-corpus/replay-mut
 import { replayGenesisAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { expect, test } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type PlatformDefinition, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeGenesis, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
-import { keys, Ledger, notesDefinition, on, T0, t, valid, variant } from "@generalbusiness/dap-derive/testing";
+import { keys, Ledger, notesDefinition, on, T0, t, valid, variant, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { genesisBodyDefinition } from "../../derive/test/fixtures-genesis-bodies.ts";
 import { MemorySource, hashOfBytes, verify } from "../src/index.ts";
 import { served } from "./world.ts";
@@ -18,7 +18,7 @@ function histories(whole: boolean, body: unknown = "é\n".repeat(500), failure: 
   const other = otherBody === undefined ? undefined : valueDigest(DOMAINS.text, otherBody);
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: { a: digest, ...(other ? { b: other } : {}), count: failure === "count" ? 2 : 0 }, idempotencyKey: "refused-birth", notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: definition.digest, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-  const made = judgeGenesis(original.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(5)), seed, creation }, { clock: clockOf(original.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, texts: named => named === other && otherBody !== undefined ? utf8(otherBody).length : failure === "forged-size" ? 65 : typeof body === "string" ? utf8(body).length : null });
+  const made = judgeGenesis(original.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(5)), seed, creation }, { clock: clockOf(original.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, texts: named => named === other && otherBody !== undefined ? utf8(otherBody).length : failure === "forged-size" ? 65 : typeof body === "string" ? utf8(body).length : null });
   if (made.result !== "write") throw new Error("the fixture's unrelated bad field must record a refused genesis");
   original.seal(made.draft);
 
@@ -26,10 +26,10 @@ function histories(whole: boolean, body: unknown = "é\n".repeat(500), failure: 
   const aliasDefinition = valid(validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true })), alias = new Ledger(aliasDefinition), platform = { named: NAMED, rules: {} };
   const signed = signIntent({ ...creation.intent, fields: {}, idempotencyKey: "alias" }, keys.rita.secret);
   const aliasSeed: Seed = { ...seed, definition: NAMED, cause: intentDigest(signed.intent) };
-  const genesis = judgeGenesis(alias.state, aliasDefinition, { name: scopeIdOf(aliasSeed), inc: newIncarnation(new Uint8Array(16).fill(6)), seed: aliasSeed, creation: signed }, { clock: clockOf(alias.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform });
+  const genesis = judgeGenesis(alias.state, aliasDefinition, { name: scopeIdOf(aliasSeed), nonce: newGenesisNonce(new Uint8Array(16).fill(6)), seed: aliasSeed, creation: signed }, { clock: clockOf(alias.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform });
   if (genesis.result !== "write") throw new Error("the fixture alias genesis must write");
   alias.seal(genesis.draft);
-  expect(alias.act(keys.rita, "retain", { ...on(alias, 0), fields: { birth: original.fact(0), body: digest } }, { platform, facts: [{ fact: original.fact(0), entry: original.last, under: "notes" }], values: [canonicalize(body)] }).result).toBe("write");
+  expect(alias.act(keys.rita, "retain", { ...on(alias, 0), fields: { birth: original.fact(0), body: digest } }, { platform, facts: [{ fact: original.fact(0), entry: original.last, sequence: fixtureSequence(original), under: "notes" }], values: [canonicalize(body)] }).result).toBe("write");
   const all = [original, alias], a = served(original, all), b = served(alias, all);
   // The source deliberately omits the original payload. No claim is made
   // that a native refused scope deleted it without a redaction entry.
@@ -76,7 +76,7 @@ test("partial recovery rechecks the remaining unknown comparison before acceptin
   expect(partial.report.result).toBe("incomplete");
   expect(partial.report.coverage).toContainEqual({ scope: w.original.at, from: 0, through: 0 });
   expect(partial.report.incompleteBytes).toEqual([{ scope: w.original.at, from: 0, through: 0, reason: "retained text unavailable" }]);
-  expect(w.alias.act(keys.rita, "retain", { ...on(w.alias, 0), fields: { birth: w.original.fact(0), body: w.other! } }, { platform: w.platform, facts: [{ fact: w.original.fact(0), entry: w.original.last, under: "notes" }], values: [canonicalize(other)] }).result).toBe("write");
+  expect(w.alias.act(keys.rita, "retain", { ...on(w.alias, 0), fields: { birth: w.original.fact(0), body: w.other! } }, { platform: w.platform, facts: [{ fact: w.original.fact(0), entry: w.original.last, sequence: fixtureSequence(w.original), under: "notes" }], values: [canonicalize(other)] }).result).toBe("write");
   const alias = served(w.alias, [w.original, w.alias]);
   alias.retained = [...alias.retained!.filter(input => input.digest !== w.alias.definition.digest), ...w.b.retained!.filter(input => input.kind === "value"), { kind: "value", domain: DOMAINS.text, digest: w.other!, bytes: canonicalize(other) }];
   const complete = await verify(new MemorySource([w.a, alias]), w.options);

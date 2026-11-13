@@ -3,7 +3,7 @@ import { archiveObservation, archiveOutcomeValue, replayArchiveEvidenceValue, ar
  * privacy admission or real-room export. Made-up owner rules and recorded
  * fixture authority are explicit; no caller anchor supplies a dependency. */
 import { PROPOSED_BOUNDS, type Digest, type PlatformData, type RetainedInput, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, newGenesisNonce, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { RETIRE_ACTION, actionOf, clockOf, contentStates, judgeDelivery, judgeGenesis, settleOutcome, valueDigest, type Judgment, type OutcomeRule } from "@generalbusiness/dap-derive";
 import { arriving, created, deskDefinition, deliver, grantOf, keys, Ledger, membership, notesDefinition, sent, T0, t, variant, type Actor } from "@generalbusiness/dap-derive/testing";
 import { C, cap, clean, snapshots, staging } from "../../derive/test/fixtures-hold.ts";
@@ -60,7 +60,7 @@ export function outcomeValueFixture(): ArchiveFixture {
   const platform = { named, rules }, ledger = new Ledger(definition);
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: { opener: keys.rita.member }, idempotencyKey: "archive-outcome-value", notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: named, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-  written(ledger, judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(71)), seed, creation }, { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform }));
+  written(ledger, judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(71)), seed, creation }, { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform }));
   const issue = ledger.act(keys.rita, "issue", { fields: { hash: textDigest("archive fixture") } }, { platform, membership });
   if (issue.result !== "write") throw new Error(`Archive fixture issue failed: ${JSON.stringify(issue)}`);
   const outcome = settleOutcome(ledger.state, definition, { type: "outcome", operation: "1:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { proof: required.digest } } }, { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, own: ledger.own, platform, values: [required.bytes] });
@@ -110,7 +110,7 @@ export function observingDeliveryFixture(): ArchiveFixture {
   const ledger = new Ledger(definition);
   const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: { opener: keys.rita.member }, idempotencyKey: "archive-observing-delivery", notAfter: t(60) }, keys.rita.secret);
   const seed: Seed = { v: 1, kind: "directory", definition: named, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-  written(ledger, judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(72)), seed, creation }, { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform }));
+  written(ledger, judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(72)), seed, creation }, { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform }));
   for (const [kind, fields] of [["point", { peer: peer.at }], ["go", {}]] as const) {
     const act = ledger.act(keys.rita, kind, { on: 0, expected: { on: ledger.item(0).revision }, fields }, { platform, membership });
     if (act.result !== "write") throw new Error(`Archive observing act failed: ${JSON.stringify(act)}`);
