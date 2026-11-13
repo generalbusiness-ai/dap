@@ -3,10 +3,11 @@ import { mkdtemp, rm, readdir, stat } from "node:fs/promises";
 import { join as pathJoin } from "node:path";
 import { tmpdir } from "node:os";
 import { fileStore } from "../src/files.ts";
-import type { Receipt, SignedIntent, Summary, Entry, OutboxId, Item } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import type { Receipt, SignedIntent, Summary, GenesisEntry, OutboxId, Item } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, entryHash, intentDigest, newGenesisNonce, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { agentKeyInvitationOf, encodeAgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { MEMBERSHIP } from "@generalbusiness/dap-platform";
+import { later } from "@generalbusiness/dap-derive/testing";
 import { Roster, rita } from "../../../packages/platform/test/support.ts";
 import { command, enrolAgentKey, enrolCheckerKey, issueCheckerInvitation, issueInvitation, linkOf, memoryStore, type Context, type Config, type Store } from "../src/index.ts";
 
@@ -17,7 +18,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   const home = await mkdtemp(pathJoin(tmpdir(), "artroom-agent-custody-"));
   try {
   const m = new Roster(named).seated(), service = "https://agents.test";
-  const directory = { scope: m.office.at.scope, inc: m.office.at.inc, kind: "directory" as const };
+  const directory = m.office.at;
   const repository = { directory, membership: m.at, rules: directory.scope, destination: directory.scope };
   const receipts = new Map<string, Receipt>(), sent: SignedIntent[] = [];
   let wrongDirectory = false, wrongDirectoryPin = false, sessionRequests = 0, crossReads = 0;
@@ -48,7 +49,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
         const judged = m.submit(signed, { platform: m.platformRules, membership: m.at, grants: m.held(signed.intent.actor) });
         expect(judged.result, "the package's actual membership rules admit the scripted native input").toBe("write");
         if (judged.result !== "write") throw Error("Model admission refused");
-        const entry = m.entries.at(-1)!.entry, fact = m.fact(entry.seq);
+        const entry = later(m.entries.at(-1)!.entry), fact = m.fact(entry.seq);
         const accepted: Receipt = { intent: digest, fact, definition: named, effects: entry.effects, sends: entry.sends.map((send): OutboxId => `${entry.seq}.${send.n}`), epoch: entry.epoch };
         receipts.set(digest, accepted); receipt = accepted;
       }
@@ -71,9 +72,9 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
     const source = agent && m.entries[agent.id]!.entry, birth = source?.sends.find(send => "creator" in send.to && send.to.kind === "inbox");
     if (birth && "creator" in birth.to && url.includes(scopeIdOf(birth.to))) {
       expect(init?.headers?.["authorization"]?.startsWith("Session ")).toBe(true); crossReads++;
-      const at = { scope: scopeIdOf(birth.to), inc: newIncarnation(new Uint8Array(16).fill(33)), kind: "inbox" as const };
+      const entry: GenesisEntry = { v: 1, seq: 0, prev: null, time: m.now, clamped: false, epoch: 0, input: { type: "genesis", seed: birth.to, nonce: newGenesisNonce(new Uint8Array(16).fill(33)), kind: "establish", "founding": null, source: m.fact(agent!.id), sourceKind: "membership", n: birth.n, message: birth.message.class === "request" ? birth.message : null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] };
+      const at = { scope: scopeIdOf(birth.to), genesis: entryHash(entry) };
       if (path.endsWith("/entries/0")) {
-        const entry: Entry = { v: 1, at, seq: 0, prev: null, time: m.now, clamped: false, epoch: 0, input: { type: "genesis", seed: birth.to, inc: at.inc, kind: "establish", "founding": null, source: m.fact(agent!.id), n: birth.n, message: birth.message.class === "request" ? birth.message : null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] };
         return reply({ ok: true, at: { seq: 0, hash: entryHash(entry) }, value: { entry, hash: entryHash(entry) }, complete: true });
       }
       return reply({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED inbox head") }, value: { scope: at, status: "active", definition: "platform:inbox@1", time: m.now, items: [{ id: 0, type: "inbox", state: "open", revision: 1, opened: textDigest("SCRIPTED inbox opening"), attributed: [], values: {}, parties: { owner: agent!.parties["member"] }, refs: { membership: m.at } }], counts: [["inbox", "open", 1]] }, complete: true });
@@ -81,7 +82,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
     if (url.includes(directory.scope)) {
       expect(init?.headers?.["authorization"]?.startsWith("Session ")).toBe(true); crossReads++;
       const definition = wrongDirectoryPin ? named === "platform:membership@8" ? "platform:directory@12" : "platform:directory@13" : directoryDefinition;
-      return reply({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED directory head") }, complete: true, value: { scope: directory, status: "active", definition, time: m.now, counts: [["repository", "ready", 1]], items: [{ id: 0, type: "repository", state: "ready", revision: 1, opened: textDigest("SCRIPTED repository"), attributed: [], parties: {}, values: {}, refs: { membership: m.at, rules: { ...directory, kind: "rules" }, destination: { ...directory, scope: wrongDirectory ? m.at.scope : directory.scope, kind: "destination" } } }] } });
+      return reply({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED directory head") }, complete: true, value: { scope: directory, status: "active", definition, time: m.now, counts: [["repository", "ready", 1]], items: [{ id: 0, type: "repository", state: "ready", revision: 1, opened: textDigest("SCRIPTED repository"), attributed: [], parties: {}, values: {}, refs: { membership: m.at, rules: { ...directory, genesis: textDigest("TEST rules genesis") }, destination: { ...directory, scope: wrongDirectory ? m.at.scope : directory.scope, kind: "destination" } } }] } });
     }
     if (path.includes("/entries/")) {
       const seq = Number(path.split("/").at(-1)), sealed = m.entries[seq];
@@ -92,7 +93,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   };
   const issuer = fileStore(pathJoin(home, "issuer")), requests: string[] = [];
   const originalKeep = issuer.keepPrivate; issuer.keepPrivate = async (name, bytes) => { await originalKeep(name, bytes); requests.push(name); };
-  await issuer.keep("founder", rita.secret); await issuer.save({ v: 1, service, key: "founder", repository, handle: "@rita" });
+  await issuer.keep("founder", rita.secret); await issuer.save({ v: 2, service, key: "founder", repository, handle: "@rita" });
   const ctx: Context = { store: issuer, fetch, now: () => timeMs(m.now)! };
   const input = { kind: "agent-key" as const, handle: "@helper", controller: { membership: m.at, member: "@rita" as const }, hours: 24 }, operation = "20000000-0000-4000-8000-000000000007";
   const savedConfig = issuer.save;
@@ -242,15 +243,15 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   expect(canonicalize(sent.at(-1)) === canonicalize(sent.at(-2))).toBe(true);
   expect(canonicalize([...(await receiver.private(kept.join!.request))!]) === canonicalize([...raw!])).toBe(true);
   const connected = (await receiver.config())!;
-  expect([connected.handle, !!connected.repository?.inbox, connected.join!.accepted?.at.kind]).toEqual(["@helper", true, "membership"]);
-  const untouched = memoryStore(); const legacy: Config = { v: 1, service, key: "legacy", join: { request: "retained-person", intent: textDigest("person intent"), link: textDigest("person link"), repository, handle: "@visitor" } }; await untouched.save(legacy);
+  expect([connected.handle, !!connected.repository?.inbox, canonicalize(connected.join!.accepted?.at) === canonicalize(m.at)]).toEqual(["@helper", true, true]);
+  const untouched = memoryStore(); const legacy: Config = { v: 2, service, key: "legacy", join: { request: "retained-person", intent: textDigest("person intent"), link: textDigest("person link"), repository, handle: "@visitor" } }; await untouched.save(legacy);
   expect((await enrolAgentKey({ store: untouched, fetch }, link)).code).toBe(1);
   expect(canonicalize(await untouched.config()) === canonicalize(legacy)).toBe(true);
   expect(await untouched.secret("agent")).toBeNull();
   // Person invitation production keeps the old Link parser/native join shape.
   const personStore: Store = memoryStore(), personRequests: string[] = [];
   const personKeep = personStore.keepPrivate; personStore.keepPrivate = async (name, bytes) => { await personKeep(name, bytes); personRequests.push(name); };
-  await personStore.keep("founder", rita.secret); await personStore.save({ v: 1, service, key: "founder", repository, handle: "@rita" });
+  await personStore.keep("founder", rita.secret); await personStore.save({ v: 2, service, key: "founder", repository, handle: "@rita" });
   const person = await issueInvitation({ ...ctx, store: personStore }, { kind: "person", handle: "@visitor", role: "member", hours: 24 }, { mode: "new", operation: "20000000-0000-4000-8000-000000000008", privateRequests: [...personRequests] });
   expect([person.state, linkOf(person.link!)?.definition, agentKeyInvitationOf(person.link!)]).toEqual(["verified", named, null]);
   expect((await command(receiving, ["join", person.link!])).code).toBe(1);
@@ -272,7 +273,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
 
 test("a retained successor preserves the effective membership declaration, including the implicit legacy M2 default, before any request", async () => {
   const m = new Roster().seated(), service = "https://retained.test";
-  const directory = { ...m.office.at, kind: "directory" as const };
+  const directory = { ...m.office.at, genesis: textDigest("TEST directory genesis") };
   const repository = { directory, membership: m.at, rules: directory.scope, destination: directory.scope };
   const input = { kind: "agent-key" as const, handle: "@helper", hours: 24, controller: { membership: m.at, member: "@rita" as const } };
   const operation = "30000000-0000-4000-8000-000000000001", names = ["i-" + "1".repeat(30), "i-" + "2".repeat(30)] as const;
@@ -282,7 +283,7 @@ test("a retained successor preserves the effective membership declaration, inclu
     await store.keep("issuer", rita.secret);
     await store.keepPrivate(names[0], utf8(raw));
     await store.keepPrivate(names[1], utf8(canonicalize({ ...root, definition, previous: { request: names[0], digest: textDigest(raw) } })));
-    await store.save({ v: 1, service, key: "issuer", repository, invitationIssue: { operation, request: names[0], digest: textDigest(raw), membership: m.at, actor: rita.key } });
+    await store.save({ v: 2, service, key: "issuer", repository, invitationIssue: { operation, request: names[0], digest: textDigest(raw), membership: m.at, actor: rita.key } });
     let calls = 0, submits = 0;
     const observed = await issueInvitation({ store, fetch: async (url) => { calls++; if (new URL(url).pathname.endsWith("/acts")) submits++; throw Error("REQUEST TRIPWIRE: declaration validation precedes I/O"); } }, input, { mode: "check", operation, privateRequests: [...names] })
       .then(value => value.state, error => error instanceof Error && error.message.includes("original invitation custody") ? "blocked" : "unexpected-error");
@@ -296,9 +297,9 @@ test("a retained successor preserves the effective membership declaration, inclu
 // Scripted session issuance refusal: no Native session or membership route runs.
 test("kept invitation issuance reports the actual session rate window before target reads or mutation", async () => {
   const model = new Roster(MEMBERSHIP).seated(), store = memoryStore();
-  const directory = { ...model.office.at, kind: "directory" as const };
+  const directory = { ...model.office.at, genesis: textDigest("TEST directory genesis") };
   await store.keep("founder", rita.secret);
-  await store.save({ v: 1, service: "https://rate.test", key: "founder", repository: { directory, membership: model.at, rules: directory.scope, destination: directory.scope }, handle: "@rita" });
+  await store.save({ v: 2, service: "https://rate.test", key: "founder", repository: { directory, membership: model.at, rules: directory.scope, destination: directory.scope }, handle: "@rita" });
   let sessions = 0, targetReads = 0;
   const fetch: Fetch = async url => {
     if (new URL(url).pathname.endsWith("/sessions")) {
@@ -338,14 +339,14 @@ test("checker receivers reject other tags before creating custody, and retained 
   const context: Context = { store, fetch: async () => { calls++; throw Error("REQUEST TRIPWIRE: invalid original precedes I/O"); } };
   for (const text of ["artroom-agent-key:invalid", "artroom-invite:invalid"]) expect((await enrolCheckerKey(context, text)).code).toBe(1);
   expect(await store.config()).toBeNull();
-  const model = new Roster("platform:membership@7").seated(), directory = { ...model.office.at, kind: "directory" as const };
+  const model = new Roster("platform:membership@7").seated(), directory = { ...model.office.at, genesis: textDigest("TEST directory genesis") };
   const repository = { directory, membership: model.at, rules: directory.scope, destination: directory.scope };
   const operation = "30000000-0000-4000-8000-000000000003", request = "i-" + "3".repeat(30);
   const input = { handle: "@checker", hours: 1 };
   const raw = canonicalize({ v: 1, operation, input: { ...input, kind: "checker-key" }, service: "https://checker.test", repository, actor: rita.key, secret: b64url(new Uint8Array(32).fill(17)), ends: "2030-01-01T00:00:00Z", definition: "platform:membership@7" });
   await store.keep("issuer", rita.secret);
   await store.keepPrivate(request, utf8(raw));
-  await store.save({ v: 1, service: "https://checker.test", key: "issuer", repository, invitationIssue: { operation, request, digest: textDigest(raw), membership: model.at, actor: rita.key } });
+  await store.save({ v: 2, service: "https://checker.test", key: "issuer", repository, invitationIssue: { operation, request, digest: textDigest(raw), membership: model.at, actor: rita.key } });
   await expect(issueCheckerInvitation(context, input, { mode: "continue", operation, privateRequests: [request] })).rejects.toThrow("original invitation custody");
   // A well-shaped current checker original also cannot enter the legacy
   // person/agent invite dispatcher. This is a local custody stand-in only.

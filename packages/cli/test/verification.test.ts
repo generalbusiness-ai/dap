@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import type { Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { Entry, ScopeRef, Seed, SequenceEntry } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { hashOfBytes } from "@generalbusiness/dap-replay";
 import { Verification } from "../src/verification.ts";
 import { Stop } from "../src/command-support.ts";
@@ -51,8 +51,8 @@ test("a stopped verification ignores a delayed reply and starts no later HTTP re
 // Hand-made entry shapes stand in for discovery and log replies. No scope
 // judged these entries. Accounting grants no admission or replay proof.
 const seed: Seed = { v: 1, kind: "directory", definition: "platform:directory@2", creator: null, cause: textDigest("TEST accounting"), ordinal: 0 };
-const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "directory" };
-const entry = (seq: number): Entry => ({ v: 1, at, seq, prev: null, time: "2099-01-01T00:00:00Z", clamped: false, epoch: 0,
+const at: ScopeRef = { scope: scopeIdOf(seed), genesis: textDigest("TEST genesis 1") };
+const entry = (seq: number): SequenceEntry => ({ v: 1, genesis: at.genesis, seq, prev: null, time: "2099-01-01T00:00:00Z", clamped: false, epoch: 0,
   input: { type: "checkpoint", through: 0, state: textDigest("TEST state") }, uses: [], prepared: [], effects: [], sends: [] });
 const sealed = (value: Entry) => ({ entry: value, hash: entryHash(value) });
 const stored = (value: Entry) => ({ seq: value.seq, hash: entryHash(value), bytes: canonicalize(value) });
@@ -89,14 +89,14 @@ test("discovery and log copies count once at the entry ceiling while each delive
 test("duplicate accounting never hides malformed bytes, a conflicting hash or a different source frame", async () => {
   const first = entry(0), changed = { ...first, time: "2099-01-02T00:00:00Z" };
   const noncanonical = canonicalize(first) + "\n";
-  const otherIncarnation = { ...at, inc: newIncarnation(new Uint8Array(16).fill(2)) };
+  const otherGenesis = { ...at, genesis: textDigest("TEST genesis 2") };
   const replies: ((budget: Verification) => void)[] = [
     budget => budget.sealedEntry(at.scope, { entry: changed, hash: entryHash(first) }),
     budget => budget.storedEntry(at.scope, at, { ...stored(changed), hash: entryHash(first) }),
     budget => budget.storedEntry(at.scope, at, { seq: 0, hash: hashOfBytes(noncanonical), bytes: noncanonical }),
     budget => budget.storedEntry(at.scope, at, { ...stored(first), seq: 1 }),
-    budget => budget.storedEntry(at.scope, otherIncarnation, stored(first)),
-    budget => budget.sealedEntry(at.scope, sealed({ ...first, at: otherIncarnation })),
+    budget => budget.storedEntry(at.scope, otherGenesis, stored(first)),
+    budget => budget.sealedEntry(at.scope, sealed({ ...first, genesis: otherGenesis.genesis })),
     budget => budget.storedEntry(at.scope, at, stored(changed)),
   ];
   for (const reply of replies) {

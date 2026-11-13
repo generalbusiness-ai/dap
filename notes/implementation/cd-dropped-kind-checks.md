@@ -231,3 +231,5 @@ A ruling decides what replaces each one.
 | `packages/replay/test/verify.test.ts` | a reference to another genesis fails with `wrong incarnation` | which reason the replay now gives |
 | `packages/checkers/test/reservation-origin.test.ts`, `reservation-record.test.ts` | the frozen `fixtures/reservation-record.json` names `at` and `inc` in its entries | a new recording from the Scope recorder |
 | `packages/mcp/test/room.scope.test.ts` | the hold `task` field value is the lane reference with `kind: "task"` | what form that field value takes |
+| `packages/cli/test/scope-index-applications.test.ts` | the recorded `fixtures/application-release-listing.json` names `inc` and `kind` in its references | a new recording of the listing |
+| `packages/cli/test/verify.test.ts` | the shared coverage line states `kind register` | what replaces the kind column of the coverage |

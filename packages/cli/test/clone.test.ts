@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { base32, newIncarnation, parseStrictBytes, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
+import { base32, parseStrictBytes, unb64url, verifySignedRead, textDigest } from "@generalbusiness/dap-bytes";
 import * as bytes from "@generalbusiness/dap-bytes";
 import type { SignedIntent, SignedRead, SignedSessionRequest } from "@generalbusiness/dap-contract";
 import { secretSigner, type Fetch, type Signer } from "@generalbusiness/dap-client";
@@ -14,9 +14,9 @@ import { memoryStore } from "../src/store.ts";
 test("remote reads the recorded repository; missing Git and the pinned @1 without read-token both sign nothing", async () => {
   const store = memoryStore();
   await store.keep("operator", new Uint8Array(32).fill(7));
-  const at = { scope: `sc_${"a".repeat(52)}` as const, kind: "destination" as const, inc: newIncarnation(new Uint8Array(16).fill(8)) };
+  const at = { scope: `sc_${"a".repeat(52)}` as const, genesis: textDigest("TEST genesis 8") };
   const membership = { ...at, scope: `sc_${base32(new Uint8Array(32).fill(1))}` as const, kind: "membership" as const };
-  const config: Config = { v: 1 as const, service: "https://service.test", key: "operator", repository: { directory: { ...at, kind: "directory" }, membership, destination: at.scope, rules: `sc_${"c".repeat(52)}` as const }, remote: "https://git.test/git/demo/r.git" };
+  const config: Config = { v: 2 as const, service: "https://service.test", key: "operator", repository: { directory: { ...at, genesis: textDigest("TEST directory genesis") }, membership, destination: at.scope, rules: `sc_${"c".repeat(52)}` as const }, remote: "https://git.test/git/demo/r.git" };
   await store.save(config);
   const calls: string[] = [];
   const signedActs: SignedIntent[] = [];
@@ -115,7 +115,7 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
   for (const result of [await command(running, ["clone"]), await command(running, ["act", "read-token", "--on", "destination", "--target", "0", "--set", "hours=1"])]) {
     expect(result.code).toBe(1);
     expect(result.lines[0]).toContain(`Archived: original entry ${at.scope}:1`);
-    expect(result.lines[0]).toContain(`hash sha256:${"b".repeat(64)}, incarnation ${at.inc}`);
+    expect(result.lines[0]).toContain(`hash sha256:${"b".repeat(64)}, genesis ${at.genesis}`);
     expect(result.lines[0]).toContain(`through entry 3, hash sha256:${"d".repeat(64)}`);
     expect(result.lines.join(" ")).toContain("before confirming the original result or another mutation");
     expect(result.lines.join(" ")).toContain("same original signed envelope");
@@ -141,9 +141,9 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
 test("unpublished remote names its mode and repository commands stop before Git, local input or act submission", async () => {
   const store = memoryStore();
   await store.keep("operator", new Uint8Array(32).fill(74));
-  const at = { scope: `sc_${"a".repeat(52)}` as const, kind: "destination" as const, inc: newIncarnation(new Uint8Array(16).fill(8)) };
-  const membership = { ...at, kind: "membership" as const };
-  await store.save({ v: 1, service: "https://unpublished.test", key: "operator", repository: { directory: { ...at, kind: "directory" }, membership, rules: at.scope, destination: at.scope } });
+  const at = { scope: `sc_${"a".repeat(52)}` as const, genesis: textDigest("TEST genesis 8") };
+  const membership = { ...at, genesis: textDigest("TEST membership genesis") };
+  await store.save({ v: 2, service: "https://unpublished.test", key: "operator", repository: { directory: { ...at, genesis: textDigest("TEST directory genesis") }, membership, rules: at.scope, destination: at.scope } });
   let definition = "platform:destination@16", state = "unpublished";
   const calls: string[] = [];
   const git = vi.fn(async () => 0), files = vi.fn(), read = vi.fn();

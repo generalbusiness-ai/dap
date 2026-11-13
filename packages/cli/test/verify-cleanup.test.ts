@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import type { FactRef, Item, Read, Summary } from "@generalbusiness/dap-contract";
-import { newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import { observeCleanup } from "../src/verify-cleanup.ts";
 
-const at: FactRef["at"] = { scope: `sc_${"a".repeat(52)}`, kind: "destination", inc: newIncarnation(new Uint8Array(16).fill(1)) };
+const at: FactRef["at"] = { scope: `sc_${"a".repeat(52)}`, genesis: textDigest("TEST genesis 1") };
 const target: FactRef = { at, seq: 9, hash: textDigest("head") };
 const head = { seq: target.seq, hash: target.hash };
 const summary = (definition: Summary["definition"] = "platform:destination@3"): Read<Summary> => ({ ok: true, complete: true, at: head, value: { scope: at, definition, status: "active", time: "2099-01-01T00:00:00Z", items: [], counts: [] } });
@@ -14,7 +14,7 @@ test.each(["platform:destination@3", "platform:destination@4", "platform:destina
   const cursors: (string | undefined)[] = [];
   const both: Item = { ...item(8, "reservation-token-unknown"), values: { ...item(8, "reservation-token-unknown").values, cleanupReason: { refReason: "reservation-stage-unknown", tokenReason: "reservation-token-unknown", tokenAttempts: 1, refRemoved: false }, cleanupAttempts: 1 } };
   const file: Item = { id: 16, type: "file-publication", state: "unresolved", revision: 2, opened: textDigest("file opening"), attributed: [], parties: {},
-    refs: { sender: { ...at, kind: "lane" } }, values: { sourceSeq: 4, sourceHash: textDigest("source"), sourceOrdinal: 0, path: "shelf/pot.md", content: "# Pot", contentDigest: textDigest("# Pot"), token: "private-file-token-must-not-print" } };
+    refs: { sender: { ...at, genesis: textDigest("TEST lane genesis") } }, values: { sourceSeq: 4, sourceHash: textDigest("source"), sourceOrdinal: 0, path: "shelf/pot.md", content: "# Pot", contentDigest: textDigest("# Pot"), token: "private-file-token-must-not-print" } };
   const liveSummary = (): Read<Summary> => { const read = summary(definition); return read.ok ? { ...read, value: { ...read.value, items: [item(4, "reservation-ref"), both, ...(["platform:destination@4", "platform:destination@6", "platform:destination@13", "platform:destination@16"].includes(definition) ? [file] : [])] } } : read; };
   const final = { ...item(12, "reservation-ref"), state: "cleaned" };
   const result = await observeCleanup({ summary: async () => liveSummary(), items: async (_type, cursor) => {

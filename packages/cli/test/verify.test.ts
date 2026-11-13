@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import type { Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { b64url, entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { Entry, ScopeRef, Seed, SequenceEntry } from "@generalbusiness/dap-contract";
+import { b64url, entryHash, newGenesisNonce, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { command, memoryStore } from "../src/index.ts";
 
@@ -9,15 +9,15 @@ import { command, memoryStore } from "../src/index.ts";
 // signed-read HTTP transport are real. This witnesses discovery coverage, not admission, authorization or historical replay.
 test("verify --all refuses incomplete room discovery at its page bound and retains the exact final cursor, after following earlier cursors", async () => {
   const seed: Seed = { v: 1, kind: "directory", definition: "platform:directory@2", creator: null, cause: textDigest("fixture directory"), ordinal: 0 };
-  const directory: ScopeRef = { kind: "directory", scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(1)) };
-  const membership: ScopeRef = { ...directory, kind: "membership", scope: scopeIdOf({ ...seed, kind: "membership" }) };
+  const directory: ScopeRef = { scope: scopeIdOf(seed), genesis: textDigest("TEST genesis 1") };
+  const membership: ScopeRef = { scope: scopeIdOf({ ...seed, kind: "membership" }), genesis: textDigest("TEST membership genesis") };
   const time = "2099-01-01T00:00:00Z";
-  const entries: Entry[] = [0, 1, 2].map((seq) => ({ v: 1, at: directory, seq, prev: seq === 0 ? null : textDigest(`previous ${seq}`), time, clamped: false, epoch: 0, input: { type: "checkpoint", through: 0, state: textDigest("fixture state") }, uses: [], prepared: [], effects: [], sends: [] }));
+  const entries: Entry[] = [0, 1, 2].map((seq): SequenceEntry => ({ v: 1, genesis: directory.genesis, seq, prev: seq === 0 ? null : textDigest(`previous ${seq}`), time, clamped: false, epoch: 0, input: { type: "checkpoint", through: 0, state: textDigest("fixture state") }, uses: [], prepared: [], effects: [], sends: [] }));
   const head = { seq: 2, hash: entryHash(entries[2]!) };
   for (const limit of [1, 2]) {
     const store = memoryStore();
     await store.keep("device", new Uint8Array(32).fill(2));
-    await store.save({ v: 1, service: "https://service.test", key: "device", repository: { directory, membership, rules: directory.scope, destination: directory.scope } });
+    await store.save({ v: 2, service: "https://service.test", key: "device", repository: { directory, membership, rules: directory.scope, destination: directory.scope } });
     const cursors: (string | null)[] = [];
     const fetch: Fetch = async (url, init) => {
       const address = new URL(url);
@@ -44,7 +44,7 @@ test("verify --all refuses incomplete room discovery at its page bound and retai
 import type { Digest, Request, RetainedInput, ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, timeMs } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, useOf } from "@generalbusiness/dap-derive";
-import { Ledger } from "@generalbusiness/dap-derive/testing";
+import { Ledger, fixtureSequence, later } from "@generalbusiness/dap-derive/testing";
 import { repositoryName } from "@generalbusiness/dap-platform";
 import { MemorySource, type MemoryScope } from "@generalbusiness/dap-replay";
 import { Register, registerDefinition, registerPlatform, directoryDefinition, directoryPlatform, rita } from "../../platform/test/support-creation.ts";
@@ -60,11 +60,11 @@ function broadRegister() {
     const sent = R.last, from = R.fact(sent.seq);
     const { to: seed, message } = sent.sends[0] as { to: Seed; message: Request };
     const D = new Ledger(directoryDefinition, "platform:directory");
-    D.seal(written(judgeGenesis(D.state, directoryDefinition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(8)), to: seed, from, n: 0, message },
-      { clock: clockOf(D.state, D.now), bounds: D.bounds, prepared: [], own: D.own, platform: directoryPlatform, facts: [{ fact: claim, entry: R.entries[claim.seq]!.entry, under: R.under }], source: { entry: sent, under: R.under } })));
+    D.seal(written(judgeGenesis(D.state, directoryDefinition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(8)), to: seed, from, n: 0, message },
+      { clock: clockOf(D.state, D.now), bounds: D.bounds, prepared: [], own: D.own, platform: directoryPlatform, facts: [{ fact: claim, entry: R.entries[claim.seq]!.entry, under: R.under, sequence: fixtureSequence(R) }], source: { entry: sent, under: R.under, sequence: fixtureSequence(R) } })));
     const result = D.last.sends[0]!;
     R.seal(written(judgeDelivery(R.state, registerDefinition, { to: result.to, from: D.fact(0), n: 0, message: result.message },
-      { clock: clockOf(R.state, R.now), bounds: R.bounds, facts: [], prepared: [], own: R.own, source: { entry: D.last, under: D.under }, origin: sent, platform: registerPlatform })));
+      { clock: clockOf(R.state, R.now), bounds: R.bounds, facts: [], prepared: [], own: R.own, source: { entry: D.last, under: D.under, sequence: fixtureSequence(D) }, origin: sent, platform: registerPlatform })));
     children.push(D);
   }
   const all = [R, ...children];
@@ -82,7 +82,7 @@ function broadRegister() {
 async function broadContext(wide: Pick<ReturnType<typeof broadRegister>, "R" | "children" | "memory">, discovery: "empty" | "wide", progress: string[], refusal?: "forbidden" | "unavailable", refused?: (scope: ScopeId) => boolean, ownAt = 0) {
   const { R, children, memory } = wide, D = children[ownAt]!;
   const store = memoryStore(); await store.keep("device", rita.secret);
-  await store.save({ v: 1, service: "https://service.test", key: "device", repository: { directory: D.at, membership: { ...D.at, kind: "membership" }, rules: D.at.scope, destination: D.at.scope } });
+  await store.save({ v: 2, service: "https://service.test", key: "device", repository: { directory: D.at, membership: { ...D.at, genesis: textDigest("TEST membership genesis") }, rules: D.at.scope, destination: D.at.scope } });
   const logs = new Set<ScopeId>(), histories: ScopeId[] = [], logPages = new Map<string, number>();
   let elapsed = 0;
   const fetch: Fetch = async (url, init) => {
@@ -90,7 +90,7 @@ async function broadContext(wide: Pick<ReturnType<typeof broadRegister>, "R" | "
     if (address.pathname.endsWith("/sessions")) {
       if (!refusal) return Response.json({ ok: false, reason: "sessions-unavailable" }, { status: 503 });
       const request = JSON.parse(init!.body!).request;
-      return Response.json({ ok: true, token: b64url(new Uint8Array(32).fill(7)), session: { v: 1, deployment: "SCRIPTED session", membership: { ...D.at, kind: "membership" }, member: "@rita", key: request.actor, reads: ["summary", "entry", "history", "log", "retained"], ends: request.notAfter } });
+      return Response.json({ ok: true, token: b64url(new Uint8Array(32).fill(7)), session: { v: 1, deployment: "SCRIPTED session", membership: { ...D.at, genesis: textDigest("TEST membership genesis") }, member: "@rita", key: request.actor, reads: ["summary", "entry", "history", "log", "retained"], ends: request.notAfter } });
     }
     expect(init?.headers?.["authorization"]).toMatch(refusal ? /^(Session|Signed) / : /^Signed /);
     if (address.pathname === `/v1/scopes/${D.at.scope}`) return Response.json({ ok: true, at: D.head, complete: true, value: { scope: D.at, status: "active", definition: "platform:directory@2", time: D.now, counts: [], items: [{ id: 0, revision: 1, type: "repository", state: "ready", opened: textDigest("SCRIPTED discovery"), attributed: [], parties: {}, values: {}, refs: { register: R.at } }] } });
@@ -99,7 +99,7 @@ async function broadContext(wide: Pick<ReturnType<typeof broadRegister>, "R" | "
       // Discovery-only metadata deliberately differs from the replay journals.
       // Its separate test exercises graph breadth; replay below uses judged bytes.
       const sources = discovery === "wide" && scope === D.at.scope ? R.entries.filter(({ entry }) => entry.sends.some(send => "creator" in send.to)) : [];
-      const value = sources.map(({ entry }) => { const changed: Entry = { ...entry, at: D.at }; return { entry: changed, hash: entryHash(changed) }; });
+      const value = sources.map(({ entry }) => { const changed: Entry = entry.input.type === "genesis" ? entry : { ...later(entry), genesis: D.at.genesis }; return { entry: changed, hash: entryHash(changed) }; });
       if (discovery === "wide" && scope === children.at(-1)!.at.scope) elapsed = 100_000;
       return Response.json({ ok: true, at: D.head, complete: true, value });
     }
@@ -145,7 +145,8 @@ test("verify --all replays a Register with 65 sibling dependencies under CLI wor
   // other 64 children. A requested-root head refresh may reread Directory 0.
   for (const child of wide.children.slice(1)) expect(logPages.get(`${child.at.scope}:0`)).toBe(1);
   expect(outcome.lines.filter(line => line.startsWith("Shared room proof:"))).toHaveLength(1);
-  expect(outcome.lines).toContain(`Shared coverage: ${wide.R.at.scope}, incarnation ${wide.R.at.inc}, kind register, entries 0 to ${wide.R.head.seq}; proving root ${wide.R.at.scope}.`);
+  // HELD: the coverage names each scope by its reference, which names no kind. Ruling needed on what replaces the kind column.
+  expect(outcome.lines).toContain(`Shared coverage: ${wide.R.at.scope}, genesis ${wide.R.at.genesis}, kind register, entries 0 to ${wide.R.head.seq}; proving root ${wide.R.at.scope}.`);
   // Only two top-level targets were selected by the SCRIPTED discovery;
   // the 65 sibling proofs are actual judged journal dependencies, not 65 targets.
   expect(outcome.lines.at(-1)).toBe("All consistent: 2 scopes.");
@@ -155,10 +156,10 @@ test("verify --all replays a Register with 65 sibling dependencies under CLI wor
 // and preserves its response-header metadata, not a Native quota window.
 test("verify --all reports a session rate window without Signed fallback or an incomplete replay finding", async () => {
   const seed: Seed = { v: 1, kind: "directory", definition: "platform:directory@2", creator: null, cause: textDigest("rate fixture"), ordinal: 0 };
-  const directory: ScopeRef = { scope: scopeIdOf(seed), kind: "directory", inc: newIncarnation(new Uint8Array(16).fill(2)) };
-  const membership: ScopeRef = { ...directory, kind: "membership", scope: scopeIdOf({ ...seed, kind: "membership" }) };
+  const directory: ScopeRef = { scope: scopeIdOf(seed), genesis: textDigest("TEST genesis 2") };
+  const membership: ScopeRef = { scope: scopeIdOf({ ...seed, kind: "membership" }), genesis: textDigest("TEST membership genesis") };
   const store = memoryStore(); await store.keep("device", new Uint8Array(32).fill(2));
-  await store.save({ v: 1, service: "https://rate.test", key: "device", repository: { directory, membership, rules: directory.scope, destination: directory.scope } });
+  await store.save({ v: 2, service: "https://rate.test", key: "device", repository: { directory, membership, rules: directory.scope, destination: directory.scope } });
   let sessions = 0, reads = 0;
   const fetch: Fetch = async url => {
     if (new URL(url).pathname.endsWith("/sessions")) { sessions++; return Response.json({ ok: false, reason: "rate-limited" }, { status: 429, headers: { "retry-after": "17" } }); }
@@ -241,7 +242,7 @@ function forged(wide: ReturnType<typeof broadRegister>, change: (entry: Entry) =
   for (const { entry } of wide.R.entries) {
     const next = change(entry);
     if (!next) continue;
-    const moved: Entry = { ...next, seq, prev };
+    const moved: Entry = next.input.type === "genesis" ? next : { ...later(next), seq, prev };
     const hash = entryHash(moved);
     entries.push({ seq, hash, bytes: canonicalize(moved) }); prev = hash; seq++;
   }
@@ -259,8 +260,8 @@ test("a server that relabels this room's own result as another room's fails the 
   const relabel = (fields: (input: { from: unknown; message: { of: unknown } }) => object) => (entry: Entry) => entry.seq === ownResult.seq ? { ...entry, input: { ...entry.input, ...fields(entry.input as never) } } as Entry : entry;
   // The strongest form: an invented entry, named as the last room's first entry and retained for the reader, with that room's real result removed from the end. Only that room's readers could compare the hash.
   const last = wide.children.at(-1)!, lastResult = results(last.at.scope);
-  const invented: Entry = { ...own.entries[0]!.entry, at: last.at };
-  const inventedFact = { at: last.at, seq: 0, hash: entryHash(invented) }, inventedUse = useOf(inventedFact, invented);
+  const invented: Entry = own.entries[0]!.entry; // Its own genesis, named as the last room's.
+  const inventedFact = { at: last.at, seq: 0, hash: entryHash(invented) }, inventedUse = useOf(inventedFact, invented, "directory");
   const inventedCopy: RetainedInput = { kind: "entry", digest: inventedUse.content, bytes: canonicalize(invented), under: own.definition.declared.name };
   const variants: Record<string, [(entry: Entry) => Entry | null, string, RetainedInput[]?]> = {
     "an invented source entry": [(entry: Entry) => entry.seq === lastResult.seq ? null : relabelUses(inventedFact, inventedUse)(entry), `Result: not proven: needs ${last.at.scope} entries 0 to 0, not readable by this session.`, [inventedCopy]],

@@ -59,7 +59,7 @@ test("dedicated public offer lets an outsider claim Register17 without a member 
       life.wire(register.name, () => ({ outside: outsideOf(register!.name) }));
       await life.wait(() => register!.restart());
       const visitor = memoryStore(); await visitor.keep("visitor", sam.secret);
-      await visitor.save({ v: 1, service: SERVICE, key: "visitor", register: current });
+      await visitor.save({ v: 2, service: SERVICE, key: "visitor", register: current });
       expect((await installer.store.secret(config.key))!).not.toEqual(sam.secret);
       const pause: NonNullable<Context["pause"]> = async waiting => {
         life.active();

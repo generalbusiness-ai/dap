@@ -85,7 +85,7 @@ test("Native installed-release listing uses a real member session and skips non-
     const manifestBytes = utf8(canonicalize(manifest)), manifestPath = "/TEST-listing/manifest.json", outputPath = "/TEST-listing/releases.json";
     const custody = memoryStore(), key = "TEST-listing-observer";
     await custody.keep(key, una.secret);
-    const config: Config = { v: 1, service: manifest.service, key, repository: { directory, membership, rules: A.name, destination: G.name, inbox: inbox.name } };
+    const config: Config = { v: 2, service: manifest.service, key, repository: { directory, membership, rules: A.name, destination: G.name, inbox: inbox.name } };
     let withMembership = false, published: Uint8Array | undefined, token: string | undefined;
     const calls: { method: string; scope: string; authority: "session-request" | "Session" | "Signed" }[] = [];
     const fetch: Fetch = async (url, init) => {

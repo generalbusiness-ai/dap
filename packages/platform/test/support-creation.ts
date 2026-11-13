@@ -19,10 +19,10 @@
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, PlatformDefinition, Request, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, ownersOf } from "@generalbusiness/dap-derive";
-import type { ActJudgment, Judgment, PlatformRules, Source, ValidDefinition } from "@generalbusiness/dap-derive";
-import { Ledger, T0, forged, keys, t, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";
+import type { ActJudgment, Fetched, Judgment, PlatformRules, Source, ValidDefinition } from "@generalbusiness/dap-derive";
+import { Ledger, T0, fixtureSequence, forged, keys, t, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, REGISTER, directoryRules, directorySeed, platform, registerRules, repositoryName } from "../src/index.ts";
 import { checkedPlatformData as checked, written } from "./fixtures.ts";
 
@@ -64,7 +64,7 @@ export class Register extends Ledger {
     this.#nativePlatform = { named, rules: source.rules };
     const install = installing(paul, policy, creators);
     const seed = registerSeed(install, { definition: named });
-    this.seal(written(judgeGenesis(this.state, this.#nativeDefinition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), seed, creation: install }, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: this.#nativePlatform })));
+    this.seal(written(judgeGenesis(this.state, this.#nativeDefinition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(7)), seed, creation: install }, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: this.#nativePlatform })));
   }
 
   /** An act, judged with the register's rules. No grant is presented: no act of the register is judged on one. */
@@ -96,8 +96,15 @@ function unknownBody(ledger: Ledger, definition: ValidDefinition, platform: Plat
 }
 
 /** An entry of a scope that no judge wrote: MADE BY HAND, under that definition's name, at that time. */
-export const scripted = (at: ScopeRef, seq: number, input: Entry["input"], sends: readonly Send[], under: string, time = T0): Source =>
-  ({ entry: { ...forged(at, seq, input, sends).entry, time }, under });
+export const scripted = (at: ScopeRef, seq: number, input: Entry["input"], sends: readonly Send[], under: string, time = T0): Source => {
+  const made = forged(at, seq, input, sends);
+  if (made.entry.input.type === "genesis") {
+    // A changed time would change the genesis bytes that `forged` admitted.
+    if (time !== T0) throw new Error("a scripted genesis has the fixture time");
+    return { ...made, under };
+  }
+  return { ...made, entry: { ...made.entry, time }, under };
+};
 
 /**
  * A directory in memory, below a SCRIPTED register: see the head of this
@@ -131,28 +138,28 @@ export class Directory extends Ledger {
     const sent = R.head.seq;
     // The directory's genesis: the real judge, with the fourth cause. The claim's entry is at hand, as a fetched fact.
     const context = () => ({ clock: clockOf(this.state, this.now), bounds: this.bounds, prepared: [], own: this.own, platform: directoryPlatform });
-    this.seal(written(judgeGenesis(this.state, directoryDefinition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(8)), to: seed, from: R.fact(sent), n: 0, message: create },
-      { ...context(), facts: [{ fact: this.claim, entry: R.entries[matched]!.entry, under: R.under }], source: { entry: R.entries[sent]!.entry, under: R.under } })));
+    this.seal(written(judgeGenesis(this.state, directoryDefinition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(8)), to: seed, from: R.fact(sent), n: 0, message: create },
+      { ...context(), facts: [{ fact: this.claim, entry: R.entries[matched]!.entry, under: R.under, sequence: fixtureSequence(R) }], source: { entry: R.entries[sent]!.entry, under: R.under, sequence: fixtureSequence(R) } })));
     if (over.confirmed === false) return;
     // The register records the directory's `applied` result, judged with its own rules: the clause `applied` of the send runs the
     // mark `claim-active`, and the entry sends the confirmation, which makes the directory active.
     const result = this.last.sends[0]!;
     R.seal(written(judgeDelivery(R.state, registerDefinition, { to: result.to, from: this.fact(0), n: 0, message: result.message },
-      { clock: clockOf(R.state, R.now), bounds: R.bounds, facts: [], prepared: [], own: R.own, source: { entry: this.last, under: this.under }, origin: R.entries[sent]!.entry, platform: registerPlatform })));
-    this.take({ entry: R.last, under: R.under }, 0);
+      { clock: clockOf(R.state, R.now), bounds: R.bounds, facts: [], prepared: [], own: R.own, source: { entry: this.last, under: this.under, sequence: fixtureSequence(this) }, origin: R.entries[sent]!.entry, platform: registerPlatform })));
+    this.take({ entry: R.last, under: R.under, sequence: fixtureSequence(R) }, 0);
     for (const kind of over.children ?? ["membership", "rules", "destination"]) this.answered(kind);
   }
 
   /** Judge the delivery of send `n` of a source entry. Nothing is written. */
-  judgeDelivered(source: Source, n: number, facts: readonly { fact: FactRef; entry: Entry; under: string }[] = []): Judgment {
+  judgeDelivered(source: Source, n: number, facts: readonly Fetched[] = []): Judgment {
     const send = source.entry.sends.find((s) => s.n === n)!;
     const of = send.message.class === "result" ? send.message.of : null;
-    const delivered = { to: send.to, from: factRefOf(source.entry), n, message: send.message };
+    const delivered = { to: send.to, from: factRefOf(source.entry, source.sequence.at), n, message: send.message };
     return judgeDelivery(this.state, directoryDefinition, delivered, { clock: clockOf(this.state, this.now), bounds: this.bounds, facts, prepared: [], own: this.own, source, origin: of ? (this.entries[of.from.seq]?.entry ?? null) : null, platform: directoryPlatform });
   }
 
   /** Judge the delivery of send `n` of a source entry, and write the entry. */
-  take(source: Source, n: number, facts: readonly { fact: FactRef; entry: Entry; under: string }[] = []): Entry {
+  take(source: Source, n: number, facts: readonly Fetched[] = []): Entry {
     return this.seal(written(this.judgeDelivered(source, n, facts)));
   }
 
@@ -163,12 +170,12 @@ export class Directory extends Ledger {
   created(seq: number, n: number, under: string, mint = 30): ScopeRef {
     const send = this.entries[seq]!.entry.sends.find((s) => s.n === n)!;
     const seed = send.to as Seed;
-    const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(mint + seed.ordinal)), kind: seed.kind };
-    const genesis = scripted(at, 0, { type: "genesis", seed, inc: at.inc, kind: "establish", "founding": null, source: this.fact(seq), n, message: send.message as Request, decision: "applied" },
+    // The genesis is admitted from its own bytes; the zero digest stands only for the scope ID that `forged` reads.
+    const genesis = scripted({ scope: scopeIdOf(seed), genesis: `sha256:${"0".repeat(64)}` }, 0, { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(mint + seed.ordinal)), kind: "establish", "founding": null, source: this.fact(seq), sourceKind: "directory", n, message: send.message as Request, decision: "applied" },
       [{ n: 0, to: this.at, message: { class: "result", of: { from: this.fact(seq), n }, outcome: "applied" } }], under);
     // A clause reads again each fact that the fields of its origin entry name: for the genesis, the claim's entry, which it retained.
-    this.take(genesis, 0, [{ fact: this.claim, entry: this.register.entries[this.claim.seq]!.entry, under: this.register.under }]);
-    return at;
+    this.take(genesis, 0, [{ fact: this.claim, entry: this.register.entries[this.claim.seq]!.entry, under: this.register.under, sequence: fixtureSequence(this.register) }]);
+    return { ...genesis.sequence.at };
   }
 
   /** SCRIPTED: one child of the directory's genesis answers its `create` as applied. */

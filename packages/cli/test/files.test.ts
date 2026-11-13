@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "vitest";
-import { b64url, keyIdOfSecret, newIncarnation, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, keyIdOfSecret, timeOf, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { fileStore } from "../src/files.ts";
 import { command } from "../src/line.ts";
@@ -114,7 +114,7 @@ test("private pending envelopes persist owner-only separately from public config
     const store = fileStore(dir);
     const bytes = new TextEncoder().encode(JSON.stringify({ secret: "an invitation secret", signed: "complete envelope" }));
     await store.keepPrivate("join-pending", bytes);
-    await store.save({ v: 1, service: "https://service.test", key: "device" });
+    await store.save({ v: 2, service: "https://service.test", key: "device" });
     const reopened = fileStore(dir);
     expect(await reopened.private("join-pending")).toEqual(bytes);
     expect([statSync(join(dir, "private")).mode & 0o777, statSync(join(dir, "private", "join-pending.data")).mode & 0o777]).toEqual([0o700, 0o600]);
@@ -129,8 +129,8 @@ test("issued session cache survives a new fileStore owner-only, rotates separate
   const dir = mkdtempSync(join(tmpdir(), "artroom-session-cache-"));
   try {
     const store = fileStore(dir), seed = new Uint8Array(32).fill(27), secret = "TEST-private-persisted-session";
-    const membership = { scope: `sc_${"a".repeat(52)}` as const, kind: "membership" as const, inc: newIncarnation(new Uint8Array(16).fill(1)) };
-    const config = { v: 1 as const, service: "https://session.test", key: "device", repository: { directory: { ...membership, kind: "directory" as const }, membership, rules: membership.scope, destination: membership.scope } };
+    const membership = { scope: `sc_${"a".repeat(52)}` as const, genesis: textDigest("TEST genesis 1") };
+    const config = { v: 2 as const, service: "https://session.test", key: "device", repository: { directory: { ...membership, genesis: textDigest("TEST directory genesis") }, membership, rules: membership.scope, destination: membership.scope } };
     await store.keep("device", seed); await store.save(config); await store.keepPrivate("read", utf8("immutable original request"));
     let requests = 0; const now = () => Date.parse("2099-01-01T00:00:00Z");
     const fetch: Fetch = async () => { requests++; return Response.json({ ok: true, token: secret,

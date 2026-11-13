@@ -400,14 +400,14 @@ test("a retained selected install founds a second real room after its Signed win
     ok(await run(first, "create", "first", "--handle", "@owner"));
     const saved = (await first.store.config())!, secret = (await first.store.secret(saved.key))!;
     const secondStore = memoryStore(); await secondStore.keep(saved.key, secret);
-    await secondStore.save({ v: 1, service: saved.service, key: saved.key, register: saved.register!, plan: saved.plan! });
+    await secondStore.save({ v: 2, service: saved.service, key: saved.key, register: saved.register!, plan: saved.plan! });
     const second: Context = { ...first, store: secondStore };
     life.advance(16 * 60_000);
     const before = (await life.wait(() => R.summary())).at;
     const refused = await life.wait(() => routed(`${SERVICE}/v1/scopes/${R.name}`));
     expect(refused.status).toBe(403);
     const legacyStore = memoryStore(); await legacyStore.keep(saved.key, secret);
-    await legacyStore.save({ v: 1, service: saved.service, key: saved.key, register: saved.register! });
+    await legacyStore.save({ v: 2, service: saved.service, key: saved.key, register: saved.register! });
     const legacy = await run({ ...first, store: legacyStore }, "create", "legacy", "--handle", "@owner");
     expect(legacy.code).toBe(1); expect(legacy.lines.join("\n")).toContain("forbidden");
     expect((await life.wait(() => R.summary())).at).toEqual(before);

@@ -5,7 +5,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Entry, ScopeRef, Seed, Sealed, SignedRead } from "@generalbusiness/dap-contract";
-import { factRefOf, newIncarnation, parseStrictBytes, scopeIdOf, textDigest, unb64url, utf8, verifySignedRead, type ByteStream } from "@generalbusiness/dap-bytes";
+import { entryHash, newGenesisNonce, parseStrictBytes, scopeIdOf, textDigest, unb64url, utf8, verifySignedRead, type ByteStream } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { scopeIndexCommand, saveIndexFile, type IndexFiles } from "../src/scope-index-command.ts";
@@ -23,19 +23,20 @@ function fleet(count: number): Registered[] {
   return Array.from({ length: count }, (_, ordinal) => {
     const kind = ordinal === 0 ? "directory" : ordinal === 1 ? "register" : "rules";
     const seed: Seed = { v: 1, kind, definition: ARCHIVE_DEVICE_PUBLICATION_COHORT[kind], creator: null, cause, ordinal };
-    const at: ScopeRef = { kind, scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(ordinal % 250 + 1)) };
-    const entry: Entry = { v: 1, at, seq: 0, prev: null, time: "2026-10-27T12:00:00Z", clamped: false, epoch: 0,
-      input: { type: "genesis", seed, inc: at.inc, kind: "create", founding: null, source: null, n: null, message: null, decision: "applied" },
+    const entry: Entry = { v: 1, seq: 0, prev: null, time: "2026-10-27T12:00:00Z", clamped: false, epoch: 0,
+      input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(ordinal % 250 + 1)), kind: "create", founding: null, source: null, sourceKind: null, n: null, message: null, decision: "applied" },
       uses: [], prepared: [], effects: [], sends: [] };
-    const birth = { entry, hash: factRefOf(entry).hash };
-    return { row: { at, genesis: birth.hash }, birth };
+    const at: ScopeRef = { scope: scopeIdOf(seed), genesis: entryHash(entry) };
+    const birth = { entry, hash: at.genesis };
+    const row: IndexScope = { at, kind };
+    return { row, birth };
   }).sort((a, b) => a.row.at.scope < b.row.at.scope ? -1 : 1);
 }
 function fixture(count: number | Registered[] = 3) {
-  const registered = typeof count === "number" ? fleet(count) : count, root = registered.find(value => value.row.at.kind === "directory")!.row.at;
-  const register = registered.find(value => value.row.at.kind === "register")!.row.at;
-  let config: Config | null = { v: 1, service, key: "PRIVATE-TEST-DEVICE-NAME", register,
-    repository: { directory: root, membership: { ...root, kind: "membership" }, rules: root.scope, destination: root.scope } };
+  const registered = typeof count === "number" ? fleet(count) : count, root = registered.find(value => value.row.kind === "directory")!.row.at;
+  const register = registered.find(value => value.row.kind === "register")!.row.at;
+  let config: Config | null = { v: 2, service, key: "PRIVATE-TEST-DEVICE-NAME", register,
+    repository: { directory: root, membership: { ...root, genesis: textDigest("TEST membership genesis") }, rules: root.scope, destination: root.scope } };
   let published: Uint8Array | undefined;
   let signer: () => Promise<Signer | null> = async () => actor;
   const calls: { cursor: string; method: string; authorization: string }[] = [], local: string[] = [];
@@ -118,7 +119,7 @@ test("census respects a full explicit final page and separates empty, fixed refu
   const omitted = fixture(); omitted.respond(async () => Response.json({ rows: omitted.registered.filter(value => value.row.at.scope !== omitted.root.scope).map(value => value.row), next: null }));
   expect(report(await omitted.run())).toMatchObject({ outcome: "root-unregistered", written: false }); expect(omitted.published()).toBeUndefined();
   const incarnation = fixture(); incarnation.respond(async () => Response.json({ rows: incarnation.registered.map(({ row }) => row.at.scope === incarnation.root.scope
-    ? { ...row, at: { ...row.at, inc: newIncarnation(new Uint8Array(16).fill(251)) } } : row), next: null }));
+    ? { ...row, at: { ...row.at, genesis: textDigest("TEST genesis 251") } } : row), next: null }));
   expect(report(await incarnation.run())).toMatchObject({ outcome: "root-unregistered", written: false }); expect(incarnation.published()).toBeUndefined();
   const missing = fixture(), withoutRoot = { ...missing.currentConfig() }; delete withoutRoot.repository; missing.config(withoutRoot);
   expect(report(await missing.run())).toMatchObject({ outcome: "root-unregistered", pages: 0 });
@@ -174,7 +175,7 @@ test("census refuses malformed identities, ordering, page envelopes and cursors 
 // cannot be refilled by pagination, and crossing either publishes nothing.
 test("census fits exactly the existing row bound and refuses a next row or excessive partial pages", async () => {
   const all = fleet(INDEX_INVENTORY_BOUNDS.scopes + 1), exactRows = [...all];
-  exactRows.splice(exactRows.findIndex(value => value.row.at.kind === "rules"), 1);
+  exactRows.splice(exactRows.findIndex(value => value.row.kind === "rules"), 1);
   const exact = fixture(exactRows);
   expect(report(await exact.run())).toMatchObject({ outcome: "complete", rows: INDEX_INVENTORY_BOUNDS.scopes,
     pages: Math.ceil(INDEX_INVENTORY_BOUNDS.scopes / SCOPE_INDEX_CENSUS_BOUNDS.pageSize) });

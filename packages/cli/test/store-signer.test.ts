@@ -5,7 +5,7 @@ import { keyIdOfSecret, verify } from "@generalbusiness/dap-bytes";
 import { memoryStore, type Store } from "../src/store.ts";
 import { install, installPlanned, type Context } from "../src/commands.ts";
 import { secretSigner } from "@generalbusiness/dap-client";
-import { canonicalize, intentDigest, newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, textDigest } from "@generalbusiness/dap-bytes";
 import type { Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { newStoredSigner, storedSigner } from "../src/store-signer.ts";
 
@@ -79,7 +79,7 @@ test("an existing hook operator supplies the exact planned identity and replays 
     bodies.push(canonicalize(request.creation));
     expect((await store.config())!.plan!.attempted).toMatch(/^sha256:/);
     const receipt: Receipt = {
-      fact: { at: { kind: "register", scope: original.register, inc: newIncarnation(new Uint8Array(16).fill(8)) }, seq: 0, hash: textDigest("TEST acknowledged register") },
+      fact: { at: { scope: original.register, genesis: textDigest("TEST genesis 8") }, seq: 0, hash: textDigest("TEST acknowledged register") },
       definition: request.definition, intent: intentDigest(request.creation.intent), effects: [], sends: [], epoch: 0,
     };
     return Response.json({ answer: "accepted", receipt });
