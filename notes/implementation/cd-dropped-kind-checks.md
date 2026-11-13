@@ -216,8 +216,10 @@ slot. Two sites did:
 
 `RETIRED_ROOM_READER_COMMIT` lives in `packages/bytes/src/retired-room.ts`.
 Ruling 190b31f4 (Q-S4) keeps it out of `contract`. `bytes` is the lowest
-package that `scope` and `mcp` both depend on. Its value is 40 zeros until
-the landing, marked `// FILLED AT LANDING`.
+package that `scope` and `mcp` both depend on. Its value is main
+`64112e4576b4c3c8fb668389786deb6b703da417`, the last old-format main commit,
+which this head integrates. The planner named that commit in act b6f9f350 and
+holds main until the cutover lands.
 
 ## Re-pinned platform digests
 
