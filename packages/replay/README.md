@@ -44,8 +44,9 @@ prevents later publication. No provisional token is a final result.
   intent's fields, and it does not compare a slot's value with the type the
   definition declares;
 - the chain: `seq` counts from 0, `prev` is the hash of the entry before,
-  every entry is at one scope and incarnation, times do not go back, and a
-  clamped entry has the time of the entry before it;
+  every entry after the genesis carries the genesis entry's hash in
+  `genesis`, times do not go back, and a clamped entry has the time of the
+  entry before it;
 - the scope ID is the digest of the genesis's seed;
 - the signature of each act, of a creation and of the signed intent of a
   preparation entry.
@@ -153,7 +154,7 @@ limits are taken from the same supplied pinned code as in the runtime,
 and counted in each possible outcome's reservation.
 
 What a source scope's history gives is derived once for each source scope,
-incarnation, head, definition and subject, and kept. Each entry of a
+genesis, head, definition and subject, and kept. Each entry of a
 source is folded once more into a view of that scope, in order, as far as
 the highest head that an observation names. The state at an earlier head
 is read from the view's log of writes, and no entry is folded again. Every
@@ -181,8 +182,8 @@ entry used, the verifier does one of two things:
 - **Replay of the source.** Otherwise the source scope is replayed from its
   genesis up to that entry, under its own definition, and the hash of its
   entry there is compared with the reference before the entry's content is
-  read. The scope's incarnation and kind must be the ones the reference
-  names.
+  read. The source's genesis must be the one the reference names, and its
+  seed's kind must be the source kind that the entry records.
 
 If the source cannot be read and a supplied anchor names the required
 scope and position with a different hash, the result is `mismatch`.
@@ -196,7 +197,7 @@ needs. Two scopes may use each other at different positions.
 A room proof uses one command-local verifier with the requested scopes as
 roots at depth 0. Foreign depth is the least distance from a root actually
 followed. A prefix or content proven once may serve later targets under
-the same source, incarnation, hash, semantic, code and trust options;
+the same source, genesis, hash, semantic, code and trust options;
 discovery alone proves nothing. The final room result gives one union of
 coverage and trusts, including the root that proved each shared prefix and
 checked content used to settle another target's detached text, followed by
@@ -221,7 +222,7 @@ service being checked.
 | Result | When |
 |---|---|
 | `consistent` | Everything the mode checks holds, through the head, for the coverage and trusts stated. |
-| `mismatch` | An entry is not what its bytes, its chain, its signature or its replay say; or a reference names another entry, incarnation or kind than its source scope has; or the history does not reach or match the known head; or an unreadable source has a required position whose supplied anchor names a different hash. `at` names the entry. |
+| `mismatch` | An entry is not what its bytes, its chain, its signature or its replay say; or a reference names another entry or genesis than its source scope has; or an entry records a source kind other than the kind of the source's seed; or the history does not reach or match the known head; or an unreadable source has a required position whose supplied anchor names a different hash. `at` names the entry. |
 | `missing-dependency` | A source history cannot be read, or does not reach the entry a reference names, and no anchor names it. `at` names the entry that used it. |
 | `incomplete` | A retained input is missing or is not the bytes its digest names; or a detached text is gone and no later entry redacts it; or the history holds an ancestry record, whose walk the replay does not derive; or a limit was reached. |
 | `unsupported-definition` | The scope pins a platform definition for which the caller gave no data and rules (`platform`), or gave them without a rule for one mark of the data; or a declaration that does not pass validation under the bounds given, or a declaration that needs a capability version the caller gave no rules for. `at` names the genesis. Also a `preparation` entry of a step, or an `outcome` entry of an owner, that the caller gave no rules for, and an observation for which its platform version supplies no reference or answer code: `at` names that entry. |

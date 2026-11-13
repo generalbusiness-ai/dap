@@ -898,7 +898,7 @@ thought:
   [fact text and ref names](../packages/bytes/src/facttext.ts),
   [the Worker routes](../packages/scope/src/worker.ts),
   [the namespace](../packages/scope/src/namespace.ts),
-  [Scopes, identity and incarnation](../docs/scopes.md#identity-and-incarnation),
+  [Scopes, identity and genesis](../docs/scopes.md#identity-and-genesis),
   the archive layout in [shared language and volatile acts](2026-10-09-shared-language-volatile-acts.md), section 15,
   and the scope URI direction of 5 October 2026 (request 9626787f).
 - gitseq: [event identifiers](https://github.com/generalbusiness-ai/gitseq/blob/main/docs/reference/event-identifiers.md),
