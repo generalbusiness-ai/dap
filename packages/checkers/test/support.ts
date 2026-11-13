@@ -19,17 +19,18 @@
  * file holds a secret.
  */
 
-import type { Answer, Digest, Effect, Entry, FactRef, Grant, Input, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { base32, canonicalize, entryHash, isEntry, keyIdOfSecret, sign, signIntent, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Answer, Digest, Effect, Entry, FactRef, Grant, Input, ScopeRef, Sealed, SequenceEntry, SignedIntent } from "@generalbusiness/dap-contract";
+import { base32, canonicalize, entryHash, isEntry, keyIdOfSecret, sign, signIntent, textDigest, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { configurationDigest, type Configuration, type Durable, type Notice, type Outcome, type ResultSigner, type RunAsk, type Runner, type RunReport, type Scopes } from "../src/index.ts";
 
 export const T0 = Date.UTC(2099, 0, 1);
 const hex = (digit: string) => digit.repeat(40);
 export const digest = (digit: string): Digest => `sha256:${digit.repeat(64)}`;
-const ref = (kind: ScopeRef["kind"], n: number): ScopeRef => ({ kind, scope: `sc_${base32(new Uint8Array(32).fill(n))}`, inc: `in_${base32(new Uint8Array(16).fill(n))}` }) as ScopeRef;
-export const lane = ref("lane", 1);
-export const otherLane = ref("lane", 2);
-const membership = ref("membership", 3);
+/** A stand-in reference: no genesis bytes stand behind its genesis digest. */
+const ref = (n: number): ScopeRef => ({ scope: `sc_${base32(new Uint8Array(32).fill(n))}`, genesis: textDigest(`TEST genesis ${n}`) });
+export const lane = ref(1);
+export const otherLane = ref(2);
+const membership = ref(3);
 
 /** A new key, from random bytes. `secret` is for a test to look for in what was written. */
 export function newKey(): { secret: Uint8Array; signer: ResultSigner; signed: Uint8Array[] } {
@@ -47,7 +48,7 @@ export const configuration: Configuration = {
 export const report = (over: Partial<RunReport> = {}): RunReport => ({ started: true, image: configuration.image, environment: configuration.environment, checkout: true, steps: [{ status: 0, line: "added 1 package" }, { status: 0, line: "ok" }], end: "complete", ...over });
 
 const sealed = (at: ScopeRef, seq: number, input: unknown, effects: Effect[]): Sealed => {
-  const entry = { v: 1, at, seq, prev: digest("0"), time: timeOf(T0), clamped: false, epoch: 0, input: input as Input, uses: [], prepared: [], effects, sends: [] } satisfies Entry;
+  const entry = { v: 1, genesis: at.genesis, seq, prev: digest("0"), time: timeOf(T0), clamped: false, epoch: 0, input: input as SequenceEntry["input"], uses: [], prepared: [], effects, sends: [] } satisfies Entry;
   if (!isEntry(entry)) throw new Error("the hand-made entry is not in the form of an entry");
   return { entry, hash: entryHash(entry) };
 };

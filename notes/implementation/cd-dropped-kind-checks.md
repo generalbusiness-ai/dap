@@ -220,3 +220,4 @@ A ruling decides what replaces each one.
 |---|---|---|
 | `packages/replay/test/verify.test.ts` | coverage rows state each scope's kind | what replaces the kind column of the coverage |
 | `packages/replay/test/verify.test.ts` | a reference to another genesis fails with `wrong incarnation` | which reason the replay now gives |
+| `packages/checkers/test/reservation-origin.test.ts`, `reservation-record.test.ts` | the frozen `fixtures/reservation-record.json` names `at` and `inc` in its entries | a new recording from the Scope recorder |

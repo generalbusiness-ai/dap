@@ -3,7 +3,7 @@
  * cohort-selection control, not a recorded native @5/@6/@13/@19 run or a Git checkout. */
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
-import type { Digest, ReservationSnapshot } from "@generalbusiness/dap-contract";
+import type { Digest, ReservationSnapshot, ScopeRef } from "@generalbusiness/dap-contract";
 import { entryHash, factRefOf, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
 import { originOf, type Notice, type OriginRead } from "../src/index.ts";
 
@@ -23,7 +23,9 @@ test("the checker accepts explicit reservation owners including the corrected co
     reservation.ref = `refs/artroom/reservations/${reservation.reservation.hash.slice(7)}`;
     const name = reservation.job.entry.effects.find(effect => effect.effect === "value" && effect.slot === "name");
     if (name?.effect !== "value" || typeof name.value !== "string") throw Error("Recorded job names its check");
-    const notice: Notice = { lane: reservation.job.entry.at, job: factRefOf(reservation.job.entry), name: name.value, tree: reservation.tree };
+    // HELD: the frozen record predates genesis references. Its entries still name `at`, and it needs a new recording.
+    const recordedAt = (reservation.job.entry as unknown as { at: ScopeRef }).at;
+    const notice: Notice = { lane: recordedAt, job: factRefOf(reservation.job.entry, recordedAt), name: name.value, tree: reservation.tree };
     const read: OriginRead = { entry: reservation.job, manifest: reservation.manifest, pinned: saved.configurationDigest, activated: { name: "change", state: "active" }, reservation };
     const result = originOf(notice, read);
     if (version === 3 || version === 5 || version === 6 || version === 13 || version === 19) expect(result).toMatchObject({ job: { commit: reservation.commit, ref: reservation.ref, tree: reservation.tree } });
