@@ -4,7 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, FieldValue, Guard, Operand, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/dap-bytes";
 import { judgeDelivery, validateDefinition, type ActJudgment, type Fetched, type ProblemCode } from "../src/index.ts";
-import { Scope, arriving, fields, forged, created, keys, on, t, ticketDefinition, valid, fixtureSequence } from "./fixtures-entry.ts";
+import { Scope, arriving, d, fields, forged, created, keys, on, t, ticketDefinition, valid, fixtureSequence } from "./fixtures-entry.ts";
 
 const { rita } = keys;
 
@@ -103,7 +103,7 @@ describe("the list forms (section 6.5)", () => {
     const timed = (second: Guard) => valid(validateDefinition(timedGuardData(second), PROPOSED_BOUNDS));
     const D = created();
     const tell: Send = { n: 0, to: D.at, message: { class: "request", type: "tell", body: { message: "audit", fields: {} } } };
-    const source = forged(fixtureSequence(new Scope(ticketDefinition)), 1, D.entries[0]!.entry.input, [tell]);
+    const source = forged(fixtureSequence(new Scope(ticketDefinition)), 1, { type: "checkpoint", through: 0, state: d("0") }, [tell]);
     const arrival = { ...tell, from: factRefOf(source.entry, source.sequence.at) };
     D.now = t(-10);
     const judged = (second: Guard) => { const j = judgeDelivery(D.state, timed(second), arrival, arriving(D, arrival, source)); return j.result === "unavailable" ? j.reason : j.result; };

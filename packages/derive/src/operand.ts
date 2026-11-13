@@ -117,9 +117,12 @@ function ownContext<C extends Reading>(context: C, data: EvidenceData): C {
   Object.freeze(holder);
   return holder;
 }
+// A fetched list with a copy that is not its entry stages no copies. The fact readers then answer
+// `dependency-unavailable` for it (`readFacts`), as for a fact that was not fetched.
 function verifiedData(context: Reading, actual: RuntimeAsked): EvidenceData {
+  const genuine = context.facts.every((value) => isEntryOf(value.entry, value.fact, value.sequence));
   return { phase: "live-verified", asked: fingerprint(actual), valid: true, own: context.own,
-    material: null, sourceInput: null, sourcePin: null, facts: Object.freeze(context.facts.map(verifiedCopy)), source: null };
+    material: null, sourceInput: null, sourcePin: null, facts: Object.freeze(genuine ? context.facts.map(verifiedCopy) : []), source: null };
 }
 const resultAsked = (actual: RuntimeAsked): actual is { delivery: Delivered } => "delivery" in actual && isObject(actual.delivery.message) && actual.delivery.message.class === "result";
 const retainedPhase = (phase: EvidencePhase): boolean => phase === "live-result-pending" || phase === "live-result-admitted";

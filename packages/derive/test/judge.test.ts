@@ -307,7 +307,7 @@ describe("a foreign fact (sections 5.1 and 6.5)", () => {
 
     expect(cite(una, [fetched]).result).toBe("write");
     const written = s.entries.at(-1)!.entry;
-    expect(written.uses).toEqual([{ fact: proof, content: digestBytes(canonicalBytes(entry)) }]);
+    expect(written.uses).toEqual([{ fact: proof, content: digestBytes(canonicalBytes(entry)), kind: "lane" }]);
     // An effect may take a member from a field of the fetched fact.
     expect(names(s.item(0).parties["readers"])).toEqual(["@una"]);
   });

@@ -607,7 +607,7 @@ describe("a rule is run at the check of its mark's place (sections 4.2 and 6.1)"
     const operation = `${s.last.seq}:0` as OperationId;
     /** A foreign entry at hand for the outcome, MADE BY HAND. */
     const foreign = forged(otherLaneSequence, 5, { type: "checkpoint", through: 4, state: d("5") }, []);
-    const fetched = { fact: factRefOf(foreign.entry, foreign.sequence.at), entry: foreign.entry, under: foreign.under };
+    const fetched = { fact: factRefOf(foreign.entry, foreign.sequence.at), entry: foreign.entry, sequence: foreign.sequence, under: foreign.under };
     const tell = { to: otherLane, message: { class: "request", type: "tell", body: { message: "hello", fields: {} } } } as const;
     /** The rule of the outcome reads the standing of one member, and each entry in `uses`. With either missing it has a fault. */
     const seen: unknown[] = [];

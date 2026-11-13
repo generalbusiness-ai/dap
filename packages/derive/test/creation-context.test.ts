@@ -84,7 +84,8 @@ test("marked declared genesis does not stamp a platform creation, and membership
   expect(received.judgment.result).toBe("write");
   expect(bodyOf(received.child)).toEqual({ fields: {} });
   const self = incoming({ creationContext: { v: 1 }, membership }, definition, "membership");
-  expect(bodyOf(self.child)).toEqual({ fields: { creationContext: { v: 99 } }, directory: self.parent.at, membership: self.child.at });
+  // The genesis names its own membership scope by the genesis-self form, which a receiver resolves against the source fact.
+  expect(bodyOf(self.child)).toEqual({ fields: { creationContext: { v: 99 } }, directory: self.parent.at, membership: { scope: self.child.at.scope, genesis: null } });
   const birth = self.child.entries[0]!.entry.input;
   if (birth.type !== "genesis") throw new Error("the membership retains its actual genesis input");
   expect(membershipOf(birth, self.child.at)).toEqual(self.child.at);
