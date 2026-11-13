@@ -27,7 +27,7 @@ things.
    room with host `none`. The room's change publication needs a note of
    its own (section 10).
 
-Source facts name a file and a symbol at main `64112e45`.
+Source facts name a file and a symbol at main `57e893c0`.
 
 ## 1. What asks for the change
 
@@ -44,7 +44,7 @@ reserves up to eighteen outside operations for one page. They are one
 
 The author cannot change any part of that path. "A declared application
 has no operation of its own on an outside system" (`docs/roadmap.md`,
-"What runs today"). The roadmap row "Outside parties and systems" lists
+"Publication from a fold"). The roadmap row "Outside parties and systems" lists
 cases that wait for one. Three of them are a release, a payment attempt
 and a tool executor's work.
 
@@ -59,8 +59,8 @@ An attempt with no answer becomes an `unknown` outcome and an open task
 
 | Part | Size | Files |
 |---|---|---|
-| `packages/derive` | 4,205 lines | `ledger.ts`, `outcomes.ts`, `prepare.ts`, `capability.ts`, `capability/`, `validate/hold.ts`, `validate/holds.ts` |
-| `packages/scope` | 4,118 lines | The driver, the destination and host adapters, and credential custody. The sources section lists the files |
+| `packages/derive` | 4,302 lines | `ledger.ts`, `outcomes.ts`, `prepare.ts`, `capability.ts`, `capability/`, `validate/hold.ts`, `validate/holds.ts` |
+| `packages/scope` | 4,166 lines | The driver, the destination and host adapters, and credential custody. The sources section lists the files |
 | `packages/platform` | 35 marks | Each `P16` mark is a rule in code for an operation or its outcome |
 
 The sources section gives the command for each count.
@@ -69,9 +69,9 @@ The sources section gives the command for each count.
 
 | Place | What the record holds | Who acts outside |
 |---|---|---|
-| The checker service | A job and the checker's signed `check` | "A separate service with its own key, and it is not a scope. It writes no entry" (`packages/checkers/src/service.ts`) |
+| The checker service | A job and the checker's signed `check` | The checker "is a separate service with its own key, and it is not a scope" (`packages/checkers/src/service.ts`) |
 | `device-command@1` | "A commanded target and the owner's signed answer" | The owner. "It reaches no device" (`docs/roadmap.md`) |
-| Host `none` | A room with no repository. The act `bind-repository` binds one later | Nobody (`docs/hosts.md`) |
+| Host `none` | A room with no repository. A room of the `repository-binding` cohort can bind one GitHub repository later, with the act `bind-repository` | Nobody (`docs/hosts.md`) |
 | The text of a shelf page | The act that states the text. "The journal shows who stated it" (`docs/roadmap.md`) | The member who signs the act |
 
 Git publication is the one place where the scope itself sends.
@@ -152,9 +152,9 @@ the present head. So the act needs no guard on the position of `through`.
 A publisher that states an earlier entry is at fault, and the entry shows
 the fault.
 
-The package grants `lending.publish` to the role `agent`
-(`declareRoles`, `examples/lending/roles.ts`). The `signer` guard limits
-the act to the one appointed member. Membership keeps its fixed list of
+Slice P1 adds the action `lending.publish` and grants it to the role
+`agent` (`declareRoles`, `examples/lending/roles.ts`). The `signer` guard
+limits the act to the one appointed member. Membership keeps its fixed list of
 roles (`ROLE`, `packages/platform/src/membership.ts`), so the route needs
 no new membership version.
 
@@ -221,7 +221,7 @@ fold and the commit have fixed rules.
 - The commit has one parent, the head. The first commit has no parent.
 - The author and the committer are one fixed text. The commit time is the
   time of the entry that `through` states.
-- The trailer states the scope with its incarnation, the position and
+- The trailer states the scope and its genesis, the position and
   hash of that entry, and the earlier head.
 
 ### 5.2 One write for each publication
@@ -261,7 +261,7 @@ shape today. This note designs neither form.
 | Who states the result? | An `outcome` input that the runtime writes. It carries no signature | An act that the publisher's key signs |
 | What does replay check? | That platform code derives the entry from the recorded evidence | That declared guards admit the signed act |
 | What shows that the branch moved? | The receipt commit and the branch | The branch and the trailer |
-| Who holds the Git credential? | The platform, in `packages/scope/src/credential-store.ts` | The publisher. A room's owner can keep the credential from the operator |
+| Who holds the Git credential? | The platform. The deployment holds the GitHub App key, and `packages/scope/src/credential-store.ts` keeps each token that the host mints | The publisher. A room's owner can keep the credential from the operator |
 | How does a room stop a bad writer? | No act does | A key revocation and a new appointment |
 
 A reader with a clone and the journal can check every commit. The reader
@@ -361,8 +361,8 @@ room keeps its definition.
 
 ## 12. Witnesses for slice P1
 
-Each witness runs in the example's test host
-(`examples/lending/story.ts`). The Git host is a bare repository in a
+Each witness runs in the in-memory test support of the example
+(`examples/lending/test-support.ts`). The Git host is a bare repository in a
 temporary directory, so no witness uses the network.
 
 1. **The story of section 3.** After `donate` and `borrow`, one
@@ -388,7 +388,7 @@ temporary directory, so no witness uses the network.
 
 ## Sources
 
-Checked against main `64112e45` on 13 November 2026.
+Checked against main `57e893c0` on 13 November 2026.
 
 Counts, each run from the repository root:
 
