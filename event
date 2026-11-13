@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9558bb931ea5f6ed882adddeeaf728b96b4cad8b","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/install-words-7ea170c9.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:97f5fedfdb05ff202af90edaa8542f761c9bcb01","text":"Merge retired a covered predecessor; the successor is at scripts/public-release.json."}
