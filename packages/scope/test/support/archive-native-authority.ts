@@ -28,7 +28,11 @@ import { dispatchFixture } from "./native-fixture-lifetime.ts";
 import { archiveDefinition, archivePolicies } from "./archive.ts";
 import type {} from "./maintained-applications.ts";
 
-interface Basis { pins: FixtureArchiveSourcePins; policies: ArchivePolicyRegistry; observed: Map<string, FactRef>; setupCost: ReturnType<ArchiveBudget["admitted"]>; creator?: FactRef; confirmation?: FactRef }
+type NativeRoom = Awaited<ReturnType<typeof sessionRoom>>;
+/** The genuine native room behind a factory lane: its Register, Directory,
+ * Rules and Membership handles, and the Grow archive policies. */
+export interface NativeArchiveRoom { readonly room: NativeRoom; readonly policies: ArchivePolicyRegistry; readonly declarations: ReadonlyMap<string, string> }
+interface Basis { pins: FixtureArchiveSourcePins; policies: ArchivePolicyRegistry; observed: Map<string, FactRef>; setupCost: ReturnType<ArchiveBudget["admitted"]>; creator?: FactRef; confirmation?: FactRef; room?: NativeArchiveRoom }
 const bases = new WeakMap<Lane, Basis>();
 let activeClockOwner: { failedClose: boolean } | null = null;
 /** TEST declaration for the two factory-born resume/replay cases only.
@@ -72,6 +76,7 @@ export function archiveAuthorityAnchors(lane: Lane): readonly FactRef[] {
   return [...(basis.creator ? [basis.creator] : []), ...(basis.confirmation ? [basis.confirmation] : []), ...[...basis.observed.values()].sort((a, b) => a.seq - b.seq || canonicalize(a.at).localeCompare(canonicalize(b.at)))];
 }
 export function archiveAuthorityBasis(lane: Lane): Basis | undefined { return bases.get(lane); }
+export function archiveAuthorityRoom(lane: Lane): NativeArchiveRoom | undefined { return bases.get(lane)?.room; }
 export function archiveAuthorityPolicies(lane: Lane, policies: ArchivePolicyRegistry = archivePolicies): ArchivePolicyRegistry {
   const basis = bases.get(lane);
   return basis ? new Map([...policies, ...basis.policies]) : policies;
@@ -272,7 +277,9 @@ export async function nativeArchiveFixture() {
           review: "TEST STAND-IN: factory-compatible inline archive classes", support: { named: under.digest, definition: under, owners: new Map(), records: new Map(), preparations: new Map() } });
         const registry: ArchivePolicyRegistry = policies;
         const pins = new FixtureArchiveSourcePins(births, lane.c.bounds, budget, registry);
-        bases.set(lane, { pins, policies: registry, observed, setupCost: budget.admitted(), ...(creator ? { creator } : {}), ...(confirmation ? { confirmation } : {}) });
+        const roomPolicies: ArchivePolicyRegistry = new Map([...growArchivePolicies(new TextDecoder().decode(packet)), ...registry]);
+        bases.set(lane, { pins, policies: registry, observed, setupCost: budget.admitted(), ...(creator ? { creator } : {}), ...(confirmation ? { confirmation } : {}),
+          ...(factory ? { room: { room, policies: roomPolicies, declarations: new Map([[under.digest, canonicalize(under.declared)]]) } } : {}) });
         console.info("Native archive source-birth/pin setup budget only", canonicalize(budget.admitted()));
         return lane;
         });

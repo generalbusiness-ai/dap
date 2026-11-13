@@ -9,6 +9,8 @@ import { expect, onTestFinished, test, vi } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { journalRef } from "@generalbusiness/dap-git/journal";
+import { platform } from "@generalbusiness/dap-platform";
+import { CAPABILITY_CODE } from "../src/ports.ts";
 import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost, type ArchiveCapacityRefusal } from "../src/archive-budget.ts";
@@ -21,7 +23,8 @@ import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { planArchive, type ArchiveFixedFinish } from "../src/archive-build.ts";
 import { at, rita, una, type Lane } from "./fixtures-native.ts";
-import { createNativeArchiveLane, createNativeArchiveApplicationLane, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
+import { createNativeArchiveLane, createNativeArchiveApplicationLane, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors, archiveAuthorityRoom } from "./support/archive-native-authority.ts";
+import { archiveNativeScope, nativeAnchorFacts } from "./support/archive-room-journals.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring, fixtureArchiveRestart } from "./worker.ts";
 import type { TestScope } from "./worker.ts";
@@ -643,14 +646,31 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
   expect(await lane.alarm()).toBe(true);
   expect(host.sends).toHaveLength(2); expect(host.sends[1]).not.toBe(marked.commit); expect(host.targets).toBe(1);
   expect((await row(lane))?.confirmed?.through).toEqual(later); expect(await lane.head()).toEqual(later);
+  // The lane's creator is its room's Directory, an archived journal. Replay
+  // must prove the Directory's facts by replay (decisions 5a642337 and
+  // 066e49b3), so the source also serves the Directory's own journal.
+  const native = archiveAuthorityRoom(lane);
+  if (!native) return expect.fail("a factory lane keeps its native room");
+  const { R, D } = native.room, membership = native.room.children[0]!;
+  const directory = await native.room.life.wait(() => D.at());
+  expect(archiveAuthorityAnchors(lane).filter(fact => fact.at.scope === directory.scope).length).toBeGreaterThan(0);
+  const journal = await native.room.life.wait(() => archiveNativeScope(D.object, directory, native.policies, format, lane.c.clock.now, native.declarations));
+  const refs = new Map([[journalRef(lane.at.scope), host.pointer], [journal.ref, journal.commit]]);
+  const objects = new Map([...host.data, ...journal.objects.map(object => [object.id, object] as const)]);
   const source = archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
-    format: async () => format, resolve: async ref => ref === journalRef(lane.at.scope) ? host.pointer : null,
-    object: async (id, most) => { const object = host.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null; },
+    format: async () => format, resolve: async ref => refs.get(ref) ?? null,
+    object: async (id, most) => { const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null; },
   }, scope, work) });
-  // Explicit caller words from the actual Directory create entry and an
-  // independent Membership read. No anchor comes from archive output.
-  const anchors = archiveAuthorityAnchors(lane); expect(anchors.length).toBeGreaterThan(0);
-  const verified = await verifyArchive(source, { mode: "replay", scope: lane.at.scope, head: later, grants: "as-recorded",
+  // Caller words from actual sealed entries and an independent Membership
+  // read; no anchor comes from archive output. Only Register and
+  // Membership facts may be anchors.
+  const authority = new Set([(await native.room.life.wait(() => R.at())).scope, (await native.room.life.wait(() => membership.at())).scope]);
+  const directoryEntries = (await native.room.life.wait(() => D.sealed())).map(sealed => sealed.entry);
+  const anchors = [...new Map([...archiveAuthorityAnchors(lane).filter(fact => authority.has(fact.at.scope)), ...nativeAnchorFacts(directoryEntries, authority)]
+    .map(fact => [canonicalize(fact), fact] as const)).values()];
+  expect(anchors.length).toBeGreaterThan(0);
+  // Replaying the Directory runs its platform code and capability hooks.
+  const verified = await verifyArchive(source, { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, scope: lane.at.scope, head: later, grants: "as-recorded",
     anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) });
   const reason = (verified.kind === "verification" ? verified.verification.why : verified.reason) ?? "";
   const diagnostic = { kind: verified.kind, reason: reason.slice(0, 2048), reasonTruncated: reason.length > 2048,
