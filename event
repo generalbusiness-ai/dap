@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5493b48318195ed78a47c1a3595a6f6f6c3f695d","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:54c2f7d801fe006cb335a8900b84b4c585220094","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/open-requests.test.ts."}
