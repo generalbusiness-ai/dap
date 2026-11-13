@@ -2,7 +2,7 @@
  * membership admission, pumps, chemical handling or provider effects. */
 import { expect, test } from "vitest";
 import { keyIdOfSecret } from "@generalbusiness/dap-bytes";
-import { keys, member, t } from "@generalbusiness/dap-derive/testing";
+import { fixtureSequence, keys, member, t } from "@generalbusiness/dap-derive/testing";
 import { room } from "./room.ts";
 import { nativeScenario, devicePermissions, operator, climate, on, replay, submit, type Actor, type Ledger } from "./test-support.ts";
 const head = keys.sam, secret = new Uint8Array(32).fill(7), irrigation: Actor = { secret, key: keyIdOfSecret(secret), member: member("irrigation"), principal: head.member };
@@ -49,7 +49,7 @@ test("an exception needs a head-grower decision before the irrigation member rec
   wrote(await submit(foreign, operator, "commission-bench", { expected: expected(foreign, { zone: other.zone }), fields: { zone: other.zone, label: "D4", row: "D", column: 4 } })); const foreignBench = foreign.last.seq;
   wrote(await submit(foreign, keys.rita, "probe", on(foreign, foreignBench, { ec: 2800 }))); const foreignBasis = foreign.fact(foreign.last.seq);
   expect(foreignBench).toBe(bench); expect(foreign.at.scope).not.toBe(ledger.at.scope);
-  expect(await submit(ledger, irrigation, "request-watering", { expected: expected(ledger, { zone, bench }), fields: { ...fields, basis: foreignBasis } }, [{ fact: foreignBasis, entry: foreign.last, under: room.name }])).toMatchObject({ result: "refused", reason: "guard-failed", name: "wrong-watering-room" });
+  expect(await submit(ledger, irrigation, "request-watering", { expected: expected(ledger, { zone, bench }), fields: { ...fields, basis: foreignBasis } }, [{ fact: foreignBasis, entry: foreign.last, sequence: fixtureSequence(foreign), under: room.name }])).toMatchObject({ result: "refused", reason: "guard-failed", name: "wrong-watering-room" });
   expect(await submit(ledger, irrigation, "request-watering", { expected: expected(ledger, { zone, bench }), fields: { ...fields, reason: " " } })).toMatchObject({ result: "refused", reason: "guard-failed", name: "empty-watering-reason" });
   wrote(await submit(ledger, irrigation, "request-watering", { expected: expected(ledger, { zone, bench }), fields })); const request = ledger.last.seq;
   expect(await submit(ledger, irrigation, "fulfill-watering", on(ledger, request, {}))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });

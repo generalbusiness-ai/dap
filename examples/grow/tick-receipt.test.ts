@@ -16,9 +16,9 @@ test("a native-shaped owner receipt with intent null binds only its exact sealed
   // A scripted wire entry, like the public-journal fixture. G5a's name is
   // not in this old Main's type union yet; no judge or codec admits it here.
   // The installed integration must wait for the actual reviewed landing.
-  const entry: Entry = JSON.parse(JSON.stringify({ v: 1, at: otherLane, seq: 2, prev: d("1"), time: T0, clamped: false, epoch: 0,
+  const entry: Entry = JSON.parse(JSON.stringify({ v: 1, genesis: otherLane.genesis, seq: 2, prev: d("1"), time: T0, clamped: false, epoch: 0,
     input: { type: "preparation", signed, authority: [], capability: "device-command@1", step: "answer" }, uses: [], prepared: [], effects: [], sends: [] }));
-  const sealed: Sealed = { entry, hash: entryHash(entry) }, receipt = receiptOf(sealed, d("a"));
+  const sealed: Sealed = { entry, hash: entryHash(entry) }, receipt = receiptOf(sealed, d("a"), otherLane, []);
   expect(receipt.intent).toBeNull();
   const answer = { answer: "accepted" as const, receipt }, reader = { entry: async () => ({ ok: true as const, at: { seq: 2, hash: sealed.hash }, complete: true, value: sealed }) };
   expect(await acceptedTickFact(answer, otherLane, d("a"), signed, true, reader)).toEqual(receipt.fact);
