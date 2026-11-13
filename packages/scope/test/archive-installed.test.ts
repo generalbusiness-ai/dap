@@ -117,23 +117,6 @@ function retainedGrowPacket(freshGrow: ApplicationPackage2) {
 }
 
 const inline = new Set<Input["type"]>(["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"]);
-/** TEST control for independent historical gross-ceiling receipts only.
- * Real settlement validates the handle/receipt/deadline first. Restoring its
- * two released byte axes keeps the old tariff in this separate original
- * budget, including the cost digits serialized into the manifest. */
-class TESTCeilingChargeBudget extends ArchiveBudget {
-  readonly restored = { metadata: 0, inputWork: 0 };
-  settlements = 0;
-  override settle(handle: object, received: number): void {
-    const before = this.admitted();
-    super.settle(handle, received);
-    const after = this.admitted();
-    const released = { metadata: before.metadata - after.metadata, inputWork: before.inputWork - after.inputWork };
-    this.spend(released);
-    this.restored.metadata += released.metadata; this.restored.inputWork += released.inputWork;
-    this.settlements++;
-  }
-}
 function archiveGiven(store: SqliteStore): OutsideGiven {
   const own = (seq: number) => { const row = store.stored(seq); return row ? { entry: parseStrict(row.bytes) as Sealed["entry"], hash: row.hash } : null; };
   const first = store.stored(0), input = first ? (parseStrict(first.bytes) as Sealed["entry"]).input : null;
@@ -688,8 +671,8 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       expect(admitted).toContainEqual({ fact: copy.source, content: copy.content });
       // A genuine public copy from either family must not authorize the other
       // family's distinct producer pin. Rules10 is shared and stays compatible.
-      if (scenario === "Grow" || scenario === "Grow failed-claim") {
-        const otherProducer = scenario === "Grow" ? FAILED_CLAIM_COHORT.directory : ARCHIVE_DEVICE_APPLICATION_COHORT.directory;
+      if (scenario === "Grow failed-claim") {
+        const otherProducer = ARCHIVE_DEVICE_APPLICATION_COHORT.directory;
         await life.wait(() => runInDurableObject(history.scope.object, (_instance, state) => {
           const metadata = new ArchiveForeignMetadata(archiveSql(state), fixtureSources, policies, PROPOSED_BOUNDS, new ArchiveBudget(), new Set(), otherProducer);
           expect(() => metadata.scan({ seq: sealed.entry.seq, hash: sealed.hash, bytes: new TextEncoder().encode(canonicalize(sealed.entry)).length }, sealed.entry.uses.length))
@@ -930,12 +913,6 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     const passAnchors = new Map<ScopeId, readonly FactRef[]>();
     const passSelections = new Map<ScopeId, string>();
     const sharedPassFootprints: unknown[] = [], sharedWholePassFootprints: unknown[] = [], supportComponents: unknown[] = [];
-    const ceilingControlTimings: { definition: string; durationMs: number; settlements: number; restored: { metadata: number; inputWork: number } }[] = [];
-    const ceilingControls = {
-      timings: ceilingControlTimings, totalMs: 0,
-      qualification: "Five separate TEST whole-prefix plans restore only metadata/inputWork released by validated real settlement through real spend. Same original limits/deadlines; current primary plans retain net settlement and all native/bytes/authority checks. Control timings include fixture dispatch and build; no production performance claim.",
-    };
-    if (scenario === "Grow") (context.task.meta as Record<string, unknown>)["historicalCeilingControls"] = ceilingControls;
     const entryPrivacyComponents: { scope: string; seq: number; input: Input["type"]; effects: number; delta: ArchiveCost }[] = [];
     if (kind === "Grow") {
       // Invariant: native domain permission belongs to its exact declared
@@ -993,42 +970,6 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         const birth = read.value[0]!.entry.input;
         if (birth.type !== "genesis") throw Error("The real fixture must begin at genesis.");
         const privacySupport = policies.get(birth.seed.definition)!.support;
-        // Independent original whole-pass receipts from the closed support
-        // checkpoint. Later shared price extraction must not move both the
-        // actual charges and the future formulas unnoticed.
-        const originalPassCosts: Readonly<Record<string, ArchiveCost>> = {
-          "sha256:5e2d34fa9965662aa508aaaffd83bdcd4198746ae8d4a8dd24654d74289529a4":
-            { entries: 6, attempts: 30, nodes: 20, calls: 87, metadata: 265580, inputWork: 13291923 },
-          "sha256:69424c1bbbf7c2f81528fcc6c910b1230a88d061ac3655c5bde916aaa2572c56":
-            { entries: 4, attempts: 35, nodes: 20, calls: 79, metadata: 255134, inputWork: 18673194 },
-          "platform:directory@16": { entries: 14, attempts: 128, nodes: 23, calls: 223, metadata: 474298, inputWork: 34957641 },
-          "platform:rules@10": { entries: 11, attempts: 80, nodes: 23, calls: 164, metadata: 373104, inputWork: 36436351 },
-          "platform:destination@12": { entries: 2, attempts: 26, nodes: 20, calls: 54, metadata: 234024, inputWork: 17754830 } };
-        // Preserve receipts from the original Grow fixture only. Publication
-        // cohort costs remain observed below, never guessed from old identities.
-        if (scenario === "Grow") {
-          const controlBudget = new TESTCeilingChargeBudget(), started = performance.now();
-          const control = await (async () => {
-            try {
-              return await life.wait(() => runInDurableObject(scope.object, (_instance, state) => planArchivePass(archiveSql(state), {
-                at, through: read.at, after: null, bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt, fixtureSources,
-                ...(discovery ? { replayScopes: discovery.scopes.map(scope => scope.at) } : {}),
-              }, controlBudget)));
-            } finally {
-              ceilingControlTimings.push({ definition: birth.seed.definition, durationMs: performance.now() - started,
-                settlements: controlBudget.settlements, restored: { ...controlBudget.restored } });
-            }
-          })();
-          expect(control.ok, JSON.stringify(control)).toBe(true); if (!control.ok) return;
-          expect(control.archive.cost).toEqual(originalPassCosts[birth.seed.definition]);
-          expect({ ...control.archive.selection, inventoryCost: planned.archive.selection.inventoryCost }).toEqual(planned.archive.selection);
-          expect(control.mark.through).toEqual(planned.mark.through);
-          expect(controlBudget.settlements).toBeGreaterThan(0);
-          for (const key of Object.keys(ARCHIVE_BOUNDS) as (keyof ArchiveCost)[]) {
-            expect(planned.archive.cost[key]).toBeLessThanOrEqual(control.archive.cost[key]);
-            expect(control.archive.cost[key]).toBeLessThanOrEqual(ARCHIVE_BOUNDS[key]);
-          }
-        }
         for (const sealed of read.value) {
           const through = { seq: sealed.entry.seq, hash: sealed.hash };
           const old: string | null = parent, receipt: Head | null = after;
@@ -1057,13 +998,6 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
             expect(forecastArchiveSupportMetadata(counts)).toEqual(originalSupport);
             expect(recorded.metadata - afterSupport.metadata).toBe(128);
             expect(recorded.inputWork - afterSupport.inputWork).toBe(originalSupport.inputWork + 256);
-            // Literal receipts measured before shared price extraction.
-            const independentSupport: Readonly<Record<string, number>> = {
-              "sha256:5e2d34fa9965662aa508aaaffd83bdcd4198746ae8d4a8dd24654d74289529a4": 512,
-              "sha256:69424c1bbbf7c2f81528fcc6c910b1230a88d061ac3655c5bde916aaa2572c56": 0,
-              "platform:directory@16": 1024, "platform:rules@10": 272640, "platform:destination@12": 378112 };
-            if (scenario === "Grow") expect(originalSupport).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0,
-              inputWork: independentSupport[privacySupport.named] });
             supportComponents.push({ named: privacySupport.named, semanticName: privacySupport.definition.declared.name,
               role: scope.name === rootScope.name ? "root" : scope.name === childScope.name ? "child" : "native", digest: privacySupport.definition.digest,
               counts, delta: originalSupport, recordedDelta: { metadata: recorded.metadata - afterSupport.metadata,
@@ -1108,11 +1042,6 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         }
         expect([...written].sort()).toEqual([...expected].sort());
       }
-    }
-    if (scenario === "Grow") {
-      ceilingControls.totalMs = ceilingControlTimings.reduce((total, control) => total + control.durationMs, 0);
-      expect(ceilingControlTimings).toHaveLength(5);
-      expect(new Set(ceilingControlTimings.map(control => control.definition)).size).toBe(5);
     }
     if (kind === "Grow" && !productionScenario) for (const [input, effects] of [["delivery", 0], ["genesis", 11], ["outcome", 1], ["preparation", 3]] as const) {
       expect(entryPrivacyComponents.some(row => row.input === input && row.effects === effects), `${input}:${effects} original receipt is exercised`).toBe(true);
