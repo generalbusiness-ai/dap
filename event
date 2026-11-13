@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5c559d3514206cbd20181158e5aeb9ae721d4b41","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-holds-v17.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5c785c9912287ff0b7a01de93fd41dec29ab482c","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/read-token-quota-store.test.ts."}
