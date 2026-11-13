@@ -43,8 +43,11 @@ interface Record {
 }
 
 afterAll(cleanup);
-// HELD: the frozen record predates genesis references. Its entries still name `at`, and it needs a new recording.
-const recordedAt = (sealed: Sealed): ScopeRef => (sealed.entry as unknown as { at: ScopeRef }).at;
+/** The scope of a recorded entry: the reference whose genesis the entry carries. An entry names no scope of its own. */
+const recordedAt = (sealed: Sealed, at: ScopeRef): ScopeRef => {
+  expect(sealed.entry.input.type === "genesis" ? sealed.hash : (sealed.entry as unknown as { genesis: string }).genesis).toBe(at.genesis);
+  return at;
+};
 const recordFile = new URL("./fixtures/reservation-record.json", import.meta.url);
 
 test("the same recorded Scope reservation is imported, staged under its exact ref, fetched by the runner, and checked by the fixture's configured Node step; absent or changed staging starts no step (local Git STAND-IN)", async () => {
@@ -52,7 +55,7 @@ test("the same recorded Scope reservation is imported, staged under its exact re
   // Reconstruct the original producer artifact; readable fixture layout is not its byte identity.
   const raw = Buffer.from(canonicalize(record), "utf8");
   const artifactHash = createHash("sha256").update(raw).digest("hex");
-  expect(artifactHash).toBe("e0c0f1023925207bde7f52859d91601e76cd85c6093427244ae164df963fe4c9");
+  expect(artifactHash).toBe("72edb565ee697afbe7f1fb682ed888b3cf37dc8ba1e8e756aee5cac6bc9befcc");
   const producer = parseStrict(readFileSync(new URL("./fixtures/reservation-record-producer.json", import.meta.url), "utf8"));
   expect(producer).toMatchObject({ recordSha256: artifactHash, recordBytes: raw.length });
   expect(canonicalize(record)).toBe(raw.toString("utf8"));
@@ -64,9 +67,10 @@ test("the same recorded Scope reservation is imported, staged under its exact re
   }
   expect(verifySignedIntent(record.readAsk)).toBe(true);
   expect(record.readAsk.intent.kind).toBe("git-read@1:job-read");
-  expect(record.readAsk.intent.fields["job"]).toEqual({ at: recordedAt(snapshot.job), seq: snapshot.job.entry.seq, hash: snapshot.job.hash });
-  expect(record.readAsk.intent.to).toEqual(recordedAt(snapshot.job));
-  expect(recordedAt(snapshot.reservation)).toEqual(snapshot.destination);
+  const lane = record.readAsk.intent.to as ScopeRef;
+  expect(record.readAsk.intent.fields["job"]).toEqual({ at: recordedAt(snapshot.job, lane), seq: snapshot.job.entry.seq, hash: snapshot.job.hash });
+  recordedAt(snapshot.manifest, lane);
+  recordedAt(snapshot.reservation, snapshot.destination);
   expect(record.destinationHead.seq).toBeGreaterThanOrEqual(snapshot.reservation.entry.seq);
   expect(record.laneHead.seq).toBeGreaterThanOrEqual(snapshot.job.entry.seq);
   expect([record.destinationHead.hash, record.laneHead.hash]).toEqual([expect.stringMatching(/^sha256:[0-9a-f]{64}$/), expect.stringMatching(/^sha256:[0-9a-f]{64}$/)]);
@@ -119,7 +123,7 @@ test("the same recorded Scope reservation is imported, staged under its exact re
     expect(fields["base"]).toBe(base);
     const bytes = utf8(fields["content"] as string);
     expect([bytes.length, digestBytes(bytes)]).toEqual([fields["size"], fields["digest"]]);
-    const expectedRow: unknown = { path: fields["path"], digest: fields["digest"], entry: { at: recordedAt(source), seq: source.entry.seq, hash: source.hash } };
+    const expectedRow: unknown = { path: fields["path"], digest: fields["digest"], entry: { at: recordedAt(source, lane), seq: source.entry.seq, hash: source.hash } };
     expect(snapshot.manifest.entry.input.signed.intent.fields["files"]).toEqual(expect.arrayContaining([expectedRow]));
     const file = files.find((file) => file.path === fields["path"]);
     expect(file).toBeDefined();
@@ -165,5 +169,5 @@ test("the same recorded Scope reservation is imported, staged under its exact re
   expect(executions).toBe(1);
   expect(git(remote, ["rev-parse", "refs/heads/main"])).toBe(base);
   expect(commands.argv.filter((argv) => argv.includes(" fetch "))).toEqual([expect.stringContaining(` -- ${remote} ${ref}`)]);
-  console.log("RESERVATION_NODE", canonicalize({ artifactHash, producer, destinationHead: record.destinationHead, laneHead: record.laneHead, reservation: { at: snapshot.destination, seq: snapshot.reservation.entry.seq, hash: snapshot.reservation.hash }, job: { at: recordedAt(snapshot.job), seq: snapshot.job.entry.seq, hash: snapshot.job.hash }, ref, commit, tree, base, objects: objects.map(({ id, type, data }) => ({ id, type, bytes: data.length })), configuration: record.configurationDigest, steps }));
+  console.log("RESERVATION_NODE", canonicalize({ artifactHash, producer, destinationHead: record.destinationHead, laneHead: record.laneHead, reservation: { at: snapshot.destination, seq: snapshot.reservation.entry.seq, hash: snapshot.reservation.hash }, job: { at: recordedAt(snapshot.job, lane), seq: snapshot.job.entry.seq, hash: snapshot.job.hash }, ref, commit, tree, base, objects: objects.map(({ id, type, data }) => ({ id, type, bytes: data.length })), configuration: record.configurationDigest, steps }));
 });
