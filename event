@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ca47f1ca6b607d00e162fab77b47f0ccc2c07e17","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-frontier-store.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ca4f5ac19af1796855db019bfff39e081e5e4029","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/rules-scope.test.ts."}
