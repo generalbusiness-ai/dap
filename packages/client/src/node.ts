@@ -265,4 +265,3 @@ export function fileStore(dir: string, bounds: FileStoreBounds = FILE_STORE_BOUN
     },
   };
 }
-
