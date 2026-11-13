@@ -1,6 +1,7 @@
 import { commonsRulesScope, commonsRules } from "./commons-rules.ts";
 import { FAILED_CLAIM_COHORT as FC } from "./failed-claim-cohort.ts";
 import { BASE_COHORT as BC } from "./base-cohort.ts";
+import { baseDestination, baseDestinationRules } from "./base-destination.ts";
 import { baseDirectory, baseDirectoryRules } from "./base-directory.ts";
 import { baseMembership, baseMembershipRules } from "./base-membership.ts";
 import { baseRules, baseRulesScope } from "./base-rules.ts";
@@ -13,7 +14,7 @@ import { SEPARATE_RECOVERY_COHORT as SR } from "./separate-recovery-cohort.ts";
 import { OWN_AGENT_COHORT as OA } from "./own-agent-cohort.ts";
 import { ownAgentRegister, ownAgentRegisterRules, ownAgentDirectory, ownAgentDirectoryRules, ownAgentDestination, ownAgentDestinationRules } from "./own-agent-cohort-data.ts";
 import { ownAgentMembership, ownAgentMembershipRules } from "./own-agent-membership.ts";
-import { ownAgentApplicationPublicationOrigin } from "./publishing-provenance.ts";
+import { baseApplicationPublicationOrigin, ownAgentApplicationPublicationOrigin } from "./publishing-provenance.ts";
 import { REPOSITORY_BINDING_COHORT as RB } from "./repository-binding-cohort.ts";
 import { repositoryBindingRegister, repositoryBindingRegisterRules, repositoryBindingDirectory, repositoryBindingDirectoryRules, repositoryBindingMembership, repositoryBindingMembershipRules, repositoryBindingDestination, repositoryBindingDestinationRules } from "./repository-binding-cohort-data.ts";
 import { repositoryBindingApplicationPublicationOrigin } from "./publishing-provenance.ts";
@@ -133,6 +134,7 @@ export interface Platform {
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
   [BC.directory]: { data: baseDirectory, rules: baseDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [BC.destination]: { data: baseDestination, rules: baseDestinationRules, membership: unpublishedDestinationMembership, rulesScope: unpublishedDestinationRulesScope, applicationPublicationOrigin: baseApplicationPublicationOrigin },
   [BC.membership]: { data: baseMembership, rules: baseMembershipRules, observed: (state, asked) => standingOf(state, asked, BC.membership) },
   [BC.rules]: { data: baseRulesScope, rules: baseRules, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, BC.rules), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   [OA.register]: { data: ownAgentRegister, rules: ownAgentRegisterRules },

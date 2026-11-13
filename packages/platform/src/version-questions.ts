@@ -341,6 +341,10 @@ const QUESTION_PINS = {
   mcpVerifyEmptyDestination: [
     "platform:destination@16", "platform:destination@21",
   ],
+  /** CF-1: the host checks every touched path and link target against the application's declared prefixes. */
+  scopePublicationPrefixesDestination: [
+    "platform:destination@21",
+  ],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
 type PlatformVersionQuestion = keyof typeof QUESTION_PINS;

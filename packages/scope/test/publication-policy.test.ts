@@ -34,6 +34,26 @@ test("publication policy reserves control aliases and unchanged requested paths 
     .toEqual({ code: "reserved-publication-path", path: "content/manual.md", reserved: "**/AGENTS.md" });
 });
 
+// Ruling 68356c6c, point 5b: after the reserved-path check, every touched path and link target stands inside the declared prefixes.
+test("publication policy with declared prefixes refuses a touched path or link target outside them before the push", () => {
+  const prefixes = ["docs/", "shelf/"], none = { paths: [], links: [], unreadable: 0 };
+  expect(publicationRefusal("shelf/a.md", { ...none, paths: ["shelf/a.md"] }, extents, prefixes)).toBeNull();
+  expect(publicationRefusal("shelf/a.md", { ...none, paths: ["shelf/a.md", "docs/b.md"] }, extents, prefixes)).toBeNull();
+  expect(publicationRefusal("notes/a.md", { ...none, paths: ["notes/a.md"] }, extents, prefixes))
+    .toEqual({ code: "publication-path-not-declared", path: "notes/a.md", outside: "notes/a.md" });
+  expect(publicationRefusal("shelf/a.md", { ...none, paths: ["README.md", "shelf/a.md"] }, extents, prefixes))
+    .toEqual({ code: "publication-path-not-declared", path: "shelf/a.md", outside: "README.md" });
+  // A link inside a prefix that resolves outside it, or that does not resolve, stands outside.
+  expect(publicationRefusal("shelf/a.md", { ...none, paths: ["shelf/a.md"], links: [{ path: "shelf/link", tree: "new", resolves: ["shelf/a.md"] }] }, extents, prefixes)).toBeNull();
+  expect(publicationRefusal("shelf/a.md", { ...none, paths: ["shelf/a.md"], links: [{ path: "shelf/link", tree: "new", resolves: ["README.md"] }] }, extents, prefixes))
+    .toEqual({ code: "publication-path-not-declared", path: "shelf/a.md", outside: "README.md" });
+  expect(publicationRefusal("shelf/a.md", { ...none, paths: ["shelf/a.md"], links: [{ path: "shelf/link", tree: "new", resolves: null }] }, extents, prefixes))
+    .toMatchObject({ code: "publication-path-not-declared", path: "shelf/a.md" });
+  // The reserved-path check comes first; an empty declaration admits no path.
+  expect(publicationRefusal(".github/x.yml", none, extents, prefixes)).toMatchObject({ code: "reserved-publication-path" });
+  expect(publicationRefusal("shelf/a.md", { ...none, paths: ["shelf/a.md"] }, extents, [])).toMatchObject({ code: "publication-path-not-declared" });
+});
+
 test("publication policy takes only the canonical bounded extent bytes of the exact authenticated Rules reference", () => {
   const of = { scope: "sc_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", genesis: `sha256:${"a".repeat(64)}` } as ScopeRef;
   const bytes = canonicalize(extents);

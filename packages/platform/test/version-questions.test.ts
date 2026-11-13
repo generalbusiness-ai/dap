@@ -16,8 +16,12 @@ const standing = JSON.parse(readFileSync(new URL("./fixtures/version-standing-86
   rows: { pin: string; answer: boolean }[];
 };
 
+/** CF-1 adds one question, which no frozen pin answers. */
+const CUTOVER_QUESTIONS: readonly VersionQuestion[] = ["scopePublicationPrefixesDestination"];
+
 test("the question owner covers every frozen predicate and catalog pin", () => {
-  expect([...VERSION_QUESTIONS].sort()).toEqual([...frozen.questions.map(question => question.name), standing.question].sort());
+  expect([...VERSION_QUESTIONS].sort()).toEqual([...frozen.questions.map(question => question.name), standing.question, ...CUTOVER_QUESTIONS].sort());
+  for (const row of frozen.rows) for (const question of CUTOVER_QUESTIONS) expect(answersVersionQuestion(row.pin, question), row.pin).toBe(false);
   expect(Object.keys(VERSIONS).filter(pin => !Object.hasOwn(CUTOVER_FAMILY_ANSWERS, pin)).sort()).toEqual([...frozen.catalogPins].sort());
   expect(frozen.rows).toHaveLength(105);
   expect(frozen.questions).toHaveLength(104);
@@ -70,8 +74,8 @@ const CUTOVER_FAMILY_ANSWERS: Readonly<Record<string, readonly VersionQuestion[]
     "mcpVerifyEmptyDestination", "nativeFilePublication", "nativeStagedPublication", "nativeTimedOperationOpen",
     "pageRetainedManifestListDestination", "pageRetainedOneFileDestination", "scopeArchiveHostDestination",
     "scopeCredentialUnpublishedBranch", "scopeDeliveryNativeApplicationOrigin", "scopeDeliveryUnpublishedBranch",
-    "scopeOperationNativeApplicationOrigin", "scopeReadTokenFixedHourDestination", "scopeSessionPreparationOwnScope",
-    "scopeSessionPreparationUnpublishedPage",
+    "scopeOperationNativeApplicationOrigin", "scopePublicationPrefixesDestination", "scopeReadTokenFixedHourDestination",
+    "scopeSessionPreparationOwnScope", "scopeSessionPreparationUnpublishedPage",
   ],
   "platform:directory@27": [
     "cliScopeIndexDefaultCoveragePin", "cliScopeIndexSupportedLineagePin", "pageUnpublishedDirectory",

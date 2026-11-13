@@ -170,7 +170,7 @@ export function applicationPublicationOrigin(from: FactRef, directory: ScopeRef,
 /** M1's new Directory handler factory. Destination7 alone adopts this policy;
  * destination4 keeps its original signed-act factory boundary. */
 function installedApplicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly SourceCopy[],
-  pins: Readonly<{ directory: string; rules: string; destination: string; membership?: string; deviceCommand?: true }>): boolean | null {
+  pins: Readonly<{ directory: string; rules: string; destination: string; membership?: string; deviceCommand?: true; capabilities?: true }>): boolean | null {
   try {
     const genesis = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, from.at));
     if (!genesis) return null;
@@ -202,7 +202,15 @@ function installedApplicationOrigin(from: FactRef, directory: ScopeRef, destinat
     const body = born.message.body;
     if (!isObject(body) || !same(body["directory"], directory) || !same(body["membership"], requested["installer"].membership)
       || !isObject(body["fields"])) return false;
-    if (pins.deviceCommand) {
+    if (pins.capabilities) {
+      // Ruling 68356c6c, point 5a: the marker carries exactly the requested grant and prefixes; v1 when neither.
+      const context = creationContextOf(body, seed.definition), grant = requested["deviceGrant"], publication = requested["publication"];
+      if (context.kind !== "marked" || (grant === undefined) !== (context.deviceCommand === undefined)
+        || (publication === undefined) !== (context.publication === undefined)
+        || context.deviceCommand && (context.delegate !== true || canonicalize(context.deviceCommand) !== grant)
+        || context.publication && canonicalize(context.publication) !== publication
+        || grant === undefined && publication === undefined && !same(body["creationContext"], { v: 1 })) return false;
+    } else if (pins.deviceCommand) {
       const context = creationContextOf(body, seed.definition);
       if (context.kind !== "marked" || context.delegate !== true || !context.deviceCommand || typeof requested["deviceGrant"] !== "string"
         || canonicalize(context.deviceCommand) !== requested["deviceGrant"]) return false;
@@ -275,6 +283,11 @@ export function unpublishedApplicationPublicationOrigin(from: FactRef, directory
 /** Exact own-agent family. Historical publication origins stay distinct. */
 export function ownAgentApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly SourceCopy[]): boolean | null {
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@26", rules: "platform:rules@10", destination: "platform:destination@20", membership: "platform:membership@13", deviceCommand: true });
+}
+
+/** Exact `base` family (CF-1): an ordinary, device or publication creation of Directory 27. */
+export function baseApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly SourceCopy[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@27", rules: "platform:rules@15", destination: "platform:destination@21", membership: "platform:membership@14", capabilities: true });
 }
 
 /** Exact later-binding family; earlier creation pins remain distinct. */
