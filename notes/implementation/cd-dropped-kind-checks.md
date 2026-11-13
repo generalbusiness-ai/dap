@@ -176,6 +176,9 @@ kind with a variable or a declared type:
 | `packages/platform/src/application-install-grants.ts` | line 17, the grant scope kind | the place fixes the kind | `f9e3f22cf0` |
 | `packages/scope/src/applications/projection-source.ts` | `room["rules"].kind !== "rules"` | the place fixes the kind | `f17b1e4779` |
 | `packages/scope/src/github-repository-bindings.ts` | `destination.kind !== "destination"` | the place fixes the kind | `f17b1e4779` |
+| `packages/checkers/src/job.ts` (`originOf`) | `lane.kind !== "lane"` | the place fixes the kind | `f71673d50c` |
+| `packages/checkers/src/job.ts` (`reservationOrigin`) | `snapshot.destination.kind !== "destination"` | the place fixes the kind | `f71673d50c` |
+| `packages/checkers/src/stage-origin.ts` | `snapshot.destination.kind !== "destination"` and the source genesis's `at.kind` | reads the kind of the destination genesis among the sources | `f71673d50c` |
 
 ## Comparisons that chose a behaviour
 
