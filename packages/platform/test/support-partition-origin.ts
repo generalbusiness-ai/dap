@@ -1,6 +1,6 @@
 /** SCRIPTED coherent immutable frames. No native factory judgment ran. */
 import type { Digest, Entry, FactRef, GenesisEntry, Request, PlatformDefinition, ScopeKind, ScopeRef, Seed, SequenceEntry } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, deliveryCauseDigest, entryHash, factRefOf, intentDigest, messageDigest, newGenesisNonce, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, deliveryCauseDigest, entryHash, factRefOf, genesisInputDigest, intentDigest, messageDigest, newGenesisNonce, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { type Fetched } from "@generalbusiness/dap-derive";
 import { d, keys, T0, t } from "@generalbusiness/dap-derive/testing";
 import { PARTITION_COHORT as C } from "../src/directory-partitions.ts";
@@ -20,11 +20,13 @@ export function scriptedPartitionOrigin(name: "application" | "change" | "issue"
   const registerSeed = seedOf("register", C.register, null, d("1")), registerGenesis = birth(registerSeed, "install", null, null, null, null), register = atOf(registerGenesis);
   const rootSeed = seedOf("directory", C.directory, register, d("2")), rootSelf = { scope: scopeIdOf(rootSeed), genesis: null } as const;
   const siblingPins = [["membership", C.membership], ["rules", C.rules], ["destination", C.destination]] as const;
-  const siblingSeeds = siblingPins.map(([kind, pin], n) => seedOf(kind, pin, rootSelf, seedDigest(rootSeed), n));
+  // Every child seed of a genesis takes the complete applied genesis input as its cause. The input holds no sends, so no cycle forms.
+  const rootBirth = birth(rootSeed, "establish", { at: register, seq: 1, hash: d("3") }, 0, { class: "request", type: "create", body: {} }, "register");
+  const siblingSeeds = siblingPins.map(([kind, pin], n) => seedOf(kind, pin, rootSelf, genesisInputDigest(rootBirth.input), n));
   const messages = siblingSeeds.map((_seed, n) => ({ class: "request", type: "create", body: { fields: { directory: rootSelf, ...(n > 0 ? { membership: scopeIdOf(siblingSeeds[0]!) } : {}), ...(n === 2 ? { rules: scopeIdOf(siblingSeeds[1]!) } : {}) } } }) as const);
   // Encoded creator/body self avoids a genesis hash cycle. The child keeps
   // that exact sent seed/message; policy resolves it against the source fact.
-  const rootGenesis: GenesisEntry = { ...birth(rootSeed, "establish", { at: register, seq: 1, hash: d("3") }, 0, { class: "request", type: "create", body: {} }, "register"), sends: siblingSeeds.map((to, n) => ({ n: n + 1, to, message: messages[n]! })) };
+  const rootGenesis: GenesisEntry = { ...rootBirth, sends: siblingSeeds.map((to, n) => ({ n: n + 1, to, message: messages[n]! })) };
   const root = atOf(rootGenesis), rootFact = factRefOf(rootGenesis, root);
   const siblings = siblingSeeds.map((seed, n) => birth(seed, "establish", rootFact, n + 1, messages[n]!, "directory"));
   const membership = atOf(siblings[0]!), rules = atOf(siblings[1]!), destination = atOf(siblings[2]!);
