@@ -46,7 +46,7 @@ export class ArchiveForeignPlan {
       if (!natural(position.seq) || !isDigest(position.hash) || !natural(position.bytes) || position.bytes === 0
         || position.seq !== this.first + this.#rows.size || !natural(uses) || uses > ARCHIVE_BOUNDS.attempts) return stop("mismatch");
       if (uses === 0 ? scan !== null : !scan || scan.position.seq !== position.seq || scan.position.hash !== position.hash
-        || scan.position.bytes !== position.bytes || scan.uses !== uses || scan.requests.length !== uses) return stop("mismatch");
+        || scan.position.bytes !== position.bytes || scan.uses !== uses || !natural(scan.births) || scan.births > uses || scan.requests.length !== uses + scan.births) return stop("mismatch");
       budget.spend({ metadata: 256, inputWork: 512 });
       const previous = this.#rows.get(position.seq - 1), work = { ...(previous?.work ?? empty()) };
       let declarations: readonly Digest[] = previous?.declarations ?? Object.freeze([]), copies = previous?.copies ?? 0;

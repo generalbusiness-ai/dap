@@ -35,6 +35,9 @@ export type ArchiveForeignRecordedRequest =
 export interface ArchiveForeignRecordedScan {
   readonly position: Readonly<ArchivePosition>;
   readonly uses: number;
+  /** Birth copies after the use copies: one per foreign sequence that the
+   * entry uses at a later entry (ruling 4f697a7a). */
+  readonly births: number;
   readonly requests: readonly Readonly<ArchiveForeignRecordedRequest>[];
 }
 export interface ArchiveForeignObservation {
@@ -49,6 +52,7 @@ export class ArchiveForeignMetadata {
   #lastScan: Readonly<ArchiveForeignRecordedScan> | null = null;
   readonly #copies = new Map<Digest, Readonly<ArchiveForeignCopy>>();
   readonly #facts = new Map<string, Digest>();
+  readonly #births = new Map<Digest, Digest>();
   readonly #sources = new Map<string, Readonly<ArchiveSourceBasis>>();
   constructor(readonly sql: Pick<Sql, "exec">, readonly sources: FixtureArchiveSourcePins,
     readonly policies: ArchivePolicyRegistry, readonly bounds: Bounds, readonly budget: ArchiveBudget,
@@ -132,6 +136,16 @@ export class ArchiveForeignMetadata {
       declarationUnits: source.declaration.length, support, ...(source.staticNative ? { staticNative: true } : {}), membership8: membershipCopySource(source.pin, this.consumer) });
     return Object.freeze({ kind: "cold", content, copy, declaration: policy.support.definition.digest, footprint });
   }
+  #birth(at: FactRef["at"]): Readonly<ArchiveForeignRecordedRequest> | undefined {
+    this.budget.spend({ attempts: 1, inputWork: ARCHIVE_FOREIGN_COPY_REQUEST_WORK });
+    const rows = this.budget.native(this.sql, () => ({ metadata: ARCHIVE_FOREIGN_COPY_SIZE_METADATA, inputWork: 0 })).exec("SELECT digest FROM retained_birth WHERE genesis = ? AND scope = ? LIMIT 2", at.genesis, at.scope).toArray();
+    if (rows.length === 0) return stop("incomplete");
+    const content = rows[0]?.["digest"];
+    if (rows.length !== 1 || !isDigest(content)) return stop("unavailable");
+    const request = this.#copy({ at, seq: 0, hash: at.genesis }, content);
+    this.#births.set(at.genesis, content);
+    return request;
+  }
   /** Only the selected local entry's direct uses. The copied entry's own
    * uses are not recursively fetched or added to this archive. */
   scan(position: ArchivePosition, count: number): void {
@@ -142,17 +156,25 @@ export class ArchiveForeignMetadata {
     const recorded: Readonly<ArchiveForeignRecordedRequest>[] | undefined = this.observation?.record ? [] : undefined;
     const rows = this.budget.native(this.sql, () => ({ metadata: archiveForeignUseMetadata(count), inputWork: 0 })).exec(`SELECT ${text("$.fact.at.scope", 71, "value")} AS scope, ${text("$.fact.at.genesis", 71, "value")} AS genesis, json_extract(value, '$.fact.seq') AS seq, ${text("$.fact.hash", 71, "value")} AS hash, ${text("$.content", 71, "value")} AS content FROM entry, json_each(entry.bytes, '$.uses') WHERE entry.seq = ? AND entry.hash = ? AND entry.size = ? AND octet_length(entry.bytes) = ? LIMIT ?`, position.seq, position.hash, position.bytes, position.bytes, count + 1).toArray();
     if (rows.length !== count) return stop("unavailable");
+    const later = new Map<string, FactRef["at"]>();
     for (const row of rows) {
       const fact = { at: { scope: row["scope"], genesis: row["genesis"] }, seq: row["seq"], hash: row["hash"] };
       if (!isFactRef(fact) || !isDigest(row["content"])) return stop("foreign-source-unavailable");
       const request = this.#copy(fact, row["content"]);
       if (recorded && request) recorded.push(request);
+      if (fact.seq > 0) later.set(canonicalize(fact.at), fact.at);
+    }
+    // A later use needs its sequence's first entry, which the scope keeps
+    // as a birth row (ruling 4f697a7a). Classify it as a seq 0 copy.
+    for (const at of later.values()) {
+      const request = this.#birth(at);
+      if (recorded && request) recorded.push(request);
     }
     this.budget.check();
     if (recorded) {
-      if (recorded.length !== count) return stop("unavailable");
+      if (recorded.length !== count + later.size) return stop("unavailable");
       this.#lastScan = Object.freeze({ position: Object.freeze({ seq: position.seq, hash: position.hash, bytes: position.bytes }),
-        uses: count, requests: Object.freeze(recorded) });
+        uses: count, births: later.size, requests: Object.freeze(recorded) });
     }
   }
   /** The caller retains this immutable scalar result before closing its
@@ -172,6 +194,12 @@ export class ArchiveForeignMetadata {
   source(fact: FactRef): Readonly<ArchiveForeignCopy> | null {
     this.budget.spend(forecastArchiveForeignLookup());
     const content = this.#facts.get(canonicalize(fact));
+    return content === undefined ? null : this.#copies.get(content) ?? null;
+  }
+  /** The seq 0 copy that serves a foreign sequence's birth, by genesis. */
+  birth(genesis: Digest): Readonly<ArchiveForeignCopy> | null {
+    this.budget.spend(forecastArchiveForeignLookup());
+    const content = this.#births.get(genesis);
     return content === undefined ? null : this.#copies.get(content) ?? null;
   }
   selection(): readonly Readonly<ArchiveForeignCopy>[] {

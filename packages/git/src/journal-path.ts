@@ -7,7 +7,9 @@ const ROOT = "journal/v1/";
 const REF = "refs/artroom/journal/";
 const DOMAIN_BYTES = 158; // d_ plus ceil(8n/5) base32 characters fits one 255-byte segment.
 const strict = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
-const plainKinds = ["definition", "entry", "rule", "snapshot"] as const;
+/** A `birth` path names a foreign sequence's first entry by its genesis
+ * entry hash, not by a content digest (ruling ae48dd39). */
+const plainKinds = ["definition", "entry", "rule", "snapshot", "birth"] as const;
 type PlainKind = (typeof plainKinds)[number];
 export type ArchiveRetainedName = { kind: PlainKind; digest: Digest } | { kind: "value"; domain: string; digest: Digest };
 
@@ -56,7 +58,7 @@ export function archiveRetainedPath(input: ArchiveRetainedName): string {
 /** Parses only the logical path grammar. Filesystem modes and fan-out are the later layout reader's responsibility. */
 export function retainedOfArchivePath(path: unknown): ArchiveRetainedName | null {
   if (typeof path !== "string" || path.length > ROOT.length + "retained/value/".length + 255 + 1 + 64) return null;
-  const match = /^journal\/v1\/retained\/(definition|entry|rule|snapshot|value)\/(?:([^/]+)\/)?([0-9a-f]{64})$/.exec(path);
+  const match = /^journal\/v1\/retained\/(birth|definition|entry|rule|snapshot|value)\/(?:([^/]+)\/)?([0-9a-f]{64})$/.exec(path);
   if (!match) return null;
   const [, kind, segment, hex] = match;
   const digest = `sha256:${hex}`;

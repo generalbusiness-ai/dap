@@ -136,8 +136,8 @@ function inventoryArchiveInternal(coupled: boolean, sql: Sql, at: ScopeRef, thro
           const name = nameOf(key), prior = objects.get(name);
           if (prior) prior.consumers.push(consumer);
           else {
-            const copy = key.kind === "entry" ? foreign?.get(key.digest) : null;
-            if (key.kind === "entry" && (!copy || copy.bytes !== bytes)) return stop("foreign-source-mismatch");
+            const copy = key.kind === "entry" ? foreign?.get(key.digest) : key.kind === "birth" ? foreign?.birth(key.digest) : null;
+            if ((key.kind === "entry" || key.kind === "birth") && (!copy || copy.bytes !== bytes)) return stop("foreign-source-mismatch");
             const pass = after === undefined ? undefined : readRetainedArchivePass(sql, key, budget) ?? firstPosition.seq;
             if (pass !== undefined && pass > firstPosition.seq) return stop("mismatch");
             objects.set(name, { key, bytes, consumers: [consumer], ...(copy ? { foreign: { fact: copy.fact, pin: copy.pin } } : {}), ...(pass === undefined ? {} : { pass }) });

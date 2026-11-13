@@ -78,9 +78,10 @@ export interface Sql {
  * - `retained_birth`: ruling 4f697a7a. For each foreign sequence whose later
  *   entry the scope retains, the content digest of that sequence's first
  *   entry, whose bytes are a `retained_input` row of the kind `entry`.
- *   One row for each (genesis, scope). No row is changed. The key leads
- *   with the genesis, so the `birth` read by genesis digest alone
- *   (ruling ae48dd39) is one key lookup.
+ *   One row for each (genesis, scope). The key leads with the genesis, so
+ *   the `birth` read by genesis digest alone (ruling ae48dd39) is one key
+ *   lookup. `pass` is the journal pass that first wrote the row's `birth`
+ *   path, as for `retained_input`; an archive receipt sets it once.
  * - `retained_value`: the retained inputs of the kind `value` (sections 6.2
  *   and 9.2, revision 19). A value is kept under its byte domain and its
  *   digest there, so it has a table of its own: one domain and one digest
@@ -122,7 +123,7 @@ CREATE TABLE IF NOT EXISTS record (capability TEXT NOT NULL, kind TEXT NOT NULL,
 CREATE INDEX IF NOT EXISTS record_by_state ON record (capability, kind, state);
 CREATE TABLE IF NOT EXISTS prepared (intent TEXT NOT NULL, capability TEXT NOT NULL, step TEXT NOT NULL, seq INTEGER NOT NULL, PRIMARY KEY (intent, capability, step)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS retained_input (kind TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, under TEXT, pass INTEGER, PRIMARY KEY (kind, digest)) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS retained_birth (genesis TEXT NOT NULL, scope TEXT NOT NULL, digest TEXT NOT NULL, PRIMARY KEY (genesis, scope)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS retained_birth (genesis TEXT NOT NULL, scope TEXT NOT NULL, digest TEXT NOT NULL, pass INTEGER, PRIMARY KEY (genesis, scope)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS retained_value (domain TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, pass INTEGER, PRIMARY KEY (domain, digest)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS item_key (type TEXT NOT NULL, slot TEXT NOT NULL, key TEXT NOT NULL, id INTEGER NOT NULL, PRIMARY KEY (type, slot, key, id)) WITHOUT ROWID;
 `;

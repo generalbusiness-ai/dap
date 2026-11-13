@@ -1,10 +1,11 @@
 /** Complete v2 clone validation. Every pass retains its own S2b basis.
  * No service fallback, native admission or replay judgment is supplied. */
 import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
-import { DOMAINS, type Digest, type FactRef, type RetainedInput, type ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { type Digest, type FactRef, type RetainedInput, type ScopeId } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, isEntry, parseStrict, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { decodeGitText } from "./wire-text.ts";
 import { journalRef } from "./journal-path.ts";
+import { journalRetainedJSON } from "./journal-retained-json.ts";
 import { archiveSegments } from "./journal-segments.ts";
 import { JournalObjectReader, journalId, type JournalObjectSource } from "./journal-objects.ts";
 import { JOURNAL_SELECTION_BYTES, journalKeyName, type JournalForeignSource } from "./journal-selection.ts";
@@ -102,14 +103,15 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
       work.input(body.length, 12);
       let bytes: string;
       try { bytes = decodeGitText(body); } catch { return mismatch(path); }
-      const value = key.kind === "entry" || key.kind === "rule" ? rawRetainedJSON(key.digest, bytes)
-        : domainRetainedJSON(key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : DOMAINS.snapshot, key.digest, bytes, { canonical: true, max: body.length });
-      if (value === undefined || canonicalize(value) !== bytes || key.kind === "entry" && !isEntry(value)) return mismatch(path);
+      const value = journalRetainedJSON(key, bytes, body.length);
+      if (value === undefined || key.kind === "entry" && !isEntry(value)) return mismatch(path);
       retained.set(journalKeyName(key), { ...key, bytes });
     }
     let lastTime: number | null = null;
     for (const pass of passes) {
       const first = pass.entries[0], local: ReadJournal["entries"][number][] = [], uses = new Map<Digest, FactRef>();
+      // Each foreign sequence this pass uses at a later entry, by genesis (ruling ae48dd39).
+      const births = new Map<Digest, FactRef["at"]>();
       const basis = new Map(pass.foreignSources?.map(source => [canonicalize(source.at), source.pin]) ?? []), usedSources = new Set<string>();
       const segments: typeof segmentRows = [];
       while (segmentIndex < segmentRows.length && segmentRows[segmentIndex]!.first <= pass.through.seq) {
@@ -156,6 +158,11 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
             const prior = uses.get(use.content);
             if (prior && canonicalize(prior) !== canonicalize(use.fact)) return mismatch(segment.path);
             uses.set(use.content, use.fact);
+            if (use.fact.seq > 0 && use.fact.at.genesis !== head.scope.genesis) {
+              const later = births.get(use.fact.at.genesis);
+              if (later && canonicalize(later) !== canonicalize(use.fact.at)) return mismatch(segment.path);
+              births.set(use.fact.at.genesis, use.fact.at);
+            }
           }
           const row = { seq: entry.seq, hash, bytes }; entries.push(row); local.push(row); lastTime = timeMs(entry.time);
         }
@@ -185,6 +192,15 @@ export async function readJournalArchiveV2(repository: JournalReadRepository, sc
           || hash !== fact.at.genesis || scopeIdOf(entry.input.seed) !== fact.at.scope
           : entry.input.type === "genesis" || !("genesis" in entry) || entry.genesis !== fact.at.genesis) return mismatch("foreign birth");
         usedSources.add(canonicalize(fact.at));
+      }
+      const birthNames = new Set(pass.retained.filter(key => key.kind === "birth").map(key => key.digest));
+      if (birthNames.size !== births.size) return mismatch("foreign birth count");
+      for (const held of pass.retained) if (held.kind === "birth") {
+        const at = births.get(held.digest), bytes = retained.get(journalKeyName(held))?.bytes;
+        if (!at || !bytes) return mismatch("foreign birth");
+        const entry = parseStrict(bytes), pin = basis.get(canonicalize(at));
+        if (!isEntry(entry) || !pin || entry.input.type !== "genesis" || entry.input.seed.definition !== pin
+          || scopeIdOf(entry.input.seed) !== at.scope) return mismatch("foreign birth");
       }
       if (basis.size !== usedSources.size) return mismatch("foreign source basis");
       for (const source of pass.foreignSources ?? []) {

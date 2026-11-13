@@ -25,7 +25,7 @@ const requiredKinds: Readonly<Record<string, readonly string[]>> = {
   declaration: ["definition"], "definition-child": ["definition"],
   "rule-input": ["rule"], "act-value": ["definition", "value"],
   "outcome-value": ["definition", "value"], "outcome-snapshot": ["snapshot"],
-  "foreign-use": ["entry"],
+  "foreign-use": ["entry"], "foreign-birth": ["birth"],
 };
 export interface JournalEntrySelection { readonly seq: number; readonly hash: Digest; readonly bytes: number }
 export interface JournalOrigin { readonly at: FactRef; readonly input: string }
@@ -79,7 +79,7 @@ export function journalRetainedKey(value: unknown): ArchiveRetainedName {
     if (typeof r["domain"] !== "string" || r["domain"].length === 0 || r["domain"] === DOMAINS.definition) return refuseJournal("input");
     key = { kind: "value", domain: r["domain"], digest: r["digest"] };
   } else {
-    if (r["kind"] !== "definition" && r["kind"] !== "entry" && r["kind"] !== "rule" && r["kind"] !== "snapshot") return refuseJournal("input");
+    if (r["kind"] !== "definition" && r["kind"] !== "entry" && r["kind"] !== "rule" && r["kind"] !== "snapshot" && r["kind"] !== "birth") return refuseJournal("input");
     key = { kind: r["kind"], digest: r["digest"] };
   }
   archiveRetainedPath(key);
@@ -185,9 +185,11 @@ function readSelection(bytes: string, work: JournalWork, incremental: boolean): 
     const r = journalRecord(raw, ["key", "bytes", "consumers", ...(copy ? ["foreign"] : []), ...(incremental ? ["pass"] : [])]), key = currentRetained(r["key"]), name = journalKeyName(key);
     if (incremental && (!journalNatural(r["pass"]) || r["pass"] > first)) return refuseJournal("input");
     let foreign: JournalForeignCopy | undefined;
-    if (key.kind === "entry") {
+    if (key.kind === "entry" || key.kind === "birth") {
       const row = journalRecord(r["foreign"], ["fact", "pin"]), fact = row["fact"];
       if (!isFactRef(fact) || sources.get(canonicalize(fact.at)) !== row["pin"]) return refuseJournal("input");
+      // A birth copy is the seq 0 entry whose hash is the key's genesis.
+      if (key.kind === "birth" && (fact.seq !== 0 || fact.hash !== key.digest || fact.at.genesis !== key.digest)) return refuseJournal("input");
       foreign = { fact: { at: { ...fact.at }, seq: fact.seq, hash: fact.hash }, pin: row["pin"] as Digest | PlatformDefinition };
       usedSources.add(canonicalize(fact.at));
     } else if (copy) return refuseJournal("input");

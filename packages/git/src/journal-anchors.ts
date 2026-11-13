@@ -30,7 +30,7 @@ export const journalPublicationUnits = (anchors: number): number => 256 + anchor
 export function journalAnchorCopyCount(rows: readonly { readonly kind?: string; readonly key?: { readonly kind: string } }[], work: JournalWork): number {
   work.input(rows.length * 128);
   let copies = 0;
-  for (const row of rows) { work.check(); if ((row.key?.kind ?? row.kind) === "entry") copies++; }
+  for (const row of rows) { work.check(); const kind = row.key?.kind ?? row.kind; if (kind === "entry" || kind === "birth") copies++; }
   return copies;
 }
 export interface JournalAnchorCoverage {
