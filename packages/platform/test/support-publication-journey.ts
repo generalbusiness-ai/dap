@@ -17,7 +17,7 @@ export function publicationJourney(data: PlatformData = destination4, named: Pla
   if (!checked.ok) throw Error(JSON.stringify(checked.problems));
   const definition = checked.definition, platform: PlatformRules = { named, rules };
   const ref = (kind: ScopeKind, mark: string): ScopeRef => standIn(kind, 8, d("e"), d(mark));
-  const directory = ref("directory", "d"), app = ref("lane", "a"), change = ref("lane", "b"), register = ref("register", "c");
+  const directory = ref("directory", "d"), app = ref("lane", "a"), change = ref("lane", "b"), register = ref("register", "9");
   const claim = handMade(register, "found");
   const write = (ledger: Ledger, judgment: Judgment) => { expect(judgment.result, JSON.stringify(judgment)).toBe("write"); if (judgment.result !== "write") throw Error("Not written"); ledger.seal(judgment.draft); };
   class BoundsBranch extends Ledger { override get foldOptions() { return { ...super.foldOptions, platform }; } }

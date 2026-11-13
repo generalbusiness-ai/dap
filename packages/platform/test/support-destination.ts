@@ -82,6 +82,8 @@ export const standIn = (kind: ScopeKind, fill: number, definition = d("f"), caus
     uses: [], prepared: [], effects: [], sends: [] };
   const sequence = admitSequenceGenesis(canonicalize(entry), { scope: scopeIdOf(seed), genesis: entryHash(entry) }, PROPOSED_BOUNDS.entryBytes);
   if (!sequence) throw new Error("the stand-in genesis must bind its address");
+  // Test files share this module in one isolate. A second genesis at one scope ID would replace the first one's sequence.
+  if (sequences.has(sequence.at.scope) && sequences.get(sequence.at.scope)!.at.genesis !== sequence.at.genesis) throw new Error("a stand-in scope ID already binds another genesis");
   sequences.set(sequence.at.scope, sequence);
   births.set(sequence.at.scope, canonicalize(entry));
   return sequence.at;
