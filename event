@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"6553a654596e7bcbb5a00bdf9e78490255574fbc","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0c0cde8a12cdcbeb1c5672b6429311082c6b63c4","text":"Merge retired a covered predecessor; the successor is at apps/room/page/assets.ts."}
