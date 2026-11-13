@@ -67,7 +67,7 @@ export interface JobRecord {
   stageSnapshot?: StageSnapshot;
 }
 
-const jobStorageKey = (job: FactRef): string => `job/${job.at.scope}/${job.at.inc}/${job.seq}/${job.hash}`;
+const jobStorageKey = (job: FactRef): string => `job/${job.at.scope}/${job.at.genesis}/${job.seq}/${job.hash}`;
 
 const recordBytes = (record: JobRecord): string => canonicalize({ ...record,
   ...(record.reservation ? { reservation: { ...record.reservation, objects: record.reservation.objects.map(object => ({ ...object, data: b64url(object.data) })) } } : {}),
