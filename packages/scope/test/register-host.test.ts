@@ -119,7 +119,7 @@ describe("register outside adapter; provider is a STAND-IN, register judgments a
     expect(f.register.outcome("1:0", 1, "unknown").result).toBe("write");
     expect(f.register.outcome("1:0", 2, "confirmed", { name: f.name(2), id: "selected-repo" }).result).toBe("write");
     expect(f.register.outcome("1:0", 1, "confirmed", { name: f.name(1), id: "owed-repo", credential: "owed-credential" }).result).toBe("write");
-    const cleanups = f.register.last.effects.filter((effect) => effect.effect === "operation");
+    const cleanups = f.register.last.effects.flatMap((effect) => effect.effect === "operation" ? [effect] : []);
     expect(cleanups.map((effect) => effect.kind)).toEqual(["revoke-credential", "delete-repository"]);
     const revoke = f.request(`${f.register.last.seq}:0`);
     const deletion = f.request(`${f.register.last.seq}:1`);

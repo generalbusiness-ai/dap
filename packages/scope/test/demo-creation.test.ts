@@ -2,7 +2,7 @@
  * repository creation, directory/enrollment completion, production credentials, browser or hosted admission runs here. */
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { b64url, canonicalize, intentDigest, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, intentDigest, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedIntent } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import type { Seed } from "@generalbusiness/dap-contract";
@@ -102,7 +102,7 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     // This exact oracle distinguishes omission of the adapter-register binding.
     expect((await lifetime.wait(()=>demoCreationRoute(new Request(origin+"/v1/demo/creation-offer"),{...bindings,DEMO_START_CONFIG:canonicalize({...config,register:secondAt})}))).status).toBe(404);
     expect(lookups).toEqual(unchanged);
-    for(const query of [`?register=${secondAt.scope}&inc=${secondAt.inc}`,`?register=${at.scope}&inc=${newIncarnation(new Uint8Array(16).fill(12))}`,`?register=${at.scope}&inc=${at.inc}&register=${secondAt.scope}`,`?register=${at.scope}`,`?register=${at.scope}&inc=${at.inc}&scope=${at.scope}`]) expect((await lifetime.wait(()=>demoCreationRoute(new Request(origin+"/v1/demo/creation-offer"+query),bindings))).status).toBe(404);
+    for(const query of [`?register=${secondAt.scope}&genesis=${secondAt.genesis}`,`?register=${at.scope}&genesis=sha256:${"0c".repeat(32)}`,`?register=${at.scope}&genesis=${at.genesis}&register=${secondAt.scope}`,`?register=${at.scope}`,`?register=${at.scope}&genesis=${at.genesis}&scope=${at.scope}`]) expect((await lifetime.wait(()=>demoCreationRoute(new Request(origin+"/v1/demo/creation-offer"+query),bindings))).status).toBe(404);
     expect(lookups).toEqual(unchanged); // request ref mismatches refuse before lookup
     expect(demoCreationConfig(canonicalize({...config,unexpected:secondAt}),deployment,bindings)).toBeNull();
     expect(demoCreationConfig(canonicalize({...config,origin:"https://foreign.invalid"}),deployment,bindings)).toMatchObject({ current: { origin: "https://foreign.invalid" } });

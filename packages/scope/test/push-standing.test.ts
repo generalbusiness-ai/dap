@@ -97,7 +97,7 @@ test.each(["effective", "absent", "unavailable", "active", "root-full", "file-su
   const returned = genesis.sends.find(send => send.message.class === "result")!;
   if (returned.message.class !== "result") throw Error("Native birth returned no result");
   const confirm = { class: "control", type: "confirm", genesis: factRefOf(genesis, destination) } as const;
-  const confirmation = { ...handMade(birth.directory, "confirm", [{ n: 0, to: destination, message: confirm }]), input: { type: "delivery", from: factRefOf(genesis, destination), n: returned.n, message: returned.message, clause: "applied" } as const };
+  const confirmation = { ...handMade(birth.directory, "confirm", [{ n: 0, to: destination, message: confirm }]), input: { type: "delivery", from: factRefOf(genesis, destination), sourceKind: "destination", n: returned.n, message: returned.message, clause: "applied" } as const };
   remember(confirmation, birth.directory, "platform:directory");
   expect(await surface.deliver({ to: destination, from: factRefOf(confirmation, birth.directory), n: 0, message: confirm })).toMatchObject({ answer: "recorded" });
   const adopt = await stubOf(name).submit(await room.M.intent(rita, "adopt-head", { to: destination, on: 0, expected: { on: 1 }, fields: { commit: HEAD, why: "scripted host base" } }), []);

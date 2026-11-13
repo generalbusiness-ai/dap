@@ -285,7 +285,9 @@ test("native related-text projection follows self and earlier owner items, and i
         // Negative metadata probe only: alter an opaque body item's owner,
         // not an accepted native history. Restore its exact original bytes
         // and size before returning; no integrity/export claim is made.
-        const bad: Entry = { ...sealed.entry, input: { ...input, message: { ...input.message, body: { ...messageBody, item: { ...item, at: { ...item.at, scope: B.name } } } } } };
+        const later = sealed.entry;
+        if (!("genesis" in later)) throw new Error("a delivery is a later entry");
+        const bad: Entry = { ...later, input: { ...input, message: { ...input.message, body: { ...messageBody, item: { ...item, at: { ...item.at, scope: B.name } } } } } };
         const bytes = canonicalize(bad), size = utf8(bytes).length;
         try {
           state.storage.sql.exec("UPDATE entry SET bytes = ?, size = ? WHERE seq = ?", bytes, size, sealed.entry.seq);

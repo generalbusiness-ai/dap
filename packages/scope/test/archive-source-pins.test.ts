@@ -3,7 +3,7 @@ import { archiveWrongProducerChange } from "./definition-corpus-data.ts";
  * TEST authority/clock/reader. This only witnesses fixture metadata binding,
  * not foreign privacy admission, production provenance or installed export. */
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Guard } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, definitionDigest, entryHash, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -80,13 +80,14 @@ test("fixture source pins bind an actual native birth and declaration to its ful
   // but cannot become a new-format source declaration. It is fixture data,
   // not a replacement for the real Native birth used above.
   const redundant = structuredClone(normalizeDefinition(definition.declared));
-  redundant.acts["remark"]!.guards.push({ of: "on", equals: { a: { field: "text" }, b: { field: "text" } } });
+  (redundant.acts["remark"]!.guards as Guard[]).push({ of: "on", equals: { a: { field: "text" }, b: { field: "text" } } });
   expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
   const redundantBirth = structuredClone(birth.value.entry);
   if (redundantBirth.input.type !== "genesis") return expect.fail("Native genesis0 required");
-  redundantBirth.input.seed.definition = definitionDigest(redundant);
+  const redundantSeed = redundantBirth.input.seed;
+  redundantSeed.definition = definitionDigest(redundant);
   const redundantHash = entryHash(redundantBirth);
-  expect(() => new FixtureArchiveSourcePins([{ at: { scope: scopeIdOf(redundantBirth.input.seed), genesis: redundantHash },
+  expect(() => new FixtureArchiveSourcePins([{ at: { scope: scopeIdOf(redundantSeed), genesis: redundantHash },
     birth: { bytes: canonicalize(redundantBirth), hash: redundantHash }, declaration: canonicalize(redundant) }],
   PROPOSED_BOUNDS, new ArchiveBudget())).toThrow("archive-mismatch");
 

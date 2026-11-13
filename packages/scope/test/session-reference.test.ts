@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import type { Entry, PlatformDefinition, ScopeRef, SessionClaims } from "@generalbusiness/dap-contract";
+import type { Entry, GenesisEntry, PlatformDefinition, ScopeRef, SessionClaims } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { SIBLINGS_OF } from "@generalbusiness/dap-platform";
 import { Scope } from "../src/core.ts";
@@ -18,13 +18,13 @@ const sessions = sessionsOf("a synthetic bounded reference test secret", "bounde
  * not a judged directory creation, confirmation, or membership issuance. */
 function fixture(scope: Lane, state: DurableObjectState, named: PlatformDefinition = "platform:directory@8") {
   const actual = sqlOf(state), store = new SqliteStore(actual), old = store.scope()!, sample = store.item(0)!;
-  const source = JSON.parse(store.stored(0)!.bytes) as Entry;
+  const source = JSON.parse(store.stored(0)!.bytes) as GenesisEntry;
   if (source.input.type !== "genesis") return expect.fail("missing native sample genesis");
   const seed = { ...source.input.seed, kind: "directory" as const, definition: named };
-  const directory: ScopeRef = { ...source.at, kind: "directory", scope: scopeIdOf(seed) };
+  const entry: Entry = { ...source, input: { ...source.input, seed } }, bytes = canonicalize(entry), hash = entryHash(entry);
+  const directory: ScopeRef = { scope: scopeIdOf(seed), genesis: hash };
   const membership: ScopeRef = { scope: scopeIdOf({ ...seed, kind: "membership", ordinal: 100 }), genesis: `sha256:${"01".repeat(32)}` as const };
   const rules: ScopeRef = { scope: scopeIdOf({ ...seed, kind: "rules", ordinal: 101 }), genesis: `sha256:${"02".repeat(32)}` as const };
-  const entry: Entry = { ...source, at: directory, input: { ...source.input, seed } }, bytes = canonicalize(entry), hash = entryHash(entry);
   state.storage.sql.exec("DELETE FROM entry"); state.storage.sql.exec("INSERT INTO entry(seq,hash,time,bytes,size) VALUES(0,?,?,?,?)", hash, entry.time, bytes, utf8(bytes).length);
   store.setScope({ ...old, at: directory, head: { seq: 0, hash }, genesis: { hash, source: null, n: 0 }, status: "active" });
   const repository = { ...sample, id: 10, type: "repository", state: "open", refs: { membership, rules } }; store.putItem(repository);

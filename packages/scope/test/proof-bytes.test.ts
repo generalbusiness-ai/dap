@@ -69,9 +69,9 @@ test("native sender admits truthful UTF8 bytes at the hard bound and refuses B+1
     const scope = await create();
     const got = await scope.inside(state => {
       const sql = sqlOf(state), store = new SqliteStore(sql), original = JSON.parse(store.stored(0)!.bytes) as GenesisEntry;
-      const entry: GenesisEntry = { ...original, effects: [...original.effects, { effect: "record" as const, capability: "hold@1" as const, kind: "padding", key: [], state: "padded", values: { text: "é😀" } }] };
-      const extra = size - utf8(canonicalize(entry)).length;
-      entry.effects[entry.effects.length - 1] = { effect: "record", capability: "hold@1" as const, kind: "padding", key: [], state: "padded", values: { text: "é😀" + "x".repeat(extra) } };
+      const padded = (text: string): GenesisEntry => ({ ...original, effects: [...original.effects, { effect: "record" as const, capability: "hold@1" as const, kind: "padding", key: [], state: "padded", values: { text } }] });
+      const extra = size - utf8(canonicalize(padded("é😀"))).length;
+      const entry = padded("é😀" + "x".repeat(extra));
       const bytes = canonicalize(entry), hash = entryHash(entry);
       state.storage.sql.exec("UPDATE entry SET bytes=?,hash=?,size=1 WHERE seq=0", bytes, hash); // forged legacy size must not decide
       store.setScope({ ...store.scope()!, at: { ...store.scope()!.at, genesis: hash }, head: { seq: 0, hash }, genesis: { ...store.scope()!.genesis, hash } });

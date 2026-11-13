@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import type { Entry, PlatformDefinition } from "@generalbusiness/dap-contract";
+import type { Entry, GenesisEntry, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isScopeKind, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { platform, VERSIONS } from "@generalbusiness/dap-platform";
 import { Scope } from "../src/core.ts";
@@ -149,7 +149,7 @@ test("one operation cannot recapture a new genesis allowance and post-await chan
 /** Synthetic pin storage for actual native catalog validation. This does
  * not claim a native judged creation under the replacement platform. */
 function pin(state: DurableObjectState, named: PlatformDefinition) {
-  const store = new SqliteStore(sqlOf(state)), sample = JSON.parse(store.stored(0)!.bytes) as Entry, current = store.scope()!;
+  const store = new SqliteStore(sqlOf(state)), sample = JSON.parse(store.stored(0)!.bytes) as GenesisEntry, current = store.scope()!;
   if (sample.input.type !== "genesis") return expect.fail("native fixture lacks genesis");
   const kind = named.startsWith("platform:directory-partition@") ? "directory" : named.slice("platform:".length).split("@")[0];
   if (!isScopeKind(kind)) return expect.fail("fixture pin has unsupported scope kind");
