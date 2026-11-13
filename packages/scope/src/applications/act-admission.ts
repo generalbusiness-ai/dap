@@ -3,7 +3,7 @@ import { applicationAdmissionCohort, platform } from "@generalbusiness/dap-platf
 /** Deployment admission for fresh acts only. Immutable native creation proves
  * which installed release owns a scope; current trust is never cached. */
 import type { Digest, Entry, FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, deliveryCauseDigest, isDigest, type CheckedSequence, isFactRef, isMemberRef, isPlatformDefinition, isRecord, isScopeRef, isSeed, messageDigest, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, deliveryCauseDigest, isDigest, type CheckedSequence, isFactRef, isMemberRef, isPlatformDefinition, isRecord, isScopeRef, isSeed, messageDigest, resolveGenesisSelf, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { same, sentBy } from "@generalbusiness/dap-derive";
 
 import { readApplicationTrust } from "./admission.ts";
@@ -190,9 +190,12 @@ export class ApplicationActAdmission implements FreshActAdmission {
         || !isRecord(made.message.body["fields"])) return null;
       const fields = made.message.body["fields"];
       // A reference names no kind. The Directory's send states the sibling seed's kind, and the seed's digest names the scope.
+      // `creator` is the Directory's genesis, so its sends name their creator
+      // by the genesis self reference; resolve it from that genesis fact.
+      const origin: FactRef = { at: parent, seq: 0, hash: parent.genesis };
       const sibling = (kind: "rules" | "membership", pin: string, at: unknown) => isScopeRef(at) && creator.sends.some(send => {
         const seed = send.to;
-        return isSeed(seed) && seed.kind === kind && seed.definition === pin && same(seed.creator, parent) && scopeIdOf(seed) === at.scope;
+        return isSeed(seed) && seed.kind === kind && seed.definition === pin && same(resolveGenesisSelf(seed.creator, origin), parent) && scopeIdOf(seed) === at.scope;
       });
       if (!sibling("rules", cohort.rules, made.from.at) || !isMemberRef(fields["installer"])
         || !sibling("membership", cohort.membership, fields["installer"].membership)
