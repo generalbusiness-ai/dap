@@ -2176,7 +2176,7 @@ class Verifier {
     }
     const foreign = [...entry.uses.map(use => use.fact), ...(input.type === "delivery" ? [input.from] : []), ...(input.type === "genesis" && input.source ? [input.source] : [])];
     const distinctForeign = [...new Map(foreign.map(fact => [canonicalize(fact), fact])).values()];
-    const proved = new Map<string, "replayed" | "anchored">();
+    const proved = new Map<string, "replayed" | "anchored" | "born">();
     const assumedCopies: AnchoredCopy[] = [];
     // Ruling a140a1c6, Q-B1: an entry that used a later entry of a sequence also used its birth. The retained birth bytes, which
     // the genesis digest binds, give the association of that sequence when this replay did not replay the source.
@@ -2188,7 +2188,15 @@ class Verifier {
     }
     for (const fact of distinctForeign) {
       if (!isFactRef(fact)) throw mismatch("a reference is not a fact reference");
-      proved.set(canonicalize(fact), await this.#prove(fact, where, depth, entry));
+      // Ruling a140a1c6, Q-B1: a birth use whose retained bytes are the sequence's genesis proves itself. Its hash is the genesis
+      // that the reference names, so no other entry 0 can match it. A replay that cannot read the source accepts it on those bytes.
+      const born = fact.seq === 0 && fact.hash === fact.at.genesis && births.has(canonicalize(fact.at));
+      try {
+        proved.set(canonicalize(fact), await this.#prove(fact, where, depth, entry));
+      } catch (error) {
+        if (!born || !(error instanceof Stop) || error.result !== "missing-dependency") throw error;
+        proved.set(canonicalize(fact), "born");
+      }
       this.#recordedKind(entry, fact, where);
       const copies = rawFacts.filter(copy => same(copy.fact, fact));
       const source = this.#runs.get(fact.at.scope), sequence = source?.sequence ?? births.get(canonicalize(fact.at));

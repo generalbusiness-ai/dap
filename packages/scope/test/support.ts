@@ -87,7 +87,8 @@ function current(stub: object): Remote {
     const method: unknown = Reflect.get(target, key);
     if (typeof method !== "function") return method;
     return async (...args: unknown[]) => {
-      const answer: unknown = await method.apply(target, args);
+      // Reflect.apply calls the function itself. On an RPC stub, `method.apply` would be a remote call to a method named "apply".
+      const answer: unknown = await Reflect.apply(method, target, args);
       if (isRoomRetiredStop(answer)) throw new Error(`the test scope answered a retired stop to ${String(key)}`);
       return answer;
     };
