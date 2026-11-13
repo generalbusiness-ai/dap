@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a0f2ad41af3b274c23b58abad05946afb7b977af","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-tick.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a149e12ddac78551629622865b1b1fd1285f4a93","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/verify-cleanup.test.ts."}
