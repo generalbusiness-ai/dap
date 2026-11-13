@@ -1808,6 +1808,7 @@ test("the control budget is one aggregate: operations, sessions and configuratio
     for (let n = 0; n <= 120; n++) {
       const signed = controlOf(control(room, rita.secret, "connections", M, bot.agent, "{}", `window-agent-${n}`))!;
       const listed = await room.wait(() => directAgent.connectionControl(signed, "connections", utf8("{}")));
+      if ("stop" in listed) return expect.fail("the Agent must not be retired");
       if (listed.status === 429) { expect(listed.body).toEqual({ error: "rate-limited" }); agentWindowLimited = true; break; }
       expect(listed.status).toBe(200);
     }

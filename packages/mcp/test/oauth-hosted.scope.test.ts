@@ -61,7 +61,7 @@ test("signed grants recheck the current controller role and persist only the cod
     expect(Object.keys(identity).sort()).toEqual(["agent", "handle", "key", "membership", "op", "state"]);
     expect(hostedAgentIdentity(state.id.toString(), observedIdentity)).toEqual(observedIdentity);
     expect(hostedAgentIdentity(state.id.toString(), { status: "observed", identity: { ...identity, configuration: "PRIVATE" } })).toEqual({ status: "unavailable" });
-    identity.membership.kind = "lane";
+    identity.membership.genesis = digestBytes(utf8("TEST another membership genesis"));
     expect(agent.roleIdentity()).toMatchObject({ status: "observed", identity: { membership: MEMBER } });
     sql.exec(`UPDATE agent SET key = ? WHERE id = 1`, "TEST malformed key");
     expect(agent.roleIdentity()).toEqual({ status: "unavailable" });

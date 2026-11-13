@@ -40,8 +40,8 @@ async function issueLane(port: PersonPort, absent: StopWord = "no-issue-lane"): 
 }
 async function factOf(port: PersonPort, scope: ScopeId, seq: number): Promise<FactRef> {
   const read = await port.read("step", { scope, seq });
-  const entry = read["entry"] as Entry;
-  return { at: entry.at, seq, hash: read["hash"] as FactRef["hash"] };
+  const entry = read["entry"] as Entry, hash = read["hash"] as FactRef["hash"];
+  return { at: { scope, genesis: "genesis" in entry ? entry.genesis : hash }, seq, hash };
 }
 const accepted = (phase: PersonPhase, fact: FactRef): PublicResult => ({ phase, actor: "person", status: "accepted", facts: { [phase]: fact } });
 
