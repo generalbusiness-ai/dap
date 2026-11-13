@@ -129,7 +129,7 @@ export function inspectClassifiedRetainedUse(value: unknown): ClassifiedRetained
 /** One actual local origin read. Retained bodies are read only by selected index. */
 export function readRetainedUses(own: RetainedOwn, originSeq: number): RetainedSelectionResult {
   try {
-    if (typeof own !== "function" || typeof own.sequence !== "function" || typeof own.retainedRow !== "function" || !natural(originSeq)) return { status: "invalid-origin" };
+    if (typeof own !== "function" || typeof own.sequence !== "function" || typeof own.retainedRow !== "function" || typeof own.retainedBirth !== "function" || !natural(originSeq)) return { status: "invalid-origin" };
     const held = own(originSeq);
     if (!held) return { status: "missing-origin" };
     const sequence = own.sequence();
@@ -226,6 +226,18 @@ export function readRetainedUses(own: RetainedOwn, originSeq: number): RetainedS
           if (!uses.some(use => same(use.fact, fact) && use.content === content && use.kind === sequence.kind)) return { status: "invalid-use" };
           fetched.push({ fact, sequence });
         }
+        // Ruling 4f697a7a: a later use with no birth among the selection or the fetched copies is genuine when the scope's
+        // retained birth row for its sequence holds bytes that admit that sequence under the use's kind. One read for each
+        // sequence, made only for such a use.
+        const born = new Map<string, CheckedSequence | null>();
+        const retainedBirth = (at: FactRef["at"]): CheckedSequence | null => {
+          const key = canonicalize(at);
+          if (born.has(key)) return born.get(key)!;
+          const row = own.retainedBirth(at);
+          const sequence = row && row.kind === "entry" && typeof row.bytes === "string" ? admitSequenceGenesis(row.bytes, at, utf8(row.bytes).length) : null;
+          born.set(key, sequence);
+          return sequence;
+        };
         const result: ClassifiedRetainedUse[] = [];
         for (const value of values) {
           let birth = SelectedBirth.belongs(value, owner) ? value.sequence : null;
@@ -238,6 +250,10 @@ export function readRetainedUses(own: RetainedOwn, originSeq: number): RetainedS
           for (const candidate of fetched) if (same(candidate.fact.at, value.use.fact.at)) {
             if (birth && birth.kind !== candidate.sequence.kind) return { status: "invalid-use" };
             birth = candidate.sequence;
+          }
+          if (!birth && value.use.fact.seq !== 0) {
+            const retained = retainedBirth(value.use.fact.at);
+            if (retained && retained.kind === value.use.kind) birth = retained;
           }
           if (birth) {
             // SAME exported association matcher as Scope.proofEntry, without

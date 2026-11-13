@@ -24,7 +24,7 @@ import { carryProducerName } from "./receiver-facts.ts";
 import { CanonicalError, admitSequenceGenesis, isEntry, canonicalize, entryHash, scopeIdOf, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, Due, Fetched, RetainedOwn, Owners, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
-import { genuineRetained, ownOf, retainedUsesOf, snapshotsOf, type BirthCandidate, type PinCell, type Pinned, type ResolvedPin } from "./core.ts";
+import { bornOf, genuineRetained, ownOf, retainedUsesOf, snapshotsOf, type BirthCandidate, type PinCell, type Pinned, type ResolvedPin } from "./core.ts";
 import type { Ports, Resolver, SourceReadContext } from "./ports.ts";
 import type { Retained, Sealed, Store } from "./store.ts";
 import { entryCorrelation, inOperation, measured, metric, operational, type Operational } from "./operational.ts";
@@ -53,6 +53,7 @@ function withAppendedOwn(store: Store, sequence: ResolvedPin["sequence"], sealed
   }, {
     sequence: () => { check(); return base.sequence(); },
     retainedRow: (content: Parameters<RetainedOwn["retainedRow"]>[0]) => { check(); return base.retainedRow(content); },
+    retainedBirth: (at: Parameters<RetainedOwn["retainedBirth"]>[0]) => { check(); return base.retainedBirth(at); },
     ...(base.retained ? { retained: (use: Parameters<NonNullable<RetainedOwn["retained"]>>[0]) => { check(); return base.retained!(use); } } : {}),
     ...(base.positions ? { positions: (before: number) => {
       check();
@@ -153,7 +154,7 @@ export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: read
 export type Verdict<A> =
   /** Write the draft. `retain`: the inputs it names by digest. `sealed` builds the answer from the sealed entry. `unfit` answers for a draft that cannot be an entry: over the size bound, or not canonical values. */
   /** `full` answers for an entry that admits new pending work and would leave no room for it to settle (section 9.2). Nothing is written then. */
-  | { verdict: "write"; draft: Draft; retain: readonly Retained[]; facts?: readonly Fetched[]; sealed(sealed: Sealed, pinned: Pinned): A; unfit(why: "size" | "form"): A; full(head: Head, bound: ScopeBoundName): A }
+  | { verdict: "write"; draft: Draft; retain: readonly Retained[]; facts?: readonly Fetched[]; born?: readonly Fetched[]; sealed(sealed: Sealed, pinned: Pinned): A; unfit(why: "size" | "form"): A; full(head: Head, bound: ScopeBoundName): A }
   /** Step 6.3: a transition is due. Nothing is written, and the turn goes back to step 3. */
   | { verdict: "stop" }
   /** Nothing is written. */
@@ -444,7 +445,7 @@ export class Turns {
         // its digest. The opt-in producer ceiling must also constrain the
         // bytes retained by this writer; an evaluator budget alone does not.
         if (definition.ruleInputBytes !== undefined && rules.some((input) => utf8(input.bytes).length > definition.ruleInputBytes!)) throw new Unfit("size");
-        const { sealed, pin } = this.#seal(definition, verdict.draft, clock, [...verdict.retain, ...rules], verdict.facts);   // 6.5
+        const { sealed, pin } = this.#seal(definition, verdict.draft, clock, [...verdict.retain, ...rules], verdict.facts, verdict.born ?? verdict.facts);   // 6.5
         // Count after folding, retaining inputs and redacting. Every opt-in
         // settlement spends its own reserved room inside the same transaction.
         const bound = this.#full(definition, sealed.entry.input, verdict.draft.settles ?? false, pin);
@@ -478,11 +479,14 @@ export class Turns {
    * inputs, the fold, and the removal of each text the entry redacts.
    * `applyEntry` is the only code that changes folded state.
    */
-  #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[]): { sealed: Sealed; pin: ResolvedPin } {
+  #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[], born: readonly Fetched[] = []): { sealed: Sealed; pin: ResolvedPin } {
     // The foreign-entry term uses this scope's entry ceiling. Constrain
     // accepted retained copies at the same boundary, including results;
     // a peer's independently configured ceiling is not that guarantee.
     if (definition.declared.capacity?.name === "whole-scope" && retain.some(input => input.kind === "entry" && utf8(input.bytes).length > this.#bounds.entryBytes)) throw new Unfit("size");
+    // Ruling 4f697a7a: the first entry of each foreign sequence whose later entry this entry uses, from the read already made.
+    const births = bornOf(draft, born);
+    if (definition.declared.capacity?.name === "whole-scope" && births.some(({ input }) => utf8(input.bytes).length > this.#bounds.entryBytes)) throw new Unfit("size");
     const entry = entryOf(this.#store, draft, clock);
     let bytes: string;
     try {
@@ -502,6 +506,7 @@ export class Turns {
     }
     this.#store.append(entry, hash, bytes, size);
     for (const input of retain) this.#store.retain(input);
+    for (const { at, input } of births) this.#store.retainBirth(at, input);
     // This is the old #platform read point. Resolve by value, not into the memo, until commit returns.
     const pin = this.#resolvePin(candidate);
     if (!pin) throw new PinUnavailable();

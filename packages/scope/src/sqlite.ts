@@ -75,6 +75,10 @@ export interface Sql {
  *   read whether the index holds every item of the type. It is derived
  *   state, and `all` reads none of it.
  * - `retained_input`: section 9.2; see `Retained`.
+ * - `retained_birth`: ruling 4f697a7a. For each foreign sequence whose later
+ *   entry the scope retains, the content digest of that sequence's first
+ *   entry, whose bytes are a `retained_input` row of the kind `entry`.
+ *   One row for each (scope, genesis). No row is changed.
  * - `retained_value`: the retained inputs of the kind `value` (sections 6.2
  *   and 9.2, revision 19). A value is kept under its byte domain and its
  *   digest there, so it has a table of its own: one domain and one digest
@@ -116,6 +120,7 @@ CREATE TABLE IF NOT EXISTS record (capability TEXT NOT NULL, kind TEXT NOT NULL,
 CREATE INDEX IF NOT EXISTS record_by_state ON record (capability, kind, state);
 CREATE TABLE IF NOT EXISTS prepared (intent TEXT NOT NULL, capability TEXT NOT NULL, step TEXT NOT NULL, seq INTEGER NOT NULL, PRIMARY KEY (intent, capability, step)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS retained_input (kind TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, under TEXT, pass INTEGER, PRIMARY KEY (kind, digest)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS retained_birth (scope TEXT NOT NULL, genesis TEXT NOT NULL, digest TEXT NOT NULL, PRIMARY KEY (scope, genesis)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS retained_value (domain TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, pass INTEGER, PRIMARY KEY (domain, digest)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS item_key (type TEXT NOT NULL, slot TEXT NOT NULL, key TEXT NOT NULL, id INTEGER NOT NULL, PRIMARY KEY (type, slot, key, id)) WITHOUT ROWID;
 `;
@@ -668,6 +673,15 @@ export class SqliteStore implements Store {
       return;
     }
     this.#run("INSERT INTO retained_input (kind, digest, bytes, under) VALUES (?, ?, ?, ?) ON CONFLICT (kind, digest) DO NOTHING", input.kind, input.digest, input.bytes, input.under ?? null);
+  }
+
+  retainBirth(at: SequenceRef, input: Retained & { kind: "entry" }): void {
+    this.retain(input);
+    this.#run("INSERT INTO retained_birth (scope, genesis, digest) VALUES (?, ?, ?) ON CONFLICT (scope, genesis) DO NOTHING", at.scope, at.genesis, input.digest);
+  }
+  retainedBirth(at: SequenceRef): Retained | null {
+    const row = this.#one("SELECT i.digest AS digest, i.bytes AS bytes, i.under AS under FROM retained_birth b JOIN retained_input i ON i.kind = 'entry' AND i.digest = b.digest WHERE b.scope = ? AND b.genesis = ?", at.scope, at.genesis);
+    return row && { kind: "entry", digest: row["digest"] as Digest, bytes: row["bytes"] as string, ...(row["under"] === null ? {} : { under: row["under"] as string }) };
   }
 
   forget(kind: Retained["kind"], digest: Digest): void { this.#run("DELETE FROM retained_input WHERE kind = ? AND digest = ?", kind, digest); }

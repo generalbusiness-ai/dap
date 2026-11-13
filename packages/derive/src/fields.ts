@@ -10,7 +10,7 @@ import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import { resolveGenesisValue } from "./genesis-values.ts";
 import { readJudgmentFacts, verifiedCopy } from "./operand.ts";
 import type { Archived, SizeProof } from "@generalbusiness/dap-contract";
-import type { ActType, Bounds, Digest, Entry, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Prepared, Request, ScopeKind, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
+import type { ActType, Bounds, Digest, Entry, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Prepared, Request, ScopeKind, ScopeRef, Sealed, SequenceRef } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes, isDigest, isIntent, isEntryOf } from "@generalbusiness/dap-bytes";
 import type { Capabilities } from "./capability.ts";
 import type { Fetched, RuleInput } from "./guards.ts";
@@ -45,6 +45,8 @@ export interface OwnRetainedRow {
 /** A real raw-row port, required only by the retained-use constructor. */
 export interface RetainedOwn extends Own {
   retainedRow(content: Digest): OwnRetainedRow | null;
+  /** Ruling 4f697a7a: the retained first entry of a foreign sequence, by the scope's association from (scope, genesis). One read. */
+  retainedBirth(at: SequenceRef): OwnRetainedRow | null;
 }
 
 /**

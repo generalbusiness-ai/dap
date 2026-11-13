@@ -64,6 +64,9 @@ export const ownOf = (store: Store, sequence: CheckedSequence): RetainedOwn => O
 }, { sequence: () => sequence, retainedRow: (content: Digest): OwnRetainedRow | null => {
   const held = store.retained("entry", content);
   return held?.kind === "entry" ? { kind: "entry", digest: held.digest, bytes: held.bytes, ...(held.under === undefined ? {} : { under: held.under }) } : null;
+}, retainedBirth: (at: SequenceRef): OwnRetainedRow | null => {
+  const held = store.retainedBirth(at);
+  return held?.kind === "entry" ? { kind: "entry", digest: held.digest, bytes: held.bytes, ...(held.under === undefined ? {} : { under: held.under }) } : null;
 }, retained: (use: import("@generalbusiness/dap-contract").FactUse) => { const held = store.retained("entry", use.content); const entry = held && rawRetainedJSON(use.content, held.bytes); return isEntry(entry) ? entry : null; }, positions: (before: number) => heldPositions(store, before), sizeProofs: () => store.floor?.()?.sizeProofs ?? [], archived: (seq: number) => archivedPosition(store, seq) });
 
 /**
@@ -79,6 +82,23 @@ export function used(draft: Pick<Draft, "uses">, facts: readonly Fetched[], reta
     if (!kept || typeof kept.use.producer.name !== "string") throw new Error(`the foreign entry ${use.fact.hash} was not fetched before the turn`);
     return { kind: "entry", digest: use.content, bytes: kept.use.originalBytes, under: kept.use.producer.name };
   });
+}
+
+/**
+ * Ruling 4f697a7a: for each foreign sequence whose later entry the draft uses from a fetched fact, the first entry of that
+ * sequence, with the bytes the fetch already admitted. One for each sequence, under the producer name of the first such fact.
+ * A use of a sequence's own first entry needs no birth. Nothing is read.
+ */
+export function bornOf(draft: Pick<Draft, "uses">, facts: readonly Fetched[]): { at: SequenceRef; input: Retained & { kind: "entry" } }[] {
+  const born: { at: SequenceRef; input: Retained & { kind: "entry" } }[] = [];
+  for (const use of draft.uses) {
+    if (use.fact.seq === 0 || born.some((held) => same(held.at, use.fact.at))) continue;
+    const read = facts.find((f) => f.fact.hash === use.fact.hash && same(f.sequence.at, use.fact.at) && f.sequence.kind === use.kind);
+    if (!read) continue;
+    const bytes = read.sequence.birth;
+    born.push({ at: { scope: read.sequence.at.scope, genesis: read.sequence.at.genesis }, input: { kind: "entry", digest: digestBytes(utf8(bytes)), bytes, under: producerName(read) } });
+  }
+  return born;
 }
 
 /**
@@ -591,7 +611,7 @@ export class Scope {
             // The item the genesis opens is indexed as this definition says, from its first write.
             this.#store.cover(valid.indexes);
             return {
-              verdict: "write", draft: judged.draft, retain: [...(bytes === null ? [] : [{ kind: "definition", digest: valid.digest, bytes } as const]), ...children.retain, ...used(judged.draft, facts), ...texts.retain(valid, judged.draft)],
+              verdict: "write", draft: judged.draft, born: facts, retain: [...(bytes === null ? [] : [{ kind: "definition", digest: valid.digest, bytes } as const]), ...children.retain, ...used(judged.draft, facts), ...texts.retain(valid, judged.draft)],
               sealed: (sealed, pin) => answer(sealed, pin), unfit: () => refused("bad-field"), full: (_head, bound) => ({ ...refused("scope-full"), ...(valid.declared.capacity ? { name: bound } : {}) }),
             };
           case "repeat": {

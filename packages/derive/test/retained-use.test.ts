@@ -35,7 +35,7 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   const reads: Digest[] = [];
   const own: RetainedOwn = Object.assign((seq: number) => { originReads++; return local.own(seq); }, {
     sequence: () => local.own.sequence(),
-    retainedRow: (content: Digest) => {
+    retainedBirth: () => null, retainedRow: (content: Digest) => {
       reads.push(content);
       if (content === birthUse.content && !allowBirth) throw Error("an unselected birth row was read");
       return rows.find(row => row.digest === content) ?? null;
@@ -80,7 +80,7 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   if (!otherSequence) return expect.fail("the separate actual genesis must admit");
   expect(selected.project([heldLater.value], [{ fact: unrelated.fact(0), entry: unrelated.entries[0]!.entry, sequence: otherSequence, under: "original:test" }])).toEqual({ status: "invalid-use" });
   const otherOrigin = checkpoint(unrelated, [laterUse, birthUse]);
-  const otherOwn: RetainedOwn = Object.assign((seq: number) => unrelated.own(seq), { sequence: () => unrelated.own.sequence(), retainedRow: own.retainedRow });
+  const otherOwn: RetainedOwn = Object.assign((seq: number) => unrelated.own(seq), { sequence: () => unrelated.own.sequence(), retainedBirth: () => null, retainedRow: own.retainedRow });
   const otherSelection = readRetainedUses(otherOwn, otherOrigin.seq);
   if (otherSelection.status !== "ready") return expect.fail("the separate receiving origin must be ready");
   expect(otherSelection.project([heldLater.value], [])).toEqual({ status: "invalid-use" });
@@ -99,7 +99,7 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   expect(Reflect.apply(selected.project, undefined, [[Object.create(Object.getPrototypeOf(heldBirth.value))], []])).toEqual({ status: "invalid-use" });
   expect(Object.isFrozen(realUse)).toBe(true); expect(Object.isFrozen(realUse.entry)).toBe(true);
   expect(Reflect.set(realUse.fact, "seq", 99)).toBe(false);
-  const badRow: RetainedOwn = Object.assign((seq: number) => local.own(seq), { sequence: () => local.own.sequence(), retainedRow: () => ({ kind: "entry" as const, digest: laterUse.content, bytes: laterBytes + " ", under: "original:test" }) });
+  const badRow: RetainedOwn = Object.assign((seq: number) => local.own(seq), { sequence: () => local.own.sequence(), retainedBirth: () => null, retainedRow: () => ({ kind: "entry" as const, digest: laterUse.content, bytes: laterBytes + " ", under: "original:test" }) });
   const bad = readRetainedUses(badRow, origin.seq);
   if (bad.status !== "ready") return expect.fail("the unchanged actual origin is valid");
   expect(bad.read(0)).toEqual({ status: "invalid-use" });
@@ -175,7 +175,7 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   // A failed ordinary read is not memoized, and supplies no token to reuse.
   let missingReads = 0;
   const missingOwn: RetainedOwn = Object.assign((seq: number) => local.own(seq), {
-    sequence: () => local.own.sequence(), retainedRow: () => { missingReads++; return null; },
+    sequence: () => local.own.sequence(), retainedBirth: () => null, retainedRow: () => { missingReads++; return null; },
   });
   const missing = readRetainedUses(missingOwn, duplicateOrigin.seq);
   if (missing.status !== "ready") return expect.fail("the actual duplicate origin remains valid when a row is missing");
@@ -190,7 +190,7 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   const phaseRows: Digest[] = [];
   const phaseOwn: RetainedOwn = Object.assign((seq: number) => { phaseOriginReads++; return local.own(seq); }, {
     sequence: () => local.own.sequence(),
-    retainedRow: (content: Digest) => { phaseRows.push(content); return rows.find(row => row.digest === content) ?? null; },
+    retainedBirth: () => null, retainedRow: (content: Digest) => { phaseRows.push(content); return rows.find(row => row.digest === content) ?? null; },
   });
   const firstPhase = readRetainedUses(phaseOwn, duplicateOrigin.seq);
   if (firstPhase.status !== "ready") return expect.fail("the first phase must read the actual origin");
