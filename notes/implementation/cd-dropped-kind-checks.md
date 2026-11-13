@@ -219,6 +219,27 @@ asks for this list. No other pin changed.
 `notes/implementation/2026-10-07-i5-definition-versions-delivery.md`, keeps
 the old inbox digest as the record of its time.
 
+## The demo Site pin (rulings 0a5f97ba and dfae40ef)
+
+`demoDefinitions` (`examples/grow/demo-definitions.ts`) points the Site's
+`create-room` send at the demo Room. The Site's `receives.room-summary`
+handler pinned the maintained Room, so the package check refused the demo
+built from source with `wrong-peer`. Under ruling 0a5f97ba, option (a), the
+handler now pins the demo Room. Act dfae40ef confirms the digests.
+
+| Definition | Before | After |
+|---|---|---|
+| demoSite | `sha256:7ca60d1e213b1d16b638e134cffa469e55d05a89a81bf1a5492b2789903527da` | `sha256:833c0702b5e301cf7cee5f4f354f55f747c5f1830a4a7623afdb94205a46bac5` |
+| demoRoom | `sha256:3ea5dcacd1c7a57af0e6e28d2678bf9d159d242ae338eb4eae03c2852edd5d41` | unchanged |
+| Room | `sha256:2fc33678c6a6cc291685c1c4b35accc8833b9068d9cdb68c7118f389dbb11e85` | unchanged |
+| Site | `sha256:a95c1de0e3a9953831aecb35535e8b72891973e7ca8f3c61aedc69b5f0ee695d` | unchanged |
+
+No package could hold the old demoSite `7ca60d1e`, because the package check
+refused it. F's identity ledger keeps `7ca60d1e` as recorded history. With
+the TEST signer `fixedSigner(254)`, the source-built demo packs with semantic
+`sha256:49eddfe2a06f9412ac7ba7551c06e71e1266330cc6e7df094cdd0dd71dae9883` and
+presentation `sha256:2a3adecf80d11e4734d1b63fc43121e7e73197ee16c3448782cec15e586ef78c`.
+
 ## Held test assertions
 
 These test assertions read a reference's kind, or a reason that names the
@@ -588,11 +609,6 @@ same policies as before. Tests that use the recorded packet pass
 
 - **e4b72290 Q2: Room A shape.** RULING IN WORK. See "The Grow archive
   binding".
-- **0a5f97ba: the demo Site receiver.** RULING PENDING. `demoDefinitions`
-  points the Site's `create-room` send at the demo Room
-  (`examples/grow/demo-definitions.ts:75-77`). The Site's
-  `receives.room-summary` handler still pins the maintained Room, so the
-  package check refuses the demo built from source with `wrong-peer`.
 
 ## The kept Grow refusal test (ruling a7c8072a)
 
