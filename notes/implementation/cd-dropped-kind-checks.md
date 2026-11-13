@@ -377,66 +377,195 @@ The scope refuses such a reference when it is used: `routed` in
 `packages/scope/src/namespace.ts` answers `wrong-genesis` to any delivery
 addressed by a reference whose genesis differs from the scope's own.
 
-## Birth uses (ruling a140a1c6, Q-B1)
+## Births of foreign sequences (rulings 4f697a7a and ae48dd39)
 
-An entry that uses a later entry of a foreign sequence also records a use of
-that sequence's entry 0. `withBirthUses` in `packages/derive/src/fields.ts`
-appends one birth use for each such sequence, after the uses already listed,
-in the order in which the sequences first appear. The act, genesis, delivery,
-confirmation, diagnosis and outcome judgments call it. An outcome that copies
-its origin's uses copies the births with them.
+Ruling 4f697a7a replaces the birth uses of ruling a140a1c6. An entry records
+no birth use. Its uses list and its use count are the same as before the
+cutover.
 
-The birth comes from the read the judgment already made. `admitSequenceGenesis`
-now keeps the canonical genesis bytes in the `CheckedSequence` it returns, and
-`birthUse` in `packages/bytes/src/sequence.ts` makes the use from them. A copy
-with no checked sequence (an anchored replay copy, or a local retained body)
-gives no birth, and its later use stays a local statement. `used()` in
-`packages/scope/src/core.ts` retains the birth bytes under the producer name of
-the fact that brought them.
+The scope keeps the first entry of each foreign sequence whose later entry it
+retains. `used()` in `packages/scope/src/core.ts` stores those bytes as a
+`retained_input` row of the kind `entry`. A `retained_birth` row, keyed
+`(genesis, scope)`, names that row's digest (`packages/scope/src/sqlite.ts`).
+The store keeps one copy for each content digest and one birth row for each
+sequence, so ten entries that use one foreign sequence keep its genesis once.
 
-The store keeps one copy for each content digest: `retained_input` has the
-primary key `(kind, digest)`, and the insert is `ON CONFLICT DO NOTHING`
-(`packages/scope/src/sqlite.ts`).
+Ruling ae48dd39 adds `birth` to the archive's retained kinds. An archive pass
+writes a sequence's birth once, under the genesis digest. Replay reads it with
+`#birth` in `packages/replay/src/verify.ts`, admits it with
+`admitSequenceGenesis`, and checks each later copy of that sequence with
+`isEntryOf`. A birth is no anchor: `packages/scope/src/archive-anchors.ts`
+records the birth pin and adds no published anchor for it (B5 below).
 
-### Caps with the added use (ruling 28295c20)
+### Archive caps with births (ruling 6d658a9f)
 
-A birth use does not count against `usesPerEntry` (128). `countedUses` in
-`packages/bytes/src/sequence.ts` states the count: every use of an entry
-except a use of entry 0 of a sequence that the same entry also uses at a later
-entry. An entry that uses entry 0 of a sequence directly gets no added birth
-for that sequence, and the judge counts that use against `usesPerEntry` as
-before.
+No cap changes, and the attempt charges stay as they are. The caps are
+`ARCHIVE_BOUNDS` in `packages/scope/src/archive-budget.ts`: 512 attempts and
+64 MiB of `inputWork` for one pass.
 
-The bound needs no new number. Each added birth belongs to a foreign sequence
-that the entry uses at a later entry, so the added births never exceed the
-later uses, and the later uses never exceed 128. One entry therefore holds at
-most 2 × 128 = 256 uses (`entryUseLimit`). `birthsWithin` in
-`packages/derive/src/fields.ts` checks this invariant where the judge charges
-`usesPerEntry`. An act that breaks it is refused with `bad-field`, the word
-the same charge site already uses. An outcome that breaks it stays unwritten
-with `unavailable`, as an outcome past `usesPerEntry` does today.
+Summed from the charge sites: an entry with base cost B and U later uses from
+S foreign sequences spends B + 4U attempts before births. The four charge
+sites for each use are `archive-foreign.ts:86`, `archive-inventory.ts:107`,
+`archive-retained.ts:113` and `archive-inventory.ts:139`. Each birth adds 3
+attempts, so the sum after births is B + 4U + 3S, with S at most U.
 
-One birth use is at most 362 bytes in an entry: 361 bytes of canonical JSON
-for kind `destination`, and one comma. The worst case is an entry with 128
-later uses from 128 sequences. It records 128 birth uses, 46,336 bytes more
-than the same entry without births. It can retain up to 128 more geneses of at
-most `entryBytes` (262,144) each, 33,554,432 bytes, once for each content
-digest in the scope. A byte cap that the worst case cannot fit refuses that
-entry. No cap changes in this head.
+The worst case is 128 later uses from 128 sequences. Before births it spends
+B + 512 attempts. That is over the 512-attempt cap for any B above 0, so the
+entry was over the attempts cap before this head. It was over the `inputWork`
+cap too: INPUTWORK FIGURE PENDING. After births it spends B + 896 attempts.
+The planner files ARC-1 for the older gap.
 
-| Cap | Charge site | With the births |
+When one entry is over a cap, the archive stops at that entry:
+
+1. A spend over a cap throws `ArchiveStopped("limit")`
+   (`archive-budget.ts:101`).
+2. On the first wake the adaptive pass selects no entry, and
+   `archive-adaptive.ts:179` returns `{ deferred: "capacity" }`.
+   `archive-driver.ts:404-409` keeps the wake and reports state `retry`,
+   reason `limit`.
+3. On the next wake the driver picks the fixed one-entry strategy
+   (`archive-driver.ts:374`). Its planner returns `limit` at
+   `archive-adaptive.ts:218-220`.
+4. `archive-driver.ts:416` calls `rows.stop("limit")` (`archive-row.ts:313`).
+   The archive floor stays at the entry before.
+5. An operator can restart a `limit` stop (`archive-row.ts:54-57`). The
+   restart pays again and stops at the same entry.
+
+### Retained bytes with births
+
+`fieldRetainedBytes` (`packages/derive/src/field-retention.ts:39-47`) charges
+`min(facts, usesPerEntry)` × `entryBytes` for an entry's foreign copies.
+`holds.ts:409` uses it for producer capacity. The bound does not count a
+birth. In the worst case an entry keeps one more genesis of at most
+`entryBytes` (262,144) for each new foreign sequence: 128 × 262,144 =
+33,554,432 bytes, once for each sequence in the scope. CAPACITY RULING
+PENDING: the coordinator recommends leaving the bound as it is.
+
+## Faults found after the composed head
+
+Each fault below had a failing test before its fix. "Behaviour fault" means
+production code did the wrong thing. "Fixture shape" means a test built input
+in the old shape. "Vector" means a measured number moved with the new bytes.
+
+| Fault | Where | What was wrong | Fix |
+|---|---|---|---|
+| B1 | `scope/src/archive-adaptive.ts` | The adaptive planner dropped the replay context, so every published adaptive pass stopped `unavailable`. | It passes the context through. |
+| B2 | test fixture driver | The fixture driver had no replay context. | It reads its own genesis with `archiveOwnReplayContext` (`archive-publication.ts`), charged at 128 metadata and `entryBytes` of `inputWork`. |
+| B3 | `scope/src/read-preparation.ts` | Read preparation charged a call where it reads a candidate. | It charges each candidate (`c5997cbd91`). |
+| B4 | `scope/src/archive-restart.ts:23` | The restart parser required the fields `inc,kind,scope`, so no new-shape row parsed. | It requires `genesis,scope`. |
+| B5 | `scope/src/archive-anchors.ts` | Each birth was added as a published anchor. Replay admits a birth by genesis and never reads it as an anchor, so it reported the birth under `unusedPublishedAnchors`. | A birth records its pin and adds no anchor. |
+| B6 | `scope/src/applications/act-admission.ts` | The sibling check compared `seed.creator` with the Directory's full reference. The Directory creates Rules and Membership in its genesis, so those seeds name `{ scope, genesis: null }`, and every installed application act answered `dependency-unavailable`. | It compares `resolveGenesisSelf(seed.creator, { at: parent, seq: 0, hash: parent.genesis })`. |
+| B7 | `scope/src/applications/act-admission.ts` | The ancestor walk took `born.seed.creator` as it stands and refused a creator named by the genesis self reference. | It resolves the creator against `born.source`. |
+| B8 | `replay/src/verify.ts` `#birth` | A kind contradiction between an admitted genesis and a use's recorded kind read "incomplete: not the one named". | It reads "mismatch: the recorded source kind contradicts its verified genesis", as `#recordedKind` does. |
+| B9 | `platform/src/partition-provenance.ts` | The cutover adds one frame to the partition proof, 8 to 9. The application-lane branch of `partitionReceiverPolicy` called `origin` under the 8-fact base bound and returned null. `rawFacts` already holds the frames to the 16-fact identity bound, as `partitionPublicationOrigin` does. | The branch passes the identity bound (`ee1b72b96a`). The witness is `directory-partition-factory.test.ts:97`, which passes on main. |
+
+## Creator comparisons (audit accepted in a5d65e58)
+
+The genesis self reference `{ scope, genesis: null }` appears only in seeds
+that a genesis judgment sends (`derive/src/sends.ts:234`). A seed's creator
+that a code path compares with a full reference must go through
+`resolveGenesisSelf(creator, source)` when the source is a fact. The audit
+read about 20 more comparisons. Their creators are born by an act or a
+delivery, or the code already resolves them, so they need no change.
+
+| Commit | Site | Change | Test |
+|---|---|---|---|
+| `804310e7c3` | `act-admission.ts`, sibling check (B6) | resolves against the parent's genesis fact | installed device scopes |
+| `1932465898` | `act-admission.ts`, ancestor walk (B7) | resolves against `born.source` | installed fixture scopes |
+| `4be0d250a4` | `projection-ownership.ts:21`, ancestor walk | `genesis.source ? resolveGenesisSelf(creator, source) : null` | "projection ancestry resolves a parent named by the genesis self reference" |
+| `093e5b47ed` | `examples/commons-bill/witness.ts`, `roomGenesisCreated` | resolves when the source is a fact and compares the raw creator otherwise | "W1 room genesis check resolves a creator named by the genesis self reference" |
+| `f7c26d0b3c` | `replay/src/verify.ts:2257`, `scope/src/receiver-reads.ts:86` | checks `isFactRef(born.source)` first, then compares the resolved creator | none |
+
+The last row has no test. Both sites check a refused sibling genesis under
+`partition-v1`, and no partition fixture builds a refused creation.
+`partition-proof.test.ts` and `directory-partition-factory.test.ts` build
+only applied ones.
+
+Commit `093e5b47ed` also fixed two checks in the commons-bill witness that
+still read the old reference. `inputOf` read `input.room[kind].kind`, and
+`preflight` read `entry.at`. The witness now binds each room reference by
+its genesis hash and seed scope ID, and reads the kind from the seed. The
+two existing W1 tests had failed with `input-room`.
+
+## Anchors and genesis copies
+
+Behaviour change: main's verify accepted a caller anchor of any kind; this head limits anchors to the register and membership kinds under 5a642337 and 066e49b3.
+
+A Directory fact that main took on an anchor is now proved by replay: the
+archive source serves the Directory journal.
+
+Ruling 1cf42f3b: `anchoredCopy` in `packages/replay/src/verify.ts` accepts a
+genesis copy on four conditions:
+
+- `fact.seq` is 0.
+- `fact.hash` equals `fact.at.genesis`.
+- `admitSequenceGenesis(bytes, fact.at)` admits the bytes.
+- The admitted sequence's kind equals the kind the using entry records.
+
+The anchor stays required. The report lists the genesis with the other
+anchored facts. The test is "an anchored genesis copy admits only at its own
+address with its recorded kind" in `packages/replay/test/genesis-bodies.test.ts`.
+Request RV-1 (`c6276dec`) holds the self-proving genesis for after the
+cutover.
+
+## Pending rulings
+
+- **3bf7e5aa, addendum 5e30241b: anchored copies in judgments.** RULING
+  PENDING. Replay puts an anchored copy in `assumedCopies` and fills the
+  judge's `facts` only from replayed sources (`verify.ts` `#replay`). A judge
+  that needs the copied fact answers `unavailable`. Nine tests stop here:
+  `decisions.test.ts` ×4, `verify.test.ts` 18.46 and 18.52, the archive-driver
+  resume tests for sha1 and sha256, and `archive-installed.test.ts` for
+  publication and failed-claim.
+- **e4b72290: the Grow archive binding.** RULING PENDING.
+  `growArchivePolicies` (`apps/room/archive-policy.ts:21-23`) and the config
+  check in `apps/room/archive.ts:31` accept only the recorded signed demo
+  release. The production, warm and evicted activation, and Room A shape
+  cases install that release, which a new-format room refuses.
+- **0a5f97ba: the demo Site receiver.** RULING PENDING. `demoDefinitions`
+  points the Site's `create-room` send at the demo Room
+  (`examples/grow/demo-definitions.ts:75-77`). The Site's
+  `receives.room-summary` handler still pins the maintained Room, so the
+  package check refuses the demo built from source with `wrong-peer`.
+- **Retained bytes with births.** CAPACITY RULING PENDING. See "Retained
+  bytes with births".
+
+## The kept Grow refusal test (ruling a7c8072a)
+
+`archive-installed.test.ts`, "installed Grow scopes export genesis zero after
+a late native membership directory binding", installs the recorded
+old-spelling package: the retained Site `69424c1b…` and Room `5e2d34fa…`. The
+install answers `refused`, phase `refused`, reason `bad-field`, name
+`invalid-application-package`.
+
+Commit `70c3431750` cut the branches that only this case reached:
+
+| Branch | Acceptance case it carried | Covered elsewhere |
 |---|---|---|
-| `usesPerEntry` (128) | `derive/src/judge.ts:266`, `derive/src/handlers.ts:398`, `derive/src/settle.ts:178` | Each counts the uses before the births, as before. `birthsWithin` checks the births after them. |
-| archive use limit | `scope/src/archive-foreign.ts` (header and `scan`), `scope/src/archive-local-references.ts` (`read` and `project`) | A reader accepts up to `entryUseLimit` uses. `scan` reads the fact of each use and stops with `limit` when `countedUses` exceeds `usesPerEntry`. |
-| `entryBytes` (262,144) | sealing in `scope/src/turn.ts` | Unchanged. An entry that the births take past the cap is refused there. |
-| retained bytes | `derive/src/field-retention.ts`, `derive/src/validate/holds.ts` | The forecast charges one more `entryBytes` for each fact it charges: the birth of that fact's sequence. |
-| destination envelopes | `platform/src/destination-budget-v17.ts` | The fixed frame holds 8 uses in place of 4. The admitted cohort charges 2 × `usesPerEntry` uses. The outcome forecast charges 10 uses and 9 commas in place of 5 and 4. |
-| evidence forecast | `platform/src/evidence-forecast-v17.ts` | The forecast refuses when `countedUses` of the origin, at least 5, exceeds `usesPerEntry`. It sizes the entry with twice that many uses. |
-| observation subjects | `derive/src/validate/observes.ts:131` | A birth use is no observation. Unchanged. |
+| cross-family scan, Grow side | A public copy from the device family does not authorize the failed-claim producer. | In part. The failed-claim case still checks the other direction, and `archive-foreign.test.ts:736` and `archive-inventory.test.ts:534` test the refusal on fixtures. |
+| `historicalCeilingControls` and `TESTCeilingChargeBudget` | Five whole-prefix control plans under the old charges give the recorded pass costs of the retained Site and Room and of Directory16, Rules10 and Destination12. | No. The costs belong to the retained identities, which no longer install. |
+| `originalPassCosts` | The recorded whole-pass costs of those five definitions. | No, for the same reason. |
+| `independentSupport` | The support metadata receipts of those five definitions, measured before shared price extraction. | No, for the same reason. |
 
-The validator agrees with the runtime: a birth never counts against
-`usesPerEntry`, so no definition that validation admits meets a runtime
-refusal from the birth count alone.
+## Other test changes
 
-The measured entry and budget numbers come from the runs after this
-revision: MEASURE PENDING.
+| Test | Kind | Change |
+|---|---|---|
+| `archive-target` | fixture shape | Anchors read source pins from the Register genesis. A wrong pin refuses `foreign-source-mismatch`, and no sources refuses `foreign-source-unavailable`. The Rules seed names its creator by the genesis self reference. |
+| `archive-target` | vector | The Rules birth spends its bytes in metadata and 8 × its bytes in `inputWork` for genesis validation, on top of the settled read. |
+| `archive-row` | vector | The row reference is `{ scope, genesis }`. Old row bytes 501 → 528, marked 1344 → 1371, attempted 1362 → 1389. Compact confirmation metadata 5175 → 5256, `inputWork` 12,878,491 → 12,879,544. The largest compact row is 25,112 bytes, under 32,768. |
+| `archive-host` | vector | Selection bytes 3789 → 3903. First charge `inputWork` 15,156 → 15,612, last 30,312 → 31,224. Admitted metadata 22,774 → 22,936, `inputWork` 89,628 → 92,046. |
+| `archive-prefix` | vector | Frame and prefix sizes [418, 1477, 418, 1557] → [464, 1416, 464, 1617]. Gross metadata 70,434 → 70,480, `inputWork` 237,938 → 234,448. |
+| `archive-privacy` | classification | A changed genesis on a later entry refuses `mismatch` from `archive-entry-metadata.ts:68`. The incarnation check at `archive-privacy.ts:27` is unreachable, because the header builds its reference from the pin. |
+| `archive-source-pins` | fixture shape | The redundant guard moved from the comment step `remark` to the transition `accept-report`, because validation refuses a guard on a comment step. |
+| `archive-build` | vector | Plan fence metadata 43,432 → 45,804, `inputWork` 118,976 → 125,520. Entry read bytes [1551, 1552, 1876, 2296] → [1611, 1612, 1962, 2434]. |
+| journal Git costs | vector | `head.json` 232 → 260 bytes. The pass, selection and forecast costs move with the entry shape. |
+| publication, foreign, parent-bootstrap, installed, driver | fixture shape | A test that plans or rebuilds a published pass gives the scope's own replay context through `ownReplayContext`, which fails when the fixture lacks its genesis. |
+| `archive-parent-bootstrap` | fixture shape | The support creates a Directory, so the seed kind is `directory`, not `lane`. |
+| `archive-anchor-ranges` | fixture shape | The journal helper adds a birth for each foreign sequence used at a later entry. |
+| `decisions` | fixture shape | `served()` serves the birth of `otherLane`. |
+| `room-verification` | vector | A coverage row states its genesis kind. |
+| `floor-signers` | fixture shape | The test reads the register kind from the genesis seed. An entry carries no address. |
+| `mcp` inventory and `docs/mcp-tools.json` | vector | A scope reference reads `{ scope, genesis }`. The same text in `docs/roadmap.md`, `docs/use-cases.md` and `docs/deploy.md` changed. |
+| Grow example tests | fixture shape | Scripted entries name their genesis. Entry 0 of the command journal is a fixture genesis. Foreign copies carry their sequence, and receipts take the scope and effects. |
+| lending browser storage | fixture shape | References are `{ scope, genesis }`. |
