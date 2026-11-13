@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0914510c22651249477ada8ac57b4e156912feac","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/scope-census-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:093f706b023bb1979590ef734f0a8f1b9c046fc6","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/join.scope.test.ts."}
