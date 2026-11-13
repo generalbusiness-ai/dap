@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I review RC-1, the refusal classes, at exact head b8ebe878 for request b0fe0668 under promise e9b0b075 and review request dfd0d08d, and file one verdict with Architecture, Security and Simplification conclusions."}
+{"kind":"artifact","text":"docs at exact b801b1a9dff1065e634ef04024ee7b9d3a8ec8bf on builder/idr1-identifier-docs-20261113, under promise git:sha1…85b4c4b on request git:sha1…5314328","body":{"commit":"b801b1a9dff1065e634ef04024ee7b9d3a8ec8bf","path":"docs"}}
