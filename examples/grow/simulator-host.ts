@@ -1,7 +1,7 @@
 /** Separate scheduled Worker. All progress lives in the application's
  * journal. Environment bindings contain public references and two secrets. */
 import type { Digest, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { same, definitionDigest, entryHash, isMemberRef, isRecord, isScopeRef, parseStrict, timeOf, unb64url } from "@generalbusiness/dap-bytes";
+import { same, definitionDigest, entryHash, isEntryBodyOf, isMemberRef, isRecord, isScopeRef, parseStrict, timeOf, unb64url } from "@generalbusiness/dap-bytes";
 import { httpTransport, newIdempotencyKey, requestSession, ScopeHandle, secretSigner, sessionRequest, type Fetch, type Signer, type Transport } from "@generalbusiness/dap-client";
 import { demoDefinitions } from "./demo-definitions.ts";
 import { simulatorRelease } from "./simulator-release.ts";
@@ -21,7 +21,7 @@ const exact = (value: unknown, keys: string): value is Record<string, unknown> =
 function binding(text: string): Binding {
   if (text.length > 8192) throw new Error("invalid-demo-binding");
   const value = parseStrict(text);
-  if (!exact(value, "members,room,service") || typeof value["service"] !== "string" || !isScopeRef(value["room"]) || value["room"].kind !== "lane"
+  if (!exact(value, "members,room,service") || typeof value["service"] !== "string" || !isScopeRef(value["room"])
     || !exact(value["members"], "climate,operator,sensors")) throw new Error("invalid-demo-binding");
   const origin = new URL(value["service"]);
   if (origin.protocol !== "https:" || origin.pathname !== "/" || origin.username || origin.password || origin.search || origin.hash) throw new Error("invalid-demo-service");
@@ -83,8 +83,8 @@ export function simulatorHost(packetText: string, expectedRelease: Digest, expec
       const reader = new ScopeHandle(transport, config.room.scope, sensorsSession.reader());
       phase = "installed-owner";
       const birth = await reader.entry(0);
-      if (!birth.ok || !birth.complete || birth.next !== undefined || birth.value.entry.seq !== 0 || !same(birth.value.entry.at, config.room)
-        || entryHash(birth.value.entry) !== birth.value.hash || birth.value.entry.input.type !== "genesis" || birth.value.entry.input.decision !== "applied") throw new Error("demo-birth-unavailable");
+      if (!birth.ok || !birth.complete || birth.next !== undefined || !isEntryBodyOf(birth.value.entry, { at: config.room, seq: 0, hash: birth.value.hash })
+        || birth.value.entry.input.type !== "genesis" || birth.value.entry.input.decision !== "applied" || birth.value.entry.input.seed.kind !== "lane") throw new Error("demo-birth-unavailable");
       const body = birth.value.entry.input.message?.body;
       // Compare the public retained native grant to the expected signed
       // graph. The native host still decides every request's authority.

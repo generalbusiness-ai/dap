@@ -80,7 +80,7 @@ test("census binds trusted native row identity, preserves modes and absence, and
       const before = await written(f.stub);
       expect((await f.request(await f.reading())).status).toBe(403);
       expect(await written(f.stub)).toEqual(before);
-      const restored = column === "genesis" ? original.genesis : original.at[column];
+      const restored = column === "genesis" ? original.at.genesis : original.kind;
       await runInDurableObject(f.stub, (_instance, state) => { state.storage.sql.exec(`UPDATE known_scope SET ${column}=? WHERE scope=?`, restored, f.register.scope); });
     }
     f.settings.SCOPE_INDEX_MODE = "register";

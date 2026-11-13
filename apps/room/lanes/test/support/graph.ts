@@ -301,7 +301,7 @@ export class Node<D extends DeclaredDefinition> {
   async envelope(seq: number, n = 0): Promise<Delivered> {
     const { entry, hash } = (await this.sealed())[seq]!;
     const send = entry.sends.find((s) => s.n === n)!;
-    return { to: send.to, from: { at: entry.at, seq, hash }, n, message: send.message };
+    return { to: send.to, from: { at: this.at, seq, hash }, n, message: send.message };
   }
   /** Run the object's stored alarm now. False: none was stored. */
   alarm(): Promise<boolean> { return runDurableObjectAlarm(this.object); }
@@ -454,7 +454,7 @@ export async function graph(creationTransport: Transport = transport): Promise<G
   const seed: Seed = { v: 1, kind: "directory", definition: definitionDigest(officeDefinition), creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
   expect(answer.receipt.definition).toBe(seed.definition);
   expect(isScopeRef(answer.receipt.fact.at)).toBe(true);
-  expect([scope.scope, answer.receipt.fact.at.scope, answer.receipt.fact.at.kind]).toEqual([scopeIdOf(seed), scopeIdOf(seed), "directory"]);
+  expect([scope.scope, answer.receipt.fact.at.scope, seed.kind]).toEqual([scopeIdOf(seed), scopeIdOf(seed), "directory"]);
   const declared = await declaredHandle(new ScopeHandle(transport, scope.scope, reader), officeDefinition);
   if (!declared.ok) throw new Error(`no handle on the office: ${JSON.stringify(declared)}`);
   expect(canonicalize(declared.handle.at)).toBe(canonicalize(answer.receipt.fact.at));

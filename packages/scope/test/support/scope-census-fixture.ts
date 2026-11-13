@@ -1,7 +1,7 @@
 /** TEST host configuration/files only; Register births, index owner, SQL,
  * signatures, membership and routed reads use the actual Native code. */
 import { env } from "cloudflare:workers";
-import { b64url, entryHash } from "@generalbusiness/dap-bytes";
+import { b64url } from "@generalbusiness/dap-bytes";
 import { invitationIssueFields, invitationRedemptionFields, secretSigner, signedReader, signerSessionRequest, requestSession, type Fetch } from "@generalbusiness/dap-client";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { route } from "../../src/worker.ts";
@@ -56,7 +56,8 @@ export async function scopeCensusFixture(options: { members?: boolean; registerO
     const rows: ScopeRegistration[] = [];
     for (const node of nodes) {
       const at = await life.wait(() => node.at()), genesis = (await life.wait(() => node.entries()))[0]!;
-      const row = { at, genesis: entryHash(genesis) };
+      if (genesis.input.type !== "genesis") throw Error("TEST native census genesis required");
+      const row: ScopeRegistration = { at, kind: genesis.input.seed.kind };
       if (!await index.register(row)) throw Error("TEST native census registration failed");
       rows.push(row);
     }
@@ -90,7 +91,8 @@ export async function scopeCensusFixture(options: { members?: boolean; registerO
       await dispatchFixture([...nodes, ownerInbox, inbox], life.wait);
       for (const node of [ownerInbox, inbox]) {
         const at = await life.wait(() => node.at()), genesis = (await life.wait(() => node.entries()))[0]!;
-        const row = { at, genesis: entryHash(genesis) };
+        if (genesis.input.type !== "genesis") throw Error("TEST inbox genesis required");
+        const row: ScopeRegistration = { at, kind: genesis.input.seed.kind };
         if (!await index.register(row)) throw Error("TEST inbox registration failed");
         rows.push(row); nodes.push(node);
       }

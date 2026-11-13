@@ -1,9 +1,8 @@
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry } from "@generalbusiness/dap-contract";
 import { net as sourceNet } from "../src/testing.ts";
 import { expect, test } from "vitest";
 import { definitionDigest, isRecord, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
-import type { Fetched } from "@generalbusiness/dap-derive";
-import type { Sourced } from "../src/namespace.ts";
+import { admittedOrigin, type Sourced } from "../src/namespace.ts";
 import { changeEvidence4 } from "../../../apps/room/lanes/src/change4.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
 import { EVIDENCE_INCIDENT_PINS_V17, evidenceIncidentOriginV17 } from "../../platform/src/evidence-incident-origin-v17.ts";
@@ -43,7 +42,7 @@ test("real old and canonical evidence parents keep native incident identity whil
       expect(source?.under).toBe("issue");
       expect(source?.origin).toHaveLength(9);
       if (!source?.origin) throw Error("Actual full nine-fact origin required");
-      const facts: Fetched[] = source.origin.map(copy => ({ fact: copy.fact, entry: parseStrict(copy.bytes) as Fetched["entry"], under: copy.under }));
+      const facts = admittedOrigin(source.origin.map(copy => ({ ...copy, entry: parseStrict(copy.bytes) as Entry })), (sourceNet.sized.get(child.name) ?? PROPOSED_BOUNDS).entryBytes);
       expect(evidenceIncidentOriginV17(setup.definitions.issue, facts)).toBe(true);
       // Both transformed proofs retain coherent signatures, hashes, causes,
       // sends and binding metadata. The same-pin control rebases nontrivially

@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import type { Digest, Entry, FactRef, Intent, Item, Read, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, FactRef, Intent, Item, Read, ScopeKind, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, factRefOf, intentDigest, isDigest, isRecord, isSeed, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { HARDENED_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_TREE_PROOF, rulesPolicyProposalV11, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import type { EffectAnswer } from "../src/operations.ts";
@@ -77,7 +77,7 @@ export async function hardeningNativeRoom() {
     const D = life.platform(scopeIdOf({ v: 1, kind: "directory", definition: cohort.directory, creator: await R.at(), cause: intentDigest(found.intent), ordinal: 0 }));
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" }); await pause([R, D]);
     const directoryBirthEntry = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = directoryBirthEntry.sends.find(row => isSeed(row.to) && row.to.kind === kind);
       if (!send || !isSeed(send.to)) throw Error("Actual applied Directory sibling send required");
       return life.platform(scopeIdOf(send.to));

@@ -2,7 +2,7 @@ import { storedSequenceOf } from "./support/local-sequence.ts";
 import { expect } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, DeclaredDefinition, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, DeclaredDefinition, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeKind, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isFactRef, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ANCESTRY_BOUNDS, CAPABILITY_CODE, countedEntries, holding, ledgerOf, localRetainedPlan, outcomeValueDomains, ownersOf, reserved, snapshotInput, stagedRefName, validateDefinition, valueDigest, walk, type Item, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -94,7 +94,7 @@ export async function evidenceNativeRoom() {
     const D = life.platform(scopeIdOf({ v: 1, kind: "directory", definition: cohort.directory, creator: await R.at(), cause: intentDigest(found.intent), ordinal: 0 }));
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" }); await pause([R, D]);
     const directoryBirthEntry = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = directoryBirthEntry.sends.find(row => isSeed(row.to) && row.to.kind === kind);
       if (!send || !isSeed(send.to)) throw Error("Actual applied Directory sibling send required");
       return life.platform(scopeIdOf(send.to));

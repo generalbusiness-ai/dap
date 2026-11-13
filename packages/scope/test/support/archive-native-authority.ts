@@ -10,7 +10,7 @@ import { expect, inject, onTestFinished, TestRunner } from "vitest";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import type { Bounds, Digest, FactRef, Grant, MemberRef, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isFactRef, isRecord, isSeed, LATE, scopeIdOf, unb64url, within } from "@generalbusiness/dap-bytes";
-import type { ValidDefinition } from "@generalbusiness/dap-derive";
+import { resolvedEntryEffects, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { growArchivePolicies } from "../../../../apps/room/archive-policy.ts";
 import { ArchiveBudget } from "../../src/archive-budget.ts";
@@ -227,7 +227,8 @@ export async function nativeArchiveFixture() {
           if (activations.length !== 1) throw Error("Actual child activation must retain the exact native confirmation");
           expect(activations[0]!.entry.effects).toContainEqual({ effect: "activate" });
           const c = controls(child.name, START); c.clock = clock;
-          made = new Lane(child.name, c, bornFact.at, receiptOf(born, under.digest), signed);
+          // A genesis opens every item it names, so the resolver reads no earlier item.
+          made = new Lane(child.name, c, bornFact.at, receiptOf(born, under.digest, bornFact.at, resolvedEntryEffects({ item: () => undefined }, under, born.entry, bornFact.at)), signed);
         } else made = await create(bounds, reads, under, { opener, clock });
         const lane = new NativeArchiveLane(made, active, run, factory);
         lanes.push(lane);
@@ -255,13 +256,13 @@ export async function nativeArchiveFixture() {
         }
         const budget = new ArchiveBudget();
         budget.spend({ nodes: 1, calls: 1, metadata: 256 * 1024, inputWork: 256 * 1024 * 8 });
-        const birth = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(at, 10_000, 256 * 1024)), at, 256 * 1024);
+        const birth = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(at, 10_000, 256 * 1024)), at, 256 * 1024, () => {})?.birth;
         if (!birth || birth.named !== ARCHIVE_DEVICE_APPLICATION_COHORT.membership) throw Error("Actual Membership8 birth required");
         const policies = new Map<Digest | PlatformDefinition, ReviewedArchivePolicy>([[ARCHIVE_DEVICE_APPLICATION_COHORT.membership, nativePolicy]]);
         const births = [{ at, birth: { bytes: birth.proof.bytes, hash: birth.proof.fact.hash } }];
         if (creator) {
           budget.spend({ nodes: 1, calls: 1, metadata: 256 * 1024, inputWork: 256 * 1024 * 8 });
-          const source = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(creator!.at, 10_000, 256 * 1024)), creator.at, 256 * 1024);
+          const source = readNativeBirth(await life.wait(() => namespace(env.PLATFORM).births.read(creator!.at, 10_000, 256 * 1024)), creator.at, 256 * 1024, () => {})?.birth;
           const policy = growArchivePolicies(new TextDecoder().decode(packet)).get(ARCHIVE_DEVICE_APPLICATION_COHORT.directory);
           if (!source || source.named !== ARCHIVE_DEVICE_APPLICATION_COHORT.directory || !policy) throw Error("Actual native Directory source birth and policy required");
           births.push({ at: creator.at, birth: { bytes: source.proof.bytes, hash: source.proof.fact.hash } });

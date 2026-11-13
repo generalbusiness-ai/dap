@@ -19,7 +19,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Bounds, DeclaredDefinition, Entry, FactRef, Intent, MemberRef, OperationId, Seed } from "@generalbusiness/dap-contract";
+import type { Answer, Bounds, DeclaredDefinition, FactRef, Intent, MemberRef, OperationId, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, keyIdOfSecret, scopeIdOf, seedDigest, signIntent, signInvitationProof, textDigest } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, declaredHandle } from "@generalbusiness/dap-client";
 import { validateDefinition, valueDigest, type ValidDefinition } from "@generalbusiness/dap-derive";
@@ -287,7 +287,7 @@ export async function room(setup: RoomSetup = {}): Promise<Room> {
   wired.delete(R.name);
   // The creation commit of `platform:destination@2`: one README that names the repository, the creator's handle and the directory.
   const readme = { name: repositoryName(seedDigest(seed), 1), handle: "@rita", directory: D.name };
-  const firstHead = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, factRefOf((await R.entries())[1]!), readme).commit;
+  const firstHead = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, factRefOf((await R.entries())[1]!, await R.at()), readme).commit;
   const made = new Room(R, D, M, rules, G, firstHead, {}, D, setup.workspaceCohort ?? false);
   for (const kind of ["mint", "first-head", "mint", "receipt", "revoke"] as const) await made.drive(kind);
   expect(await G.item(0)).toMatchObject({ state: "ready", values: { head: firstHead } });

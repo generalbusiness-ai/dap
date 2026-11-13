@@ -1,7 +1,7 @@
 /** One stateless invocation over public member reads and signed requests.
  * The caller supplies HTTP allowances and real member/session bindings. */
 import type { Answer, Digest, FactRef, FieldValue, Head, Item, MemberRef, ScopeRef, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { isLocalId as integer, same, entryHash, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/dap-bytes";
+import { isLocalId as integer, same, entryHash, isEntryBodyOf, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/dap-bytes";
 import { signedIntent, type ScopeHandle, type Signer } from "@generalbusiness/dap-client";
 import { readCommandJournal, type OpenCommand } from "./command-journal.ts";
 import { simulateRoom, type SimulatedDevice, type SimulatedZone, type SimulatorSchedule } from "./simulator.ts";
@@ -54,8 +54,8 @@ export async function acceptedTickFact(answer: Extract<Answer, { answer: "accept
   if (!same(receipt.fact.at, scope) || receipt.definition !== definition || receipt.intent !== (owner ? null : intentDigest(signed.intent))) return tickFailure("accepted-receipt-mismatch");
   if (owner) {
     const read = await reader.entry(receipt.fact.seq);
-    if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
-      || read.value.entry.seq !== receipt.fact.seq || !same(read.value.entry.at, scope)) return tickFailure("owner-preparation-unavailable");
+    if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash
+      || !isEntryBodyOf(read.value.entry, { at: scope, seq: receipt.fact.seq, hash: receipt.fact.hash })) return tickFailure("owner-preparation-unavailable");
     const input = read.value.entry.input;
     if (input.type !== "preparation" || input.capability !== DEVICE_OWNER || input.step !== "answer" || !same(input.signed, signed)) return tickFailure("owner-preparation-mismatch");
   }
@@ -83,8 +83,7 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
   }
   async function fact(position: number): Promise<{ fact: FactRef; entry: import("@generalbusiness/dap-contract").Entry }> {
     const read = await port.reader.entry(position);
-    if (!read.ok || !read.complete || read.next !== undefined || read.value.entry.seq !== position || !same(read.value.entry.at, config.scope)
-      || entryHash(read.value.entry) !== read.value.hash) return tickFailure("room-fact-unavailable");
+    if (!read.ok || !read.complete || read.next !== undefined || !isEntryBodyOf(read.value.entry, { at: config.scope, seq: position, hash: read.value.hash })) return tickFailure("room-fact-unavailable");
     return { fact: { at: config.scope, seq: position, hash: read.value.hash }, entry: read.value.entry };
   }
   async function send(role: "sensors" | "climate", kind: string, on: number | null, fields: Record<string, FieldValue>, expected: Record<string, number>, owner = false): Promise<FactRef | "already-closed"> {

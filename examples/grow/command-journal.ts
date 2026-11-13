@@ -2,7 +2,7 @@
  * its acknowledged prefix from the application's own recorded cursor. This
  * does not read a native record table or infer absence from a short suffix. */
 import type { Digest, FactRef, Head, MemberRef, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { isLocalId as integer, canonicalize, entryHash, isFactRef, isMemberRef } from "@generalbusiness/dap-bytes";
+import { isLocalId as integer, canonicalize, entryHash, isEntryBodyOf, isFactRef, isMemberRef } from "@generalbusiness/dap-bytes";
 import type { SimulatedDevice } from "./simulator.ts";
 
 const CAPABILITY: string = "device-command@1";
@@ -35,7 +35,7 @@ export function openCommands(scope: ScopeRef, owner: MemberRef, through: FactRef
   let previous: Digest | null = through?.hash ?? null, position = from, recordCount = 0;
   for (const sealed of suffix) {
     const entry = sealed.entry;
-    if (entry.seq !== position || !equal(entry.at, scope) || entry.prev !== previous || entryHash(entry) !== sealed.hash) return invalid();
+    if (!isEntryBodyOf(entry, { at: scope, seq: position, hash: sealed.hash }) || entry.prev !== previous) return invalid();
     for (const effect of entry.effects) {
       if (effect.effect !== "record" || effect.capability !== CAPABILITY || effect.kind !== "command") continue;
       if (++recordCount > COMMAND_SUFFIX_RECORDS || effect.key.length !== 1 || !integer(effect.key[0])) return invalid();
