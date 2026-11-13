@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { intentDigest, isDigest, scopeIdOf, signIntent, newGenesisNonce } from "@generalbusiness/dap-bytes";
 import { PROFILES, clockOf, judgeGenesis, judgeOutcome, validateDefinition } from "@generalbusiness/dap-derive";
-import { Ledger, T0, creation } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, creation, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { DEMO_PURPOSE, DEMO_REGISTER, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, platform, repositoryName } from "../src/index.ts";
 import { installing, creationPaul as paul, creationRita as rita } from "./fixtures-entry.ts";
 
@@ -54,7 +54,7 @@ test("demo install admits open founding without an allow-list and refuses a clos
     expect(directoryCreation.asked.to.definition).toBe(directoryName);
     const directoryDefinition = definitionOf(directoryName);
     const directory = new Ledger(directoryDefinition, "platform:directory");
-    const directoryGenesis = judgeGenesis(directory.state, directoryDefinition, directoryCreation.asked, { clock: clockOf(directory.state, T0), bounds: PROPOSED_BOUNDS, prepared: [], facts: [{ fact: register.fact(matched), entry: register.entries[matched]!.entry, under: register.under }], source: directoryCreation.source, platform: { named: directoryName, rules: platform(directoryName)!.rules } });
+    const directoryGenesis = judgeGenesis(directory.state, directoryDefinition, directoryCreation.asked, { clock: clockOf(directory.state, T0), bounds: PROPOSED_BOUNDS, prepared: [], facts: [{ fact: register.fact(matched), entry: register.entries[matched]!.entry, under: register.under, sequence: fixtureSequence(register) }], source: directoryCreation.source, platform: { named: directoryName, rules: platform(directoryName)!.rules } });
     if (directoryGenesis.result !== "write") expect.fail("The selected directory genesis was refused.");
     directory.seal(directoryGenesis.draft);
     expect(directory.last.sends.slice(1).map(send => "definition" in send.to ? send.to.definition : null)).toEqual(["platform:membership@2", named === DEMO_REGISTER ? "platform:rules@2" : WEB_DEMO_COHORT.rules, "platform:destination@3"]);

@@ -7,7 +7,7 @@ import { expect, test } from "vitest";
 import { canonicalize, definitionDigest, keyIdOfSecret, sign, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { packApplication } from "../src/application-codec/application.ts";
 import { packApplication2, readApplicationPackage2, readApplicationProjection } from "../src/application-codec/application-v2.ts";
-import { Ledger, T0, arriving, creation, grantOf, keys, membership, sent } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, arriving, creation, grantOf, keys, membership, sent, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { clockOf, judgeDelivery, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -127,7 +127,7 @@ test.each([
   expect(checked.ok).toBe(true); if (!checked.ok) return;
   const app = new Ledger(checked.definition, countingCommitments.name), { asked, source } = creation(D, D.head.seq, create.n, 40);
   const nodes = [R, D, M, A, G, app];
-  const facts = () => nodes.flatMap(node => node.entries.map(({ entry }, seq) => ({ fact: node.fact(seq), entry, under: node.under })));
+  const facts = () => nodes.flatMap(node => node.entries.map(({ entry }, seq) => ({ fact: node.fact(seq), entry, under: node.under, bytes: canonicalize(entry), sequence: fixtureSequence(node) })));
   const born = judgeGenesis(app.state, app.definition, asked, { clock: clockOf(app.state, T0), bounds: app.bounds, facts: facts(), prepared: [], source });
   expect(born.result, JSON.stringify(born)).toBe("write"); if (born.result !== "write") return;
   expect(born.draft.input).toMatchObject({ type: "genesis", decision: "applied" }); app.seal(born.draft);
