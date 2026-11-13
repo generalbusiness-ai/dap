@@ -260,7 +260,7 @@ test("Page Start rejects a forged failed hint, then keeps its creator key and or
     const first = await life.wait(() => startRoom(service, storage, { ...options, mode: "new", offer, label: "Page retry", tries: 1, pause: async () => {} }));
     expect(first.pending).toBe(true);
     const originalOperation = first.operation, creator = first.key;
-    const journalKey = [...values.keys()].find(key => key.startsWith("artroom-page-claim:"))!;
+    const journalKey = [...values.keys()].find(key => key.startsWith("dap-page-claim-2:"))!;
     const journal = JSON.parse(values.get(journalKey)!) as { claims: Record<string, string> };
     const kept = JSON.parse(journal.claims[originalOperation]!) as { config: { claim: { found: { accepted: unknown }; failure?: unknown } } };
     kept.config.claim.failure = { found: kept.config.claim.found.accepted, observed: kept.config.claim.found.accepted };

@@ -1,7 +1,7 @@
 /** TEST proof rebasing only. The caller first obtains nine actual Native facts.
  * Re-signing a copied factory does not claim that its judge ran again. */
 import { PROPOSED_BOUNDS, type Digest, type Entry, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, canonicalize, deliveryCauseDigest, factRefOf, intentDigest, isFactRef, isRecord, isScopeRef, isSeed, messageDigest, parseStrict, same, scopeIdOf, signIntent, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, deliveryCauseDigest, entryHash, factRefOf, intentDigest, isFactRef, isRecord, isScopeRef, isSeed, messageDigest, parseStrict, same, scopeIdOf, signIntent, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isEntryOf, sentBy, type SourceCopy } from "@generalbusiness/dap-derive";
 import { evidenceBindingDigest, readEvidenceBinding } from "@generalbusiness/dap-platform";
 import { rita } from "./repository.ts";
@@ -30,7 +30,7 @@ export function evidenceFactoryProof(facts: readonly SourceCopy[], factoryPin: D
     // A rebased scope's address: its rebased seed's scope ID and the rebased hash of its genesis, from the previous pass.
     const genesisOf = (at: ScopeRef) => hashes.get(at.genesis) ?? at.genesis;
     const parentAt: ScopeRef = { scope: scopeIdOf(parentSeed), genesis: genesisOf(parent.fact.at) };
-    const childAt: ScopeRef = { scope: scopeIdOf(childSeed), genesis: genesisOf(child.fact.at) };
+    let childAt: ScopeRef = { scope: scopeIdOf(childSeed), genesis: genesisOf(child.fact.at) };
     const rewrite = (value: unknown, wire = false): unknown => {
       if (typeof value === "string") {
         if (wire) return canonicalize(rewrite(parseStrict(value)));
@@ -58,6 +58,8 @@ export function evidenceFactoryProof(facts: readonly SourceCopy[], factoryPin: D
     const delivery = rewrite(creator.entry.input) as typeof creator.entry.input;
     childSeed = { ...childBirth.seed, creator: parentAt,
       cause: deliveryCauseDigest({ v: 1, from: delivery.from, n: delivery.n, message: messageDigest(delivery.message) }) };
+    // The child's genesis carries this pass's seed, so its address takes that seed's scope ID.
+    childAt = { scope: scopeIdOf(childSeed), genesis: childAt.genesis };
     const next = facts.map(copy => {
       let entry = rewrite(copy.entry) as Entry;
       if (copy === opened) {
@@ -66,7 +68,10 @@ export function evidenceFactoryProof(facts: readonly SourceCopy[], factoryPin: D
         authority: opened.entry.input.type === "act" ? opened.entry.input.authority : [],
         presented: opened.entry.input.type === "act" ? opened.entry.input.presented : {} } };
       }
-      const at = rewrite(copy.fact.at) as ScopeRef;
+      // A genesis hash is its sequence's identity: a rebased genesis takes the address of its own bytes,
+      // and the next pass carries that hash to the sequence's later entries.
+      const rebased = rewrite(copy.fact.at) as ScopeRef;
+      const at: ScopeRef = entry.input.type === "genesis" ? { scope: rebased.scope, genesis: entryHash(entry) } : rebased;
       return { ...copy, entry, fact: factRefOf(entry, at) };
     });
     if (canonicalize(next.map(copy => [copy.fact, copy.entry])) === canonicalize(result.map(copy => [copy.fact, copy.entry]))) {

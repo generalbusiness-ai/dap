@@ -88,7 +88,8 @@ export class ScopeIndex extends DeployedScopeIndex {
 /** Separate actual fixed-object namespace for small-limit boundary witnesses.
  * Heavy existing fixtures explicitly retain their high finite test policy. */
 export class ServingTestIndex extends ScopeIndex {
-  constructor(ctx: DurableObjectState, env: Env) { super(ctx, { ...env,
+  // The fixed index object is active only in the namespace that its env names as SCOPE_INDEX.
+  constructor(ctx: DurableObjectState, env: Env) { super(ctx, { ...env, SCOPE_INDEX: (env as Env & { SERVING_INDEX: DurableObjectNamespace }).SERVING_INDEX,
     SERVING_CREATION_KEY_PER_HOUR: "2", SERVING_CREATION_ADDRESS_PER_HOUR: "3",
     SERVING_READ_KEY_PER_MINUTE: "2", SERVING_READ_ADDRESS_PER_MINUTE: "3" }); }
 }
@@ -120,7 +121,6 @@ export class CreationVersionScope extends DeployedScope {
     const name = ctx.id.name ?? "", trace = creationFormatStorage.get(name);
     const start: CreationFormatStart = { catalogReads: 0, wordReads: 0, formatWrites: 0, atFailure: null, tablesAfterFailure: null };
     const exec = ctx.storage.sql.exec.bind(ctx.storage.sql);
-    let observed = ctx;
     if (trace) {
       if (trace.starts.length >= 4) throw new Error("TEST format start observation exceeded four starts");
       trace.starts.push(start);
@@ -142,19 +142,12 @@ export class CreationVersionScope extends DeployedScope {
         const value = Reflect.get(target, property, target);
         return typeof value === "function" ? value.bind(target) : value;
       } });
-      const storage = new Proxy(ctx.storage, { get(target, property) {
-        if (property === "sql") return sql;
-        const value = Reflect.get(target, property, target);
-        return typeof value === "function" ? value.bind(target) : value;
-      } });
-      observed = new Proxy(ctx, { get(target, property) {
-        if (property === "storage") return storage;
-        const value = Reflect.get(target, property, target);
-        return typeof value === "function" ? value.bind(target) : value;
-      } });
+      // The DurableObjectBase constructor takes only the real state, so the
+      // observer shadows the one `sql` property of the real storage object.
+      Object.defineProperty(ctx.storage, "sql", { value: sql, configurable: true });
     }
     try {
-      super(observed, { ...env, ...(creationVersionSettings.has(name) ? { PLATFORM_CREATION_PINS: creationVersionSettings.get(name) } : {}) });
+      super(ctx, { ...env, ...(creationVersionSettings.has(name) ? { PLATFORM_CREATION_PINS: creationVersionSettings.get(name) } : {}) });
     } catch (error) {
       if (trace && start.atFailure) start.tablesAfterFailure = Number(exec("SELECT count(*) AS n FROM sqlite_master WHERE type='table'").one()["n"]);
       throw error;

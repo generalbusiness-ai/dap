@@ -346,6 +346,10 @@ test("a scope with rows reads the real membership scope of the platform package:
     if (!sealed.ok) throw new Error("no history");
     const retained: RetainedInput[] = [];
     for (const { entry } of sealed.value) for (const use of entry.uses) retained.push(...await kept("entry", use.content));
+    // Rulings 4f697a7a and ae48dd39: a use at a later entry of a foreign sequence also needs that sequence's `birth` row.
+    const births = new Set<Digest>();
+    for (const { entry } of sealed.value) for (const use of entry.uses) if (use.fact.seq > 0) births.add(use.fact.at.genesis);
+    for (const digest of births) retained.push(...await kept("birth", digest));
     const W: MemoryScope = { scope: s.scope, entries: sealed.value.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };
     const data = weigherWith(membershipObservationChange()).declared;
     const code = (named: PlatformDefinition) => (named === MADE ? { data: data as never, rules: weigherRules().rules, membership: () => of, rulesScope: () => rulebook }

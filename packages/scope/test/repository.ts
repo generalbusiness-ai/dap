@@ -273,6 +273,10 @@ export async function copied(node: Platform): Promise<MemoryScope> {
   const genesis = sealed[0]!.entry.input as Extract<Entry["input"], { type: "genesis" }>;
   const retained = isDigest(genesis.seed.definition) ? await kept("definition", genesis.seed.definition) : [];
   for (const { entry } of sealed) for (const use of entry.uses) retained.push(...await kept("entry", use.content));
+  // A use at a later entry of a foreign sequence also needs that sequence's first entry, the `birth` row under its genesis.
+  const births = new Set<Digest>();
+  for (const { entry } of sealed) for (const use of entry.uses) if (use.fact.seq > 0) births.add(use.fact.at.genesis);
+  for (const digest of births) retained.push(...await kept("birth", digest));
   return { scope: await node.at(), entries: sealed.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };
 }
 

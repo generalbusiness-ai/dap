@@ -2,7 +2,7 @@ import { describe, expect, onTestFinished, test } from "vitest";
 import { env, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, Intent, OperationId, ReadRequest, ScopeId, ScopeRef, Sealed, Seed, SignedReadName } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, b64url, canonicalBytes, entryHash, factRefOf, intentDigest, newGenesisNonce, retainedReadArgument, scopeIdOf, seedDigest, signIntent, signRead } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, b64url, canonicalBytes, entryHash, factRefOf, intentDigest, newGenesisNonce, genesisInputDigest, retainedReadArgument, scopeIdOf, seedDigest, signIntent, signRead } from "@generalbusiness/dap-bytes";
 import { requestSession, secretSigner, sessionRequest, signedLogReader, signedReader, type Fetch } from "@generalbusiness/dap-client";
 import { timeMs, timeOf, useOf } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t, type Actor } from "@generalbusiness/dap-derive/testing";
@@ -485,7 +485,9 @@ describe("signed reads on real registers (the planner's decisions 61cc5e50, c649
     const chain: Entry[] = [];
     let source = act;
     for (let n = 1; n <= CHAIN_STEPS + 1; n++) {
-      const seed: Seed = { v: 1, kind: "lane", definition: d("e"), creator: refs.get(source)!, cause: source.input.type === "genesis" ? seedDigest(source.input.seed) : intentDigest((source.input as { signed: { intent: Intent } }).signed.intent), ordinal: 0 };
+      // A child of a genesis names its creator in the self form, and its cause is the creator's complete genesis input.
+      const seed: Seed = { v: 1, kind: "lane", definition: d("e"), creator: source.input.type === "genesis" ? { scope: refs.get(source)!.scope, genesis: null } : refs.get(source)!,
+        cause: source.input.type === "genesis" ? genesisInputDigest(source.input) : intentDigest((source.input as { signed: { intent: Intent } }).signed.intent), ordinal: 0 };
       const body: Entry = { v: 1, seq: 0, prev: null, time: t(n), clamped: false, epoch: 0, input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(n)), kind: "open", "founding": null, source: fact(source), sourceKind: "lane", n: 0, message: { class: "request", type: "create", body: {} }, decision: "applied" }, uses: [useOf(fact(source), source, "lane")], prepared: [], effects: [], sends: [] };
       const genesis = placed(body, { scope: scopeIdOf(seed), genesis: entryHash(body) });
       kept.set(useOf(fact(genesis), genesis, "lane").content, genesis);

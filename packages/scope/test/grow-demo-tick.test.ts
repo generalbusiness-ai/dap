@@ -18,7 +18,9 @@ import type {} from "./support/maintained-applications.ts";
 import type { TestScope } from "./worker.ts";
 
 async function fixture() {
-  const captured = inject("maintainedApplications").growDemo, bytes = unb64url(captured.bytes);
+  // Ruling a7c8072a: native tests install the demo built from current source in canonical spelling.
+  // Install proofs validate declarations in canonical mode (23e0c92d04); the committed packet's grow-room is not canonical.
+  const captured = inject("maintainedApplications").growDemoSource, bytes = unb64url(captured.bytes);
   if (!bytes) throw Error("The separate TEST demo packet must be captured.");
   const packet = readPublishedApplicationPackage2(bytes, captured.release), siteId = packet.package.semantic.entry;
   const roomId = packet.package.semantic.projections["grid"]!.definition;

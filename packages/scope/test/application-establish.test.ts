@@ -3,7 +3,7 @@ import { countingContainerData, countingPublicationData } from "./definition-cor
 import { runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
 import type { Intent, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, genesisInputDigest, intentDigest, isSeed, scopeIdOf, seedDigest, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import { command, issueInvitation, memoryStore, type Context } from "../../cli/src/index.ts";
 import { keys } from "@generalbusiness/dap-derive/testing";
@@ -93,6 +93,11 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
     const creates = (await D.entries())[0]!.sends.filter((send) => send.message.class === "request" && send.message.type === "create");
     expect(creates).toHaveLength(3);
     const creator = await D.at();
+    // The Directory creates its siblings in its own genesis: each seed names it by the genesis-self form,
+    // and the cause is the digest of the Directory's applied genesis input.
+    const directoryGenesis = (await D.entries())[0]!.input;
+    if (directoryGenesis.type !== "genesis") throw new Error("The Directory's first entry must be its genesis");
+    const selfCreator = { scope: creator.scope, genesis: null };
     const siblings = [
       { kind: "membership", definition: cohort.membership },
       { kind: "rules", definition: cohort.rules },
@@ -105,7 +110,7 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
       if (!send || !isSeed(send.to)) throw new Error("one actual create request supplies each validated sibling seed");
       // Native result/control fullrefs are not seeds. Send numbers are1/2/3;
       // creation ordinals are0/1/2 under this exact directory genesis cause.
-      expect([send.n, send.to]).toEqual([ordinal + 1, { v: 1, kind, definition, creator, cause: seedDigest(directorySeed), ordinal }]);
+      expect([send.n, send.to]).toEqual([ordinal + 1, { v: 1, kind, definition, creator: selfCreator, cause: genesisInputDigest(directoryGenesis), ordinal }]);
       return new OwnedPlatform(scopeIdOf(send.to));
     });
     if (!M || !Q || !G) throw new Error("the complete three-child cohort is required");

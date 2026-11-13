@@ -201,7 +201,7 @@ test("unknown scope gate touches no target and only the native target's applied 
     const answer = await scopes.create(born.signed, definition.declared);
     expect(answer.answer).toBe("accepted");
     if (answer.answer !== "accepted") return expect.fail("native applied genesis required");
-    expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, genesis: answer.receipt.fact.hash });
+    expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, kind: "directory" });
     expect((await scopes.summary(born.name, reader)).ok).toBe(true);
     const again = await scopes.create(born.signed, definition.declared);
     expect(again).toEqual(answer);
@@ -227,7 +227,7 @@ test("unknown scope gate touches no target and only the native target's applied 
     expect(known.get(born.name)?.at.genesis).toBe(answer.receipt.fact.hash);
     known.delete(born.name);
     expect((await backfill.summary(born.name, reader)).ok).toBe(true);
-    expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, genesis: answer.receipt.fact.hash });
+    expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, kind: "directory" });
     expect((await backfill.summary(denied.name, reader)).ok).toBe(false);
     expect(known.has(denied.name)).toBe(false);
 

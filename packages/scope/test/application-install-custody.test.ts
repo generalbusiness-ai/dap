@@ -20,6 +20,7 @@ import { TRUSTED_APPLICATION_COHORT as C, applicationPublicationOrigin, installe
 import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext } from "@generalbusiness/dap-client/application";
 import { encodeAgentKeyInvitation, invitationIssueFields, secretSigner, signedApplicationInstall, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { outsideOf as hostOutside } from "../src/worker.ts";
+import { hostedRegistryName } from "../src/hosted-registry-name.ts";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { applicationSandboxPage } from "../src/applications/route.ts";
 import { applicationHttpPeer, applicationResolverFixture, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationContentBindings, applicationWorkerBindings } from "./fixtures-native.ts";
@@ -336,7 +337,7 @@ test("hosted Worker application trust reaches its lazy native agent before the p
     hostedTest.applicationSettings = { APPLICATION_TRUST: JSON.stringify([{ release, publisher: rita.key, host: "packages.test" }]) };
     const body = utf8(JSON.stringify({ link: encodeAgentKeyInvitation(link) }));
     const request: ControlRequest = { v: 1, action: "create", service: "https://scopes.test", membership, agent: null, actor: rita.key, body: digestBytes(body), op: "trust-forward-create", notAfter: timeOf(life.now() + 60_000) };
-    const registry = env.REGISTRIES.get(env.REGISTRIES.idFromName(membership.scope)) as unknown as Pick<HostedRegistry, "create">;
+    const registry = env.REGISTRIES.get(env.REGISTRIES.idFromName(hostedRegistryName(membership))) as unknown as Pick<HostedRegistry, "create">;
     const created = await life.wait(() => registry.create(signControl(request, rita.secret), body, "https://scopes.test"));
     expect(created.status).toBe(201);
     const agent = created.body["agent"], bearer = created.body["bearer"];

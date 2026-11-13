@@ -21,7 +21,7 @@ import { withSequence } from "../src/testing.ts";
 // Register, Directory and Destination entries pass their actual creation and
 // outcome judges in memory. Lane creation and trusted proof readers remain
 // STAND-INS. This proves parsing, not independent proof authentication or Git.
-function fixture(laneNonce = 4) {
+function fixture(laneNonce = 4, forge?: (judged: ReturnType<typeof workspaceAncestors>) => void) {
   const definition = variant(staged.declared, draft => { draft.capabilities.find((cap: { name: string }) => cap.name === "hold").version = 2; });
   const time = "2026-10-30T10:00:00Z", hash = digestBytes(utf8("fixture"));
   const seed = (kind: Seed["kind"], named: Seed["definition"], creator: ScopeRef | null, cause = hash, ordinal = 0): Seed => ({ v: 1, kind, definition: named, creator, cause, ordinal });
@@ -29,6 +29,16 @@ function fixture(laneNonce = 4) {
   const sealed = (at: ScopeRef, seq: number, input: SequenceEntry["input"], effects: SequenceEntry["effects"] = [], sends: SequenceEntry["sends"] = []): SequenceEntry => ({ v: 1, genesis: at.genesis, seq, prev: hash, time, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
   const signed = (at: ScopeRef, kind: string, fields: SignedIntent["intent"]["fields"]): SignedIntent => signIntent({ v: 1, to: at, actor: keys.rita.key, kind, on: null, fields, expected: {}, idempotencyKey: kind, notAfter: "2026-10-30T10:10:00Z" }, keys.rita.secret);
   const judged = workspaceAncestors(time, "actual-room-space", "workspace lineage fixture");
+  if (forge) {
+    // The genesis hash is the Directory's identity: a forged Directory genesis is another Directory,
+    // and the lane below names that one. Rows of the Directory take its new full reference.
+    const before = judged.directory;
+    forge(judged);
+    const genesis = judged.rows.find(row => row.at.scope === before.scope && row.entry.seq === 0)!.entry;
+    const after: ScopeRef = { scope: before.scope, genesis: entryHash(genesis) };
+    for (const row of judged.rows) if (row.at.scope === before.scope) row.at = after;
+    judged.directory = after;
+  }
   const { register, directory, destination, repository } = judged;
   const open = signed(directory, "open-issue", { definition: definition.digest });
   const laneSeed = seed("lane", definition.digest, directory, intentDigest(open.intent));
@@ -90,34 +100,36 @@ test("workspace lineage binds six immutable reads to the actual room namespace a
 // Adversarial replies below recompute their fact hashes and canonical proof
 // bytes. Their forged sends are not new judgments or authenticated ancestors.
 test("workspace lineage refuses a forged opening claim and an unselected repository outcome", async () => {
-  const forged = fixture();
-  const directory = forged.genesisOf("directory");
-  if (directory.input.type !== "genesis" || !directory.input.message || directory.input.message.class !== "request") return expect.fail("actual Directory genesis required");
-  const selected = forged.judged.selected;
-  // Borrow a real Register fact at a different position from the operation's
-  // opening. Keep the source send and message equal so the claim guard decides.
-  const message = structuredClone(directory.input.message);
-  const fields = message.body as { fields: { claim: FactRef } };
-  fields.fields.claim = factRefOf(forged.judged.unselected, forged.register);
-  const ordinal = directory.input.n;
-  const send = selected.sends.find(send => send.n === ordinal)!;
-  selected.sends = selected.sends.map(row => row === send ? { ...row, message } : row);
-  directory.input.message = message;
-  directory.input.source = factRefOf(selected, forged.register);
+  const forged = fixture(4, judged => {
+    const directory = judged.rows.find(row => row.at.scope === judged.directory.scope && row.entry.seq === 0)!.entry;
+    if (directory.input.type !== "genesis" || !directory.input.message || directory.input.message.class !== "request") throw Error("actual Directory genesis required");
+    const selected = judged.selected;
+    // Borrow a real Register fact at a different position from the operation's
+    // opening. Keep the source send and message equal so the claim guard decides.
+    const message = structuredClone(directory.input.message);
+    const fields = message.body as { fields: { claim: FactRef } };
+    fields.fields.claim = factRefOf(judged.unselected, judged.register);
+    const ordinal = directory.input.n;
+    const send = selected.sends.find(send => send.n === ordinal)!;
+    selected.sends = selected.sends.map(row => row === send ? { ...row, message } : row);
+    directory.input.message = message;
+    directory.input.source = factRefOf(selected, judged.register);
+  });
   expect(await workspaceRepository(forged.given, forged.sources, forged.register.scope, "artifacts", "actual-room-space")).toBeNull();
   expect(forged.calls(), "The forged claim reaches the operation-opening guard after four immutable reads").toBe(4);
 
-  const late = fixture();
-  const born = late.genesisOf("directory");
-  if (born.input.type !== "genesis") return expect.fail("actual Directory genesis required");
-  const unselected = late.judged.unselected;
-  expect(unselected.input).toMatchObject({ type: "outcome", result: "confirmed", evidence: { basis: "own-answer" } });
-  expect(unselected.effects).toContainEqual(expect.objectContaining({ effect: "attempt", selected: false, result: "confirmed" }));
-  expect(unselected.sends).toEqual([]);
-  // A malicious read port borrows the selected outcome's send. Hash/send checks
-  // alone then hold; its actual unselected attempt effect still forbids use.
-  unselected.sends = structuredClone(late.judged.selected.sends);
-  born.input.source = factRefOf(unselected, late.register);
+  const late = fixture(4, judged => {
+    const born = judged.rows.find(row => row.at.scope === judged.directory.scope && row.entry.seq === 0)!.entry;
+    if (born.input.type !== "genesis") throw Error("actual Directory genesis required");
+    const unselected = judged.unselected;
+    expect(unselected.input).toMatchObject({ type: "outcome", result: "confirmed", evidence: { basis: "own-answer" } });
+    expect(unselected.effects).toContainEqual(expect.objectContaining({ effect: "attempt", selected: false, result: "confirmed" }));
+    expect(unselected.sends).toEqual([]);
+    // A malicious read port borrows the selected outcome's send. Hash/send checks
+    // alone then hold; its actual unselected attempt effect still forbids use.
+    unselected.sends = structuredClone(judged.selected.sends);
+    born.input.source = factRefOf(unselected, judged.register);
+  });
   expect(await workspaceRepository(late.given, late.sources, late.register.scope, "artifacts", "actual-room-space")).toBeNull();
   expect(late.calls(), "The unselected outcome reaches selection checking after four immutable reads").toBe(4);
 });

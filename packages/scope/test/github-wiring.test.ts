@@ -108,10 +108,13 @@ function destinationGiven(register: Ledger, creator: ScopeRef, definition: Platf
   const copy = register.own(1)!.entry;
   const bytes = canonicalize(copy);
   const content = digestBytes(utf8(bytes));
-  const seed: Seed = { v: 1, kind: "destination", definition, creator, cause: d("e"), ordinal: 3 };
+  // The destination is born in its directory's genesis: the seed names the directory by the genesis-self form,
+  // and the genesis source is the directory's first entry, which supplies its genesis.
+  const seed: Seed = { v: 1, kind: "destination", definition, creator: { scope: creator.scope, genesis: null }, cause: d("e"), ordinal: 3 };
+  const source = { at: creator, seq: 0, hash: creator.genesis };
   const entry: Entry = {
     v: 1, seq: 0, prev: null, time: register.own(0)!.entry.time, clamped: false, epoch: 0,
-    input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(3)), kind: "establish", "founding": null, source: null, sourceKind: null, n: null, message: null, decision: "applied" },
+    input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(3)), kind: "establish", "founding": null, source, sourceKind: "directory", n: null, message: null, decision: "applied" },
     uses: [{ fact: claim, content, kind: "register" }], prepared: [], effects: [], sends: [],
   };
   const hash = entryHash(entry);

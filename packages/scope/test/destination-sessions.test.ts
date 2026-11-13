@@ -12,7 +12,8 @@ import { mintSession, readerOf, sessionReaders, sessionsOf } from "../src/sessio
 function fixture(kind: "destination" | "rules" = "destination", cohort: 1 | 2 = 2) {
   const branch = new Branch(false);
   branch.confirmed();
-  const at = { ...branch.at, kind };
+  // A reference names no kind; the scope's folded state states it.
+  const at = branch.at;
   const sessions = sessionsOf("a deliberately scripted test secret", "destination-test")!;
   let now: Timestamp = branch.now;
   let calls = 0;
@@ -20,7 +21,7 @@ function fixture(kind: "destination" | "rules" = "destination", cohort: 1 | 2 = 
   // The rules variant scripts only the birth/state boundary over Branch's
   // fixture; founding-real witnesses the actual rules history and RPC.
   const context: Pick<Repository, "genesis" | "state"> & { state: NonNullable<Repository["state"]> } = { state: kind === "destination" ? branch.state : new Proxy(branch.state, { get(state, key) {
-    if (key === "scope") return () => ({ ...state.scope()!, at });
+    if (key === "scope") return () => ({ ...state.scope()!, at, kind });
     if (key === "page") return (type: string, states: readonly string[], after: number | null, limit: number) => type === "rules" ? { items: [{ refs: { directory: branch.bureau.at }, values: { membership: MEMBERSHIP.scope } }], next: null } : state.page(type, states, after, limit);
     const value = Reflect.get(state, key); return typeof value === "function" ? value.bind(state) : value;
   } }), genesis: () => { const input = branch.own(0)?.entry.input; return input?.type === "genesis" ? { ...input, seed: { ...input.seed, kind, definition: `platform:${kind}@${cohort}` as const } } : null; } };

@@ -42,7 +42,8 @@ test.each(transports)("a scope handle over %s: an act returns its receipt; the e
   expect(await scope.followReceipt({ ...receipt, fact: { ...receipt.fact, hash: answer.receipt.fact.hash } })).toEqual({ ok: false, reason: "hash-mismatch" });
   // Receipt identity checks preserve the original named refusals.
   const elsewhere = (over: object) => scope.followReceipt({ ...receipt, fact: { ...receipt.fact, at: { ...at, ...over } } });
-  expect([await elsewhere({ genesis: `sha256:${"07".repeat(32)}` as const }), await elsewhere({ kind: "lane" })]).toEqual([{ ok: false, reason: "wrong-genesis" }, { ok: false, reason: "reference-mismatch" }]);
+  // A reference names no kind (cutover ruling 7), so only the genesis can differ.
+  expect(await elsewhere({ genesis: `sha256:${"07".repeat(32)}` as const })).toEqual({ ok: false, reason: "wrong-genesis" });
   expect(await scope.followOutbox(receipt.sends[0]!)).toMatchObject({ ok: true, value: { outboxId: "1.0", class: "request", held: false, result: null } });
   net.hold = null;
 });

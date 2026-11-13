@@ -64,7 +64,8 @@ test("native receiver pins fund item and request transfers at full scope ceiling
       return { head: store.scope()!.head, bytes: store.logicalBytes(), keys: store.keyCounts(), owner: ownerReservations(CAPABILITY_CODE, store, under), reserved: reserved(store, under, head.input, CAPABILITY_CODE), pin: store.record("hold@1", "receiver-pin", [0]), text: store.retained("text", digest)?.bytes ?? null, snapshot: store.all() };
     });
     const unit = under.pendingWorkAmounts.receiverPins!.byKind["directory"]!;
-    expect(unit).toEqual({ entries: 4, items: 1, records: 0, bytes: 6 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 });
+    // Ruling a4a587c9: the per-entry retained bound also charges one birth (one entryBytes) for the foreign sequence it uses.
+    expect(unit).toEqual({ entries: 4, items: 1, records: 0, bytes: 7 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 });
     const before = await inspect();
     expect(before.owner).toEqual({ entries: 8, items: 2, records: 0, bytes: 2 * unit.bytes, requests: 2 });
     expect(before.keys).toEqual({ items: 1, records: 1, requests: 0 });
