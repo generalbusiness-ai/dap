@@ -14,7 +14,7 @@ import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/d
  * knows no application: it reads definitions as data.
  */
 
-import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, RetainedInput, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { TransportError, ScopeHandle, ApplicationPackageError, actBodyText, originalsAt, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
@@ -986,8 +986,8 @@ export class McpService {
         { scope: scopeArg, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#record(a)),
       tool("sends", "A page of a scope's sends with their attempts and results; or, with outboxId (seq.n, as a receipt lists it), the status of that one send.",
         { scope: scopeArg, outboxId: { type: "string" }, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#sends(a)),
-      tool("text", "A retained input by scope, kind and digest: a definition, a foreign entry, a rule's input, a detached text, a snapshot, or a value in its byte domain; paged by bytes with offset.",
-        { scope: scopeArg, kind: { enum: ["definition", "entry", "rule", "text", "snapshot", "value"] }, digest: { type: "string" }, domain: { type: "string" }, offset: { type: "integer", minimum: 0 } }, ["scope", "kind", "digest"], READ, (a) => this.#text(a)),
+      tool("text", "A retained input by scope, kind and digest: a definition, a foreign entry, a rule's input, a detached text, a snapshot, a value in its byte domain, or a birth: the first entry of a foreign sequence, by that sequence's genesis entry hash in place of a content digest; paged by bytes with offset.",
+        { scope: scopeArg, kind: { enum: ["definition", "entry", "rule", "text", "snapshot", "value", "birth"] }, digest: { type: "string" }, domain: { type: "string" }, offset: { type: "integer", minimum: 0 } }, ["scope", "kind", "digest"], READ, (a) => this.#text(a)),
       tool("wait", "Waits at most 60 seconds until one of: a scope's head reaches seq; an item reaches one of states; the scopes an entry created (entry) and the scopes their genesis created exist and are active; a send (outboxId) has a result. Returns what it saw and whether it timed out. Never writes.",
         { scope: scopeArg, seq: { type: "integer", minimum: 0 }, item: { type: "integer", minimum: 0 }, type: { type: "string", description: "the item's type; with item, a final item is found among the retained ones" }, states: { type: "array", items: { type: "string" } }, entry: { type: "integer", minimum: 0 }, outboxId: { type: "string" }, seconds: { type: "integer", minimum: 1, maximum: WAIT_MOST_SECONDS } }, ["scope"], READ, (a) => this.#wait(a)),
       tool("settle", "What is known about the envelope under idempotencyKey on target (or the creation of definition): the act's phase and kept outcome, the scope's settlement for an act that is not final, and each preparation step apart. Signs nothing and sends no act.",
@@ -1186,7 +1186,7 @@ export class McpService {
   async #text(args: Args): Promise<CallResult> {
     const s = await this.#current();
     const { scope, membership } = await this.#scope(s, args["scope"]);
-    const kind = String(args["kind"]) as "definition" | "entry" | "rule" | "text" | "snapshot" | "value";
+    const kind = String(args["kind"]) as RetainedInput["kind"];
     const digest = String(args["digest"]) as Digest;
     const domain = typeof args["domain"] === "string" ? args["domain"] : undefined;
     const read = await this.#reads.read(membership, (t, r) => t.retained(scope, r, kind, digest, domain));

@@ -1117,7 +1117,7 @@ A page of a scope's sends with their attempts and results; or, with outboxId (se
 
 ### `text`
 
-A retained input by scope, kind and digest: a definition, a foreign entry, a rule's input, a detached text, a snapshot, or a value in its byte domain; paged by bytes with offset.
+A retained input by scope, kind and digest: a definition, a foreign entry, a rule's input, a detached text, a snapshot, a value in its byte domain, or a birth: the first entry of a foreign sequence, by that sequence's genesis entry hash in place of a content digest; paged by bytes with offset.
 
 ```json
 {
@@ -1138,7 +1138,8 @@ A retained input by scope, kind and digest: a definition, a foreign entry, a rul
           "rule",
           "text",
           "snapshot",
-          "value"
+          "value",
+          "birth"
         ]
       },
       "digest": {

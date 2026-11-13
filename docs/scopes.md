@@ -707,7 +707,7 @@ or `archived` with the archive receipt.
 | `outbox` | A page of the scope's sends, with the attempts and result of each. |
 | `outboxItem` | The outbox row of one send, by its outbox ID. |
 | `log` | A page of the journal as stored: each entry's canonical bytes. For a verifier. |
-| `retained` | One retained input, by kind and digest: a definition, a foreign entry, a rule's input, a detached text until it is redacted, a snapshot, or a value in its byte domain. |
+| `retained` | One retained input, by kind and digest: a definition, a foreign entry, a rule's input, a detached text until it is redacted, a snapshot, a value in its byte domain, or a `birth`. A `birth` is the first entry of a foreign sequence that a retained entry of this scope uses at a later entry. Its digest is that sequence's genesis entry hash, not a digest of the bytes. The reader checks the bytes against the full sequence reference with `admitSequenceGenesis`. |
 
 The Worker serves `ScopeApi` over HTTP through `route`, with the routes in
 the [scope package guide](../packages/scope/README.md#routes). Hosted
