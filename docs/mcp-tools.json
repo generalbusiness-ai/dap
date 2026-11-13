@@ -118,25 +118,12 @@
                     "type": "string",
                     "pattern": "^sc_[a-z2-7]{51}[aq]$"
                   },
-                  "inc": {
+                  "genesis": {
                     "type": "string",
-                    "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
-                  },
-                  "kind": {
-                    "enum": [
-                      "register",
-                      "directory",
-                      "membership",
-                      "rules",
-                      "destination",
-                      "inbox",
-                      "task",
-                      "lane",
-                      "commons"
-                    ]
+                    "pattern": "^sha256:[0-9a-f]{64}$"
                   }
                 },
-                "required": ["scope", "inc", "kind"],
+                "required": ["scope", "genesis"],
                 "additionalProperties": false
               }
             ]
@@ -192,14 +179,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -367,14 +351,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -500,25 +481,12 @@
                     "type": "string",
                     "pattern": "^sc_[a-z2-7]{51}[aq]$"
                   },
-                  "inc": {
+                  "genesis": {
                     "type": "string",
-                    "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
-                  },
-                  "kind": {
-                    "enum": [
-                      "register",
-                      "directory",
-                      "membership",
-                      "rules",
-                      "destination",
-                      "inbox",
-                      "task",
-                      "lane",
-                      "commons"
-                    ]
+                    "pattern": "^sha256:[0-9a-f]{64}$"
                   }
                 },
-                "required": ["scope", "inc", "kind"],
+                "required": ["scope", "genesis"],
                 "additionalProperties": false
               },
               "member": {
@@ -831,7 +799,15 @@
             "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "kind": {
-            "enum": ["definition", "entry", "rule", "text", "snapshot", "value", "birth"]
+            "enum": [
+              "definition",
+              "entry",
+              "rule",
+              "text",
+              "snapshot",
+              "value",
+              "birth"
+            ]
           },
           "digest": {
             "type": "string"
@@ -931,25 +907,12 @@
                     "type": "string",
                     "pattern": "^sc_[a-z2-7]{51}[aq]$"
                   },
-                  "inc": {
+                  "genesis": {
                     "type": "string",
-                    "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
-                  },
-                  "kind": {
-                    "enum": [
-                      "register",
-                      "directory",
-                      "membership",
-                      "rules",
-                      "destination",
-                      "inbox",
-                      "task",
-                      "lane",
-                      "commons"
-                    ]
+                    "pattern": "^sha256:[0-9a-f]{64}$"
                   }
                 },
-                "required": ["scope", "inc", "kind"],
+                "required": ["scope", "genesis"],
                 "additionalProperties": false
               }
             ]
@@ -1157,14 +1120,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -1365,14 +1325,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -1573,14 +1530,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -1815,14 +1769,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -2050,14 +2001,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -2282,14 +2230,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -2504,14 +2449,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -2722,14 +2664,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -2944,14 +2883,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -3171,14 +3107,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -3510,14 +3443,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -3718,14 +3648,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -3926,14 +3853,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -4149,14 +4073,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -4366,14 +4287,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -4605,14 +4523,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -4819,14 +4734,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -5033,14 +4945,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -5241,14 +5150,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -5447,14 +5353,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -5664,14 +5567,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -5890,14 +5790,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -6103,14 +6000,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -6316,14 +6210,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -6553,14 +6444,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -6794,14 +6682,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -7017,14 +6902,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -7267,14 +7149,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -7484,14 +7363,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -7692,14 +7568,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -7906,14 +7779,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -8120,14 +7990,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -8343,14 +8210,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -8554,14 +8418,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -8768,14 +8629,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -8992,14 +8850,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -9213,14 +9068,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -9419,14 +9271,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -9630,14 +9479,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -9836,14 +9682,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -10042,14 +9885,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -10258,14 +10098,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -10470,14 +10307,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -10676,14 +10510,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -10888,14 +10719,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -11094,14 +10922,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -11316,14 +11141,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -11533,14 +11355,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -11740,14 +11559,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -11952,14 +11768,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -12164,14 +11977,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -12365,14 +12175,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -12584,14 +12391,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -12803,14 +12607,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -13075,14 +12876,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -13281,14 +13079,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",
@@ -13523,14 +13318,11 @@
                   "scope": {
                     "type": "string"
                   },
-                  "inc": {
-                    "type": "string"
-                  },
-                  "kind": {
+                  "genesis": {
                     "type": "string"
                   }
                 },
-                "required": ["scope", "inc", "kind"]
+                "required": ["scope", "genesis"]
               },
               "seq": {
                 "type": "integer",

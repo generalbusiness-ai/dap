@@ -116,7 +116,9 @@ export async function scopeRows(text, snapshotDispatches = []) {
   const globals = {
     URL, Response, ReadableStream, TextDecoder, read: () => new Response(), answered: () => new Response(), MISSING: {}, isObject: value => value !== null && typeof value === "object" && !Array.isArray(value), BODY_BYTES: 1024 * 1024,
     admittedRequestUrl: () => true, credentialInUrl: () => false, presentsSignedRead,
-    api: () => remote, scopedApi: () => remote, json: status => new Response(null, { status }),
+    api: () => remote, roomApi: () => remote, scopedApi: () => remote, json: status => new Response(null, { status }),
+    // Retired-room stand-ins: route enumeration never calls the retired answer.
+    RETIRED_HTTP: {}, retiredRoomAnswer: () => null,
     // Structural route enumeration only; the five serving witnesses own actual admission.
     admitCreationAddress: async () => ({ decision: "admitted", overflow: null }),
     requestQuery: () => true, positionOf: value => /^\d+$/.test(value ?? "") ? Number(value) : null,

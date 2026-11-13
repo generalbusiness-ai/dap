@@ -685,28 +685,14 @@ Creates a scope with no existing target, and records it in your configuration so
                 "type": "string",
                 "pattern": "^sc_[a-z2-7]{51}[aq]$"
               },
-              "inc": {
+              "genesis": {
                 "type": "string",
-                "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
-              },
-              "kind": {
-                "enum": [
-                  "register",
-                  "directory",
-                  "membership",
-                  "rules",
-                  "destination",
-                  "inbox",
-                  "task",
-                  "lane",
-                  "commons"
-                ]
+                "pattern": "^sha256:[0-9a-f]{64}$"
               }
             },
             "required": [
               "scope",
-              "inc",
-              "kind"
+              "genesis"
             ],
             "additionalProperties": false
           }
@@ -767,17 +753,13 @@ Creates a scope with no existing target, and records it in your configuration so
               "scope": {
                 "type": "string"
               },
-              "inc": {
-                "type": "string"
-              },
-              "kind": {
+              "genesis": {
                 "type": "string"
               }
             },
             "required": [
               "scope",
-              "inc",
-              "kind"
+              "genesis"
             ]
           },
           "seq": {
@@ -965,17 +947,13 @@ Joins a room with an invitation link from dap invite (artroom-invite:...), as da
               "scope": {
                 "type": "string"
               },
-              "inc": {
-                "type": "string"
-              },
-              "kind": {
+              "genesis": {
                 "type": "string"
               }
             },
             "required": [
               "scope",
-              "inc",
-              "kind"
+              "genesis"
             ]
           },
           "seq": {
@@ -1542,28 +1520,14 @@ What is known about the envelope under idempotencyKey on target (or the creation
                 "type": "string",
                 "pattern": "^sc_[a-z2-7]{51}[aq]$"
               },
-              "inc": {
+              "genesis": {
                 "type": "string",
-                "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
-              },
-              "kind": {
-                "enum": [
-                  "register",
-                  "directory",
-                  "membership",
-                  "rules",
-                  "destination",
-                  "inbox",
-                  "task",
-                  "lane",
-                  "commons"
-                ]
+                "pattern": "^sha256:[0-9a-f]{64}$"
               }
             },
             "required": [
               "scope",
-              "inc",
-              "kind"
+              "genesis"
             ],
             "additionalProperties": false
           }
@@ -1859,17 +1823,13 @@ Signs one act of a scope by its native kind, under the same custody and binding 
               "scope": {
                 "type": "string"
               },
-              "inc": {
-                "type": "string"
-              },
-              "kind": {
+              "genesis": {
                 "type": "string"
               }
             },
             "required": [
               "scope",
-              "inc",
-              "kind"
+              "genesis"
             ]
           },
           "seq": {
@@ -2012,28 +1972,14 @@ Install an operator-trusted package in this room by immutable Git URI and indepe
                 "type": "string",
                 "pattern": "^sc_[a-z2-7]{51}[aq]$"
               },
-              "inc": {
+              "genesis": {
                 "type": "string",
-                "pattern": "^in_[a-z2-7]{25}[aeimquy4]$"
-              },
-              "kind": {
-                "enum": [
-                  "register",
-                  "directory",
-                  "membership",
-                  "rules",
-                  "destination",
-                  "inbox",
-                  "task",
-                  "lane",
-                  "commons"
-                ]
+                "pattern": "^sha256:[0-9a-f]{64}$"
               }
             },
             "required": [
               "scope",
-              "inc",
-              "kind"
+              "genesis"
             ],
             "additionalProperties": false
           },
