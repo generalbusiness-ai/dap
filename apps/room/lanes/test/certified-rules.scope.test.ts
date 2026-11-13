@@ -247,7 +247,7 @@ test("fresh certified global checks override a stale native lane and staged publ
     // As in Graph.instance, task is a descriptive TEST reference. No task
     // scope is created or delivered, and it supplies no authority.
     const instanced = await preparedLane.prepare(await L.intent(rita, "hold@1:instance", {
-      fields: { hold, task: { ...await L.at(), kind: "task" }, instance },
+      fields: { hold, task: { scope: (await L.at()).scope, genesis: digestBytes(utf8("TEST task scope that no scope answers")) }, instance },
     }), [], "hold@1", "instance");
     expect(instanced).toMatchObject({ answer: "accepted" });
     const built = editObjects("sha1", id => {

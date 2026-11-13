@@ -266,7 +266,7 @@ export class Node<D extends DeclaredDefinition> {
    * scope answers: no task scope is delivered.
    */
   async instance(who: Actor, hold: number, instance = "i-1"): Promise<Answer> {
-    const fields = { hold, task: { ...this.at, kind: "task" } as ScopeRef, instance };
+    const fields = { hold, task: { scope: this.at.scope, genesis: textDigest("TEST task scope that no scope answers") } as ScopeRef, instance };
     return this.prepare(signIntent({ v: 1, to: this.at, actor: who.key, kind: "hold@1:instance", on: null, expected: {}, fields, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) }, who.secret), "instance");
   }
   /**
