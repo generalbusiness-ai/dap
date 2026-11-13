@@ -60,6 +60,8 @@ export class ArchiveScout {
   readonly #layout: ArchiveScoutLayout;
   readonly #sourceWork = empty();
   readonly #copies = new Map<Digest, Readonly<ArchiveForeignCopy>>();
+  /** Genesis entry hash to the content digest of that sequence's seq 0 copy. */
+  readonly #births = new Map<Digest, Digest>();
   readonly #facts = new Map<string, Digest>();
   readonly #sources = new Set<string>();
   readonly #visited: Set<Digest>;
@@ -140,6 +142,7 @@ export class ArchiveScout {
       this.#copies.set(request.content, Object.freeze({ content: request.content, bytes: copy.bytes, fact: copy.fact,
         pin: copy.pin, under: policy.support.definition.declared.name }));
       this.#facts.set(key, request.content);
+      if (copy.fact.seq === 0 && copy.fact.hash === copy.fact.at.genesis) this.#births.set(copy.fact.hash, request.content);
       const source = canonicalize(copy.fact.at);
       if (!this.#sources.has(source)) {
         this.budget.spend({ metadata: 128, inputWork: 256 });
@@ -178,8 +181,9 @@ export class ArchiveScout {
     this.declarations.append(position, roots);
     for (const { dependency } of plan.dependencies) {
       const keys = dependency.mode === "text" ? [] : dependency.mode === "probe" ? dependency.choices.map(choice => choice.key) : [dependency.key];
-      for (const key of keys) if (key.kind === "entry") {
-        const copy = this.#copies.get(key.digest);
+      for (const key of keys) if (key.kind === "entry" || key.kind === "birth") {
+        const content = key.kind === "entry" ? key.digest : this.#births.get(key.digest);
+        const copy = content === undefined ? undefined : this.#copies.get(content);
         if (!copy) return stop("unsupported-foreign-copy"); reader.registerCopy(copy);
       }
     }
@@ -254,7 +258,7 @@ export class ArchiveScout {
     add(work, this.fence.comparisonCost(through)); add(work, forecastArchiveRetainedPass(), row.objects);
     add(work, forecastArchiveForeignSelection(foreign.copies));
     add(work, { metadata: foreign.copies * 512, inputWork: foreign.copies * 1024 });
-    add(work, forecastArchiveForeignLookup(), foreign.copies); // add() of each selected copied entry
+    add(work, forecastArchiveForeignLookup(), this.#layout.copyObjects(through)); // add() of each selected entry or birth object
     add(work, forecastArchiveForeignBasis(row.sources)); add(work, forecastArchiveInventoryFinal(this.after !== null));
     return Object.freeze(work);
   }

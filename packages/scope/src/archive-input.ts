@@ -2,7 +2,7 @@
  * inventory, retention enumeration or detached-text fallback. Foreign copies
  * require their marked source/pin pairs to match the fixture configuration. */
 import { natural, type CheckedSequence } from "@generalbusiness/dap-bytes";
-import { RETAINED_INPUT_BYTES, type Digest, type FactRef, type PlatformDefinition } from "@generalbusiness/dap-contract";
+import { RETAINED_INPUT_BYTES, type Digest, type FactRef, type PlatformDefinition, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isRecord, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import { checkedRetainedKey, type RetainedKey } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
@@ -29,6 +29,13 @@ export interface ArchiveInput {
 /** Selection admission belongs to the caller before construction. Rebuilds
  * decode their stored selection, never select against today's retained set.
  * Every call uses the original budget, including missing and cached reads. */
+function birthContent(sql: Sql, at: ScopeRef, budget: ArchiveBudget): Digest {
+  const rows = budget.native(sql, () => ({ metadata: 96, inputWork: 0 })).exec("SELECT digest FROM retained_birth WHERE genesis = ? AND scope = ? LIMIT 2", at.genesis, at.scope).toArray();
+  const digest = rows[0]?.["digest"];
+  if (rows.length !== 1 || !isDigest(digest)) throw new ArchivePrefixStopped("incomplete");
+  return digest;
+}
+
 export function archiveInput(sql: Sql, selection: ArchiveInputSelection, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins): ArchiveInput {
   budget.check();
   if (selection.entries.length > ARCHIVE_BOUNDS.entries || selection.objects.length > ARCHIVE_BOUNDS.attempts) budget.stop("limit");
@@ -51,17 +58,22 @@ export function archiveInput(sql: Sql, selection: ArchiveInputSelection, budget:
     sourceSequences.push(configured.checked);
     sources.set(canonicalize(source.at), { source: { at: { ...source.at }, pin: source.pin }, genesis: configured.genesis, used: false });
   }
-  const copies: ArchiveRetainedCopy[] = [];
+  const copies: ArchiveRetainedCopy[] = [], copied = new Set<Digest>();
   for (const object of selection.objects) {
     const key = checkedRetainedKey(object.key);
     if (!natural(object.bytes) || object.bytes === 0 || object.bytes > RETAINED_INPUT_BYTES || objects.has(nameOf(key))) budget.stop("unavailable");
-    if (key.kind === "entry") {
+    if (key.kind === "entry" || key.kind === "birth") {
       const foreign = object.foreign;
       if (!foreign || !isFactRef(foreign.fact)) throw new ArchivePrefixStopped("foreign-source-unavailable");
       const source = sources.get(canonicalize(foreign.fact.at));
       if (!source || source.source.pin !== foreign.pin || foreign.fact.seq === 0 && foreign.fact.hash !== source.genesis) throw new ArchivePrefixStopped("foreign-source-mismatch");
+      if (key.kind === "birth" && (foreign.fact.seq !== 0 || foreign.fact.hash !== key.digest)) throw new ArchivePrefixStopped("foreign-source-mismatch");
       source.used = true;
-      copies.push({ content: key.digest, bytes: object.bytes, fact: foreign.fact, pin: foreign.pin });
+      // A birth names the genesis entry hash. Its bytes are the `entry` row
+      // that the scope's `retained_birth` association names (ruling 4f697a7a).
+      const content = key.kind === "entry" ? key.digest : birthContent(sql, foreign.fact.at, budget);
+      if (!copied.has(content)) copies.push({ content, bytes: object.bytes, fact: foreign.fact, pin: foreign.pin });
+      copied.add(content);
     } else if (object.foreign !== undefined) budget.stop("unavailable");
     objects.set(nameOf(key), { key: { ...key }, bytes: object.bytes });
   }

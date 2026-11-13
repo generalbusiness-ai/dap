@@ -11,7 +11,7 @@ import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
-import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis, forecastArchiveForeignColdCopy } from "../src/archive-foreign-cost.ts";
+import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, forecastArchiveForeignScan, forecastArchiveForeignRepeat, forecastArchiveForeignCopyRequest, forecastArchiveForeignCopySize, forecastArchiveForeignGenesis, forecastArchiveForeignColdCopy, forecastArchiveForeignBirth } from "../src/archive-foreign-cost.ts";
 import { ArchiveRetainedReader } from "../src/archive-retained.ts";
 import { forecastArchiveSupportMetadata } from "../src/archive-support-cost.ts";
 import { ArchiveScout } from "../src/archive-scout.ts";
@@ -172,24 +172,39 @@ test("direct foreign copies classify their own full headers against fixture pins
   }
   expect(genesisReads[0]!.cost).toEqual({ ...fixed, calls: 1, metadata: 512, inputWork: 512 });
   expect(forecastArchiveForeignGenesis()).toEqual(genesisReads[0]!.cost);
+  // A later use also reads its sequence's birth row (ruling 4f697a7a): the
+  // first scan and the repeated scan of the assignment use each read it once.
+  const birthReads = result.nativeCosts.filter(row => row.query.includes("FROM retained_birth"));
+  expect(birthReads).toHaveLength(2);
+  for (const row of birthReads) {
+    expect(row.cost).toEqual({ ...fixed, calls: 1, metadata: 128, inputWork: 128 });
+    expect(forecastArchiveForeignBirth()).toEqual(row.cost);
+  }
+  const genesisBytes = (result.copies[1] as { bytes: number }).bytes;
   expect(result.repeatCost).not.toBeNull();
   const repeat = result.repeatCost!;
-  expect(repeat.cost).toEqual({ ...fixed, attempts: 1, calls: 1, metadata: 1536, inputWork: 2048 + repeat.bytes * 64 });
-  const quote = forecastArchiveForeignRepeat(repeat.bytes), scan = forecastArchiveForeignScan(1);
-  for (const key of Object.keys(quote) as (keyof ArchiveCost)[]) expect(quote[key] + scan[key]).toBe(repeat.cost[key]);
+  expect(repeat.cost).toEqual({ ...fixed, attempts: 2, calls: 2, metadata: 1664, inputWork: 2688 + (repeat.bytes + genesisBytes) * 64 });
+  const sum = (...rows: Readonly<Partial<ArchiveCost>>[]) => (key: keyof ArchiveCost) => rows.reduce((n, row) => n + (row[key] ?? 0), 0);
+  const repeated = sum(forecastArchiveForeignRepeat(repeat.bytes), forecastArchiveForeignScan(1), forecastArchiveForeignBirth(), forecastArchiveForeignRepeat(genesisBytes));
+  for (const key of Object.keys(repeat.cost) as (keyof ArchiveCost)[]) expect(repeated(key)).toBe(repeat.cost[key]);
   expect(forecastArchiveForeignCopyRequest()).toEqual({ ...fixed, attempts: 1, metadata: 0, inputWork: 512 });
   expect(result.scanCosts).toHaveLength(3);
-  for (let index = 0; index < 2; index++) {
+  const colds = [0, 1].map(index => {
     const use = f.uses[index]!, source = use.fact.seq === 0 ? f.birth.entry : f.assigned.entry;
     const copy = result.copies[index] as { bytes: number };
     const cold = forecastArchiveForeignColdCopy({ bytes: copy.bytes, input: source.input.type,
       effects: source.effects.length, declarationUnits: canonicalize(definition.declared).length,
       support: { declarationNodes: 0, ownerKinds: 0, ownerDomains: 0, capabilityKinds: 0 }, membership8: false });
-    expect(cold.ok).toBe(true);
-    if (cold.ok) {
-      const uses = forecastArchiveForeignScan(1), actual = result.scanCosts[index]!.cost;
-      for (const key of Object.keys(cold.work) as (keyof typeof cold.work)[]) expect(cold.work[key] + uses[key]).toBe(actual[key]);
-    }
+    expect(cold.ok).toBe(true); if (!cold.ok) return expect.fail("cold copy forecast");
+    return cold.work;
+  });
+  // The assignment entry pays its own cold copy, then the birth lookup and
+  // the genesis cold copy. The genesis entry then repeats that copy.
+  const first = sum(colds[0]!, forecastArchiveForeignScan(1), forecastArchiveForeignBirth(), colds[1]!);
+  const second = sum(forecastArchiveForeignScan(1), forecastArchiveForeignRepeat(genesisBytes));
+  for (const key of Object.keys(colds[0]!) as (keyof ArchiveCost)[]) {
+    expect(first(key)).toBe(result.scanCosts[0]!.cost[key]);
+    expect(second(key)).toBe(result.scanCosts[1]!.cost[key]);
   }
   expect(result.scanCosts.slice(0, 2).reduce((sum, row) => sum + row.cost.nodes, 0)).toBe(1);
 
@@ -236,7 +251,7 @@ test("native foreign recording pays scout work and fences fresh metadata after a
     const receipts: ArchiveCost[] = [];
     for (const recorded of scans) {
       const quote = { attempts: 0, calls: 0, metadata: 0, inputWork: 0 }, uses = forecastArchiveForeignScan(recorded.uses);
-      for (const key of Object.keys(quote) as (keyof typeof quote)[]) quote[key] += uses[key];
+      for (const key of Object.keys(quote) as (keyof typeof quote)[]) quote[key] += uses[key] + recorded.births * forecastArchiveForeignBirth()[key];
       for (const request of recorded.requests) {
         const work = request.kind === "repeat" ? forecastArchiveForeignRepeat(request.bytes) : forecastArchiveForeignColdCopy(request.footprint);
         if ("ok" in work && !work.ok) return expect.fail("The actual native cold copy must fit its scalar bounds.");
@@ -266,7 +281,9 @@ test("native foreign recording pays scout work and fences fresh metadata after a
     const changed = await f.consumer.inside(state => {
       const all = result.scans.flatMap(row => row.requests.filter(request => request.kind === "cold"));
       const expected = new Map<Digest, Readonly<ArchiveForeignExpectedCopy>>(all.map(request => [request.content, request.copy]));
-      const selected = variant === "size" ? first : second, request = selected.requests[0]!;
+      // The assignment entry's scan sees both copies cold: its own use, then
+      // its sequence's birth (ruling 4f697a7a).
+      const selected = first, request = selected.requests[variant === "size" ? 0 : 1]!;
       if (request.kind !== "cold") return expect.fail("The fixture must first see each retained copy cold.");
       const raw = state.storage.sql.exec<{ bytes: string }>("SELECT bytes FROM retained_input WHERE kind = 'entry' AND digest = ?", request.content).one().bytes;
       let bytes = raw + " ";
@@ -285,9 +302,10 @@ test("native foreign recording pays scout work and fences fresh metadata after a
       return { reason, queries, cost: budget.admitted() };
     });
     expect(changed.reason).toBe("foreign-source-mismatch");
-    expect(changed.queries.filter(query => query.includes("AS effects"))).toHaveLength(variant === "size" ? 0 : 1);
+    expect(changed.queries.filter(query => query.includes("AS effects"))).toHaveLength(variant === "size" ? 0 : 2);
     expect(changed.queries.some(query => query.startsWith("SELECT bytes"))).toBe(false);
-    expect(changed.cost.nodes).toBe(0);
+    // The genesis copy follows the admitted assignment copy, whose policy node is already paid.
+    expect(changed.cost.nodes).toBe(variant === "size" ? 0 : 1);
   }
 });
 
@@ -321,7 +339,7 @@ test("foreign plans quote native whole prefixes and retain an earlier boundary a
     const scouted = budget.admitted(), earlier = prefix.positions[1]!, head = { seq: earlier.seq, hash: earlier.hash };
     const handoff = plan.handoffCost(), beforeMap = budget.admitted(), oldMap = plan.expectedCopies(head), afterMap = budget.admitted();
     for (const key of Object.keys(handoff) as (keyof ArchiveCost)[]) expect(afterMap[key] - beforeMap[key]).toBe(handoff[key]);
-    expect(oldMap.size).toBe(1);
+    expect(oldMap.size).toBe(2);
     const expected = plan.expectedCopies(f.through);
     const fresh = new ArchiveForeignMetadata(sql, f.sources, f.policies, PROPOSED_BOUNDS, budget, new Set(), receiver.digest, { expected });
     const work = { attempts: 0, calls: 0, metadata: 0, inputWork: 0 };
@@ -330,7 +348,8 @@ test("foreign plans quote native whole prefixes and retain an earlier boundary a
       for (const key of Object.keys(work) as (keyof typeof work)[]) work[key] += after[key] - before[key];
       const quote = plan.quote({ seq: position.seq, hash: position.hash });
       expect(quote.work).toEqual(work);
-      expect(quote.copies).toBe(Math.min(position.seq, 2));
+      // The first later use adds its sequence's birth copy (ruling 4f697a7a).
+      expect(quote.copies).toBe(position.seq === 0 ? 0 : 2);
       expect(quote.declarations).toEqual(position.seq === 0 ? [] : [definition.digest]);
     }
     const quoteBefore = plan.quote(head), beforeFailed = budget.admitted();
@@ -345,8 +364,9 @@ test("foreign plans quote native whole prefixes and retain an earlier boundary a
     expect(uncommitted).toBe("mismatch");
     return { recordedKinds, scouted, final: budget.admitted(), quoteBefore, quoteAfter, expected: [...expected.keys()], oldExpected: [...oldMap.keys()], queries };
   });
-  expect(result.recordedKinds).toEqual(["cold", "cold", "cold"]);
-  expect(result.expected).toHaveLength(2); expect(result.oldExpected).toEqual([f.uses[0]!.content]);
+  // Each position scouts cold. The assignment uses add the genesis as a birth.
+  expect(result.recordedKinds).toEqual(["cold", "cold", "cold", "cold", "cold"]);
+  expect(result.expected).toHaveLength(2); expect(result.oldExpected).toEqual([f.uses[0]!.content, f.uses[1]!.content]);
   expect(result.quoteBefore).toEqual(result.quoteAfter);
   expect(result.scouted.nodes).toBe(1); expect(result.final.nodes).toBe(2);
   expect(result.queries.some(query => /^SELECT (?:\*|bytes)(?:\s|,)/.test(query))).toBe(false);
@@ -478,9 +498,13 @@ test("native inventory admits only classified direct copies and refuses a final 
   expect(short.result).toEqual({ ok: false, reason: "limit" }); expect(bodies(short.calls)).toEqual([]);
   expect(accepted.result.inventory.cost.nodes).toBe(2); // root + one producer declaration, used twice
   expect(accepted.result.inventory.foreignSources).toEqual([{ at: f.producer.at, pin: definition.digest }]);
-  expect(accepted.result.inventory.objects.map(object => object.key)).toEqual([{ kind: "definition", digest: receiver.digest }, ...f.uses.map(use => ({ kind: "entry", digest: use.content }))]);
+  // The assignment use needs its sequence's birth (ruling 4f697a7a), named by the genesis entry hash.
+  expect(accepted.result.inventory.objects.map(object => object.key)).toEqual([{ kind: "definition", digest: receiver.digest },
+    { kind: "entry", digest: f.uses[0]!.content }, { kind: "birth", digest: f.producer.at.genesis }, { kind: "entry", digest: f.uses[1]!.content }]);
+  expect(accepted.result.inventory.objects.find(object => object.key.kind === "birth")!.foreign).toEqual({ fact: f.uses[1]!.fact, pin: definition.digest });
   expect(accepted.result.inventory.objects.filter(object => object.key.kind === "entry").map(object => object.foreign)).toEqual(f.uses.map(use => ({ fact: use.fact, pin: definition.digest })));
-  expect(bodies(accepted.calls).filter(call => call.key === "entry")).toHaveLength(2);
+  // The birth key reads the genesis row once more, under its own key.
+  expect(bodies(accepted.calls).filter(call => call.key === "entry")).toHaveLength(3);
   expect(accepted.result.inventory.replay).toBe("unchecked");
   // Rebuild reads the immutable result after another native turn/restart.
   // The fixture supplies the same separately prepared source-pin map.
@@ -641,7 +665,9 @@ test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis
     for (const made of maker.objects()) objects.set(made.id, made);
     return corrupted.id;
   };
-  expect(await open(alterManifest({ ...rebuilt.archive.manifest, foreignSources: [{ at: f.producer.at, pin: receiver.digest }] }))).toMatchObject({ ok: false, result: "mismatch", reason: "foreign copy birth differs from its classified source pin" });
+  // The reader checks the `birth` file before the `entry` files, so the
+  // birth copy of the producer sequence meets the wrong pin first.
+  expect(await open(alterManifest({ ...rebuilt.archive.manifest, foreignSources: [{ at: f.producer.at, pin: receiver.digest }] }))).toMatchObject({ ok: false, result: "mismatch", reason: "foreign birth differs from its later use" });
   // Erasing the optional field must not select the local-only v1 path for
   // genuine copies. Removing the copied files as well still leaves actual
   // direct uses, so they must require their source basis independently.
@@ -725,7 +751,8 @@ test("recorded cold foreign support uses one paid validation walk and keeps reco
     // Reading the immutable report has its own original charge, excluded here.
     const ordinaryCost = ordinaryBudget.admitted(), recordedCost = recordedBudget.admitted();
     const scan = recorded.recorded(position), cold = scan.requests.filter(request => request.kind === "cold");
-    expect(cold).toHaveLength(1);
+    // The assignment use and its sequence's birth (ruling 4f697a7a) are both cold.
+    expect(cold).toHaveLength(2);
     expect(forecastArchiveSupportMetadata(cold[0]!.footprint.support).inputWork).toBeGreaterThan(0);
     for (const key of ["entries", "attempts", "nodes", "calls"] as const) expect(recordedCost[key]).toBe(ordinaryCost[key]);
     expect(recordedCost.metadata - ordinaryCost.metadata).toBe(512 + cold.length * 640);

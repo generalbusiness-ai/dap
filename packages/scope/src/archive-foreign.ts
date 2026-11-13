@@ -8,7 +8,7 @@ import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusines
 
 import { forecastArchiveSourceLookup } from "./archive-source-cost.ts";
 import { derivable } from "@generalbusiness/dap-derive";
-import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, ARCHIVE_FOREIGN_COPY_REQUEST_WORK, ARCHIVE_FOREIGN_COPY_SIZE_METADATA, ARCHIVE_FOREIGN_GENESIS_METADATA, archiveForeignRepeatWork, archiveForeignUseMetadata, type ArchiveForeignColdFootprint } from "./archive-foreign-cost.ts";
+import { forecastArchiveForeignLookup, forecastArchiveForeignSelection, forecastArchiveForeignBasis, ARCHIVE_FOREIGN_COPY_REQUEST_WORK, ARCHIVE_FOREIGN_COPY_SIZE_METADATA, ARCHIVE_FOREIGN_GENESIS_METADATA, ARCHIVE_FOREIGN_BIRTH_METADATA, archiveForeignRepeatWork, archiveForeignUseMetadata, type ArchiveForeignColdFootprint } from "./archive-foreign-cost.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import type { ArchiveSupportFootprint } from "./archive-support-cost.ts";
 import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, collectArchiveSupportMetadata } from "./archive-entry-metadata.ts";
@@ -137,8 +137,7 @@ export class ArchiveForeignMetadata {
     return Object.freeze({ kind: "cold", content, copy, declaration: policy.support.definition.digest, footprint });
   }
   #birth(at: FactRef["at"]): Readonly<ArchiveForeignRecordedRequest> | undefined {
-    this.budget.spend({ attempts: 1, inputWork: ARCHIVE_FOREIGN_COPY_REQUEST_WORK });
-    const rows = this.budget.native(this.sql, () => ({ metadata: ARCHIVE_FOREIGN_COPY_SIZE_METADATA, inputWork: 0 })).exec("SELECT digest FROM retained_birth WHERE genesis = ? AND scope = ? LIMIT 2", at.genesis, at.scope).toArray();
+    const rows = this.budget.native(this.sql, () => ({ metadata: ARCHIVE_FOREIGN_BIRTH_METADATA, inputWork: 0 })).exec("SELECT digest FROM retained_birth WHERE genesis = ? AND scope = ? LIMIT 2", at.genesis, at.scope).toArray();
     if (rows.length === 0) return stop("incomplete");
     const content = rows[0]?.["digest"];
     if (rows.length !== 1 || !isDigest(content)) return stop("unavailable");

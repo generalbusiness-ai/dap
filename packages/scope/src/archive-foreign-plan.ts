@@ -5,7 +5,7 @@ import type { Digest, Head } from "@generalbusiness/dap-contract";
 import { isDigest, isHead, natural, same } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, type ArchiveBudget, type ArchiveCost } from "./archive-budget.ts";
 import type { ArchiveForeignExpectedCopy, ArchiveForeignRecordedScan } from "./archive-foreign.ts";
-import { forecastArchiveForeignColdCopy, forecastArchiveForeignRepeat, forecastArchiveForeignScan } from "./archive-foreign-cost.ts";
+import { forecastArchiveForeignBirth, forecastArchiveForeignColdCopy, forecastArchiveForeignRepeat, forecastArchiveForeignScan } from "./archive-foreign-cost.ts";
 import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 
 type Work = Pick<ArchiveCost, "attempts" | "calls" | "metadata" | "inputWork">;
@@ -53,6 +53,7 @@ export class ArchiveForeignPlan {
       const add = (cost: Readonly<Work>) => { for (const key of Object.keys(work) as (keyof Work)[]) work[key] += cost[key]; };
       if (scan) {
         add(forecastArchiveForeignScan(uses));
+        for (let n = 0; n < scan.births; n++) add(forecastArchiveForeignBirth());
         for (const request of scan.requests) {
           budget.spend({ inputWork: 512 });
           const prior = this.#copies.get(request.content);
