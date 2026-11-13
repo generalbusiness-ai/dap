@@ -4,16 +4,15 @@
  * section 4.1). The `Entry` type has no field for its own hash.
  */
 
-import type { Digest, FactRef, Incarnation, MemberRef, OperationId, PlatformDefinition, ScopeId, ScopeRef, Seed, Grant, Timestamp } from "./scope.ts";
-import type { FieldValue, SignedIntent } from "./intent.ts";
+import type { Digest, FactRef, GenesisNonce, GenesisSelfRef, MemberRef, OperationId, PlatformDefinition, ScopeId, ScopeKind, ScopeRef, Seed, Grant, Timestamp } from "./scope.ts";
+import type { FieldValue, GenesisFieldValue, SignedIntent } from "./intent.ts";
 import type { RefusalReason } from "./result.ts";
 import type { CapabilityName } from "./capability.ts";
 import type { Evidence } from "./evidence.ts";
 import type { ObservationUse } from "./observation.ts";
 
-export interface Entry {
+interface EntryBody {
   v: 1;
-  at: ScopeRef;
   seq: number;                 // 0 for genesis, then +1
   prev: Digest | null;
   time: Timestamp;             // section 5.3
@@ -22,9 +21,27 @@ export interface Entry {
   input: Input;                // exactly one
   uses: readonly FactUse[];    // foreign entries read while judging
   prepared: readonly Prepared[];   // each rule evaluated: name, input digest, result
-  effects: readonly Effect[];  // derived
+  effects: readonly GenesisEffect[];  // typed encoded self is resolved only after sealing
   sends: readonly Send[];      // derived; each has an ordinal n
 }
+
+/** Genesis has no self-hashing sequence header. */
+export interface GenesisEntry extends EntryBody { seq: 0; prev: null; input: GenesisInput }
+/** Every later entry binds its sequence by the already sealed genesis. */
+export interface SequenceEntry extends EntryBody { genesis: Digest; input: Exclude<Input, GenesisInput>; effects: readonly Effect[] }
+export type Entry = GenesisEntry | SequenceEntry;
+
+interface GenesisInputBody {
+  type: "genesis"; seed: Seed; nonce: GenesisNonce; kind: string;
+  founding: SignedIntent | null;
+  n: number | null; message: Request | null;
+  decision: "applied" | "refused";
+}
+/** The receiving scope records the source's checked genesis kind before hashing its input. */
+export type GenesisInput = GenesisInputBody & (
+  | { source: null; sourceKind: null }
+  | { source: FactRef; sourceKind: ScopeKind }
+);
 
 /**
  * Why a refused delivery was refused (section 4.2): a code and, where one
@@ -50,23 +67,18 @@ import type { FloorInput } from "./floor.ts";
 
 export type Input =
   | FloorInput
-  | { type: "genesis"; seed: Seed; inc: Incarnation;
-      kind: string;                             // the genesis act of the pinned definition (section 4.1)
-      "founding": SignedIntent | null;            // a repository's directory only
-      source: FactRef | null; n: number | null; // the creator's entry and send, for a child
-      message: Request | null;                  // the creation request, for a child
-      decision: "applied" | "refused" }
+  | GenesisInput
   | { type: "act"; signed: SignedIntent; authority: readonly Grant[];   // the one grant judged
       presented: Record<string, FactRef>;       // the facts presented beside the intent, by the names the act declares (section 6.4)
       observed?: readonly ObservationUse[] }    // further observations that the judgment read (sections 4.1 and 16.1)
-  | { type: "delivery"; from: FactRef; n: number; message: Request;
+  | { type: "delivery"; from: FactRef; sourceKind: ScopeKind; n: number; message: Request;
       decision: "applied" | "refused" | "superseded"; reason?: Reason;
       late?: { reason: string } }              // an applied replacement branch, not a refused guard
-  | { type: "delivery"; from: FactRef; n: number; message: Result;
+  | { type: "delivery"; from: FactRef; sourceKind: ScopeKind; n: number; message: Result;
       clause: "applied" | "refused" | "superseded" | "conflict";
       observed?: readonly ObservationUse[] }    // as for an act
-  | { type: "delivery"; from: FactRef; n: number; message: Control }
-  | { type: "delivery"; from: FactRef; n: number; message: Advisory }
+  | { type: "delivery"; from: FactRef; sourceKind: ScopeKind; n: number; message: Control }
+  | { type: "delivery"; from: FactRef; sourceKind: ScopeKind; n: number; message: Advisory }
   | { type: "diagnosis"; of: { seq: number; n: number };
       finding: "undelivered" | "delivery-unavailable";
       attempts: readonly Attempt[] }            // section 7.4
@@ -105,9 +117,9 @@ export interface Control  { class: "control";  type: "confirm"; genesis: FactRef
 export interface Advisory { class: "advisory"; type: "index" | "notify"; body: unknown }
 
 /** One dispatch of a send and how it was answered. "none": no answer, or no recorded completion. */
-export interface Attempt  { at: Timestamp; answer: "none" | "wrong-incarnation" | "not-found" | "retry" }
+export interface Attempt  { at: Timestamp; answer: "none" | "wrong-genesis" | "not-found" | "retry" }
 
-export interface FactUse { fact: FactRef; content: Digest }
+export interface FactUse { fact: FactRef; content: Digest; kind: ScopeKind }
 
 /** One rule expression evaluated in preparation (section 5.2, step 5). */
 export interface Prepared { rule: string; input: Digest; result: boolean }
@@ -161,6 +173,14 @@ export type Effect =
       result: "opened" | "confirmed" | "refused" | "unknown"; selected: boolean | null }   // section 4.3
   | { effect: "index"; from: FactRef; fields: Record<string, FieldValue> }              // a projection row in the directory
   | { effect: "attention"; item: number; members: readonly MemberRef[]; reason: string };
+
+/** Only a genesis draft may encode its own sequence in declared effect positions. */
+export type GenesisEffect = Exclude<Effect, { effect: "ref" | "value" | "relation" | "party" | "list" }>
+  | { effect: "ref"; item: number; slot: string; to: GenesisFieldValue | null }
+  | { effect: "value"; item: number; slot: string; value: GenesisFieldValue | null }
+  | { effect: "relation"; owner: ScopeRef | GenesisSelfRef; item: number; name: string; state: string; revision: number }
+  | { effect: "party"; item: number; slot: string; member: { membership: ScopeRef | GenesisSelfRef; member: MemberRef["member"] } | null }
+  | { effect: "list"; item: number; slot: string; change: "add" | "remove"; member: { membership: ScopeRef | GenesisSelfRef; member: MemberRef["member"] } };
 
 // Views of an entry, built after sealing. None is part of the entry's bytes (section 3, point 5).
 

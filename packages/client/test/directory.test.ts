@@ -1,10 +1,10 @@
 /** Scripted navigation reads, not Native origin/authority or browser proof. */
 import { expect, test, vi } from "vitest";
-import type { Head, Item, ItemQuery, ItemQueryRead, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { itemQueryArgument, itemQueryDigest, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { Head, Item, ItemQuery, ItemQueryRead, ScopeKind, ScopeRef, Summary } from "@generalbusiness/dap-contract";
+import { itemQueryArgument, itemQueryDigest, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { activeDirectory, partitionIndexes, type DirectoryReader } from "../src/index.ts";
 
-const ref = (c: string, kind: ScopeRef["kind"] = "directory"): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: textDigest(c), creator: null, cause: textDigest(c), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(c.charCodeAt(0))), kind });
+const ref = (c: string, kind: ScopeKind = "directory"): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: textDigest(c), creator: null, cause: textDigest(c), ordinal: 0 }), genesis: textDigest(`TEST genesis ${c.charCodeAt(0)}`) });
 const root = ref("a"), membership = ref("b", "membership"), p = ref("c"), q = ref("d");
 const head = (seq: number): Head => ({ seq, hash: `sha256:${"a".repeat(64)}` });
 const item = (id: number, type: string, state: string, refs: Item["refs"] = {}, values: Item["values"] = {}): Item => ({ id, type, state, revision: 0, opened: null, parties: {}, refs, values, attributed: [] });

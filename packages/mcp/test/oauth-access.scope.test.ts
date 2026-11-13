@@ -12,7 +12,7 @@ import { hostedRolePort, HostedAgent, type HostedRoleRead } from "../src/hosted.
 const RESOURCE = "https://room.example/mcp?connector=claude";
 const GRANT = b64url(new Uint8Array(32).fill(1));
 const SECRET = b64url(new Uint8Array(32).fill(2));
-const MEMBERSHIP: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+const MEMBERSHIP: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 const START = Date.parse("2099-01-01T00:00:00Z");
 
 /** Scripted same-head RPC facts; SQL/candidate custody below are production, Native membership is not. */

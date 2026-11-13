@@ -338,7 +338,7 @@ is nonsecret JSON with exactly these fields:
 | `v` | `3` |
 | `origin` | The Worker's canonical public origin. `dap-demo` uses `https://dap-demo.inguz.workers.dev`. |
 | `deployment` | The Worker's actual `DEPLOYMENT` value. |
-| `register` | The full reference of the installed register, `{ inc, kind, scope }`. A scope ID alone does not work. |
+| `register` | The full reference of the installed register, `{ scope, genesis }`. A scope ID alone does not work. |
 | `definition` | `platform:register@26` for the new default, or retained `platform:register@17`. |
 
 The register must be open, and its recorded host must be `artifacts`. Its

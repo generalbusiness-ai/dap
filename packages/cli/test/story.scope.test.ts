@@ -226,7 +226,7 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>, metadat
     const live = await run(rita, "verify", scope);
     expect([scope, live.code, live.lines[0]], live.lines.join("\n")).toEqual([scope, 0, consistent]);
     // The destination is folded through the publication's last outcome, entry 7.
-    if (scope === "destination") expect(live.lines[2]).toMatch(/, destination, through entry 7 \(sha256:/);
+    if (scope === "destination") expect(live.lines[2]).toMatch(/, genesis sha256:[0-9a-f]{64}, through entry 7 \(sha256:/);
   }
 
   // One real room and key, not 1,000 fixtures. Fresh command Contexts share

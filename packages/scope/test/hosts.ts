@@ -251,7 +251,7 @@ export function ownHost(): Stand {
   return {
     host: "artifacts", namespace: NAMESPACE, stand,
     bindings: (registerScope) => ({ ARTIFACTS_CONFIG: canonicalize({ registerScope, namespace: NAMESPACE, host: HOST, maxBytes: MAX_BYTES, credentialIdentity: "adapter-attempt" }), ARTIFACTS: stand.ns }),
-    outside: (given, sql, bindings) => artifactsOutside(given, sql, bindings, stand.fetch, snapshotReaderOf(env.PLATFORM)),
+    outside: (given, sql, bindings) => artifactsOutside(given, sql, bindings, stand.fetch, given.bounds ? snapshotReaderOf(env.PLATFORM, { maxBytes: given.bounds.entryBytes, milliseconds: Math.floor(given.bounds.fetchSeconds * 1000) }) : undefined),
     secrets: () => [...stand.tokens.keys()],
   };
 }
@@ -267,7 +267,7 @@ export async function gitHub(): Promise<Stand> {
       GITHUB_APP_CONFIG: canonicalize({ issuer: "Iv1.scripted-edit", installationId: 99, account: ACCOUNT, maxBytes: MAX_BYTES, registerScope, privateRepositories: false, publicReads: true, credentialIdentity: "adapter-attempt" }),
       GITHUB_APP_PRIVATE_KEY: privateKey, GITHUB_CREATION_TOKEN: CREATION,
     }),
-    outside: (given, sql, bindings) => gitHubOutside(given, sql, bindings, stand.fetch, snapshotReaderOf(env.PLATFORM)),
+    outside: (given, sql, bindings) => gitHubOutside(given, sql, bindings, stand.fetch, given.bounds ? snapshotReaderOf(env.PLATFORM, { maxBytes: given.bounds.entryBytes, milliseconds: Math.floor(given.bounds.fetchSeconds * 1000) }) : undefined),
     secrets: () => [CREATION, privateKey, ...stand.minted],
   };
 }

@@ -1,4 +1,4 @@
-import type { FieldValue } from "@generalbusiness/dap-contract";
+import type { Effect, FieldValue, GenesisEffect } from "@generalbusiness/dap-contract";
 import { snapshotInput, stagedRefName, type AncestryCheck } from "@generalbusiness/dap-derive";
 import type { EffectAnswer, EffectRequest } from "@generalbusiness/dap-scope";
 import { Host } from "./graph.ts";
@@ -12,7 +12,8 @@ export class WorkspaceStandIn extends Host {
   }
   override send(request: EffectRequest): EffectAnswer | null {
     this.asked.push(request.kind);
-    const records = request.origin.entry.effects.filter(effect => effect.effect === "record");
+    const effects: readonly (Effect | GenesisEffect)[] = request.origin.entry.effects;
+    const records = effects.filter((effect): effect is Extract<Effect, { effect: "record" }> => effect.effect === "record");
     const answer = (body: FieldValue, basis: "own-answer" | "read" = "own-answer"): EffectAnswer => ({ result: "confirmed", evidence: { basis, body } });
     if (request.kind === "head") return answer({ commit: this.head });
     if (request.kind === "fork") {

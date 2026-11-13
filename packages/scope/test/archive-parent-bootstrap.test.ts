@@ -4,7 +4,7 @@
  * of Native validation or replay of its contents. */
 import { expect, onTestFinished, test, vi } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Head } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { GitRefusal, Reader, idOf, objectId, parseCommit } from "@generalbusiness/dap-git";
 import { captureJournalParentFrontier, journalRef, JOURNAL_SELECTION_BYTES, buildJournalPass, type JournalObject } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCapacityRefusal, type ArchiveCost } from "../src/archive-budget.ts";
@@ -20,6 +20,7 @@ import { archiveAuthorityAnchors, archiveAuthorityBasis, archiveAuthorityPolicie
 import { archiveDefinition, archivePolicies, archiveSql } from "./support/archive.ts";
 import type { TestScope } from "./worker.ts";
 import { rita, type Lane } from "./fixtures-native.ts";
+import { ownReplayContext } from "./support/own-replay-context.ts";
 
 // The real Artifacts adapter requires the repository id to equal its name.
 const repository = { host: "artifacts", namespace: "bootstrap-fixture", name: "bootstrap", id: "bootstrap" };
@@ -153,7 +154,7 @@ test("missing v2 parent state seeds once, publishes legacy anchors and then appe
   } };
   for (const wrong of [
     { ...expected, commit: "0".repeat(40) },
-    { ...expected, at: { ...lane.at, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" as const } },
+    { ...expected, at: { ...lane.at, genesis: `sha256:${"aa".repeat(32)}` as const } },
     { ...expected, through: { ...receipt.through, hash: digestBytes(utf8("TEST wrong head")) } },
   ]) {
     await expect(captureJournalParentFrontier(wrong, local, new ArchiveBudget())).rejects.toBeDefined();
@@ -480,7 +481,7 @@ test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after 
   expect(birth.input.type).toBe("genesis");
   if (birth.input.type !== "genesis") throw Error("Actual native birth required");
   expect(birth.input.decision).toBe("applied"); expect(scopeIdOf(birth.input.seed)).toBe(lane.at.scope);
-  expect(birth.at).toEqual(lane.at); expect(birth.input.inc).toBe(lane.at.inc); expect(birth.input.seed.kind).toBe(lane.at.kind);
+  expect(entryHash(birth)).toBe(lane.at.genesis); expect(birth.input.seed.kind).toBe("directory");
   const birthSeed = canonicalize(birth.input.seed);
   const diagnostics: { state: string; cost: ArchiveCost; fixedFinish: ArchiveFixedFinish | null; capacityRefusal: ArchiveCapacityRefusal | null }[] = [];
   const info = console.info, log = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
@@ -498,12 +499,16 @@ test.for([0, 1] as const)("unpublished v2 cutoff %i migrates exactly next after 
       }, clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS,
       policies: { registry: archiveAuthorityPolicies(lane, archivePolicies) },
       admit: (at, admittedSeed) => canonicalize(at) === canonicalize(lane.at)
-        && admittedSeed.kind === lane.at.kind && scopeIdOf(admittedSeed) === lane.at.scope && canonicalize(admittedSeed) === birthSeed,
+        && admittedSeed.kind === "directory" && scopeIdOf(admittedSeed) === lane.at.scope && canonicalize(admittedSeed) === birthSeed,
       provider: host.provider, budget: () => budget,
       target: { resolve: async () => { order.push("target"); return repository; } },
       sources: async (_after, _through, sameBudget, exact) => {
         expect(sameBudget).toBe(budget); order.push(exact ? "sources:pending" : "sources:plan");
-        return { pins: archiveAuthorityBasis(lane)!.pins, prepare: async (seq, actualBudget) => {
+        // Production takes the replay context from its target read; this
+        // stand-in admits the lane's own genesis outside the pass budget.
+        return { pins: archiveAuthorityBasis(lane)!.pins,
+          replayContext: ownReplayContext(archiveSql(state), lane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
+          prepare: async (seq, actualBudget) => {
           expect(actualBudget).toBe(budget); order.push(`prepare:${seq}`);
         } };
       },

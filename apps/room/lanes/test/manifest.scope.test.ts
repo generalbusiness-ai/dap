@@ -22,8 +22,8 @@ test("T3, a manifest and its evidence: it is complete only by the plan's recorde
   // and from their own capability records. It shows nothing about a real host, a walk of real commits, a real rules scope, or what
   // a destination judges and publishes.
   const { r, reviewer } = await delegatedRoom();
-  const rulesPeer = new Peer("rules", "platform:rules", await r.rules.at());
-  const destinationPeer = new Peer("destination", "platform:destination", await r.G.at());
+  const rulesPeer = await Peer.of("rules", "platform:rules", r.rules);
+  const destinationPeer = await Peer.of("destination", "platform:destination", r.G);
   net.hold = e => "scope" in e.to && e.to.scope === rulesPeer.at.scope;
   const G = await r.lane(rita, "open-issue", issue, DIGESTS.issue, { title: "A goal", conditions: ["it works"] });
   // Everything below names the entry that filed the goal as the goal's conditions: the genesis of the issue lane, of the kind `file`.

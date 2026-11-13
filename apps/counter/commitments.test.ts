@@ -54,7 +54,7 @@ test("commitments declaration has a distinct exact canonical pin and finite own-
   expect(canonicalize(parseStrict(bytes.toString("utf8")))).toBe(canonicalize(countingCommitments));
   expect(parseStrict(bytes.toString("utf8"))).toEqual(countingCommitments);
   expect(definitionDigest(countingCommitments)).toBe(COUNTING_COMMITMENTS_DEFINITION);
-  expect(COUNTING_COMMITMENTS_DEFINITION).not.toBe("sha256:435d9f5745048183d3cf0392ce909cd76909fd69ee368dfc57e142ba96af1d09");
+  expect(COUNTING_COMMITMENTS_DEFINITION).not.toBe("sha256:3512c1e4ff01f097f06bbdd05c5897ae7d589420a92b74f10a4dbb53af6094fb");
   if (checked.ok) {
     expect(checked.definition.digest).toBe(COUNTING_COMMITMENTS_DEFINITION);
     expect(checked.definition.deadlines).toEqual({ board: { open: 1 }, promise: { pledged: 1 } });

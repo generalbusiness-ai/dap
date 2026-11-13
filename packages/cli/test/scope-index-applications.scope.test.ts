@@ -72,20 +72,20 @@ test("Native installed-release listing uses a real member session and skips non-
     const joined = await life.wait(() => M.did(una, "join", { fields: invitationRedemptionFields(C.membership, membership, invitation, una.key, invitationSecret) }));
     const inbox = await life.wait(() => M.created(joined));
     await driveFixture([R, D, M, A, G, ownerInbox, lane, inbox], life.wait);
-    const inboxAt = await life.wait(() => inbox.at());
+    await life.wait(() => inbox.at());
     expect((await life.wait(() => A.entries())).some(entry => entry.input.type === "act" && entry.input.signed.intent.actor === una.key)).toBe(false);
     const scopes = await life.wait(() => Promise.all([R, D, M, A, G, ownerInbox, lane, inbox].map(async node => {
       const first = (await node.sealed())[0];
       if (!first || first.entry.input.type !== "genesis" || first.entry.input.decision !== "applied") throw Error("Manifest scopes need their actual applied native genesis.");
-      return { at: first.entry.at, genesis: first.hash };
+      return { at: { scope: scopeIdOf(first.entry.input.seed), genesis: first.hash }, kind: first.entry.input.seed.kind };
     })));
-    expect(new Set(scopes.map(row => row.at.kind))).toEqual(new Set(["register", "directory", "membership", "rules", "destination", "inbox", "lane"]));
+    expect(new Set(scopes.map(row => row.kind))).toEqual(new Set(["register", "directory", "membership", "rules", "destination", "inbox", "lane"]));
     const manifest: IndexManifest = { v: 1, service: "https://scopes.test", root: directory,
       scopes: scopes.sort((left, right) => left.at.scope < right.at.scope ? -1 : left.at.scope > right.at.scope ? 1 : 0) };
     const manifestBytes = utf8(canonicalize(manifest)), manifestPath = "/TEST-listing/manifest.json", outputPath = "/TEST-listing/releases.json";
     const custody = memoryStore(), key = "TEST-listing-observer";
     await custody.keep(key, una.secret);
-    const config: Config = { v: 1, service: manifest.service, key, repository: { directory, membership, rules: A.name, destination: G.name, inbox: inbox.name } };
+    const config: Config = { v: 2, service: manifest.service, key, repository: { directory, membership, rules: A.name, destination: G.name, inbox: inbox.name } };
     let withMembership = false, published: Uint8Array | undefined, token: string | undefined;
     const calls: { method: string; scope: string; authority: "session-request" | "Session" | "Signed" }[] = [];
     const fetch: Fetch = async (url, init) => {
@@ -130,7 +130,7 @@ test("Native installed-release listing uses a real member session and skips non-
     const refused = JSON.parse(new TextDecoder().decode(published)) as ListingReport;
     expect(refused.applications).toEqual([]);
     expect(refused.errors).toEqual([{ scope: rulesAt, why: "forbidden" }]);
-    const skipped = manifest.scopes.filter(({ at }) => at.kind !== "rules").map(({ at }) => ({ scope: at, status: "not-applicable" }));
+    const skipped = manifest.scopes.filter(({ kind }) => kind !== "rules").map(({ at }) => ({ scope: at, status: "not-applicable" }));
     expect(refused.notApplicable).toEqual(skipped);
     const signedRequestCounts = { sessionRequests: calls.filter(call => call.method === "POST").length, summaryGets: calls.filter(call => call.method === "GET").length };
 
@@ -144,7 +144,7 @@ test("Native installed-release listing uses a real member session and skips non-
     expect(admitted.notApplicable).toEqual(skipped);
     expect(admitted.applications).toEqual([{ scope: laneAt, installItem: { scope: rulesAt, item: job },
       release: f.packet.ids.release, publisher: f.packet.package.release.manifest.publisher, host: "git.example" }]);
-    expect(inboxAt.kind).toBe("inbox");
+    expect(await inbox.kind()).toBe("inbox");
     expect(typeof token === "string" && token.length > 0).toBe(true);
     expect(token !== undefined && (output + JSON.stringify(positive)).includes(token)).toBe(false);
     expect(output.includes(invitationSecret)).toBe(false);

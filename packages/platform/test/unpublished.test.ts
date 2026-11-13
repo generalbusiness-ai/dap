@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import type { Digest, FactRef, FieldValue, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { intentDigest, scopeIdOf, signIntent, newGenesisNonce } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, runnable, type Fetched, type PlatformRules, type RuleGiven } from "@generalbusiness/dap-derive";
-import { Ledger, T0, keys, t } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, keys, t, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { platform, repositoryName, firstHeadCommit, UNPUBLISHED_COHORT as U, REPOSITORY_BINDING_COHORT as B } from "../src/index.ts";
 import { checkedPlatformData, written } from "./fixtures.ts";
 
@@ -23,7 +23,7 @@ function register(host: string, namespace = "TEST ignored under none", family: C
   const observed: PlatformRules = { ...native, rules: { ...native.rules, "host-choice": { ...guard, run: (given: RuleGiven) => {
     const checked = guard.run(given); hostChecks.push(checked); return checked;
   } } } };
-  const judgment = judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(21)), seed, creation: signed },
+  const judgment = judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(21)), seed, creation: signed },
     { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: observed });
   if (judgment.result === "write") ledger.seal(judgment.draft);
   return { ledger, judgment, hostChecks };
@@ -37,19 +37,19 @@ function child(parent: Ledger, seq: number, ordinal: number, named: PlatformDefi
   const send = parent.entries[seq]!.entry.sends.find(send => send.n === ordinal)!;
   const seed = send.to as Seed, definition = checkedPlatformData(platform(named)!.data);
   const ledger = new Ledger(definition, `platform:${seed.kind}`);
-  ledger.seal(written(judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(seed.kind === "directory" ? 20 : 16)),
+  ledger.seal(written(judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(seed.kind === "directory" ? 20 : 16)),
     to: seed, from: parent.fact(seq), n: send.n, message: send.message as Request }, {
     clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts, prepared: [], own: ledger.own,
-    source: { entry: parent.entries[seq]!.entry, under: parent.under }, platform: code(named),
+    source: { entry: parent.entries[seq]!.entry, under: parent.under, sequence: fixtureSequence(parent) }, platform: code(named),
   })));
   return ledger;
 }
 function take(target: Ledger, named: PlatformDefinition, from: Ledger, seq: number, ordinal: number, facts: readonly Fetched[] = []) {
   const entry = from.entries[seq]!.entry, send = entry.sends.find(send => send.n === ordinal)!;
   const of = send.message.class === "result" ? send.message.of : null;
-  const judgment = judgeDelivery(target.state, target.definition, { to: send.to, from: factRefOf(entry), n: ordinal, message: send.message }, {
+  const judgment = judgeDelivery(target.state, target.definition, { to: send.to, from: from.fact(seq), n: ordinal, message: send.message }, {
     clock: clockOf(target.state, target.now), bounds: target.bounds, facts, prepared: [], own: target.own,
-    source: { entry, under: from.under }, origin: of ? target.entries[of.from.seq]!.entry : null, platform: code(named),
+    source: { entry, under: from.under, sequence: fixtureSequence(from) }, origin: of ? target.entries[of.from.seq]!.entry : null, platform: code(named),
   });
   target.seal(written(judgment));
 }
@@ -66,7 +66,7 @@ test("an opt-in unpublished destination binds once, authenticates its directory 
   // mint/write answers below are scripted; no provider or deployed room runs.
   const R = register("none", "", B).ledger;
   expect(found(R, {}, B).result).toBe("write");
-  const facts = [{ fact: R.fact(1), entry: R.last, under: R.under }];
+  const facts = [{ fact: R.fact(1), entry: R.last, under: R.under, sequence: fixtureSequence(R) }];
   const D = child(R, 1, 0, B.directory, facts);
   take(R, B.register, D, 0, D.last.sends.find(send => send.message.class === "result")!.n);
   take(D, B.directory, R, R.head.seq, 0, facts);
@@ -130,7 +130,7 @@ test("Register21 rejects an unknown host, normalizes none, and settles a hosted 
     evidence: { basis: "own-answer", body: { name: repository.name, id: repository.id } } }, {
     clock: clockOf(hosted.state, hosted.now), bounds: hosted.bounds, platform: code(U.register), own: hosted.own,
   })));
-  const facts = [{ fact: hosted.fact(1), entry: hosted.entries[1]!.entry, under: hosted.under }];
+  const facts = [{ fact: hosted.fact(1), entry: hosted.entries[1]!.entry, under: hosted.under, sequence: fixtureSequence(hosted) }];
   const D = child(hosted, 2, 0, U.directory, facts);
   expect(D.last.input).toMatchObject({ type: "genesis", decision: "applied", seed: { definition: U.directory } });
   const answer = D.last.sends.find(send => send.message.class === "result")!;
@@ -150,7 +150,7 @@ test("a native unpublished found directly creates its directory, applies its res
   expect(R.last.sends[0]!.message).toMatchObject({ class: "request", type: "create", body: { fields: { claim: { self: true } } } });
   const body = R.last.sends[0]!.message as Request;
   expect(Object.hasOwn((body.body as { fields: object }).fields, "repository")).toBe(false);
-  const claim: FactRef = R.fact(1), facts = [{ fact: claim, entry: R.last, under: R.under }];
+  const claim: FactRef = R.fact(1), facts = [{ fact: claim, entry: R.last, under: R.under, sequence: fixtureSequence(R) }];
   const D = child(R, 1, 0, U.directory, facts);
   expect(D.last.input).toMatchObject({ type: "genesis", decision: "applied", seed: { definition: U.directory } });
   const answer = D.last.sends.find(send => send.message.class === "result")!;
@@ -170,15 +170,15 @@ test("a native unpublished found directly creates its directory, applies its res
   if (resultInput.type !== "delivery" || resultInput.message.class !== "result") throw Error("Native applied result required");
   const directoryGenesis = D.last.input;
   if (directoryGenesis.type !== "genesis") throw Error("Native directory genesis required");
-  const wrongIncarnation = { ...resultInput, from: { ...resultInput.from, at: { ...resultInput.from.at, inc: R.at.inc } } };
+  const wrongGenesis = { ...resultInput, from: { ...resultInput.from, at: { ...resultInput.from.at, genesis: R.at.genesis } } };
   const refusedResult = { ...resultInput, message: { ...resultInput.message, outcome: "refused" as const } };
   const original = R.own(1)!;
-  const unrelated = { ...resultContext, own: () => ({ ...original, hash: R.fact(0).hash }) };
-  const wrongOrigin = { ...resultContext, own: () => ({ ...original, entry: { ...original.entry, input: directoryGenesis } }) };
+  const unrelated = { ...resultContext, own: Object.assign(() => ({ ...original, hash: R.fact(0).hash }), { sequence: resultContext.own.sequence }) };
+  const wrongOrigin = { ...resultContext, own: Object.assign(() => ({ ...original, entry: D.last }), { sequence: resultContext.own.sequence }) };
   expect([
     accepts(resultContext, { ...D.fact(0), seq: 1 }),
     accepts(resultContext, { ...D.fact(0), hash: R.fact(0).hash }),
-    accepts({ ...resultContext, input: wrongIncarnation }, D.fact(0)),
+    accepts({ ...resultContext, input: wrongGenesis }, D.fact(0)),
     accepts(unrelated, D.fact(0)),
     accepts(wrongOrigin, D.fact(0)),
     accepts({ ...resultContext, input: refusedResult }, D.fact(0)),

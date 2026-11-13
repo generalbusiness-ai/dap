@@ -144,6 +144,12 @@ export interface LogPage { scope: ScopeRef; definition: Digest | PlatformDefinit
  * give it, and no other kind states the member. A value in
  * `artroom-definition-1` is a definition, and is kept under the kind
  * `definition`. A value is never removed.
+ * `birth`: the first entry of a foreign sequence that an entry of this
+ * scope uses at a later entry (rulings 4f697a7a and ae48dd39). Its `digest`
+ * is the sequence's genesis digest: an entry hash, not a content digest. The
+ * scope keeps the bytes as an `entry` row under their content digest, and an
+ * association from the sequence to that row. A reader admits the bytes with
+ * the use's full sequence reference, its scope and its genesis.
  * `bytes` is canonical JSON text.
  */
-export interface RetainedInput { kind: "definition" | "entry" | "rule" | "text" | "snapshot" | "value"; digest: Digest; bytes: string; under?: string; domain?: string }
+export interface RetainedInput { kind: "definition" | "entry" | "rule" | "text" | "snapshot" | "value" | "birth"; digest: Digest; bytes: string; under?: string; domain?: string }

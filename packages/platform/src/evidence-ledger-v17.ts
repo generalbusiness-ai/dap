@@ -30,7 +30,7 @@ export function evidenceLedgerOfV17(state: LedgerState): Item | null {
   try {
     const own = state.scope(), current = branch(state), ledger = singleton(state, "evidence-ledger", ["ready"]);
     if (!own) return current || ledger ? fault() : null;
-    if (own.at.kind !== "destination" || !current) return fault();
+    if (own.kind !== "destination" || !current) return fault();
     const reference = current?.refs["evidenceLedger"];
     if (empty(reference)) {
       if (ledger || !empty(current.values["rulesCertificateRequest"]) || !empty(current.values["rulesCertificateDeclined"])) return fault();

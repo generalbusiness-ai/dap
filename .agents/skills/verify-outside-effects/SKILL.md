@@ -12,7 +12,7 @@ A duplicate mutation could repeat a Git push or child-creation request.
 
 ## Coverage
 
-The correspondence review covers commit `c9f4dff6267d12d89d1215a0d894e7ec2f5f2435`. `verification/state-machines/coverage.json` records exact source hashes. BR13 moves the publication-origin version query outside the protected functions; those functions stay byte-identical to the S4 correspondence. The 9 November model and T19 source checks pass. Planner ruling `12c4f5fb` requires no repeated fault control for this unchanged boundary. See the [BR13 note](../../../notes/implementation/2026-11-09-br13-version-questions.md) for the comparison and retained evidence.
+The correspondence review covers commit `99ed4a7e143f`, the identifier cutover. In the protected functions the cutover changes one line: `Operations.#pass` passes `ownOf(store, this.#scope.localSequence()!)` to `beforeSend`. See the [cutover note](../../../notes/implementation/cd-dropped-kind-checks.md#gate-and-the-effects-model). Before the cutover the review covered `c9f4dff6267d12d89d1215a0d894e7ec2f5f2435`. `verification/state-machines/coverage.json` records exact source hashes. BR13 moves the publication-origin version query outside the protected functions; those functions stay byte-identical to the S4 correspondence. The 9 November model and T19 source checks pass. Planner ruling `12c4f5fb` requires no repeated fault control for this unchanged boundary. See the [BR13 note](../../../notes/implementation/2026-11-09-br13-version-questions.md) for the comparison and retained evidence.
 
 - `packages/scope/src/operations.ts`: `Operations.#pass`, `Operations.#send`, `Operations.#answer`, `Operations.#offer`.
 - `packages/scope/src/sqlite.ts`: `markSent`.

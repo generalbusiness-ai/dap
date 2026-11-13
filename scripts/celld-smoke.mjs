@@ -80,7 +80,7 @@ const ref = (value, kind) => value && typeof value === "object" && value.kind ==
   && typeof value.inc === "string" && /^in_[a-z2-7]{26}$/.test(value.inc);
 const publicRef = value => ({ scope: value.scope, inc: value.inc, kind: value.kind });
 export const celldAnswersVersionQuestion = async (named, question) => (await cli()).answersVersionQuestion(named, question);
-const planIsOurs = async (config, base) => config?.v === 1 && config.service === base && config.plan?.service === base
+const planIsOurs = async (config, base) => config?.v === 2 && config.service === base && config.plan?.service === base
   && await celldAnswersVersionQuestion(config.plan.definition, "celldSmokeOwnedPlanRegister") && scope(config.plan.register)
   && config.plan.founding?.intent?.fields?.host === "none" && config.plan.founding.intent.fields.namespace === "";
 

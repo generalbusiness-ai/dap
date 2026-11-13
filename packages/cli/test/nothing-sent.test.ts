@@ -2,7 +2,7 @@
  * The real commands run over a memory store. The service is a STAND-IN: `fetch` scripts each lost reply and refusal. */
 import { expect, test } from "vitest";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { b64url, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { COUNTING_COHORT } from "@generalbusiness/dap-platform";
 import { claim, command, installPlanned, memoryStore, type Config, type Context, type PendingClaim } from "../src/index.ts";
 import { applicationCommands } from "../src/application-install-runtime.ts";
@@ -11,7 +11,7 @@ const SERVICE = "https://nothing-sent.test";
 const NOW = Date.parse("2026-11-01T12:00:00Z");
 const UNKNOWN = "This run sent nothing, and an earlier send of this plan has no known outcome. A new plan can make a second register.";
 const lostReply = (async () => { throw new Error("the reply never came"); }) as unknown as Fetch;
-const ref = (kind: "register" | "directory" | "membership", name: string) => ({ kind, inc: newIncarnation(new Uint8Array(16).fill(3)), scope: scopeIdOf({ v: 1, kind, definition: "platform:register@8", creator: null, cause: textDigest(name), ordinal: 0 }) });
+const ref = (kind: "register" | "directory" | "membership", name: string) => ({ genesis: textDigest("TEST genesis 3"), scope: scopeIdOf({ v: 1, kind, definition: "platform:register@8", creator: null, cause: textDigest(name), ordinal: 0 }) });
 
 /** A plan whose one send lost its reply: the attempted marker is on the plan. */
 async function attemptedPlan(planned: readonly string[] = []) {
@@ -109,7 +109,7 @@ test("a stop over a pending claim says that the earlier send has no known outcom
   const register = ref("register", "claim");
   await store.keep("device", new Uint8Array(32).fill(9));
   const intent = textDigest("the digest of an older claim");
-  const save = (pending: PendingClaim) => store.save({ v: 1, service: SERVICE, key: "device", register, claim: pending });
+  const save = (pending: PendingClaim) => store.save({ v: 2, service: SERVICE, key: "device", register, claim: pending });
   const reads = (async () => Response.json({ ok: false, reason: "not-found" }, { status: 404 })) as unknown as Fetch;
   const ctx: Context = { store, now: () => NOW, fetch: reads, tries: 1 };
   const said = "This step sent nothing, and an earlier send of this claim has no known outcome.";
@@ -130,7 +130,7 @@ test("an application request with no signing key says what this call did", async
   const store = memoryStore();
   const membership = ref("membership", "application");
   const directory = ref("directory", "application");
-  await store.save({ v: 1, service: SERVICE, key: "device", repository: { directory, membership, rules: directory.scope, destination: membership.scope } });
+  await store.save({ v: 2, service: SERVICE, key: "device", repository: { directory, membership, rules: directory.scope, destination: membership.scope } });
   const outcome = await applicationCommands({ store, now: () => NOW }, {} as never)("install_application", { idempotencyKey: "request-1" });
   expect(outcome).toEqual({ code: 1, lines: ["The configured signing key is unavailable. This call signed and sent nothing, and it did not read the record under this request key. Keep the original request key and arguments."] });
 });

@@ -60,7 +60,7 @@ export async function openSession(home: string, options: { fetch?: Fetch; now?: 
     },
     joined: async room => {
       const c = await store.config();
-      await store.save({ ...(c ?? { v: 1 as const, key: initial.key }), service: room.service, repository: room.repository, handle: room.handle });
+      await store.save({ ...(c ?? { v: 2 as const, key: initial.key }), service: room.service, repository: room.repository, handle: room.handle });
     },
     addRoot: async (root: Root) => {
       const c = await store.config();
@@ -108,7 +108,7 @@ export async function openSession(home: string, options: { fetch?: Fetch; now?: 
   const membershipOf = async (target: ScopeRef): Promise<ScopeRef | null> => {
     const config = await port.read();
     if (config.register?.scope === target.scope) {
-      if (!same(config.register, target)) return refuse("wrong-incarnation");
+      if (!same(config.register, target)) return refuse("wrong-genesis");
     }
     const root = config.roots?.find(root => root.scope === target.scope);
     // Match the generic engine: a root with no membership uses the room's

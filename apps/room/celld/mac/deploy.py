@@ -32,12 +32,11 @@ def github_repository_bindings(raw, namespace):
         require(isinstance(row, dict) and set(row) == {"destination", "repository", "branch"},
                 "invalid repository binding")
         destination, repository, branch = row["destination"], row["repository"], row["branch"]
-        require(isinstance(destination, dict) and set(destination) == {"scope", "inc", "kind"}
-                and destination["kind"] == "destination"
+        require(isinstance(destination, dict) and set(destination) == {"scope", "genesis"}
                 and isinstance(destination["scope"], str)
                 and re.fullmatch(r"sc_[a-z2-7]{51}[aq]", destination["scope"])
-                and isinstance(destination["inc"], str)
-                and re.fullmatch(r"in_[a-z2-7]{25}[aeimquy4]", destination["inc"]),
+                and isinstance(destination["genesis"], str)
+                and re.fullmatch(r"sha256:[0-9a-f]{64}", destination["genesis"]),
                 "invalid repository binding destination")
         require(isinstance(repository, dict) and set(repository) == {"host", "namespace", "name", "id"}
                 and repository["host"] == "github.com" and repository["namespace"] == namespace
@@ -52,7 +51,7 @@ def github_repository_bindings(raw, namespace):
                 and ".." not in full and not full.endswith(".")
                 and all(part and not part.startswith((".", "-")) and not part.endswith(".lock")
                         for part in full.split("/")), "invalid repository binding branch")
-        destination_key = (destination["scope"], destination["inc"])
+        destination_key = (destination["scope"], destination["genesis"])
         repository_key = (repository["id"], branch)
         require(destination_key not in destinations and repository_key not in repositories,
                 "ambiguous repository binding")

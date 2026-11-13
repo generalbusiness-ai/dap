@@ -83,7 +83,7 @@ test("hold@2 fixes a confirmed head then selects the actual first eligible fork;
   const creation = s.creation();
   const first = setup(s, creation, 1);
   expect(first).toMatchObject({ key: [1], state: "minting", values: { purpose: "setup", hold: s.hold, operation: creation, attempt: 1, mint: creation,
-    id: `workspace:h-${s.at.scope.slice(3, 35)}-${s.at.inc.slice(3)}-${s.hold}-${creation.split(":")[0]}-1`, ends: null, revocation: null } });
+    id: `workspace:h-${s.at.scope.slice(3, 35)}-${s.at.genesis.slice(7, 33)}-${s.hold}-${creation.split(":")[0]}-1`, ends: null, revocation: null } });
   expect(s.fork().values["seed"]).toEqual({ commit: COMMIT, from: "destination-head", fact: null, under: s.commitment });
   expect(opened(s.last)).toMatchObject([{ owner: HOLD_V2, kind: "fork", attempts: 3 }]);
   s.answered(creation, "unknown", {}, 1);

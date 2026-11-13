@@ -1,10 +1,11 @@
 /** Scenario v1 authoring over the maintained judges and fold, with scripted TEST grants. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, Digest, Entry, FieldType, FieldValue, Grant, Intent, KeyId, MemberId, MemberRef, ObservationUse, ScopeKind, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize, entryHash, intentDigest, type CheckedSequence, keyIdOfSecret, newGenesisNonce, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { alsoItems, applyEntry, clockOf, entryOf, judgeAct, judgeGenesis, judgeTimed, MemoryState, nextDue, prepareRules, readFields, timeMs, timeOf, validateDefinition } from "@generalbusiness/dap-derive";
-import type { ActJudgment, Draft, JudgeContext, ValidDefinition } from "@generalbusiness/dap-derive";
+import type { ActJudgment, Draft, JudgeContext, Own, ValidDefinition } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import type { Projection } from "./package.ts";
 import type { NativeInputFields } from "./field-input.ts";
 
@@ -58,9 +59,10 @@ export interface Teller<D extends DeclaredDefinition> {
 }
 interface Actor { readonly secret: Uint8Array; readonly key: KeyId; readonly member: MemberRef; readonly actions: readonly string[]; readonly principal: string | null }
 
-function scopeReference(kind: ScopeKind): ScopeRef {
+/** A labelled TEST scope of `kind`: a scripted sequence whose genesis is sealed at the story's start time (ruling 97583e65, item 9). */
+function scopeReference(kind: ScopeKind, start: Timestamp): ScopeRef {
   const seed: Seed = { v: 1, kind, definition: `sha256:${"0".repeat(64)}`, creator: null, cause: `sha256:${"1".repeat(64)}`, ordinal: 0 };
-  return { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(2)), kind };
+  return scriptedSequence(seed, start, 2).at;
 }
 const assertSame = (label: string, actual: unknown, expected: unknown): void => {
   if (canonicalize(actual) !== canonicalize(expected)) throw new Error(`${label}: the story's assertion does not match the judged result`);
@@ -87,6 +89,7 @@ export async function tell<const D extends DeclaredDefinition>(spec: StorySpec<D
   const reading = timeMs(held.time);
   if (reading === null) throw new Error("a story needs an explicit timestamp");
   let now: Timestamp = timeOf(reading), ordinal = 0;
+  const start = now;
   const actor = (name: string): Actor => {
     const who = actors.get(name);
     if (!who) throw new Error(`the story names no actor ${name}`);
@@ -100,11 +103,20 @@ export async function tell<const D extends DeclaredDefinition>(spec: StorySpec<D
     if (Object.keys(object).length === 1 && typeof object["$reference"] === "string") {
       const kind = object["$reference"];
       if (kind !== "membership" && kind !== "destination") throw new Error("scenario v1 supports membership and destination stand-ins only");
-      return scopeReference(kind);
+      return scopeReference(kind, start);
     }
     return Object.fromEntries(Object.entries(object).map(([key, child]) => [key, resolve(child)]));
   };
-  const own = (seq: number) => entries[seq] ?? null;
+  // The story's own sequence, admitted from its sealed genesis bytes as a scope admits any genesis.
+  let admitted: CheckedSequence | null = null;
+  const own: Own = Object.assign((seq: number) => entries[seq] ?? null, {
+    sequence: (): CheckedSequence | null => {
+      const born = entries[0];
+      if (admitted || !born || born.entry.input.type !== "genesis") return admitted;
+      admitted = admitSequenceGenesis(canonicalize(born.entry), { scope: scopeIdOf(born.entry.input.seed), genesis: born.hash }, PROPOSED_BOUNDS.entryBytes);
+      return admitted;
+    },
+  });
   const seal = (draft: Draft): Entry => {
     const entry = entryOf(state, draft, clockOf(state, now)), hash = entryHash(entry);
     applyEntry(state, definition, entry, hash, { bounds: PROPOSED_BOUNDS, own });
@@ -116,7 +128,7 @@ export async function tell<const D extends DeclaredDefinition>(spec: StorySpec<D
     assertSame(label, actual, resolve(expected.entries));
   };
   const grants = () => [...actors.values()].map(who => ({ current: true, grant: {
-    issued: { at: scopeReference("membership"), seq: 3, hash: `sha256:${"3".repeat(64)}` }, subject: who.member, key: who.key,
+    issued: { at: scopeReference("membership", start), seq: 3, hash: `sha256:${"3".repeat(64)}` }, subject: who.member, key: who.key,
     principal: who.principal === null ? null : actor(who.principal).member, actions: who.actions, within: state.scope()!.at,
     notAfter: null, fresh: null as unknown as ObservationUse,
   } satisfies Grant }));
@@ -159,12 +171,12 @@ export async function tell<const D extends DeclaredDefinition>(spec: StorySpec<D
       secrets.push(secret);
       if (usedKeys.has(key)) throw new Error("TEST actor keys must be distinct");
       usedKeys.add(key);
-      actors.set(name, { secret, key, member: { membership: scopeReference("membership"), member: `@${name}` as MemberId }, actions: given.actions, principal: given.principal ?? null });
+      actors.set(name, { secret, key, member: { membership: scopeReference("membership", start), member: `@${name}` as MemberId }, actions: given.actions, principal: given.principal ?? null });
     }
     for (const who of actors.values()) if (who.principal !== null) actor(who.principal);
     const founding = signed(actor(held.founding.actor), "found", null, {}, resolve(held.founding.fields) as Record<string, FieldValue>, null);
     const seed: Seed = { v: 1, kind: "directory", definition: definition.digest, creator: null, cause: intentDigest(founding.intent), ordinal: 0 };
-    const creation = { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(1)), seed, creation: founding };
+    const creation = { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(1)), seed, creation: founding };
     const genesisContext = { clock: clockOf(state, now), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null };
     const prepared = await evaluateRules(prepareRules(state, definition, { genesis: creation, context: genesisContext }));
     const genesis = judgeGenesis(state, definition, creation, { ...genesisContext, prepared });

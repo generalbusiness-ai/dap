@@ -61,7 +61,7 @@ const properties = {
   answer: { type: "string", enum: Object.keys(answers), description: "The room's Native decision: accepted, archived, refused, unavailable, or mismatch. A lost reply remains a separate custody finding." },
   sentence: { type: "string" }, next: { type: "string" },
   scope: { type: "string" }, kind: { type: "string" }, tool: { type: "string" },
-  fact: { type: "object", properties: { at: { type: "object", properties: { scope: { type: "string" }, inc: { type: "string" }, kind: { type: "string" } }, required: ["scope", "inc", "kind"] }, seq: integer, hash: { type: "string" } }, required: ["at", "seq", "hash"] },
+  fact: { type: "object", properties: { at: { type: "object", properties: { scope: { type: "string" }, genesis: { type: "string" } }, required: ["scope", "genesis"] }, seq: integer, hash: { type: "string" } }, required: ["at", "seq", "hash"] },
   outboxIds: { type: "array", items: { type: "string" } },
   reason: { type: "string" }, name: { type: "string" }, judgedAt: head,
   retained: { type: "boolean", description: "true when this is a terminal outcome kept under custody, and nothing was sent" },

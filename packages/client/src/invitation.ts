@@ -44,7 +44,7 @@ export function wellFormedInvitation(link: InvitationLink): boolean {
     finally { seed.fill(0); }
   }
   return invitationServiceUrl(link.service) !== null && typeof link.handle === "string" && link.invitation >= 1
-    && isScopeRef(link.repository?.directory) && link.repository.directory.kind === "directory"
-    && isScopeRef(link.repository?.membership) && link.repository.membership.kind === "membership"
+    && isScopeRef(link.repository?.directory)
+    && isScopeRef(link.repository?.membership)
     && isScopeId(link.repository?.rules) && isScopeId(link.repository?.destination);
 }

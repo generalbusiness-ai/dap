@@ -27,7 +27,7 @@ async function completeIssue(d: Demo, room: Room, fact: FactRef, kind: "open-iss
   expect(source.ok, "Accepted opening must have readable immutable source bytes").toBe(true);
   if (!source.ok) throw new Error("Accepted opening source unavailable");
   const entry = source.value.entry;
-  expect([entryHash(entry), entry.at]).toEqual([fact.hash, fact.at]);
+  expect([entryHash(entry), "genesis" in entry ? entry.genesis : null]).toEqual([fact.hash, fact.at.genesis]);
   expect(entry.input.type).toBe("act");
   if (entry.input.type !== "act") throw new Error("Accepted opening is not an act");
   expect(entry.input.signed.intent.kind).toBe(kind);
@@ -55,7 +55,7 @@ async function completeIssue(d: Demo, room: Room, fact: FactRef, kind: "open-iss
   expect(row, "Accepted opening must retain its native directory lane row").toBeDefined();
   expect(["refused", "conflict"]).not.toContain(row?.state);
   expect(row?.refs["scope"], "Parent must have confirmed its actual child after scheduler idle").toEqual(childRead.value.scope);
-  expect([childRead.value.scope.scope, childRead.value.scope.kind, childRead.value.definition]).toEqual([child, "lane", definition]);
+  expect([childRead.value.scope.scope, childRead.value.definition]).toEqual([child, definition]);
   return child;
 }
 
@@ -66,7 +66,7 @@ test("selected merge facts are native ISSUE reports in admitted order, independe
   const owner = beginSessionFixture({ secret: "Native task-data witness session secret of at least thirty-two bytes", sessions: true, inspector: "a test reader" });
   onTestFinished(() => owner.close());
   const { r } = await delegatedRoom();
-  const rulesPeer = new Peer("rules", "platform:rules", await r.rules.at());
+  const rulesPeer = await Peer.of("rules", "platform:rules", r.rules);
   net.hold = e => "scope" in e.to && e.to.scope === rulesPeer.at.scope;
   const G = await r.lane(rita, "open-issue", issue, DIGESTS.issue, { title: "A goal", conditions: ["it works"] });
   // Everything below names the entry that filed the goal as the goal's conditions: the genesis of the issue lane, of the kind `file`.

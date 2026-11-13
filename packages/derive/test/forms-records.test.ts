@@ -1,7 +1,7 @@
 import { forms_records_change0 } from "./definition-corpus/forms-records-variants.ts";
 import { describe, expect, test } from "vitest";
-import type { Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest } from "@generalbusiness/dap-bytes";
+import type { Entry, FactRef, GenesisEntry, ScopeKind, Seed } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, entryHash, factRefOf, intentDigest, newGenesisNonce, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { boundLicense, counted, hasWorkspace, holdCapability, judgeDelivery, preparationStatus, recordEffects } from "../src/index.ts";
 import type { Fetched } from "../src/index.ts";
@@ -9,8 +9,15 @@ import { arriving, d, decided, forged, keys, laneDefinition, otherLane, t, varia
 
 const { rita, una, vic } = keys;
 const X = C("a");
-/** A task scope's reference: made up. No task scope exists here. */
-const task: ScopeRef = { ...otherLane, kind: "task" };
+/** Canonical TEST byte association only; no Native task was admitted. */
+const taskSeed: Seed = { v: 1, kind: "task", definition: d("e"), creator: null, cause: d("c"), ordinal: 21 };
+const taskGenesis: GenesisEntry = { v: 1, seq: 0, prev: null, time: t(0), clamped: false, epoch: 0,
+  input: { type: "genesis", seed: taskSeed, nonce: newGenesisNonce(new Uint8Array(16).fill(21)), kind: "TEST task", founding: null, source: null, sourceKind: null, n: null, message: null, decision: "applied" },
+  uses: [], prepared: [], effects: [], sends: [] };
+const task = { scope: scopeIdOf(taskSeed), genesis: entryHash(taskGenesis) };
+const taskSequence = admitSequenceGenesis(canonicalize(taskGenesis), task, PROPOSED_BOUNDS.entryBytes);
+if (!taskSequence) throw new Error("the TEST task genesis must bind its original bytes");
+const checkedTaskKind = { source: { at: task, kind: "task" as const }, declared: {} };
 const shape = (entry: Entry | string) => (typeof entry === "string" ? entry : entry.effects.map((e) => (e.effect === "record" ? `${e.kind} ${e.state}` : e.effect === "operation" ? `opens ${e.kind} x${e.attempts}` : e.effect === "attempt" ? (e.result === "opened" ? `attempt ${e.attempt} opened` : e.result) : e.effect)));
 
 describe("the records of `hold@1` (scope contract, section 6.11; authority note, sections 5.7 and 6.2)", () => {
@@ -262,23 +269,27 @@ describe("the records of `hold@1` (scope contract, section 6.11; authority note,
     const license = (over: object = {}) => cap.guard("hold@1", "license", { ...args, ...over }, s.given());
     expect([license(), license({ from: otherLane }), license({ instance: "i9" }), license({ hold: s.hold })]).toEqual([true, "export-not-authorized", "target-not-held", "target-not-held"]);
     // The license entry: the pin stands, with the target that the first request fixed.
-    s.hand(recordEffects("hold@1", cap.effect("hold@1", "license", { ...args, k: 1 }, s.given())));
-    expect(s.record("receiver-pin", exported)).toEqual({ state: "standing", checkpoint: d("9"), hold: target, instance: "i2", holder: una.member, task, k: 1, decided: 1, by: null });
+    expect(() => cap.effect("hold@1", "license", { ...args, k: 1 }, s.given())).toThrow("no declared scope-field kind");
+    s.hand(recordEffects("hold@1", cap.effect("hold@1", "license", { ...args, k: 1 }, s.given({ kindContext: checkedTaskKind }))));
+    expect(s.record("receiver-pin", exported)).toEqual({ state: "standing", checkpoint: d("9"), hold: target, instance: "i2", holder: una.member, task, taskKind: "task", taskKindBasis: "checked", k: 1, decided: 1, by: null });
+    const updated = cap.effect("hold@1", "license", { ...args, k: 2 }, s.given({ kindContext: { source: null, declared: { from: "task" } } }));
+    expect(updated[0]?.values).toMatchObject({ task, taskKind: "task", taskKindBasis: "checked", k: 2, decided: 2 });
     s.prepare(una, "instance", { hold: target, task, instance: "i3" });
     expect([license(), license({ instance: "i3" })]).toEqual(["target-not-held", "target-fixed"]);
 
-    // Section 4.2, "A reserved license decision". The binding is by source, export and number alone: another field may be ill-typed.
-    const bound = (fields: object, from: unknown = task) => { const b = boundLicense(s.state, s.at, from, fields); return b && b.k; };
+    // Other fields may be ill-typed, but actual kind must match the pin.
+    const bound = (fields: object, from: unknown = task, sourceKind: ScopeKind = "task") => { const b = boundLicense(s.state, s.at, from, fields, sourceKind); return b && b.k; };
     const whole = { export: s.fact(exported), k: 2, instance: 7 };
     expect([bound(whole), bound(whole, otherLane), bound({ ...whole, k: 1 }), bound({ ...whole, k: 4 }), bound({ ...whole, k: "2" }), bound({ k: 2 })]).toEqual([2, null, null, null, null, null]);
+    expect(bound(whole, task, "lane")).toBeNull();
     // The judge of a delivery decides a license request of the task scope, with the capability's code. Request 2 is bound, and it is
     // ill-typed in another field. Its refusal is a settling entry with one effect, the record whose `decided` is 2: the pin's
     // state, target and `k` do not change. It uses the entry that the pin reserved for number 2, so what is used and reserved is the
     // same after it. The number is then decided: the same number again is not bound. Its refusal is new work, with no effect.
     const asks = (fields: object) => {
       const send = { n: 0, to: s.at, message: { class: "request", type: "tell", body: { message: "export-license", fields } } } as const;
-      const source = { ...forged(task, 20 + s.head.seq, { type: "checkpoint", through: 0, state: d("0") }, [send]), under: "platform:task" };
-      const arrival = { ...send, from: factRefOf(source.entry) };
+      const source = { ...forged(taskSequence, 20 + s.head.seq, { type: "checkpoint", through: 0, state: d("0") }, [send]), under: "platform:task" };
+      const arrival = { ...send, from: factRefOf(source.entry, task) };
       const judged = judgeDelivery(s.state, s.definition, arrival, { ...arriving(s, arrival, source), capabilities: cap });
       if (judged.result !== "write") throw new Error(`not decided: ${JSON.stringify(judged)}`);
       s.seal(judged.draft);
@@ -287,16 +298,20 @@ describe("the records of `hold@1` (scope contract, section 6.11; authority note,
     const before = [s.head.seq + s.reserved(), s.reserved()];
     expect([asks(whole), s.record("receiver-pin", exported), s.head.seq + s.reserved(), s.reserved(), bound(whole), bound({ ...whole, k: 3 }), asks(whole)]).toEqual([
       ["refused", "bad-field", true, ["receiver-pin standing"]],
-      { state: "standing", checkpoint: d("9"), hold: target, instance: "i2", holder: una.member, task, k: 1, decided: 2, by: null }, before[0], before[1]! - 1, null, 3,
+      { state: "standing", checkpoint: d("9"), hold: target, instance: "i2", holder: una.member, task, taskKind: "task", taskKindBasis: "checked", k: 1, decided: 2, by: null }, before[0], before[1]! - 1, null, 3,
       ["refused", "bad-field", false, []],
     ]);
 
     // `export-settled`: the final entry of the task scope, made by hand, whose own effects set the release to its final state.
-    const F: Fetched = { fact: { at: task, seq: 5, hash: d("f") }, under: "platform:task", entry: { v: 1, at: task, seq: 5, prev: d("e"), time: t(0), clamped: false, epoch: 0, input: { type: "checkpoint", through: 4, state: d("0") }, uses: [], prepared: [], effects: [{ effect: "state", item: 3, state: "withheld" }], sends: [] } };
-    const settled = (over: object = {}) => cap.guard("hold@1", "settled", { export: exported, from: task, final: "withheld", by: F.fact, ...over }, s.given({ source: F }));
+    const final = forged(taskSequence, 5, { type: "checkpoint", through: 4, state: d("0") }, []);
+    const finalEntry: Entry = { ...final.entry, effects: [{ effect: "state", item: 3, state: "withheld" }] };
+    const F: Fetched = { fact: factRefOf(finalEntry, task), under: "platform:task", entry: finalEntry, sequence: taskSequence };
+    const settled = (over: object = {}) => cap.guard("hold@1", "settled", { export: exported, from: task, final: "withheld", by: F.fact, ...over }, s.given({ source: F, kindContext: checkedTaskKind }));
     expect([settled(), settled({ final: "confirmed" }), settled({ from: otherLane })]).toEqual([true, "not-final", "export-not-authorized"]);
+    const wrongHash: Fetched = { ...F, fact: { ...F.fact, hash: d("f") } };
+    expect(cap.guard("hold@1", "settled", { export: exported, from: task, final: "withheld", by: wrongHash.fact }, s.given({ source: wrongHash, kindContext: checkedTaskKind }))).toBe("not-final");
     const reserved = s.reserved();
-    s.hand(recordEffects("hold@1", cap.effect("hold@1", "settle", { export: exported, by: F.fact }, s.given({ source: F }))));
+    s.hand(recordEffects("hold@1", cap.effect("hold@1", "settle", { export: exported, by: F.fact }, s.given({ source: F, kindContext: checkedTaskKind }))));
     // The pin is released, and the entry that it still reserved, for license 3, is released with it.
     expect([s.record("receiver-pin", exported)?.state, s.reserved(), license()]).toEqual(["released", reserved - 1, "export-not-authorized"]);
   });

@@ -1,8 +1,9 @@
 import { earlierFieldProof } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { expect, test } from "vitest";
+import { coverageRow } from "./coverage-rows.ts";
 import { canonicalize, factRefOf, textDigest } from "@generalbusiness/dap-bytes";
 import { judgeDelivery } from "@generalbusiness/dap-derive";
-import { arriving, created, forged, keys, notesDefinition, on, otherLane, variant } from "@generalbusiness/dap-derive/testing";
+import { arriving, created, forged, keys, notesDefinition, on, otherLane, otherLaneSequence, variant } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify, type MemoryScope } from "../src/index.ts";
 
 test("an earlier successful field check rules out a later fabricated size refusal even after the text is erased", async () => {
@@ -10,7 +11,7 @@ test("an earlier successful field check rules out a later fabricated size refusa
   const scope = created(definition, {}, "earlier-field-proof"), body = "four", digest = textDigest(body);
   expect(scope.act(keys.rita, "write", { ...on(scope, 0), fields: { body: digest } }, { texts: () => 4 }).result).toBe("write");
   const send = { n: 0, to: scope.at, message: { class: "request", type: "tell", body: { message: "noted", fields: { body: digest } } } } as const;
-  const source = { ...forged(otherLane, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]), under: "notes" }, fact = factRefOf(source.entry);
+  const source = { ...forged(otherLaneSequence, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]), under: "notes" }, fact = factRefOf(source.entry, otherLane);
   const arrival = { ...send, from: fact };
   // Deliberately untrue historical size: this makes a forged refusal,
   // not an input that any native scope admitted. The foreign send is an
@@ -27,9 +28,11 @@ test("an earlier successful field check rules out a later fabricated size refusa
     retained: [
       { kind: "definition", digest: definition.digest, bytes: canonicalize(definition.declared) },
       { kind: "entry", digest: use.content, bytes: canonicalize(source.entry), under: "notes" },
+      // Rulings 4f697a7a and ae48dd39: the scope keeps the first entry of the source's sequence beside the later entry.
+      { kind: "birth", digest: fact.at.genesis, bytes: source.sequence.birth },
     ],
   };
   const result = await verify(new MemorySource([served]), { mode: "replay", scope: scope.at.scope, grants: "as-recorded", anchors: [{ scope: fact.at.scope, seq: fact.seq, hash: fact.hash }] });
   expect([result.report.result, result.report.at?.seq, result.why]).toEqual(["mismatch", deciding, "the recorded input, with its decision, is not the one derived again"]);
-  expect(result.report.coverage).toEqual([{ scope: scope.at, from: 0, through: deciding - 1 }]);
+  expect(result.report.coverage).toEqual([coverageRow(scope.at, scope.entries[0]?.entry, deciding - 1)]);
 });

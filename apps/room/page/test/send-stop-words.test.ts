@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { digestBytes, keyIdOfSecret, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { workbenchFixtures } from "./workbench-fixture.ts";
 
 // Invariant: a stop on the send path speaks of this press. A reload in an outage leaves no lock, so an earlier press can have no known outcome.
@@ -48,7 +48,7 @@ test("a changed room or key stops the send, and the words speak of this press", 
   const root = new Element("div"), body = new Element("body"); body.append(root);
   const main = () => { const host = new Element("main"); const slot = new Element("div"); slot.setAttribute("data-action-slot", "create"); host.append(slot); return host; };
   const digest = digestBytes(new Uint8Array([5, 4, 3, 7]));
-  const membership = { scope: scopeIdOf({ v: 1, kind: "membership", definition: digest, creator: null, cause: digest, ordinal: 0 }), kind: "membership", inc: newIncarnation(new Uint8Array(16).fill(55)) };
+  const membership = { scope: scopeIdOf({ v: 1, kind: "membership", definition: digest, creator: null, cause: digest, ordinal: 0 }), genesis: textDigest("TEST genesis 29") };
   const key = keyIdOfSecret(new Uint8Array(32).fill(41)), otherKey = keyIdOfSecret(new Uint8Array(32).fill(42));
   const forbidden = vi.fn(async () => { throw new Error("Unexpected UI key operation"); });
   const kept = { place: { directory: "directory", membership }, publicKey: key };
@@ -63,9 +63,8 @@ test("a changed room or key stops the send, and the words speak of this press", 
   });
   const outcomes: string[] = [];
   const list = vi.fn(async () => { throw new Error("no reply to the list"); });
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/browser-key-store.ts", () => ({ pageKeyStore: () => ({ load: async (asked: string) => ({ key: asked, sign: forbidden }), create: forbidden, migrate: forbidden, saveSettings: forbidden }) }));
-  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value }));
+  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "genesis" in value }));
   vi.doMock("../src/tasks.ts", async () => ({ ...await vi.importActual<typeof import("../src/tasks.ts")>("../src/tasks.ts"), issueDialogOutcome: (_context: string, _state: string, message: string) => { outcomes.push(message); } }));
   vi.doMock("../src/data.ts", async () => {
     const { sessionKey, Unreadable } = await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts");
@@ -99,7 +98,7 @@ test("a changed room or key stops the send, and the words speak of this press", 
   } finally {
     await fixture.retire();
     vi.unstubAllGlobals();
-    for (const path of ["../src/browser-key-store.ts", "../src/page-key-migration.ts", "../src/data.ts", "../src/view.ts", "../src/tasks.ts", "@generalbusiness/dap-bytes"]) vi.doUnmock(path);
+    for (const path of ["../src/browser-key-store.ts", "../src/data.ts", "../src/view.ts", "../src/tasks.ts", "@generalbusiness/dap-bytes"]) vi.doUnmock(path);
     vi.resetModules();
   }
   expect(forbidden).not.toHaveBeenCalled();

@@ -42,7 +42,7 @@ import { checkSignedRead, leads, presentsSignedRead, signerOf, type SignedReadin
 import type { OutboxItem, OperationStatus, Sealed, Store, Stored } from "./store.ts";
 
 /** The kinds of retained input that the read route serves by digest. `value` is read by domain as well. */
-export const READABLE: readonly RetainedInput["kind"][] = ["definition", "entry", "rule", "text", "snapshot", "value"];
+export const READABLE: readonly RetainedInput["kind"][] = ["definition", "entry", "rule", "text", "snapshot", "value", "birth"];
 
 /** The bound of each read. The defaults are the contract's table, and for a retained input the history page's byte bound. */
 type ReadRefusal = Exclude<ContractReadRefusal, "archived" | "behind">;
@@ -152,6 +152,9 @@ export class Reads {
     const matches = (namedKind: RetainedInput["kind"], namedDigest: Digest, namedDomain?: string) => kind === namedKind && digest === namedDigest && domain === namedDomain;
     const value = (namedDigest: Digest, namedDomain: string) => namedDomain === DOMAINS.definition ? matches("definition", namedDigest) : matches("value", namedDigest, namedDomain);
     if (entry.uses.some((use) => matches("entry", use.content)) || entry.prepared.some((prepared) => matches("rule", prepared.input))) return true;
+    // Ruling ae48dd39: a birth row is readable as its `entry` row is, by a reader that may have an entry that uses a later
+    // entry of that sequence.
+    if (kind === "birth" && domain === undefined && entry.uses.some((use) => use.fact.seq > 0 && use.fact.at.genesis === digest)) return true;
     const input = entry.input;
     if (input.type === "genesis" && isDigest(input.seed.definition) && matches("definition", input.seed.definition)) return true;
     if (entry.sends.some((send) => isSeed(send.to) && isDigest(send.to.definition) && matches("definition", send.to.definition))) return true;
@@ -174,7 +177,7 @@ export class Reads {
         types = act?.fields;
         fields = input["founding"]?.intent.fields ?? (input.source && act ? creationFields(input.message, input.source, act.fields) : null) ?? {};
       } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
-        const received = bound(definition, input.message, input.from, under);
+        const received = bound(definition, input.message, input.from, input.sourceKind, under);
         types = received?.handler?.fields;
         fields = received?.fields ?? {};
       }
@@ -321,7 +324,7 @@ export class Reads {
     if (!("scope" in open)) return open;
     // A limited reader reads an input that an entry it may have names, and is told nothing of any other.
     if (open.limit && (typeof digest !== "string" || !this.#carried(open.limit, open.scope.head.seq, kind, digest, domain))) return no("forbidden");
-    if (!READABLE.includes(kind) || typeof digest !== "string" || (kind === "value" && (typeof domain !== "string" || domain.length === 0))) return no("not-found");
+    if (!READABLE.includes(kind) || typeof digest !== "string" || (kind === "value" && (typeof domain !== "string" || domain.length === 0)) || (kind === "birth" && domain !== undefined)) return no("not-found");
     // The size is asked of storage first, so an input over the bound is refused before any of it is read into memory.
     const size = this.#store.retainedSize(kind, digest, domain);
     if (size === null) return no("not-found");

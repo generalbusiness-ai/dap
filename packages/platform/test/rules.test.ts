@@ -252,7 +252,7 @@ test("membership answers an observation from its head: the key's state, its memb
   expect(standingOf(m.state, { of, member: "@bot" }, MEMBERSHIP)).toMatchObject({ controllerActive: false });
 
   // Another scope or incarnation than this one, and a question for the rules: no answer. Case e: a provisional membership answers none.
-  expect([standingOf(m.state, { of: m.office.at, key: rita.key }, MEMBERSHIP), standingOf(m.state, { of: { ...of, inc: m.office.at.inc }, key: rita.key }, MEMBERSHIP), standingOf(m.state, { of, asked: "rules" }, MEMBERSHIP)]).toEqual([null, null, null]);
+  expect([standingOf(m.state, { of: m.office.at, key: rita.key }, MEMBERSHIP), standingOf(m.state, { of: { ...of, genesis: m.office.at.genesis }, key: rita.key }, MEMBERSHIP), standingOf(m.state, { of, asked: "rules" }, MEMBERSHIP)]).toEqual([null, null, null]);
   const provisional = new Roster();
   expect([standingOf(provisional.replay(1), { of: provisional.at, key: rita.key }, MEMBERSHIP), provisional.replay(1).scope()?.status]).toEqual([null, "provisional"]);
 });

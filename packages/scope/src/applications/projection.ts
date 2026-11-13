@@ -47,7 +47,7 @@ export class ApplicationProjections {
       const waited = await this.config.minimum(reader, atLeast, active);
       if (waited) {
         if (waited.reason === "behind") return waited;
-        return no(["forbidden", "sessions-unavailable", "clock-behind", "wrong-incarnation"].includes(waited.reason) ? waited.reason as "forbidden" | "sessions-unavailable" | "clock-behind" | "wrong-incarnation" : "unavailable");
+        return no(["forbidden", "sessions-unavailable", "clock-behind", "wrong-genesis"].includes(waited.reason) ? waited.reason as "forbidden" | "sessions-unavailable" | "clock-behind" | "wrong-genesis" : "unavailable");
       }
     }
     return this.config.flights.run(run => this.#run(encoded, reader, run), ends).then(result => result ?? no("unavailable"));

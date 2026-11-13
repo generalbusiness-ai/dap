@@ -822,7 +822,7 @@ export function standingOf(state: Pick<StateView, "scope" | "page" | "item">, as
   const scope = state.scope();
   // A request that states an incarnation is answered by that incarnation only. One that asks by the scope ID alone, as the first read
   // of a rules scope or of a destination does, is answered by the scope that holds the name: the answer's `of` says which.
-  if (!scope || scope.status !== "active" || scope.at.kind !== "membership" || asked.of.scope !== scope.at.scope || ("inc" in asked.of && asked.of.inc !== scope.at.inc) || asked.of.kind !== scope.at.kind) return null;
+  if (!scope || scope.status !== "active" || scope.kind !== "membership" || asked.of.scope !== scope.at.scope || ("genesis" in asked.of ? asked.of.genesis !== scope.at.genesis : asked.of.kind !== scope.kind)) return null;
   const of: ScopeRef = scope.at;
   const common = { of, head: scope.head, definition } as const;
   const roster = rosterOf(state);

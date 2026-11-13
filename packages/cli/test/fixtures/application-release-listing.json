@@ -1,8 +1,8 @@
 {
   "qualification": "Recorded TEST metadata projected from two actual Native Rules summaries in one existing install witness. Complete summaries, item bodies, signatures, headers, tokens and settings were not retained. Host, repository, clock and read-session inspector remain TEST fixtures. No live read or deployment runs.",
-  "sourceCommit": "f9aca97f84803860cb10a714b1bf643e50bc87f1",
-  "projectorSha256": "f07250f67ae3025facce3c4c0f0340de38aef18a0f96c440b1a7ce3743a9289c",
-  "sourceState": "sourceCommit names the checked-out base; projectorSha256 identifies the uncommitted projector bytes used for the Native capture.",
+  "sourceCommit": "b3a3544ae29259c528e652fcf36d966a00cfd9f8",
+  "projectorSha256": "9a9a33cd87fdc8e115ded71d6676b05aa991f3131f0146a430d82413445ed762",
+  "sourceState": "sourceCommit names the checked-out head; projectorSha256 identifies the committed projector bytes used for the Native capture.",
   "samples": {
     "none": {
       "observation": {
@@ -13,15 +13,14 @@
           ["installation", "refused", 0]
         ],
         "head": {
-          "hash": "sha256:11aedba81723dcad66aae99b2eb585ca9257590ce633dd5efb30ad66a9a414eb",
+          "hash": "sha256:9a260ff0537b3b0e6439d4a05f07d3583fdd0ded73254c87d1c961f1e4348cc1",
           "seq": 1
         },
         "phases": [],
         "pin": "platform:rules@5",
         "scope": {
-          "inc": "in_liy7qijyvkwevajysxmbnpo7ea",
-          "kind": "rules",
-          "scope": "sc_63mx7xrfdoel4ya4yxij7c2rvspkua4ncz4obnjgylj4aklp3hva"
+          "genesis": "sha256:aa6a435a3db662463e1903e4f7ce919a1584a1afacbc953f938ba440bfa402cf",
+          "scope": "sc_hwaywermkb3offghkxtunq6rm2y4zwv3c56rtjnjjnwy4v5gxoja"
         },
         "status": "active"
       },
@@ -40,7 +39,7 @@
           ["installation", "refused", 0]
         ],
         "head": {
-          "hash": "sha256:f592b0ac8fcfa59a4d12f18beb6c6ad6c43285de25a31bedeb66ff1967276556",
+          "hash": "sha256:1406c9cdc1f62a1ea43a22938136133e29b2a3d31691fe3b225abe6c623d1890",
           "seq": 10
         },
         "phases": [
@@ -52,9 +51,8 @@
         ],
         "pin": "platform:rules@5",
         "scope": {
-          "inc": "in_liy7qijyvkwevajysxmbnpo7ea",
-          "kind": "rules",
-          "scope": "sc_63mx7xrfdoel4ya4yxij7c2rvspkua4ncz4obnjgylj4aklp3hva"
+          "genesis": "sha256:aa6a435a3db662463e1903e4f7ce919a1584a1afacbc953f938ba440bfa402cf",
+          "scope": "sc_hwaywermkb3offghkxtunq6rm2y4zwv3c56rtjnjjnwy4v5gxoja"
         },
         "status": "active"
       },
@@ -65,17 +63,15 @@
             "installItem": {
               "item": 2,
               "scope": {
-                "inc": "in_liy7qijyvkwevajysxmbnpo7ea",
-                "kind": "rules",
-                "scope": "sc_63mx7xrfdoel4ya4yxij7c2rvspkua4ncz4obnjgylj4aklp3hva"
+                "genesis": "sha256:aa6a435a3db662463e1903e4f7ce919a1584a1afacbc953f938ba440bfa402cf",
+                "scope": "sc_hwaywermkb3offghkxtunq6rm2y4zwv3c56rtjnjjnwy4v5gxoja"
               }
             },
             "publisher": "key_Z3p02WTkqE_6UCWotVN7XEo3rW0UboVHg6xzRoSiB8Q",
             "release": "sha256:14350156fcc43bb59d142cc5b84c0b84088f12beda47f36a9e98621dd5311c80",
             "scope": {
-              "inc": "in_gisckqbc2grw4w6fdbsvs4376y",
-              "kind": "lane",
-              "scope": "sc_2nmgl6zvrlagrlh2hlij4ba4oimp4mzxxq2khpqo2rsvfzignkua"
+              "genesis": "sha256:4a7b90ebce52f7b0c1b714763994d858f522ada7f73cf7f6c604056a8cc3f09e",
+              "scope": "sc_43fo7r5yajvwm7obf3k2y6ozxgoftph427ewcozafqcw3bg6jgcq"
             }
           }
         ],

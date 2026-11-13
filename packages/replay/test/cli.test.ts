@@ -83,7 +83,7 @@ test("the command prints the report of a consistent history in plain English and
   const good = await run(sourceOf(w), "https://scopes.test/", w.I.scope.scope, "--head", `2:${w.I.entries[2]!.hash}`, ...anchored(w.I));
   expect([good.code, good.err]).toEqual([0, ""]);
   expect(good.out).toMatch(/^Result: consistent, for the mode, target, coverage and trusts stated below\.\nMode: replay\./);
-  expect(good.out).toContain(`Target: ${w.I.scope.scope}, incarnation ${w.I.scope.inc}, lane, through entry 2 (${w.I.entries[2]!.hash}).`);
+  expect(good.out).toContain(`Target: ${w.I.scope.scope}, genesis ${w.I.scope.genesis}, through entry 2 (${w.I.entries[2]!.hash}).`);
   expect(good.out).toContain("Foreign facts: 0 shown by replay of their source scope, 3 taken from an anchor, 0 missing.");
   // The scope contract, section 15.6n, on the I3 delta E8: a grant without a freshness proof is no grant. Without the anchors the
   // replay reaches the desk's first act, which the fixture's stand-in authority granted. The command reports it, and exits 1.

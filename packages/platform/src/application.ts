@@ -122,7 +122,7 @@ export function applicationPublicationValues(raw: unknown, declared: DeclaredDef
   if (!isObject(value) || Object.hasOwn(value, "destination") || canonicalize(value) !== raw) return null;
   const field = declared.acts[declared.genesis]?.fields["destination"];
   if (!field) return applicationValues(raw, declared, opener, bounds);
-  if (field.type !== "scope" || field.kind !== "destination" || !isScopeRef(destination) || destination.kind !== "destination") return null;
+  if (field.type !== "scope" || field.kind !== "destination" || !isScopeRef(destination)) return null;
   return applicationValues(canonicalize({ ...value, destination }), declared, opener, bounds);
 }
 
@@ -131,7 +131,7 @@ export function applicationPublicationValues(raw: unknown, declared: DeclaredDef
 export const directory8: PlatformData = { ...directory5 };
 const destinationOf = (given: RuleGiven): ScopeRef | null => {
   const destination = given.state.page("repository", ["open"], null, 1).items[0]?.refs["destination"];
-  return isScopeRef(destination) && destination.kind === "destination" ? destination : null;
+  return isScopeRef(destination) ? destination : null;
 };
 export const directoryRules8: Rules = {
   ...directoryRules5,

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Entry, FactRef, Intent, Item, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef, keyIdOfSecret, same, signInvitationProof, timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, isFactRef, isScopeId, keyIdOfSecret, same, signInvitationProof, timeOf } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, ROLE_LISTS } from "@generalbusiness/dap-platform";
@@ -76,9 +76,10 @@ test("a fresh same-key session resumes only from native records; a real wait tim
     type Session = ReturnType<typeof fresh>;
     const fact = async (agent: Pick<Agent, "ok">, scope: string, seq: number): Promise<FactRef> => {
       const step = await agent.ok("step", { scope, seq });
-      const entry = step["entry"] as Entry;
-      expect(entry.seq).toBe(seq); expect(entry.at.scope).toBe(scope);
-      return { at: entry.at, seq, hash: step["hash"] as FactRef["hash"] };
+      const entry = step["entry"] as Entry, hash = step["hash"] as FactRef["hash"];
+      expect(entry.seq).toBe(seq);
+      if (!isScopeId(scope)) return expect.fail("a step names a scope ID");
+      return { at: { scope, genesis: "genesis" in entry ? entry.genesis : hash }, seq, hash };
     };
     const { inbox: _inbox, ...shared } = repository;
     const saved: McpConfig = { service: owner.config.service, repository: shared, handle: "@una" };

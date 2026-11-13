@@ -75,7 +75,7 @@ test("a transport with signed reads signs summary, history, entry, log and retai
     submit(...args: Parameters<Transport["submit"]>) { return this.#http.submit(...args); }
   }
   const service = signedReads(new ServiceTransport(), secretSigner(secret), { now });
-  const intent = await signedIntent(secretSigner(secret), { to: { scope, kind: "register", inc: `in_${"a".repeat(26)}` }, kind: "found" }, { now: now() });
+  const intent = await signedIntent(secretSigner(secret), { to: { scope, genesis: `sha256:${"a".repeat(64)}` }, kind: "found" }, { now: now() });
   const forwarded = await (async () => service.submit(scope, intent, []))().catch(() => null);
   expect([forwarded, sent.at(-1)]).toEqual([refused, { path: "/acts", authorization: undefined }]);
 });

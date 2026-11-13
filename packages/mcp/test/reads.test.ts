@@ -60,9 +60,8 @@ test("shared credentials bind service, signer and the full membership reference"
     { service: SERVICE, key: a, ref: stand.membership },
     { service: SERVICE + "/another", key: a, ref: stand.membership },
     { service: SERVICE, key: b, ref: stand.membership },
-    { service: SERVICE, key: a, ref: { ...stand.membership, inc: stand.directory.inc } },
+    { service: SERVICE, key: a, ref: { ...stand.membership, genesis: stand.directory.genesis } },
     { service: SERVICE, key: a, ref: { ...stand.membership, scope: stand.directory.scope } },
-    { service: SERVICE, key: a, ref: { ...stand.membership, kind: "directory" as const } },
   ];
   for (const [index, one] of cases.entries()) {
     const reads = new Reads({ service: one.service, signer: one.key, sessions, now: () => START, fetch: fetcher });

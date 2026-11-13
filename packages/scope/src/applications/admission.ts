@@ -38,7 +38,7 @@ export function readTrustedApplication(bytes: Uint8Array, release: Digest, trust
   if (utf8(canonicalize(packet.package.semantic)).length > INSTALL_SEMANTIC_BYTES) return admissionFailure("unsupported-definition");
   for (const part of packet.package.semantic.definitions) {
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES) return admissionFailure("unsupported-definition");
-    const checked = validateDefinition(parseStrict(part.bytes), bounds, RULE_PROFILES);
+    const checked = validateDefinition(parseStrict(part.bytes), bounds, RULE_PROFILES, { canonical: true });
     if (!checked.ok || checked.definition.digest !== part.id) return admissionFailure("unsupported-definition");
   }
   if (packet.package.v === 2) for (const view of Object.values(packet.package.presentation.views)) for (const act of view.acts) {

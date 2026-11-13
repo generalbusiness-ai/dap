@@ -16,12 +16,12 @@ import { CanonicalError, canonicalize, parseStrict } from "./canonical.ts";
 import { isDigest } from "./hash.ts";
 import { isFactRef } from "./records.ts";
 
-/** The longest text of a fact reference, in bytes: the kind `destination` at the position 9,007,199,254,740,991. Every byte is printable ASCII. */
-export const FACT_TEXT_MOST = 237;
+/** The longest text of a fact reference, in bytes: the position 9,007,199,254,740,991. Every byte is printable ASCII. */
+export const FACT_TEXT_MOST = 262;
 
 /**
  * The text of a fact reference: its RFC 8785 canonical JSON, and nothing
- * before or after it. One line, with no space: `at` with `inc`, `kind` and
+ * before or after it. One line, with no space: `at` with `genesis` and
  * `scope`, then `hash`, then `seq`. Null for a value that is no `FactRef`.
  */
 export function factText(ref: unknown): string | null {

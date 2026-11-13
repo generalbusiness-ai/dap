@@ -53,8 +53,9 @@ test("an outside founder needs open policy and its actual child is indexed at ge
       expect(recorded.send.to).toEqual(directorySeed);
       expect(recorded.send.to.definition).toBe("platform:directory@16");
       expect(await index.has(D.name)).toBe(false);
+      const registerAt = await R.at();
       const answer = await life.wait(() => namespace(indexedScopes(env.PLATFORM, settings)).transport.send({ to: recorded.send.to,
-        from: factRefOf(recorded.entry), n: recorded.send.n, message: recorded.send.message }));
+        from: factRefOf(recorded.entry, registerAt), n: recorded.send.n, message: recorded.send.message }));
       expect(answer).toMatchObject({ answer: "recorded" });
       expect(await index.has(D.name, "directory")).toBe(true);
       expect((await life.wait(() => D.entries()))[0]!.input.type).toBe("genesis");
@@ -96,7 +97,8 @@ test("deployed indexed admission refuses genuine Register7 and Register8 childre
       const targetId = env.PLATFORM.idFromName(target).toString();
       const lookups = { id: 0, get: 0 };
       const raw: Binding<DurableObjectId> = { idFromName: scope => { if (scope === target) lookups.id++; return env.PLATFORM.idFromName(scope); }, get: id => { if (id.toString() === targetId) lookups.get++; return env.PLATFORM.get(id); } };
-      const answer = await life.wait(() => namespace(indexedScopes(raw, settings)).transport.send({ to: emitted.send.to, from: factRefOf(emitted.entry), n: emitted.send.n, message: emitted.send.message }));
+      const registerAt = await R.at();
+      const answer = await life.wait(() => namespace(indexedScopes(raw, settings)).transport.send({ to: emitted.send.to, from: factRefOf(emitted.entry, registerAt), n: emitted.send.n, message: emitted.send.message }));
       expect(answer).toEqual({ answer: "routing", reason: "not-found" });
       expect(lookups).toEqual({ id: 0, get: 0 });
       expect(await index.has(target)).toBe(false);

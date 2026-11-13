@@ -8,9 +8,9 @@
 import { expect, onTestFinished, test, vi } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { journalRef } from "@generalbusiness/dap-git/journal";
-import { readJournalRepositoryArchive } from "@generalbusiness/dap-git/journal-reader";
-import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
+import { platform } from "@generalbusiness/dap-platform";
+import { CAPABILITY_CODE } from "../src/ports.ts";
+import { verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost, type ArchiveCapacityRefusal } from "../src/archive-budget.ts";
 import { driver, ScriptedHost } from "./support/archive-driver.ts";
 import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
@@ -20,11 +20,13 @@ import { ArchiveDriver } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { planArchive, type ArchiveFixedFinish } from "../src/archive-build.ts";
 import { at, rita, una, type Lane } from "./fixtures-native.ts";
-import { createNativeArchiveLane, createNativeArchiveApplicationLane, archiveAuthorityBasis, archiveAuthorityPolicies, archiveAuthorityAnchors } from "./support/archive-native-authority.ts";
+import { createNativeArchiveLane, createNativeArchiveApplicationLane, archiveAuthorityBasis, archiveAuthorityPolicies } from "./support/archive-native-authority.ts";
+import { archiveAuthorityReplay } from "./support/archive-authority-replay.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring, fixtureArchiveRestart } from "./worker.ts";
 import type { TestScope } from "./worker.ts";
 import type { readArchiveCapacityObservation } from "../src/archive-capacity-observation.ts";
+import { ownReplayContext } from "./support/own-replay-context.ts";
 
 // Observe the existing production diagnostic; no scheduling or budget hook.
 function passDiagnostics() {
@@ -462,7 +464,11 @@ test("adaptive Native passes reserve writing, incremental sending and confirmati
       sources: async (_after, _through, actualBudget, exact) => {
         if (budget) expect(actualBudget).toBe(budget); else fixedBudgets.push(actualBudget);
         expect(exact).toBe(false); sourceOrder.push("sources");
-        return { pins: archiveAuthorityBasis(lane)!.pins, prepare: async (seq, sameBudget) => {
+        // Production takes the replay context from its target read; this
+        // stand-in admits the lane's own genesis outside the pass budget.
+        return { pins: archiveAuthorityBasis(lane)!.pins,
+          replayContext: ownReplayContext(archiveSql(state), lane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
+          prepare: async (seq, sameBudget) => {
           expect(sameBudget).toBe(actualBudget); sourceOrder.push(`prepare:${seq}`);
           if (hardWithdraw) throw new ArchivePrefixStopped("foreign-source-unavailable");
           if (withdraw) actualBudget.stop("unavailable");
@@ -638,14 +644,14 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
   expect(await lane.alarm()).toBe(true);
   expect(host.sends).toHaveLength(2); expect(host.sends[1]).not.toBe(marked.commit); expect(host.targets).toBe(1);
   expect((await row(lane))?.confirmed?.through).toEqual(later); expect(await lane.head()).toEqual(later);
-  const source = archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
-    format: async () => format, resolve: async ref => ref === journalRef(lane.at.scope) ? host.pointer : null,
-    object: async (id, most) => { const object = host.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null; },
-  }, scope, work) });
-  // Explicit caller words from the actual Directory create entry and an
-  // independent Membership read. No anchor comes from archive output.
-  const anchors = archiveAuthorityAnchors(lane); expect(anchors.length).toBeGreaterThan(0);
-  const verified = await verifyArchive(source, { mode: "replay", scope: lane.at.scope, head: later, grants: "as-recorded",
+  // The lane's creator is its room's Directory. Replay proves the room's
+  // public facts by replay and takes only Register and Membership anchors.
+  const replay = await archiveAuthorityReplay(lane, format, host);
+  if (!replay) return expect.fail("a factory lane keeps its native room");
+  const { source, anchors } = replay;
+  expect(anchors.length).toBeGreaterThan(0);
+  // Replaying the Directory runs its platform code and capability hooks.
+  const verified = await verifyArchive(source, { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, scope: lane.at.scope, head: later, grants: "as-recorded",
     anchors: anchors.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash })) });
   const reason = (verified.kind === "verification" ? verified.verification.why : verified.reason) ?? "";
   const diagnostic = { kind: verified.kind, reason: reason.slice(0, 2048), reasonTruncated: reason.length > 2048,
@@ -654,7 +660,10 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
       coverageCount: verified.verification.report.coverage.length, anchorCount: verified.verification.report.anchors.length,
       missingCount: verified.verification.report.dependencies.missing.length }
       : { result: verified.result, scope: verified.location.scope, commit: verified.location.commit }) };
-  expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors, trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
+  expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
+  // Replay reports the anchors in the order it used them, across three journals.
+  const sorted = (facts: readonly unknown[]) => facts.map(fact => canonicalize(fact)).sort();
+  if (verified.kind === "verification") expect(sorted(verified.verification.report.anchors)).toEqual(sorted(anchors));
   fixtureArchiveWiring.delete(lane.name);
 });
 

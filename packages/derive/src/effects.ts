@@ -11,7 +11,7 @@
  */
 
 import { declarationOf } from "./program/declaration.ts";
-import type { Effect, FieldType, FieldValue, Mark, MarkMost, MemberRef, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Effect, GenesisEffect, GenesisFieldValue, FieldType, FieldValue, Mark, MarkMost, MemberRef, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { attribution, byMember, historyOf } from "./attribution.ts";
 import { capabilityEffect } from "./capability.ts";
 import { isEntryOf, isLocalFact } from "./fields.ts";
@@ -27,12 +27,12 @@ import { readValue } from "./program/read-value.ts";
 import { coveredItems } from "./lists.ts";
 import { givenTo, ofCodedType, outside, ruleFor, run, type RuleEffect } from "./marks.ts";
 import { ruleMayNot } from "./markers.ts";
-import { kindOf } from "./operand.ts";
+import { copyEntry, copyFact, copyUnder, kindOf, matchesCopy } from "./operand.ts";
 import type { Item } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { LAST_MS, timeMs, timeOf } from "./time.ts";
 import { isFactRef, isLocalId, isMemberRef, isObject, isValue, memberFits, own, same } from "./values.ts";
-import { isDigest, isEffect } from "@generalbusiness/dap-bytes";
+import { isDigest, isEffect, isGenesisEffect, isGenesisSelfRef } from "@generalbusiness/dap-bytes";
 import { captureProgramReads, enterProgramInstruction, observeCapabilityCall, recordProgramLeaf } from "./program/observe.ts";
 
 /**
@@ -58,16 +58,17 @@ export type Derived<T> = ({ ok: true } & T) | { ok: false; reason: RefusalReason
  * list and a member of a record are each checked by their declared type, to
  * any depth, as `readFacts` checks the fields of an input.
  */
-export function held(j: Judging, type: FieldType, value: unknown): FieldValue | undefined {
+export function held(j: Judging, type: FieldType, value: unknown): GenesisFieldValue | undefined {
+  if (type.type === "scope" && isGenesisSelfRef(value)) return j.judged?.type === "genesis" && same(value, j.scope.at) ? value : undefined;
   if (type.type === "list") {
     if (!Array.isArray(value) || value.length > Math.min(type.max, j.bounds.listElements)) return undefined;
     const each = value.map((v) => held(j, type.of, v));
-    return each.includes(undefined) ? undefined : (each as FieldValue[]);
+    return each.includes(undefined) ? undefined : (each as GenesisFieldValue[]);
   }
   if (type.type === "record") {
     // Section 6.2: an unknown member is refused, and a member that is not required may be absent.
     if (!isObject(value) || Object.keys(value).some((m) => !Object.hasOwn(type.of, m))) return undefined;
-    const members: [string, FieldValue][] = [];
+    const members: [string, GenesisFieldValue][] = [];
     for (const [m, of] of Object.entries(type.of)) {
       const member = Object.hasOwn(value, m) ? held(j, of, value[m]) : undefined;
       if (member === undefined && (of.required || Object.hasOwn(value, m))) return undefined;
@@ -83,10 +84,12 @@ export function held(j: Judging, type: FieldType, value: unknown): FieldValue | 
     if (!isFactRef(value)) return undefined;
     const local = isLocalFact(value, j.scope.at);
     const kept = local ? j.own?.(value.seq) : undefined;
-    const fetched = local ? undefined : j.source && same(j.source.fact, value) ? j.source : j.facts.get(value.hash);
-    const entry = kept?.hash === value.hash ? kept.entry : fetched && isEntryOf(fetched.entry, value) ? fetched.entry : null;
+    const fetched = local ? undefined : j.source && same(copyFact(j.source), value) ? j.source : j.facts.get(value.hash);
+    const sequence = local ? j.own?.sequence() : null;
+    const entry = sequence && kept?.hash === value.hash && isEntryOf(kept.entry, value, sequence) ? kept.entry
+      : fetched && matchesCopy(fetched, value) ? copyEntry(fetched) : null;
     const kind = entry && kindOf(entry);
-    const under = fetched ? fetched.under : declarationOf(j.definition).name;
+    const under = fetched ? copyUnder(fetched) : declarationOf(j.definition).name;
     return kind && type.kind.includes(kind) && under === type.under ? (local ? value.seq : value) : undefined;
   }
   return isValue(type, value, j.bounds) ? (value as FieldValue) : undefined;
@@ -113,7 +116,17 @@ const BY_RULE: readonly string[] = ["open", "state", "party", "list", "ref", "va
  * whose type is a mark is checked by that mark's rule, for each effect that
  * sets it.
  */
-type EffectResult = Derived<{ effects: Effect[]; working: Map<string, Item>; opened: Item | null }>;
+type EffectResult = Derived<{ effects: GenesisEffect[]; working: Map<string, Item>; opened: Item | null }>;
+
+/** A later entry's effects. Judgment admits an encoded self only in a genesis draft, so this narrows and never drops one. */
+export function sequenceEffects(effects: readonly GenesisEffect[]): Effect[] {
+  const checked: Effect[] = [];
+  for (const effect of effects) {
+    if (!isEffect(effect)) throw new Error("a later entry's effects hold an encoded self");
+    checked.push(effect);
+  }
+  return checked;
+}
 type EffectInstruction = { readonly kind: "native"; readonly mark: Mark; readonly body?: BodyStructure; readonly node?: EffectNode }
   | { readonly kind: "written"; readonly body: BodyStructure; readonly node: EffectNode; readonly plan: EffectPlan };
 interface AttentionInstruction { readonly body: BodyStructure; readonly node: AttentionNode; readonly plan: AttentionPlan }
@@ -145,7 +158,7 @@ export function joinReturnedEffects(j: Judging, mark: Mark): EffectResult {
 function executeEffects(j: Judging, instructions: readonly EffectInstruction[], attention: readonly AttentionInstruction[], opens: string | null): EffectResult {
   const items = declarationOf(j.definition).items;
   const working = new Map(j.subjects);
-  const effects: Effect[] = [];
+  const effects: GenesisEffect[] = [];
   /** The items that a rule's effects change and that are no subject of the row, by ID, as the effects left them. The item that a rule opens is one. */
   const others = new Map<number, Item>();
   /** What each applied effect set, by item, for the conflict check on the joined list: whether a rule set it, and whether it is one change of a party list. */
@@ -156,7 +169,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
    * checked here, on the effects that are applied. Such a conflict is a
    * fault of the rule, which leaves the input not judged.
    */
-  const sets = (effect: Effect, by: Mark | null): void => {
+  const sets = (effect: GenesisEffect, by: Mark | null): void => {
     if (effect.effect !== "state" && effect.effect !== "party" && effect.effect !== "list" && effect.effect !== "ref" && effect.effect !== "value") return;
     const what = JSON.stringify([effect.item, effect.effect === "state" ? null : effect.slot]);
     const [earlier, successive] = [set.get(what), effect.effect === "list"];
@@ -200,7 +213,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     if (!Array.isArray(given) || given.length > rule.most) throw outside(mark, `no list of at most ${rule.most} effects`);
     const bad = (what: string) => refuse("bad-field", `effects.${at}: the rule ${mark.code} ${what}`);
     for (const effect of given as readonly RuleEffect[]) {
-      if (!isEffect(effect) || !BY_RULE.includes(effect.effect)) throw outside(mark, "a value that is none of the effects that a rule returns");
+      if (!(j.judged?.type === "genesis" ? isGenesisEffect(effect) : isEffect(effect)) || !BY_RULE.includes(effect.effect)) throw outside(mark, "a value that is none of the effects that a rule returns");
       if (effect.effect === "operation") {
         // Section 6.1, "An operation that a rule opens": its owner is this definition, and its kind is one that `outcomes` lists.
         const kinds = nativeOutcomes(j.definition);
@@ -261,7 +274,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
       if (was && own(type.states, was.state)?.final) return refuse("final", `effects.${at}: item ${item.id} is ${was.state}`);
       const of = { item: item.id, slot: "slot" in effect ? effect.slot : "" };
       /** The value as the slot holds it, or undefined when it is not a value of the slot's type: by the type's rule when the type is a mark, and else as data. */
-      const fits = (to: FieldType, value: FieldValue): FieldValue | undefined => {
+      const fits = (to: FieldType, value: GenesisFieldValue): GenesisFieldValue | undefined => {
         const coded = ofCodedType(j, to, value, of);
         // Section 4.1: an item's ID is the `seq` of the entry that opened it. So a rule may name the item that this entry opens, which
         // the state before the entry does not hold yet: the destination's `branch.judging` "may be the one that the entry itself
@@ -361,7 +374,7 @@ function executeEffects(j: Judging, instructions: readonly EffectInstruction[], 
     // Every applied effect checks finality on the state before the entry.
     const was = j.subjects.get(subject);
     if (was && own(type.states, was.state)?.final) return refuse("final", `effects.${i}: item ${id} is ${was.state}`);
-    const fits = (to: FieldType, slot: string): FieldValue | undefined => {
+    const fits = (to: FieldType, slot: string): GenesisFieldValue | undefined => {
       const coded = ofCodedType(j, to, source, { item: id, slot });
       if (coded !== null) return coded ? source as FieldValue : undefined;
       if (!copied) throw new TypeError("copied effect value has no admitted source");

@@ -5,7 +5,7 @@ import { smokeWorker, smokeSandbox, deploySmokeMain, BROWSER_USER_AGENT } from "
 import { parseConfig, sandboxScreenOrigins, smokePolicy } from "./deploy-config.mjs";
 
 const origin = "https://TEST.invalid".toLowerCase();
-const register = { kind: "register", scope: "sc_" + "a".repeat(52), inc: "in_" + "a".repeat(26) };
+const register = { scope: "sc_" + "a".repeat(52), genesis: "sha256:" + "a".repeat(64) };
 const offer = { v: 2, origin, register, definition: "platform:register@26" };
 const config = (start = false) => ({ name: "dap-demo", main: "worker.ts", vars: start
   ? { REGISTER_SCOPE: register.scope, DEMO_START_CONFIG: JSON.stringify({ ...offer, v: 3 }) } : {} });
@@ -57,7 +57,7 @@ test("the configured offer must name its exact register and an omitted offer mus
   const valid = scripted({ creation: 200 });
   assert.equal((await smokeWorker({ config: config(true), url: origin }, valid)).pass, true);
   assert.equal(valid.calls.length, 6);
-  const wrong = scripted({ creation: 200, body: { ...offer, register: { ...register, inc: "in_" + "b".repeat(26) } } });
+  const wrong = scripted({ creation: 200, body: { ...offer, register: { ...register, genesis: "sha256:" + "b".repeat(64) } } });
   assert.equal((await smokeWorker({ config: config(true), url: origin }, wrong)).pass, false);
   const absent = scripted(); assert.equal((await smokeWorker({ config: config(), url: origin }, absent)).pass, true);
   const untracked = scripted({ creation: 200 });
@@ -98,14 +98,14 @@ test("invalid origin or offer context refuses before fetch and no input can over
   assert.equal(calls, 0);
 });
 
-test("the four tracked configs define three absent offers and one pinned demo offer", async () => {
+test("the four tracked configs define no offer: the demo offer waits for the planner's new register", async () => {
   const policies = [];
   for (const name of ["grow", "lending", "demo", "artroom-scope"]) {
     const source = await readFile(new URL(`../apps/room/wrangler.${name}.jsonc`, import.meta.url), "utf8");
     policies.push(smokePolicy(parseConfig(source)));
   }
   assert.deepEqual(policies.map(row => row.mcpStatus), [404, 404, 404, 404]);
-  assert.deepEqual(policies.map(row => row.offer !== null), [false, false, true, false]);
+  assert.deepEqual(policies.map(row => row.offer !== null), [false, false, false, false]);
 });
 
 const screen = "https://test.inguz.space", room = "sc_" + "c".repeat(52);

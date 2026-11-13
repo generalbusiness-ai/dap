@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import type { Entry, Input } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, utf8 } from "@generalbusiness/dap-bytes";
+import type { Entry, Input, SequenceEntry } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, isEntry, newGenesisNonce, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { timeMs } from "@generalbusiness/dap-derive";
 import { signerOf } from "../src/entry-signer.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS as B } from "../src/local-signers.ts";
@@ -17,20 +17,26 @@ const resetLegacy = (state: DurableObjectState) => {
 test("native append signer evidence preserves every classifier variant, inclusive time and unknown versus negative", async () => {
   const scope = await create(); await scope.hold();
   const entries = await scope.entries(), genesis = entries[0]!, act = entries[1]!;
-  if (genesis.input.type !== "genesis" || act.input.type !== "act") return expect.fail("fixture lacks native signed entries");
+  if (genesis.input.type !== "genesis" || act.input.type !== "act" || !("genesis" in act)) return expect.fail("fixture lacks native signed entries");
   expect(signerOf(genesis)).toBe(rita.key);
+  expect(scope.at).toEqual({ scope: scopeIdOf(genesis.input.seed), genesis: entryHash(genesis) });
+  expect(scope.genesis.fact.hash).toBe(entryHash(genesis));
   const unsigned: Input[] = [
     { ...genesis.input, decision: "refused" }, { ...genesis.input, "founding": null },
     { type: "checkpoint", through: 0, state: entryHash(genesis) },
     { type: "timed", item: 0, rule: "rule", due: at(0) },
     { type: "diagnosis", of: { seq: 0, n: 0 }, finding: "undelivered", attempts: [] },
     { type: "outcome", operation: "0:0", attempt: 1, owner: "hold@1", kind: "fixture", result: "unknown", evidence: { basis: "none", body: null } },
-    { type: "delivery", from: scope.genesis.fact, n: 0, message: { class: "advisory", type: "notify", body: null } },
+    { type: "delivery", from: scope.genesis.fact, sourceKind: genesis.input.seed.kind, n: 0, message: { class: "advisory", type: "notify", body: null } },
   ];
-  for (const input of unsigned) expect(signerOf({ ...act, input })).toBeNull(); // pure classifier variants, not judged histories
+  for (const input of unsigned) expect(signerOf({ ...act, input } as Entry)).toBeNull(); // pure classifier variants, not judged histories: a genesis input beside a later entry body
   expect(signerOf({ ...act, input: { type: "preparation", signed: act.input.signed, authority: [], capability: "hold@1", step: "fixture" } })).toBe(rita.key);
   const native = await scope.inside(state => {
     const index = new SqliteStore(sqlOf(state)).localSigners;
+    const control = JSON.parse(state.storage.sql.exec("SELECT value FROM local_signer_control WHERE id=1").one()["value"] as string);
+    const generation = state.storage.sql.exec("SELECT generation FROM latest_local_signer WHERE actor=?", rita.key).one()["generation"];
+    expect(control.at).toEqual(scope.at);
+    expect(generation).toBe(canonicalize([1, scope.at]));
     return [index.proof(rita.key, timeMs(at(0))!), index.proof(una.key, timeMs(at(0))!), index.proof(vic.key, timeMs(at(0))!), index.proof(rita.key, timeMs(at(0))! + 1)];
   });
   expect(native).toEqual([{ state: "positive", seq: 2, time: at(0) }, { state: "positive", seq: 3, time: at(0) }, { state: "negative" }, { state: "negative" }]);
@@ -73,7 +79,7 @@ async function journal(count: number, padding = 0): Promise<Lane> {
   const scope = await create(); await scope.commitment();
   await scope.inside(state => {
     const store = new SqliteStore(sqlOf(state));
-    const sample = JSON.parse(store.stored(1)!.bytes) as Entry;
+    const sample = JSON.parse(store.stored(1)!.bytes) as SequenceEntry;
     store.transaction(() => {
       let current = store.scope()!;
       for (let seq = current.head.seq + 1; seq < count; seq++) {
@@ -165,7 +171,30 @@ test("signer migration rejects generation, version, missing, corrupt, backward a
       const sql = state.storage.sql, store = new SqliteStore(sqlOf(state));
       const control = JSON.parse(sql.exec("SELECT value FROM local_signer_control").one()["value"] as string);
       if (fault === "version") { control.v = 2; sql.exec("UPDATE local_signer_control SET value=?", canonicalize(control)); }
-      if (fault === "generation") { control.at.kind = "different"; sql.exec("UPDATE local_signer_control SET value=?", canonicalize(control)); }
+      if (fault === "generation") {
+        const birth = JSON.parse(store.stored(0)!.bytes) as Entry;
+        if (birth.input.type !== "genesis") throw new Error("actual native genesis required");
+        const firstNonce = newGenesisNonce(new Uint8Array(16).fill(233));
+        const nonce = birth.input.nonce === firstNonce ? newGenesisNonce(new Uint8Array(16).fill(234)) : firstNonce;
+        const otherBirth = { ...birth, input: { ...birth.input, nonce } };
+        if (!isEntry(otherBirth)) throw new Error("valid alternate genesis required");
+        const otherGenesis = entryHash(otherBirth);
+        expect(isEntry(otherBirth)).toBe(true);
+        expect(scopeIdOf(otherBirth.input.seed)).toBe(scope.at.scope);
+        expect(otherGenesis).not.toBe(scope.at.genesis);
+        // Corrupt only the later sequence word, keeping the existing metadata,
+        // tail/cutoff hash and predecessor checks consistent with those bytes.
+        // This is a private index fault, never a native judgment/admission.
+        const last = JSON.parse(store.stored(control.tail.seq)!.bytes) as Entry;
+        if (last.input.type === "genesis" || !("genesis" in last)) throw new Error("actual later journal entry required");
+        const wrong: Entry = { ...last, genesis: otherGenesis };
+        expect(isEntry(wrong)).toBe(true);
+        const bytes = canonicalize(wrong), hash = entryHash(wrong);
+        sql.exec("UPDATE entry SET bytes=?,hash=?,size=? WHERE seq=?", bytes, hash, utf8(bytes).length, wrong.seq);
+        store.setScope({ ...store.scope()!, head: { seq: wrong.seq, hash } });
+        control.tail.hash = hash; control.cutoff.hash = hash;
+        sql.exec("UPDATE local_signer_control SET value=?", canonicalize(control));
+      }
       if (fault === "cutoff") { control.cutoff.hash = `sha256:${"0".repeat(64)}`; sql.exec("UPDATE local_signer_control SET value=?", canonicalize(control)); }
       if (fault === "missing") sql.exec("DELETE FROM entry WHERE seq=3");
       if (fault === "corrupt") sql.exec("UPDATE entry SET bytes='[]',size=2 WHERE seq=3");
@@ -178,6 +207,7 @@ test("signer migration rejects generation, version, missing, corrupt, backward a
       return { batch, status: store.localSigners.status(), proof: store.localSigners.proof(rita.key, timeMs(at(0))!), again: store.localSigners.maintain() };
     });
     expect(got.status.phase).toMatch(/invalid|stopped/);
+    if (fault === "generation") expect(got.status).toMatchObject({ phase: "stopped", reason: "entry" });
     expect(got.proof).toEqual({ state: "unknown" });
     expect(got.batch.pending).toBe(false); expect(got.again.pending).toBe(false);
   }
@@ -186,7 +216,7 @@ test("signer migration rejects generation, version, missing, corrupt, backward a
 test("native history and signer maintenance roll back together and forged signer row metadata grants nothing", async () => {
   const scope = await create(); await scope.commitment();
   const got = await scope.inside(state => {
-    const store = new SqliteStore(sqlOf(state)), before = store.scope()!, sample = JSON.parse(store.stored(1)!.bytes) as Entry;
+    const store = new SqliteStore(sqlOf(state)), before = store.scope()!, sample = JSON.parse(store.stored(1)!.bytes) as SequenceEntry;
     try {
       store.transaction(() => {
         const entry: Entry = { ...sample, seq: 3, prev: before.head.hash };

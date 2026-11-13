@@ -12,7 +12,7 @@ import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
 import { fixtureRoute as route } from "./support/serving-route.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, creation, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
+import { Lane, START, at, foreignOf, creation, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 test("native receiver pins fund item and request transfers at full scope ceilings, retain an over-limit body once, and replay their real child results after eviction", async () => {
   // Two actual scopes and journals, native hold code, SQLite and routes.
@@ -33,8 +33,7 @@ test("native receiver pins fund item and request transfers at full scope ceiling
     wired.set(name, () => ({ capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE,
       definitions: { read: async () => ({ ok: false, reason: "absent" }), platform: named => named === "platform:task@1" ? { data: childData, rules: {} } : null },
       resolver: { read: async (fact: FactRef) => {
-        const entry = await stubOf(fact.at.scope).entry(reader, fact.seq);
-        return entry.ok && entry.value.hash === fact.hash ? { fact, entry: entry.value.entry, under: peers.get(fact.at.scope)!.declared.name } : null;
+        return foreignOf(fact, peers.get(fact.at.scope)!.declared.name);
       } },
       texts: { read: async (from: FactRef, digest: Digest) => {
         const text = await (stubOf(from.at.scope) as unknown as { text(seq: number, digest: Digest): Promise<string | null> }).text(from.seq, digest);
@@ -65,7 +64,8 @@ test("native receiver pins fund item and request transfers at full scope ceiling
       return { head: store.scope()!.head, bytes: store.logicalBytes(), keys: store.keyCounts(), owner: ownerReservations(CAPABILITY_CODE, store, under), reserved: reserved(store, under, head.input, CAPABILITY_CODE), pin: store.record("hold@1", "receiver-pin", [0]), text: store.retained("text", digest)?.bytes ?? null, snapshot: store.all() };
     });
     const unit = under.pendingWorkAmounts.receiverPins!.byKind["directory"]!;
-    expect(unit).toEqual({ entries: 4, items: 1, records: 0, bytes: 6 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 });
+    // Ruling a4a587c9: the per-entry retained bound also charges one birth (one entryBytes) for the foreign sequence it uses.
+    expect(unit).toEqual({ entries: 4, items: 1, records: 0, bytes: 7 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 });
     const before = await inspect();
     expect(before.owner).toEqual({ entries: 8, items: 2, records: 0, bytes: 2 * unit.bytes, requests: 2 });
     expect(before.keys).toEqual({ items: 1, records: 1, requests: 0 });

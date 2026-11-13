@@ -6,7 +6,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_BOUNDS, ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { ARCHIVE_POSITION_METADATA_BYTES, archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { ArchiveWindow, openArchiveWindow, type ArchiveWindowCheckpoint } from "../src/archive-window.ts";
@@ -164,9 +164,9 @@ test("native prefix admission binds the original cutoff and full pin before entr
     after: { cost: result.after.cost, gross: result.after.gross, reservation: result.after.reservation, frameBytes: result.after.frameBytes,
       entries: result.after.prefix.positions.length, entryBytes: result.after.prefix.bytes },
     qualification: "Actual native SQLite/pin/frame/scalar position reads on original component budgets. Reviewed-cohort set and predecessor are TEST metadata, not privacy admission, integrity, archive receipts or export. No entry JSON or bodies selected." };
-  expect([result.frameBytes, result.prefix.bytes, result.after.frameBytes, result.after.prefix.bytes]).toEqual([418, 1477, 418, 1557]);
-  expect(result.gross).toEqual({ entries: 1, attempts: 0, nodes: 0, calls: 7, metadata: 70434, inputWork: 237938 });
-  expect(result.after.gross).toEqual({ entries: 1, attempts: 0, nodes: 0, calls: 6, metadata: 53026, inputWork: 225650 });
+  expect([result.frameBytes, result.prefix.bytes, result.after.frameBytes, result.after.prefix.bytes]).toEqual([464, 1416, 464, 1617]);
+  expect(result.gross).toEqual({ entries: 1, attempts: 0, nodes: 0, calls: 7, metadata: 70480, inputWork: 234448 });
+  expect(result.after.gross).toEqual({ entries: 1, attempts: 0, nodes: 0, calls: 6, metadata: 53072, inputWork: 229904 });
   for (const [measured, afterReceipt] of [[result, false], [result.after, true]] as const) {
     const { prefix, gross, frameBytes } = measured;
     expectSettledPinCost(measured);
@@ -199,7 +199,7 @@ test("native incarnation, cutoff, gap and size damage cannot yield prefix admiss
       try { archivePrefixMetadata({ exec(query, ...args) { queries.push(query); return state.storage.sql.exec(query, ...args); } }, at, head, PROPOSED_BOUNDS, new ArchiveBudget(), certified); return { reason: "admitted", queries }; }
       catch (error) { return { reason: (error as { reason: string }).reason, queries }; }
     };
-    const wrongInc = read({ ...lane.at, inc: newIncarnation(new Uint8Array(16).fill(39)) }, through);
+    const wrongInc = read({ ...lane.at, genesis: `sha256:${"27".repeat(32)}` as const }, through);
     const future = read(lane.at, { ...through, seq: through.seq + 1 });
     const wrongHash = read(lane.at, { ...through, hash: syntheticHash });
     const original = state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'scope'").one().v;

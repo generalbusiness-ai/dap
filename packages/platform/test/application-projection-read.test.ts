@@ -61,7 +61,7 @@ test("fact-signer uses only exact local recorded signer metadata and keeps absen
   } } });
   const query = applicationProjectionQueries(signed, scope, {})["all"]!;
   const fact = { at: scope, seq: 7, hash: textDigest("PUBLIC TEST original signed fact") };
-  const signer = { membership: { ...scope, kind: "membership" }, member: "@recorded" };
+  const signer = { membership: { ...scope }, member: "@recorded" };
   const rows: Item[] = [{ ...row(1), refs: { seen: fact } }, { ...row(2), refs: { seen: 7 } }, { ...row(3), refs: { seen: null } }];
   const metadata = { scope, at: head, entries: [{ seq: 7, hash: fact.hash, signer }] };
   const read = (signers: unknown = metadata, items = rows) => projectApplicationQueryReads(signed, native, scope, {}, { all: reply(query, items) }, {}, {}, { all: signers });
@@ -72,7 +72,7 @@ test("fact-signer uses only exact local recorded signer metadata and keeps absen
   expect(() => read({ ...metadata, entries: [{ ...metadata.entries[0]!, signer: { member: "@guessed" } }] })).toThrow("application-projection-unavailable");
   expect(() => read({ ...metadata, entries: [] })).toThrow("application-projection-unavailable");
   expect(() => read(metadata, [{ ...row(1), refs: { seen: { ...fact, seq: 13 } } }])).toThrow("application-projection-unavailable");
-  expect(() => read(metadata, [{ ...row(1), refs: { seen: { ...fact, at: { ...scope, inc: `in_${"b".repeat(25)}a` } } } }])).toThrow("application-projection-unavailable");
+  expect(() => read(metadata, [{ ...row(1), refs: { seen: { ...fact, at: { ...scope, genesis: textDigest("PUBLIC TEST another genesis") } } } }])).toThrow("application-projection-unavailable");
 });
 
 // Invariant: selected fields and native row identity at one exact head form

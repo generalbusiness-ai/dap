@@ -4,7 +4,7 @@ import { cliInvitationDirectoriesForMembership, answersVersionQuestion, isHandle
  * Store.private holds secrets/envelopes; public config holds only exact pointers.
  * Callers serialize one Store and fence their captured Page context. */
 import type { Answer, Entry, FactRef, FieldValue, MemberRef, Receipt, SignedIntent, Summary, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, entryHash, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent, isEntryBodyOf } from "@generalbusiness/dap-bytes";
 import { agentKeyInvitationOf, encodeAgentKeyInvitation, checkerKeyInvitationOf, deviceKeyInvitationOf, encodeCheckerKeyInvitation, isCheckerKeyMembership, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type DeviceKeyInvitation, type Signer } from "@generalbusiness/dap-client";
 
 import { expectedOf, LINK, linkOf, type DefinitionShape, type Link } from "./browser-helpers.ts";
@@ -78,7 +78,7 @@ async function boundDirectory(reads: InvitationReads, repository: Repository, me
   const read = await handle(reads, repository.directory.scope).summary();
   if (!read.ok || !read.complete || read.next !== undefined || read.value.status !== "active" || !cliInvitationDirectoriesForMembership(definition).some(directory => directory === read.value.definition) || !sameOptional(read.value.scope, repository.directory)) return null;
   const item = read.value.items.find(item => item.type === "repository"), rules = item?.refs["rules"], destination = item?.refs["destination"];
-  if (!item || !sameOptional(item.refs["membership"], repository.membership) || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return null;
+  if (!item || !sameOptional(item.refs["membership"], repository.membership) || !isScopeRef(rules) || rules.scope !== repository.rules || !isScopeRef(destination) || destination.scope !== repository.destination) return null;
   return { directory: read.value.scope, membership: membership.scope, rules: rules.scope, destination: destination.scope };
 }
 export function isInvitationIssueInput(value: unknown): value is InvitationIssueInput {
@@ -89,7 +89,7 @@ export function isInvitationIssueInput(value: unknown): value is InvitationIssue
 }
 function repositoryValid(r: unknown): r is Repository {
   if (!closed(r, ["directory", "membership", "rules", "destination"], ["inbox"])) return false;
-  return isScopeRef(r["directory"]) && r["directory"].kind === "directory" && isScopeRef(r["membership"]) && r["membership"].kind === "membership" && isScopeId(r["rules"]) && isScopeId(r["destination"]) && (r["inbox"] === undefined || isScopeId(r["inbox"]));
+  return isScopeRef(r["directory"]) && isScopeRef(r["membership"]) && isScopeId(r["rules"]) && isScopeId(r["destination"]) && (r["inbox"] === undefined || isScopeId(r["inbox"]));
 }
 function stageValid(stage: Stage, issue: Issue, kind: string): boolean {
   if (!closed(stage, ["signed", "attempted"], ["receipt", "refused"]) || !isSignedIntentShape(stage.signed) || !verifySignedIntent(stage.signed) || stage.signed.intent.kind !== kind || stage.signed.intent.actor !== issue.actor || !sameOptional(stage.signed.intent.to, issue.repository.membership) || typeof stage.attempted !== "boolean") return false;
@@ -176,7 +176,7 @@ async function snapshotChain(ctx: Context, config: Config, input: IssuedInput, a
 }
 async function followFact(M: ScopeHandle, fact: FactRef): Promise<Entry | null> {
   const read = await M.entry(fact.seq);
-  return read.ok && read.complete && read.next === undefined && sameOptional(factRefOf(read.value.entry), fact) && read.value.hash === fact.hash && entryHash(read.value.entry) === fact.hash ? read.value.entry : null;
+  return read.ok && read.complete && read.next === undefined && isEntryBodyOf(read.value.entry, fact) && read.value.hash === fact.hash && entryHash(read.value.entry) === fact.hash ? read.value.entry : null;
 }
 async function follow(M: ScopeHandle, signed: SignedIntent, receipt: Receipt, definition: AgentKeyMembership): Promise<Entry | null> {
   if (!isReceipt(receipt) || receipt.definition !== definition || receipt.intent !== intentDigest(signed.intent) || !sameOptional(receipt.fact.at, signed.intent.to)) return null;
@@ -200,13 +200,13 @@ async function inboxOfOpening(reads: InvitationReads, opening: Entry, membership
   const scope = scopeIdOf(birth.to), I = handle(reads, scope);
   const summaryRead = await I.summary();
   if (!summaryRead.ok && (summaryRead.reason === "not-found" || summaryRead.reason === "forbidden")) return { pending: scope };
-  if (!summaryRead.ok || !summaryRead.complete || summaryRead.next !== undefined || !answersVersionQuestion(summaryRead.value.definition, "cliInvitationInboxDefinition") || summaryRead.value.scope.kind !== "inbox" || summaryRead.value.scope.scope !== scope) return null;
+  if (!summaryRead.ok || !summaryRead.complete || summaryRead.next !== undefined || !answersVersionQuestion(summaryRead.value.definition, "cliInvitationInboxDefinition") || summaryRead.value.scope.scope !== scope) return null;
   if (summaryRead.value.status === "provisional") return { pending: scope };
   if (summaryRead.value.status !== "active") return null;
   const birthRead = await I.entry(0);
   if (!birthRead.ok || !birthRead.complete || birthRead.next !== undefined) return null;
   const entry = birthRead.value.entry;
-  if (entry.seq !== 0 || entry.input.type !== "genesis" || entry.input.decision !== "applied" || entry.input.kind !== "establish" || entry.input.inc !== summaryRead.value.scope.inc || !sameOptional(entry.at, summaryRead.value.scope) || !sameOptional(entry.input.seed, birth.to) || !sameOptional(entry.input.source, factRefOf(opening)) || entry.input.n !== birth.n || entryHash(entry) !== birthRead.value.hash) return null;
+  if (entry.seq !== 0 || entry.input.type !== "genesis" || entry.input.decision !== "applied" || entry.input.kind !== "establish" || birthRead.value.hash !== summaryRead.value.scope.genesis || scopeIdOf(entry.input.seed) !== summaryRead.value.scope.scope || !sameOptional(entry.input.seed, birth.to) || !sameOptional(entry.input.source, { at: membership, seq: opening.seq, hash: entryHash(opening) }) || entry.input.n !== birth.n || entryHash(entry) !== birthRead.value.hash) return null;
   const inbox = summaryRead.value.items.find(item => item.type === "inbox" && item.state === "open");
   return inbox && sameOptional(inbox.parties["owner"], owner) && sameOptional(inbox.refs["membership"], membership) ? summaryRead.value.scope : null;
 }
@@ -469,7 +469,7 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
         const readback = await ctx.store.secret(keyName);
         if (!readback || !sameOptional([...readback], [...own])) { own.fill(0); return bad(); }
       }
-      config = { v: 1, service: link.service, key: keyName };
+      config = { v: 2, service: link.service, key: keyName };
     }
     if (!own || own.length !== 32) return bad();
     const key = own.slice();

@@ -1,24 +1,25 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { env } from "cloudflare:workers";
 import type { ControlRequest, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, newIncarnation, signControl, utf8 } from "@generalbusiness/dap-bytes";
+import { RETIRED_ROOM_READER_COMMIT, b64url, canonicalize, digestBytes, signControl, utf8 } from "@generalbusiness/dap-bytes";
 import { applicationScreenPath } from "@generalbusiness/dap-client/application";
 import { indexedScopes, ScopeIndexRows, SCOPE_INDEX_NAME, type ScopeIndexPort, type ScopeRegistration } from "../src/scope-index.ts";
-import scopeWorker, { api, mcpRoute } from "../src/worker.ts";
+import scopeWorker, { api, mcpRoute, route } from "../src/worker.ts";
 import { applicationSandboxPage } from "../src/applications/route.ts";
 import { namespace, membershipIn, type Binding } from "../src/namespace.ts";
+import type { SourceReadContext } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
 import { at, create, creation, definition, reader, rita, START } from "./fixtures-native.ts";
 import { scopeRegistrationWiring } from "./worker.ts";
 
 test("index lookup writes no schema and registration on real SQLite is idempotent and conflict closed", async () => {
-  const holder = await create(), proof = { at: holder.at, genesis: holder.genesis.fact.hash };
+  const holder = await create(), proof: ScopeRegistration = { at: holder.at, kind: "directory" };
   const result = await holder.inside(state => {
     const queries: string[] = [];
     const rows = new ScopeIndexRows({ exec: (query, ...args) => { queries.push(query); return state.storage.sql.exec(query, ...args); } });
     const before = rows.has(proof.at.scope), reads = [...queries]; queries.length = 0;
     const first = rows.register(proof), again = rows.register(proof);
-    const conflict = rows.register({ ...proof, genesis: `sha256:${"0".repeat(64)}` });
+    const conflict = rows.register({ ...proof, at: { ...proof.at, genesis: `sha256:${"0".repeat(64)}` } });
     queries.length = 0;
     const after = rows.has(proof.at.scope), wrongKind = rows.has(proof.at.scope, "membership"), listed = rows.list();
     return { before, reads, first, again, conflict, after, wrongKind, listed, lookups: queries };
@@ -30,7 +31,7 @@ test("index lookup writes no schema and registration on real SQLite is idempoten
 
 test("unknown foreign facts, site and application lookups and hosted registry reach no target", async () => {
   const born = creation();
-  const atRef: ScopeRef = { scope: born.name, inc: newIncarnation(crypto.getRandomValues(new Uint8Array(16))), kind: "membership" };
+  const atRef: ScopeRef = { scope: born.name, genesis: digestBytes(crypto.getRandomValues(new Uint8Array(16))) };
   const fact = { at: atRef, seq: 0, hash: digestBytes(utf8("unknown")) };
   let targetCalls = 0, registryCalls = 0, bodyReads = 0, indexReads = 0;
   const targets: Binding = { idFromName() { targetCalls++; throw Error("unknown target namespace touched"); }, get() { targetCalls++; throw Error("unknown target instantiated"); } };
@@ -48,7 +49,7 @@ test("unknown foreign facts, site and application lookups and hosted registry re
   };
   const settings = { SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } };
   const gated = indexedScopes(targets, settings), ports = namespace(gated);
-  expect(await ports.resolver.read(fact, 1)).toEqual({ absent: true });
+  expect(await ports.resolver.read(fact, { maxBytes: 1024, milliseconds: 1000 }, false)).toEqual({ absent: true });
   expect(await ports.proofs.read(fact, 1024, 1000)).toBeNull();
   expect(await ports.births.read(atRef, 1000, 1024)).toBeNull();
   expect(await ports.birthNames.read(atRef.scope, "directory", 1000, 1024)).toBeNull();
@@ -87,6 +88,92 @@ test("unknown foreign facts, site and application lookups and hosted registry re
     SCOPES: targets as unknown as DurableObjectNamespace, REGISTRIES: registries as unknown as DurableObjectNamespace, AGENTS: env.AGENTS });
   expect(otherKind?.status).toBe(404); // a known Directory ID is not a known Membership
   expect({ targetCalls, registryCalls, bodyReads }).toEqual({ targetCalls: 0, registryCalls: 0, bodyReads: 0 });
+
+  // This retired RPC stand-in proves routing and raw propagation only.
+  // It neither constructs an old database nor supplies Native authority.
+  let retiredNames = 0, retiredGets = 0, retiredRegistrations = 0, retiredReads = 0;
+  const rawStop = Object.freeze({ stop: "retired" } as const);
+  const retiredTarget: Binding<string> = {
+    idFromName(name) { expect(name).toBe(born.name); retiredNames++; return name; },
+    get() { retiredGets++; return {
+      registerKnown: async () => { retiredRegistrations++; return rawStop; },
+      summary: async () => { retiredReads++; return expect.fail("A retired registration must stop before summary"); },
+      observed: async () => { retiredReads++; return expect.fail("A retired registration must stop before observed work"); },
+    }; },
+  };
+  let newIndexReads = 0;
+  const emptyNewIndex: ScopeIndexPort = {
+    async has(name) { expect(name).toBe(born.name); newIndexReads++; return false; },
+    async register() { return expect.fail("A retired room must not seed the new index"); },
+    async list() { return expect.fail("A lookup must not scan the index"); },
+  };
+  const retirementSettings = { SCOPE_INDEX: {
+    idFromName(name: string) { expect(name).toBe("applied-genesis-v2"); return name; },
+    get() { return emptyNewIndex; },
+  } };
+  const enforced = indexedScopes(retiredTarget, { ...retirementSettings, SCOPE_INDEX_MODE: "enforce" });
+  const notFound = await route(new Request(`https://scope.test/v1/scopes/${born.name}`), enforced);
+  expect([notFound.status, await notFound.json()]).toEqual([404, { ok: false, reason: "not-found" }]);
+  expect({ retiredNames, retiredGets, retiredRegistrations, retiredReads, newIndexReads }).toEqual({ retiredNames: 0, retiredGets: 0, retiredRegistrations: 0, retiredReads: 0, newIndexReads: 1 });
+  const legacy = indexedScopes(retiredTarget, { ...retirementSettings, SCOPE_INDEX_MODE: "register" });
+  const raw = legacy.get(legacy.idFromName(born.name)) as { summary(reader: unknown): Promise<unknown> };
+  expect(await raw.summary(null)).toBe(rawStop);
+  expect(await api(legacy).summary(born.name, null)).toEqual({ ok: false, reason: "unavailable" });
+  const gone = await route(new Request(`https://scope.test/v1/scopes/${born.name}`), legacy);
+  expect([gone.status, gone.headers.get("cache-control")]).toEqual([410, "no-store"]);
+  expect(await gone.json()).toEqual({
+    error: "room-retired",
+    message: `This room retired at the identifier cutover. Commit ${RETIRED_ROOM_READER_COMMIT} reads its journal.`,
+    reader: RETIRED_ROOM_READER_COMMIT,
+  });
+  expect({ retiredNames, retiredGets, retiredRegistrations, retiredReads, newIndexReads }).toEqual({ retiredNames: 3, retiredGets: 3, retiredRegistrations: 3, retiredReads: 0, newIndexReads: 4 });
+
+  // TEST transport/parser-work clock stand-in, not a Native peer or proof.
+  // Both RPC replies arrive in time. The real strict parser fails on the same
+  // malformed bytes; only the synchronous validation work's elapsed time differs.
+  const malformed = '{"required-source-validation":';
+  const sourceCalls: { seq: number; origin: boolean; maxBytes: number; milliseconds: number }[] = [];
+  const direct = namespace({
+    idFromName: name => name,
+    get: () => ({ source: async (seq: number, origin: boolean, context: SourceReadContext) => {
+      sourceCalls.push({ seq, origin, maxBytes: context.maxBytes, milliseconds: context.milliseconds });
+      return { at: atRef, under: "TEST malformed source", bytes: malformed };
+    } }),
+  }).resolver;
+  const originalCharCodeAt = String.prototype.charCodeAt;
+  let elapsed = 2, charged = false;
+  const validationWork: number[] = [];
+  try {
+    vi.useFakeTimers({ toFake: ["performance"] });
+    const work = vi.spyOn(String.prototype, "charCodeAt").mockImplementation(function (this: string, index: number) {
+      if (String(this) === malformed && !charged) {
+        charged = true; validationWork.push(elapsed);
+        vi.advanceTimersByTime(elapsed);
+      }
+      return originalCharCodeAt.call(this, index);
+    });
+    try {
+      const started = performance.now();
+      expect(await direct.read(fact, { maxBytes: 1024, milliseconds: 10 }, false)).toEqual({ absent: true });
+      expect(charged).toBe(true);
+      expect(performance.now() - started).toBe(2);
+
+      elapsed = 11; charged = false;
+      const lateStarted = performance.now();
+      expect(await direct.read(fact, { maxBytes: 1024, milliseconds: 10 }, false)).toBeNull();
+      expect(charged).toBe(true);
+      expect(performance.now() - lateStarted).toBe(11);
+      expect(validationWork).toEqual([2, 11]);
+      expect(sourceCalls).toEqual([
+        { seq: fact.seq, origin: false, maxBytes: 1024, milliseconds: 10 },
+        { seq: fact.seq, origin: false, maxBytes: 1024, milliseconds: 10 },
+      ]);
+    } finally {
+      work.mockRestore();
+    }
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("unknown scope gate touches no target and only the native target's applied genesis registers", async () => {
@@ -114,7 +201,7 @@ test("unknown scope gate touches no target and only the native target's applied 
     const answer = await scopes.create(born.signed, definition.declared);
     expect(answer.answer).toBe("accepted");
     if (answer.answer !== "accepted") return expect.fail("native applied genesis required");
-    expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, genesis: answer.receipt.fact.hash });
+    expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, kind: "directory" });
     expect((await scopes.summary(born.name, reader)).ok).toBe(true);
     const again = await scopes.create(born.signed, definition.declared);
     expect(again).toEqual(answer);
@@ -137,10 +224,10 @@ test("unknown scope gate touches no target and only the native target's applied 
     expect((await backfill.summary(born.name, reader)).ok).toBe(false);
     failRegistration = false;
     await scopes.create(born.signed, definition.declared);
-    expect(known.get(born.name)?.genesis).toBe(answer.receipt.fact.hash);
+    expect(known.get(born.name)?.at.genesis).toBe(answer.receipt.fact.hash);
     known.delete(born.name);
     expect((await backfill.summary(born.name, reader)).ok).toBe(true);
-    expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, genesis: answer.receipt.fact.hash });
+    expect(known.get(born.name)).toEqual({ at: answer.receipt.fact.at, kind: "directory" });
     expect((await backfill.summary(denied.name, reader)).ok).toBe(false);
     expect(known.has(denied.name)).toBe(false);
 

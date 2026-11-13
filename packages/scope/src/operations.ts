@@ -42,10 +42,11 @@ import { countedEntries } from "@generalbusiness/dap-derive";
 import type { Bounds, CapabilityName, DecisiveEvidence, Entry, Evidence, FactRef, FactUse, KeyId, OperationId, PlatformDefinition, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import type { ReceiverReads } from "./receiver-reads.ts";
 import { canonicalize, isEvidence, isPlatformDefinition, isOperationId, isRetainedInput, parseStrict, retainedValueKey, utf8 } from "@generalbusiness/dap-bytes";
-import { clockOf, recordedOutcome, evidenceValues, isEntryOf, valueDigest, settleOutcome, snapshotInput, snapshotRead, timeMs, timeOf, type Clock as Reading, type Fetched, type Operation, type OutcomeOffered, type Owners } from "@generalbusiness/dap-derive";
+import { clockOf, recordedOutcome, evidenceValues, isEntryOf, same, valueDigest, settleOutcome, snapshotInput, snapshotRead, timeMs, timeOf, type ClassifiedRetainedUse, type Clock as Reading, type Fetched, type Operation, type OutcomeOffered, type Owners } from "@generalbusiness/dap-derive";
 
-import { ownOf, valuesOf, type Scope } from "./core.ts";
+import { genuineRetained, ownOf, retainedUsesOf, valuesOf, type Scope } from "./core.ts";
 import { report } from "./diag.ts";
+import { admittedOrigin } from "./namespace.ts";
 import type { Wakes } from "./outbox.ts";
 import type { Clock, Ports, Resolver } from "./ports.ts";
 import type { Sealed, Sending, Store } from "./store.ts";
@@ -394,23 +395,25 @@ export class Operations {
   /** Forward security check only: it changes neither old entries nor their derivation. */
   async #publicationReady(operation: Operation, reader?: ReceiverReads): Promise<boolean> {
     const rules = this.#scope.owners()?.rules(operation.owner, operation.kind);
-    const asked = rules?.publicationOrigin?.(this.#store, operation, ownOf(this.#store));
+    const sequence = this.#scope.localSequence();
+    if (rules?.publicationOrigin && !sequence) return false;
+    const asked = rules?.publicationOrigin?.(this.#store, operation, ownOf(this.#store, sequence!));
     if (asked === undefined || asked === null) return true;
     if (asked === false) return false;
     try {
       const receiver = reader ?? await this.#scope.receiverReads();
       if (!receiver) return false;
       if (receiver.mode === "partition-v1") {
-        const read = await within(() => receiver.read(asked.from, this.#bounds.fetchSeconds), this.#bounds.fetchSeconds);
-        if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from)) return false;
+        const read = await within(() => receiver.read(asked.from, { maxBytes: this.#bounds.entryBytes, milliseconds: Math.floor(this.#bounds.fetchSeconds * 1000) }, false), this.#bounds.fetchSeconds);
+        if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from, read.sequence)) return false;
         if (asked.mode !== "application" && read.under !== "change") return false;
         return await receiver.publication(asked.from, asked.directory, asked.destination, asked.mode === "application" ? "application" : "change") === true;
       }
-      const read = await within(() => this.#resolver.read(asked.from, this.#bounds.fetchSeconds, true), this.#bounds.fetchSeconds);
-      if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from)) return false;
+      const read = await within(() => this.#resolver.read(asked.from, { maxBytes: this.#bounds.entryBytes, milliseconds: Math.floor(this.#bounds.fetchSeconds * 1000) }, true), this.#bounds.fetchSeconds);
+      if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from, read.sequence)) return false;
       return asked.mode === "application"
-        ? (answersVersionQuestion(operation.owner, "scopeOperationNativeApplicationOrigin") ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
-        : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []);
+        ? (answersVersionQuestion(operation.owner, "scopeOperationNativeApplicationOrigin") ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, admittedOrigin(read.origin ?? [], this.#bounds.entryBytes)) === true
+        : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, admittedOrigin(read.origin ?? [], this.#bounds.entryBytes));
     } catch { return false; }
   }
 
@@ -510,7 +513,7 @@ export class Operations {
       // A stale file is judged as known not sent, before the durable mark.
       // Recovery and late answers above concern an original request that may
       // already have left and never enter this branch.
-      const local = rules.beforeSend?.(store, operation, attempt, ownOf(store));
+      const local = rules.beforeSend?.(store, operation, attempt, ownOf(store, this.#scope.localSequence()!));
       if (local) {
         const recorded = await this.#record({ type: "outcome", operation: id, attempt, result: "refused", evidence: local }, false);
         if (recorded.recorded === "written") { localRefusals++; this.#again = true; }
@@ -646,7 +649,9 @@ export class Operations {
     let body: unknown = null;
     try {
       const of = this.#store.operation(operation);
-      body = (of && this.#scope.owners()?.rules(of.owner, of.kind)?.unknown?.(this.#store, of, attempt, ownOf(this.#store))) ?? null;
+      const rules = of && this.#scope.owners()?.rules(of.owner, of.kind);
+      const sequence = this.#scope.localSequence();
+      body = (of && sequence && rules?.unknown?.(this.#store, of, attempt, ownOf(this.#store, sequence))) ?? null;
     } catch {
       body = null;
     }
@@ -751,25 +756,39 @@ export class Operations {
     // needs one then has a fault, and its outcome stays offered: the destination's `judge`.
     const rows = this.#scope.observes();
     const store = this.#store;
-    const retained = (use: FactUse): Fetched | null => {
-      const kept = store.retained("entry", use.content);
-      return kept ? { fact: use.fact, entry: JSON.parse(kept.bytes) as Entry, under: kept.under ?? "" } : null;
+    // The retained uses of an origin, read once through Own for this record (ruling a94bfa4d, item 1c). Sealed history does not
+    // change, and the map ends with this call. The judge reads a genuine use as a fact. A local statement is no Fetched (item 1b):
+    // the judge finds it not at hand and leaves the outcome not written now (item 1d).
+    const sequence = this.#scope.localSequence();
+    const origins = new Map<number, ReturnType<typeof retainedUsesOf>>();
+    const classifiedOf = (use: FactUse, origin: number): ClassifiedRetainedUse | null => {
+      if (!origins.has(origin)) origins.set(origin, sequence ? retainedUsesOf(ownOf(store, sequence), origin) : null);
+      return origins.get(origin)?.uses.find(value => same(value.use.fact, use.fact) && value.use.content === use.content && value.use.kind === use.kind) ?? null;
+    };
+    const retained = (use: FactUse, origin: number): Fetched | null => {
+      const classified = classifiedOf(use, origin);
+      return classified ? genuineRetained([classified])[0] ?? null : null;
     };
     let interpreted: readonly Fetched[] | undefined;
     let readRetained = retained;
-    const context = (clock: Reading) => ({ clock, bounds, owners: this.#owners, platform: this.#scope.pinned()?.platform ?? undefined, own: ownOf(store), ...(definition.observing ? { retained: readRetained, ...rows.hand() } : {}), values: [...bytes, ...(rows.hand().values ?? [])] });
+    const context = (clock: Reading) => ({ clock, bounds, owners: this.#owners, platform: this.#scope.pinned()?.platform ?? undefined, own: ownOf(store, this.#scope.localSequence()!), ...(definition.observing ? { retained: readRetained, ...rows.hand() } : {}), values: [...bytes, ...(rows.hand().values ?? [])] });
     if (receiver?.mode === "partition-v1" && definition.observing) {
       // The pure origin preamble asks for every use before it judges rows or
       // effects. Returning no copy discovers that exact immutable dependency
       // set without giving producer labels to a receiver judgment.
-      const needed = new Map<string, FactUse>();
-      settleOutcome(store, definition, input, { ...context(clockOf(store, this.#clock.read())), retained: use => { needed.set(canonicalize([use.fact, use.content]), use); return null; } });
-      const raw = [...needed.values()].map(retained);
+      const needed = new Map<string, { use: FactUse; origin: number }>();
+      settleOutcome(store, definition, input, { ...context(clockOf(store, this.#clock.read())), retained: (use, origin) => { needed.set(canonicalize([use.fact, use.content]), { use, origin }); return null; } });
+      const raw = [...needed.values()].map(({ use, origin }) => classifiedOf(use, origin));
       if (raw.some(copy => copy === null)) return { recorded: "unavailable" };
-      const selected = await receiver.retained(raw as Fetched[]);
+      const selected = await receiver.retained(raw as ClassifiedRetainedUse[]);
       if (!selected) return { recorded: "unavailable" };
-      interpreted = selected;
-      const copies = new Map([...needed.keys()].map((key, n) => [key, selected[n]!]));
+      // The receiver's name replaces the producer's for this judgment only; the retained row keeps its producer.
+      const named = selected.map(({ classified, under }) => {
+        const [fact] = genuineRetained([classified as ClassifiedRetainedUse]);
+        return fact ? { ...fact, under } : null;
+      });
+      interpreted = named.filter((fact): fact is Fetched => fact !== null);
+      const copies = new Map([...needed.keys()].map((key, n) => [key, named[n] ?? null]));
       readRetained = use => copies.get(canonicalize([use.fact, use.content])) ?? null;
     }
     await rows.before(() => { const planned = settleOutcome(store, definition, input, context(clockOf(store, this.#clock.read()))); return planned.result === "unavailable" ? planned.missing : undefined; }, 2);
@@ -787,7 +806,7 @@ export class Operations {
             return {
               // Section 16.1, "A value that a row may retain": each value that a retained observation names is kept with the entry.
               verdict: "write", draft: judged.draft, ...(interpreted ? { facts: interpreted } : {}), retain: [...retain.filter((given) => given.kind === "snapshot" && named.includes(given.digest)), ...valuesOf(judged.draft)],
-              sealed: (sealed) => { wrote.sealed = sealed; rows.sealed(sealed); return { recorded: "written", fact: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash } }; },
+              sealed: (sealed) => { wrote.sealed = sealed; rows.sealed(sealed); return { recorded: "written", fact: { at: store.scope()!.at, seq: sealed.entry.seq, hash: sealed.hash } }; },
               unfit: () => ({ recorded: "refused", detail: "the outcome cannot be an entry" }), full: (_head, bound) => ({ recorded: "unavailable", ...(definition.declared.capacity ? { reason: "scope-full", name: bound } : {}) }),
             };
           case "repeat": return said({ recorded: "repeat", seq: judged.seq });

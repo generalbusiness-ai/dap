@@ -33,7 +33,7 @@ let renderedCard = "";
 const surfaces = new SurfacePanels();
 interface DeclaredAddress { screen: string; items?: Readonly<Record<string, number>>; scope?: ScopeRef }
 const declaredHistory: DeclaredAddress[] = [];
-const scopeKey = (scope?: ScopeRef) => scope ? JSON.stringify([scope.scope, scope.inc, scope.kind]) : "";
+const scopeKey = (scope?: ScopeRef) => scope ? JSON.stringify([scope.scope, scope.genesis]) : "";
 const surfaceOf = () => display?.card?.declared?.surface ?? display?.surface;
 
 function scheduleRefresh() {

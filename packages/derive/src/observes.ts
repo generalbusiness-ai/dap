@@ -35,7 +35,7 @@
 import type { Bounds, ClauseObserves, Digest, KeyId, MemberId, MemberRef, Observe, ObservationUse, ObservingClause, Operand, PlatformData, PlatformDefinition, Retained, RulesObservation, SendForm } from "@generalbusiness/dap-contract";
 import { canonicalize, isKeyId, isMemberId, isMemberRef, isObservationUse, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { headsOf } from "./fold.ts";
-import { observedOf, type Discarded, type RecordedRef, type Retains, type Window } from "./grant.ts";
+import { fixedBy, observedOf, type Discarded, type RecordedRef, type Retains, type Window } from "./grant.ts";
 import { operand, type Judging } from "./guards.ts";
 import { RuleFault, valueDigest, type ValueRead } from "./marks.ts";
 import type { Item, StateView } from "./state.ts";
@@ -163,7 +163,7 @@ const single = (n: number, row: Observe): Listed | null =>
 
 /** True when a member reference names a member of the repository whose membership scope this scope records. */
 const ofRepository = (ref: MemberRef, recorded: RecordedRef | null | undefined): boolean =>
-  !!recorded && ref.membership.scope === recorded.scope && ref.membership.kind === recorded.kind && (recorded.inc === null || ref.membership.inc === recorded.inc);
+  !!recorded && observedOf(ref.membership, recorded);
 
 /**
  * The subject list of an act or of a clause of a result: the subjects of
@@ -355,16 +355,16 @@ function serves(use: ObservationUse, row: Observe, g: Settling, recorded: Record
 
 /**
  * The reference that the scope records for one kind of observed scope, with
- * the incarnation that this entry fixes where none is recorded yet (section
- * 16.1, "The first read of a scope names no incarnation"): every
- * observation that one entry retains of one scope states one incarnation.
+ * the genesis that this entry fixes where the reference is still pending
+ * (section 16.1, "The first read of a scope"): every observation that one
+ * entry retains of one scope states one sequence.
  * It is the one of the grant's observation, or else of the observation at
  * hand of that scope ID with the lowest `read.n`.
  */
 function fixed(recorded: RecordedRef | null | undefined, g: Settling): RecordedRef | null | undefined {
-  if (!recorded || recorded.inc !== null) return recorded;
+  if (!recorded || !("pending" in recorded)) return recorded;
   const first = [...(g.grant ? [g.grant] : []), ...[...g.observed].sort((a, b) => a.read.n - b.read.n)].find((use) => observedOf(use.observation.of, recorded));
-  return first ? { ...recorded, inc: first.observation.of.inc } : recorded;
+  return first ? fixedBy(recorded, first.observation.of) : recorded;
 }
 
 /**

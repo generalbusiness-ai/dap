@@ -34,7 +34,7 @@ test.each(["change", "application"] as const)("%s: a sent recovery and its late 
     },
   };
   wired.set(s.name, () => ({ outside, owners: rules, resolver: {
-    read: async () => sourceVerified ? { entry: proof.merge, under: mode === "application" ? "declared:change" : "change", origin: proof.origin } : null,
+    read: async () => sourceVerified ? { entry: proof.merge, under: mode === "application" ? "declared:change" : "change", sequence: proof.sequence, origin: proof.origin } : null,
   } }));
   const surface = () => s.object as unknown as {
     effect(): Promise<number>;

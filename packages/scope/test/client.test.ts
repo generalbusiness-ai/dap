@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { SELF } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { ScopeHandle, bindingTransport, create, httpTransport, secretSigner, signedIntent, type ServiceBinding, type Transport } from "@generalbusiness/dap-client";
-import { newIncarnation } from "@generalbusiness/dap-bytes";
+import {  } from "@generalbusiness/dap-bytes";
 import { timeMs } from "@generalbusiness/dap-derive";
 import { deskDefinition, grantOf, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { net, rita } from "./net.ts";
@@ -42,7 +42,8 @@ test.each(transports)("a scope handle over %s: an act returns its receipt; the e
   expect(await scope.followReceipt({ ...receipt, fact: { ...receipt.fact, hash: answer.receipt.fact.hash } })).toEqual({ ok: false, reason: "hash-mismatch" });
   // Receipt identity checks preserve the original named refusals.
   const elsewhere = (over: object) => scope.followReceipt({ ...receipt, fact: { ...receipt.fact, at: { ...at, ...over } } });
-  expect([await elsewhere({ inc: newIncarnation(new Uint8Array(16).fill(7)) }), await elsewhere({ kind: "lane" })]).toEqual([{ ok: false, reason: "wrong-incarnation" }, { ok: false, reason: "reference-mismatch" }]);
+  // A reference names no kind (cutover ruling 7), so only the genesis can differ.
+  expect(await elsewhere({ genesis: `sha256:${"07".repeat(32)}` as const })).toEqual({ ok: false, reason: "wrong-genesis" });
   expect(await scope.followOutbox(receipt.sends[0]!)).toMatchObject({ ok: true, value: { outboxId: "1.0", class: "request", held: false, result: null } });
   net.hold = null;
 });

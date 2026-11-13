@@ -10,7 +10,7 @@ import type { ExtentV11, RulesPolicyV11 } from "../src/rules-policy-v11.ts";
 // membership observations; no grants, repository proof, certificate or native scope are exercised here.
 const member = (name: string): MemberId => `@${name}` as MemberId;
 const author = member("author"), owner = member("owner"), reviewer = member("reviewer"), merger = member("merger");
-const checker: MemberRef = { membership: { scope: "sc_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa", kind: "membership" }, member: member("checker") };
+const checker: MemberRef = { membership: { scope: "sc_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", genesis: `sha256:${"a".repeat(64)}` }, member: member("checker") };
 const configuration = `sha256:${"1".repeat(64)}` as Digest;
 const check = { name: "unit", configuration, required: true, checker };
 const policy = (over: Partial<RulesPolicyV11> = {}): RulesPolicyV11 => ({
@@ -103,10 +103,10 @@ test("Q11 retains owned complete policy fields and only explicit bounded exact f
   expect(extentChoices.policy.extents[2]).toEqual({ ...owned.extents[2], allowZeroApprovals: false, futurePatterns: [] });
   expect(extentChoices.digest).not.toBe(originalProposal.digest);
   raw.labels[0] = "changed";
-  raw.checks[0]!.checker.membership.kind = "rules";
+  raw.checks[0]!.checker.membership.genesis = `sha256:${"f".repeat(64)}`;
   raw.extents[0]!.patterns[0] = "changed";
-  expect([owned.labels, owned.checks[0]!.checker.membership.kind, owned.extents[0]!.patterns[0], owned.singleControllerException, owned.allowZeroApprovals])
-    .toEqual([["bug", ""], "membership", "**/AGENTS.md", false, false]);
+  expect([owned.labels, owned.checks[0]!.checker.membership.genesis, owned.extents[0]!.patterns[0], owned.singleControllerException, owned.allowZeroApprovals])
+    .toEqual([["bug", ""], `sha256:${"a".repeat(64)}`, "**/AGENTS.md", false, false]);
   expect(originalProposal.digest).toBe(valueDigest("artroom-rules-policy-1", owned));
   expect(refusal(extent(base, "source", { checks: ["unknown"] }))).toBe("extent-check-unknown");
   expect(refusal({ ...base, checks: [check, check] })).toBe("invalid-policy");

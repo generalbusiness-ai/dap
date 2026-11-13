@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { VERSIONS } from "@generalbusiness/dap-platform";
 import { PREPARATION_BOUNDS as B, PreparationBudget } from "../src/preparation-budget.ts";
 import { preparationScope } from "../src/preparation-scope.ts";
@@ -42,8 +42,8 @@ test("current exact native membership and rules callbacks agree with the complet
   const scope = await create();
   const got = await scope.inside(state => {
     const sql = sqlOf(state), store = new SqliteStore(sql), sample = store.item(0)!, genesis = JSON.parse(store.stored(0)!.bytes);
-    const membership: ScopeRef = { scope: scopeIdOf({ ...genesis.input.seed, kind: "membership", ordinal: 100 }), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "membership" };
-    const rules: ScopeRef = { scope: scopeIdOf({ ...genesis.input.seed, kind: "rules", ordinal: 101 }), inc: newIncarnation(new Uint8Array(16).fill(2)), kind: "rules" };
+    const membership: ScopeRef = { scope: scopeIdOf({ ...genesis.input.seed, kind: "membership", ordinal: 100 }), genesis: `sha256:${"01".repeat(32)}` as const };
+    const rules: ScopeRef = { scope: scopeIdOf({ ...genesis.input.seed, kind: "rules", ordinal: 101 }), genesis: `sha256:${"02".repeat(32)}` as const };
     const item = (id: number, type: string, state: string): Item => ({ ...sample, id, type, state, refs: { membership, rules }, values: { membership: membership.scope, rules: rules.scope } });
     store.putItem(item(10, "repository", "open")); store.putItem(item(20, "rules", "current")); store.putItem(item(30, "branch", "ready"));
     store.putObserved({ of: membership, subject: "member", seq: 0 }); store.putObserved({ of: rules, subject: "rules", seq: 0 });
@@ -72,8 +72,8 @@ test("state facade refuses an oversized first body, unsupported method and ambig
     const got = await scope.inside(state => {
       const actual = sqlOf(state), store = new SqliteStore(actual), sample = store.item(0)!, at = store.scope()!.at;
       store.putItem({ ...sample, id: 10, type: "repository", state: "open", values: { text: "x".repeat(B.bytes + 1) } });
-      store.putObserved({ of: { ...at, inc: newIncarnation(new Uint8Array(16).fill(1)) }, subject: "member", seq: 0 });
-      store.putObserved({ of: { ...at, inc: newIncarnation(new Uint8Array(16).fill(2)) }, subject: "member", seq: 0 });
+      store.putObserved({ of: { ...at, genesis: `sha256:${"01".repeat(32)}` as const }, subject: "member", seq: 0 });
+      store.putObserved({ of: { ...at, genesis: `sha256:${"02".repeat(32)}` as const }, subject: "member", seq: 0 });
       let itemBodies = 0, metadata = 0;
       const sql: Pick<Sql, "exec"> = { exec(query, ...args) { if (query.startsWith("SELECT record FROM")) itemBodies++; if (query.startsWith("SELECT id,")) metadata++; return actual.exec(query, ...args); } };
       const budget = new PreparationBudget({ ...B, candidates: fault === "candidates" ? 2 : B.candidates }), snapshot = preparationScope(sql, budget);
@@ -82,7 +82,7 @@ test("state facade refuses an oversized first body, unsupported method and ambig
       try {
         if (fault === "body" || fault === "candidates") view.page("repository", ["open"], null, 1);
         if (fault === "method") view.item(0);
-        if (fault === "ambiguous") view.incarnations(at.scope);
+        if (fault === "ambiguous") view.geneses(at.scope);
       } catch { refused = true; }
       return { refused, available: budget.available, itemBodies, metadata };
     });

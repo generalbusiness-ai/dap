@@ -7,7 +7,7 @@ import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isMemberRef, isRecord, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { readApplicationReleaseUri } from "./application-codec/application.ts";
 import { readPublishedApplicationReleaseProof2, type PublishedApplicationReleaseProof2 } from "./application-codec/application-v2.ts";
-import { same, validateDefinition, type GuardRule, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
+import { observedOf, same, validateDefinition, type GuardRule, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";
 import { INSTALL_DEFINITION_BYTES, INSTALL_DEFINITIONS, readInstallAdditions } from "./application-install-wire.ts";
@@ -48,7 +48,7 @@ function proof(given: RuleGiven): PublishedApplicationReleaseProof2 | null {
   for (let index = 0; index < checked.semantic.definitions.length; index++) {
     const part = checked.semantic.definitions[index]!;
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");
-    const value = parseStrict(part.bytes), native = validateDefinition(value, given.resolved.bounds, RULE_PROFILES);
+    const value = parseStrict(part.bytes), native = validateDefinition(value, given.resolved.bounds, RULE_PROFILES, { canonical: true });
     if (!native.ok || native.definition.digest !== part.id || canonicalize(value) !== part.bytes) throw Error("unsupported native definition");
     requireReferenceInstall(native.definition.declared, pinnedBy(given));
   }
@@ -75,8 +75,7 @@ export const deviceApplicationRules: Rules = {
   "device-owner-standing": { place: "guard", refusals: ["device-owner-not-active"], run: given => {
     const owner = given.resolved.fields["owner"], membership = rulesMembership(given.state);
     const refused = { holds: false, name: "device-owner-not-active" } as const;
-    if (!isMemberRef(owner) || !membership || membership.scope !== owner.membership.scope || membership.kind !== "membership"
-      || membership.inc !== null && membership.inc !== owner.membership.inc) return refused;
+    if (!isMemberRef(owner) || !membership || !observedOf(owner.membership, membership)) return refused;
     const observation = given.observed({ member: owner.member })?.observation as MemberObservation | undefined;
     if (!observation || !same(observation.of, owner.membership)) return { holds: null, reason: "dependency-unavailable" };
     return observation.memberState === "active" && observation.activeKey === true

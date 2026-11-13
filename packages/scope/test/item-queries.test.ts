@@ -85,7 +85,7 @@ test("native query accepts an issued session across birth references and enforce
     expect(await response.text()).toBe(first.ok ? first.serialized : "");
     const store = memoryStore();
     await store.keep("query-founder", memberRita.secret);
-    await store.save({ v: 1, service, key: "query-founder", repository: { directory: f.directory, membership: f.membership, rules: f.rules.scope, destination: f.children[2]!.name } });
+    await store.save({ v: 2, service, key: "query-founder", repository: { directory: f.directory, membership: f.membership, rules: f.rules.scope, destination: f.children[2]!.name } });
     const requests: string[] = [];
     const cli = await f.life.wait(() => command({ store, now: () => Date.parse(net.clock.now), fetch: async (url, init) => { requests.push(url); return routed(url, init); } }, ["items", scope.scope, "--query", canonicalize(query(["current"]))]));
     expect(cli.code, cli.lines.join("\n")).toBe(0);

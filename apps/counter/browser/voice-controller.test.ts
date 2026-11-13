@@ -2,14 +2,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { domainBytes, keyIdOfSecret, newIncarnation, scopeIdOf, sign, textDigest } from "@generalbusiness/dap-bytes";
+import type { ScopeKind } from "@generalbusiness/dap-contract";
+import { domainBytes, keyIdOfSecret, sign, textDigest } from "@generalbusiness/dap-bytes";
+import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { createVoiceController, type ActorIdentity, type Completion, type CustodyLock, type PendingReport,
   type AudioStart, type PreparedEnvelope, type ReportOutcome, type SpeechPort, type TurnToken } from "./voice-controller.ts";
 import { activeAttempt, actURL, contextKey, envelopeKey, markActive, terminalJournal, validAudioStart, type RefusalJudgment } from "./journal.ts";
 
 const secret = new Uint8Array(32).fill(61);
-const reference = (kind: ActorIdentity["scope"]["kind"]) => ({scope:scopeIdOf({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE controller ${kind}`),ordinal:0}),inc:newIncarnation(new Uint8Array(16).fill(6)),kind});
+const reference = (kind: ScopeKind) => (scriptedSequence({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE controller ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",6).at);
 const scope = reference("lane"), membership = reference("membership");
 const identity: ActorIdentity = { origin: "https://example.invalid", deployment: "test-deployment", scope,
   definition: COUNTING_DEFINITION, membership, member: { membership, member: "@alice" }, publicKey: keyIdOfSecret(secret) };
@@ -164,8 +166,8 @@ test("Pause fences callbacks and retains uncertain audio until native resolution
 
 test("Complete context binding rejects key, full scope, membership, deployment, member, definition and origin changes", async () => {
   const wrong: Partial<TurnToken>[] = [
-    { publicKey: "key_other" }, { scope: { ...scope, inc: "in_other" } },
-    { scope: { ...scope, kind: "task" } }, { membership: { ...membership, inc: "in_other" } },
+    { publicKey: "key_other" }, { scope: { ...scope, genesis: `sha256:${"f".repeat(64)}` } },
+    { scope: { ...scope, scope: membership.scope } }, { membership: { ...membership, genesis: `sha256:${"f".repeat(64)}` } },
     { deployment: "another-deployment" }, { member: { membership, member: "@bob" } },
     { definition: "sha256:other" }, { origin: "https://other.invalid" },
   ];

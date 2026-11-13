@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import type { FactRef, KeyId, MemberObservation, Observation, RulesObservation, ScopedRulesPosition, ServiceMark } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import type { EvidenceBinding } from "../src/evidence.ts";
-import { keys, otherLane, d, t } from "@generalbusiness/dap-derive/testing";
+import { keys, otherLane, d, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { keyObserved, MEMBERSHIP, RULES } from "./support-destination.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
@@ -13,7 +13,7 @@ import { evidenceKeyEligibleV17, evidenceSourceV17, readRulesPolicyObservationV1
 // SCRIPTED. These are the real pure readers/guards, not Native authority,
 // a membership answer, a published policy, or an executed checker job.
 const fact = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
-const destination = { ...otherLane, kind: "destination" as const };
+const destination = fixtureScope("destination", 17).at;
 const checker = { membership: MEMBERSHIP, member: keys.una.member.member };
 const mark: ServiceMark = { checker, key: keys.una.key }, rotated: ServiceMark = { checker, key: keys.vic.key };
 const memberCheck: RulesCheckV13 = { name: "member", configuration: d("b"), required: true, checker };
@@ -90,7 +90,7 @@ test("current key eligibility requires the exact member and incarnation, checker
   expect(evidenceKeyEligibleV17(memberCheck, good, t(20.001))).toBe(false);
   for (const invalid of [
     null, standing(keys.una.key, { keyState: "compromised" }), standing(keys.una.key, { memberState: "removed" }),
-    standing(keys.una.key, { member: keys.vic.member.member }), standing(keys.una.key, { of: { ...MEMBERSHIP, inc: RULES.inc } }),
+    standing(keys.una.key, { member: keys.vic.member.member }), standing(keys.una.key, { of: { ...MEMBERSHIP, genesis: RULES.genesis } }),
     standing(keys.una.key, { role: "maintainer" }), standing(keys.una.key, { actions: [] }),
     standing(keys.una.key, { controller: keys.rita.member.member, controllerActive: false }),
     standing(keys.una.key, { notAfter: t(10) }), standing(keys.una.key, { at: t(11) }),
@@ -131,7 +131,7 @@ test("Q13 reads complete retained policy against authenticated revision21 Rules 
   expect(withEnvelope({ ...scripted.envelope, serviceGeneration: generation(2) })).toEqual({ ok: false, reason: "evidence-invalid" });
   const { serviceGeneration: _generation, ...missingGeneration } = scripted.observed.content;
   expect(readRulesPolicyObservationV17({ ...scripted.observed, content: missingGeneration }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
-  for (const serviceGeneration of [generation(6), generation(0), { ...generation(2), rules: { ...RULES, inc: MEMBERSHIP.inc } }, { ...generation(2), seq: -0 }]) {
+  for (const serviceGeneration of [generation(6), generation(0), { ...generation(2), rules: { ...RULES, genesis: MEMBERSHIP.genesis } }, { ...generation(2), seq: -0 }]) {
     expect(readRulesPolicyObservationV17({ ...scripted.observed, content: { ...scripted.observed.content, serviceGeneration } }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
   }
   expect(readRulesPolicyObservationV17({ ...scripted.observed, definition: "platform:rules@12" }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });

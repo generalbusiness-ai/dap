@@ -102,7 +102,7 @@ test("the real Worker source inventory rejects an undocumented setting read", ()
   const inherited = source(file) + "\ninterface D3InheritedEnvironment extends HealthEnvironment {}\nfunction inheritedRead(env: D3InheritedEnvironment) { return env.SECURITY_SETTINGS_UNDOCUMENTED; }\n";
   assert.throws(() => checkSettings(root, { overrides: new Map([[file, inherited]]) }), /undocumented setting read SECURITY_SETTINGS_UNDOCUMENTED/);
   const object = "packages/scope/src/object.ts";
-  for (const changedAdapter of [source(object).replace("return this.env as MetricEnvironment;", "return (this.env as MetricEnvironment);"), source(object).replace("operationContext(this.metricEnvironment()", "untrackedConsumer(this.metricEnvironment()")]) {
+  for (const changedAdapter of [source(object).replace("return this.env as MetricEnvironment;", "return (this.env as MetricEnvironment);"), source(object).replace("operationContext(this[scopeMetricEnvironment]()", "untrackedConsumer(this[scopeMetricEnvironment]()"), source(object).replace("protected [scopeMetricEnvironment]", 'protected ["scopeMetricEnvironment"]'), source(object).replace("operationContext(this[scopeMetricEnvironment]()", 'operationContext(this["scopeMetricEnvironment"]()')]) {
     assert.throws(() => checkSettings(root, { overrides: new Map([[object, changedAdapter]]) }), /metric environment adapter or its sole typed consumer changed/);
   }
   const changed = source(file) + "\nfunction undocumentedSettingWitness(env: HealthEnvironment) { return env.SECURITY_SETTINGS_UNDOCUMENTED; }\n";

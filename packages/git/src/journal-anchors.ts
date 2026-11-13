@@ -30,7 +30,7 @@ export const journalPublicationUnits = (anchors: number): number => 256 + anchor
 export function journalAnchorCopyCount(rows: readonly { readonly kind?: string; readonly key?: { readonly kind: string } }[], work: JournalWork): number {
   work.input(rows.length * 128);
   let copies = 0;
-  for (const row of rows) { work.check(); if ((row.key?.kind ?? row.kind) === "entry") copies++; }
+  for (const row of rows) { work.check(); const kind = row.key?.kind ?? row.kind; if (kind === "entry" || kind === "birth") copies++; }
   return copies;
 }
 export interface JournalAnchorCoverage {
@@ -57,9 +57,8 @@ export function journalAnchors(value: unknown, _copies: number, work: JournalWor
   let prior: FactRef | undefined;
   for (const value of rows) {
     const row = record(value, ["at", "seq", "hash"]);
-    record(row["at"], ["scope", "inc", "kind"]);
-    if (!isFactRef(row) || row.at.kind !== "register" && row.at.kind !== "membership"
-      || archived.some(at => at.scope === row.at.scope)
+    record(row["at"], ["scope", "genesis"]);
+    if (!isFactRef(row) || archived.some(at => at.scope === row.at.scope)
       || prior && (prior.at.scope > row.at.scope || prior.at.scope === row.at.scope && prior.seq >= row.seq)) return refuseJournal("tree", "anchor identity/order");
     work.input(1024);
     const fact = Object.freeze({ at: Object.freeze({ ...row.at }), seq: row.seq, hash: row.hash });
@@ -74,11 +73,14 @@ export function journalLegacyAnchors(value: unknown, first: number, work: Journa
   if (first === 0 || row["from"] !== 0 || row["through"] !== first - 1) return refuseJournal("manifest", "legacy anchor range");
   return Object.freeze({ from: 0, through: first - 1, anchors: journalAnchors(row["anchors"], JOURNAL_SELECTION_BYTES, work, archived) });
 }
+/** Exact facts only. Publication neither proves a source birth nor grants
+ * Replay trust without an explicit caller. */
 export function journalAnchorPublication(value: unknown, copies: number, first: number, work: JournalWork, archived: readonly ScopeRef[] = []): JournalAnchorPublication {
   const legacy = isRecord(value) && Object.hasOwn(value, "legacyAnchors");
   const row = record(value, ["anchors", ...(legacy ? ["legacyAnchors"] : [])]);
-  return Object.freeze({ anchors: journalAnchors(row["anchors"], copies, work, archived),
-    ...(legacy ? { legacyAnchors: journalLegacyAnchors(row["legacyAnchors"], first, work, archived) } : {}) });
+  const anchors = journalAnchors(row["anchors"], copies, work, archived);
+  const legacyAnchors = legacy ? journalLegacyAnchors(row["legacyAnchors"], first, work, archived) : undefined;
+  return Object.freeze({ anchors, ...(legacyAnchors ? { legacyAnchors } : {}) });
 }
 
 /** Coverage concerns publication in this immutable snapshot only. Missing
@@ -101,6 +103,8 @@ export function readJournalAnchorPublication(passes: readonly JournalPassManifes
   for (const pass of passes) {
     work.metadata(128);
     if (pass.anchors !== undefined) {
+      journalAnchorPublication({ anchors: pass.anchors,
+        ...(pass.legacyAnchors ? { legacyAnchors: pass.legacyAnchors } : {}) }, 0, pass.entries[0], work, archived);
       add(pass.anchors);
       ranges.push(Object.freeze({ from: pass.entries[0], through: pass.through.seq, anchors: pass.anchors }));
     }
@@ -124,7 +128,7 @@ export function readJournalAnchorPublication(passes: readonly JournalPassManifes
   // the output remains in the required scope/position order.
   work.input(published.size * 1024 * (Math.ceil(Math.log2(published.size + 1)) + 1));
   const anchors = [...published.values()].sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq
-    || (a.at.inc < b.at.inc ? -1 : a.at.inc > b.at.inc ? 1 : a.at.kind < b.at.kind ? -1 : a.at.kind > b.at.kind ? 1 : 0));
+    || (a.at.genesis < b.at.genesis ? -1 : a.at.genesis > b.at.genesis ? 1 : 0));
   return Object.freeze({ publishedAnchors: Object.freeze(anchors), anchorRanges: Object.freeze(ranges), anchorCoverage: Object.freeze({ covered: unpublished.length === 0,
     unpublished: Object.freeze(unpublished), legacy: Object.freeze(legacy) }) });
 }

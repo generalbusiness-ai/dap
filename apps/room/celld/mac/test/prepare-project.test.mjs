@@ -8,7 +8,7 @@ import { prepareProject, ProjectPreparationError } from '../prepare-project.mjs'
 
 const origin = 'https://room.example';
 const register = `sc_${'a'.repeat(52)}`;
-const retainedPlan = () => ({ v: 1, service: origin, plan: { service: origin, register,
+const retainedPlan = () => ({ v: 2, service: origin, key: 'operator', plan: { service: origin, register,
   definition: 'platform:register@21', founding: { intent: { fields: { host: 'none', namespace: '' } } } } });
 
 async function fixture(t, config = retainedPlan()) {

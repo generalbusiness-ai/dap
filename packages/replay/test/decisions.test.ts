@@ -2,9 +2,9 @@ import { replayDecisionFloor, replayDecisionText, replayDecisionFields, replayDe
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, FieldValue, PlatformData, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, applyEntry, checkpointOf, clockOf, judgeCheckpoint, judgeDelivery, judgeGenesis, judgeFloor, decisionBinding, isUnprovenDecisionBinding, owed, ownersOf, stateDigest, validateDefinition } from "@generalbusiness/dap-derive";
-import { Ledger, T0, arriving, forged, keys, otherLane, t, valid } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, arriving, fixtureSequence, forged, keys, otherLane, otherLaneSequence, t, valid } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify } from "../src/index.ts";
 import type { Rules, StateView } from "@generalbusiness/dap-derive";
 import type { MemoryScope } from "../src/index.ts";
@@ -64,24 +64,26 @@ class Deciding extends Ledger {
     if (memo !== undefined) this.texts.set(textDigest(memo), memo);
     const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: { opener: keys.rita.member, ...(memo === undefined ? {} : { memo: textDigest(memo) }) }, idempotencyKey: "decisions", notAfter: t(60) }, keys.rita.secret);
     const seed: Seed = { v: 1, kind: "directory", definition: NAMED, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-    const judged = judgeGenesis(this.state, this.definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(6)), seed, creation: creation }, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: { named: NAMED, rules: this.rules }, texts: this.sizes });
+    const judged = judgeGenesis(this.state, this.definition, { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(6)), seed, creation: creation }, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: { named: NAMED, rules: this.rules }, texts: this.sizes });
     if (judged.result !== "write") throw new Error(JSON.stringify(judged));
     this.seal(judged.draft);
   }
   delivery(message: string, fields: Record<string, FieldValue> = {}) {
     const request: Request = { class: "request", type: "tell", body: { message, fields } };
-    const source = forged(otherLane, this.foreign.length + 1, { type: "checkpoint", through: 0, state: this.definition.digest }, [{ n: 0, to: this.at, message: request }]);
+    const source = forged(otherLaneSequence, this.foreign.length + 1, { type: "checkpoint", through: 0, state: this.definition.digest }, [{ n: 0, to: this.at, message: request }]);
     this.foreign.push(source);
-    const arrival = { to: this.at, from: factRefOf(source.entry), n: 0, message: request };
+    const arrival = { to: this.at, from: factRefOf(source.entry, otherLane), n: 0, message: request };
     const judged = judgeDelivery(this.state, this.definition, arrival, { ...arriving(this, arrival, source), platform: { named: NAMED, rules: this.rules }, texts: this.sizes });
     if (judged.result !== "write") throw new Error(JSON.stringify(judged));
     const entry = this.seal(judged.draft);
     return { entry, draft: judged.draft, total: this.entries.length + owed(this.state, this.definition, entry.input) };
   }
   served(): MemoryScope {
-    return { scope: this.at, entries: this.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained: [...this.entries.flatMap(({ entry }) => entry.uses.map((use) => ({ kind: "entry" as const, digest: use.content, bytes: canonicalize(this.foreign.find((copy) => factRefOf(copy.entry).hash === use.fact.hash)!.entry), under: "lane" }))), ...[...this.texts].map(([digest, text]) => ({ kind: "text" as const, digest, bytes: canonicalize(text) }))] };
+    return { scope: this.at, entries: this.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained: [...this.entries.flatMap(({ entry }) => entry.uses.map((use) => ({ kind: "entry" as const, digest: use.content, bytes: canonicalize(this.foreign.find((copy) => factRefOf(copy.entry, otherLane).hash === use.fact.hash)!.entry), under: "lane" }))), ...[...this.texts].map(([digest, text]) => ({ kind: "text" as const, digest, bytes: canonicalize(text) })),
+      // Rulings 4f697a7a and ae48dd39: the scope keeps the first entry of each later-used source sequence.
+      ...(this.entries.some(({ entry }) => entry.uses.some(use => use.fact.seq > 0)) ? [{ kind: "birth" as const, digest: otherLane.genesis, bytes: otherLaneSequence.birth }] : [])] };
   }
-  anchors() { return this.foreign.map(({ entry }) => { const fact = factRefOf(entry); return { scope: fact.at.scope, seq: fact.seq, hash: fact.hash }; }); }
+  anchors() { return this.foreign.map(({ entry }) => { const fact = factRefOf(entry, otherLane); return { scope: fact.at.scope, seq: fact.seq, hash: fact.hash }; }); }
 }
 
 test("a bound refusal consumes a real holder decision at a full scope; replay derives the count and enforces the taking reservation", async () => {
@@ -113,6 +115,21 @@ test("replay and a closing checkpoint preserve the early field refusal and draw 
   scope.seal(checkpoint.draft);
   const replay = await verify(new MemorySource([scope.served()]), { mode: "replay", scope: scope.at.scope, anchors: scope.anchors(), bounds: { ...PROPOSED_BOUNDS, scopeEntries: 5 }, platform: () => ({ data, rules }) });
   expect([replay.report.result, replay.why, guards]).toEqual(["consistent", null, 2]);
+});
+
+// Ruling 3bf7e5aa: a checked copy enters the judge's facts. A copy that fails its check stops the replay before any judge runs.
+test("an anchored source copy with no retained definition name stops the replay before the judge reads it", async () => {
+  const data = replayDecisionFields();
+  let guards = 0;
+  const rules: Rules = { decline: { place: "guard", refusals: ["late"], run: () => { guards++; return { holds: false, name: "late", code: "bad-field" }; } } };
+  const scope = new Deciding(data, rules);
+  scope.delivery("start");
+  scope.delivery("stop", { amount: 0 });
+  expect(guards).toBe(1);
+  const served = scope.served();
+  const unnamed = { ...served, retained: served.retained.map(input => input.kind === "entry" ? { ...input, under: "" } : input) };
+  const replay = await verify(new MemorySource([unnamed]), { mode: "replay", scope: scope.at.scope, anchors: scope.anchors(), bounds: { ...PROPOSED_BOUNDS, scopeEntries: 5 }, platform: () => ({ data, rules }) });
+  expect([replay.report.result, replay.why, guards]).toEqual(["incomplete", "an anchored source lacks its recorded kind or retained definition name", 1]);
 });
 
 /** A larger creation field really holds the text before the smaller stop field reads it. Every receiver entry is judged. */
@@ -193,17 +210,17 @@ test("a floor's proof at 200 cannot bind deciding entry 100, while its proof at 
     scope.texts.delete(digest);
     scope.now = t(1200);
     const input = { type: "floor" as const, floor: 250, receipt: { commit: "a".repeat(40), through: { ...scope.head } }, keep: [100] };
-    const floor = judgeFloor(scope.state, scope.definition, input, { ...scope.context(), own: floorOwn(scope.state, scope.entries) });
+    const floor = judgeFloor(scope.state, scope.definition, input, { ...scope.context(), own: floorOwn(scope.state, scope.entries, fixtureSequence(scope)) });
     if (floor.result !== "write") throw new Error(JSON.stringify(floor));
     scope.seal(floor.draft);
     expect(scope.state.floor()!.sizeProofs).toEqual([{ digest, seq: proving, bound: 2 }]);
-    const own = floorOwn(scope.state, scope.entries);
+    const own = floorOwn(scope.state, scope.entries, fixtureSequence(scope));
     expect(own(proving)).toBeNull();
     expect(own(100)?.entry).toEqual(deciding.entry);
-    const source = scope.foreign.find(copy => factRefOf(copy.entry).hash === (deciding.entry.input as { from: { hash: Digest } }).from.hash)!;
+    const source = scope.foreign.find(copy => factRefOf(copy.entry, otherLane).hash === (deciding.entry.input as { from: { hash: Digest } }).from.hash)!;
     const run = () => decisionBinding(before, scope.definition, deciding.entry, {
       clock: clockOf(before, deciding.entry.time), bounds: PROPOSED_BOUNDS,
-      own, prepared: [], texts: () => null, facts: [{ fact: factRefOf(source.entry), entry: source.entry, under: "lane" }],
+      own, prepared: [], texts: () => null, facts: [{ fact: factRefOf(source.entry, otherLane), entry: source.entry, sequence: source.sequence, under: "lane" }],
       platform: { named: NAMED, rules },
     });
     if (proving === 200) {

@@ -234,8 +234,7 @@ this public TEST reference:
 		},
 		"destination": {
 			"scope": "sc_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-			"inc": "in_aaaaaaaaaaaaaaaaaaaaaaaaaa",
-			"kind": "destination"
+			"genesis": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 		}
 	}
 }

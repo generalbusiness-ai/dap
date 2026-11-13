@@ -37,17 +37,16 @@ function certificateBody(sql: Pick<Sql, "exec">, position: ArchivePosition, budg
     (SELECT count(*) FROM json_each(bytes, '$.input.evidence.body.started')) AS started_keys,
     json_type(bytes, '$.input.evidence.body.started.at') = 'object' AS at_object,
     (SELECT count(*) FROM json_each(bytes, '$.input.evidence.body.started.at')) AS at_keys,
-    ${text("$.input.evidence.body.started.at.scope", 71)} AS scope, ${text("$.input.evidence.body.started.at.inc", 64)} AS inc,
-    ${text("$.input.evidence.body.started.at.kind", 16)} AS kind,
+    ${text("$.input.evidence.body.started.at.scope", 71)} AS scope, ${text("$.input.evidence.body.started.at.genesis", 71)} AS genesis,
     CASE WHEN json_type(bytes, '$.input.evidence.body.started.seq') IN ('integer', 'real') THEN json_extract(bytes, '$.input.evidence.body.started.seq') ELSE NULL END AS seq,
     ${text("$.input.evidence.body.started.hash", 71)} AS hash
     FROM entry WHERE entry.seq = ? AND entry.hash = ? AND entry.size = ? AND typeof(entry.bytes) = 'text' AND octet_length(entry.bytes) = ?
       AND json_extract(entry.bytes, '$.input.type') = 'outcome' LIMIT 1`, position.seq, position.hash, position.bytes, position.bytes).toArray();
   if (rows.length !== 1) return stop("mismatch");
   const row = rows[0], proposal = row?.["proposal"], proof = row?.["proof"];
-  const started = { at: { scope: row?.["scope"], inc: row?.["inc"], kind: row?.["kind"] }, seq: row?.["seq"], hash: row?.["hash"] };
+  const started = { at: { scope: row?.["scope"], genesis: row?.["genesis"] }, seq: row?.["seq"], hash: row?.["hash"] };
   if (row?.["body_object"] !== 1 || row["body_keys"] !== 3 || row["started_object"] !== 1 || row["started_keys"] !== 3
-    || row["at_object"] !== 1 || row["at_keys"] !== 3 || !isDigest(proposal) || !isDigest(proof) || !isFactRef(started)) return null;
+    || row["at_object"] !== 1 || row["at_keys"] !== 2 || !isDigest(proposal) || !isDigest(proof) || !isFactRef(started)) return null;
   return { proposal, proof, started };
 }
 

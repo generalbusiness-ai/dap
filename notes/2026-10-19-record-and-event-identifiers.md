@@ -803,11 +803,24 @@ The job of the incarnation is to tell one sequence from another under
 one scope ID. `genesis` does that job. The genesis entry keeps the 16 random
 bytes that it mints today, as `nonce`, so that two sequences from one
 seed never hash alike. The kind leaves references, because it is in the
-seed. A handler that tests the kind of the sender reads the genesis of
-the source scope. The receiver reads that genesis once and holds it. The
-scope ID stays in the reference because it is the address that routing
+seed. A live handler that tests the kind of the sender reads the genesis of
+the source scope. The receiver reads that genesis once and records the
+kind in the entry. The scope ID stays in the reference because it is the address that routing
 and creation use. So no host needs an index from genesis digest to
 object.
+
+**The kind of another sequence.** A reference holds no kind, because
+the kind is in the seed. A scope checks the kind against the genesis
+of the sequence when it takes a delivery, when it is created from a
+source, when it reads a named fact and when it reads a grant. The
+entry then holds the kind: `sourceKind` beside the source of a
+delivery or of a genesis, and `kind` in each fact use. A grant and a
+creation context name a Membership by their place, and the
+`directory` of a lane's creation names a Directory. A later judgment
+of the scope reads the entry and reads no other scope. Replay
+compares the recorded kind with the genesis when its permitted input
+holds that genesis. Otherwise it judges with the recorded kind, and
+its report says so.
 
 **Entries.** Every entry after the genesis carries `genesis` in place of
 `at`. The genesis entry carries the seed and the nonce and no `genesis`

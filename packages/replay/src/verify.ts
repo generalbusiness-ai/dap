@@ -39,10 +39,10 @@ import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/
  */
 
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Seed, Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { AmountError, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery, archivedPosition, countedEntries, heldPositions, judgeFloor, judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds } from "@generalbusiness/dap-derive";
-import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, Own, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import type { Seed, Bounds, CapabilityName, Digest, Entry, FactRef, FactUse, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeKind, ScopeRef, SequenceRef } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, digestBytes, isEntryOf, type CheckedSequence, rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isEntryBodyOf, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, resolveGenesisSelf, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { AmountError, RuleFault, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeActForReplay, judgeCheckpoint, judgeDeliveryForReplay, archivedPosition, countedEntries, heldPositions, judgeFloor, judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesisForReplay, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds } from "@generalbusiness/dap-derive";
+import type { AnchoredJudgmentCopy, DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, SourceCopy, Observing, Owners, PlatformRules, PreparationJudgment, Own, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, RETAINED_REPLY_BYTES, hashOfBytes, type HistorySource, type Stored } from "./source.ts";
 import { IdentityEvidence, type IdentityFrame, type ReceiverIdentityCode } from "./identity.ts";
@@ -54,6 +54,9 @@ import { floorOwn } from "./floor.ts";
  * with what was covered. Each is counted as the source's replies arrive,
  * before anything in them is kept.
  */
+/** The kind that a covered sequence's genesis names, as a coverage row states it. A row whose first entry is not a genesis carries none. */
+const genesisKind = (entry: Entry | undefined): { kind?: ScopeKind } => entry?.input.type === "genesis" ? { kind: entry.input.seed.kind } : {};
+
 export interface Limits {
   scopes: number;    // scopes whose history is read
   entries: number;   // entries checked, over all scopes
@@ -65,6 +68,58 @@ export const LIMITS: Limits = { scopes: 64, entries: 100_000, bytes: 256 * 1024 
 
 /** A fact the caller says it trusts: one entry of a source scope, by position and hash (section 9.4). */
 export interface Anchor { scope: ScopeId; seq: number; hash: Digest }
+
+/** Already-open manifest alias basis. It supplies no kind or source admission. */
+export interface ExporterSourceRow { readonly at: SequenceRef; readonly pin: Digest | PlatformDefinition }
+/** Raw exact-anchor copy, separate from verified evidence. */
+export type AnchoredCopy = AnchoredJudgmentCopy;
+/** The caller chooses a basis before inspecting a copy. An archive refusal
+ * cannot change this choice to the direct-history name policy. */
+export type RawCopyBasis = { readonly mode: "retained-name"; readonly under: string }
+  | { readonly mode: "archive-alias"; readonly exporterRow: ExporterSourceRow };
+type RawCopyPolicy = { readonly mode: "retained-name" }
+  | { readonly mode: "archive-alias"; readonly rows: NonNullable<Options["archiveSourceRows"]> };
+const rawCopyPolicy = (options: Pick<Options, "archiveSourceRows">): RawCopyPolicy => options.archiveSourceRows === undefined
+  ? Object.freeze({ mode: "retained-name" }) : Object.freeze({ mode: "archive-alias", rows: options.archiveSourceRows });
+const copyName = (copy: AnchoredCopy): string => copy.mode === "retained-name" ? copy.under : platformName(copy.exporterRow.pin);
+const privatePin = (pin: unknown): pin is PlatformDefinition => isPlatformDefinition(pin)
+  && (answersCatalogVocabularyQuestion(pin, "archiveRegisterForeignCopy") || answersCatalogVocabularyQuestion(pin, "archiveMembershipForeignCopy"));
+function freezeCopy(value: unknown): void {
+  if (value === null || typeof value !== "object") return;
+  for (const member of Object.values(value)) freezeCopy(member);
+  Object.freeze(value);
+}
+/** Own canonical retained bytes without inventing a checked association.
+ * A genesis copy (ruling 1cf42f3b) must sit at seq 0 with the address's
+ * genesis hash, admit as its sequence's genesis, and name the recorded kind.
+ * The anchor stays required: the copy proves no fact by itself. */
+export function anchoredCopy(originalBytes: string, fact: FactRef, anchor: Anchor, basis: RawCopyBasis, maxBytes: number, recordedKind: ScopeKind | null): AnchoredCopy | null {
+  if (!isObject(basis) || Object.keys(basis).sort().join(",") !== (basis.mode === "retained-name" ? "mode,under" : "exporterRow,mode")
+    || !natural(maxBytes) || maxBytes === 0 || originalBytes.length > maxBytes || utf8(originalBytes).length > maxBytes
+    || !isFactRef(fact) || anchor.scope !== fact.at.scope || anchor.seq !== fact.seq || anchor.hash !== fact.hash
+    || (basis.mode === "archive-alias" ? !isObject(basis.exporterRow) || Object.keys(basis.exporterRow).sort().join(",") !== "at,pin"
+      || !same(basis.exporterRow.at, fact.at)
+      : basis.mode !== "retained-name" || typeof basis.under !== "string" || basis.under.length === 0)) return null;
+  let exporterRow: { readonly at: SequenceRef; readonly pin: PlatformDefinition } | null = null;
+  if (basis.mode === "archive-alias") {
+    const pin = basis.exporterRow.pin;
+    if (!privatePin(pin)) return null;
+    exporterRow = Object.freeze({ at: Object.freeze({ ...basis.exporterRow.at }), pin });
+  }
+  let entry: unknown;
+  try { entry = parseStrict(originalBytes); } catch { return null; }
+  if (!isEntry(entry) || canonicalize(entry) !== originalBytes || !isEntryBodyOf(entry, fact)) return null;
+  if (entry.input.type === "genesis") {
+    if (fact.seq !== 0 || fact.hash !== fact.at.genesis || recordedKind === null) return null;
+    const born = admitSequenceGenesis(originalBytes, fact.at, maxBytes);
+    if (!born || born.kind !== recordedKind) return null;
+  }
+  freezeCopy(entry);
+  const body = { fact: Object.freeze({ at: Object.freeze({ ...fact.at }), seq: fact.seq, hash: fact.hash }), entry,
+    originalBytes, anchor: Object.freeze({ ...anchor }) };
+  return basis.mode === "retained-name" ? Object.freeze({ ...body, mode: "retained-name", under: basis.under })
+    : exporterRow === null ? null : Object.freeze({ ...body, mode: "caller-anchor", exporterRow });
+}
 
 /** Archive-only exact-list accounting. Generic caller anchors keep their
  * existing semantics when this optional policy is absent. */
@@ -82,6 +137,8 @@ export interface Options {
   head?: Head | undefined;
   /** Facts taken on trust. An anchor covers exactly the entry it names. */
   anchors?: readonly Anchor[] | undefined;
+  /** Already-open exporter rows, used only for the exact anchored-copy alias check. */
+  archiveSourceRows?: ReadonlyMap<ScopeId, readonly ExporterSourceRow[]> | undefined;
   /**
    * The reader's own directory, on a register that several rooms share. Each room's directory admits only that room's members, so a reader cannot replay the
    * first entry of another room's directory. With this option, a register's creation result from another room's directory stands on the service's word, when the service refuses that read and the register's own request created that directory.
@@ -162,9 +219,9 @@ export interface Coded {
   /** The shared source-identity policy, using checked genesis and creator facts.
    * Null means that required origin proof is missing; anchored copies remain
    * explicitly trusted. This metadata changes no pinned data or judgment. */
-  sourceName?: ((named: Digest | PlatformDefinition, declaredName: string, origin?: readonly Fetched[]) => string | null) | undefined;
+  sourceName?: ((named: Digest | PlatformDefinition, declaredName: string, origin?: readonly SourceCopy[]) => string | null) | undefined;
   /** File publication admission uses the supplied version's application factory policy. */
-  applicationPublicationOrigin?: ((from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]) => boolean | null) | undefined;
+  applicationPublicationOrigin?: ((from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly SourceCopy[]) => boolean | null) | undefined;
   /**
    * Where a scope under this version records its membership reference,
    * when that is not its genesis entry (authority note, section 3.3, "Where
@@ -291,6 +348,7 @@ export const TRUSTS = {
   dispatched: "that the outside effects which a preparation entry opened were dispatched only after that entry was sealed",
   staged: "staged-ref-read: that the Git host returned the snapshot of staged refs and the head that each ancestry record names, when the staging lane read them, and that the lane kept what was returned",
   anchors: "the caller's anchors, including any value observed at an anchored head and each retained definition name",
+  recordedKinds: "the kind that an entry records, or that its place fixes, for a sequence whose genesis Replay did not read",
   otherRooms: "other rooms' creation results: that each entry listed under Anchors is the first entry of another room's directory, as the service says. This reader cannot read those directories, so those rooms' histories were not replayed",
   bounds: "the bounds: each scope is taken to run under the bounds this replay was given",
   redacted: "each redacted text: its bytes are gone, so nothing shows that they were the text its digest names, or that they were within the bound of their field",
@@ -353,6 +411,7 @@ interface Run {
   head: Head;
   /** From the genesis, once that is checked. */
   at: ScopeRef | null;
+  sequence: CheckedSequence | null;
   named: Digest | PlatformDefinition | null;
   definition: ValidDefinition | null;
   /** The rules of the platform definition that the scope pins, which each judge is given. Null: a declared definition. */
@@ -442,14 +501,14 @@ const retainedBy = (input: Entry["input"]): ObservationUse[] => {
  * in its grant or in `observed`, which fixes it.
  */
 const fixedFor = (recorded: RecordedRef | null, input: Entry["input"]): ScopeRef | null => {
-  if (recorded === null || recorded.inc !== null) return recorded as ScopeRef | null;
+  if (recorded === null || !("pending" in recorded)) return recorded;
   return fixedBy(recorded, retainedBy(input).map((use) => use.observation.of).find((of) => observedOf(of, recorded)) ?? null);
 };
 /** The membership reference, so. */
 const fixedIn = (run: Run, input: Entry["input"]): ScopeRef | null => fixedFor(recordedMembership(run), input);
 
-const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;
-const named = (ref: ScopeRef): string => `${ref.scope} (incarnation ${ref.inc})`;
+const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.genesis === b.genesis;
+const named = (ref: ScopeRef): string => `${ref.scope} (genesis ${ref.genesis})`;
 
 class Verifier {
   /** Prefix field-check evidence, not sizes. Strictly improving bounds
@@ -460,6 +519,7 @@ class Verifier {
   #target: ScopeId;
   #expected: Head | null;
   readonly #anchors: readonly Anchor[];
+  readonly #rawCopyPolicy: RawCopyPolicy;
   readonly #otherRooms: Options["otherRooms"];
   readonly #publications: ReadonlyMap<ScopeId, PublishedAnchorPolicy> | undefined;
   readonly #consulted = new Map<ScopeId, Map<PublishedAnchorPolicy["ranges"][number], Set<FactRef>>>();
@@ -520,7 +580,7 @@ class Verifier {
   readonly #missingAtBirth = new Set<string>();
   readonly #successful = new Set<string>();
 
-  constructor(source: HistorySource, options: Options, tally: Tally = { folds: 0, values: 0, states: 0, runs: 0, owed: 0 }, room = false) {
+  constructor(source: HistorySource, options: Options, policy: RawCopyPolicy, tally: Tally = { folds: 0, values: 0, states: 0, runs: 0, owed: 0 }, room = false) {
     this.#room = room;
     this.#tally = tally;
     // A successful body is immutable input within this owner. Cached replies
@@ -540,6 +600,7 @@ class Verifier {
     this.#target = options.scope;
     this.#expected = options.head ?? null;
     this.#anchors = options.anchors ?? [];
+    this.#rawCopyPolicy = policy;
     this.#otherRooms = options.otherRooms;
     this.#publications = options.publishedAnchorPolicies;
     this.#limits = { ...LIMITS, ...options.limits };
@@ -768,7 +829,7 @@ class Verifier {
     for (const root of roots) if (root.result !== "not-read") for (const fact of root.missing) missing.set(canonicalize(fact), fact);
     const coverage = [...this.#segments].flatMap(([id, rows]) => {
       const run = this.#runs.get(id)!;
-      return rows.filter(row => row.from < run.sealed.length).map(row => ({ scope: run.at!, ...row, through: Math.min(row.through, run.sealed.length - 1) }));
+      return rows.filter(row => row.from < run.sealed.length).map(row => ({ scope: run.at!, ...(row.from === 0 ? genesisKind(run.sealed[0]?.entry) : {}), ...row, through: Math.min(row.through, run.sealed.length - 1) }));
     });
     const texts = [...this.#sharedTexts].flatMap(([digest, users]) => {
       const origin = this.#textOrigin(digest);
@@ -1009,7 +1070,7 @@ class Verifier {
       mode: this.#mode,
       // Consistent: the head checked through. Otherwise: the head the check was aiming for.
       target: stop || !through ? { at, seq: target.head.seq, hash: target.head.hash } : { at, seq: through.entry.seq, hash: through.hash },
-      coverage: covered.map((run) => ({ scope: run.at!, from: 0, through: run.sealed.length - 1 })),
+      coverage: covered.map((run) => ({ scope: run.at!, ...genesisKind(run.sealed[0]?.entry), from: 0, through: run.sealed.length - 1 })),
       anchors: this.#anchored,
       ...(this.#trusts.has("otherRooms") ? { otherRooms: true as const } : {}),
       dependencies: { verified: proven.filter((how) => how === "replayed").length, anchored: proven.filter((how) => how === "anchored").length, missing: stop?.missing ? [stop.missing] : [] },
@@ -1046,7 +1107,7 @@ class Verifier {
   }
 
   #newRun(id: ScopeId, said: ScopeRef, head: Head): Run {
-    return { id, said: this.#room ? { ...said } : said, head: this.#room ? { ...head } : head, at: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), retainedEntries: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), bytes: new ByteUsage(), unknownByteTexts: new Map(), byteIntervals: [], redactions: new Map(), byteHeads: new Map(), textJudgments: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
+    return { id, said: this.#room ? { ...said } : said, head: this.#room ? { ...head } : head, at: null, sequence: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), retainedEntries: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), bytes: new ByteUsage(), unknownByteTexts: new Map(), byteIntervals: [], redactions: new Map(), byteHeads: new Map(), textJudgments: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
   }
 
   /**
@@ -1152,6 +1213,28 @@ class Verifier {
     const prior = this.#textCounts.get(digest);
     if (prior !== undefined && prior !== bytes) throw new Stop("mismatch", "an archive text omission disagrees with another known canonical byte count", where);
     this.#textCounts.set(digest, bytes);
+  }
+
+  /**
+   * Rulings 4f697a7a and ae48dd39: the retained first entry of a foreign sequence that an entry uses at a later entry, by the
+   * `birth` read under the sequence's genesis digest. The bytes must admit the use's full reference and give the use's kind. A
+   * missing row reads as a missing retained input, and a row that does not admit reads as one that is not the one named. The
+   * bytes count once, as the `entry` row the scope keeps under their content digest.
+   */
+  async #birth(run: Run, use: FactUse, where: FactRef): Promise<CheckedSequence> {
+    const at = use.fact.at, left = this.#limits.bytes - this.#bytes;
+    const got = await this.#source.retained(run.id, "birth", at.genesis, { bytes: Math.min(left, RETAINED_REPLY_BYTES) });
+    if (!got.ok) {
+      this.#unread(got.reason, left < RETAINED_REPLY_BYTES, `a retained input of ${run.id}`);
+      throw new Stop("incomplete", `a retained input is missing: the first entry of ${at.scope}, ${at.genesis} (${got.reason})`, where);
+    }
+    this.#count(got.bytes);
+    const sequence = admitSequenceGenesis(got.input.bytes, at, this.#bounds.entryBytes);
+    if (!sequence) throw new Stop("incomplete", `a retained input is not the one named: the first entry of ${at.scope}`, where);
+    // The admitted genesis proves the source kind; a different recorded word contradicts it.
+    if (sequence.kind !== use.kind) throw new Stop("mismatch", "the recorded source kind contradicts its verified genesis", where);
+    if (run.definition === null || run.definition.declared.capacity) this.#retainBytes(run, { kind: "entry", digest: digestBytes(utf8(got.input.bytes)) }, utf8(got.input.bytes).length, where.seq, got.input.bytes);
+    return sequence;
   }
 
   /** Section 9.2: an input an entry names by digest. One that is missing makes the replay `incomplete`. */
@@ -1311,7 +1394,7 @@ class Verifier {
     this.#live();
     if (this.#room) {
       run.read.set(seq, stored);
-      const key = canonicalize([run.id, run.said.inc, seq, hashOfBytes(stored.bytes)]);
+      const key = canonicalize([run.id, run.said.genesis, seq, hashOfBytes(stored.bytes)]);
       if (!this.#entryKeys.has(key)) {
         if (this.#entries >= this.#limits.entries) { const stop = new Stop("incomplete", `the limit of ${this.#limits.entries} entries was reached`); this.#terminal = stop; throw stop; }
         this.#entries++; this.#entryKeys.add(key);
@@ -1348,15 +1431,17 @@ class Verifier {
         id = scopeIdOf(input.seed);
       } catch { /* not a seed */ }
       if (id !== run.id) throw mismatch("the scope ID is not the digest of the genesis's seed");
-      const at: ScopeRef = { scope: run.id, inc: input.inc, kind: input.seed.kind };
-      if (!sameScope(entry.at, at)) throw mismatch("the genesis is not at the scope, incarnation and kind its input names");
+      const at: ScopeRef = { scope: run.id, genesis: hash };
+      const sequence = admitSequenceGenesis(stored.bytes, at, this.#mode === "replay" ? this.#bounds.entryBytes : size);
+      if (!sequence || !sameScope(run.said, at)) throw mismatch("the original genesis bytes do not bind the source page's sequence");
       run.at = at;
+      run.sequence = sequence;
       run.named = input.seed.definition;
       where.at = at;
     } else {
       if (input.type === "genesis") throw mismatch("a history has one genesis");
       if (entry.seq !== seq || entry.prev !== before.hash) throw mismatch(`the entry does not follow entry ${seq - 1}: its prev is not that entry's hash`);
-      if (!sameScope(entry.at, run.at!)) throw mismatch("the entry names another scope or incarnation than its history");
+      if (!run.sequence || !isEntryOf(entry, where, run.sequence)) throw mismatch("the entry names another genesis than its history");
       const [time, last] = [timeMs(entry.time)!, timeMs(before.entry.time)!];
       if (time < last) throw mismatch("the entry's time is earlier than the time of the entry before it");
       if (entry.clamped && time !== last) throw mismatch("a clamped entry has the time of the entry before it");
@@ -1381,7 +1466,7 @@ class Verifier {
         throw new Stop(proof.reason === "floor-commit-mismatch" ? "mismatch" : "incomplete", `${proof.reason === "floor-commit-mismatch" ? "floor-commit-mismatch" : "floor-commit-missing"}: the named clone commit could not establish its archive head`, where);
       }
       this.#count(proof.bytes);
-      if (!sameScope(proof.scope, entry.at) || !same(proof.through, input.receipt.through)) throw new Stop("mismatch", "floor-commit-mismatch: the clone commit's archive head differs from the floor receipt", where);
+      if (!sameScope(proof.scope, where.at) || !same(proof.through, input.receipt.through)) throw new Stop("mismatch", "floor-commit-mismatch: the clone commit's archive head differs from the floor receipt", where);
     }
     if (this.#mode === "replay") {
       this.#checking.push(where);
@@ -1434,7 +1519,7 @@ class Verifier {
     const declared = domainRetainedJSON(DOMAINS.definition, digest, kept.bytes);
     // Bytes that do not parse, or do not hash to the value named, are rejected before anything in them is read (section 9.4).
     if (declared === undefined) throw new Stop("incomplete", `a retained input is not the one named: the definition's declaration, ${digest}`, where);
-    const checked = validateDefinition(declared, this.#bounds, RULE_PROFILES);
+    const checked = validateDefinition(declared, this.#bounds, RULE_PROFILES, { canonical: true });
     // Section 9.3: a capability version that the verifier does not implement gives `unsupported-definition`.
     const needs = checked.ok ? checked.definition.underived.find((u) => !this.#capabilities?.implements(u)) : undefined;
     if (needs) throw new Stop("unsupported-definition", `the pinned definition needs ${needs.capability}, which this replay has no code for: ${needs.form} ${needs.name} at ${needs.path}`, where);
@@ -1462,7 +1547,7 @@ class Verifier {
     if (!supplied) throw new Stop("unsupported-definition", `the scope pins ${named}, which this replay has no code for`, where);
     let checked: ReturnType<typeof validateDefinition> | null = null;
     try {
-      checked = validateDefinition(parseStrict(canonicalize(supplied.data)), this.#bounds, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(supplied.data, supplied.rules) });
+      checked = validateDefinition(parseStrict(canonicalize(supplied.data)), this.#bounds, RULE_PROFILES, { canonical: true, platform: true, outcomeValues: outcomeValueDomains(supplied.data, supplied.rules) });
     } catch { /* data with no canonical bytes is no definition */ }
     if (!checked?.ok || checked.definition.declared.name !== platformName(named)) {
       const formatProblem = checked && !checked.ok ? checked.problems.find((problem) => problem.code === "unsupported-definition" && problem.path === "format") : undefined;
@@ -1506,9 +1591,9 @@ class Verifier {
   #otherRoomResult(fact: FactRef, user: FactRef, entry: Entry | undefined): boolean {
     const own = this.#otherRooms?.ownDirectory, input = entry?.input;
     if (!own || input?.type !== "delivery" || !same(input.from, fact) || input.message.class !== "result" || input.message.outcome !== "applied") return false;
-    if (fact.seq !== 0 || fact.at.kind !== "directory" || fact.at.scope === own) return false;
+    if (fact.seq !== 0 || input.sourceKind !== "directory" || fact.at.scope === own) return false;
     const run = this.#runs.get(user.at.scope), of = input.message.of;
-    if (run?.at?.kind !== "register" || !sameScope(of.from.at, run.at)) return false;
+    if (run?.sequence?.kind !== "register" || !run.at || !sameScope(of.from.at, run.at)) return false;
     const request = run.sealed[of.from.seq];
     if (!request || request.hash !== of.from.hash) return false;
     const to = request.entry.sends[of.n]?.to;
@@ -1535,6 +1620,63 @@ class Verifier {
       used.add(anchor);
     }
     return true;
+  }
+
+  /** Read only the actual receiving entry's exact kind rows. */
+  #recordedKind(entry: Entry, fact: FactRef, where: FactRef): ScopeKind | null {
+    const words = entry.uses.filter(use => same(use.fact, fact)).map(use => use.kind);
+    const input = entry.input;
+    if (input.type === "delivery" && same(input.from, fact)) words.push(input.sourceKind);
+    if (input.type === "genesis" && input.source && same(input.source, fact) && input.sourceKind !== null) words.push(input.sourceKind);
+    const kind = words[0];
+    if (kind === undefined) return null;
+    if (words.some(word => word !== kind)) throw new Stop("mismatch", "the receiving entry records contradictory kinds for one exact source fact", where);
+    const sequence = this.#runs.get(fact.at.scope)?.sequence;
+    if (sequence && sameScope(sequence.at, fact.at) && sequence.kind !== kind) throw new Stop("mismatch", "the recorded source kind contradicts its verified genesis", where);
+    return kind;
+  }
+
+  /** A fixed place is not a supplied kind or a source admission. */
+  #fixedKind(at: ScopeRef, expected: ScopeKind, where: FactRef): void {
+    const sequence = this.#runs.get(at.scope)?.sequence;
+    if (sequence && sameScope(sequence.at, at)) {
+      if (sequence.kind !== expected) throw new Stop("mismatch", "the sequence's verified genesis contradicts its fixed kind place", where);
+    } else this.#trust("recordedKinds");
+  }
+
+  /** A finite manifest alias and recorded word must agree independently. */
+  #anchoredPrivateName(entry: Entry, fact: FactRef, row: ExporterSourceRow, where: FactRef): string | null {
+    const kind = this.#recordedKind(entry, fact, where);
+    const catalogKind = answersCatalogVocabularyQuestion(row.pin, "archiveRegisterForeignCopy") ? "register"
+      : answersCatalogVocabularyQuestion(row.pin, "archiveMembershipForeignCopy") ? "membership" : null;
+    if (!same(row.at, fact.at) || catalogKind === null || kind === null || !isPlatformDefinition(row.pin)) return null;
+    if (catalogKind !== kind) throw new Stop("mismatch", "the retained definition's catalog kind contradicts the receiving entry's recorded kind", where);
+    return platformName(row.pin);
+  }
+
+  /** Exact anchors never cause a private history open or mint an association. */
+  #privateCopy(fact: FactRef, user: FactRef, originalBytes: string, recorded: Entry, under: string): AnchoredCopy | null {
+    const anchor = this.#anchors.find(anchor => anchor.scope === fact.at.scope && anchor.seq === fact.seq && anchor.hash === fact.hash);
+    if (!anchor) return null;
+    const sequence = this.#runs.get(fact.at.scope)?.sequence;
+    if (sequence && sameScope(sequence.at, fact.at)) { this.#recordedKind(recorded, fact, user); return null; }
+    const kind = this.#recordedKind(recorded, fact, user);
+    let basis: RawCopyBasis;
+    if (this.#rawCopyPolicy.mode === "retained-name") {
+      if (kind === null || under.length === 0) throw new Stop("incomplete", "an anchored source lacks its recorded kind or retained definition name", user, fact);
+      basis = { mode: "retained-name", under };
+    } else {
+      const rows = this.#rawCopyPolicy.rows.get(user.at.scope)?.filter(row => same(row.at, fact.at)) ?? [];
+      if (rows.some(row => row.pin !== rows[0]?.pin)) throw new Stop("mismatch", "retained manifest rows contradict the source alias", user);
+      const row = rows[0];
+      if (!row || this.#anchoredPrivateName(recorded, fact, row, user) === null)
+        throw new Stop("incomplete", "an anchored private source lacks matching recorded kind and finite exporter alias metadata", user, fact);
+      basis = { mode: "archive-alias", exporterRow: row };
+    }
+    const admitted = anchoredCopy(originalBytes, fact, anchor, basis, this.#bounds.entryBytes, kind);
+    if (!admitted) throw new Stop("incomplete", "the anchored source lacks an exact canonical raw copy", user, fact);
+    this.#trust("recordedKinds");
+    return admitted;
   }
 
   async #prove(fact: FactRef, user: FactRef, depth: number, entry?: Entry): Promise<"replayed" | "anchored"> {
@@ -1594,7 +1736,7 @@ class Verifier {
       if (!(error instanceof Gap)) throw error;
       throw new Stop("missing-dependency", `${error.reason}, and no anchor names it`, user, fact);
     }
-    if (!sameScope(source.at!, fact.at)) throw new Stop("mismatch", `the reference names ${named(fact.at)}, ${fact.at.kind}; the source scope's genesis is ${named(source.at!)}, ${source.at!.kind}: a wrong incarnation or kind`, user);
+    if (!sameScope(source.at!, fact.at)) throw new Stop("mismatch", `the reference names ${named(fact.at)}; the source scope's genesis is ${named(source.at!)}: a different sequence`, user);
     if (source.sealed[fact.seq]!.hash !== fact.hash) throw new Stop("mismatch", `the reference names another entry than the source scope has at that position: entry ${fact.seq} of ${fact.at.scope}`, user);
     this.#live();
     this.#proven.set(key, "replayed");
@@ -1671,18 +1813,21 @@ class Verifier {
     const unanswered = (): Stop => new Stop("unsupported-definition", `the observed scope ${o.of.scope} pins a definition for which this replay has no answer to an observation`, where);
     let derived: unknown;
     if (o.of.scope === run.id) {
+      this.#fixedKind(o.of, "subject" in o && o.subject === "rules" ? "rules" : "membership", where);
       if (o.head.seq !== entry.seq - 1 || o.head.hash !== entry.prev || o.at !== entry.time) throw mismatch("a membership scope judges its own act on the head before the entry, at the entry's time, and the retained observation states another");
       if (!run.observed) throw unanswered();
       // The state that this replay holds at the head before the entry. Nothing is folded for it, and each entry names another head.
       derived = run.observed(run.state, asked);
     } else {
       const fact: FactRef = { at: o.of, seq: o.head.seq, hash: o.head.hash };
-      if (await this.#prove(fact, where, depth) === "anchored") return;
+      const standing = await this.#prove(fact, where, depth);
+      this.#fixedKind(o.of, "subject" in o && o.subject === "rules" ? "rules" : "membership", where);
+      if (standing === "anchored") return;
       this.#live();
       const source = this.#runs.get(o.of.scope)!;
       if (!source.observed) throw unanswered();
       // The head is proved: the source has that incarnation, and that hash at that position. So the key names one state and one question.
-      const key = canonicalize([o.of.scope, o.of.inc, o.head.seq, o.head.hash, source.named, asked]);
+      const key = canonicalize([o.of.scope, o.of.genesis, o.head.seq, o.head.hash, source.named, asked]);
       if (this.#values.has(key)) derived = this.#values.get(key);
       else {
         derived = source.observed(this.#viewAt(source, o.head.seq), asked);
@@ -1929,18 +2074,19 @@ class Verifier {
     const direct = this.#sourceName(named, declared);
     if (direct !== null) return direct;
     const genesis = source.sealed[0];
-    const origin: Fetched[] = [];
-    if (genesis?.entry.input.type === "genesis") {
-      origin.push({ fact: { at: genesis.entry.at, seq: 0, hash: genesis.hash }, entry: genesis.entry, under: declared });
+    // Each row is a replayed sealed entry under its admitted sequence, so each is a genuine copy.
+    const origin: SourceCopy[] = [];
+    if (genesis?.entry.input.type === "genesis" && source.sequence) {
+      origin.push({ fact: { at: source.sequence.at, seq: 0, hash: genesis.hash }, entry: genesis.entry, bytes: canonicalize(genesis.entry), sequence: source.sequence, under: declared });
       const from = genesis.entry.input.source;
       const creator = from && this.#runs.get(from.at.scope);
       const made = from && creator?.sealed[from.seq];
-      if (from && creator?.at && sameScope(creator.at, from.at) && made?.hash === from.hash && creator.definition) {
+      if (from && creator?.at && sameScope(creator.at, from.at) && made?.hash === from.hash && creator.definition && creator.sequence) {
         const creatorUnder = this.#sourceIdentity(creator, where);
-        origin.push({ fact: from, entry: made.entry, under: creatorUnder });
+        origin.push({ fact: from, entry: made.entry, bytes: canonicalize(made.entry), sequence: creator.sequence, under: creatorUnder });
         const parentGenesis = creator.sealed[0];
         if (creatorUnder === "issue" && parentGenesis?.entry.input.type === "genesis") origin.push({
-          fact: { at: parentGenesis.entry.at, seq: 0, hash: parentGenesis.hash }, entry: parentGenesis.entry, under: creatorUnder,
+          fact: { at: creator.sequence.at, seq: 0, hash: parentGenesis.hash }, entry: parentGenesis.entry, bytes: canonicalize(parentGenesis.entry), sequence: creator.sequence, under: creatorUnder,
         });
       }
     }
@@ -1954,6 +2100,8 @@ class Verifier {
    * code or birth authority. A sealed prefix remains usable during recursion. */
   async #identityFrame(at: ScopeRef, where: FactRef, depth: number, from?: FactRef): Promise<IdentityFrame | null> {
     const cached = this.#runs.get(at.scope);
+    // Exact caller anchors do not authorize opening a private source for identity.
+    if (this.#anchors.some(anchor => anchor.scope === at.scope) && !cached?.sequence) return null;
     if (this.#room) {
       this.#depend(at.scope, from?.seq ?? 0, where);
       depth = Math.min(depth, this.#runs.get(where.at.scope)?.depth ?? depth);
@@ -1963,8 +2111,8 @@ class Verifier {
     if (typeof opened === "string") return null;
     await this.#advance(opened, from?.seq ?? 0, depth + 1, from ? { hash: from.hash, user: where } : undefined);
     const copy = opened.sealed[from?.seq ?? 0];
-    if (!copy || !opened.at || !sameScope(opened.at, at) || !opened.definition || !opened.named || from && copy.hash !== from.hash) return null;
-    return { fact: { at: opened.at, seq: copy.entry.seq, hash: copy.hash }, entry: copy.entry, named: opened.named, declarationName: opened.definition.declared.name, native: isPlatformDefinition(opened.named) && opened.platform?.named === opened.named };
+    if (!copy || !opened.at || !sameScope(opened.at, at) || !opened.definition || !opened.named || !opened.sequence || from && copy.hash !== from.hash) return null;
+    return { fact: { at: opened.at, seq: copy.entry.seq, hash: copy.hash }, entry: copy.entry, sequence: opened.sequence, named: opened.named, declarationName: opened.definition.declared.name, native: isPlatformDefinition(opened.named) && opened.platform?.named === opened.named };
   }
 
   async #receiverEvidence(run: Run, entry: Entry, where: FactRef, depth: number): Promise<{ mode: "legacy" | "partition-v1"; evidence: IdentityEvidence } | null> {
@@ -1982,10 +2130,10 @@ class Verifier {
     // Own genesis does not exist as an accepted fact yet: select bootstrap
     // solely from the actual parent create and the validated own definition.
     const selected = input.type === "genesis"
-      ? input.source && input.n !== null && input.message
-        ? await evidence.bootstrap({ seed: input.seed, source: input.source, n: input.n, message: input.message }, isPlatformDefinition(run.named) ? run.named : run.definition!.declared)
+      ? input.source && input.sourceKind !== null && input.n !== null && input.message
+        ? await evidence.bootstrap({ seed: input.seed, source: input.source, sourceKind: input.sourceKind, n: input.n, message: input.message }, isPlatformDefinition(run.named) ? run.named : run.definition!.declared)
         : { mode: "legacy" as const }
-      : await evidence.receiver(entry.at);
+      : await evidence.receiver(where.at);
     if (!selected) throw new Stop("incomplete", "the receiving scope's required native birth proof is unavailable", where);
     return { ...selected, evidence };
   }
@@ -2002,16 +2150,16 @@ class Verifier {
     await this.#prove(from, where, depth);
     const source = this.#runs.get(from.at.scope);
     const first = source?.sealed[0];
-    const facts: Fetched[] = [];
-    if (source?.at && sameScope(source.at, from.at) && first?.entry.input.type === "genesis") {
-      facts.push({ fact: { at: first.entry.at, seq: 0, hash: first.hash }, entry: first.entry, under: this.#sourceIdentity(source, where) });
+    const facts: SourceCopy[] = [];
+    if (source?.at && source.sequence && sameScope(source.at, from.at) && first?.entry.input.type === "genesis") {
+      facts.push({ fact: { at: source.sequence.at, seq: 0, hash: first.hash }, entry: first.entry, bytes: canonicalize(first.entry), sequence: source.sequence, under: this.#sourceIdentity(source, where) });
       const cause = first.entry.input.source;
       if (cause) {
         await this.#prove(cause, where, depth);
         const creator = this.#runs.get(cause.at.scope), made = creator?.sealed[cause.seq], genesis = creator?.sealed[0];
-        if (creator?.at && sameScope(creator.at, cause.at) && made?.hash === cause.hash && genesis) {
+        if (creator?.at && sameScope(creator.at, cause.at) && made?.hash === cause.hash && genesis && creator.sequence) {
           const under = this.#sourceIdentity(creator, where);
-          facts.push({ fact: cause, entry: made.entry, under }, { fact: { at: genesis.entry.at, seq: 0, hash: genesis.hash }, entry: genesis.entry, under });
+          facts.push({ fact: cause, entry: made.entry, bytes: canonicalize(made.entry), sequence: creator.sequence, under }, { fact: { at: creator.sequence.at, seq: 0, hash: genesis.hash }, entry: genesis.entry, bytes: canonicalize(genesis.entry), sequence: creator.sequence, under });
         }
       }
     }
@@ -2036,7 +2184,7 @@ class Verifier {
         if (domainRetainedJSON(DOMAINS.definition, digest, kept.bytes) === undefined) throw new Stop("incomplete", `a retained input is not the one named: the child declaration, ${digest}`, where);
         return { ok: true, bytes: kept.bytes };
       }, bytes => {
-        const checked = validateDefinition(parseStrict(bytes), bounds, RULE_PROFILES);
+        const checked = validateDefinition(parseStrict(bytes), bounds, RULE_PROFILES, { canonical: true });
         return checked.ok && !checked.definition.underived.some(underived => !this.#capabilities?.implements(underived)) ? checked.definition : null;
       }, bounds.namedDefinitions);
       if (!children.ok) throw new Stop(children.reason === "unavailable" ? "incomplete" : "unsupported-definition", children.reason === "unavailable" ? "a required child declaration cannot be read" : children.problems[0]!.message, where);
@@ -2044,25 +2192,74 @@ class Verifier {
     // Sections 4.1 and 9.4: a genesis states the genesis act of the definition that it pins. Integrity mode reads no definition, and does not check this.
     if (input.type === "genesis" && input.kind !== definition.declared.genesis) throw mismatch(`genesis-kind: the genesis records the kind ${input.kind}, and the genesis act of the pinned definition is ${definition.declared.genesis}`);
 
-    // The retained copy of each foreign entry this entry used, by its content digest (section 9.2).
+    // Raw retained bytes carry no association until a genuine source genesis matches.
     const facts: Fetched[] = [];
+    const rawFacts: { fact: FactRef; entry: Entry; content: Digest; under: string; bytes: string }[] = [];
     for (const use of entry.uses) {
       const kept = await this.#retained(run, requiredDependency({ at: where, input: input.type }, "foreign-use", { kind: "entry", digest: use.content }), `the foreign entry ${use.fact.seq} of ${use.fact.at.scope}`);
       if (definition.declared.capacity && utf8(kept.bytes).length > bounds.entryBytes) throw mismatch("a retained foreign entry exceeds its opt-in entryBytes producer ceiling");
       const copy = rawRetainedJSON(use.content, kept.bytes);
       if (copy === undefined) throw new Stop("incomplete", `a retained input is not the one named: the foreign entry ${use.fact.seq} of ${use.fact.at.scope}`, where);
-      if (!isEntry(copy)) throw mismatch("a used foreign entry is not an entry");
-      run.retainedEntries.set(use.content, copy);
-      facts.push({ fact: use.fact, entry: copy, under: kept.under ?? "" });
+      if (!isEntry(copy) || !isEntryBodyOf(copy, use.fact)) throw mismatch("a retained foreign body does not match its exact fact");
+      this.#recordedKind(entry, use.fact, where);
+      rawFacts.push({ fact: use.fact, entry: copy, content: use.content, under: kept.under ?? "", bytes: kept.bytes });
     }
-
-    // Section 9.4: a retained copy lets this judgment be derived again. It does not show that the source admitted the entry.
-    const foreign = [...entry.uses.map((use) => use.fact), ...(input.type === "delivery" ? [input.from] : []), ...(input.type === "genesis" && input.source ? [input.source] : [])];
+    // Rulings 4f697a7a and ae48dd39: each foreign sequence that the entry uses at a later entry has its retained first entry.
+    const births = new Map<string, CheckedSequence>();
+    for (const use of entry.uses) {
+      if (use.fact.seq === 0 || (run.at && use.fact.at.scope === run.at.scope) || births.has(canonicalize(use.fact.at))) continue;
+      const born = await this.#birth(run, use, where);
+      births.set(canonicalize(use.fact.at), born);
+      if (!rawFacts.filter(copy => same(copy.fact.at, use.fact.at)).every(copy => isEntryOf(copy.entry, copy.fact, born))) throw mismatch("a retained foreign body does not match its retained first entry");
+    }
+    // Ruling 3bf7e5aa: a copy of a sequence that Replay does not run takes its sequence from that sequence's checked birth, or from its own bytes at entry 0.
+    const bornOf = (copy: (typeof rawFacts)[number]): CheckedSequence | null => births.get(canonicalize(copy.fact.at))
+      ?? (copy.fact.seq === 0 ? admitSequenceGenesis(copy.bytes, copy.fact.at, bounds.entryBytes) : null);
+    const foreign = [...entry.uses.map(use => use.fact), ...(input.type === "delivery" ? [input.from] : []), ...(input.type === "genesis" && input.source ? [input.source] : [])];
     const distinctForeign = [...new Map(foreign.map(fact => [canonicalize(fact), fact])).values()];
     const proved = new Map<string, "replayed" | "anchored">();
     for (const fact of distinctForeign) {
       if (!isFactRef(fact)) throw mismatch("a reference is not a fact reference");
       proved.set(canonicalize(fact), await this.#prove(fact, where, depth, entry));
+      this.#recordedKind(entry, fact, where);
+      const copies = rawFacts.filter(copy => same(copy.fact, fact));
+      const source = this.#runs.get(fact.at.scope), sequence = source?.sequence;
+      if (sequence && sameScope(sequence.at, fact.at)) {
+        for (const copy of copies) {
+          if (!isEntryOf(copy.entry, fact, sequence)) throw mismatch("the retained source body does not match its checked sequence");
+          run.retainedEntries.set(copy.content, copy.entry);
+          facts.push({ fact, entry: copy.entry, sequence, under: copy.under });
+        }
+      } else {
+        // Ruling 0f76cac1: a mismatch that replay can establish outranks a missing copy. Every derived
+        // delivery records a use of its own source first, so a recorded delivery without one cannot be derived.
+        if (!copies.length && input.type === "delivery" && same(fact, input.from)) throw mismatch("the delivery records no use of its own source entry");
+        if (!copies.length) throw new Stop("incomplete", "an anchored source lacks its original retained copy", where, fact);
+        for (const copy of copies) {
+          const assumed = this.#privateCopy(fact, where, copy.bytes, entry, copy.under);
+          if (!assumed && this.#otherRoomResult(fact, where, entry)) {
+            const born = bornOf(copy);
+            if (!born || !isEntryOf(copy.entry, fact, born)) throw new Stop("incomplete", "the anchored source copy has no checked first entry", where, fact);
+            run.retainedEntries.set(copy.content, copy.entry);
+            facts.push({ fact, entry: copy.entry, sequence: born, under: copy.under });
+            continue;
+          }
+          if (!assumed) throw new Stop("incomplete", "the anchored source has no admitted raw-copy context", where, fact);
+          if (copy.under !== "" && copy.under !== copyName(assumed)) throw mismatch("the retained source alias contradicts its finite manifest row");
+          const born = bornOf(copy);
+          if (!born || !isEntryOf(copy.entry, fact, born)) throw new Stop("incomplete", "the anchored source copy has no checked first entry", where, fact);
+          run.retainedEntries.set(copy.content, copy.entry);
+          // Ruling 3bf7e5aa: the checked copy enters `facts`, as on main. `#prove` above still proves the fact by its anchor.
+          facts.push({ fact, entry: copy.entry, sequence: born, under: copyName(assumed) });
+        }
+      }
+    }
+    if (input.type === "genesis" && isObject(input.message?.body)) {
+      for (const [field, kind] of [["membership", "membership"], ["directory", "directory"]] as const) {
+        if (field === "directory" && input.seed.kind !== "lane") continue;
+        const at = input.message.body[field];
+        if (isScopeRef(at)) this.#fixedKind(at, kind, where);
+      }
     }
     const identity = await this.#receiverEvidence(run, entry, where, depth);
     for (const fact of distinctForeign) {
@@ -2071,21 +2268,24 @@ class Verifier {
         const selected = await identity.evidence.name(fact);
         if (!selected) throw new Stop("incomplete", "the source's bounded native identity proof is unavailable", where);
         for (const copy of copies) {
-          if (copy.under !== selected.producer) throw mismatch("the retained source alias differs from its unchanged producer policy");
+          if (copy.under !== "" && copy.under !== selected.producer) throw mismatch("the retained source alias differs from its unchanged producer policy");
           if (copy.entry.input.type === "genesis" && copy.entry.input.decision !== "applied") {
             const born = copy.entry.input;
             const delivered = input.type === "delivery" && input.message.class === "result" ? input : null;
             const message = delivered?.message;
             if (born.decision !== "refused" || !delivered || message?.class !== "result" || !same(fact, delivered.from)
-              || !same(born.seed.creator, entry.at) || !isFactRef(born.source) || !isObject(message.of) || !isFactRef(message.of.from) || !isLocalId(message.of.n) || !same(message.of.from, born.source) || message.of.n !== born.n
-              || message.outcome !== "refused" || !sentBy(copy.entry, { to: entry.at, from: delivered.from, n: delivered.n, message })) throw mismatch("a refused genesis is not positive source evidence");
+              || !isFactRef(born.source) || !same(resolveGenesisSelf(born.seed.creator, born.source), where.at) || !isObject(message.of) || !isFactRef(message.of.from) || !isLocalId(message.of.n) || !same(message.of.from, born.source) || message.of.n !== born.n
+              || message.outcome !== "refused" || !sentBy(copy.entry, { to: where.at, from: delivered.from, n: delivered.n, message }, copy.sequence)) throw mismatch("a refused genesis is not positive source evidence");
             copy.under = "";
           } else copy.under = selected.under;
         }
       } else if (proved.get(canonicalize(fact)) === "replayed") {
         const source = this.#runs.get(fact.at.scope)!;
         const pinned = this.#sourceIdentity(source, where);
-        for (const copy of copies) if (copy.under !== pinned) throw mismatch(`the retained copy of entry ${fact.seq} of ${fact.at.scope} names another definition than that scope pins`);
+        for (const copy of copies) {
+          if (copy.under !== "" && copy.under !== pinned) throw mismatch(`the retained copy of entry ${fact.seq} of ${fact.at.scope} names another definition than that scope pins`);
+          copy.under = pinned;
+        }
       }
     }
 
@@ -2094,7 +2294,7 @@ class Verifier {
     // Section 9.3, for every entry: no two `relate` sends for one key.
     const keys = new Set<string>();
     for (const send of entry.sends) {
-      const update = send.message.class === "request" && send.message.type === "relate" && isScopeRef(send.to) ? updateOf(send.message, { at: entry.at, seq: entry.seq, hash }) : null;
+      const update = send.message.class === "request" && send.message.type === "relate" && isScopeRef(send.to) ? updateOf(send.message, { at: where.at, seq: entry.seq, hash }) : null;
       if (!update || !isScopeRef(send.to)) continue;
       const key = canonicalize([send.to.scope, update.item.seq, update.name]);
       if (keys.has(key)) throw mismatch("the entry has two relate sends for one key");
@@ -2135,7 +2335,9 @@ class Verifier {
     // inputs or in the caller's bounds.
     // Section 16.4: the guard `ancestry` reads a snapshot of staged refs from the bytes that the scope retains. Here they are the
     // bytes that an earlier outcome entry of this scope named, which were read and checked against their digest at that entry.
-    const ownEntry: Own = floorOwn(state, run.sealed, use => run.retainedEntries.get(use.content) ?? null);
+    const sequence = run.sequence;
+    if (!sequence) throw new Stop("incomplete", "the replay has no admitted local genesis", where);
+    const ownEntry: Own = floorOwn(state, run.sealed, sequence, use => run.retainedEntries.get(use.content) ?? null);
     const reading = {
       clock, bounds, facts, prepared: entry.prepared, own: ownEntry, texts: (digest: Digest) => texts.get(digest) ?? null, snapshot: (digest: Digest) => run.snapshots.get(digest) ?? null,
       capabilities: this.#capabilities, platform: run.platform ?? undefined,
@@ -2147,7 +2349,9 @@ class Verifier {
     const foldInputs: DrawOptions = reading;
     const drawn = drawsOf(state, definition, entry, foldInputs);
     if ("fault" in drawn) throw mismatch(`${drawn.fault === "past-count" ? "draw-past-count" : "held-without-holder"}: ${drawn.detail}`);
-    const copyOf = (fact: FactRef | null) => facts.find((f) => f.fact.hash === fact?.hash) ?? null;
+    const copyOf = (fact: FactRef | null) => fact ? facts.find(copy => same(copy.fact, fact)) ?? null : null;
+    // Ruling 3bf7e5aa: every checked copy is in `facts`, so a judge takes no assumed copy.
+    const assumptions = { recorded: entry, facts: [], source: null };
     const sealed = (seq: unknown): Entry | null => (isLocalId(seq) ? (ownEntry(seq)?.entry ?? null) : null);
     let judged: ActJudgment | Judgment | TimedJudgment | PreparationJudgment;
     let judgeText: ((view: StateView, texts: Texts) => ActJudgment | Judgment) | null = null;
@@ -2155,7 +2359,7 @@ class Verifier {
     const refusedField = input.type === "genesis" ? input.decision === "refused" : input.type === "delivery" && "decision" in input && input.decision === "refused" && input.reason?.code === "bad-field" && input.reason.name === undefined;
     const tell = input.type === "delivery" && input.message.class === "request" && input.message.type === "tell" ? input.message : null;
     const messageName = tell && isObject(tell.body) ? tell.body["message"] : null;
-    const sourceKind = input.type === "delivery" ? input.from.at.kind : null;
+    const sourceKind = input.type === "delivery" ? input.sourceKind : null;
     const fieldBound = tell && Object.values(definition.declared.receives).some(handler => handler.class === "tell" && handler.message === messageName && handler.from.kind === sourceKind && "bound" in handler);
     const conditionalRefusal = !!definition.declared.capacity && refusedField && unknown.length > 0 && !fieldBound;
     const withTextGaps = (view: StateView, judge: NonNullable<typeof judgeText>, lookup: Texts): ActJudgment | Judgment => {
@@ -2164,7 +2368,7 @@ class Verifier {
       const measured: Texts = digest => lookup(digest);
       measured.redactedOver = (digest, max) => { const seen = limits.get(digest) ?? new Set<number>(); seen.add(max); limits.set(digest, seen); return false; };
       let initial: ActJudgment | Judgment | undefined, failure: unknown;
-      try { initial = judge(view, measured); } catch (error) { failure = error; }
+      try { initial = judge(view, measured); } catch (error) { if (error instanceof RuleFault) throw error; failure = error; }
       const matches = (result: ActJudgment | Judgment) => result.result === "write" && canonicalize(entryOf(view, result.draft, clock)) === bytes;
       if (initial && matches(initial)) return initial;
       // The missing size may explain the recorded refusal. Test only its
@@ -2177,7 +2381,7 @@ class Verifier {
         try {
           const candidate = judge(view, conditional);
           if (matches(candidate)) return candidate;
-        } catch { /* a different unknown comparison may explain the refusal */ }
+        } catch (error) { if (error instanceof RuleFault) throw error; /* a different unknown comparison may explain the refusal */ }
       }
       if (!initial) throw failure;
       return initial;
@@ -2186,16 +2390,16 @@ class Verifier {
       case "genesis": {
         this.#trust("minted");
         if (input["founding"]) {
-          const asked = { name: run.id, inc: input.inc, seed: input.seed, creation: input["founding"] };
-          judgeText = (view, texts) => judgeGenesis(view, definition, asked, { ...reading, texts, source: null });
+          const asked = { name: run.id, nonce: input.nonce, seed: input.seed, creation: input["founding"] };
+          judgeText = (view, texts) => judgeGenesisForReplay(view, definition, asked, { ...reading, texts, source: null }, assumptions);
           judged = withTextGaps(state, judgeText, reading.texts);
         }
         else {
           if (!input.source || input.n === null || !input.message) throw mismatch("a genesis has a signed creation intent or a request from its creator");
           this.#trust("held");
           const source = copyOf(input.source);
-          const asked = { name: run.id, inc: input.inc, to: input.seed, from: input.source, n: input.n, message: input.message };
-          judgeText = (view, texts) => judgeGenesis(view, definition, asked, { ...reading, texts, source: source && { entry: source.entry, under: source.under } });
+          const asked = { name: run.id, nonce: input.nonce, to: input.seed, from: input.source, n: input.n, message: input.message };
+          judgeText = (view, texts) => judgeGenesisForReplay(view, definition, asked, { ...reading, texts, source: source && { entry: source.entry, sequence: source.sequence, under: source.under } }, assumptions);
           judged = withTextGaps(state, judgeText, reading.texts);
         }
         break;
@@ -2207,12 +2411,12 @@ class Verifier {
         for (const grant of input.authority) {
           const row = own(definition.declared.acts, input.signed.intent.kind);
           // Authority note, section 3.3: a membership scope judges its own act on an observation that serves that one commit.
-          const window = run.at!.kind === "membership" ? WINDOWS.once : windowOf(definition, run.at!.kind, input.signed.intent.kind);
+          const window = run.sequence!.kind === "membership" ? WINDOWS.once : windowOf(definition, run.sequence!.kind, input.signed.intent.kind);
           await this.#granted(run, entry, grant, { key: input.signed.intent.actor, action: row ? actionOf(row, definition) : null, window }, where, depth);
         }
         // Revision 20, section 16.1, "Replay": under a definition whose data states rows, the check is by the rows (`#byRows`, below).
         // Under any other, the older rule stands as a stand-in: the window of the act's own grant.
-        if (input.observed && !definition.observing) await this.#observed(run, entry, input.observed, windowOf(definition, run.at!.kind, input.signed.intent.kind), where, depth);
+        if (input.observed && !definition.observing) await this.#observed(run, entry, input.observed, windowOf(definition, run.sequence!.kind, input.signed.intent.kind), where, depth);
         const actRows = definition.observing ? await this.#hand(run, entry, input.observed, where) : null;
         // Section 16.1, "Replay": that `within` covers the observing scope is checked by the reference that its genesis records.
         // Section 16.1, "Replay": the entry holds exactly the observations that its judgment reads. The judge is given the recorded
@@ -2233,7 +2437,7 @@ class Verifier {
         }
         if (actRows) values.push(...actRows.values);
         const actContext = { ...reading, presented: input.presented, grants: input.authority.map((grant) => ({ grant, current: true })), membership: fixedIn(run, input), ...(input.observed ? { observed: input.observed } : {}), ...(values.length > 0 ? { values } : {}), ...(actRows ? { observed: actRows.observed, observing: actRows.observing } : {}) };
-        judgeText = (view, texts) => judgeAct(view, definition, input.signed, { ...actContext, texts });
+        judgeText = (view, texts) => judgeActForReplay(view, definition, input.signed, { ...actContext, texts }, assumptions);
         judged = withTextGaps(state, judgeText, reading.texts);
         if (actRows) await this.#byRows(run, entry, judged, actRows.observed, where, depth);
         break;
@@ -2265,13 +2469,13 @@ class Verifier {
         const clauseRows = definition.observing && "clause" in input ? await this.#hand(run, entry, further, where) : null;
         const delivered = { to, from: input.from, n: input.n, message: input.message };
         let sourcePin: Digest | PlatformDefinition | undefined;
-        if ((input.message.class === "request" || input.message.class === "advisory") && bound(definition, input.message, input.from, source.under)?.handler?.from.pin) {
+        if ((input.message.class === "request" || input.message.class === "advisory") && bound(definition, input.message, input.from, input.sourceKind, source.under)?.handler?.from.pin) {
           const birth = await this.#identityFrame(input.from.at, where, depth);
           if (!birth) throw new Stop("incomplete", "the pinned sender's genesis cannot be verified", where);
           sourcePin = birth.named;
         }
-        const deliveryContext = { ...reading, source: { entry: source.entry, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, origin, ...(further ? { observed: further } : {}), ...(clauseRows ?? {}) };
-        judgeText = (view, texts) => judgeDelivery(view, definition, delivered, { ...deliveryContext, texts });
+        const deliveryContext = { ...reading, source: { entry: source.entry, sequence: source.sequence, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, origin, ...(further ? { observed: further } : {}), ...(clauseRows ?? {}) };
+        judgeText = (view, texts) => judgeDeliveryForReplay(view, definition, delivered, { ...deliveryContext, texts }, assumptions);
         judged = withTextGaps(state, judgeText, reading.texts);
         if (clauseRows) await this.#byRows(run, entry, judged, clauseRows.observed, where, depth);
         break;
@@ -2429,7 +2633,7 @@ class Verifier {
  * what it has already checked (`Tally`).
  */
 export function verifyHistory(source: HistorySource, options: Options, tally?: Tally): Promise<Verification> {
-  return new Verifier(source, options, tally).run();
+  return new Verifier(source, options, rawCopyPolicy(options), tally).run();
 }
 
 export { verifyHistory as verify };
@@ -2447,6 +2651,7 @@ export function roomVerification(source: HistorySource, options: Omit<Options, "
     ...(options.bounds ? { bounds: { ...options.bounds } } : {}),
     limits: { ...LIMITS, ...options.limits },
   };
+  const policy = rawCopyPolicy(fixed);
   const bound: HistorySource = { page: source.page.bind(source), retained: source.retained.bind(source),
     ...(source.omittedText ? { omittedText: source.omittedText.bind(source) } : {}),
     ...(source.floorReceipt ? { floorReceipt: source.floorReceipt.bind(source) } : {}) };
@@ -2467,7 +2672,7 @@ export function roomVerification(source: HistorySource, options: Omit<Options, "
       if (phase !== "open") return Promise.reject(new Error(`room verification is ${phase}`));
       const asked = { scope: target.scope, ...(target.head === undefined ? {} : { head: { ...target.head } }) };
       return enqueue(async () => {
-        const owner = engine ?? (engine = new Verifier(bound, { ...fixed, scope: asked.scope }, undefined, true));
+        const owner = engine ?? (engine = new Verifier(bound, { ...fixed, scope: asked.scope }, policy, undefined, true));
         await owner.checkRoomTarget(asked); live();
         return Object.freeze({ token: Object.freeze({ [ROOT_TOKEN]: true as const }), requested: asked.scope, final: false as const });
       });

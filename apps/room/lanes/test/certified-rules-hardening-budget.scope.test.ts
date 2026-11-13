@@ -82,14 +82,14 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
       if (!rules) return expect.fail("The lane must retain its real rules reply");
       const content = `# ${name}\n`, path = `${name}.md`;
       const source = await lane.did(rita, "propose-file", { expected: await lane.expected({ proposal: 0 }), fields: { base: laneBase, path, digest: digestBytes(utf8(content)), size: utf8(content).length, content } });
-      const file = { path, entry: factRefOf((await hardeningEntries(lane))[source]!), digest: digestBytes(utf8(content)) };
+      const file = { path, entry: factRefOf((await hardeningEntries(lane))[source]!, await lane.at()), digest: digestBytes(utf8(content)) };
       const manifest = await lane.did(rita, "propose-manifest", { expected: await lane.expected({ proposal: 0 }), fields: { base: laneBase, files: [file] } });
-      return { lane, rules, manifest, fact: factRefOf((await hardeningEntries(lane))[manifest]!) };
+      return { lane, rules, manifest, fact: factRefOf((await hardeningEntries(lane))[manifest]!, await lane.at()) };
     };
     const merge = async (prepared: Awaited<ReturnType<typeof prepare>>) => {
       const seq = await prepared.lane.did(rita, "merge", { expected: await prepared.lane.expected({ proposal: 0, manifest: prepared.manifest, rules: prepared.rules.id }), fields: { manifest: prepared.manifest, reports: [] } });
       await pause(nodes);
-      const operation = factRefOf((await hardeningEntries(prepared.lane))[seq]!);
+      const operation = factRefOf((await hardeningEntries(prepared.lane))[seq]!, await prepared.lane.at());
       // Summary keeps live publications. The retained items surface keeps
       // final publications, including a reserve that was refused.
       const publications = [...(await G.summary()).value.items.filter(item => item.type === "publication"), ...await hardeningItems(G, "publication")];
@@ -100,7 +100,7 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
     const small = await prepare("template");
     const baseline = await merge(small);
     const template = (await hardeningEntries(G)).find(entry => entry.effects.some(effect => effect.effect === "value" && effect.item === baseline.id && effect.slot === "passes"));
-    if (!template) return expect.fail("One real small native capture supplies the exact envelope template");
+    if (!template || !("genesis" in template)) return expect.fail("One real small native capture supplies the exact envelope template, a later entry");
     const smallRecord = capturedRecord(template);
     expect(smallRecord.policy.required).toHaveLength(1); expect(smallRecord.generations).toEqual([]);
     const smallStage = await small.lane.item(small.manifest), firstCheck = checks[0]!;
@@ -173,9 +173,9 @@ test("G15 admits the maximum constructed capture, retains 32 real proofs, and re
       await pause(nodes);
       const result = await admitted.lane.did(una, "check", { expected: await admitted.lane.expected({ job, rules: admitted.rules.id, proposal: 0, manifest: admitted.manifest }), fields: { job, tree: staged.values["tree"]!, configuration: descriptor.configuration, outcome: "passed" } });
       await pause(nodes);
-      const laneEntries = await hardeningEntries(admitted.lane);
+      const laneEntries = await hardeningEntries(admitted.lane), laneAt = await admitted.lane.at();
       expect(laneEntries[result]!.input).toMatchObject({ type: "act", signed: { intent: { kind: "check", actor: una.key } } });
-      nativeProofs.set(descriptor.name, { job: factRefOf(laneEntries[job]!), result: factRefOf(laneEntries[result]!) });
+      nativeProofs.set(descriptor.name, { job: factRefOf(laneEntries[job]!, laneAt), result: factRefOf(laneEntries[result]!, laneAt) });
     }
     const final = (await hardeningItems(G, "publication")).find(item => item.id === publication.id);
     expect(final).toMatchObject({ state: "cleaned" });

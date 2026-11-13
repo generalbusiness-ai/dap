@@ -62,19 +62,19 @@ import { Gateway, type GatewayOptions, type GrantRecord, type GrantRequest, type
 /** The purpose of a job's read token, as its record states it (`derive/src/capability/gitread.ts`, `CHECK_READ`). */
 export const CHECK_READ = "check-read";
 
-const sameFact = (a: FactRef, b: FactRef): boolean => a.at.scope === b.at.scope && a.at.inc === b.at.inc && a.seq === b.seq && a.hash === b.hash;
+const sameFact = (a: FactRef, b: FactRef): boolean => a.at.scope === b.at.scope && a.at.genesis === b.at.genesis && a.seq === b.seq && a.hash === b.hash;
 
 /**
  * The one grant of a run's gateway: the job's repository, for reads only,
  * with the job's read token. Null: the token is not the read token of this
  * job in this lane, and no grant is made for it.
  *
- * The attempt's name is made from the lane, its incarnation and the job's
+ * The attempt's name is made from the lane, its genesis hash and the job's
  * position, so one job has one grant in a gateway's life.
  */
 export function readGrant(job: { lane: ScopeRef; fact: FactRef }, repository: string, token: LiveToken): GrantRequest | null {
-  if (token.purpose !== CHECK_READ || !("job" in token.for) || !sameFact(token.for.job, job.fact) || token.scope.scope !== job.lane.scope || token.scope.inc !== job.lane.inc) return null;
-  return { attempt: `${job.lane.scope}.${job.lane.inc}.${job.fact.seq}`, repository, update: null, token: { id: token.id, state: token.state, plaintext: token.plaintext } };
+  if (token.purpose !== CHECK_READ || !("job" in token.for) || !sameFact(token.for.job, job.fact) || token.scope.scope !== job.lane.scope || token.scope.genesis !== job.lane.genesis) return null;
+  return { attempt: `${job.lane.scope}.${job.lane.genesis}.${job.fact.seq}`, repository, update: null, token: { id: token.id, state: token.state, plaintext: token.plaintext } };
 }
 
 /**

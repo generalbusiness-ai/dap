@@ -17,8 +17,8 @@
 
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
-import type { Answer, Beside, Digest, Entry, FactRef, FieldValue, Grant, Intent, PlatformDefinition, Read, RetainedInput, ScopeId, ScopeRef, Seed, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, isDigest, isScopeRef, newIncarnation, scopeIdOf, signIntent, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
+import type { Answer, Beside, Digest, Entry, FactRef, FieldValue, Grant, Intent, PlatformDefinition, Read, RetainedInput, ScopeId, ScopeKind, ScopeRef, Seed, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
+import { canonicalize, factRefOf, intentDigest, isDigest, isScopeRef, scopeIdOf, signIntent, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { hashOfBytes, type MemoryScope } from "@generalbusiness/dap-replay";
 import type { Delivered, Item } from "@generalbusiness/dap-derive";
 import { d, keys, type Actor } from "@generalbusiness/dap-derive/testing";
@@ -27,7 +27,7 @@ import { officeDefinitionFor } from "@generalbusiness/dap-platform/testing";
 import type { Delivery, OutboxItem, Sealed, Summary } from "../src/index.ts";
 import { route } from "../src/worker.ts";
 import { startupTest } from "./support/serving-startup.ts";
-import { net } from "../src/testing.ts";
+import { net, scriptedSequence } from "../src/testing.ts";
 import { quiet, settle, settleDriving, soon } from "./net.ts";
 import { reader } from "./support.ts";
 
@@ -79,6 +79,18 @@ export class Platform {
     return read.value;
   }
   async entries(): Promise<Entry[]> { return (await this.sealed()).map((sealed) => sealed.entry); }
+  /** The kind that this scope's genesis seed names. */
+  async kind(): Promise<ScopeKind> {
+    const born = (await this.entries())[0];
+    if (!born || born.input.type !== "genesis") throw new Error(`no genesis of ${this.name}`);
+    return born.input.seed.kind;
+  }
+  /** The fact of this scope's sealed entry at `seq`, under this scope's full reference. */
+  async fact(seq: number): Promise<FactRef> {
+    const entry = (await this.entries())[seq];
+    if (!entry) throw new Error(`no entry ${seq} in ${this.name}`);
+    return factRefOf(entry, await this.at());
+  }
   async last(): Promise<Entry> { return (await this.entries()).at(-1)!; }
   /** Item `id`, from the summary's live items. */
   async item(id: number): Promise<Item> {
@@ -137,8 +149,8 @@ export async function inboxConfirmation(repository: Repository) {
   const inboxes = await Promise.all([repository.ritasInbox, repository.unasInbox].map(async inbox => {
     const sealed = await inbox.sealed(), first = sealed[0];
     if (!first || first.entry.input.type !== "genesis") throw new Error("Inbox creation has no retained genesis");
-    const born = first.entry.input, genesis = factRefOf(first.entry);
-    if (born.seed.kind !== "inbox" || scopeIdOf(born.seed) !== genesis.at.scope || born.inc !== genesis.at.inc || genesis.at.kind !== "inbox") throw new Error("Inbox genesis has another full seed/incarnation");
+    const at = await inbox.at(), born = first.entry.input, genesis = factRefOf(first.entry, at);
+    if (born.seed.kind !== "inbox" || scopeIdOf(born.seed) !== at.scope || first.hash !== at.genesis) throw new Error("Inbox genesis has another full seed or genesis");
     if (!born.source || born.n === null || canonicalize(born.source.at) !== canonicalize(membership)) throw new Error("Inbox belongs to another creator");
     const creation = parent[born.source.seq];
     if (!creation || creation.hash !== born.source.hash || !creation.entry.sends.some(send => send.n === born.n && canonicalize(send.to) === canonicalize(born.seed) && canonicalize(send.message) === canonicalize(born.message))) throw new Error("Inbox genesis lacks its exact recorded creation");
@@ -147,11 +159,11 @@ export async function inboxConfirmation(repository: Repository) {
       const input = control.entry.input;
       if (input.type !== "delivery") throw new Error("Confirmation is no retained delivery");
       const sender = (await repository.M.sealed())[input.from.seq];
-      if (!sender || sender.hash !== input.from.hash || !sender.entry.sends.some(send => send.n === input.n && canonicalize(send.to) === canonicalize(first.entry.at) && canonicalize(send.message) === canonicalize(input.message))) throw new Error("Confirmation lacks its exact retained Native creator send");
+      if (!sender || sender.hash !== input.from.hash || !sender.entry.sends.some(send => send.n === input.n && canonicalize(send.to) === canonicalize(at) && canonicalize(send.message) === canonicalize(input.message))) throw new Error("Confirmation lacks its exact retained Native creator send");
     }
     const pairs: [Platform, string][] = [[repository.M, `${born.source.seq}.${born.n}`]];
     for (const send of first.entry.sends) if (send.message.class === "result" && canonicalize(send.to) === canonicalize(membership)) pairs.push([inbox, `0.${send.n}`]);
-    for (const row of parent) for (const send of row.entry.sends) if (send.message.class === "control" && canonicalize(send.message.genesis) === canonicalize(genesis) && canonicalize(send.to) === canonicalize(first.entry.at)) pairs.push([repository.M, `${row.entry.seq}.${send.n}`]);
+    for (const row of parent) for (const send of row.entry.sends) if (send.message.class === "control" && canonicalize(send.message.genesis) === canonicalize(genesis) && canonicalize(send.to) === canonicalize(at)) pairs.push([repository.M, `${row.entry.seq}.${send.n}`]);
     for (const [sender, id] of pairs) {
       const read = await sender.stub.outbox(reader);
       if (!read.ok) throw new Error("Creation protocol outbox unavailable");
@@ -162,8 +174,8 @@ export async function inboxConfirmation(repository: Repository) {
       if (timing.next !== null) retries.push({ scope: await sender.at(), inbox: genesis.at, genesis, outboxId: id, class: outboxId.class, next: timing.next, alarm: timing.alarm, attempts: outboxId.attempts.slice(-4) });
     }
     const summary = await inbox.summary();
-    if (canonicalize(summary.value.scope) !== canonicalize(genesis.at)) throw new Error("Inbox view has another full incarnation");
-    return { scope: summary.value.scope, status: summary.value.status, genesis, controls: controls.map(row => factRefOf(row.entry)) };
+    if (canonicalize(summary.value.scope) !== canonicalize(genesis.at)) throw new Error("Inbox view has another full genesis");
+    return { scope: summary.value.scope, status: summary.value.status, genesis, controls: controls.map(row => factRefOf(row.entry, at)) };
   }));
   return { clock: timeMs(net.clock.now)!, inboxes, retries };
 }
@@ -237,11 +249,11 @@ let lanes = 0;
  */
 export async function notify(inbox: Platform, fields: Record<string, FieldValue>): Promise<{ envelope: Delivered; answer: Delivery }> {
   const seed: Seed = { v: 1, kind: "lane", definition: d("e"), creator: null, cause: d("f"), ordinal: lanes++ };
-  const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), kind: "lane" };
+  const lane = scriptedSequence(seed, net.clock.now);
   const send = { n: 0, to: await inbox.at(), message: { class: "advisory", type: "notify", body: { fields } } } as const;
-  const entry: Entry = { v: 1, at, seq: 4, prev: d("0"), time: net.clock.now, clamped: false, epoch: 0, input: { type: "checkpoint", through: 3, state: d("1") }, uses: [], prepared: [], effects: [], sends: [send] };
-  const from: FactRef = { at, seq: 4, hash: entryHash(entry) };
-  net.peers.set(from.hash, { entry, under: "issue" });
+  const entry = lane.entry(4, { type: "checkpoint", through: 3, state: d("1") }, [send]);
+  const from: FactRef = lane.fact(entry);
+  net.peers.set(from.hash, lane.source(entry, "issue"));
   const envelope: Delivered = { to: send.to, from, n: 0, message: send.message };
   return { envelope, answer: await inbox.stub.deliver(envelope) };
 }
@@ -261,6 +273,10 @@ export async function copied(node: Platform): Promise<MemoryScope> {
   const genesis = sealed[0]!.entry.input as Extract<Entry["input"], { type: "genesis" }>;
   const retained = isDigest(genesis.seed.definition) ? await kept("definition", genesis.seed.definition) : [];
   for (const { entry } of sealed) for (const use of entry.uses) retained.push(...await kept("entry", use.content));
+  // A use at a later entry of a foreign sequence also needs that sequence's first entry, the `birth` row under its genesis.
+  const births = new Set<Digest>();
+  for (const { entry } of sealed) for (const use of entry.uses) if (use.fact.seq > 0) births.add(use.fact.at.genesis);
+  for (const digest of births) retained.push(...await kept("birth", digest));
   return { scope: await node.at(), entries: sealed.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };
 }
 

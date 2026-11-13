@@ -17,7 +17,7 @@ async function fixture(t) {
   t.after(() => rm(directory, { recursive: true }));
   const home = join(directory, 'home'), project = join(directory, 'project');
   await mkdir(home, { mode: 0o700 });
-  await writeFile(join(home, 'config.json'), JSON.stringify({ v: 1, service: origin, plan: { service: origin, register,
+  await writeFile(join(home, 'config.json'), JSON.stringify({ v: 2, service: origin, key: 'operator', plan: { service: origin, register,
     definition: 'platform:register@25', founding: { intent: { fields: { host: 'none', namespace: '' } } } } }), { mode: 0o600 });
   await prepareProject({ origin, home, out: project });
   const configFile = join(directory, 'github.json'), privateKeyFile = join(directory, 'github-key.pem'), readTokenFile = join(directory, 'read-token'), bindingsFile = join(directory, 'bindings.json');
@@ -31,7 +31,7 @@ async function fixture(t) {
   await writeFile(configFile, JSON.stringify(config), { mode: 0o644 });
   await writeFile(privateKeyFile, key, { mode: 0o600 });
   await writeFile(readTokenFile, token + '\n', { mode: 0o600 });
-  const bindings = [{ destination: { scope: 'sc_' + 'a'.repeat(52), inc: 'in_' + 'a'.repeat(26), kind: 'destination' },
+  const bindings = [{ destination: { scope: 'sc_' + 'a'.repeat(52), genesis: 'sha256:' + 'a'.repeat(64) },
     repository: { host: 'github.com', namespace: 'test-account', name: 'TEST-repo', id: '71' }, branch: 'main' }];
   await writeFile(bindingsFile, JSON.stringify(bindings), { mode: 0o644 });
   return { directory, project, configFile, privateKeyFile, readTokenFile, bindingsFile, bindings, out: join(directory, 'configured'), config, key, token };

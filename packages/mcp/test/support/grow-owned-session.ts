@@ -2,7 +2,7 @@ import { growLauncherDefinition } from "./definition-corpus-data.ts";
 /** One Core/SQLite Site -> Room path. TEST grants, namespace routing,
  * installation lookup and sessions remain fixtures. Every birth and source
  * entry is native; no Lane reference or application state is manufactured. */
-import type { DeclaredDefinition, ScopeId, Timestamp } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition, type ScopeId, type Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isEntry, isScopeRef, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { AnyPackedApplication } from "@generalbusiness/dap-platform/application-v2";
 import { signedIntent } from "@generalbusiness/dap-client";
@@ -35,15 +35,15 @@ export async function openOwnedGrowScenario(packet: AnyPackedApplication, value:
         return peers.get(id)!;
       };
       const deliver = async (sender: LocalApplicationScope, seq: number, n: number): Promise<LocalApplicationScope> => {
-        const source = await peer(sender.at.scope).source(seq);
-        const entry = source?.bytes ? parseStrict(source.bytes) : null;
+        const source = await peer(sender.at.scope).source(seq, false, { maxBytes: PROPOSED_BOUNDS.entryBytes, milliseconds: 10_000 });
+        const entry = source && "bytes" in source && source.bytes ? parseStrict(source.bytes) : null;
         if (!isEntry(entry)) throw Error("The native source entry is unavailable.");
         const send = entry.sends.find(send => send.n === n);
         if (!send) throw Error("The native source holds no selected send.");
         const name = isSeed(send.to) ? scopeIdOf(send.to) : isScopeRef(send.to) ? send.to.scope : null;
         if (!name) throw Error("The native send has no scope address.");
-        const target = peer(name), answer = await target.deliver({ ...send, from: factRefOf(entry) });
-        if (answer.answer !== "recorded") throw Error(`Native fixture delivery ${answer.answer}.`);
+        const target = peer(name), answer = await target.deliver({ ...send, from: factRefOf(entry, sender.at) });
+        if (!("answer" in answer) || answer.answer !== "recorded") throw Error(`Native fixture delivery ${"answer" in answer ? answer.answer : answer.stop}.`);
         return scopes.get(name)!;
       };
       deliverNative = deliver;
@@ -58,7 +58,7 @@ export async function openOwnedGrowScenario(packet: AnyPackedApplication, value:
       if (opening.answer !== "accepted") throw Error(`Native Site create-room ${opening.answer}: ${"reason" in opening ? opening.reason : "unknown"}.`);
       const room = await deliver(site, opening.receipt.fact.seq, 0); await deliver(room, 0, 0);
       await deliver(site, site.state.scope()!.head.seq, 0);
-      if (room.at.kind !== "lane" || site.at.kind !== "lane" || room.definition !== selected) throw Error("The native path selected another application definition.");
+      if (room.state.scope()?.kind !== "lane" || site.state.scope()?.kind !== "lane" || room.definition !== selected) throw Error("The native path selected another application definition.");
       return room;
     });
     const reportSite = async (time: Timestamp = session.time) => {

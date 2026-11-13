@@ -12,7 +12,7 @@ import { fixtureRoute as route } from "./support/serving-route.ts";
 import type { NativeBirth } from "../src/native-birth.ts";
 import type { ProofBody } from "../src/proof-bytes.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
+import { Lane, START, at, foreignOf, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 function setup(under: ValidDefinition, bounds: Partial<Bounds> = {}) {
   const signed = signIntent({ v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: crypto.randomUUID(), notAfter: at(60) }, rita.secret);
@@ -93,7 +93,7 @@ test("a legacy creator's optional absent declaration cannot become an opt-in chi
     resolver: { read: async fact => {
       const read = await stubOf(parent.name).entry(reader, fact.seq);
       trace.push({ seq: fact.seq, ok: read.ok, hash: read.ok && read.value.hash === fact.hash });
-      return read.ok && read.value.hash === fact.hash ? { fact, entry: read.value.entry, under: root.declared.name } : null;
+      return read.ok && read.value.hash === fact.hash ? foreignOf(fact, root.declared.name) : null;
     } },
   }));
   try {

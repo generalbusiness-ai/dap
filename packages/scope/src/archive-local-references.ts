@@ -2,7 +2,7 @@
  * caller supplies actual classified context inside its synchronous frame;
  * this grants no pin, privacy, body-read or export admission. */
 import { RETAINED_INPUT_BYTES, type Bounds, type Digest, type FactRef, type Input, type ScopeRef } from "@generalbusiness/dap-contract";
-import { isFactRef, natural } from "@generalbusiness/dap-bytes";
+import { isDigest, isFactRef, natural } from "@generalbusiness/dap-bytes";
 import { boundedRetainedDependencies, requiredDependency, type PlannedRetainedDependency } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ArchiveActFields } from "./archive-act-fields.ts";
@@ -57,6 +57,19 @@ export class ArchiveLocalReferences {
       const digests = readArchiveDigestFields(sql, position, Array.from({ length }, (_, n) => `$.uses[${offset + n}].content`), this.budget);
       for (const digest of digests) { if (digest === null) return stop("mismatch"); uses.push(digest); }
     }
+    const births: Digest[] = [];
+    if (count > 0) {
+      // Each foreign sequence used at a later entry needs its birth row
+      // once (ruling 4f697a7a). The planner keeps first-use order.
+      const rows = this.budget.native(sql, () => ({ metadata: count * 128, inputWork: position.bytes * 16 })).exec(
+        `SELECT json_extract(value, '$.fact.seq') AS seq, ${text("$.fact.at.genesis", 71, "value")} AS genesis FROM entry, json_each(entry.bytes, '$.uses') WHERE ${source} ORDER BY key LIMIT ?`, ...args, count + 1).toArray();
+      if (rows.length !== count) return stop("mismatch");
+      for (const row of rows) {
+        const seq = row["seq"], genesis = row["genesis"];
+        if (!natural(seq) || !isDigest(genesis)) return stop("mismatch");
+        if (seq > 0 && genesis !== at.genesis && !births.includes(genesis)) births.push(genesis);
+      }
+    }
     let context: ArchiveReferenceContext;
     if (position.input === "outcome") {
       this.#values ??= new ArchiveOutcomeValues(this.support.owners, this.budget, this.bounds);
@@ -67,11 +80,11 @@ export class ArchiveLocalReferences {
         (SELECT count(*) FROM json_each(bytes, '$.input.from')) AS keys,
         json_type(bytes, '$.input.from.at') = 'object' AS at_object,
         (SELECT count(*) FROM json_each(bytes, '$.input.from.at')) AS at_keys,
-        ${text("$.input.from.at.scope", 71)} AS scope, ${text("$.input.from.at.inc", 64)} AS inc, ${text("$.input.from.at.kind", 16)} AS kind,
+        ${text("$.input.from.at.scope", 71)} AS scope, ${text("$.input.from.at.genesis", 71)} AS genesis,
         CASE WHEN json_type(bytes, '$.input.from.seq') IN ('integer', 'real') THEN json_extract(bytes, '$.input.from.seq') ELSE NULL END AS seq, ${text("$.input.from.hash", 71)} AS hash
         FROM entry WHERE ${source} LIMIT 1`, ...args).toArray();
-      const row = rows[0], from = { at: { scope: row?.["scope"], inc: row?.["inc"], kind: row?.["kind"] }, seq: row?.["seq"], hash: row?.["hash"] };
-      if (rows.length !== 1 || row?.["object"] !== 1 || row["keys"] !== 3 || row["at_object"] !== 1 || row["at_keys"] !== 3 || !isFactRef(from)) return stop("mismatch");
+      const row = rows[0], from = { at: { scope: row?.["scope"], genesis: row?.["genesis"] }, seq: row?.["seq"], hash: row?.["hash"] };
+      if (rows.length !== 1 || row?.["object"] !== 1 || row["keys"] !== 3 || row["at_object"] !== 1 || row["at_keys"] !== 2 || !isFactRef(from)) return stop("mismatch");
       this.#delivery ??= new ArchiveDeliveryFields(this.support.definition, this.budget, this.bounds);
       let under: string | undefined;
       if (this.#delivery.needsUnder) {
@@ -81,11 +94,11 @@ export class ArchiveLocalReferences {
       }
       context = { input: "delivery", from, ...(under === undefined ? {} : { under }) };
     } else context = { input: position.input };
-    return this.project(sql, at, position, context, uses);
+    return this.project(sql, at, position, context, uses, births);
   }
 
   project(sql: Pick<Sql, "exec">, at: ScopeRef, position: ArchivePrivacyPosition, context: ArchiveReferenceContext,
-    uses: readonly Digest[]): ArchiveLocalReferencePlan {
+    uses: readonly Digest[], births: readonly Digest[] = []): ArchiveLocalReferencePlan {
     this.budget.check();
     if (position.input !== context.input) return stop("mismatch");
     if (uses.length > this.bounds.usesPerEntry) return stop("limit");
@@ -97,6 +110,9 @@ export class ArchiveLocalReferences {
     const origin = { at: { at: { ...at }, seq: position.seq, hash: position.hash }, input: position.input };
     this.budget.spend({ metadata: uses.length * 512, inputWork: uses.length * 1024 });
     for (const digest of uses) dependencies.push({ dependency: requiredDependency(origin, "foreign-use", { kind: "entry", digest }), max: RETAINED_INPUT_BYTES });
+    if (births.length > uses.length) return stop("limit");
+    this.budget.spend({ metadata: births.length * 512, inputWork: births.length * 1024 });
+    for (const digest of births) dependencies.push({ dependency: requiredDependency(origin, "foreign-birth", { kind: "birth", digest }), max: RETAINED_INPUT_BYTES });
     this.#prepared ??= new ArchivePrepared(definition, this.budget, this.bounds);
     append(this.#prepared.project(sql, at, position));
     if (context.input === "genesis") {

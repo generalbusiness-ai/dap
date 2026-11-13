@@ -3,7 +3,7 @@ import { ARCHIVE_DEVICE_APPLICATION_COHORT, COMMONS_COHORT, platform } from "@ge
 import { relaxedCounting } from "./support/definition-corpus-data.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { definitionDigest, isIncarnation, isScopeId, timeMs } from "@generalbusiness/dap-bytes";
+import { definitionDigest, isDigest, isScopeId, timeMs } from "@generalbusiness/dap-bytes";
 import { change, issueDemo } from "@generalbusiness/dap-lanes";
 import { lane as deriveLane } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
@@ -197,20 +197,20 @@ describe("descriptions are derived from the whole declaration", () => {
     const mcp = new McpService({ service: "https://x", signer: fixedSigner(0), config: { read: async () => ({ service: "https://x" }), addRoot: async () => {} }, custody: memoryStore(), mode: "add" });
     const tools = (await mcp.page()).tools;
     const inputOf = (name: string) => tools.find((t) => t.name === name)!.inputSchema as { properties: Record<string, Record<string, unknown>>; required: string[]; additionalProperties: boolean; anyOf?: { required: string[] }[] };
-    const membership = inputOf("create").properties["membership"] as { anyOf: [{ pattern: string }, { properties: { scope: { pattern: string }; inc: { pattern: string } } }] };
-    const scopePattern = new RegExp(membership.anyOf[1].properties.scope.pattern), incPattern = new RegExp(membership.anyOf[1].properties.inc.pattern);
-    // 52 base32 characters carry 260 bits for 32 bytes, and 26 carry 130 for 16: the bits past the last byte must be zero.
-    const scope = `sc_${"a".repeat(52)}`, scopeSetBits = `sc_${"a".repeat(51)}b`, inc = `in_${"a".repeat(25)}e`, incSetBits = `in_${"a".repeat(25)}b`;
+    const membership = inputOf("create").properties["membership"] as { anyOf: [{ pattern: string }, { properties: { scope: { pattern: string }; genesis: { pattern: string } } }] };
+    const scopePattern = new RegExp(membership.anyOf[1].properties.scope.pattern), genesisPattern = new RegExp(membership.anyOf[1].properties.genesis.pattern);
+    // 52 base32 characters carry 260 bits for 32 bytes: the bits past the last byte must be zero. A genesis is a lowercase sha256 digest.
+    const scope = `sc_${"a".repeat(52)}`, scopeSetBits = `sc_${"a".repeat(51)}b`, genesis = `sha256:${"a".repeat(64)}`, genesisUpper = `sha256:${"A".repeat(64)}`;
     expect([scopePattern.test(scope), scopePattern.test(scopeSetBits), isScopeId(scope), isScopeId(scopeSetBits)]).toEqual([true, false, true, false]);
-    expect([incPattern.test(inc), incPattern.test(incSetBits), isIncarnation(inc), isIncarnation(incSetBits)]).toEqual([true, false, true, false]);
+    expect([genesisPattern.test(genesis), genesisPattern.test(genesisUpper), isDigest(genesis), isDigest(genesisUpper)]).toEqual([true, false, true, false]);
     expect(membership.anyOf[0].pattern).toBe(membership.anyOf[1].properties.scope.pattern);
     // No JSON Schema validator runs here: the input is checked against the schema's members, keys, required, anyOf and patterns.
     // The same input then goes through #settle, which reads membership with #membershipRef; this server keeps no record under the key.
     const settle = inputOf("settle"), ref = membership.anyOf[1] as unknown as { properties: Record<string, { pattern?: string; enum?: string[] }>; required: string[] };
     const admits = (given: Record<string, unknown>) => Object.keys(given).every((k) => k in settle.properties) && settle.required.every((k) => k in given) && settle.anyOf!.some((c) => c.required.every((k) => k in given));
-    const refAdmits = (r: { scope: string; inc: string; kind: string }) => ref.required.every((k) => k in r) && scopePattern.test(r.scope) && incPattern.test(r.inc) && ref.properties["kind"]!.enum!.includes(r.kind);
+    const refAdmits = (r: { scope: string; genesis: string }) => ref.required.every((k) => k in r) && scopePattern.test(r.scope) && genesisPattern.test(r.genesis);
     expect(settle.properties["membership"]).toEqual(membership);
-    for (const [at, schema, answered] of [[{ scope, inc, kind: "membership" }, true, "not-found"], [{ scope: scopeSetBits, inc, kind: "membership" }, false, "shape"]] as const) {
+    for (const [at, schema, answered] of [[{ scope, genesis }, true, "not-found"], [{ scope: scopeSetBits, genesis }, false, "shape"]] as const) {
       const creation = { definition: "platform:register@18", membership: at, idempotencyKey: "TEST-settle-creation" };
       expect([settle.additionalProperties, admits(creation), refAdmits(at)]).toEqual([false, true, schema]);
       const result = await mcp.call("settle", creation);

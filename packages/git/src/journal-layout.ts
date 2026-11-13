@@ -1,11 +1,11 @@
 /** Internal selected-prefix layout only. No route, alarm, exporter,
  * certificate, provider/write token or history/replay verdict. */
 import type { Entry, Head } from "@generalbusiness/dap-contract";
-import { DOMAINS } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isEntry, parseStrict, scopeIdOf, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { journalObjectClosure, type JournalClosure } from "./journal-closure.ts";
 import { archiveSegments, type ArchiveSegment } from "./journal-segments.ts";
 import type { ArchiveRetainedName } from "./journal-path.ts";
+import { journalRetainedJSON } from "./journal-retained-json.ts";
 import { journalFileTree, journalPhysicalFiles, journalTreeFiles, type JournalRetainedFile } from "./journal-files.ts";
 import { journalHead, journalManifest, manifestOfSelection, type JournalManifest } from "./journal-manifest.ts";
 import { JournalObjectReader, JournalObjects, journalFormat, journalId, type JournalFormat, type JournalObject, type JournalObjectSource } from "./journal-objects.ts";
@@ -64,10 +64,12 @@ export async function selectedEntries(selection: JournalSelection & { readonly a
     let entry: unknown;
     try { entry = parseStrict(bytes); if (canonicalize(entry) !== bytes) return refuseJournal("input-mismatch", where); }
     catch { return refuseJournal("input-mismatch", where); }
-    if (!isEntry(entry) || entry.seq !== descriptor.seq || !sameJournalScope(entry.at, selection.at) || entryHash(entry) !== descriptor.hash || entry.prev !== (rows.at(-1)?.descriptor.hash ?? selection.after?.hash ?? null)) return refuseJournal("input-mismatch", where);
+    if (!isEntry(entry)) return refuseJournal("input-mismatch", where);
+    const hash = entryHash(entry);
+    if (entry.seq !== descriptor.seq || hash !== descriptor.hash || entry.prev !== (rows.at(-1)?.descriptor.hash ?? selection.after?.hash ?? null)) return refuseJournal("input-mismatch", where);
     if (descriptor.seq === 0) {
-      if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== entry.at.scope || entry.input.seed.kind !== entry.at.kind || entry.input.inc !== entry.at.inc) return refuseJournal("input-mismatch", where);
-    } else if (entry.input.type === "genesis") return refuseJournal("input-mismatch", where);
+      if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== selection.at.scope || hash !== selection.at.genesis) return refuseJournal("input-mismatch", where);
+    } else if (entry.input.type === "genesis" || !("genesis" in entry) || entry.genesis !== selection.at.genesis) return refuseJournal("input-mismatch", where);
     work.check(); rows.push({ descriptor, entry, bytes });
   }
   work.metadata(journalOriginsMetadata(selection.objects.reduce((n, row) => n + row.consumers.length, 0) + selection.omitted.reduce((n, row) => n + row.consumers.length, 0) + selection.ancestryUnwalked.length));
@@ -94,6 +96,19 @@ export async function selectedEntries(selection: JournalSelection & { readonly a
     const copy = copies.get(use.content);
     if (!copy?.foreign || canonicalize(copy.foreign.fact) !== canonicalize(use.fact) || !bindings.has(`${row.entry.seq}:${use.content}`)) return refuseJournal("input-mismatch", `foreign-use:${row.entry.seq}`);
   }
+  // Each entry needs one birth copy for each foreign sequence it uses at a
+  // later entry, and each birth consumer names such an entry (ruling ae48dd39).
+  const births = new Map(selection.objects.filter(object => object.key.kind === "birth").map(object => [object.key.digest, object]));
+  const born = new Set<string>();
+  for (const [genesis, birth] of births) for (const consumer of birth.consumers) {
+    const entry = rows[consumer.origin.at.seq - (selection.after ? selection.after.seq + 1 : 0)]?.entry;
+    if (!birth.foreign || !entry?.uses.some(use => use.fact.seq > 0 && canonicalize(use.fact.at) === canonicalize(birth.foreign!.fact.at))) return refuseJournal("input-mismatch", `foreign-birth:${consumer.origin.at.seq}`);
+    born.add(`${consumer.origin.at.seq}:${genesis}`);
+  }
+  for (const row of rows) for (const use of row.entry.uses) {
+    work.check();
+    if (use.fact.seq > 0 && use.fact.at.genesis !== selection.at.genesis && !born.has(`${row.entry.seq}:${use.fact.at.genesis}`)) return refuseJournal("input-mismatch", `foreign-birth:${row.entry.seq}`);
+  }
   return rows;
 }
 export async function selectedRetained(selection: JournalSelection, input: JournalInputSource, work: JournalWork): Promise<ReadonlyMap<string, JournalRetainedFile>> {
@@ -106,13 +121,16 @@ export async function selectedRetained(selection: JournalSelection, input: Journ
     work.metadata(journalRetainedNameMetadata(where.length));
     const requested = { ...key };
     const bytes = await namedBytes(work, selected.bytes, where, () => input.retained(requested, selected.bytes));
-    const parsed = key.kind === "rule" || key.kind === "entry" ? rawRetainedJSON(key.digest, bytes)
-      : domainRetainedJSON(key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : DOMAINS.snapshot, key.digest, bytes, { canonical: true, max: selected.bytes });
-    if (parsed === undefined || canonicalize(parsed) !== bytes) return refuseJournal("input-mismatch", where);
-    if (key.kind === "entry") {
+    const parsed = journalRetainedJSON(key, bytes, selected.bytes);
+    if (parsed === undefined) return refuseJournal("input-mismatch", where);
+    if (key.kind === "entry" || key.kind === "birth") {
       const foreign = selected.foreign;
-      if (!foreign || !isEntry(parsed) || !sameJournalScope(parsed.at, foreign.fact.at) || parsed.seq !== foreign.fact.seq || entryHash(parsed) !== foreign.fact.hash) return refuseJournal("input-mismatch", where);
-      if (parsed.seq === 0 ? parsed.input.type !== "genesis" || parsed.prev !== null || parsed.input.seed.definition !== foreign.pin || parsed.input.inc !== parsed.at.inc || scopeIdOf(parsed.input.seed) !== parsed.at.scope || parsed.input.seed.kind !== parsed.at.kind : parsed.input.type === "genesis") return refuseJournal("input-mismatch", where);
+      if (!foreign || !isEntry(parsed)) return refuseJournal("input-mismatch", where);
+      const hash = entryHash(parsed);
+      if (parsed.seq !== foreign.fact.seq || hash !== foreign.fact.hash) return refuseJournal("input-mismatch", where);
+      if (parsed.seq === 0 ? parsed.input.type !== "genesis" || parsed.prev !== null || parsed.input.seed.definition !== foreign.pin
+        || hash !== foreign.fact.at.genesis || scopeIdOf(parsed.input.seed) !== foreign.fact.at.scope
+        : parsed.input.type === "genesis" || !("genesis" in parsed) || parsed.genesis !== foreign.fact.at.genesis) return refuseJournal("input-mismatch", where);
     }
     work.check(); work.metadata(journalRetainedNameMetadata(where.length));
     rows.set(where, { key, data: utf8(bytes) });

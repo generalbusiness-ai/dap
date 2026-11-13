@@ -5,8 +5,9 @@
  * every request. It shows what the server sends, reads and returns; it shows nothing about a scope's judgment, which the
  * `*.scope.test.ts` stories show on the real test Worker.
  */
-import type { Answer, DeclaredDefinition, Digest, Entry, Input, Item, KeyId, PlatformDefinition, Receipt, ScopeId, ScopeKind, ScopeRef, Sealed, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import type { Answer, DeclaredDefinition, Digest, Entry, FactRef, GenesisEntry, Input, Item, KeyId, PlatformDefinition, Receipt, Request, ScopeId, ScopeKind, ScopeRef, Sealed, Seed, SequenceEntry, SignedIntent } from "@generalbusiness/dap-contract";
+import { admitSequenceGenesis, canonicalize, definitionDigest, entryHash, intentDigest, isEntryOf, isSequenceRef, newGenesisNonce, same, scopeIdOf, sealedFactRef, textDigest, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import type { McpConfig } from "../../src/index.ts";
 
@@ -19,7 +20,10 @@ const T = "2099-01-01T00:00:00Z";
  * One scope of the stand-in. Its items are two traversals, as a scope's are: `items`, the live ones its summary holds, and
  * `final`, the retained final ones its items route pages; the items tool's `final: true` reads the second, separately.
  */
-interface Scope { ref: ScopeRef; definition: Digest | PlatformDefinition; entries: Sealed[]; items: Item[]; retained: Map<string, string>; final: Item[] }
+interface Scope { ref: ScopeRef; readonly sequence: CheckedSequence; definition: Digest | PlatformDefinition; entries: Sealed[]; items: Item[]; retained: Map<string, string>; final: Item[] }
+
+/** Exact scripted sender context. Byte association is not Native judgment. */
+interface StandInCreation { from: FactRef; sourceKind: ScopeKind; n: number; message: Request }
 
 /** How many retained final items one page of the stand-in's items route holds: small, so a search crosses pages. */
 export const FINAL_PAGE = 2;
@@ -58,13 +62,10 @@ export class StandIn {
 
   add(kind: ScopeKind, definition: Digest | PlatformDefinition | DeclaredDefinition, items: Item[] = []): ScopeRef {
     const named = typeof definition === "string" ? definition : definitionDigest(definition);
-    const scope = scopeIdOf({ v: 1, kind, definition: named, creator: null, cause: textDigest(`${kind} ${this.scopes.size}`), ordinal: 0 });
-    const ref: ScopeRef = { scope, inc: newIncarnation(new Uint8Array(16).fill(this.scopes.size + 1)), kind };
-    const retained = new Map<string, string>();
-    if (typeof definition !== "string") retained.set(`definition ${named}`, canonicalize(definition));
-    const s: Scope = { ref, definition: named, entries: [], items, retained, final: [] };
-    this.scopes.set(scope, s);
-    this.append(s, { type: "genesis", seed: { v: 1, kind, definition: named, creator: null, cause: textDigest(kind), ordinal: 0 }, inc: ref.inc, kind: "establish", "founding": null, source: null, n: null, message: null, decision: "applied" } as Input);
+    // The same owned seed names the address and appears in its canonical birth.
+    const seed: Seed = { v: 1, kind, definition: named, creator: null, cause: textDigest(`${kind} ${this.scopes.size}`), ordinal: 0 };
+    const ref = this.seeded(seed, items);
+    if (typeof definition !== "string") this.scopes.get(ref.scope)!.retained.set(`definition ${named}`, canonicalize(definition));
     return ref;
   }
 
@@ -92,19 +93,38 @@ export class StandIn {
     return { service: SERVICE, repository: { directory: this.directory, membership: this.membership, rules: this.rules.scope, destination: this.destination.scope } };
   }
 
-  /** A scope under exactly this seed, so its ID is the one a send names. */
-  seeded(seed: Seed, items: Item[] = []): ScopeRef {
-    const scope = scopeIdOf(seed);
-    const ref: ScopeRef = { scope, inc: newIncarnation(new Uint8Array(16).fill(this.scopes.size + 1)), kind: seed.kind };
-    const s: Scope = { ref, definition: seed.definition, entries: [], items, retained: new Map(), final: [] };
-    this.scopes.set(scope, s);
-    this.append(s, { type: "genesis", seed, inc: ref.inc, kind: "establish", "founding": null, source: null, n: null, message: null, decision: "applied" } as Input);
+  /** A scripted scope under exactly this seed. A child must name its actual retained send.
+   * The byte admission below proves association only. No Native judge runs. */
+  seeded(seed: Seed, items: Item[] = [], creation?: StandInCreation): ScopeRef {
+    if (seed.creator === null ? creation !== undefined : creation === undefined) throw new Error("STAND-IN child creation needs its exact source context");
+    if (creation) {
+      const source = this.scopes.get(creation.from.at.scope), sent = source?.entries[creation.from.seq];
+      if (!source || !sent || !isSequenceRef(seed.creator) || !same(seed.creator, source.ref)
+        || !isEntryOf(sent.entry, creation.from, source.sequence) || creation.sourceKind !== source.sequence.kind
+        || !sent.entry.sends.some(send => send.n === creation.n && same(send.to, seed) && same(send.message, creation.message))) {
+        throw new Error("STAND-IN child creation differs from its retained sender entry");
+      }
+    }
+    const provenance = creation
+      ? { source: creation.from, sourceKind: creation.sourceKind, n: creation.n, message: creation.message }
+      : { source: null, sourceKind: null, n: null, message: null };
+    const genesis: GenesisEntry = { v: 1, seq: 0, prev: null, time: T, clamped: false, epoch: 0,
+      input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(this.scopes.size + 1)), kind: "establish",
+        founding: null, ...provenance, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] };
+    const sealed = { entry: genesis, hash: entryHash(genesis) };
+    const ref: ScopeRef = { scope: scopeIdOf(seed), genesis: sealed.hash };
+    const sequence = admitSequenceGenesis(canonicalize(genesis), ref, PROPOSED_BOUNDS.entryBytes);
+    if (!sequence) throw new Error("STAND-IN canonical genesis must bind its actual sequence");
+    const s: Scope = { ref, sequence, definition: seed.definition, entries: [sealed], items, retained: new Map(), final: [] };
+    this.scopes.set(ref.scope, s);
     return ref;
   }
 
-  append(s: Scope, input: Input, effects: Entry["effects"] = [], sends: Entry["sends"] = []): Sealed {
-    const seq = s.entries.length;
-    const entry: Entry = { v: 1, at: s.ref, seq, prev: seq === 0 ? null : s.entries[seq - 1]!.hash, time: T, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends };
+  append(s: Scope, input: Input, effects: SequenceEntry["effects"] = [], sends: Entry["sends"] = []): Sealed {
+    if (input.type === "genesis") throw new Error("STAND-IN genesis is owned by seeded");
+    const seq = s.entries.length, previous = s.entries.at(-1);
+    if (!previous) throw new Error("STAND-IN later entry needs its retained genesis");
+    const entry: SequenceEntry = { v: 1, genesis: s.ref.genesis, seq, prev: previous.hash, time: T, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends };
     const sealed = { entry, hash: entryHash(entry) };
     s.entries.push(sealed);
     return sealed;
@@ -181,6 +201,8 @@ export class StandIn {
 
   receipt(s: Scope, sealed: Sealed): Receipt {
     const input = sealed.entry.input;
-    return { fact: factRefOf(sealed.entry), definition: s.definition, intent: input.type === "act" ? intentDigest(input.signed.intent) : null, effects: sealed.entry.effects, sends: [], epoch: 0 };
+    if (!("genesis" in sealed.entry) && sealed.entry.effects.length !== 0) throw new Error("STAND-IN root genesis has no scripted effects");
+    const effects = "genesis" in sealed.entry ? sealed.entry.effects : [];
+    return { fact: sealedFactRef(sealed.entry, sealed.hash, s.ref), definition: s.definition, intent: input.type === "act" ? intentDigest(input.signed.intent) : null, effects, sends: [], epoch: 0 };
   }
 }

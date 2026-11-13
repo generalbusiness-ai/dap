@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import type { Head, Item, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, readItemQueryParameter, itemQueryDigest, itemQueryArgument, digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { Head, Item, ScopeKind, ScopeRef, Summary } from "@generalbusiness/dap-contract";
+import { canonicalize, readItemQueryParameter, itemQueryDigest, itemQueryArgument, digestBytes, keyIdOfSecret, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { Session as ReadSession } from "@generalbusiness/dap-client";
 import { roomInitialization, initializationStillCurrent, type Room } from "../src/data.ts";
 import { initializationMessage } from "../src/shell.ts";
@@ -9,14 +9,14 @@ import { initializationMessage } from "../src/shell.ts";
 // Real client HTTP reads and bounded current/final selection replies are exercised.
 test("initialization guidance needs complete initial rules and no live or retired definitions; read failures and changed context stay unknown", async () => {
   const digest = digestBytes(new Uint8Array([1]));
-  const scope = (kind: ScopeRef["kind"], n: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: digest, creator: null, cause: digest, ordinal: n }), inc: newIncarnation(new Uint8Array(16).fill(n)), kind });
+  const scope = (kind: ScopeKind, n: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: digest, creator: null, cause: digest, ordinal: n }), genesis: textDigest("TEST genesis " + kind) });
   const D = scope("directory", 1), M = scope("membership", 2), Q = scope("rules", 3), G = scope("destination", 4);
   const head: Head = { seq: 1, hash: digest };
   const item = (over: Partial<Item>): Item => ({ id: 0, type: "rules", state: "current", revision: 1, opened: digest, parties: {}, refs: {}, values: {}, attributed: [], ...over });
   const rule = item({ refs: { directory: { ...D } }, values: { branch: "main", membership: M.scope, approvals: 1, ownerMayReview: false, singleControllerException: false } });
   const repository = item({ type: "repository", refs: { membership: { ...M }, rules: { ...Q }, destination: { ...G } } });
   let rulesDefinition: Summary["definition"] = "platform:rules@3", ownerMayReview: boolean | undefined = false;
-  const summary = (at: ScopeRef, items: Item[]): Summary => ({ scope: at, status: "active", definition: at.kind === "rules" ? rulesDefinition : "platform:directory@3", time: "2026-10-12T00:00:00Z", items, counts: [] });
+  const summary = (at: ScopeRef, items: Item[]): Summary => ({ scope: at, status: "active", definition: at.scope === Q.scope ? rulesDefinition : "platform:directory@3", time: "2026-10-12T00:00:00Z", items, counts: [] });
   let mode: "empty" | "live" | "published" | "revised" | "retired" | "forbidden" | "incomplete" | "missing" | "moved" | "context" = "empty", reads = 0, mutations = 0, definitionReads = 0, denyDefinitionReads = false;
   let pageEntered!: () => void, resumePage!: () => void;
   const fetch = async (url: string, init?: { method?: string }): Promise<Response> => {
@@ -79,7 +79,7 @@ test("initialization guidance needs complete initial rules and no live or retire
   }
   mode = "context"; const entered = new Promise<void>(resolve => { pageEntered = resolve; });
   const old = roomInitialization(room); await entered;
-  room.membership = { ...M, inc: newIncarnation(new Uint8Array(16).fill(5)) }; resumePage();
+  room.membership = { ...M, genesis: textDigest("TEST genesis 28") }; resumePage();
   expect((await old).state).toBe("unknown");
   expect(reads).toBeGreaterThan(0); expect(mutations).toBe(0);
 });

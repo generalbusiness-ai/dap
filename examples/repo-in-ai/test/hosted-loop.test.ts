@@ -26,7 +26,7 @@ const SERVICE = "https://hosted-loop.invalid", VERSION = "11111111-2222-4333-844
 const AGENT_KEY = `key_${"a".repeat(43)}`, BEARER = `${"b".repeat(64)}.${"s".repeat(43)}`;
 const ISSUE = `sc_${"i".repeat(52)}`, CHANGE = `sc_${"c".repeat(52)}`, DIRECTORY = `sc_${"d".repeat(52)}`;
 const HASH = `sha256:${"7".repeat(64)}`;
-const at = (scope: string) => ({ kind: "lane", scope, inc: `in_${"n".repeat(26)}` });
+const GENESIS = `sha256:${"9".repeat(64)}`, at = (scope: string) => ({ scope, genesis: GENESIS });
 const FACT = { at: at(ISSUE), seq: 3, hash: HASH };
 const ACT_TOOLS = [...LOOP_ACT_TOOLS, "change.link-own", "change.propose-file"];
 const DEFAULT_LIST = [...hostedDefaultTools(), ...ACT_TOOLS];
@@ -71,7 +71,7 @@ function scripted(script: Script): McpPort & { called: string[]; closed: number 
         return reply({ items: (args["final"] ? script.final ?? [] : script.live ?? []).filter(row => row.type === args["type"]) });
       }
       if (name === "steps") return reply({ steps: (args["scope"] === CHANGE ? script.changeSteps : script.steps) ?? [] });
-      if (name === "step") return reply({ hash: HASH, entry: { seq: args["seq"], at: at(ISSUE), input: script.entries?.[args["seq"] as number] ?? { type: "delivery" } } });
+      if (name === "step") return reply({ hash: HASH, entry: { seq: args["seq"], genesis: GENESIS, input: script.entries?.[args["seq"] as number] ?? { type: "delivery" } } });
       if (name === "settle") return reply(script.settle ?? { answer: "not-found" });
       if (name === "wait") return reply(script.wait ?? { timedOut: true });
       if (name === "text") return reply({ text: "other text" });
@@ -532,7 +532,7 @@ test("another input against the same person's home stops", async () => {
 test("an HTTPS input does not adopt a key that planned a register, because that stand-in serves a local Worker alone", async () => {
   const plan = planOf(), home = join(plan.home, "person");
   mkdirSync(home, { recursive: true, mode: 0o700 });
-  const store = durableCliStore(home), config = { v: 1, service: SERVICE, key: "operator", register: plan.register, plan: {} } as never;
+  const store = durableCliStore(home), config = { v: 2, service: SERVICE, key: "operator", register: plan.register, plan: {} } as never;
   await store.save(config);
   const answer = await runPhase(plan, "owner", "new", { fetch: health() }).catch(() => null);
   expect(answer?.values?.["localFounder"]).toBeUndefined();

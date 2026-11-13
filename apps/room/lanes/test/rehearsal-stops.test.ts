@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import type { Entry, Read, ScopeRef, Seed, Sealed, Summary } from "@generalbusiness/dap-contract";
-import { entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import type { Entry, Read, ScopeKind, ScopeRef, Seed, Sealed, SequenceEntry, Summary } from "@generalbusiness/dap-contract";
+import { entryHash, intentDigest, keyIdOfSecret, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { memoryStore, type Context, type Outcome } from "@generalbusiness/dap-cli";
 import { TRUSTS, platformCode } from "@generalbusiness/dap-replay";
 import { DEMO_DIGESTS, MANIFEST_DIGESTS } from "../src/index.ts";
@@ -22,8 +22,13 @@ vi.mock("@generalbusiness/dap-client", async importOriginal => ({
 
 const OLD = "a".repeat(40), NEW = "b".repeat(40), TIME = "2026-10-11T20:00:00Z";
 const secret = new Uint8Array(32).fill(7);
-function ref(label: string, kind: ScopeRef["kind"], definition: Seed["definition"]): ScopeRef {
-  return { scope: scopeIdOf({ v: 1, kind, definition, creator: null, cause: textDigest(label), ordinal: 0 }), kind, inc: newIncarnation(new Uint8Array(16).fill(5)) };
+// The rehearsal compares the reported genesis digests as text and admits no
+// sequence, so each reference names a made-up genesis digest.
+const kinds = new Map<string, ScopeKind>();
+function ref(label: string, kind: ScopeKind, definition: Seed["definition"]): ScopeRef {
+  const scope = scopeIdOf({ v: 1, kind, definition, creator: null, cause: textDigest(label), ordinal: 0 });
+  kinds.set(scope, kind);
+  return { scope, genesis: textDigest(`TEST genesis ${label}`) };
 }
 const D = ref("scripted directory", "directory", "platform:directory@3");
 const M = ref("scripted membership", "membership", "platform:membership@2");
@@ -33,14 +38,14 @@ const C = ref("scripted winner", "lane", DEMO_DIGESTS.change);
 async function context(): Promise<Context> {
   const store = memoryStore();
   await store.keep("scripted", secret);
-  await store.save({ v: 1, service: "https://scripted.test", key: "scripted", repository: { directory: D, membership: M, rules: R.scope, destination: G.scope } });
+  await store.save({ v: 2, service: "https://scripted.test", key: "scripted", repository: { directory: D, membership: M, rules: R.scope, destination: G.scope } });
   ports.session.mockResolvedValue({ ok: true, session: { reader: () => "SCRIPTED reader" } });
   return { store, tries: 1, now: () => Date.parse(TIME), pause: async () => {} };
 }
-function opening(definition: Seed["definition"]): Entry {
+function opening(definition: Seed["definition"]): SequenceEntry {
   const signed = signIntent({ v: 1, to: D, actor: keyIdOfSecret(secret), kind: "open-pr", on: null, expected: {}, fields: {}, idempotencyKey: "scripted opening", notAfter: TIME }, secret);
   const seed: Seed = { v: 1, kind: "lane", definition, creator: D, cause: intentDigest(signed.intent), ordinal: 0 };
-  return { v: 1, at: D, seq: 1, prev: null, time: TIME, clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [{ n: 0, to: seed, message: { class: "request", type: "create", body: { fields: {} } } }] };
+  return { v: 1, genesis: D.genesis, seq: 1, prev: null, time: TIME, clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [{ n: 0, to: seed, message: { class: "request", type: "create", body: { fields: {} } } }] };
 }
 function entryRead(entry: Entry): Read<Sealed> {
   const hash = entryHash(entry);
@@ -54,8 +59,9 @@ test("the rehearsal requires shared proof provenance before accepting the origin
   // Output correspondence only: these lines do not stand for a replay or
   // native authority. The four demo.scope journeys exercise the actual CLI.
   const digest = textDigest("scripted shared text");
-  const span = (scope: ScopeRef, from: number, through: number, root: ScopeRef) => `Shared coverage: ${scope.scope}, incarnation ${scope.inc}, kind ${scope.kind}, entries ${from} to ${through}; proving root ${root.scope}.`;
-  const checked = `Shared checked text: ${digest}; source ${D.scope}, incarnation ${D.inc}, kind ${D.kind}; proving root ${D.scope}; consumers ${M.scope}, ${G.scope}.`;
+  const span = (scope: ScopeRef, from: number, through: number, root: ScopeRef, kind: string | undefined = from === 0 ? kinds.get(scope.scope) : undefined) =>
+    `Shared coverage: ${scope.scope}, genesis ${scope.genesis}${kind ? `, kind ${kind}` : ""}, entries ${from} to ${through}; proving root ${root.scope}.`;
+  const checked = `Shared checked text: ${digest}; source ${D.scope}, genesis ${D.genesis}; proving root ${D.scope}; consumers ${M.scope}, ${G.scope}.`;
   const prefix = [
     "Shared room proof: 3 roots; 4 verified dependencies; 0 anchored dependencies; 0 missing dependencies.",
     span(D, 0, 1, D), span(D, 2, 3, M), span(M, 0, 1, D), span(G, 0, 2, G), checked,
@@ -81,8 +87,11 @@ test("the rehearsal requires shared proof provenance before accepting the origin
     ["missing target coverage", valid.filter(line => line !== prefix[4])],
     ["coverage gap", replaced(2, span(D, 3, 3, M))],
     ["foreign proving root", replaced(2, span(D, 2, 3, R))],
-    ["conflicting incarnation", replaced(2, span({ ...D, inc: newIncarnation(new Uint8Array(16).fill(6)) }, 2, 3, M))],
-    ["text source mismatch", replaced(5, checked.replace(`incarnation ${D.inc}`, `incarnation ${newIncarnation(new Uint8Array(16).fill(6))}`))],
+    ["conflicting genesis", replaced(2, span({ ...D, genesis: textDigest("TEST other genesis") }, 2, 3, M))],
+    ["missing first kind", replaced(1, span(D, 0, 1, D, ""))],
+    ["kind on a later row", replaced(2, span(D, 2, 3, M, "directory"))],
+    ["wrong target kind", replaced(4, span(G, 0, 2, G, "lane"))],
+    ["text source mismatch", replaced(5, checked.replace(`genesis ${D.genesis}`, `genesis ${textDigest("TEST other genesis")}`))],
     ["uncovered text consumer", replaced(5, checked.replace(`consumers ${M.scope}, ${G.scope}`, `consumers ${R.scope}`))],
     ["undeclared replay trust", replaced(6, "Shared trust: all outside outcomes independently verified.")],
     ["missing replay trust", valid.filter(line => line !== `Shared trust: ${TRUSTS.head}.`)],
@@ -115,7 +124,7 @@ test("scripted preparation answers stop the composite before the next mutation, 
     const matched: CapturedValues = { directory: D.scope, publishedCommit: OLD, controlled: C.scope };
     const calls: string[] = [];
     const took = (scope: string, seq: number) => `Took effect: entry ${scope}:${seq}, hash ${fault === "wrong-opening-hash" ? textDigest("different scripted opening") : entryHash(entry)}.`;
-    const source = { ...opening(MANIFEST_DIGESTS.demo), at: stale, seq: 3, sends: [] };
+    const source = { ...opening(MANIFEST_DIGESTS.demo), genesis: stale.genesis, seq: 3, sends: [] };
     if (source.input.type === "act") source.input.signed = signIntent({ ...source.input.signed.intent, to: stale, kind: fault === "wrong-manifest-kind" ? "another-valid-kind" : "propose-file" }, secret);
     if (fault === "wrong-manifest-type") source.input = { type: "checkpoint", through: 0, state: textDigest("scripted source checkpoint") };
     ports.entry.mockImplementation(async (_scope: string, seq: number) => seq === 1 ? fault === "missing-opening" ? { ok: false, reason: "unavailable" } : entryRead(entry) : fault === "missing-manifest-source" ? { ok: false, reason: "unavailable" } : entryRead(source));
@@ -158,7 +167,7 @@ test("scripted preparation answers stop the composite before the next mutation, 
   for (const fault of ["invalid-base", "invalid-scope", "missing-room", "missing-key", "session-refused"] as const) {
     ports.command.mockReset();
     const ctx = await context();
-    if (fault === "missing-room") await ctx.store.save({ v: 1, service: "https://scripted.test", key: "scripted" });
+    if (fault === "missing-room") await ctx.store.save({ v: 2, service: "https://scripted.test", key: "scripted" });
     if (fault === "missing-key") ctx.store = { ...ctx.store, secret: async () => null };
     if (fault === "session-refused") ports.session.mockResolvedValue({ ok: false, reason: "unauthorized" });
     const result = await prepareConcurrentAndMerge(ctx, fault === "invalid-base" ? "bad-base" : OLD, fault === "invalid-scope" ? "bad-scope" : C.scope, { code: 0, lines: [] }, {}, false);

@@ -202,7 +202,9 @@ for (const { name, keepReady } of [
     } finally { (answer as typeof answer & Partial<Disposable>)[Symbol.dispose]?.(); }
   };
   let observed: Awaited<ReturnType<typeof snapshot>> | undefined;
-  siteTokenTestSettings.set(owner, p.settings);
+  // The fixed index object is active only when its own env names it as SCOPE_INDEX_NAME.
+  const named = { idFromName: () => env.SCOPE_INDEX.idFromName(owner), get: (id: DurableObjectId) => env.SCOPE_INDEX.get(id) };
+  siteTokenTestSettings.set(owner, { ...p.settings, SCOPE_INDEX: named } as typeof p.settings);
   try {
     const initial = await snapshot();
     expect(initial).toEqual({ rows: [], alarm: null });

@@ -25,13 +25,13 @@ import { env } from "cloudflare:workers";
 import { SELF, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Bounds, DeclaredDefinition, Digest, OutboxItem, Entry, FactRef, FieldValue, Grant, Input, Message, Receipt, ScopeId, ScopeRef, Sealed, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, intentDigest, isScopeRef, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import type { Answer, Bounds, DeclaredDefinition, Digest, OutboxItem, Entry, FactRef, FieldValue, Grant, Message, SequenceEntry, Receipt, ScopeId, ScopeRef, Sealed, Seed, SignedIntent } from "@generalbusiness/dap-contract";
+import { canonicalize, definitionDigest, entryHash, intentDigest, isEntry, isScopeRef, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, declaredHandle, create, httpTransport, secretSigner, signedIntent, type AskedOf, type DeclaredHandle, type Kind, type Signed, type Transport } from "@generalbusiness/dap-client";
 import { MemoryState, alsoItems, applyEntry, isFactRef, snapshotInput, stagedRefName, timeMs, timeOf, validateDefinition, type AncestryCheck, type Delivered, type Item, type StagedRef, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { grantOf, keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import type { Checkpointed, Delivery, EffectAnswer, EffectRequest } from "@generalbusiness/dap-scope";
-import { CODE, net, type CapabilityScript } from "@generalbusiness/dap-scope/testing";
+import { CODE, net, scriptedSequence, type CapabilityScript } from "@generalbusiness/dap-scope/testing";
 import { api, route } from "@generalbusiness/dap-scope/worker";
 import { settle, type Dispatching } from "../../../../../packages/scope/test/net.ts";
 import { DIGESTS, change, definitions, issue } from "../../src/index.ts";
@@ -266,7 +266,7 @@ export class Node<D extends DeclaredDefinition> {
    * scope answers: no task scope is delivered.
    */
   async instance(who: Actor, hold: number, instance = "i-1"): Promise<Answer> {
-    const fields = { hold, task: { ...this.at, kind: "task" } as ScopeRef, instance };
+    const fields = { hold, task: { scope: this.at.scope, genesis: textDigest("TEST task scope that no scope answers") } as ScopeRef, instance };
     return this.prepare(signIntent({ v: 1, to: this.at, actor: who.key, kind: "hold@1:instance", on: null, expected: {}, fields, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) }, who.secret), "instance");
   }
   /**
@@ -301,7 +301,7 @@ export class Node<D extends DeclaredDefinition> {
   async envelope(seq: number, n = 0): Promise<Delivered> {
     const { entry, hash } = (await this.sealed())[seq]!;
     const send = entry.sends.find((s) => s.n === n)!;
-    return { to: send.to, from: { at: entry.at, seq, hash }, n, message: send.message };
+    return { to: send.to, from: { at: this.at, seq, hash }, n, message: send.message };
   }
   /** Run the object's stored alarm now. False: none was stored. */
   alarm(): Promise<boolean> { return runDurableObjectAlarm(this.object); }
@@ -320,25 +320,44 @@ export class Node<D extends DeclaredDefinition> {
  */
 export class Peer {
   readonly at: ScopeRef;
+  readonly #birth: string;
   #seq = 0;
   #first: FactRef | null = null;
 
   /** An explicit reference still labels a scripted peer entry, never an
-   * admitted history of the real object that owns that reference. */
-  constructor(kind: "rules" | "destination" | "task", readonly under: string, at?: ScopeRef) {
-    if (at && at.kind !== kind) throw new Error("the scripted peer reference has another kind");
-    const seed: Seed = { v: 1, kind, definition: `platform:${kind}@1`, creator: null, cause: textDigest(`a scripted peer ${crypto.randomUUID()}`), ordinal: 0 };
-    this.at = at ?? { scope: scopeIdOf(seed), inc: newIncarnation(crypto.getRandomValues(new Uint8Array(16))), kind };
+   * admitted history of the real object that owns that reference. With it
+   * come the canonical bytes of that sequence's actual genesis, so the
+   * namespace's test resolver admits the sequence as it admits any source's.
+   * Without it, the peer's genesis is scripted here, and nothing judged it. */
+  constructor(kind: "rules" | "destination" | "task", readonly under: string, given?: { at: ScopeRef; birth: string }) {
+    if (given) {
+      const genesis: unknown = JSON.parse(given.birth);
+      if (!isEntry(genesis) || genesis.input.type !== "genesis" || genesis.input.seed.kind !== kind || entryHash(genesis) !== given.at.genesis) throw new Error("the scripted peer reference has another kind or genesis");
+      this.at = given.at;
+      this.#birth = given.birth;
+    } else {
+      const seed: Seed = { v: 1, kind, definition: `platform:${kind}@1`, creator: null, cause: textDigest(`a scripted peer ${crypto.randomUUID()}`), ordinal: 0 };
+      const sequence = scriptedSequence(seed, net.clock.now);
+      this.at = sequence.at;
+      this.#birth = sequence.birth;
+    }
+  }
+
+  /** A scripted peer that labels its entries with the reference of a real scope, with that scope's actual sealed genesis bytes. */
+  static async of(kind: "rules" | "destination" | "task", under: string, scope: { at(): Promise<ScopeRef>; entries(): Promise<Entry[]> }): Promise<Peer> {
+    const [at, entries] = await Promise.all([scope.at(), scope.entries()]);
+    if (!entries[0]) throw new Error("the real scope has no genesis");
+    return new Peer(kind, under, { at, birth: canonicalize(entries[0]) });
   }
 
   /** One entry with one send to `to`, as an act of kind `kind` would have written it. The envelope is returned, to be delivered. */
   sends(to: ScopeRef, message: Message, kind = "publish"): Delivered {
     const seq = ++this.#seq;
     const intent = { v: 1, to: this.at, actor: sam.key, kind, on: null, expected: {}, fields: {}, idempotencyKey: `p${seq}`, notAfter: soon(60) } as const;
-    const input: Input = { type: "act", signed: signIntent(intent, sam.secret), authority: [], presented: {} };
-    const entry: Entry = { v: 1, at: this.at, seq, prev: `sha256:${"0".repeat(64)}`, time: net.clock.now, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends: [{ n: 0, to, message }] };
+    const input: SequenceEntry["input"] = { type: "act", signed: signIntent(intent, sam.secret), authority: [], presented: {} };
+    const entry: SequenceEntry = { v: 1, genesis: this.at.genesis, seq, prev: `sha256:${"0".repeat(64)}`, time: net.clock.now, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends: [{ n: 0, to, message }] };
     const hash = entryHash(entry);
-    net.peers.set(hash, { entry, under: this.under });
+    net.peers.set(hash, { entry, under: this.under, birth: this.#birth });
     this.#first ??= { at: this.at, seq, hash };
     return { to, from: { at: this.at, seq, hash }, n: 0, message };
   }
@@ -435,7 +454,7 @@ export async function graph(creationTransport: Transport = transport): Promise<G
   const seed: Seed = { v: 1, kind: "directory", definition: definitionDigest(officeDefinition), creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
   expect(answer.receipt.definition).toBe(seed.definition);
   expect(isScopeRef(answer.receipt.fact.at)).toBe(true);
-  expect([scope.scope, answer.receipt.fact.at.scope, answer.receipt.fact.at.kind]).toEqual([scopeIdOf(seed), scopeIdOf(seed), "directory"]);
+  expect([scope.scope, answer.receipt.fact.at.scope, seed.kind]).toEqual([scopeIdOf(seed), scopeIdOf(seed), "directory"]);
   const declared = await declaredHandle(new ScopeHandle(transport, scope.scope, reader), officeDefinition);
   if (!declared.ok) throw new Error(`no handle on the office: ${JSON.stringify(declared)}`);
   expect(canonicalize(declared.handle.at)).toBe(canonicalize(answer.receipt.fact.at));

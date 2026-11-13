@@ -24,7 +24,7 @@ export function gitHubRepositoryBindings(raw: unknown, namespace: string): reado
       const destination = value?.["destination"];
       const repository = exact(value?.["repository"], ["host", "namespace", "name", "id"]);
       const branch = value?.["branch"];
-      if (!value || !isScopeRef(destination) || destination.kind !== "destination"
+      if (!value || !isScopeRef(destination)
         || !repository || repository["host"] !== "github.com" || repository["namespace"] !== namespace
         || typeof repository["name"] !== "string" || !/^[A-Za-z0-9_.-]{1,100}$/.test(repository["name"])
         || [".", ".."].includes(repository["name"]) || repository["name"].toLowerCase().endsWith(".git")

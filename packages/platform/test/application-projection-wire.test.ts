@@ -2,8 +2,9 @@ import { expect, test } from "vitest";
 import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionQuery, type ApplicationProjectionRead } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { directory } from "../../bytes/test/fixtures.ts";
+import { fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReply } from "../src/application-codec/application-projection-wire.ts";
-const scope = { ...directory, kind: "lane" as const };
+const scope = fixtureScope("lane", 20).at;
 const query = (): ApplicationProjectionQuery => ({ v: 1, scope, directory, install: 2, projection: "room.alert", items: { alert: 7 } });
 const reply = (): ApplicationProjectionRead => ({ ok: true, query: applicationProjectionQueryDigest(query())!, value: {
   v: 1, projection: textDigest("PUBLIC TEST declared projection"), scope, at: { seq: 12, hash: textDigest("PUBLIC TEST head") },
@@ -18,7 +19,7 @@ test("bounded owned queries bind their exact selection and incarnation", () => {
   const identity = applicationProjectionQueryDigest(owned);
   expect(applicationProjectionQueryDigest({ ...input, install: 3 })).not.toBe(identity);
   expect(applicationProjectionQueryDigest({ ...input, items: { alert: 8 } })).not.toBe(identity);
-  expect(applicationProjectionQueryDigest({ ...input, scope: { ...scope, inc: `in_${"b".repeat(25)}a` } })).not.toBe(identity);
+  expect(applicationProjectionQueryDigest({ ...input, scope: { ...scope, genesis: textDigest("TEST genesis b") } })).not.toBe(identity);
   let calls = 0;
   const getter = Object.defineProperty(query(), "projection", { enumerable: true, get() { calls++; return "room.alert"; } });
   expect(encodeApplicationProjectionQuery(getter)).toBeNull(); expect(calls).toBe(0);
@@ -45,10 +46,10 @@ test("canonical replies require the exact request binding and native row identit
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "forbidden" })), query())).toEqual({ ok: false, reason: "forbidden" });
   const behind = { ok: false, reason: "behind", current: { at: scope, seq: 11, hash: textDigest("PUBLIC TEST current head") } };
   expect(readApplicationProjectionReply(utf8(canonicalize(behind)), query())).toEqual(behind);
-  expect(readApplicationProjectionReply(utf8(canonicalize(behind)), { ...query(), scope: { ...scope, kind: "task" } })).toBeNull();
+  expect(readApplicationProjectionReply(utf8(canonicalize(behind)), { ...query(), scope: { ...scope, genesis: textDigest("TEST task genesis") } })).toBeNull();
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "behind" })), query())).toBeNull();
   expect(readApplicationProjectionReply(utf8(canonicalize({ ...behind, reason: "unavailable" })), query())).toBeNull();
-  expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "wrong-incarnation" })), query())).toEqual({ ok: false, reason: "wrong-incarnation" });
+  expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "wrong-genesis" })), query())).toEqual({ ok: false, reason: "wrong-genesis" });
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "unknown" })))).toBeNull();
   expect(readApplicationProjectionReply(new Uint8Array(B.resultBytes + 1))).toBeNull();
 });

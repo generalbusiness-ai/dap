@@ -38,8 +38,8 @@
  * irreversible revocations separately from grant reuse.
  */
 
-import type { Digest, Entry, Input, KeyId, Observation, ObservationRequest, ObservationUse, ObservedScope, PlatformDefinition, RunId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, hex, isObservationUse, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
+import type { Digest, Entry, Input, KeyId, Observation, ObservationRequest, ObservationUse, ObservedScope, PlatformDefinition, RunId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, hex, isObservationUse, isRecord, parseStrict, resolveGenesisSelf } from "@generalbusiness/dap-bytes";
 import { WINDOWS, contentChecked, contentStates, fixedBy, highestHead, isScopeRef, judgeGrant, membershipOf, namedBy, observationOf, observedName, observedOf, prefer, revoked, same, subjectName, valueDigest, type Clock as Reading, type ContentStates, type GrantJudgment, type Needed, type RecordedRef, type Retains, type StateView, type ValueRead } from "@generalbusiness/dap-derive";
 import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { answersVersionQuestion, authoritySessionBirthDirectories, destinationBranch, unpublishedDestinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
@@ -154,7 +154,8 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
     const of = "asked" in subject ? (config.rules?.(scope) ?? null) : config.membership(scope);
     if (!of) return null;
     const began = config.clock.read();
-    const to: ObservedScope = of.inc === null ? { scope: of.scope, kind: of.kind } : (of as ScopeRef);
+    // A first read of a recorded scope with no full reference yet names the kind that its recorded position states.
+    const to: ObservedScope = "pending" in of ? { scope: of.scope, kind: "asked" in subject ? "rules" : "membership" } : of;
     let got: unknown = null;
     try {
       got = await config.reader.observe("holders" in subject ? { of: to, holders: subject.holders, most: subject.most } : { of: to, ...subject }, seconds);
@@ -266,8 +267,8 @@ export function observing(config: Observing): Authority & { cacheCounts(): { adm
         const n = ++count;
         let answer: unknown = null;
         try {
-          // The first read of a scope that records no incarnation asks by the scope ID alone. The answer's `of` holds the incarnation.
-          answer = await config.reader.observe({ of: of.inc === null ? { scope: of.scope, kind: of.kind } : (of as ScopeRef), key }, seconds);
+          // The first read of a membership that records no full reference asks by the scope ID and kind. The answer's `of` holds the full reference.
+          answer = await config.reader.observe({ of: "pending" in of ? { scope: of.scope, kind: "membership" } : of, key }, seconds);
         } catch {
           answer = null;
         }
@@ -457,19 +458,25 @@ export const fixedMembership = (config: Pick<Repository, "genesis" | "state">, s
 
 /** The actual directory of a rules scope or destination, recorded by its judged creation. A
  * session's claims cannot select this target or substitute its incarnation. */
-export function repositorySessionBirth(config: Pick<Repository, "genesis" | "state">, scope: ScopeRef, recorded?: RecordedRef | null): { directory: ScopeRef; membership: RecordedRef; definitions: readonly string[] } | null {
+export function repositorySessionBirth(config: Pick<Repository, "genesis" | "state">, scope: ScopeRef, recorded?: RecordedRef | null): { directory: ScopeRef; kind: ScopeKind; membership: RecordedRef; definitions: readonly string[] } | null {
   const genesis = config.genesis();
   const state = config.state;
+  const own = state?.scope();
+  // The kind is this scope's own folded kind. A reference names no kind; the genesis seed must state the same kind.
+  const kind = own?.kind;
+  if (!state || !own || !kind || !same(own.at, scope) || genesis?.decision !== "applied" || genesis.seed.kind !== kind) return null;
   // The directory/child cohort is the exact supported catalog, never a name alias or newest fallback.
-  const definitions = authoritySessionBirthDirectories(scope.kind, genesis?.seed.definition);
-  if (!definitions.length || !state || !same(state.scope()?.at, scope) || genesis?.decision !== "applied" || genesis.seed.kind !== scope.kind) return null;
-  const directory = genesis.seed.creator;
-  const item = scope.kind === "destination"
+  const definitions = authoritySessionBirthDirectories(kind, genesis.seed.definition);
+  if (!definitions.length) return null;
+  // A child of the directory's genesis names its creator by scope alone; the recorded source fact supplies its genesis.
+  const directory = genesis.source ? resolveGenesisSelf(genesis.seed.creator, genesis.source) : null;
+  const item = kind === "destination"
     ? (answersVersionQuestion(genesis.seed.definition, "authoritySessionBirthUnpublishedBranch") ? unpublishedDestinationBranch(state) : destinationBranch(state))
-    : state.page(scope.kind === "commons" ? "commons" : "rules", [scope.kind === "commons" ? "open" : "current"], null, 1).items[0];
+    : state.page(kind === "commons" ? "commons" : "rules", [kind === "commons" ? "open" : "current"], null, 1).items[0];
   const held = item?.refs["directory"];
   const membership = recorded === undefined ? recordedMembership(config, scope) : recorded;
-  return directory?.kind === "directory" && isScopeRef(held) && same(held, directory) && genesis.source?.seq === 0 && same(genesis.source.at, directory) && genesis.message?.class === "request" && genesis.message.type === "create" && membership?.kind === "membership" ? { directory, membership, definitions } : null;
+  // The creator's kind is the genesis's recorded source kind. The membership is the reference recorded in its membership position.
+  return directory && genesis.sourceKind === "directory" && isScopeRef(held) && same(held, directory) && genesis.source?.seq === 0 && same(genesis.source.at, directory) && genesis.message?.class === "request" && genesis.message.type === "create" && membership ? { directory: held, kind, membership, definitions } : null;
 }
 
 /** Resolve only the session reference of a rules scope or destination that has not retained
@@ -489,10 +496,10 @@ export function repositorySessionMembership(config: Pick<Repository, "genesis" |
         if (repositories.length !== 1) return null;
         const refs = repositories[0]["refs"];
         const reference: unknown = isRecord(refs) ? refs["membership"] : null;
-        const target: unknown = isRecord(refs) ? refs[scope.kind] : null;
-        if ((scope.kind === "rules" || scope.kind === "commons") && (!isScopeRef(target) || !same(target, scope))) return null;
+        const target: unknown = isRecord(refs) ? refs[birth.kind] : null;
+        if ((birth.kind === "rules" || birth.kind === "commons") && (!isScopeRef(target) || !same(target, scope))) return null;
         const after = repositorySessionBirth(config, scope);
-        return isScopeRef(reference) && reference.kind === "membership" && after && same(after.directory, birth.directory) && reference.scope === after.membership.scope && (after.membership.inc === null || after.membership.inc === reference.inc) ? reference : null;
+        return isScopeRef(reference) && after && same(after.directory, birth.directory) && observedOf(reference, after.membership) ? reference : null;
       } catch { return null; }
     },
   };
@@ -541,9 +548,11 @@ export function repositoryAuthority(config: Repository): Authority {
     rules: () => recordedRules(config),
     content: (named) => { const data = platform(named)?.data; return data ? contentStates(data) : null; },
   });
+  // The kind is this scope's own recorded kind, from its genesis seed. A reference names no kind.
+  const membership = (): boolean => config.genesis()?.seed.kind === "membership";
   return {
-    read: (asked, seconds) => (asked.scope.kind === "membership" ? own : observed).read(asked, seconds),
+    read: (asked, seconds) => (membership() ? own : observed).read(asked, seconds),
     // A membership scope reads no other scope: an act of it is judged on its own head, and no row of it is read here.
-    further: (scope) => (scope.kind === "membership" ? NOTHING_READ : observed.further!(scope)),
+    further: (scope) => (membership() ? NOTHING_READ : observed.further!(scope)),
   };
 }

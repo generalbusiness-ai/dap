@@ -3,12 +3,12 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
 import type { DeclaredDefinition, Entry, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { definitionDigest, factRefOf, intentDigest, isIncarnation, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { definitionDigest, intentDigest, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { timeOf, type Delivered } from "@generalbusiness/dap-derive";
-import { Scope, forged, grantOf, laneDefinition, variant } from "@generalbusiness/dap-derive/testing";
+import { Scope, grantOf, laneDefinition, variant } from "@generalbusiness/dap-derive/testing";
 import { inbox, platform } from "@generalbusiness/dap-platform";
 import { httpSource, platformCode, verify } from "@generalbusiness/dap-replay";
-import { controls, scriptedCapability, type CapabilityScript } from "../src/testing.ts";
+import { controls, scriptedCapability, type CapabilityScript, ledgerSource, scriptedSequence } from "../src/testing.ts";
 import { Node, creation as creationIn, net, routed, soon } from "./net.ts";
 import { HOLD, START, at, definition, create, creation, reader, rita, stubOf, una } from "./fixtures-native.ts";
 
@@ -30,14 +30,15 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
     expect(held).toEqual([{ entries: 0 }]);
   });
 
-  test("entry 0 holds the seed, the signed intent and a minted incarnation, and the scope answers under its own name only", async () => {
+  test("entry 0 holds the seed, the signed intent and a minted nonce, and the scope answers under its own name only", async () => {
     const s = await create();
     expect(await s.stub.entry(reader, 0)).toMatchObject({
       ok: true, at: { seq: 0, hash: s.genesis.fact.hash },
-      value: { entry: { seq: 0, prev: null, at: { scope: s.name, inc: s.at.inc, kind: "directory" }, input: { type: "genesis", inc: s.at.inc, "founding": s.signed, decision: "applied" } } },
+      value: { entry: { seq: 0, prev: null, input: { type: "genesis", "founding": s.signed, decision: "applied" } } },
     });
-    expect([isIncarnation(s.at.inc), s.genesis.intent, s.genesis.definition]).toEqual([true, intentDigest(s.signed.intent), definition.digest]);
-    // The same creation again is answered from the genesis: the same receipt, with the incarnation minted the first time.
+    // The scope's full reference is its seed's scope ID and the hash of its genesis.
+    expect([s.at, s.genesis.intent, s.genesis.definition]).toEqual([{ scope: s.name, genesis: s.genesis.fact.hash }, intentDigest(s.signed.intent), definition.digest]);
+    // The same creation again is answered from the genesis: the same receipt, with the nonce minted the first time.
     expect(await s.stub.create(s.signed, definition.declared)).toEqual({ answer: "accepted", receipt: s.genesis });
     expect(await s.head()).toEqual({ seq: 0, hash: s.genesis.fact.hash });
 
@@ -81,7 +82,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
     // The first creation reads the fact. Unread, it waits and records nothing.
     expect(await stub.create(signed, naming.declared)).toEqual({ answer: "unavailable", reason: "dependency-unavailable" });
     expect(await stub.summary(reader)).toEqual({ ok: false, reason: "not-found" });
-    c.foreign.set(proof.hash, { entry, under: "lane" });
+    c.foreign.set(proof.hash, ledgerSource(l, entry.seq, "lane"));
     const first = await stub.create(signed, naming.declared);
     expect(first).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 0 } } });
     // The fact is lost. The same creation again is a repeat: it reads no fact, and is answered from the genesis.
@@ -150,11 +151,11 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
       // the inbox's side of the delivery and nothing about a lane. The handler's written effects set `reason`, `item` and `at`.
       // The mark `notice-source` stands after them, and its rule, the platform package's own, sets `source`: the record of the source
       // fact's scope ID, incarnation, position and hash (authority note, section 12.1.6, case a).
-      const lane: ScopeRef = { scope: scopeIdOf(seedOf(asked(soon(60)), NAMED)), inc: newIncarnation(new Uint8Array(16).fill(7)), kind: "lane" };
+      const lane = scriptedSequence({ ...seedOf(asked(soon(60)), NAMED), kind: "lane" }, net.clock.now);
       const message = { class: "advisory", type: "notify", body: { fields: { reason: "review", item: 4 } } } as const;
-      const source = forged(lane, 3, { type: "checkpoint", through: 2, state: `sha256:${"0".repeat(64)}` }, [{ n: 0, to: ref, message }]);
-      const from = factRefOf(source.entry);
-      net.peers.set(from.hash, { entry: source.entry, under: "issue" });
+      const entry = lane.entry(3, { type: "checkpoint", through: 2, state: `sha256:${"0".repeat(64)}` }, [{ n: 0, to: ref, message }]);
+      const from = lane.fact(entry);
+      net.peers.set(from.hash, lane.source(entry, "issue"));
       const notified: Delivered = { to: ref, from, n: 0, message };
       const recorded = await I.stub.deliver(notified);
       expect(recorded).toMatchObject({ answer: "recorded", fact: { at: ref, seq: 1 } });
@@ -162,7 +163,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
         input: { type: "delivery", from, n: 0, message },
         effects: [
           { effect: "open", item: 1, type: "notice", state: "unread" }, { effect: "value", item: 1, slot: "reason", value: "review" }, { effect: "value", item: 1, slot: "item", value: 4 },
-          { effect: "value", item: 1, slot: "at", value: net.clock.now }, { effect: "value", item: 1, slot: "source", value: { scope: lane.scope, incarnation: lane.inc, seq: 3, hash: from.hash } },
+          { effect: "value", item: 1, slot: "at", value: net.clock.now }, { effect: "value", item: 1, slot: "source", value: { scope: lane.at.scope, genesis: lane.at.genesis, seq: 3, hash: from.hash } },
         ],
         sends: [],
       });
@@ -176,10 +177,10 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
       // they are the ones the runtime ran. Given none, or the data without the rule, it cannot derive under the definition at all:
       // `unsupported-definition`, at the genesis. The lane's entry is the scripted peer's, so an anchor names it.
       const replayed = async (code?: (named: string) => ReturnType<typeof platform>) =>
-        (await verify(httpSource("https://scopes.test", { fetch: routed }), { mode: "replay", scope: name, grants: "as-recorded", platform: code, anchors: [{ scope: lane.scope, seq: 3, hash: from.hash }] })).report;
+        (await verify(httpSource("https://scopes.test", { fetch: routed }), { mode: "replay", scope: name, grants: "as-recorded", platform: code, anchors: [{ scope: lane.at.scope, seq: 3, hash: from.hash }] })).report;
       const [same, none, ruleless] = [await replayed(platform), await replayed(), await replayed((named) => { const supplied = platform(named); return supplied && { ...supplied, rules: {} }; })];
       expect([same, none, ruleless]).toMatchObject([{ result: "consistent", target: { seq: 2 } }, { result: "unsupported-definition", at: { seq: 0 } }, { result: "unsupported-definition", at: { seq: 0 } }]);
-      expect([same.trusts.includes(platformCode(NAMED)), none.trusts.some((trust) => trust.startsWith("platform-code")), same.coverage]).toEqual([true, false, [{ scope: ref, from: 0, through: 2 }]]);
+      expect([same.trusts.includes(platformCode(NAMED)), none.trusts.some((trust) => trust.startsWith("platform-code")), same.coverage]).toEqual([true, false, [{ scope: ref, kind: "directory", from: 0, through: 2 }]]);
 
       // The same scope, in a runtime that has lost the rule: test support supplies the data with no rule. Section 6.1, "A mark with
       // no rule: the whole scope": the scope admits nothing, whatever the row. The act that was judged above is now not judged, and
@@ -222,7 +223,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
     const at = created.receipt.fact.at;
     const intent = (kind: string, more: Partial<Intent>): Intent => ({ v: 1, to: at, actor: rita.key, kind, on: null, expected: {}, fields: {}, idempotencyKey: crypto.randomUUID(), notAfter: timeOf(Date.now() + 60_000), ...more });
     const offer = signIntent(intent("offer", { expected: { intent: 1 }, fields: { intent: 0 } }), rita.secret);
-    const step = signIntent(intent("hold@1:instance", { fields: { hold: 2, task: { ...at, kind: "task" }, instance: "i1" } }), rita.secret);
+    const step = signIntent(intent("hold@1:instance", { fields: { hold: 2, task: at, instance: "i1" } }), rita.secret);
     const all = [grantOf(rita, at, [...new Set(Object.values(staged.declared.acts).map((act) => act.grant as string))])];
     const entries = () => runInDurableObject(env.AS_DEPLOYED.get(env.AS_DEPLOYED.idFromName(scopeIdOf(seed))), (_instance, state) => state.storage.sql.exec("SELECT (SELECT COUNT(*) FROM entry) AS entries, (SELECT COUNT(*) FROM operation) AS operations").toArray());
     expect([await deployed.submit(offer, all), await deployed.prepare(step, all, "hold@1", "instance"), await (deployed as unknown as { effect(): Promise<number> }).effect(), await deployed.summary(reader), await entries()]).toMatchObject([

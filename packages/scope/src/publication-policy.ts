@@ -1,6 +1,6 @@
 /** Host publication limits; no Native rule or recorded outcome shape changes. */
 import { canonicalize, isDigest, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
-import { valueDigest } from "@generalbusiness/dap-derive";
+import { observedOf, valueDigest, type RecordedRef } from "@generalbusiness/dap-derive";
 import { classify, EXTENTS_MOST, isExtents, RULES_PATTERNS, type Extent, type JudgeChanges } from "@generalbusiness/dap-platform";
 
 /** GitHub reads workflows and ownership here; the room protects its agent instructions as rules. */
@@ -8,12 +8,12 @@ export const PUBLICATION_RESERVED = [".github", ".github/**", "CODEOWNERS", "doc
 export interface PublicationRefusal { code: "reserved-publication-path"; path: string; reserved: string }
 
 /** Current authenticated Rules answer and the exact canonical extent value it names. */
-export function publicationExtents(raw: unknown, expected: { scope: string; inc?: unknown }): readonly Extent[] | null {
+export function publicationExtents(raw: unknown, expected: RecordedRef): readonly Extent[] | null {
   try {
     if (!isRecord(raw) || Object.keys(raw).length !== 2 || !Array.isArray(raw["values"]) || raw["values"].length > 8) return null;
     const answer = raw["answer"];
-    if (!isRecord(answer) || answer["subject"] !== "rules" || !isScopeRef(answer["of"]) || answer["of"].kind !== "rules"
-      || answer["of"].scope !== expected.scope || expected.inc != null && answer["of"].inc !== expected.inc
+    // The subject states a rules answer. The answer fixes the recorded reference, or binds a pending one.
+    if (!isRecord(answer) || answer["subject"] !== "rules" || !isScopeRef(answer["of"]) || !observedOf(answer["of"], expected)
       || !isHead(answer["head"]) || !Number.isSafeInteger(answer["revision"]) || Number(answer["revision"]) < 0
       || !isRecord(answer["content"]) || answer["content"]["asked"] !== "rules" || !isDigest(answer["content"]["extents"])) return null;
     const digest = answer["content"]["extents"];

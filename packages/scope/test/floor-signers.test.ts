@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import type { Entry, FloorInput } from "@generalbusiness/dap-contract";
 import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
-import { isEntryOf } from "@generalbusiness/dap-derive";
+import { isEntryBodyOf } from "@generalbusiness/dap-derive";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { Scope, type Checkpointed } from "../src/core.ts";
 import { production } from "../src/ports.ts";
@@ -25,7 +25,7 @@ async function bookkeeping(scope: Platform) {
       const own = use.fact.at.scope === scope.name ? store.stored(use.fact.seq) : null;
       const held = own ?? store.retained("entry", use.content);
       const entry = held ? JSON.parse(held.bytes) as Entry : null;
-      return entry && isEntryOf(entry, use.fact) ? entry : null;
+      return entry && isEntryBodyOf(entry, use.fact) ? entry : null;
     });
     await chains.update();
     return { discoveries: chains.discoveries(), anchors: store.localSigners.floorAnchors(),
@@ -77,7 +77,7 @@ test("Native register signer and discovered membership survive two floors and re
     const token = readerOf(mintSession(sessions, { ...claims, reads: ["entry", "retained"], ends: soon(60) }));
     const unrelated = readerOf(mintSession(sessions, { ...claims, reads: ["entry", "retained"], membership: otherMembership, ends: soon(60) }));
     // Existing chained-session authority permits entry/retained, not summary.
-    expect(await life.owner.required(() => R.stub.entry(token, 0))).toMatchObject({ ok: true, value: { entry: { seq: 0, at: { kind: "register" } } } });
+    expect(await life.owner.required(() => R.stub.entry(token, 0))).toMatchObject({ ok: true, value: { entry: { seq: 0, input: { type: "genesis", seed: { kind: "register" } } } } }); // an entry carries no address; its genesis seed names the kind
     expect(await life.owner.required(() => R.stub.entry(unrelated, 0))).toEqual({ ok: false, reason: "forbidden" });
     const carried = await runInDurableObject(R.object, (_instance, state) => {
       const store = new SqliteStore(archiveSql(state));

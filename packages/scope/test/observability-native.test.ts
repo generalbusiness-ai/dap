@@ -177,7 +177,7 @@ test("a missing-definition turn emits its early native end without an entry", as
   const result = await lane.inside(async state => {
     const store = new SqliteStore({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: closure => state.storage.transactionSync(closure) });
     const wakes = new Wakes(store, { set: () => {} }, false);
-    const turns = new Turns(store, { clock: lane.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, lane.c.bounds, () => null, () => undefined);
+    const turns = new Turns(store, { clock: lane.c.clock, rules: production().rules, alarm: wakes.deadline, capabilities: null }, lane.c.bounds, () => null, () => undefined, { value: null }, () => null);
     const context = operationContext({ DEPLOYMENT: "missing-definition-test", METRICS: { writeDataPoint: p => points.push(structuredClone(p)) } }, lane.name, "alarm", { request: null, trace: null });
     const before = state.storage.sql.exec("SELECT seq,hash,bytes FROM entry ORDER BY seq").toArray();
     return { end: await measured(context, () => turns.run(null)), entered: context.turn.entered, before, after: state.storage.sql.exec("SELECT seq,hash,bytes FROM entry ORDER BY seq").toArray() };

@@ -3869,3 +3869,15 @@ commit that no entry holds?**
   run. The scripts that revision 28 ran applied the edits, listed the
   added lines, counted rows and headings of the main note, compared the
   cells of each table with its header, and made the sizes and the sums.
+
+## Renamed refusal reasons (ruling 22c70f15)
+
+The identifiers cutover head (C+D) renames two refusal reasons. The note's
+body keeps the old words. Read them as the new words.
+
+| Old word | New word |
+|---|---|
+| `wrong-incarnation` | `wrong-genesis` |
+| `incarnation-conflict` | `genesis-conflict` |
+
+Each name keeps its position and its meaning.

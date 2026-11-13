@@ -3,18 +3,19 @@
  * Git replies are scripted stand-ins. No provider or partition activates. */
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, onTestFinished, test } from "vitest";
-import type { Entry, FieldValue, OperationId, Request, ScopeRef, Seed } from "@generalbusiness/dap-contract";
+import type { Entry, FieldValue, GenesisEntry, OperationId, Request, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, factRefOf, intentDigest, isRecord, newIncarnation, scopeIdOf, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { contentStates, owed, PROFILES, validateDefinition, valueDigest, type Fetched } from "@generalbusiness/dap-derive";
+import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, isRecord, newGenesisNonce, scopeIdOf, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { contentStates, owed, PROFILES, validateDefinition, valueDigest } from "@generalbusiness/dap-derive";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { DESTINATION_5, destination5, destinationRules5, firstExtents, PUBLISHING_LANE_DIGESTS, platform } from "@generalbusiness/dap-platform";
 import { publicationJourney } from "../../platform/test/support-publication-journey.ts";
-import { handMade, HEAD, RULES, rulesObserved } from "../../platform/test/support-destination.ts";
+import { birthAt, handMade, HEAD, refOf, RULES, rulesObserved } from "../../platform/test/support-destination.ts";
 import { observing } from "../src/authority.ts";
 import type { Delivery, EffectAnswer, EffectRequest, Sealed } from "../src/index.ts";
+import type { OriginRow } from "../src/ports.ts";
 import { SqliteStore } from "../src/sqlite.ts";
-import { controls, net } from "../src/testing.ts";
+import { controls, net, scriptedSource, type ScriptedSource } from "../src/testing.ts";
 import { wired } from "./outside.ts";
 import { repository, rita, una } from "./repository.ts";
 import { objectOf, reader, stubOf } from "./fixtures-native.ts";
@@ -30,23 +31,34 @@ test.each(["effective", "absent", "unavailable", "active", "root-full", "file-su
   // Only the new file case scripts a complete immutable D8/application
   // factory proof. No real Directory/application creation is claimed here.
   const directorySeed: Seed = { v: 1, kind: "directory", definition: "platform:directory@8", creator: null, cause: textDigest("PUBLIC TEST D1 scripted file office"), ordinal: 0 };
-  const directory: ScopeRef = { scope: scopeIdOf(directorySeed), inc: newIncarnation(new Uint8Array(16).fill(85)), kind: "directory" };
+  // SCRIPTED: the office's genesis, made by hand. Its hash is the office's genesis; nothing judged it.
+  const office: GenesisEntry = { v: 1, seq: 0, prev: null, time: net.clock.now, clamped: false, epoch: 0,
+    input: { type: "genesis", seed: directorySeed, nonce: newGenesisNonce(new Uint8Array(16).fill(85)), founding: null, source: null, sourceKind: null, n: null, message: null, kind: "found", decision: "applied" },
+    uses: [], prepared: [], effects: [], sends: [] };
+  const directory: ScopeRef = { scope: scopeIdOf(directorySeed), genesis: entryHash(office) };
   const birth = journey.birth(true, membership, fullRoot ? await fullRoot.D.at() : fileCase ? directory : undefined), name = scopeIdOf(birth.asked.to), control = controls(name, net.clock.now);
   control.clock = net.clock;
-  const foreign = new Map<string, { entry: Entry; under: string; origin?: readonly Fetched[] }>();
-  const remember = (entry: Entry, under: string, origin?: readonly Fetched[]) => { foreign.set(factRefOf(entry).hash, { entry, under, ...(origin ? { origin } : {}) }); };
-  remember(birth.source, "platform:directory"); remember(birth.claim, "platform:register");
+  // The genesis bytes of each scripted scope that a scripted entry names, by scope ID: stand-ins, the office and, for the full root, the real Directory.
+  const births = new Map<string, string>([[directory.scope, canonicalize(office)]]);
+  if (fullRoot) births.set((await fullRoot.D.at()).scope, canonicalize((await fullRoot.D.entries())[0]!));
+  const birthOf = (at: ScopeRef) => births.get(at.scope) ?? birthAt(at);
+  const foreign = new Map<string, ScriptedSource>();
+  const remember = (entry: Entry, at: ScopeRef, under: string, origin?: readonly OriginRow[]) => {
+    foreign.set(entryHash(entry), { entry, under, ...(entry.seq === 0 ? {} : { birth: birthOf(at) }), ...(origin ? { origin } : {}) });
+  };
+  const row = (entry: Entry, at: ScopeRef, under: string): OriginRow => ({ fact: factRefOf(entry, at), entry, under, bytes: canonicalize(entry) });
+  remember(birth.source, birth.directory, "platform:directory"); remember(birth.claim, refOf(birth.claim).at, "platform:register");
   let driving = "none", keyReads: string[] = [], unreadable = false;
   const answers = new Map<string, EffectAnswer>(), sent: EffectRequest[] = [];
   // Scripted custody of exact already-received replies, across object lives.
   const replies = new Map<OperationId, { operation: OperationId; attempt: number; answer: EffectAnswer }>();
   wired.set(name, () => ({
     owners: null, transport: null,
-    resolver: { read: async fact => foreign.get(fact.hash) ?? null },
+    resolver: { read: async (fact, context) => scriptedSource(fact, foreign.get(fact.hash), context) },
     authority: observing({ clock: control.clock, random: { bytes: n => crypto.getRandomValues(new Uint8Array(n)) }, membership: () => membership, rules: () => RULES,
       content: named => { const data = platform(named)?.data; return data ? contentStates(data) : null; },
       reader: { observe: async asked => {
-        if (asked.of.kind === "rules") {
+        if (asked.of.scope === RULES.scope) {
           const { at: _at, ...answer } = rulesObserved(control.clock.now);
           if (answer.content.asked !== "rules") throw Error("Scripted rules have fixed content");
           const extents = firstExtents(answer.content);
@@ -80,35 +92,37 @@ test.each(["effective", "absent", "unavailable", "active", "root-full", "file-su
     await surface.effect();
     driving = "none";
   };
-  expect(await surface.deliver({ to: birth.asked.to, from: factRefOf(birth.source), n: 0, message: birth.asked.message })).toMatchObject({ answer: "recorded" });
-  const genesis = (await history())[0]!.entry, destination = genesis.at;
+  expect(await surface.deliver({ to: birth.asked.to, from: factRefOf(birth.source, birth.directory), n: 0, message: birth.asked.message })).toMatchObject({ answer: "recorded" });
+  const born = (await history())[0]!, genesis = born.entry, destination: ScopeRef = { scope: name, genesis: born.hash };
   const returned = genesis.sends.find(send => send.message.class === "result")!;
   if (returned.message.class !== "result") throw Error("Native birth returned no result");
-  const confirm = { class: "control", type: "confirm", genesis: factRefOf(genesis) } as const;
-  const confirmation = { ...handMade(birth.directory, "confirm", [{ n: 0, to: destination, message: confirm }]), input: { type: "delivery", from: factRefOf(genesis), n: returned.n, message: returned.message, clause: "applied" } as const };
-  remember(confirmation, "platform:directory");
-  expect(await surface.deliver({ to: destination, from: factRefOf(confirmation), n: 0, message: confirm })).toMatchObject({ answer: "recorded" });
+  const confirm = { class: "control", type: "confirm", genesis: factRefOf(genesis, destination) } as const;
+  const confirmation = { ...handMade(birth.directory, "confirm", [{ n: 0, to: destination, message: confirm }]), input: { type: "delivery", from: factRefOf(genesis, destination), sourceKind: "destination", n: returned.n, message: returned.message, clause: "applied" } as const };
+  remember(confirmation, birth.directory, "platform:directory");
+  expect(await surface.deliver({ to: destination, from: factRefOf(confirmation, birth.directory), n: 0, message: confirm })).toMatchObject({ answer: "recorded" });
   const adopt = await stubOf(name).submit(await room.M.intent(rita, "adopt-head", { to: destination, on: 0, expected: { on: 1 }, fields: { commit: HEAD, why: "scripted host base" } }), []);
   expect(adopt.answer).toBe("accepted");
   const adoptSeq = (await history()).at(-1)!.entry.seq;
   await drive("adopt-read", `${adoptSeq}:0`, { seen: HEAD });
 
   if (fileCase) {
-    const office: Entry = { ...handMade(directory, "unused"), seq: 0, prev: null, input: { type: "genesis", seed: directorySeed, inc: directory.inc, "founding": null, source: null, n: null, message: null, kind: "found", decision: "applied" }, effects: [], sends: [] };
     const definition = textDigest("PUBLIC TEST D1 scripted application");
     const maker = handMade(directory, "establish-application", [], keys.rita, { definition });
     if (maker.input.type !== "act") throw Error("Scripted application maker is an act");
     const seed: Seed = { v: 1, kind: "lane", definition, creator: directory, cause: intentDigest(maker.input.signed.intent), ordinal: 0 };
-    const app: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(86)), kind: "lane" };
     const creation: Request = { class: "request", type: "create", body: { kind: "establish", directory: directory as unknown as FieldValue, membership: membership as unknown as FieldValue, creationContext: { v: 1 }, fields: { destination: destination as unknown as FieldValue } } };
     const sourceMaker = { ...maker, sends: [{ n: 0, to: seed, message: creation }] };
-    const genesis: Entry = { ...handMade(app, "unused"), seq: 0, prev: null, input: { type: "genesis", seed, inc: app.inc, "founding": null, source: factRefOf(sourceMaker), n: 0, message: creation, kind: "establish", decision: "applied" }, effects: [], sends: [] };
-    const origin: Fetched[] = [{ fact: factRefOf(genesis), entry: genesis, under: "declared:application" }, { fact: factRefOf(sourceMaker), entry: sourceMaker, under: "platform:directory" }, { fact: factRefOf(office), entry: office, under: "platform:directory" }];
+    const genesis: GenesisEntry = { v: 1, seq: 0, prev: null, time: net.clock.now, clamped: false, epoch: 0,
+      input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(86)), founding: null, source: factRefOf(sourceMaker, directory), sourceKind: "directory", n: 0, message: creation, kind: "establish", decision: "applied" },
+      uses: [], prepared: [], effects: [], sends: [] };
+    const app: ScopeRef = { scope: scopeIdOf(seed), genesis: entryHash(genesis) };
+    births.set(app.scope, canonicalize(genesis));
+    const origin: OriginRow[] = [row(genesis, app, "declared:application"), row(sourceMaker, directory, "platform:directory"), row(office, directory, "platform:directory")];
     const deliverFile = async (content: string) => {
       const message: Request = { class: "request", type: "tell", body: { message: "publish-file", fields: { path: "shelf/standing.md", content } } };
       const source = handMade(app, "write", [{ n: 0, to: destination, message }]);
-      remember(source, "declared:application", origin);
-      expect(await surface.deliver({ to: destination, from: factRefOf(source), n: 0, message })).toMatchObject({ answer: "recorded" });
+      remember(source, app, "declared:application", origin);
+      expect(await surface.deliver({ to: destination, from: factRefOf(source, app), n: 0, message })).toMatchObject({ answer: "recorded" });
       return source;
     };
     const old = await deliverFile("Older scripted application content\n");
@@ -156,7 +170,7 @@ test.each(["effective", "absent", "unavailable", "active", "root-full", "file-su
     expect(ended.state).toBe("superseded");
     expect(sent.filter(request => request.kind === "push")).toEqual([]);
     const outcome = (await history()).find(row => row.entry.input.type === "outcome" && row.entry.input.operation === push.id)!;
-    expect(outcome.entry.input).toMatchObject({ type: "outcome", owner: DESTINATION_5, kind: "push", operation: push.id, attempt: 1, result: "refused", evidence: { basis: "own-answer", body: { send: "not-sent", seen: HEAD, supersededBy: { from: factRefOf(newer), n: 0 } } } });
+    expect(outcome.entry.input).toMatchObject({ type: "outcome", owner: DESTINATION_5, kind: "push", operation: push.id, attempt: 1, result: "refused", evidence: { basis: "own-answer", body: { send: "not-sent", seen: HEAD, supersededBy: { from: refOf(newer), n: 0 } } } });
     expect(after.operations.find(op => op.id === push.id)?.attempts[0]!.outcomes).toMatchObject([{ result: "refused" }]);
     const marked = await runInDurableObject(object, (_instance, state) => {
       const store = new SqliteStore({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
@@ -172,16 +186,19 @@ test.each(["effective", "absent", "unavailable", "active", "root-full", "file-su
   const creator = handMade(birth.directory, "open-pr", [], keys.rita, { definition: PUBLISHING_LANE_DIGESTS[0] });
   if (creator.input.type !== "act") throw Error("Scripted creator is an act");
   const seed: Seed = { v: 1, kind: "lane", definition: PUBLISHING_LANE_DIGESTS[0], creator: birth.directory, cause: intentDigest(creator.input.signed.intent), ordinal: 0 };
-  const lane: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(83)), kind: "lane" };
   const creation: Request = { class: "request", type: "create", body: { kind: "open", directory: birth.directory as unknown as FieldValue, fields: { destination: destination as unknown as FieldValue } } };
   const maker = { ...creator, sends: [{ n: 0, to: seed, message: creation }] };
-  const sourceGenesis: Entry = { ...handMade(lane, "unused"), seq: 0, prev: null, input: { type: "genesis", seed, inc: lane.inc, "founding": null, source: factRefOf(maker), n: 0, message: creation, kind: "open", decision: "applied" }, effects: [], sends: [] };
-  const origin: Fetched[] = [{ fact: factRefOf(sourceGenesis), entry: sourceGenesis, under: "change" }, { fact: factRefOf(maker), entry: maker, under: "platform:directory" }];
+  const sourceGenesis: GenesisEntry = { v: 1, seq: 0, prev: null, time: net.clock.now, clamped: false, epoch: 0,
+    input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(83)), founding: null, source: factRefOf(maker, birth.directory), sourceKind: "directory", n: 0, message: creation, kind: "open", decision: "applied" },
+    uses: [], prepared: [], effects: [], sends: [] };
+  const lane: ScopeRef = { scope: scopeIdOf(seed), genesis: entryHash(sourceGenesis) };
+  births.set(lane.scope, canonicalize(sourceGenesis));
+  const origin: OriginRow[] = [row(sourceGenesis, lane, "change"), row(maker, birth.directory, "platform:directory")];
   const content = "D1 native standing witness\n", manifest = handMade(lane, "propose-file", [], una, { path: "standing.md", content, size: utf8(content).length, digest: digestBytes(utf8(content)), base: HEAD });
-  const reserve: Request = { class: "request", type: "tell", body: { message: "reserve", fields: { operation: { self: true }, manifest: factRefOf(manifest) as unknown as FieldValue, verdicts: [], jobs: [], links: [], reports: [] } } };
+  const reserve: Request = { class: "request", type: "tell", body: { message: "reserve", fields: { operation: { self: true }, manifest: refOf(manifest) as unknown as FieldValue, verdicts: [], jobs: [], links: [], reports: [] } } };
   const merge = handMade(lane, "merge", [{ n: 0, to: destination, message: reserve }], una, { manifest: manifest.seq });
-  remember(manifest, "change", origin); remember(merge, "change", origin);
-  expect(await surface.deliver({ to: destination, from: factRefOf(merge), n: 0, message: reserve })).toMatchObject({ answer: "recorded" });
+  remember(manifest, lane, "change", origin); remember(merge, lane, "change", origin);
+  expect(await surface.deliver({ to: destination, from: refOf(merge), n: 0, message: reserve })).toMatchObject({ answer: "recorded" });
   const publication = (await history()).at(-1)!.entry.seq;
   const changes = { paths: ["standing.md"], links: [], unreadable: 0 }, changed = valueDigest("artroom-changed-set-1", changes);
   await drive("judge", `${publication}:0`, { head: HEAD, present: true, tree: "d".repeat(40), firstParent: HEAD, ancestors: [], changes: changed }, [{ kind: "value", domain: "artroom-changed-set-1", digest: changed, bytes: canonicalize(changes) }]);
@@ -225,7 +242,7 @@ test.each(["effective", "absent", "unavailable", "active", "root-full", "file-su
     const revocation = (await room.M.entries())[revocationSeq!]!;
     const relay = revocation.sends.find(send => send.message.class === "request" && send.message.type === "tell" && isRecord(send.message.body) && send.message.body["message"] === "compromised")!;
     expect(relay.to).toEqual(await fullRoot.D.at());
-    expect(await fullRoot.D.stub.deliver({ to: relay.to, from: factRefOf(revocation), n: relay.n, message: relay.message })).toMatchObject({ answer: "retry", reason: "scope-full" });
+    expect(await fullRoot.D.stub.deliver({ to: relay.to, from: factRefOf(revocation, membership), n: relay.n, message: relay.message })).toMatchObject({ answer: "retry", reason: "scope-full" });
     expect(await fullRoot.D.sealed()).toEqual(rootBefore);
   }
   expect((await room.M.stub.outbox(reader)).ok).toBe(true);
@@ -251,8 +268,8 @@ test.each(["effective", "absent", "unavailable", "active", "root-full", "file-su
     expect(replies.has(mint.id)).toBe(false);
     const message: Request = { class: "request", type: "tell", body: { message: "publish-file", fields: { path: "unproven.md", content: "Unproven application" } } };
     const unproven = handMade(lane, "donate", [{ n: 0, to: destination, message }]);
-    remember(unproven, "lending"); // deliberately lacks immutable factory proof
-    expect(await surface.deliver({ to: destination, from: factRefOf(unproven), n: 0, message })).toMatchObject({ answer: "retry", reason: "dependency-unavailable" });
+    remember(unproven, lane, "lending"); // deliberately lacks immutable factory proof
+    expect(await surface.deliver({ to: destination, from: refOf(unproven), n: 0, message })).toMatchObject({ answer: "retry", reason: "dependency-unavailable" });
     expect(await snapshot()).toEqual(aborted);
     await evictDurableObject(object);
     expect(await snapshot()).toEqual(aborted);

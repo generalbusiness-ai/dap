@@ -205,7 +205,7 @@ test("dap create reports a final failure, retains it past an hour, and can start
     const { service, register, counters, ...client } = await clientSurface(life, R);
     const store = memoryStore();
     await store.keep("visitor", rita.secret);
-    await store.save({ v: 1, service, key: "visitor", register });
+    await store.save({ v: 2, service, key: "visitor", register });
     const ctx = { store, ...client };
     const pending = await life.wait(() => claim({ ...ctx, tries: 1, pause: async () => {} }, "retry-room"));
     expect(pending.code).toBe(1);
@@ -260,7 +260,7 @@ test("Page Start rejects a forged failed hint, then keeps its creator key and or
     const first = await life.wait(() => startRoom(service, storage, { ...options, mode: "new", offer, label: "Page retry", tries: 1, pause: async () => {} }));
     expect(first.pending).toBe(true);
     const originalOperation = first.operation, creator = first.key;
-    const journalKey = [...values.keys()].find(key => key.startsWith("artroom-page-claim:"))!;
+    const journalKey = [...values.keys()].find(key => key.startsWith("dap-page-claim-2:"))!;
     const journal = JSON.parse(values.get(journalKey)!) as { claims: Record<string, string> };
     const kept = JSON.parse(journal.claims[originalOperation]!) as { config: { claim: { found: { accepted: unknown }; failure?: unknown } } };
     kept.config.claim.failure = { found: kept.config.claim.found.accepted, observed: kept.config.claim.found.accepted };

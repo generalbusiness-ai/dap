@@ -38,7 +38,7 @@ test("T5a, a link is the change lane's and the issue keeps a copy of it: set the
     await r.settle();
     // In the issue: one deciding entry for each update, in the order of arrival. The copy is the link at its higher revision.
     expect(decided(await G.entries(), C.at)).toEqual(late ? [[removed, "removed", "applied"], [set, "set", "superseded"]] : [[set, "set", "applied"], [removed, "removed", "applied"]]);
-    expect([(await G.state()).relation(C.at, "closes", set), (await G.item(0)).state]).toEqual([{ owner: C.at, name: "closes", item: set, state: "removed", revision: removed }, "open"]);
+    expect([(await G.state()).relation(C.at, "closes", set), (await G.item(0)).state]).toEqual([{ owner: C.at, ownerKind: "lane", name: "closes", item: set, state: "removed", revision: removed }, "open"]);
     // In the change lane: one result for each request, by the request it names. It says how the update was decided, and no more.
     expect(results(await C.entries())).toEqual([[set, late ? "superseded" : "applied"], [removed, "applied"]]);
   }
@@ -59,8 +59,8 @@ test("T5b, a merge closes a linked issue once: the issue closes by its own decid
   const C = await r.lane(rita, "open-pr", change, DIGESTS.change, { title: "A change", draft: false });
   // Actual native factory and member authority; only these two peer entries
   // are scripted. They are not admitted histories of the native objects.
-  const rulesPeer = new Peer("rules", "platform:rules", await r.rules.at());
-  const destinationPeer = new Peer("destination", "platform:destination", await r.G.at());
+  const rulesPeer = await Peer.of("rules", "platform:rules", r.rules);
+  const destinationPeer = await Peer.of("destination", "platform:destination", r.G);
   const peer = (e: Delivered) => "scope" in e.to && (e.to.scope === destinationPeer.at.scope || e.to.scope === rulesPeer.at.scope);
   // Native destination/rules deliveries are held. The update "set" to G is
   // also held, so the scripted publication's "merged" update arrives first.

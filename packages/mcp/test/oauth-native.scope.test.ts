@@ -11,6 +11,8 @@ import { issueOwnAgentInvitation } from "../../cli/src/browser.ts";
 import { memoryStore } from "../../cli/src/store.ts";
 import { hostedRegistries, hostedTest } from "../../scope/test/worker.ts";
 import { mcpRoute } from "../../scope/src/worker.ts";
+import { OAUTH_CLIENT_REGISTRY } from "../../scope/src/oauth-routes.ts";
+import { hostedRegistryName } from "../../scope/src/hosted-registry-name.ts";
 import worker from "../../../apps/room/worker.ts";
 import { created, mcpRoom, SERVICE, type Agent, type Room } from "./fixtures-native.ts";
 import type { OAuthBinding } from "../src/oauth-parameters.ts";
@@ -54,9 +56,10 @@ test("default-off registration and metadata never obtain a registry or consume t
     expect(lookups).toBe(0); expect(reads).toBe(0);
   } finally { read.mockRestore(); }
 
-  // A unique real client-registry object keeps this scripted clock/window
-  // independent from the other OAuth stories. Only HTTPS metadata bytes are mocked.
-  const registryId = env.REGISTRIES.newUniqueId();
+  // The client registry works only as the fixed owner of OAUTH_CLIENT_REGISTRY.
+  // This case's own address prefix and scripted clock keep its window apart
+  // from the other OAuth stories. Only HTTPS metadata bytes are mocked.
+  const registryId = env.REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY);
   const registries = { idFromName: () => registryId, get: (id: DurableObjectId) => env.REGISTRIES.get(id) };
   const registry = env.REGISTRIES.get(registryId);
   let now = Date.parse("2099-01-01T00:00:00Z"), fetched = 0;
@@ -93,7 +96,7 @@ test("control signatures precede index registration and public client resolution
   const settings = { MCP_ENABLED: "true", SCOPE_INDEX_MODE: "register", SCOPE_INDEX: index, SCOPES: scopes, REGISTRIES: registries, AGENTS: agents } as unknown as Parameters<typeof mcpRoute>[1];
   const secret = new Uint8Array(32).fill(42), address = "203.0.113.45";
   const bytes = utf8(canonicalize({ client_id: "https://claude.ai/oauth/TEST-signature-order.json" }));
-  const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
+  const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
   const call = async (action: "create" | "grant", agent: string | null, tamper: boolean, service = SERVICE, given = settings, payload = bytes) => {
     const request = { v: 1 as const, action, service, membership, agent, actor: keyIdOfSecret(secret), body: digestBytes(bytes), op: "TEST signature order", notAfter: timeOf(Date.now() + 60_000) };
     const signed = await signControlWith(request, secretSigner(secret));
@@ -148,7 +151,7 @@ async function join(room: Room, admin: Agent, handle: string, definition: string
 async function invitation(room: Room, admin: Agent, owner: Agent, own: boolean): Promise<string> {
   const M = owner.config.repository!.membership;
   if (own) {
-    const store = memoryStore(); await store.save({ v: 1, service: SERVICE, key: "browser", handle: owner.config.handle!, repository: owner.config.repository! });
+    const store = memoryStore(); await store.save({ v: 2, service: SERVICE, key: "browser", handle: owner.config.handle!, repository: owner.config.repository! });
     const custody = { ...store, signer: async () => secretSigner(owner.secret), secret: async (): Promise<never> => { throw Error("No raw seed export"); } };
     const issued = await room.wait(() => issueOwnAgentInvitation({ store: custody, fetch: room.fetch, pause: waiting => room.pause(waiting), now: () => room.now() + 1000 },
       { handle: "@oauth-agent", hours: 1, controller: { membership: M, member: owner.config.handle as MemberId } }, { operation: crypto.randomUUID(), privateRequests: [], mode: "new" }));
@@ -278,7 +281,7 @@ test.each([
       const answers = JSON.stringify(state.storage.sql.exec(`SELECT answer FROM control`).toArray());
       expect(answers).not.toContain(code); expect(answers).not.toContain(tokens.access_token); expect(answers).not.toContain(tokens.refresh_token);
     }));
-    await room.wait(() => runInDurableObject(env.REGISTRIES.get(env.REGISTRIES.idFromName(M.scope)), (_instance, state) => {
+    await room.wait(() => runInDurableObject(env.REGISTRIES.get(env.REGISTRIES.idFromName(hostedRegistryName(M))), (_instance, state) => {
       const answers = JSON.stringify(state.storage.sql.exec(`SELECT answer FROM control`).toArray());
       expect(answers).not.toContain(code); expect(answers).not.toContain(tokens.access_token); expect(answers).not.toContain(tokens.refresh_token);
     }));

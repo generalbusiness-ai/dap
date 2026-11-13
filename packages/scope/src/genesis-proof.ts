@@ -3,7 +3,7 @@ import type { Entry, FactRef, FactUse, KeyId } from "@generalbusiness/dap-contra
 import { canonicalize, digestBytes, isFactRef, isFactUse, isKeyId, utf8 } from "@generalbusiness/dap-bytes";
 import { same } from "@generalbusiness/dap-derive";
 import { CHAIN_STEPS, leads, rootOf, type Root } from "./signed-reads.ts";
-import { ProofBytes, proofEntry, type ProofBody, type ProofSource } from "./proof-bytes.ts";
+import { ProofBytes, bodyAndDigestProofEntry, type ProofBody, type ProofSource } from "./proof-bytes.ts";
 import type { PreparationRun } from "./preparation-flight.ts";
 
 export const GENESIS_PROOF_BOUNDS = { steps: CHAIN_STEPS, bodies: 16, bytes: 1024 * 1024, attempts: 64, visits: 512, milliseconds: 10_000 } as const;
@@ -104,7 +104,9 @@ export class GenesisProofs {
       const raw = utf8(value.bytes);
       if (raw.length > GENESIS_PROOF_BOUNDS.bytes - bytes) throw new Error("proof-unavailable");
       bodies++; bytes += raw.length;
-      const entry = proofEntry(value, fact, raw.length, content as FactUse["content"] | undefined);
+      // Ruling Q-GP (a): the body and the content digest of the retained use that names it admit a foreign entry. The scope's
+      // own sealed entry names that use, so it is the authority for the address. The walk reads no genesis.
+      const entry = bodyAndDigestProofEntry(value, fact, raw.length, content as FactUse["content"] | undefined);
       if (!entry) throw new Error("proof-unavailable");
       cache.set(canonicalize(fact), { entry, content: digestBytes(raw) });
       if (same(fact.at, own.at)) locals.set(fact.seq, entry);
@@ -156,7 +158,7 @@ export class GenesisProofs {
     try {
       const start = ownEntry(0);
       if (start.input.type !== "genesis") return unknown();
-      const root = await rootOf(start, readUse, GENESIS_PROOF_BOUNDS.steps, { scope: own.at.scope, entry: ownEntry }, work);
+      const root = await rootOf({ entry: start, scope: own.at.scope }, readUse, GENESIS_PROOF_BOUNDS.steps, { scope: own.at.scope, entry: ownEntry }, work);
       active();
       return root === "unavailable" ? unknown() : root === null ? { kind: "none", of: own } : { kind: "root", of: own, root };
     } catch { return unknown(); }

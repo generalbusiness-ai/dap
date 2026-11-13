@@ -5,7 +5,7 @@ import { isDigest } from "./hash.ts";
 import { isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef } from "./records.ts";
 import { utf8, wellFormed } from "./canonical.ts";
 /** A member handle within its bound. A slot never holds a longer one, so an entry that lists a slot's members has a known size. */
-export const memberFits = (v: MemberRef, bounds: Pick<Bounds, "memberBytes">): boolean => utf8(v.member).length <= bounds.memberBytes;
+export const memberFits = (v: Pick<MemberRef, "member">, bounds: Pick<Bounds, "memberBytes">): boolean => utf8(v.member).length <= bounds.memberBytes;
 
 /** A Git object ID: SHA-1 or SHA-256, lowercase hex. */
 const isObjectId = (v: unknown) => typeof v === "string" && /^([0-9a-f]{40}|[0-9a-f]{64})$/.test(v);
@@ -36,7 +36,7 @@ export function fitsFieldType(type: FieldType, v: unknown, bounds: Bounds): bool
     case "item": return isLocalId(v);
     case "fact": return isFactRef(v);
     case "reference": return isReference(v, type.fragment);
-    case "scope": return isScopeRef(v) && v.kind === type.kind;
+    case "scope": return isScopeRef(v); // Kind is checked when the room reads from this sequence (429c1be7).
     case "digest": return isDigest(v);
     case "commit": case "tree": return isObjectId(v);
     case "list": return Array.isArray(v) && v.length <= Math.min(type.max, bounds.listElements) && v.every((e) => fitsFieldType(type.of, e, bounds));

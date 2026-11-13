@@ -2,7 +2,7 @@
 import { lstatSync } from "node:fs";
 import { join } from "node:path";
 import type { FactRef, KeyId, Read, Receipt, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, intentDigest, isKeyId, isRecord, isScopeRef, parseStrict, same, takeBytes, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, intentDigest, isFactRef, isKeyId, isRecord, isScopeRef, parseStrict, resolveGenesisSelf, same, scopeIdOf, takeBytes, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, loadCommons, notesAbout, type Fetch } from "@generalbusiness/dap-client";
 import { COMMONS_COHORT } from "@generalbusiness/dap-platform";
 import { McpService, identityId, type CustodyRecord, type Identity, type ConfigPort } from "@generalbusiness/dap-mcp";
@@ -36,7 +36,7 @@ export function inputOf(value: unknown): Input {
   need(input.v === 1 && url.protocol === "https:" && url.origin === input.service && input.fixture === FIXTURE_DIGEST, "input-service-or-fixture");
   need(closed(input.source, ["head", "tree"]) && /^[a-f0-9]{40}$/.test(input.source.head) && /^[a-f0-9]{40}$/.test(input.source.tree), "input-source");
   need(closed(input.deployment, ["name", "version"]) && input.deployment.name === "dap-commons" && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(input.deployment.version), "input-deployment");
-  need(closed(input.room, KINDS) && KINDS.every(kind => isScopeRef(input.room[kind]) && input.room[kind].kind === kind), "input-room");
+  need(closed(input.room, KINDS) && KINDS.every(kind => isScopeRef(input.room[kind])), "input-room");
   for (const name of ["member", "agent"] as const) need(closed(input[name], ["key", "handle"]) && isKeyId(input[name].key) && /^@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(input[name].handle), "input-actor");
   need(input.member.key !== input.agent.key && input.member.handle !== input.agent.handle, "distinct-actors");
   return parseStrict(canonicalize(input)) as Input;
@@ -147,6 +147,15 @@ async function verifiedFact(actor: Open, step: string, note: Note): Promise<Fact
   return found.receipt.fact;
 }
 
+/** A room scope's genesis names its creator: none for the register, the
+ * register for the Directory, and the Directory for the others. A creation in
+ * the creator's own genesis names it by the genesis self reference, which the
+ * birth's source fact resolves. */
+export function roomGenesisCreated(kind: Kind, born: { seed: { creator: unknown }; source: unknown }, room: Input["room"]): boolean {
+  const creator = isFactRef(born.source) ? resolveGenesisSelf(born.seed.creator, born.source) : born.seed.creator;
+  return same(creator, kind === "register" ? null : kind === "directory" ? room.register : room.directory);
+}
+
 async function preflight(input: Input, actors: Record<Actor, Open>): Promise<void> {
   const summaries = new Map<Kind, Summary>();
   for (const kind of KINDS) {
@@ -156,10 +165,12 @@ async function preflight(input: Input, actors: Record<Actor, Open>): Promise<voi
     if (!summary.ok) throw new WitnessRefusal("room-pin-or-read");
     summaries.set(kind, summary.value);
     const birth = await actors.member.read(handle => handle.entry(0), ref);
-    need(birth.ok && entryHash(birth.value.entry) === birth.value.hash && same(birth.value.entry.at, ref)
-      && birth.value.entry.input.type === "genesis" && birth.value.entry.input.decision === "applied"
+    // A reference carries no kind; the genesis seed names it, and the genesis hash and seed bind the reference.
+    need(birth.ok && entryHash(birth.value.entry) === birth.value.hash && birth.value.hash === ref.genesis
+      && birth.value.entry.input.type === "genesis" && scopeIdOf(birth.value.entry.input.seed) === ref.scope
+      && birth.value.entry.input.seed.kind === kind && birth.value.entry.input.decision === "applied"
       && birth.value.entry.input.seed.definition === COMMONS_COHORT[kind]
-      && same(birth.value.entry.input.seed.creator, kind === "register" ? null : kind === "directory" ? input.room.register : input.room.directory), "room-genesis");
+      && roomGenesisCreated(kind, birth.value.entry.input, input.room), "room-genesis");
   }
   const directory = summaries.get("directory")!, repository = directory.items.find(item => item.type === "repository");
   for (const kind of ["membership", "rules", "destination", "commons"] as const) need(same(repository?.refs[kind], input.room[kind]), "directory-sibling");

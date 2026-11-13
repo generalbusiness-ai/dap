@@ -5,7 +5,7 @@ import { canonicalize, utf8 } from "../src/canonical.ts";
 import * as canonical from "../src/canonical.ts";
 import { itemQueryArgument, itemQueryDigest, encodeItemQueryCursor } from "../src/item-query.ts";
 import { itemQueryReadFor, readItemQueryReply } from "../src/item-query-read.ts";
-const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" as const };
+const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"e".repeat(64)}` };
 const head = { seq: 12, hash: `sha256:${"a".repeat(64)}` as const };
 const query: ItemQuery = { v: 1, scope, type: "task", states: ["open"], ids: null, limit: 2, cursor: null };
 const item = (id: number): Item => ({ id, type: "task", state: "open", revision: 1, opened: null, parties: {}, refs: {}, values: {}, attributed: [] });

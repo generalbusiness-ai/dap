@@ -4,8 +4,8 @@ import { expect, test, vi } from "vitest";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Item, ScopeRef, SignedSessionRequest, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8, verifySessionRequest } from "@generalbusiness/dap-bytes";
+import type { Item, ScopeKind, ScopeRef, SignedSessionRequest, Summary } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, keyIdOfSecret, scopeIdOf, textDigest, utf8, verifySessionRequest } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { platform } from "@generalbusiness/dap-platform";
 import { saveIndexFile, scopeIndexCommand, type IndexFiles } from "../src/scope-index-command.ts";
@@ -19,9 +19,13 @@ const argv = ["applications", "--manifest", manifestPath, "--out", outputPath];
 const sentinel = "PRIVATE-TEST-REMOTE-LOCAL-KEY-DETAIL";
 const sessionToken = "PRIVATE-TEST-SESSION-TOKEN";
 const secret = new Uint8Array(32).fill(9), publisher = keyIdOfSecret(secret), release = textDigest("TEST release");
-function ref(kind: ScopeRef["kind"], ordinal: number): ScopeRef {
-  return { kind, inc: newIncarnation(new Uint8Array(16).fill(ordinal % 250 + 1)),
-    scope: scopeIdOf({ v: 1, kind, definition: textDigest("TEST definition"), creator: null, cause: textDigest("TEST listing"), ordinal }) };
+/** The kind of each stand-in scope, by its scope ID: its seed states it, and a reference names no kind. */
+const kinds = new Map<string, ScopeKind>();
+const kindOf = (at: ScopeRef): ScopeKind => kinds.get(at.scope)!;
+function ref(kind: ScopeKind, ordinal: number): ScopeRef {
+  const scope = scopeIdOf({ v: 1, kind, definition: textDigest("TEST definition"), creator: null, cause: textDigest("TEST listing"), ordinal });
+  kinds.set(scope, kind);
+  return { genesis: textDigest(`TEST genesis ${kind} ${ordinal}`), scope };
 }
 function installation(id: number, host = "git.example.test"): Item {
   return { id, type: "installation", state: "active", revision: 1, opened: textDigest(`TEST item ${id}`), parties: {}, attributed: [],
@@ -30,21 +34,21 @@ function installation(id: number, host = "git.example.test"): Item {
       uri: `git+https://${host}/private-repository.git/@${"a".repeat(40)}/private-package.json`, additions: sentinel, declarations: sentinel, genesis: sentinel } };
 }
 function summary(scope: ScopeRef, items: readonly Item[] = []): unknown {
-  const definition = scope.kind === "rules" ? "platform:rules@12" : "platform:directory@19";
+  const definition = kindOf(scope) === "rules" ? "platform:rules@12" : "platform:directory@19";
   const data = platform(definition)!.data;
   const value: Summary = { scope, status: "active", definition, time: "2026-10-27T12:00:00Z", items,
     counts: Object.entries(data.items).flatMap(([name, type]) => Object.keys(type.states).map(state =>
       [name, state, items.filter(item => item.type === name && item.state === state).length] as [string, string, number])) };
   return { ok: true, at: { seq: 100, hash: textDigest("TEST summary head") }, complete: true, value };
 }
-function fixture(ruleCount = 1, withMembership = false, otherKinds: readonly ScopeRef["kind"][] = []) {
+function fixture(ruleCount = 1, withMembership = false, otherKinds: readonly ScopeKind[] = []) {
   const root = ref("directory", 0), membership = ref("membership", 1), rules = Array.from({ length: ruleCount }, (_, i) => ref("rules", i + 1));
   const manifest: IndexManifest = { v: 1, service: service.toLowerCase(), root,
-    scopes: [root, ...rules, ...otherKinds.map((kind, i) => ref(kind, i + 500))].map(at => ({ at, genesis: textDigest(`TEST manifest ${at.scope}`) })).sort((a, b) => a.at.scope.localeCompare(b.at.scope)) };
+    scopes: [root, ...rules, ...otherKinds.map((kind, i) => ref(kind, i + 500))].map(at => ({ at, kind: kindOf(at) })).sort((a, b) => a.at.scope.localeCompare(b.at.scope)) };
   let saved = utf8(canonicalize(manifest)), published: Uint8Array | undefined;
   const calls: { url: string; method: string }[] = [], local: string[] = [], readers: string[] = [];
   let asked: SignedSessionRequest | undefined;
-  let respond: (at: ScopeRef, reader: string) => Promise<Awaited<ReturnType<Fetch>>> = async at => Response.json(summary(at, at.kind === "rules" ? [installation(2)] : []));
+  let respond: (at: ScopeRef, reader: string) => Promise<Awaited<ReturnType<Fetch>>> = async at => Response.json(summary(at, kindOf(at) === "rules" ? [installation(2)] : []));
   let respondSession: (request: SignedSessionRequest) => Promise<Awaited<ReturnType<Fetch>>> = async request => Response.json({ ok: true, token: sessionToken,
     session: { v: 1, deployment: "TEST deployment", membership, member: "@operator", key: request.request.actor, reads: ["summary"], ends: request.request.notAfter } });
   const files: IndexFiles = { read: async path => { expect(path).toBe(manifestPath); local.push("manifest"); return saved; },
@@ -52,7 +56,7 @@ function fixture(ruleCount = 1, withMembership = false, otherKinds: readonly Sco
   const denied = async (): Promise<never> => { throw Error(sentinel); };
   const ctx: Context = { now: () => Date.parse("2026-10-27T12:00:00Z"), store: { ...memoryStore(),
     // Omission deliberately models a saved configuration without membership.
-    config: async () => { local.push("config"); return { v: 1, service, key: "TEST-device", repository: { directory: root, ...(withMembership ? { membership } : {}), rules: rules[0]?.scope ?? root.scope, destination: ref("destination", 2).scope } } as Config; },
+    config: async () => { local.push("config"); return { v: 2, service, key: "TEST-device", repository: { directory: root, ...(withMembership ? { membership } : {}), rules: rules[0]?.scope ?? root.scope, destination: ref("destination", 2).scope } } as Config; },
     signer: async () => { local.push("signer"); return secretSigner(secret); },
     secret: denied, save: denied, keep: denied, private: denied, keepPrivate: denied, newSigner: denied },
     fetch: async (url, init) => {
@@ -96,7 +100,7 @@ test("application listing validates locally before reading key custody or reques
 test("application listing uses one acquired session where the same scripted host refuses Signed reads", async () => {
   const otherKinds = ["register", "membership", "destination", "inbox", "task", "lane"] as const;
   const signed = fixture(2, false, otherKinds), session = fixture(2, true, otherKinds);
-  const host = async (at: ScopeRef, reader: string) => at.kind === "rules" && reader === `Session ${sessionToken}`
+  const host = async (at: ScopeRef, reader: string) => kindOf(at) === "rules" && reader === `Session ${sessionToken}`
     ? Response.json(summary(at, [installation(2)]))
     : Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
   signed.respond(host); session.respond(host);
@@ -106,17 +110,17 @@ test("application listing uses one acquired session where the same scripted host
   const before = JSON.parse(new TextDecoder().decode(signed.published()!));
   const after = JSON.parse(new TextDecoder().decode(session.published()!));
   expect(before.applications).toEqual([]);
-  expect(before.errors).toEqual(signed.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) => ({ scope: at, why: "forbidden" })));
-  const skipped = session.manifest.scopes.filter(({ at }) => at.kind !== "rules").map(({ at }) => ({ scope: at, status: "not-applicable" }));
+  expect(before.errors).toEqual(signed.manifest.scopes.filter(({ at }) => kindOf(at) === "rules").map(({ at }) => ({ scope: at, why: "forbidden" })));
+  const skipped = session.manifest.scopes.filter(({ at }) => kindOf(at) !== "rules").map(({ at }) => ({ scope: at, status: "not-applicable" }));
   expect(skipped).toHaveLength(7); expect(before.notApplicable).toEqual(skipped); expect(after.notApplicable).toEqual(skipped);
   expect(after.errors).toEqual([]);
-  expect(after.applications).toEqual(session.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) =>
+  expect(after.applications).toEqual(session.manifest.scopes.filter(({ at }) => kindOf(at) === "rules").map(({ at }) =>
     ({ scope: ref("lane", 1002), installItem: { scope: at, item: 2 }, release, publisher, host: "git.example.test" })));
   expect(session.calls).toEqual([
     { url: `${session.manifest.service}/v1/scopes/${session.membership.scope}/sessions`, method: "POST" },
-    ...session.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) => ({ url: `${session.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })),
+    ...session.manifest.scopes.filter(({ at }) => kindOf(at) === "rules").map(({ at }) => ({ url: `${session.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })),
   ]);
-  expect(signed.calls).toEqual(signed.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) => ({ url: `${signed.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })));
+  expect(signed.calls).toEqual(signed.manifest.scopes.filter(({ at }) => kindOf(at) === "rules").map(({ at }) => ({ url: `${signed.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })));
   expect(session.readers).toEqual([`Session ${sessionToken}`, `Session ${sessionToken}`]);
   expect(JSON.parse(admitted.lines[0]!)).toMatchObject({ status: "complete", applications: 2, errors: 0, notApplicable: 7 });
   expect(JSON.parse(refused.lines[0]!)).toMatchObject({ status: "incomplete", applications: 0, errors: 2, notApplicable: 7 });
@@ -196,7 +200,7 @@ test("application listing reads each scope once and saves metadata with explicit
     if (at.scope === f.rules[1]!.scope) return Response.json(summary(at));
     if (at.scope === f.rules[2]!.scope) return Response.json({ ok: false, reason: "forbidden" });
     if (at.scope === f.rules[3]!.scope) return Response.json(summary(at, [{ ...installation(2), values: { ...installation(2).values, publisher: sentinel } }]));
-    return Response.json(summary(at, at.kind === "rules" ? [installation(2)] : []));
+    return Response.json(summary(at, kindOf(at) === "rules" ? [installation(2)] : []));
   });
   const outcome = await scopeIndexCommand(f.ctx, argv, f.files);
   expect(outcome.code).toBe(1);
@@ -207,7 +211,7 @@ test("application listing reads each scope once and saves metadata with explicit
   expect(report.errors).toEqual(expect.arrayContaining([{ scope: f.rules[2], why: "forbidden" }, { scope: f.rules[3], why: "malformed-installation" }]));
   expect(report.errors).toHaveLength(2);
   expect(report.notApplicable).toEqual([{ scope: f.root, status: "not-applicable" }]);
-  expect(f.calls).toEqual(f.manifest.scopes.filter(({ at }) => at.kind === "rules").map(({ at }) => ({ url: `${f.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })));
+  expect(f.calls).toEqual(f.manifest.scopes.filter(({ at }) => kindOf(at) === "rules").map(({ at }) => ({ url: `${f.manifest.service}/v1/scopes/${at.scope}`, method: "GET" })));
   expect(f.local.filter(value => value === "signer")).toHaveLength(1);
   expect(f.local.indexOf("manifest")).toBeLessThan(f.local.indexOf("signer"));
   const allOutput = JSON.stringify({ report, outcome });
@@ -273,7 +277,7 @@ test("application listing keeps empty success distinct from exclusive publicatio
   } finally { await rm(directory, { recursive: true, force: true }); }
   // The applications fit the real cap. Explicit skipped rows make the whole
   // serialized report exceed it, so omitting their accounting is observable.
-  const full = fixture(64, false, Array<ScopeRef["kind"]>(32).fill("register"));
+  const full = fixture(64, false, Array<ScopeKind>(32).fill("register"));
   const rows = full.rules.flatMap(scope => Array.from({ length: 64 }, (_, item) =>
     ({ scope: ref("lane", item + 1000), installItem: { scope, item }, release, publisher, host: "x.test" })));
   const expected = { manifestPath, manifestDigest: digestBytes(full.saved()), applications: rows, errors: [], notApplicable: [] as { scope: ScopeRef; status: string }[] };
@@ -281,7 +285,7 @@ test("application listing keeps empty success distinct from exclusive publicatio
   const host = "a".repeat(Math.floor(room / rows.length)) + "x.test";
   for (const row of rows) row.host = host;
   expect(Buffer.byteLength(JSON.stringify(expected) + "\n")).toBeLessThanOrEqual(INDEX_INVENTORY_BOUNDS.bytes);
-  expected.notApplicable = full.manifest.scopes.filter(({ at }) => at.kind !== "rules").map(({ at }) => ({ scope: at, status: "not-applicable" }));
+  expected.notApplicable = full.manifest.scopes.filter(({ at }) => kindOf(at) !== "rules").map(({ at }) => ({ scope: at, status: "not-applicable" }));
   expect(Buffer.byteLength(JSON.stringify(expected) + "\n")).toBeGreaterThan(INDEX_INVENTORY_BOUNDS.bytes);
   const items = Array.from({ length: 64 }, (_, i) => installation(i, host));
   full.respond(async at => Response.json(summary(at, items)));

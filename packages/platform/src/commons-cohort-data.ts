@@ -1,6 +1,6 @@
 /** Only this cohort creates a Commons and grants its initial write action. */
 import type { FieldValue, PlatformData, Seed } from "@generalbusiness/dap-contract";
-import { intentDigest, isFactRef, isScopeRef, isSeed, same, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import { genesisInputDigest, intentDigest, isFactRef, isScopeRef, isSeed, same, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { Rules } from "@generalbusiness/dap-derive";
 import { COMMONS_COHORT as C } from "./commons-cohort.ts";
 import { SIBLINGS_OF } from "./directory.ts";
@@ -13,7 +13,7 @@ export const commonsRegisterRules: Rules = { ...unpublishedRegisterRules,
   "directory-genesis-result": { place: "type", run: (given, value) => {
     const input = given.input;
     if (!isFactRef(value) || input.type !== "delivery" || input.message.class !== "result" || input.message.outcome !== "applied"
-      || !same(value, input.from) || value.seq !== 0 || value.at.kind !== "directory") return false;
+      || !same(value, input.from) || value.seq !== 0 || input.sourceKind !== "directory") return false;
     const of = input.message.of, original = given.own(of.from.seq);
     if (!original || original.hash !== of.from.hash || !same(of.from.at, given.resolved.at)) return false;
     const sent = original.entry.sends.find(send => send.n === of.n);
@@ -50,12 +50,13 @@ export const commonsDirectoryData: PlatformData = { ...unpublishedDirectory,
 export const commonsDirectoryRules: Rules = { ...unpublishedDirectoryRules,
   "has-commons": { place: "guard", refusals: ["commons-missing"], run: given => {
     const commons = given.resolved.subjects.get("also.repository")?.refs["commons"];
-    return given.resolved.fields["needsCommons"] === false || isScopeRef(commons) && commons.kind === "commons"
+    return given.resolved.fields["needsCommons"] === false || isScopeRef(commons)
       ? { holds: true } : { holds: false, name: "commons-missing" };
   } },
   "create-commons": { place: "send", run: given => {
     if (given.input.type !== "genesis" || given.input.seed.definition !== C.directory) throw Error("Commons creation needs its exact Directory genesis");
-    const root = given.input.seed, cause = seedDigest(root);
+    // As for the directory's siblings (directory.ts `sibling`): the cause is the digest of the complete genesis input.
+    const cause = genesisInputDigest(given.input);
     const seed: Seed = { v: 1, kind: "commons", definition: C.commons, creator: given.resolved.at, cause, ordinal: 3 };
     const membership = scopeIdOf({ v: 1, kind: "membership", definition: SIBLINGS_OF[C.directory]!.membership, creator: given.resolved.at, cause, ordinal: 0 });
     return { to: seed, message: { class: "request", type: "create", body: { fields: { directory: given.resolved.at as unknown as FieldValue, membership } } } };

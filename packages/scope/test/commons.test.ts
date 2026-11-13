@@ -24,7 +24,8 @@ test("new-room Commons notes preserve opaque citations and signer identity; nati
     const birth = (await D.entries())[0]!;
     const create = birth.sends.find(send => isSeed(send.to) && send.to.kind === "commons");
     if (!create || !isSeed(create.to)) return expect.fail("Directory genesis emitted no Commons create");
-    expect(create.to).toMatchObject({ kind: "commons", definition: C.commons, creator: await D.at(), ordinal: 3 });
+    // A genesis names its own scope in the self form: it cannot name its own genesis hash.
+    expect(create.to).toMatchObject({ kind: "commons", definition: C.commons, creator: { scope: (await D.at()).scope, genesis: null }, ordinal: 3 });
     const Q = life.platform(scopeIdOf(create.to));
     await dispatchFixture([R, D, ...children, Q], life.wait);
     expect((await Q.summary()).value).toMatchObject({ definition: C.commons, status: "active" });
@@ -43,7 +44,7 @@ test("new-room Commons notes preserve opaque citations and signer identity; nati
     };
     const settings = { DEPLOYMENT: "TEST-commons-lineage", REGISTER_SCOPE: R.name,
       SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } };
-    const delivered = { to: create.to, from: factRefOf(birth), n: create.n, message: create.message };
+    const delivered = { to: create.to, from: await D.fact(0), n: create.n, message: create.message };
     const beforeLineage = await Q.entries();
     expect(await life.wait(() => namespace(indexedScopes(binding, settings)).transport.send(delivered)))
       .toMatchObject({ answer: "recorded" });
@@ -100,7 +101,7 @@ test("new-room Commons notes preserve opaque citations and signer identity; nati
     expect(written.answer).toBe("accepted");
     if (written.answer !== "accepted") return;
     const entry = (await Q.entries()).find(row => row.seq === written.receipt.fact.seq)!;
-    expect(factRefOf(entry)).toEqual(written.receipt.fact);
+    expect(factRefOf(entry, await Q.at())).toEqual(written.receipt.fact);
     expect(entry.input).toMatchObject({ type: "act", signed: { intent: { actor: rita.key, fields: { about: citations } } } });
     expect(entry.effects).toEqual([]); expect(entry.sends).toEqual([]);
     expect(entry.uses.some(use => use.fact.hash === earlier.receipt.fact.hash)).toBe(false);

@@ -25,11 +25,11 @@ import { stagingGateDeclaration, replayProofDomain as PROOF_DOMAIN } from "../..
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Digest, Entry, Evidence, FieldValue, Grant, MemberId, MemberObservation, Observation, ObservationUse, OperationId, PlatformDefinition, RetainedInput, RulesObservation, ScopeRef, Seed, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import type { Digest, Entry, Evidence, FieldValue, Grant, MemberId, MemberObservation, Observation, ObservationUse, OperationId, PlatformDefinition, RetainedInput, RulesObservation, ScopeRef, Seed, SequenceEntry, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, factRefOf, intentDigest, newGenesisNonce, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { RETIRE_ACTION, actionOf, clockOf, grantFrom, judgeDelivery, judgeGenesis, judgePreparation, settleOutcome, valueDigest } from "@generalbusiness/dap-derive";
 import type { OutcomeRule, PlatformRules, Source } from "@generalbusiness/dap-derive";
-import { Ledger, T0, creation, d, deliver, directory, keys, membership, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, creation, d, deliver, directory, directorySequence, fixtureSequence, keys, membership, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
 import { cap, snapshots, staging } from "../../derive/test/fixtures-hold.ts";
 import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
 import type { Anchor, Coded, MemoryScope } from "../src/index.ts";
@@ -77,12 +77,12 @@ export class Lane extends Ledger {
       this.foreign.push(birth.source);
       this.seal(written(judgeGenesis(this.state, staging, birth.asked, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: birth.source, capabilities: cap })).draft);
       written(deliver(parent, this, 0));
-      this.foreign.push({ entry: parent.last, under: parent.under });
+      this.foreign.push({ entry: parent.last, sequence: fixtureSequence(parent), under: parent.under });
       written(deliver(this, parent, parent.head.seq));
     } else {
       // STAND-IN: the directory's act that creates the lane, and its entry that confirms it, are made by hand.
-      const by = (seq: number, input: Entry["input"], sends: Entry["sends"]): Source => {
-        const source: Source = { entry: { v: 1, at: directory, seq, prev: d("0"), time: T0, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends }, under: "desk" };
+      const by = (seq: number, input: SequenceEntry["input"], sends: Entry["sends"]): Source => {
+        const source: Source = { entry: { v: 1, genesis: directory.genesis, seq, prev: d("0"), time: T0, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends }, sequence: directorySequence, under: "desk" };
         this.foreign.push(source);
         return source;
       };
@@ -90,12 +90,12 @@ export class Lane extends Ledger {
       const seed: Seed = { v: 1, kind: "lane", definition: staging.digest, creator: directory, cause: intentDigest(opening.intent), ordinal: 0 };
       const message = { class: "request", type: "create", body: { fields: { opener: keys.rita.member, title: "work" }, directory, membership } } as const;
       const asked = by(17, { type: "act", signed: opening, authority: [], presented: {} }, [{ n: 0, to: seed, message }]);
-      const creation = { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(9)), to: seed, from: factRefOf(asked.entry), n: 0, message };
+      const creation = { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(9)), to: seed, from: factRefOf(asked.entry, directory), n: 0, message };
       this.seal(written(judgeGenesis(this.state, staging, creation, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: asked, capabilities: cap })).draft);
       const result = this.last.sends[0]!.message;
       const confirm = { class: "control", type: "confirm", genesis: this.fact(0) } as const;
-      const confirmed = by(18, { type: "delivery", from: this.fact(0), n: 0, message: result, clause: "applied" } as Entry["input"], [{ n: 0, to: this.at, message: confirm }]);
-      const arrival = { to: this.at, from: factRefOf(confirmed.entry), n: 0, message: confirm };
+      const confirmed = by(18, { type: "delivery", from: this.fact(0), sourceKind: "lane", n: 0, message: result, clause: "applied" } as SequenceEntry["input"], [{ n: 0, to: this.at, message: confirm }]);
+      const arrival = { to: this.at, from: factRefOf(confirmed.entry, directory), n: 0, message: confirm };
       this.seal(written(judgeDelivery(this.state, staging, arrival, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], own: this.own, source: confirmed, origin: null, capabilities: cap })).draft);
     }
 
@@ -140,8 +140,11 @@ export class Lane extends Ledger {
     const retained: RetainedInput[] = [{ kind: "definition", digest: this.definition.digest, bytes: canonicalize(this.definition.declared) }];
     for (const { entry } of this.entries) {
       for (const use of entry.uses) {
-        const source = this.foreign.find((made) => factRefOf(made.entry).hash === use.fact.hash)!;
+        const source = this.foreign.find((made) => factRefOf(made.entry, made.sequence.at).hash === use.fact.hash)!;
         retained.push({ kind: "entry", digest: use.content, bytes: canonicalize(source.entry), under: source.under });
+        // Rulings 4f697a7a and ae48dd39: a later foreign use also keeps that sequence's first entry, served as `birth`.
+        if (use.fact.seq > 0 && !retained.some((r) => r.kind === "birth" && r.digest === use.fact.at.genesis))
+          retained.push({ kind: "birth", digest: use.fact.at.genesis, bytes: source.sequence.birth });
       }
     }
     for (const [digest, bytes] of snapshots) retained.push({ kind: "snapshot", digest: digest as RetainedInput["digest"], bytes });
@@ -149,7 +152,7 @@ export class Lane extends Ledger {
   }
   /** The anchors of the STAND-INS: the directory's two entries, and the one head of membership. */
   anchors(): Anchor[] {
-    return [...this.foreign.map(({ entry }) => ({ scope: entry.at.scope, seq: entry.seq, hash: factRefOf(entry).hash })), { scope: membership.scope, ...STANDING }];
+    return [...this.foreign.map(({ entry, sequence }) => ({ scope: sequence.at.scope, seq: entry.seq, hash: factRefOf(entry, sequence.at).hash })), { scope: membership.scope, ...STANDING }];
   }
 }
 
@@ -165,7 +168,7 @@ export const OWNER = "platform:task@1" as PlatformDefinition;
 /** STAND-IN: a rules scope that a gate's outcome observes. It does not exist, and its one head is anchored. */
 export const RULES_SCOPE: ScopeRef = (() => {
   const seed: Seed = { v: 1, kind: "rules", definition: d("e"), creator: null, cause: d("c"), ordinal: 9 };
-  return { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(9)), kind: "rules" };
+  return { scope: scopeIdOf(seed), genesis: textDigest("TEST genesis 9") };
 })();
 const RULES_HEAD = { seq: 12, hash: d("9") } as const;
 
@@ -208,7 +211,7 @@ export class Gate extends Ledger {
     this.rules = Gate.rulesWith(derives, watched, held ? this.ticket : undefined);
     const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: { opener: keys.rita.member }, idempotencyKey: "gate", notAfter: t(60) }, keys.rita.secret);
     const seed: Seed = { v: 1, kind: "directory", definition: OWNER, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-    const asked = { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(1)), seed, creation: creation };
+    const asked = { name: scopeIdOf(seed), nonce: newGenesisNonce(new Uint8Array(16).fill(1)), seed, creation: creation };
     this.seal(written(judgeGenesis(this.state, this.definition, asked, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: this.rules })).draft);
     if (this.act(keys.rita, "issue", { fields: { hash: textDigest("one"), ...(this.proof ? { proof: this.proof.digest } : {}) } }, this.proof ? { values: [this.proof.bytes] } : {}).result !== "write") throw new Error("the issue was not written");
     const entered = this.did(keys.una, "enter", { on: 0, expected: { on: this.item(0).revision }, fields: { secret: "one" } });

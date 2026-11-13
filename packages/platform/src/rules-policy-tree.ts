@@ -51,8 +51,8 @@ export function verifyRulesTree(canonical: string, digest: Digest, binding: Rule
     const proof: unknown = parseStrict(canonical);
     if (!object(proof) || !keys(proof, ["v", "rules", "proposal", "destination", "repository", "ref", "commit", "commitBytes", "trees"])
       || proof["v"] !== 1 || canonicalize(proof) !== canonical || valueDigest(RULES_TREE_PROOF.domain, proof) !== digest
-      || !isScopeRef(proof["rules"]) || proof["rules"].kind !== "rules"
-      || !isScopeRef(proof["destination"]) || proof["destination"].kind !== "destination" || !isDigest(proof["proposal"])
+      || !isScopeRef(proof["rules"])
+      || !isScopeRef(proof["destination"]) || !isDigest(proof["proposal"])
       || !object(proof["repository"]) || !keys(proof["repository"], ["host", "namespace", "name", "id"])
       || Object.values(proof["repository"]).some(v => typeof v !== "string")
       || typeof proof["ref"] !== "string" || !isSha1Hex(proof["commit"]) || !Array.isArray(proof["trees"])) return fail();

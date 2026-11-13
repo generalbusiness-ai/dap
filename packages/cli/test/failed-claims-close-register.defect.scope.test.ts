@@ -179,7 +179,7 @@ async function publicRegister(life: Life) {
   const person = async (who: { secret: Uint8Array }) => {
     const store = memoryStore();
     await store.keep("visitor", who.secret);
-    await store.save({ v: 1, service: SERVICE, key: "visitor", register: at });
+    await store.save({ v: 2, service: SERVICE, key: "visitor", register: at });
     const pause: NonNullable<Context["pause"]> = async waiting => { life.active(); life.advance(2_000); await driveFixture([R, ...waiting.map(scope => life.platform(scope as never))], life.wait); };
     const ctx = (tries: number): Context => ({ store, fetch, now: life.now, pause, tries });
     return { store, ctx };
@@ -451,7 +451,7 @@ test("DEFECT: the retained Register18 install pin under policy keys: at 64 a fou
     const person = async (who: typeof rita) => {
       const store = memoryStore();
       await store.keep("founder", who.secret);
-      await store.save({ v: 1, service: "https://scopes.test", key: "founder", register: at });
+      await store.save({ v: 2, service: "https://scopes.test", key: "founder", register: at });
       return { store, fetch, now: life.now, tries: 1, pause: async () => undefined } satisfies Context;
     };
     const filler = await life.wait(async () => command(await person(rita), ["claim", "room", "--handle", "@rita"]));

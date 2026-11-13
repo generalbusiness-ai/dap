@@ -1,11 +1,11 @@
 import { expect, test } from "vitest";
 import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { keyIdOfSecret, newIncarnation } from "@generalbusiness/dap-bytes";
+import { keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
 import { currentStanding, reviewCandidates } from "../src/membership-projection.ts";
 
 // Made-up complete summary rows: this witnesses Page presentation, not a
 // membership judgment, native grant, review decision or destination readiness.
-const membership: ScopeRef = { scope: `sc_${"b".repeat(51)}a`, inc: newIncarnation(new Uint8Array(16).fill(2)), kind: "membership" };
+const membership: ScopeRef = { scope: `sc_${"b".repeat(51)}a`, genesis: textDigest("TEST genesis 21") };
 const ref = (member: string) => ({ membership, member });
 const keyId = (n: number) => keyIdOfSecret(new Uint8Array(32).fill(n));
 const member = (id: number, handle: string, role = "member", controller?: string): Item => ({
@@ -56,7 +56,7 @@ test("a missing author-controller relation is unavailable, and foreign incarnati
   const exceptSource = reviewCandidates(missing, membership, [ref("@author")], true, extents)!;
   expect(exceptSource.byExtent["source"]?.length).toBeGreaterThan(0);
   expect(exceptSource.byExtent["rules"]).toBeNull();
-  const foreign = { membership: { ...membership, inc: newIncarnation(new Uint8Array(16).fill(3)) }, member: "@author" };
+  const foreign = { membership: { ...membership, genesis: textDigest("TEST genesis 22") }, member: "@author" };
   expect(reviewCandidates(rows(), membership, [foreign], false, extents)).toBeNull();
   const foreignController = rows().map<Item>((item) => item.values["handle"] === "@agent" ? { ...item, parties: { ...item.parties, controller: { ...foreign, member: "@controller" } } } : item);
   expect(reviewCandidates(foreignController, membership, [ref("@author")], false, extents)?.members?.map((choice) => choice.value)).not.toContain("@agent");

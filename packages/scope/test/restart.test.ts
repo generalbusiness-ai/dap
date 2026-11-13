@@ -37,7 +37,7 @@ describe("a restart of the scope (sections 2.2 and 5.2)", () => {
           const scope = store.scope()!;
           const hold = store.item(3)!;
           const hash = `sha256:${"0".repeat(64)}` as const;
-          store.append({ v: 1, at: scope.at, seq: 4, prev: scope.head.hash, time: scope.time, clamped: false, epoch: 0, input: { type: "timed", item: 3, rule: "hold-end", due: scope.time }, uses: [], prepared: [], effects: [], sends: [] }, hash, "{}", 2);
+          store.append({ v: 1, genesis: scope.at.genesis, seq: 4, prev: scope.head.hash, time: scope.time, clamped: false, epoch: 0, input: { type: "timed", item: 3, rule: "hold-end", due: scope.time }, uses: [], prepared: [], effects: [], sends: [] }, hash, "{}", 2);
           store.putItem({ ...hold, state: "ended" });
           store.addCount("hold", "ended", 1);
           store.setScope({ ...scope, head: { seq: 4, hash } });

@@ -27,8 +27,8 @@
  * (section 6.8). Nothing here changes it.
  */
 
-import type { CapabilityName, Digest, Effect, Evidence, FieldValue, Intent, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isLocalId, isRecord, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
+import type { CapabilityName, Digest, Effect, Evidence, FieldValue, Intent, OperationId, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { isDigest, isEntryOf, isFactRef, isLocalId, isRecord, isScopeKind, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Capabilities, CapabilityGiven, Maximum, Recorded } from "../capability.ts";
 import { WINDOWS, type Window } from "../grant.ts";
 import { EPOCH, HOLDER, holdStates, type HoldEffect } from "../hold.ts";
@@ -42,6 +42,7 @@ import { own, same } from "../values.ts";
 import { isAncestryCheck, objectIdLength } from "./ancestry.ts";
 import { hasWorkspace as workspaceListed } from "./workspace.ts";
 import { AmountError, NOTHING as NO_AMOUNT, amountMath, type Amount } from "../held.ts";
+import { RuleFault } from "../marks.ts";
 
 export const HOLD: CapabilityName = "hold@1";
 export const HOLD_V2: CapabilityName = "hold@2";
@@ -329,6 +330,48 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     return holds.length === 1 ? holds[0]! : null;
   }
 
+  /** Both bases price a reservation; neither is transferable kind proof. */
+  function recordedTaskKind(pin: RecordState): ScopeKind | null {
+    const kind = pin.values["taskKind"], basis = pin.values["taskKindBasis"];
+    return isScopeKind(kind) && (basis === "checked" || basis === "declared") ? kind : null;
+  }
+  function requiredTaskKind(pin: RecordState): ScopeKind {
+    const kind = recordedTaskKind(pin);
+    if (kind === null) throw new RuleFault(`${HOLD}/receiver-pin has no recorded task kind and basis`);
+    return kind;
+  }
+  /** An actual different source cannot consume or change this pin. */
+  function pinSourceMatches(pin: RecordState, given: CapabilityGiven): boolean {
+    const task = pin.values["task"];
+    if (!isScopeRef(task)) return true; // An inert producer binds no sequence.
+    const kind = requiredTaskKind(pin);
+    if (!given.kindContext) throw new RuleFault(`${HOLD}/receiver-pin has no input kind context`);
+    const source = given.kindContext.source;
+    if (source === null) return true;
+    if (!source || !isScopeRef(source.at) || !isScopeKind(source.kind)) throw new RuleFault(`${HOLD}/receiver-pin has no source kind context`);
+    return same(source.at, task) && source.kind === kind;
+  }
+
+  /** A different actual kind gets the ordinary no-pin guard answer. The
+   * stored pin still owns its reservation and remains visible to effects. */
+  function guardPin(pin: RecordState | null, given: CapabilityGiven): RecordState | null {
+    if (!pin || pin.state !== "standing" || !isScopeRef(pin.values["task"])) return pin;
+    const matches = pinSourceMatches(pin, given), source = given.kindContext.source;
+    return !matches && source !== null && same(source.at, pin.values["task"]) ? null : pin;
+  }
+
+  function licenseKind(from: ScopeRef, given: CapabilityGiven): { kind: ScopeKind; basis: "checked" | "declared" } {
+    const context = given.kindContext;
+    if (!context) throw new RuleFault(`${HOLD}/receiver-pin has no input kind context`);
+    if (context.source !== null) {
+      if (!isScopeRef(context.source.at) || !isScopeKind(context.source.kind) || !same(context.source.at, from)) throw new RuleFault(`${HOLD}/receiver-pin source differs from its task`);
+      return { kind: context.source.kind, basis: "checked" };
+    }
+    const kind = isRecord(context.declared) ? own(context.declared, "from") : undefined;
+    if (!isScopeKind(kind)) throw new RuleFault(`${HOLD}/receiver-pin has no declared scope-field kind`);
+    return { kind, basis: "declared" };
+  }
+
   /**
    * The guard `license` (section 6.11; authority note, section 4.2, the row
    * `export-license`). `from` is the task scope that the ended hold of the
@@ -341,8 +384,9 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     const source = exportedHold(view, definition, args["export"]);
     const task = source && !source.held ? taskOf(view, source.item.id) : null;
     if (!task || !isScopeRef(args["from"]) || !same(task, args["from"])) return "export-not-authorized";
-    const pin = holdRecord(view, "receiver-pin", [args["export"] as number]);
+    const pin = guardPin(holdRecord(view, "receiver-pin", [args["export"] as number]), given);
     if (pin && pin.state !== "standing") return "export-not-authorized";   // the release of this export is settled
+    if (pin && !pinSourceMatches(pin, given)) return "export-not-authorized";
     const target = holdOf(view, definition, args["hold"]);
     const instance = target ? currentInstance(view, target.item.id) : null;
     if (!target || !heldNow(target, given.clock) || !instance || instance.key[1] !== args["instance"]) return "target-not-held";
@@ -361,12 +405,14 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
    */
   function settled(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): true | string {
     const { view, definition, source } = given;
-    const pin = holdRecord(view, "receiver-pin", [args["export"] as number]);
+    const pin = guardPin(holdRecord(view, "receiver-pin", [args["export"] as number]), given);
     const hold = exportedHold(view, definition, args["export"]);
     const task = pin ? (pin.state === "standing" ? pin.values["task"] : null) : args["final"] === "withheld" && hold ? taskOf(view, hold.item.id) : null;
     if (!isScopeRef(task) || !same(task, args["from"])) return "export-not-authorized";
+    if (pin && !pinSourceMatches(pin, given)) return "not-final";
     const final = args["final"] === "confirmed" || args["final"] === "withheld" ? args["final"] : null;
-    const by = source && isFactRef(args["by"]) && same(source.fact, args["by"]) && same(source.entry.at, task) ? source.entry : null;
+    const by = source && isFactRef(args["by"]) && same(source.fact, args["by"]) && same(source.sequence.at, task)
+      && isEntryOf(source.entry, source.fact, source.sequence) ? source.entry : null;
     return final !== null && by?.effects.some((e) => e.effect === "state" && e.state === final) ? true : "not-final";
   }
 
@@ -423,17 +469,28 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
   function licensed(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): readonly Recorded[] {
     const k = args["k"] as number;
     const pin = holdRecord(given.view, "receiver-pin", [args["export"] as number]);
-    if (pin) return pin.state === "standing" ? [moved(pin, "standing", { k, decided: Math.max(pin.values["decided"] as number, k) })] : [];
+    const from = args["from"];
+    if (pin) {
+      if (pin.state !== "standing" || !pinSourceMatches(pin, given)) return [];
+      if (isScopeRef(pin.values["task"])) {
+        if (!isScopeRef(from) || !same(pin.values["task"], from)) return [];
+        if (licenseKind(from, given).kind !== requiredTaskKind(pin)) return [];
+      }
+      // Never replace the task, its kind, or the original basis.
+      return [moved(pin, "standing", { k, decided: Math.max(pin.values["decided"] as number, k) })];
+    }
+    const taskKind = isScopeRef(from) ? licenseKind(from, given) : null;
     const target = holdOf(given.view, given.definition, args["hold"]);
     return [{ kind: "receiver-pin", key: [args["export"] as number], state: "standing", values: {
-      checkpoint: args["checkpoint"], hold: args["hold"], instance: args["instance"], holder: (target && own(target.item.parties, HOLDER)) ?? null, task: args["from"], k, decided: k, by: null,
+      checkpoint: args["checkpoint"], hold: args["hold"], instance: args["instance"], holder: (target && own(target.item.parties, HOLDER)) ?? null, task: from,
+      taskKind: taskKind?.kind ?? null, taskKindBasis: taskKind?.basis ?? null, k, decided: k, by: null,
     } }];
   }
 
   /** The effect `settle` (section 6.11): the `receiver-pin` becomes `released`, with the entry that made the release final. With no pin, nothing changes. */
   function settle(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): readonly Recorded[] {
     const pin = holdRecord(given.view, "receiver-pin", [args["export"] as number]);
-    return pin?.state === "standing" ? [moved(pin, "released", { by: args["by"] ?? null })] : [];
+    return pin?.state === "standing" && pinSourceMatches(pin, given) ? [moved(pin, "released", { by: args["by"] ?? null })] : [];
   }
 
   const GUARDS: Readonly<Record<string, (args: Readonly<Record<string, unknown>>, given: CapabilityGiven) => true | string>> = { staged, pin: pinned, license, settled };
@@ -445,7 +502,8 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
    * Whether a license request is bound to a standing receiver pin (authority
    * note, section 4.2, "A reserved license decision", decided in revision 17;
    * section 6.11, "Bound means covered"). The binding is by source, export
-   * and number alone. `from` is the envelope's source scope, as verified, and
+   * and number, with the actual source kind checked against the pin.
+   * `from` is the envelope's source scope, as verified, and
    * `fields` the message's own fields, read by themselves: `export` names the
    * `export` item that is the pin's key, as a fact of this scope or as its
    * local ID, and `k` is higher than `decided` and at most 3. A message in
@@ -458,13 +516,14 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
    * decides. Applied, the `license` effect raises `decided`. Refused, the
    * entry holds the one record of `licenseRefused` and no other effect.
    */
-  function boundLicense(view: StateView, at: Pick<ScopeRef, "scope" | "inc">, from: unknown, fields: unknown): { pin: RecordState; k: number } | null {
+  function boundLicense(view: StateView, at: ScopeRef, from: unknown, fields: unknown, sourceKind: ScopeKind): { pin: RecordState; k: number } | null {
     if (!isRecord(fields)) return null;
     const named = own(fields, "export");
-    const exported = isLocalId(named) ? named : isFactRef(named) && named.at.scope === at.scope && named.at.inc === at.inc ? named.seq : null;
+    const exported = isLocalId(named) ? named : isFactRef(named) && same(named.at, at) ? named.seq : null;
     const k = own(fields, "k");
     const pin = exported === null ? null : holdRecord(view, "receiver-pin", [exported]);
     if (!pin || pin.state !== "standing" || !isScopeRef(from) || !same(pin.values["task"], from)) return null;
+    if (requiredTaskKind(pin) !== sourceKind) return null;
     return typeof k === "number" && Number.isSafeInteger(k) && k > (pin.values["decided"] as number) && k <= LICENSE_BOUND ? { pin, k } : null;
   }
 
@@ -598,7 +657,7 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
    * Its handle names the same exact attempt as the host's private custody. */
   function setupToken(view: StateView, hold: number, operation: OperationId, attempt: number, numbered = 0): Recorded {
     const scope = view.scope()!.at;
-    const name = `h-${scope.scope.slice(3, 35)}-${scope.inc.slice(3)}-${hold}-${operation.split(":")[0]}-${attempt}`;
+    const name = `h-${scope.scope.slice(3, 35)}-${scope.genesis.slice(7, 33)}-${hold}-${operation.split(":")[0]}-${attempt}`;
     return { kind: "token", key: [nextNumber(view, "token") + numbered], state: "minting", values: {
       purpose: "setup", hold, operation, attempt, mint: operation, id: `workspace:${name}`, ends: null, revocation: null,
     } };
@@ -1047,10 +1106,12 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
       // Only a ScopeRef can match the verified source of a bound request.
       const source = pin.values["task"];
       if (!isScopeRef(source)) return NO_AMOUNT;
+      const taskKind = recordedTaskKind(pin);
+      if (taskKind === null) throw new AmountError(`${HOLD}/receiver-pin has no recorded task kind and basis`);
       const decided = pin.values["decided"];
       if (typeof decided !== "number" || !Number.isSafeInteger(decided)) throw new AmountError(`${HOLD}/receiver-pin decided counter is not a safe integer`);
       if (!quotes) throw new AmountError(`${HOLD}/receiver-pin producer has no complete reservation Amount`);
-      return times(Math.max(0, LICENSE_BOUND - decided), own(quotes.byKind, source.kind) ?? quotes.fallback);
+      return times(Math.max(0, LICENSE_BOUND - decided), own(quotes.byKind, taskKind) ?? quotes.fallback);
     }));
   }
 
@@ -1109,8 +1170,8 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
         return rule(given);
       },
       workspace: workspaceEffects,
-      bound: (capability, view, at, from, fields) => {
-        const matched = capability === HOLD ? boundLicense(view, at, from, fields) : null;
+      bound: (capability, view, at, from, fields, sourceKind) => {
+        const matched = capability === HOLD ? boundLicense(view, at, from, fields, sourceKind) : null;
         return matched && licenseRefused(matched);
       },
       rules: (owner, kind) => (owner === HOLD ? (own(OPERATION_RULES, kind) ?? null) : null),

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { DOMAINS } from "@generalbusiness/dap-contract";
-import type { ControlRequest, Digest, Message, Seed, SignedIntent } from "@generalbusiness/dap-contract";
+import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import type { ControlRequest, Digest, GenesisEntry, GenesisInput, Message, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import {
-  b64url, canonicalBytes, canonicalize, definitionDigest, deliveryCauseDigest, digestBytes, domainBytes, entryHash, factRefOf, intentDigest,
-  isOutboxId, isIncarnation, isKeyId, isMemberId, isOperationId, isPlatformDefinition, isRetainedInput, isScopeId, isScopeKind, keyIdOfSecret, messageDigest, newIncarnation, scopeIdOf, seedDigest, sign, signControl, signControlWith, signIntent, textDigest, unb64url, utf8, verifyControl, verifySignedIntent,
+  admitSequenceGenesis, fitsFieldType, isEntryBodyOf, isEntryOf, b64url, canonicalBytes, canonicalize, definitionDigest, deliveryCauseDigest, digestBytes, domainBytes, entryHash, factRefOf, intentDigest,
+  isOutboxId, isGenesisNonce, isSequenceRef, isGenesisSelfRef, isFactRef, isFactUse, isEntry, isInput, resolveGenesisSelf, sealedFactRef, genesisInputDigest, isKeyId, isMemberId, isOperationId, isPlatformDefinition, isRetainedInput, isScopeId, isScopeKind, keyIdOfSecret, messageDigest, newGenesisNonce, scopeIdOf, seedDigest, sign, signControl, signControlWith, signIntent, textDigest, unb64url, utf8, verifyControl, verifySignedIntent,
 } from "../src/index.ts";
 import { cause, definition, directory, entry, intent, message, otherSecret, secret, seed } from "./fixtures.ts";
 
@@ -64,20 +64,20 @@ describe("scope identity", () => {
       { ...seed, cause: `sha256:${"d".repeat(64)}` },
       { ...seed, ordinal: 1 },
       { ...seed, creator: null },
-      { ...seed, creator: { ...directory, inc: `in_${"b".repeat(26)}` } },
+      { ...seed, creator: { ...directory, genesis: textDigest("another genesis") } },
     ];
     expect(new Set([id, ...others.map(scopeIdOf)]).size).toBe(5);
   });
 
-  test("an incarnation is in_ and 26 base32 characters of 16 bytes; a name of another length, alphabet or encoding is not an ID", () => {
-    const inc = newIncarnation(new Uint8Array(16).fill(0xff));
-    expect(inc).toMatch(/^in_[a-z2-7]{26}$/);
-    expect(isIncarnation(inc)).toBe(true);
-    expect(newIncarnation(new Uint8Array(16))).not.toBe(inc);
-    expect(() => newIncarnation(new Uint8Array(15))).toThrow();
-    // Too short, upper case, a character outside the alphabet, set trailing bits, the other prefix.
-    for (const bad of [inc.slice(0, -1), inc.toUpperCase(), `in_${"1".repeat(26)}`, `in_${"7".repeat(26)}`, `sc_${inc.slice(3)}`, 7]) expect(isIncarnation(bad), String(bad)).toBe(false);
-    for (const bad of [scopeIdOf(seed).slice(0, -1), `sc_${"7".repeat(52)}`, inc]) expect(isScopeId(bad), String(bad)).toBe(false);
+  test("a genesis nonce has exactly 16 bytes in canonical lowercase unpadded base32, including zero padding bits", () => {
+    const zero = newGenesisNonce(new Uint8Array(16));
+    const full = newGenesisNonce(new Uint8Array(16).fill(0xff));
+    expect(zero).toBe("a".repeat(26));
+    expect(full).toBe(`${"7".repeat(25)}4`);
+    expect([isGenesisNonce(zero), isGenesisNonce(full)]).toEqual([true, true]);
+    for (const size of [15, 17]) expect(() => newGenesisNonce(new Uint8Array(size))).toThrow();
+    for (const bad of [zero.slice(1), zero.toUpperCase(), `${"a".repeat(25)}b`, "7".repeat(26), `in_${zero}`, `${"1".repeat(26)}`, 7]) expect(isGenesisNonce(bad), String(bad)).toBe(false);
+    for (const bad of [scopeIdOf(seed).slice(0, -1), `sc_${"7".repeat(52)}`, zero]) expect(isScopeId(bad), String(bad)).toBe(false);
   });
 });
 
@@ -108,7 +108,7 @@ describe("signed intents", () => {
 });
 
 test("an async control signer binds its own actor and the original request while signing waits", async () => {
-  const request: ControlRequest = { v: 1, action: "create", service: "https://control.test", membership: { ...directory, kind: "membership" }, agent: null, actor: keyIdOfSecret(secret), body: digestBytes(utf8("link")), op: "original-control", notAfter: intent.notAfter };
+  const request: ControlRequest = { v: 1, action: "create", service: "https://control.test", membership: { ...directory }, agent: null, actor: keyIdOfSecret(secret), body: digestBytes(utf8("link")), op: "original-control", notAfter: intent.notAfter };
   const original = structuredClone(request);
   let release!: () => void, calls = 0;
   const wait = new Promise<void>(resolve => { release = resolve; });
@@ -116,7 +116,7 @@ test("an async control signer binds its own actor and the original request while
   const signer = { key: request.actor, sign: async (bytes: Uint8Array) => { calls++; await wait; return sign(secret, bytes); } };
   const pending = signControlWith(request, signer);
   request.op = "changed-after-signing-started";
-  request.membership.inc = newIncarnation(new Uint8Array(16).fill(9));
+  request.membership.genesis = textDigest("replacement membership genesis");
   release();
   const signed = await pending;
   expect(signed).toEqual(signControl(original, secret));
@@ -129,11 +129,13 @@ describe("entries", () => {
   test("an entry's hash is over bytes that do not contain it, and a fact reference is a view beside the entry", () => {
     const before = canonicalize(entry);
     const hash = entryHash(entry);
-    const fact = factRefOf(entry);
+    const fact = factRefOf(entry, directory);
     expect(canonicalize(entry)).toBe(before);
     expect(before).not.toContain(hash);
     expect(entry).not.toHaveProperty("hash");
-    expect(fact).toEqual({ at: entry.at, seq: 17, hash });
+    expect(fact).toEqual({ at: directory, seq: 17, hash });
+    expect(sealedFactRef(entry, hash, directory)).toEqual(fact);
+    expect(() => factRefOf(entry, { ...directory, genesis: textDigest("different sequence") })).toThrow();
     // The next entry holds this hash as `prev`: a hash that already exists.
     expect(canonicalize({ ...entry, seq: 18, prev: fact.hash })).toContain(hash);
   });
@@ -150,10 +152,103 @@ describe("identifiers", () => {
       [isOutboxId, ["0.0", "17.2"], ["17", "17.02", "1.2.3", "-1.0", 17.2]],
       [isPlatformDefinition, ["platform:directory@1", "platform:directory-partition@1"], ["platform:lane@1", "platform:directory@01", "platform:directory-partition@01", "platform:directory-partitions@1", "directory@1"]],
       [isScopeKind, ["lane", "directory"], ["room", "", null]],
+      [isSequenceRef, [directory], [{ ...directory, kind: "directory" }, { scope: directory.scope, genesis: `sha256:${"a".repeat(63)}` }, { scope: directory.scope, genesis: null }]],
+      [isGenesisSelfRef, [{ scope: directory.scope, genesis: null }], [directory, { scope: directory.scope, genesis: null, kind: "directory" }]],
+      [isFactRef, [{ at: directory, seq: 0, hash: directory.genesis }], [{ at: { scope: directory.scope, genesis: null }, seq: 0, hash: directory.genesis }]],
       // Section 9.2, revision 19: a retained value states its domain, and no other kind states one.
       [isRetainedInput, [{ kind: "value", domain: "artroom-check-configuration-1", digest: KEPT, bytes: "{}" }, { kind: "snapshot", digest: KEPT, bytes: "[]" }, { kind: "entry", digest: KEPT, bytes: "{}", under: "issue" }],
         [{ kind: "value", digest: KEPT, bytes: "{}" }, { kind: "value", domain: "", digest: KEPT, bytes: "{}" }, { kind: "definition", domain: "artroom-definition-1", digest: KEPT, bytes: "{}" }, { kind: "values", domain: "d", digest: KEPT, bytes: "{}" }]],
     ];
     for (const [guard, good, bad] of forms) expect([good.map(guard), bad.map(guard)], guard.name).toEqual([good.map(() => true), bad.map(() => false)]);
   });
+});
+
+
+test("genesis and later entry headers are closed, and the complete nonce-bearing input precedes its children and entry digest", () => {
+  const input: GenesisInput = { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16)), kind: "establish", founding: null, source: null, sourceKind: null, n: null, message: null, decision: "applied" };
+  const genesis: GenesisEntry = { v: 1, seq: 0, prev: null, time: entry.time, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends: [] };
+  expect(DOMAINS.entry).toBe("artroom-entry-1");
+  expect(DOMAINS.input).toBe("artroom-input-1");
+  expect(genesisInputDigest(input)).toBe(digestBytes(new Uint8Array([...utf8("artroom-input-1\n"), ...canonicalBytes(input)])));
+  expect(genesisInputDigest(input)).not.toBe(entryHash(genesis));
+  expect([isInput(input), isEntry(genesis), isEntry(entry)]).toEqual([true, true, true]);
+  const { sourceKind: _rootKind, ...missingRootKind } = input;
+  const source = { at: directory, seq: 0, hash: directory.genesis };
+  const created: GenesisInput = { ...input, source, sourceKind: "directory" };
+  const otherKind: GenesisInput = { ...created, sourceKind: "membership" };
+  expect(isInput(created)).toBe(true);
+  for (const invalid of [missingRootKind, { ...input, sourceKind: "directory" }, { ...created, sourceKind: null }, { ...created, sourceKind: "other" }]) expect(isInput(invalid)).toBe(false);
+  expect(genesisInputDigest(created)).not.toBe(genesisInputDigest(otherKind));
+  expect(entryHash({ ...genesis, input: created })).not.toBe(entryHash({ ...genesis, input: otherKind }));
+  const messages: Message[] = [
+    { class: "request", type: "tell", body: {} },
+    { class: "result", of: { from: source, n: 0 }, outcome: "applied" },
+    { class: "control", type: "confirm", genesis: source },
+    { class: "advisory", type: "index", body: {} },
+  ];
+  for (const message of messages) {
+    const delivery = { type: "delivery", from: source, sourceKind: "directory", n: 0, message,
+      ...(message.class === "request" ? { decision: "applied" } : message.class === "result" ? { clause: "applied" } : {}) };
+    expect(isInput(delivery)).toBe(true);
+    const { sourceKind: _kind, ...missing } = delivery;
+    for (const invalid of [missing, { ...delivery, sourceKind: null }, { ...delivery, sourceKind: "other" }]) expect(isInput(invalid)).toBe(false);
+  }
+  const use = { fact: source, content: textDigest("original retained bytes"), kind: "directory" };
+  expect(isFactUse(use)).toBe(true);
+  const { kind: _useKind, ...missingUseKind } = use;
+  for (const invalid of [missingUseKind, { ...use, kind: null }, { ...use, kind: "other" }]) expect(isFactUse(invalid)).toBe(false);
+  expect(isEntry({ ...genesis, uses: [use] })).toBe(true);
+  expect(isEntry({ ...genesis, uses: [missingUseKind] })).toBe(false);
+  for (const invalid of [{ ...genesis, at: directory }, { ...genesis, genesis: directory.genesis }, { ...genesis, seq: 1 }, { ...genesis, prev: directory.genesis }, { ...entry, genesis: undefined }, { ...entry, at: directory }, { ...entry, seq: 0 }, { ...entry, prev: null }, { ...entry, input }]) expect(isEntry(invalid)).toBe(false);
+  const cause = genesisInputDigest(input);
+  const self = { scope: scopeIdOf(seed), genesis: null } as const;
+  const child: Seed = { v: 1, kind: "membership", definition: "platform:membership@2", creator: self, cause, ordinal: 0 };
+  const encodedEffect = { effect: "ref", item: 0, slot: "directory", to: self } as const;
+  expect(isEntry({ ...genesis, effects: [encodedEffect] })).toBe(true);
+  expect(isEntry({ ...entry, effects: [encodedEffect] })).toBe(false);
+  const changed = { ...input, nonce: newGenesisNonce(new Uint8Array(16).fill(1)) };
+  expect(scopeIdOf(child)).not.toBe(scopeIdOf({ ...child, cause: genesisInputDigest(changed) }));
+  const hash = entryHash(genesis), at = { scope: scopeIdOf(seed), genesis: hash };
+  const origin = sealedFactRef(genesis, hash, at);
+  const bytes = canonicalize(genesis);
+  const checked = admitSequenceGenesis(bytes, at, utf8(bytes).length);
+  expect(checked?.at).toEqual(at);
+  expect(checked?.kind).toBe(seed.kind);
+  if (!checked) throw new Error("the original canonical genesis must admit its identity");
+  expect(isEntryOf(genesis, origin, checked)).toBe(true);
+  const wrongAddress = { ...origin, at: { ...at, scope: directory.scope } };
+  expect(isEntryBodyOf(genesis, wrongAddress)).toBe(true);
+  expect(isEntryOf(genesis, wrongAddress, checked)).toBe(false);
+  expect(admitSequenceGenesis(`${bytes} `, at, utf8(bytes).length + 1)).toBeNull();
+  expect(admitSequenceGenesis(bytes, at, utf8(bytes).length - 1)).toBeNull();
+  expect(admitSequenceGenesis(bytes, { ...at, scope: directory.scope }, utf8(bytes).length)).toBeNull();
+  expect(admitSequenceGenesis(bytes, { ...at, genesis: directory.genesis }, utf8(bytes).length)).toBeNull();
+  for (const invalid of [NaN, Infinity, -1, 1.5]) expect(admitSequenceGenesis(bytes, at, invalid)).toBeNull();
+  const constructor = checked.constructor;
+  expect(() => Reflect.construct(constructor, [Symbol("wrong token"), directory, "membership"])).toThrow();
+  expect(() => Reflect.construct(constructor, [undefined, directory, "membership"])).toThrow();
+  const lookalike = Object.create(Object.getPrototypeOf(checked));
+  expect(isEntryOf(genesis, origin, lookalike)).toBe(false);
+  expect(Reflect.apply(isEntryOf, undefined, [genesis, origin])).toBe(false);
+  expect(Reflect.apply(isEntryOf, undefined, [genesis, origin, { at, kind: seed.kind }])).toBe(false);
+  expect(Object.isFrozen(checked)).toBe(true);
+  expect(Object.isFrozen(Object.getPrototypeOf(checked))).toBe(true);
+  expect(Object.isFrozen(constructor)).toBe(true);
+  expect(Object.isFrozen(checked.at)).toBe(true);
+  const mutable = { ...at };
+  const snapshot = admitSequenceGenesis(bytes, mutable, utf8(bytes).length);
+  mutable.scope = directory.scope;
+  mutable.genesis = directory.genesis;
+  expect(snapshot?.at).toEqual(at);
+  expect(isEntryOf(genesis, origin, checked)).toBe(true);
+  expect(fitsFieldType({ type: "scope", kind: "membership" }, checked.at, PROPOSED_BOUNDS)).toBe(true);
+
+  expect(() => sealedFactRef(genesis, hash, { ...at, scope: directory.scope })).toThrow();
+  expect(() => sealedFactRef(genesis, hash, { ...at, genesis: textDigest("another genesis") })).toThrow();
+  const before = canonicalize({ genesis, child });
+  expect(resolveGenesisSelf(self, origin)).toEqual(at);
+  expect(resolveGenesisSelf(self, { ...origin, seq: 1 })).toBeNull();
+  expect(resolveGenesisSelf({ ...self, scope: directory.scope }, origin)).toBeNull();
+  expect(canonicalize({ genesis, child })).toBe(before);
+  expect(child.creator).toEqual(self);
 });

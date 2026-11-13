@@ -4,7 +4,7 @@ import { floorMonotonicChange } from "./definition-corpus-data.ts";
  * this is not evidence of platform authority or Git archive custody. */
 import { expect, test } from "vitest";
 import type { Entry, FloorInput, Sealed } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalize } from "@generalbusiness/dap-bytes";
 import { applyEntry, MemoryState, stateDigest } from "@generalbusiness/dap-derive";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify, type MemoryScope } from "@generalbusiness/dap-replay";
@@ -63,9 +63,11 @@ test("Native and complete-clone replay never resurrect an archived final item th
   const replayed = await verify(source, { mode: "replay", scope: lane.name, grants: "as-recorded" });
   expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
   const entries: Sealed[] = journal.entries.map(row => ({ entry: JSON.parse(row.bytes) as Entry, hash: row.hash }));
+  const sequence = admitSequenceGenesis(journal.entries[0]!.bytes, lane.at, lane.c.bounds.entryBytes);
+  if (!sequence) throw new Error("the saved journal has no admitted genesis");
   const replayState = new MemoryState();
-  for (const sealed of entries) applyEntry(replayState, definition, sealed.entry, sealed.hash, { own: floorOwn(replayState, entries), bounds: lane.c.bounds });
-  const replayOwn = floorOwn(replayState, entries);
+  for (const sealed of entries) applyEntry(replayState, definition, sealed.entry, sealed.hash, { own: floorOwn(replayState, entries, sequence), bounds: lane.c.bounds });
+  const replayOwn = floorOwn(replayState, entries, sequence);
   // Report both sides before the assertions so the old-logic counterexample
   // records the Native missing row AND the clone's resurrected payload.
   console.log("monotonic-floor-observation", canonicalize({ nativeKept: native.kept, nativeStored: native.stored !== null, nativeRead: read, nativeFact: fact, replayKept: replayState.floor()!.kept, replayOwn: replayOwn(1)?.entry.seq ?? null, replayResult: replayed.report.result }));

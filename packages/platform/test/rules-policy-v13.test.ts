@@ -6,7 +6,7 @@ import { checkSourceV13, checkStageV13, readRulesPolicyV13, rulesPolicyCheckersV
 import type { RulesCheckV13, RulesPolicyV13 } from "../src/rules-policy-v13.ts";
 
 // Pure owned policy decisions. These member/key identifiers stand in for native observations.
-const checker: MemberRef = { membership: { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" }, member: "@checker" };
+const checker: MemberRef = { membership: { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` }, member: "@checker" };
 const service: MemberRef = { ...checker, member: "@service" };
 const key = `key_${"A".repeat(43)}` as KeyId;
 const configuration = `sha256:${"1".repeat(64)}` as Digest;
@@ -31,7 +31,7 @@ test("Q13 owns complete choices without changing omitted member/landing meaning 
   const owned = readRulesPolicyV13(marked);
   expect(owned.ok).toBe(true);
   marked.roomService.checker.member = "@changed";
-  marked.roomService.checker.membership.kind = "rules";
+  marked.roomService.checker.membership.genesis = `sha256:${"f".repeat(64)}`;
   expect(owned.ok && owned.policy.roomService?.checker).toEqual(service);
   const explicit = rulesPolicyProposalV13(policy([{ ...check, source: "member", stage: "landing", reuse: false, holds: false }]));
   expect(explicit.ok && explicit.digest).not.toBe(proposal.ok && proposal.digest);
@@ -59,7 +59,7 @@ test("the publication member union includes a marked service with no check and r
   const marked = { ...policy([check, { ...check, name: "another" }]), roomService: { checker: service, key } };
   expect(rulesPolicyCheckersV13(marked)).toEqual([checker, service]);
   const union = rulesPolicyCheckersV13(marked);
-  union[0]!.membership.kind = "rules";
-  expect(marked.checks[0]!.checker.membership.kind).toBe("membership");
+  union[0]!.membership.genesis = `sha256:${"f".repeat(64)}`;
+  expect(marked.checks[0]!.checker.membership.genesis).toBe(`sha256:${"a".repeat(64)}`);
   expect(rulesPolicyCheckersV13({ ...marked, roomService: null })).toEqual([checker]);
 });

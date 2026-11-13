@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import type { Digest, FactRef, Intent, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, Intent, ScopeKind } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, factRefOf, intentDigest, isDigest, isRecord, isSeed, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_CERTIFIED_RULES_COHORT, RULES_CERTIFICATE_KIND, RULES_TREE_PROOF, rulesPolicyProposalV11, type RulesPolicyV11 } from "@generalbusiness/dap-platform";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
@@ -60,7 +60,7 @@ export async function certifiedNativeRoom() {
     const D = life.platform(scopeIdOf({ v: 1, kind: "directory", definition: cohort.directory, creator: await R.at(), cause: intentDigest(found.intent), ordinal: 0 }));
     expect(await R.stub.submit(found, [])).toMatchObject({ answer: "accepted" }); await pause([R, D]);
     const directoryBirthEntry = (await D.entries())[0]!;
-    const sibling = (kind: ScopeRef["kind"]) => {
+    const sibling = (kind: ScopeKind) => {
       const send = directoryBirthEntry.sends.find(row => isSeed(row.to) && row.to.kind === kind);
       if (!send || !isSeed(send.to)) throw Error("Actual applied Directory sibling send required");
       return life.platform(scopeIdOf(send.to));
@@ -86,13 +86,13 @@ export async function openRulesCertificate(room: CertifiedRoom, policy: RulesPol
   if (!proposal.ok) throw Error("Strict policy required");
   const { D, M, Q, G } = room;
   const signed = await G.intent(rita, RULES_CERTIFICATE_KIND, { on: 0, expected: await G.expected({ on: 0 }), fields: {
-    proposal: proposal.digest, directoryBirth: factRefOf((await D.entries())[0]!),
-    rulesBirth: factRefOf((await Q.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!),
+    proposal: proposal.digest, directoryBirth: (await D.fact(0)),
+    rulesBirth: (await Q.fact(0)), membershipBirth: (await M.fact(0)),
   } });
   const answer = await G.stub.submit(signed, [], { values: [canonicalize(proposal.policy)] });
   expect(answer, canonicalize(answer)).toMatchObject({ answer: "accepted" });
   if (answer.answer !== "accepted") throw Error("Actual certificate opening required");
-  return factRefOf((await G.entries())[answer.receipt.fact.seq]!);
+  return (await G.fact(answer.receipt.fact.seq));
 }
 export async function publishRulesCertificate(room: CertifiedRoom, policy: RulesPolicyV11, request: FactRef, certificate: FactRef, proof: Digest, proofBytes: string) {
   const proposed = rulesPolicyProposalV11(policy);
@@ -100,7 +100,7 @@ export async function publishRulesCertificate(room: CertifiedRoom, policy: Rules
   const { D, M, Q, G } = room;
   return Q.stub.submit(await Q.intent(rita, "publish", { on: 0, expected: await Q.expected({ on: 0 }),
     fields: JSON.parse(canonicalize({ ...proposed.policy, proposal: proposed.digest, proof, certificateRequest: request, certificate,
-      directoryBirth: factRefOf((await D.entries())[0]!), destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) })) }), [],
+      directoryBirth: (await D.fact(0)), destinationBirth: (await G.fact(0)), membershipBirth: (await M.fact(0)) })) }), [],
     { values: [canonicalize(proposed.policy), proofBytes] });
 }
 export async function configureRules(room: CertifiedRoom, policy: RulesPolicyV11) {
@@ -112,7 +112,7 @@ export async function configureRules(room: CertifiedRoom, policy: RulesPolicyV11
   if (!isRecord(body) || !isDigest(body["proof"])) throw Error("Actual proof digest required");
   const kept = await room.G.stub.retained(reader, "value", body["proof"], RULES_TREE_PROOF.domain);
   if (!kept.ok) throw Error("Actual retained proof required");
-  const certificate = factRefOf(outcome);
+  const certificate = factRefOf(outcome, await room.G.at());
   expect(await publishRulesCertificate(room, policy, request, certificate, body["proof"], kept.value.bytes)).toMatchObject({ answer: "accepted" });
   return { request, certificate, proof: body["proof"] };
 }

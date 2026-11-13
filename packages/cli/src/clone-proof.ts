@@ -1,12 +1,12 @@
 /** Check read-token receipt and entry evidence before any private handoff.
  * This is the client's exact-envelope/full-fact check, not history replay. */
-import type { Input, OperationId, PlatformDefinition, Receipt, ScopeRef, Sealed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, isPlatformDefinition, isReceipt, isRecord, isSealed, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { GenesisEffect, Input, OperationId, PlatformDefinition, Receipt, ScopeRef, Sealed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
+import { canonicalize, intentDigest, isEntryBodyOf, isPlatformDefinition, isReceipt, isRecord, isSealed, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 
 export interface ReadTokenProof { to: ScopeRef; definition: PlatformDefinition; signed: SignedIntent; receipt: Receipt; operation: OperationId }
 export function readTokenReceipt(receipt: Receipt, summary: Pick<Summary, "scope" | "definition">, signed: SignedIntent): ReadTokenProof | null {
   try {
-    if (!isReceipt(receipt) || !isPlatformDefinition(summary.definition) || !verifySignedIntent(signed) || summary.scope.kind !== "destination" || signed.intent.kind !== "read-token" || signed.intent.on === null || receipt.fact.seq < 1
+    if (!isReceipt(receipt) || !isPlatformDefinition(summary.definition) || !verifySignedIntent(signed) || !summary.definition.startsWith("platform:destination@") || signed.intent.kind !== "read-token" || signed.intent.on === null || receipt.fact.seq < 1
       || canonicalize(signed.intent.to) !== canonicalize(summary.scope) || canonicalize(receipt.fact.at) !== canonicalize(summary.scope)
       || receipt.definition !== summary.definition || receipt.intent !== intentDigest(signed.intent)) return null;
     return { to: summary.scope, definition: summary.definition, signed, receipt, operation: `${receipt.fact.seq}:0` };
@@ -17,18 +17,18 @@ export function readTokenReceipt(receipt: Receipt, summary: Pick<Summary, "scope
  * advertised hash as well. A correct hash does not excuse a different scope. */
 export function readTokenEntry(sealed: Sealed, at: ScopeRef, seq: number): boolean {
   try {
-    return isSealed(sealed) && sealed.entry.seq === seq && canonicalize(sealed.entry.at) === canonicalize(at) && factRefOf(sealed.entry).hash === sealed.hash;
+    return isSealed(sealed) && isEntryBodyOf(sealed.entry, { at, seq, hash: sealed.hash });
   } catch { return false; }
 }
 
 export function readTokenOpening(sealed: Sealed, proof: ReadTokenProof): boolean {
   try {
     const { entry } = sealed;
-    if (!readTokenEntry(sealed, proof.to, proof.receipt.fact.seq) || canonicalize(factRefOf(entry)) !== canonicalize(proof.receipt.fact) || entry.input.type !== "act"
+    if (!readTokenEntry(sealed, proof.to, proof.receipt.fact.seq) || sealed.hash !== proof.receipt.fact.hash || canonicalize(proof.receipt.fact.at) !== canonicalize(proof.to) || entry.input.type !== "act"
       || canonicalize(entry.input.signed) !== canonicalize(proof.signed) || entry.epoch !== proof.receipt.epoch || canonicalize(entry.effects) !== canonicalize(proof.receipt.effects)
       || canonicalize(entry.sends.map((send) => `${entry.seq}.${send.n}`)) !== canonicalize(proof.receipt.sends)) return false;
-    const operations = entry.effects.filter((effect) => effect.effect === "operation");
-    const attempts = entry.effects.filter((effect) => effect.effect === "attempt");
+    const operations = (entry.effects as readonly GenesisEffect[]).filter((effect): effect is Extract<GenesisEffect, { effect: "operation" }> => effect.effect === "operation");
+    const attempts = (entry.effects as readonly GenesisEffect[]).filter((effect): effect is Extract<GenesisEffect, { effect: "attempt" }> => effect.effect === "attempt");
     return operations.length === 1 && operations[0]!.k === 0 && operations[0]!.owner === proof.definition && operations[0]!.kind === "mint-read" && operations[0]!.attempts === 1 && operations[0]!.for === proof.signed.intent.on
       && attempts.length === 1 && attempts[0]!.attempt === 1 && attempts[0]!.result === "opened"
       && (attempts[0]!.operation === proof.operation || canonicalize(attempts[0]!.operation) === canonicalize({ k: 0 }));
@@ -40,7 +40,7 @@ export function readTokenOutcome(sealed: Sealed, seq: number, proof: ReadTokenPr
     if (!readTokenEntry(sealed, proof.to, seq) || seq <= proof.receipt.fact.seq) return false;
     const input = sealed.entry.input;
     if (input.type !== "outcome" || input.operation !== proof.operation || input.owner !== proof.definition || input.kind !== "mint-read" || input.attempt !== 1 || input.evidence.basis !== (input.result === "unknown" ? "none" : "own-answer")) return false;
-    const attempt = sealed.entry.effects.filter((effect) => effect.effect === "attempt");
+    const attempt = (sealed.entry.effects as readonly GenesisEffect[]).filter((effect): effect is Extract<GenesisEffect, { effect: "attempt" }> => effect.effect === "attempt");
     if (attempt.length !== 1 || attempt[0]!.operation !== proof.operation || attempt[0]!.attempt !== 1 || attempt[0]!.result !== input.result) return false;
     return readTokenBody(input);
   } catch { return false; }

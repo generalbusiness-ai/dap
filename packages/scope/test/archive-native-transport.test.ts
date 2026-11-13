@@ -15,7 +15,7 @@ import { ArchiveBudget, ARCHIVE_BOUNDS } from "../src/archive-budget.ts";
 import { ArchiveDriver, type FixtureArchiveProvider } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
-import { create } from "./fixtures-native.ts";
+import { create, live } from "./fixtures-native.ts";
 import type { TestScope } from "./worker.ts";
 import { archiveDefinition, archivePolicies, archiveSql } from "./support/archive.ts";
 import { scriptedArchiveV2Pack } from "./support/archive-v2-pack.ts";
@@ -108,7 +108,7 @@ test("native driver parent reads and append sends use the same original budget t
   // three incremental appends plus genesis. This keeps one backlog and the
   // same fixed tree path and radix-100 boundary; 9999 did not cross radix 10000.
   await runInDurableObject(lane.object, async instance => {
-    for (let i = 0; i < 4097; i++) expect((await (instance as TestScope).checkpoint()).answer).toBe("written");
+    for (let i = 0; i < 4097; i++) expect((await live(instance as TestScope).checkpoint()).answer).toBe("written");
   });
   const head = await lane.head(); let through = 0;
   expect(head.seq).toBe(4097);

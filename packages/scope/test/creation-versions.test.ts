@@ -1,6 +1,8 @@
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 /** Pure policy/transport witnesses plus actual DeployedScope SQLite genesis.
  * Index transport is a labelled stand-in only in the cache case. The native
- * cases override Env only: no clock, policy wiring or native authority port. */
+ * cases keep the deployed clock, policy wiring and native authority ports.
+ * One name-scoped storage observer injects a setup failure after the real word insert. */
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
@@ -12,7 +14,8 @@ import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
 import type { Binding } from "../src/namespace.ts";
 import type { ScopeObject } from "../src/object.ts";
-import { creationVersionSettings } from "./worker.ts";
+import { creationFormatStorage, creationVersionSettings } from "./worker.ts";
+import { live } from "./support.ts";
 
 const legacy = "platform:register@2";
 const newest = FAILED_CLAIM_COHORT.register;
@@ -92,7 +95,7 @@ test("indexed creation captures policy before awaits and changes cache identity 
 
 test("injected invalid or excluded child policy refuses before local and open-creation shortcuts", async () => {
   const signed = install(), root = scopeIdOf(seedOf(signed, legacy));
-  const at = { scope: root, kind: "register" as const, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" as const };
+  const at = { scope: root, genesis: `sha256:${"aa".repeat(32)}` as const };
   const to: Seed = { v: 1, kind: "membership", definition: "platform:membership@2", creator: at, cause: intentDigest(signed.intent), ordinal: 0 };
   const delivered = { to, from: { at, seq: 0, hash: intentDigest(signed.intent) }, n: 0, message: { class: "request", type: "create", body: {} } };
   let lookups = 0;
@@ -114,6 +117,9 @@ type Native = {
   nativeBirth(...args: Parameters<ScopeObject["nativeBirth"]>): Promise<ReturnType<ScopeObject["nativeBirth"]>>;
 };
 const objectOf = (name: string) => env.CREATION_VERSIONS.get(env.CREATION_VERSIONS.idFromName(name));
+/** Restart an object as production does after a fault: abort its instance, keep its storage. */
+const restart = (object: ReturnType<typeof objectOf>) => runInDurableObject(object, (_instance, state) => { state.abort("TEST restart"); })
+  .then(() => { throw new Error("The aborted object answered."); }, (error: unknown) => { if (String(error).includes("The aborted object answered")) throw error; });
 const count = (object: ReturnType<typeof objectOf>) => runInDurableObject(object, (_instance, state) => {
   if (state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='entry'").toArray().length === 0) return 0;
   return state.storage.sql.exec("SELECT seq FROM entry").toArray().length;
@@ -123,24 +129,51 @@ test("actual deployed object defaults reject old new genesis and invalid policy 
   for (const [pin, raw] of [[legacy, undefined], [ARCHIVE_DEVICE_APPLICATION_COHORT.register, undefined], [newest, null], [newest, undefined], [COMMONS_COHORT.register, undefined]] as const) {
     const signed = install(undefined, pin === COMMONS_COHORT.register ? "none" : "git.example"), name = scopeIdOf(seedOf(signed, pin));
     creationVersionSettings.set(name, raw); // own undefined must have the absent-setting meaning
-    const object = objectOf(name), native = object as unknown as Native;
+    const object = objectOf(name), native = live(object as unknown as Native);
+    const trace: NonNullable<ReturnType<typeof creationFormatStorage.get>> | null = pin === newest && raw === undefined
+      ? { failAfterWord: true, starts: [] } : null;
+    if (trace) creationFormatStorage.set(name, trace);
     try {
+      if (trace) {
+        await expect(native.create(signed, pin)).rejects.toThrow("TEST fresh schema and format word rollback");
+        expect(trace.starts, "fresh setup rolls back the actual schema and inserted format word together").toEqual([
+          { catalogReads: 1, wordReads: 0, formatWrites: 2, atFailure: { schema: 1, word: 2 }, tablesAfterFailure: 0 },
+        ]);
+        trace.failAfterWord = false;
+      }
       const answer = await native.create(signed, pin);
       if ((pin === newest || pin === COMMONS_COHORT.register) && raw === undefined) {
-        expect(answer).toMatchObject({ answer: "accepted", receipt: { definition: pin, fact: { at: { scope: name, kind: "register" }, seq: 0 } } });
+        expect(answer).toMatchObject({ answer: "accepted", receipt: { definition: pin, fact: { at: { scope: name }, seq: 0 } } });
         expect(await count(object)).toBe(1);
+        if (trace) {
+          const fresh = { catalogReads: 1, wordReads: 0, formatWrites: 2, atFailure: null, tablesAfterFailure: null };
+          expect(trace.starts.slice(1), "the rolled-back database retries as fresh with one catalog read").toEqual([fresh]);
+          expect(await native.create(signed, pin)).toEqual(answer);
+          expect(trace.starts.slice(1), "another request does not repeat the fresh format read or setup").toEqual([fresh]);
+          await restart(object);
+          const restarted = objectOf(name) as unknown as Native;
+          expect(await restarted.create(signed, pin)).toEqual(answer);
+          const current = { catalogReads: 1, wordReads: 1, formatWrites: 0, atFailure: null, tablesAfterFailure: null };
+          expect(trace.starts.slice(1), "a current start reads the catalog and word once without rewriting the word").toEqual([fresh, current]);
+          expect(await restarted.create(signed, pin)).toEqual(answer);
+          expect(trace.starts.slice(1), "another request does not repeat the current format reads").toEqual([fresh, current]);
+        }
       } else {
         expect(answer).toEqual({ answer: "refused", reason: "unsupported-definition" });
         expect(await count(object)).toBe(0);
       }
-    } finally { await evictDurableObject(object); creationVersionSettings.delete(name); }
+    } finally {
+      if (trace) trace.failAfterWord = false;
+      try { await (trace ? restart(object) : evictDurableObject(object)); }
+      finally { creationVersionSettings.delete(name); creationFormatStorage.delete(name); }
+    }
   }
 });
 
 test("old live deployed genesis needs sealed applied integrity for repeats while reads and acts keep its pin", async () => {
   const signed = install(), seed = seedOf(signed, legacy), name = scopeIdOf(seed);
   creationVersionSettings.set(name, JSON.stringify([legacy]));
-  const object = objectOf(name), native = object as unknown as Native;
+  const object = objectOf(name), native = live(object as unknown as Native);
   try {
     const original = await native.create(signed, legacy);
     expect(original).toMatchObject({ answer: "accepted" });
@@ -151,7 +184,7 @@ test("old live deployed genesis needs sealed applied integrity for repeats while
     creationVersionSettings.set(name, null);
     expect(await native.create(signed, legacy)).toEqual(original);
     expect((await native.nativeBirth(at, 1000))?.named).toBe(legacy);
-    expect(parseStrict((await native.source(0))?.bytes ?? "null")).toMatchObject({ input: { type: "genesis", seed, decision: "applied" } });
+    expect(parseStrict((await native.source(0, false, { maxBytes: PROPOSED_BOUNDS.entryBytes, milliseconds: Math.floor(PROPOSED_BOUNDS.fetchSeconds * 1000) }))?.bytes ?? "null")).toMatchObject({ input: { type: "genesis", seed, decision: "applied" } });
     const changed = signIntent({ ...signed.intent, idempotencyKey: crypto.randomUUID() }, keys.paul.secret);
     expect(await native.create(changed, legacy)).toEqual({ answer: "refused", reason: "unsupported-definition" });
     // Corrupt only the retained body. Matching table/meta/index identity is not a sealed birth.
@@ -164,7 +197,7 @@ test("old live deployed genesis needs sealed applied integrity for repeats while
       notAfter: timeOf(Date.now() + 60_000) } satisfies Intent, keys.rita.secret);
     expect(await native.submit(found, [])).toMatchObject({ answer: "accepted", receipt: { definition: legacy, fact: { at, seq: 1 } } });
     const old = parseStrict(stored);
-    expect((await native.source(0))?.bytes).toBe(canonicalize(old));
+    expect((await native.source(0, false, { maxBytes: PROPOSED_BOUNDS.entryBytes, milliseconds: Math.floor(PROPOSED_BOUNDS.fetchSeconds * 1000) }))?.bytes).toBe(canonicalize(old));
   } finally { await evictDurableObject(object); creationVersionSettings.delete(name); }
 });
 
@@ -180,7 +213,7 @@ test("a deployment creates on the separate-recovery cohort only after PLATFORM_C
   for (const [raw, answer] of [[undefined, "refused"], [added, "accepted"]] as const) {
     const signed = install(), name = scopeIdOf(seedOf(signed, register));
     creationVersionSettings.set(name, raw);
-    const object = objectOf(name), native = object as unknown as Native;
+    const object = objectOf(name), native = live(object as unknown as Native);
     try {
       expect(await native.create(signed, register)).toMatchObject({ answer });
       expect(await count(object)).toBe(answer === "accepted" ? 1 : 0);
@@ -199,7 +232,7 @@ test("repository binding and own-agent families remain opt-in in actual deployed
     for (const [raw, answer] of [[undefined, "refused"], [added, "accepted"]] as const) {
       const signed = install(undefined, "none"), name = scopeIdOf(seedOf(signed, cohort.register));
       creationVersionSettings.set(name, raw);
-      const object = objectOf(name), native = object as unknown as Native;
+      const object = objectOf(name), native = live(object as unknown as Native);
       try {
         expect(await native.create(signed, cohort.register)).toMatchObject({ answer });
         expect(await count(object)).toBe(answer === "accepted" ? 1 : 0);

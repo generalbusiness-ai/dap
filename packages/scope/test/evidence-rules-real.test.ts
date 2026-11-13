@@ -1,3 +1,5 @@
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { net as sourceNet } from "../src/testing.ts";
 import { expect, inject, test } from "vitest";
 import { runDurableObjectAlarm } from "cloudflare:test";
 import type { Observation } from "@generalbusiness/dap-contract";
@@ -179,7 +181,7 @@ test("actual landing reuse follows the tree key and a fresh passed job still pub
     if (!isFactRef(nativeDecision)) throw Error('Actual Native refusal decision reference required');
     expect(nativeDecision.at).toEqual(await room.G.at());
     const refusedEntry = await evidenceEntry(room.G, nativeDecision.seq);
-    expect(factRefOf(refusedEntry)).toEqual(nativeDecision);
+    expect(factRefOf(refusedEntry, await room.G.at())).toEqual(nativeDecision);
     expect(refusedEntry.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-admit', result: 'confirmed' });
     const decisions = refusedEntry.sends.filter(send => canonicalize(send.to) === canonicalize(refused.job.at)
       && send.message.class === 'request' && send.message.type === 'tell' && isRecord(send.message.body)
@@ -216,7 +218,7 @@ test("observed room-key rotation refuses both keys for the frozen real work job 
     expect(await newKeyJob.record()).toMatchObject({ state: 'admitted', result: null, binding: work.binding });
     const provisionalClaim = async (result: typeof work.job, job: typeof work.job, actor: typeof work.service.actor.key) => {
       const entry = await evidenceEntry(work.lane, result.seq);
-      expect(factRefOf(entry)).toEqual(result);
+      expect(factRefOf(entry, await work.lane.at())).toEqual(result);
       expect(entry.input).toMatchObject({ type: 'act', signed: { intent: { kind: 'check', actor, fields: { job: job.seq, jobFact: job } } } });
       expect(entry.effects).toContainEqual({ effect: 'open', item: result.seq, type: 'result', state: 'recorded' });
       expect(entry.effects.some(effect => 'item' in effect && effect.item === job.seq
@@ -226,7 +228,7 @@ test("observed room-key rotation refuses both keys for the frozen real work job 
       if (!isFactRef(decision)) throw Error('Actual wrong-source Native decision required');
       expect(decision.at).toEqual(await room.G.at());
       const entry = await evidenceEntry(room.G, decision.seq);
-      expect(factRefOf(entry)).toEqual(decision);
+      expect(factRefOf(entry, await room.G.at())).toEqual(decision);
       expect(entry.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-result', result: 'confirmed' });
       if (entry.input.type !== 'outcome') throw Error('Actual Native result outcome required');
       expect((await evidenceEntry(room.G, Number(entry.input.operation.split(':')[0]))).input)
@@ -356,7 +358,7 @@ test("real published holds survive newer counted passes and clear only through d
     if (!create || !isSeed(create.to)) throw Error("Actual nested incident creation send required");
     const child = room.life.platform(scopeIdOf(create.to)); room.nodes.push(child); await room.pause(room.nodes);
     expect((await child.summary()).value.definition).toBe(setup.definitions.issue);
-    const childSource = await (child.stub as unknown as { source(seq: number, origin: boolean): Promise<{ under: string; origin?: readonly unknown[] } | null> }).source(0, true);
+    const childSource = await (child.stub as unknown as { source(seq: number, origin: boolean, context: import("../src/ports.ts").SourceReadContext): Promise<{ under: string; origin?: readonly unknown[] } | null> }).source(0, true, { maxBytes: (sourceNet.sized.get(child.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(child.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) });
     expect(childSource?.under).toBe("issue");
     expect(childSource?.origin).toHaveLength(9);
     const intent = await child.item(0);
@@ -370,7 +372,7 @@ test("real published holds survive newer counted passes and clear only through d
     const notice = noticeEntry?.sends.find(send => send.message.class === "request" && send.message.type === "tell" && isRecord(send.message.body) && send.message.body['message'] === "published-check-failure");
     if (!notice || !noticeEntry) throw Error("Actual native failure notice required");
     // Redeliver the exact sealed source send. No peer or fact is synthesized.
-    await second.lane.stub.deliver({ from: factRefOf(noticeEntry), n: notice.n, to: await second.lane.at(), message: notice.message });
+    await second.lane.stub.deliver({ from: factRefOf(noticeEntry, await room.G.at()), n: notice.n, to: await second.lane.at(), message: notice.message });
     await room.pause(room.nodes);
     expect(await hardeningItems(second.lane, "incident")).toHaveLength(1);
     await unchangedActiveHold();
@@ -430,7 +432,7 @@ test("real published holds survive newer counted passes and clear only through d
     if (!timedView || timedView.raw.admittedAt === null) throw Error('Actual literal timed job required');
     expect(timedView.raw.state).toBe('admitted');
     expect(timedView.current.state).toBe('timeout');
-    await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: factRefOf(await evidenceEntry(room.G, timedView.raw.admittedAt)), operation: third.operation },
+    await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: (await room.G.fact(timedView.raw.admittedAt)), operation: third.operation },
       expected: await room.G.expected({ on: 0 }) });
     await room.pause(room.nodes);
     const timed = await evidenceRecord(room, thirdJob.job);
@@ -471,7 +473,7 @@ test("real published holds survive newer counted passes and clear only through d
     const delayedEntry = await evidenceEntry(third.lane, delayed.id), delayedCreate = delayedEntry.sends.find(send => isSeed(send.to) && send.to.definition === setup.definitions.issue);
     if (!delayedCreate || !isSeed(delayedCreate.to)) throw Error("Actual timeout incident creation required");
     const delayedChild = room.life.platform(scopeIdOf(delayedCreate.to)); room.nodes.push(delayedChild); await room.pause(room.nodes);
-    const delayedSource = await (delayedChild.stub as unknown as { source(seq: number, origin: boolean): Promise<{ under: string; origin?: readonly unknown[] } | null> }).source(0, true);
+    const delayedSource = await (delayedChild.stub as unknown as { source(seq: number, origin: boolean, context: import("../src/ports.ts").SourceReadContext): Promise<{ under: string; origin?: readonly unknown[] } | null> }).source(0, true, { maxBytes: (sourceNet.sized.get(delayedChild.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(delayedChild.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) });
     expect(delayedSource?.under).toBe("issue");
     expect(delayedSource?.origin).toHaveLength(9);
     expect((await delayedChild.item(0)).refs['failedResult'] ?? null).toBeNull();
@@ -516,7 +518,7 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
     expect(beforeJob.record.state).toBe('admitted');
     const admission = target.record.admittedAt;
     if (admission === null) throw Error('Actual target admission required');
-    const admissionFact = factRefOf(await evidenceEntry(room.G, admission));
+    const admissionFact = (await room.G.fact(admission));
     expect(await room.G.act(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact, operation: c.operation },
       expected: await room.G.expected({ on: 0 }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
     const due = timeMs(target.record.deadline);
@@ -576,7 +578,7 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
     expect((await evidenceRecord(room, target.job)).incident?.cause).toEqual(hydrated.incident?.cause);
     const liveAdmission = beforeJob.record.admittedAt;
     if (liveAdmission === null) throw Error('Actual still-running job admission required');
-    expect(await room.G.act(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: factRefOf(await evidenceEntry(room.G, liveAdmission)) },
+    expect(await room.G.act(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: (await room.G.fact(liveAdmission)) },
       expected: await room.G.expected({ on: 0 }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
     const stillRunning = (await evidenceNativeState(room)).jobs.find(row => row.item.id === liveAdmission);
     if (!stillRunning) throw Error('The actual unaffected running job must remain present');
@@ -681,14 +683,14 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     const observed = await observedRules(room);
     const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: setup.service.member,
       policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.roomService,
-      serviceGeneration: observed.serviceGeneration, auditOf: null, subject: { kind: "landing", publication: factRefOf(opening.entry), manifest: change.manifest } };
+      serviceGeneration: observed.serviceGeneration, auditOf: null, subject: { kind: "landing", publication: factRefOf(opening.entry, await room.G.at()), manifest: change.manifest } };
     const laneRules = (await hardeningItems(change.lane, "rules"))[0]!;
     const request = async (proposed: EvidenceBinding, earlier?: number) => {
       const bindingDigest = evidenceBindingDigest(proposed);
       const jobSeq = await change.lane.did(rita, "request-check", { fields: { manifest: change.manifest.seq, name: "unit", configuration: setup.configurationDigest,
         checker: setup.service.member, binding: canonicalize(proposed), bindingDigest, ...(earlier === undefined ? {} : { earlier }) },
         expected: await change.lane.expected({ manifest: change.manifest.seq, proposal: 0, rules: laneRules.id, ...(earlier === undefined ? {} : { earlier }) }) });
-      const memberJob = factRefOf(await evidenceEntry(change.lane, jobSeq));
+      const memberJob = (await change.lane.fact(jobSeq));
       await room.pause(room.nodes);
       expect(await evidenceRecord(room, memberJob)).toMatchObject({ state: "admitted", binding: { source: "member" } });
       return { jobSeq, memberJob, bindingDigest };
@@ -700,7 +702,7 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
         return binding !== null && canonicalize(binding.auditOf) === canonicalize(memberJob);
       });
       if (!audit || typeof audit.values['binding'] !== "string") throw Error("Actual fresh automatic audit job required");
-      const job = factRefOf(await evidenceEntry(change.lane, audit.id));
+      const job = (await change.lane.fact(audit.id));
       const binding = readEvidenceBinding(JSON.parse(audit.values['binding']));
       expect(binding).toMatchObject({ source: "room", auditOf: memberJob });
       const bindingDigest = audit.values['bindingDigest'];
@@ -712,7 +714,7 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     const unmarkedError = await change.lane.did(keys.vic, 'check-error', { fields: { job: oldAudit.job.seq, jobFact: oldAudit.job,
       tree: reservedTree, configuration: setup.configurationDigest, bindingDigest: oldAudit.bindingDigest, reason: 'TEST unmarked same-member key' },
       expected: await change.lane.expected({ job: oldAudit.job.seq, manifest: change.manifest.seq }) });
-    const unmarkedEntry = await evidenceEntry(change.lane, unmarkedError), unmarkedResult = factRefOf(unmarkedEntry);
+    const unmarkedEntry = await evidenceEntry(change.lane, unmarkedError), unmarkedResult = factRefOf(unmarkedEntry, await change.lane.at());
     expect(unmarkedEntry.input).toMatchObject({ type: 'act', signed: { intent: { kind: 'check-error', actor: keys.vic.key, fields: { jobFact: oldAudit.job } } } });
     expect(unmarkedEntry.effects).toContainEqual({ effect: 'open', item: unmarkedError, type: 'result', state: 'recorded' });
     expect(unmarkedEntry.effects.some(effect => 'item' in effect && effect.item === oldAudit.job.seq
@@ -727,7 +729,7 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     const oldResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: oldAudit.job.seq, jobFact: oldAudit.job,
       tree: reservedTree, configuration: setup.configurationDigest, bindingDigest: oldAudit.bindingDigest, outcome: "passed" },
       expected: await change.lane.expected({ job: oldAudit.job.seq, manifest: change.manifest.seq }) });
-    const oldResult = factRefOf(await evidenceEntry(change.lane, oldResultSeq));
+    const oldResult = (await change.lane.fact(oldResultSeq));
     await room.pause(room.nodes);
     expect(await evidenceRecord(room, oldAudit.job)).toMatchObject({ state: "passed", result: oldResult });
     await assertNativeCountedEvidence(room, change.lane, oldAudit.job, oldResult, 'passed');
@@ -737,14 +739,14 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     expect((await hardeningItems(room.G, "publication")).find(item => item.id === reserved.id)?.state).not.toBe("reserved");
     const retrySeq = await change.lane.did(rita, "merge", { fields: { manifest: change.manifest.seq, reports: [] },
       expected: await change.lane.expected({ manifest: change.manifest.seq, proposal: 0, rules: laneRules.id }) });
-    const retryOperation = factRefOf(await evidenceEntry(change.lane, retrySeq));
+    const retryOperation = (await change.lane.fact(retrySeq));
     await room.pause(room.nodes);
     const retry = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(retryOperation));
     expect(retry).toMatchObject({ state: "reserved", values: { tree: reservedTree } });
     if (!retry) throw Error("Actual same-tree retry reservation required");
     const retryTree = retry.values['tree'];
     if (!isObjectId(retryTree)) throw Error("Actual retry reservation tree required");
-    const retryPublication = factRefOf(await evidenceEntry(room.G, retry.id));
+    const retryPublication = (await room.G.fact(retry.id));
     const retryBinding: EvidenceBinding = { ...binding, subject: { kind: "landing", publication: retryPublication, manifest: change.manifest } };
     const { jobSeq, memberJob, bindingDigest } = await request(retryBinding, first.jobSeq);
     const freshAudit = await auditFor(memberJob);
@@ -754,14 +756,14 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     expect(await evidenceRecord(room, oldAudit.job)).toMatchObject({ state: "passed", result: oldResult });
     const memberResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: jobSeq, jobFact: memberJob,
       tree: retryTree, configuration: setup.configurationDigest, bindingDigest, outcome: "passed" }, expected: await change.lane.expected({ job: jobSeq, manifest: change.manifest.seq }) });
-    const memberResult = factRefOf(await evidenceEntry(change.lane, memberResultSeq));
+    const memberResult = (await change.lane.fact(memberResultSeq));
     await room.pause(room.nodes);
     expect(room.host.stand.refs.get("refs/heads/main")).toBe(before);
     const audit = freshAudit.audit, auditJob = freshAudit.job;
     expect(auditJob).not.toEqual(memberJob);
     const auditResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: audit.id, jobFact: auditJob,
       tree: retryTree, configuration: setup.configurationDigest, bindingDigest: freshAudit.bindingDigest, outcome: "failed" }, expected: await change.lane.expected({ job: audit.id, manifest: change.manifest.seq }) });
-    const auditResult = factRefOf(await evidenceEntry(change.lane, auditResultSeq));
+    const auditResult = (await change.lane.fact(auditResultSeq));
     await room.pause(room.nodes);
     const refused = (await hardeningItems(room.G, "publication")).find(item => item.id === retry.id);
     expect(["cleanup-aborted", "cleanup-deleted", "cleaned"]).toContain(refused?.state);

@@ -246,4 +246,21 @@ test("legacy v2 parent work preserves partial Native checkpoint progress and dra
   expect(publications).toHaveLength(1); const publication = JSON.parse(publications[0]!);
   expect(publication).toMatchObject({ legacyAnchors: { from: 0, through: originalHead.seq, anchors: expect.arrayContaining([...expectedAnchors]) } });
   expect(publication.legacyAnchors.anchors).toHaveLength(expectedAnchors.length);
+  expect(publication).not.toHaveProperty("anchorSources");
+  for (const fact of publication.legacyAnchors.anchors) {
+    expect(fact.at).toEqual(expect.objectContaining({ genesis: expect.stringMatching(/^sha256:[0-9a-f]{64}$/) }));
+    expect(Object.keys(fact).sort()).toEqual(["at", "hash", "seq"]);
+  }
+  // Inspect the existing held birth associations under a separate test
+  // budget. No published row supplies this kind or causes a source read.
+  const sourceChecks = new ArchiveBudget(), seen = new Set<string>();
+  for (const fact of expectedAnchors) {
+    const key = canonicalize(fact.at);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const source = archiveAuthorityBasis(lane)!.pins.get(fact.at, sourceChecks);
+    expect(source?.checked.at).toEqual(fact.at);
+    expect(["register", "membership"]).toContain(source?.checked.kind);
+  }
+
 }, 30_000);

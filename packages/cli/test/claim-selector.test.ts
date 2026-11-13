@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Receipt, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import { command, memoryStore, type Context } from "../src/index.ts";
 
@@ -20,7 +20,7 @@ test.each([
     const path = new URL(url).pathname;
     if (path === "/v1/scopes" && init?.method === "POST") {
       const given = JSON.parse(init.body!) as { creation: SignedIntent; definition: Receipt["definition"] };
-      receipt = { fact: { at: { scope: scopeIdOf({ v: 1, kind: "register", definition: given.definition, creator: null, cause: intentDigest(given.creation.intent), ordinal: 0 }), kind: "register", inc: newIncarnation(new Uint8Array(16).fill(7)) }, seq: 0, hash: textDigest("SCRIPTED acknowledged genesis") }, definition: given.definition, intent: intentDigest(given.creation.intent), effects: [], sends: [], epoch: 0 };
+      receipt = { fact: { at: { scope: scopeIdOf({ v: 1, kind: "register", definition: given.definition, creator: null, cause: intentDigest(given.creation.intent), ordinal: 0 }), genesis: textDigest("SCRIPTED acknowledged genesis") }, seq: 0, hash: textDigest("SCRIPTED acknowledged genesis") }, definition: given.definition, intent: intentDigest(given.creation.intent), effects: [], sends: [], epoch: 0 };
       return Response.json({ answer: "accepted", receipt });
     }
     if (path.endsWith("/acts")) {
@@ -58,8 +58,8 @@ test.each([
   expect(timeMs(submitted[0]!.intent.notAfter)!).toBeGreaterThan(now);
   expect(canonicalize((await store.config())!.plan!.founding)).toBe(original);
 
-  const other = newIncarnation(new Uint8Array(16).fill(8));
-  const wrong = { ...plan, acknowledged: { ...plan.acknowledged!, receipt: { ...receipt, fact: { ...receipt.fact, at: { ...receipt.fact.at, inc: other } } } } };
+  const other = textDigest("TEST other genesis");
+  const wrong = { ...plan, acknowledged: { ...plan.acknowledged!, receipt: { ...receipt, fact: { ...receipt.fact, at: { ...receipt.fact.at, genesis: other } } } } };
   await store.save({ ...kept, plan: wrong });
   const mismatched = await command(ctx, ["create", "other", "--handle", "@owner"]);
   expect(mismatched.code).toBe(1);

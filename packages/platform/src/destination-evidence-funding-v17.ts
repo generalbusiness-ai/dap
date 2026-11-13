@@ -1,7 +1,7 @@
 /** G17 new-work funding and serial, post-write published checks.
  * A self request opens each holder. Outcomes open only nonholder cursors. */
 import type { Bounds, Digest, Entry, FactRef, FieldValue, PlatformData, ScopeRef } from "@generalbusiness/dap-contract";
-import { natural, canonicalize, entryHash, isDigest, isEntry, isFactRef, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, entryHash, isDigest, isEntry, isEntryBodyOf, isEntryOf, isFactRef, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest } from "./evidence.ts";
 import { operationSettled, RuleFault, type Item, type Opening, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView } from "@generalbusiness/dap-derive";
 import { claimEvidenceBatchJobV17, obligationChecksV17, readEvidenceBatchV17, readEvidenceBatchWireV17, evidenceBatchWireV17, selectEvidenceBatchV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
@@ -12,6 +12,7 @@ import { readEvidenceWireV17, evidenceWireV17 } from "./evidence-wire-v17.ts";
 import { readBindingTextV17 } from "./destination-evidence-v17.ts";
 import { checkSourceV13, checkStageV13 } from "./rules-policy-v13.ts";
 import { evidenceOperationOpeningV17 } from "./evidence-opening-v17.ts";
+import { sealedAt } from "@generalbusiness/dap-derive";
 
 export const PUBLISHED_CHECKS_V17 = "published-checks";
 export const EVIDENCE_FUNDING_V17 = "evidence-funding";
@@ -24,7 +25,7 @@ export interface FundingHooksV17 {
 const owned = <T>(value: T): T => JSON.parse(canonicalize(value)) as T;
 const factOf = (own: Own, at: FactRef["at"], seq: number): FactRef | null => {
   const sealed = own(seq);
-  return sealed && same(sealed.entry.at, at) && sealed.entry.seq === seq && entryHash(sealed.entry) === sealed.hash ? { at, seq, hash: sealed.hash } : null;
+  return sealed && sealed.entry.seq === seq && entryHash(sealed.entry) === sealed.hash ? { at, seq, hash: sealed.hash } : null;
 };
 /** readFacts normalizes checked own facts to local numbers. Bind that
  * normal form back to the unchanged retained incoming full reference. */
@@ -34,7 +35,7 @@ function localFact(given: RuleGiven, name: string): FactRef | null {
   const raw = given.input.message.body["fields"][name], value = given.resolved.fields[name];
   if (!isFactRef(raw)) return null;
   if (same(raw.at, given.resolved.at)) {
-    const actual = natural(value) ? factOf(given.own, given.resolved.at, value) : null;
+    const actual = natural(value) ? factOf(given.own, sealedAt(given.resolved.at), value) : null;
     return actual && same(actual, raw) ? actual : null;
   }
   return isFactRef(value) && same(value, raw) ? raw : null;
@@ -83,12 +84,12 @@ function captured(own: Own, at: ScopeRef, publication: Item, snapshot: Certified
 }
 /** The actual capture and its pre-guard forecast use this same opening. */
 export function evidenceFundingCaptureV17(given: RuleGiven, publication: Item, snapshot: CertifiedPublicationStateV17): Opening | null {
-  const selected = captured(given.own, given.resolved.at, publication, snapshot);
+  const selected = captured(given.own, sealedAt(given.resolved.at), publication, snapshot);
   if (!selected) throw Error("The captured funding policy is unavailable");
   // Forecast identity widths only: this future capture hash is never stored
   // or used as proof. The actual self-delivery binds its sealed capture.
   const forecast: EvidenceBatchRecordV17 = { v: 1, publication: selected.ref, operation: selected.operation,
-    capture: { at: given.resolved.at, seq: Number.MAX_SAFE_INTEGER, hash: `sha256:${"f".repeat(64)}` }, ordinal: 0, total: Math.ceil(selected.checks.length / 8),
+    capture: { at: sealedAt(given.resolved.at), seq: Number.MAX_SAFE_INTEGER, hash: `sha256:${"f".repeat(64)}` }, ordinal: 0, total: Math.ceil(selected.checks.length / 8),
     touched: selected.touched, checks: selected.checks.slice(0, 8), policy: selected.view, jobs: [], planAt: null };
   if (selected.checks.some(check => checkStageV13(check) === "published") && !certifiedWrittenPlanBudgetV17(given.resolved.bounds, forecast).admitted)
     throw Error("The published check plan exceeds its future carrying entry");
@@ -245,11 +246,11 @@ function landingCarrierPending(given: RuleGiven, binding: NonNullable<ReturnType
   const fields = given.resolved.fields, job = fields["job"], operationFact = fields["operation"], name = fields["name"];
   const publication = given.state.item(binding.subject.publication.seq), from = input.from;
   if (!isFactRef(job) || !same(job, from) || !isFactRef(operationFact) || typeof name !== "string" || !publication || publication.type !== "publication"
-    || publication.state !== "reserved" || publication.values["withdrawDecided"] === true || !same(binding.subject.publication, factOf(given.own, given.resolved.at, publication.id))
+    || publication.state !== "reserved" || publication.values["withdrawDecided"] === true || !same(binding.subject.publication, factOf(given.own, sealedAt(given.resolved.at), publication.id))
     || !same(publication.refs["operation"], operationFact) || !same(publication.refs["manifest"], binding.subject.manifest)
     || !same(publication.refs["lane"], job.at) || !same(fields["manifest"], binding.subject.manifest)) return false;
-  const source = given.uses.find(use => same(use.fact, job))?.entry;
-  if (!source || !same(source.at, job.at) || source.seq !== job.seq || entryHash(source) !== job.hash
+  const copy = given.uses.find(use => same(use.fact, job)), source = copy?.entry;
+  if (!copy || !source || !isEntryOf(source, job, copy.sequence)
     || !source.effects.some(effect => effect.effect === "open" && effect.item === job.seq && effect.type === "job")
     || !source.sends.some(send => send.n === input.n && same(send.to, given.resolved.at) && same(send.message, input.message))) return false;
   const value = (slot: string): unknown => {
@@ -268,7 +269,7 @@ function landingCarrierPending(given: RuleGiven, binding: NonNullable<ReturnType
     || value("base") !== manifestSource.input.signed.intent.fields["base"]) return false;
   if (value("name") !== name || value("binding") !== fields["binding"] || value("bindingDigest") !== fields["bindingDigest"] || value("stage") !== "landing"
     || !isDigest(configuration) || !same(ref("destination"), given.resolved.at)
-    || !(same(manifest, binding.subject.manifest) || manifest === binding.subject.manifest.seq && same(source.at, binding.subject.manifest.at))
+    || !(same(manifest, binding.subject.manifest) || manifest === binding.subject.manifest.seq && same(job.at, binding.subject.manifest.at))
     || parties.length !== 1 || parties[0]!.effect !== "party" || !same(parties[0]!.member, binding.checker)
     || value("commit") !== publication.values["integration"] || value("tree") !== publication.values["tree"]) return false;
   if (source.input.type === "act") {
@@ -277,11 +278,11 @@ function landingCarrierPending(given: RuleGiven, binding: NonNullable<ReturnType
     if (source.input.type !== "delivery" || source.input.message.class !== "request" || source.input.message.type !== "tell" || !("decision" in source.input) || source.input.decision !== "applied"
       || !same(source.input.from.at, given.resolved.at) || !isRecord(source.input.message.body) || source.input.message.body["message"] !== "admit-audit-check" || binding.auditOf === null) return false;
     const sender = given.own(source.input.from.seq), sent = sender?.entry.sends.find(send => send.n === (source.input.type === "delivery" ? source.input.n : -1));
-    if (!sender || !same(factOf(given.own, given.resolved.at, sender.entry.seq), source.input.from) || sender.entry.input.type !== "outcome"
+    if (!sender || !same(factOf(given.own, sealedAt(given.resolved.at), sender.entry.seq), source.input.from) || sender.entry.input.type !== "outcome"
       || sender.entry.input.owner !== "platform:destination@17" || sender.entry.input.kind !== "evidence-audit" || sender.entry.input.result !== "confirmed"
       || !sent || !same(sent.to, job.at) || !same(sent.message, source.input.message)) return false;
   }
-  const captureSeq = publication.values["reservedAt"], capture = natural(captureSeq) ? factOf(given.own, given.resolved.at, captureSeq) : null;
+  const captureSeq = publication.values["reservedAt"], capture = natural(captureSeq) ? factOf(given.own, sealedAt(given.resolved.at), captureSeq) : null;
   const selected = capture && captureAt(given.state, given.own, capture, given.resolved.bounds), rows = batches(given.state, operationFact);
   if (!selected || !rows || !same(selected.ref, binding.subject.publication) || !same(selected.operation, operationFact)
     || !same(binding.policyGeneration, { rules: selected.view.rules, seq: selected.view.revision })
@@ -303,13 +304,13 @@ function landingCarrierPending(given: RuleGiven, binding: NonNullable<ReturnType
     if (!operationSettled(original)) return original.sent !== true;
     const confirmed = original.attempts.flatMap(attempt => attempt.outcomes).find(outcome => outcome.result === "confirmed");
     const sealed = confirmed && given.own(confirmed.seq);
-    if (!sealed || !same(factOf(given.own, given.resolved.at, sealed.entry.seq), { at: given.resolved.at, seq: sealed.entry.seq, hash: sealed.hash })
+    if (!sealed || !same(factOf(given.own, sealedAt(given.resolved.at), sealed.entry.seq), { at: sealedAt(given.resolved.at), seq: sealed.entry.seq, hash: sealed.hash })
       || sealed.entry.input.type !== "outcome" || sealed.entry.input.operation !== original.id || sealed.entry.input.attempt !== 1
       || sealed.entry.input.owner !== "platform:destination@17" || sealed.entry.input.kind !== EVIDENCE_FUNDING_V17 || sealed.entry.input.result !== "confirmed"
       || sealed.entry.input.evidence.basis !== "own-answer" || !isRecord(sealed.entry.input.evidence.body) || !same(sealed.entry.input.evidence.body["capture"], selected.capture)) return false;
     dispatch = sealed.entry;
   }
-  const request = fundRequest(given.resolved.at, { publication: selected.ref, operation: selected.operation, capture: selected.capture }, rows.length);
+  const request = fundRequest(sealedAt(given.resolved.at), { publication: selected.ref, operation: selected.operation, capture: selected.capture }, rows.length);
   const sends = dispatch?.sends.filter(send => same(send.to, request.to) && same(send.message, request.message)) ?? [];
   const sent = sends.length === 1 ? sends[0] : null, retained = dispatch && sent ? given.state.request(dispatch.seq, sent.n) : null;
   return !!dispatch && !!sent && !!retained && retained.hash === entryHash(dispatch) && retained.type === "tell"
@@ -327,7 +328,7 @@ function fundingProposal(given: RuleGiven): EvidenceBatchRecordV17 | null {
   const batch = readEvidenceBatchV17({ v: 1, publication, operation, capture, ordinal, total: selected.total,
     touched: selected.touched, checks: selected.checks.slice(ordinal * 8, ordinal * 8 + 8), policy: selected.view, jobs: [], planAt: null });
   if (!batch || selected.checks.some(check => checkStageV13(check) === "published") && !certifiedWrittenPlanBudgetV17(given.resolved.bounds, batch).admitted) return null;
-  const preview: Entry = { v: 1, at: given.resolved.at, seq: given.resolved.self, prev: null, time: given.time, clamped: false, epoch: 0,
+  const preview: Entry = { v: 1, genesis: sealedAt(given.resolved.at).genesis, seq: given.resolved.self, prev: null, time: given.time, clamped: false, epoch: 0,
     input: { ...given.input, message: given.input.message, decision: "applied" }, uses: [], prepared: [], effects: [{ effect: "open", item: given.resolved.self, type: "evidence-batch", state: "funded" },
       { effect: "value", item: given.resolved.self, slot: "batch", value: evidenceBatchWireV17(batch) }], sends: [] };
   return batchAt(given.state, given.own, preview, given.resolved.bounds, 0);
@@ -398,7 +399,7 @@ function writtenPlan(given: RuleGiven, result: OutcomeGives) {
   // final carrier then opens the same plan from this actual written proof.
   if (!rows) return null;
   if (!rows.length || rows.some(row => row.record.planAt !== null)) return null;
-  const ref = factOf(given.own, given.resolved.at, receipt.id), manifest = publication.refs["manifest"];
+  const ref = factOf(given.own, sealedAt(given.resolved.at), receipt.id), manifest = publication.refs["manifest"];
   if (!ref || !isFactRef(manifest)) throw Error("The written publication has no exact receipt or manifest");
   const first = rows[0]!, holder = completeRows(given.state, publication)?.find(row => row.record.ordinal === 0);
   if (!holder || !evidenceFundedBatchV17(given.state, given.own, holder.item, given.resolved.bounds)) throw Error("The written plan has no original funded holder");
@@ -461,8 +462,8 @@ export function destinationEvidencePlanPending(state: StateView, own: Own, opera
 function publishedBase(given: RuleGiven, publication: FactRef, manifest: FactRef): string {
   const birth = given.own(publication.seq), uses = birth?.entry.uses.filter(use => same(use.fact, manifest)) ?? [];
   const source = uses.length === 1 ? given.own.retained?.(uses[0]!) : null;
-  if (!birth || !same(factOf(given.own, given.resolved.at, publication.seq), publication) || !source || !isEntry(source)
-    || !same(source.at, manifest.at) || source.seq !== manifest.seq || entryHash(source) !== manifest.hash
+  if (!birth || !same(factOf(given.own, sealedAt(given.resolved.at), publication.seq), publication) || !source || !isEntry(source)
+    || !isEntryBodyOf(source, manifest)
     || source.input.type !== "act" || !["propose-manifest", "propose-file"].includes(source.input.signed.intent.kind)
     || !isObjectId(source.input.signed.intent.fields["base"])) throw new RuleFault("The published plan's retained manifest is unavailable");
   return source.input.signed.intent.fields["base"];
@@ -531,7 +532,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
   // but leave its emission to deriveEffects so the carrying entry has one open.
   const implicitBatchOpen = (given: RuleGiven): RuleEffect => ({ effect: "open", item: given.resolved.self, type: "evidence-batch", state: "funded" });
   const dispatch = (given: RuleGiven, batch: EvidenceBatchRecordV17): RuleRequest | null => batch.ordinal + 1 < batch.total
-    ? fundRequest(given.resolved.at, batch, batch.ordinal + 1) : null;
+    ? fundRequest(sealedAt(given.resolved.at), batch, batch.ordinal + 1) : null;
   // Only the final actual carrier may catch up an already written receipt.
   // The receipt callback uses the same marker when carriers won the race.
   const latePlan = (given: RuleGiven, batch: EvidenceBatchRecordV17): RuleEffect[] => {
@@ -649,7 +650,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     if (given.input.type !== "outcome" || given.input.result !== "confirmed") return null;
     const operation = given.state.operation(given.input.operation), pending = operation && destinationEvidenceFundingPending(given.state, given.own, operation);
     const source = pending && captureAt(given.state, given.own, pending.capture, given.resolved.bounds);
-    return source ? fundRequest(given.resolved.at, { publication: source.ref, operation: source.operation, capture: source.capture }, 0) : null;
+    return source ? fundRequest(sealedAt(given.resolved.at), { publication: source.ref, operation: source.operation, capture: source.capture }, 0) : null;
   } };
   next["evidence-plan-outcome-v17"] = { place: "outcome", rules: { selects: false, read: false, retries: () => false,
     most: { effects: 8, requests: 0, operations: 1 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
@@ -662,7 +663,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
   const published = (given: RuleGiven, operation: Operation): OutcomeGives => {
     const current = planFor(given.state, given.own, operation);
     if (!current || given.input.type !== "outcome" || given.input.result !== "confirmed") return { effects: [], sends: [], opens: [] };
-    const { plan, selected } = current, written = factOf(given.own, given.resolved.at, plan.written);
+    const { plan, selected } = current, written = factOf(given.own, sealedAt(given.resolved.at), plan.written);
     if (!written) throw Error("The published plan lost its actual written fact");
     const check = selected.check, policy = selected.record.policy;
     const binding = { v: 1 as const, source: checkSourceV13(check), stage: "published" as const, checker: check.checker,
@@ -740,7 +741,7 @@ export function* evidenceFundingFloorReferencesV17(snapshot: StateSnapshot, own:
   }
   for (const seq of positions) {
     const value = own(seq);
-    if (!value || !same(value.entry.at, at) || value.entry.seq !== seq || entryHash(value.entry) !== value.hash) throw Error("A funding source is unavailable");
+    if (!value || value.entry.seq !== seq || entryHash(value.entry) !== value.hash) throw Error("A funding source is unavailable");
     yield seq;
   }
 }

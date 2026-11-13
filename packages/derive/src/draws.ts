@@ -23,7 +23,7 @@
  * opens, other than the holder itself.
  */
 
-import type { Bounds, Effect, Entry, Held } from "@generalbusiness/dap-contract";
+import type { Bounds, Entry, GenesisEffect, Held } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
 import { operationSettled } from "./ledger.ts";
@@ -79,7 +79,8 @@ export interface DrawOptions extends Partial<Pick<Reading, "facts" | "own" | "te
 /** What that entry does to the counts of the holders, on the state before it; or the fault of an entry that draws past a count, or opens a held operation with no holder. */
 export function drawsOf(view: StateView, definition: ValidDefinition, entry: Drawing, options: DrawOptions = {}, binding?: { item: number; message: string } | null): Drawn | DrawFault {
   const r = definition.reserving;
-  const operations = entry.effects.filter((effect): effect is Extract<Effect, { effect: "operation" }> => effect.effect === "operation");
+  const effects: readonly GenesisEffect[] = entry.effects;
+  const operations = effects.filter((effect): effect is Extract<GenesisEffect, { effect: "operation" }> => effect.effect === "operation");
   if ((!r || (Object.keys(r.holders).length === 0)) && operations.every((effect) => effect.for === undefined)) return NO_DRAW;
   const fault = (name: DrawFault["fault"], detail: string): DrawFault => ({ fault: name, detail });
   const input = entry.input;
@@ -87,7 +88,7 @@ export function drawsOf(view: StateView, definition: ValidDefinition, entry: Dra
   const deciding = input.type === "delivery" && input.message.class === "request" && input.message.type === "tell";
   const decided = binding === undefined && deciding && scope ? decisionBinding(view, definition, entry, {
     ...options, bounds: options.bounds ?? PROPOSED_BOUNDS, platform: options.platform, facts: options.facts ?? [], prepared: [],
-    own: options.own ? (seq) => seq < entry.seq ? options.own!(seq) : null : undefined,
+    own: options.own ? Object.assign((seq: number) => seq < entry.seq ? options.own!(seq) : null, { sequence: () => options.own!.sequence() }) : undefined,
     clock: { reading: entry.time ?? scope.time, asOf: entry.time ?? scope.time, behind: entry.clamped === true },
   }) : binding ?? null;
   const working = new Map<number, Counts>();

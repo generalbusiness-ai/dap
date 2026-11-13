@@ -26,7 +26,7 @@ export function observeDirectoryFinish(at: ScopeRef, expectedBudget: () => Archi
   const parentGet = parentObjects.get, parentGetDescriptor = Object.getOwnPropertyDescriptor(parentObjects, "get"), parentReads = new Map<string, number>();
   let rejected: { readonly cost: Partial<ArchiveCost>; readonly used: ArchiveCost } | undefined;
   const matches = (where: ScopeRef, budget: unknown) => budget !== undefined && budget === expectedBudget()
-    && where.scope === at.scope && where.inc === at.inc && where.kind === at.kind;
+    && where.scope === at.scope && where.genesis === at.genesis;
   const capture = (work: () => void) => {
     // A finite diagnostic ceiling, never a production work allowance.
     if (captures >= 32) { overflow = true; return; }

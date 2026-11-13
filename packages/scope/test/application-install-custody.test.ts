@@ -1,3 +1,4 @@
+import { net as sourceNet } from "../src/testing.ts";
 /** Real native room scopes, production member authority, SQLite commits,
  * operation driver, eviction/recovery, detached-text transport and local R2.
  * Repository creation, Git objects, clock and read-session inspector are
@@ -7,19 +8,19 @@ import { command, memoryStore as cliStore, type Context } from "../../cli/src/in
 import { applicationCommands } from "../../cli/src/application-install-runtime.ts";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { McpService, memoryStore as custodyStore, type ServerPort, type HostedRegistry, MODERN } from "@generalbusiness/dap-mcp";
-import type { Fetched } from "@generalbusiness/dap-derive";
-import type { Sourced } from "../src/namespace.ts";
+import { admittedOrigin, type Sourced } from "../src/namespace.ts";
 import { lending } from "../../../examples/lending/definition.ts";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { env } from "cloudflare:test";
 import { expect, test, vi } from "vitest";
-import { PROPOSED_BOUNDS, type ControlRequest, type Digest } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type ControlRequest, type Digest, type Entry } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, isSeed, parseStrict, scopeIdOf, signControl, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { TRUSTED_APPLICATION_COHORT as C, applicationPublicationOrigin, installedApplicationPublicationOrigin, platform } from "@generalbusiness/dap-platform";
 import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext } from "@generalbusiness/dap-client/application";
 import { encodeAgentKeyInvitation, invitationIssueFields, secretSigner, signedApplicationInstall, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { outsideOf as hostOutside } from "../src/worker.ts";
+import { hostedRegistryName } from "../src/hosted-registry-name.ts";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { applicationSandboxPage } from "../src/applications/route.ts";
 import { applicationHttpPeer, applicationResolverFixture, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationContentBindings, applicationWorkerBindings } from "./fixtures-native.ts";
@@ -115,7 +116,7 @@ test.each(installations)("$name: one signed native install settles through Direc
       let result;
       if (specimen.application === "Counter") {
         const local = cliStore(); await local.keep("operator", rita.secret);
-        await local.save({ v: 1, service: port.service, key: "operator", repository: { directory, membership, rules: A.name, destination: G.name } });
+        await local.save({ v: 2, service: port.service, key: "operator", repository: { directory, membership, rules: A.name, destination: G.name } });
         cli = { store: local, fetch: port.fetch!, now: life.now };
         cli.applicationCommand = applicationCommands(cli, store, peer.fetch, JSON.stringify(f.trust));
         const argv = ["install", f.uri, "--release", f.packet.ids.release, "--request", key, "--role", "admin", "--role", "member", "--values", specimen.values];
@@ -177,7 +178,7 @@ test.each(installations)("$name: one signed native install settles through Direc
       expect(final).toMatchObject({ ok: true, value: [{ id: job, state: "refused", values: { phase: "creation", reason: "application-creation-refused" } }] });
       expect((await life.wait(() => M.item(0))).values["adminActions"]).toContain("counting.control");
       expect((await life.wait(() => A.summary())).value.items.find(item => item.type === "definition")).toMatchObject({ state: "active", values: { digest: f.packet.package.semantic.entry } });
-      const birth = await life.wait(() => (C.object as unknown as { source(seq: number): Promise<Sourced> }).source(0));
+      const birth = await life.wait(() => (C.object as unknown as { source(seq: number, origin: boolean, context: import("../src/ports.ts").SourceReadContext): Promise<Sourced> }).source(0, false, { maxBytes: (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) }));
       expect(parseStrict(birth.bytes!)).toMatchObject({ input: { type: "genesis", decision: "refused" } });
       expect((await nativeWorker.fetch(new Request("https://scopes.test" + applicationScreenPath(D.name, job, f.packet.ids.presentation)), applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX))).status).toBe(404);
       const history = await life.wait(() => A.entries());
@@ -219,14 +220,14 @@ test.each(installations)("$name: one signed native install settles through Direc
     expect(original[0]!.input).toMatchObject({ type: "act", signed });
     expect(history.filter(entry => entry.input.type === "outcome")).toHaveLength(2);
     const current = (await life.wait(() => C.summary())).at;
-    const provenance = await life.wait(() => (C.object as unknown as { source(seq: number, origin: boolean): Promise<Sourced> }).source(current.seq, true));
-    const facts: Fetched[] = provenance.origin!.map(copy => ({ fact: copy.fact, entry: parseStrict(copy.bytes) as Fetched["entry"], under: copy.under }));
+    const provenance = await life.wait(() => (C.object as unknown as { source(seq: number, origin: boolean, context: import("../src/ports.ts").SourceReadContext): Promise<Sourced> }).source(current.seq, true, { maxBytes: (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes, milliseconds: Math.floor((sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).fetchSeconds * 1000) }));
+    const facts = admittedOrigin(provenance.origin!.map(copy => ({ ...copy, entry: parseStrict(copy.bytes) as Entry })), (sourceNet.sized.get(C.name) ?? PROPOSED_BOUNDS).entryBytes);
     const from = { at: await life.wait(() => C.at()), seq: current.seq, hash: current.hash };
     const directory = await life.wait(() => D.at()), destination = await life.wait(() => G.at());
     expect(installedApplicationPublicationOrigin(from, directory, destination, facts)).toBe(true);
     expect(applicationPublicationOrigin(from, directory, destination, facts)).toBe(false);
     expect(installedApplicationPublicationOrigin(from, directory, destination, facts.slice(0, 2))).toBeNull();
-    expect(installedApplicationPublicationOrigin(from, { ...directory, inc: destination.inc }, destination, facts)).toBe(false);
+    expect(installedApplicationPublicationOrigin(from, { ...directory, genesis: destination.genesis }, destination, facts)).toBe(false);
     expect(installedApplicationPublicationOrigin(from, directory, { ...destination, scope: directory.scope }, facts)).toBe(false);
     await f.store.put(f.packet.bytes, f.packet.ids.release);
     const screenEnv = { ...applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX), DEPLOYMENT: "native-install-screen-test" };
@@ -336,7 +337,7 @@ test("hosted Worker application trust reaches its lazy native agent before the p
     hostedTest.applicationSettings = { APPLICATION_TRUST: JSON.stringify([{ release, publisher: rita.key, host: "packages.test" }]) };
     const body = utf8(JSON.stringify({ link: encodeAgentKeyInvitation(link) }));
     const request: ControlRequest = { v: 1, action: "create", service: "https://scopes.test", membership, agent: null, actor: rita.key, body: digestBytes(body), op: "trust-forward-create", notAfter: timeOf(life.now() + 60_000) };
-    const registry = env.REGISTRIES.get(env.REGISTRIES.idFromName(membership.scope)) as unknown as Pick<HostedRegistry, "create">;
+    const registry = env.REGISTRIES.get(env.REGISTRIES.idFromName(hostedRegistryName(membership))) as unknown as Pick<HostedRegistry, "create">;
     const created = await life.wait(() => registry.create(signControl(request, rita.secret), body, "https://scopes.test"));
     expect(created.status).toBe(201);
     const agent = created.body["agent"], bearer = created.body["bearer"];

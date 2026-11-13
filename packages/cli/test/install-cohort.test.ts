@@ -1,7 +1,7 @@
 import { retainHistoricalInstallPlan } from "./support/historical-install-plan.ts";
 import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 
@@ -67,7 +67,7 @@ function scenario(fault: "none" | "reply" | "save" = "none", replaceUnsentLegacy
       }
       bodies.push(body);
       receipt ??= {
-        fact: { at: { kind: "register", scope: scopeIdOf({ v: 1, kind: "register", definition: request.definition, creator: null, cause: intentDigest(request.creation.intent), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(9)) }, seq: 0, hash: textDigest("fake service acknowledgement") },
+        fact: { at: { scope: scopeIdOf({ v: 1, kind: "register", definition: request.definition, creator: null, cause: intentDigest(request.creation.intent), ordinal: 0 }), genesis: textDigest("fake service acknowledgement") }, seq: 0, hash: textDigest("fake service acknowledgement") },
         definition: request.definition, intent: intentDigest(request.creation.intent), effects: [], sends: [], epoch: 0,
       };
       if (fault === "reply" && !failed) { failed = true; throw new Error("fake accepted reply loss"); }

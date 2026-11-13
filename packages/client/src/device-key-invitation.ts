@@ -21,7 +21,7 @@ export function isDeviceKeyInvitation(value: unknown): value is DeviceKeyInvitat
     const origin = invitationServiceUrl(value["service"]);
     if (!origin || origin.origin !== value["service"] || origin.pathname !== "/") return false;
     const r = value["repository"];
-    if (!closed(r, ["directory", "membership", "rules", "destination"]) || !closed(r["directory"], ["scope", "inc", "kind"]) || !isScopeRef(r["directory"]) || r["directory"].kind !== "directory" || !closed(r["membership"], ["scope", "inc", "kind"]) || !isScopeRef(r["membership"]) || r["membership"].kind !== "membership" || !isScopeId(r["rules"]) || !isScopeId(r["destination"])) return false;
+    if (!closed(r, ["directory", "membership", "rules", "destination"]) || !closed(r["directory"], ["scope", "genesis"]) || !isScopeRef(r["directory"]) || !closed(r["membership"], ["scope", "genesis"]) || !isScopeRef(r["membership"]) || !isScopeId(r["rules"]) || !isScopeId(r["destination"])) return false;
     if (!closed(value["invitation"], ["at", "seq", "hash"]) || !isFactRef(value["invitation"]) || !same(value["invitation"]["at"], r["membership"]) || value["invitation"]["seq"] < 1) return false;
     const expected = value["expected"];
     if (!closed(expected, ["on", "member"]) || !revision(expected["on"]) || !revision(expected["member"])) return false;

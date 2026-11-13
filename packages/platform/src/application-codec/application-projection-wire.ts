@@ -12,7 +12,7 @@ const projectionName = (value: unknown): value is string => typeof value === "st
 const only = (value: object, keys: string) => Object.keys(value).sort().join() === keys;
 function query(value: unknown): value is ApplicationProjectionQuery {
   return isRecord(value) && only(value, "directory,install,items,projection,scope,v") && value["v"] === 1
-    && isScopeRef(value["scope"]) && isScopeRef(value["directory"]) && value["directory"].kind === "directory"
+    && isScopeRef(value["scope"]) && isScopeRef(value["directory"])
     && whole(value["install"]) && projectionName(value["projection"]) && isRecord(value["items"])
     && Object.keys(value["items"]).length <= B.sources && Object.entries(value["items"]).every(([key, id]) => name(key) && whole(id));
 }

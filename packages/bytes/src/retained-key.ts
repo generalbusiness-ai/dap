@@ -19,6 +19,8 @@ export function retainedByteDomain(kind: RetainedInput["kind"], domain?: string)
     if (typeof domain !== "string" || domain.length === 0) throw new RangeError("a retained value states its byte domain");
     return domain;
   }
+  // A `birth` names its sequence by the genesis entry hash, not its bytes by a digest in a domain (ruling ae48dd39).
+  if (kind === "birth") throw new RangeError("a birth row is named by an entry hash, not by a byte digest");
   if (!Object.hasOwn(RETAINED_BYTE_DOMAINS, kind)) throw new RangeError("unknown retained byte kind");
   return RETAINED_BYTE_DOMAINS[kind];
 }

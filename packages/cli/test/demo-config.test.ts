@@ -66,9 +66,8 @@ test("dap-demo has private namespaces, enforced index and the Grow serving bound
   expect(JSON.parse(demo.vars.ARTIFACTS_CONFIG)).toEqual({ registerScope: "sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq", namespace: "dap-demo", host: "6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net", maxBytes: 10485760, credentialIdentity: "adapter-attempt" });
   expect(demo.vars.REGISTER_SCOPE).toBe("sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq");
   expect(JSON.parse(demo.vars.INSTALLED_REGISTER_SCOPES)).toEqual(["sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq", "sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq"]);
-  const start = JSON.parse(demo.vars.DEMO_START_CONFIG);
-  expect(start).toEqual({ v: 3, origin: "https://dap-demo.inguz.workers.dev", deployment: "dap-demo", register: { kind: "register", scope: "sc_zm56yco5zyx7n3kx7e5jcxz55q5wp7y2lcuy2ialj7r7mzzcarjq", inc: "in_q4heevf4laa43j5ehocmjn54wq" }, definition: "platform:register@26" });
-  expect(start.register.scope).toBe(JSON.parse(demo.vars.ARTIFACTS_CONFIG).registerScope);
+  // Ruling 19a509a5 (Q-D1): no start config, so the demo Worker serves no start offer until the planner names its new register.
+  expect(demo.vars).not.toHaveProperty("DEMO_START_CONFIG");
   for (const field of ["SERVING_CREATION_KEY_PER_HOUR", "SERVING_CREATION_ADDRESS_PER_HOUR", "SERVING_READ_KEY_PER_MINUTE", "SERVING_READ_ADDRESS_PER_MINUTE"]) expect(demo.vars[field]).toBe(grow.vars[field]);
   for (const field of ["ALLOW_OPEN_CREATION", "DEPLOYMENT", "SESSION_SECRET"]) expect(demo.vars).not.toHaveProperty(field);
 

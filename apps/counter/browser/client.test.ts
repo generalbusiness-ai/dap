@@ -2,7 +2,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Entry, Item, MemberRef, Receipt, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { ScopeKind } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
+import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import { secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import { assignedTurn, canCommit, countingView, proposal, type CountingView } from "./model.ts";
@@ -24,7 +26,7 @@ export function checkProposalTypes(view: CountingView, actor: ActorIdentity): vo
 
 async function fixture(joined=true) {
   const secret=new Uint8Array(32).fill(51),definition=COUNTING_COMMITMENTS_DEFINITION;
-  const ref=(kind:ScopeRef["kind"]):ScopeRef=>({scope:scopeIdOf({v:1,kind,definition,creator:null,cause:textDigest(`FAKE gateway ${kind}`),ordinal:0}),inc:newIncarnation(new Uint8Array(16).fill(8)),kind});
+  const ref=(kind:ScopeKind):ScopeRef=>(scriptedSequence({v:1,kind,definition,creator:null,cause:textDigest(`FAKE gateway ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",8).at);
   const scope=ref("lane"),membership=ref("membership"),member={membership,member:"@ada" as const};
   const identity:ActorIdentity={origin:"https://gateway-fake.test",deployment:"FAKE gateway",scope,definition,membership,member,publicKey:keyIdOfSecret(secret)};
   const item=(type:string,id:number,state:string,values:Item["values"],parties:Item["parties"]):Item=>({type,id,state,revision:1,opened:null,values,parties,refs:{},attributed:[]});
@@ -42,7 +44,7 @@ async function fixture(joined=true) {
     if(path.endsWith("/acts")){
       posts++;assert.ok(held?.journal,"custody must exist before POST");assert.equal(activeAttempt(held.journal).phase,"inflight");const submitted=JSON.parse(init?.body??"{}");assert.equal(canonicalize(submitted.signed),canonicalize(held.envelope.signed));
       // Scripted accepted history can later contradict an untrusted or lost response. It is NOT native admission proof.
-      if(metadata!=="trusted"||reply==="lost"){entry={v:1,at:scope,seq:2,prev:head.hash,time:new Date().toISOString(),clamped:false,epoch:0,input:{type:"act",signed:submitted.signed,authority:[],presented:{}},uses:[],prepared:[],effects:[],sends:[]};receipt={fact:factRefOf(entry),definition,intent:intentDigest(submitted.signed.intent),effects:[],sends:[],epoch:0};}
+      if(metadata!=="trusted"||reply==="lost"){entry={v:1,genesis:scope.genesis,seq:2,prev:head.hash,time:new Date().toISOString(),clamped:false,epoch:0,input:{type:"act",signed:submitted.signed,authority:[],presented:{}},uses:[],prepared:[],effects:[],sends:[]};receipt={fact:factRefOf(entry,scope),definition,intent:intentDigest(submitted.signed.intent),effects:[],sends:[],epoch:0};}
       if(race==="before-reply"&&held.journal)held={...held,journal:markActive(held.journal,"unknown")};
       if(reply==="lost")throw new Error("FAKE lost response");return Response.json({answer:"refused",reason:"guard-failed",judgedAt:head},{status:422});
     }
@@ -188,8 +190,8 @@ test("FAKE read-only dispatcher Check leaves valid prepared custody unsent; orig
 // Pure projection/proposal witness over authored summary data; not native authority or media evidence.
 test("C1 claims use the complete active roster without assigning a speaker, and only the exact linked pledge can resolve",()=>{
   const definition=COUNTING_COMMITMENTS_DEFINITION;
-  const scope:ScopeRef={scope:scopeIdOf({v:1,kind:"lane",definition,creator:null,cause:textDigest("FAKE C1 model"),ordinal:0}),inc:newIncarnation(new Uint8Array(16).fill(8)),kind:"lane"};
-  const membership:ScopeRef={...scope,kind:"membership"};
+  const scope:ScopeRef=scriptedSequence({v:1,kind:"lane",definition,creator:null,cause:textDigest("FAKE C1 model"),ordinal:0},"2026-01-01T00:00:00Z",8).at;
+  const membership:ScopeRef=scriptedSequence({v:1,kind:"membership",definition,creator:null,cause:textDigest("FAKE C1 model"),ordinal:0},"2026-01-01T00:00:00Z",8).at;
   const ada={membership,member:"@ada" as const},bea={membership,member:"@bea" as const},cy={membership,member:"@cy" as const};
   const actor=(member:MemberRef):ActorIdentity=>({origin:"https://model-fake.test",deployment:"FAKE",scope,definition,membership,member,publicKey:keyIdOfSecret(new Uint8Array(32).fill(51))});
   const item=(type:string,id:number,state:string,values:Item["values"],parties:Item["parties"],refs:Item["refs"]={}):Item=>({type,id,state,revision:id+1,opened:null,values,parties,refs,attributed:[]});

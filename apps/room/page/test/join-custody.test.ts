@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import type { Entry, PlatformDefinition, Receipt, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, entryHash, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Entry, PlatformDefinition, Receipt, ScopeRef, SignedIntent, ScopeKind } from "@generalbusiness/dap-contract";
+import { b64url, entryHash, intentDigest, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { checkOriginal as actualCheckOriginal, joinInvitation as actualJoinInvitation, originalJoin, type JoinStorage } from "../src/join-custody.ts";
 import { memoryPageKeys } from "./private-key-fixture.ts";
@@ -8,26 +8,23 @@ const keys = memoryPageKeys();
 const joinInvitation: typeof actualJoinInvitation = (origin, invitation, storage, options) => actualJoinInvitation(origin, invitation, storage, { keys, ...options });
 const checkOriginal: typeof actualCheckOriginal = (origin, storage, options) => actualCheckOriginal(origin, storage, { keys, ...options });
 
-test("legacy pending enrollment imports the same key before removing its seed and keeps the original envelope across reload", async () => {
+test("a legacy pending enrollment of format 1 is refused, kept unchanged and never sent", async () => {
   const f = fixture(), secret = new Uint8Array(32).fill(67); f.lose();
-  const original = await joinInvitation(origin, invitation(), f.storage, { fetch: f.fetch, now, lock, secret });
+  await joinInvitation(origin, invitation(), f.storage, { fetch: f.fetch, now, lock, secret });
   const name = [...f.values.keys()][0]!, current = JSON.parse(f.values.get(name)!);
   const { publicKey: _publicKey, ...retained } = current;
-  const legacy = { ...retained, v: 1, secret: b64url(secret) };
-  const signed = JSON.stringify(legacy.prepared.signed);
-  f.values.set(name, JSON.stringify(legacy));
-  const checked = await checkOriginal(origin, f.storage, { fetch: f.fetch, now, lock, keys: memoryPageKeys() });
-  expect(checked?.status).toBe("verified"); expect(checked?.key).toBe(original.key);
-  const migrated = JSON.parse(f.values.get(name)!);
-  expect(migrated.v).toBe(2); expect(migrated.secret).toBeUndefined(); expect(migrated.publicKey).toBe(original.key);
-  expect(JSON.stringify(migrated.prepared.signed)).toBe(signed);
-  expect(f.counters().posts).toBe(1);
+  const legacy = JSON.stringify({ ...retained, v: 1, secret: b64url(secret) });
+  f.values.set(name, legacy);
+  const posts = f.counters().posts;
+  await expect(checkOriginal(origin, f.storage, { fetch: f.fetch, now, lock, keys: memoryPageKeys() })).rejects.toThrow("The original private enrollment is unavailable or no longer current. Nothing was replaced.");
+  expect(f.values.get(name)).toBe(legacy);
+  expect(f.counters().posts).toBe(posts);
 });
 
 // Actual signer/codec/HTTP adapter with SCRIPTED storage, locking and service
 // answers. No native enrollment, grants, deployment or provider runs here.
 const origin = "https://page-custody.test";
-const ref = (kind: ScopeRef["kind"]): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:membership@2", creator: null, cause: textDigest("TEST custody " + kind), ordinal: 0 }), kind, inc: newIncarnation(new Uint8Array(16).fill(7)) });
+const ref = (kind: ScopeKind): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:membership@2", creator: null, cause: textDigest("TEST custody " + kind), ordinal: 0 }), genesis: textDigest("TEST custody genesis " + kind) });
 const directory = ref("directory"), membership = ref("membership");
 const invitation = (n = 1, secret = "TEST invitation secret", targetMembership = membership, handle = "@ada") => "artroom-invite:" + b64url(utf8(JSON.stringify({ v: 1, service: origin, repository: { directory, membership: targetMembership, rules: ref("rules").scope, destination: ref("destination").scope }, invitation: n, secret, handle, definition: "platform:membership@2" })));
 const lock = { run: async <T>(work: () => Promise<T>) => work() };
@@ -45,7 +42,7 @@ function fixture(definition: PlatformDefinition = "platform:membership@2") {
       expect(originalJoin(origin, storage)?.status).toBe("unknown");
       signed = (JSON.parse(init!.body!) as { signed: SignedIntent }).signed;
       expect(verifySignedIntent(signed)).toBe(true);
-      entry = { v: 1, at: membership, seq: 5, prev: textDigest("TEST previous"), time: "2026-10-12T00:00:00Z", clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
+      entry = { v: 1, genesis: membership.genesis, seq: 5, prev: textDigest("TEST previous"), time: "2026-10-12T00:00:00Z", clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
       receipt = { fact: { at: membership, seq: 5, hash: entryHash(entry) }, definition, intent: intentDigest(signed.intent), effects: [], sends: [], epoch: 0 };
       if (refused) return Response.json({ answer: "refused", reason: "expired", judgedAt: { seq: 0, hash: textDigest("TEST refusal") } });
       if (lost) throw new Error("TEST lost reply");

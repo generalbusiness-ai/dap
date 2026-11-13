@@ -23,8 +23,8 @@
  * authority's proposals, to be measured by the proof plan.
  */
 
-import type { Entry, FactRef, FieldValue, KeyId, Observation, OperationId, PlatformData, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, parseStrict, entryHash, factRefOf, isDigest, isFactRef, isScopeRef, timeOf, timeMs, utf8, textDigest, isMemberRef } from "@generalbusiness/dap-bytes";
+import type { Entry, FactRef, FieldValue, KeyId, Observation, OperationId, PlatformData, PlatformDefinition, ScopeId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, parseStrict, entryHash, factRefOf, isDigest, isFactRef, isScopeRef, timeOf, timeMs, utf8, textDigest, isMemberRef, same } from "@generalbusiness/dap-bytes";
 import type { Item, Opening, Operation, OperationRules, Own, PlatformRule, PublicationOrigin, RecordedRef, RuleEffect, RuleGiven, RuleRequest, Rules, StateView } from "@generalbusiness/dap-derive";
 import { observedOf } from "@generalbusiness/dap-derive";
 import { DESTINATION_CHANGED_SET, isJudgeChanges, isRecordedJudgeEvidence, isObjectId, judgeReservation, judgeReservationWithStanding, fileSound, type ReservationAsked, type ReservationRead, type ReservationStanding, type Statement } from "./reservation.ts";
@@ -639,9 +639,9 @@ const heldId = (state: Pick<StateView, "page">, slot: "membership" | "rules"): S
  * It is code of the version, as the production authority and a replay
  * read it.
  */
-export const destinationMembership = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => referenceOf(state, heldId(state, "membership"), "membership");
+export const destinationMembership = (state: Pick<StateView, "page" | "geneses">): RecordedRef | null => referenceOf(state, heldId(state, "membership"), "membership");
 /** The same, for the rules scope that a destination observes: the value `branch.rules` (the same table). Guard 1 of an observation of the rules reads it, in a replay (`Platform.rulesScope`). The outcome rows read this reference before their turn. */
-export const destinationRulesScope = (state: Pick<StateView, "page" | "incarnations">): RecordedRef | null => referenceOf(state, heldId(state, "rules"), "rules");
+export const destinationRulesScope = (state: Pick<StateView, "page" | "geneses">): RecordedRef | null => referenceOf(state, heldId(state, "rules"), "rules");
 
 /**
  * "The next `judge`" (section 12.1.5, "The rule `open-judge`, and one `judge`
@@ -705,6 +705,12 @@ const ownEntry = (own: Own, seq: number) => {
   const kept = own(seq);
   if (!kept) throw new Error(`this scope's own entry ${seq} is not at hand`);
   return kept.entry;
+};
+/** This scope's own full reference, from its admitted genesis. A rule that needs it and has none has a fault. */
+const ownAt = (own: Own): ScopeRef => {
+  const sequence = own.sequence();
+  if (!sequence) throw new Error("this scope's own genesis association is not at hand");
+  return sequence.at;
 };
 
 /** Sparse native history preserves the order of every held causal entry.
@@ -776,7 +782,7 @@ const matchesRecordMembers = (value: unknown, required: Readonly<Record<string, 
  * nothing of a link's entry.
  */
 const COLLECTED_RECORD: Readonly<Record<keyof typeof COLLECT_MOST, (value: unknown) => boolean>> = {
-  links: (value) => matchesRecordMembers(value, { link: isFactRef, issue: (issue) => isScopeRef(issue) && issue.kind === "lane" }),
+  links: (value) => matchesRecordMembers(value, { link: isFactRef, issue: (issue) => isScopeRef(issue) }),
 };
 
 // ---------------------------------------------------------------- what an operation is for
@@ -1149,10 +1155,10 @@ export function initialCommitOf(state: Pick<StateView, "page">, own: Own, format
   const claim = branch?.refs["claim"];
   if (!branch || !isFactRef(claim)) throw new Error("a founding first head holds its verified claim");
   const genesis = ownEntry(own, 0);
-  if (pinnedOf(own) === DESTINATION_1) return initialCommitObjects(format, genesis.at.scope, genesis.time, claim);
+  if (pinnedOf(own) === DESTINATION_1) return initialCommitObjects(format, ownAt(own).scope, genesis.time, claim);
   const [repository, handle, directory] = [branch.values["repository"] as { name?: unknown } | null, branch.values["founderHandle"], branch.refs["directory"]];
   if (typeof repository?.name !== "string" || typeof handle !== "string" || !isScopeRef(directory)) throw new Error("a founding of version 2 holds the repository's name, the founder's handle and the directory");
-  return initialCommitObjects(format, genesis.at.scope, genesis.time, claim, { name: repository.name, handle, directory: directory.scope });
+  return initialCommitObjects(format, ownAt(own).scope, genesis.time, claim, { name: repository.name, handle, directory: directory.scope });
 }
 
 /** A receipt's recorded file, commit objects and public ref. Every fact is an own entry or a verified reference held by an item. */
@@ -1165,9 +1171,9 @@ export function destinationReceipt(state: Pick<StateView, "item" | "page">, own:
     const cause = filePublicationCause(publication);
     if (!cause) throw new Error("A file receipt holds its immutable sending cause");
     const supersededBy = receipt.values["supersededBy"];
-    const file = { v: 1, publication: factRefOf(entry), cause, path: publication.values["path"], contentDigest: publication.values["contentDigest"], commit,
+    const file = { v: 1, publication: factRefOf(entry, ownAt(own)), cause, path: publication.values["path"], contentDigest: publication.values["contentDigest"], commit,
       ...(supersededBy == null ? {} : { supersededBy }) };
-    return { ...fileReceiptObjects(format, entry.at.scope, entry.time, cause, file), ref: fileReceiptRef(cause), file };
+    return { ...fileReceiptObjects(format, ownAt(own).scope, entry.time, cause, file), ref: fileReceiptRef(cause), file };
   }
   let operation: FactRef;
   let file: unknown;
@@ -1175,17 +1181,17 @@ export function destinationReceipt(state: Pick<StateView, "item" | "page">, own:
     const [heldOperation, manifest, reason] = [publication.refs["operation"], publication.refs["manifest"], publication.values["reason"]];
     if (!isFactRef(heldOperation) || !isFactRef(manifest)) throw new Error("a publication's receipt holds its operation and manifest");
     operation = heldOperation;
-    file = { v: 1, publication: factRefOf(entry), operation, manifest, commit, ...(typeof reason === "string" && reason.startsWith("single-controller:") ? { reason } : {}) };
+    file = { v: 1, publication: factRefOf(entry, ownAt(own)), operation, manifest, commit, ...(typeof reason === "string" && reason.startsWith("single-controller:") ? { reason } : {}) };
   } else {
     const [branch, opening] = [branchOf(state), receipt.values["opening"]];
     const claim = branch?.refs["claim"];
     if (!isFactRef(claim) || typeof opening !== "number") throw new Error("a first head's receipt holds the claim and its opening position");
-    operation = factRefOf(ownEntry(own, opening));
-    file = { v: 1, first: factRefOf(entry), claim, commit };
+    operation = factRefOf(ownEntry(own, opening), ownAt(own));
+    file = { v: 1, first: factRefOf(entry, ownAt(own)), claim, commit };
   }
   const ref = receiptRef(operation);
   if (ref === null) throw new Error("a verified operation's fact gives its receipt ref");
-  return { ...receiptObjects(format, entry.at.scope, entry.time, operation, file), ref, file };
+  return { ...receiptObjects(format, ownAt(own).scope, entry.time, operation, file), ref, file };
 }
 
 /** The commit ID in `seen` alone states an object format. `absent` and `failed` never compute a commit. */
@@ -1254,7 +1260,7 @@ export function readFor(state: Pick<StateView, "operation" | "item" | "page"> & 
   if (isStandingDestination(read.owner) && read.kind === "read" && input.type === "outcome" && input.owner === read.owner && input.kind === "mint") {
     const scope = state.scope?.(), origin = own(seqOf(read.id)), ordinal = Number(read.id.split(":")[1]);
     const current = state.operation(read.id);
-    if (!scope || !origin || origin.entry.seq !== seqOf(read.id) || canonicalize(origin.entry.at) !== canonicalize(scope.at) || entryHash(origin.entry) !== origin.hash || input.result !== "confirmed" || of?.owner !== read.owner || of.kind !== "mint"
+    if (!scope || !origin || origin.entry.seq !== seqOf(read.id) || entryHash(origin.entry) !== origin.hash || input.result !== "confirmed" || of?.owner !== read.owner || of.kind !== "mint"
       || !current || canonicalize(current) !== canonicalize(read) || read.most !== 1 || read.attempts.length !== 1 || read.attempts[0]?.attempt !== 1 || read.attempts[0].opened !== origin.entry.seq) return null;
     const served = servedBy(state, own, of), target = served ? targetOf(state, own, served.write) : null;
     const attempt = served?.write.attempts.find(attempt => attempt.attempt === served.attempt);
@@ -1657,7 +1663,7 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
   const file = fileOf(given.uses.find((used) => used.fact.hash === statement.manifest.hash)?.entry);
   const listed = given.uses.find((used) => used.fact.hash === statement.manifest.hash)?.entry;
   if (list && listed) {
-    const files = manifestFiles(listed, given.uses);
+    const files = manifestFiles(listed, statement.manifest.at, given.uses);
     const refused = !files || files.some((file) => !fileSound(file)) ? "source-mismatch" : files.some((file) => editPath(file.path) === null) ? "path-invalid" : null;
     if (refused) {
       const next = andNext(given, state, { judging: true, ended: publication.id }, true);
@@ -1693,7 +1699,7 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
     if (list && read !== null) {
       const manifestEntry = given.uses.find((use) => use.fact.hash === statement.manifest.hash)?.entry;
       const sources = sourcesOf(manifestEntry);
-      const files = manifestEntry ? manifestFiles(manifestEntry, given.uses) : null;
+      const files = manifestEntry ? manifestFiles(manifestEntry, statement.manifest.at, given.uses) : null;
       if (!sources || !files || files.some((file) => !fileSound(file))) {
         judged = { reserved: false, reason: "source-mismatch" };
       } else {
@@ -2312,8 +2318,8 @@ const WRITTEN: Rules = {
  * The key that this entry of a destination names, when the entry is an applied `compromised` notice. Null for any other entry. A
  * notice that the row's guard refused names nobody: it came from no directory of this room, so a stranger cannot close a key.
  */
-export function compromisedKey({ at, input }: Entry): string | null {
-  if (at.kind !== "destination" || input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell" || !("decision" in input) || input.decision !== "applied") return null;
+export function compromisedKey({ input }: Entry, kind: ScopeKind | undefined): string | null {
+  if (kind !== "destination" || input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell" || !("decision" in input) || input.decision !== "applied") return null;
   const { message, fields } = input.message.body as { message?: unknown; fields?: { key?: unknown } };
   return message === "compromised" && typeof fields?.key === "string" ? fields.key : null;
 }
@@ -2397,7 +2403,7 @@ export function publicationOrigin(state: StateView, operation: Operation, own: O
     const from = publication.refs["operation"], lane = publication.refs["lane"];
     const directory = branchOf(state)?.refs["directory"], destination = state.scope()?.at;
     if (!isFactRef(from) || !isScopeRef(lane) || !sameRef(lane, from.at)
-      || !isScopeRef(directory) || directory.kind !== "directory" || !destination || destination.kind !== "destination") return false;
+      || !isScopeRef(directory) || !destination) return false;
     return { from, directory, destination };
   } catch { return false; }
 }
@@ -2588,8 +2594,9 @@ export const destinationRules3: Rules = (() => {
     "checked-bound": { place: "guard", refusals: ["not-the-reservation", "not-this-check"], run: (given) => {
       const publication = given.resolved.subjects.get("also.publication");
       if (!publication || publication.state !== "reserved" || given.input.type !== "delivery" || !isScopeRef(publication.refs["lane"]) || canonicalize(given.input.from.at) !== canonicalize(publication.refs["lane"])) return { holds: false, name: "not-the-reservation" };
-      const result = given.uses.find((use) => use.fact.hash === (given.resolved.fields["result"] as FactRef).hash)?.entry;
-      const job = given.uses.find((use) => use.fact.hash === (given.resolved.fields["job"] as FactRef).hash)?.entry;
+      const resultFact = given.resolved.fields["result"] as FactRef, jobFact = given.resolved.fields["job"] as FactRef;
+      const result = given.uses.find((use) => same(use.fact, resultFact))?.entry;
+      const job = given.uses.find((use) => same(use.fact, jobFact))?.entry;
       const fields = result?.input.type === "act" ? result.input.signed.intent.fields : null;
       const opened = job?.input.type === "act" ? job.input.signed.intent.fields : null;
       const manifest = publication.refs["manifest"] as FactRef;
@@ -2600,9 +2607,9 @@ export const destinationRules3: Rules = (() => {
       const observation = snapshot14?.observation ?? (reserved?.input.type === "outcome" ? reserved.input.observed?.map((use) => use.observation).find((seen) => "subject" in seen && seen.subject === "rules") : null);
       const configured = observation && "content" in observation && observation.content.asked === "rules" ? observation.content.checks.find((check) => check.name === opened?.["name"]) : null;
       const historical = grant?.fresh?.observation;
-      const authentic = !!fields && !!opened && !!configured && job!.at.scope === manifest.at.scope && job!.at.inc === manifest.at.inc && opened["manifest"] === manifest.seq
+      const authentic = !!fields && !!opened && !!configured && same(jobFact.at, manifest.at) && opened["manifest"] === manifest.seq
         && fields["job"] === job!.seq && fields["tree"] === publication.values["tree"] && fields["configuration"] === configured.configuration
-        && result!.at.scope === manifest.at.scope && result!.at.inc === manifest.at.inc
+        && same(resultFact.at, manifest.at)
         && job!.effects.some((effect) => effect.effect === "value" && effect.item === job!.seq && effect.slot === "tree" && effect.value === publication.values["tree"])
         && historical !== undefined && !("subject" in historical) && historical.key === (result!.input.type === "act" ? result!.input.signed.intent.actor : null)
         && historical.actions.includes("change.check") && canonicalize(historical.of) === canonicalize(grant?.subject.membership)
@@ -3026,7 +3033,7 @@ const D1_KEY = { type: "text", max: 256 } as const;
 // references for the bounded own-record provenance check at mint.
 const D1_FACT = { type: "record", of: {
   at: { type: "record", required: true, of: {
-    scope: { type: "text", max: 64, required: true }, inc: { type: "text", max: 64, required: true }, kind: { type: "enum", of: ["lane"], required: true },
+    scope: { type: "text", max: 64, required: true }, genesis: { type: "digest", required: true },
   } }, seq: { ...D1_DECIDED, required: true }, hash: { type: "digest", required: true },
 } } as const;
 const D1_BASE = { type: "record", of: {
@@ -3070,8 +3077,8 @@ function standingTarget(given: RuleGiven, mint: Operation): Item | null {
 }
 function standingKeys(given: RuleGiven, publication: Item): readonly KeyId[] {
   const scope = given.state.scope(), membership = destinationMembership(given.state);
-  if (!scope || !membership?.inc) throw new Error("D1 membership incarnation is unavailable");
-  const matched = publicationStandingKeys({ at: scope.at, membership: { scope: membership.scope, inc: membership.inc, kind: "membership" }, owner: pinnedBy(given), before: given.resolved.self, own: given.own, operation: id => given.state.operation(id) }, publication);
+  if (!scope || !membership || "pending" in membership) throw new Error("D1 membership genesis is unavailable");
+  const matched = publicationStandingKeys({ at: scope.at, membership: { scope: membership.scope, genesis: membership.genesis }, owner: pinnedBy(given), before: given.resolved.self, own: given.own, operation: id => given.state.operation(id) }, publication);
   if (!matched.ok) throw new Error(`D1 standing provenance ${matched.reason}`);
   return matched.keys;
 }
@@ -3117,11 +3124,11 @@ export const destinationRules5: Rules = (() => {
       const target = standingTarget(given, operation);
       if (!target) return mint.rules.derives!(given, operation, selected);
       const membership = destinationMembership(given.state);
-      if (!membership?.inc) throw new Error("D1 membership incarnation is unavailable");
+      if (!membership || "pending" in membership) throw new Error("D1 membership genesis is unavailable");
       let active = true;
       for (const key of standingKeys(given, target)) {
         const seen = given.observed({ key })?.observation;
-        if (!seen || "subject" in seen || seen.key !== key || seen.of.scope !== membership.scope || seen.of.inc !== membership.inc || seen.of.kind !== "membership" || seen.keyState === "unknown"
+        if (!seen || "subject" in seen || seen.key !== key || !same(seen.of, membership) || seen.keyState === "unknown"
           || (seen.controller === null) !== (seen.controllerActive === null)) throw new Error("D1 complete fresh standing is unavailable");
         active &&= seen.keyState === "active" && seen.memberState === "active" && (seen.controller === null && seen.controllerActive === null || seen.controllerActive === true)
           && (seen.notAfter === null || timeMs(seen.notAfter)! > timeMs(given.time)!);

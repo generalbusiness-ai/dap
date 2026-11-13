@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { newIncarnation } from "@generalbusiness/dap-bytes";
+import { textDigest } from "@generalbusiness/dap-bytes";
 import type { ScopeId } from "@generalbusiness/dap-contract";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
@@ -98,9 +98,9 @@ test("a connection that names no active membership, and a device clock the servi
   try {
     const una = await member(d), place = placeIn(d);
     const directoryAsMembership: Place = { directory: place.directory, membership: { ...place.membership, scope: d.D.name } };
-    const otherIncarnation: Place = { directory: place.directory, membership: { ...place.membership, inc: newIncarnation(secretOf().slice(0, 16)) } };
+    const otherGenesis: Place = { directory: place.directory, membership: { ...place.membership, genesis: textDigest("TEST genesis 23") } };
     expect(await refused(d.as(una), directoryAsMembership)).toMatchObject({ shown: NO_SUCH_ROOM, why: "not-found" });
-    expect(await refused(d.as(una), otherIncarnation)).toMatchObject({ shown: NO_SUCH_ROOM, why: "misaddressed" });
+    expect(await refused(d.as(una), otherGenesis)).toMatchObject({ shown: NO_SUCH_ROOM, why: "misaddressed" });
     const session = d.as(una), now = session.now!;
     expect(await refused({ ...session, now: () => now() - 120_000 }, place)).toMatchObject({ shown: DEVICE_CLOCK, why: "expired" });
     expect(await refused({ ...session, now: () => now() + 1_000_000 }, place)).toMatchObject({ shown: DEVICE_CLOCK, why: "bad-request" });

@@ -23,8 +23,8 @@ export function archivePrivacyMetadata(sql: Pick<Sql, "exec">, prefix: ArchivePr
   const positions: ArchivePrivacyPosition[] = [];
   let previous: Digest | null = prefix.after?.hash ?? null;
   for (const position of prefix.positions) {
-    const source = { kind: "local" as const, position }, header = archiveEntryHeader(sql, source, budget);
-    if (header.seq !== position.seq || header.at.scope !== prefix.pin.at.scope || header.at.inc !== prefix.pin.at.inc || header.at.kind !== prefix.pin.at.kind) return stop("unavailable");
+    const source = { kind: "local" as const, position }, header = archiveEntryHeader(sql, source, budget, prefix.pin.at);
+    if (header.seq !== position.seq || header.at.scope !== prefix.pin.at.scope || header.at.genesis !== prefix.pin.at.genesis) return stop("unavailable");
     if (header.prev !== previous) return stop("mismatch");
     if (header.uses !== 0) {
       if (!foreign) return stop("unsupported-foreign-copy");

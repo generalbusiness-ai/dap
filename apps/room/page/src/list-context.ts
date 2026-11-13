@@ -9,7 +9,8 @@ export type ListFilter = "open" | "closed" | "merged" | "all";
 export interface ListState { query: string; filter: ListFilter }
 export interface ListStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
 
-const STORAGE = "artroom-page-lists:v1";
+// Rooms of the new format keep the tab list under a new name. The old name is never read.
+const STORAGE = "dap-page-lists-2";
 const MAX_CONTEXTS = 64;
 export const LIST_QUERY_LIMIT = 512;
 const MAX_RECORD = 128 * 1024;
@@ -25,17 +26,17 @@ function listStorageKey(context: ListContext, kind: ListKind): string | null {
   try {
     const { origin, directory, membership, key } = context;
     if (origin.length > 2048 || new URL(origin).origin !== origin || !isScopeId(directory)
-      || !isScopeRef(membership) || membership.kind !== "membership" || !isKeyId(key) || !validKind(kind)) return null;
-    return JSON.stringify([origin, directory, membership.scope, membership.inc, membership.kind, key, kind]);
+      || !isScopeRef(membership) || !isKeyId(key) || !validKind(kind)) return null;
+    return JSON.stringify([origin, directory, membership.scope, membership.genesis, key, kind]);
   } catch { return null; }
 }
 function kindOfKey(key: string): ListKind | null {
   try {
     const parts: unknown = JSON.parse(key);
-    if (!Array.isArray(parts) || parts.length !== 7) return null;
-    const [origin, directory, scope, inc, memberKind, keyId, kind] = parts;
+    if (!Array.isArray(parts) || parts.length !== 6) return null;
+    const [origin, directory, scope, genesis, keyId, kind] = parts;
     if (!validKind(kind)) return null;
-    const context = { origin, directory, membership: { scope, inc, kind: memberKind }, key: keyId } as ListContext;
+    const context = { origin, directory, membership: { scope, genesis }, key: keyId } as ListContext;
     return listStorageKey(context, kind) === key ? kind : null;
   } catch { return null; }
 }

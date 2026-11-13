@@ -112,13 +112,13 @@ export class LocalApplicationScope {
     const parent = scriptedDeviceParent(packet, founding, owner, selected, now), scope = new LocalApplicationScope(parent.name, actors, now);
     if (packet.package.v === 2) scope.#projections = packet.package.semantic.projections;
     const parts = new Map(packet.package.semantic.definitions.map(part => [part.id, part.bytes]));
-    scope.#ports.resolver = { read: async fact => fact.at.scope === parent.at.scope && fact.at.inc === parent.at.inc ? parent.read(fact.seq) : null };
+    scope.#ports.resolver = { read: async fact => fact.at.scope === parent.at.scope && fact.at.genesis === parent.at.genesis ? parent.read(fact.seq) : null };
     scope.#ports.proofs = { read: async (fact, maxBytes) => {
-      const proof = fact.at.scope === parent.at.scope && fact.at.inc === parent.at.inc ? parent.proof(fact.seq, maxBytes) : null;
+      const proof = fact.at.scope === parent.at.scope && fact.at.genesis === parent.at.genesis ? parent.proof(fact.seq, maxBytes) : null;
       return proof && canonicalize(proof.fact) === canonicalize(fact) ? proof : null;
     } };
     scope.#ports.births = { read: async (at, _milliseconds, maxBytes = PROPOSED_BOUNDS.entryBytes) =>
-      at.scope === parent.at.scope && at.inc === parent.at.inc ? parent.birth(maxBytes) : nativeBirth(scope.#preparation(), at, undefined, maxBytes) };
+      at.scope === parent.at.scope && at.genesis === parent.at.genesis ? parent.birth(maxBytes) : nativeBirth(scope.#preparation(), at, undefined, maxBytes) };
     scope.#ports.definitions = { ...scope.#ports.definitions, read: async digest => {
       const bytes = parts.get(digest);
       return bytes === undefined ? { ok: false, reason: "unavailable" } : { ok: true, bytes };

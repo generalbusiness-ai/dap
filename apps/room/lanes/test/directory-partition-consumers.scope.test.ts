@@ -26,7 +26,7 @@ test("partition consumers keep the Root stable, open through the active partitio
     const fetch = ((url: string, init?: RequestInit) => routed(url, init)) as unknown as Fetch;
     const now = () => timeMs(net.clock.now)!;
     const store = memoryStore(); await store.keep("rita", rita.secret);
-    await store.save({ v: 1, service: "https://scopes.test", key: "rita", handle: "@rita", repository });
+    await store.save({ v: 2, service: "https://scopes.test", key: "rita", handle: "@rita", repository });
     const ctx: Context = { store, fetch, now, pause: async waiting => settle(...r.scopes, ...waiting.map(scope => new Platform(scope as ScopeId))) };
     const before = (await r.root.summary()).at;
     const absent = await command(ctx, ["issue", "open", "--title", "Before any partition"]);

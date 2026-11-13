@@ -6,8 +6,8 @@
  * the state before them.
  */
 
-import type { Digest, FieldType, Input, Seed, Send, SendMark, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isSend } from "@generalbusiness/dap-bytes";
+import type { Digest, FieldType, GenesisSelfRef, Input, Seed, Send, SendMark, ScopeRef } from "@generalbusiness/dap-contract";
+import { isDigest, isSend, resolveGenesisSelf, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { creationContextOf, type CreationContext } from "./creation-context.ts";
 import type { Derived } from "./effects.ts";
 import { isLocalFact } from "./fields.ts";
@@ -32,30 +32,39 @@ export type Sends = Derived<{ sends: Send[] }>;
  * records at its genesis. It is its creator, when that is a directory;
  * otherwise the directory that its creator recorded, which the platform puts
  * in every `create` of a lane. Null: the scope has none.
+ * Call only on the judged input or checked retained genesis, after its
+ * source/message/seed association. This reader supplies no birth proof.
  */
-export function directoryOf(genesis: Pick<Extract<Input, { type: "genesis" }>, "seed" | "message">): ScopeRef | null {
+export function directoryOf(genesis: Pick<Extract<Input, { type: "genesis" }>, "seed" | "message" | "source" | "sourceKind">): ScopeRef | null {
   const creator = genesis.seed.creator;
-  if (creator?.kind === "directory") return creator;
+  if (creator && genesis.sourceKind === "directory") {
+    const source = genesis.source;
+    if (!source) return null;
+    const resolved = resolveGenesisSelf(creator, source);
+    return resolved && same(resolved, source.at) ? resolved : null;
+  }
   const named = isObject(genesis.message?.body) ? genesis.message.body["directory"] : null;
-  return isScopeRef(named) && named.kind === "directory" ? named : null;
+  // This reserved place means Directory. Domain fields cannot select it.
+  return isScopeRef(named) ? named : null;
 }
 
 /**
  * Section 6.6, "`membership` in a `create`": the membership scope that a
- * scope records, with its incarnation. It is a function of the genesis
+ * scope records, with its genesis. It is a function of the genesis
  * entry, as the directory is: the member `membership` in the body of the
  * creation, which the platform sets. A membership scope is its own. Null:
  * the genesis names none.
  *
- * Platform siblings created beside membership fix its incarnation later
+ * Platform siblings created beside membership fix its genesis later
  * (authority note, section 3.3). Ordinary creations and the explicit versioned
  * declared creation context carry a full reference in this authoritative body,
  * separate from any domain field of the same name.
  */
-export function membershipOf(genesis: Pick<Extract<Input, { type: "genesis" }>, "message">, at: ScopeRef): ScopeRef | null {
-  if (at.kind === "membership") return at;
+export function membershipOf(genesis: Pick<Extract<Input, { type: "genesis" }>, "seed" | "message">, at: ScopeRef): ScopeRef | null {
+  // Callers supply their checked local genesis and its full association.
+  if (genesis.seed.kind === "membership") return scopeIdOf(genesis.seed) === at.scope ? at : null;
   const named = isObject(genesis.message?.body) ? genesis.message.body["membership"] : null;
-  return isScopeRef(named) && named.kind === "membership" ? named : null;
+  return isScopeRef(named) ? named : null;
 }
 
 /**
@@ -117,7 +126,7 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
   // that immutable input. Only declared non-membership scopes forward this
   // opt-in; platform siblings and membership-self keep their old behavior.
   const recordedContext = (): CreationContext => {
-    if (j.scope.at.kind === "membership") return { kind: "legacy" };
+    if (j.scope.kind === "membership") return { kind: "legacy" };
     const genesis = j.self === 0 ? j.judged : j.own?.(0)?.entry.input;
     return genesis?.type === "genesis" && isDigest(genesis.seed.definition)
       ? creationContextOf(genesis.message?.body, j.definition.digest) : { kind: "legacy" };
@@ -128,8 +137,8 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
    * `create`. A membership scope is its own, and every other scope reads it from its genesis entry (`membershipOf`). Null: the
    * scope records none, and its creations hold no such member. Undefined: its genesis entry cannot be read now.
    */
-  const recordedMembership = (declared: boolean): ScopeRef | null | undefined => {
-    if (j.scope.at.kind === "membership") return j.scope.at;
+  const recordedMembership = (declared: boolean): ScopeRef | GenesisSelfRef | null | undefined => {
+    if (j.scope.kind === "membership") return j.scope.at;
     // A legacy/platform genesis records no membership reference while it is written: a directory's slot `repository.membership` is set later, by
     // the clause `applied` of its own `create`. So a creation that a genesis sends holds no such member, and the scopes that are
     // created beside membership get its scope ID in a field (authority note, revision 25, section 12.1.2, "No member `membership`
@@ -139,7 +148,8 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
       return declared && context.kind === "marked" ? context.membership : null;
     }
     const genesis = j.own?.(0)?.entry.input;
-    return genesis?.type === "genesis" ? membershipOf(genesis, j.scope.at) : undefined;
+    const at = j.scope.at;
+    return genesis?.type === "genesis" && at.genesis !== null ? membershipOf(genesis, at) : undefined;
   };
 
   /** Shared reference encoding keeps production and prototype sends on one leaf. */
@@ -223,7 +233,7 @@ function executeSends(j: Judging, instructions: readonly SendInstruction[], work
       const definition = form.definition === "self" ? j.definition.digest : form.definition;
       const seed: Seed = { v: 1, kind: form.kind, definition, creator: j.scope.at, cause, ordinal: creations++ };
       // Section 6.6: the platform puts the directory in every `create` of a lane: this scope, when it is one, or the one it records.
-      const lanes = form.kind !== "lane" ? null : j.scope.at.kind === "directory" ? j.scope.at : recordedDirectory();
+      const lanes = form.kind !== "lane" ? null : j.scope.kind === "directory" ? j.scope.at : recordedDirectory();
       if (lanes === undefined) return { ok: false, unavailable: "unavailable" };
       // Section 6.6: the body of a `create` is `{ fields, directory, membership }`. The membership scope is the one that the creating
       // scope records. A scope that records none creates without the member, so a creation of a scope that knows no membership

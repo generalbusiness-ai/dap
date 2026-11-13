@@ -16,10 +16,10 @@ function record(value: unknown, names: string): Record<string, unknown> | null {
 /** Own a validated RPC/local input without retaining caller-owned objects. */
 export function readMinimum(value: unknown): ReadMinimum | null {
   try {
-    const row = record(value, "at,head"), at = row && record(row["at"], "inc,kind,scope");
+    const row = record(value, "at,head"), at = row && record(row["at"], "genesis,scope");
     if (!row || !at || !isScopeRef(at)) return null;
     const head = typeof row["head"] === "number" ? row["head"] : record(row["head"], "hash,seq");
-    const scope = Object.freeze({ scope: at.scope, inc: at.inc, kind: at.kind });
+    const scope = Object.freeze({ scope: at.scope, genesis: at.genesis });
     if (typeof head === "number") return whole(head) ? Object.freeze({ at: scope, head }) : null;
     if (!isHead(head) || !whole(head.seq)) return null;
     return Object.freeze({ at: scope, head: Object.freeze({ seq: head.seq, hash: head.hash }) });

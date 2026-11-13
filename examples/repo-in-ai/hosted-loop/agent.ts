@@ -56,7 +56,8 @@ class Room {
     const read = await this.mcp.call("step", { scope, seq });
     const entry = read["entry"] as Entry | undefined;
     if (!entry || entry.seq !== seq) return stop("read-failed");
-    return { at: entry.at, seq, hash: read["hash"] as FactRef["hash"] };
+    const hash = read["hash"] as FactRef["hash"];
+    return { at: { scope, genesis: "genesis" in entry ? entry.genesis : hash }, seq, hash };
   }
   async entry(scope: ScopeId, seq: number): Promise<Entry> {
     return (await this.mcp.call("step", { scope, seq }))["entry"] as Entry ?? stop("read-failed");

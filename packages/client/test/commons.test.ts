@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, Grant, Head, MemberRef, ReferenceValue, ScopeRef, Sealed, Summary } from "@generalbusiness/dap-contract";
-import { entryHash, factRefOf, newIncarnation, scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
+import { entryHash, factRefOf, newGenesisNonce, scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedIntent } from "../src/intent.ts";
 import type { ScopeHandle } from "../src/handle.ts";
 import { commonsAuthorLabels, commonsInstallCheck, loadCommons, notesAbout } from "../src/commons.ts";
@@ -8,11 +8,12 @@ import { commonsAuthorLabels, commonsInstallCheck, loadCommons, notesAbout } fro
 // Actual signatures/hashes and reader, with scripted authority/history/text
 // ports. Native creation and authority are separate witnesses.
 async function reading() {
-  const scope: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED commons"), ordinal: 0 }), kind: "commons", inc: newIncarnation(new Uint8Array(16).fill(7)) };
-  const membership: ScopeRef = { ...scope, kind: "membership" }, owner = { membership, member: "@person" as const }, agent = { membership, member: "@agent" as const };
+  const seed = { v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED commons"), ordinal: 0 } as const;
+  const genesis: Entry = { v: 1, seq: 0, prev: null, time: timeOf(Date.parse("2030-01-01T00:00:00Z")), clamped: false, epoch: 0,
+    input: { type: "genesis", seed, nonce: newGenesisNonce(new Uint8Array(16).fill(7)), kind: "establish", founding: null, source: null, sourceKind: null, n: null, message: null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] };
+  const scope: ScopeRef = { scope: scopeIdOf(seed), genesis: entryHash(genesis) };
+  const membership: ScopeRef = { ...scope, genesis: textDigest("TEST membership genesis") }, owner = { membership, member: "@person" as const }, agent = { membership, member: "@agent" as const };
   const agentSigner = secretSigner(new Uint8Array(32).fill(7)), personSigner = secretSigner(new Uint8Array(32).fill(8)), entries: Sealed[] = [], bodies = new Map<string, string>();
-  const genesis: Entry = { v: 1, at: scope, seq: 0, prev: null, time: timeOf(Date.parse("2030-01-01T00:00:00Z")), clamped: false, epoch: 0,
-    input: { type: "genesis", seed: { v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED commons"), ordinal: 0 }, inc: scope.inc, kind: "establish", founding: null, source: null, n: null, message: null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] };
   entries.push({ entry: genesis, hash: entryHash(genesis) });
   const add = async (text: string, media: string, about: ReferenceValue[], member: MemberRef = agent) => {
     const digest = textDigest(text), seq = entries.length, signer = member.member === owner.member ? personSigner : agentSigner;
@@ -22,9 +23,9 @@ async function reading() {
     const authority: Grant[] = [{ key: signer.key, subject: member, principal: member.member === agent.member ? owner : null,
       issued: { at: membership, seq: 1, hash: textDigest("SCRIPTED grant") }, actions: ["commons.write"], within: { membership }, notAfter: null,
       fresh: { read: { run: "SCRIPTED", n: seq }, use: "fresh", prior: null, observation: { of: membership, head: { seq: 1, hash: textDigest("SCRIPTED membership head") }, key: signer.key, keyState: "active", member: member.member, memberState: "active", role: member.member === agent.member ? "agent" : "member", actions: ["commons.write"], within: { membership }, controller: member.member === agent.member ? owner.member : null, controllerActive: member.member === agent.member ? true : null, notAfter: null, definition: "platform:membership@9", at } } }];
-    const entry: Entry = { v: 1, at: scope, seq, prev: entries.at(-1)?.hash ?? null, time: timeOf(Date.parse("2030-01-01T00:00:00Z")), clamped: false, epoch: 0,
+    const entry: Entry = { v: 1, genesis: scope.genesis, seq, prev: entries.at(-1)!.hash, time: timeOf(Date.parse("2030-01-01T00:00:00Z")), clamped: false, epoch: 0,
       input: { type: "act", signed, authority, presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
-    const sealed = { entry, hash: entryHash(entry) }; entries.push(sealed); bodies.set(digest, text); return factRefOf(entry);
+    const sealed = { entry, hash: entryHash(entry) }; entries.push(sealed); bodies.set(digest, text); return factRefOf(entry, scope);
   };
   const bill = textDigest("bill"), statement = textDigest("statement");
   await add("bill", "text/plain", []); await add("statement", "text/plain", []);
@@ -56,7 +57,7 @@ test("a document reading includes all fourteen source-line rows, indirect marks 
     expect(related.filter(note => note.text !== "Ask about this").every(note => JSON.stringify(note.author) === JSON.stringify(fixture.agent))).toBe(true);
     expect(related.at(-1)?.fact).toEqual(fixture.asked);
   }
-  expect(notesAbout(view, { entry: { ...fixture.asked, at: { ...fixture.scope, inc: newIncarnation(new Uint8Array(16).fill(8)) } } })).toEqual([]);
+  expect(notesAbout(view, { entry: { ...fixture.asked, at: { ...fixture.scope, genesis: textDigest("TEST genesis 8") } } })).toEqual([]);
   expect(view.notes[2]!.about[0]).toMatchObject({ fragment: "line=0,1" });
   const membership = { ...fixture.summary, scope: fixture.owner.membership, definition: "platform:membership@9", items: [
     { type: "member", parties: { member: fixture.agent, controller: fixture.owner }, values: { handle: fixture.agent.member, kind: "agent", role: "agent" } },

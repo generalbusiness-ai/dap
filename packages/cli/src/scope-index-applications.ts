@@ -1,6 +1,6 @@
 /** Project one authenticated summary observation into release metadata only.
  * This is neither a genesis proof nor an independent installation replay. */
-import type { Digest, KeyId, PlatformData, ReadRefusal, ScopeRef, Summary } from "@generalbusiness/dap-contract";
+import type { Digest, KeyId, PlatformData, ReadRefusal, ScopeKind, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { isDigest, isKeyId, isRead, isScopeRef, isSummary } from "@generalbusiness/dap-bytes";
 import { readApplicationReleaseUri } from "@generalbusiness/dap-client";
 import { answersVersionQuestion, platform } from "@generalbusiness/dap-platform";
@@ -20,7 +20,7 @@ export interface ScopeApplicationListing {
 }
 
 const summaryRead = isRead(isSummary);
-const sameScope = (left: ScopeRef, right: ScopeRef): boolean => left.scope === right.scope && left.inc === right.inc && left.kind === right.kind;
+const sameScope = (left: ScopeRef, right: ScopeRef): boolean => left.scope === right.scope && left.genesis === right.genesis;
 
 /** Counts name every native type/state, including unbounded retained finals.
  * Only the live states must equal the items in a complete summary. */
@@ -62,9 +62,10 @@ function nativeItemsAgree(summary: Summary, data: PlatformData, seq: number): bo
   return true;
 }
 
-/** The listed reference is already validated by readIndexManifest. Each bad
+/** The listed reference and kind are already validated by readIndexManifest. Each bad
  * observation fails atomically; callers may still retain other scope results. */
-export function projectScopeApplications(listed: ScopeRef, reply: unknown): ScopeApplicationListing {
+export function projectScopeApplications(row: { readonly at: ScopeRef; readonly kind: ScopeKind }, reply: unknown): ScopeApplicationListing {
+  const listed = row.at, kind = row.kind;
   const fail = (why: ApplicationListingReason): ScopeApplicationListing => ({ applications: [], errors: [{ scope: { ...listed }, why }] });
   if (!summaryRead(reply)) return fail("malformed-summary");
   if (!reply.ok) return fail(reply.reason);
@@ -75,13 +76,13 @@ export function projectScopeApplications(listed: ScopeRef, reply: unknown): Scop
 
   // Declared application scopes cannot impersonate native Rules through an
   // item name. Their private items are not interpreted by this projection.
-  if (isDigest(summary.definition)) return listed.kind === "rules" ? fail("unsupported-definition") : { applications: [], errors: [] };
+  if (isDigest(summary.definition)) return kind === "rules" ? fail("unsupported-definition") : { applications: [], errors: [] };
   const code = platform(summary.definition);
   if (!code) return fail("unsupported-definition");
   const nativeKind = code.data.name === "platform:directory-partition" ? "directory" : code.data.name.slice("platform:".length);
-  if (nativeKind !== listed.kind) return fail("identity-mismatch");
+  if (nativeKind !== kind) return fail("identity-mismatch");
   if (!nativeItemsAgree(summary, code.data, reply.at.seq)) return fail("malformed-summary");
-  if (listed.kind !== "rules") return { applications: [], errors: [] };
+  if (kind !== "rules") return { applications: [], errors: [] };
   if (!Object.hasOwn(code.data.items, "installation")) return { applications: [], errors: [] };
   if (!answersVersionQuestion(summary.definition, "cliApplicationInstallationRules")) return fail("unsupported-definition");
 
@@ -94,8 +95,8 @@ export function projectScopeApplications(listed: ScopeRef, reply: unknown): Scop
     if (item.state !== "active") return fail("malformed-installation");
     const scope = item.refs["scope"], membership = item.refs["membership"], destination = item.refs["destination"];
     const release = item.values["release"], publisher = item.values["publisher"];
-    if (!isScopeRef(scope) || scope.kind !== "lane" || !isScopeRef(membership) || membership.kind !== "membership"
-      || !isScopeRef(destination) || destination.kind !== "destination" || !isDigest(release) || !isKeyId(publisher)
+    if (!isScopeRef(scope) || !isScopeRef(membership)
+      || !isScopeRef(destination) || !isDigest(release) || !isKeyId(publisher)
       || !["definition", "semantic", "presentation"].every(name => isDigest(item.values[name])) || seen.has(scope.scope)) return fail("malformed-installation");
     let host: string;
     try { host = new URL(readApplicationReleaseUri(item.values["uri"]).remote).hostname; }

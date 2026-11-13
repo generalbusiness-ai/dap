@@ -15,7 +15,7 @@ const dataArray = (value: unknown, max: number): value is unknown[] => Array.isA
 const text = (value: unknown, max: number): value is string => typeof value === "string" && value.length <= max && wellFormed(value) && utf8(value).length <= max;
 const objectId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{40}$/.test(value) && !/^0+$/.test(value);
 const owned = <T>(value: T): T => parseStrict(canonicalize(value)) as T;
-const scopeValue = (value: unknown): value is ScopeRef => exact(value, ["scope", "inc", "kind"]) && isScopeRef(value);
+const scopeValue = (value: unknown): value is ScopeRef => exact(value, ["scope", "genesis"]) && isScopeRef(value);
 const factValue = (value: unknown): value is FactRef => exact(value, ["at", "seq", "hash"]) && scopeValue(value["at"]) && isFactRef(value);
 const member = (value: unknown): value is MemberRef => exact(value, ["membership", "member"]) && scopeValue(value["membership"]) && isMemberRef(value) && text(value.member, 256);
 export const evidencePositionV17 = natural;
@@ -46,7 +46,7 @@ export interface EvidenceCandidateV17 {
   outcome: "passed" | "failed";
 }
 export function readEvidenceCandidateV17(value: unknown): EvidenceCandidateV17 | null {
-  if (!exact(value, ["job", "keyDigest", "admission", "result", "decidedBy", "key", "checker", "binding", "outcome"]) || !factValue(value["job"]) || value["job"].at.kind !== "lane" || !isDigest(value["keyDigest"])
+  if (!exact(value, ["job", "keyDigest", "admission", "result", "decidedBy", "key", "checker", "binding", "outcome"]) || !factValue(value["job"]) || !isDigest(value["keyDigest"])
     || !natural(value["admission"]) || !factValue(value["result"]) || !natural(value["decidedBy"]) || value["decidedBy"] < value["admission"]
     || !same(value["job"].at, value["result"].at) || !isKeyId(value["key"]) || !member(value["checker"]) || (value["outcome"] !== "passed" && value["outcome"] !== "failed")) return null;
   const binding = readEvidenceBinding(value["binding"]);

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Entry, OperationId } from "@generalbusiness/dap-contract";
-import { entryHash, newIncarnation } from "@generalbusiness/dap-bytes";
+import { entryHash } from "@generalbusiness/dap-bytes";
 import { d } from "@generalbusiness/dap-derive/testing";
 import { repositoryName } from "@generalbusiness/dap-platform";
 import { Register, rita } from "../../../packages/platform/test/support-creation.ts";
@@ -27,7 +27,7 @@ function fixture() {
   const register = new Register();
   const provider = new Provider();
   const given: OutsideGiven = {
-    state: register.state, own: register.own, retained: () => null, scope: () => register.state.scope(),
+    localSequence: () => register.own.sequence(), state: register.state, own: register.own, retained: () => null, scope: () => register.state.scope(),
     genesis: () => { const input = register.own(0)?.entry.input; return input?.type === "genesis" ? input : null; },
     clock: { read: () => register.now }, random: { bytes: (length) => new Uint8Array(length) },
   };
@@ -68,7 +68,7 @@ describe("register outside adapter; provider is a STAND-IN, register judgments a
     const f = fixture();
     const original = f.request();
     const unbound: EffectRequest[] = [
-      { ...original, scope: { ...original.scope, inc: newIncarnation(new Uint8Array(16).fill(4)) } },
+      { ...original, scope: { ...original.scope, genesis: `sha256:${"04".repeat(32)}` as const } },
       { ...original, owner: "platform:destination@1" },
       { ...original, kind: "delete-repository" },
       { ...original, operation: "1:1" },
@@ -119,7 +119,7 @@ describe("register outside adapter; provider is a STAND-IN, register judgments a
     expect(f.register.outcome("1:0", 1, "unknown").result).toBe("write");
     expect(f.register.outcome("1:0", 2, "confirmed", { name: f.name(2), id: "selected-repo" }).result).toBe("write");
     expect(f.register.outcome("1:0", 1, "confirmed", { name: f.name(1), id: "owed-repo", credential: "owed-credential" }).result).toBe("write");
-    const cleanups = f.register.last.effects.filter((effect) => effect.effect === "operation");
+    const cleanups = f.register.last.effects.flatMap((effect) => effect.effect === "operation" ? [effect] : []);
     expect(cleanups.map((effect) => effect.kind)).toEqual(["revoke-credential", "delete-repository"]);
     const revoke = f.request(`${f.register.last.seq}:0`);
     const deletion = f.request(`${f.register.last.seq}:1`);

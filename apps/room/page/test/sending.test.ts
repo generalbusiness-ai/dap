@@ -1,13 +1,12 @@
 import { workbenchFixtures } from "./workbench-fixture.ts";
 import { expect, test, vi } from "vitest";
-import { keyIdOfSecret, digestBytes, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { keyIdOfSecret, digestBytes, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 
 
 // Scripted UI ports: migration/key persistence have separate custody/browser
 // witnesses. Any unexpected key creation, import, write or signing is a failure.
 function uiKeys(publicKeys: readonly string[]) {
   const forbidden = vi.fn(async () => { throw new Error("Unexpected UI key operation"); });
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/browser-key-store.ts", () => ({ pageKeyStore: () => ({
     load: async (key: string) => {
       if (!publicKeys.includes(key)) throw new Error("Unknown scripted browser key");
@@ -69,8 +68,8 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
   };
   const root = new Element("div"), body = new Element("body"); body.append(root);
   const membershipDigest = digestBytes(new Uint8Array([5, 4, 3, 6]));
-  const membership = { scope: scopeIdOf({ v: 1, kind: "membership", definition: membershipDigest, creator: null, cause: membershipDigest, ordinal: 0 }), kind: "membership", inc: newIncarnation(new Uint8Array(16).fill(54)) };
-  type Place = { directory: string; membership: { scope: string; kind: string; inc: string } };
+  const membership = { scope: scopeIdOf({ v: 1, kind: "membership", definition: membershipDigest, creator: null, cause: membershipDigest, ordinal: 0 }), genesis: textDigest("TEST genesis 30") };
+  type Place = { directory: string; membership: { scope: string; genesis: string } };
   const key = keyIdOfSecret(new Uint8Array(32).fill(31)), otherKey = keyIdOfSecret(new Uint8Array(32).fill(32));
   expect(otherKey).not.toBe(key);
   const unexpectedKeyOperation = uiKeys([key, otherKey]);
@@ -96,12 +95,12 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
   const issueRead = vi.fn(async () => ({ questions: [], decided: [], state: "closed", intent: 0, requesterRef: room.me.ref }));
   // The captured send returns the actual owned action promise, including
   // its final redraw. A refused synchronous admission returns immediately.
-  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value }));
+  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "genesis" in value }));
   vi.doMock("../src/data.ts", async () => {
     const { sessionKey, Unreadable } = await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts");
     return { sessionKey, Unreadable,
     act: dataAct, actAssociation: (_room: unknown, scope: string) => `room/member/${scope}`, actsOn: async () => ({ acts: [...["comment", "close-own", "close-any", "reopen-own", "merge", "review-verdict", "ready-own", "open-pr"].map((kind) => ({ kind, fields: [] })), ...(initializedDuringView ? [{ kind: "open-issue", step: "open", on: "lane", line: "Open", fields: [{ name: "definition", type: "digest", required: true, choices: [{ label: "Issue", value: "SCRIPTED-current-definition" }] }, { name: "title", type: "text", required: true }, { name: "conditions", type: "list", required: true }] }] : [])], hidden: 0 }), fieldValue: (_room: unknown, _type: unknown, value: string) => value,
-    initializationStillCurrent: async () => !initializedDuringView, roomInitialization: async () => initialization === "not-initialized" ? { state: initialization, scope: { scope: "rules", kind: "rules", inc: "one" }, head: { seq: 1, hash: "head" }, rulesItem: 0, definition: "platform:rules@3", context: "SCRIPTED-private-read-context" } : initialization === "unknown" ? { state: initialization, reason: "Scripted read unavailable" } : { state: initialization }, openRoom: async (session: import("../src/data.ts").Session) => ({ ...room, session, key: context.publicKey, directory: context.place.directory, membership: context.place.membership, name: `Recorded ${context.place.directory}` }), loadNeedsYou: async () => undefined, listLanes: async () => ({ issues: [], changes: [] }), siteAddress: () => "/site/", placeOf: () => null,
+    initializationStillCurrent: async () => !initializedDuringView, roomInitialization: async () => initialization === "not-initialized" ? { state: initialization, scope: { scope: "rules", genesis: textDigest("TEST genesis 31") }, head: { seq: 1, hash: "head" }, rulesItem: 0, definition: "platform:rules@3", context: "SCRIPTED-private-read-context" } : initialization === "unknown" ? { state: initialization, reason: "Scripted read unavailable" } : { state: initialization }, openRoom: async (session: import("../src/data.ts").Session) => ({ ...room, session, key: context.publicKey, directory: context.place.directory, membership: context.place.membership, name: `Recorded ${context.place.directory}` }), loadNeedsYou: async () => undefined, listLanes: async () => ({ issues: [], changes: [] }), siteAddress: () => "/site/", placeOf: () => null,
     joinRoom: vi.fn(), loadChange: async () => ({ state: "open", manifests: [{ id: 1, state: "current", file: { path: "../unsafe.md" } }], merges: [] }), loadIssue: issueRead, loadRules: async () => { if (rulesUnavailable) throw new Error("Scripted rules read unavailable"); return { scope: "rules", head: { seq: 1, hash: "head" }, revision: null, approvals: 1, ownerMayReview: false, singleControllerException: false, checks: [], labels: [], extents: null, definitions: [], controllers: [] }; },
     };
   });
@@ -292,7 +291,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     // and joins actual draw/action work before restoring globals.
     await fixture.retire();
     vi.unstubAllGlobals();
-    vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/view.ts"); vi.doUnmock("@generalbusiness/dap-bytes");
+    vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/view.ts"); vi.doUnmock("@generalbusiness/dap-bytes");
   }
   expect(unexpectedKeyOperation).not.toHaveBeenCalled();
 }));
@@ -347,19 +346,19 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
   const root=new Node('div'),body=new Node('body');body.append(root);
   const doc={createElement:(tag:string)=>new Node(tag),createElementNS:(_ns:string,tag:string)=>new Node(tag),getElementById:(id:string)=>id==='page'?root:body.all().find(node=>node.attrs['id']===id)??null,querySelectorAll:(selector:string)=>body.querySelectorAll(selector),body,get activeElement(){return focused;}};
   const fixtureDigest=digestBytes(new Uint8Array([1]));
-  const place={directory:'directory',membership:{scope:scopeIdOf({v:1,kind:'membership',definition:fixtureDigest,creator:null,cause:fixtureDigest,ordinal:0}),kind:'membership',inc:newIncarnation(new Uint8Array(16))}};
+  const place={directory:'directory',membership:{scope:scopeIdOf({v:1,kind:'membership',definition:fixtureDigest,creator:null,cause:fixtureDigest,ordinal:0}),genesis:textDigest('TEST genesis membership')}};
   const key=keyIdOfSecret(new Uint8Array(32).fill(33));
   const unexpectedKeyOperation=uiKeys([key]);
   const settings={place,publicKey:key};
   const room={session:{service:'https://page.test',signer:{key,sign:unexpectedKeyOperation}},...place,rules:'rules',destination:'destination',key,me:{handle:'@reader',role:'maintainer',actions:['change.review','change.merge','issue.open'],ref:{membership:place.membership,member:'@reader'}},reader:{}};
   const issueScope=scopeIdOf({v:1,kind:'lane',definition:fixtureDigest,creator:null,cause:fixtureDigest,ordinal:2});
-  const issue={questions:[],decided:[],scope:issueScope,ref:{scope:issueScope,kind:'lane',inc:newIncarnation(new Uint8Array(16).fill(2))},requesterRef:room.me.ref,definition:'definition',head:{seq:1,hash:'head'},intent:0,title:'Native issue',number:1,body:null,state:'open',requester:'@author',assignees:[],conditions:[],comments:[],closeReason:null};
+  const issue={questions:[],decided:[],scope:issueScope,ref:{scope:issueScope,genesis:textDigest('TEST genesis lane 2')},requesterRef:room.me.ref,definition:'definition',head:{seq:1,hash:'head'},intent:0,title:'Native issue',number:1,body:null,state:'open',requester:'@author',assignees:[],conditions:[],comments:[],closeReason:null};
   const changeScope=scopeIdOf({v:1,kind:'lane',definition:fixtureDigest,creator:null,cause:fixtureDigest,ordinal:0});
-  const change={scope:changeScope,ref:{scope:changeScope,kind:'lane',inc:newIncarnation(new Uint8Array(16).fill(1))},definition:'definition',head:{seq:2,hash:'head'},proposal:0,title:'Selected change',number:2,body:null,state:'open',author:'@author',currentManifest:12,
+  const change={scope:changeScope,ref:{scope:changeScope,genesis:textDigest('TEST genesis lane 1')},definition:'definition',head:{seq:2,hash:'head'},proposal:0,title:'Selected change',number:2,body:null,state:'open',author:'@author',currentManifest:12,
     manifests:[{id:12,state:'current',authors:['@author'],integrator:'@author',base:'a'.repeat(40),integration:null,tree:null,complete:true,selectedReports:[],file:{path:'AGENTS.md',digest:'digest',size:4,page:'latest',content:'Text'}}],
     reviews:[],requests:[{id:6,state:'open',requested:'@reader',requester:'@author',requestedRef:room.me.ref,requesterRef:{membership:place.membership,member:'@author'}}],jobs:[],links:[],merges:[],comments:[],rules:{approvals:0,ownerMayReview:false,revision:1,checks:[],extents:[{name:'rules',approvals:1,approver:'rules.publish',checks:[],class:'authority'}]},
     // Synthetic presentation fixture; the native task-data case proves the real policy binding.
-    reviewPolicy:{manifest:12,source:{at:{scope:'rules',kind:'rules',inc:'one'},seq:1,hash:'hash'},extents:[{name:'rules',patterns:['AGENTS.md'],approvals:1,approver:'rules.publish',checks:[],class:'authority'}]},
+    reviewPolicy:{manifest:12,source:{at:{scope:'rules',genesis:'one'},seq:1,hash:'hash'},extents:[{name:'rules',patterns:['AGENTS.md'],approvals:1,approver:'rules.publish',checks:[],class:'authority'}]},
     reviewExtents:[{label:'rules',value:'rules'}],reviewMembers:[{label:'@reader',value:'@reader'}],reviewMembersByExtent:{rules:[{label:'@reader',value:'@reader'}]},
   };
   const comment={kind:'comment',step:'open',on:'comment',line:'Comment',fields:[{name:'body',type:'text',required:true}]};
@@ -478,7 +477,7 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
     expect(cachedClose).not.toBeNull();
     const reason=cachedClose.querySelector<Node>('[name="field:reason"]')!;reason.value='completed';cachedClose.emit('change');
     const postsBeforeClose=posts.mock.calls.length;
-    issue.requesterRef={...room.me.ref,membership:{...place.membership,inc:newIncarnation(new Uint8Array(16).fill(3))}};
+    issue.requesterRef={...room.me.ref,membership:{...place.membership,genesis:textDigest('TEST genesis membership 3')}};
     rendered=gate();cachedClose.emit('submit');await fixture.wait(() => rendered.promise);
     expect(posts.mock.calls.length).toBe(postsBeforeClose);
     expect(root.querySelector<Node>('[data-action-slot="next"]')!.querySelector('form[data-act="close-own"]')).toBeNull();
@@ -513,7 +512,7 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
     expect(act).toHaveBeenCalledTimes(before);expect(posts).toHaveBeenCalledTimes(before);
     expect(form.querySelector<Node>('[name="field:body"]')!.value).toBe('Keep this selected review');
     change.requests[0]!.state='open';await refresh();
-    const sameNameElsewhere={...room.me.ref,membership:{...place.membership,inc:newIncarnation(new Uint8Array(16).fill(2))}};
+    const sameNameElsewhere={...room.me.ref,membership:{...place.membership,genesis:textDigest('TEST genesis membership 2')}};
     change.requests[0]!.requestedRef=sameNameElsewhere;rendered=gate();form.emit('submit');await fixture.wait(() => rendered.promise);
     expect(act).toHaveBeenCalledTimes(before);expect(posts).toHaveBeenCalledTimes(before);
     change.requests[0]!.requestedRef=room.me.ref;await refresh();
@@ -572,7 +571,7 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
   } finally {
     await fixture.retire();
     vi.clearAllTimers();vi.useRealTimers();
-    vi.unstubAllGlobals();vi.doUnmock('../src/browser-key-store.ts');vi.doUnmock('../src/page-key-migration.ts');vi.doUnmock('../src/view.ts');vi.doUnmock('../src/data.ts');vi.doUnmock('../src/retained-editor.ts');vi.doUnmock('@generalbusiness/dap-bytes');vi.resetModules();
+    vi.unstubAllGlobals();vi.doUnmock('../src/browser-key-store.ts');vi.doUnmock('../src/view.ts');vi.doUnmock('../src/data.ts');vi.doUnmock('../src/retained-editor.ts');vi.doUnmock('@generalbusiness/dap-bytes');vi.resetModules();
   }
   expect(unexpectedKeyOperation).not.toHaveBeenCalled();
 }));

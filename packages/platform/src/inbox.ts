@@ -53,7 +53,7 @@ export const inbox: PlatformData = {
             type: "record",
             of: {
               scope: { type: "text", max: 64, required: true },
-              incarnation: { type: "text", max: 32, required: true },
+              genesis: { type: "digest", required: true },
               seq: { type: "int", min: 0, max: 1000000000, required: true },
               hash: { type: "digest", required: true },
             },
@@ -140,7 +140,7 @@ function notify(kind: "lane" | "task"): PlatformData["receives"][string] {
  * `notice-source`, at place 5, row P22. It reads the delivery's `from`,
  * which the entry's own input holds whole. It returns one `value` effect on
  * the notice that the entry opens: `source` is the record of the fact's
- * scope ID, incarnation, position and hash. It names no refusal, and it
+ * scope ID, genesis hash, position and hash. It names no refusal, and it
  * does not read the clock. The commit checks the value against the slot's
  * type, as it checks a written effect's.
  */
@@ -150,7 +150,7 @@ export const inboxRules: Rules = {
     run: ({ input, resolved }) => {
       if (input.type !== "delivery") throw new Error("notice-source stands in a handler, and reads a delivery");
       const { at, seq, hash } = input.from;
-      return [{ effect: "value", item: resolved.self, slot: "source", value: { scope: at.scope, incarnation: at.inc, seq, hash } }];
+      return [{ effect: "value", item: resolved.self, slot: "source", value: { scope: at.scope, genesis: at.genesis, seq, hash } }];
     },
   },
 };

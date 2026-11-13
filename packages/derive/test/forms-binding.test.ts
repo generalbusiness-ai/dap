@@ -1,11 +1,11 @@
 import { bindingChanges, bindingBoundOperandsData, bindingLateGuardData, bindingLateEffectData, bindingPreFailureData, bindingClockData, bindingAuditData, bindingCountsData, bindingRequestData, bindingProtoData, bindingLocalFactData, bindingIntegerData } from "./definition-corpus/binding-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { FactRef, FieldValue, Input, PlatformDefinition, ScopeKind, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
-import { canonicalBytes, entryHash, factRefOf, newIncarnation, parseStrictBytes, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { FactRef, FieldValue, PlatformDefinition, Send } from "@generalbusiness/dap-contract";
+import { canonicalBytes, entryHash, factRefOf, parseStrictBytes, signIntent, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { MemoryState, PROFILES, applyEntry, clockOf, decisionCounts, entryOf, fits, indexItems, itemAwaits, judgeDelivery, keyOf, owed, validateDefinition } from "../src/index.ts";
 import type { Counts, Draft, Fetched, Indexed, Judgment, PlatformRule, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
-import { Scope, arriving, d, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";
+import { Scope, arriving, d, fixtureScope, forged, keys, on, t, valid, type Over } from "./fixtures-entry.ts";
 import { observeNativeCalls } from "../src/program/native-trace.ts";
 
 /**
@@ -21,10 +21,8 @@ import { observeNativeCalls } from "../src/program/native-trace.ts";
  * The platform data and selector rules remain stand-ins.
  */
 
-const lane = (n: number): ScopeRef => {
-  const seed: Seed = { v: 1, kind: "lane" as ScopeKind, definition: d("e"), creator: null, cause: d("c"), ordinal: n };
-  return { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(n)), kind: "lane" };
-};
+// Each lane is the admitted sequence of a hand-made genesis; `.at` is its address.
+const lane = (n: number): CheckedSequence => fixtureScope("lane", n);
 const [P, Q, R] = [lane(31), lane(32), lane(33)];
 import { JOB_OF, M, M51 } from "./definition-corpus/forms-binding-data.ts";
 
@@ -84,10 +82,11 @@ function rules(over: Record<string, PlatformRule> = {}) {
 interface Arrival { send: Send; from: FactRef; source: ReturnType<typeof forged>; facts: Fetched[] }
 let made = 1000;
 /** A ticket: the fact of an entry of that lane, with the entry as the receiver fetches it. */
-function ticket(of: ScopeRef, seq = ++made): Fetched {
-  // The entry says that it recorded an act of the kind `merge`. Nothing signed it.
-  const { entry } = forged(of, seq, { type: "act", signed: { intent: { kind: "merge" } }, authority: [] } as unknown as Input, []);
-  return { fact: factRefOf(entry), entry, under: "ticket" };
+function ticket(of: CheckedSequence, seq = ++made): Fetched {
+  // The entry records an act of the kind `merge`, signed by hand. Nothing judged it.
+  const signed = signIntent({ v: 1, to: of.at, actor: keys.una.key, kind: "merge", on: null, expected: {}, fields: {}, idempotencyKey: `m${seq}`, notAfter: t(60) }, keys.una.secret);
+  const { entry, sequence } = forged(of, seq, { type: "act", signed, authority: [], presented: {} }, []);
+  return { fact: factRefOf(entry, of.at), entry, sequence, under: "ticket" };
 }
 
 /** A scope under made-up platform data, with a real reservation ledger and a budget of entries. */
@@ -108,18 +107,18 @@ class Jobs extends Scope {
   }
   does(kind: string, over: Over = {}) { return this.commit(this.judge(this.intent(keys.una, kind, over))); }
   /** A `tell` of that name from that lane, with those fields, in an envelope of its own. */
-  request(from: ScopeRef, message: string, fields: Record<string, FieldValue>, facts: Fetched[] = []): Arrival {
+  request(from: CheckedSequence, message: string, fields: Record<string, FieldValue>, facts: Fetched[] = []): Arrival {
     const send: Send = { n: 0, to: this.at, message: { class: "request", type: "tell", body: { message, fields } } };
     const source = forged(from, ++made, { type: "checkpoint", through: 0, state: d("0") }, [send]);
-    return { send, from: factRefOf(source.entry), source, facts };
+    return { send, from: factRefOf(source.entry, source.sequence.at), source, facts };
   }
   judged(a: Arrival, state: MemoryState = this.state, using = this.using): Judgment {
     const arrival = { ...a.send, from: a.from };
     return judgeDelivery(state, this.definition, arrival, { ...arriving(this, arrival, a.source, a.facts), platform: using.platform });
   }
   deliver(a: Arrival) { return this.commit(this.judged(a)); }
-  start(from: ScopeRef, t: Fetched) { this.free(1 + (this.definition.reserving?.holders["job"]?.amount.entries ?? 0)); expect(this.deliver(this.request(from, "start", { ticket: t.fact }, [t]))).toBe("new work"); return this.head.seq; }
-  stop(from: ScopeRef, t: Fetched) { return this.request(from, "stop", { ticket: t.fact }, [t]); }
+  start(from: CheckedSequence, t: Fetched) { this.free(1 + (this.definition.reserving?.holders["job"]?.amount.entries ?? 0)); expect(this.deliver(this.request(from, "start", { ticket: t.fact }, [t]))).toBe("new work"); return this.head.seq; }
+  stop(from: CheckedSequence, t: Fetched) { return this.request(from, "stop", { ticket: t.fact }, [t]); }
   /** The decision of the last entry, the name of its reason, and how many effects it holds. */
   last3() { const result = this.last.sends.at(-1)!.message as { outcome: string; reason?: { name?: string } }; return [result.outcome, result.reason?.name ?? null, this.last.effects.length]; }
 }
@@ -139,7 +138,7 @@ describe("18.53, at the validator: the index, the binding selector and `bound`",
   test("an opt-in bound settlement reserves its source and fields without charging forbidden rule state changes", () => {
     const checked = changed(M, bindingChanges.wholeSettlement);
     expect(checked.ok).toBe(true);
-    if (checked.ok) expect(checked.definition.reserving!.dec["stop"]).toEqual({ entries: 1, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
+    if (checked.ok) expect(checked.definition.reserving!.dec["stop"]).toEqual({ entries: 1, items: 0, records: 0, bytes: 5 * PROPOSED_BOUNDS.entryBytes, requests: 0 }); // Ruling a4a587c9: each foreign copy adds one birth of entryBytes.
   });
 
   test("C2 integer indexes preserve fixed required platform slots and exact selector ranges", () => {
@@ -397,7 +396,7 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
     G.using.given.length = 0;
     expect([G.deliver(first), G.last3(), states(), counts()]).toEqual(["settles", ["applied", null, 1], ["queued", "gone", "taken"], [1, 0, 1]]);
     // Case 4. The index returned B for that ticket, and no other job: the rule was given B and the fields, and nothing else.
-    expect(G.using.given).toEqual([{ items: [{ id: b, state: "queued", parties: {}, refs: { ticket: t.b.fact, owner: Q }, values: {} }], fields: { ticket: t.b.fact } }]);
+    expect(G.using.given).toEqual([{ items: [{ id: b, state: "queued", parties: {}, refs: { ticket: t.b.fact, owner: Q.at }, values: {} }], fields: { ticket: t.b.fact } }]);
     expect([G.row()[0] - used, G.row()[1] <= reserved]).toEqual([1, true]);
     // Case 7. The same envelope again: answered from its deciding entry. The selector does not run, and nothing is drawn.
     expect([G.judged(first), G.using.given.length, counts()]).toEqual([{ result: "repeat", seq: G.head.seq }, 1, [1, 0, 1]]);
@@ -446,7 +445,7 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
     const ran = G.using.given.length;
     expect([G.free(1).deliver(G.stop(Q, y)), G.last3(), G.using.given.length - ran]).toEqual(["new work", ["applied", null, 4], 0]);
     const stopped = G.head.seq;
-    expect([G.item(stopped).state, G.item(stopped).refs, G.counts(G.item(stopped), "stop")]).toEqual(["gone", { ticket: y.fact, owner: Q }, 0]);
+    expect([G.item(stopped).state, G.item(stopped).refs, G.counts(G.item(stopped), "stop")]).toEqual(["gone", { ticket: y.fact, owner: Q.at }, 0]);
     // Case 22. A start from Q for the same ticket opens a second job. The index returns both, in order of item ID.
     const second = G.start(Q, y);
     expect([G.free(0).deliver(G.stop(Q, y)), G.using.given.at(-1)!.items.map((item) => [item.id, item.state])]).toEqual(["settles", [[stopped, "gone"], [second, "queued"]]]);
@@ -484,8 +483,8 @@ describe("18.53, in the judge: a bound request finds its item by a selector, at 
     const { G, t, b } = three();
     // Case 25. Forty more jobs of Q, each with a ticket in the same scope as the ticket of B and at another position.
     for (let i = 0; i < 40; i++) G.start(Q, ticket(Q, 5000 + i));
-    // Another hash at the position of B's ticket, and the same hash under another incarnation, are other keys.
-    const near = [{ ...t.b.fact, hash: d("1") }, { ...t.b.fact, at: { ...Q, inc: P.inc } }];
+    // Another hash at the position of B's ticket, and the same hash under another genesis, are other keys.
+    const near = [{ ...t.b.fact, hash: d("1") }, { ...t.b.fact, at: { ...Q.at, genesis: P.at.genesis } }];
     expect([G.state.lookup("job", "ticket", keyOf(t.b.fact, G.at)!, 9), ...near.map((fact) => G.state.lookup("job", "ticket", keyOf(fact, G.at)!, 9))]).toEqual([[b], [], []]);
     // Case 23. A start is written and fills G, and the next entry is a stop with that ticket: the row was written with the item.
     const fresh = ticket(Q);
@@ -563,7 +562,7 @@ describe("18.51: a settlement by a mark, and a bound request, at a full scope", 
     expect(G.free(2).deliver(G.request(Q, "start", {}))).toBe("retry");
     expect(G.free(3).deliver(G.request(Q, "start", {}))).toBe("new work");
     const job = G.head.seq;
-    const of = (from: ScopeRef, message: string) => G.request(from, message, { job: G.fact(job) });
+    const of = (from: CheckedSequence, message: string) => G.request(from, message, { job: G.fact(job) });
     return { G, job, of };
   };
 

@@ -4,7 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, FactRef, FieldValue, Guard, Operand } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition, type Fetched, type ProblemCode } from "../src/index.ts";
-import { Scope, deliver, fields, keys, on, ticket, valid, variant } from "./fixtures-entry.ts";
+import { Scope, deliver, fields, keys, on, ticket, valid, variant, fixtureSequence } from "./fixtures-entry.ts";
 
 const { rita, una } = keys;
 
@@ -30,7 +30,7 @@ test("M3: copying historical source time does not judge the commit clock", () =>
 const asksDefinition = valid(validateDefinition(asks, PROPOSED_BOUNDS));
 
 /** An entry of `s` as another scope fetches it: by fact, with its bytes and the name its scope's definition states. */
-const fetched = (s: Scope, seq: number): Fetched => ({ fact: s.fact(seq), entry: s.entries[seq]!.entry, under: s.under });
+const fetched = (s: Scope, seq: number): Fetched => ({ fact: s.fact(seq), entry: s.entries[seq]!.entry, sequence: fixtureSequence(s), under: s.under });
 
 /** M, another lane of asks: M.2 and M.3 open asks 2 and 3, and M.4 and M.5 answer them. */
 function other(): Scope {
@@ -120,7 +120,7 @@ describe("operands, parts and a local fact (sections 6.2 and 6.5; witness 18.1)"
     const named = (name: string, change: (d: any) => void = () => {}) => valid(validateDefinition(namedOperandData(name, change), PROPOSED_BOUNDS));
     const elsewhere = (change: (d: any) => void = () => {}) => valid(validateDefinition(elsewhereOperandData(change), PROPOSED_BOUNDS));
     const P = new Scope(elsewhere());
-    expect([(M.entries[0]!.entry.input as { kind?: string }).kind, trace(P, M).result, P.last.uses]).toEqual(["start", "write", [{ fact: M.fact(0), content: expect.any(String) }]]);
+    expect([(M.entries[0]!.entry.input as { kind?: string }).kind, trace(P, M).result, P.last.uses]).toEqual(["start", "write", [{ fact: M.fact(0), content: expect.any(String), kind: "lane" }]]);
     // Q differs from P in one thing: the kinds of the field omit that genesis act.
     const Q = new Scope(elsewhere((d) => { d.acts.trace.fields.origin.kind = ["ask"]; }));
     expect(trace(Q, M)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });

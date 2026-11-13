@@ -33,7 +33,7 @@ function context(definition: ValidDefinition): Judging {
     parties: { owner: keys.rita.member, readers: [] }, refs: { peer: otherLane, me: null }, values: { text: "before", due: t(100) } };
   view.putItem(on);
   return { view, definition, bounds: PROPOSED_BOUNDS, clock: { reading: t(101), asOf: t(101), behind: false },
-    scope: { at: otherLane, creator: null }, self: 20, kind: "edit", fields: {}, fieldTypes: declared.acts["edit"]!.fields,
+    scope: { at: otherLane, kind: "lane", creator: null }, self: 20, kind: "edit", fields: {}, fieldTypes: declared.acts["edit"]!.fields,
     subjects: new Map([["on", on]]), signer: { member: keys.rita.member, principal: null }, facts: new Map(), prepared: [], used: [], ran: { clock: false } };
 }
 
@@ -149,7 +149,7 @@ test("scripted implicit hold endings retain unknown workspace requirements and o
     },
   };
   const j: Judging = { view, definition, bounds: PROPOSED_BOUNDS, clock: { reading: t(101), asOf: t(101), behind: false },
-    scope: { at: otherLane, creator: null }, self: 20, kind: "finish", fields: {}, fieldTypes: {}, subjects: new Map([["on", commitment]]),
+    scope: { at: otherLane, kind: "lane", creator: null }, self: 20, kind: "finish", fields: {}, fieldTypes: {}, subjects: new Map([["on", commitment]]),
     signer: { member: keys.rita.member, principal: null }, facts: new Map(), prepared: [], used: [], ran: { clock: false }, capabilities: code };
   const expected = { result: "ran", effects: [{ effect: "state", item: 1, state: "done" }, { effect: "hold", item: 2, change: "end", epoch: 2 }],
     sends: [], prepared: [], judgesTime: false, settles: false };

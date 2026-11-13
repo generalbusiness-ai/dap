@@ -8,7 +8,7 @@ import { ScopeHandle, ShapeError, FieldShapeError, shapeFieldsOf, declaredHandle
 
 
 const d = (c: string) => `sha256:${c.repeat(64)}` as const;
-const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
 const head = { seq: 4, hash: d("4") };
 /** A transport that answers a summary with that definition's name, and keeps what is submitted. Nothing else is asked of it. */
 function serving(published: Summary["definition"] | null) {

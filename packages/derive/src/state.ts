@@ -7,7 +7,7 @@
  */
 
 import type { JournalFloor } from "@generalbusiness/dap-contract";
-import type { CapabilityName, Digest, FactRef, FieldValue, Head, Held, Incarnation, Item, KeyId, OperationId, Party, PlatformDefinition, Request, ScopeId, ScopeKind, ScopeRef, Seed, Status, Timestamp } from "@generalbusiness/dap-contract";
+import type { CapabilityName, Digest, FactRef, FieldValue, Head, Held, Item, KeyId, OperationId, Party, PlatformDefinition, Request, ScopeId, ScopeKind, ScopeRef, Seed, SequenceRef, Status, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/dap-bytes";
 import { pendingOf } from "./ledger.ts";
 import { byteOrder } from "./values.ts";
@@ -18,7 +18,7 @@ export type { Item, Party, Status };
 
 /** What every judgment reads first. `time` is the last entry's time (section 5.3). */
 export interface ScopeState {
-  at: ScopeRef; creator: ScopeRef | null; status: Status; head: Head; time: Timestamp;
+  at: ScopeRef; kind: ScopeKind; creator: ScopeRef | null; status: Status; head: Head; time: Timestamp;
   /** The hash of the genesis entry and, for a child, the creation request it answered: the creator's entry and send (section 7.2). */
   genesis: { hash: Digest; source: FactRef | null; n: number | null };
   /**
@@ -30,7 +30,7 @@ export interface ScopeState {
 }
 
 /** This scope's copy of a relationship another scope owns (section 7.3). `revision` is the `seq` of the owner's entry. */
-export interface Relation { owner: ScopeRef; name: string; item: number; state: string; revision: number }
+export interface Relation { owner: ScopeRef; ownerKind: ScopeKind; name: string; item: number; state: string; revision: number }
 
 /** An accepted intent: the entry that holds it, and its digest (section 4.2). */
 export interface Accepted { seq: number; intent: Digest }
@@ -50,16 +50,16 @@ export interface OwnRequest {
 }
 
 /** The applied creation result this scope holds for a seed (section 7.2). */
-export interface HeldCreation { inc: Incarnation; seq: number }
+export interface HeldCreation { genesis: Digest; seq: number }
 
 /**
- * An incoming delivery this scope recorded: the source scope and incarnation,
+ * An incoming delivery this scope recorded: the source scope and genesis,
  * the source entry by `seq` and hash, the ordinal, and `by`, the entry that
  * recorded it. An owner entry is consumed once (section 7.3).
  */
-export interface Decided { from: Pick<ScopeRef, "scope" | "inc">; seq: number; hash: Digest; n: number; by: number }
-/** Highest applied source pair for one tell dispatch. Incarnations are separate. */
-export interface SourceOrder { from: Pick<ScopeRef, "scope" | "inc">; handler: string; seq: number; n: number }
+export interface Decided { from: SequenceRef; seq: number; hash: Digest; n: number; by: number }
+/** Highest applied source pair for one tell dispatch. Sequences are separate. */
+export interface SourceOrder { from: SequenceRef; handler: string; seq: number; n: number }
 
 /**
  * One recorded outcome of an attempt (section 4.3): the entry that holds it,
@@ -155,7 +155,7 @@ export interface RecordState {
  * accepted keys is. The commit judges the order of heads against it, so a
  * lower head is refused in every run, also after a restart.
  */
-export interface ObservedHead { of: Pick<ScopeRef, "scope" | "inc">; subject: string; seq: number }
+export interface ObservedHead { of: SequenceRef; subject: string; seq: number }
 
 /** Which records of one kind a read asks for: those in one of `states`, and those whose value `member` equals `value`. Absent: every one. */
 export interface RecordsWhere { states?: readonly string[]; member?: string; value?: unknown }
@@ -178,7 +178,7 @@ export interface StateSnapshot {
   scope: ScopeState | null;
   items: readonly Item[];                                               // by ID
   counts: readonly (readonly [type: string, state: string, n: number])[];   // by type, then state
-  relations: readonly Relation[];                                       // by owner scope, owner incarnation, name, item
+  relations: readonly Relation[];                                       // by owner scope, owner genesis, name, item
   accepted: readonly (readonly [actor: KeyId, idempotencyKey: string, accepted: Accepted])[];   // by actor, then key
   requests: readonly OwnRequest[];                                      // by seq, then n
   decided: readonly Decided[];                                          // by source scope, incarnation, seq, n
@@ -293,14 +293,14 @@ export interface StateView {
   records(capability: CapabilityName, kind: string, where?: RecordsWhere): readonly RecordState[];
   /** The exact number of records of that kind: in that state, or in any state when none is named. A key is never reused, so the second is the capability's counter. */
   recordCount(capability: CapabilityName, kind: string, state?: string): number;
-  /** The highest head that an entry of this scope retains for that subject of that observed scope, with that incarnation (section 16.1). Null: no entry retains an observation of it. */
-  observed(of: Pick<ScopeRef, "scope" | "inc">, subject: string): number | null;
+  /** The highest head that an entry of this scope retains for that subject of that observed sequence (section 16.1). Null: no entry retains an observation of it. */
+  observed(of: SequenceRef, subject: string): number | null;
   /**
-   * The incarnations in `of` of the observations of that scope ID that the entries of this scope retain, once each, in byte order
+   * The genesis hashes in `of` of the observations of that scope ID that the entries of this scope retain, once each, in byte order
    * (authority note, section 12.1, "Where the rules scope and the destination record their membership reference": the folded state
    * holds a head for each subject that an entry observed, with its `of`). None: no entry retains an observation of that scope ID.
    */
-  incarnations(scope: ScopeId): readonly Incarnation[];
+  geneses(scope: ScopeId): readonly Digest[];
   /** How many tasks are open, for the room they need to settle (section 9.2); see `Outstanding`. */
   outstanding(): Outstanding;
   /** What that item still holds (section 17.2a). Null: it holds nothing, or it is no holder. */
@@ -407,8 +407,8 @@ export class MemoryState implements StateWriter {
   readonly #fixedRowDependencies = new Map<string, readonly string[]>();
   readonly #fixedHashes = new Map<number, Digest>();
   #fixedReady: string | null = null;
-  fixedReady(definition: Digest, at: ScopeRef, head: Head): boolean { return this.#fixedReady === key(definition, at.scope, at.inc, at.kind, head.seq, head.hash); }
-  finishFixed(definition: Digest, at: ScopeRef, head: Head): void { this.#fixedReady = key(definition, at.scope, at.inc, at.kind, head.seq, head.hash); }
+  fixedReady(definition: Digest, at: ScopeRef, head: Head): boolean { return this.#fixedReady === key(definition, at.scope, at.genesis, head.seq, head.hash); }
+  finishFixed(definition: Digest, at: ScopeRef, head: Head): void { this.#fixedReady = key(definition, at.scope, at.genesis, head.seq, head.hash); }
   fixedHash(seq: number): Digest | null {
     const floor = this.#floor;
     return floor && seq < floor.floor && !floor.kept.includes(seq) ? null : this.#fixedHashes.get(seq) ?? null;
@@ -474,11 +474,11 @@ export class MemoryState implements StateWriter {
   readonly #settledHolders = new Set<number>();
   readonly #accounts = new Map<string, Account>();
   /**
-   * For each observed scope ID, the incarnations of the observed heads that are held, once each, in byte order. `putObserved`
-   * keeps it, and no head is ever removed. So `incarnations` reads one list, and not every head that the scope holds: a scope
+   * For each observed scope ID, the genesis hashes of the observed heads that are held, once each, in byte order. `putObserved`
+   * keeps it, and no head is ever removed. So `geneses` reads one list, and not every head that the scope holds: a scope
    * reads it for each entry that it judges on its membership reference (I3 deltas, section 31, entry FD5).
    */
-  readonly #incarnations = new Map<ScopeId, readonly Incarnation[]>();
+  readonly #geneses = new Map<ScopeId, readonly Digest[]>();
 
   /**
    * For each relationship name and kind of owner, the number of keys that this scope keeps a copy for. `putRelation` keeps it,
@@ -494,7 +494,7 @@ export class MemoryState implements StateWriter {
   readonly #keyed = new Map<string, number[]>();
   readonly #rows = new Map<string, number>();
 
-  /** `tally`, when it is given, counts what `incarnations` and `copies` read, for a test of their bounds. Nothing else is counted. */
+  /** `tally`, when it is given, counts what `geneses` and `copies` read, for a test of their bounds. Nothing else is counted. */
   readonly tally: { steps: number } | undefined;
   constructor(tally?: { steps: number }) { this.tally = tally; }
 
@@ -516,19 +516,19 @@ export class MemoryState implements StateWriter {
       items.push(this.#items.get(next.ids[next.at++]!)!);
     }
   }
-  relation(owner: ScopeRef, name: string, item: number) { return this.#relations.get(key(owner.scope, owner.inc, name, item)) ?? null; }
+  relation(owner: ScopeRef, name: string, item: number) { return this.#relations.get(key(owner.scope, owner.genesis, name, item)) ?? null; }
   copies(name: string, kind: ScopeKind, states?: readonly string[]) {
     if (this.tally) this.tally.steps += states ? this.#relations.size : 1;
     if (!states) return this.#copies.get(key(name, kind)) ?? 0;
-    return [...this.#relations.values()].filter((r) => r.name === name && r.owner.kind === kind && states.includes(r.state)).length;
+    return [...this.#relations.values()].filter((r) => r.name === name && r.ownerKind === kind && states.includes(r.state)).length;
   }
   accepted(actor: KeyId, idempotencyKey: string) { return this.#accepted.get(key(actor, idempotencyKey))?.[2] ?? null; }
   request(seq: number, n: number) { return this.#requests.get(key(seq, n)) ?? null; }
   pendingRequests(): readonly OwnRequest[] {
     return [...this.#pendingRequests].map(at => this.#requests.get(at)!).sort((a, b) => a.seq - b.seq || a.n - b.n);
   }
-  decided(from: ScopeRef, seq: number, n: number) { return this.#decided.get(key(from.scope, from.inc, seq, n)) ?? null; }
-  sourceOrder(from: ScopeRef, handler: string) { return this.#sourceOrder.get(key(from.scope, from.inc, handler)) ?? null; }
+  decided(from: ScopeRef, seq: number, n: number) { return this.#decided.get(key(from.scope, from.genesis, seq, n)) ?? null; }
+  sourceOrder(from: ScopeRef, handler: string) { return this.#sourceOrder.get(key(from.scope, from.genesis, handler)) ?? null; }
   creation(seed: Digest) { return this.#creations.get(seed) ?? null; }
   operation(id: OperationId) { return this.#operations.get(id) ?? null; }
   texts(item: number, slot: string) { return this.#texts.get(key(item, slot))?.[2] ?? []; }
@@ -542,9 +542,9 @@ export class MemoryState implements StateWriter {
   }
   recordCount(capability: CapabilityName, kind: string, state?: string) { return this.records(capability, kind, state === undefined ? {} : { states: [state] }).length; }
   #kept() { return [...this.#records.values()].sort((a, b) => keyOrder([a.capability, a.kind, canonicalize(a.key)], [b.capability, b.kind, canonicalize(b.key)])); }
-  observed(of: Pick<ScopeRef, "scope" | "inc">, subject: string) { return this.#observed.get(key(of.scope, of.inc, subject))?.seq ?? null; }
-  incarnations(scope: ScopeId) {
-    const held = this.#incarnations.get(scope) ?? [];
+  observed(of: SequenceRef, subject: string) { return this.#observed.get(key(of.scope, of.genesis, subject))?.seq ?? null; }
+  geneses(scope: ScopeId) {
+    const held = this.#geneses.get(scope) ?? [];
     if (this.tally) this.tally.steps += 1 + held.length;
     return held;
   }
@@ -609,8 +609,8 @@ export class MemoryState implements StateWriter {
   }
   addCount(type: string, state: string, by: number) { this.#counts.set(key(type, state), [type, state, this.count(type, state) + by]); }
   putRelation(r: Relation) {
-    const at = key(r.owner.scope, r.owner.inc, r.name, r.item);
-    if (!this.#relations.has(at)) this.#copies.set(key(r.name, r.owner.kind), (this.#copies.get(key(r.name, r.owner.kind)) ?? 0) + 1);
+    const at = key(r.owner.scope, r.owner.genesis, r.name, r.item);
+    if (!this.#relations.has(at)) this.#copies.set(key(r.name, r.ownerKind), (this.#copies.get(key(r.name, r.ownerKind)) ?? 0) + 1);
     this.#relations.set(at, r);
   }
   putAccepted(actor: KeyId, idempotencyKey: string, accepted: Accepted) { this.#accepted.set(key(actor, idempotencyKey), [actor, idempotencyKey, accepted]); }
@@ -620,8 +620,8 @@ export class MemoryState implements StateWriter {
     if (r.result === null && r.diagnosis?.finding !== "undelivered") this.#pendingRequests.add(at);
     else this.#pendingRequests.delete(at);
   }
-  putDecided(from: FactRef, n: number, by: number) { this.#decided.set(key(from.at.scope, from.at.inc, from.seq, n), { from: { scope: from.at.scope, inc: from.at.inc }, seq: from.seq, hash: from.hash, n, by }); }
-  putSourceOrder(order: SourceOrder) { this.#sourceOrder.set(key(order.from.scope, order.from.inc, order.handler), order); }
+  putDecided(from: FactRef, n: number, by: number) { this.#decided.set(key(from.at.scope, from.at.genesis, from.seq, n), { from: { scope: from.at.scope, genesis: from.at.genesis }, seq: from.seq, hash: from.hash, n, by }); }
+  putSourceOrder(order: SourceOrder) { this.#sourceOrder.set(key(order.from.scope, order.from.genesis, order.handler), order); }
   putCreation(seed: Digest, held: HeldCreation) { this.#creations.set(seed, held); }
   putOperation(operation: Operation) { this.#operations.set(operation.id, operation); }
   putTexts(item: number, slot: string, texts: readonly Digest[]) {
@@ -631,9 +631,9 @@ export class MemoryState implements StateWriter {
   putPrepared(p: PreparedStep) { this.#prepared.set(key(p.intent, p.capability, p.step), p); }
   putRecord(r: RecordState) { this.#records.set(key(r.capability, r.kind, canonicalize(r.key)), r); }
   putObserved(h: ObservedHead) {
-    this.#observed.set(key(h.of.scope, h.of.inc, h.subject), { of: { scope: h.of.scope, inc: h.of.inc }, subject: h.subject, seq: h.seq });
-    const held = this.#incarnations.get(h.of.scope) ?? [];
-    if (!held.includes(h.of.inc)) this.#incarnations.set(h.of.scope, [...held, h.of.inc].sort(byteOrder));
+    this.#observed.set(key(h.of.scope, h.of.genesis, h.subject), { of: { scope: h.of.scope, genesis: h.of.genesis }, subject: h.subject, seq: h.seq });
+    const held = this.#geneses.get(h.of.scope) ?? [];
+    if (!held.includes(h.of.genesis)) this.#geneses.set(h.of.scope, [...held, h.of.genesis].sort(byteOrder));
   }
   putHolder(item: number, held: Held | null) {
     if (held === null) this.#holders.delete(item);
@@ -648,18 +648,18 @@ export class MemoryState implements StateWriter {
       ...(this.#floor === null ? {} : { floor: this.#floor }),
       items: sorted(this.#items.values(), (i) => [i.id]),
       counts: sorted(this.#counts.values(), ([type, state]) => [type, state]).filter(([, , n]) => n !== 0),
-      relations: sorted(this.#relations.values(), (r) => [r.owner.scope, r.owner.inc, r.name, r.item]),
+      relations: sorted(this.#relations.values(), (r) => [r.owner.scope, r.owner.genesis, r.name, r.item]),
       accepted: sorted(this.#accepted.values(), ([actor, k]) => [actor, k]),
       requests: sorted(this.#requests.values(), (r) => [r.seq, r.n]),
-      decided: sorted(this.#decided.values(), (d) => [d.from.scope, d.from.inc, d.seq, d.n]),
+      decided: sorted(this.#decided.values(), (d) => [d.from.scope, d.from.genesis, d.seq, d.n]),
       creations: sorted(this.#creations.entries(), ([seed]) => [seed]),
       operations: sorted(this.#operations.values(), (o) => o.id.split(":").map(Number)),
       texts: sorted(this.#texts.values(), ([item, slot]) => [item, slot]),
       // A member that would be empty is left out, so a state that holds none has the digest it had before these members existed.
       ...(this.#prepared.size === 0 ? {} : { prepared: this.#steps() }),
-      ...(this.#sourceOrder.size === 0 ? {} : { sourceOrder: sorted(this.#sourceOrder.values(), order => [order.from.scope, order.from.inc, order.handler]) }),
+      ...(this.#sourceOrder.size === 0 ? {} : { sourceOrder: sorted(this.#sourceOrder.values(), order => [order.from.scope, order.from.genesis, order.handler]) }),
       ...(this.#records.size === 0 ? {} : { records: this.#kept() }),
-      ...(this.#observed.size === 0 ? {} : { observed: sorted(this.#observed.values(), (h) => [h.of.scope, h.of.inc, h.subject]) }),
+      ...(this.#observed.size === 0 ? {} : { observed: sorted(this.#observed.values(), (h) => [h.of.scope, h.of.genesis, h.subject]) }),
       ...(this.#holders.size === 0 ? {} : { holders: this.holders() }),
       ...(this.#accounts.size === 0 ? {} : { accounts: sorted(this.#accounts.values(), (a) => [a.seq, a.n]) }),
       ...(this.#itemDuties.size === 0 ? {} : { itemDuties: this.itemDuties() }),

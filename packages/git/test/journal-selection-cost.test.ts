@@ -36,10 +36,10 @@ test("selection parsing and byte ordering keep their original charged work", () 
       + groups.reduce((n, group) => n + journalOrderingInputWork(group.utf8Bytes, group.rows), 0) };
   // Recorded with the original parser before extraction. Duplicate raw
   // omissions are charged; duplicate consumers are normalized for ordering.
-  const original = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 11879, inputWork: 107581 };
+  const original = { entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 12467, inputWork: 113125 };
   expect(difference(orderedAfter, orderedBefore)).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 60 });
   expect(difference(after, before)).toEqual(original);
-  expect(shape).toEqual({ codeUnits: 3789, utf8Bytes: 3789, measuredOmissions: 2, orderingInputWork: 4766 });
+  expect(shape).toEqual({ codeUnits: 3985, utf8Bytes: 3985, measuredOmissions: 2, orderingInputWork: 5018 });
   expect(forecastJournalSelection(shape)).toEqual({ ok: true, cost: original });
   // Both wire limits remain independent of the work allowance.
   expect(forecastJournalSelection({ ...shape, codeUnits: JOURNAL_SELECTION_BYTES + 1, utf8Bytes: JOURNAL_SELECTION_BYTES + 1 }))

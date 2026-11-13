@@ -51,7 +51,7 @@ test("append forecasts charge shared head paths and old and new changed edges", 
   const edges = forecast.appendEdges;
   expect(edges?.ok).toBe(true); if (!edges?.ok) return;
   // Sizes pinned from the original validator, not returned by new prices.
-  const fixed = forecastJournalAppendFixed({ oldCommitBytes: 199, newCommitBytes: 247, oldHeadBytes: 232, newHeadBytes: 232 });
+  const fixed = forecastJournalAppendFixed({ oldCommitBytes: 199, newCommitBytes: 247, oldHeadBytes: 260, newHeadBytes: 260 });
   expect(fixed.ok).toBe(true); if (!fixed.ok) return;
   const built = await buildJournalPass({ format: "sha1", selection, input: selectedInput(fixture), parent, budget, preparation });
   expect(built.ok, JSON.stringify(built)).toBe(true); if (!built.ok) return;
@@ -66,7 +66,7 @@ test("append forecasts charge shared head paths and old and new changed edges", 
     qualification: "Shared comparison/head path geometry; original per-unit append-validator fees unchanged. Mechanical selected metadata, not native receipts/export." };
   expect([held.get(parent.id)!.data.length, held.get(built.archive.commit)!.data.length,
     utf8(canonicalize({ v: 2, scope: fixture.at, through: oldHead.seq, hash: oldHead.hash })).length, utf8(head).length])
-    .toEqual([199, 247, 232, 232]);
+    .toEqual([199, 247, 260, 260]);
   // Separately measured shared-pass geometry; original per-unit fees and
   // the fixed receipt above remain unchanged. Old layout evidence is kept.
   expect({ entries: delta.entries, attempts: delta.attempts, nodes: delta.nodes, calls: delta.calls })

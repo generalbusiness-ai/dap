@@ -46,7 +46,7 @@ capabilities. [definition.json](definition.json) holds readable source JSON.
 The [pin writer](scripts/pin-definition.mjs) checks the existing digest and
 writes the formatted value. [pin.ts](pin.ts) records the validated digest:
 
-`sha256:435d9f5745048183d3cf0392ce909cd76909fd69ee368dfc57e142ba96af1d09`
+`sha256:3512c1e4ff01f097f06bbdd05c5897ae7d589420a92b74f10a4dbb53af6094fb`
 
 The validator checks the actual restricted@1 rule grammar. The pin binds
 the whole declaration, not a display name. Its profile/interpreter remains

@@ -1,6 +1,6 @@
 /** Selection-to-layout boundary. A rebuild spends a new pass's finite
  * allowance on the stored manifest and exact immutable dependencies. */
-import { same, natural } from "@generalbusiness/dap-bytes";
+import { same, natural, isScopeRef, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import type { Bounds, Digest, FactRef, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { buildJournalArchive, buildJournalPass, convertJournalArchiveV1, JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, journalAnchorCopyCount, journalLegacyCopyCount, validateJournalPublicationEntries, JournalPassPreparation, JournalWork, type JournalArchive, type JournalPassArchive, type JournalSelection, type JournalPassSelection, type JournalCost, type JournalFormat, type JournalLayoutResult, type JournalObject, type JournalObjectSource, type JournalAnchorPublication, type JournalLegacyAnchors } from "@generalbusiness/dap-git/journal";
@@ -15,7 +15,7 @@ import { ArchiveReplayAnchors } from "./archive-anchors.ts";
 import { readArchiveTextBytes } from "./archive-text.ts";
 import type { ArchivePlanFence } from "./archive-plan-fence.ts";
 import type { ArchiveForeignExpectedCopy } from "./archive-foreign.ts";
-import { archiveReplayScopes, readArchivePublication, writeArchivePublication } from "./archive-publication.ts";
+import { archiveReplayScopes, readArchivePublication, writeArchivePublication, type ArchiveReplayContext } from "./archive-publication.ts";
 import { archiveFixedLayout } from "./archive-fixed-layout.ts";
 import { archiveParentMetadata, forecastArchiveFinish } from "./archive-finish-cost.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, archivePinReadBytes, readArchivePinAfterReceipt } from "./archive-pin.ts";
@@ -30,14 +30,33 @@ type Parent = { readonly id: string; readonly source: JournalObjectSource } | nu
 /** Collect only bytes that the native builder actually reads. The same
  * pass budget pays for admission, anchors and layout. */
 function replayInput(native: ReturnType<typeof archiveInput>, selection: ConstructorParameters<typeof ArchiveReplayAnchors>[0],
-  scopes: readonly ScopeRef[] | undefined, budget: ArchiveBudget, sources?: FixtureArchiveSourcePins, publish = false, legacyAnchors?: JournalLegacyAnchors) {
+  scopes: readonly ScopeRef[] | undefined, budget: ArchiveBudget, sources?: FixtureArchiveSourcePins, publish = false, legacyAnchors?: JournalLegacyAnchors, context?: ArchiveReplayContext) {
   let collector: ArchiveReplayAnchors | undefined;
   let replayScopes: readonly ScopeRef[] | undefined;
   try {
     if (scopes || publish) {
+      if (publish && !context) return budget.stop("unavailable");
       if (publish && scopes && (!Array.isArray(scopes) || scopes.length === 0 || scopes.length > 64)) return budget.stop("limit");
+      if (context && (!Array.isArray(context.checked) || context.checked.length > 64)) return budget.stop("limit");
+      const sourceSequences = native.sourceSequences, supplied = context?.checked ?? [];
+      if (supplied.length > (scopes?.length ?? 1)) return budget.stop("unavailable");
+      // Each source association comes from archiveInput's existing paid get.
+      // Bound and charge the explicit pass-context/copy-source join as well.
+      budget.spend({ metadata: (supplied.length + sourceSequences.length) * 512,
+        inputWork: (supplied.length + sourceSequences.length) * 1024 });
+      const checked = new Map<string, CheckedSequence>();
+      for (const sequence of [...supplied, ...sourceSequences]) {
+        const at = sequence.at, prior = checked.get(at.scope);
+        if (!isScopeRef(at) || prior && (!same(prior.at, at) || prior.kind !== sequence.kind)) return budget.stop("unavailable");
+        checked.set(at.scope, sequence);
+      }
+      const publicCopy = (at: ScopeRef): boolean => {
+        const sequence = checked.get(at.scope);
+        if (!sequence || !same(sequence.at, at)) return budget.stop("unavailable");
+        return !["register", "membership", "inbox"].includes(sequence.kind);
+      };
       const identities = scopes ?? [selection.at, ...selection.objects.flatMap(object => object.foreign
-        && object.foreign.fact.at.kind !== "register" && object.foreign.fact.at.kind !== "membership" ? [object.foreign.fact.at] : [])];
+        && publicCopy(object.foreign.fact.at) ? [object.foreign.fact.at] : [])];
       const unique = new Map<string, ScopeRef>();
       for (const at of identities) {
         const prior = unique.get(at.scope);
@@ -51,7 +70,7 @@ function replayInput(native: ReturnType<typeof archiveInput>, selection: Constru
         // required replay dependency, never a new anchor or export right.
         budget.spend({ inputWork: 1024 });
         const at = object.foreign?.fact.at;
-        if (!at || ["register", "membership", "inbox"].includes(at.kind)) continue;
+        if (!at || !publicCopy(at)) continue;
         const prior = unique.get(at.scope);
         if (prior && !same(prior, at)) throw new ArchivePrefixStopped("foreign-source-mismatch");
         if (!prior) {
@@ -60,7 +79,18 @@ function replayInput(native: ReturnType<typeof archiveInput>, selection: Constru
           unique.set(at.scope, at);
         }
       }
-      replayScopes = publish ? archiveReplayScopes([...unique.values()], selection.at, budget) : [...unique.values()];
+      for (const sequence of supplied) {
+        if (!same(unique.get(sequence.at.scope), sequence.at)) return budget.stop("unavailable");
+      }
+      const roots: CheckedSequence[] = [];
+      for (const sequence of checked.values()) {
+        const expected = unique.get(sequence.at.scope);
+        if (!expected) continue; // A private copied source is not a replay root.
+        if (!same(expected, sequence.at)) return budget.stop("unavailable");
+        roots.push(sequence);
+      }
+      replayScopes = publish ? archiveReplayScopes([...unique.values()], selection.at, budget,
+        { checked: roots, ...(context?.directoryRules ? { directoryRules: context.directoryRules } : {}) }) : [...unique.values()];
       collector = new ArchiveReplayAnchors(selection, replayScopes, budget, sources);
     }
   }
@@ -84,8 +114,8 @@ function replayInput(native: ReturnType<typeof archiveInput>, selection: Constru
     if (!success) return { ok: true as const };
     try {
       if (!finished) {
-        const anchors = collector?.finish();
-        finished = { ok: true as const, ...(anchors ? { anchors } : {}) };
+        const publication = collector?.finish(legacyAnchors);
+        finished = { ok: true as const, ...(publication ? { anchors: publication.anchors } : {}) };
       }
       return finished;
     } catch (error) {
@@ -96,7 +126,8 @@ function replayInput(native: ReturnType<typeof archiveInput>, selection: Constru
   return { ok: true as const, input, finish, scopes: replayScopes, publication: (): JournalAnchorPublication => {
     const result = finish(true);
     if (!result.ok) throw new ArchiveStopped(result.reason === "limit" || result.reason === "timeout" ? result.reason : "unavailable");
-    return { anchors: result.anchors ?? [], ...(legacyAnchors ? { legacyAnchors } : {}) };
+    if (result.anchors === undefined) throw new ArchiveStopped("unavailable");
+    return { anchors: result.anchors, ...(legacyAnchors ? { legacyAnchors } : {}) };
   } };
 }
 
@@ -105,7 +136,7 @@ function replayInput(native: ReturnType<typeof archiveInput>, selection: Constru
  * remote archive is never used as a substitute input. */
 export async function planLegacyArchiveAnchors(sql: Sql, context: { readonly row: ArchiveRow; readonly bounds: Bounds;
   readonly policies: ArchivePolicyRegistry; readonly parent: Parent; readonly legacyAnchorParent?: NonNullable<Parent>;
-  readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[];
+  readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[]; readonly replayContext?: ArchiveReplayContext;
   readonly preparation?: JournalPassPreparation;
   readonly prepareSources?: (seq: number, budget: ArchiveBudget) => Promise<void> }, budget: ArchiveBudget): Promise<JournalLegacyAnchors | undefined> {
   const old = context.row.confirmed;
@@ -129,7 +160,7 @@ export async function planLegacyArchiveAnchors(sql: Sql, context: { readonly row
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const bytes = canonicalize(inventory);
   if (bytes.length > JOURNAL_SELECTION_BYTES || utf8(bytes).length > JOURNAL_SELECTION_BYTES) return budget.stop("limit");
-  const replay = replayInput(archiveInput(sql, inventory, budget, context.fixtureSources), inventory, context.replayScopes, budget, context.fixtureSources, true);
+  const replay = replayInput(archiveInput(sql, inventory, budget, context.fixtureSources), inventory, context.replayScopes, budget, context.fixtureSources, true, undefined, context.replayContext);
   if (!replay.ok) throw new ArchiveStopped(replay.reason === "limit" || replay.reason === "timeout" ? replay.reason : "unavailable");
   await validateJournalPublicationEntries(bytes, replay.input, budget);
   const collected = replay.finish(true);
@@ -141,7 +172,7 @@ export async function planLegacyArchiveAnchors(sql: Sql, context: { readonly row
 /** Conversion is a bounded re-admission of the confirmed v1 prefix, never
  * a new cutoff or an outstanding v1 attempt. Matching its complete tree
  * establishes byte preservation before any new receipt can be marked. */
-type ConversionContext = { readonly row: ArchiveRow; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[] };
+type ConversionContext = { readonly row: ArchiveRow; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[]; readonly replayContext?: ArchiveReplayContext };
 export function planArchiveConversion(sql: Sql, context: ConversionContext, budget: ArchiveBudget) {
   return planArchiveConversionInternal(false, sql, context, budget);
 }
@@ -167,7 +198,7 @@ async function planArchiveConversionInternal(publish: boolean, sql: Sql, context
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const manifest = canonicalize(inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
-  const replay = replayInput(archiveInput(sql, inventory, budget, fixtureSources), inventory, context.replayScopes, budget, fixtureSources, publish);
+  const replay = replayInput(archiveInput(sql, inventory, budget, fixtureSources), inventory, context.replayScopes, budget, fixtureSources, publish, undefined, context.replayContext);
   if (!replay.ok) return replay;
   const built = await convertJournalArchiveV1({ format, selection: manifest, input: replay.input, parent, budget, ...(publish ? { publication: replay.publication } : {}) });
   const collected = replay.finish(built.ok);
@@ -211,7 +242,7 @@ function storedSelection(manifest: string, budget: ArchiveBudget, incremental = 
 
 /** A bounded new interval, with the previous confirmed position explicit.
  * Every old retained key is named by its stored original pass. */
-export type ArchivePassContext = { readonly at: ScopeRef; readonly through: Head; readonly after: Head | null; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[]; readonly legacyAnchors?: JournalLegacyAnchors; readonly preparation?: JournalPassPreparation; readonly forecast?: ArchivePlanFence; readonly declarationSizes?: ReadonlyMap<Digest, number | null>; readonly expectedCopies?: ReadonlyMap<Digest, Readonly<ArchiveForeignExpectedCopy>>; readonly retainedSizes?: ReadonlyMap<string, number | null> };
+export type ArchivePassContext = { readonly at: ScopeRef; readonly through: Head; readonly after: Head | null; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[]; readonly replayContext?: ArchiveReplayContext; readonly legacyAnchors?: JournalLegacyAnchors; readonly preparation?: JournalPassPreparation; readonly forecast?: ArchivePlanFence; readonly declarationSizes?: ReadonlyMap<Digest, number | null>; readonly expectedCopies?: ReadonlyMap<Digest, Readonly<ArchiveForeignExpectedCopy>>; readonly retainedSizes?: ReadonlyMap<string, number | null> };
 export function planArchivePass(sql: Sql, context: ArchivePassContext, budget: ArchiveBudget) {
   return planArchivePassInternal(inventoryArchive, false, sql, context, budget);
 }
@@ -265,7 +296,7 @@ function ownedPassManifest(selected: ArchiveInventory, preparation: JournalPassP
 async function buildOwnedPass(sql: Sql, context: ArchivePassContext, budget: ArchiveBudget,
   inventory: ArchiveInventory, manifest: string, publish: boolean, parent: Parent, format: JournalFormat, markedAt: Timestamp, fixtureSources?: FixtureArchiveSourcePins): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalPassArchive; readonly mark: ArchiveMark; readonly anchors?: readonly FactRef[] }> {
   const preparation = context.preparation;
-  const replay = replayInput(archiveInput(sql, inventory, budget, fixtureSources), inventory, context.replayScopes, budget, fixtureSources, publish, context.legacyAnchors);
+  const replay = replayInput(archiveInput(sql, inventory, budget, fixtureSources), inventory, context.replayScopes, budget, fixtureSources, publish, context.legacyAnchors, context.replayContext);
   if (!replay.ok) return replay;
   const built = await buildJournalPass({ format, selection: manifest, input: replay.input, parent, budget, ...(publish ? { publication: replay.publication } : {}), ...(preparation ? { preparation } : {}) });
   const collected = replay.finish(built.ok);
@@ -380,7 +411,7 @@ async function finishRootFixedArchivePass(sql: Sql, context: FixedArchivePassCon
 
 /** Restart follows the marked interval and pass references exactly. It
  * neither inventories today's rows nor reads a prior journal entry. */
-export async function rebuildArchivePass(sql: Sql, row: ArchiveRow, parent: Parent, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins): Promise<ArchivePassBuildResult> {
+export async function rebuildArchivePass(sql: Sql, row: ArchiveRow, parent: Parent, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins, replayContext?: ArchiveReplayContext): Promise<ArchivePassBuildResult> {
   const mark = row.pending ? { ...row.pending, through: { ...row.pending.through } } : null, at = { ...row.at }, format = row.format, base = parent ? { ...parent } : null;
   if (!mark || mark.layout !== 2 || mark.parent !== (base?.id ?? null)) return { ok: false, reason: "manifest" };
   const selection = storedSelection(mark.manifest, budget, true);
@@ -396,7 +427,7 @@ export async function rebuildArchivePass(sql: Sql, row: ArchiveRow, parent: Pare
   }
   const publication = mark.anchorPublication === undefined ? undefined : readArchivePublication(mark.anchorPublication,
     journalAnchorCopyCount(selection.objects, new JournalWork(budget)), (selection.after?.seq ?? -1) + 1, budget, [at]);
-  const replay = publication ? replayInput(input, selection, mark.replayScopes, budget, fixtureSources, true, publication.legacyAnchors) : null;
+  const replay = publication ? replayInput(input, selection, mark.replayScopes, budget, fixtureSources, true, publication.legacyAnchors, replayContext) : null;
   if (replay && !replay.ok) return replay;
   // A missing producer in a stored Mark must refuse, not be repaired by
   // today's composition rule while silently accepting a different closure.
@@ -409,7 +440,7 @@ export async function rebuildArchivePass(sql: Sql, row: ArchiveRow, parent: Pare
     if (actual.length !== expected.length) return { ok: false, reason: "rebuild-mismatch" };
     for (let index = 0; index < actual.length; index++) {
       const a = actual[index]!, b = expected[index]!;
-      if (a.scope !== b.scope || a.inc !== b.inc || a.kind !== b.kind) return { ok: false, reason: "rebuild-mismatch" };
+      if (a.scope !== b.scope || a.genesis !== b.genesis) return { ok: false, reason: "rebuild-mismatch" };
     }
   }
   const build = conversion ? convertJournalArchiveV1 : buildJournalPass;
@@ -426,7 +457,7 @@ export async function rebuildArchivePass(sql: Sql, row: ArchiveRow, parent: Pare
 
 /** Initial planning uses the native synchronous inventory and its explicit
  * caller-owned fixture/reviewed policy registry. It does not mark or send. */
-export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[] }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalArchive; readonly mark: ArchiveMark; readonly anchors?: readonly FactRef[] }> {
+export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[]; readonly replayContext?: ArchiveReplayContext }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalArchive; readonly mark: ArchiveMark; readonly anchors?: readonly FactRef[] }> {
   const at = { ...context.at }, through = { ...context.through }, parent = context.parent ? { ...context.parent } : null, format = context.format, markedAt = context.markedAt;
   const fixtureSources = context.fixtureSources;
   const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources);
@@ -434,7 +465,7 @@ export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; re
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const manifest = canonicalize(selected.inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
-  const replay = replayInput(archiveInput(sql, selected.inventory, budget, fixtureSources), selected.inventory, context.replayScopes, budget, fixtureSources);
+  const replay = replayInput(archiveInput(sql, selected.inventory, budget, fixtureSources), selected.inventory, context.replayScopes, budget, fixtureSources, false, undefined, context.replayContext);
   if (!replay.ok) return replay;
   const built = await buildJournalArchive({ format, selection: manifest, input: replay.input, parent, budget });
   const collected = replay.finish(built.ok);

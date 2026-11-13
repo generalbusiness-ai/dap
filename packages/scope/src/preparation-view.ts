@@ -1,7 +1,7 @@
 /** Only the read methods used by the supported native reference callbacks. */
 import { canonicalize, isItem, parseStrict, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { byteOrder, type Page, type ScopeState, type StateView } from "@generalbusiness/dap-derive";
-import { incarnationEvidence } from "./incarnation-evidence.ts";
+import { genesisEvidence } from "./genesis-evidence.ts";
 import { itemCandidates, ITEM_CANDIDATE_BOUNDS } from "./item-candidates.ts";
 import { PreparationBudget } from "./preparation-budget.ts";
 import type { Sql } from "./sqlite.ts";
@@ -34,11 +34,11 @@ export function preparationView(sql: Pick<Sql, "exec">, snapshot: ScopeState, bu
   const methods = {
     scope: () => { budget.spend({ calls: 1 }); return snapshot; },
     page: (...args: Parameters<StateView["page"]>) => { try { return page(...args); } catch { return budget.stop(); } },
-    incarnations: (scope: Parameters<StateView["incarnations"]>[0]) => {
-      const matched = incarnationEvidence(sql, scope, budget);
-      // A two-incarnation witness is not a complete inventory. Invalid
+    geneses: (scope: Parameters<StateView["geneses"]>[0]) => {
+      const matched = genesisEvidence(sql, scope, budget);
+      // A two-sequence witness is not a complete inventory. Invalid
       // native histories stop this supported callback path explicitly.
-      return matched.kind === "none" ? [] : matched.kind === "one" ? [matched.incarnation] : budget.stop();
+      return matched.kind === "none" ? [] : matched.kind === "one" ? [matched.genesis] : budget.stop();
     },
   };
   return new Proxy(Object.freeze(methods), { get(target, property) {

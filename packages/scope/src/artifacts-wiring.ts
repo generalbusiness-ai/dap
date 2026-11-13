@@ -146,7 +146,7 @@ export function artifactsWorkspaceOutside(given: OutsideGiven, sql: Pick<Sql, "e
   try {
     const ready = artifactsReadiness(env);
     const roots = ready.state === "wired" ? hostRegisterScopes(ready.config.registerScope, env) : null;
-    if (!sources || ready.state !== "wired" || !roots || given.scope()?.at.kind !== "lane"
+    if (!sources || ready.state !== "wired" || !roots || given.scope()?.kind !== "lane"
       || !given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2)) return NO_OUTSIDE;
     const provider = new ArtifactsProvider({ binding: ready.binding, host: ARTIFACTS_HOST, namespace: ready.config.namespace,
       service: ready.config.host, maxBytes: ready.config.maxBytes, ...(fetch ? { fetch } : {}),

@@ -1,6 +1,6 @@
 import { answersCatalogVocabularyQuestion } from "@generalbusiness/dap-contract/catalog-vocabulary";
 /** Execute the instructions of one actual admitted body, including its finalization. */
-import type { Digest, Effect, PlatformTimedRule, Prepared, RefusalReason, ScopeRef, Send, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Digest, Effect, GenesisEffect, PlatformTimedRule, Prepared, RefusalReason, ScopeRef, Send, UnavailableReason } from "@generalbusiness/dap-contract";
 import { evaluateEffects } from "../effects.ts";
 import { evaluateSends } from "../sends.ts";
 import type { Judging } from "../guards.ts";
@@ -16,7 +16,7 @@ export type Ran =
    * (section 17.3); or, by a mark, the item awaited the mark and these effects set it (section 6.4, revision 21). `bound`: the
    * delivery is bound to that item (section 17.2a), whatever is decided.
    */
-  | { result: "ran"; effects: Effect[]; sends: Send[]; prepared: Prepared[]; judgesTime: boolean; settles: boolean; bound?: number }
+  | { result: "ran"; effects: GenesisEffect[]; sends: Send[]; prepared: Prepared[]; judgesTime: boolean; settles: boolean; bound?: number }
   /** `name`: the reason the failed guard declares. `prepared`: the rule results the guards read before the refusal. An entry that records the refusal records them (section 9.2). */
   | { result: "refused"; reason: RefusalReason; name?: string; detail: string; prepared: Prepared[]; bound?: number }
   | { result: "unavailable"; reason: UnavailableReason };
@@ -69,7 +69,7 @@ export function executeBody(j: Judging, structure: BodyStructure | null, cause: 
     // Final admission ties this frame to its immutable timed declaration.
     const opens = (row.declaration as PlatformTimedRule).opens ?? [], opened: Effect[] = [];
     const nativeOwner = timed?.platform?.named;
-    if (opens.length && (!answersCatalogVocabularyQuestion(nativeOwner, "nativeTimedOperationOpen") || j.scope.at.kind !== "destination")) return { result: "unavailable", reason: "unavailable" };
+    if (opens.length && (!answersCatalogVocabularyQuestion(nativeOwner, "nativeTimedOperationOpen") || j.scope.kind !== "destination")) return { result: "unavailable", reason: "unavailable" };
     for (const [k, open] of opens.entries()) opened.push(
       { effect: "operation", k, owner: nativeOwner!, kind: open.kind, attempts: open.attempts, for: timedItem! },
       { effect: "attempt", operation: { k }, attempt: 1, result: "opened", selected: null },

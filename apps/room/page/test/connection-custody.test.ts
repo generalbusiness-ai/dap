@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, keyIdOfSecret, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Signer } from "@generalbusiness/dap-client";
 import type { Context, InvitationIssueInput, InvitationIssueResult } from "@generalbusiness/dap-cli/browser";
 import type { ClaimStorage } from "../src/claim.ts";
@@ -10,7 +10,7 @@ vi.mock("../src/start-custody.ts", () => creator);
 vi.mock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"), openRoom: async (session: { service: string; signer: Signer }) => ({ session, directory: directory.scope, membership, key, me: { handle: "@founder", ref: controller, actions: ["membership.invite", "membership.manage"] } }) }));
 import { connectInvitation, originalConnection, creatorConnectionFiles, saveCreatorRecoveryOnce } from "../src/connection-custody.ts";
 const origin = "https://connection-custody.test";
-const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@7" : "platform:directory@3", creator: null, cause: textDigest("SCRIPTED connection " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(4)), kind });
+const ref = (kind: "register" | "directory" | "membership") => ({ scope: scopeIdOf({ v: 1, kind, definition: kind === "register" ? "platform:register@7" : "platform:directory@3", creator: null, cause: textDigest("SCRIPTED connection " + kind), ordinal: 0 }), genesis: textDigest("SCRIPTED connection genesis " + kind) });
 const directory = ref("directory"), membership = ref("membership"), register = ref("register"), seed = new Uint8Array(32).fill(71), key = keyIdOfSecret(seed);
 const controller = { membership, member: "@founder" };
 const expected = { key, operation: "50000000-0000-4000-8000-000000000001", membership };

@@ -13,25 +13,6 @@ export interface LegacyKey {
   current(): boolean;
   removeSecret(publicKey: KeyId): void;
 }
-/** Capture only a caller-selected settings slot. Preserve its public settings;
- * never search localStorage or rewrite another start/join operation implicitly. */
-export function legacySettingsKey(storage: KeySettingsStorage, name: string): LegacyKey {
-  const original = storage.getItem(name);
-  if (original === null || original.length > 64 * 1024) throw unavailable();
-  const value: unknown = JSON.parse(original);
-  if (!value || typeof value !== "object" || Array.isArray(value) || typeof (value as { secret?: unknown }).secret !== "string") throw unavailable();
-  const { secret, ...publicSettings } = value as Record<string, unknown> & { secret: string };
-  return {
-    seed: secret,
-    current: () => storage.getItem(name) === original,
-    removeSecret: publicKey => {
-      if (storage.getItem(name) !== original) throw unavailable();
-      const replacement = JSON.stringify({ ...publicSettings, publicKey });
-      storage.setItem(name, replacement);
-      if (storage.getItem(name) !== replacement) throw unavailable();
-    },
-  };
-}
 const unavailable = () => new Error("The browser signing key is unavailable or changed. Inspect the current settings before continuing.");
 const slot = (key: KeyId) => "ed25519:" + key;
 async function checked(value: unknown, expected: KeyId): Promise<Signer> {

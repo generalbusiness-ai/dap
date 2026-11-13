@@ -1,6 +1,7 @@
 /** Whole-entry selection under the original all-work allowance. Native
  * metadata frames close before parent I/O; failed/discarded scouting stays
  * spent. Final inventory and every body/writer/send operation still run. */
+import type { ArchiveReplayContext } from "./archive-publication.ts";
 import type { Bounds, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, same, utf8 } from "@generalbusiness/dap-bytes";
 import { JournalPassPreparation, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/dap-git/journal";
@@ -34,6 +35,8 @@ export interface AdaptiveArchiveContext {
   readonly legacyAnchorParent?: { readonly id: string; readonly source: JournalObjectSource };
   readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins;
   readonly replayScopes?: readonly ScopeRef[];
+  /** This pass's checked sequences, which classify each replay root. */
+  readonly replayContext?: ArchiveReplayContext;
   /** Host source identity preparation for exactly the next candidate. It
    * runs outside native frames and inside this owner's earlier-finish fence. */
   readonly prepareSources?: (seq: number, budget: ArchiveBudget) => Promise<void>;
@@ -179,6 +182,7 @@ async function adaptiveArchivePass(coupled: boolean, sql: Sql, context: Adaptive
       bounds: context.bounds, policies: context.policies, format: context.format, parent: context.parent,
       markedAt: context.markedAt, ...(context.fixtureSources ? { fixtureSources: context.fixtureSources } : {}),
       ...(context.replayScopes ? { replayScopes: context.replayScopes } : {}),
+      ...(context.replayContext ? { replayContext: context.replayContext } : {}),
       preparation, ...(legacyAnchors ? { legacyAnchors } : {}), ...constraints }, budget);
     return built.ok ? { ...built, parentObjects: selected.parent.ids, rowContextBytes } : built;
   } catch (error) {

@@ -17,7 +17,7 @@ export interface JournalClone {
   log(from: number): Promise<Read<LogPage>>;
 }
 export type JournalTailRead = Read<LogPage> | { ok: false; reason: "incomplete"; detail: "floor-moved" | "floor-commit-missing" | "floor-commit-mismatch" | "clone-unavailable" };
-const sameScope = (a: ScopeRef, b: ScopeRef) => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;
+const sameScope = (a: ScopeRef, b: ScopeRef) => a.scope === b.scope && a.genesis === b.genesis;
 const sameHead = (a: Head, b: Head) => a.seq === b.seq && a.hash === b.hash;
 const validRead = isRead(isLogPage);
 

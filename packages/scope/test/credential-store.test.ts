@@ -39,7 +39,7 @@ test("private custody retains one mint's own reply and secret across a real obje
     const judged = store.judged(credential.mint, 1, reply);
     const live = store.live(credential.mint, 1, START);
     const otherAttempt = store.live(credential.mint, 2, START);
-    const isolated = new CredentialStore(state.storage.sql, () => ({ ...scope.at, inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa" as never }));
+    const isolated = new CredentialStore(state.storage.sql, () => ({ ...scope.at, genesis: `sha256:${"00".repeat(32)}` as const }));
     const otherIncarnation = [isolated.read(credential.mint, 1), isolated.pending(null, 1), isolated.revocations(null, 1), isolated.expectRevoke(revokeFirst)];
     const revoked = store.revoked(second.mint, 1);
     return { retained, reply, firstPage, nextPage, revokePage, revokeNext, judged, live, otherAttempt, otherIncarnation, revoked, remaining: store.pending(null, 1), revokeRemaining: store.revocations(null, 1), invalidLimit };
@@ -97,9 +97,9 @@ test("conflicting mint identities cannot replace custody; expiry and rejected cu
 
 // Metadata/clock values here are mechanical private legacy rows, not host tokens.
 // The actual alarm/authority boundary is covered by read-token.test.ts.
-test("expiry backfill crosses restarts in bounded quanta and clears old incarnations without revocation", async () => {
+test("expiry backfill crosses restarts in bounded quanta and clears old sequences without revocation", async () => {
   const scope = await create(), due = at(60), future = timeOf(timeMs(at(120))! + 123);
-  const oldScope = canonicalize({ ...scope.at, inc: "in_zzzzzzzzzzzzzzzzzzzzzzzzzz" });
+  const oldScope = canonicalize({ ...scope.at, genesis: `sha256:${"ff".repeat(32)}` });
   expect(canonicalize(scope.at) < oldScope).toBe(true);
   await scope.inside(state => {
     const custody = new CredentialStore(state.storage.sql, () => scope.at);
@@ -109,7 +109,7 @@ test("expiry backfill crosses restarts in bounded quanta and clears old incarnat
     // the primary-key quantum and an invalid legacy expiry that must erase.
     for (let n = 0; n < 65; n++) state.storage.sql.exec("INSERT INTO private_credential (scope,id,mint,attempt,ends,plaintext,state) VALUES (?,?,?,?,?,?,?)",
       oldScope, `legacy-${String(n).padStart(3, "0")}`, `${n}:0`, 1, n === 64 ? "invalid" : due, n === 0 ? null : "TEST legacy plaintext", "live").toArray();
-    // Explicit trusted read-mint markers model known old-incarnation read
+    // Explicit trusted read-mint markers model known old-sequence read
     // credentials; unknown legacy write rows are deliberately not classified.
     state.storage.sql.exec("INSERT INTO private_read_credential(scope,id,mint,attempt,ends) SELECT scope,id,mint,attempt,ends FROM private_credential WHERE scope=?", oldScope).toArray();
     state.storage.sql.exec("DELETE FROM private_credential_expiry").toArray();

@@ -55,9 +55,9 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
         throw new Error("scripted lost accepted join reply");
       }
       if (signed?.intent.kind === "join" && wrongReceipt) {
-        const answer = await response.json() as { receipt?: { fact: { at: { inc: string } } } };
+        const answer = await response.json() as { receipt?: { fact: { at: { genesis: string } } } };
         if (!answer.receipt) return Response.json(answer);
-        answer.receipt.fact.at.inc = (await O.at()).inc;
+        answer.receipt.fact.at.genesis = (await O.at()).genesis;
         return Response.json(answer);
       }
       if (path.endsWith("/settle") && unavailableSettlement) return Response.json({ ok: false, reason: "unavailable" });
@@ -68,7 +68,7 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
       }
       if (path.endsWith("/settle") && wrongSettlement) {
         const answer = await response.json() as { value: { fact: unknown } };
-        answer.value.fact = factRefOf((await M.entries())[invitation]!);
+        answer.value.fact = await M.fact(invitation);
         return Response.json(answer);
       }
       return response;
@@ -115,12 +115,12 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
     const waiting = await run();
     expect(waiting).toMatchObject({ code: 1, lines: [expect.stringMatching(/^Gave up waiting for your inbox/)] });
     const accepted = (await store.config())!;
-    expect(accepted.join!.accepted).toEqual(factRefOf((await joins())[0]!));
+    expect(accepted.join!.accepted).toEqual(factRefOf((await joins())[0]!, await M.at()));
     expect(accepted.join!.repository.inbox).toBeDefined();
     expect(sent).toEqual([saved, saved, saved]);
     // A stored marker for another real entry cannot replace the exact join.
     const beforeSettlement = sent.length;
-    await store.save({ ...accepted, join: { ...accepted.join!, accepted: factRefOf((await M.entries())[invitation]!) } });
+    await store.save({ ...accepted, join: { ...accepted.join!, accepted: await M.fact(invitation) } });
     expect(await run()).toMatchObject({ code: 1, lines: ["The saved accepted fact does not match this exact join. This run sent nothing, and an earlier send of this join went ahead."] });
     expect(sent).toHaveLength(beforeSettlement);
     await store.save(accepted);

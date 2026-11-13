@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type FieldValue, type RulesObservation } from "@generalbusiness/dap-contract";
-import { definitionDigest } from "@generalbusiness/dap-bytes";
+import { definitionDigest, textDigest } from "@generalbusiness/dap-bytes";
 import { type RuleGiven } from "@generalbusiness/dap-derive";
-import { d, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, otherLane, t, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { applicationRoot, applicationChild, smallApplication as unrelated } from "./definition-corpus-data.ts";
 import { hardenedCertifiedRulesDirectory } from "../src/archive-binding.ts";
 import { evidenceRulesDirectory, evidenceRulesDirectoryRules } from "../src/evidence-cohort-data.ts";
@@ -19,7 +19,7 @@ test("only D21 open-pr declares its one child place, and its closure stays bound
   expect(Object.keys(old.fields).some(name => name.startsWith("dependency"))).toBe(false);
   expect(evidenceRulesDirectory.acts["open-issue"]).toBe(hardenedCertifiedRulesDirectory.acts["open-issue"]);
   const child = applicationChild(), childDigest = definitionDigest(child), root = applicationRoot(childDigest), rootDigest = definitionDigest(root);
-  const rules = { ...otherLane, kind: "rules" as const };
+  const rules = fixtureScope("rules", 18).at;
   const observation: RulesObservation = { subject: "rules", of: rules, head: { seq: 4, hash: d("a") }, revision: 3,
     content: { asked: "definitions", active: [{ digest: rootDigest, name: root.name }] }, definition: "platform:rules@13", at: t(1) };
   const rule = evidenceRulesDirectoryRules["definition-active"];
@@ -42,6 +42,6 @@ test("only D21 open-pr declares its one child place, and its closure stays bound
   expect(rule.run(given({ definition: childDigest, dependency1: rootDigest }, { definition: child, dependency1: root },
     { ...observation, content: { asked: "definitions", active: [{ digest: childDigest, name: child.name }] } }))).toMatchObject({ holds: false, name: "unsupported-definition" });
   expect(rule.run(given(fields, places, null))).toEqual({ holds: null, reason: "dependency-unavailable" });
-  expect(rule.run(given(fields, places, { ...observation, of: { ...rules, inc: `in_${"b".repeat(26)}` } }))).toEqual({ holds: null, reason: "dependency-unavailable" });
+  expect(rule.run(given(fields, places, { ...observation, of: { ...rules, genesis: textDigest("TEST genesis b") } }))).toEqual({ holds: null, reason: "dependency-unavailable" });
   expect(rule.run(given(fields, places, { ...observation, content: { asked: "definitions", active: [] } }))).toEqual({ holds: false, name: "not-activated" });
 });

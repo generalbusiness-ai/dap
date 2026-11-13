@@ -20,7 +20,7 @@ const listed = (definition: ValidDefinition) => definition.declared.capabilities
 function grantOf(view: StateView, definition: ValidDefinition, history?: Own): DeviceCommandGrant | null | typeof unavailable {
   const scope = view.scope(), genesis = history?.(0);
   if (!scope || !genesis) return unavailable;
-  if (genesis.hash !== scope.genesis.hash || !same(genesis.entry.at, scope.at) || genesis.entry.seq !== 0
+  if (genesis.hash !== scope.genesis.hash || genesis.hash !== scope.at.genesis || genesis.entry.seq !== 0
     || genesis.entry.input.type !== "genesis" || genesis.entry.input.decision !== "applied") return null;
   const context = creationContextOf(genesis.entry.input.message?.body, definition.digest);
   return context.kind === "marked" && context.deviceCommand?.definitions.includes(definition.digest) ? context.deviceCommand : null;
@@ -81,7 +81,7 @@ function answer(given: StepGiven): StepDerived | { refused: StepRefusal } {
   if (!command) return refused("device-command-unknown");
   if (command.state !== "open") return refused("device-command-closed");
   const source = given.own?.(asked.command.seq);
-  if (!source || source.hash !== asked.command.hash || !same(source.entry.at, given.scope.at) || source.entry.seq !== asked.command.seq
+  if (!source || source.hash !== asked.command.hash || !("genesis" in source.entry) || source.entry.genesis !== given.scope.at.genesis || source.entry.seq !== asked.command.seq
     || command.seq !== asked.command.seq || !source.entry.effects.some(effect => effect.effect === "record" && effect.capability === DEVICE_COMMAND
       && effect.kind === "command" && effect.state === "open" && same(effect.key, command.key) && same(effect.values, command.values))) return refused("device-command-unknown");
   const values = command.values;

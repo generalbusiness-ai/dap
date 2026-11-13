@@ -5,7 +5,7 @@ import { PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-cont
 import type { FactUse, Input, KeyId, MemberId, Observation, ObservationUse, OperationId, Send } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, isEntry, isObservationUse, signIntent } from "@generalbusiness/dap-bytes";
 import { PROFILES, actNeeds, clockOf, contentChecked, contentStates, judgeDelivery, observationBytes, retainable, retainableByRequest, rowsOfAct, rowsOfKind, settleOutcome, validateDefinition, valueDigest, type ActJudgment, type Fetched, type Judgment, type Observing, type OutcomeJudgment, type RuleGiven, type Subject } from "../src/index.ts";
-import { Scope, T0, arriving, forged, grantOf, keys, membership, otherLane, t, EXTENTS, EXTENTS_MAX, RULEBOOK, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weighed, weigher, weigherRules, weigherWith, type Seen } from "./fixtures-entry.ts";
+import { Scope, T0, arriving, forged, grantOf, keys, membership, otherLane, otherLaneSequence, t, EXTENTS, EXTENTS_MAX, RULEBOOK, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weighed, weigher, weigherRules, weigherWith, type Seen } from "./fixtures-entry.ts";
 
 // Scope contract, revisions 20 and 21, sections 6.1 and 16.1; witnesses 18.46, 18.48, 18.50 and 18.52; source rows I3-39, I3-41,
 // I3-42, I3-43, I3-53 and I3-56. STAND-INS: the platform data `weigher` and every rule of it are made up (`fixtures-observes.ts`),
@@ -175,7 +175,7 @@ describe("an act with rows (section 16.1; witness 18.46, cases 4 to 6 and 16; wi
     const refused = s.judge(five, context([], READABLE));
     expect([said(refused), "name" in refused && refused.name, actNeeds(s.state, s.definition, five, s.context(context([], READABLE)))]).toEqual([["refused", "entry-too-large"], "observations", []]);
     // Case 6: the first checker is a member of another repository. It names no subject of this scope.
-    const foreign = { fields: { checks: [{ name: "c0", checker: { membership: { ...membership, inc: otherLane.inc }, member: "@una" } }, check("c1", "@vic")] } };
+    const foreign = { fields: { checks: [{ name: "c0", checker: { membership: { ...membership, genesis: otherLane.genesis }, member: "@una" } }, check("c1", "@vic")] } };
     expect(said(s.act(rita, "set-checks", foreign, context([seenUna, seenVic])))).toEqual(["refused", "bad-field"]);
   });
 
@@ -222,8 +222,8 @@ describe("an act with rows (section 16.1; witness 18.46, cases 4 to 6 and 16; wi
 function decided(seq: number, who: typeof una, check: string): Fetched {
   const signed = signIntent({ v: 1, to: otherLane, actor: who.key, kind: "decide", on: null, expected: {}, fields: { check }, idempotencyKey: `d${seq}`, notAfter: t(60) }, who.secret);
   const input: Input = { type: "act", signed, authority: [], presented: {} };
-  const source = forged(otherLane, seq, input, []);
-  return { fact: factRefOf(source.entry), entry: source.entry, under: "lane" };
+  const source = forged(otherLaneSequence, seq, input, []);
+  return { fact: factRefOf(source.entry, source.sequence.at), entry: source.entry, sequence: source.sequence, under: "lane" };
 }
 
 describe("an outcome with rows, and its origin (sections 6.1 and 16.1; witness 18.46, cases 7 to 12; witness 18.52, cases 5 to 9)", () => {
@@ -374,8 +374,8 @@ describe("a clause of a result with a row, and a value that its observation name
     const sent = s.did(rita, "go", { on: 0, expected: { on: 2 } });
     const request = { from: s.fact(sent.seq), n: 0 };
     const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
-    const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, [answer]);
-    const arrival = { ...answer, from: factRefOf(source.entry) };
+    const source = forged(otherLaneSequence, 9, { type: "delivery", sourceKind: "lane", from: request.from, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, [answer]);
+    const arrival = { ...answer, from: factRefOf(source.entry, source.sequence.at) };
     s.now = t(8);
     const record = (hand: readonly ObservationUse[], values: readonly string[], over: Partial<Observing> = {}) =>
       judgeDelivery(s.state, s.definition, arrival, { ...arriving(s, arrival, source), platform: weigherRules(), observed: hand, values, observing: observing({ content: U, ...over }) });

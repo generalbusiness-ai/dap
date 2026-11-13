@@ -4,10 +4,11 @@ import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, entryHash, keyIdOfSecret, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { directory } from "../../bytes/test/fixtures.ts";
+import { fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { bindApplicationProjection, applicationProjectionId, readApplicationProjection } from "../src/application-codec/application-v2.ts";
 import { projectApplicationQueryReads } from "../src/application-codec/application-projection-read.ts";
 import { applicationProjectionQueryDigest, readApplicationProjectionReply } from "../src/application-codec/application-projection-wire.ts";
-const scope = { ...directory, kind: "lane" as const }, secret = new Uint8Array(32).fill(71);
+const scope = fixtureScope("lane", 20).at, secret = new Uint8Array(32).fill(71);
 
 const projection = () => ({ v: 1, definition: definitionDigest(definition), revision: "revision", sources: { log: {
   read: "entries", acts: ["note", "observe"], window: 2, limit: 2, latestBy: null as string | null, fields: {
@@ -19,7 +20,7 @@ function journal() {
   const entries: { seq: number; hash: ReturnType<typeof textDigest>; bytes: string }[] = [];
   let prev = textDigest("PUBLIC TEST prefix outside the declared tail");
   for (const seq of [4, 5]) {
-    const entry: Entry = { v: 1, at: scope, seq, prev, time: "2026-10-18T12:00:00Z", clamped: false, epoch: 0, uses: [], prepared: [], effects: [], sends: [],
+    const entry: Entry = { v: 1, genesis: scope.genesis, seq, prev, time: "2026-10-18T12:00:00Z", clamped: false, epoch: 0, uses: [], prepared: [], effects: [], sends: [],
       input: { type: "act", signed: signIntent({ v: 1, to: scope, actor: keyIdOfSecret(secret), kind: seq === 4 ? "observe" : "note", on: seq === 4 ? null : 1, expected: {}, fields: { room: 1 },
         idempotencyKey: `PUBLIC-TEST-${seq}`, notAfter: "2026-10-18T12:01:00Z" }, secret), authority: [], presented: {} } };
     prev = entryHash(entry); entries.push({ seq, hash: prev, bytes: canonicalize(entry) });

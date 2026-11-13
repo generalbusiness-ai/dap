@@ -41,7 +41,7 @@ beforeAll(async () => {
   home = mkdtempSync(join(tmpdir(), "mcp-lost-reply-"));
   mkdirSync(join(home, "keys"), { recursive: true });
   writeFileSync(join(home, "keys", "device.key"), `${b64url(secret)}\n`, { mode: 0o600 });
-  writeFileSync(join(home, "config.json"), JSON.stringify({ v: 1, key: "device", ...standIn.config(), service }));
+  writeFileSync(join(home, "config.json"), JSON.stringify({ v: 2, key: "device", ...standIn.config(), service }));
 });
 afterAll(async () => {
   server.closeAllConnections();

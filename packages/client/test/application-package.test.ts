@@ -3,7 +3,7 @@ import { packageDeclaration as declaration } from "./definition-corpus-data.ts";
  * Native whole-definition judgment, a Git fetch/install and browser behavior
  * are separate obligations of check and the host-side slice. */
 import { expect, test } from "vitest";
-import { b64url, canonicalize, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ApplicationPackageError, packApplication, readApplicationPackage, readApplicationReleaseProof, secretSigner, signedApplicationInstall, type ApplicationPackageInput, type PackedApplication } from "../src/index.ts";
 
 const signer = secretSigner(new Uint8Array(32).fill(7));
@@ -142,7 +142,7 @@ test("an install proof verifies exact semantics and signed release without prese
 // custody and explicit role selection, before any transport or host admission.
 test("native install signing owns inputs and excludes screen bytes from its retry envelope", async () => {
   const packet = await packApplication(input(), signer), bytes = packet.bytes.slice();
-  const options = { rules: { scope: scopeIdOf({ v: 1, kind: "rules", definition: `sha256:${"a".repeat(64)}`, creator: null, cause: `sha256:${"b".repeat(64)}`, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "rules" }, uri: `git+https://example.test/project.git/@${"c".repeat(40)}/application.dap.json`, release: packet.ids.release, roles: ["member"], values: { title: "Original" } } as any;
+  const options = { rules: { scope: scopeIdOf({ v: 1, kind: "rules", definition: `sha256:${"a".repeat(64)}`, creator: null, cause: `sha256:${"b".repeat(64)}`, ordinal: 0 }), genesis: textDigest("TEST genesis 1") }, uri: `git+https://example.test/project.git/@${"c".repeat(40)}/application.dap.json`, release: packet.ids.release, roles: ["member"], values: { title: "Original" } } as any;
   const rules = structuredClone(options.rules);
   let calls = 0, release!: () => void;
   const held = new Promise<void>(resolve => { release = resolve; });
@@ -160,7 +160,7 @@ test("native install signing owns inputs and excludes screen bytes from its retr
 
 test("invalid package, URI, role selection and accessor inputs never ask the install key to sign", async () => {
   const packet = await packApplication(input(), signer);
-  const options = { rules: { scope: scopeIdOf({ v: 1, kind: "rules", definition: `sha256:${"a".repeat(64)}`, creator: null, cause: `sha256:${"b".repeat(64)}`, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "rules" }, uri: `git+https://example.test/project.git/@${"c".repeat(40)}/application.dap.json`, release: packet.ids.release, roles: [], values: {} } as any;
+  const options = { rules: { scope: scopeIdOf({ v: 1, kind: "rules", definition: `sha256:${"a".repeat(64)}`, creator: null, cause: `sha256:${"b".repeat(64)}`, ordinal: 0 }), genesis: textDigest("TEST genesis 1") }, uri: `git+https://example.test/project.git/@${"c".repeat(40)}/application.dap.json`, release: packet.ids.release, roles: [], values: {} } as any;
   let calls = 0, getters = 0; const key = { key: signer.key, sign: async (bytes: Uint8Array) => { calls++; return signer.sign(bytes); } };
   for (const [bytes, altered] of [
     [changed(packet, value => { value.presentation.assets[0].bytes = ""; }), options],

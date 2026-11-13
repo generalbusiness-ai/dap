@@ -2,7 +2,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { domainBytes, keyIdOfSecret, newIncarnation, scopeIdOf, sign, textDigest } from "@generalbusiness/dap-bytes";
+import type { ScopeKind } from "@generalbusiness/dap-contract";
+import { domainBytes, keyIdOfSecret, sign, textDigest } from "@generalbusiness/dap-bytes";
+import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import type { Summary } from "@generalbusiness/dap-contract";
 import { secretSigner, type ObservationState } from "@generalbusiness/dap-client";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
@@ -43,7 +45,7 @@ test("Roster removal leaves the identity-owned original Check report reachable w
   const oldDocument=globalThis.document,oldHTMLElement=globalThis.HTMLElement,oldButton=globalThis.HTMLButtonElement;
   Object.assign(globalThis,{document:{createElement:()=>new Element(),createElementNS:()=>new Element(),activeElement:null},HTMLElement:Element,HTMLButtonElement:Element});
   const secret=new Uint8Array(32).fill(71);
-  const ref=(kind:ActorIdentity["scope"]["kind"])=>({scope:scopeIdOf({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE mount ${kind}`),ordinal:0}),inc:newIncarnation(new Uint8Array(16).fill(7)),kind});
+  const ref=(kind:ScopeKind)=>(scriptedSequence({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE mount ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",7).at);
   const scope=ref("lane"),membership=ref("membership"),member={membership,member:"@ada" as const},identity:ActorIdentity={origin:"https://fake-mount.test",deployment:"FAKE",scope,membership,member,definition:COUNTING_DEFINITION,publicKey:keyIdOfSecret(secret)};
   const turn={...identity,generation:0,serial:1,N:1,expiresAt:10_000};
   const intent:PreparedEnvelope["signed"]["intent"]={v:1,to:scope,actor:identity.publicKey,kind:"fulfill",on:1,expected:{},fields:{generation:0,serial:1,n:1},idempotencyKey:"FAKE retained",notAfter:"2099-01-01T00:00:00Z"};
@@ -71,7 +73,7 @@ test("Explicit Resume command fences active playback before dispatch and display
   const oldDocument=globalThis.document,oldHTMLElement=globalThis.HTMLElement,oldButton=globalThis.HTMLButtonElement;
   Object.assign(globalThis,{document:{createElement:()=>new Element(),createElementNS:()=>new Element(),activeElement:null},HTMLElement:Element,HTMLButtonElement:Element});
   const secret=new Uint8Array(32).fill(72);
-  const ref=(kind:ActorIdentity["scope"]["kind"])=>({scope:scopeIdOf({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE resume mount ${kind}`),ordinal:0}),inc:newIncarnation(new Uint8Array(16).fill(7)),kind});
+  const ref=(kind:ScopeKind)=>(scriptedSequence({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE resume mount ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",7).at);
   const scope=ref("lane"),membership=ref("membership"),member={membership,member:"@ada" as const},identity:ActorIdentity={origin:"https://fake-resume.test",deployment:"FAKE",scope,membership,member,definition:COUNTING_DEFINITION,publicKey:keyIdOfSecret(secret)};
   let audioStart:AudioStart|null=null;
   let publish:((state:ObservationState<Summary>,view?:CountingView)=>void)|undefined,commandPending=false,cancelled=false,resumes=0,prepares=0,posts=0,plays=0,commands=0,end:(()=>void)|undefined;
@@ -167,7 +169,7 @@ test("Counter acknowledgement requires a recorded local effect and keeps playbac
     const forget=elements(root).find(e=>e.dataset["focusKey"]==="forget")!;
     assert.equal(inspection.hidden,true);assert.equal(forget.hidden,true);
     const secret=new Uint8Array(32).fill(79);
-    const ref=(kind:ActorIdentity["scope"]["kind"])=>({scope:scopeIdOf({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE view ${kind}`),ordinal:0}),inc:newIncarnation(new Uint8Array(16).fill(13)),kind});
+    const ref=(kind:ScopeKind)=>(scriptedSequence({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE view ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",13).at);
     const membership=ref("membership");
     const identity:ActorIdentity={origin:"https://fake-view.test",deployment:"FAKE",scope:ref("lane"),membership,member:{membership,member:"@ada"},definition:COUNTING_DEFINITION,publicKey:keyIdOfSecret(secret)};
     ui.render({...base,identity});assert.equal(inspection.hidden,false);assert.equal(forget.hidden,false);
@@ -197,7 +199,7 @@ async function mountedJourney(work:(f:Awaited<ReturnType<typeof journeyFixture>>
 }
 async function journeyFixture() {
   const secret=new Uint8Array(32).fill(73);
-  const ref=(kind:ActorIdentity["scope"]["kind"])=>({scope:scopeIdOf({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE join ${kind}`),ordinal:0}),inc:newIncarnation(new Uint8Array(16).fill(9)),kind});
+  const ref=(kind:ScopeKind)=>(scriptedSequence({v:1,kind,definition:COUNTING_DEFINITION,creator:null,cause:textDigest(`FAKE join ${kind}`),ordinal:0},"2026-01-01T00:00:00Z",9).at);
   const scope=ref("lane"),membership=ref("membership"),member={membership,member:"@ada" as const};
   const identity:ActorIdentity={origin:"https://fake-join.test",deployment:"FAKE",scope,membership,member,definition:COUNTING_DEFINITION,publicKey:keyIdOfSecret(secret)};
   const summary={scope,status:"active",definition:COUNTING_DEFINITION,time:"2099-01-01T00:00:00Z",counts:[],items:[]} as Summary;

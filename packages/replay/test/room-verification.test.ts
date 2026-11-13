@@ -2,7 +2,7 @@
  * authority; these cases claim no native host or membership admission. */
 import { expect, test } from "vitest";
 import type { Digest, FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, textDigest } from "@generalbusiness/dap-bytes";
 import { hashOfBytes, roomVerification, type HistorySource, type Page, type Unread } from "../src/index.ts";
 import { contentOf, entryOf, sourceOf, world, rewrite } from "./world.ts";
 
@@ -26,7 +26,7 @@ test("one room proof reuses checked prefixes at the exact unique-entry ceiling a
     expect(pages.get(`${w.I.scope.scope}:0`)).toBe(2); // dependency open + explicit root refresh
     expect(pages.get(`${w.P.scope.scope}:0`)).toBe(2);
     expect(pages.get(`${w.D.scope.scope}:2`)).toBe(1);
-    expect(finished.coverage.filter(span => span.scope.scope === w.D.scope.scope)).toEqual([{ scope: w.D.scope, from: 0, through: 6, root: w.D.scope.scope }]);
+    expect(finished.coverage.filter(span => span.scope.scope === w.D.scope.scope)).toEqual([{ scope: w.D.scope, kind: "directory", from: 0, through: 6, root: w.D.scope.scope }]); // a coverage row states the kind its genesis names
     expect(finished.coverage.some(span => span.scope.scope === w.P.scope.scope && span.root === w.I.scope.scope && span.through >= 2)).toBe(true);
     expect(Object.isFrozen(finished)).toBe(true);
     expect(Object.isFrozen(finished.roots)).toBe(true);
@@ -82,12 +82,12 @@ test("a room byte-limit refusal remains terminal across later targets", async ()
   } finally { room.close(); }
 });
 
-test.each(["overlap", "incarnation", "retreat"] as const)("a cached requested source's %s contradiction invalidates earlier dependent roots", async change => {
+test.each(["overlap", "genesis", "retreat"] as const)("a cached requested source's %s contradiction invalidates earlier dependent roots", async change => {
   const w = world(), memory = sourceOf(w, 200), room = roomVerification(memory, { mode: "replay", grants: "as-recorded" });
   try {
     await room.checkTarget({ scope: w.I.scope.scope });
     if (change === "overlap") rewrite(w.D, 2, entry => { entry.effects = []; });
-    if (change === "incarnation") w.D.scope.inc = newIncarnation(new Uint8Array(16).fill(51));
+    if (change === "genesis") w.D.scope.genesis = textDigest("TEST genesis 51");
     if (change === "retreat") w.D.entries.length = 5;
     await room.checkTarget({ scope: w.D.scope.scope });
     const finished = await room.finish();

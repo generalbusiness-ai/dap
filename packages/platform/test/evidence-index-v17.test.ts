@@ -2,15 +2,15 @@ import { expect, test } from "vitest";
 import type { FactRef, KeyId } from "@generalbusiness/dap-contract";
 import type { EvidenceBinding } from "../src/evidence.ts";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { keys, otherLane, d } from "@generalbusiness/dap-derive/testing";
+import { fixtureScope, keys, otherLane, d } from "@generalbusiness/dap-derive/testing";
 import { NOTHING } from "@generalbusiness/dap-derive";
 import { assessEvidenceV17, evidenceCapacityV17, evidenceKeyDigestV17, newEvidenceIndexV17, readEvidenceIndexV17, releaseEvidenceCandidateV17, reserveEvidenceCandidateV17, reserveEvidenceCountsV17, settleEvidenceCandidateV17, type EvidenceCandidateV17, type EvidenceIndexRecordV17, type EvidenceKeyV17 } from "../src/evidence-index-v17.ts";
 
 // Every fact and authority choice below is scripted. These are the actual pure
 // bounded records and decisions, not a Native admission or key observation.
 const fact = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });
-const ruleScope = { ...otherLane, kind: "rules" as const };
-const key: EvidenceKeyV17 = { room: { ...otherLane, kind: "destination" }, tree: "a".repeat(40), name: "verify", configuration: d("b"), source: "member", stage: "landing" };
+const ruleScope = fixtureScope("rules", 18).at;
+const key: EvidenceKeyV17 = { room: fixtureScope("destination", 17).at, tree: "a".repeat(40), name: "verify", configuration: d("b"), source: "member", stage: "landing" };
 const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: keys.una.member,
   policyGeneration: { rules: ruleScope, seq: 1 }, roomService: null, serviceGeneration: { rules: ruleScope, seq: 0 }, auditOf: null,
   subject: { kind: "landing", publication: { ...fact(1), at: key.room }, manifest: fact(2) } };

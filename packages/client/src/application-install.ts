@@ -33,7 +33,7 @@ const invalid = (): never => { throw new ApplicationPackageError("invalid"); };
 export function readApplicationInstallOptions(value: unknown): ApplicationInstallOptions {
   const owned = parseStrict(applicationJson(value, 32 * 1024)) as unknown as ApplicationInstallOptions;
   if (!isRecord(owned) || Object.keys(owned).sort().join() !== "release,roles,rules,uri,values"
-    || !isDigest(owned.release) || !isScopeRef(owned.rules) || owned.rules.kind !== "rules"
+    || !isDigest(owned.release) || !isScopeRef(owned.rules)
     || !Array.isArray(owned.roles) || owned.roles.length > 5 || new Set(owned.roles).size !== owned.roles.length
     || owned.roles.some(role => !roles.includes(role)) || !isRecord(owned.values)) return invalid();
   try { readApplicationReleaseUri(owned.uri); } catch { return invalid(); }

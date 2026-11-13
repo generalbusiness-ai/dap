@@ -43,10 +43,10 @@ export function isCreationOffer(value: unknown, origin: string, register?: Scope
   try {
     const expectedOrigin = exactOrigin(origin);
     if (!closed(value, ["v", "origin", "register", "definition", "at", "registerItem"]) || value["origin"] !== expectedOrigin || (value["v"] !== 2 || !answersCatalogVocabularyQuestion(value["definition"], "clientCreationOfferRegister"))
-      || !closed(value["register"], ["scope", "kind", "inc"]) || !isScopeRef(value["register"]) || value["register"].kind !== "register"
+      || !closed(value["register"], ["scope", "genesis"]) || !isScopeRef(value["register"])
       || !closed(value["at"], ["seq", "hash"]) || !isHead(value["at"])) return false;
     const ref = value["register"], at = value["at"], item = value["registerItem"];
-    if (register && (ref.scope !== register.scope || ref.inc !== register.inc || ref.kind !== register.kind)) return false;
+    if (register && (ref.scope !== register.scope || ref.genesis !== register.genesis)) return false;
     return closed(item, ["id", "revision", "state", "host", "namespace", "policy"])
       && isLocalId(item["id"]) && isLocalId(item["revision"]) && item["revision"] >= 1 && item["id"] <= item["revision"] && item["revision"] <= at.seq + 1
       && item["state"] === "open" && item["policy"] === "open"
@@ -61,8 +61,8 @@ export function isCurrentCreationOffer(value: unknown, origin: string, register?
 /** One anonymous GET for a current register, optionally selected by exact reference. */
 export async function creationOffer(origin: string, options: { fetch?: CreationOfferFetch; register?: ScopeRef } = {}): Promise<CreationOffer> {
   try {
-    if (options.register && (!closed(options.register, ["scope", "kind", "inc"]) || !isScopeRef(options.register) || options.register.kind !== "register")) throw failed();
-    const endpoint = `${exactOrigin(origin)}/v1/demo/creation-offer${options.register ? `?register=${encodeURIComponent(options.register.scope)}&inc=${encodeURIComponent(options.register.inc)}` : ""}`;
+    if (options.register && (!closed(options.register, ["scope", "genesis"]) || !isScopeRef(options.register))) throw failed();
+    const endpoint = `${exactOrigin(origin)}/v1/demo/creation-offer${options.register ? `?register=${encodeURIComponent(options.register.scope)}&genesis=${encodeURIComponent(options.register.genesis)}` : ""}`;
     const send = options.fetch ?? (globalThis as { fetch?: CreationOfferFetch }).fetch;
     if (!send) throw failed();
     const bytes = await within(30, async signal => {

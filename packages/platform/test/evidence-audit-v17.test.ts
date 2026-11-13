@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type FactRef, type FieldValue } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type FactRef, type FieldValue, type SequenceEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, isEntry, signIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest } from "../src/evidence.ts";
 import { readFacts, readFields, useOf, RuleFault, type Item, type Operation, type RuleGiven, type StateView } from "@generalbusiness/dap-derive";
-import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, fixtureScope, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { destinationEvidenceAuditPending, destinationEvidenceResultPending, evidenceAuditOpeningV17, evidenceDestinationRulesV17, evidenceResultMessageFieldsV17,
   evidenceJobKeyV17, evidenceJobRecordWireV17, type EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
@@ -12,7 +12,7 @@ import { destinationV17 } from "../src/destination-v17.ts";
 
 // SCRIPTED entries and folded ports, using real canonical wire hashes.
 // These exercise dispatch correspondence, not Native admission or authority.
-const at = { ...otherLane, kind: "destination" as const }, rules = { ...otherLane, kind: "rules" as const };
+const atSequence = fixtureScope("destination", 15), at = atSequence.at, rules = fixtureScope("rules", 16).at;
 const fact = (seq: number, scope = otherLane): FactRef => ({ at: scope, seq, hash: d("a") });
 function fixture(marked: number | null = null) {
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, labels: [], roomService: null, checks: [
@@ -33,7 +33,7 @@ function fixture(marked: number | null = null) {
     reuseOwner: null, reuse: null, holdOwner: null, holds: [], policyOwner: null, incident: null, result: null, signer: null, decidedAt: null,
     reason: null, observedGeneration: binding.serviceGeneration, funded: { reuse: false, holds: false, policy: false, incident: false },
     countedJob: null, reuseRequested: false, deadline: t(60), forJob: null, noticeAt: null, holder: 7, requestAt: 15, covered: [] };
-  const entry = (seq: number, kind: string, effects: Entry["effects"]): Entry => ({ v: 1, at, seq, prev: d("e"), time: t(0), clamped: false, epoch: 0,
+  const entry = (seq: number, kind: string, effects: SequenceEntry["effects"]): SequenceEntry => ({ v: 1, genesis: at.genesis, seq, prev: d("e"), time: t(0), clamped: false, epoch: 0,
     input: { type: "outcome", owner: "platform:destination@17", kind, operation: "15:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { job: record.job } } },
     uses: [], prepared: [], effects, sends: [] });
   const admission = entry(20, "evidence-admit", [
@@ -47,9 +47,10 @@ function fixture(marked: number | null = null) {
     values: { record: evidenceJobRecordWireV17(record), auditOpenedAt: marked }, attributed: [] };
   const operation: Operation = { id: "30:0", owner: "platform:destination@17", kind: "evidence-audit", most: 1, for: 7, selected: null,
     attempts: [{ attempt: 1, opened: 30, outcomes: [{ seq: 31, result: "unknown", evidence: d("f"), selected: null }] }] };
-  const own = (seq: number) => seq === 20 ? { entry: admission, hash: entryHash(admission) } : seq === 30 ? { entry: progress, hash: entryHash(progress) } : null;
+  const own = Object.assign((seq: number) => seq === 20 ? { entry: admission, hash: entryHash(admission) } : seq === 30 ? { entry: progress, hash: entryHash(progress) } : null,
+    { sequence: () => atSequence });
   const state = { item: (id: number) => id === 20 ? item : null, lookup: (type: string, index: string, key: string) =>
-    type === "evidence-job" && index === "jobKey" && key === canonicalize(evidenceJobKeyV17(record.job)) ? [20] : [], operation: () => operation } as unknown as StateView;
+    type === "evidence-job" && index === "jobKey" && key === canonicalize(evidenceJobKeyV17(record.job)) ? [20] : [], operation: () => operation, scope: () => ({ at }) } as unknown as StateView;
   const given = { state, own, resolved: { at, self: 30, bounds: PROPOSED_BOUNDS } } as unknown as RuleGiven;
   return { record, item, operation, admission, progress, own, state, given };
 }
@@ -64,9 +65,9 @@ test("the initial null audit marker opens one held dispatch and its unknown orig
   expect(evidenceAuditOpeningV17(retained.given, retained.item, retained.record)).toEqual({ effects: [], opens: [] });
   expect(destinationEvidenceAuditPending(retained.state, retained.own, { ...retained.operation, for: 8 })).toBeNull();
   if (retained.progress.input.type !== "outcome") throw Error("The scripted progress must be an outcome");
-  const wrong: Entry = { ...retained.progress, input: { ...retained.progress.input, kind: "evidence-admit" } };
-  expect(destinationEvidenceAuditPending(retained.state, seq => seq === 30 ? { entry: wrong, hash: entryHash(wrong) } : retained.own(seq), retained.operation)).toBeNull();
-  expect(() => evidenceAuditOpeningV17({ ...retained.given, own: () => null }, retained.item, retained.record)).toThrow(RuleFault);
+  const wrong: SequenceEntry = { ...retained.progress, input: { ...retained.progress.input, kind: "evidence-admit" } };
+  expect(destinationEvidenceAuditPending(retained.state, Object.assign((seq: number) => seq === 30 ? { entry: wrong, hash: entryHash(wrong) } : retained.own(seq), { sequence: retained.own.sequence }), retained.operation)).toBeNull();
+  expect(() => evidenceAuditOpeningV17({ ...retained.given, own: Object.assign(() => null, { sequence: () => null }) }, retained.item, retained.record)).toThrow(RuleFault);
 });
 
 test("every counted evidence outcome declares one marked request rather than an uncounted callback request", () => {
@@ -79,7 +80,7 @@ test("every counted evidence outcome declares one marked request rather than an 
 });
 
 test("the admitted-job selector reads the maintained numeric local fact normal form and rejects a mismatching arriving reference", () => {
-  const source = fixture(), admission = factRefOf(source.admission), declared = destinationV17.acts["evidence-recover-timeout"]!.fields;
+  const source = fixture(), admission = factRefOf(source.admission, at), declared = destinationV17.acts["evidence-recover-timeout"]!.fields;
   const admissionType = declared["admission"], operationType = declared["operation"];
   if (Object.keys(declared).length !== 2 || admissionType?.type !== "fact" || operationType?.type !== "fact")
     throw Error("The actual recovery schema must contain exactly its two declared fact fields");
@@ -108,21 +109,21 @@ function resultBoundary(work: boolean, patch: Record<string, FieldValue> = {}) {
   const prior = fixture();
   const binding = work ? { ...prior.record.binding, stage: "work" as const, subject: { kind: "work" as const, source: fact(3) } } : prior.record.binding;
   const record = { ...prior.record, binding, bindingDigest: evidenceBindingDigest(binding) };
-  const admission: Entry = { ...prior.admission, effects: prior.admission.effects.map(effect => effect.effect === "value" && effect.slot === "record"
+  const admission: SequenceEntry = { ...prior.admission, effects: prior.admission.effects.map(effect => effect.effect === "value" && effect.slot === "record"
     ? { ...effect, value: evidenceJobRecordWireV17(record) } : effect) };
-  const admitted = factRefOf(admission), merge = fact(8);
+  const admitted = factRefOf(admission, at), merge = fact(8);
   const message = { class: "request" as const, type: "tell" as const, body: { message: work ? "work-checked" : "checked", fields: {
     admission: admitted, job: record.job, result: { self: true }, bindingDigest: record.bindingDigest, ...(work ? {} : { operation: merge }), ...patch,
   } } };
   // SCRIPTED Native admission and state ports; the actual signed result
   // retains the same SelfMark send shape as the maintained lane definition.
-  const result: Entry = { v: 1, at: record.job.at, seq: 40, prev: d("e"), time: t(0), clamped: false, epoch: 0, uses: [], prepared: [],
+  const result: SequenceEntry = { v: 1, genesis: record.job.at.genesis, seq: 40, prev: d("e"), time: t(0), clamped: false, epoch: 0, uses: [], prepared: [],
     input: { type: "act", signed: signIntent({ v: 1, to: record.job.at, actor: keys.una.key, kind: "check", on: null, expected: { job: record.job.seq },
       fields: { job: record.job.seq, jobFact: record.job, tree: record.tree!, configuration: record.configuration, bindingDigest: record.bindingDigest, outcome: "passed" },
       idempotencyKey: "SCRIPTED-result-self", notAfter: t(60) }, keys.una.secret), authority: [], presented: {} },
     effects: [{ effect: "state", item: record.job.seq, state: "passed" }], sends: [{ n: 0, to: at, message }] };
-  const resultFact = factRefOf(result), receipt: Entry = { v: 1, at, seq: 50, prev: entryHash(admission), time: t(0), clamped: false, epoch: 0,
-    input: { type: "delivery", from: resultFact, n: 0, message, decision: "applied" }, uses: [useOf(resultFact, result)], prepared: [], sends: [], effects: [
+  const resultFact = factRefOf(result, record.job.at), receipt: SequenceEntry = { v: 1, genesis: at.genesis, seq: 50, prev: entryHash(admission), time: t(0), clamped: false, epoch: 0,
+    input: { type: "delivery", from: resultFact, sourceKind: "lane", n: 0, message, decision: "applied" }, uses: [useOf(resultFact, result, "lane")], prepared: [], sends: [], effects: [
       { effect: "operation", k: 0, owner: "platform:destination@17", kind: "evidence-result", attempts: 1, for: record.holder },
       { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null },
     ] };
@@ -133,7 +134,7 @@ function resultBoundary(work: boolean, patch: Record<string, FieldValue> = {}) {
   const state = { ...prior.state, scope: () => ({ at }), item: (id: number) => id === 20 ? item : id === 1 ? { id: 1, type: "publication", refs: { operation: merge } } : null,
     operation: (id: string) => id === operation.id ? operation : null } as unknown as StateView;
   const own = Object.assign((seq: number) => seq === 20 ? { entry: admission, hash: entryHash(admission) }
-    : seq === 50 ? { entry: receipt, hash: entryHash(receipt) } : prior.own(seq), { retained: () => result });
+    : seq === 50 ? { entry: receipt, hash: entryHash(receipt) } : prior.own(seq), { retained: () => result, sequence: () => atSequence });
   return { record, admitted, result, resultFact, receipt, state, own, operation };
 }
 
@@ -153,7 +154,7 @@ test("host and outcome result readers normalize the original SelfMark through it
       const wrong = resultBoundary(work, patch);
       expect(destinationEvidenceResultPending(wrong.state, wrong.own, wrong.operation)).toBeNull();
     }
-    expect(destinationEvidenceResultPending(proof.state, Object.assign(proof.own.bind(null), { retained: () => null }), proof.operation)).toBeNull();
+    expect(destinationEvidenceResultPending(proof.state, Object.assign(proof.own.bind(null), { retained: () => null, sequence: proof.own.sequence }), proof.operation)).toBeNull();
     expect(destinationEvidenceResultPending(proof.state, proof.own, { ...proof.operation, for: proof.operation.for! + 1 })).toBeNull();
   }
 });

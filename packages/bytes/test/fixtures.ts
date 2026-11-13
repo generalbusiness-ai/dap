@@ -8,7 +8,7 @@ export const otherSecret = new Uint8Array(32).fill(8);
 
 const d = (c: string): Digest => `sha256:${c.repeat(64)}`;
 
-export const directory: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "directory" };
+export const directory: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: d("a") };
 
 export const intent: Intent = {
   v: 1, to: directory, actor: keyIdOfSecret(secret), kind: "open-issue", on: null, expected: {},
@@ -27,7 +27,7 @@ export const definition: DeclaredDefinition = {
 };
 
 export const entry: Entry = {
-  v: 1, at: directory, seq: 17, prev: d("6"), time: "2026-10-04T12:00:00Z", clamped: false, epoch: 0,
+  v: 1, genesis: directory.genesis, seq: 17, prev: d("6"), time: "2026-10-04T12:00:00Z", clamped: false, epoch: 0,
   input: { type: "timed", item: 3, rule: "end", due: "2026-10-04T11:59:00Z" },
   uses: [], prepared: [],
   effects: [{ effect: "state", item: 3, state: "ended" }],

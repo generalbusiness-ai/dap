@@ -5,8 +5,7 @@
   "deploymentVersion": "COPY-THE-REVIEWED-WORKER-VERSION",
   "register": {
     "scope": "sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq",
-    "inc": "in_rjfrmifznpi65vm6y2kbc36xpi",
-    "kind": "register"
+    "genesis": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
   "namespace": "dap-demo",
   "name": "repo-in-ai",

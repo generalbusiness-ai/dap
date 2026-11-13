@@ -3,7 +3,7 @@
  * separate Native owner witnesses admission and the actual adapter path. */
 import { expect, test } from "vitest";
 import type { Entry, MemberRef, OperationId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, keyIdOfSecret, newIncarnation, signIntent, timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, keyIdOfSecret, signIntent, timeOf } from "@generalbusiness/dap-bytes";
 import { LAST_MS, timeMs } from "@generalbusiness/dap-derive";
 import { d, grantOf, keys, t, type Actor } from "@generalbusiness/dap-derive/testing";
 import { Branch } from "../../platform/test/support-destination.ts";
@@ -18,7 +18,7 @@ const destination = branch.at;
 function opening(seq: number, at = destination, member: MemberRef = rita.member, hours = 1, time: Timestamp = t(0), who: Actor = rita): Entry {
   const actor = { ...who, member };
   const signed = signIntent({ v: 1, to: at, actor: actor.key, kind: "read-token", on: 0, expected: { on: 1 }, fields: { hours }, idempotencyKey: `TEST-read-${seq}`, notAfter: timeOf(Math.min(LAST_MS, timeMs(time)! + 60_000)) }, actor.secret);
-  return { v: 1, at, seq, prev: d("1"), time, clamped: false, epoch: 0,
+  return { v: 1, genesis: at.genesis, seq, prev: d("1"), time, clamped: false, epoch: 0,
     input: { type: "act", signed, authority: [grantOf(actor, at, ["destination.read-token"])], presented: {} },
     uses: [], prepared: [], effects: [{ effect: "operation", k: 0, owner: "platform:destination@2", kind: "mint-read", attempts: 1 }], sends: [] };
 }
@@ -54,8 +54,8 @@ test("private read reservations retain actual expiry after plaintext take, prese
   const end = timeMs(t(0))! + (24 * 60 + 10) * 60_000;
   expect(initial).toEqual({ old: "legacy", reserved: end, bound: "bound", actual: true, took: true, wakeAfterTake: t(10), beforeExpiry: [{ mint: "10:0", ends_ms: timeMs(t(10)) }, { mint: "12:0", ends_ms: end }], cannotRemint: "closed", cannotRevive: false, remaining: [{ mint: "12:0", ends_ms: end }], legacyStillUnassigned: "legacy" });
   await scope.restart();
-  const otherMembership = { ...rita.member, membership: { ...rita.member.membership, inc: newIncarnation(new Uint8Array(16).fill(23)) } };
-  const otherDestination: ScopeRef = { ...destination, inc: newIncarnation(new Uint8Array(16).fill(24)) };
+  const otherMembership = { ...rita.member, membership: { ...rita.member.membership, genesis: `sha256:${"17".repeat(32)}` as const } };
+  const otherDestination: ScopeRef = { ...destination, genesis: `sha256:${"18".repeat(32)}` as const };
   const isolated = await scope.inside(state => {
     const old = new CredentialStore(state.storage.sql, () => destination).readTokens;
     const retained = old.nextExpiry();

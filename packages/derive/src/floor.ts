@@ -1,7 +1,7 @@
 /** The retained-journal floor. Judges read journal/state only; host archive
  * receipts and transport acknowledgement timing remain writer obligations. */
 import type { Archived, FieldType, Bounds, Digest, FloorInput, FloorRefusal, JournalFloor, SizeProof } from "@generalbusiness/dap-contract";
-import { entryHash, isDigest, natural } from "@generalbusiness/dap-bytes";
+import { isDigest, isEntryBodyOf, natural } from "@generalbusiness/dap-bytes";
 import type { Own } from "./fields.ts";
 import { checkedTextBounds } from "./handlers.ts";
 import type { Judgment } from "./judge.ts";
@@ -53,7 +53,7 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
     if (!found) missing = true;
     return found;
   }, {
-    archived, positions: (before: number) => heldPositions({ floor: () => previous ?? null, scope: () => snapshot.scope }, Math.min(before, (snapshot.scope?.head.seq ?? -1) + 1)),
+    sequence: () => history.sequence(), archived, positions: (before: number) => heldPositions({ floor: () => previous ?? null, scope: () => snapshot.scope }, Math.min(before, (snapshot.scope?.head.seq ?? -1) + 1)),
     ...(history.retained ? { retained: history.retained } : {}),
     ...(history.sizeProofs ? { sizeProofs: history.sizeProofs } : {}),
   });
@@ -69,7 +69,7 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
     if (!queued.has(seq)) { queued.add(seq); queue.push(seq); }
   };
   const local = (value: unknown): void => {
-    if (isFactRef(value) && value.at.scope === snapshot.scope?.at.scope && value.at.inc === snapshot.scope.at.inc) add(value.seq);
+    if (isFactRef(value) && snapshot.scope && same(value.at, snapshot.scope.at)) add(value.seq);
   };
   const typed = (type: FieldType, value: unknown): void => {
     if ((type.type === "item" || type.type === "fact") && typeof value === "number") add(value, type.type === "item");
@@ -105,8 +105,8 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
   // The recorded keep list cannot name them (it lists positions below F).
   if (heldHistory?.positions) for (const seq of heldHistory.positions((snapshot.scope?.head.seq ?? -1) + 1)) if (seq >= floor) add(seq);
   const foreign = new Set<string>();
-  const visit = (entry: import("@generalbusiness/dap-contract").Entry) => {
-    const here = entry.at.scope === snapshot.scope?.at.scope && entry.at.inc === snapshot.scope.at.inc;
+  const visit = (entry: import("@generalbusiness/dap-contract").Entry, at: import("@generalbusiness/dap-contract").SequenceRef) => {
+    const here = snapshot.scope !== null && snapshot.scope !== undefined && same(at, snapshot.scope.at);
     const input = entry.input;
     // These are grammar positions, never arbitrary numeric payloads or prev.
     if (here && input.type === "outcome") operation(input.operation);
@@ -119,14 +119,14 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
     }
     for (const use of entry.uses) {
       local(use.fact);
-      if (use.fact.at.scope === snapshot.scope?.at.scope && use.fact.at.inc === snapshot.scope.at.inc) continue;
+      if (snapshot.scope && same(use.fact.at, snapshot.scope.at)) continue;
       if (foreign.has(use.content)) continue;
       foreign.add(use.content);
       const copy = heldHistory?.retained?.(use);
-      if (copy && same(copy.at, use.fact.at) && copy.seq === use.fact.seq && entryHash(copy) === use.fact.hash) visit(copy);
+      if (copy && isEntryBodyOf(copy, use.fact)) visit(copy, use.fact.at);
     }
   };
-  for (let i = 0; i < queue.length && held.size <= FLOOR_KEPT; i++) { const entry = heldHistory?.(queue[i]!)?.entry; if (entry) visit(entry); }
+  for (let i = 0; i < queue.length && held.size <= FLOOR_KEPT; i++) { const entry = heldHistory?.(queue[i]!)?.entry; if (entry && snapshot.scope) visit(entry, snapshot.scope.at); }
   return missing ? null : [...held].sort((a, b) => a - b);
 }
 
@@ -145,7 +145,7 @@ export function nextFloorState(view: StateView, definition: ValidDefinition, inp
     if (seq < input.floor && !keptSet.has(seq)) {
       for (const [digest, bound] of checkedTextBounds(definition, entry.input)) candidates.push({ digest, seq, bound });
     } else {
-      for (const text of detachedTextDependencies(definition, { at: { at: entry.at, seq, hash }, input: entry.input.type }, entry.input)) needed.add(text.key.digest);
+      for (const text of detachedTextDependencies(definition, { at: { at: snapshot.scope!.at, seq, hash }, input: entry.input.type }, entry.input)) needed.add(text.key.digest);
     }
   }
   candidates.sort((a, b) => a.digest < b.digest ? -1 : a.digest > b.digest ? 1 : a.seq - b.seq || a.bound - b.bound);
@@ -167,7 +167,7 @@ export function judgeFloor(view: StateView, definition: ValidDefinition, input: 
   if (input.floor > input.receipt.through.seq + 1) return refuse("floor-ahead", "the receipt does not cover the floor");
   if (input.floor - current > FLOOR_STEP) return refuse("floor-step", "the floor advances by at most 4096");
   const through = context.own(input.receipt.through.seq);
-  if (input.receipt.through.seq < current || !through || !same(through.entry.at, scope.at) || through.hash !== input.receipt.through.hash) return refuse("floor-receipt", "the receipt differs from this scope's held entry");
+  if (input.receipt.through.seq < current || !through || through.hash !== input.receipt.through.hash) return refuse("floor-receipt", "the receipt differs from this scope's held entry");
   const preceding = context.own(input.floor - 1), now = timeMs(context.clock.asOf), previous = preceding && timeMs(preceding.entry.time);
   if (scope.head.seq + 2 - input.floor < FLOOR_WINDOW || now === null || previous === null || !preceding || now - previous < context.bounds.intentLifetimeSeconds * 1000) return refuse("floor-recent", "retain 100 entries and the intent-lifetime window");
   if (!Array.isArray(input.keep) || input.keep.length > FLOOR_KEEP || input.keep.some((seq, i) => !natural(seq) || seq >= input.floor || i > 0 && seq <= input.keep[i - 1]! || context.own(seq) === null)) return refuse("floor-keep", "keep must list at most 1024 held positions below the floor, ascending");

@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeRef, type Sealed } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeRef, type SequenceEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isEntry, same, signIntent } from "@generalbusiness/dap-bytes";
 import { MemoryState, RuleFault, useOf, valueDigest, type Operation, type Own, type RuleGiven } from "@generalbusiness/dap-derive";
-import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, fixtureScope, keys, otherLane, otherLaneSequence, t } from "@generalbusiness/dap-derive/testing";
 import { readEvidenceBoundFenceV17 } from "../src/evidence-bound-fence-v17.ts";
 import { claimEvidenceBatchJobV17, evidenceBatchWireV17, readEvidenceBatchV17 } from "../src/evidence-batch-v17.ts";
 import { certifiedPublicationWireV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
@@ -12,18 +12,19 @@ import { evidenceBindingDigest } from "../src/evidence.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { readRulesPolicyObservationV17, requiredChecksV17 } from "../src/reservation-v17.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
+import { destinationBirth } from "./support-destination-birth.ts";
 
 // SCRIPTED sealed source/state chain. The maintained hash, wire, funding
 // proof and sentBy readers run; this is not a Native admission witness.
 function boundary(wrongPolicy = false, checkCount = 2) {
-  const destination = { ...otherLane, kind: "destination" as const }, rules = { ...otherLane, kind: "rules" as const };
-  const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
-  const seal = (entry: Entry): Sealed => {
+  const seal = <E extends Entry>(entry: E): { entry: E; hash: ReturnType<typeof entryHash> } => {
     if (!isEntry(entry)) throw Error("The scripted entry must have the maintained wire shape");
     return { entry, hash: entryHash(entry) };
   };
-  const frame = (seq: number, input: Entry["input"], effects: Entry["effects"] = [], sends: Entry["sends"] = [], at: ScopeRef = destination): Entry =>
-    ({ v: 1, at, seq, prev: seq === 0 ? null : d("0"), time: t(0), clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
+  const born = destinationBirth(), destination = born.at, sequence = born.sequence, rules = fixtureScope("rules", 18).at;
+  const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
+  const frame = (seq: number, input: SequenceEntry["input"], effects: SequenceEntry["effects"] = [], sends: SequenceEntry["sends"] = [], at: ScopeRef = destination): SequenceEntry =>
+    ({ v: 1, genesis: at.genesis, seq, prev: d("0"), time: t(0), clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
   const manifestEntry = seal(frame(4, { type: "act", signed: signIntent({ v: 1, to: otherLane, actor: keys.una.key, kind: "propose-file", on: null,
     expected: {}, fields: { base: "c".repeat(40) }, idempotencyKey: "TEST-manifest", notAfter: t(60) }, keys.una.secret), authority: [], presented: {} }, [], [], otherLane));
   const manifest: FactRef = { at: otherLane, seq: 4, hash: manifestEntry.hash };
@@ -44,8 +45,7 @@ function boundary(wrongPolicy = false, checkCount = 2) {
   if (!decoded.ok || !required.ok) throw Error("The scripted complete policy must decode");
   const snapshot: CertifiedPublicationStateV17 = { policy: { observation, input: policyInput, touched: ["source"], required: required.checks,
     tree: "b".repeat(40), manifest }, generations: [] };
-  const genesis = seal(frame(0, { type: "genesis", seed: { v: 1, kind: "destination", definition: "platform:destination@17", creator: null, cause: d("e"), ordinal: 0 },
-    inc: destination.inc, kind: "establish", founding: null, source: null, n: null, message: null, decision: "applied" }));
+  const genesis = born.genesis;
   const publication = seal(frame(2, { type: "timed", item: 2, rule: "TEST-publication", due: t(0) }));
   const publicationFact: FactRef = { at: destination, seq: 2, hash: publication.hash }, operation = fact(1);
   const passes = certifiedPublicationWireV17(snapshot, PROPOSED_BOUNDS);
@@ -59,7 +59,7 @@ function boundary(wrongPolicy = false, checkCount = 2) {
   const initial = readEvidenceBatchV17({ v: 1, publication: publicationFact, operation, capture: captureFact, ordinal: 0, total: Math.ceil(checkCount / 8),
     touched: ["source"], checks: proposed.policy.checks.slice(0, 8), policy: decoded.view, jobs: [], planAt: null });
   if (!initial) throw Error("The scripted initial funded account must decode");
-  const funded = seal(frame(5, { type: "delivery", from: { at: destination, seq: 4, hash: dispatch.hash }, n: 0, message: fundingMessage, decision: "applied" },
+  const funded = seal(frame(5, { type: "delivery", from: { at: destination, seq: 4, hash: dispatch.hash }, sourceKind: "destination", n: 0, message: fundingMessage, decision: "applied" },
     [{ effect: "open", item: 5, type: "evidence-batch", state: "funded" }, { effect: "value", item: 5, slot: "batch", value: evidenceBatchWireV17(initial) }],
     initial.total > 1 ? [{ n: 0, to: destination, message: { ...fundingMessage, body: { message: "evidence-fund", fields: { ...fundingMessage.body.fields, ordinal: 1 } } } }] : []));
   const binding = { v: 1 as const, source: "member" as const, stage: "landing" as const, checker: keys.una.member,
@@ -76,12 +76,12 @@ function boundary(wrongPolicy = false, checkCount = 2) {
         .map(([slot, value]) => ({ effect: "value" as const, item: 10, slot, value }))], [{ n: 0, to: destination, message }], otherLane));
   const jobFact: FactRef = { at: otherLane, seq: 10, hash: job.hash }, claimed = claimEvidenceBatchJobV17(initial, jobFact, "compile");
   if (!claimed.ok) throw Error("The scripted job must fit its reserved slot");
-  const input: Entry["input"] = { type: "delivery", from: jobFact, n: 0, message, decision: "applied" };
+  const input: SequenceEntry["input"] = { type: "delivery", from: jobFact, sourceKind: "lane", n: 0, message, decision: "applied" };
   const fence = seal({ ...frame(6, input, [{ effect: "value", item: 5, slot: "batch", value: evidenceBatchWireV17(claimed.record) },
     { effect: "operation", k: 0, owner: "platform:destination@17", kind: "evidence-admit", attempts: 1, for: 5 },
-    { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }]), uses: [useOf(jobFact, job.entry)] });
-  const history = new Map([[0, genesis], [2, publication], [3, capture], [4, dispatch], [5, funded], [6, fence]]), state = new MemoryState();
-  state.setScope({ at: destination, creator: null, status: "active", head: { seq: 6, hash: fence.hash }, time: t(0), genesis: { hash: genesis.hash, source: null, n: null }, held: [] });
+    { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null }]), uses: [useOf(jobFact, job.entry, "lane")] });
+  const history = new Map<number, { entry: Entry; hash: ReturnType<typeof entryHash> }>([[0, genesis], [2, publication], [3, capture], [4, dispatch], [5, funded], [6, fence]]), state = new MemoryState();
+  state.setScope({ at: destination, kind: "destination", creator: null, status: "active", head: { seq: 6, hash: fence.hash }, time: t(0), genesis: { hash: genesis.hash, source: null, n: null }, held: [] });
   state.putItem({ id: 2, type: "publication", state: "reserved", opened: publication.hash, revision: 2, parties: {}, refs: { operation, manifest, lane: otherLane },
     values: { reservedAt: 3, passes, integration: "a".repeat(40), tree: "b".repeat(40) }, attributed: [] });
   state.putItem({ id: 5, type: "evidence-batch", state: "funded", opened: funded.hash, revision: 2, parties: {}, refs: { operation, lane: otherLane },
@@ -92,14 +92,14 @@ function boundary(wrongPolicy = false, checkCount = 2) {
     attempts: [{ attempt: 1, opened: 6, outcomes: [] }] };
   state.putOperation(admitted);
   let retained: Entry | null = job.entry;
-  const own: Own = Object.assign((seq: number) => history.get(seq) ?? null, { retained: () => retained });
+  const own: Own = Object.assign((seq: number) => history.get(seq) ?? null, { retained: () => retained, sequence: () => sequence });
   const read = () => readEvidenceBoundFenceV17(state, own, admitted, PROPOSED_BOUNDS);
   const given: RuleGiven = { state, own, time: t(0), observed: () => null, value: () => undefined, placed: () => undefined,
     input: { type: "outcome", owner: admitted.owner, kind: admitted.kind, operation: admitted.id, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { job: jobFact } } },
-    uses: [{ fact: jobFact, entry: job.entry, under: "change@4" }, { fact: manifest, entry: manifestEntry.entry, under: "change@4" }],
+    uses: [{ fact: jobFact, entry: job.entry, under: "change@4", sequence: otherLaneSequence }, { fact: manifest, entry: manifestEntry.entry, under: "change@4", sequence: otherLaneSequence }],
     resolved: { at: destination, self: 7, fields: {}, subjects: new Map(), signer: null, bounds: PROPOSED_BOUNDS } };
-  const changeFence = (change: (entry: Entry) => Entry) => { const next = seal(change(fence.entry)); history.set(6, next); state.setScope({ ...state.scope()!, head: { seq: 6, hash: next.hash } }); };
-  return { state, own, history, read, given, fields, changeFence, fence, job, jobFact, admitted, binding, manifest, manifestEntry,
+  const changeFence = (change: (entry: SequenceEntry) => SequenceEntry) => { const next = seal(change(fence.entry)); history.set(6, next); state.setScope({ ...state.scope()!, head: { seq: 6, hash: next.hash } }); };
+  return { destination, state, own, history, read, given, fields, changeFence, fence, job, jobFact, admitted, binding, manifest, manifestEntry,
     claimed: claimed.record, setRetained: (value: Entry | null) => { retained = value; } };
 }
 
@@ -107,7 +107,7 @@ test("reconstructs the actual bound fence and retained job without inventing a f
   const fixture = boundary(), read = fixture.read();
   expect(read).not.toBeNull();
   expect(fixture.state.item(fixture.fence.entry.seq)).toBeNull();
-  expect(read).toMatchObject({ entry: fixture.fence.entry, source: { at: fixture.fence.entry.at, seq: 6, hash: fixture.fence.hash },
+  expect(read).toMatchObject({ entry: fixture.fence.entry, source: { at: fixture.destination, seq: 6, hash: fixture.fence.hash },
     job: fixture.job.entry, fields: { job: fixture.jobFact, name: "compile" }, holder: { id: 5 }, batch: fixture.claimed,
     birth: { seq: 0, hash: fixture.history.get(0)!.hash }, batchFact: { seq: 5, hash: fixture.history.get(5)!.hash } });
   expect(read?.entry.input.type === "delivery" && read.entry.input.message.class === "request" && read.entry.input.message.body).toMatchObject({ fields: { job: { self: true } } });
@@ -150,25 +150,25 @@ test("the actual binding field waits only for the exact unexpired source whose o
   if (source.input.type !== "act") throw Error("The scripted source job must retain its signed request");
   const raw = { ...fixture.fields, name: "z06" };
   const message = { class: "request" as const, type: "tell" as const, body: { message: "check-fence", fields: raw } };
-  const job: Entry = { ...source, seq: 11, input: { ...source.input, signed: signIntent({ ...source.input.signed.intent,
+  const job: SequenceEntry = { ...source, seq: 11, input: { ...source.input, signed: signIntent({ ...source.input.signed.intent,
     fields: { ...source.input.signed.intent.fields, name: "z06" }, idempotencyKey: "TEST-delayed-source" }, keys.una.secret) },
-    effects: source.effects.map((effect): Entry["effects"][number] => {
+    effects: source.effects.map((effect): SequenceEntry["effects"][number] => {
       if (!("item" in effect) || effect.item !== 10) return effect;
       return effect.effect === "value" && effect.slot === "name" ? { ...effect, item: 11, value: "z06" } : { ...effect, item: 11 };
-    }), sends: [{ n: 0, to: fixture.given.resolved.at, message }] };
+    }), sends: [{ n: 0, to: fixture.destination, message }] };
   expect(isEntry(job)).toBe(true);
-  const jobFact: FactRef = { at: job.at, seq: job.seq, hash: entryHash(job) };
+  const jobFact: FactRef = { at: otherLane, seq: job.seq, hash: entryHash(job) };
   // SCRIPTED source/state proof, with no committed fence or admitted record
   // for this delayed job. The real field predicate chooses whether to wait.
-  const given: RuleGiven = { ...fixture.given, input: { type: "delivery", from: jobFact, n: 0, message },
-    uses: [{ fact: jobFact, entry: job, under: "change@4" }, { fact: fixture.manifest, entry: fixture.manifestEntry.entry, under: "change@4" }],
+  const given: RuleGiven = { ...fixture.given, input: { type: "delivery", from: jobFact, sourceKind: "lane", n: 0, message },
+    uses: [{ fact: jobFact, entry: job, under: "change@4", sequence: otherLaneSequence }, { fact: fixture.manifest, entry: fixture.manifestEntry.entry, under: "change@4", sequence: otherLaneSequence }],
     resolved: { ...fixture.given.resolved, fields: { ...raw, job: jobFact } } };
   const rule = destinationRulesV17["evidence-fence-binding-v17"];
   if (rule?.place !== "type") throw Error("The actual bound-fence field rule is required");
   const text = canonicalize(fixture.binding);
   expect(() => rule.run(given, text, { field: "binding" })).toThrow(RuleFault);
   expect(rule.run({ ...given, time: t(60) }, text, { field: "binding" })).toBe(true);
-  expect(rule.run({ ...given, input: { type: "delivery", from: { ...jobFact, hash: d("f") }, n: 0, message } }, text, { field: "binding" })).toBe(true);
+  expect(rule.run({ ...given, input: { type: "delivery", from: { ...jobFact, hash: d("f") }, sourceKind: "lane", n: 0, message } }, text, { field: "binding" })).toBe(true);
   const request = fixture.state.request(5, 0)!;
   fixture.state.putRequest({ ...request, result: { seq: 7, clause: "refused" } });
   expect(rule.run(given, text, { field: "binding" })).toBe(true);
@@ -185,7 +185,7 @@ test("missing or mismatching retained source bytes and source sends never fall b
 });
 
 test("only the applied original opening with its actual holder and one canonical append is accepted", () => {
-  const mutations: ((entry: Entry) => Entry)[] = [
+  const mutations: ((entry: SequenceEntry) => SequenceEntry)[] = [
     entry => ({ ...entry, input: entry.input.type === "delivery" && "decision" in entry.input ? { ...entry.input, decision: "refused" } : entry.input }),
     entry => ({ ...entry, effects: [...entry.effects, { effect: "open", item: entry.seq, type: "evidence-slot", state: "pending" }] }),
     entry => ({ ...entry, effects: entry.effects.map(effect => effect.effect === "operation" ? { ...effect, for: 6 } : effect) }),

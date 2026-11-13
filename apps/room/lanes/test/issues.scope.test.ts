@@ -191,12 +191,12 @@ async function story(at: Stand, wired: Set<ScopeId>): Promise<void> {
   expect(verified.lines.at(-1)).toBe("All consistent: 12 scopes.");
   // Bind the shared proof to this room's actual identities and checked heads,
   // rather than dropping every line with a new output prefix.
-  const roots = new Map<string, { at: ScopeRef; head: number }>(), codeTrusts = new Set<string>();
+  const roots = new Map<string, { at: ScopeRef; kind: string; head: number }>(), codeTrusts = new Set<string>();
   for (const line of lines) {
     const scope = line.split(" ")[1]!.replace(/,$/, "") as ScopeId;
     const summary = await new Platform(scope).summary();
     expect(Number(/, entry (\d+):/.exec(line)![1])).toBe(summary.at.seq);
-    roots.set(scope, { at: summary.value.scope, head: summary.at.seq });
+    roots.set(scope, { at: summary.value.scope, kind: line.split(" ")[0]!, head: summary.at.seq });
     if (isPlatformDefinition(summary.value.definition)) codeTrusts.add(`Shared trust: ${platformCode(summary.value.definition)}.`);
   }
   expect(new Set(roots.keys())).toEqual(wired);
@@ -207,19 +207,21 @@ async function story(at: Stand, wired: Set<ScopeId>): Promise<void> {
   const coverage = new Map<string, { from: number; through: number }[]>();
   for (const line of shared.slice(1)) {
     if (line.startsWith("Shared trust:")) { expect(allowedTrusts.has(line), line).toBe(true); continue; }
-    const covered = /^Shared coverage: (sc_[^,]+), incarnation (in_[^,]+), kind ([a-z]+), entries (\d+) to (\d+); proving root (sc_[^.]+)\.$/.exec(line);
-    const text = /^Shared checked text: ([^;]+); source (sc_[^,]+), incarnation (in_[^,]+), kind ([a-z]+); proving root (sc_[^;]+); consumers (.+)\.$/.exec(line);
+    const covered = /^Shared coverage: (sc_[^,]+), genesis (sha256:[^,]+)(?:, kind ([a-z]+))?, entries (\d+) to (\d+); proving root (sc_[^.]+)\.$/.exec(line);
+    const text = /^Shared checked text: ([^;]+); source (sc_[^,]+), genesis (sha256:[^;]+); proving root (sc_[^;]+); consumers (.+)\.$/.exec(line);
     expect(covered !== null || text !== null, line).toBe(true);
     if (covered) {
-      const [, scope, inc, kind, from, through, root] = covered;
-      expect(isScopeRef({ scope, inc, kind }) && roots.has(scope!) && roots.has(root!)).toBe(true);
-      expect({ scope, inc, kind }).toEqual(roots.get(scope!)!.at);
+      const [, scope, genesis, kind, from, through, root] = covered;
+      expect(isScopeRef({ scope, genesis }) && roots.has(scope!) && roots.has(root!)).toBe(true);
+      expect({ scope, genesis }).toEqual(roots.get(scope!)!.at);
+      // Only the row that covers entry 0 states the kind, read from the genesis.
+      expect(kind).toBe(from === "0" ? roots.get(scope!)!.kind : undefined);
       const ranges = coverage.get(scope!) ?? [];
       ranges.push({ from: Number(from), through: Number(through) }); coverage.set(scope!, ranges);
     } else if (text) {
-      const [, digest, scope, inc, kind, root, consumers] = text;
-      expect(isDigest(digest) && isScopeRef({ scope, inc, kind }) && roots.has(scope!) && roots.has(root!)).toBe(true);
-      expect({ scope, inc, kind }).toEqual(roots.get(scope!)!.at);
+      const [, digest, scope, genesis, root, consumers] = text;
+      expect(isDigest(digest) && isScopeRef({ scope, genesis }) && roots.has(scope!) && roots.has(root!)).toBe(true);
+      expect({ scope, genesis }).toEqual(roots.get(scope!)!.at);
       for (const consumer of consumers!.split(", ")) expect(roots.has(consumer)).toBe(true);
     }
   }

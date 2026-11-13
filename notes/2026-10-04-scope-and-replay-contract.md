@@ -18953,7 +18953,7 @@ D is a scope that observes a scope under U. Every number is made up.
 | Case | The input | Judged | Result |
 |---|---|---|---|
 | 1 | The text of F | The canonical JSON of the reference. | One line: `at` with `inc`, `kind` and `scope`, then `hash`, then `seq` as `41`. It holds no space and no line feed. |
-| 2 | The text of a fact with the kind `destination` at the position 9,007,199,254,740,991 | The longest text. | 237 bytes. |
+| 2 | The text of a fact at the position 9,007,199,254,740,991, with its genesis hash in its scope reference | The longest text. | 262 bytes, `FACT_TEXT_MOST`. |
 | 3 | The name of a ref for F, after the prefix `refs/artroom/receipts/` | The 64 hexadecimal characters of F's `hash`. | A name of 86 bytes, with no colon. |
 | 4 | A commit whose message holds a line with the text of F, under the ref of case 3 | A reader compares the last part of the name with `hash` in the line. | They are equal. No entry and no host was read. |
 | 5 | A reference with F's `hash` and another `at`, which the scope never verified | A rule builds a name and a line only from a verified fact. | Not used. Its name would equal that of case 3, and its line would differ. |
