@@ -9,14 +9,17 @@ import { sendableAt, type OriginalRow } from "@generalbusiness/dap-client";
 import type { Room } from "./data.ts";
 
 /**
- * Whether `to` names the room's directory. A reference names no kind, so the
- * page compares it with the directory reference it holds: the full reference
- * where it holds one, and the scope ID where it holds only that. The page holds
- * no partition reference after a read, so a partition matches only by its own scope.
+ * Whether `to` names the room's directory or one of its partitions. A
+ * reference names no kind, so the page compares it with the references it
+ * holds: the full directory reference and the full partition references that
+ * its last directory read returned. Where the page holds only the directory's
+ * scope ID, it compares the scope ID.
  */
 export function atDirectory(room: Pick<Room, "directory" | "directoryIndex">, to: ScopeRef): boolean {
-  const held = room.directoryIndex?.scope;
-  return held && held.scope === room.directory ? to.scope === held.scope && to.genesis === held.genesis : to.scope === room.directory;
+  const index = room.directoryIndex, held = index?.scope;
+  const same = (ref: ScopeRef) => to.scope === ref.scope && to.genesis === ref.genesis;
+  if (!index || !held || held.scope !== room.directory) return to.scope === room.directory;
+  return same(held) || (index.partitions ?? []).some(same);
 }
 
 /** The last rows this page read for a view, for each room and key, so the next draw shows them. Memory only. */

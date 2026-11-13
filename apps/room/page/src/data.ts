@@ -83,7 +83,8 @@ export interface Place { directory: ScopeId; membership: ScopeRef }
 export interface Room {
   session: Session;
   directory: ScopeId;
-  directoryIndex: { scope: ScopeRef; definition: Summary["definition"] } | null;
+  /** `partitions`: the full references of the partition indexes that the last directory read returned. */
+  directoryIndex: { scope: ScopeRef; definition: Summary["definition"]; partitions?: readonly ScopeRef[] } | null;
   membership: ScopeRef;
   rules: ScopeId;
   destination: ScopeId;
@@ -456,6 +457,8 @@ async function directoryLanes(room: Room): Promise<readonly Item[]> {
   if (answersVersionQuestion(index.definition, "pagePartitionRootDirectory")) {
     const coverage = await partitionIndexes({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, index.scope, room.membership);
     if (!coverage.complete) throw new Unreadable(`Directory indexes incomplete (${coverage.reason ?? "unavailable"}); partitions read: ${coverage.indexes.length}.`);
+    // Keep the partition references that this read returned, so a row to a partition locks the directory (ruling 10 (b)).
+    room.directoryIndex = { ...index, partitions: coverage.indexes.map(part => part.ref) };
     return coverage.indexes.flatMap(part => [...part.lanes]);
   }
   const declared = platform(index.definition)?.data.items["lane"];

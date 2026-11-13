@@ -188,10 +188,19 @@ slot. Two sites did:
 - `apps/room/page/src/open-requests.ts` and `original-check.ts`: a row to the
   directory also locks, stops or settles the directory. Ruling 10 (b) covers
   them: the page compares the row's reference with the directory reference it
-  holds.
+  holds and with the partition references that its directory read returns
+  (`partitionIndexes`), so a row to a partition locks the directory and reads
+  "in this room".
 - `packages/cli/src/command-verify.ts:57`: the verify source reads create
-  results only from a register's pages. The check now compares the page's
-  scope with the configured register. Question V1 asks whether that holds.
+  results only from a register's pages. The check compares the page's full
+  reference with the configured register. Ruling 190b31f4 confirms it (V1).
+
+## The retired-room reader commit
+
+`RETIRED_ROOM_READER_COMMIT` lives in `packages/bytes/src/retired-room.ts`.
+Ruling 190b31f4 (Q-S4) keeps it out of `contract`. `bytes` is the lowest
+package that `scope` and `mcp` both depend on. Its value is 40 zeros until
+the landing, marked `// FILLED AT LANDING`.
 
 ## Re-pinned platform digests
 
