@@ -1,12 +1,12 @@
 {
-  "qualification": "Index of unchanged raw originals for the identifiers cutover. Each evidence directory carries its own SHA256SUMS and is read-only. The gate at f9d6fea1 passed on attempt 9, on AC power with powermode 0 at start and end and no sleep between start and end. Attempts 1 to 8 failed and stay sealed in their own -attemptN directories; their END acts record each cause. Gate internals sit under gate-internals and are not listed here.",
+  "qualification": "Index of unchanged raw originals for the identifiers cutover. Each evidence directory carries its own SHA256SUMS and is read-only. The gate at 9b38f07e passed on attempt 10. It started on AC power with powermode 0. The laptop switched to battery (powermode 1) at 17:50:59Z, in the last minutes of the Native stage, and no case timed out. The pmset log shows no sleep between start and end. The gate at f9d6fea1 passed on attempt 9, on AC power with powermode 0 at start and end and no sleep. Commits after f9d6fea1 answer review 15f2b78a, so attempt 10 gates the review head. Attempts 1 to 8 failed and stay sealed in their own -attemptN directories. Their END acts record each cause. Gate internals sit under gate-internals and are not listed here.",
   "request": "05d618e28d87f9d6b3aa6b41ce414a9b0e084717",
   "promise": "9fd2d4288ec27d3b459cf8eb99fd4e100a8de08d",
   "directory": "/Users/hughpyle/play/artroom-evidence",
   "base": "64112e4576b4c3c8fb668389786deb6b703da417",
-  "checkpointCommit": "f9d6fea1c202f4b49c8abb98189764e42780ebc9",
-  "checkpointTree": "118692ea099abcfffd9b077cdb58cc20e47d01a4",
-  "fileCount": 11,
+  "checkpointCommit": "9b38f07e7932309772b28d18363b34ccd27c8938",
+  "checkpointTree": "5996fa10bb7210290f9cbfaf33d3eec4033123ba",
+  "fileCount": 22,
   "files": [
     {
       "path": "2026-11-13-identifiers-cutover-gate-attempt9/SHA256SUMS",
@@ -62,6 +62,61 @@
       "path": "2026-11-13-identifiers-cutover-gate-attempt9/pmset-sleep-wake.txt",
       "bytes": 709,
       "sha256": "e1233d803833bf8210553fd0f11b77fc3c3e4883055b234c58abb9de024d3748"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/SHA256SUMS",
+      "bytes": 4073,
+      "sha256": "bcdbc8dd7e5602a075d81ea79a71a8d88ba842157ac4d4bb76f599ecdb244432"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/gate.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/gate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/gate.stdout",
+      "bytes": 7252,
+      "sha256": "96bb48eeee99fae6fdc478ae6f19d781e37eac06f6e24fdc02a28af2395d7867"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/head.txt",
+      "bytes": 41,
+      "sha256": "507b3427ec849b5b27229e27f1ac5dc84f2f06929208a14931255f09e3c13e8b"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/internals-move.json",
+      "bytes": 128,
+      "sha256": "a5d13340a67610b1ab52fbd0b48a551cb97d30fe674d41b81c951e907995ad69"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/pmset-batt-end.txt",
+      "bytes": 115,
+      "sha256": "34de715bc6c6257419a5e00a969510ab5429ed61d24a85ac201d02667d62c6bd"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/pmset-batt-start.txt",
+      "bytes": 106,
+      "sha256": "401cce5ebde3b2abcc9bbf3f6318a41f002f489b8e54e52215543664e1be5cde"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/pmset-powermode-end.txt",
+      "bytes": 24,
+      "sha256": "fbfd5a7e8cf0da89ba83c28eba395e495cd2744780474814869904b499e911bf"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/pmset-powermode-start.txt",
+      "bytes": 24,
+      "sha256": "bbbab903143e711fd8baa92b78bd2104ab62ec7c64247bbe3168eb04f3b12dd6"
+    },
+    {
+      "path": "2026-11-13-identifiers-cutover-gate-attempt10/pmset-sleep-wake.txt",
+      "bytes": 417,
+      "sha256": "597173c7d1c471228c70421fc922e4a417ab0bcb9c4b4d711f7103502940f4c9"
     }
   ]
 }
