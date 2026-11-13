@@ -286,6 +286,15 @@ const hasScopeRefFields = (v: unknown): v is ScopeRef =>
  * the directory and membership. Null when the text is neither. The link's
  * secret is not kept here: `joinRoom` reads it from the link.
  */
+/**
+ * Whether a pasted `config.json` has the old format, `v: 1`. Its rooms
+ * retired at the identifier cutover (ruling e46dd964 item 5), so the page
+ * imports nothing from it.
+ */
+export function isRetiredConfig(typed: string): boolean {
+  try { const parsed: unknown = JSON.parse(typed.trim()); return record(parsed) && parsed["v"] === 1; } catch { return false; }
+}
+
 export function placeOf(typed: string): Place | null {
   const trimmed = typed.trim();
   try {

@@ -269,22 +269,41 @@ key, never a secret.
 A person who returns with an old link gets `room-retired` from the Worker. The
 old browser rows stay in the browser, unread.
 
-Release text: "Rooms made before this release are retired: an old link
-answers `room-retired`, and the browser keeps its old rows but no longer
-reads them."
+Release text (ruling 5f63a8f2 Q-R1; the same text goes in
+`docs/operate-a-service.md` and the landing commit body):
+
+"Rooms made before the identifier cutover are retired. An old link answers `room-retired`, or 404 on a Worker that serves only indexed scopes. The browser keeps its old rows and no longer reads them."
 
 Kept, not a stored-row migration: the "Join with config and key" screen
 (`apps/room/page/src/main.ts`) imports a pasted `device.key` through the key
 store's `migrate`, and the join path imports a supplied `secret` the same way.
 Neither reads a stored row, so neither is the legacy migration that item 5
-removes.
+removes. Ruling 5f63a8f2 keeps both on one condition: a pasted config with
+`v: 1` gets the retired-home refusal of e46dd964 item 5, and the screen imports
+nothing from it. `isRetiredConfig` (`apps/room/page/src/data.ts`) makes the
+check before the screen reads the key. The config scene of
+`apps/room/page/test/settings.test.ts` pastes a `v: 1` config and checks the
+refusal, no open, no settings write and no key import.
 
 ## Grow and lending examples
 
 The grow examples check each entry with `isEntryBodyOf` against the room's
 sequence reference. The simulator host reads the room kind `lane` from the
-room genesis seed, not from the binding. The lending `memberForKey` check
-`summary.scope.kind !== "membership"` is HELD for a planner ruling.
+room genesis seed, not from the binding.
+
+## Summaries asked for their own kind (ruling 5f63a8f2 Q-L1)
+
+The standing ruling: where code asked a summary for the kind of its own scope,
+it reads the summary's `definition` instead.
+
+| File | Check dropped | What replaces it |
+|---|---|---|
+| `examples/lending/browser/model.ts` (`memberForKey`) | `summary.scope.kind !== "membership"` | the summary's definition matches `platform:membership@<n>`; any other definition returns null |
+| `packages/scope/test/signed-reads.test.ts` | the summary's `scope.kind` is `register` | the summary's definition matches `platform:register@<n>` |
+| `apps/room/page/test/task-data.scope.test.ts` | the child summary's `scope.kind` is `lane` | the child summary's definition is the lane definition digest, which the assertion already compared |
+
+The lending test roster names `platform:membership@13`, and a roster with a
+directory definition returns null.
 
 ## Coverage kind (ruling 4393b366 T3(a))
 

@@ -2,6 +2,7 @@ import { expect, test, vi } from "vitest";
 import type { Signer } from "@generalbusiness/dap-client";
 import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 import {
+  RETIRED_ROOM_READER_COMMIT,
   b64url,
   keyIdOfSecret,
   scopeIdOf,
@@ -11,7 +12,9 @@ import {
 // Actual config entry handlers; DOM, native reads and storage failures are
 // stand-ins. A readable config alone supplies no verified room membership.
 test("Config and key select a room only after matching standing and exact storage readback; legacy Settings shows only the chooser", async () => {
-  vi.doMock("../src/browser-key-store.ts", async () => ({ ...await vi.importActual<typeof import("../src/browser-key-store.ts")>("../src/browser-key-store.ts"), pageKeyStore: scriptedPageKeys }));
+  const imported: string[] = [];
+  const countedKeys = (): ReturnType<typeof scriptedPageKeys> => { const keys = scriptedPageKeys(); return { ...keys, migrate: async legacy => { imported.push("import"); return keys.migrate(legacy); } }; };
+  vi.doMock("../src/browser-key-store.ts", async () => ({ ...await vi.importActual<typeof import("../src/browser-key-store.ts")>("../src/browser-key-store.ts"), pageKeyStore: countedKeys }));
   class Element {
     children: (Element | string)[] = [];
     attrs: Record<string, string> = {};
@@ -275,10 +278,18 @@ test("Config and key select a room only after matching standing and exact storag
     await drain();
     expect(open).not.toHaveBeenCalled();
     expect(writes).not.toHaveBeenCalled();
+    // A config of the old format gets the retired-home refusal, and the screen imports nothing from it.
+    fill();
+    root.all().find((e) => e.attrs["name"] === "config")!.value = JSON.stringify({ ...JSON.parse(config) as object, v: 1 });
+    submit();
+    await drain();
+    expect(root.textContent).toContain(`Refused because this config.json names rooms of the old format. Those rooms retired at the identifier cutover, and commit ${RETIRED_ROOM_READER_COMMIT} reads them.`);
+    expect([open.mock.calls.length, writes.mock.calls.length, imported.length]).toEqual([0, 0, 0]);
     fill();
     submit();
     await drain();
     expect(open).toHaveBeenCalledTimes(1);
+    expect(imported).toEqual(["import"]);
     expect(open.mock.calls[0]![0].service).toBe(location.origin);
     expect(writes).not.toHaveBeenCalled();
     expect(location.hash).toBe("#/config");

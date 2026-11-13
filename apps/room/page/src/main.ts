@@ -25,9 +25,9 @@ import { pageKeyStore } from "./browser-key-store.ts";
 import { connectInvitation, originalConnection, creatorConnectionFiles, type CreatorBinding } from "./connection-custody.ts";
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, Head, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
+import { RETIRED_ROOM_READER_COMMIT, b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
 import { ORIGINALS_UNREAD, checkAnswerLine, checkOriginalRequest, liftFences, lockedScopes, openOriginals, originalLine, type OpenOriginals } from "./original-check.ts";
-import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadNeedsYou, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
+import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadNeedsYou, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, isRetiredConfig, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
 import { PageObservation, pollingInterval } from "./page-observation.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
 import { actsPanel, answerLine, nonacceptedAnswerText, changeScreen, failureScreen, h, icon, whoLine, issueScreen, roomScreen, rulesScreen } from "./view.ts";
@@ -916,6 +916,7 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
       connectionBusy = true; submit.setAttribute("disabled", ""); tell("Working on joining the room");
       let decodedSecret: Uint8Array | null = null;
       try {
+        if (isRetiredConfig(config.value)) { tell(`Refused because this config.json names rooms of the old format. Those rooms retired at the identifier cutover, and commit ${RETIRED_ROOM_READER_COMMIT} reads them. Use a config.json of the new format to join a room. Nothing was imported.`, true); return; }
         const typed = config.value.trim(), raw = key.value.trim(), place = placeOf(typed);
         decodedSecret = unb64url(raw);
         const secret = decodedSecret;

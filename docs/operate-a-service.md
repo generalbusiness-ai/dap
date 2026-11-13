@@ -288,6 +288,8 @@ Durable Object migration or remove records that the newer version wrote.
 
 ## Cut over to the new journal format
 
+Rooms made before the identifier cutover are retired. An old link answers `room-retired`, or 404 on a Worker that serves only indexed scopes. The browser keeps its old rows and no longer reads them.
+
 An old room link answers 404 on a Worker in enforce mode, because the new
 index does not list the room. A request that reaches a retired room answers
 410 and names the reader commit.
