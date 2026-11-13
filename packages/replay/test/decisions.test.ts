@@ -117,6 +117,21 @@ test("replay and a closing checkpoint preserve the early field refusal and draw 
   expect([replay.report.result, replay.why, guards]).toEqual(["consistent", null, 2]);
 });
 
+// Ruling 3bf7e5aa: a checked copy enters the judge's facts. A copy that fails its check stops the replay before any judge runs.
+test("an anchored source copy with no retained definition name stops the replay before the judge reads it", async () => {
+  const data = replayDecisionFields();
+  let guards = 0;
+  const rules: Rules = { decline: { place: "guard", refusals: ["late"], run: () => { guards++; return { holds: false, name: "late", code: "bad-field" }; } } };
+  const scope = new Deciding(data, rules);
+  scope.delivery("start");
+  scope.delivery("stop", { amount: 0 });
+  expect(guards).toBe(1);
+  const served = scope.served();
+  const unnamed = { ...served, retained: served.retained.map(input => input.kind === "entry" ? { ...input, under: "" } : input) };
+  const replay = await verify(new MemorySource([unnamed]), { mode: "replay", scope: scope.at.scope, anchors: scope.anchors(), bounds: { ...PROPOSED_BOUNDS, scopeEntries: 5 }, platform: () => ({ data, rules }) });
+  expect([replay.report.result, replay.why, guards]).toEqual(["incomplete", "an anchored source lacks its recorded kind or retained definition name", 1]);
+});
+
 /** A larger creation field really holds the text before the smaller stop field reads it. Every receiver entry is judged. */
 function redacted(text: string, decision: "bare" | "named" | "other" | "applied" | "invalid" | "spent" | "known" = "bare") {
   const data = replayDecisionText(decision);

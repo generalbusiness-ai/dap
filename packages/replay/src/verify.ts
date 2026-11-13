@@ -2205,17 +2205,19 @@ class Verifier {
       rawFacts.push({ fact: use.fact, entry: copy, content: use.content, under: kept.under ?? "", bytes: kept.bytes });
     }
     // Rulings 4f697a7a and ae48dd39: each foreign sequence that the entry uses at a later entry has its retained first entry.
-    const births = new Set<string>();
+    const births = new Map<string, CheckedSequence>();
     for (const use of entry.uses) {
       if (use.fact.seq === 0 || (run.at && use.fact.at.scope === run.at.scope) || births.has(canonicalize(use.fact.at))) continue;
-      births.add(canonicalize(use.fact.at));
       const born = await this.#birth(run, use, where);
+      births.set(canonicalize(use.fact.at), born);
       if (!rawFacts.filter(copy => same(copy.fact.at, use.fact.at)).every(copy => isEntryOf(copy.entry, copy.fact, born))) throw mismatch("a retained foreign body does not match its retained first entry");
     }
+    // Ruling 3bf7e5aa: a copy of a sequence that Replay does not run takes its sequence from that sequence's checked birth, or from its own bytes at entry 0.
+    const bornOf = (copy: (typeof rawFacts)[number]): CheckedSequence | null => births.get(canonicalize(copy.fact.at))
+      ?? (copy.fact.seq === 0 ? admitSequenceGenesis(copy.bytes, copy.fact.at, bounds.entryBytes) : null);
     const foreign = [...entry.uses.map(use => use.fact), ...(input.type === "delivery" ? [input.from] : []), ...(input.type === "genesis" && input.source ? [input.source] : [])];
     const distinctForeign = [...new Map(foreign.map(fact => [canonicalize(fact), fact])).values()];
     const proved = new Map<string, "replayed" | "anchored">();
-    const assumedCopies: AnchoredCopy[] = [];
     for (const fact of distinctForeign) {
       if (!isFactRef(fact)) throw mismatch("a reference is not a fact reference");
       proved.set(canonicalize(fact), await this.#prove(fact, where, depth, entry));
@@ -2234,8 +2236,11 @@ class Verifier {
           const assumed = this.#privateCopy(fact, where, copy.bytes, entry, copy.under);
           if (!assumed) throw new Stop("incomplete", "the anchored source has no admitted raw-copy context", where, fact);
           if (copy.under !== "" && copy.under !== copyName(assumed)) throw mismatch("the retained source alias contradicts its finite manifest row");
+          const born = bornOf(copy);
+          if (!born || !isEntryOf(copy.entry, fact, born)) throw new Stop("incomplete", "the anchored source copy has no checked first entry", where, fact);
           run.retainedEntries.set(copy.content, copy.entry);
-          assumedCopies.push(assumed);
+          // Ruling 3bf7e5aa: the checked copy enters `facts`, as on main. `#prove` above still proves the fact by its anchor.
+          facts.push({ fact, entry: copy.entry, sequence: born, under: copyName(assumed) });
         }
       }
     }
@@ -2245,9 +2250,6 @@ class Verifier {
         const at = input.message.body[field];
         if (isScopeRef(at)) this.#fixedKind(at, kind, where);
       }
-    }
-    if (assumedCopies.length && input.type !== "act" && input.type !== "genesis" && input.type !== "delivery") {
-      throw new Stop("incomplete", `the ${input.type} judgment requires verified source evidence; anchored raw copies cannot enter Native uses`, where);
     }
     const identity = await this.#receiverEvidence(run, entry, where, depth);
     for (const fact of distinctForeign) {
@@ -2338,8 +2340,8 @@ class Verifier {
     const drawn = drawsOf(state, definition, entry, foldInputs);
     if ("fault" in drawn) throw mismatch(`${drawn.fault === "past-count" ? "draw-past-count" : "held-without-holder"}: ${drawn.detail}`);
     const copyOf = (fact: FactRef | null) => fact ? facts.find(copy => same(copy.fact, fact)) ?? null : null;
-    const assumedOf = (fact: FactRef | null) => fact ? assumedCopies.find(copy => same(copy.fact, fact)) ?? null : null;
-    const assumptions = (source: AnchoredCopy | null) => ({ recorded: entry, facts: assumedCopies, source });
+    // Ruling 3bf7e5aa: every checked copy is in `facts`, so a judge takes no assumed copy.
+    const assumptions = { recorded: entry, facts: [], source: null };
     const sealed = (seq: unknown): Entry | null => (isLocalId(seq) ? (ownEntry(seq)?.entry ?? null) : null);
     let judged: ActJudgment | Judgment | TimedJudgment | PreparationJudgment;
     let judgeText: ((view: StateView, texts: Texts) => ActJudgment | Judgment) | null = null;
@@ -2379,7 +2381,7 @@ class Verifier {
         this.#trust("minted");
         if (input["founding"]) {
           const asked = { name: run.id, nonce: input.nonce, seed: input.seed, creation: input["founding"] };
-          judgeText = (view, texts) => judgeGenesisForReplay(view, definition, asked, { ...reading, texts, source: null }, assumptions(null));
+          judgeText = (view, texts) => judgeGenesisForReplay(view, definition, asked, { ...reading, texts, source: null }, assumptions);
           judged = withTextGaps(state, judgeText, reading.texts);
         }
         else {
@@ -2387,7 +2389,7 @@ class Verifier {
           this.#trust("held");
           const source = copyOf(input.source);
           const asked = { name: run.id, nonce: input.nonce, to: input.seed, from: input.source, n: input.n, message: input.message };
-          judgeText = (view, texts) => judgeGenesisForReplay(view, definition, asked, { ...reading, texts, source: source && { entry: source.entry, sequence: source.sequence, under: source.under } }, assumptions(assumedOf(input.source)));
+          judgeText = (view, texts) => judgeGenesisForReplay(view, definition, asked, { ...reading, texts, source: source && { entry: source.entry, sequence: source.sequence, under: source.under } }, assumptions);
           judged = withTextGaps(state, judgeText, reading.texts);
         }
         break;
@@ -2425,14 +2427,13 @@ class Verifier {
         }
         if (actRows) values.push(...actRows.values);
         const actContext = { ...reading, presented: input.presented, grants: input.authority.map((grant) => ({ grant, current: true })), membership: fixedIn(run, input), ...(input.observed ? { observed: input.observed } : {}), ...(values.length > 0 ? { values } : {}), ...(actRows ? { observed: actRows.observed, observing: actRows.observing } : {}) };
-        judgeText = (view, texts) => judgeActForReplay(view, definition, input.signed, { ...actContext, texts }, assumptions(null));
+        judgeText = (view, texts) => judgeActForReplay(view, definition, input.signed, { ...actContext, texts }, assumptions);
         judged = withTextGaps(state, judgeText, reading.texts);
         if (actRows) await this.#byRows(run, entry, judged, actRows.observed, where, depth);
         break;
       case "delivery": {
         this.#trust("delivered");
-        const verifiedSource = copyOf(input.from), assumedSource = assumedOf(input.from);
-        const source = verifiedSource ?? (assumedSource && { entry: assumedSource.entry, under: copyName(assumedSource) });
+        const source = copyOf(input.from);
         // The address is the one the sender wrote: the source entry's send at that ordinal.
         const to = source?.entry.sends.find((send) => send.n === input.n)?.to;
         if (!source || to === undefined) throw mismatch("the source entry holds no send at that ordinal");
@@ -2459,13 +2460,12 @@ class Verifier {
         const delivered = { to, from: input.from, n: input.n, message: input.message };
         let sourcePin: Digest | PlatformDefinition | undefined;
         if ((input.message.class === "request" || input.message.class === "advisory") && bound(definition, input.message, input.from, input.sourceKind, source.under)?.handler?.from.pin) {
-          if (!verifiedSource) throw new Stop("incomplete", "the pinned sender requires genuine genesis evidence, not an anchored copy", where);
           const birth = await this.#identityFrame(input.from.at, where, depth);
           if (!birth) throw new Stop("incomplete", "the pinned sender's genesis cannot be verified", where);
           sourcePin = birth.named;
         }
-        const deliveryContext = { ...reading, source: verifiedSource && { entry: verifiedSource.entry, sequence: verifiedSource.sequence, under: verifiedSource.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, origin, ...(further ? { observed: further } : {}), ...(clauseRows ?? {}) };
-        judgeText = (view, texts) => judgeDeliveryForReplay(view, definition, delivered, { ...deliveryContext, texts }, assumptions(assumedSource));
+        const deliveryContext = { ...reading, source: { entry: source.entry, sequence: source.sequence, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, origin, ...(further ? { observed: further } : {}), ...(clauseRows ?? {}) };
+        judgeText = (view, texts) => judgeDeliveryForReplay(view, definition, delivered, { ...deliveryContext, texts }, assumptions);
         judged = withTextGaps(state, judgeText, reading.texts);
         if (clauseRows) await this.#byRows(run, entry, judged, clauseRows.observed, where, depth);
         break;
@@ -2551,9 +2551,6 @@ class Verifier {
         // Checked against the fold through that sequence. It is never taken as proof of the prefix (section 9.2).
         judged = judgeCheckpoint(state, definition, { through: input.through, state: input.state }, { clock, bounds });
         break;
-    }
-    if (judged.result === "unavailable" && assumedCopies.length) {
-      throw new Stop("incomplete", "the judgment lacks verified dependency evidence; caller copies cannot supply a Native capability", where);
     }
     if (judged.result !== "write") {
       const said = [judged.result, "reason" in judged ? judged.reason : "", "detail" in judged ? judged.detail : "", "failed" in judged ? judged.failed : ""].filter((part) => part !== "").join(", ");

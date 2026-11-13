@@ -648,15 +648,20 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
   expect((await row(lane))?.confirmed?.through).toEqual(later); expect(await lane.head()).toEqual(later);
   // The lane's creator is its room's Directory, an archived journal. Replay
   // must prove the Directory's facts by replay (decisions 5a642337 and
-  // 066e49b3), so the source also serves the Directory's own journal.
+  // 066e49b3), so the source also serves the Directory's own journal. The
+  // Directory takes deliveries from the Rules and Destination geneses, so the
+  // source also serves their journals. Membership facts stay anchors.
   const native = archiveAuthorityRoom(lane);
   if (!native) return expect.fail("a factory lane keeps its native room");
   const { R, D } = native.room, membership = native.room.children[0]!;
   const directory = await native.room.life.wait(() => D.at());
   expect(archiveAuthorityAnchors(lane).filter(fact => fact.at.scope === directory.scope).length).toBeGreaterThan(0);
-  const journal = await native.room.life.wait(() => archiveNativeScope(D.object, directory, native.policies, format, lane.c.clock.now, native.declarations));
-  const refs = new Map([[journalRef(lane.at.scope), host.pointer], [journal.ref, journal.commit]]);
-  const objects = new Map([...host.data, ...journal.objects.map(object => [object.id, object] as const)]);
+  const served = [{ object: D.object, at: directory }];
+  for (const child of native.room.children.slice(1)) served.push({ object: child.object, at: await native.room.life.wait(() => child.at()) });
+  const journals = [];
+  for (const { object, at } of served) journals.push(await native.room.life.wait(() => archiveNativeScope(object, at, native.policies, format, lane.c.clock.now, native.declarations)));
+  const refs = new Map([[journalRef(lane.at.scope), host.pointer], ...journals.map(journal => [journal.ref, journal.commit] as const)]);
+  const objects = new Map([...host.data, ...journals.flatMap(journal => journal.objects).map(object => [object.id, object] as const)]);
   const source = archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
     format: async () => format, resolve: async ref => refs.get(ref) ?? null,
     object: async (id, most) => { const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null; },
@@ -665,8 +670,9 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
   // read; no anchor comes from archive output. Only Register and
   // Membership facts may be anchors.
   const authority = new Set([(await native.room.life.wait(() => R.at())).scope, (await native.room.life.wait(() => membership.at())).scope]);
-  const directoryEntries = (await native.room.life.wait(() => D.sealed())).map(sealed => sealed.entry);
-  const anchors = [...new Map([...archiveAuthorityAnchors(lane).filter(fact => authority.has(fact.at.scope)), ...nativeAnchorFacts(directoryEntries, authority)]
+  const servedEntries = [];
+  for (const scope of [D, ...native.room.children.slice(1)]) servedEntries.push(...(await native.room.life.wait(() => scope.sealed())).map(sealed => sealed.entry));
+  const anchors = [...new Map([...archiveAuthorityAnchors(lane).filter(fact => authority.has(fact.at.scope)), ...nativeAnchorFacts(servedEntries, authority)]
     .map(fact => [canonicalize(fact), fact] as const)).values()];
   expect(anchors.length).toBeGreaterThan(0);
   // Replaying the Directory runs its platform code and capability hooks.
@@ -679,7 +685,10 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
       coverageCount: verified.verification.report.coverage.length, anchorCount: verified.verification.report.anchors.length,
       missingCount: verified.verification.report.dependencies.missing.length }
       : { result: verified.result, scope: verified.location.scope, commit: verified.location.commit }) };
-  expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors, trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
+  expect(verified, JSON.stringify(diagnostic)).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", trusts: expect.arrayContaining([TRUSTS.anchors, TRUSTS.observed]) } } });
+  // Replay reports the anchors in the order it used them, across three journals.
+  const sorted = (facts: readonly unknown[]) => facts.map(fact => canonicalize(fact)).sort();
+  if (verified.kind === "verification") expect(sorted(verified.verification.report.anchors)).toEqual(sorted(anchors));
   fixtureArchiveWiring.delete(lane.name);
 });
 

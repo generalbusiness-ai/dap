@@ -508,15 +508,37 @@ address with its recorded kind" in `packages/replay/test/genesis-bodies.test.ts`
 Request RV-1 (`c6276dec`) holds the self-proving genesis for after the
 cutover.
 
+## Anchored copies in judgments (ruling 3bf7e5aa, option b)
+
+Every checked copy enters the judge's `facts`, as on main. `#replay` in
+`packages/replay/src/verify.ts` checks a copy by one of two paths before the
+judge reads it:
+
+- A copy of a sequence that Replay runs must match that checked sequence.
+- A copy of a sequence that Replay does not run must pass the `#privateCopy`
+  context check, and it must match the sequence's checked first entry. That
+  entry is the retained birth, or the copy itself at entry 0.
+
+The copy enters `facts` with that checked sequence and with the definition
+name that `#privateCopy` admitted. `#prove` still proves every fact by replay
+or by an anchor. A judge now takes no assumed copy, so the head removes
+`assumedCopies` and the three stops that read it: "anchored raw copies cannot
+enter Native uses", "caller copies cannot supply a Native capability" and "the
+pinned sender requires genuine genesis evidence, not an anchored copy".
+
+A copy that fails its check stops the replay before any judge runs. The test
+is "an anchored source copy with no retained definition name stops the replay
+before the judge reads it" in `packages/replay/test/decisions.test.ts`. Its
+guard counter stays at 1.
+
+The nine tests that waited on this ruling pass: `decisions.test.ts` ×4,
+`verify.test.ts` 18.46 and 18.52, the two archive-driver resume tests, and
+the `archive-installed.test.ts` publication and failed-claim cases. The resume
+tests now serve the Rules and Destination journals as well as the Directory
+journal. The "Other test changes" table gives the reason.
+
 ## Pending rulings
 
-- **3bf7e5aa, addendum 5e30241b: anchored copies in judgments.** RULING
-  PENDING. Replay puts an anchored copy in `assumedCopies` and fills the
-  judge's `facts` only from replayed sources (`verify.ts` `#replay`). A judge
-  that needs the copied fact answers `unavailable`. Nine tests stop here:
-  `decisions.test.ts` ×4, `verify.test.ts` 18.46 and 18.52, the archive-driver
-  resume tests for sha1 and sha256, and `archive-installed.test.ts` for
-  publication and failed-claim.
 - **e4b72290: the Grow archive binding.** RULING PENDING.
   `growArchivePolicies` (`apps/room/archive-policy.ts:21-23`) and the config
   check in `apps/room/archive.ts:31` accept only the recorded signed demo
@@ -570,3 +592,4 @@ Commit `70c3431750` cut the branches that only this case reached:
 | Grow example tests | fixture shape | Scripted entries name their genesis. Entry 0 of the command journal is a fixture genesis. Foreign copies carry their sequence, and receipts take the scope and effects. |
 | lending browser storage | fixture shape | References are `{ scope, genesis }`. |
 | repo-in-ai example and tests | fixture shape | References are `{ scope, genesis }`, and home configs are version 2. An entry binds to its sequence by genesis (`isEntryBodyOf`, `sentByBody`), and a genesis binds by its seed and hash. The example drops its register kind checks, because the place fixes the kind. Fixture refs that differed only by kind now differ by genesis. |
+| `archive-driver` resume, sha1 and sha256 | fixture shape | The Directory takes deliveries from the Rules and Destination geneses. Under 5a642337 and 066e49b3 neither kind may be an anchor, so the test also serves the Rules and Destination journals, and Replay proves those facts by replay. The anchors include the Membership facts of all three journals. The test compares the reported anchors as a set, because Replay reports them in the order of use. |
