@@ -8,6 +8,12 @@ This head builds on main `a76764a7`, where NF2 landed. Its tree differs from tha
 
 `McpService.#stoppedEarly` reads the error name of a stopped call. It now reads that name through `dataOf` on a `Failure`, so the name has its type from `FindingData`. A result that sets `isError` is always a `Failure`. Behaviour does not change.
 
+## The gate and CI pass at `a91f1d6b`
+
+The gate at `a91f1d6ba0958f1861532bdb15e3673f9a8439ff` exited 0. Its START is `2ba6688b` and its END is `dd8122a3`. Node passed 172 tests and Counting passed 56. Plain passed 4,547 of 4,548 with 1 skip. Native passed 1,132 of 1,134 with 2 skips. The evidence is in `2026-11-12-nf3-gate-a91f1d6b`.
+
+Card browser scripts run `43353392611` and Page browser scripts run `43353392617` both passed at the same commit. The evidence is in `2026-11-12-nf3-ci-a91f1d6b`. Later commits on this head change only `notes/`, which neither workflow filter names.
+
 ## Failed gates
 
 Two earlier gates on this work failed. Neither result changes to a pass.
