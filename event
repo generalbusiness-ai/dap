@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2eb8edb06c3ec5ed260008fbca2289d251c0763d","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/prepare-project.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2ec777f1998f34b65f63d9ded903533ed9572b9c","text":"Merge retired a covered predecessor; the successor is at packages/git/test/journal-pass-cost.test.ts."}
