@@ -107,3 +107,23 @@ test("a recovered non-string under a typed genesis text digest disproves the rec
   expect([checked.report.result, checked.report.at?.at.scope, checked.report.at?.seq]).toEqual(["mismatch", w.original.at.scope, 0]);
   expect(checked.report.coverage).toEqual([coverageRow(w.alias.at, w.alias.entries[0]?.entry, 0)]);
 });
+
+// Invariant (ruling 1cf42f3b): an anchored genesis copy sits at seq 0 with its
+// address's genesis hash, admits as that sequence's genesis, and names the
+// recorded kind. The anchor stays required; the copy alone proves nothing.
+test("an anchored genesis copy admits only at its own address with its recorded kind", async () => {
+  const { anchoredCopy } = await import("../src/verify.ts");
+  const { created } = await import("@generalbusiness/dap-derive/testing");
+  const { entryHash } = await import("@generalbusiness/dap-bytes");
+  const entry = created().entries[0]!.entry;
+  if (entry.input.type !== "genesis") throw Error("The fixture needs genesis bytes.");
+  const bytes = canonicalize(entry), hash = entryHash(entry), kind = entry.input.seed.kind;
+  const at = { scope: scopeIdOf(entry.input.seed), genesis: hash }, fact = { at, seq: 0, hash };
+  const anchor = { scope: at.scope, seq: 0, hash }, basis = { mode: "retained-name", under: "TEST" } as const;
+  expect(anchoredCopy(bytes, fact, anchor, basis, 1 << 20, kind)?.fact).toEqual(fact);
+  expect(anchoredCopy(bytes, fact, anchor, basis, 1 << 20, kind === "lane" ? "membership" : "lane")).toBeNull();
+  expect(anchoredCopy(bytes, fact, anchor, basis, 1 << 20, null)).toBeNull();
+  const elsewhere = { scope: at.scope, genesis: "sha256:" + "0".repeat(64) } as typeof at;
+  expect(anchoredCopy(bytes, { at: elsewhere, seq: 0, hash }, anchor, basis, 1 << 20, kind)).toBeNull();
+  expect(anchoredCopy(bytes, fact, { ...anchor, seq: 1 }, basis, 1 << 20, kind)).toBeNull();
+});

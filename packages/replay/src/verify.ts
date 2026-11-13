@@ -89,8 +89,11 @@ function freezeCopy(value: unknown): void {
   for (const member of Object.values(value)) freezeCopy(member);
   Object.freeze(value);
 }
-/** Own canonical retained bytes without inventing a checked association. */
-export function anchoredCopy(originalBytes: string, fact: FactRef, anchor: Anchor, basis: RawCopyBasis, maxBytes: number): AnchoredCopy | null {
+/** Own canonical retained bytes without inventing a checked association.
+ * A genesis copy (ruling 1cf42f3b) must sit at seq 0 with the address's
+ * genesis hash, admit as its sequence's genesis, and name the recorded kind.
+ * The anchor stays required: the copy proves no fact by itself. */
+export function anchoredCopy(originalBytes: string, fact: FactRef, anchor: Anchor, basis: RawCopyBasis, maxBytes: number, recordedKind: ScopeKind | null): AnchoredCopy | null {
   if (!isObject(basis) || Object.keys(basis).sort().join(",") !== (basis.mode === "retained-name" ? "mode,under" : "exporterRow,mode")
     || !natural(maxBytes) || maxBytes === 0 || originalBytes.length > maxBytes || utf8(originalBytes).length > maxBytes
     || !isFactRef(fact) || anchor.scope !== fact.at.scope || anchor.seq !== fact.seq || anchor.hash !== fact.hash
@@ -105,7 +108,12 @@ export function anchoredCopy(originalBytes: string, fact: FactRef, anchor: Ancho
   }
   let entry: unknown;
   try { entry = parseStrict(originalBytes); } catch { return null; }
-  if (!isEntry(entry) || entry.input.type === "genesis" || canonicalize(entry) !== originalBytes || !isEntryBodyOf(entry, fact)) return null;
+  if (!isEntry(entry) || canonicalize(entry) !== originalBytes || !isEntryBodyOf(entry, fact)) return null;
+  if (entry.input.type === "genesis") {
+    if (fact.seq !== 0 || fact.hash !== fact.at.genesis || recordedKind === null) return null;
+    const born = admitSequenceGenesis(originalBytes, fact.at, maxBytes);
+    if (!born || born.kind !== recordedKind) return null;
+  }
   freezeCopy(entry);
   const body = { fact: Object.freeze({ at: Object.freeze({ ...fact.at }), seq: fact.seq, hash: fact.hash }), entry,
     originalBytes, anchor: Object.freeze({ ...anchor }) };
@@ -1665,7 +1673,7 @@ class Verifier {
         throw new Stop("incomplete", "an anchored private source lacks matching recorded kind and finite exporter alias metadata", user, fact);
       basis = { mode: "archive-alias", exporterRow: row };
     }
-    const admitted = anchoredCopy(originalBytes, fact, anchor, basis, this.#bounds.entryBytes);
+    const admitted = anchoredCopy(originalBytes, fact, anchor, basis, this.#bounds.entryBytes, kind);
     if (!admitted) throw new Stop("incomplete", "the anchored source lacks an exact canonical raw copy", user, fact);
     this.#trust("recordedKinds");
     return admitted;
