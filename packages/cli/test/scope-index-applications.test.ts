@@ -143,7 +143,8 @@ test("application listing preserves active rows with pending errors and isolates
   for (const damage of [
     (item: Item): Item => ({ ...item, values: { ...item.values, release: privateText } }),
     (item: Item): Item => ({ ...item, values: { ...item.values, uri: `git+https://name:secret@git.example.test/repo.git/@${"a".repeat(40)}/package.json` } }),
-    (item: Item): Item => ({ ...item, refs: { ...item.refs, scope: membership } }),
+    // An installed scope named before its genesis was sealed: the reference holds no genesis digest.
+    (item: Item): Item => ({ ...item, refs: { ...item.refs, scope: { scope: application.scope, genesis: null } as unknown as ScopeRef } }),
   ]) expect(projectScopeApplications({ at: rules, kind: "rules" }, observation([damage(installation())]))).toEqual(error("malformed-installation"));
   expect(projectScopeApplications({ at: rules, kind: "rules" }, observation([installation(), installation(7)]))).toEqual(error("malformed-installation"));
 });
