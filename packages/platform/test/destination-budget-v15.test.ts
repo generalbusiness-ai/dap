@@ -31,7 +31,7 @@ const policy: RulesPolicyV11 = { approvals: 0, allowZeroApprovals: true, ownerMa
     { name: 'other', patterns: [], approvals: 0, allowZeroApprovals: true, approver: 'change.review', checks: [], class: 'content' },
   ] };
 function capture(value: CertifiedPublicationStateV15): Entry {
-  return { v: 1, at: destination, seq: 5, prev: d('a'), time: t(0), clamped: false, epoch: 0,
+  return { v: 1, genesis: destination.genesis, seq: 5, prev: d('a'), time: t(0), clamped: false, epoch: 0,
     input: { type: 'outcome', owner: 'platform:destination@15', kind: 'judge', operation: '4:0', attempt: 1, result: 'confirmed', evidence: { basis: 'own-answer', body: {} } },
     uses: [], prepared: [], sends: [], effects: [{ effect: 'value', item: 4, slot: 'passes', value: JSON.parse(canonicalize(value)) }] };
 }

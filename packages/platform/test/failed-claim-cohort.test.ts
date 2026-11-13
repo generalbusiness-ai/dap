@@ -20,7 +20,7 @@ test.each(["unknown", "refused"] as const)("a final %s frees the claim and a lat
   expect(R.item(1).values["repository"]).toBeNull();
   expect(R.state.operation("1:0")!.selected).toBeNull();
   expect(R.last.sends).toEqual([]);
-  expect(R.last.effects.filter(effect => effect.effect === "operation").map(effect => effect.kind)).toEqual(["revoke-credential", "delete-repository"]);
+  expect(R.last.effects.flatMap(effect => effect.effect === "operation" ? [effect.kind] : [])).toEqual(["revoke-credential", "delete-repository"]);
   const deletion: OperationId = `${R.last.seq}:1`;
   expect(R.outcome(deletion, 1, "confirmed", { id: "late-repository" }).result).toBe("write");
   expect(R.item(1).state).toBe("failed");

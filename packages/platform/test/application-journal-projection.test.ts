@@ -20,7 +20,7 @@ function journal() {
   const entries: { seq: number; hash: ReturnType<typeof textDigest>; bytes: string }[] = [];
   let prev = textDigest("PUBLIC TEST prefix outside the declared tail");
   for (const seq of [4, 5]) {
-    const entry: Entry = { v: 1, at: scope, seq, prev, time: "2026-10-18T12:00:00Z", clamped: false, epoch: 0, uses: [], prepared: [], effects: [], sends: [],
+    const entry: Entry = { v: 1, genesis: scope.genesis, seq, prev, time: "2026-10-18T12:00:00Z", clamped: false, epoch: 0, uses: [], prepared: [], effects: [], sends: [],
       input: { type: "act", signed: signIntent({ v: 1, to: scope, actor: keyIdOfSecret(secret), kind: seq === 4 ? "observe" : "note", on: seq === 4 ? null : 1, expected: {}, fields: { room: 1 },
         idempotencyKey: `PUBLIC-TEST-${seq}`, notAfter: "2026-10-18T12:01:00Z" }, secret), authority: [], presented: {} } };
     prev = entryHash(entry); entries.push({ seq, hash: prev, bytes: canonicalize(entry) });

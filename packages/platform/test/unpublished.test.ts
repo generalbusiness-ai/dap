@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Digest, FactRef, FieldValue, PlatformDefinition, Request, Seed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, scopeIdOf, signIntent, textDigest, newGenesisNonce } from "@generalbusiness/dap-bytes";
+import { intentDigest, scopeIdOf, signIntent, newGenesisNonce } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, runnable, type Fetched, type PlatformRules, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, keys, t, fixtureSequence } from "@generalbusiness/dap-derive/testing";
 import { platform, repositoryName, firstHeadCommit, UNPUBLISHED_COHORT as U, REPOSITORY_BINDING_COHORT as B } from "../src/index.ts";
@@ -174,7 +174,7 @@ test("a native unpublished found directly creates its directory, applies its res
   const refusedResult = { ...resultInput, message: { ...resultInput.message, outcome: "refused" as const } };
   const original = R.own(1)!;
   const unrelated = { ...resultContext, own: Object.assign(() => ({ ...original, hash: R.fact(0).hash }), { sequence: resultContext.own.sequence }) };
-  const wrongOrigin = { ...resultContext, own: Object.assign(() => ({ ...original, entry: { ...original.entry, input: directoryGenesis } }), { sequence: resultContext.own.sequence }) };
+  const wrongOrigin = { ...resultContext, own: Object.assign(() => ({ ...original, entry: D.last }), { sequence: resultContext.own.sequence }) };
   expect([
     accepts(resultContext, { ...D.fact(0), seq: 1 }),
     accepts(resultContext, { ...D.fact(0), hash: R.fact(0).hash }),

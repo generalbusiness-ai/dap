@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 import type { OperationId, Request, Result } from "@generalbusiness/dap-contract";
-import { factRefOf } from "@generalbusiness/dap-bytes";
+
 import { destinationReceipt, firstHeadCommit } from "../src/destination.ts";
-import { Branch, HEAD, NEXT, OTHER, handMade, said } from "./fixtures-entry.ts";
+import { Branch, HEAD, NEXT, OTHER, handMade, said, sequenceAt } from "./fixtures-entry.ts";
 import { t } from "@generalbusiness/dap-derive/testing";
 
 // Real destination rules and derive judges, in memory. The bureau, claim
@@ -25,7 +25,7 @@ for (const format of ["sha1", "sha256"] as const) test(`first-head ${format} com
   expect(b.opened.map(([kind]) => kind)).toEqual(["revoke", "receipt", "mint", "judge"]);
   const first = kinds(b);
   const made = destinationReceipt(b.state, b.own, receipt, format);
-  expect(made.file).toEqual({ v: 1, first: factRefOf(b.last), claim: b.branch.refs["claim"], commit: expected });
+  expect(made.file).toEqual({ v: 1, first: b.fact(b.last.seq), claim: b.branch.refs["claim"], commit: expected });
   expect(made.ref).toBe(`refs/artroom/receipts/${b.fact(0).hash.slice(7)}`);
   expect(said(b.answered(first["receipt"]!, 1, "confirmed", { send: "accepted", seen: made.commit }))).toEqual(WRITTEN);
   expect(b.item(receipt.id).state).toBe("written");
@@ -97,9 +97,9 @@ test("a publication reserves its own operations, keeps the receipt and cleanup a
   for (const account of b.state.accountsOf(publication)) {
     const message: Result = { class: "result", of: { from: b.fact(account.seq), n: account.n }, outcome: "applied" };
     const source = { ...handMade(b.lane.at, "publication-result", [{ n: 0, to: b.at, message }]), input: {
-      type: "delivery" as const, from: message.of.from, n: account.n, message: b.entries[account.seq]!.entry.sends[account.n]!.message as Request, decision: "applied" as const,
+      type: "delivery" as const, from: message.of.from, sourceKind: "destination" as const, n: account.n, message: b.entries[account.seq]!.entry.sends[account.n]!.message as Request, decision: "applied" as const,
     } };
-    expect(said(b.delivered(message, { entry: source, under: "change" }))).toEqual(WRITTEN);
+    expect(said(b.delivered(message, { entry: source, under: "change", sequence: sequenceAt(b.lane.at) }))).toEqual(WRITTEN);
   }
   expect([b.item(publication).state, b.item(receipt).state, b.state.holder(publication)]).toEqual(["published", "written", null]);
 });

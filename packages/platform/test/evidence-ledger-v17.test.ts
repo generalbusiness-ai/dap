@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type FactRef, type ItemType, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { newItem, RuleFault, type Item, type RuleGiven, type StateView } from "@generalbusiness/dap-derive";
-import { d, fixtureScope, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, fixtureScope, t } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_LEDGER_ITEM_V17, evidenceLedgerInitializationV17, evidenceLedgerOfV17 } from "../src/evidence-ledger-v17.ts";
 
 // SCRIPTED folded-state ports. These test singleton correspondence and the

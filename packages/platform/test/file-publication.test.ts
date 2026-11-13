@@ -70,9 +70,9 @@ test.each(["platform:destination@4", "platform:destination@5", "platform:destina
   state.putItem({ ...file(0, 0), type: "branch", state: "ready", refs: {}, values: { slot: early.id, judging: null, head: "a".repeat(40) } });
   state.putItem(early); state.putItem(later);
   const operation: Operation = { id: "2:0", owner, kind: "push", for: early.id, most: 1, selected: null, attempts: [{ attempt: 1, opened: 2, outcomes: [] }] };
-  const entry: Entry = { v: 1, at: { ...sender, kind: "destination" }, seq: 2, prev: null, time: "2026-10-14T03:00:00Z", clamped: false, epoch: 0,
+  const entry: Entry = { v: 1, genesis: sender.genesis, seq: 2, prev: null, time: "2026-10-14T03:00:00Z", clamped: false, epoch: 0,
     input: { type: "outcome", owner, kind: "judge", operation: "1:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { head: "a".repeat(40), present: true, tree: "b".repeat(40) } } }, uses: [], prepared: [], effects: [{ effect: "state", item: early.id, state: "reserved" }], sends: [] };
-  const own: Own = seq => seq === 2 ? { entry, hash: textDigest("PUBLIC TEST scripted opening") } : null;
+  const own: Own = Object.assign((seq: number) => seq === 2 ? { entry, hash: textDigest("PUBLIC TEST scripted opening") } : null, { sequence: () => null });
   const before = state.snapshot();
   expect(fileSupersededOutcome(state, operation, own)).toEqual({ basis: "own-answer", body: { send: "not-sent", seen: "a".repeat(40), supersededBy: filePublicationCause(later) } });
   for (const owner of ["platform:destination@9", "platform:destination@12"] as const) expect(fileSupersededOutcome(state, { ...operation, owner }, own)).toBeNull();

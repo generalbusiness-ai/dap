@@ -46,7 +46,7 @@ test("canonical replies require the exact request binding and native row identit
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "forbidden" })), query())).toEqual({ ok: false, reason: "forbidden" });
   const behind = { ok: false, reason: "behind", current: { at: scope, seq: 11, hash: textDigest("PUBLIC TEST current head") } };
   expect(readApplicationProjectionReply(utf8(canonicalize(behind)), query())).toEqual(behind);
-  expect(readApplicationProjectionReply(utf8(canonicalize(behind)), { ...query(), scope: { ...scope, kind: "task" } })).toBeNull();
+  expect(readApplicationProjectionReply(utf8(canonicalize(behind)), { ...query(), scope: { ...scope, genesis: textDigest("TEST task genesis") } })).toBeNull();
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "behind" })), query())).toBeNull();
   expect(readApplicationProjectionReply(utf8(canonicalize({ ...behind, reason: "unavailable" })), query())).toBeNull();
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "wrong-genesis" })), query())).toEqual({ ok: false, reason: "wrong-genesis" });

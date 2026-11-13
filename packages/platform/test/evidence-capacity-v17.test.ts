@@ -7,7 +7,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, isFactRef, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, type EvidenceBinding } from "../src/evidence.ts";
 import { EVIDENCE_BINDING_TEXT_V17, readBindingTextV17 } from "../src/destination-evidence-v17.ts";
-import { d, keys, otherLane, fixtureScope } from "@generalbusiness/dap-derive/testing";
+import { d, keys, later, otherLane, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { sequenceEffects, type Item, type RuleGiven } from "@generalbusiness/dap-derive";
 import { evidenceFundCapacityV17, evidencePendingCapacityForecastV17, readEvidenceCapacityWireV17 } from "../src/destination-evidence-capacity-v17.ts";
 import type { EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
@@ -108,7 +108,7 @@ describe("exact pre-publication capacity identities", () => {
       || input.message.type !== "tell" || !isRecord(input.message.body) || !isRecord(input.message.body["fields"])) throw Error("A bound fence forecast must retain its full wire shape");
     const fields: Record<string, unknown> = { ...input.message.body["fields"], binding: text, bindingDigest: digest };
     expect(isFactRef(fields["job"])).toBe(true);
-    const entry: Entry = { ...shell, uses: Array.from({ length: 5 }, (_, n) => ({ fact: { ...fact(Number.MAX_SAFE_INTEGER - n, destination), hash: d("f") }, content: d("f"), kind: "destination" as const })),
+    const entry: Entry = { ...later(shell), uses: Array.from({ length: 5 }, (_, n) => ({ fact: { ...fact(Number.MAX_SAFE_INTEGER - n, destination), hash: d("f") }, content: d("f"), kind: "destination" as const })),
       input: { ...input, message: { class: "request", type: "tell", body: { message: "check-fence", fields } } } };
     expect(isEntry(entry)).toBe(true);
     const full = utf8(canonicalize(entry)).length;

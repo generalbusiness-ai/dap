@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type FactRef, type HoldersObservation, type Item, type ObservationUse } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type FactRef, type HoldersObservation, type Item, type ObservationUse, type SequenceEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest } from "../src/evidence.ts";
 import { RuleFault, type Operation, type RuleGiven } from "@generalbusiness/dap-derive";
@@ -39,8 +39,8 @@ function item(value: EvidenceJobRecordV17, marked = false): Item {
   return { id: 20, type: "evidence-job", state: "job-timedout", revision: 40, opened: d("e"), parties: {}, refs: { timeoutDecision: 30 },
     values: { record: evidenceJobRecordWireV17(value), noticeOpenedAt: marked ? 40 : null }, attributed: [] };
 }
-function opening(value: EvidenceJobRecordV17): Entry {
-  return { v: 1, at: destination, seq: 40, prev: d("f"), time: t(19), clamped: false, epoch: 0,
+function opening(value: EvidenceJobRecordV17): SequenceEntry {
+  return { v: 1, genesis: destination.genesis, seq: 40, prev: d("f"), time: t(19), clamped: false, epoch: 0,
     input: { type: "outcome", operation: "15:0", attempt: 1, owner: "platform:destination@17", kind: "evidence-result", result: "confirmed", evidence: { basis: "own-answer", body: { job: value.job } } },
     uses: [], prepared: [], effects: [{ effect: "value", item: 20, slot: "noticeOpenedAt", value: 40 },
       { effect: "operation", k: 0, owner: "platform:destination@17", kind: "evidence-notice", attempts: 1, for: value.holder },

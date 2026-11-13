@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { valueDigest } from "@generalbusiness/dap-derive";
-import { d, otherLane, fixtureScope } from "@generalbusiness/dap-derive/testing";
+import { d, fixtureScope } from "@generalbusiness/dap-derive/testing";
 import { idOf } from "@generalbusiness/dap-git/tree-proof";
 import { RULES_TREE_PROOF, verifyRulesTree, type RulesTreeBinding, type RulesTreePattern } from "../src/rules-policy-tree.ts";
 
