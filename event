@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:71e73a9fa8bba264d14d64ab30e17fcd1256ed38","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/vite.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:71fc0fc6571306e5c7207b93214b35ce98771b39","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-tick.ts."}
