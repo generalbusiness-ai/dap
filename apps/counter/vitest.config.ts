@@ -8,6 +8,7 @@ export default defineConfig({
     { find: "@generalbusiness/dap-define/package", replacement: source("define/src/package.ts") },
     { find: "@generalbusiness/dap-define/story", replacement: source("define/src/story.ts") },
     { find: "@generalbusiness/dap-derive/testing", replacement: source("derive/test/fixtures.ts") },
+    { find: "@generalbusiness/dap-derive/scripted", replacement: source("derive/src/scripted.ts") },
     { find: "@generalbusiness/dap-derive/rule", replacement: source("derive/src/rule/index.ts") },
     { find: "@generalbusiness/dap-derive", replacement: source("derive/src/index.ts") },
     { find: /^@generalbusiness\/dap-bytes$/, replacement: source("bytes/src/index.ts") },

@@ -1,7 +1,9 @@
 // Genuine Node WebCrypto; public TEST seeds and scripted binding, no enrollment or native acts.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { b64url, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify, verifySessionRequest } from "@generalbusiness/dap-bytes";
+import type { ScopeKind } from "@generalbusiness/dap-contract";
+import { b64url, keyIdOfSecret, textDigest, verify, verifySessionRequest } from "@generalbusiness/dap-bytes";
+import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import { signerSessionRequest } from "@generalbusiness/dap-client";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
@@ -9,7 +11,7 @@ import { deviceSigner, importDemoBundle, importLegacyDevice } from "./device-key
 
 const origin = "https://counter-keys.test";
 Object.defineProperty(globalThis, "location", { configurable: true, value: { origin } });
-const ref = (kind: ScopeRef["kind"]): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: COUNTING_COMMITMENTS_DEFINITION, creator: null, cause: textDigest("TEST device " + kind), ordinal: 0 }), kind, inc: newIncarnation(new Uint8Array(16).fill(7)) });
+const ref = (kind: ScopeKind): ScopeRef => (scriptedSequence({ v: 1, kind, definition: COUNTING_COMMITMENTS_DEFINITION, creator: null, cause: textDigest("TEST device " + kind), ordinal: 0 },"2026-01-01T00:00:00Z",7).at);
 const membership = ref("membership"), scope = ref("lane");
 function fixture() {
   return { v: 1, identities: ["Ada", "Beau", "Cleo"].map((name, index) => {

@@ -1,7 +1,9 @@
 /** Real same-origin browser custody witness. Two pages share IDB and Web Locks,
  * deliberately without BroadcastChannel. Public TEST binding/key; protocol
  * dispatch and speech callbacks are stand-ins, never native/provider/audio proof. */
-import { keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import type { ScopeKind } from "@generalbusiness/dap-contract";
+import { keyIdOfSecret, textDigest } from "@generalbusiness/dap-bytes";
+import { scriptedSequence } from "@generalbusiness/dap-derive/scripted";
 import { signedIntent } from "@generalbusiness/dap-client";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
@@ -12,7 +14,7 @@ const custody=privateDeviceStore();
 let channel:BroadcastChannel|undefined,notifications=0;
 let held:{epoch:string;device:SavedDevice}|undefined;
 let signs=0,dispatches=0,plays=0;
-const ref=(kind:ScopeRef["kind"]):ScopeRef=>({scope:scopeIdOf({v:1,kind,definition:COUNTING_COMMITMENTS_DEFINITION,creator:null,cause:textDigest("TEST durable Forget "+kind),ordinal:0}),kind,inc:newIncarnation(new Uint8Array(16).fill(9))});
+const ref=(kind:ScopeKind):ScopeRef=>(scriptedSequence({v:1,kind,definition:COUNTING_COMMITMENTS_DEFINITION,creator:null,cause:textDigest("TEST durable Forget "+kind),ordinal:0},"2026-01-01T00:00:00Z",9).at);
 const membership=ref("membership"),scope=ref("lane");
 const seed=new Uint8Array(32).fill(41);
 const binding={origin:location.origin,deployment:"TEST durable Forget",scope,membership,member:{membership,member:"@ada"},publicKey:keyIdOfSecret(seed),definition:COUNTING_COMMITMENTS_DEFINITION,cohort:{directory:"platform:directory@6",membership:"platform:membership@5",rules:"platform:rules@3",destination:"platform:destination@2"}};
