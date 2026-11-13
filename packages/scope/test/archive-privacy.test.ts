@@ -92,7 +92,9 @@ test("changed genesis, an unknown consumer variant and a stopped scan never publ
   await damageLast(lane, entry => { entry.input.type = "new-consumer" as never; });
   expect((await scan(lane)).reason).toBe("unavailable");
   await damageLast(lane, entry => { entry.input.type = "act"; if ("genesis" in entry) entry.genesis = `sha256:${"9".repeat(64)}`; });
-  const changed = await scan(lane); expect(changed.reason).toBe("unavailable"); expect(changed.positions).toEqual([]);
+  // The entry header compares the stored genesis column with the pinned
+  // sequence and refuses a different genesis as a mismatch.
+  const changed = await scan(lane); expect(changed.reason).toBe("mismatch"); expect(changed.positions).toEqual([]);
   const stopped = await scan(await create(), support, 7);
   expect(stopped.reason).toBe("limit"); expect(stopped.positions).toEqual([]);
   expect(stopped.queries.filter(row => row.query.includes("AS usesType"))).toEqual([]);

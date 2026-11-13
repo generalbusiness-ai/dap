@@ -80,7 +80,9 @@ test("fixture source pins bind an actual native birth and declaration to its ful
   // but cannot become a new-format source declaration. It is fixture data,
   // not a replacement for the real Native birth used above.
   const redundant = structuredClone(normalizeDefinition(definition.declared));
-  (redundant.acts["remark"]!.guards as Guard[]).push({ of: "on", equals: { a: { field: "text" }, b: { field: "text" } } });
+  // `remark` is a comment step, which takes no guards; a transition does.
+  // The guard spells its default subject `on`, which canonical mode omits.
+  (redundant.acts["accept-report"]!.guards as Guard[]).push({ of: "on", state: ["reported"] } as Guard);
   expect(validateDefinition(redundant, PROPOSED_BOUNDS, RULE_PROFILES).ok).toBe(true);
   const redundantBirth = structuredClone(birth.value.entry);
   if (redundantBirth.input.type !== "genesis") return expect.fail("Native genesis0 required");

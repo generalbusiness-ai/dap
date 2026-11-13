@@ -20,7 +20,7 @@ export function readArchiveRestart(raw: unknown, now: Timestamp, budget = new Ar
     const v: unknown = parseStrict(raw);
     if (!isRecord(v) || !fields(v,"at,command,confirmed,expires,format,generation,repository,rowDigest,v") || v["v"] !== 1 || canonicalize(v) !== raw
       || !isDigest(v["command"]) || !isDigest(v["rowDigest"]) || !natural(v["generation"]) || v["generation"] >= Number.MAX_SAFE_INTEGER
-      || !isScopeRef(v["at"]) || !fields(v["at"] as unknown as Record<string,unknown>,"inc,kind,scope")
+      || !isScopeRef(v["at"]) || !fields(v["at"] as unknown as Record<string,unknown>,"genesis,scope")
       || !isRecord(v["repository"]) || !fields(v["repository"],"host,id,name,namespace")
       || Object.values(v["repository"]).some(x => typeof x !== "string" || x.length === 0 || x.length > 1024)
       || (v["format"] !== "sha1" && v["format"] !== "sha256") || typeof v["expires"] !== "string") return null;
