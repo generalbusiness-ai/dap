@@ -78,7 +78,9 @@ export interface Sql {
  * - `retained_birth`: ruling 4f697a7a. For each foreign sequence whose later
  *   entry the scope retains, the content digest of that sequence's first
  *   entry, whose bytes are a `retained_input` row of the kind `entry`.
- *   One row for each (scope, genesis). No row is changed.
+ *   One row for each (genesis, scope). No row is changed. The key leads
+ *   with the genesis, so the `birth` read by genesis digest alone
+ *   (ruling ae48dd39) is one key lookup.
  * - `retained_value`: the retained inputs of the kind `value` (sections 6.2
  *   and 9.2, revision 19). A value is kept under its byte domain and its
  *   digest there, so it has a table of its own: one domain and one digest
@@ -120,7 +122,7 @@ CREATE TABLE IF NOT EXISTS record (capability TEXT NOT NULL, kind TEXT NOT NULL,
 CREATE INDEX IF NOT EXISTS record_by_state ON record (capability, kind, state);
 CREATE TABLE IF NOT EXISTS prepared (intent TEXT NOT NULL, capability TEXT NOT NULL, step TEXT NOT NULL, seq INTEGER NOT NULL, PRIMARY KEY (intent, capability, step)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS retained_input (kind TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, under TEXT, pass INTEGER, PRIMARY KEY (kind, digest)) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS retained_birth (scope TEXT NOT NULL, genesis TEXT NOT NULL, digest TEXT NOT NULL, PRIMARY KEY (scope, genesis)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS retained_birth (genesis TEXT NOT NULL, scope TEXT NOT NULL, digest TEXT NOT NULL, PRIMARY KEY (genesis, scope)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS retained_value (domain TEXT NOT NULL, digest TEXT NOT NULL, bytes TEXT NOT NULL, pass INTEGER, PRIMARY KEY (domain, digest)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS item_key (type TEXT NOT NULL, slot TEXT NOT NULL, key TEXT NOT NULL, id INTEGER NOT NULL, PRIMARY KEY (type, slot, key, id)) WITHOUT ROWID;
 `;
@@ -667,6 +669,7 @@ export class SqliteStore implements Store {
     }
   }
   retain(input: Retained): void {
+    if (input.kind === "birth") throw new Error("a birth row is retained only with its association, by retainBirth");
     if (input.kind === "value") {
       if (typeof input.domain !== "string" || input.domain === "") throw new Error("a retained value states its byte domain");
       this.#run("INSERT INTO retained_value (domain, digest, bytes) VALUES (?, ?, ?) ON CONFLICT (domain, digest) DO NOTHING", input.domain, input.digest, input.bytes);
@@ -677,7 +680,7 @@ export class SqliteStore implements Store {
 
   retainBirth(at: SequenceRef, input: Retained & { kind: "entry" }): void {
     this.retain(input);
-    this.#run("INSERT INTO retained_birth (scope, genesis, digest) VALUES (?, ?, ?) ON CONFLICT (scope, genesis) DO NOTHING", at.scope, at.genesis, input.digest);
+    this.#run("INSERT INTO retained_birth (genesis, scope, digest) VALUES (?, ?, ?) ON CONFLICT (genesis, scope) DO NOTHING", at.genesis, at.scope, input.digest);
   }
   retainedBirth(at: SequenceRef): Retained | null {
     const row = this.#one("SELECT i.digest AS digest, i.bytes AS bytes, i.under AS under FROM retained_birth b JOIN retained_input i ON i.kind = 'entry' AND i.digest = b.digest WHERE b.scope = ? AND b.genesis = ?", at.scope, at.genesis);
@@ -690,7 +693,17 @@ export class SqliteStore implements Store {
   storedFrom(seq: number, limit: number): Stored[] {
     return this.#all("SELECT seq, hash, bytes, size FROM entry WHERE seq >= ? ORDER BY seq LIMIT ?", seq, limit).map((row) => ({ seq: row["seq"] as number, hash: row["hash"] as Digest, bytes: row["bytes"] as string, size: row["size"] as number }));
   }
+  /** Ruling ae48dd39: a `birth` read names the genesis digest alone. A genesis digest names one sequence, so more than one
+   * association reads as none. */
+  #birth(genesis: Digest, select: string): Record<string, unknown> | null {
+    const rows = this.#all(`SELECT ${select} FROM retained_birth b JOIN retained_input i ON i.kind = 'entry' AND i.digest = b.digest WHERE b.genesis = ? LIMIT 2`, genesis);
+    return rows.length === 1 ? rows[0]! : null;
+  }
   retained(kind: Retained["kind"], digest: Digest, domain?: string): Retained | null {
+    if (kind === "birth") {
+      const row = this.#birth(digest, "i.bytes AS bytes, i.under AS under");
+      return row && { kind, digest, bytes: row["bytes"] as string, ...(row["under"] === null ? {} : { under: row["under"] as string }) };
+    }
     if (kind === "value") {
       const value = domain === undefined ? null : this.#one("SELECT bytes FROM retained_value WHERE domain = ? AND digest = ?", domain, digest);
       return value && { kind, digest, bytes: value["bytes"] as string, domain: domain! };
@@ -699,6 +712,7 @@ export class SqliteStore implements Store {
     return row && { kind, digest, bytes: row["bytes"] as string, ...(row["under"] === null ? {} : { under: row["under"] as string }) };
   }
   retainedSize(kind: Retained["kind"], digest: Digest, domain?: string): number | null {
+    if (kind === "birth") return (this.#birth(digest, "length(CAST(i.bytes AS BLOB)) AS size")?.["size"] as number | undefined) ?? null;
     const row = kind === "value"
       ? (domain === undefined ? null : this.#one("SELECT length(CAST(bytes AS BLOB)) AS size FROM retained_value WHERE domain = ? AND digest = ?", domain, digest))
       : this.#one("SELECT length(CAST(bytes AS BLOB)) AS size FROM retained_input WHERE kind = ? AND digest = ?", kind, digest);

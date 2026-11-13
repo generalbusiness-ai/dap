@@ -2,7 +2,7 @@ import { describe, expect, onTestFinished, test } from "vitest";
 import { env, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, Intent, OperationId, ReadRequest, ScopeId, ScopeRef, Sealed, Seed, SignedReadName } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, entryHash, factRefOf, intentDigest, newGenesisNonce, retainedReadArgument, scopeIdOf, seedDigest, signIntent, signRead } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, b64url, canonicalBytes, entryHash, factRefOf, intentDigest, newGenesisNonce, retainedReadArgument, scopeIdOf, seedDigest, signIntent, signRead } from "@generalbusiness/dap-bytes";
 import { requestSession, secretSigner, sessionRequest, signedLogReader, signedReader, type Fetch } from "@generalbusiness/dap-client";
 import { timeMs, timeOf, useOf } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t, type Actor } from "@generalbusiness/dap-derive/testing";
@@ -295,6 +295,15 @@ describe("signed reads on real registers (the planner's decisions 61cc5e50, c649
     expect(genesis.uses.map((use) => use.fact.seq).sort()).toEqual([1, 2]);
     expect(await Promise.all(genesis.uses.map((use) => retained(rita, D, use.content)))).toEqual([200, 200]);
     expect(await Promise.all(genesis.uses.map((use) => retained(vic, D, use.content)))).toEqual([403, 403]);
+    // Ruling ae48dd39: the genesis uses later entries of the register, so the directory keeps the register's birth row. The route's
+    // digest place holds the register's genesis digest. A reader who may read the entry's uses reads the row, and the bytes admit
+    // the full reference; a reader that `entry` refuses is refused the row too.
+    const born = genesis.uses[0]!.fact.at;
+    const birth = async (who: Actor, node: Platform) => get(owner, `${node.name}/retained/birth/${encodeURIComponent(born.genesis)}`, await signed(who, node.name, "retained", retainedReadArgument("birth", born.genesis)));
+    const ritasBirth = await birth(rita, D);
+    expect(ritasBirth).toMatchObject({ status: 200, body: { ok: true, value: { kind: "birth", digest: born.genesis } } });
+    expect(admitSequenceGenesis((ritasBirth.body.value as { bytes: string }).bytes, born, PROPOSED_BOUNDS.entryBytes)?.kind).toBe("register");
+    expect((await birth(vic, D)).status).toBe(403);
     // Vic's own directory retains his claim, not rita's.
     expect(await retained(vic, V, genesis.uses[0]!.content)).toBe(403);
 
