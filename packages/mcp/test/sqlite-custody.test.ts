@@ -35,7 +35,7 @@ function nodeSql(): Sql & { db: DatabaseSync } {
 }
 
 const T = "2026-10-13T20:00:00Z";
-const ref = { scope: "sc_target", inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa", kind: "lane" } as never;
+const ref = { scope: "sc_target", genesis: `sha256:${"a".repeat(64)}` } as never;
 function recordOf(key: string, phase: CustodyRecord["phase"], padding = 0, outcomes: Outcome[] = []): CustodyRecord {
   return {
     v: 1, identity: { service: "https://s", membership: null, signer: "key_a" as never, target: ref, key }, binding: { definition: "d", kind: "k", declaration: null, pinned: "sha256:0" as never },

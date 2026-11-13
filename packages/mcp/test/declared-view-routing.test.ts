@@ -53,7 +53,7 @@ async function fixture(condition = rule, related = false, outcome: "accepted" | 
       if (related && relatedFailure === "forbidden") return { ok: false, reason: "forbidden" };
       return { ok: true, query: applicationProjectionQueryDigest(query)!, value: {
       v: 1, projection: related && relatedFailure === "projection" ? `sha256:${"c".repeat(64)}` : applicationProjectionId(projections[query.projection]!),
-      scope: related && relatedFailure === "scope" ? { ...query.scope, inc: `in_${"c".repeat(25)}a` } : query.scope,
+      scope: related && relatedFailure === "scope" ? { ...query.scope, genesis: `sha256:${"c".repeat(63)}a` } : query.scope,
       at: { seq: related ? head - 2 : head, hash: `sha256:${"b".repeat(64)}` },
       sources: { board: query.projection === "record" ? rows.filter(row => row.id === query.items["board"]) : rows },
     } }; },
@@ -165,7 +165,7 @@ test("automatic member-queue refresh retains an unknown original even when curre
 });
 
 test("missing or foreign viewer and nonboolean or failed rules stay unavailable", async () => {
-  for (const viewer of [null, { member: { membership: { ...membership, inc: `in_${"b".repeat(25)}a` as const }, member: "@alice" as const }, grants: ["counting.control"] }]) {
+  for (const viewer of [null, { member: { membership: { ...membership, genesis: `sha256:${"b".repeat(63)}a` as const }, member: "@alice" as const }, grants: ["counting.control"] }]) {
     const f = await fixture(); f.viewer(viewer);
     await expect(f.source.read({ screen: "queue", page: "summary", position: 0 })).rejects.toMatchObject({ reason: "unavailable" });
   }

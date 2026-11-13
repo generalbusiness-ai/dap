@@ -24,7 +24,7 @@ describe("the fields the scope will read, for an act's subjects", () => {
     expect(effective).toEqual({ jarFact: 2, list: [2, fact(other, 2)] });
     expect(given.jarFact).toEqual(fact(here, 2));
     expect(expectedOf(act, items, 0, effective)).toEqual({ on: 4, selected: 7 });
-    // Another incarnation of the same scope is foreign.
+    // Another genesis of the same scope is foreign.
     const foreign = effectiveFields(act, { jarFact: fact({ scope: here.scope, genesis: genesisOf(3) }, 2) } as never, here);
     expect(expectedOf(act, items, 0, foreign)).toEqual({ on: 4 });
   });

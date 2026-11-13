@@ -9,7 +9,7 @@ import { created, step } from "./support/story.ts";
 import { reader } from "../../scope/test/support.ts";
 
 // Invariant: bounded display reads preserve actual final member states and
-// controller facts, while a foreign incarnation or unjoined key reads none.
+// controller facts, while a foreign genesis or unjoined key reads none.
 test("native member display reads include removed agents and refuse foreign or unjoined session context", async () => {
   const room = mcpRoom();
   try {
@@ -44,7 +44,7 @@ test("native member display reads include removed agents and refuse foreign or u
     const final = await readMembershipDisplay(rita.service.reads, membership);
     expect(final?.members.find(item => item.id === on)).toMatchObject({ state: "removed", parties: { controller } });
     expect(final?.at.seq).toBeGreaterThan(active!.at.seq);
-    const foreign = { ...membership, inc: `in_${"b".repeat(25)}a` as const };
+    const foreign = { ...membership, genesis: `sha256:${"b".repeat(63)}a` as const };
     const beforeForeign = rita.requests.length;
     expect(canonicalize(foreign)).not.toBe(canonicalize(membership));
     expect(await readMembershipDisplay(rita.service.reads, foreign)).toBeNull();

@@ -96,7 +96,7 @@ test("party and signer resolve once with controller evidence; arbitrary values n
   } };
   expect((await projectionMembers(declaration, onlyFact, async () => snapshot)).records[canonicalize(agent)]?.controller).toEqual(owner);
   expect(projectionMemberFacts(declaration.sources["benches"]!, ["lastProber"], { lastProber: agent })).toEqual({ 0: { label: "lastProber", refs: [agent] } });
-  const other = { ...agent, membership: { ...membership, inc: `in_${"b".repeat(25)}a` as const } };
+  const other = { ...agent, membership: { ...membership, genesis: `sha256:${"b".repeat(63)}a` as const } };
   expect(isMemberRef(other)).toBe(true);
   const unknown = await projectionMembers(declaration, data([other]), async () => snapshot);
   expect(unknown.records[canonicalize(other)]?.identity).toBeNull();
