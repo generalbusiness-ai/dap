@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd1c72025bed1758f793b524e64f63bd9cc3a9d3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-11-nf3-client-custody.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ffbe215ebd1e03e11daf0c43c0841387dddca670","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/test/custody.test.mjs."}
