@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7f87dd67958ac0d3599706850d805f6b4765d957","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/metrics.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7fe3926953a24dba6bc4c1f4a7f31f6712b0dfce","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/hosted-enrol-readback.test.ts."}
