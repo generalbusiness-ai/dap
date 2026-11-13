@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6e76f0e99c71538b34001dd62edccbb17b171284","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/site-immutable-publication.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6e9f936a1d78a60ac7a0ba08411174e6c7fdda15","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/certified-rules-archive.scope.test.ts."}
