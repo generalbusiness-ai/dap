@@ -439,7 +439,7 @@ describe("a founding on real scopes under the deployed class (authority note, se
     const genesis: GenesisEntry = { v: 1, seq: 0, prev: null, time: timeOf(lifetime.now()), clamped: false, epoch: 0,
       input: { type: "genesis", seed: laneSeed, nonce: newGenesisNonce(new Uint8Array(16).fill(29)), kind: "open", "founding": null,
         source: factRefOf(creator, directory), sourceKind: "directory", n: 0, message: creationMessage, decision: "applied" },
-      uses: [useOf(factRefOf(creator, directory), creator)], prepared: [], effects: [], sends: [] };
+      uses: [useOf(factRefOf(creator, directory), creator, "directory")], prepared: [], effects: [], sends: [] };
     // The lane's address follows from its hand-made genesis: its seed's scope ID and its hash.
     const otherLane: ScopeRef = { scope: scopeIdOf(laneSeed), genesis: entryHash(genesis) };
     const addressOf = (entry: Entry): ScopeRef => entry === creator ? directory : otherLane;

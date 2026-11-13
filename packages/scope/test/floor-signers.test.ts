@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import type { Entry, FloorInput } from "@generalbusiness/dap-contract";
 import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
-import { isEntryOf } from "@generalbusiness/dap-derive";
+import { isEntryBodyOf } from "@generalbusiness/dap-derive";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { Scope, type Checkpointed } from "../src/core.ts";
 import { production } from "../src/ports.ts";
@@ -25,7 +25,7 @@ async function bookkeeping(scope: Platform) {
       const own = use.fact.at.scope === scope.name ? store.stored(use.fact.seq) : null;
       const held = own ?? store.retained("entry", use.content);
       const entry = held ? JSON.parse(held.bytes) as Entry : null;
-      return entry && isEntryOf(entry, use.fact) ? entry : null;
+      return entry && isEntryBodyOf(entry, use.fact) ? entry : null;
     });
     await chains.update();
     return { discoveries: chains.discoveries(), anchors: store.localSigners.floorAnchors(),

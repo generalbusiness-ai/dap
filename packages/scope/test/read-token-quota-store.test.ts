@@ -18,7 +18,7 @@ const destination = branch.at;
 function opening(seq: number, at = destination, member: MemberRef = rita.member, hours = 1, time: Timestamp = t(0), who: Actor = rita): Entry {
   const actor = { ...who, member };
   const signed = signIntent({ v: 1, to: at, actor: actor.key, kind: "read-token", on: 0, expected: { on: 1 }, fields: { hours }, idempotencyKey: `TEST-read-${seq}`, notAfter: timeOf(Math.min(LAST_MS, timeMs(time)! + 60_000)) }, actor.secret);
-  return { v: 1, at, seq, prev: d("1"), time, clamped: false, epoch: 0,
+  return { v: 1, genesis: at.genesis, seq, prev: d("1"), time, clamped: false, epoch: 0,
     input: { type: "act", signed, authority: [grantOf(actor, at, ["destination.read-token"])], presented: {} },
     uses: [], prepared: [], effects: [{ effect: "operation", k: 0, owner: "platform:destination@2", kind: "mint-read", attempts: 1 }], sends: [] };
 }

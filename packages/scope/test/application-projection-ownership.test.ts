@@ -7,6 +7,7 @@ import { canonicalize, entryHash, newGenesisNonce, scopeIdOf, textDigest } from 
 import { created, directory } from "@generalbusiness/dap-derive/testing";
 import { APPLICATION_OWNERSHIP_BOUNDS as B, projectionScopeOwned } from "../src/applications/projection-ownership.ts";
 import { readNativeBirth, type NativeBirth } from "../src/native-birth.ts";
+import { PROOF_BYTE_BOUNDS } from "../src/proof-bytes.ts";
 import type { PreparedRead } from "../src/read-preparation.ts";
 import { PreparationFlights, PREPARATION_MILLISECONDS } from "../src/preparation-flight.ts";
 const fixture = created(), original = fixture.entries[0]!.entry, digest = fixture.definition.digest;
@@ -30,7 +31,7 @@ function node(parent: ScopeRef, tag: number, oversized = false, parentKind: Scop
 // declared definitions cannot turn an incomplete chain into an owned scope.
 test("projection ancestry accepts the complete 16-parent chain and refuses before a seventeenth or oversized birth", async () => {
   const root = node(directory, 1), nodes = [root], calls: { at: ScopeRef; ms: number; most: number | undefined }[] = [];
-  expect(readNativeBirth(root.birth, root.at)).toEqual(root.birth);
+  expect(readNativeBirth(root.birth, root.at, PROOF_BYTE_BOUNDS.body, () => {})?.birth).toEqual(root.birth);
   for (let n = 1; n <= B.ancestors + 1; n++) nodes.push(node(nodes.at(-1)!.at, n + 1));
   const source = { read: async (at: ScopeRef, ms: number, most?: number) => {
     calls.push({ at, ms, most }); return nodes.find(node => canonicalize(node.at) === canonicalize(at))?.birth ?? null;
@@ -42,7 +43,7 @@ test("projection ancestry accepts the complete 16-parent chain and refuses befor
   expect(await projectionScopeOwned(nodes[B.ancestors + 1]!.frame, root.at, digest, directory, source, run)).toBe("too-large");
   expect(calls).toHaveLength(B.ancestors); expect(calls.some(call => canonicalize(call.at) === canonicalize(root.at))).toBe(false);
   const hugeRoot = node(directory, 90, true), child = node(hugeRoot.at, 91);
-  expect(readNativeBirth(hugeRoot.birth, hugeRoot.at)).toEqual(hugeRoot.birth); // valid at the general protocol's larger cap
+  expect(readNativeBirth(hugeRoot.birth, hugeRoot.at, PROOF_BYTE_BOUNDS.body, () => {})?.birth).toEqual(hugeRoot.birth); // valid at the general protocol's larger cap
   expect(await projectionScopeOwned(child.frame, hugeRoot.at, digest, directory, { read: async () => hugeRoot.birth }, run)).toBe("unowned");
   expect(B.totalBirthBytes).toBe(B.ancestors * B.birthBytes); // derived bound, not a second unreachable admission guard
 });

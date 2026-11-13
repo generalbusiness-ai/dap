@@ -5,6 +5,7 @@ import type { SessionClaims } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { OWN_AGENT_COHORT } from "@generalbusiness/dap-platform";
 import { SqliteStore } from "../src/sqlite.ts";
+import { isRoomRetiredStop } from "../src/room-retired.ts";
 import { mintSession, readerOf, sessionsOf } from "../src/sessions.ts";
 import { sessionReferenceReply } from "../src/session-reference.ts";
 import type { QueryVisibility } from "../src/session-preparation.ts";
@@ -84,7 +85,7 @@ test.each(sessionCohorts)("native %s session composition and directory RPC stay 
       Object.assign(SqliteStore.prototype, { scope: forbidden, stored: forbidden, retained: forbidden, page: forbidden, parked: forbidden });
       try {
         let answer: string | null = null;
-        try { answer = (instance as PlatformScope).sessionReference(request); }
+        try { const got = (instance as PlatformScope).sessionReference(request); if (isRoomRetiredStop(got)) throw new Error("the test scope answered a retired stop"); answer = got; }
         catch (error) { if (!(error instanceof Error) || error.message !== "legacy reader/activation forbidden") throw error; }
         return { answer, unchanged: snapshot() === before, forbiddenCalls };
       }
