@@ -13,7 +13,7 @@ import { viewToolName } from "../../src/views/names.ts";
 import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/dap-platform/application-v2";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
 import { fixedSigner } from "../fixtures.ts";
-import type { CustodyStore } from "../../src/custody.ts";
+import type { CustodyStore } from "@generalbusiness/dap-client";
 
 const fields = { approvals: 0, ownerMayReview: false, checks: [], labels: [], extents: firstExtents({ approvals: 0, checks: [] }) };
 /** Test-only gates hold actual service reads after their fixture credentials

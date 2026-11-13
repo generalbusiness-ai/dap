@@ -6,19 +6,18 @@ import { describe, expect, test } from "vitest";
 import type { Answer, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { signedIntent } from "@generalbusiness/dap-client";
-import { Custody, CustodyError, Lost, RECORD_BYTES, identityId, meaningOf, memoryStore, UNRESOLVED_MOST, type CustodyRecord, type Envelope } from "../src/index.ts";
+import { Custody, CustodyError, Lost, RECORD_BYTES, identityId, meaningOf, memoryStore, UNRESOLVED_MOST, type CustodyMetrics, type Phase, type CustodyRecord, type Envelope } from "../src/index.ts";
 import { blockedBy, fileStore, releaseLock, takeLock } from "../src/node.ts";
-import { McpMetrics, type McpMetricPoint } from "../src/metrics.ts";
-import { T0, accepted, build, identity, lane, notAfter, receiptOf, refused, resource, signer } from "./support/custody.ts";
+import { T0, accepted, build, goldenRecord, identity, lane, notAfter, receiptOf, refused, resource, signer } from "./support/custody.ts";
 
 // The scope's answers here are scripted: `deliver` and `settle` are STAND-INs for a scope's submit and settlement. What a real
 // scope answers to a replay is shown in room.scope.test.ts; these cases show what the server keeps and sends.
 
-function setup(bounds?: Parameters<typeof fileStore>[1]) {
+function setup(bounds?: Parameters<typeof fileStore>[1], metrics?: CustodyMetrics) {
   const dir = mkdtempSync(join(tmpdir(), "mcp-custody-"));
   let now = T0;
   const clock = { at: () => now, advance: (ms: number) => { now += ms; } };
-  const make = () => new Custody(fileStore(dir, bounds, clock.at), () => timeOf(clock.at()));
+  const make = () => new Custody(fileStore(dir, bounds, clock.at), () => timeOf(clock.at()), metrics);
   return { dir, clock, make, custody: make() };
 }
 
@@ -48,14 +47,14 @@ function holdings(results: readonly { out: string }[]): { refused: number; insid
 }
 const overlapping = (inside: readonly [number, number][]): number => inside.filter((h, i) => i > 0 && h[0] < inside[i - 1]![1]).length;
 
-describe("custody keeps the exact envelope under the caller's key", () => {
+describe("custody keeps the exact envelope under the caller's key", { timeout: 60_000 }, () => {
   // Invariant: after a lost first reply, settle with the caller's key finds the receipt of the exact envelope, also after the
   // intent's notAfter has passed; nothing is signed again.
   test("a lost reply, then settle finds the receipt, also after notAfter", async () => {
-    const { custody, clock } = setup();
-    const points: McpMetricPoint[] = [], metrics = new McpMetrics({ report: p => { points.push(p); } });
+    const points: Phase[] = [];
+    const { custody, clock } = setup(undefined, { transition: (_from, to) => { points.push(to); }, stepTransition: () => {} });
     const sent: SignedIntent[] = [];
-    const lost = await metrics.call("act", () => custody.send(identity("k1"), meaningOf("m"), build("k1"), async (e) => { sent.push(e.signed); throw new Lost(); }, { notAfter }), () => ({ end: "unavailable", bytes: 0 }));
+    const lost = await custody.send(identity("k1"), meaningOf("m"), build("k1"), async (e) => { sent.push(e.signed); throw new Lost(); }, { notAfter });
     expect("lost" in lost && lost.record.phase).toBe("unknown");
     clock.advance(20 * 60_000);
     // A real file-store write is held back once. An observed settlement
@@ -63,15 +62,41 @@ describe("custody keeps the exact envelope under the caller's key", () => {
     const write = custody.store.write;
     custody.store.write = async (id, record, options) => { if (record.phase === "accepted") throw new Error("scripted storage failure"); return write(id, record, options); };
     try {
-      await expect(metrics.call("settle", () => custody.settle(identity("k1"), async e => receiptOf(e.signed, 3)), () => ({ end: "ok", bytes: 0 }))).rejects.toMatchObject({ why: { held: "unreadable" } });
+      await expect(custody.settle(identity("k1"), async e => receiptOf(e.signed, 3))).rejects.toMatchObject({ why: { held: "unreadable" } });
     } finally { custody.store.write = write; }
     expect((await custody.store.read(identityId(identity("k1"))))?.phase).toBe("unknown");
-    expect(points.filter(p => p.blobs[0] === "custody").map(p => p.blobs[5])).toEqual(["prepared", "sent", "unknown"]);
-    const settled = await metrics.call("settle", () => custody.settle(identity("k1"), async (e) => receiptOf(e.signed, 3)), () => ({ end: "ok", bytes: 0 }));
+    expect(points).toEqual(["prepared", "sent", "unknown"]);
+    const settled = await custody.settle(identity("k1"), async (e) => receiptOf(e.signed, 3));
     expect([settled!.record.phase, settled!.receipt?.fact.seq]).toEqual(["accepted", 3]);
     expect(settled!.record.envelope.signed).toEqual(sent[0]);
     expect(sent[0]!.intent.idempotencyKey).toBe("k1");
-    expect(points.filter(p => p.blobs[0] === "custody").map(p => p.blobs[5])).toEqual(["prepared", "sent", "unknown", "accepted"]);
+    expect(points).toEqual(["prepared", "sent", "unknown", "accepted"]);
+
+    // A throwing observation port cannot replace a completed record or step write.
+    // These are predecessor bytes, not an expected value serialized by this implementation.
+    const golden = readFileSync(new URL("./fixtures/custody-record-v1.json.txt", import.meta.url), "utf8");
+    let transitions = 0, stepTransitions = 0;
+    const memoryRun = goldenRecord(() => memoryStore(), {
+      transition: () => { transitions++; throw new Error("TEST observation failure"); },
+      stepTransition: () => { stepTransitions++; throw new Error("TEST observation failure"); },
+    });
+    await expect(memoryRun).resolves.toMatchObject({ builds: 1, steps: 1, sends: 1, settlements: 1 });
+    const memory = await memoryRun;
+    expect([transitions > 0, stepTransitions]).toEqual([true, 2]);
+    expect(memory.store.records.get(memory.id)).toBe(golden);
+    expect(await new Custody(memory.store, () => timeOf(T0 + 3000)).find(memory.who)).toEqual(JSON.parse(golden));
+    const dir = mkdtempSync(join(tmpdir(), "client-custody-golden-"));
+    const file = await goldenRecord(now => fileStore(dir, { terminalMost: 1024, ageDays: 30, archiveBytes: 67108864 }, now));
+    expect(readFileSync(join(dir, "records", `${file.id}.json`), "utf8")).toBe(golden);
+    const reopened = fileStore(dir, undefined, () => T0 + 3000);
+    expect(await reopened.read(file.id)).toEqual(JSON.parse(golden));
+    for (const scene of [memory, file]) {
+      expect([scene.builds, scene.steps, scene.sends, scene.settlements]).toEqual([1, 1, 1, 1]);
+      expect("lost" in scene.lost).toBe(true);
+      expect(scene.copies.map(value => canonicalize(value))).toEqual(Array(3).fill(canonicalize(scene.original.envelope.signed)));
+      expect(scene.record).toEqual(JSON.parse(golden));
+      expect([scene.record?.phase, Object.values(scene.record!.steps)[0]?.phase, scene.record?.outcomes.map(value => Object.keys(value).filter(key => key !== "at" && key !== "attempt"))]).toEqual(["accepted", "answered", [["lost"], ["settled"]]]);
+    }
   });
 
   // Invariant: an unavailable resend and a not-found settlement resolve nothing; the record stays unknown and is never evicted.

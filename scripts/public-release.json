@@ -115,7 +115,9 @@
         "@generalbusiness/dap-bytes": "coordinated",
         "@generalbusiness/dap-contract": "coordinated",
         "@generalbusiness/dap-platform": "coordinated"
-      }
+      },
+      "excludedSourceExports": { "./node": "./src/node.ts" },
+      "excludedInputs": ["src/node.ts"]
     },
     {
       "dir": "replay",

@@ -17,7 +17,5 @@
     "test/**/*.scope.test.ts",
     "test/support/*.ts",
     "../scope/test/env.d.ts"
-  ],
-  // The custody fixtures run in Node, with the file store and child processes.
-  "exclude": ["test/support/custody.ts", "test/support/custody-child.ts"]
+  ]
 }

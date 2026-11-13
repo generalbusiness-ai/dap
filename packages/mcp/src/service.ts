@@ -23,7 +23,7 @@ import { TransportError, ScopeHandle, ApplicationPackageError, actBodyText, orig
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
-import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "./custody.ts";
+import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "@generalbusiness/dap-client";
 import { effectiveFields, expectedOf, finalStates, viaLeft } from "@generalbusiness/dap-client";
 import { describeAct } from "./describe.ts";
 import { grantAction, onOf, type ActLike, type DefinitionLike } from "@generalbusiness/dap-client";
@@ -35,7 +35,7 @@ import { ReadSessions, Reads } from "./reads.ts";
 import { Recent } from "./recent.ts";
 import { Unshaped, capturedExpected, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces } from "./shape.ts";
 import { WORDS, type Words } from "./words.ts";
-import { McpMetrics, observedFetch, type McpMetricOptions } from "./metrics.ts";
+import { custodyMetrics, McpMetrics, observedFetch, type McpMetricOptions } from "./metrics.ts";
 import { ViewResources, type PresentationPackage } from "./views/resources.ts";
 import { ApplicationReads, type ApplicationReadCatalogue } from "./read-tools.ts";
 import { PackageResources, type PackageBrief } from "./package-brief.ts";
@@ -142,8 +142,8 @@ interface Snapshot {
 }
 
 type Preparing = { resource: unknown; capability: string; step: string };
-type PreparedStep = { step: { resource: string; capability: string; step: string; phase: import("./custody.ts").Step["phase"]; answer: ActResult | null }; act: { phase: import("./custody.ts").Phase; intent: Digest }; sentence: string; next: string };
-type CustodyReport = { answer: Answer["answer"] | "not-found" | "unknown" | "settled"; sentence: string; next: string; phase?: import("./custody.ts").Phase; reason?: string; name?: string; checkAfter?: string; fact?: Receipt["fact"] };
+type PreparedStep = { step: { resource: string; capability: string; step: string; phase: import("@generalbusiness/dap-client").Step["phase"]; answer: ActResult | null }; act: { phase: import("@generalbusiness/dap-client").Phase; intent: Digest }; sentence: string; next: string };
+type CustodyReport = { answer: Answer["answer"] | "not-found" | "unknown" | "settled"; sentence: string; next: string; phase?: import("@generalbusiness/dap-client").Phase; reason?: string; name?: string; checkAfter?: string; fact?: Receipt["fact"] };
 type Args = Record<string, unknown>;
 type Copies = ReturnType<typeof originalsAt>;
 type SentBefore = { earlier: boolean; stepped: boolean };
@@ -265,7 +265,7 @@ export class McpService {
     const now = port.now ?? Date.now;
     this.#service = port.service;
     this.#reads = this.#readsOf(port.service);
-    this.custody = new Custody(port.custody, () => timeOf(now()));
+    this.custody = new Custody(port.custody, () => timeOf(now()), custodyMetrics);
     if (port.views && port.declaredViews) throw Error("Choose one view source for this MCP service.");
     const item = port.declaredViews?.item;
     if (item !== undefined && (!Number.isSafeInteger(item) || item < 0 || Object.is(item, -0))) throw Error("Invalid native application install item.");
@@ -513,7 +513,8 @@ export class McpService {
   #stoppedEarly<T extends Record<string, unknown>>(result: CallOutcome<T>, given: Args): Promise<CallOutcome<T>> | CallOutcome<T>;
   #stoppedEarly(result: CallResult, given: Args): Promise<CallResult> | CallResult;
   #stoppedEarly(result: CallResult, given: Args): Promise<CallResult> | CallResult {
-    const error = result.isError ? result.structuredContent["error"] : null;
+    // Every result that sets isError is a Failure, so its data is FindingData.
+    const error = result.isError ? dataOf(result as Failure).error : null;
     return error === "shape" || error === "stale-descriptor" || error === "target" || error === "commons-missing" || error === "read" || error === "unknown-tool" ? this.#stated(result, given) : result;
   }
 

@@ -39,7 +39,7 @@
  */
 
 import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
-import { CustodyError, OUTCOMES_INLINE, RECORD_BYTES, TERMINAL, UNRESOLVED_MOST, type CustodyRecord, type CustodyStore, type Outcome } from "./custody.ts";
+import { CustodyError, OUTCOMES_INLINE, RECORD_BYTES, TERMINAL, UNRESOLVED_MOST, type CustodyRecord, type CustodyStore, type Outcome } from "@generalbusiness/dap-client";
 
 export type SqlValue = string | number | null | ArrayBuffer | Uint8Array;
 /** What this store needs of a Durable Object's SQLite storage: `ctx.storage.sql.exec` and `ctx.storage.transactionSync`. */

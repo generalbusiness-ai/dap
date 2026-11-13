@@ -151,7 +151,7 @@ export function copiedDependency(sourceRoot, outputRoot, name, expected, lock) {
 }
 export function publishManifest(spec, source, selected) {
   const excluded = spec.excludedSourceExports ?? {};
-  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "platform" ? { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" } : spec.dir === "replay" ? { "./git": "./src/git.ts" } : spec.dir === "git" ? GIT_SOURCE_EXPORTS : {})) refusal("source-export-exclusions");
+  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "platform" ? { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" } : spec.dir === "replay" ? { "./git": "./src/git.ts" } : spec.dir === "git" ? GIT_SOURCE_EXPORTS : spec.dir === "client" ? { "./node": "./src/node.ts" } : {})) refusal("source-export-exclusions");
   if (spec.dir === "git" && JSON.stringify(spec.exports) !== JSON.stringify({ "./tree-proof": "src/tree-proof", "./checkout-types": "src/checkout-types" })) refusal("git-public-exports");
   const excludedDependencies = spec.excludedSourceDependencies ?? {};
   if (JSON.stringify(excludedDependencies) !== JSON.stringify(spec.dir === "replay" ? { "@generalbusiness/dap-platform": "coordinated" } : {})) refusal("source-dependency-exclusions");
@@ -177,10 +177,10 @@ export function publishManifest(spec, source, selected) {
     ...(Object.keys(spec.dependencies).length ? { dependencies: Object.fromEntries(Object.entries(spec.dependencies).map(([name, pin]) => [name, pin === "coordinated" ? selected : pin])) } : {}),
   };
 }
-/** Omit the exact Replay adapters and everything outside Git's pure closure. */
+/** Omit the exact source-only adapters and everything outside Git's pure closure. */
 export function productionInputs(spec, tracked) {
   const excluded = spec.excludedInputs ?? [];
-  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "replay" ? ["src/bin.ts", "src/git.ts"] : [])) refusal("source-input-exclusions");
+  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "replay" ? ["src/bin.ts", "src/git.ts"] : spec.dir === "client" ? ["src/node.ts"] : [])) refusal("source-input-exclusions");
   const included = spec.includedInputs ?? [];
   if (JSON.stringify(included) !== JSON.stringify(spec.dir === "git" ? PUBLIC_GIT_INPUTS : [])) refusal("source-input-inclusions");
   if (spec.dir === "git") {
@@ -225,6 +225,7 @@ export function outputClosure(stage, spec, selected, assets = null) {
   for (const row of rows) {
     if (spec.dir === "git" && row.path.startsWith("dist/") && !PUBLIC_GIT_OUTPUTS.has(row.path)) refusal("excluded-output");
     if (spec.dir === "replay" && /^dist\/src\/(?:bin|git)\.(?:js|d\.ts)$/.test(row.path)) refusal("excluded-output");
+    if (spec.dir === "client" && /^dist\/src\/node\.(?:js|d\.ts)$/.test(row.path)) refusal("excluded-output");
     if (assets?.files.some(file => file.path === row.path)) continue;
     if (!["package.json", "README.md", "LICENSE", "NOTICE"].includes(row.path) && (!row.path.startsWith("dist/") || !/\.(?:js|d\.ts)$/.test(row.path))) refusal("unplanned-output");
     if (row.path.startsWith("dist/test/") && !(spec.dir === "derive" && PUBLIC_TESTING_OUTPUTS.has(row.path))) refusal("unplanned-testing-output");
