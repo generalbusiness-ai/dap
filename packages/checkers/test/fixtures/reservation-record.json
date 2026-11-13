@@ -17,12 +17,7 @@
       "seconds": 60
     },
     "name": "text",
-    "steps": [
-      [
-        "check",
-        "text"
-      ]
-    ]
+    "steps": [["check", "text"]]
   },
   "configurationDigest": "sha256:286318d5dddf912f8dc03f82b26204699de8f9b6deb8cd154f4bc671f8d3ab6c",
   "destinationHead": {
@@ -704,9 +699,7 @@
             "effect": "value",
             "item": 8,
             "slot": "requiredChecks",
-            "value": [
-              "text"
-            ]
+            "value": ["text"]
           },
           {
             "effect": "value",
@@ -887,9 +880,7 @@
                   "hash": "sha256:867a683794fa86b9a1cd4adde1bfdd929fc8b24f1342d46264c45e224c57be95",
                   "seq": 7
                 },
-                "holders": [
-                  "@rita"
-                ],
+                "holders": ["@rita"],
                 "of": {
                   "genesis": "sha256:9b12ef4daeb1d86b432c53b4c0950b7e5647a6f294e42b46b87e0935362a061d",
                   "scope": "sc_j6tesu7q4lj4a6toihtmk5vbn6saxavnjrwzgwrjvczlwaejl7ra"
