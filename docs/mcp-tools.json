@@ -1509,7 +1509,7 @@
     {
       "name": "change.link-own",
       "title": "link-own (change)",
-      "description": "link-own: opens a link; needs change.edit-own, which your role (admin) holds. Fields: how (required): one of keyword, manual. issue (required): a reference to a lane scope, as { scope, inc, kind }. Guards: no merge is intended, committed or unknown (merge-in-progress); the proposal is draft, open or closed; no link is set where the link's issue equals the act's issue (already-linked); you are the proposal's author.",
+      "description": "link-own: opens a link; needs change.edit-own, which your role (admin) holds. Fields: how (required): one of keyword, manual. issue (required): a reference to a lane scope, as { scope, genesis }. Guards: no merge is intended, committed or unknown (merge-in-progress); the proposal is draft, open or closed; no link is set where the link's issue equals the act's issue (already-linked); you are the proposal's author.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1545,13 +1545,17 @@
               },
               "issue": {
                 "type": "object",
-                "required": ["scope", "inc", "kind"],
+                "required": ["scope", "genesis"],
                 "properties": {
-                  "kind": {
-                    "const": "lane"
+                  "scope": {
+                    "type": "string"
+                  },
+                  "genesis": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
                   }
                 },
-                "description": "a reference to a lane scope, as { scope, inc, kind }"
+                "description": "a reference to a lane scope, as { scope, genesis }"
               }
             },
             "required": ["how", "issue"],
@@ -2082,13 +2086,17 @@
               },
               "lane": {
                 "type": "object",
-                "required": ["scope", "inc", "kind"],
+                "required": ["scope", "genesis"],
                 "properties": {
-                  "kind": {
-                    "const": "lane"
+                  "scope": {
+                    "type": "string"
+                  },
+                  "genesis": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
                   }
                 },
-                "description": "a reference to a lane scope, as { scope, inc, kind }"
+                "description": "a reference to a lane scope, as { scope, genesis }"
               },
               "plan": {
                 "type": "object",
@@ -2150,14 +2158,12 @@
                       "scope": {
                         "type": "string"
                       },
-                      "inc": {
-                        "type": "string"
-                      },
-                      "kind": {
-                        "type": "string"
+                      "genesis": {
+                        "type": "string",
+                        "pattern": "^sha256:[0-9a-f]{64}$"
                       }
                     },
-                    "required": ["scope", "inc", "kind"],
+                    "required": ["scope", "genesis"],
                     "additionalProperties": false
                   },
                   "seq": {
@@ -3204,7 +3210,7 @@
         "dap/binding": {
           "definition": "platform:inbox",
           "kind": "dismiss",
-          "declaration": "sha256:b3a45cb87c52f0efed2e48879bf67fe76f3f7406cf381c93a8fff4dddee1d744",
+          "declaration": "sha256:cf08564025b22700121e94e27459539d1184fa5b9ebef64c497300333f2ffa1d",
           "digests": ["platform:inbox@1"]
         }
       }
@@ -3314,7 +3320,7 @@
         "dap/binding": {
           "definition": "platform:inbox",
           "kind": "mark-read",
-          "declaration": "sha256:c965d74a07ee30aac8bac052016138232965d3dc43402ca2b23861c1f59c1f80",
+          "declaration": "sha256:82bffd7b56fd83e5bb947ad8cd3f5ec9c9b688001b4b56fec21a6c695886d404",
           "digests": ["platform:inbox@1"]
         }
       }
@@ -7700,7 +7706,7 @@
     {
       "name": "task.create",
       "title": "open-task (platform:directory)",
-      "description": "open-task: opens a task; needs task.control, which your role (admin) holds. Fields: worker (required): a member, as @handle. controller (required): a member, as @handle. lane (required): a reference to a lane scope, as { scope, inc, kind }. Guards: the worker is an active member with an active key (worker-not-active).",
+      "description": "open-task: opens a task; needs task.control, which your role (admin) holds. Fields: worker (required): a member, as @handle. controller (required): a member, as @handle. lane (required): a reference to a lane scope, as { scope, genesis }. Guards: the worker is an active member with an active key (worker-not-active).",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -7758,13 +7764,17 @@
               },
               "lane": {
                 "type": "object",
-                "required": ["scope", "inc", "kind"],
+                "required": ["scope", "genesis"],
                 "properties": {
-                  "kind": {
-                    "const": "lane"
+                  "scope": {
+                    "type": "string"
+                  },
+                  "genesis": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
                   }
                 },
-                "description": "a reference to a lane scope, as { scope, inc, kind }"
+                "description": "a reference to a lane scope, as { scope, genesis }"
               }
             },
             "required": ["worker", "controller", "lane"],
