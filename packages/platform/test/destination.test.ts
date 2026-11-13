@@ -174,7 +174,9 @@ test("each rule of platform:destination@2 at an act or a handler, as a plain fun
     ["37: a publication in any other state: nothing", "reopen-publish", [given(ready, tell, {}, { on: publication("published") })], []],
     // Row b: each record of the `collect` list `links`, up to its number. The two other lists have written types now.
     ["b: links", "collect-list", type("links", [link]), true],
-    ["b: a link to a scope that is no lane", "collect-list", type("links", [{ ...link, issue: ready.bureau.at }]), false],
+    // A scope reference holds no kind since the identifier cutover: the place fixes the kind (notes/implementation/cd-dropped-kind-checks.md).
+    ["b: a link to a scope of another kind is a well-formed reference", "collect-list", type("links", [{ ...link, issue: ready.bureau.at }]), true],
+    ["b: a link whose issue is no scope reference", "collect-list", type("links", [{ ...link, issue: ready.bureau.at.scope }]), false],
     ["b: one link more than the lane holds", "collect-list", type("links", Array(COLLECT_MOST.links + 1).fill(link)), false],
     ["b: a link with a member that the lane does not send", "collect-list", type("links", [{ ...link, label: "x" }]), false],
     ["b: a value that is no list", "collect-list", type("links", link), false],
