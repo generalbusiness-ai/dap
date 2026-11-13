@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8c6b894308cb627a5a74a0cdae21c6816b280dde","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-12-mcp-boundary-nf2.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:950471582ec10fcbe8c51b63878c284629a86979","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/describe.test.ts."}
