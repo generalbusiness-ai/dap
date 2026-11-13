@@ -14,7 +14,7 @@ import { stageOriginOf } from "../src/stage-origin.ts";
 test("successor signatures bind the full actual job and semantic binding while legacy fields stay unchanged", async () => {
   const w = world(), read = originOf(w.notice, { entry: w.job, manifest: w.manifest, pinned: digest("a"), activated: { name: "change", state: "active" } });
   if ("not" in read) return expect.fail("The explicit stand-in job must be readable");
-  const signer = newKey(), membership = { ...w.fact.at, kind: "membership" as const }, rules = { ...w.fact.at, kind: "rules" as const };
+  const signer = newKey(), membership = { ...w.fact.at }, rules = { ...w.fact.at };
   const evidence: EvidenceBinding = { v: 1, source: "room", stage: "work", checker: { membership, member: "@checker" },
     roomService: { checker: { membership, member: "@checker" }, key: signer.signer.key }, policyGeneration: { rules, seq: 1 }, serviceGeneration: { rules, seq: 1 },
     auditOf: null, subject: { kind: "work", source: w.fact } };
