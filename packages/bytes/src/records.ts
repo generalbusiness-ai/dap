@@ -76,6 +76,26 @@ export const REFUSAL_REASONS: Record<RefusalReason, true> = {
   "unknown-act": true, "bad-field": true, "no-item": true, final: true, "fact-mismatch": true, unauthorized: true, "guard-failed": true, "capability-refused": true, "slot-full": true, "type-full": true, "entry-too-large": true, "send-unresolved": true,
   "unknown-message": true, "wrong-pin": true, "unsupported-definition": true, "application-revoked": true, limit: true, "bad-input": true, late: true,
 };
+/**
+ * What a refusal tells a client about the same signed bytes at a later head.
+ * - `never`: every later head refuses them, so they never take effect.
+ * - `head`: the reason speaks for the head that judged them. A later head can admit them until `notAfter`.
+ * - `protocol`: the client and the scope disagree on the definition or the address. The client stops writing to the scope.
+ */
+export type RefusalClass = "never" | "head" | "protocol";
+/**
+ * The class of each refusal reason. A later copy of a delivery refused `late`
+ * answers `repeat` of the refused decision. `wrong-genesis` and
+ * `genesis-conflict` are not refusal reasons, so the table has no row for them.
+ */
+export const REFUSAL_CLASSES: Record<RefusalReason, RefusalClass> = {
+  archived: "never", "floor-ahead": "never", "floor-back": "never", "floor-keep": "never", "scope-refused": "never", late: "never",
+  misaddressed: "protocol", "unknown-act": "protocol", "unknown-message": "protocol", "wrong-pin": "protocol", "unsupported-definition": "protocol",
+  "floor-receipt": "head", "floor-step": "head", "floor-recent": "head", "floor-kept": "head", "revision-moved": "head", alias: "head", "duplicate-relation": "head",
+  "required-unset": "head", "scope-full": "head", "bad-intent": "head", expired: "head", "bad-field": "head", "no-item": "head", final: "head",
+  "fact-mismatch": "head", unauthorized: "head", "guard-failed": "head", "capability-refused": "head", "slot-full": "head", "type-full": "head",
+  "entry-too-large": "head", "send-unresolved": "head", "application-revoked": "head", limit: "head", "bad-input": "head",
+};
 export const READ_REFUSALS: Record<ReadRefusal, true> = {
   behind: true,
   archived: true,
