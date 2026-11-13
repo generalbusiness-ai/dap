@@ -3,7 +3,7 @@ import type { GenesisEntry } from "@generalbusiness/dap-contract";
 import { definitionDigest, digestBytes, isEntryOf, isPlatformDefinition, admitSequenceGenesis, canonicalize, entryHash, factRefOf, utf8 } from "@generalbusiness/dap-bytes";
 import { sourceName } from "../src/publishing-provenance.ts";
 import { partitionApplicationPublicationOrigin, partitionPublishingLaneOrigin, partitionPublicationOrigin, partitionSourceName, partitionCreationPolicy, partitionDeclaredCreationPolicy, partitionReceiverPolicy, type PartitionNativeFrame } from "../src/partition-provenance.ts";
-import { small } from "@generalbusiness/dap-derive/testing";
+import { genesisOnly, small } from "@generalbusiness/dap-derive/testing";
 import { scriptedPartitionOrigin } from "./fixtures-entry.ts";
 
 const raw = (sample: ReturnType<typeof scriptedPartitionOrigin>): PartitionNativeFrame[] => sample.frames.map(copy => {
@@ -21,7 +21,7 @@ test("new direct factory proof binds all eight births while the legacy producer 
   expect(partitionApplicationPublicationOrigin(application.from, application.root, application.destination, application.frames)).toBeNull();
   expect(partitionPublicationOrigin(application.from, application.root, application.destination, "application", raw(application))).toBe(true);
   expect(partitionSourceName(change.definition, "change", change.from.at, raw(change))).toBe("change");
-  expect(sourceName(change.definition, "change", change.frames)).toBe("declared:change");
+  expect(sourceName(change.definition, "change", change.frames.map(copy => ({ ...copy, bytes: canonicalize(copy.entry) })))).toBe("declared:change");
   const wrong = change.definition;
   expect(partitionPublicationOrigin(change.from, { ...change.root, genesis: wrong }, change.destination, "change", raw(change))).toBeNull();
   expect(partitionPublicationOrigin(change.from, change.root, { ...change.destination, genesis: wrong }, "change", raw(change))).toBe(false);
@@ -42,7 +42,8 @@ test("new direct factory proof binds all eight births while the legacy producer 
   expect(partitionReceiverPolicy(change.partition, receiverFrames)?.mode).toBe("partition-v1");
   const part = receiverFrames.find(row => row.fact.at.scope === change.partition.scope)!;
   const register = receiverFrames.find(row => row.fact.at.scope === change.register.scope)!;
-  if (part.entry.input.type !== "genesis") return expect.fail("scripted Partition receiver is not genesis");
+  const partEntry = genesisOnly(part.entry), partInput = partEntry.input;
+  if (partInput.source === null) return expect.fail("scripted Partition receiver has no creation source");
   const registerContent = digestBytes(utf8(canonicalize(register.entry)));
   const matchingUse = { fact: register.fact, content: registerContent, kind: "register" as const };
   const unheld = { ...register.fact.at, genesis: change.definition };
@@ -53,8 +54,8 @@ test("new direct factory proof binds all eight births while the legacy producer 
     { sourceKind: "directory", uses: [{ ...matchingUse, kind: "directory" }], admitted: false },
   ] as const;
   for (const example of examples) {
-    const receiving: GenesisEntry = { ...part.entry, seq: 0, prev: null,
-      input: { ...part.entry.input, sourceKind: example.sourceKind }, uses: example.uses };
+    const receiving: GenesisEntry = { ...partEntry, uses: example.uses,
+      input: { ...partInput, sourceKind: example.sourceKind } };
     const at = { scope: part.fact.at.scope, genesis: entryHash(receiving) }, bytes = canonicalize(receiving);
     const sequence = admitSequenceGenesis(bytes, at, utf8(bytes).length);
     if (!sequence) return expect.fail("recorded-kind example failed self birth admission");
@@ -69,13 +70,13 @@ test("new direct factory proof binds all eight births while the legacy producer 
   }
   // Each entry below has one well-shaped recorded alias. Only their shared
   // operation reveals disagreement about the same unheld sequence.
-  const opening = receiverFrames.find(row => canonicalize(row.fact) === canonicalize(part.entry.input.source))!;
+  const opening = receiverFrames.find(row => canonicalize(row.fact) === canonicalize(partInput.source))!;
   const unheldUse = { ...matchingUse, fact: { ...register.fact, at: unheld } };
   for (const kind of ["register", "directory"] as const) {
     const changedOpening = { ...opening.entry, uses: [{ ...unheldUse, kind }] };
     const openingFact = factRefOf(changedOpening, opening.fact.at);
-    const receiving: GenesisEntry = { ...part.entry, seq: 0, prev: null,
-      input: { ...part.entry.input, source: openingFact }, uses: [unheldUse] };
+    const receiving: GenesisEntry = { ...partEntry, uses: [unheldUse],
+      input: { ...partInput, source: openingFact } };
     const at = { scope: part.fact.at.scope, genesis: entryHash(receiving) }, bytes = canonicalize(receiving);
     const sequence = admitSequenceGenesis(bytes, at, utf8(bytes).length);
     if (!sequence) return expect.fail("cross-entry alias example failed self birth admission");
@@ -108,8 +109,9 @@ test("concern identity proves each exact parent's pin and inherited room under o
   const direct = scriptedPartitionOrigin();
   for (const [sample, sourceKind, name] of [[nested, "directory", "issue"], [direct, "lane", "change"]] as const) {
     const originals = raw(sample), leaf = originals[0]!;
-    if (leaf.entry.input.type !== "genesis") return expect.fail("scripted leaf is not genesis");
-    const contradicted = { ...sample.genesis, input: { ...sample.genesis.input, sourceKind } };
+    const leafGenesis = sample.genesis, leafInput = leafGenesis.input;
+    if (leaf.entry.input.type !== "genesis" || leafInput.source === null) return expect.fail("scripted leaf is not a sourced genesis");
+    const contradicted: GenesisEntry = { ...leafGenesis, input: { ...leafInput, sourceKind } };
     const at = { scope: leaf.fact.at.scope, genesis: entryHash(contradicted) }, bytes = canonicalize(contradicted);
     const sequence = admitSequenceGenesis(bytes, at, utf8(bytes).length);
     if (!sequence) return expect.fail("contradictory recorded kind did not retain canonical birth shape");
