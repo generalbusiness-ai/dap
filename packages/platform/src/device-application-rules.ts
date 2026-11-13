@@ -1,6 +1,7 @@
 import { REFERENCE_INSTALL_REFUSAL, ReferenceInstallRefusal, requireReferenceInstall } from "./application-install-reference.ts";
 import { COMMONS_COHORT } from "./commons-cohort.ts";
 import { EVIDENCE_RULES_COHORT as ERC } from "./evidence-cohort.ts";
+import { BASE_COHORT } from "./base-cohort.ts";
 /** Explicit device-command package proof under Rules9. Older pins keep their proofs. */
 import type { DeclaredDefinition, FieldValue, MemberObservation, PlatformData } from "@generalbusiness/dap-contract";
 import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
@@ -19,9 +20,9 @@ import { pinnedBy } from "./versions.ts";
 import { DEVICE_GENESIS_BYTES, DEVICE_GRANT_BYTES } from "./device-application-wire.ts";
 
 import { APPLICATION_SEMANTIC_VALUE2, APPLICATION_RELEASE_VALUE2 } from "./application-install-v2.ts";
-const archiveInstall = (given: RuleGiven): boolean => {
+export const archiveInstall = (given: RuleGiven): boolean => {
   const pin = pinnedBy(given);
-  return pin === COMMONS_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules || pin === ERC.rules;
+  return pin === COMMONS_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules || pin === ERC.rules || pin === BASE_COHORT.rules;
 };
 const install = applicationInstallRulesScope.acts["install-application"]!;
 export const deviceApplicationRulesScope: PlatformData = {
@@ -35,14 +36,16 @@ export const deviceApplicationRulesScope: PlatformData = {
     release: { type: "digest", required: true, value: APPLICATION_RELEASE_VALUE2 },
   } } },
 };
-function proof(given: RuleGiven): PublishedApplicationReleaseProof2 | null {
+/** The signed v2 proof, whole native validation and exact texts. `admits`
+ * names the capability sets of this version's packages. */
+export function installProof2(given: RuleGiven, admits: (semantic: PublishedApplicationReleaseProof2["semantic"]) => boolean): PublishedApplicationReleaseProof2 | null {
   const fields = given.resolved.fields;
   if (!isDigest(fields["semantic"]) || !isDigest(fields["release"])) throw Error("install proof digests required");
   const semantic = given.value(APPLICATION_SEMANTIC_VALUE2.domain, fields["semantic"], APPLICATION_SEMANTIC_VALUE2.max);
   const release = given.value(APPLICATION_RELEASE_VALUE2.domain, fields["release"], APPLICATION_RELEASE_VALUE2.max);
   if (semantic === undefined || release === undefined) return null;
   const checked = readPublishedApplicationReleaseProof2(semantic, release, fields["release"], { bytes: APPLICATION_SEMANTIC_VALUE2.max + APPLICATION_RELEASE_VALUE2.max });
-  if (checked.ids.semantic !== fields["semantic"] || !deviceApplicationRequirement(checked.semantic) || (!archiveInstall(given) && checked.semantic.host.requires !== undefined)
+  if (checked.ids.semantic !== fields["semantic"] || !admits(checked.semantic) || (!archiveInstall(given) && checked.semantic.host.requires !== undefined)
     || (pinnedBy(given) !== COMMONS_COHORT.rules && checked.semantic.host.requires?.includes("commons") === true)
     || checked.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
   for (let index = 0; index < checked.semantic.definitions.length; index++) {
@@ -55,7 +58,9 @@ function proof(given: RuleGiven): PublishedApplicationReleaseProof2 | null {
   for (let index = checked.semantic.definitions.length; index < INSTALL_DEFINITIONS; index++) if (fields[`definitionText${index}`] !== undefined) throw Error("unrelated declaration text");
   return checked;
 }
-function initialFields(given: RuleGiven, checked: PublishedApplicationReleaseProof2): { fields: Record<string, FieldValue>; needsDestination: boolean } | null {
+const proof = (given: RuleGiven) => installProof2(given, semantic => deviceApplicationRequirement(semantic) !== null);
+/** The root's genesis fields from the installer's values, and whether it declares a destination. */
+export function initialFields(given: RuleGiven, checked: PublishedApplicationReleaseProof2): { fields: Record<string, FieldValue>; needsDestination: boolean } | null {
   const signer = given.resolved.signer;
   if (!signer) return null;
   const root = parseStrict(checked.semantic.definitions.find(part => part.id === checked.semantic.entry)!.bytes) as DeclaredDefinition;
