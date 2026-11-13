@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fa7c25c721a8beb9ac7a5dd55402d4d6e6c1a3c2","text":"Merge retired a covered predecessor; the successor is at packages/client/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd1c72025bed1758f793b524e64f63bd9cc3a9d3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-11-nf3-client-custody.md."}
