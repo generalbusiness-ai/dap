@@ -171,7 +171,7 @@ routing files; their line numbers are head lines.
 | `packages/scope/src/sessions.ts` | 149 | `membership` | the place fixes the kind: the claims' `membership` field; acceptance compares it with the scope's own full Membership reference | `ff4ef5a97d` |
 | `packages/scope/src/site/host.ts` | 62 | `destination` | the place fixes the kind: the admitted Directory's destination slot; the publication must answer under that exact reference | `6c1f06153e` |
 | `packages/scope/src/site/host.ts` | 80 | `destination` | the place fixes the kind: the admitted Directory's destination slot | `6c1f06153e` |
-| `packages/client/src/application-route.ts` | 34 | `directory`, `rules`, `membership`, `destination`, `lane` | the place fixes the kind: each named field of the screen context; the Directory must also match the address's scope ID | `f04b8ecbc9` |
+| `packages/client/src/application-route.ts` | 34 | `directory`, `rules`, `membership`, `destination`, `lane` | the place fixes the kind: each named field of the screen context, and the five fields must name five different scopes (B15); the Directory must also match the address's scope ID | `f04b8ecbc9` |
 
 ## Checks against a variable
 
@@ -526,6 +526,8 @@ in the old shape. "Vector" means a measured number moved with the new bytes.
 | B11 | `git/src/journal-v2-tree.ts` `#emit` | `#emit` built child trees in the order that `prepare` first named them. The adaptive scout prepares paths step by step, and a resumed build reaches the birth, definition and entry directories in other steps. The rebuild after a restart sent the same commit in a pack with three trees in another order, and `archive-installed.test.ts` ("export genesis zero after a late native membership directory binding") requires the same bytes. | `#emit` builds child trees in name order. This changes only the order of objects in the pack. Each tree sorts its own rows, so no tree ID, commit ID or git vector changes. The fault needs the `birth` directory, which this head adds; main has no `birth` path. The witness in `journal-v2-tree.test.ts` prepares the same paths in two orders and expects the same object list. The git suite passes, 239/239. |
 | B12 | `examples/lending/test-support.ts` (fixture shape) | The fixture built the destination as `{ ...directory, kind: "destination" }`. The ref check refused the extra field, so the lending genesis was sealed refused, item 0 never opened, and 8 tests read null. `packages/mcp/test/support/views-host.ts` built its scripted installation refs with the same spread. | Both fixtures pass the plain refs. Lending passes, 18/18. A follow-up for another head: `created()` in `derive/test/fixtures.ts` accepts a refused genesis. A check for `decision === "applied"` there would name this fault. |
 | B13 | `scope/src/applications/projection-ownership.ts` | The root check compared the root's `seed.creator` with the Directory's full reference. The Directory creates the Grow Site in its own genesis, so that seed names the creator by the genesis self reference, and every declared projection read answered "not owned". | It resolves the creator against the birth's source fact with `resolveGenesisSelf`, at the selected root and at a root reached by the ancestor walk, as B7 does for act admission. |
+| B14 | `client/src/handle.ts` `log` | An entry with no `input` threw a `TypeError` in place of the handle's `TransportError`. | The check reads `input` only when it is an object, so such an entry is "not this scope's entry at that seq" (`handle-log.test`). |
+| B15 | `client/src/application-route.ts` | A screen context that named one scope in two fields, such as the Directory in the `scope` field, passed once the kind checks went. | The five fields must name five different scope IDs (`application-route.test`). |
 
 ## Creator comparisons (audit accepted in a5d65e58)
 
@@ -658,7 +660,7 @@ The cutover changes 78 plain seals and 55 named-owner seals in `scripts/security
 | `packages/cli/src/store.ts` | `9b185a206c41` | `e710dc929252` | home format v2 | |
 | `packages/cli/src/verification.ts` | `3fb0f354c0d0` | `4875139168f4` | entry framed by genesis |
 | `packages/client/src/application-install.ts` | `4046c6792d46` | `08bae1b1393d` | drop ref kind check | |
-| `packages/client/src/application-route.ts` | `3ba8c4d9e680` | `7a80e90eb0de` | drop ref kind checks | |
+| `packages/client/src/application-route.ts` | `3ba8c4d9e680` | `62660d1d37d6` | drop ref kind checks; the five context scopes must differ |
 | `packages/client/src/describe.ts` | `43c62d2cfd70` | `5fd433d592d3` | ref shape (text) | |
 | `packages/client/src/expected.ts` | `bdbfca234539` | `914ab6dab7f0` | ref shape | |
 | `packages/client/src/session.ts` | `3e4dfcbab9c9` | `0199b1f70200` | ref shape |
@@ -896,3 +898,7 @@ Commit `70c3431750` cut the branches that only this case reached:
 | `mcp` `store-format` | merge | Main's failure shape returns `error`, `message` and `next` only, so the test no longer expects a `reason` field. |
 | `client` and `mcp` custody golden (`custody-record-v1.json.txt`) | regenerated predecessor | The NF-3 capture script ran again at the cutover head `c38bf62a72`, which comes before the move and already writes `{ scope, genesis }` references. The record is 2543 bytes, sha256 `5e417c9c…`. The moved code writes the same bytes. |
 | `mcp` `install-words` golden (`install-words-7ea170c9-c38bf62a.json`) | regenerated predecessor | The NF-4 words script ran again at `c38bf62a72`. That head predates main's answer words (`phase: "accepted"`, `outboxIds`, `effects`), so the golden keeps the words from main `7ea170c9` and takes only the scope references and fact hashes from `c38bf62a72`. Every other byte matches both runs. |
+| `client` `observe`, `application-projection`, `session` | fixture shape | Membership references are `{ scope, genesis }`; the session case that varied the reference's `kind` goes. |
+| `client` `handle-log` | fixture shape | Entry 0 is a genesis whose seed names the scope and whose hash is the genesis; later entries name the genesis. |
+| `client` `read-minimum` | fixture shape | A receipt that names another genesis reads `wrong-genesis`, as `wrong-incarnation` did. The fixed projection query digest is recomputed for the new reference bytes. |
+| `client` `intent` | fixture shape | The malformed entry drops `genesis`, since an entry carries no `at`. |
