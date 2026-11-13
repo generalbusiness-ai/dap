@@ -83,7 +83,7 @@ export function outcomeSnapshotFixture(): ArchiveFixture {
     }
   }
   const ledger = new ClosedLane(parent), commit = C("a");
-  ledger.prepare(keys.una, "instance", { hold: ledger.hold, task: { ...ledger.at, kind: "task" }, instance: "archive-fixture-instance" });
+  ledger.prepare(keys.una, "instance", { hold: ledger.hold, task: ledger.at, instance: "archive-fixture-instance" });
   const signed = ledger.intent(keys.una, "report", { expected: { commitment: ledger.item(ledger.commitment).revision }, fields: { commitment: ledger.commitment, commit } });
   const stage = ledger.asked(signed, "stage");
   const live = ledger.outcome(ledger.opened(stage.seq, "stage"), "confirmed", {}, "read");

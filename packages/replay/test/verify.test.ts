@@ -425,7 +425,7 @@ describe("a preparation, its outcomes and an ancestry record are derived again (
    */
   function staged(checked = true) {
     const s = new Lane();
-    s.prepare(una, "instance", { hold: s.hold, task: { ...otherLane, kind: "task" }, instance: "i1" });
+    s.prepare(una, "instance", { hold: s.hold, task: otherLane, instance: "i1" });
     const report = s.intent(una, "report", { expected: { commitment: s.item(s.commitment).revision }, fields: { commitment: s.commitment, commit: X } });
     const stage = s.asked(report, "stage");
     const live = s.outcome(s.opened(stage.seq, "stage"), "confirmed", {}, "read");
@@ -444,9 +444,9 @@ describe("a preparation, its outcomes and an ancestry record are derived again (
   test("a lane's history with preparations and their outcomes, and no ancestry record, is consistent, and the report lists what of the outside is trusted (witness 18.4)", async () => {
     const s = staged(false);
     const { report, why } = await replayed(s, s.served());
-    expect([s.last.input.type, report.result, why, report.coverage]).toEqual(["outcome", "consistent", null, [{ scope: s.at, from: 0, through: 7 }]]);
+    expect([s.last.input.type, report.result, why, report.coverage]).toEqual(["outcome", "consistent", null, [{ scope: s.at, kind: "lane", from: 0, through: 7 }]]);
     // The stand-ins are anchored: the directory's two entries and the one head of membership.
-    expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.outcomes, TRUSTS.dispatched, TRUSTS.anchors, TRUSTS.bounds]);
+    expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.outcomes, TRUSTS.dispatched, TRUSTS.anchors, TRUSTS.recordedKinds, TRUSTS.bounds]);
   });
 
   test("a lane's history with a check entry, after the root is retired: every entry is derived, the act that the guard `ancestry` admitted among them, from the record and the retained snapshot; the walk is not derived, so the result is `incomplete` at the check entry and never `consistent` (T24; witness 18.10; I3 deltas, entry EU2)", async () => {
@@ -454,10 +454,10 @@ describe("a preparation, its outcomes and an ancestry record are derived again (
     expect([s.entries.map(({ entry }) => entry.input.type).slice(5), s.state.record("hold@1", "root", [1])?.state]).toEqual([["preparation", "preparation", "outcome", "outcome", "act", "act", "timed", "preparation", "outcome"], "retired"]);
     const { report, why } = await replayed(s, s.served());
     // No entry is a mismatch through the head, entry 13, which follows the retirement. The one thing not shown is the walk of the record in entry 8.
-    expect([report.result, report.at, report.coverage]).toEqual(["incomplete", s.fact(8), [{ scope: s.at, from: 0, through: 13 }]]);
+    expect([report.result, report.at, report.coverage]).toEqual(["incomplete", s.fact(8), [{ scope: s.at, kind: "lane", from: 0, through: 13 }]]);
     expect(why).toBe(`the walk of the ancestry record in entry 8 of ${s.at.scope} was not derived: this replay reads no commit, so the stops, the basis of the start, \`published\`, the list F and the count of visited commits are not shown`);
     // Nothing of the Git host is read: that it returned the snapshot and the head is listed as trusted.
-    expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.outcomes, TRUSTS.dispatched, TRUSTS.staged, TRUSTS.anchors, TRUSTS.bounds]);
+    expect(report.trusts).toEqual([TRUSTS.clock, TRUSTS.head, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered, TRUSTS.observed, TRUSTS.outcomes, TRUSTS.dispatched, TRUSTS.staged, TRUSTS.anchors, TRUSTS.recordedKinds, TRUSTS.bounds]);
   });
 
   /** Both copies of the ancestry record that the check entry holds: in its evidence, and in the `check` record that its rule derives. */
@@ -761,7 +761,7 @@ describe("the value of an observation is derived once from the history of its so
   test("a view gives the state of a scope at every head that it was folded through, asked in any order, and it is the state that a fold from the genesis to that head gives", () => {
     const { una: performer } = keys;
     const lane = new Lane();
-    lane.prepare(performer, "instance", { hold: lane.hold, task: { ...otherLane, kind: "task" }, instance: "i1" });
+    lane.prepare(performer, "instance", { hold: lane.hold, task: otherLane, instance: "i1" });
     const note = created(notesDefinition, {}, "s");
     for (const [kind, over] of [["write", { fields: { body: textDigest("a body") } }], ["strike", {}]] as const) if (note.act(rita, kind, { ...on(note, 0), ...over }, { texts: () => 6 }).result !== "write") throw new Error(`${kind} was not written`);
     const { D, P, I } = ledgers();
