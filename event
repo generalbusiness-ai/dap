@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:280e1f9a1c2d2c36ac76025e7fb95c3932558d05","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/fold.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:288b3bc9df39cb9d3c87be0c3b8449dc3bce9f80","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-recovery.scope.test.ts."}
