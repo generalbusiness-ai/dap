@@ -1000,3 +1000,34 @@ Commit `70c3431750` cut the branches that only this case reached:
 | `cli` `scope-index-command` | fixture shape | A wrong entry reads "wrong entry identity", and the mismatch row reports the altered reference. |
 | `cli` `verification`, `verify` | fixture shape | Entries after the genesis start at seq 1 and carry `prev`; the head is seq 3. |
 | `cli` `verify` relabel test, "an invented source entry" | expectation | Replay now checks the invented copy against its birth (B18), so the case reads `mismatch`. The planner accepted that stronger verdict in act 0f76cac1. The "source and the request" case reads `mismatch` again, as on main (B20). |
+
+## Gate and the Effects model
+
+The gate passed on attempt 9 at `f9d6fea1`, on AC power with `powermode 0`
+at start and end (START `93f26f2c`, END `30577e04`). Plain passed 4,560
+tests and Native passed 1,141. The evidence directory is
+`~/play/artroom-evidence/2026-11-13-identifiers-cutover-gate-attempt9`, and
+[its manifest](evidence/2026-11-13-identifiers-cutover.manifest.json) lists
+its files. Attempts 1 to 8 failed. Their END acts give each cause.
+
+Attempt 8 failed on one case in `packages/scope/test/creation-versions.test.ts`.
+The case makes the object's constructor throw once. The test pool's wrapper
+then keeps the same workerd actor, where production discards it. Eviction of
+that actor hung under load. The case now restarts the object with
+`state.abort()` inside `runInDurableObject`, and keeps every assertion.
+
+The cutover changes `packages/scope/src/operations.ts` and
+`packages/scope/src/sqlite.ts`, so the Effects hashes in
+`verification/state-machines/coverage.json` moved. In the protected
+functions one line changed: `Operations.#pass` passes
+`ownOf(store, this.#scope.localSequence()!)` to `beforeSend`. The mark, the
+send, the answer and the offer keep their order, and `markSent` is
+byte-identical. The coverage now follows `99ed4a7e`. At `e56e5ba9`,
+`check.mjs Effects` passed (TLC: 7 distinct states; the real-source witness:
+1 test). The recorded source control dispatched twice and failed on
+`expected [ [ '1:0#1', '1:0#1' ]`. The baseline and the restored source
+passed. The evidence directories are
+`~/play/artroom-evidence/2026-11-13-identifiers-cutover-effects-check` and
+`~/play/artroom-evidence/2026-11-13-identifiers-cutover-effects-control`.
+The model, its config and its view are unchanged since `13e704a4`, so the
+committed chart stands.
