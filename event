@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1e2d518d239f71e81ee35751cf1799255eda9599","text":"Merge retired a covered predecessor; the successor is at packages/client/test/custody.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1eb07b1da394164664cf673652cf12648aff89ca","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/evidence-opening-v17.test.ts."}
