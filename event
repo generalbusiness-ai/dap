@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:046f20b8d7a0f8c8e50ea2ed5c8202c3ec865e29","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/service.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0555e4034a0955b035611ff92ce4edd0a1ada274","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-12-nf4-cli-install.md."}
