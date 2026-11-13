@@ -24,7 +24,8 @@ test("new-room Commons notes preserve opaque citations and signer identity; nati
     const birth = (await D.entries())[0]!;
     const create = birth.sends.find(send => isSeed(send.to) && send.to.kind === "commons");
     if (!create || !isSeed(create.to)) return expect.fail("Directory genesis emitted no Commons create");
-    expect(create.to).toMatchObject({ kind: "commons", definition: C.commons, creator: await D.at(), ordinal: 3 });
+    // A genesis names its own scope in the self form: it cannot name its own genesis hash.
+    expect(create.to).toMatchObject({ kind: "commons", definition: C.commons, creator: { scope: (await D.at()).scope, genesis: null }, ordinal: 3 });
     const Q = life.platform(scopeIdOf(create.to));
     await dispatchFixture([R, D, ...children, Q], life.wait);
     expect((await Q.summary()).value).toMatchObject({ definition: C.commons, status: "active" });
