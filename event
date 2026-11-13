@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8de12e1eff6ce793826e874ccdc55f361277c107","text":"Merge retired a covered predecessor; the successor is at packages/client/test/support/person-invitation-table.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8e3a3a10de5759fc917114c2a46956ea5253122b","text":"Merge retired a covered predecessor; the successor is at packages/client/src/device-key-invitation.ts."}
