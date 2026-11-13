@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:509c22055c970b9d034ad70fe12af4f2996ab1e5","text":"Merge retired a covered predecessor with no successor at its old path."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5140ab8973a0cdd7b837111632e667d2b63fd6c3","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/own-agent-cohort-data.ts."}
