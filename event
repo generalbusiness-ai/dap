@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d75a1cdab8f9035f3b18b046230ef99a7a6a3ee9","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/install-without-mcp.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d7856f892bf1888e49a98682725ab6ba5aebe3f7","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-consumers.scope.test.ts."}
