@@ -1,6 +1,7 @@
 # Outside effects by a member: the publisher
 
-Status: current. Draft 2, for request `35cbcb29`. Nothing here is built.
+Status: current. Hugh ratified this note on 13 November 2026, for request
+`35cbcb29`, with the two decisions of section 11. Nothing here is built.
 
 A scope judges signed acts and keeps one entry for each act that takes
 effect. One part of dap does more. A destination scope writes to a Git
@@ -271,11 +272,11 @@ shape today. This note designs neither form.
 
 | Question | Today | With a publisher |
 |---|---|---|
-| Who writes to the Git host? | The operator's runtime | A member. The operator or the room's owner runs it |
+| Who writes to the Git host? | The operator's runtime | A member, with the credential of the room's owner |
 | Who states the result? | An `outcome` input that the runtime writes. It carries no signature | An act that the publisher's key signs |
 | What does replay check? | That platform code derives the entry from the recorded evidence | That declared guards admit the signed act |
 | What shows that the branch moved? | The receipt commit and the branch | The branch and the trailer |
-| Who holds the Git credential? | The platform. The deployment holds the GitHub App key, and `packages/scope/src/credential-store.ts` keeps each token that the host mints | The publisher. A room's owner can keep the credential from the operator |
+| Who holds the Git credential? | The platform. The deployment holds the GitHub App key, and `packages/scope/src/credential-store.ts` keeps each token that the host mints | The room's owner, who gives it to the publisher. The operator holds none |
 | How does a room stop a bad writer? | No act does | Two parts: a key revocation in the record, and a credential revocation at the Git host |
 
 A reader with a clone and the journal can check every commit. The reader
@@ -297,10 +298,10 @@ The new publisher then meets the case "Another writer moved the branch"
 of section 6 and stops. The record holds. The published pages can show
 content that no entry covers until staff repair the branch.
 
-The issuer holds the duty. When the operator runs the publisher, the
-operator issued the credential and revokes it. When the owner of the
-room runs the publisher, the owner does. Section 11 lists the decision
-on who runs a hosted publisher.
+The owner of the room holds the duty. The owner holds the Git
+credential of a publisher (section 11, decision 1), so the owner issued
+it and revokes it at the Git host. The operator holds no Git credential
+of the room on this route, and cannot revoke one.
 
 ## 8. Kernel review
 
@@ -389,13 +390,15 @@ Slice P1 changes no file in `packages/contract`, `packages/derive`,
 lending definition and its pin stay as they are, and the hosted lending
 room keeps its definition.
 
-Two decisions are Hugh's, at the ratification of this note.
+Hugh decided two things on 13 November 2026, at the ratification of
+this note.
 
-1. Who runs a hosted publisher and holds its Git credential: the
-   operator or the owner of the room. The answer names who revokes the
-   credential (section 7).
-2. Whether slice P1 is inside the stable base. The planner recommends a
-   side lane after the cutover family and the cutover deployment.
+1. "Room's owner holds the credentials." The owner of a room holds the
+   Git credential of its publisher, also in a hosted room. The owner
+   revokes it (section 7).
+2. "P1 side-lane is ok." Slice P1 is a side lane after the cutover
+   family and the cutover deployment. The stable base does not wait for
+   it.
 
 ## 12. Witnesses for slice P1
 
