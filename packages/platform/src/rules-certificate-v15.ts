@@ -62,7 +62,8 @@ export function rulesCertificateFamilyV15(given:RuleGiven,otherKind:'rules'|'des
         ||child.seed.ordinal!==ordinal||directory.entry.input.type!=='genesis'||child.seed.cause!==genesisInputDigest(directory.entry.input)||input.n===null||!input.message
         ||!sentBy(directory.entry,{from:directory.fact,n:input.n,to:child.seed,message:input.message},directory.sequence))return null;
     }
-    if(!same(rules.fields['directory'],directory.fact.at)||!same(destination.fields['directory'],directory.fact.at)
+    // The directory's genesis wrote both fields in the self form: it cannot name its own genesis hash.
+    if(!same(resolveGenesisSelf(rules.fields['directory'],directory.fact),directory.fact.at)||!same(resolveGenesisSelf(destination.fields['directory'],directory.fact),directory.fact.at)
       ||rules.fields['membership']!==membership.fact.at.scope||destination.fields['membership']!==membership.fact.at.scope
       ||destination.fields['rules']!==rules.fact.at.scope||rules.fields['branch']!==destination.fields['branch']||rules.fields['ownerMayReview']!==false)return null;
     const signer=given.resolved.signer;

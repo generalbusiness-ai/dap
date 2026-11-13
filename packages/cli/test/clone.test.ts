@@ -15,7 +15,7 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
   const store = memoryStore();
   await store.keep("operator", new Uint8Array(32).fill(7));
   const at = { scope: `sc_${"a".repeat(52)}` as const, genesis: textDigest("TEST genesis 8") };
-  const membership = { ...at, scope: `sc_${base32(new Uint8Array(32).fill(1))}` as const, kind: "membership" as const };
+  const membership = { ...at, scope: `sc_${base32(new Uint8Array(32).fill(1))}` as const };
   const config: Config = { v: 2 as const, service: "https://service.test", key: "operator", repository: { directory: { ...at, genesis: textDigest("TEST directory genesis") }, membership, destination: at.scope, rules: `sc_${"c".repeat(52)}` as const }, remote: "https://git.test/git/demo/r.git" };
   await store.save(config);
   const calls: string[] = [];

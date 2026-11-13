@@ -79,7 +79,7 @@ test("an existing hook operator supplies the exact planned identity and replays 
     bodies.push(canonicalize(request.creation));
     expect((await store.config())!.plan!.attempted).toMatch(/^sha256:/);
     const receipt: Receipt = {
-      fact: { at: { scope: original.register, genesis: textDigest("TEST genesis 8") }, seq: 0, hash: textDigest("TEST acknowledged register") },
+      fact: { at: { scope: original.register, genesis: textDigest("TEST acknowledged register") }, seq: 0, hash: textDigest("TEST acknowledged register") },
       definition: request.definition, intent: intentDigest(request.creation.intent), effects: [], sends: [], epoch: 0,
     };
     return Response.json({ answer: "accepted", receipt });

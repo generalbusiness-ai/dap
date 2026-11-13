@@ -127,7 +127,7 @@ const namedOwners = {
   "packages/cli/src/command-verify.ts": {
     "packages/cli/src/command-verify.ts:$module": "08579a0e3076df46c748b6f5d572b382858bcd5b3ec828f1abc965755e09b527",
     "packages/cli/src/command-verify.ts:sessionDeniedDependency": "8d700dc0b3ba4755d46999cbbb2e901240ac3f21e103303e20f0ec96d8aea28b",
-    "packages/cli/src/command-verify.ts:replaySource": "212ab1f1d7b4a80932df1aa44173b5be696886336a6038d958ff96ba9076766d",
+    "packages/cli/src/command-verify.ts:replaySource": "efa791c6df8f2f42406d5cb98ed0047603c28ed8acf2a314831e6534eb902f69",
     "packages/cli/src/command-verify.ts:otherRoomsOf": "7c301eee78006007a2f2a6cdfdfbfb73f7224782dd9b8fe3173303a1eec4ead7",
     "packages/cli/src/command-verify.ts:replayOf": "e4f3f261612d3e755c94a4a19d8d54920d4f938c9e30cee8caafd59f12c3fdac",
     "packages/cli/src/command-verify.ts:verificationContext": "bc38c07b7cbcbaa2118086aaf05068fc05d2cd90b1994edc81968e48788c41b6",
@@ -328,7 +328,7 @@ const seals = {
   "packages/scope/src/credential-store.ts": "cfe657393dedd0fafa09018742bee31a5dfa3837c857186f115cfb096f7d3523", // R13 private reservation and custody owner; actual maintained parser output.
   "packages/scope/src/read-token-quota.ts": "54020db49341f3b775c68f3b491db015d2e9f77f9ecb9d3c06f5d46e781d9065", // R13 private reservation and custody owner; actual maintained parser output.
   "packages/scope/src/workspace-host.ts": "2d2040debfd2c51cbe69bf41023b7c26068c68ee9d8b743140fc88e56c35dc7c", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
-  "packages/scope/src/workspace-lineage.ts": "3df9134796edb005dc47d072b8f1d09b765ae80fe12ed0e8226faed3810502a2", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
+  "packages/scope/src/workspace-lineage.ts": "1813da1335de71432b6af8bf8d41f4a77478ed0fb212cdc68a863e99cc617c5f", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "f8b131dd7da72f215e59aa80365706c78bee4e564a4a573a3c080c72326c5d7e", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
   "packages/mcp/src/oauth-resource.ts": "895d3a1b241e5fe0d5228febff46fe6c921899110fef99056dd1b53199d341ae", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-access.ts": "96679465b97286aa2babe6e3b670bf51b202427300cea836e9be9da744884b78", // O1 resource discovery and grant transport boundary.

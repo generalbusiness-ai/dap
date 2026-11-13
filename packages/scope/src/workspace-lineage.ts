@@ -1,6 +1,6 @@
 /** Native creation proofs bind a lane to its actual Destination repository. */
 import type { FactRef, ScopeId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { LATE, isEntryOf, isFactRef, isOperationId, isRecord, isScopeRef, isSeed, same, scopeIdOf, within, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { LATE, isEntryOf, isFactRef, isOperationId, isRecord, isScopeRef, isSeed, resolveGenesisSelf, same, scopeIdOf, within, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { sentBy } from "@generalbusiness/dap-derive";
 import { DIRECTORY_OF, SIBLINGS_OF, directoryIdOf, isOf, platform } from "@generalbusiness/dap-platform";
 import type { OutsideGiven } from "./given.ts";
@@ -97,7 +97,7 @@ export async function workspaceRepository(given: OutsideGiven, sources: Workspac
     if (!isRecord(repository) || Object.keys(repository).sort().join() !== "host,id,name,namespace"
       || repository["host"] !== host || repository["namespace"] !== namespace || typeof repository["name"] !== "string"
       || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/.test(repository["name"]) || repository["id"] !== repository["name"]
-      || !isRecord(fields) || !same(fields["directory"], directory.fact.at) || !same(fields["claim"], claimFact)
+      || !isRecord(fields) || !same(resolveGenesisSelf(fields["directory"], directory.fact), directory.fact.at) || !same(fields["claim"], claimFact)
       || typeof fields["branch"] !== "string") return null;
     return { destination: destination.fact.at, repository: repository as unknown as DestinationRepository, branch: fields["branch"] };
   } catch (failure) { report(toConsole, "outside-call-failed", "workspace-lineage", failure); return null; }

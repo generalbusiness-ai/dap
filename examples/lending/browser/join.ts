@@ -2,7 +2,7 @@
  * joining owns exact request custody; this adapter keeps the historical
  * membership pin and the application's own discovery/identity validation. */
 import type { KeyId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, timeOf } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, isScopeRef, timeOf } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, httpTransport, requestSession, signerSessionRequest, storedWebCryptoSigner, generateBrowserDeviceKey,
   applicationDeviceIdentity, readApplicationInvitation, browserJoining, readBrowserInvitation, type ApplicationScreenContext, type BrowserJoining, type BrowserJoiningOptions, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { LENDING_DEFINITION } from "../pin.ts";
@@ -51,5 +51,5 @@ export async function findLending(seat: Seat, device: DeviceKey, options: { now?
 /** The scopes of the directory's created applications that pin the lending definition. */
 export function lendingScopes(directory: Summary): ScopeRef[] {
   return directory.items.filter((item) => item.type === "application" && item.state === "created" && item.values["definition"] === LENDING_DEFINITION)
-    .map((item) => item.refs["scope"]).filter((ref): ref is ScopeRef => typeof ref === "object" && ref !== null && "scope" in ref && "inc" in ref);
+    .map((item) => item.refs["scope"]).filter((ref): ref is ScopeRef => isScopeRef(ref));
 }

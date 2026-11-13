@@ -1,13 +1,12 @@
 /** Check read-token receipt and entry evidence before any private handoff.
  * This is the client's exact-envelope/full-fact check, not history replay. */
 import type { GenesisEffect, Input, OperationId, PlatformDefinition, Receipt, ScopeRef, Sealed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { platform } from "@generalbusiness/dap-platform";
 import { canonicalize, intentDigest, isEntryBodyOf, isPlatformDefinition, isReceipt, isRecord, isSealed, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 
 export interface ReadTokenProof { to: ScopeRef; definition: PlatformDefinition; signed: SignedIntent; receipt: Receipt; operation: OperationId }
 export function readTokenReceipt(receipt: Receipt, summary: Pick<Summary, "scope" | "definition">, signed: SignedIntent): ReadTokenProof | null {
   try {
-    if (!isReceipt(receipt) || !isPlatformDefinition(summary.definition) || !verifySignedIntent(signed) || platform(summary.definition)?.data.name !== "platform:destination" || signed.intent.kind !== "read-token" || signed.intent.on === null || receipt.fact.seq < 1
+    if (!isReceipt(receipt) || !isPlatformDefinition(summary.definition) || !verifySignedIntent(signed) || !summary.definition.startsWith("platform:destination@") || signed.intent.kind !== "read-token" || signed.intent.on === null || receipt.fact.seq < 1
       || canonicalize(signed.intent.to) !== canonicalize(summary.scope) || canonicalize(receipt.fact.at) !== canonicalize(summary.scope)
       || receipt.definition !== summary.definition || receipt.intent !== intentDigest(signed.intent)) return null;
     return { to: summary.scope, definition: summary.definition, signed, receipt, operation: `${receipt.fact.seq}:0` };

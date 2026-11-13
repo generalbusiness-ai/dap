@@ -20,7 +20,7 @@ test.each([
     const path = new URL(url).pathname;
     if (path === "/v1/scopes" && init?.method === "POST") {
       const given = JSON.parse(init.body!) as { creation: SignedIntent; definition: Receipt["definition"] };
-      receipt = { fact: { at: { scope: scopeIdOf({ v: 1, kind: "register", definition: given.definition, creator: null, cause: intentDigest(given.creation.intent), ordinal: 0 }), genesis: textDigest("TEST genesis 7") }, seq: 0, hash: textDigest("SCRIPTED acknowledged genesis") }, definition: given.definition, intent: intentDigest(given.creation.intent), effects: [], sends: [], epoch: 0 };
+      receipt = { fact: { at: { scope: scopeIdOf({ v: 1, kind: "register", definition: given.definition, creator: null, cause: intentDigest(given.creation.intent), ordinal: 0 }), genesis: textDigest("SCRIPTED acknowledged genesis") }, seq: 0, hash: textDigest("SCRIPTED acknowledged genesis") }, definition: given.definition, intent: intentDigest(given.creation.intent), effects: [], sends: [], epoch: 0 };
       return Response.json({ answer: "accepted", receipt });
     }
     if (path.endsWith("/acts")) {

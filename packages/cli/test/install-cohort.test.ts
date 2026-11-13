@@ -67,7 +67,7 @@ function scenario(fault: "none" | "reply" | "save" = "none", replaceUnsentLegacy
       }
       bodies.push(body);
       receipt ??= {
-        fact: { at: { scope: scopeIdOf({ v: 1, kind: "register", definition: request.definition, creator: null, cause: intentDigest(request.creation.intent), ordinal: 0 }), genesis: textDigest("TEST genesis 9") }, seq: 0, hash: textDigest("fake service acknowledgement") },
+        fact: { at: { scope: scopeIdOf({ v: 1, kind: "register", definition: request.definition, creator: null, cause: intentDigest(request.creation.intent), ordinal: 0 }), genesis: textDigest("fake service acknowledgement") }, seq: 0, hash: textDigest("fake service acknowledgement") },
         definition: request.definition, intent: intentDigest(request.creation.intent), effects: [], sends: [], epoch: 0,
       };
       if (fault === "reply" && !failed) { failed = true; throw new Error("fake accepted reply loss"); }
