@@ -7,6 +7,7 @@ import { textDigest } from "@generalbusiness/dap-bytes";
 import { ArchiveSegmentCursor, journalV2SegmentPath, journalV2RetainedPath, prepareJournalPass, type JournalArchive, type JournalFormat } from "@generalbusiness/dap-git/journal";
 import type { RetainedKey } from "@generalbusiness/dap-derive";
 import { planArchive, planArchivePass, planArchiveConversion, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
+import { archiveOwnReplayContext } from "../src/archive-publication.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { planAdaptiveArchivePass } from "../src/archive-adaptive.ts";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
@@ -244,8 +245,8 @@ test("v2 native inventory and restart read only the marked new interval and keep
     const value = await planArchivePass(exact, { at: lane.at, through, after: initial, bounds: PROPOSED_BOUNDS,
       policies, format: "sha1", parent, markedAt: at(1), preparation: prepared.preparation, forecast: held.fence }, budget);
     if (value.ok) {
-      expect(held.comparison).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 43432, inputWork: 118976 });
-      expect([held.fence.comparisonMetadata, held.fence.comparisonInputWork]).toEqual([43432, 118976]);
+      expect(held.comparison).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 45804, inputWork: 125520 });
+      expect([held.fence.comparisonMetadata, held.fence.comparisonInputWork]).toEqual([45804, 125520]);
       expect(attributed.nodes).toBeGreaterThan(0);
       expect(value.archive.cost.nodes).toBe(value.archive.selection.inventoryCost.nodes + attributed.nodes);
       expect(budget.admitted()).toEqual(value.archive.cost);
@@ -257,8 +258,8 @@ test("v2 native inventory and restart read only the marked new interval and keep
     qualification: "Actual native SQLite fresh inventory invokes the original plan fence start/check methods on the same original budget as metadata preparation and build. Test subclass only observes exact super calls. Genuine native prepared-rule input; TESTpolicy/authority/manual component receipt. No host, adaptive cutoff, export or full-pass claim." };
   (context.task.meta as Record<string, unknown>)["archiveInventoryFixedCost"] = { entryReads: planned.entryReads, finalRead: planned.finalRead,
     qualification: "Observed exact original spend spans before real native inventory entry queries and the final pin/cutoff fence. Same original preparation/build ledger, no second budget or skipped validation. Genuine SQLite/turns/prepared rule, TESTpolicy/authority/manual component receipt, no host/adaptive/export/full-pass claim." };
-  expect(planned.entryReads?.map(row => row.bytes)).toEqual([1551, 1552, 1876, 2296]);
-  expect(planned.entryReads?.map(row => row.cost.inputWork)).toEqual([51183, 51216, 61908, 75768]);
+  expect(planned.entryReads?.map(row => row.bytes)).toEqual([1611, 1612, 1962, 2434]);
+  expect(planned.entryReads?.map(row => row.cost.inputWork)).toEqual([53163, 53196, 64746, 80322]);
   for (const read of planned.entryReads ?? []) expect(forecastArchiveInventoryEntry(read.bytes as number)).toEqual(read.cost);
   expect(planned.finalRead).toEqual({ entries: 0, attempts: 0, nodes: 0, calls: 4, metadata: 52352, inputWork: 121984 });
   expect(forecastArchiveInventoryFinal(true)).toEqual(planned.finalRead);
@@ -306,6 +307,7 @@ test("v2 native inventory and restart read only the marked new interval and keep
     const planned = await planAdaptiveArchivePass(sql, { at: fallbackLane.at, through: fallbackThrough, after: null,
       bounds: PROPOSED_BOUNDS, policies: archiveAuthorityPolicies(fallbackLane), fixtureSources: pins,
       format: "sha1", parent: null, markedAt: fallbackLane.c.clock.now, row,
+      replayContext: archiveOwnReplayContext(sql, fallbackLane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()),
       parentHeld: new Map(), parentUsed: new Set(), maximum: 8 * 1024 * 1024 }, budget);
     expect(budget.charges).toContainEqual({ metadata: 32 * 1024, inputWork: 256 * 1024 });
     expect(planned.ok, JSON.stringify(planned)).toBe(true);
@@ -324,7 +326,8 @@ test("v2 native inventory and restart read only the marked new interval and keep
       else if (!query.includes(" FROM retained_input ") && !query.includes(" FROM retained_value ")) expect.fail(`unselected fallback rebuild query: ${query}`);
       return sql.exec(query, ...args);
     } };
-    const built = await rebuildArchivePass(exact, row, null, new ArchiveBudget(), pins);
+    const built = await rebuildArchivePass(exact, row, null, new ArchiveBudget(), pins,
+      archiveOwnReplayContext(sql, fallbackLane.at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()));
     expect(new ArchiveRows(sql, fallbackLane.at).load()!.pending!.manifest).toBe(fallback.mark.manifest);
     return built;
   });
