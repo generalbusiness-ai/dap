@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:812640ce641b4ce3c8e4d3d005b283ba6c77de96","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/tsconfig.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:814547e2fc5f09a0a6bdeb142524e131600f50da","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/claim-selector.test.ts."}
