@@ -79,7 +79,7 @@ class Deciding extends Ledger {
     return { entry, draft: judged.draft, total: this.entries.length + owed(this.state, this.definition, entry.input) };
   }
   served(): MemoryScope {
-    return { scope: this.at, entries: this.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained: [...this.entries.flatMap(({ entry }) => entry.uses.map((use) => ({ kind: "entry" as const, digest: use.content, bytes: use.fact.seq === 0 ? this.foreign[0]!.sequence.birth : canonicalize(this.foreign.find((copy) => factRefOf(copy.entry, otherLane).hash === use.fact.hash)!.entry), under: "lane" }))), ...[...this.texts].map(([digest, text]) => ({ kind: "text" as const, digest, bytes: canonicalize(text) }))] };
+    return { scope: this.at, entries: this.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained: [...this.entries.flatMap(({ entry }) => entry.uses.map((use) => ({ kind: "entry" as const, digest: use.content, bytes: canonicalize(this.foreign.find((copy) => factRefOf(copy.entry, otherLane).hash === use.fact.hash)!.entry), under: "lane" }))), ...[...this.texts].map(([digest, text]) => ({ kind: "text" as const, digest, bytes: canonicalize(text) }))] };
   }
   anchors() { return this.foreign.map(({ entry }) => { const fact = factRefOf(entry, otherLane); return { scope: fact.at.scope, seq: fact.seq, hash: fact.hash }; }); }
 }

@@ -11,7 +11,7 @@ import { resolveGenesisValue } from "./genesis-values.ts";
 import { readJudgmentFacts, verifiedCopy } from "./operand.ts";
 import type { Archived, SizeProof } from "@generalbusiness/dap-contract";
 import type { ActType, Bounds, Digest, Entry, FactRef, FactUse, FieldRecord, FieldType, FieldValue, Prepared, Request, ScopeKind, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { birthUse, countedUses, canonicalBytes, digestBytes, isDigest, isIntent, isEntryOf } from "@generalbusiness/dap-bytes";
+import { canonicalBytes, digestBytes, isDigest, isIntent, isEntryOf } from "@generalbusiness/dap-bytes";
 import type { Capabilities } from "./capability.ts";
 import type { Fetched, RuleInput } from "./guards.ts";
 import { markOf, type PlatformRules } from "./marks.ts";
@@ -173,32 +173,6 @@ export interface Local { at: ScopeRef | import("@generalbusiness/dap-contract").
 
 /** What a use records of a foreign entry: the entry by fact, and the digest of its canonical bytes (section 9.2). */
 export const useOf = (fact: FactRef, entry: Entry, kind: ScopeKind): FactUse => ({ fact, content: digestBytes(canonicalBytes(entry)), kind });
-
-/**
- * Ruling a140a1c6, Q-B1: an entry that uses a later entry of a foreign sequence also uses that sequence's first entry. One birth
- * use is added for each such sequence, after the uses already listed, in the order in which the sequences first appear. The birth
- * comes from the association of a copy that the judgment already read; no read is added. A sequence with no association at hand
- * gets no birth use.
- */
-export function withBirthUses(uses: readonly FactUse[], sequences: readonly (CheckedSequence | null | undefined)[]): FactUse[] {
-  const result = [...uses];
-  for (const use of uses) {
-    if (use.fact.seq === 0 || result.some((held) => held.fact.seq === 0 && same(held.fact.at, use.fact.at))) continue;
-    const sequence = sequences.find((candidate) => candidate && same(candidate.at, use.fact.at) && candidate.kind === use.kind);
-    if (sequence) result.push(birthUse(sequence));
-  }
-  return result;
-}
-
-/**
- * Ruling 28295c20: the birth uses that `withBirthUses` added stay within their bound. Each belongs to a foreign sequence with a
- * later use in the same entry, so the added births never exceed the later uses, and the later uses never exceed `usesPerEntry`.
- * A birth does not count against `usesPerEntry`. False only when that invariant fails.
- */
-export function birthsWithin(uses: readonly FactUse[], withBirths: readonly FactUse[], usesPerEntry: number): boolean {
-  const births = withBirths.length - uses.length, later = uses.filter((use) => use.fact.seq !== 0).length;
-  return births >= 0 && births <= later && countedUses(withBirths.map((use) => use.fact)) <= usesPerEntry;
-}
 
 /** True when `entry` is the entry that `fact` names. */
 export { isEntryOf, isEntryBodyOf } from "@generalbusiness/dap-bytes";

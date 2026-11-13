@@ -2,7 +2,7 @@
  * caller supplies actual classified context inside its synchronous frame;
  * this grants no pin, privacy, body-read or export admission. */
 import { RETAINED_INPUT_BYTES, type Bounds, type Digest, type FactRef, type Input, type ScopeRef } from "@generalbusiness/dap-contract";
-import { entryUseLimit, isFactRef, natural } from "@generalbusiness/dap-bytes";
+import { isFactRef, natural } from "@generalbusiness/dap-bytes";
 import { boundedRetainedDependencies, requiredDependency, type PlannedRetainedDependency } from "@generalbusiness/dap-derive";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { ArchiveActFields } from "./archive-act-fields.ts";
@@ -49,9 +49,7 @@ export class ArchiveLocalReferences {
       `SELECT json_type(bytes, '$.uses') AS type, json_array_length(bytes, '$.uses') AS count FROM entry WHERE ${source} LIMIT 1`, ...args).toArray();
     const count = counts[0]?.["count"];
     if (counts.length !== 1 || counts[0]?.["type"] !== "array" || !natural(count)) return stop("mismatch");
-    // Ruling 28295c20: an entry holds up to `usesPerEntry` counted uses and one birth use for each. The scan of the foreign
-    // reader counts the later uses against `usesPerEntry` itself.
-    if (count > entryUseLimit(this.bounds.usesPerEntry)) return stop("limit");
+    if (count > this.bounds.usesPerEntry) return stop("limit");
     this.budget.spend({ metadata: count * 256, inputWork: count * 512 });
     const uses: Digest[] = [];
     for (let offset = 0; offset < count; offset += ARCHIVE_DIGEST_FIELD_BATCH) {
@@ -90,7 +88,7 @@ export class ArchiveLocalReferences {
     uses: readonly Digest[]): ArchiveLocalReferencePlan {
     this.budget.check();
     if (position.input !== context.input) return stop("mismatch");
-    if (uses.length > entryUseLimit(this.bounds.usesPerEntry)) return stop("limit");
+    if (uses.length > this.bounds.usesPerEntry) return stop("limit");
     const definition = this.support.definition, dependencies: PlannedRetainedDependency[] = [];
     const append = (plans: readonly PlannedRetainedDependency[]) => {
       this.budget.spend({ metadata: plans.length * 256, inputWork: plans.length * 512 });

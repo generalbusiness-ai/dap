@@ -1,7 +1,7 @@
 /** Synthetic maximum future entries only. No forecast fact is recorded or
  * treated as authority. Kernel holder closure owns used-plus-reserved Amount. */
 import type { Effect, FactRef, FieldValue } from "@generalbusiness/dap-contract";
-import { canonicalize, countedUses, isFactRef, isRecord, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isFactRef, isRecord, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest } from "./evidence.ts";
 import { observationBytes, operationOpening, type Opening, type RuleEffect, type RuleGiven, type RuleRequest } from "@generalbusiness/dap-derive";
 import type { EvidenceJobRecordV17 } from "./destination-evidence-v17.ts";
@@ -149,10 +149,9 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
   settlement: readonly RuleEffect[] = []): Forecast {
   try {
     const bounds = given.resolved.bounds, record = current.record;
-    // Ruling 28295c20: the birth uses do not count against `usesPerEntry`, and each counted use can bring one birth use.
-    const counted = Math.max(5, countedUses(given.uses.map(use => use.fact))), uses = 2 * counted;
+    const uses = Math.max(5, given.uses.length);
     if (!record.policy || !record.commit || !record.tree || !record.base || owners.length > 4 || bounds.memberBytes < 3
-      || !Number.isSafeInteger(bounds.usesPerEntry) || counted > bounds.usesPerEntry) return refused();
+      || !Number.isSafeInteger(bounds.usesPerEntry) || uses > bounds.usesPerEntry) return refused();
     const distinct = new Map<number, Row>([[current.item, current]]);
     for (const owner of owners) {
       const prior = distinct.get(owner.item);

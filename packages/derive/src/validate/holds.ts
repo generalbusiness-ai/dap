@@ -415,8 +415,7 @@ export function prepareReserving(d: Defining, top: Rec, reader: CapacityReader, 
       if (!amount) { bad("reserve-unbounded", binding.path, "a bound handler's mark lists a kind with no finite closure"); continue; }
       if (!d.wholeCapacity) {
         const retains = fieldRetention(Object.values(isObject(handler["fields"]) ? handler["fields"] : {}) as FieldType[], bounds);
-        // Ruling 28295c20: each fact retained can bring the birth of its sequence, retained in full, at most one each.
-        amount = sum(amount, { ...NOTHING, bytes: 2 * Math.min(retains.facts, Math.max(0, bounds.usesPerEntry - 1)) * bounds.entryBytes + retains.texts });
+        amount = sum(amount, { ...NOTHING, bytes: Math.min(retains.facts, Math.max(0, bounds.usesPerEntry - 1)) * bounds.entryBytes + retains.texts });
       }
       decisions.set(binding.message, [...(decisions.get(binding.message) ?? []), amount]);
     }

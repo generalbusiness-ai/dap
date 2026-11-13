@@ -1,8 +1,7 @@
 /** Genesis identity admission and contextual resolution of encoded self. */
-import type { Entry, FactRef, FactUse, ScopeId, ScopeKind, SequenceRef } from "@generalbusiness/dap-contract";
+import type { Entry, FactRef, ScopeId, ScopeKind, SequenceRef } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict, utf8 } from "./canonical.ts";
 import { entryHash, scopeIdOf } from "./domains.ts";
-import { digestBytes } from "./hash.ts";
 import { isEntry, isFactRef, isGenesisSelfRef, isSequenceRef } from "./records.ts";
 
 // An obtained instance.constructor cannot mint an association without this
@@ -36,8 +35,8 @@ Object.freeze(SequenceAssociation);
 /** A process-local result of actual genesis validation, never a wire record. */
 export type CheckedSequence = SequenceAssociation;
 
-/** Admit original bytes. The association keeps the checked identity, the kind and the canonical genesis bytes, so that an
- * entry that uses a later entry of the sequence can also record its birth (ruling a140a1c6, Q-B1). It keeps no parsed body. */
+/** Admit original bytes. The association keeps the checked identity, the kind and the canonical genesis bytes, so that a
+ * scope that retains a later entry of the sequence can also retain its birth (ruling 4f697a7a). It keeps no parsed body. */
 export function admitSequenceGenesis(bytes: string, expected: SequenceRef, maxBytes: number): CheckedSequence | null {
   try {
     if (!isSequenceRef(expected) || !Number.isSafeInteger(maxBytes) || maxBytes < 0
@@ -72,23 +71,3 @@ export function resolveGenesisSelf(value: unknown, origin: FactRef): SequenceRef
   return isGenesisSelfRef(value) && value.scope === origin.at.scope && origin.seq === 0 && origin.hash === origin.at.genesis
     ? { scope: origin.at.scope, genesis: origin.at.genesis } : null;
 }
-
-/** The use of a sequence's birth, from the genesis bytes its association holds: the use that an entry records beside a use of
- * a later entry of that sequence (ruling a140a1c6, Q-B1). */
-export function birthUse(sequence: CheckedSequence): FactUse {
-  const at = sequence.at;
-  return { fact: { at: { scope: at.scope, genesis: at.genesis }, seq: 0, hash: at.genesis }, content: digestBytes(utf8(sequence.birth)), kind: sequence.kind };
-}
-
-/**
- * The uses of one entry that count against `usesPerEntry` (ruling 28295c20): every use except a use of entry 0 of a sequence
- * that the same entry also uses at a later entry. That entry-0 use is the birth the later use brings, and it does not count.
- * A use of entry 0 with no later use of its sequence counts.
- */
-export function countedUses(facts: readonly Pick<FactRef, "at" | "seq">[]): number {
-  const later = new Set(facts.filter((fact) => fact.seq !== 0).map((fact) => canonicalize(fact.at)));
-  return facts.filter((fact) => fact.seq !== 0 || !later.has(canonicalize(fact.at))).length;
-}
-
-/** The most uses one entry can hold: `usesPerEntry` counted uses, and at most one birth use for each (ruling 28295c20). */
-export const entryUseLimit = (usesPerEntry: number): number => 2 * usesPerEntry;

@@ -19,10 +19,10 @@ import { withinCounts } from "./draws.ts";
 import { namedBody } from "./program/structure.ts";
 import { executeBody } from "./program/body.ts";
 import { declarationOf } from "./program/declaration.ts";
-import { birthsWithin, isIntent, presentedTypes, readFields, withBirthUses, type Reading } from "./fields.ts";
+import { isIntent, presentedTypes, readFields, type Reading } from "./fields.ts";
 import { covers } from "./grant.ts";
 import type { Judging, ReplayAssumptions } from "./guards.ts";
-import { copySequence, judgmentFacts, readJudgmentFacts, replayContext, verifiedContext } from "./operand.ts";
+import { judgmentFacts, readJudgmentFacts, replayContext, verifiedContext } from "./operand.ts";
 import { alsoItems, giving } from "./handlers.ts";
 import { actionOf, atHand, atHandByRows, fieldOutsideType, grantByRule, placeWithoutValue, placesOf, retainedOf, selectedBy, unjudged, type JudgedInput, type ValueRead } from "./marks.ts";
 import { listedBy, rowsOfAct, settle, type Listed, type Needed, type Observing, type Settled } from "./observes.ts";
@@ -399,11 +399,7 @@ function actJudged(view: StateView, definition: ValidDefinition, signed: SignedI
   // with the entry, and is in no entry.
   const retained = retainedOf(beside);
   const input = { type: "act", signed, authority: granted ? [granted] : [], presented: shown.fields as Record<string, FactRef>, ...(retained.observed.length > 0 ? { observed: retained.observed } : {}) } as const;
-  // Ruling a140a1c6, Q-B1: the births of the later foreign entries used. Ruling 28295c20: a birth does not count against
-  // `usesPerEntry`; the added births stay within the later uses, checked here as an invariant.
-  const usesWithBirths = withBirthUses(uses, judgmentFacts(context).map(copySequence));
-  if (!birthsWithin(uses, usesWithBirths, bounds.usesPerEntry)) return refused("bad-field", `more birth uses than later foreign entries`);
-  return { result: "write", draft: { input, uses: usesWithBirths, prepared: ran.prepared, effects: ran.effects, sends: ran.sends, judgesTime: true, settles: ran.settles, ...(retained.values.length > 0 ? { values: retained.values } : {}), ...(settled ? { rows: settled } : {}) } };
+  return { result: "write", draft: { input, uses, prepared: ran.prepared, effects: ran.effects, sends: ran.sends, judgesTime: true, settles: ran.settles, ...(retained.values.length > 0 ? { values: retained.values } : {}), ...(settled ? { rows: settled } : {}) } };
 }
 
 /**

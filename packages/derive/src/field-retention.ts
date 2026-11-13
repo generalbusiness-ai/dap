@@ -43,7 +43,5 @@ export function fieldRetainedBytes(producers: FieldProducers, bounds: Pick<Bound
   const facts = sum({ ...NOTHING, entries: fields.facts }, { ...NOTHING, entries: producers.presented }, { ...NOTHING, entries: producers.source ? 1 : 0 }).entries;
   // Validate the cap before min can conceal an invalid configured operand.
   const cap = times(1, { ...NOTHING, entries: bounds.usesPerEntry }).entries;
-  // Ruling 28295c20: each foreign entry used can bring the birth of its sequence, retained in full, at most one each.
-  const used = Math.min(facts, cap);
-  return sum(times(used, { ...NOTHING, bytes: bounds.entryBytes }), times(used, { ...NOTHING, bytes: bounds.entryBytes }), { ...NOTHING, bytes: fields.texts }, { ...NOTHING, bytes: fields.values }, { ...NOTHING, bytes: retainedBytes(producers.observes) }).bytes;
+  return sum(times(Math.min(facts, cap), { ...NOTHING, bytes: bounds.entryBytes }), { ...NOTHING, bytes: fields.texts }, { ...NOTHING, bytes: fields.values }, { ...NOTHING, bytes: retainedBytes(producers.observes) }).bytes;
 }

@@ -10,9 +10,8 @@ import type { Attempt, Digest, Entry, FactUse, ObservationUse } from "@generalbu
 import { declarationOf } from "./program/declaration.ts";
 import { nativeOutcomes } from "./program/native.ts";
 import { evidenceValues } from "./evidence-values.ts";
-import { birthsWithin, useOf, withBirthUses, type Reading } from "./fields.ts";
+import { useOf, type Reading } from "./fields.ts";
 import type { Fetched } from "./guards.ts";
-import { copySequence, judgmentFacts } from "./operand.ts";
 import { runClause } from "./handlers.ts";
 import { namesOwn, outcomeOf, recordedOutcome, type OutcomeInput, type OutcomeOffered, type Owners } from "./ledger.ts";
 import { ownersOf, type OutcomeReading } from "./outcomes.ts";
@@ -72,7 +71,7 @@ export function judgeDiagnosis(view: StateView, definition: ValidDefinition, dia
   const ran = finding === "undelivered" ? unjudged(() => runClause(view, definition, context, admit.scope, request, "undelivered", undefined, { type: "diagnosis", of: { seq: of.seq, n: of.n }, attempts })) : { result: "ran", effects: [], uses: [], judgesTime: false } as const;
   if (ran.result === "unavailable") return ran;
   if (ran.judgesTime && context.clock.behind) return { result: "unavailable", reason: "clock-behind" };
-  return withinCounts(view, definition, { result: "write", draft: { input: { type: "diagnosis", of: { seq: of.seq, n: of.n }, finding, attempts }, uses: withBirthUses(ran.uses, judgmentFacts(context).map(copySequence)), prepared: [], effects: ran.effects, sends: [], judgesTime: ran.judgesTime } } satisfies Judgment);
+  return withinCounts(view, definition, { result: "write", draft: { input: { type: "diagnosis", of: { seq: of.seq, n: of.n }, finding, attempts }, uses: ran.uses, prepared: [], effects: ran.effects, sends: [], judgesTime: ran.judgesTime } } satisfies Judgment);
 }
 
 /**
@@ -184,11 +183,7 @@ export function settleOutcome(view: StateView, definition: ValidDefinition, outc
   // none was read. So an outcome whose rules read none has the bytes it had.
   const input = retained.length > 0 ? { ...judged.draft.input, observed: retained } : judged.draft.input;
   // Section 17.2a, "Past a count": an outcome whose entry would draw past a count of a holder is not judged. It stays offered.
-  // Ruling 28295c20: the births stay within the later uses, and do not count against `usesPerEntry`. An outcome is never refused,
-  // so a failed invariant leaves it not written.
-  const plain = facts.map((fact) => useOf(fact.fact, fact.entry, fact.sequence.kind)), uses = withBirthUses(plain, facts.map((fact) => fact.sequence));
-  if (!birthsWithin(plain, uses, context.bounds.usesPerEntry)) return { result: "unavailable", reason: "unavailable" };
-  return withinCounts(view, definition, { result: "write", draft: { ...judged.draft, input, uses, judgesTime, values: [...kept, ...retainedOf(beside).values.filter((value) => !kept.some((read) => read.domain === value.domain && read.digest === value.digest))] } } satisfies Judgment);
+  return withinCounts(view, definition, { result: "write", draft: { ...judged.draft, input, uses: facts.map((fact) => useOf(fact.fact, fact.entry, fact.sequence.kind)), judgesTime, values: [...kept, ...retainedOf(beside).values.filter((value) => !kept.some((read) => read.domain === value.domain && read.digest === value.digest))] } } satisfies Judgment);
 }
 
 /**

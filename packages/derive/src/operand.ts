@@ -12,7 +12,6 @@ import { canonicalBytes, canonicalize, digestBytes, intentDigest, isEntry, isEnt
 import { creationFields, isEntryOf, isLocalFact, useOf, type Facts, type Local, type Reading } from "./fields.ts";
 import { bound } from "./handlers.ts";
 import { declarationOf } from "./program/declaration.ts";
-import type { CheckedSequence } from "@generalbusiness/dap-bytes";
 import type { AnchoredJudgmentCopy, Fetched, Judging, ReplayAssumptions, RetainedResultMaterial, RetainedResultOperand } from "./guards.ts";
 import type { Item, StateView } from "./state.ts";
 import { byteOrder, isFactRef, isLocalId, isObject, memberOf, own, same } from "./values.ts";
@@ -58,8 +57,6 @@ export const copyFact = (copy: JudgmentCopy): FactRef => copy.mode === "verified
 export const copyEntry = (copy: JudgmentCopy): Entry => copy.mode === "verified" ? copy.value.entry : copy.mode === "local-retained" ? localCopy(copy).entry : copy.entry;
 export const copyUnder = (copy: JudgmentCopy): string => copy.mode === "verified" ? copy.value.under
   : copy.mode === "local-retained" ? localCopy(copy).under : copy.mode === "retained-name" ? copy.under : platformName(copy.exporterRow.pin);
-/** The association of a copy whose sequence was proved from its genesis bytes. Other copies have none. */
-export const copySequence = (copy: JudgmentCopy | null | undefined): CheckedSequence | null => copy?.mode === "verified" ? copy.value.sequence : null;
 export const copyKind = (copy: JudgmentCopy): ScopeKind => copy.mode === "verified" ? copy.value.sequence.kind : copy.mode === "local-retained" ? localCopy(copy).kind : copy.kind;
 
 /** Full matching always precedes hash deduplication, including in the caller arm. */

@@ -9,7 +9,7 @@ import { countedEntries, archivedPosition, heldPositions, judgeFloor } from "@ge
  */
 
 import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, Effect, FactRef, Created, Grant, Head, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, SequenceRef, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
-import { admitSequenceGenesis, birthUse, canonicalBytes, canonicalize, digestBytes, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newGenesisNonce, parseStrict, sealedFactRef, platformName, retainedValueKey, scopeIdOf, textDigest, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import { admitSequenceGenesis, canonicalBytes, canonicalize, digestBytes, definitionDigest, intentDigest, isDigest, isEntry, isGrant, rawRetainedJSON, isPlatformDefinition, newGenesisNonce, parseStrict, sealedFactRef, platformName, retainedValueKey, scopeIdOf, textDigest, utf8, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { readRetainedUses, same, actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, resolvedEntryEffects, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
 import type { ClassifiedRetainedUse, RetainedResultOperand, SelectedRetainedUse, ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, OwnRetainedRow, RetainedOwn, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -75,9 +75,6 @@ export function used(draft: Pick<Draft, "uses">, facts: readonly Fetched[], reta
   return draft.uses.map((use) => {
     const read = facts.find((f) => f.fact.hash === use.fact.hash);
     if (read) return { kind: "entry", digest: use.content, bytes: canonicalize(read.entry), under: producerName(read) };
-    // Ruling a140a1c6, Q-B1: a birth use that the judgment added beside a later use takes the genesis bytes of that fact's sequence.
-    const born = use.fact.seq === 0 ? facts.find((f) => same(f.sequence.at, use.fact.at) && f.sequence.kind === use.kind && same(birthUse(f.sequence), use)) : undefined;
-    if (born) return { kind: "entry", digest: use.content, bytes: born.sequence.birth, under: producerName(born) };
     const kept = retained.find((value) => same(value.use.fact, use.fact) && value.use.content === use.content && value.use.kind === use.kind);
     if (!kept || typeof kept.use.producer.name !== "string") throw new Error(`the foreign entry ${use.fact.hash} was not fetched before the turn`);
     return { kind: "entry", digest: use.content, bytes: kept.use.originalBytes, under: kept.use.producer.name };

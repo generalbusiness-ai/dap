@@ -141,13 +141,10 @@ export class Weighing extends Ledger {
     const kept = new Set<Digest>();
     for (const { entry } of this.entries) {
       for (const use of entry.uses) {
+        const copy = copies.find((held) => held.fact.hash === use.fact.hash)!;
         if (kept.has(use.content)) continue;
         kept.add(use.content);
-        const copy = copies.find((held) => held.fact.hash === use.fact.hash);
-        if (copy) { retained.push({ kind: "entry", digest: digestBytes(utf8(canonicalize(copy.entry))), bytes: canonicalize(copy.entry), under: copy.under }); continue; }
-        // Ruling a140a1c6, Q-B1: a birth use beside a later use retains the genesis bytes that the copy's sequence was admitted from.
-        const born = copies.find((held) => held.fact.at.scope === use.fact.at.scope && use.fact.seq === 0)!;
-        retained.push({ kind: "entry", digest: digestBytes(utf8(born.sequence.birth)), bytes: born.sequence.birth, under: born.under });
+        retained.push({ kind: "entry", digest: digestBytes(utf8(canonicalize(copy.entry))), bytes: canonicalize(copy.entry), under: copy.under });
       }
     }
     return { scope: this.at, entries: this.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };
