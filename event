@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:79dded06366dc17ac88c48a14c556c431d23a256","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-index-v17.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:79fe59fb6ce80c4ebee62e0ee960e2a42c75a878","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-local-device-fixture.ts."}
