@@ -192,3 +192,20 @@ slot. Two sites did:
 - `packages/cli/src/command-verify.ts:57`: the verify source reads create
   results only from a register's pages. The check now compares the page's
   scope with the configured register. Question V1 asks whether that holds.
+
+## Re-pinned platform digests
+
+The dropped kind checks change the declaration bytes of three platform
+versions. `packages/platform/scripts/pin-native-declarations.mjs` wrote the
+new pins into `native-declarations.generated.ts`. Ruling 862eb586, item 6,
+asks for this list. No other pin changed.
+
+| Version | Old digest | New digest |
+|---|---|---|
+| `platform:inbox@1` | `sha256:2d4fb56155ddc0cf02bfc75ac89a261c35aeb3069771e4a51429319ccd204748` | `sha256:1110d86e954737e3b9412887f0f357ac9374a60e43570ef2e28fe79c64c0cfe0` |
+| `platform:destination@5` | `sha256:aed97f875f0331aeb249deff7a35b45378decfae43a3efedb5eac8ca43433f96` | `sha256:40d9aae597c18d7507edc096c699e7e9730b2cb918b8375edb2cc36938539209` |
+| `platform:destination@6` | `sha256:aed97f875f0331aeb249deff7a35b45378decfae43a3efedb5eac8ca43433f96` | `sha256:40d9aae597c18d7507edc096c699e7e9730b2cb918b8375edb2cc36938539209` |
+
+`packages/platform/test/versions.test.ts` states the new pins. The I5 note,
+`notes/implementation/2026-10-07-i5-definition-versions-delivery.md`, keeps
+the old inbox digest as the record of its time.
