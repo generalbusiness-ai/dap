@@ -2178,12 +2178,20 @@ class Verifier {
     const distinctForeign = [...new Map(foreign.map(fact => [canonicalize(fact), fact])).values()];
     const proved = new Map<string, "replayed" | "anchored">();
     const assumedCopies: AnchoredCopy[] = [];
+    // Ruling a140a1c6, Q-B1: an entry that used a later entry of a sequence also used its birth. The retained birth bytes, which
+    // the genesis digest binds, give the association of that sequence when this replay did not replay the source.
+    const births = new Map<string, CheckedSequence>();
+    for (const copy of rawFacts) {
+      if (copy.fact.seq !== 0) continue;
+      const birth = admitSequenceGenesis(copy.bytes, copy.fact.at, bounds.entryBytes);
+      if (birth) births.set(canonicalize(copy.fact.at), birth);
+    }
     for (const fact of distinctForeign) {
       if (!isFactRef(fact)) throw mismatch("a reference is not a fact reference");
       proved.set(canonicalize(fact), await this.#prove(fact, where, depth, entry));
       this.#recordedKind(entry, fact, where);
       const copies = rawFacts.filter(copy => same(copy.fact, fact));
-      const source = this.#runs.get(fact.at.scope), sequence = source?.sequence;
+      const source = this.#runs.get(fact.at.scope), sequence = source?.sequence ?? births.get(canonicalize(fact.at));
       if (sequence && sameScope(sequence.at, fact.at)) {
         for (const copy of copies) {
           if (!isEntryOf(copy.entry, fact, sequence)) throw mismatch("the retained source body does not match its checked sequence");
