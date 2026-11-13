@@ -325,11 +325,9 @@ function scopedApi(binding: Binding, address: string | null, creationAdmission: 
     },
     async submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> {
       if (signed?.intent?.kind === "found") {
-        const owned = boundedServingIntent(signed);
-        if (owned) {
-          const decision = await admitServing(creationAdmission, { kind: "found", signed: owned }, address);
-          if (decision === "rate-limited" || decision === "unavailable") return { answer: "unavailable", reason: decision };
-        }
+        // Every found submit charges the address. An unbounded intent crosses as null.
+        const decision = await admitServing(creationAdmission, { kind: "found", signed: boundedServingIntent(signed) }, address);
+        if (decision === "rate-limited" || decision === "unavailable") return { answer: "unavailable", reason: decision };
       }
       return (await at(scope)?.submit(signed, grants, beside, address)) ?? { answer: "unavailable", reason: "unavailable" };
     },
