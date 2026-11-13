@@ -7,7 +7,6 @@ import { keyIdOfSecret } from "@generalbusiness/dap-bytes";
 // witnesses. Any unexpected key creation, import, write or signing is a failure.
 function uiKeys(publicKeys: readonly string[]) {
   const forbidden = vi.fn(async () => { throw new Error("Unexpected UI key operation"); });
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/browser-key-store.ts", () => ({ pageKeyStore: () => ({
     load: async (key: string) => {
       if (!publicKeys.includes(key)) throw new Error("Unknown scripted browser key");
@@ -69,7 +68,7 @@ test("joined room/account clicks disclose identity without leaving the room, and
   }));
   vi.stubGlobal("document", { title: "", activeElement: null, getElementById: () => root, createElement: (tag: string) => new Element(tag), createElementNS: (_ns: string, tag: string) => new Element(tag) });
   vi.stubGlobal("location", location);
-  vi.stubGlobal("localStorage", { getItem: (key: string) => key === "artroom-page:v2" ? saved : null, setItem });
+  vi.stubGlobal("localStorage", { getItem: (key: string) => key === "dap-page-settings-2" ? saved : null, setItem });
   let redraw!: () => void;
   vi.stubGlobal("window", { addEventListener: (_name: string, handler: () => void) => { redraw = handler; } });
   let main!: typeof import("../src/main.ts");
@@ -130,5 +129,5 @@ test("joined room/account clicks disclose identity without leaving the room, and
 
     expect(unexpectedKeyOperation).not.toHaveBeenCalled();
     expect(setItem).not.toHaveBeenCalled(); expect(root.textContent).not.toContain("Settings");
-  } finally { await fixture.retire(); vi.unstubAllGlobals(); vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.doUnmock("../src/data.ts"); vi.resetModules(); }
+  } finally { await fixture.retire(); vi.unstubAllGlobals(); vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/data.ts"); vi.resetModules(); }
 }));

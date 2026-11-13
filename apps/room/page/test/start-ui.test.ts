@@ -106,7 +106,6 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
   });
   const save = vi.fn((name: string, text: string) => { values.set(name, text); });
   vi.doMock("@generalbusiness/dap-client", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-client")>("@generalbusiness/dap-client"), creationOffer: offerRead }));
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/connection-custody.ts", () => ({ connectInvitation: issue, originalConnection: () => connection, creatorConnectionFiles: files, saveCreatorRecoveryOnce: recovery }));
   vi.doMock("../src/start-custody.ts", () => ({ originalStart: () => original, startRoom: start }));
   vi.doMock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"), openRoom: async (session: import("../src/data.ts").Session) => ({ session, directory: selectedDirectory.scope, membership, key, name: "Recorded host name", me: verified ? { handle: "@founder", role: "admin", actions: [], ref: { membership, member: "@founder" } } : null }) }));
@@ -243,18 +242,18 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     expect(root.textContent).toContain("new owner-only DAP_HOME directory");
     // A late ready-screen action cannot replace a newly selected connection.
     const changedSettings = JSON.stringify({ place: null, publicKey: keyIdOfSecret(new Uint8Array(32).fill(64)) });
-    values.set("artroom-page:v2", changedSettings);
+    values.set("dap-page-settings-2", changedSettings);
     opening = Promise.resolve(find("button", "Open room").fire("click"));
     await opening;
     expect(save).not.toHaveBeenCalled();
-    expect(values.get("artroom-page:v2")).toBe(changedSettings);
+    expect(values.get("dap-page-settings-2")).toBe(changedSettings);
   } finally {
     // Retain globals until the actual async click callback settles, even if
     // an assertion fails. A rejected callback remains a test failure.
     try { await opening; }
     finally {
       createUrl.mockRestore(); revokeUrl.mockRestore(); vi.unstubAllGlobals();
-      for (const path of ["@generalbusiness/dap-client", "../src/start-custody.ts", "../src/connection-custody.ts", "../src/page-key-migration.ts", "../src/data.ts", "../src/view.ts"]) vi.doUnmock(path);
+      for (const path of ["@generalbusiness/dap-client", "../src/start-custody.ts", "../src/connection-custody.ts", "../src/data.ts", "../src/view.ts"]) vi.doUnmock(path);
     }
   }
 });

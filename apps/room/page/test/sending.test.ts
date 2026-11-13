@@ -7,7 +7,6 @@ import { keyIdOfSecret, digestBytes, newIncarnation, scopeIdOf } from "@generalb
 // witnesses. Any unexpected key creation, import, write or signing is a failure.
 function uiKeys(publicKeys: readonly string[]) {
   const forbidden = vi.fn(async () => { throw new Error("Unexpected UI key operation"); });
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/browser-key-store.ts", () => ({ pageKeyStore: () => ({
     load: async (key: string) => {
       if (!publicKeys.includes(key)) throw new Error("Unknown scripted browser key");
@@ -292,7 +291,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     // and joins actual draw/action work before restoring globals.
     await fixture.retire();
     vi.unstubAllGlobals();
-    vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/view.ts"); vi.doUnmock("@generalbusiness/dap-bytes");
+    vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/view.ts"); vi.doUnmock("@generalbusiness/dap-bytes");
   }
   expect(unexpectedKeyOperation).not.toHaveBeenCalled();
 }));
@@ -572,7 +571,7 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
   } finally {
     await fixture.retire();
     vi.clearAllTimers();vi.useRealTimers();
-    vi.unstubAllGlobals();vi.doUnmock('../src/browser-key-store.ts');vi.doUnmock('../src/page-key-migration.ts');vi.doUnmock('../src/view.ts');vi.doUnmock('../src/data.ts');vi.doUnmock('../src/retained-editor.ts');vi.doUnmock('@generalbusiness/dap-bytes');vi.resetModules();
+    vi.unstubAllGlobals();vi.doUnmock('../src/browser-key-store.ts');vi.doUnmock('../src/view.ts');vi.doUnmock('../src/data.ts');vi.doUnmock('../src/retained-editor.ts');vi.doUnmock('@generalbusiness/dap-bytes');vi.resetModules();
   }
   expect(unexpectedKeyOperation).not.toHaveBeenCalled();
 }));

@@ -43,7 +43,8 @@ import { controlKey, keepFocus, restoreFocus } from "./focus.ts";
 import { allowedClaim, claimRoom, claimStatus, type ClaimRegister } from "./claim.ts";
 import { joinInvitation, checkOriginal, originalJoin, type JoinResult } from "./join-custody.ts";
 
-const KEPT = "artroom-page:v2";
+// Rooms of the new format keep the settings slot under a new name. The old name is never read.
+const KEPT = "dap-page-settings-2";
 // This owner covers rendering, workbench submissions/source loads and native
 // creation-follow reads. Entry enrollment/connection and clipboard handlers
 // are not a whole-page shutdown contract.

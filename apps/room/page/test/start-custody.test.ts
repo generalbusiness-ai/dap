@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, verify } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, verify } from "@generalbusiness/dap-bytes";
 import { signedIntent, type CreationOffer } from "@generalbusiness/dap-client";
 import type { Context, PendingClaim, Repository } from "@generalbusiness/dap-cli/browser";
 
@@ -27,14 +27,14 @@ function fixture() {
 
 test("scripted retained Start keeps its founder key before the CLI boundary; reload Check is read-only and Continue keeps the original envelope and key", async () => {
   cli.claim.mockReset(); cli.checkClaim.mockReset();
-  // The v1 private-custody format migrates independently of the current offer.
   const register = { ...ref("register"), scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@17", creator: null, cause: textDigest("SCRIPTED retained Start"), ordinal: 0 }) };
   const retainedOffer: CreationOffer = { ...offer, register };
   const f = fixture(), offerRead = vi.fn(async () => retainedOffer);
-  f.values.set(`artroom-page-start:v2:${origin}`, canonicalize({ v: 1, origin, secret: b64url(new Uint8Array(32).fill(61)), configured: { register, definition: "platform:register@17" }, label: "Personal intent", handle: "@founder" }));
+  const founder = await keys.create();
+  f.values.set(`dap-page-start-2:${origin}`, canonicalize({ v: 2, origin, publicKey: founder.key, configured: { register, definition: "platform:register@17" }, label: "Personal intent", handle: "@founder" }));
   let original: SignedIntent | undefined, posts = 0, creator: string | undefined;
   cli.claim.mockImplementation(async (ctx: Context) => {
-    const descriptorBytes = f.values.get(`artroom-page-start:v2:${origin}`)!;
+    const descriptorBytes = f.values.get(`dap-page-start-2:${origin}`)!;
     expect(!!descriptorBytes, "founder-key readback precedes the workflow boundary").toBe(true);
     const descriptor = JSON.parse(descriptorBytes) as { publicKey: string; secret?: string };
     const signer = (await ctx.store.signer!("browser"))!;
@@ -62,8 +62,8 @@ test("scripted retained Start keeps its founder key before the CLI boundary; rel
   expect(first.pending).toBe(true); expect(posts).toBe(1);
   expect(first.configured).toEqual({ register, definition: "platform:register@17" });
   const status = originalStart(origin, f.storage)!;
-  expect(status.key).toBe(keyIdOfSecret(new Uint8Array(32).fill(61)));
-  expect(JSON.parse(f.values.get(`artroom-page-start:v2:${origin}`)!).secret).toBeUndefined();
+  expect(status.key).toBe(founder.key);
+  expect(JSON.parse(f.values.get(`dap-page-start-2:${origin}`)!).secret).toBeUndefined();
   expect(Object.keys(status).sort()).toEqual(["configured", "handle", "key", "label", "operation", "state"]);
   const bytesBefore = [...f.values.entries()];
   const reload: ClaimStorage = { getItem: key => f.values.get(key) ?? null, setItem: (key, value) => { f.values.set(key, value); } };
@@ -78,7 +78,7 @@ test("scripted retained Start keeps its founder key before the CLI boundary; rel
   expect(posts).toBe(2);
   // Losing the original journal cannot turn an attempted Start into a new
   // claim. The separate descriptor still carries its exact operation.
-  const descriptorBeforeLoss = f.values.get(`artroom-page-start:v2:${origin}`)!;
+  const descriptorBeforeLoss = f.values.get(`dap-page-start-2:${origin}`)!;
   expect((JSON.parse(descriptorBeforeLoss) as { operation: string }).operation).toBe(status.operation);
   for (const name of [...f.values.keys()]) if (name.startsWith("dap-page-claim-2:")) f.values.delete(name);
   const uuid = vi.spyOn(crypto, "randomUUID"), randomness = vi.spyOn(crypto, "getRandomValues");
@@ -90,7 +90,7 @@ test("scripted retained Start keeps its founder key before the CLI boundary; rel
     expect(posts).toBe(2); expect(uuid).not.toHaveBeenCalled(); // Public-key derivation uses 16-byte scalar blinding in the pinned
     // curve implementation; a new creator seed would require 32 bytes.
     expect(randomness.mock.calls.some(([array]) => array?.byteLength === 32)).toBe(false);
-    expect(f.values.get(`artroom-page-start:v2:${origin}`) === descriptorBeforeLoss).toBe(true);
+    expect(f.values.get(`dap-page-start-2:${origin}`) === descriptorBeforeLoss).toBe(true);
   } finally { uuid.mockRestore(); randomness.mockRestore(); }
 });
 
@@ -109,9 +109,9 @@ test("scripted dropped, malformed or stale Start custody stops before the workfl
   const dropped: ClaimStorage = { getItem: () => null, setItem: () => {} };
   await expect(startRoom(origin, dropped, { mode: "new", label: "Room", offer, locks })).rejects.toThrow("private Start");
   expect(cli.claim).not.toHaveBeenCalled();
-  const malformed = fixture(); malformed.values.set(`artroom-page-start:v2:${origin}`, "{broken");
+  const malformed = fixture(); malformed.values.set(`dap-page-start-2:${origin}`, "{broken");
   await expect(startRoom(origin, malformed.storage, { mode: "new", label: "Room", offer, locks })).rejects.toThrow("private Start");
-  expect(malformed.values.get(`artroom-page-start:v2:${origin}`)).toBe("{broken");
+  expect(malformed.values.get(`dap-page-start-2:${origin}`)).toBe("{broken");
   const stale = fixture();
   await expect(startRoom(origin, stale.storage, { mode: "new", label: "Room", offer, locks, current: () => false })).rejects.toThrow("private Start");
   expect(stale.values.size).toBe(0); expect(cli.claim).not.toHaveBeenCalled();
@@ -130,7 +130,7 @@ test("completed Start hands off the enrolled signer, preserves the separate reco
   cli.claim.mockReset(); cli.checkClaim.mockReset();
   const f = fixture();
   cli.claim.mockImplementation(async (ctx: Context) => {
-    const descriptor = JSON.parse(f.values.get(`artroom-page-start:v2:${origin}`)!) as { configured: { definition: string }; publicKey: string };
+    const descriptor = JSON.parse(f.values.get(`dap-page-start-2:${origin}`)!) as { configured: { definition: string }; publicKey: string };
     expect(descriptor.configured.definition).toBe("platform:register@17");
     const config = (await ctx.store.config())!;
     expect(config.register).toEqual(register);
@@ -144,7 +144,7 @@ test("completed Start hands off the enrolled signer, preserves the separate reco
   });
   const result = await startRoom(origin, f.storage, { mode: "new", label: "Room", offer, creationOffer: async () => offer, locks });
   expect(result.repository).toEqual(repository);
-  const actual = JSON.parse(f.values.get(`artroom-page-start:v2:${origin}`)!) as { publicKey: string; secret?: string };
+  const actual = JSON.parse(f.values.get(`dap-page-start-2:${origin}`)!) as { publicKey: string; secret?: string };
   expect(result.signer?.key).toBe(actual.publicKey); expect(actual.secret).toBeUndefined();
   const message = new Uint8Array([1, 2, 3]);
   expect(verify(result.key, await result.signer!.sign(message), message)).toBe(true);

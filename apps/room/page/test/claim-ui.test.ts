@@ -5,7 +5,6 @@ import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 // Native creation/recovery is witnessed separately against real scopes.
 test("only an eligible configured founder sees creation; an in-flight or stale claim cannot replace another room", async () => {
   vi.doMock("../src/browser-key-store.ts", async () => ({ ...await vi.importActual<typeof import("../src/browser-key-store.ts")>("../src/browser-key-store.ts"), pageKeyStore: scriptedPageKeys }));
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   const gate = () => { let resolve!: () => void; const promise = new Promise<void>((done) => { resolve = done; }); return { promise, resolve }; };
   let rendered = gate();
   class Element {
@@ -146,5 +145,5 @@ test("only an eligible configured founder sees creation; an in-flight or stale c
     expect(root.find((element) => element.tag === "button" && element.textContent === "Create room")).toBeUndefined();
     eligible = true; locked = false; rendered = gate(); redraw(); await rendered.promise;
     expect(root.find((element) => element.tag === "button" && element.textContent === "Create room")).toBeUndefined();
-  } finally { vi.unstubAllGlobals(); for (const path of ["../src/claim.ts", "../src/data.ts", "../src/view.ts", "../src/browser-key-store.ts", "../src/page-key-migration.ts", "@generalbusiness/dap-bytes"]) vi.doUnmock(path); }
+  } finally { vi.unstubAllGlobals(); for (const path of ["../src/claim.ts", "../src/data.ts", "../src/view.ts", "../src/browser-key-store.ts", "@generalbusiness/dap-bytes"]) vi.doUnmock(path); }
 });

@@ -4,7 +4,6 @@ import { afterEach, expect, test, vi } from "vitest";
 import { canonicalize, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { secretSigner } from "@generalbusiness/dap-client";
 import { claimRoom, claimStatus, type ClaimLocks, type ClaimRegister, type ClaimStorage } from "../src/claim.ts";
-import { migrateOriginalJoin } from "../src/join-custody.ts";
 import { startRoom } from "../src/start-custody.ts";
 import { memoryPageKeys } from "./private-key-fixture.ts";
 
@@ -56,7 +55,6 @@ test("a stop before the lock reads no custody, so it says that a saved request c
   vi.stubGlobal("navigator", {});
   expect(await stopOf(claimRoom(session, configured, storageOf(journal({ [operation]: record })), "Room", { mode: "resume", operation, keys: memoryPageKeys() }))).toBe("This browser cannot lock private claim recovery across tabs. This step sent nothing. A saved creation stays kept, and an earlier send of it can have gone. A new creation can make a second room.");
   expect(await stopOf(startRoom(origin, storageOf(), { mode: "check", keys: memoryPageKeys() }))).toBe("Private Start locking is unavailable. This step sent nothing. A saved Start stays kept, and an earlier send of it can have gone. A new creation can make a second room.");
-  expect(await stopOf(migrateOriginalJoin(origin, storageOf(), { keys: memoryPageKeys() }))).toBe("Private enrollment locking is unavailable. This step sent nothing. A saved enrollment stays kept, and an earlier send of it can have gone. Do not use the invitation again.");
 });
 
 test("a fresh creation with no record keeps the plain words", async () => {

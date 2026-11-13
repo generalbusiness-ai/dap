@@ -40,14 +40,14 @@ export function oauthCallback(authorization: OAuthAuthorization, response: { cod
 }
 
 export async function selectedOAuthRoom(origin: string, storage: CustodyStorage, options: OAuthContextOptions = {}): Promise<OAuthSelection> {
-  const raw = storage.getItem("artroom-page:v2");
+  const raw = storage.getItem("dap-page-settings-2");
   if (raw === null || utf8(raw).length > 64 * 1024) throw new Error("Open this room in dap and select your browser key, then return here.");
   let kept: unknown;
   try { kept = parseStrict(raw); } catch { throw new Error("Open this room in dap and select your browser key, then return here."); }
   if (!isRecord(kept) || !isKeyId(kept["publicKey"]) || Object.hasOwn(kept, "secret") || !isRecord(kept["place"]) || !isScopeId(kept["place"]["directory"]) || !isScopeRef(kept["place"]["membership"])) throw new Error("Open this room in dap and select your browser key, then return here.");
   const browser = globalThis as { location?: { origin: string } };
   if (new URL(origin).origin !== origin || browser.location && browser.location.origin !== origin) throw changed();
-  const current = () => storage.getItem("artroom-page:v2") === raw;
+  const current = () => storage.getItem("dap-page-settings-2") === raw;
   const signer = await (options.keys ?? pageKeyStore()).load(kept["publicKey"]);
   if (!current() || signer.key !== kept["publicKey"]) throw changed();
   const fetch = options.fetch ?? globalThis.fetch.bind(globalThis) as Fetch, now = options.now ?? (() => Date.now());

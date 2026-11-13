@@ -13,8 +13,6 @@ import {
 // stand-ins. A readable config alone supplies no verified room membership.
 test("Config and key select a room only after matching standing and exact storage readback; legacy Settings shows only the chooser", async () => {
   vi.doMock("../src/browser-key-store.ts", async () => ({ ...await vi.importActual<typeof import("../src/browser-key-store.ts")>("../src/browser-key-store.ts"), pageKeyStore: scriptedPageKeys }));
-  const migratePageOperations = vi.fn(async () => { throw new Error("Retired startup migration must not run."); });
-  vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations }));
   class Element {
     children: (Element | string)[] = [];
     attrs: Record<string, string> = {};
@@ -101,6 +99,10 @@ test("Config and key select a room only after matching standing and exact storag
     ["artroom-page", "TEST old settings stay unread"],
     [`artroom-page-start:${location.origin}`, "TEST old Start stays unread"],
     [`artroom-page-enrollment:${location.origin}`, "TEST old enrollment stays unread"],
+    ["artroom-page:v2", "TEST old settings slot stays unread"],
+    [`artroom-page-start:v2:${location.origin}`, "TEST old Start stays unread"],
+    [`artroom-page-enrollment:v2:${location.origin}`, "TEST old enrollment stays unread"],
+    ["artroom-page-lists:v2", "TEST old tab list stays unread"],
   ]);
   const oldBytes = [...oldRows], storageReads: string[] = [];
   const retiredAttempts = { get: [] as string[], set: [] as string[], remove: [] as string[], enumerate: [] as (string | number)[] };
@@ -224,7 +226,7 @@ test("Config and key select a room only after matching standing and exact storag
     getItem: (k: string) => {
       storageReads.push(k);
       if (oldRows.has(k)) { retiredAttempts.get.push(k); throw new Error("The new Page opened retired browser storage."); }
-      if (k !== "artroom-page:v2") return null;
+      if (k !== "dap-page-settings-2") return null;
       if (readFails) {
         readFails = false;
         throw new Error("Scripted readback failure");
@@ -237,7 +239,7 @@ test("Config and key select a room only after matching standing and exact storag
     },
     setItem: (k: string, v: string) => {
       if (oldRows.has(k)) { retiredAttempts.set.push(k); throw new Error("The new Page changed retired browser storage."); }
-      if (k !== "artroom-page:v2") return;
+      if (k !== "dap-page-settings-2") return;
       writes(v);
       if (storageMode !== "drop") saved = v;
       if (storageMode === "readback") readFails = true;
@@ -338,7 +340,6 @@ test("Config and key select a room only after matching standing and exact storag
         ),
     ).toBe(false);
     expect(document.title).toBe("dap - workroom");
-    expect(migratePageOperations).not.toHaveBeenCalled();
     expect(storageReads.some(name => oldRows.has(name))).toBe(false);
     expect([...oldRows]).toEqual(oldBytes);
     expect(retiredAttempts).toEqual({ get: [], set: [], remove: [], enumerate: [] });
@@ -347,7 +348,7 @@ test("Config and key select a room only after matching standing and exact storag
     vi.unstubAllGlobals();
     vi.doUnmock("../src/data.ts");
     vi.doUnmock("../src/view.ts");
-    vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts");
+    vi.doUnmock("../src/browser-key-store.ts");
     vi.resetModules();
   }
 });

@@ -6,7 +6,6 @@ import { scriptedPageKeys } from "./scripted-page-key-store.ts";
 test("Main mounts a new corrected-proposal control for verified invalid-path text and keeps publication/review unavailable", async () => {
   vi.resetModules();
   vi.doMock('../src/browser-key-store.ts',async()=>({...await vi.importActual<typeof import('../src/browser-key-store.ts')>('../src/browser-key-store.ts'),pageKeyStore:scriptedPageKeys}));
-  vi.doMock('../src/page-key-migration.ts',()=>({migratePageOperations:async()=>{}}));
   let rendered!: () => void;
   const done = new Promise<void>(resolve => { rendered = resolve; });
   let activeRender: Promise<void> | null = null;
@@ -55,6 +54,6 @@ test("Main mounts a new corrected-proposal control for verified invalid-path tex
     // Retain the scripted globals until the requested terminal publication;
     // do not turn an early assertion into an unowned draw continuation.
     try { await activeRender; }
-    finally { vi.unstubAllGlobals();vi.doUnmock('../src/data.ts');vi.doUnmock('../src/retained-editor.ts');vi.doUnmock('../src/claim.ts');vi.doUnmock('@generalbusiness/dap-bytes');vi.doUnmock('../src/browser-key-store.ts');vi.doUnmock('../src/page-key-migration.ts');vi.resetModules(); }
+    finally { vi.unstubAllGlobals();vi.doUnmock('../src/data.ts');vi.doUnmock('../src/retained-editor.ts');vi.doUnmock('../src/claim.ts');vi.doUnmock('@generalbusiness/dap-bytes');vi.doUnmock('../src/browser-key-store.ts');vi.resetModules(); }
   }
 });

@@ -12,7 +12,7 @@ const storage = (): ListStorage & { records: Map<string, string> } => {
 };
 
 test("list queries and filters survive redraw and fresh tab-runtime reads without crossing room, membership, device or destination", () => {
-  const kept = storage(), retiredName = "artroom-page-lists:v1", retiredBytes = "TEST old list preferences stay unread";
+  const kept = storage(), retiredName = "artroom-page-lists:v2", retiredBytes = "TEST old list preferences stay unread";
   kept.records.set(retiredName, retiredBytes);
   const reads: string[] = [];
   const retiredAttempts = { get: [] as string[], set: [] as string[], remove: [] as string[], enumerate: [] as (string | number)[] };

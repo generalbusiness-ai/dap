@@ -79,7 +79,7 @@ export async function consentOAuth(selection: OAuthSelection, authorization: OAu
   if (authorization.issuer !== selection.origin) throw unavailable();
   const locks = options.locks ?? (globalThis as { navigator?: { locks?: ClaimLocks } }).navigator?.locks;
   if (!locks) throw new Error("This browser cannot keep the original connection safely. Use a browser with Web Locks.");
-  return locks.request("artroom-oauth-connection:" + selection.binding, async () => {
+  return locks.request("dap-oauth-connection-2:" + selection.binding, async () => {
     currentOAuth(selection);
     let journal = custody.read(selection.binding, storage), row: Row;
     const base: Config = { v: 2, service: selection.origin, key: "browser", handle: selection.room.me!.handle,
