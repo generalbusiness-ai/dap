@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:432e965083e3d43ea1caf701b3cf10c4aea0d560","text":"Merge retired a covered predecessor; the successor is at packages/client/src/web.d.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:44014e07afe02b049cb2e34ec5985951510a6402","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/install-words.ts."}
