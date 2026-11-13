@@ -109,7 +109,7 @@ test("published written callbacks and the direct plan outcome fit their frozen-r
   expect(measured.effects).toBe(18);
   for (const variant of measured.variants) {
     const entry = { ...variant.entry, uses: Array.from({ length: PROPOSED_BOUNDS.usesPerEntry }, (_, n) => ({
-      fact: { ...fact(n, destination), seq: Number.MAX_SAFE_INTEGER - n }, content: d("f"),
+      fact: { ...fact(n, destination), seq: Number.MAX_SAFE_INTEGER - n }, content: d("f"), kind: "destination" as const,
     })) };
     expect(isEntry(entry), `${variant.name} complete entry`).toBe(true);
     // Independently materialize the full canonical uses array rather than

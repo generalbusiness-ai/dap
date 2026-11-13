@@ -58,7 +58,7 @@ describe("exact pre-publication capacity identities", () => {
       state: { page: (type: string) => ({ items: type === "branch" ? [branch] : type === "evidence-ledger" ? [ledger] : [], more: false }), lookup: () => anchor ? [anchor.id] : [],
         item: (id: number) => id === 0 ? branch : id === 1 ? ledger : anchor && id === anchor.id ? { id, values: { capacity: anchor.capacity } }
           : [10, 30, 40, 50].includes(id) ? { id, type: "publication", refs: { manifest: fact(5) }, values: {} } : null,
-        scope: () => ({ at: destination, head: { seq: 90, hash: d("a") } }) },
+        scope: () => ({ at: destination, kind: "destination", head: { seq: 90, hash: d("a") } }) },
     } as unknown as RuleGiven;
   }
   it("reserves a hold key once across publications and adds only newly touched keys", () => {
