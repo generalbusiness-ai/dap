@@ -8,20 +8,17 @@ const keys = memoryPageKeys();
 const joinInvitation: typeof actualJoinInvitation = (origin, invitation, storage, options) => actualJoinInvitation(origin, invitation, storage, { keys, ...options });
 const checkOriginal: typeof actualCheckOriginal = (origin, storage, options) => actualCheckOriginal(origin, storage, { keys, ...options });
 
-test("legacy pending enrollment imports the same key before removing its seed and keeps the original envelope across reload", async () => {
+test("a legacy pending enrollment of format 1 is refused, kept unchanged and never sent", async () => {
   const f = fixture(), secret = new Uint8Array(32).fill(67); f.lose();
-  const original = await joinInvitation(origin, invitation(), f.storage, { fetch: f.fetch, now, lock, secret });
+  await joinInvitation(origin, invitation(), f.storage, { fetch: f.fetch, now, lock, secret });
   const name = [...f.values.keys()][0]!, current = JSON.parse(f.values.get(name)!);
   const { publicKey: _publicKey, ...retained } = current;
-  const legacy = { ...retained, v: 1, secret: b64url(secret) };
-  const signed = JSON.stringify(legacy.prepared.signed);
-  f.values.set(name, JSON.stringify(legacy));
-  const checked = await checkOriginal(origin, f.storage, { fetch: f.fetch, now, lock, keys: memoryPageKeys() });
-  expect(checked?.status).toBe("verified"); expect(checked?.key).toBe(original.key);
-  const migrated = JSON.parse(f.values.get(name)!);
-  expect(migrated.v).toBe(2); expect(migrated.secret).toBeUndefined(); expect(migrated.publicKey).toBe(original.key);
-  expect(JSON.stringify(migrated.prepared.signed)).toBe(signed);
-  expect(f.counters().posts).toBe(1);
+  const legacy = JSON.stringify({ ...retained, v: 1, secret: b64url(secret) });
+  f.values.set(name, legacy);
+  const posts = f.counters().posts;
+  await expect(checkOriginal(origin, f.storage, { fetch: f.fetch, now, lock, keys: memoryPageKeys() })).rejects.toThrow("The original private enrollment is unavailable or no longer current. Nothing was replaced.");
+  expect(f.values.get(name)).toBe(legacy);
+  expect(f.counters().posts).toBe(posts);
 });
 
 // Actual signer/codec/HTTP adapter with SCRIPTED storage, locking and service

@@ -112,7 +112,6 @@ test("Config and key select a room only after matching standing and exact storag
   const seed = new Uint8Array(32).fill(82),
     secret = b64url(seed);
   const membership = {
-    kind: "membership" as const,
     scope: scopeIdOf({
       v: 1,
       kind: "membership",

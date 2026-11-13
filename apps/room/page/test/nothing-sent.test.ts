@@ -16,7 +16,7 @@ const binding = canonicalize([origin, register, "platform:register@8", keyIdOfSe
 const name = `dap-page-claim-2:${binding}`;
 const operation = "60000000-0000-4000-8000-000000000001";
 const locks: ClaimLocks = { request: async (_name, run) => run() };
-const record = canonicalize({ v: 1, binding, label: "Room", config: { v: 1, service: origin, key: "browser", register } });
+const record = canonicalize({ v: 1, binding, label: "Room", config: { v: 2, service: origin, key: "browser", register } });
 const journal = (claims: Record<string, string>, active = operation) => canonicalize({ v: 2, binding, active, claims });
 const storageOf = (bytes?: string): ClaimStorage => {
   const values = new Map<string, string>(bytes === undefined ? [] : [[name, bytes]]);
@@ -34,7 +34,7 @@ test.each([
   ["a journal that is not JSON", "not json", "The private claim journal cannot be read. It is kept."],
   ["a journal of another context", canonicalize({ v: 2, binding: "another", active: operation, claims: { [operation]: record } }), "The private claim journal does not match this context. It is kept."],
   ["a record that is not JSON", journal({ [operation]: "not json" }), "The private claim record cannot be read. It is kept."],
-  ["a record of another register", journal({ [operation]: canonicalize({ v: 1, binding: "another", label: "Room", config: { v: 1, service: origin, key: "browser", register } }) }), "The private claim record does not match this Worker, register and key. It is kept."],
+  ["a record of another register", journal({ [operation]: canonicalize({ v: 1, binding: "another", label: "Room", config: { v: 2, service: origin, key: "browser", register } }) }), "The private claim record does not match this Worker, register and key. It is kept."],
 ])("resuming over %s cannot say what an earlier send did", async (_case, bytes, first) => {
   expect(await stopOf(resume(storageOf(bytes)))).toBe(`${first} ${UNKNOWN}`);
 });
@@ -47,7 +47,7 @@ test("an operation that the journal has lost cannot say what an earlier send did
 
 test("a saved room with no proof says that an earlier step went ahead", async () => {
   const directory = { genesis: register.genesis, scope: register.scope };
-  const saved = canonicalize({ v: 1, binding, label: "Room", config: { v: 1, service: origin, key: "browser", register, repository: { directory, membership: directory, rules: register.scope, destination: register.scope } } });
+  const saved = canonicalize({ v: 1, binding, label: "Room", config: { v: 2, service: origin, key: "browser", register, repository: { directory, membership: directory, rules: register.scope, destination: register.scope } } });
   expect(await stopOf(resume(storageOf(journal({ [operation]: saved }))))).toBe("The saved room has no exact native claim recovery proof. It is kept. This step sent nothing, and an earlier step of this creation went ahead. Report it. A new creation makes a second room.");
 });
 

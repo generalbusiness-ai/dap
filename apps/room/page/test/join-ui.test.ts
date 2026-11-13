@@ -149,7 +149,6 @@ test("Invitation paste joins automatically once; Back and reload keep unknown en
   const seed = new Uint8Array(32).fill(81),
     key = keyIdOfSecret(seed);
   const membership = {
-    kind: "membership" as const,
     scope: scopeIdOf({
       v: 1,
       kind: "membership",
@@ -382,7 +381,6 @@ test("A retained first refusal stays readable after reload and allows only a dif
   const root = new Element("div");
   const location = { origin: "https://page.test", hash: "#/invitation" };
   const membership = {
-    kind: "membership" as const,
     scope: scopeIdOf({
       v: 1,
       kind: "membership",

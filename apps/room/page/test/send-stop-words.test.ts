@@ -64,7 +64,7 @@ test("a changed room or key stops the send, and the words speak of this press", 
   const outcomes: string[] = [];
   const list = vi.fn(async () => { throw new Error("no reply to the list"); });
   vi.doMock("../src/browser-key-store.ts", () => ({ pageKeyStore: () => ({ load: async (asked: string) => ({ key: asked, sign: forbidden }), create: forbidden, migrate: forbidden, saveSettings: forbidden }) }));
-  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value }));
+  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "genesis" in value }));
   vi.doMock("../src/tasks.ts", async () => ({ ...await vi.importActual<typeof import("../src/tasks.ts")>("../src/tasks.ts"), issueDialogOutcome: (_context: string, _state: string, message: string) => { outcomes.push(message); } }));
   vi.doMock("../src/data.ts", async () => {
     const { sessionKey, Unreadable } = await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts");

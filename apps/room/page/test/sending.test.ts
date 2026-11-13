@@ -95,7 +95,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
   const issueRead = vi.fn(async () => ({ questions: [], decided: [], state: "closed", intent: 0, requesterRef: room.me.ref }));
   // The captured send returns the actual owned action promise, including
   // its final redraw. A refused synchronous admission returns immediately.
-  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value }));
+  vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "genesis" in value }));
   vi.doMock("../src/data.ts", async () => {
     const { sessionKey, Unreadable } = await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts");
     return { sessionKey, Unreadable,

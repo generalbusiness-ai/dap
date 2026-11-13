@@ -42,7 +42,7 @@ test("page join refuses mismatched encoding before submission and accepts script
   const session: Session = { service: "https://page.test", secret: new Uint8Array(32).fill(7), fetch, now: () => Date.parse("2026-10-08T12:00:00Z") };
   expect(joinAssociation(session, encode({ ...original, invitation: 4, secret: "another-link" }))).toBe(joinAssociation(session, encode(original)));
   expect(joinAssociation({ ...session, secret: new Uint8Array(32).fill(8) }, encode(original))).not.toBe(joinAssociation(session, encode(original)));
-  const malformed = { ...original, repository: { ...repository, membership: { ...repository.membership, genesis: textDigest("TEST genesis 16") } } };
+  const malformed = { ...original, repository: { ...repository, membership: { ...repository.membership, genesis: "malformed" } } };
   expect([placeOf(encode(malformed)), placeOf(JSON.stringify({ repository: malformed.repository })), placeOf(encode({ ...original, repository: undefined }))]).toEqual([null, null, null]);
   expect(placeOf(JSON.stringify({ repository }))).toEqual({ directory: repository.directory.scope, membership: repository.membership });
   for (const changed of [

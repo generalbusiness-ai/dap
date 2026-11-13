@@ -102,7 +102,7 @@ test("cursor spelling, schema, UTF8, bound and nesting failures are distinct fro
 
 test("authorized continuation checks report full head/genesis drift and exact query mismatch", () => {
   const current = query({ cursor: encodeItemQueryCursor(cursor())! });
-  for (const of of [{ ...scope, scope: `sc_${"b".repeat(52)}` as const }, { ...scope, genesis: `sha256:${"b".repeat(63)}a` as const }]) {
+  for (const of of [{ ...scope, scope: `sc_${"b".repeat(51)}a` as const }, { ...scope, genesis: `sha256:${"b".repeat(63)}a` as const }]) {
     expect(itemQueryContinuation(current, of, head)).toEqual({ ok: false, reason: "wrong-scope" });
     expect(itemQueryContinuation({ ...current, scope: of }, of, head)).toEqual({ ok: false, reason: "stale-cursor" });
     expect(itemQueryArgument(query({ scope: of }))).not.toBe(itemQueryArgument(query()));

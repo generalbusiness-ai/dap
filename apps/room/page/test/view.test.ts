@@ -195,7 +195,7 @@ test("dap acknowledgement requires an accepted receipt and a known observation",
   const receipt = { fact: { at: { scope: "sc_exact", genesis: textDigest("TEST genesis 39") }, seq: 91, hash: "sha256:exact" }, definition: "sha256:definition", intent: "sha256:intent", effects: [], sends: [], epoch: 0 } as const;
   const acted: Parameters<typeof answerLine>[0] = { digest: "sha256:scripted" as never, service: "https://fake.test", directory: "sc_directory", membership: { scope: "sc_membership", genesis: textDigest("TEST genesis 40") }, key: "key_exact", kind: "comment", scope: "sc_exact", on: 7, before: { seq: 90, hash: "sha256:before" }, after: { seq: 91, hash: "sha256:exact" }, observation: null, answer: { answer: "accepted", receipt } };
   const accepted = answerLine(acted) as unknown as Element;
-  for (const fact of ["sc_exact:91", "in_exact", "sha256:exact"]) expect(accepted.textContent).toContain(fact);
+  for (const fact of ["sc_exact:91", textDigest("TEST genesis 39"), "sha256:exact"]) expect(accepted.textContent).toContain(fact);
   expect(accepted.all("p").at(-1)?.textContent).toBe("dap.");
   for (const changed of [
     { ...acted, observation: "The view could not be read." },
@@ -229,7 +229,7 @@ test("an empty change list explains the first recorded source once in its list c
 test("Commons renders source lines and the member's marks without attributing them to the agent, and keeps content literal", () => {
   vi.stubGlobal("document", document);
   const scope = { scope: scopeIdOf({ v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED Commons UI"), ordinal: 0 }), genesis: textDigest("TEST genesis 41") };
-  const membership = { ...scope, kind: "membership" as const }, documentDigest = textDigest("<script>carrier</script>");
+  const membership = scope, documentDigest = textDigest("<script>carrier</script>");
   const fact = (seq: number) => ({ at: scope, seq, hash: textDigest(`SCRIPTED note ${seq}`) });
   const note = (seq: number, body: string, person = "@agent"): CommonsNote => ({ fact: fact(seq), author: { membership, member: person as `@${string}` }, key: "key_" + "A".repeat(43) as CommonsNote["key"], time: "2030-01-01T00:00:00Z", textDigest: textDigest(body), text: body, media: "application/json", about: [{ document: documentDigest, fragment: "line=2,3" }] });
   const rows = Array.from({ length: 14 }, (_, n) => note(n + 2, JSON.stringify({ charge: n + 1, amount: n + 20 })));
