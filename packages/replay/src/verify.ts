@@ -2231,6 +2231,9 @@ class Verifier {
           facts.push({ fact, entry: copy.entry, sequence, under: copy.under });
         }
       } else {
+        // Ruling 0f76cac1: a mismatch that replay can establish outranks a missing copy. Every derived
+        // delivery records a use of its own source first, so a recorded delivery without one cannot be derived.
+        if (!copies.length && input.type === "delivery" && same(fact, input.from)) throw mismatch("the delivery records no use of its own source entry");
         if (!copies.length) throw new Stop("incomplete", "an anchored source lacks its original retained copy", where, fact);
         for (const copy of copies) {
           const assumed = this.#privateCopy(fact, where, copy.bytes, entry, copy.under);
