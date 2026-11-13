@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:80700c2d19d0ad1f8b3898a834b7e8bc91f7e76d","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/shape.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:81901824679b0e7cf0feb4d04900a63bd152dd7e","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/review-control.ts."}
