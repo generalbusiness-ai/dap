@@ -17,6 +17,7 @@ import { rita, una } from "../../../../packages/scope/test/repository.ts";
 import { reader } from "../../../../packages/scope/test/fixtures-native.ts";
 import { soon } from "../../../../packages/scope/test/net.ts";
 import { archiveSql } from "../../../../packages/scope/test/support/archive.ts";
+import { ownReplayContext } from "../../../../packages/scope/test/support/own-replay-context.ts";
 import { localClone } from "../../../../packages/scope/test/support/local-clone.ts";
 import { ArchiveBudget } from "../../../../packages/scope/src/archive-budget.ts";
 import { ArchiveRows } from "../../../../packages/scope/src/archive-row.ts";
@@ -147,7 +148,8 @@ test("certified native policy and proof plus its consumed single policy envelope
         const sql = archiveSql(state), budget = new ArchiveBudget(), owner = new ArchiveRows(sql, at);
         const target = owner.target(repository, "sha1", budget);
         const made = await planPublishedArchivePass(sql, { at, through: { seq: last.entry.seq, hash: last.hash }, after: null,
-          bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: soon(0), fixtureSources, replayScopes }, budget);
+          bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: soon(0), fixtureSources, replayScopes,
+          replayContext: ownReplayContext(sql, at, PROPOSED_BOUNDS.entryBytes, new ArchiveBudget()) }, budget);
         if (!made.ok) return { ok: false as const, result: made, cost: budget.admitted() };
         const source = { object: async (id: string, maximum: number) => {
           const object = made.archive.objects.find(row => row.id === id);
@@ -155,18 +157,20 @@ test("certified native policy and proof plus its consumed single policy envelope
         } };
         const frontiers = new ArchiveFrontiers(sql, { at, repository: digestBytes(utf8(canonicalize(target.repository))), format: "sha1" });
         const prepared = await frontiers.prepareFromSource(source, made.mark, null, budget);
+        // The full plan leaves too little of its pass budget to stage. This test's Mark runs as its own transaction, with its own budget.
+        const marking = new ArchiveBudget();
         const confirmed = sql.transaction(() => {
-          owner.markAttempt(made.mark, soon(0), budget); frontiers.stage(prepared, budget);
-          frontiers.promote(prepared, budget); return owner.confirm(made.archive.commit, budget).confirmed!;
+          owner.markAttempt(made.mark, soon(0), marking); frontiers.stage(prepared, marking);
+          frontiers.promote(prepared, marking); return owner.confirm(made.archive.commit, marking).confirmed!;
         });
-        return { ok: true as const, archive: made.archive, anchors: made.anchors ?? [], confirmed, cost: budget.admitted() };
+        return { ok: true as const, archive: made.archive, anchors: made.anchors ?? [], confirmed, cost: budget.admitted(), markCost: marking.admitted() };
       }));
       expect(result.ok).toBe(true); if (!result.ok) throw Error("Actual full archive plan/Mark required");
       expect(result.confirmed).toMatchObject({ commit: result.archive.commit, through: { seq: last.entry.seq, hash: last.hash }, layout: 2, anchorsPublished: true });
       for (const object of result.archive.objects) objects.set(object.id, object);
       for (const fact of result.anchors) anchors.set(canonicalize(fact), fact);
       refs.set(journalRef(scope.name), result.archive.commit);
-      costs.push({ scope: scope.name, cost: result.cost });
+      costs.push({ scope: scope.name, cost: result.cost, markCost: result.markCost });
       if (scope === G) for (const value of expectedValues) expect(result.archive.selection.objects.some(row => row.key.kind === "value" && row.key.domain === value.domain && row.key.digest === value.digest)).toBe(true);
     }
     expect(refs.has(journalRef(R.name))).toBe(false); expect(refs.has(journalRef(M.name))).toBe(false);
