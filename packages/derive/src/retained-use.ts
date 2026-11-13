@@ -44,11 +44,15 @@ const object = (value: unknown): value is object => typeof value === "object" &&
 class LocalUse implements RetainedUse {
   readonly #owner: object;
   readonly mode = "local-retained-use" as const;
-  constructor(token: unknown, owner: object, readonly origin: FactRef, readonly useIndex: number,
-    readonly fact: FactRef, readonly content: Digest, readonly kind: ScopeKind, readonly entry: Entry,
-    readonly originalBytes: string, readonly producer: RetainedUse["producer"]) {
+  readonly origin: FactRef; readonly useIndex: number; readonly fact: FactRef; readonly content: Digest;
+  readonly kind: ScopeKind; readonly entry: Entry; readonly originalBytes: string; readonly producer: RetainedUse["producer"];
+  constructor(token: unknown, owner: object, origin: FactRef, useIndex: number,
+    fact: FactRef, content: Digest, kind: ScopeKind, entry: Entry,
+    originalBytes: string, producer: RetainedUse["producer"]) {
     if (token !== CONSTRUCT) throw new TypeError("retained use requires its actual local origin and row");
     this.#owner = owner;
+    this.origin = origin; this.useIndex = useIndex; this.fact = fact; this.content = content;
+    this.kind = kind; this.entry = entry; this.originalBytes = originalBytes; this.producer = producer;
     Object.freeze(this);
   }
   static is(value: unknown): value is LocalUse { return object(value) && #owner in value; }
@@ -58,9 +62,10 @@ class SelectedBirth {
   readonly #owner: object;
   readonly #sequence: CheckedSequence;
   readonly mode = "retained-birth" as const;
-  constructor(token: unknown, owner: object, readonly use: LocalUse, sequence: CheckedSequence) {
+  readonly use: LocalUse;
+  constructor(token: unknown, owner: object, use: LocalUse, sequence: CheckedSequence) {
     if (token !== CONSTRUCT) throw new TypeError("retained birth requires checked original bytes");
-    this.#owner = owner; this.#sequence = sequence; Object.freeze(this);
+    this.#owner = owner; this.use = use; this.#sequence = sequence; Object.freeze(this);
   }
   get sequence(): CheckedSequence { return this.#sequence; }
   static belongs(value: unknown, owner: object): value is SelectedBirth { return object(value) && #owner in value && value.#owner === owner; }
@@ -69,9 +74,10 @@ class SelectedBirth {
 class SelectedLater {
   readonly #owner: object;
   readonly mode = "retained-later" as const;
-  constructor(token: unknown, owner: object, readonly use: LocalUse) {
+  readonly use: LocalUse;
+  constructor(token: unknown, owner: object, use: LocalUse) {
     if (token !== CONSTRUCT) throw new TypeError("retained selection requires its actual local row");
-    this.#owner = owner; Object.freeze(this);
+    this.#owner = owner; this.use = use; Object.freeze(this);
   }
   static belongs(value: unknown, owner: object): value is SelectedLater { return object(value) && #owner in value && value.#owner === owner; }
   static ownsUse(value: unknown): value is SelectedLater { return object(value) && #owner in value && LocalUse.belongs(value.use, value.#owner); }
@@ -79,9 +85,10 @@ class SelectedLater {
 class GenuineUse {
   readonly #sequence: CheckedSequence;
   readonly mode = "genuine" as const;
-  constructor(token: unknown, readonly use: LocalUse, sequence: CheckedSequence) {
+  readonly use: LocalUse;
+  constructor(token: unknown, use: LocalUse, sequence: CheckedSequence) {
     if (token !== CONSTRUCT) throw new TypeError("retained association requires checked birth provenance");
-    this.#sequence = sequence; Object.freeze(this);
+    this.use = use; this.#sequence = sequence; Object.freeze(this);
   }
   get sequence(): CheckedSequence { return this.#sequence; }
   static is(value: unknown): value is GenuineUse { return object(value) && #sequence in value; }

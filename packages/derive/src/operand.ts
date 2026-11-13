@@ -31,9 +31,11 @@ const CONSTRUCT = Symbol("judgment-context-construction");
 class LocalRetainedCopy {
   readonly #use: RetainedUse;
   readonly mode = "local-retained" as const;
-  constructor(token: unknown, use: RetainedUse, readonly under: string) {
+  readonly under: string;
+  constructor(token: unknown, use: RetainedUse, under: string) {
     if (token !== CONSTRUCT || !isRetainedUse(use)) throw new TypeError("local judgment copy requires its original retained use");
     this.#use = use;
+    this.under = under;
     Object.freeze(this);
   }
   get fact(): FactRef { return this.#use.fact; }
