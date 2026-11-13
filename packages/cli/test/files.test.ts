@@ -4,10 +4,11 @@ import { Worker } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, test } from "vitest";
-import { b64url, keyIdOfSecret, timeOf, utf8, textDigest } from "@generalbusiness/dap-bytes";
+import { expect, test, vi } from "vitest";
+import { RETIRED_ROOM_READER_COMMIT, b64url, keyIdOfSecret, timeOf, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { fileStore } from "../src/files.ts";
+import { main } from "../src/main.ts";
 import { command } from "../src/line.ts";
 import { sessionOf } from "../src/command-support.ts";
 import { READ_SESSION_CACHE_BYTES } from "../src/store.ts";
@@ -156,4 +157,42 @@ test("issued session cache survives a new fileStore owner-only, rotates separate
     expect(await reopened.sessionCache!.read()).toBeNull(); expect(existsSync(cache)).toBe(false);
     expect(await reopened.private("read")).toEqual(utf8("immutable original request"));
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// Invariant: a home of format 1 names rooms that retired at the identifier cutover. The command's own entry
+// refuses it before any command reads a key, signs or sends a request, and it changes nothing in the home.
+test("a home of format 1 is refused at the command's entry with the retired-home sentence, and nothing in it changes", async () => {
+  const dir = join(mkdtempSync(join(tmpdir(), "artroom-cli-")), "artroom");
+  const store = fileStore(dir);
+  await store.keep("device", new Uint8Array(32).fill(41));
+  // STAND-IN: a config of format 1, as an older command wrote it. Its references name an incarnation and a kind.
+  const old = { v: 1, service: "https://retired.test", key: "device", repository: {
+    directory: { scope: `sc_${"a".repeat(52)}`, inc: `in_${"c".repeat(26)}`, kind: "directory" },
+    membership: { scope: `sc_${"b".repeat(52)}`, inc: `in_${"d".repeat(26)}`, kind: "membership" },
+    rules: `sc_${"e".repeat(52)}`, destination: `sc_${"f".repeat(52)}` } };
+  writeFileSync(join(dir, "config.json"), `${JSON.stringify(old, null, 2)}\n`, { mode: 0o600 });
+  const files = () => readdirSync(dir, { recursive: true, encoding: "utf8" }).sort().map(name => {
+    const path = join(dir, name), stats = statSync(path);
+    return [name, stats.mode, stats.mtimeMs, stats.isFile() ? readFileSync(path, "utf8") : null];
+  });
+  const before = files();
+  const saved = { dap: process.env["DAP_HOME"], artroom: process.env["ARTROOM_HOME"] };
+  const sent = vi.spyOn(globalThis, "fetch").mockImplementation(async () => { throw new Error("no request is sent from a retired home"); });
+  const errors: string[] = [];
+  const stderr = vi.spyOn(process.stderr, "write").mockImplementation((chunk: string | Uint8Array) => { errors.push(String(chunk)); return true; });
+  try {
+    process.env["DAP_HOME"] = dir; delete process.env["ARTROOM_HOME"];
+    for (const argv of [["status"], ["act", "read-token", "--on", "destination", "--target", "0", "--set", "hours=1"]]) {
+      errors.length = 0;
+      expect(await main(argv)).toBe(2);
+      expect(errors.join("")).toBe(`The home ${dir} names rooms of the old format. Those rooms retired at the identifier cutover, and commit ${RETIRED_ROOM_READER_COMMIT} reads them. Set a new DAP_HOME to join a room of the new format. Nothing in this home was changed.\n`);
+    }
+    expect(sent).not.toHaveBeenCalled();
+    expect(files()).toEqual(before);
+  } finally {
+    stderr.mockRestore(); sent.mockRestore();
+    if (saved.dap === undefined) delete process.env["DAP_HOME"]; else process.env["DAP_HOME"] = saved.dap;
+    if (saved.artroom === undefined) delete process.env["ARTROOM_HOME"]; else process.env["ARTROOM_HOME"] = saved.artroom;
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
