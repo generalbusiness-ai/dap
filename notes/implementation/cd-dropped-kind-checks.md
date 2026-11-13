@@ -205,12 +205,12 @@ slot. Two sites did:
   (`partitionIndexes`), so a row to a partition locks the directory and reads
   "in this room".
 - `packages/cli/src/command-verify.ts:57`: the verify source reads create
-  results only from a register's pages. Ruling 190b31f4 confirmed a check that
-  compared the page's full reference with the configured register (V1). A
-  member's home saves no register, so that check read no results (B17). The
-  scan now reads the pages of the named scope and keeps only a result that a
-  Directory genesis delivered for a create this page's scope sent: only a
-  register sends that create.
+  results only from a register's pages. Ruling 190b31f4 (V1) compares the
+  page's full reference with the register where the configuration holds one. A
+  member's home holds none, and the check then read no results (B17). The scan
+  now skips the comparison only when the configuration holds no register. It
+  keeps only a result that a Directory genesis delivered for a create that the
+  page's own scope sent, and only a register sends that create.
 
 ## The retired-room reader commit
 
@@ -533,7 +533,7 @@ in the old shape. "Vector" means a measured number moved with the new bytes.
 | B14 | `client/src/handle.ts` `log` | An entry with no `input` threw a `TypeError` in place of the handle's `TransportError`. | The check reads `input` only when it is an object, so such an entry is "not this scope's entry at that seq" (`handle-log.test`). |
 | B15 | `client/src/application-route.ts` | A screen context that named one scope in two fields, such as the Directory in the `scope` field, passed once the kind checks went. | The five fields must name five different scope IDs (`application-route.test`). |
 | B16 | `cli/src/clone-proof.ts` `readTokenReceipt` | The proof admitted only a Destination definition that `platform()` resolves, so a read token from another Destination version proved nothing. Main's kind check admitted every version. | It admits any `platform:destination@` definition (`clone-proof.test`). |
-| B17 | `cli/src/command-verify.ts` `replaySource` | The register scan required the configured register. A member's home saves none, so the scan read no create results. | The scan drops that condition. The loop already keeps only a Directory genesis's result for a create the page's scope sent (`verify.test`, "only an actual Session-forbidden Directory genesis…"). |
+| B17 | `cli/src/command-verify.ts` `replaySource` | The register scan required the configured register. A member's home holds none, so the scan read no create results. | The scan compares the page with the configured register only when the configuration holds one (V1). The loop already keeps only a Directory genesis's result for a create the page's scope sent (`verify.test`, "only an actual Session-forbidden Directory genesis…"). |
 | B18 | `replay/src/verify.ts` anchored sources | A copy for a fact that `#otherRoomResult` proves had no raw-copy context, so replay stopped `incomplete`. | Replay admits that copy when its entry checks against its own birth, and adds it to the facts (the second-room test in `verify.test`). |
 
 ## Creator comparisons (audit accepted in a5d65e58)
@@ -765,7 +765,7 @@ The cutover changes 78 plain seals and 55 named-owner seals in `scripts/security
 | `packages/cli/src/command-scope.ts:entryLine` | `61bf6dce3240` | `b33d37dabac5` | register test reads the definition |
 | `packages/cli/src/command-verify.ts:$module` | `ebda9dc52241` | `08579a0e3076` | genesis in place of kind |
 | `packages/cli/src/command-verify.ts:sessionDeniedDependency` | `72ee1a12a971` | `8d700dc0b3ba` | genesis in place of kind |
-| `packages/cli/src/command-verify.ts:replaySource` | `e2b4cc945442` | `66913d758f64` | genesis in place of kind; register scan without the configured register (B17) |
+| `packages/cli/src/command-verify.ts:replaySource` | `e2b4cc945442` | `efa791c6df8f` | genesis in place of kind; register scan compares only a configured register (B17) |
 | `packages/cli/src/command-verify.ts:sharedProofLines` | `e549a716ca1e` | `34b301124799` | genesis in place of kind |
 | `packages/cli/src/command-repository.ts:destinationStateOf` | `941a3b984ed8` | `a0daccc378fc` | destination test reads the definition |
 | `packages/mcp/src/service.ts:$module` | `70866d46d425` | `cbd7d615614d` | store-retired refusal; {scope, genesis} refs; kind checks rest on definitions |
@@ -800,7 +800,7 @@ The cutover changes 78 plain seals and 55 named-owner seals in `scripts/security
 - `packages/cli/src/command-membership.ts` (config v2; entry body admitted by isEntryBodyOf). The join path writes configuration version 2 and admits a fetched entry only when isEntryBodyOf matches it to the expected fact and the hash agrees.
 - `packages/cli/src/command-repository.ts` (destination test reads the definition). A destination counts when its definition is the known platform:destination; the reference kind test goes.
 - `packages/cli/src/command-scope.ts` (register test reads the definition). The full-register answer applies when the room's platform definition names platform:register, in place of the reference kind. Delivery lines name the source kind that the input carries.
-- `packages/cli/src/command-verify.ts` (genesis in place of kind). A denied dependency counts only at entry 0 with a hash equal to its genesis. The register create-result scan reads the named scope's pages and keeps only a Directory genesis's applied result for a create that the page's own scope sent, and admits each entry with isEntryBodyOf. Proof lines print genesis in place of incarnation.
+- `packages/cli/src/command-verify.ts` (genesis in place of kind). A denied dependency counts only at entry 0 with a hash equal to its genesis. The register create-result scan reads the configured register by its full reference when the home holds one, and the named scope's pages when it holds none. It keeps only a Directory genesis's applied result for a create that the page's own scope sent, and admits each entry with isEntryBodyOf. Proof lines print genesis in place of incarnation.
 - `packages/cli/src/files.ts` (home format v2; RetiredHomeError). A v1 home now raises RetiredHomeError, and a v2 config must pass an exact shape check before any command reads it.
 - `packages/cli/src/invitations.ts` (ref shape; inbox genesis check; v2). The invitation inbox check compares the birth hash with the summary's genesis and the seed's scope ID, not inc.
 - `packages/cli/src/scope-index-manifest.ts` (manifest rows {at, kind}; creator via source). The manifest verifier reads rows of {at, kind}, binds a genesis by seed and hash, resolves genesis-self creators through the source fact, and reports a genesis-kind mismatch.
