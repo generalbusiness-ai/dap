@@ -94,8 +94,10 @@ export class ReadPreparation {
       const stored = applied ? reader.own(0, maxBytes) : reader.birth(maxBytes), expected = { at: snapshot.scope.at, seq: 0, hash: snapshot.scope.genesis.hash };
       if (stored.kind !== "body" || !same(stored.value.fact, expected)) return budget.stop();
       // The genesis byte ceiling is already prepaid. Charge the additional
-      // bounded factory validation as one existing validation candidate.
-      budget.spend({ calls: 1, candidates: 1 });
+      // bounded validation as one validation candidate. It makes no SQL
+      // call, so it spends no `calls`: a session read of a destination
+      // uses all 16 calls without it.
+      budget.spend({ candidates: 1 });
       const sequence = admitSequenceGenesis(stored.value.bytes, expected.at, maxBytes);
       if (!sequence) return budget.stop();
       const entry = proofEntry(stored.value, expected, maxBytes, sequence);
