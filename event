@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ef2c1ac6aca7deb1449ff5aff25fcbc77f2cdbb6","text":"Merge retired a covered predecessor; the successor is at apps."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ef5aae696c44b7dd391fdf06b110ac332582b5e6","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-adaptive.ts."}
