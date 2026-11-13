@@ -180,7 +180,7 @@ describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
         (await verify(httpSource("https://scopes.test", { fetch: routed }), { mode: "replay", scope: name, grants: "as-recorded", platform: code, anchors: [{ scope: lane.at.scope, seq: 3, hash: from.hash }] })).report;
       const [same, none, ruleless] = [await replayed(platform), await replayed(), await replayed((named) => { const supplied = platform(named); return supplied && { ...supplied, rules: {} }; })];
       expect([same, none, ruleless]).toMatchObject([{ result: "consistent", target: { seq: 2 } }, { result: "unsupported-definition", at: { seq: 0 } }, { result: "unsupported-definition", at: { seq: 0 } }]);
-      expect([same.trusts.includes(platformCode(NAMED)), none.trusts.some((trust) => trust.startsWith("platform-code")), same.coverage]).toEqual([true, false, [{ scope: ref, from: 0, through: 2 }]]);
+      expect([same.trusts.includes(platformCode(NAMED)), none.trusts.some((trust) => trust.startsWith("platform-code")), same.coverage]).toEqual([true, false, [{ scope: ref, kind: "directory", from: 0, through: 2 }]]);
 
       // The same scope, in a runtime that has lost the rule: test support supplies the data with no rule. Section 6.1, "A mark with
       // no rule: the whole scope": the scope admits nothing, whatever the row. The act that was judged above is now not judged, and
