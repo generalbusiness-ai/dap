@@ -12,7 +12,7 @@
  */
 
 import type { DeclaredDefinition, Entry, RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, digestBytes, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { born, deliver, fields, created, genesisOnly, keys, notesDefinition, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, hashOfBytes, type MemoryScope } from "../src/index.ts";
 
@@ -99,11 +99,25 @@ export function rewrite(scope: MemoryScope, seq: number, change: (entry: any) =>
 /** The digest a `uses` records for a foreign entry: of its canonical bytes. */
 export const contentOf = (bytes: string) => digestBytes(utf8(bytes));
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function resign(before: any, after: any): void {
+  if (typeof after !== "object" || after === null) return;
+  if (typeof after.sig === "string" && typeof after.intent === "object" && after.intent !== null && Object.keys(after).length === 2
+    && canonicalize(after.intent) !== canonicalize(before?.intent)) {
+    const signer = Object.values(keys).find((k) => k.key === after.intent.actor);
+    if (!signer) throw new Error("a changed intent has no fixture key to sign it again");
+    after.sig = signIntent(after.intent, signer.secret).sig;
+    return;
+  }
+  for (const key of Object.keys(after)) resign(before?.[key], after[key]);
+}
+
 /**
  * Change entry `seq` of one scope and seal every history of the world again, as its writers would have sealed it.
  * A changed genesis gives its scope a new genesis digest. Each later entry, in any scope, that names a changed
  * entry or genesis is written again with the new values: its `prev`, its `uses` and every reference in its input.
  * The entries are sealed in the order in which they used each other, so each history stays bound to its genesis.
+ * A signed intent whose text changed is signed again by its actor's key from the fixture keys.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function reseal(w: World, name: keyof World, seq: number, change: (entry: any) => void): void {
@@ -126,8 +140,9 @@ export function reseal(w: World, name: keyof World, seq: number, change: (entry:
     for (const o of needs(s)) visit(o, path);
     path.delete(s);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const entry: any = JSON.parse(replaceAll(s.bytes));
+    const before = JSON.parse(s.bytes), entry: any = JSON.parse(replaceAll(s.bytes));
     if (s.name === name && s.seq === seq) change(entry);
+    resign(before, entry);
     const bytes = canonicalize(entry), hash = hashOfBytes(bytes) as string;
     if (hash !== s.old) { swap.set(s.old, hash); swap.set(oldContent.get(s.old)!, contentOf(bytes)); }
     if (s.seq === 0 && hash !== oldGenesis.get(s.name)) swap.set(oldGenesis.get(s.name)!, hash);
