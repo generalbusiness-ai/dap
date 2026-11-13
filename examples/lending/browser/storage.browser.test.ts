@@ -1,14 +1,15 @@
 /** Real IndexedDB/Web Locks/WebCrypto witness; transport and recorded answers are STAND-INs.
  * No native membership, deployed room, public pages or audio is proved here. */
-import type { Receipt, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Receipt, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, intentDigest, scopeIdOf, textDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { signedIntent } from "@generalbusiness/dap-client";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { advance, lendingBinding, type Envelope, type Kept, type LendingIdentity, type Ports } from "./custody.ts";
 import { deviceSigner, newDeviceKey } from "./join.ts";
 import { actStore, browserLock, remembered } from "./storage.ts";
 
-const ref = (kind: ScopeRef["kind"]): ScopeRef => ({ kind, scope: scopeIdOf({ v: 1, kind, definition: LENDING_DEFINITION, creator: null, cause: textDigest("PUBLIC TEST browser storage " + kind), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(29)) });
+// A reference names a scope ID and a genesis hash, and no kind. The seed kind only varies the stand-in scope ID.
+const ref = (kind: ScopeKind): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: LENDING_DEFINITION, creator: null, cause: textDigest("PUBLIC TEST browser storage " + kind), ordinal: 0 }), genesis: textDigest("PUBLIC TEST browser storage genesis " + kind) });
 let sends = 0;
 async function mounted() {
   return browserLock.run(async () => {
