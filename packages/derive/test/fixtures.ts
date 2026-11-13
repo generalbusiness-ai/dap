@@ -12,7 +12,7 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Bounds, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Grant, Input, Intent, KeyId, MemberRef, ObservationUse, ScopeRef, Seed, Send, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import type { Bounds, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Grant, Input, Intent, KeyId, MemberRef, ObservationUse, ScopeRef, GenesisEntry, Seed, Send, SequenceEntry, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, newGenesisNonce, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { MemoryState, actionOf, applyEntry, clockOf, entryOf, judgeAct, judgeDelivery, judgeGenesis, judgeTimed, messageFacts, nextDue, timeMs, timeOf, validateDefinition } from "../src/index.ts";
 import type { CheckedSequence } from "@generalbusiness/dap-bytes";
@@ -308,6 +308,18 @@ export function ownWith<T>(read: (seq: number) => T, sequence: CheckedSequence |
 }
 
 /** Only the actual fixture ledger can supply its admitted genesis association. */
+/** A test reads this entry as a later entry of its sequence, which binds its genesis. */
+export function later(entry: Entry): SequenceEntry {
+  if (entry.input.type === "genesis") throw new Error("the entry is a genesis, not a later entry");
+  return entry as SequenceEntry;
+}
+
+/** A test reads this entry as the genesis of its sequence. */
+export function genesisOnly(entry: Entry): GenesisEntry {
+  if (entry.input.type !== "genesis") throw new Error("the entry is not a genesis");
+  return entry as GenesisEntry;
+}
+
 export function fixtureSequence(ledger: Ledger): CheckedSequence {
   const sequence = ledger.own.sequence();
   if (!sequence) throw new Error("the fixture ledger has no admitted genesis");

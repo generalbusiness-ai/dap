@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, FactRef, FactUse, FieldValue, GenesisEffect, GenesisSelfRef, Request, Result, ScopeKind } from "@generalbusiness/dap-contract";
 import { applyEntry, FoldError, MemoryState, messageFacts, stateDigest, validateDefinition, type Fetched } from "../src/index.ts";
-import { Scope, arrive, created, decided, deliver, fields, keys, on, ticket, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
+import { Scope, arrive, created, decided, deliver, fields, keys, on, ticket, ticketDefinition, valid, variant, fixtureSequence } from "./fixtures-entry.ts";
 
 import { canonicalBytes, digestBytes, entryHash, isEntry, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 
@@ -173,7 +173,7 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
 
     // A fact that a field names is fetched before the turn, like a fact that an act names. Until it is, the delivery is not decided.
     X.did(rita, "link", fields({ target: B.at, about: 0 }));
-    const proof = { fact: X.fact(2), entry: X.entries[2]!.entry, under: X.under };
+    const proof = { fact: X.fact(2), entry: X.entries[2]!.entry, sequence: fixtureSequence(X), under: X.under };
     B.did(rita, "done", on(B, card));
     expect(tell("post", { text: "f", proof: proof.fact })).toEqual({ result: "unavailable", reason: "dependency-unavailable" });
     // The entry records it beside the source entry. One entry uses only so many foreign entries, and the source entry is one of them.
@@ -187,7 +187,7 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
     // A handler for a sender under another definition does not receive the message, so its declared fields name nothing to fetch.
     const under = variant(board, forms_handlers_change2);
     const message = { class: "request", type: "tell", body: { message: "post", fields: { text: "f", proof: proof.fact } } } as const;
-    expect(["ticket", "desk"].map((sender) => messageFacts(B.state, under, message, X.fact(1), B.bounds, sender))).toEqual([[proof.fact], []]);
+    expect(["ticket", "desk"].map((sender) => messageFacts(B.state, under, message, X.fact(1), fixtureSequence(X).kind, B.bounds, sender))).toEqual([[proof.fact], []]);
   });
 
   test("a result clause changes the items that its entry selected, read as they are now, and not an item that the entry did not find", () => {

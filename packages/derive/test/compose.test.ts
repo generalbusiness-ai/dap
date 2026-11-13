@@ -1,7 +1,7 @@
 import { composeChange0, composeChange1, composeChange2, composeChange3, composeChange4, composeChange5, composeChange6, composeChange7, composeChange8, composeChange9 } from "./definition-corpus/compose-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Attempt, Input, Result, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
+import type { Attempt, Input, Result, Seed, Send } from "@generalbusiness/dap-contract";
 import { deliveryCauseDigest, entryHash, factRefOf, intentDigest, isEntryBodyOf, isEntryOf, messageDigest, newGenesisNonce, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { MemoryState, applyEntry, checkpointOf, clockOf, entryOf, fits, judgeCheckpoint, judgeDelivery, judgeDiagnosis, judgeGenesis, owed, prepareRules, stateDigest, useOf } from "../src/index.ts";
 import type { Creation, DeliveryContext, Draft, Fetched, Judged, Source, ValidDefinition } from "../src/index.ts";
@@ -62,7 +62,7 @@ describe("founding a directory and creating a child (sections 7.1 and 7.2)", () 
       input: { type: "delivery", from: I.fact(0), n: 0, clause: "applied" }, effects: [{ effect: "state", item: 1, state: "created" }],
       sends: [{ n: 0, to: I.at, message: { class: "control", type: "confirm", genesis: I.fact(0) } }],
     });
-    expect(D.state.creation(seedDigest(seed))).toEqual({ inc: I.at.inc, seq: 2 });
+    expect(D.state.creation(seedDigest(seed))).toEqual({ genesis: I.at.genesis, seq: 2 });
 
     // A confirmation is admitted only from the creator's entry that recorded this genesis's result: not from its act, D.1.
     const other = forged(D.at, 7, D.entries[1]!.entry.input, D.last.sends, fixtureSequence(D));
@@ -92,11 +92,11 @@ describe("founding a directory and creating a child (sections 7.1 and 7.2)", () 
     const first = born(D, 3).child;
     deliver(D, first, 0);
     const second = born(D, 3, 0, 21).child;
-    expect([second.at.scope, second.at.inc === first.at.inc]).toEqual([first.at.scope, false]);
+    expect([second.at.scope, second.at.genesis === first.at.genesis]).toEqual([first.at.scope, false]);
     expect(deliver(D, second, 0).result).toBe("write");
     expect(D.last).toMatchObject({ input: { clause: "conflict" }, effects: [{ effect: "state", item: 3, state: "conflicted" }], sends: [] });
     // The incarnation held and the request's one result are still the first's. The second stays provisional for good.
-    expect([D.state.creation(seedDigest(seed)), D.state.request(3, 0)!.result, second.state.scope()!.status]).toEqual([{ inc: first.at.inc, seq: 4 }, { seq: 4, clause: "applied" }, "provisional"]);
+    expect([D.state.creation(seedDigest(seed)), D.state.request(3, 0)!.result, second.state.scope()!.status]).toEqual([{ genesis: first.at.genesis, seq: 4 }, { seq: 4, clause: "applied" }, "provisional"]);
   });
 
   test("two deliveries with identical message bytes create two different children, and an exact repeat adds nothing", () => {
@@ -204,7 +204,7 @@ describe("a relationship update (section 7.3)", () => {
     const head = I.head;
     expect(judged(I, P, 2, 0, { from: sourceFact(twice), source: twice })).toMatchObject(unverified);
     // The address names this scope ID with another incarnation, or another scope. No source entry is needed to say so.
-    expect(judged(I, P, 2, 0, { to: { ...I.at, inc: P.at.inc }, source: null })).toEqual({ result: "routing", reason: "wrong-genesis" });
+    expect(judged(I, P, 2, 0, { to: { ...I.at, genesis: P.at.genesis }, source: null })).toEqual({ result: "routing", reason: "wrong-genesis" });
     expect(judged(I, P, 2, 0, { to: P.at, source: null })).toEqual({ result: "routing", reason: "not-found" });
     expect(I.head).toEqual(head);
   });
@@ -325,7 +325,7 @@ describe("what a written refusal or a later clause records of what it read (sect
     const { asked, context } = creationUnder(D, cited, { proof: fetched.fact });
     // The opener is rita, so the guard is false. The entry holds the source entry and P: the child can derive the refusal again from its own retained bytes.
     expect(judgeGenesis(new MemoryState(), cited, asked, { ...context, facts: [fetched] })).toMatchObject({
-      result: "write", draft: { input: { decision: "refused" }, uses: [useOf(asked.from, context.source!.entry), useOf(fetched.fact, entry)], sends: [{ message: { outcome: "refused", reason: { code: "guard-failed" } } }] },
+      result: "write", draft: { input: { decision: "refused" }, uses: [useOf(asked.from, context.source!.entry, context.source!.sequence.kind), useOf(fetched.fact, entry, fetched.sequence.kind)], sends: [{ message: { outcome: "refused", reason: { code: "guard-failed" } } }] },
     });
 
     // The same creation under a definition whose later field names a local item. No item exists before a genesis, so it is refused
@@ -333,7 +333,7 @@ describe("what a written refusal or a later clause records of what it read (sect
     const itemised = variant(ticket, composeChange3(proof));
     const early = creationUnder(D, itemised, { proof: fetched.fact, zItem: 0 });
     expect(judgeGenesis(new MemoryState(), itemised, early.asked, { ...early.context, facts: [fetched] })).toMatchObject({
-      result: "write", draft: { input: { decision: "refused" }, uses: [useOf(early.asked.from, early.context.source!.entry), useOf(fetched.fact, entry)], sends: [{ message: { outcome: "refused", reason: { code: "no-item" } } }] },
+      result: "write", draft: { input: { decision: "refused" }, uses: [useOf(early.asked.from, early.context.source!.entry, early.context.source!.sequence.kind), useOf(fetched.fact, entry, fetched.sequence.kind)], sends: [{ message: { outcome: "refused", reason: { code: "no-item" } } }] },
     });
 
     // An `ask` whose fields name P. Its `undelivered` clause runs in a later entry and reads P again; the origin entry recorded P first.
@@ -341,7 +341,7 @@ describe("what a written refusal or a later clause records of what it read (sect
     const S = new Scope(asking);
     expect(S.act(una, "ask", fields({ desk: D.at, proof: fetched.fact }), { facts: [fetched] }).result).toBe("write");
     expect(judgeDiagnosis(S.state, asking, { of: { seq: 2, n: 0 }, attempts: [{ at: t(0), answer: "not-found" }] }, { ...reading(S), facts: [fetched], origin: S.last })).toMatchObject({
-      result: "write", draft: { input: { finding: "undelivered" }, uses: [useOf(fetched.fact, entry)], effects: [{ effect: "state", item: 2, state: "failed" }] },
+      result: "write", draft: { input: { finding: "undelivered" }, uses: [useOf(fetched.fact, entry, fetched.sequence.kind)], effects: [{ effect: "state", item: 2, state: "failed" }] },
     });
   });
 });

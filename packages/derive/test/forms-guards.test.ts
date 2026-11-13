@@ -4,7 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, FieldValue, Guard, Operand, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/dap-bytes";
 import { judgeDelivery, validateDefinition, type ActJudgment, type Fetched, type ProblemCode } from "../src/index.ts";
-import { Scope, arriving, fields, forged, created, keys, on, t, ticketDefinition, valid } from "./fixtures-entry.ts";
+import { Scope, arriving, fields, forged, created, keys, on, t, ticketDefinition, valid, fixtureSequence } from "./fixtures-entry.ts";
 
 const { rita } = keys;
 
@@ -90,7 +90,7 @@ describe("the list forms (section 6.5)", () => {
     const definition = probing(rows);
     const s = board(definition, [], [["a", "pass"], ["b", null]]);   // entry 3 requests job 3, entry 4 passes it, and entry 5 requests job 5
     const m = board(definition, [], [["c", "pass"]], 1);
-    const fetched: Fetched = { fact: m.fact(4), entry: m.entries[4]!.entry, under: m.under };
+    const fetched: Fetched = { fact: m.fact(4), entry: m.entries[4]!.entry, sequence: fixtureSequence(m), under: m.under };
     const probe = (proofs: FieldValue[], facts: Fetched[] = []) => s.judge(s.intent(rita, "probe-0", { ...on(s, 0), ...fields({ proofs }) }), { facts });
     const foreign = probe([s.fact(4), m.fact(4)], [fetched]);
     expect([said(foreign), foreign.result === "write" && foreign.draft.uses.map((u) => u.fact)]).toEqual(["passes", [m.fact(4)]]);

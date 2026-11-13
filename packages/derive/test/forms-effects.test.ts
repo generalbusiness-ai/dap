@@ -5,6 +5,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/dap-bytes";
 import { clockOf, evaluateEffects, judgeDelivery, validateDefinition, type ActJudgment, type Item, type Judging } from "../src/index.ts";
+import { verifiedCopy } from "../src/operand.ts";
 import { Scope, arriving, deliver, fields, forged, created, keys, member, on, ticketDefinition, valid, type Actor, type Over } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
@@ -21,7 +22,7 @@ import { runClause } from "../src/handlers.ts";
 import { bodyStructure, namedBody } from "../src/program/structure.ts";
 import { executeBody } from "../src/program/body.ts";
 import { judgeGuardNodes } from "../src/program/guard-value.ts";
-import { otherLane, sequenceAt, t } from "./fixtures-entry.ts";
+import { later, otherLane, sequenceAt, t } from "./fixtures-entry.ts";
 
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
 
@@ -155,10 +156,10 @@ const derived = (s: Scope, kind: string, forms: readonly EffectForm[], bound: Re
   const probe = checked.declared.acts["probe"]!;
   if (s.last.input.type !== "act") return expect.fail("the effect probe requires an act entry template");
   // Explicit fetched-entry stand-in, hashed as production requires. It proves no provider judgment or authority.
-  const entry = { ...s.last, genesis: otherLane.genesis, input: { ...s.last.input, signed: s.intent(rita, "test-input", { to: otherLane, ...fields(more.given ?? {}) }) }, effects: [], sends: [] };
+  const entry = { ...later(s.last), genesis: otherLane.genesis, input: { ...s.last.input, signed: s.intent(rita, "test-input", { to: otherLane, ...fields(more.given ?? {}) }) }, effects: [], sends: [] };
   const fact = factRefOf(entry, otherLane);
   const j: Judging = { ...judging(s, kind, bound, more), definition: checked, kind: "probe", fieldTypes: probe.fields,
-    fields: { ...more.given, "test-proof": fact }, facts: new Map([[fact.hash, { fact, entry, sequence: sequenceAt(otherLane), under: "test-effects-source" }]]) };
+    fields: { ...more.given, "test-proof": fact }, facts: new Map([[fact.hash, verifiedCopy({ fact, entry, sequence: sequenceAt(otherLane), under: "test-effects-source" })]]) };
   return evaluateEffects(j, bodyStructure(checked, probe, "probe"), more.opens ?? null);
 };
 

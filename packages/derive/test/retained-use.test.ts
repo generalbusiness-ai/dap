@@ -91,8 +91,9 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   expect(isRetainedUse({ ...realUse })).toBe(false);
   expect(() => Reflect.construct(realUse.constructor, [])).toThrow(TypeError);
   expect(() => Reflect.construct(heldBirth.value.constructor, [])).toThrow(TypeError);
+  const heldSequence = heldBirth.value.sequence;
   expect(Reflect.set(heldBirth.value, "sequence", otherSequence)).toBe(false);
-  expect(() => Reflect.construct(heldBirth.value.sequence.constructor, [])).toThrow(TypeError);
+  expect(() => Reflect.construct(heldSequence.constructor, [])).toThrow(TypeError);
   // A genuine token pasted onto a plain selection cannot create provenance.
   expect(Reflect.apply(selected.project, undefined, [[{ mode: "retained-birth", use: realUse, sequence }], []])).toEqual({ status: "invalid-use" });
   expect(Reflect.apply(selected.project, undefined, [[Object.create(Object.getPrototypeOf(heldBirth.value))], []])).toEqual({ status: "invalid-use" });
@@ -307,7 +308,7 @@ test("retained selection preserves reads and admits only byte-proved same-origin
   expect(admitted.facts).toEqual([]);
   expect(judgmentFacts(admitted).map(copy => [copyEntry(copy), copyKind(copy), copyUnder(copy)]))
     .toEqual([[resultLater.value.use.entry, sequence.kind, "receiver:label"]]);
-  const bodyRead = readJudgmentFacts(local.state, { picked: { type: "fact", kind: ["checkpoint"], under: "receiver:label" } },
+  const bodyRead = readJudgmentFacts(local.state, { picked: { type: "fact", kind: ["checkpoint"], under: "receiver:label", required: true } },
     { picked: laterUse.fact }, judgmentFacts(admitted), { at: local.at });
   expect(bodyRead.result).toBe("read");
   expect(resultLater.value.use.originalBytes).toBe(laterBytes);

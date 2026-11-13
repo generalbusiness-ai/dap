@@ -54,7 +54,7 @@ export async function nativeCreatedSite(definition: DeclaredDefinition, permissi
   const site = await nativeChild(launcher, 0, definition, permissions, 19);
   expect(deliver(launcher, site, 0).result).toBe("write");
   expect(deliver(site, launcher, launcher.last.seq).result).toBe("write");
-  expect(site.at.kind).toBe("lane");
+  expect(site.state.scope()!.kind).toBe("lane");
   return { launcher, site };
 }
 export async function submit(ledger: Ledger, who: Actor, kind: string, over: Over = {}, facts: readonly Fetched[] = []) {
@@ -73,7 +73,7 @@ export function replay(ledger: Ledger, others: readonly Ledger[] = []) {
   const source = new MemorySource(all.map(current => {
     const foreign = new Map<Digest, RetainedInput>();
     for (const { entry } of current.entries) for (const use of entry.uses) {
-      const owner = all.find(other => other.at.scope === use.fact.at.scope && other.at.inc === use.fact.at.inc);
+      const owner = all.find(other => other.at.scope === use.fact.at.scope && other.at.genesis === use.fact.at.genesis);
       const original = owner?.entries[use.fact.seq];
       expect(original?.hash, "replay needs the exact foreign entry recorded by the native judge").toBe(use.fact.hash);
       const bytes = canonicalize(original!.entry);

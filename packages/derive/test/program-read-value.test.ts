@@ -12,7 +12,7 @@ import { Scope, d, directory, fields, keys, ownWith, small, t, valid } from "./f
 function checked(input: DeclaredDefinition): ValidDefinition { return valid(validateDefinition(input, PROPOSED_BOUNDS)); }
 function judging(definition: ValidDefinition): Judging {
   return { definition, view: new MemoryState(), bounds: PROPOSED_BOUNDS, clock: { reading: t(100), asOf: t(100), behind: false },
-    scope: { at: directory, creator: null }, kind: "edit", self: 20, fields: {}, fieldTypes: definition.declared.acts["edit"]!.fields,
+    scope: { at: directory, kind: "directory", creator: null }, kind: "edit", self: 20, fields: {}, fieldTypes: definition.declared.acts["edit"]!.fields,
     subjects: new Map(), signer: { member: keys.rita.member, principal: null }, facts: new Map(), prepared: [], used: [] };
 }
 function note(definition: ValidDefinition, id: number, text: string) {

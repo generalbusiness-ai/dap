@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Entry, Evidence, OperationId } from "@generalbusiness/dap-contract";
+import type { Evidence, OperationId, SequenceEntry } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/dap-bytes";
 import { AmountError, FoldError, applyEntry, capabilitiesOf, checkpointOf, clockOf, gitRead, holdCapability, ownerReservations, operationId, operationOpening, operationStanding, owed, reserved as reservedAmount, settleOutcome, tokenPast, validateDefinition } from "../src/index.ts";
 import type { Opening, OperationRules, Owners } from "../src/index.ts";
 import { ledgerDefinitionData } from "./definition-corpus/ledger-data.ts";
 import { kindOf } from "../src/operand.ts";
-import { Scope, t, ticketDefinition, valid } from "./fixtures-entry.ts";
+import { Scope, later, t, ticketDefinition, valid } from "./fixtures-entry.ts";
 
 test("a hold reader without local holds owes no record work", () => {
   const reader = valid(validateDefinition(ledgerDefinitionData(true), PROPOSED_BOUNDS));
@@ -77,7 +77,7 @@ const create: Opening = { owner: "hold@1", kind: "create", attempts: 3 };
 function open(s: Scope, ...opens: Opening[]): OperationId[] {
   const seq = s.head.seq + 1;
   s.fold({
-    v: 1, at: s.at, seq, prev: s.head.hash, time: s.now, clamped: false, epoch: 0, input: { type: "checkpoint", ...checkpointOf(s.state) }, uses: [], prepared: [],
+    v: 1, genesis: s.at.genesis, seq, prev: s.head.hash, time: s.now, clamped: false, epoch: 0, input: { type: "checkpoint", ...checkpointOf(s.state) }, uses: [], prepared: [],
     effects: opens.flatMap((o, k) => operationOpening(k, o)), sends: [],
   });
   return opens.map((_, k) => operationId(seq, k));
@@ -97,8 +97,8 @@ const shape = (s: Scope, id: OperationId) => s.state.operation(id)!.attempts.map
 /** The entries that the pending work reserves, with the closures that the made-up owners declare. */
 const reserved = (s: Scope, given: Owners | null = owners) => owed(s.state, ticketDefinition, s.last.input, given);
 /** The last entry with one effect changed, folded into a copy of the state before it. */
-function forged(s: Scope, change: (entry: Entry) => Entry): () => void {
-  const entry = change(s.last);
+function forged(s: Scope, change: (entry: SequenceEntry) => SequenceEntry): () => void {
+  const entry = change(later(s.last));
   return () => applyEntry(s.replay(s.entries.length - 1), ticketDefinition, entry, entryHash(entry));
 }
 
@@ -121,7 +121,7 @@ describe("the ledger of outside effects (scope contract, section 4.3; authority 
     // The judge set both members from the opening, and the entry's kind is read from them by any reader (section 6.2).
     expect([s.entries[3]!.entry.input, kindOf(s.entries[3]!.entry), kindOf(s.last)]).toMatchObject([{ type: "outcome", operation: op, attempt: 1, owner: "hold@1", kind: "create", result: "unknown" }, "hold@1:create", "hold@1:create"]);
     // An entry whose input names another kind than its operation has is no state: a replay stops at it.
-    expect(forged(s, (e) => ({ ...e, input: { ...e.input, kind: "mint" } as Entry["input"] }))).toThrow(FoldError);
+    expect(forged(s, (e) => ({ ...e, input: { ...e.input, kind: "mint" } as SequenceEntry["input"] }))).toThrow(FoldError);
     expect([shape(s, op), s.state.operation(op)!.selected, operationStanding(s.state.operation(op)!)]).toEqual([[["unknown"], ["confirmed, selected true"]], 2, "unknown"]);
     // What stays reserved is the late answer of attempt 1, with its closure: nothing more is opened after a selection.
     expect(reserved(s) - free).toBe(7);

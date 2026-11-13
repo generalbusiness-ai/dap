@@ -223,7 +223,7 @@ function decided(seq: number, who: typeof una, check: string): Fetched {
   const signed = signIntent({ v: 1, to: otherLane, actor: who.key, kind: "decide", on: null, expected: {}, fields: { check }, idempotencyKey: `d${seq}`, notAfter: t(60) }, who.secret);
   const input: Input = { type: "act", signed, authority: [], presented: {} };
   const source = forged(otherLane, seq, input, []);
-  return { fact: factRefOf(source.entry, source.sequence.at), entry: source.entry, under: "lane" };
+  return { fact: factRefOf(source.entry, source.sequence.at), entry: source.entry, sequence: source.sequence, under: "lane" };
 }
 
 describe("an outcome with rows, and its origin (sections 6.1 and 16.1; witness 18.46, cases 7 to 12; witness 18.52, cases 5 to 9)", () => {

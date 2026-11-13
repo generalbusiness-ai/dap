@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Intent, type Seed } from "@generalbusiness/dap-contract";
 import { genesisInputDigest, intentDigest, newGenesisNonce, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { clockOf, entryOf, judgeGenesis, judgeGenesisForReplay, validateDefinition } from "../src/index.ts";
-import { Ledger, T0, created, creation, keys, t, valid, genesisBodyDefinition } from "./fixtures-entry.ts";
+import { Ledger, T0, created, creation, keys, t, valid, genesisBodyDefinition, genesisOnly } from "./fixtures-entry.ts";
 
 test("opt-in signed genesis requires every named body before recording even a refused birth, while legacy and repeat judgments keep their paths", () => {
   const body = "é\n", other = "other", digest = textDigest(body), second = textDigest(other);
@@ -42,7 +42,7 @@ test("opt-in signed genesis requires every named body before recording even a re
   const recorded = entryOf(child.state, born.draft, context.clock);
   if (recorded.input.type !== "genesis" || recorded.input.source === null) throw Error("the child must record its source");
   expect(judgeGenesisForReplay(child.state, child.definition, asked, context, { recorded, facts: [], source: null })).toMatchObject({ result: "write" });
-  const different = { ...recorded, input: { ...recorded.input, sourceKind: "membership" as const }, uses: recorded.uses.map(use => ({ ...use, kind: "membership" as const })) };
+  const different = { ...genesisOnly(recorded), input: { ...recorded.input, sourceKind: "membership" as const }, uses: recorded.uses.map(use => ({ ...use, kind: "membership" as const })) };
   // F1: the source is genuine and is deliberately absent from context.facts.
   expect(() => judgeGenesisForReplay(child.state, child.definition, asked, context, { recorded: different, facts: [], source: null })).toThrow("separately verified source genesis");
 });

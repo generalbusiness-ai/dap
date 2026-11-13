@@ -4,7 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, FactRef, FieldValue, Guard, Operand } from "@generalbusiness/dap-contract";
 import { intentDigest } from "@generalbusiness/dap-bytes";
 import { validateDefinition, type Fetched, type ProblemCode } from "../src/index.ts";
-import { Scope, deliver, fields, keys, on, ticket, valid, variant } from "./fixtures-entry.ts";
+import { Scope, deliver, fields, keys, on, ticket, valid, variant, fixtureSequence } from "./fixtures-entry.ts";
 
 const { rita, una } = keys;
 
@@ -30,7 +30,7 @@ test("M3: copying historical source time does not judge the commit clock", () =>
 const asksDefinition = valid(validateDefinition(asks, PROPOSED_BOUNDS));
 
 /** An entry of `s` as another scope fetches it: by fact, with its bytes and the name its scope's definition states. */
-const fetched = (s: Scope, seq: number): Fetched => ({ fact: s.fact(seq), entry: s.entries[seq]!.entry, under: s.under });
+const fetched = (s: Scope, seq: number): Fetched => ({ fact: s.fact(seq), entry: s.entries[seq]!.entry, sequence: fixtureSequence(s), under: s.under });
 
 /** M, another lane of asks: M.2 and M.3 open asks 2 and 3, and M.4 and M.5 answer them. */
 function other(): Scope {

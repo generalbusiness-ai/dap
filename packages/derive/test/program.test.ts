@@ -48,7 +48,7 @@ function program(definition: ValidDefinition, kind: string): BodyStructure {
 const evaluate = (body: BodyStructure, j: Judging, first = 0, budget?: number) => evaluateAdmitted(body, j, cause, { first }, budget);
 function context(definition: ValidDefinition, kind: string): Judging {
   const view = new MemoryState();
-  return { view, definition, bounds, clock: { reading: t(101), behind: false, asOf: t(101) }, scope: { at: directory, creator: null }, self: 20, kind,
+  return { view, definition, bounds, clock: { reading: t(101), behind: false, asOf: t(101) }, scope: { at: directory, kind: "directory", creator: null }, self: 20, kind,
     fields: {}, fieldTypes: definition.declared.acts[kind]!.fields, subjects: new Map(), signer: { member: keys.rita.member, principal: null }, facts: new Map(), prepared: [], used: [], ran: { clock: false } };
 }
 function item(definition: ValidDefinition, type: string, id: number) {
