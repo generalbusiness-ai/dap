@@ -1,6 +1,6 @@
 # A replica holds what the scope holds: the state seed
 
-Status: current. Draft 1, for request `4893fbfa`. Nothing here is built.
+Status: current. Draft 2, for request `4893fbfa`. Nothing here is built.
 
 A room has run for a year. Its repository scope has sealed 60,000
 entries. The archive holds the first 50,000, and the scope raised its
@@ -57,34 +57,50 @@ can judge a second act over the predicted state of a first act.
 ## 3. The rule: a replica mirrors the scope
 
 The fold and the judges read three things: the state, the definition,
-and earlier entries of the scope's own journal. They read earlier
-entries through `Own` (`packages/derive/src/fields.ts`), in four places.
+and what the scope holds beside the state. They read the third through
+`Own` (`packages/derive/src/fields.ts`). `Own` answers an earlier entry
+of the scope's own journal. It also carries the sequence, the retained
+copies of entries of other scopes, the held positions, the size proofs
+and the archived positions.
 
-| Reader | What it reads | Where |
-|---|---|---|
-| Equality of two values | The hash of a local entry, to put a fact reference in normal form | `equal`, `packages/derive/src/operand.ts` |
-| Fixed rows | The hash of each held position | `fixedRowsOf`, `packages/derive/src/fixed-index.ts` |
-| Capacity bindings | Earlier entries, for `whole-scope` capacity and for a definition that reserves | `packages/derive/src/fold.ts`, `packages/derive/src/draws.ts` |
-| A `floor` entry | Every held entry from the old floor to the head | `nextFloorState`, `packages/derive/src/floor.ts` |
+About twenty readers of `Own` exist in `packages/derive/src`. A reader
+that gets no entry does one of four things. The list is partial, and
+section 9 makes the builder's list the authority.
 
-Each reader takes a missing entry as an entry that does not exist.
-`equal` reads `j.own?.(seq)?.hash ?? null`. With no entry, a fact
-reference keeps its long form and equals nothing. The reader reports no
-fault. A replica that holds the state and lacks an entry can therefore
-judge an act differently from the scope, and nothing shows the
-difference.
+| What the reader does | Readers, in part |
+|---|---|
+| It takes the entry as absent and reports no fault | `equal` (`operand.ts`), `program/guard-value.ts`, `entryOf` (`operand.ts`), the opener in `outcomes.ts` |
+| It refuses, or it answers `unavailable` | The local fact field (`operand.ts`), the `fact` guard, `send-value.ts`, `prepare.ts`, `capability/hold.ts`, `capability/device-command.ts`, `judgeFloor` |
+| It throws | `settle.ts` (`RuleFault`), `nextFloorState` through `stateKept`, the fold of a `floor` entry with no `Own` |
+| It skips its work and leaves no trace | `priorDetachedBounds` (`handlers.ts`) loses the size bound of a text, `capability/gitread.ts` drops its check, the size-proof pass of `nextFloorState` |
+
+The set of readers is open, because platform rules receive `Own`
+(`marks.ts`). The fixed index is a second place: `fixedRowsOf` reads
+the hash of a held position from the state (`fixedHash`,
+`packages/derive/src/state.ts`), and a state with no hash writes
+another row.
+
+So a replica that lacks an entry can refuse where the scope admits. It
+can admit where the scope refuses, when a text loses its size bound. It
+can throw. In the first and second cases nothing shows the difference.
 
 The scope has the same gap below its own floor, and its answers there
 are part of the record. `fixedHash` answers null for an archived
-position (`packages/derive/src/state.ts`), and replay applies each
-floor as the scope does.
+position, and replay applies each floor as the scope does.
 
-So the rule has two parts.
+The rule has two parts.
 
 1. A replica that mirrors the scope computes what the scope computes.
    It needs no list of the definitions that are safe.
-2. A replica never answers "no entry" for a position that the scope
-   holds and the replica lacks. It holds the entry, or it stops.
+2. A replica never answers "nothing" for a thing that the scope holds
+   and the replica lacks. Its `Own` throws the fault `Unheld` for that
+   entry or copy. The readers of the table then cannot take it as
+   absent, refuse on it or skip it.
+
+The client catches `Unheld`. A prediction that meets it reads
+`not-judged`. A fold that meets it stops the replica. The replica keeps
+one `Own` object for its life, because the judges compare `Own` by
+identity (`operand.ts`).
 
 The rule decides the rest of this note. It also binds build step C2 of
 the client design today, with no seed. Section 9 states what C2 owes.
@@ -101,17 +117,26 @@ loadState(rows: Iterable<SeedRow>, definition: ValidDefinition,
 `loadState` lives in `@generalbusiness/dap-client/scope`, the entry that
 build step C2 adds. It adds nothing to `packages/derive`.
 
-1. It gives each row to the `put` method of its member. `SqliteStore`
-   loads a `MemoryState` this way from its tables today
-   (`all`, `packages/scope/src/sqlite.ts`). The `put` methods rebuild
-   the type index, the pending requests, the relation counts, the
-   observed geneses and the duties of each item.
+1. It gives each row to the `put` method of its member. The `put`
+   methods rebuild the type index, the pending requests, the relation
+   counts, the observed geneses and the duties of each item.
+   `SqliteStore.all` makes the same calls to build a snapshot
+   (`packages/scope/src/sqlite.ts`). Nothing folds over its result, so
+   it is a precedent for the calls and not for the load.
 2. It calls `indexItems` with the definition
    (`packages/derive/src/binding.ts`). The declared indexes are not in
    a snapshot. A fold under a binding mark throws `RuleFault` without
    them.
-3. It calls `putFixedHash` for each held entry, and `fixedRowsOf` for
-   each item when the definition declares a fixed slot.
+3. It calls `putFixedHash` for each held entry. When the definition
+   declares a fixed slot, it calls `fixedRowsOf` for each item and gives
+   each result to `putFixed`, as `SqliteStore.ensureFixed` does. The
+   fixed hashes, rows, counts and dependencies are outside a snapshot.
+
+Two more things are outside a snapshot: the retained copies of entries
+of other scopes, and the bytes of detached texts. The loader loads
+neither. Before the client folds an entry, it reads each copy that the
+entry's `uses` name. A copy that it cannot read stays unheld, and the
+rule of section 3 applies: `Own` throws `Unheld`.
 
 A row is one element of one member of `StateSnapshot`
 (`packages/derive/src/state.ts`). The loader names each member of
@@ -135,7 +160,8 @@ definition corpus and each example package.
    states. Step 4 catches a part that the digest does not cover, such
    as a fixed row.
 
-The journals include a `floor` entry before T and one after T.
+The journals include a `floor` entry before T. A `floor` entry after T
+restarts the replica (section 7), and the witness of SS2 covers it.
 
 ### 4.3 The copy
 
@@ -149,10 +175,11 @@ change to the kernel, and this note does not ask for it.
 
 ### 5.1 When the scope makes it
 
-A scope makes a seed after each turn that seals a `floor` entry, before
-its next turn. The seed's head T is that floor entry. A scope that has
-a floor and holds no seed makes one before its next turn, so a scope
-that had a floor before this change gets its seed.
+A scope makes a seed in each turn that seals a `floor` entry. The
+seed's head T is that floor entry. No read can arrive between the floor
+entry and its seed. A scope that has a floor and holds no seed makes
+one before its next turn, so a scope that had a floor before this
+change gets its seed.
 
 The scope keeps one seed. A new seed replaces the old one.
 
@@ -161,9 +188,9 @@ after T. That can end only at the next floor entry, and the next floor
 entry makes the next seed. So a scope with a floor always holds one
 seed that a client can use.
 
-The scope makes the seed in one pass with no other turn between its
-reads. The store holds the state in tables, and the pass copies each
-table. No client waits for the pass, and no read starts it.
+The scope makes the seed in one pass inside the turn. The store holds
+the state in tables, and the pass copies each table. No read starts the
+pass.
 
 A scope with no floor makes no seed. A replica of that scope needs each
 entry from position 0 to mirror it, so a seed would save no download.
@@ -188,9 +215,19 @@ capacity. Its size is at most the size of the state tables.
   the member reads (`MEMBER_READS`, `packages/scope/src/sessions.ts`).
   A signed read is refused. A signed read of `log` gets only the
   entries of its key and the entries that lead to them, and the state
-  holds the effect of every entry. A member's session reads `log`
-  whole today (LOG-1), so the seed shows a member nothing that `log`,
-  `summary` and `items` do not show.
+  holds the effect of every entry.
+- **What a member reads.** The seed holds what the archived entries
+  left in the state. That includes the accepted keys of other members,
+  with the intent digest of each act, and the records, requests,
+  relations and holders that those entries wrote. `summary` and `items`
+  do not show those rows. The archive does. A member reads the archive
+  with the room's read token: `credential` is a member read, and
+  `dap clone --archive` fetches each journal ref with that token
+  (`docs/operate-a-service.md`). The archive holds each entry below the
+  floor, and the seed holds only their effect. So the seed widens no
+  member's read. The planner decides that the seed follows the archive:
+  a room that closes its archive to a member closes the seed to that
+  member in the same change.
 - **Pages.** One page holds at most 1 MiB and at least one row, as a
   page of `log` does. Each page names the head T and a cursor. The seed
   does not change between pages. If a new seed replaces it during a
@@ -214,18 +251,25 @@ service and the CLI gain nothing.
    client reads the seed. `none` stops the client with `archived`.
 4. The client checks that the seed names the scope and the genesis of
    its handle, and the definition digest that the author passed.
-5. The client reads `log` from F to the scope's head, and each kept
-   position below F with `entry`. The floor state in the seed lists
-   the kept positions.
-6. The client checks the chain: the entry at T has the hash that the
+5. The client reads position 0 with `entry`. A floor always keeps
+   position 0 (`stateKept`, `packages/derive/src/floor.ts`). The client
+   checks the genesis entry as a start from the genesis does: its hash
+   is the genesis of the handle, and it names the definition.
+6. The client reads `log` from F to the scope's head, and each other
+   kept position below F with `entry`. The floor state in the seed
+   lists the kept positions.
+7. The client checks the chain: the entry at T has the hash that the
    seed names, and each entry names the hash of the entry before it.
-7. The client calls `loadState` with the rows and the entries from F
+8. The client calls `loadState` with the rows and the entries from F
    to T. It folds each entry after T.
-8. The replica mirrors the scope. The client's state is `current`.
+9. The replica mirrors the scope. The client's state is `current`.
 
-A replica that runs holds each entry that the scope holds. So it folds
-a later `floor` entry as the scope does, and then drops each entry
-that the scope drops. A floor no longer stops a replica that runs.
+A `floor` entry in the journal restarts the replica. The scope made a
+new seed in the turn of that entry. The client reads the new seed, keeps
+each entry that it holds at or above the new floor, and goes to step 7.
+The fold of a floor entry reads every held entry and each retained copy
+that a kept position needs, so the first version does not fold one in
+the replica.
 
 A client that returns after a long time reads `log` from its head and
 can get `archived`. It drops its state and starts at step 3.
@@ -243,6 +287,7 @@ trust: the state at T is the fold of the entries before T.
 
 A client with a seed checks these things.
 
+- The genesis entry, which a floor always keeps.
 - The seed names its scope, its genesis and its definition.
 - The entry at T has the hash that the seed names, and each later
   entry continues that chain.
@@ -251,7 +296,6 @@ A client with a seed checks these things.
 It cannot check these things.
 
 - That the state is the fold of the entries below F.
-- The genesis entry, when position 0 is archived.
 - An accepted key below F, beyond its position and its intent digest.
 
 A person with the archive can check a seed with no trust in the
@@ -275,17 +319,21 @@ section 3 binds it now.
 
 1. The replica keeps each entry that it folds, while the scope holds
    that entry.
-2. The replica gives the fold and `judgeAct` an `Own` over those
-   entries. It builds `Own` as the scope does.
-3. Before code, the builder lists each read of `Own` and of `fixedHash`
-   in `packages/derive`, with what each does when the entry is absent.
-   The table of section 3 is my reading, and the list replaces it.
-4. The builder measures the memory of a replica at 20,000 entries, in
+2. The replica gives the fold and `judgeAct` one `Own` object over
+   those entries, for its life. `Own` throws `Unheld` for an entry or a
+   copy that the scope holds and the replica lacks.
+3. Before code, the builder lists each reader of `Own`, of
+   `context.retained` and of `fixedHash` in `packages/derive`, with
+   what each does when the thing is absent. The table of section 3 is a
+   partial list from the review, and the builder's list replaces it.
+4. The list states, for each kind of retained copy, the read that
+   serves it and when the client reads it.
+5. The builder measures the memory of a replica at 20,000 entries, in
    Node and in headless Chrome, and states it in the client note.
 
 If the memory at 20,000 entries passes what a page can hold, the
 builder proposes a smaller form. The form must keep part 2 of the rule:
-no silent "no entry".
+no silent "nothing".
 
 ## 10. Kernel review
 
@@ -297,8 +345,9 @@ of an entry, no field type, no scope kind, no platform definition name,
 no capability, no reason code and no record form. It adds no tool
 family. It names no K item.
 
-- `loadState` uses `MemoryState`, `indexItems`, `fixedRowsOf` and
-  `StateSnapshot`, which `packages/derive` exports today.
+- `loadState` uses `MemoryState` with its `put` methods, `indexItems`,
+  `fixedRowsOf` and `StateSnapshot`, which `packages/derive` exports
+  today.
 - The read is a route of the service and a method of `ScopeHandle`. It
   is outside `ScopeApi`. Section 7.4 of the kernel page put the read
   minimums in the contract because every transport must agree on them.
@@ -372,8 +421,8 @@ Each slice is one head with one gate.
 
 | Slice | Owns | Needs | Witness |
 |---|---|---|---|
-| SS1, the loader | `loadState`, the typed member table, the copy, and the test of 4.2. The replica folds a `floor` entry and drops what the scope drops | C2 on main | The test of 4.2. A replica that runs across a floor entry equals the scope's state after it |
-| SS2, the seed and the read | The copy pass, the seed tables, the route, the member read name, `ScopeHandle.seed`, the start of section 7, the archive check of section 8, the measures of section 12, and the changes to the client note and the reader pages | SS1 on main | A scope with a floor on native storage: a new client starts from the seed and equals the scope's state, and `judgeAct` agrees for generated acts. A signed reader is refused. A seed replaced during a read starts the client again. A scope with no floor answers `none` |
+| SS1, the loader | `loadState`, the typed member table, the copy, and the test of 4.2 | C2 on main | The test of 4.2 |
+| SS2, the seed and the read | The copy pass in the floor's turn, the seed tables, the route, the member read name with its row in the entry-point inventory, `ScopeHandle.seed`, the start and the restart of section 7, the archive check of section 8, the measures of section 12, and the changes to the client note, the one-channel audit and the reader pages | SS1 on main | A scope with a floor on native storage: a new client starts from the seed and equals the scope's state, and `judgeAct` agrees for generated acts. A replica that runs across a floor entry restarts and equals the scope's state. A signed reader is refused. A seed replaced during a read starts the client again. A scope with no floor answers `none` |
 | SS3, the kept replica | The kept rows in the browser store, the check of the kept head, and the measure of a second load | SS2 and NF-5 on main | A reload folds only the new entries. A kept replica on another chain is dropped |
 
 No milestone of dap-foldkit waits for a slice. The slices come after
@@ -382,28 +431,33 @@ and retires no room.
 
 ## 15. Decisions
 
-1. A replica mirrors the scope, and it never answers "no entry" for a
-   position that the scope holds. Planner.
+1. A replica mirrors the scope. Its `Own` throws `Unheld` for a thing
+   that the scope holds and the replica lacks. Planner.
 2. `loadState` lives in `packages/client`. The kernel does not change.
    Planner.
-3. The scope makes a seed when it seals a floor entry, and keeps one.
-   No read makes a seed. Planner.
+3. The scope makes a seed in the turn that seals a floor entry, and
+   keeps one. No read makes a seed. Planner.
 4. A scope with no floor has no seed. Its replica folds from the
    genesis entry. Planner.
-5. A member's session reads the seed. A signed read is refused.
-   Planner.
+5. A member's session reads the seed. A signed read is refused. The
+   seed follows the archive: a member who can read the archive can read
+   the seed. Planner.
 6. The read is outside `ScopeApi`. Planner.
 7. The first version trusts the service for the state at T, as the
    reads `summary` and `items` do. A person with the archive can check
    it. Planner.
 8. The checkpoint entry stays unused. Planner.
+9. A `floor` entry restarts a replica from the new seed. The first
+   version does not fold a floor entry in the replica. Planner.
 
 ## 16. Open points
 
 | Point | Question | Proposed |
 |---|---|---|
-| O1 | Whether the copy pass fits one turn at the largest state | SS2 measures. A form in parts keeps one head for each seed |
+| O1 | Whether the copy pass fits the floor's turn at the largest state | SS2 measures. A form in parts keeps one head for each seed and answers no read of the old seed after the floor entry |
 | O2 | Whether a replica can hold hashes for most entries and whole entries for few | After C2's list of readers and its memory measure. Part 2 of the rule stays |
+| O6 | Whether a replica folds a floor entry in place | After C2's list. It needs every held entry and each retained copy that a kept position needs |
+| O7 | `ScopeObject.checkpoint` is a method of the Durable Object that no route calls | The consolidation review after the cutover decides its removal |
 | O3 | Whether a floor entry names the digest of its seed | A later note, with the kernel review. It needs a digest that the scope computes in bounded memory |
 | O4 | How many entries a scope holds after a floor entry | The archive decides. SS2 states the number for the Grow room and for AE-1's driver, because the start downloads those entries |
 | O5 | Whether a host `none` room, which has no archive and no floor, needs another remedy at 100,000 entries | Not in this note. Its replica folds from the genesis entry, and SS3 makes the second load short |
