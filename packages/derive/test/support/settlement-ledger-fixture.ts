@@ -78,7 +78,7 @@ export class SettlementFixture {
       let source = this.#replies.get(key);
       if (!source) {
         source = forged(this.family === "marker" ? directory : otherLane, ++this.#source,
-          { type: "delivery", ...request, message: sent.message as never, decision: command.result }, [send]);
+          { type: "delivery", sourceKind: "lane", ...request, message: sent.message as never, decision: command.result }, [send]);
         this.#replies.set(key, source);
       }
       if (scope instanceof Works) scope.script.after = () => opened(0, "audit", 1);

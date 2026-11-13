@@ -2,7 +2,7 @@ import { deviceConditions, wholeDeviceData, conditionalDeviceData, deviceParentD
 import { expect, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeviceCommandGrant, type EffectForm, type FactRef, type FieldValue, type Grant, type SignedIntent } from "@generalbusiness/dap-contract";
 import { capabilitiesOf, clockOf, deviceCommand, fits, holdCapability, judgeGenesis, judgePreparation, ownerReservations, reserved, validateDefinition, type Own, type PreparationJudgment, type Steps, type ValidDefinition } from "../src/index.ts";
-import { Ledger, T0, creation, created, deliver, grantOf, keys, valid, deviceCommandFixture as scope } from "./fixtures-entry.ts";
+import { Ledger, T0, creation, created, deliver, grantOf, keys, ownWith, valid, deviceCommandFixture as scope } from "./fixtures-entry.ts";
 
 
 
@@ -117,8 +117,8 @@ test("only the full granted owner can answer an exact local command, within gran
   expect(answer({ ...fact, at: { ...fact.at, genesis: foreignGenesis } }).judgment).toMatchObject({ result: "refused", name: "device-command-unknown" });
   expect(answer({ ...fact, seq: 0 }).judgment).toMatchObject({ result: "refused", name: "device-command-unknown" });
   expect(answer({ ...fact, hash: s.fact(0).hash }).judgment).toMatchObject({ result: "refused", name: "device-command-unknown" });
-  expect(answer(fact, "confirmed", keys.rita, { own: seq => seq === fact.seq ? null : s.own(seq) }).judgment).toEqual({ result: "unavailable", reason: "unavailable" });
-  expect(answer(fact, "confirmed", keys.rita, { own: () => null }).judgment).toEqual({ result: "unavailable", reason: "unavailable" });
+  expect(answer(fact, "confirmed", keys.rita, { own: ownWith(seq => seq === fact.seq ? null : s.own(seq), s.own.sequence()) }).judgment).toEqual({ result: "unavailable", reason: "unavailable" });
+  expect(answer(fact, "confirmed", keys.rita, { own: ownWith(() => null, s.own.sequence()) }).judgment).toEqual({ result: "unavailable", reason: "unavailable" });
   expect(answer(fact, "confirmed", keys.rita, { fields: { unexpected: true } }).judgment).toMatchObject({ result: "refused", reason: "bad-field" });
   expect(s.head).toEqual(head);
   const fan = commission("fan");

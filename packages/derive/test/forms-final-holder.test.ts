@@ -57,7 +57,7 @@ test("a no-account result clause cannot draw a retained positive count from a fi
 
   // The fold and a replay use the same boundary: even this sealed-looking result cannot spend the final holder's count.
   const seq = s.last.seq + 1;
-  const invalid: Entry = { ...s.last, seq, prev: s.head.hash, input: { type: "delivery", from: s.fact(0), n: 0, message: { class: "result", of: { from: s.fact(sent), n: 0 }, outcome: "applied" }, clause: "applied" },
+  const invalid: Entry = { ...s.last, seq, prev: s.head.hash, input: { type: "delivery", sourceKind: "lane", from: s.fact(0), n: 0, message: { class: "result", of: { from: s.fact(sent), n: 0 }, outcome: "applied" }, clause: "applied" },
     effects: [{ effect: "operation", k: 0, owner: OWNER, kind: "tidy", attempts: 1, for: job }, { effect: "attempt", operation: `${seq}:0`, attempt: 1, result: "opened", selected: null }], sends: [] };
   const copy = s.replay();
   expect(drawsOf(copy, definition, invalid)).toMatchObject({ fault: "no-holder" });

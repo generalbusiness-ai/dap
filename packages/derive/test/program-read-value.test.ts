@@ -7,7 +7,7 @@ import { MemoryState } from "../src/state.ts";
 import { validateDefinition, type ValidDefinition } from "../src/validate/index.ts";
 import { bodyStructure, formStructures } from "../src/program/structure.ts";
 import { readValue } from "../src/program/read-value.ts";
-import { Scope, d, directory, fields, keys, small, t, valid } from "./fixtures.ts";
+import { Scope, d, directory, fields, keys, ownWith, small, t, valid } from "./fixtures.ts";
 
 function checked(input: DeclaredDefinition): ValidDefinition { return valid(validateDefinition(input, PROPOSED_BOUNDS)); }
 function judging(definition: ValidDefinition): Judging {
@@ -55,7 +55,7 @@ test("typed history projections preserve the recorded slot and skip a nested rea
   const body = bodyStructure(definition, act, "edit")!, read = formStructures(definition, body, guard)[0]!.reads.operands.find(read => read.op === "field" && read.name === "proof");
   if (!read) return expect.fail("expected the enclosing history projection");
   const j = judging(definition), calls: number[] = [];
-  j.scope = scope.state.scope()!; j.own = seq => { calls.push(seq); return scope.own(seq); };
+  j.scope = scope.state.scope()!; j.own = ownWith(seq => { calls.push(seq); return scope.own(seq); }, scope.own.sequence());
   j.fields = { proof: wrote, selected: wrote };
   expect(readValue(j, read, null)).toBe("kept");
   expect(calls).toEqual([wrote, wrote]);

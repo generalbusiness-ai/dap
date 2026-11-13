@@ -4,15 +4,16 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, JournalFloor, ScopeRef } from "@generalbusiness/dap-contract";
 import { chooseFloor, countedEntries, judgeFloor, MemoryState, stateKept, type Own, type PlatformRules } from "../src/index.ts";
-import { d, directory, notesDefinition, t, variant } from "./fixtures.ts";
+import { d, directory, notesDefinition, ownWith, t, variant } from "./fixtures.ts";
 import { stagingData } from "./definition-corpus/staging-data.ts";
 
 const hash = (seq: number) => `sha256:${seq.toString(16).padStart(64, "0")}` as const;
 const at: ScopeRef = directory;
-const metadata = (seq: number) => ({ at, creator: null, status: "active" as const, head: { seq, hash: hash(seq) }, time: t(0), genesis: { hash: hash(0), source: null, n: null }, held: [] });
-const entry = (seq: number): Entry => ({ v: 1, at, seq, prev: seq === 0 ? null : hash(seq - 1), time: t(0), clamped: false, epoch: 0,
+const metadata = (seq: number) => ({ at, kind: "directory" as const, creator: null, status: "active" as const, head: { seq, hash: hash(seq) }, time: t(0), genesis: { hash: hash(0), source: null, n: null }, held: [] });
+const entry = (seq: number): Entry => ({ v: 1, genesis: at.genesis, seq, prev: seq === 0 ? null : hash(seq - 1), time: t(0), clamped: false, epoch: 0,
   input: { type: "checkpoint", through: seq - 1, state: d("f") }, uses: [], prepared: [], effects: [], sends: [] });
-const own = (seq: number) => seq < 0 ? null : { entry: entry(seq), hash: hash(seq) };
+// Made-up entries: no genesis was admitted, so the read names no sequence.
+const own = ownWith((seq: number) => seq < 0 ? null : { entry: entry(seq), hash: hash(seq) });
 const receipt = { commit: "a".repeat(40), through: { seq: 29000, hash: hash(29000) } };
 
 test("floor policy advances in bounded steps and does not manufacture repeated one-entry floors", () => {
@@ -45,7 +46,7 @@ test("counting charges the held tail and kept entries without renumbering the he
 // claim it kept just because its position is a derived obligation.
 test("floor derivation fails closed when a currently held payload root is missing", () => {
   const state = new MemoryState(); state.setScope(metadata(150));
-  const missing = (seq: number) => seq === 0 ? null : own(seq);
+  const missing = ownWith((seq: number) => seq === 0 ? null : own(seq));
   const input = { type: "floor" as const, floor: 50, receipt: { commit: "e".repeat(40), through: { seq: 150, hash: hash(150) } }, keep: [] };
   expect(stateKept(state.all(), notesDefinition, 50, [], missing)).toBeNull();
   expect(judgeFloor(state, notesDefinition, input, { clock: { reading: t(1200), asOf: t(1200), behind: false }, bounds: PROPOSED_BOUNDS, own: missing })).toEqual({ result: "unavailable", reason: "unavailable" });
@@ -73,7 +74,7 @@ test("a live workspace root keeps its payload under the exact pinned hold versio
     const root = { capability: `hold@${version}` as const, kind: "root", key: [1], state: "live", values: {}, seq: 12 };
     state.putRecord(root);
     expect(stateKept(state.all(), definition, 50, [], own)).toEqual([0, 12]);
-    expect(stateKept(state.all(), definition, 50, [], seq => seq === 12 ? null : own(seq))).toBeNull();
+    expect(stateKept(state.all(), definition, 50, [], ownWith(seq => seq === 12 ? null : own(seq)))).toBeNull();
     state.putRecord({ ...root, state: "retired" });
     expect(stateKept(state.all(), definition, 50, [], own)).toEqual([0]);
   }

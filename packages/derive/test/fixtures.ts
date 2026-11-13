@@ -299,6 +299,14 @@ export function forged(at: ScopeRef, seq: number, input: Input, sends: readonly 
   return { entry: { ...body, genesis: at.genesis, seq, prev: d("0"), input }, sequence: sequence ?? sequenceAt(at), under: "ticket" };
 }
 
+/**
+ * A read of a scope's own entries with the sequence it admitted. `sequence`:
+ * null where the fixture's entries are made up and no genesis was admitted.
+ */
+export function ownWith<T>(read: (seq: number) => T, sequence: CheckedSequence | null = null): ((seq: number) => T) & { sequence(): CheckedSequence | null } {
+  return Object.assign(read, { sequence: () => sequence });
+}
+
 /** Only the actual fixture ledger can supply its admitted genesis association. */
 export function fixtureSequence(ledger: Ledger): CheckedSequence {
   const sequence = ledger.own.sequence();

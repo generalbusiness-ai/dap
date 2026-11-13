@@ -200,7 +200,7 @@ describe("subjects and handlers (sections 6.4 and 7.3)", () => {
     // X decides the request, and its result returns. The clause runs on the card that B.2 opened. The tally came later: it is not changed.
     const request = { from: B.fact(asked), n: 0 };
     const result: Result = { class: "result", of: request, outcome: "applied" };
-    expect(arrive(B, X, result, { type: "delivery", ...request, message: B.entries[asked]!.entry.sends[0]!.message as Request, decision: "applied" }).result).toBe("write");
+    expect(arrive(B, X, result, { type: "delivery", sourceKind: "lane", ...request, message: B.entries[asked]!.entry.sends[0]!.message as Request, decision: "applied" }).result).toBe("write");
     expect([B.last.effects, B.item(tally).values["last"]]).toEqual([[{ effect: "value", item: asked, slot: "note", value: "answered" }], "x"]);
     expect(B.replay().snapshot()).toBe(B.state.snapshot());
   });

@@ -129,7 +129,7 @@ export class Works extends Scope {
   answered(seq: number): string {
     const request = { from: this.fact(seq), n: 0 };
     const send = { n: 0, to: this.at, message: { class: "result", of: request, outcome: "applied" } } as const;
-    const source = forged(otherLane, ++this.#made, { type: "delivery", ...request, message: this.entries[seq]!.entry.sends[0]!.message as Request, decision: "applied" }, [send]);
+    const source = forged(otherLane, ++this.#made, { type: "delivery", sourceKind: "lane", ...request, message: this.entries[seq]!.entry.sends[0]!.message as Request, decision: "applied" }, [send]);
     const arrival = { ...send, from: factRefOf(source.entry, source.sequence.at) };
     return this.commit(judgeDelivery(this.state, this.definition, arrival, { ...arriving(this, arrival, source), platform: this.rules }));
   }

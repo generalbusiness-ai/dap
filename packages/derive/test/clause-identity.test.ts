@@ -42,7 +42,7 @@ for (const { name, identical, distinct, conditional, choices } of clauseMatrices
       expect(s.state.request(origin.seq, sent.n)?.reservation).toEqual(cohort === "whole-scope" ? { entries: 2, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 } : undefined);
       const request = { from: s.fact(origin.seq), n: sent.n };
       const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
-      const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
+      const source = forged(otherLane, 9, { type: "delivery", sourceKind: "lane", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
       const arrival = { ...answer, from: factRefOf(source.entry, source.sequence.at) };
       s.now = t(8);
       const record = (observed: readonly ObservationUse[]) => judgeDelivery(s.state, s.definition, arrival, {
@@ -77,7 +77,7 @@ for (const cohort of ["legacy", "whole-scope"] as const) for (const effectList o
   const sent = origin.sends[0]!;
   const request = { from: s.fact(origin.seq), n: sent.n };
   const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
-  const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
+  const source = forged(otherLane, 9, { type: "delivery", sourceKind: "lane", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
   const arrival = { ...answer, from: factRefOf(source.entry, source.sequence.at) };
   s.now = t(8);
   const record = (observed: readonly ObservationUse[]) => judgeDelivery(s.state, s.definition, arrival, {
@@ -120,7 +120,7 @@ for (const cohort of ["legacy", "whole-scope"] as const) for (const mode of ["mu
     expect(s.state.request(origin.seq, sent.n)?.reservation).toEqual(cohort === "whole-scope" ? { entries: 2, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 } : undefined);
     const request = { from: s.fact(origin.seq), n: sent.n };
     const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
-    const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
+    const source = forged(otherLane, 9, { type: "delivery", sourceKind: "lane", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);
     const arrival = { ...answer, from: factRefOf(source.entry, source.sequence.at) };
     s.now = t(8);
     const right = memberSeen(keys.una.member.member, 1, t(3));

@@ -374,7 +374,7 @@ describe("a clause of a result with a row, and a value that its observation name
     const sent = s.did(rita, "go", { on: 0, expected: { on: 2 } });
     const request = { from: s.fact(sent.seq), n: 0 };
     const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
-    const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, [answer]);
+    const source = forged(otherLane, 9, { type: "delivery", sourceKind: "lane", from: request.from, n: 0, message: sent.sends[0]!.message as never, decision: "applied" }, [answer]);
     const arrival = { ...answer, from: factRefOf(source.entry, source.sequence.at) };
     s.now = t(8);
     const record = (hand: readonly ObservationUse[], values: readonly string[], over: Partial<Observing> = {}) =>

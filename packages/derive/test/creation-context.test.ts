@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeviceCommandGrant, type ScopeKind } from "@generalbusiness/dap-contract";
 import { canonicalize, isSeed, textDigest } from "@generalbusiness/dap-bytes";
 import { clockOf, directoryOf, judgeGenesis, membershipOf, validateDefinition, type ValidDefinition } from "../src/index.ts";
-import { Ledger, T0, creation, deliver, created, keys, valid } from "./fixtures-entry.ts";
+import { Ledger, T0, creation, deliver, created, keys, ownWith, valid } from "./fixtures-entry.ts";
 
 // Pure judge/send boundary. Parent metadata and authority are SCRIPTED in a
 // draft before it seals; no native emitter/membership/session proof is claimed.
@@ -65,7 +65,7 @@ test("recognized verified-context metadata and the same full membership flow thr
   confirm(parent, child);
   child.did(keys.rita, "spawn", { on: 0, expected: { on: child.item(0).revision } });
   expect(bodyOf(child, child.last.seq, 0)).toEqual(marked);
-  expect(child.act(keys.rita, "spawn", { on: 0, expected: { on: child.item(0).revision } }, { own: () => null })).toMatchObject({ result: "unavailable" });
+  expect(child.act(keys.rita, "spawn", { on: 0, expected: { on: child.item(0).revision } }, { own: ownWith(() => null, child.own.sequence()) })).toMatchObject({ result: "unavailable" });
 });
 
 test("unknown or malformed opt-in and marked missing/invalid full membership record bad-field refusal with only the native result; source-message proof and typed lower bounds still hold", () => {
