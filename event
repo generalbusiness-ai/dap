@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c0056431bbbfd14c253d4a1695a868ab6677b9b3","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/destination-budget-v15.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c008c7d711290d86d6cea3c03ea22204d1c9fe9d","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-v2-manifest.ts."}
