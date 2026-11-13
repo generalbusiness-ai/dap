@@ -23,6 +23,7 @@ export * from "./invitation-fields.ts";
 export * from "./item-query.ts";
 export * from "./directory.ts";
 export * from "./browser-storage.ts";
+export * from "./browser-custody.ts";
 export { requestJournal, MAX_ATTEMPTS as REQUEST_MAX_ATTEMPTS, SLOT_BYTES as REQUEST_SLOT_BYTES, activeAttempt as activeRequestAttempt,
   appendPrepared as appendPreparedRequest, markActive as markRequestAttempt, legacyUnknown as unknownLegacyRequest,
   fitsPending as fitsRequestPending, envelopeKey as requestEnvelopeKey, contextKey as requestContextKey, actURL as requestActURL } from "./request-attempts.ts";
