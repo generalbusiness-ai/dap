@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:49a6c2999a349e6f44409e6cb42fcaf9a98c32eb","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/directory.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:49c9242d6b6d07f945328f1b44b125fe7cf66c48","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-frontier-cost.ts."}
