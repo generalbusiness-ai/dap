@@ -1358,7 +1358,7 @@ function notKept(reason: string): string {
  * person relies on the copy. A page that opened on signed reads keeps no copy,
  * and it sends as it always did.
  */
-export async function keepOriginal(room: Pick<Room, "session" | "directory" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside): Promise<void> {
+export async function keepOriginal(room: Pick<Room, "session" | "directory" | "directoryIndex" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside): Promise<void> {
   if (sessionLost(room)) throw new CopyNotKept(`This page could not renew its session with the room${room.unsessioned && room.unsessioned !== "no-reply" ? ` (${room.unsessioned})` : ""}, so it cannot keep a copy of this request. This press sent nothing. When your connection returns, open this view again and check your open requests before you send it again.`);
   const copies = copiesOf(room);
   if (!copies) return;
@@ -1366,7 +1366,7 @@ export async function keepOriginal(room: Pick<Room, "session" | "directory" | "m
   try { listed = await copies.list(); }
   catch { throw new CopyNotKept(openRequestsUnread(null)); }
   if (!listed.ok) throw new CopyNotKept(openRequestsUnread(listed.reason));
-  const stop = signed.intent.to && pressStop(room.key, listed.rows, rowsLastRead(actAssociation(room, room.membership.scope)) ?? [], signed.intent.to, nowOf(room.session));
+  const stop = signed.intent.to && pressStop(room, listed.rows, rowsLastRead(actAssociation(room, room.membership.scope)) ?? [], signed.intent.to, nowOf(room.session));
   if (stop) throw new CopyNotKept(OPEN_REQUEST_STOPS[stop]);
   let kept: Awaited<ReturnType<NonNullable<typeof copies>["keep"]>>;
   try { kept = await copies.keep(actBodyText(signed, beside)); }
@@ -1382,7 +1382,7 @@ export async function keepOriginal(room: Pick<Room, "session" | "directory" | "m
  * with no row. Anything that stops it after the keep ends the row, because a
  * row reads "You sent" and a press past the margin sends its bytes.
  */
-export async function keepToSend(room: Pick<Room, "session" | "directory" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside, before?: () => void, after?: (digest: Digest) => void): Promise<void> {
+export async function keepToSend(room: Pick<Room, "session" | "directory" | "directoryIndex" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside, before?: () => void, after?: (digest: Digest) => void): Promise<void> {
   const digest = intentDigest(signed.intent);
   before?.();
   await keepOriginal(room, signed, beside);

@@ -8,6 +8,17 @@ import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { sendableAt, type OriginalRow } from "@generalbusiness/dap-client";
 import type { Room } from "./data.ts";
 
+/**
+ * Whether `to` names the room's directory. A reference names no kind, so the
+ * page compares it with the directory reference it holds: the full reference
+ * where it holds one, and the scope ID where it holds only that. The page holds
+ * no partition reference after a read, so a partition matches only by its own scope.
+ */
+export function atDirectory(room: Pick<Room, "directory" | "directoryIndex">, to: ScopeRef): boolean {
+  const held = room.directoryIndex?.scope;
+  return held && held.scope === room.directory ? to.scope === held.scope && to.genesis === held.genesis : to.scope === room.directory;
+}
+
 /** The last rows this page read for a view, for each room and key, so the next draw shows them. Memory only. */
 const lastRead = new Map<string, readonly OriginalRow[]>();
 export const rowsLastRead = (memory: string): readonly OriginalRow[] | undefined => lastRead.get(memory);
@@ -17,12 +28,12 @@ export const rememberRows = (memory: string, rows: readonly OriginalRow[]): void
  * The scopes where this page offers only the button: an open copy that this
  * page's key signed, until the margin passes. Other keys keep their acts.
  */
-export function lockedScopes(room: Pick<Room, "key" | "directory">, rows: readonly OriginalRow[], now: number): ReadonlySet<ScopeId> {
+export function lockedScopes(room: Pick<Room, "key" | "directory" | "directoryIndex">, rows: readonly OriginalRow[], now: number): ReadonlySet<ScopeId> {
   const locked = new Set<ScopeId>();
   for (const row of rows) {
     if (row.actor !== room.key || now >= sendableAt(row.notAfter)) continue;
     locked.add(row.to.scope);
-    if (row.to.kind === "directory") locked.add(room.directory); // An opening act can go to the directory's current partition.
+    if (atDirectory(room, row.to)) locked.add(room.directory); // An opening act can go to the directory's current partition.
   }
   return locked;
 }
@@ -34,8 +45,8 @@ export function lockedScopes(room: Pick<Room, "key" | "directory">, rows: readon
  * the row, because then the person cannot know of the earlier send. Any opening
  * act counts as the same scope, because it can go to another partition.
  */
-export function pressStop(key: string, rows: readonly OriginalRow[], shown: readonly OriginalRow[], to: ScopeRef, now: number): "locked" | "unshown" | null {
-  const mine = rows.filter(row => row.actor === key && (row.to.scope === to.scope || row.to.kind === "directory" && to.kind === "directory"));
+export function pressStop(room: Pick<Room, "key" | "directory" | "directoryIndex">, rows: readonly OriginalRow[], shown: readonly OriginalRow[], to: ScopeRef, now: number): "locked" | "unshown" | null {
+  const mine = rows.filter(row => row.actor === room.key && (row.to.scope === to.scope || atDirectory(room, row.to) && atDirectory(room, to)));
   if (mine.some(row => now < sendableAt(row.notAfter))) return "locked";
   return mine.some(row => !shown.some(seen => seen.digest === row.digest)) ? "unshown" : null;
 }

@@ -16,7 +16,7 @@ import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
 import { originalRequest, sendableAt, type OriginalRow } from "@generalbusiness/dap-client";
 import type { ScopeSending } from "./shell.ts";
 import { actAssociation, copiesOf, endOriginal, fresh, handleOf, itemsOf, nowOf, renewLost, sessionLost, summaryOf, type Acted, type Room } from "./data.ts";
-import { rememberRows, rowsLastRead } from "./open-requests.ts";
+import { atDirectory, rememberRows, rowsLastRead } from "./open-requests.ts";
 
 export { lockedScopes } from "./open-requests.ts";
 
@@ -67,13 +67,13 @@ export async function openOriginals(room: Room): Promise<OpenOriginals> {
  * does not show that no act was sent. `mismatch` and `archived` are fences on
  * the send path too. Another key's answer lifts nothing here.
  */
-export function settledAssociations(room: Pick<Room, "session" | "key" | "directory" | "membership">, row: OriginalRow, check: OriginalCheck): readonly string[] {
+export function settledAssociations(room: Pick<Room, "session" | "key" | "directory" | "directoryIndex" | "membership">, row: OriginalRow, check: OriginalCheck): readonly string[] {
   if (row.actor !== room.key || (check.state !== "landed" && check.state !== "refused")) return [];
-  return [actAssociation(room, row.to.scope), ...(row.to.kind === "directory" ? [actAssociation(room, room.directory)] : [])];
+  return [actAssociation(room, row.to.scope), ...(atDirectory(room, row.to) ? [actAssociation(room, room.directory)] : [])];
 }
 
 /** Lifts those fences, each only if it holds this row's request. An older row lifts no newer request's fence. */
-export function liftFences(room: Pick<Room, "session" | "key" | "directory" | "membership">, row: OriginalRow, check: OriginalCheck, lastActs: Map<string, Acted>, sending: Pick<ScopeSending, "get" | "answered">): void {
+export function liftFences(room: Pick<Room, "session" | "key" | "directory" | "directoryIndex" | "membership">, row: OriginalRow, check: OriginalCheck, lastActs: Map<string, Acted>, sending: Pick<ScopeSending, "get" | "answered">): void {
   for (const association of settledAssociations(room, row, check)) {
     if (lastActs.get(association)?.digest === row.digest) lastActs.delete(association);
     const fence = sending.get(association);
@@ -134,11 +134,11 @@ export async function checkOriginalRequest(room: Room, digest: Digest): Promise<
 }
 
 /** The sentence for one open copy. */
-export function originalLine(row: OriginalRow, room: Pick<Room, "key" | "directory" | "rules" | "membership" | "commons">, lanes: readonly { scope: string; number: number | null; kind: "issue" | "pr" | null }[]): string {
+export function originalLine(row: OriginalRow, room: Pick<Room, "key" | "directory" | "directoryIndex" | "rules" | "membership" | "commons">, lanes: readonly { scope: string; number: number | null; kind: "issue" | "pr" | null }[]): string {
   const what = row.kind === "comment" ? "a comment" : row.kind === "open-issue" ? "a new issue" : row.kind === "open-pr" ? "a new change" : `the action ${row.kind}`;
   const lane = lanes.find(item => item.scope === row.to.scope);
   const where = lane?.number != null && lane.kind ? `on ${lane.kind === "pr" ? "change" : "issue"} ${lane.number}`
-    : row.to.kind === "directory" || row.to.scope === room.directory ? "in this room"
+    : atDirectory(room, row.to) ? "in this room"
     : row.to.scope === room.rules ? "on the rules"
     : row.to.scope === room.membership.scope ? "on the member list"
     : row.to.scope === room.commons?.scope ? "in Commons"
