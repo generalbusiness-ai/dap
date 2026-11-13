@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4e76fd8ffc5c5283e1081ecc9337431dc83d24ee","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-12-cli-install-nf4.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:55d288ad59feb1a843170800fb5e1ec36bcaa097","text":"Merge retired a covered predecessor; the successor is at scripts/public-release-lib.mjs."}
