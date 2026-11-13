@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f02b106b80034f1cf0b00f116ab226f45d8af97c","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/workspace-host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f04eff035d81d84d54d17e700bb9c358ce521aff","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/preview.ts."}
