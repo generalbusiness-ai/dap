@@ -125,3 +125,32 @@ test("a device grant for another membership genesis or definition refuses before
     expect(child.last.sends).toHaveLength(1);
   }
 });
+
+// Ruling bccd8dd1, Q2: v3 carries the declared publication prefixes, alone or with the device grant; children get v1 or v2.
+test("a v3 marker carries publication prefixes to the root only; its children get the v1 or v2 marker", () => {
+  const publication = ["docs/", "shelf/"];
+  const plain = incoming({ creationContext: { v: 3, publication }, membership });
+  expect(plain.judgment).toMatchObject({ result: "write", draft: { input: { decision: "applied" } } });
+  expect(bodyOf(plain.child)).toEqual({ fields: { creationContext: { v: 99 } }, directory: plain.parent.at, membership, creationContext: { v: 1 } });
+
+  const grant: DeviceCommandGrant = { capability: "device-command@1", owner: keys.rita.member,
+    bounds: { kinds: ["fan"], owners: 1 }, root: definition.digest, definitions: [definition.digest] };
+  const both = incoming({ creationContext: { v: 3, delegate: true, deviceCommand: grant, publication }, membership });
+  expect(both.judgment).toMatchObject({ result: "write", draft: { input: { decision: "applied" } } });
+  expect(bodyOf(both.child)).toEqual({ fields: { creationContext: { v: 99 } }, directory: both.parent.at, membership,
+    creationContext: { v: 2, deviceCommand: grant, delegate: false } });
+});
+
+test("a v3 marker with a malformed publication list or another shape refuses before any child send", () => {
+  const grant: DeviceCommandGrant = { capability: "device-command@1", owner: keys.rita.member,
+    bounds: { kinds: ["fan"], owners: 1 }, root: definition.digest, definitions: [definition.digest] };
+  for (const marker of [{ v: 3 }, { v: 3, publication: [] }, { v: 3, publication: ["b/", "a/"] }, { v: 3, publication: ["a/", "a/"] },
+    { v: 3, publication: [""] }, { v: 3, publication: [`${"a".repeat(256)}/`] }, { v: 3, publication: Array.from({ length: 9 }, (_, n) => `p${n}/`) },
+    { v: 3, publication: "a/" }, { v: 3, publication: ["a/"], other: true }, { v: 3, publication: ["a/"], deviceCommand: grant },
+    { v: 3, publication: ["a/"], deviceCommand: grant, delegate: "yes" }, { v: 3, publication: ["a/"], deviceCommand: { ...grant, root: textDigest("x") }, delegate: true },
+    { v: 2, deviceCommand: grant, delegate: true, publication: ["a/"] }]) {
+    const { child, judgment } = incoming({ creationContext: marker, membership });
+    expect(judgment, JSON.stringify(marker)).toMatchObject({ result: "write", draft: { input: { decision: "refused" }, sends: [{ n: 0, message: { class: "result", outcome: "refused", reason: { code: "bad-field" } } }] } });
+    expect(child.last.sends).toHaveLength(1);
+  }
+});

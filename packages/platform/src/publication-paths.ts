@@ -11,7 +11,7 @@
  * `shelf/` does not admit `shelf-other/page.md`.
  */
 import { DEVICE_COMMAND, type DeviceCommandBounds, type Digest } from "@generalbusiness/dap-contract";
-import { utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isObject } from "@generalbusiness/dap-derive";
 import type { ApplicationSemantics } from "./application-codec/application.ts";
 import { deviceApplicationRequirement } from "./device-application-package.ts";
@@ -19,6 +19,8 @@ import { deviceApplicationRequirement } from "./device-application-package.ts";
 export const PUBLICATION_PATHS = "publication-paths@1" as const;
 export const PUBLICATION_PREFIXES = 8;
 export const PUBLICATION_PREFIX_BYTES = 256;
+/** The canonical text of a full declaration's prefix list fits this many UTF-8 bytes. */
+export const PUBLICATION_TEXT_BYTES = 2304;
 
 const segmentsOf = (path: string): string[] | null => {
   const segments = path.split("/");
@@ -40,6 +42,15 @@ export function readPublicationPrefixes(bounds: unknown): readonly string[] | nu
   if (prefixes.length < 1 || prefixes.length > PUBLICATION_PREFIXES || !prefixes.every(isPublicationPrefix)) return null;
   for (let index = 1; index < prefixes.length; index++) if (!(prefixes[index - 1]! < prefixes[index]!)) return null;
   return prefixesOverlap(prefixes, prefixes, true) ? null : [...prefixes];
+}
+
+/** The prefixes of a canonical text that a Directory or Destination field carries. Null: not one valid declaration's list. */
+export function readPublicationText(raw: unknown): readonly string[] | null {
+  if (typeof raw !== "string" || utf8(raw).length > PUBLICATION_TEXT_BYTES) return null;
+  try {
+    const prefixes = parseStrict(raw);
+    return canonicalize(prefixes) === raw ? readPublicationPrefixes({ prefixes }) : null;
+  } catch { return null; }
 }
 
 /** True when a prefix of one list contains, or is, a prefix of the other. `distinct`: the lists are one list, compared with itself. */

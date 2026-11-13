@@ -2,6 +2,7 @@ export { COMMONS_COHORT } from "./commons-cohort.ts";
 export { OWN_AGENT_COHORT } from "./own-agent-cohort.ts";
 export { BASE_COHORT } from "./base-cohort.ts";
 export { OWN_AGENT_KEYS } from "./base-membership.ts";
+export { APPLICATION_PATHS } from "./base-directory.ts";
 export { PUBLICATION_PATHS, PUBLICATION_PREFIXES, applicationCapabilities, isPublicationPrefix, prefixesOverlap, readPublicationPrefixes, withinPublicationPrefixes, type ApplicationCapabilities } from "./publication-paths.ts";
 export { REPOSITORY_BINDING_COHORT, repositoryBindingBranch } from "./repository-binding-cohort.ts";
 export { commons, commonsDirectory, commonsMembership } from "./commons.ts";

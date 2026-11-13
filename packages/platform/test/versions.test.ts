@@ -24,6 +24,7 @@ const DIGESTS: Readonly<Record<string, string>> = {
   // CF-1 base family (ruling bccd8dd1), observed from the generator; every earlier literal stays exact.
   "platform:membership@14": "sha256:c909fd58a24433568f5cca3db0890de379b8456f403596fa8a8971cba19c1400",
   "platform:rules@15": "sha256:de1f83120e304f4970e3d81504a1c888d512bcf037e66774df4e324cd73eeb0c",
+  "platform:directory@27": "sha256:3bcc3fef39c145c2de415debf0d45b4d9873df689aae898209835487f1044a23",
   // Own-agent generation preserves all 92 earlier pin and declaration byte pairs.
   "platform:destination@20": "sha256:400ab350d2593ec2a8c6139810e1a0160fa2842833668ab4f9851043c057542a",
   "platform:directory@26": "sha256:7e0a9d4cb8c2227c35878c0db62dd4bc09b969f2f338fcec16de653b5d443f63",
