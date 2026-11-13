@@ -2,7 +2,18 @@
 
 NF3 moves the complete `Custody` owner, its record types, `decisive`, and `memoryStore` from MCP to Client. `CustodyStore` is the one custody port, and Client owns it. Client also owns the file store and its locks through the source-only `@generalbusiness/dap-client/node` entry. MCP keeps its SQLite store, its server transports, and its metrics vocabulary. The browser SDK exports only its root and application entries. The release guards omit `src/node.ts` and reject emitted Node output.
 
-This head starts from the NF2 head `95ff9a43` merged with main `fb354651`. It keeps every NF2 behaviour and changes only custody ownership and the imports that follow it.
+This head builds on main `a76764a7`, where NF2 landed. Its tree differs from that main only in NF3's own paths. It keeps every NF2 behaviour. It changes custody ownership, the imports that follow it, and one type in `#stoppedEarly`.
+
+## `#stoppedEarly` reads a typed finding
+
+`McpService.#stoppedEarly` reads the error name of a stopped call. It now reads that name through `dataOf` on a `Failure`, so the name has its type from `FindingData`. A result that sets `isError` is always a `Failure`. Behaviour does not change.
+
+## Failed gates
+
+Two earlier gates on this work failed. Neither result changes to a pass.
+
+- `8f490edc` exited 2 on the whitespace precheck. Its END is `14e70437`.
+- `31fcce02` exited 1 when a derive test timed out under concurrent compile load. Its END is `243af45d`. Ruling `370a3732` says not to rerun it.
 
 ## The stored vocabulary stays the same
 
@@ -28,7 +39,7 @@ NF5 removes the named MCP aliases after NF4 and NF5 move their importers to Clie
 
 ## Changed security seals
 
-The custody import edits change six seals in `scripts/security-entry-points.test.mjs`. The builder computed each new value with the test's own seal functions, `sourceSeal` and `namedSourceSeals`, and adopted it.
+The custody import edits and the `#stoppedEarly` type change six seals in `scripts/security-entry-points.test.mjs`. The builder computed each new value with the test's own seal functions, `sourceSeal` and `namedSourceSeals`, and adopted it.
 
 | Seal | Old | New |
 |---|---|---|
@@ -37,4 +48,4 @@ The custody import edits change six seals in `scripts/security-entry-points.test
 | `packages/mcp/src/hosted-retirement.ts` | `8707c99f` | `3c6f4653` |
 | `packages/mcp/src/act-result.ts` | `df3f0746` | `be9a341b` |
 | `packages/mcp/src/service.ts:$module` | `d1cd323e` | `38190902` |
-| `packages/mcp/src/service.ts:McpService` | `aa4fddb5` | `fa45fc1a` |
+| `packages/mcp/src/service.ts:McpService` | `aa4fddb5` | `e6ed1a95` |

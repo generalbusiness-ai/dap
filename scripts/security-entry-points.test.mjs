@@ -204,7 +204,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:scopeRefArg": "b1d77904c4c34f4e134b6732b42ea8612d4c8f30da9f6cd1bfa7fd874674bb2d",
     "packages/mcp/src/service.ts:memberRefArg": "80b4a7634bee92e5b6d8b03dea6102cbf701fcab94198e54de219783961ee281",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "fa45fc1a54ef308edc8c4cc774e00437aae26bbff3db694e3f28b0ef0bd1c960", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:McpService": "e6ed1a95fe57c10d078115df653098b00b6636a39359aa525c47c89786b3cdd4", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:commitIdFault": "36b75703f0eb36b5abca60906629f23df18a233d26c395f0b61c792eddabe405",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",

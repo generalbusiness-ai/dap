@@ -513,7 +513,8 @@ export class McpService {
   #stoppedEarly<T extends Record<string, unknown>>(result: CallOutcome<T>, given: Args): Promise<CallOutcome<T>> | CallOutcome<T>;
   #stoppedEarly(result: CallResult, given: Args): Promise<CallResult> | CallResult;
   #stoppedEarly(result: CallResult, given: Args): Promise<CallResult> | CallResult {
-    const error = result.isError ? result.structuredContent["error"] : null;
+    // Every result that sets isError is a Failure, so its data is FindingData.
+    const error = result.isError ? dataOf(result as Failure).error : null;
     return error === "shape" || error === "stale-descriptor" || error === "target" || error === "commons-missing" || error === "read" || error === "unknown-tool" ? this.#stated(result, given) : result;
   }
 
