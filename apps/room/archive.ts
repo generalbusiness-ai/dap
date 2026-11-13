@@ -1,5 +1,5 @@
 /** Grow's explicit host-owned archive wiring. No member or Worker secret. */
-import type { Bounds, SequenceRef } from "@generalbusiness/dap-contract";
+import type { Bounds, Digest, SequenceRef } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, isScopeId, isSequenceRef, parseStrict, readItemQueryParameter, readItemQueryReply, same, utf8 } from "@generalbusiness/dap-bytes";
 import { ARTIFACTS_HOST, ARTIFACTS_NAMESPACE, artifactsBinding, artifactsConfiguration, type ArtifactsBindings } from "../../packages/scope/src/artifacts-wiring.ts";
 import { ArtifactsProvider } from "../../packages/scope/src/artifacts-host.ts";
@@ -15,7 +15,6 @@ import type { ArchivePolicyRegistry } from "../../packages/scope/src/archive-inv
 import type { OutsideGiven } from "../../packages/scope/src/given.ts";
 import type { RoomArchiveDriverOptions } from "../../packages/scope/src/archive-driver.ts";
 import { exact } from "../../packages/scope/src/host-wiring.ts";
-import { DEMO_RELEASE } from "../../examples/grow/demo-release.ts";
 import type { Sql } from "../../packages/scope/src/sqlite.ts";
 import { archiveSourceReferences } from "../../packages/scope/src/archive-source-window.ts";
 import { ArchivePrefixStopped } from "../../packages/scope/src/archive-prefix.ts";
@@ -23,12 +22,13 @@ import { ArchiveStopped } from "../../packages/scope/src/archive-budget.ts";
 import type { ArchiveReplayContext } from "../../packages/scope/src/archive-publication.ts";
 
 export interface GrowArchiveEnvironment extends ArtifactsBindings { GROW_ARCHIVE_CONFIG?: string; ARCHIVE_RESTART_DIRECTIVE?: string }
-export function growArchiveConfiguration(env: GrowArchiveEnvironment): (ArchiveHostConfiguration & { readonly repositoryName: string; readonly service: string; readonly maxBytes: number }) | null {
+/** `release` is the release digest that the Worker trusts (ruling e4b72290). */
+export function growArchiveConfiguration(env: GrowArchiveEnvironment, release: Digest): (ArchiveHostConfiguration & { readonly repositoryName: string; readonly service: string; readonly maxBytes: number }) | null {
   try {
     const host = artifactsConfiguration(env.ARTIFACTS_CONFIG);
     if (!host || host.namespace !== ARTIFACTS_NAMESPACE || typeof env.GROW_ARCHIVE_CONFIG !== "string" || env.GROW_ARCHIVE_CONFIG.length > 2048) return null;
     const config = exact(parseStrict(env.GROW_ARCHIVE_CONFIG), ["policy", "release", "directory", "repositoryName"]);
-    if (!config || config["policy"] !== "grow-room-archive-1" || config["release"] !== DEMO_RELEASE || !isScopeId(config["directory"])
+    if (!config || config["policy"] !== "grow-room-archive-1" || config["release"] !== release || !isScopeId(config["directory"])
       || typeof config["repositoryName"] !== "string" || !/^[a-z2-7]{52}-1$/.test(config["repositoryName"])) return null;
     return { registerScope: host.registerScope, namespace: host.namespace, host: ARTIFACTS_HOST, directory: config["directory"], repositoryName: config["repositoryName"], service: host.host, maxBytes: host.maxBytes };
   } catch { return null; }
@@ -37,8 +37,8 @@ export function growArchiveConfiguration(env: GrowArchiveEnvironment): (ArchiveH
 /** One target resolution prepares only the finite room graph's public birth
  * identities. Private Register/Membership bodies are never inventoried. Each
  * new pass repeats the reads/validation on its original archive allowance. */
-export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Binding, env: GrowArchiveEnvironment, policies: ArchivePolicyRegistry, bounds: Bounds, fetch?: (request: Request) => Promise<Response>): Omit<RoomArchiveDriverOptions, "sql" | "current" | "clock" | "bounds"> | null {
-  const config = growArchiveConfiguration(env), artifacts = artifactsBinding(env.ARTIFACTS);
+export function growArchiveDriver(given: OutsideGiven, sql: Sql, binding: Binding, env: GrowArchiveEnvironment, release: Digest, policies: ArchivePolicyRegistry, bounds: Bounds, fetch?: (request: Request) => Promise<Response>): Omit<RoomArchiveDriverOptions, "sql" | "current" | "clock" | "bounds"> | null {
+  const config = growArchiveConfiguration(env, release), artifacts = artifactsBinding(env.ARTIFACTS);
   if (!config || !artifacts) return null;
   const prepared = new WeakMap<ArchiveBudget, Map<string, FixtureArchiveSourceBirth>>();
   const publicScopes = new WeakMap<ArchiveBudget, Readonly<{ replayScopes: readonly SequenceRef[]; replayContext: ArchiveReplayContext }>>();

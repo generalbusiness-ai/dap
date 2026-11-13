@@ -31,6 +31,7 @@ import { observeDirectoryFinish } from "./support/archive-finish-observer.ts";
 import { growArchivePolicies, GROW_ARCHIVE_DEFINITIONS } from "../../../apps/room/archive-policy.ts";
 import { growArchiveDriver } from "../../../apps/room/archive.ts";
 import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../examples/grow/demo-release.ts";
+import { RECORDED_GROW_RELEASE } from "./support/recorded-grow-release.ts";
 import { archiveHostWiring, roomArchiveWiring, roomArchiveConstructions } from "./worker.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import type { DestinationRepository } from "../src/destination-host.ts";
@@ -378,7 +379,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       // This separate story runs the real ScopeObject production factory and
       // scheduled alarms. It never substitutes manual driver invocations.
       const repository = (await life.wait(() => D.item(0))).values["repository"] as unknown as DestinationRepository;
-      const host = new ArchiveArtifactsPeer(repository, life.now), policies = growArchivePolicies(new TextDecoder().decode(packet.bytes));
+      const host = new ArchiveArtifactsPeer(repository, life.now), policies = growArchivePolicies(new TextDecoder().decode(packet.bytes), RECORDED_GROW_RELEASE);
       const environment = { ARTIFACTS: host.binding,
         ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: repository.namespace, host: "service.invalid", maxBytes: 8 * 1024 * 1024, credentialIdentity: "adapter-attempt" }),
         GROW_ARCHIVE_CONFIG: canonicalize({ policy: "grow-room-archive-1", release: DEMO_RELEASE, directory: D.name, repositoryName: repository.name }) };
@@ -400,7 +401,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
               };
             } });
           } };
-          const options = growArchiveDriver(given, sql, binding, environment, policies, bounds, host.fetch);
+          const options = growArchiveDriver(given, sql, binding, environment, DEMO_RELEASE, policies, bounds, host.fetch);
           if (!options) throw Error("Actual exact Grow archive wiring must be present");
           return { ...options,
             sources: async (...args) => {
@@ -504,7 +505,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       }
       histories.push({ scope, read });
     }
-    const declarations = new Map([[rootId, root], [childId, child]]), policies = new Map<Digest | PlatformDefinition, ReviewedArchivePolicy>(productionScenario ? growArchivePolicies(new TextDecoder().decode(packet.bytes)) : [[rootId, reviewed(rootId, root)], [childId, reviewed(childId, child)]]);
+    const declarations = new Map([[rootId, root], [childId, child]]), policies = new Map<Digest | PlatformDefinition, ReviewedArchivePolicy>(productionScenario ? growArchivePolicies(new TextDecoder().decode(packet.bytes), RECORDED_GROW_RELEASE) : [[rootId, reviewed(rootId, root)], [childId, reviewed(childId, child)]]);
     const childBirth = histories[1]!.read.value[0]!.entry, childAt = await life.wait(() => histories[1]!.scope.at());
     if (childBirth.input.type !== "genesis") throw Error("Actual installed child birth is required.");
     const childSeed = childBirth.input.seed;
@@ -832,7 +833,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
             if (request.method === "GET" && request.url.endsWith("/info/refs?service=git-upload-pack")) refAdvertisements++;
             return archivePeer.fetch(request);
           };
-          const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, policies, PROPOSED_BOUNDS, fetch);
+          const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, DEMO_RELEASE, policies, PROPOSED_BOUNDS, fetch);
           if (!options) throw Error("Exact old-family Grow archive wiring required");
           let fixedFinish: ArchiveFixedFinish | null = null, capacityRefusal: unknown = null, diagnosticCount = 0;
           const info = console.info;
@@ -1105,7 +1106,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
               } });
             } };
             const store = new SqliteStore(sql); let passBudget: ArchiveBudget | undefined;
-            const options = growArchiveDriver(archiveGiven(store), sql, binding, environment, policies, PROPOSED_BOUNDS, peer.fetch);
+            const options = growArchiveDriver(archiveGiven(store), sql, binding, environment, DEMO_RELEASE, policies, PROPOSED_BOUNDS, peer.fetch);
             if (!options) return expect.fail("The explicit native TEST host configuration must be admitted");
             const sourcePreparation = options.sources!;
             const finishObserver = kind === "directory" && cutoff.seq === 2 ? observeDirectoryFinish(at, () => passBudget, cutoff, peer.data) : undefined;
@@ -1194,7 +1195,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       // Install the actual production factory on an already confirmed,
       // quiescent native Destination. A real alarm must clear idle work.
       roomArchiveWiring.set(G.name, (given, sql, bounds) => {
-        const options = growArchiveDriver(given, sql, env.PLATFORM, environment, policies, bounds, peer.fetch);
+        const options = growArchiveDriver(given, sql, env.PLATFORM, environment, DEMO_RELEASE, policies, bounds, peer.fetch);
         if (!options) throw Error("Exact Grow archive factory is required"); return options;
       });
       life.cleanup(() => { roomArchiveWiring.delete(G.name); });
@@ -1210,7 +1211,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const writesBeforeIdleGuard = peer.minted.filter(token => token.scope === "write").length;
       const concurrentIdle = await life.wait(() => runInDurableObject(G.object, async (_instance, state) => {
         const sql = archiveSql(state), store = new SqliteStore(sql);
-        const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, policies, PROPOSED_BOUNDS, peer.fetch);
+        const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, DEMO_RELEASE, policies, PROPOSED_BOUNDS, peer.fetch);
         if (!options) throw Error("Exact Grow archive wiring is required");
         let checkpoint: Checkpointed | undefined; const budget = new ArchiveBudget();
         const driver = new ArchiveDriver({ ...options, sql, current: () => store.scope(), clock: () => timeOf(life.now()), bounds: PROPOSED_BOUNDS, budget: () => budget,
@@ -1234,7 +1235,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         const writes = peer.minted.filter(token => token.scope === "write").length;
         const result = await life.wait(() => runInDurableObject(excluded.object, (_instance, state) => {
           const sql = archiveSql(state), store = new SqliteStore(sql);
-          const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, policies, PROPOSED_BOUNDS, peer.fetch);
+          const options = growArchiveDriver(archiveGiven(store), sql, env.PLATFORM, environment, DEMO_RELEASE, policies, PROPOSED_BOUNDS, peer.fetch);
           if (!options) return expect.fail("The explicit host configuration exists");
           return new ArchiveDriver({ ...options, sql, current: () => store.scope(), clock: () => timeOf(life.now()), bounds: PROPOSED_BOUNDS }).run();
         }));
@@ -1567,7 +1568,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       try {
         const run=()=>life.wait(()=>runInDurableObject(rootScope.object,async(_instance,state)=>{
           const sql=archiveSql(state),store=new SqliteStore(sql);
-          const options=growArchiveDriver(archiveGiven(store),sql,binding,environment,sourcePolicies,PROPOSED_BOUNDS,peer.fetch);
+          const options=growArchiveDriver(archiveGiven(store),sql,binding,environment,DEMO_RELEASE,sourcePolicies,PROPOSED_BOUNDS,peer.fetch);
           if(!options)throw Error("the reviewed Grow host fixture must be admitted");
           return new ArchiveDriver({...options,sql,current:()=>({ at,head:currentThrough }),clock:()=>timeOf(life.now()),bounds:PROPOSED_BOUNDS}).run();
         }));

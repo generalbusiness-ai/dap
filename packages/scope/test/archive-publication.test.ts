@@ -11,6 +11,7 @@ import { FLOOR_WINDOW } from "@generalbusiness/dap-derive";
 import { canonicalize, digestBytes, intentDigest, isSeed, scopeIdOf, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { growArchivePolicies } from "../../../apps/room/archive-policy.ts";
+import { RECORDED_GROW_RELEASE } from "./support/recorded-grow-release.ts";
 import { buildJournalPass, captureJournalParentFrontier } from "@generalbusiness/dap-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "../src/archive-budget.ts";
 import { planLegacyArchiveAnchors, planPublishedArchivePass, planRootPublishedArchivePass, rebuildArchivePass } from "../src/archive-build.ts";
@@ -176,7 +177,7 @@ test("Native admitted Register17 fact publishes nonempty anchors and rebuilds th
     const publicScopes = [directoryAt, await life.wait(() => rules.at()), await life.wait(() => destination.at())];
     const packet = unb64url(inject("maintainedApplications").growDemo.bytes);
     if (!packet) throw Error("Exact deployed Grow policy packet required");
-    const policies = growArchivePolicies(new TextDecoder().decode(packet));
+    const policies = growArchivePolicies(new TextDecoder().decode(packet), RECORDED_GROW_RELEASE);
     const seat = await life.wait(async () => membership.did(rita, "seat", { expected: await membership.expected({ roster: 0 }) }));
     await life.wait(async () => membership.did(rita, "first-key", { fields: { member: seat }, expected: await membership.expected({ roster: 0, member: seat }) }));
     const memberReader = readerOf(mintSession(room.sessions, { ...room.claims, reads: ["summary", "items"] }));

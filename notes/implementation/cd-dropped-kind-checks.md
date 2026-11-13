@@ -537,13 +537,26 @@ the `archive-installed.test.ts` publication and failed-claim cases. The resume
 tests now serve the Rules and Destination journals as well as the Directory
 journal. The "Other test changes" table gives the reason.
 
+## The Grow archive binding (ruling e4b72290)
+
+Q1: `growArchivePolicies` (`apps/room/archive-policy.ts`) takes the trusted
+release as a `GrowArchiveRelease` of three parts: the release digest, its
+publisher and its entry definition. The function reads the packet under that
+release and builds a policy for the entry, for every other definition the
+packet declares, and for the native room places. `growArchiveConfiguration`
+and `growArchiveDriver` (`apps/room/archive.ts`) take the release digest, and
+the config check compares the configured release with it.
+
+`apps/room/worker.grow.ts` passes today's three constants: `DEMO_RELEASE`,
+`DEMO_PUBLISHER` and `GROW_ARCHIVE_DEFINITIONS[0]`. The recorded packet
+declares exactly the two `GROW_ARCHIVE_DEFINITIONS`, so production builds the
+same policies as before. Tests that use the recorded packet pass
+`RECORDED_GROW_RELEASE` (`packages/scope/test/support/recorded-grow-release.ts`).
+
 ## Pending rulings
 
-- **e4b72290: the Grow archive binding.** RULING PENDING.
-  `growArchivePolicies` (`apps/room/archive-policy.ts:21-23`) and the config
-  check in `apps/room/archive.ts:31` accept only the recorded signed demo
-  release. The production, warm and evicted activation, and Room A shape
-  cases install that release, which a new-format room refuses.
+- **e4b72290 Q2: Room A shape.** RULING IN WORK. See "The Grow archive
+  binding".
 - **0a5f97ba: the demo Site receiver.** RULING PENDING. `demoDefinitions`
   points the Site's `create-room` send at the demo Room
   (`examples/grow/demo-definitions.ts:75-77`). The Site's
