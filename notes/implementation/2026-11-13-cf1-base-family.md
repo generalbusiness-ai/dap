@@ -61,7 +61,7 @@ The deliberate no answers:
 
 ## Archive
 
-`ARCHIVE_NATIVE_DATA` in `packages/git/src/archive-policy.ts` gains rows for Directory 27, Destination 21 and Rules 15, and value-place rows for Rules 15 and Destination 21 (ruling `96676b22`, point 3). Destination 21 keeps the `certify-rules-tree` act of Destination 14, so it also has that act's three value places. The default family includes the archive binding, so the `Grow base` case of `packages/scope/test/archive-installed.test.ts` exports and replays a base room.
+`ARCHIVE_NATIVE_DATA` in `packages/git/src/archive-policy.ts` gains rows for Directory 27, Destination 21 and Rules 15, and value-place rows for Rules 15 and Destination 21 (ruling `96676b22`, point 3). Destination 21 keeps the `certify-rules-tree` act of Destination 14, so it also has that act's three value places. Directory 20 and its successors read `has-repository` from the item whose ID equals the new entry's seq, so a room of the unpublished, repository-binding or own-agent family refuses `bind-archive` with `no-repository`. CF-1 changes no historical pin, and a celld room has no archive until celld runs the base family (ruling `9658ed88`). The test "bind-archive reads the room's own repository item" in `packages/platform/test/base-family.test.ts` witnesses both answers. The default family includes the archive binding, so the `Grow base` case of `packages/scope/test/archive-installed.test.ts` exports and replays a base room.
 
 ## Native witnesses
 

@@ -173,6 +173,9 @@ give. A celld room lacks these parts of the `base` family:
 - The final failed state of a claim, and the refusal of a founder key that
   is also the recovery key.
 - The fixed one-hour Git read token.
+- An archive. A room of the `unpublished` or the `repository-binding`
+  family refuses `bind-archive` with `no-repository`, so a celld room has
+  no archive until celld runs the `base` family.
 
 The prepared project keeps the production
 Worker and its bindings, sets `REGISTER_SCOPE` to the planned register, and
