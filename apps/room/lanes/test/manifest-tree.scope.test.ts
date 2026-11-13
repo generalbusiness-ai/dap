@@ -766,8 +766,10 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   // records; current standing, snapshot, keys, generations and refs stay fresh.
   const [jobEntry, manifestEntry] = await L.sealed().then(entries => [entries[job], entries[version]] as const);
   if (!jobEntry || !manifestEntry) expect.fail("The native checker job and manifest openings must both be present.");
-  const sameOpeningScope = (scope: ScopeRef): boolean => scope.scope === jobEntry.entry.at.scope && scope.inc === jobEntry.entry.at.inc && scope.kind === jobEntry.entry.at.kind;
-  if (jobEntry.entry.seq !== job || manifestEntry.entry.seq !== version || jobEntry.entry.at.scope !== L.name || jobEntry.entry.at.kind !== "lane" || !sameOpeningScope(manifestEntry.entry.at)) expect.fail("The native checker openings must match their exact lane and sequences.");
+  // Both openings bind the genesis of lane L, which is a lane by construction.
+  const lane = await L.at();
+  const onLane = (entry: Entry): boolean => "genesis" in entry && entry.genesis === lane.genesis;
+  if (jobEntry.entry.seq !== job || manifestEntry.entry.seq !== version || lane.scope !== L.name || !onLane(jobEntry.entry) || !onLane(manifestEntry.entry)) expect.fail("The native checker openings must match their exact lane and sequences.");
   const serviceOptions: ConstructorParameters<typeof CheckerService>[0] = {
     signer: { key: checkerKey, sign: (bytes) => sign(checkerSecret, bytes) }, outcomes: new Outcomes(new MemoryDurable()), clock: now, random: (length) => crypto.getRandomValues(new Uint8Array(length)),
     scopes: {
@@ -790,7 +792,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   };
   if (containerTest) { const realRun = serviceOptions.runner.run.bind(serviceOptions.runner); serviceOptions.runner = { find: (run, expectedJob) => containerTestRunner(containerTest).find(run, expectedJob), run: async ask => { runs++; return realRun(ask); } }; }
   const service = new CheckerService(serviceOptions);
-  const jobFact = factRefOf(jobEntry.entry);
+  const jobFact = factRefOf(jobEntry.entry, lane);
   const readAsk = await signJobRead({ key: checkerKey, sign: (bytes) => sign(checkerSecret, bytes) }, { lane: await L.at(), fact: jobFact }, { now: now(), nonce: crypto.getRandomValues(new Uint8Array(16)) });
   const snapshot = await Gsnapshot.reservationSnapshot(readAsk);
   expect(snapshot).not.toBeNull();
@@ -881,7 +883,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const wrongKey = (await otherChecker.store.secret((await otherChecker.store.config())!.key))!;
   const wrongAsk = await signJobRead({ key: keyIdOfSecret(wrongKey), sign: (bytes) => sign(wrongKey, bytes) }, { lane: await L.at(), fact: jobFact }, { now: now(), nonce: crypto.getRandomValues(new Uint8Array(16)) });
   expect(await Gsnapshot.reservationSnapshot(wrongAsk)).toBeNull();
-  const delivered = await service.deliver({ lane: await L.at(), job: factRefOf(jobEntry.entry), name: "text", tree: manifest.values["tree"] as string });
+  const delivered = await service.deliver({ lane: await L.at(), job: factRefOf(jobEntry.entry, lane), name: "text", tree: manifest.values["tree"] as string });
   expect([delivered, runs, prepares]).toEqual([{ did: "submitted", outcome: { act: "check", outcome: "passed" }, ran: true, lane: "kept" }, 1, 0]);
   refuseSnapshot = true;
   const resumed = await new CheckerService(serviceOptions).deliver({ lane: await L.at(), job: jobFact, name: "text", tree: manifest.values["tree"] as string });
@@ -1069,7 +1071,7 @@ test("a native version-2 room refuses branch list proposals before local Git cap
   owner.configure({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   try {
     const store = memoryStore(); await store.keep("founder", legacyCreator.secret);
-    await store.save({ v: 1, service: SERVICE, key: "founder", repository: { directory, membership, rules: old.rules.name, destination: old.G.name } });
+    await store.save({ v: 2, service: SERVICE, key: "founder", repository: { directory, membership, rules: old.rules.name, destination: old.G.name } });
     let reads = 0;
     const outcome = await command({ store, fetch: ((url: string, init?: RequestInit) => routed(url, init)) as unknown as Fetch, now: () => timeMs(net.clock.now)!, git: { run: async () => 0, files: async () => { reads++; return { ok: false, reason: "should-not-read" }; } } }, ["propose", "topic"]);
     expect([outcome.code, outcome.lines[0], reads, (await old.G.summary()).value.definition]).toEqual([1, "Cannot propose: version-mismatch. This room has no manifest-list destination.", 0, "platform:destination@2"]);

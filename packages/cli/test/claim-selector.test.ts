@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Receipt, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import { command, memoryStore, type Context } from "../src/index.ts";
 
@@ -58,8 +58,8 @@ test.each([
   expect(timeMs(submitted[0]!.intent.notAfter)!).toBeGreaterThan(now);
   expect(canonicalize((await store.config())!.plan!.founding)).toBe(original);
 
-  const other = newIncarnation(new Uint8Array(16).fill(8));
-  const wrong = { ...plan, acknowledged: { ...plan.acknowledged!, receipt: { ...receipt, fact: { ...receipt.fact, at: { ...receipt.fact.at, inc: other } } } } };
+  const other = textDigest("TEST other genesis");
+  const wrong = { ...plan, acknowledged: { ...plan.acknowledged!, receipt: { ...receipt, fact: { ...receipt.fact, at: { ...receipt.fact.at, genesis: other } } } } };
   await store.save({ ...kept, plan: wrong });
   const mismatched = await command(ctx, ["create", "other", "--handle", "@owner"]);
   expect(mismatched.code).toBe(1);

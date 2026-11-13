@@ -148,7 +148,7 @@ async function join(room: Room, admin: Agent, handle: string, definition: string
 async function invitation(room: Room, admin: Agent, owner: Agent, own: boolean): Promise<string> {
   const M = owner.config.repository!.membership;
   if (own) {
-    const store = memoryStore(); await store.save({ v: 1, service: SERVICE, key: "browser", handle: owner.config.handle!, repository: owner.config.repository! });
+    const store = memoryStore(); await store.save({ v: 2, service: SERVICE, key: "browser", handle: owner.config.handle!, repository: owner.config.repository! });
     const custody = { ...store, signer: async () => secretSigner(owner.secret), secret: async (): Promise<never> => { throw Error("No raw seed export"); } };
     const issued = await room.wait(() => issueOwnAgentInvitation({ store: custody, fetch: room.fetch, pause: waiting => room.pause(waiting), now: () => room.now() + 1000 },
       { handle: "@oauth-agent", hours: 1, controller: { membership: M, member: owner.config.handle as MemberId } }, { operation: crypto.randomUUID(), privateRequests: [], mode: "new" }));

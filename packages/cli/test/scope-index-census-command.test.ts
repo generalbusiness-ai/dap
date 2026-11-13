@@ -155,7 +155,7 @@ test("census refuses malformed identities, ordering, page envelopes and cursors 
   const bad: unknown[] = [
     { rows, next: null, private: sentinel }, { rows },
     { rows: [{ ...rows[0], private: sentinel }], next: null },
-    { rows: [{ ...rows[0], at: { ...rows[0]!.at, inc: sentinel } }], next: null },
+    { rows: [{ ...rows[0], at: { ...rows[0]!.at, genesis: sentinel } }], next: null },
     { rows: [{ ...rows[0], genesis: sentinel }], next: null },
     { rows: [rows[0], rows[0]], next: null }, { rows: [...rows].reverse(), next: null },
     { rows, next: rows[0]!.at.scope }, { rows, next: sentinel }, { rows: [], next: rows[0]!.at.scope },

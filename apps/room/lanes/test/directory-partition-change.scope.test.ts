@@ -4,7 +4,7 @@ import { namespace } from "../../../../packages/scope/src/namespace.ts";
 import { ReceiverReads } from "../../../../packages/scope/src/receiver-reads.ts";
 import { expect, test } from "vitest";
 import { firstExtents, PARTITION_COHORT as P, platform } from "@generalbusiness/dap-platform";
-import { canonicalize, factRefOf, intentDigest, newIncarnation, isMemberRef } from "@generalbusiness/dap-bytes";
+import { canonicalize, factRefOf, intentDigest, isMemberRef, textDigest } from "@generalbusiness/dap-bytes";
 import { CAPABILITY_CODE } from "@generalbusiness/dap-scope";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { DIGESTS, change, issue } from "../src/index.ts";
@@ -124,8 +124,8 @@ test.each([true, false])("activated experimental change pin consumer keeps recei
     if (!send) return expect.fail("actual experimental manifest emitted no pin-confirm");
     const envelope = await C.envelope(first.fact.seq, send.n);
     await new Platform(I.name).restart();
-    const wrongInc = { ...envelope, from: { ...envelope.from, at: { ...envelope.from.at, inc: newIncarnation(new Uint8Array(16).fill(240)) } } };
-    expect(await I.stub.deliver(wrongInc)).toMatchObject(partitioned ? { answer: "retry", reason: "dependency-unavailable" } : { answer: "source-unverified" });
+    const wrongGenesis = { ...envelope, from: { ...envelope.from, at: { ...envelope.from.at, genesis: textDigest("TEST other genesis") } } };
+    expect(await I.stub.deliver(wrongGenesis)).toMatchObject(partitioned ? { answer: "retry", reason: "dependency-unavailable" } : { answer: "source-unverified" });
     expect((await record())?.state).toBe("provisional");
     // A current manifest did not emit this premature unpin. Its valid
     // sender identity cannot replace the exact immutable send permission.

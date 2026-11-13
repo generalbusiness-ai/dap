@@ -3,7 +3,7 @@ import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Seed } from "@generalbusiness/dap-contract";
-import { factRefOf, intentDigest, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { entryHash, factRefOf, intentDigest, newGenesisNonce, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, PROFILES, validateDefinition, type Delivered } from "@generalbusiness/dap-derive";
 import { PARTITION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import type { Resent } from "@generalbusiness/dap-scope";
@@ -120,13 +120,12 @@ test("native root keeps a lost create answer pending and explicitly resends its 
     await settle(...r.scopes, P);
     expect(sent).toHaveLength(5);
     // PURE boundary specimen: one namespace cannot actually produce a
-    // second incarnation of this seed. Change only the actual G's inc in
+    // second genesis of this seed. Change only the actual genesis nonce in
     // memory, offer it to the real clause judge, and never write the draft.
     // This proves the conflict clause, not Native second-birth attestation.
     const born = (await P.entries())[0]!;
     if (born.input.type !== "genesis") return expect.fail("actual child has no genesis");
-    const other = newIncarnation(new Uint8Array(16).fill(99));
-    const synthetic: Entry = { ...born, at: { ...born.at, inc: other }, input: { ...born.input, inc: other } };
+    const synthetic: Entry = { ...born, input: { ...born.input, nonce: newGenesisNonce(new Uint8Array(16).fill(99)) } };
     const conflict = await runInDurableObject(D.object, (_instance, storage) => {
       const store = new SqliteStore({ exec: (query, ...args) => storage.storage.sql.exec(query, ...args), transaction: work => storage.storage.transactionSync(work) });
       const native = platform(C.directory)!;
@@ -134,7 +133,7 @@ test("native root keeps a lost create answer pending and explicitly resends its 
       if (!checked.ok) throw new Error("native Root definition is invalid");
       const sequence = storedSequenceOf(store, PROPOSED_BOUNDS.entryBytes); // receiver fixture setup only
       const reply = synthetic.sends.find(send => send.message.class === "result")!;
-      const judged = judgeDelivery(store, checked.definition, { to: reply.to, from: factRefOf(synthetic), n: reply.n, message: reply.message }, {
+      const judged = judgeDelivery(store, checked.definition, { to: reply.to, from: factRefOf(synthetic, { scope: P.name, genesis: entryHash(synthetic) }), n: reply.n, message: reply.message }, {
         clock: clockOf(store, net.clock.now), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], own: ownOf(store, sequence),
         source: { entry: synthetic, under: "platform:directory-partition" },
         origin: JSON.parse(store.stored(opened.receipt.fact.seq)!.bytes) as Entry,

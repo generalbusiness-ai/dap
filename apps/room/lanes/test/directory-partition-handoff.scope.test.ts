@@ -48,7 +48,7 @@ test.each(["full", "threshold"] as const)("native partition seal at %s keeps con
     let late: Platform | undefined;
     let lateSend: string | undefined;
     if (mode === "threshold") {
-      net.hold = envelope => "scope" in envelope.to && envelope.to.scope === P.name && envelope.from.at.kind === "lane" && envelope.from.at.scope !== I.name && envelope.message.class === "result";
+      net.hold = envelope => "scope" in envelope.to && envelope.to.scope === P.name && envelope.from.seq === 0 && envelope.from.at.scope !== I.name && envelope.message.class === "result"; // the child's genesis result
       const lane = await laneRoom.lane(rita, "open-issue", issue, DIGESTS.issue, { title: "Delayed child result", conditions: ["Settle after seal"] });
       late = new Platform(lane.name);
       const pending = (await P.summary()).value.items.find(item => item.type === "lane" && item.values["number"] === 2);

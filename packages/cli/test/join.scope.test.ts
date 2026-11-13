@@ -55,9 +55,9 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
         throw new Error("scripted lost accepted join reply");
       }
       if (signed?.intent.kind === "join" && wrongReceipt) {
-        const answer = await response.json() as { receipt?: { fact: { at: { inc: string } } } };
+        const answer = await response.json() as { receipt?: { fact: { at: { genesis: string } } } };
         if (!answer.receipt) return Response.json(answer);
-        answer.receipt.fact.at.inc = (await O.at()).inc;
+        answer.receipt.fact.at.genesis = (await O.at()).genesis;
         return Response.json(answer);
       }
       if (path.endsWith("/settle") && unavailableSettlement) return Response.json({ ok: false, reason: "unavailable" });

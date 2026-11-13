@@ -1,7 +1,7 @@
 import { customRequiredChangeData } from "./support/definition-corpus-data.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type OutboxId, type Entry, type FactRef, type Item, type Receipt, type ScopeRef, type Seed, type SignedIntent, type SignedSessionRequest, type Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { changeDemo3 } from "../src/index.ts";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { command, memoryStore, type Context } from "../../../../packages/cli/src/index.ts";
@@ -24,7 +24,8 @@ const ref = (label: string, kind: keyof typeof DEFINITIONS): ScopeRef => ({
   // Repeated base32 characters are not necessarily a canonical digest. Use
   // the real identifier codec even for this explicitly scripted identity.
   scope: scopeIdOf({ v: 1, kind, definition: DEFINITIONS[kind], creator: null, cause: textDigest(`scripted ${label}`), ordinal: 0 }),
-  inc: newIncarnation(new Uint8Array(16).fill(7)), kind,
+  // The client compares genesis digests as text and admits no sequence here.
+  genesis: textDigest(`TEST genesis ${label}`),
 });
 const item = (type: string, id: number, state: string, values: Item["values"] = {}, refs: Item["refs"] = {}, parties: Item["parties"] = {}): Item => ({ id, type, state, revision: 1, opened: null, values, refs, parties, attributed: [] });
 
@@ -32,7 +33,7 @@ async function fixture(category: Category, declared: DeclaredDefinition = change
   const pin = definitionDigest(declared), declaration = canonicalize(declared);
   const D = ref("a", "directory"), M = ref("b", "membership"), R = ref("c", "rules"), G = ref("d", "destination"), I = ref("e", "lane");
   const store = memoryStore(); await store.keep("test", new Uint8Array(32).fill(11));
-  await store.save({ v: 1, service: "https://cli.test", key: "test", handle: "@rita", repository: { directory: D, membership: M, rules: R.scope, destination: G.scope } });
+  await store.save({ v: 2, service: "https://cli.test", key: "test", handle: "@rita", repository: { directory: D, membership: M, rules: R.scope, destination: G.scope } });
   const summaries = new Map<string, Summary>([
     [D.scope, { scope: D, definition: "platform:directory@3", status: "active", time: TIME, counts: [], items: [item("lane", 1, "created", { kind: "issue" }, { scope: I })] }],
     [R.scope, { scope: R, definition: "platform:rules@2", status: "active", time: TIME, counts: [], items: [item("definition", 1, "active", { name: "change", digest: pin })] }],
@@ -87,10 +88,10 @@ async function fixture(category: Category, declared: DeclaredDefinition = change
     const target = signed.intent.to!;
     const prior = entries.get(target.scope) ?? [];
     const seq = prior.length + 1;
-    const entry: Entry = { v: 1, at: target, seq, prev: prior.length ? entryHash(prior.at(-1)!) : textDigest("scripted prior head"), time: TIME, clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
+    const entry: Entry = { v: 1, genesis: target.genesis, seq, prev: prior.length ? entryHash(prior.at(-1)!) : textDigest("scripted prior head"), time: TIME, clamped: false, epoch: 0, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
     if (kind === "open-pr") {
       const seed: Seed = { v: 1, kind: "lane", definition: pin, creator: D, cause: intentDigest(signed.intent), ordinal: 0 };
-      lane = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(9)), kind: "lane" };
+      lane = { scope: scopeIdOf(seed), genesis: textDigest("TEST genesis opened lane") };
       entry.effects = [{ effect: "open", item: seq, type: "lane", state: "opened" }];
       entry.sends = [{ n: 0, to: seed, message: { class: "request", type: "create", body: { fields: signed.intent.fields } } }];
       const singles = Object.entries(declared.items).filter(([, t]) => !t.many).map(([type, t], id) => item(type, id, t.initial, type === "rules" ? { revision: 1, checks: [{ required: true }] } : {}));
@@ -105,7 +106,7 @@ async function fixture(category: Category, declared: DeclaredDefinition = change
     }
     prior.push(entry); entries.set(target.scope, prior);
     if (kind === "merge") prior.push({ ...entry, seq: seq + 1, prev: entryHash(entry), input: { type: "delivery", from: { at: G, seq: 1, hash: textDigest("scripted reservation") }, n: 0, message: { class: "result", of: { from: factRefOf(entry), n: 0 }, outcome: "applied" }, clause: "applied" }, effects: [{ effect: "state", item: seq, state: "committed" }], sends: [] });
-    const fact = factRefOf(entry);
+    const fact = factRefOf(entry, target);
     accepted.push({ kind, ...(typeof signed.intent.fields["path"] === "string" ? { path: signed.intent.fields["path"] } : {}), fact, signed });
     const receipt: Receipt = { fact, definition: summaries.get(target.scope)!.definition, intent: intentDigest(signed.intent), effects: entry.effects, sends: entry.sends.map(s => `${seq}.${s.n}` as OutboxId), epoch: 0 };
     return Response.json({ answer: "accepted", receipt });

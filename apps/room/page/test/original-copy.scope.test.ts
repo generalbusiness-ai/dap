@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import type { ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, canonicalize, intentDigest, newIncarnation, parseStrict, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalBytes, canonicalize, intentDigest, parseStrict, timeMs, timeOf, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
 import { actBodyText, originalRequest, requestSession, secretSigner, sendableAt, signedIntent, signedRead, signerSessionRequest, type Fetch, type OriginalRow, type Signer } from "@generalbusiness/dap-client";
 import { applicationGatewayRoute } from "../../../../packages/client/src/application-gateway.ts";
@@ -100,7 +100,7 @@ const GIB = 1024 * 1024 * 1024;
 const FILLER_KEY = secretSigner(new Uint8Array(32).fill(7)).key;
 const fill = (s: Scene, member: string, digest: string, size: number) => s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => {
   const now = s.laptop.session.now!();
-  state.storage.sql.exec("INSERT INTO original_copy (digest, inc, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, ?, ?, 'k', NULL, ?, ?, ?, '')", `sha256:${digest.split("").map(c => c.charCodeAt(0).toString(16)).join("").padEnd(64, "0").slice(0, 64)}`, s.laptop.membership.inc, member, FILLER_KEY, JSON.stringify(s.laptop.membership), timeOf(now + 300_000), now + 8 * 24 * 3600 * 1000, size);
+  state.storage.sql.exec("INSERT INTO original_copy (digest, genesis, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, ?, ?, 'k', NULL, ?, ?, ?, '')", `sha256:${digest.split("").map(c => c.charCodeAt(0).toString(16)).join("").padEnd(64, "0").slice(0, 64)}`, s.laptop.membership.genesis, member, FILLER_KEY, JSON.stringify(s.laptop.membership), timeOf(now + 300_000), now + 8 * 24 * 3600 * 1000, size);
 }));
 /** Each member's row count in the object. */
 const rowsByMember = (s: Scene) => s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => Object.fromEntries(state.storage.sql.exec("SELECT member, COUNT(*) AS n FROM original_copy GROUP BY member").toArray().map(row => [row["member"] as string, row["n"] as number]))));
@@ -479,7 +479,7 @@ test("an idle object drops a row at seven days", async () => {
 
 // A page with no session keeps nothing and sends no extra request, as section 9 of the note says.
 test("a page on signed reads keeps no copy", async () => {
-  const room = { session: { service: SERVICE, secret: new Uint8Array(32) }, membership: { scope: "m", inc: "i", kind: "membership" }, reader: null } as unknown as Room;
+  const room = { session: { service: SERVICE, secret: new Uint8Array(32) }, membership: { scope: "m", genesis: textDigest("TEST genesis 24") }, reader: null } as unknown as Room;
   const fetch: Fetch = () => { throw new Error("no request goes out"); };
   await expect(keepOriginal({ ...room, session: { ...room.session, fetch } }, {} as SignedIntent, {})).resolves.toBeUndefined();
 });
@@ -571,8 +571,8 @@ test("a full object still takes a request to membership, under the member's own 
     const membershipRef = s.rita.membership;
     await fill(s, "@paul", "paul-fills-it", GIB);
     expect(await keepBy(s, s.rita, rita, (await scopeRefOf(s.rita, s.lane)).scope)).toEqual({ status: 423, reason: "room-full" });
-    // Another incarnation of the scope's name is no request to this scope.
-    expect(await keepBy(s, s.rita, rita, { ...membershipRef, inc: newIncarnation(new Uint8Array(16).fill(9)) })).toEqual({ status: 423, reason: "room-full" });
+    // Another genesis under the scope's name is no request to this scope.
+    expect(await keepBy(s, s.rita, rita, { ...membershipRef, genesis: textDigest("TEST genesis 25") })).toEqual({ status: 423, reason: "room-full" });
     expect((await keepBy(s, s.rita, rita, membershipRef)).status).toBe(204);
     // The member's own caps still apply to a request to membership.
     for (let i = 0; i < 63; i++) await fill(s, "@rita", `rita-${i}`, 1);
@@ -875,9 +875,10 @@ test("an answer lifts only this page's own fence", async () => {
     expect(settledAssociations(s.laptop, row, { state: "refused", reason: "expired" })).toEqual([own]);
     // A missing row shows nothing, and `mismatch` and `archived` are fences on the send path too.
     for (const state of ["gone", "mismatch", "archived", "waiting", "unknown", "unverified"] as const) expect(settledAssociations(s.laptop, row, { state, reason: "x", until: 0 } as never), state).toEqual([]);
-    // An opening act can sit under the directory, where the page's panel keeps its fence.
-    const opening = { ...row, to: { ...row.to, kind: "directory" as const } };
-    expect(settledAssociations(s.laptop, opening, landed)).toEqual([own, actAssociation(s.laptop, s.laptop.directory)]);
+    // An opening act goes to the directory reference that the page holds, where the page's panel keeps its fence.
+    const opening = { ...row, to: s.laptop.directoryIndex!.scope };
+    const directory = actAssociation(s.laptop, s.laptop.directory);
+    expect(settledAssociations(s.laptop, opening, landed)).toEqual([directory, directory]);
   } finally { s.d.done(); }
 });
 

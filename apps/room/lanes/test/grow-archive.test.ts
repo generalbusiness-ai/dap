@@ -29,7 +29,7 @@ test("Grow export requires its exact deployed signed release and never admits pr
 
 test("Artifacts archive mints one service-expiring pass token and the actual send guard rejects another ref and revoked reuse", async () => {
   const repository = { host: "artifacts", namespace: "demo", name: "repo", id: "repo" }, remote = "https://service.invalid/git/demo/repo.git";
-  const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
+  const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, genesis: `sha256:${"a".repeat(64)}` };
   const expires = "2026-10-21T00:07:00Z", now = "2026-10-21T00:00:00Z", tokens: unknown[] = [], revoked: string[] = [], posts: string[] = [];
   const pkt = (text: string) => `${(utf8(text).length + 4).toString(16).padStart(4, "0")}${text}`;
   const reply = (text: string, kind: string) => new Response(text, { headers: { "content-type": `application/x-git-${kind}` } });
