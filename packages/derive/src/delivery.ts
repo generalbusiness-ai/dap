@@ -143,6 +143,8 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
 
   // The source checks. They are immutable facts about the input (section 5.1).
   if (!isFactRef(from) || !isLocalId(n) || !isObject(message)) return unverified("not a delivery");
+  // A source that is not the entry its fact names is a fact about the input, not a missing dependency.
+  if (context.source && !isEntryOf(context.source.entry, from, context.source.sequence)) return unverified("the source entry does not hold that send with that message");
   const evidence = sourceCopy(context, from);
   if (!evidence) return { result: "unavailable", reason: "dependency-unavailable" };
   const source = copyEntry(evidence);

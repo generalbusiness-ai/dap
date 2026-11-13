@@ -41,8 +41,9 @@ describe("founding a directory and creating a child (sections 7.1 and 7.2)", () 
 
     // I.0: the genesis. Its name is the seed's digest; the opener is the member the creator judged; it sends one result, at ordinal 0.
     const { child: I } = born(D, 1);
+    expect(I.at.scope).toBe(scopeIdOf(seed));
     expect(I.last).toMatchObject({
-      seq: 0, prev: null, at: { scope: scopeIdOf(seed), kind: "lane" },
+      seq: 0, prev: null,
       input: { type: "genesis", seed, kind: ticketDefinition.declared.genesis, "founding": null, source: D.fact(1), n: 0, decision: "applied" },
       effects: [{ effect: "open", item: 0, type: "intent", state: "open" }, { effect: "party", item: 0, slot: "requester", member: rita.member }, { effect: "value", item: 0, slot: "title", value: "A flaky test" }],
       sends: [
@@ -192,7 +193,7 @@ describe("a relationship update (section 7.3)", () => {
     const { P, I, results } = arrive(order);
     expect(results).toEqual(expected);
     // The copy is keyed by the owner's scope, incarnation, name and item; its revision is the owner entry's seq.
-    expect(I.state.relation(P.at, "closes", 2)).toEqual({ owner: P.at, name: "closes", item: 2, state: "removed", revision: 3 });
+    expect(I.state.relation(P.at, "closes", 2)).toEqual({ owner: P.at, ownerKind: "lane", name: "closes", item: 2, state: "removed", revision: 3 });
     // The handler for the relationship `closes` ran for each applied update, and not for a superseded one.
     expect(I.item(0).values["linked"]).toBe("removed");
     expect(deliver(I, P, order[1]!)).toEqual({ result: "repeat", seq: I.head.seq });

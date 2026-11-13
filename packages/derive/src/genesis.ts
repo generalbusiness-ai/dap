@@ -15,7 +15,7 @@ import { nativeMark } from "./program/native.ts";
 import type { Entry, FactRef, FactUse, GenesisInput, GenesisNonce, GenesisSelfRef, Prepared, Reason, Request, ScopeId, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
 import { deliveryCauseDigest, genesisInputDigest, intentDigest, isDigest, isGenesisNonce, isSeed, messageDigest, resolveGenesisSelf, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { judgeDelivery, judgeDeliveryForReplay, reasonOf, type DeliveryContext } from "./delivery.ts";
-import { creationFields, isIntent, readFields, textsNamed, useOf, type Texts } from "./fields.ts";
+import { creationFields, isEntryOf, isIntent, readFields, textsNamed, useOf, type Texts } from "./fields.ts";
 import { copyEntry, copyFact, copyKind, judgmentFacts, matchesCopy, readJudgmentFacts, replayAssumptions, replayContext, sentByCopy, sourceCopy, verifiedContext, withJudgmentSource, type JudgmentCopy } from "./operand.ts";
 import type { Judging, ReplayAssumptions } from "./guards.ts";
 import { giving } from "./handlers.ts";
@@ -158,6 +158,7 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
     // Section 7.2, "What the child checks at step 2".
     if (!isFactRef(asked.from) || !isLocalId(asked.n) || !seed.creator || !same(resolveGenesisSelf(seed.creator, asked.from), asked.from.at)) return unverified("the source is not the creator the seed names");
     if (!isObject(asked.message) || asked.message.class !== "request" || asked.message.type !== "create") return unverified("not a creation request");
+    if (context.source && !isEntryOf(context.source.entry, asked.from, context.source.sequence)) return unverified("the source entry holds no create at that ordinal with that seed and that message");
     source = sourceCopy(context, asked.from);
     if (!source) return { result: "unavailable", reason: "dependency-unavailable" };
     if (!sentByCopy(source, asked)) return unverified("the source entry holds no create at that ordinal with that seed and that message");

@@ -335,12 +335,14 @@ test("retained selection preserves reads and admits only byte-proved same-origin
 
   const historical = forged(localSequence, 1001, { type: "delivery", from: answer.delivered.from, sourceKind: sequence.kind,
     n: 0, message: answer.message, clause: "applied" }, []);
-  const replay = replayContext({ ...base, facts: [], origin: requestOrigin }, {
-    recorded: { ...historical.entry, uses: [laterUse] }, source: null,
-    facts: [{ mode: "retained-name", fact: laterUse.fact, entry: resultLater.value.use.entry,
+  // No live source: the composed check refuses an assumption whose label contradicts the live source of the same sequence.
+  const assumptions = { recorded: { ...historical.entry, uses: [laterUse] }, source: null,
+    facts: [{ mode: "retained-name" as const, fact: laterUse.fact, entry: resultLater.value.use.entry,
       originalBytes: canonicalize(resultLater.value.use.entry), under: "replay:label",
-      anchor: { scope: laterUse.fact.at.scope, seq: laterUse.fact.seq, hash: laterUse.fact.hash } }],
-  }, { delivery: answer.delivered });
+      anchor: { scope: laterUse.fact.at.scope, seq: laterUse.fact.seq, hash: laterUse.fact.hash } }] };
+  expect(canonicalize(answer.source!.sequence.at)).toBe(canonicalize(laterUse.fact.at));
+  expect(replayContext({ ...base, facts: [], origin: requestOrigin }, assumptions, { delivery: answer.delivered })).toBeNull();
+  const replay = replayContext({ ...base, source: null, facts: [], origin: requestOrigin }, assumptions, { delivery: answer.delivered });
   if (!replay) return expect.fail("the explicit historical replay assumption must admit separately");
   expect(judgmentFacts(replay).map(copyUnder)).toEqual(["replay:label"]);
   expect(replayAssumptions(replay)?.facts).toHaveLength(1);
