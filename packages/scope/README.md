@@ -81,7 +81,7 @@ for a few acts
 | Port | Asked for | Production default |
 |---|---|---|
 | `Clock` | One reading for each call. | The runtime's clock. |
-| `Random` | The bytes of a new incarnation. | The runtime's random source. |
+| `Random` | The 16 bytes of a new genesis nonce. | The runtime's random source. |
 | `Authority` | Two phases. `read`, before the turn: what the judgment of one act's signer needs, within the fetch time limit. `held`, a method of what was read, in the commit: each grant the act may be judged on, and whether it is current at the commit's reading. It is a function of the folded state, that reading and what was read. `sealed`, optional: the commit tells the port the entry that it wrote on that answer. | The read finds no grant, so none is current. Every act that needs one is refused `unauthorized`. `DeployedScope` supplies `repositoryAuthority`, which reads the membership scope that the scope records. With none recorded nothing is read, and an act that needs a grant is answered `authority-unavailable`. |
 | `Resolver` | One foreign entry by fact reference, within the fetch time limit: the entry, `absent` when the object at that name does not hold it, or nothing when it cannot be read now. | Nothing can be read. An act that names a foreign entry is answered `dependency-unavailable`. `DeployedScope` supplies the namespace. |
 | `Transport` | One dispatch of one send to the object its address names, answered or not. | None: the sends stay in the outbox. `DeployedScope` supplies the namespace. |
@@ -148,7 +148,7 @@ run. What it reads is kept in memory only, so a restart leaves none.
   them, so its digest is unchanged.
 - A grant's `within` is a scope reference or a filter, `{ membership }`. A
   filter covers a scope when it names the membership scope that the scope
-  itself records, with that incarnation. The read asks `{ of, key }`, and
+  itself records, with that genesis. The read asks `{ of, key }`, and
   names no asker. An answer whose `within` is not that filter, with `of`
   as its `membership`, is no answer.
 - The entry's grant is built from the observation and retains it, with
@@ -174,19 +174,19 @@ The deployed class, `DeployedScope`, uses it, in `repositoryAuthority`: a
 membership scope answers the read (`observe`), and a scope whose genesis
 records a membership scope, such as an inbox, is judged on it. A rules
 scope and a destination hold membership's scope ID as a fixed value, and
-no incarnation at first. The authority's first read there asks by the ID
+no genesis at first. The authority's first read there asks by the ID
 alone. Guard 1 takes an answer of that ID and of the kind `membership`,
-and the entry that retains it fixes the incarnation. From then on the
-read states the incarnation, and the recorded reference is checked again
+and the entry that retains it fixes the genesis. From then on the
+read states the genesis, and the recorded reference is checked again
 inside the commit (I3 deltas, section 26, entries EM21 and EY7 to EY9).
 Before a retained membership observation, a rules scope or destination may
 resolve its session reference from the confirmed full membership reference
 in its recorded birth directory, after local token, clock and read checks
 (`repositorySessionMembership`, in `authority.ts`). Rules additionally checks
 that the directory confirms its exact rules reference. This writes no entry
-and does not fix grant authority; token or directory incarnation mismatches
+and does not fix grant authority; token or directory genesis mismatches
 remain forbidden. A scope whose entries retain more than one
-incarnation of that ID records no reference, and an act there that needs a
+genesis of that ID records no reference, and an act there that needs a
 grant is answered
 `authority-unavailable` (entry EY9).
 
@@ -259,7 +259,7 @@ the designs, and is no review of this source.
 - A directory under `platform:directory@1` records its membership
   reference in its slot `repository.membership`. The production authority
   reads it there, from the scope's own folded state. A rules scope and a
-  destination hold membership's scope ID, and the incarnation of the
+  destination hold membership's scope ID, and the genesis of the
   observations of it that their entries retain: before the first, the
   authority asks by the ID alone.
 
@@ -300,7 +300,7 @@ whose stored bytes are the canonical bytes.
 | `item`, `item_count` | The items, and the exact number in each type and state. The index on type, state and ID answers a page from a cursor, so a page costs the rows it returns. |
 | `item_slot` | For each slot that a range guard's `where` reads, as `validateDefinition` derived them: the slot's value in each item, indexed by value. It is kept and not yet read, because `StateView.page` takes no `where`. |
 | `outbox` | One row for each send: `seq`, ordinal, target, class, message, the held flag, and for a request its result or diagnosis. The dispatcher's bookkeeping is in three more columns: `attempts`, the attempt log; `next`, when the next attempt is due; and `ack`, the fact transport acknowledged the send with. |
-| `inbox` | Each incoming delivery the scope recorded, by source scope, incarnation, entry and ordinal. |
+| `inbox` | Each incoming delivery the scope recorded, by source scope, genesis, entry and ordinal. |
 | `folded` | Folded records that are not items: relationship copies, held creations, and the digests of the texts a slot has held. |
 | `operation` | The outside operations, folded, by the entry that opened each and its ordinal there, with what each still reserves. |
 | `attempt` | One row for each attempt that an entry opened, written with that entry. The driver's bookkeeping is in three columns: `next`, when it looks at the attempt next; `sent`, the time written before its one request left; and `outcome`, the entry that recorded its first outcome. |
@@ -386,11 +386,11 @@ that records the confirmation clears the flag. No attempt of it starts.
 1. The resolver of the name answers first, from the scope's record:
    `not-found` or `wrong-genesis`. Nothing was judged or recorded.
 2. The source entry is read from the source scope's object, by its scope
-   ID. Not readable now: `retry`. Another incarnation, no such entry, or
+   ID. Not readable now: `retry`. Another genesis, no such entry, or
    bytes that do not match the fact's hash: `source-unverified`.
 3. The delivery is judged in the scope's turn, like an act: the queue, the
    drain, the head check and the budgets are the same. A `create` that
-   reaches an empty store writes the genesis and mints the incarnation.
+   reaches an empty store mints a genesis nonce and writes the genesis.
 4. A first decision and a repeat are both answered `recorded`, with the
    fact of the entry that recorded the message. A scope that cannot decide
    yet answers `retry`. A repeat still reads and checks the source entry.
@@ -455,7 +455,7 @@ for I5).
 
 | Question | Answer |
 |---|---|
-| What it binds | The deployment's name; the membership scope with its incarnation, which is the repository; the member and the device key; the reads of the member's role when it was issued; and an end time at most 600 seconds later, written from membership's clock. |
+| What it binds | The deployment's name; the membership scope with its genesis, which is the repository; the member and the device key; the reads of the member's role when it was issued; and an end time at most 600 seconds later, written from membership's clock. |
 | How it is issued | A device signs a session request with its own key, to the membership scope. Membership answers from its head: only an active key of an active member gets one. It writes no entry. A request is answered with a session once: membership notes the key and the request's operation identity, outside its history, until the request's `notAfter`. |
 | Issuance limit | At most 64 retained requests per key. A 429 keeps the `rate-limited` answer body and adds advisory `Retry-After` seconds until that key's earliest retained request deadline, on membership's clock. It does not promise admission after that delay. |
 | How it is verified | By HMAC-SHA-256 under the deployment's session secret, over the exact claim bytes, compared in constant time. Then the deployment's name, then the membership reference: a scope accepts a session only for the membership scope that it records itself. Then the scope's own clock against the end time, at every read and before every send on a stream. |

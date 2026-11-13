@@ -13,10 +13,11 @@ entries, the items those entries fold into, and one pinned definition.
 Two scopes share no storage and no transaction.
 
 A scope's ID is the digest of its seed, so the ID is known before the
-scope exists. When a scope writes its first entry it mints a random
-**incarnation**, which tells one life of the scope from another. A
-reference to a scope (`ScopeRef`) is the ID, the incarnation and the
-kind together. The types are in
+scope exists. The first entry of a scope is its genesis entry, and that
+entry's hash is the scope's **genesis**. The genesis tells one sequence of
+entries from another under the same ID. A reference to a scope
+(`SequenceRef`) is `{ scope, genesis }`, the ID and the genesis. It names
+no kind; the seed holds the kind. The types are in
 [scope.ts](../../packages/contract/src/scope.ts).
 
 ## 2. Definition
@@ -49,7 +50,7 @@ revisions it expects.
 
 An **act** is something a definition declares that a participant can
 sign, such as `donate` or `merge`. To sign one, a participant makes an
-**intent**: the act's kind, the scope and incarnation, the item, its
+**intent**: the act's kind, the scope and its genesis, the item, its
 fields, the revisions the signer expects, an idempotency key and a
 deadline, signed with the participant's key. The intent is in
 [intent.ts](../../packages/contract/src/intent.ts).
@@ -166,7 +167,7 @@ holds for that coverage and those trusts. It is in
 
 ## Source
 
-Checked against main `6bfb6e16` on 10 November 2026. Sources: the types in
+Checked against main `57e893c0` on 13 November 2026. Sources: the types in
 [packages/contract](../../packages/contract/src), the judges in
 [packages/derive](../../packages/derive/src), and the platform definitions
 in [packages/platform](../../packages/platform/src). The room's own terms,

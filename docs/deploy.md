@@ -352,7 +352,7 @@ context and returns a version 2 offer. These registers have no `purpose` field.
 The request's effective origin must equal `origin`. Behind a proxy, set
 `PUBLIC_ORIGIN`. When it is unset, the Worker uses the URL's origin.
 Forwarded headers supply no identity. A different register, a different
-incarnation, or a setting of version 1 or 2 produces no offer. An offer
+genesis, or a setting of version 1 or 2 produces no offer. An offer
 grants no authority: the native namespace still judges the signed creation
 lineage.
 

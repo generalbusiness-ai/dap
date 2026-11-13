@@ -30,7 +30,7 @@ gets no outside port. Its operations stay recorded and unsent.
 The opt-in `repository-binding` cohort lets a room created on `none`
 attach one GitHub repository later. The register keeps `none`; the
 destination records the attachment. The operator must authorize that exact
-destination incarnation, repository, and branch in
+destination reference (scope ID and genesis), repository, and branch in
 `GITHUB_REPOSITORY_BINDINGS`. An administrator's binding grant alone gives
 no GitHub access. Earlier cohorts cannot bind a repository. Follow
 [Bind a new room to GitHub](self-host-mac.md#bind-a-new-room-to-github) for the
@@ -263,7 +263,7 @@ recorded behavior. Deploying the adapter does not move them to `hold@2`.
 - **Fork.** The service authenticates the lane's Directory creation and its
   Register and Destination births before it picks a repository. A caller
   cannot pick another namespace or repository. The fork's name comes from
-  the lane incarnation, the hold, the opening and the attempt. A lost
+  the lane's scope ID and genesis, the hold, the opening and the attempt. A lost
   creation answer stays unknown, and another attempt uses a different
   name.
 - **Setup credential.** Each fork attempt has a `hold@2` token record with
