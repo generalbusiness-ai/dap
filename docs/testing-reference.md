@@ -375,6 +375,14 @@ platform package depends on the lanes package or imports from it. It prints the 
 each step's elapsed and CPU time. It also fails on a whitespace error in
 what the branch changed.
 
+`scripts/test-selection.test.mjs` runs in the Node stage. It fails when a
+tracked `*.test.*` or `*.spec.*` file is in no gate step. The gate steps
+are the two `node --test` steps of `scripts/gate.sh`, `nodeFiles` in
+`scripts/test.mjs`, the four Counting witnesses, and the files that
+`vitest list` selects in the plain and native phases. When you add a test
+file, add it to one of these steps. If no gate step can run it, add it to
+`excludedTests` in `scripts/test.mjs` with a reason.
+
 The sixteen plain projects share one group with at most four active file
 tasks in total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
 The `scope` project follows in the workerd pool, against real Durable
