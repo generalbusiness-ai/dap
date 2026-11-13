@@ -1,11 +1,11 @@
 import { bindingChanges, bindingBoundOperandsData, bindingLateGuardData, bindingLateEffectData, bindingPreFailureData, bindingClockData, bindingAuditData, bindingCountsData, bindingRequestData, bindingProtoData, bindingLocalFactData, bindingIntegerData } from "./definition-corpus/binding-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { FactRef, FieldValue, Input, PlatformDefinition, Send } from "@generalbusiness/dap-contract";
-import { canonicalBytes, entryHash, factRefOf, parseStrictBytes, type CheckedSequence } from "@generalbusiness/dap-bytes";
+import type { FactRef, FieldValue, PlatformDefinition, Send } from "@generalbusiness/dap-contract";
+import { canonicalBytes, entryHash, factRefOf, parseStrictBytes, signIntent, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { MemoryState, PROFILES, applyEntry, clockOf, decisionCounts, entryOf, fits, indexItems, itemAwaits, judgeDelivery, keyOf, owed, validateDefinition } from "../src/index.ts";
 import type { Counts, Draft, Fetched, Indexed, Judgment, PlatformRule, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
-import { Scope, arriving, d, fixtureScope, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";
+import { Scope, arriving, d, fixtureScope, forged, keys, on, t, valid, type Over } from "./fixtures-entry.ts";
 import { observeNativeCalls } from "../src/program/native-trace.ts";
 
 /**
@@ -83,8 +83,9 @@ interface Arrival { send: Send; from: FactRef; source: ReturnType<typeof forged>
 let made = 1000;
 /** A ticket: the fact of an entry of that lane, with the entry as the receiver fetches it. */
 function ticket(of: CheckedSequence, seq = ++made): Fetched {
-  // The entry says that it recorded an act of the kind `merge`. Nothing signed it.
-  const { entry, sequence } = forged(of, seq, { type: "act", signed: { intent: { kind: "merge" } }, authority: [] } as unknown as Input, []);
+  // The entry records an act of the kind `merge`, signed by hand. Nothing judged it.
+  const signed = signIntent({ v: 1, to: of.at, actor: keys.una.key, kind: "merge", on: null, expected: {}, fields: {}, idempotencyKey: `m${seq}`, notAfter: t(60) }, keys.una.secret);
+  const { entry, sequence } = forged(of, seq, { type: "act", signed, authority: [], presented: {} }, []);
   return { fact: factRefOf(entry, of.at), entry, sequence, under: "ticket" };
 }
 
