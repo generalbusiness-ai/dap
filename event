@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b2405bc11410564e0e2591a6542366e6438d3e88","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/deploy.py."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b24426a61403bee9d0f4b694203707f0eaa40ccc","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-parent-bootstrap.test.ts."}
