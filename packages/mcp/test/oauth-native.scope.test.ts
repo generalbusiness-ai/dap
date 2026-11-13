@@ -11,6 +11,8 @@ import { issueOwnAgentInvitation } from "../../cli/src/browser.ts";
 import { memoryStore } from "../../cli/src/store.ts";
 import { hostedRegistries, hostedTest } from "../../scope/test/worker.ts";
 import { mcpRoute } from "../../scope/src/worker.ts";
+import { OAUTH_CLIENT_REGISTRY } from "../../scope/src/oauth-routes.ts";
+import { hostedRegistryName } from "../../scope/src/hosted-registry-name.ts";
 import worker from "../../../apps/room/worker.ts";
 import { created, mcpRoom, SERVICE, type Agent, type Room } from "./fixtures-native.ts";
 import type { OAuthBinding } from "../src/oauth-parameters.ts";
@@ -54,9 +56,10 @@ test("default-off registration and metadata never obtain a registry or consume t
     expect(lookups).toBe(0); expect(reads).toBe(0);
   } finally { read.mockRestore(); }
 
-  // A unique real client-registry object keeps this scripted clock/window
-  // independent from the other OAuth stories. Only HTTPS metadata bytes are mocked.
-  const registryId = env.REGISTRIES.newUniqueId();
+  // The client registry works only as the fixed owner of OAUTH_CLIENT_REGISTRY.
+  // This case's own address prefix and scripted clock keep its window apart
+  // from the other OAuth stories. Only HTTPS metadata bytes are mocked.
+  const registryId = env.REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY);
   const registries = { idFromName: () => registryId, get: (id: DurableObjectId) => env.REGISTRIES.get(id) };
   const registry = env.REGISTRIES.get(registryId);
   let now = Date.parse("2099-01-01T00:00:00Z"), fetched = 0;
@@ -278,7 +281,7 @@ test.each([
       const answers = JSON.stringify(state.storage.sql.exec(`SELECT answer FROM control`).toArray());
       expect(answers).not.toContain(code); expect(answers).not.toContain(tokens.access_token); expect(answers).not.toContain(tokens.refresh_token);
     }));
-    await room.wait(() => runInDurableObject(env.REGISTRIES.get(env.REGISTRIES.idFromName(M.scope)), (_instance, state) => {
+    await room.wait(() => runInDurableObject(env.REGISTRIES.get(env.REGISTRIES.idFromName(hostedRegistryName(M))), (_instance, state) => {
       const answers = JSON.stringify(state.storage.sql.exec(`SELECT answer FROM control`).toArray());
       expect(answers).not.toContain(code); expect(answers).not.toContain(tokens.access_token); expect(answers).not.toContain(tokens.refresh_token);
     }));

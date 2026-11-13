@@ -333,19 +333,14 @@ test("explicit new creates another native directory while exact operation resume
     const old = await claimRoom(session, configured, storage, "Again edited", { ...options, mode: "resume", operation: first.operation });
     expect([old.operation, old.repository, old.label, sent.length]).toEqual([first.operation, first.repository, first.label, beforeResume]);
     expect(claimStatus(session, configured, storage)?.operation).toBe(second.value.operation);
-    // A completed legacy v1 record remains a single exact operation; migration
-    // neither invents a found nor loses the already-migrated recovery reference
-    // or original proof bytes. Legacy raw-seed custody has separate migration tests.
+    // The identifier cutover retired the legacy v1 record (3f7631ed): the page
+    // refuses it, keeps every byte as it was and sends nothing.
     const legacyRaw = JSON.stringify(JSON.parse(firstBytes), null, 2);
     const legacyValues = new Map<string, string>([[[...values.keys()][0]!, legacyRaw]]);
     const legacyStorage: ClaimStorage = { getItem: (key) => legacyValues.get(key) ?? null, setItem: (key, value) => { d.lifetime.active(); legacyValues.set(key, value); } };
-    expect(claimStatus(session, configured, legacyStorage)).toEqual({ operation: "legacy", label: first.label, state: "complete" });
-    const legacy = await claimRoom(session, configured, legacyStorage, "No replacement", { ...options, mode: "resume", operation: "legacy" });
-    expect([legacy.repository, sent.length]).toEqual([first.repository, beforeResume]);
-    const migrated = JSON.parse([...legacyValues.values()][0]!);
-    expect([migrated.v, migrated.active]).toEqual([2, "legacy"]);
-    expect(migrated.claims.legacy === firstBytes).toBe(true);
-    expect(migrated.originalLegacy === legacyRaw).toBe(true);
+    expect(() => claimStatus(session, configured, legacyStorage)).toThrow("The private claim journal does not match this context. It is kept.");
+    await expect(claimRoom(session, configured, legacyStorage, "No replacement", { ...options, mode: "resume", operation: first.operation })).rejects.toThrow("The private claim journal does not match this context. It is kept.");
+    expect([[...legacyValues.values()][0] === legacyRaw, sent.length]).toEqual([true, beforeResume]);
     // Saturation is a named client bound; archived/unknown data is never evicted.
     const full = JSON.parse([...values.values()][0]!);
     while (Object.keys(full.claims).length < 64) full.claims[crypto.randomUUID()] = firstBytes;
