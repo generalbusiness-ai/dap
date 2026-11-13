@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type Item, type Seed } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type Item, type Seed, type SequenceEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, newGenesisNonce, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { forged } from "@generalbusiness/dap-derive/testing";
-import { applyEntry, PROFILES, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
+import { applyEntry, PROFILES, sequenceEffects, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { directoryPartition1, directoryPartitionRules1, partitionGeneration, partitionLane, partitionNumber, PARTITION_COHORT } from "../../platform/src/directory-partitions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { create } from "./fixtures-native.ts";
@@ -64,7 +64,7 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     const updateRuleStats = { queries: queries.slice(stats.queries.length), rowsRead: rowsRead - stats.rowsRead, rowsWritten: rowsWritten - stats.rowsWritten, plans: plans.slice(stats.plans.length) };
     const beforeFold = { queries: queries.length, rowsRead, rowsWritten, plans: plans.length };
     const head = counted.scope()!;
-    const update: Entry = { ...source, genesis: head.at.genesis, seq: head.head.seq + 1, prev: head.head.hash, input, uses: [], effects, sends: [] };
+    const update: SequenceEntry = { v: 1, time: source.time, clamped: source.clamped, epoch: 0, prepared: source.prepared, genesis: head.at.genesis, seq: head.head.seq + 1, prev: head.head.hash, input, uses: [], effects: sequenceEffects(effects), sends: [] };
     // SCRIPTED journal append, outside the counted fold boundary, just as
     // the runtime stores a sealed entry before deriving its state.
     const bytes = canonicalize(update), hash = entryHash(update);
