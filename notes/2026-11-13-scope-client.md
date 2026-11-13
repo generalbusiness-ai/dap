@@ -109,10 +109,12 @@ signing is live and the client holds no answer for that send. A lost
 reply and the answer `unavailable` are not answers. An **attempt** is
 the set of copies that the client sends after one submit of the member.
 
-A signing is **closed** when it cannot hold the key. Each of its copies
-has a refusal. Or a read after its death shows that the key is not in
-the record: a settlement read that answers `not-found`, or a journal
-read to a head that does not hold the key.
+A signing is **closed** when it cannot hold the key. A signing closes in
+four cases. A settlement read after its death answers `not-found`. The
+caller states with `absent` that a journal read to a head after its
+death does not hold the key. The scope answers `mismatch` to it. Or a
+verified journal entry holds the key with another intent, and the
+caller states it with `folded`. A refusal alone closes no signing.
 
 The **replica** is the client's fold of the scope's journal, from the
 genesis entry to a head. The **record** is the scope's journal. A
