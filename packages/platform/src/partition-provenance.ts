@@ -374,7 +374,8 @@ export function partitionReceiverPolicy(at: ScopeRef, frames: readonly Partition
     if (!isObject(fields) || !isScopeRef(fields["root"]) || !isScopeRef(fields["destination"])) return null;
     const creating = isFactRef(born.source) ? frame(facts, born.source) : undefined;
     if (creating?.entry.input.type === "act" && creating.entry.input.signed.intent.kind === "establish-application") {
-      return origin(own.fact, fields["root"], fields["destination"], facts, "application") === true ? selected(fields["root"]) : null;
+      // The frames passed the identity bound in rawFacts, as partitionPublicationOrigin's do.
+      return origin(own.fact, fields["root"], fields["destination"], facts, "application", true) === true ? selected(fields["root"]) : null;
     }
     if (own.declarationName === "issue" || own.declarationName === "change") {
       const room = nativeLane(own.named, own.declarationName, at, facts, 1, new Set());
