@@ -139,9 +139,12 @@ export class ApplicationActAdmission implements FreshActAdmission {
     const seen = new Set([canonicalize(own.at)]);
     for (let ancestor = 0; ancestor < b.ancestors; ancestor++) {
       active();
-      const born = child.input, parent = born.seed.creator;
+      // A creator that creates in its own genesis names itself by the
+      // genesis self reference; the birth's source fact resolves it.
+      const born = child.input, named = born.seed.creator;
+      const parent = named === null ? null : isFactRef(born.source) ? resolveGenesisSelf(named, born.source) : named;
       // A genuine parentless declared birth is not a package installation.
-      if (parent === null) return born.source === null && born.n === null && born.message === null && born.founding !== null ? { kind: "unpackaged" } : null;
+      if (named === null) return born.source === null && born.n === null && born.message === null && born.founding !== null ? { kind: "unpackaged" } : null;
       if (!isScopeRef(parent) || !isFactRef(born.source) || !same(born.source.at, parent) || born.n === null || !born.message
         || born.message.class !== "request" || born.message.type !== "create" || seen.has(canonicalize(parent))) return null;
       seen.add(canonicalize(parent));
