@@ -27,7 +27,7 @@ test("native receiver pins reserve their full deciding amount, including an over
   const s = created(definition, { title: "A lane", opener: keys.rita.member });
   s.bounds = PIN_BOUNDS;
   const taskSource = sourceFixture("task", 22), task = taskSource.at;
-  const unit = { ...zero, entries: 1, bytes: 2 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2 };
+  const unit = { ...zero, entries: 1, bytes: 3 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2 }; // Ruling a4a587c9: each foreign copy adds one birth of entryBytes.
   expect(definition.pendingWorkAmounts.receiverPins).toEqual({ fallback: { ...zero, entries: 1, bytes: 2 * PIN_BOUNDS.entryBytes }, byKind: { task: unit } });
   expect(ownerReservations(owner, s.state, definition)).toEqual(zero);
   expect(s.act(keys.rita, "license", { on: 0, expected: { on: 1 }, fields: { peer: task } }, { capabilities: owner }).result).toBe("write");
@@ -167,13 +167,13 @@ test("native receiver-pin quotes use the shared item/request closure and refuse 
   const data = receiverClosureData(receiverPinDefinition().digest);
   const definition = valid(validateDefinition(data, PIN_BOUNDS));
   const unit = definition.pendingWorkAmounts.receiverPins!.byKind["task"]!;
-  expect(unit).toEqual({ entries: 4, items: 1, records: 0, bytes: 6 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 });
+  expect(unit).toEqual({ entries: 4, items: 1, records: 0, bytes: 7 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 }); // Ruling a4a587c9: each foreign copy adds one birth of entryBytes.
   // Its later result comes from the declared child kind, not from the
   // original handler's task source. That pin has the finite unknown-
   // handler refusal, rather than a false edge back to the task handler.
   receiverExtendChange(data);
   const extended = valid(validateDefinition(data, PIN_BOUNDS));
-  expect(extended.pendingWorkAmounts.receiverPins!.byKind["task"]).toEqual({ entries: 6, items: 1, records: 1, bytes: 10 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 });
+  expect(extended.pendingWorkAmounts.receiverPins!.byKind["task"]).toEqual({ entries: 6, items: 1, records: 1, bytes: 11 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 1 }); // Ruling a4a587c9: each foreign copy adds one birth of entryBytes.
   // This handler would create a new pin instead of updating the bound key.
   // The same native task would have to fund its own closure again.
   const cyclic = receiverPinData();
@@ -187,7 +187,7 @@ test("native receiver-pin quotes use the shared item/request closure and refuse 
   const inert = validateDefinition(cyclic, PIN_BOUNDS);
   expect(inert.ok).toBe(true);
   if (!inert.ok) throw new Error("inert native source must validate");
-  expect(inert.definition.pendingWorkAmounts.receiverPins!.byKind["task"]).toEqual({ entries: 1, items: 0, records: 1, bytes: 2 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 0 });
+  expect(inert.definition.pendingWorkAmounts.receiverPins!.byKind["task"]).toEqual({ entries: 1, items: 0, records: 1, bytes: 3 * PIN_BOUNDS.entryBytes + 6 * PIN_BOUNDS.textBytes + 2, requests: 0 }); // Ruling a4a587c9: each foreign copy adds one birth of entryBytes.
   const unknown = receiverPinData();
   const opening = unknown.acts["license"]!.effects[0]!;
   if (!("capability" in opening)) throw new Error("native fixture effect missing");

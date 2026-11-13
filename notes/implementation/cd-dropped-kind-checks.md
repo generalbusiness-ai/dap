@@ -431,15 +431,45 @@ When one entry is over a cap, the archive stops at that entry:
 5. An operator can restart a `limit` stop (`archive-row.ts:54-57`). The
    restart pays again and stops at the same entry.
 
-### Retained bytes with births
+### Retained bytes with births (ruling a4a587c9, option b)
 
-`fieldRetainedBytes` (`packages/derive/src/field-retention.ts:39-47`) charges
-`min(facts, usesPerEntry)` × `entryBytes` for an entry's foreign copies.
-`holds.ts:409` uses it for producer capacity. The bound does not count a
-birth. In the worst case an entry keeps one more genesis of at most
-`entryBytes` (262,144) for each new foreign sequence: 128 × 262,144 =
-33,554,432 bytes, once for each sequence in the scope. CAPACITY RULING
-PENDING: the coordinator recommends leaving the bound as it is.
+`fieldRetainedBytes` (`packages/derive/src/field-retention.ts`) charged
+`min(facts, usesPerEntry)` × `entryBytes` for an entry's foreign copies. It
+now charges the same term again for births. Each copy can bring one birth:
+the first entry of its sequence, which the scope keeps under ruling 4f697a7a.
+No bound on a genesis is smaller than `entryBytes`. `Bounds` states none, and
+`admitSequenceGenesis` admits a genesis under `entryBytes`. A birth therefore
+counts `entryBytes`, and an entry with N copies reserves 2 × N × `entryBytes`
+for them. `capacity.ts` and `holds.ts:409` both read the function, so the
+validator and the holder reservations take the term together.
+
+The term is an upper bound for one entry. A scope keeps one birth for each
+sequence, so a later entry that uses the same sequence adds no birth bytes.
+`logicalBytes` counts each retained digest once.
+
+Capacity checks over the pinned definitions, with no cap changed:
+
+- `definition-corpus.test.ts` validates every shipped and native corpus row
+  under `PROPOSED_BOUNDS`: the lanes, Counting, Counting commitments,
+  Lending, the Grow Site and Room, the source-built Grow demo, and the
+  retained Grow demo packet. All validate.
+- The maintained application packages pack: Counter, Lending, the Grow check
+  package and the recorded Grow demo. The source-built Grow demo packs with
+  the 0a5f97ba repair, which waits for the planner's digest confirmation.
+- `capacity.scope.test.ts` and the Directory partition capacity stories pass.
+- Seven derive vectors move by one `entryBytes` for each copy:
+  `bound-records`, `forms-binding`, `forms-settles` ×2 and `receiver-pins` ×3.
+
+At runtime, a scope whose definition opts into `whole-scope` capacity checks
+its bytes inside the turn's transaction (`packages/scope/src/turn.ts`,
+`#full`). The check adds the scope's logical bytes, which count each entry
+and each retained input once by digest, births included, to the pending
+reservation. If the sum passes `scopeBytes`, the transaction writes nothing.
+An act or a delivery answers `refused` with reason `scope-full` and the name
+`scopeBytes` (`core.ts`). An outcome records `unavailable` with reason
+`scope-full` (`operations.ts`). A timed turn writes nothing and records the
+bound on the turn. A scope without the opt-in checks only its entry count
+(`fits`) and never refuses for bytes.
 
 ## Faults found after the composed head
 
@@ -562,8 +592,6 @@ same policies as before. Tests that use the recorded packet pass
   (`examples/grow/demo-definitions.ts:75-77`). The Site's
   `receives.room-summary` handler still pins the maintained Room, so the
   package check refuses the demo built from source with `wrong-peer`.
-- **Retained bytes with births.** CAPACITY RULING PENDING. See "Retained
-  bytes with births".
 
 ## The kept Grow refusal test (ruling a7c8072a)
 

@@ -36,12 +36,17 @@ export function fieldRetention(fields: readonly FieldType[], bounds: Pick<Bounds
 }
 
 /** Foreign uses are capped by the entry's actual producer limit. A handler
- * consumes one of those slots for its mandatory source entry. */
+ * consumes one of those slots for its mandatory source entry.
+ *
+ * Ruling a4a587c9: each foreign copy can bring one birth, the first entry of
+ * its sequence (ruling 4f697a7a). No bound on a genesis is smaller than
+ * `entryBytes`, so a birth counts `entryBytes`, once for each copy. */
 export function fieldRetainedBytes(producers: FieldProducers, bounds: Pick<Bounds, "textBytes" | "listElements" | "entryBytes" | "usesPerEntry">): number {
   const { sum, times } = amountMath(true);
   const fields = fieldRetention(producers.fields, bounds, true);
   const facts = sum({ ...NOTHING, entries: fields.facts }, { ...NOTHING, entries: producers.presented }, { ...NOTHING, entries: producers.source ? 1 : 0 }).entries;
   // Validate the cap before min can conceal an invalid configured operand.
   const cap = times(1, { ...NOTHING, entries: bounds.usesPerEntry }).entries;
-  return sum(times(Math.min(facts, cap), { ...NOTHING, bytes: bounds.entryBytes }), { ...NOTHING, bytes: fields.texts }, { ...NOTHING, bytes: fields.values }, { ...NOTHING, bytes: retainedBytes(producers.observes) }).bytes;
+  const copies = times(Math.min(facts, cap), { ...NOTHING, bytes: bounds.entryBytes }), births = copies;
+  return sum(copies, births, { ...NOTHING, bytes: fields.texts }, { ...NOTHING, bytes: fields.values }, { ...NOTHING, bytes: retainedBytes(producers.observes) }).bytes;
 }

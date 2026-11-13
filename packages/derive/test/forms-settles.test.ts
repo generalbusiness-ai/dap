@@ -143,7 +143,7 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
     // presented fact may each retain one foreign entry beside that text,
     // and the value place has its own seventeen-byte canonical ceiling.
     expect(canonicalBytes("\0\0\0").length).toBe(20);
-    expect(reserved(retained.state, withFields, retained.last.input)).toEqual({ entries: 6, bytes: 9 * unit + 37, items: 0, records: 0, requests: 1 });
+    expect(reserved(retained.state, withFields, retained.last.input)).toEqual({ entries: 6, bytes: 11 * unit + 37, items: 0, records: 0, requests: 1 }); // Ruling a4a587c9: each foreign copy adds one birth of entryBytes.
     const withRows = valid(changed(M, settlesChanges.rows, true));
     const observed = new Full(withRows);
     const observedJob = observed.started();
@@ -308,7 +308,7 @@ describe("the form `{ of, sets, in }` at the validator", () => {
     const markedCopy = validateDefinition(parseStrictBytes(canonicalBytes(ownCopy)), PROPOSED_BOUNDS, PROFILES, { platform: true });
     expect(markedCopy.ok).toBe(true);
     // The handler also reserves its retained foreign source entry.
-    if (markedCopy.ok) expect(markedCopy.definition.pendingWorkAmounts.pendingCopies.map(({ amount }) => amount)).toEqual([{ entries: 1, items: 1, records: 0, bytes: 2 * PROPOSED_BOUNDS.entryBytes, requests: 0 }]);
+    if (markedCopy.ok) expect(markedCopy.definition.pendingWorkAmounts.pendingCopies.map(({ amount }) => amount)).toEqual([{ entries: 1, items: 1, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 }]); // Ruling a4a587c9: each foreign copy adds one birth of entryBytes.
 
     const holder = structuredClone(ownCopy);
     holder.items["result"]!.holds = { requests: 1 };

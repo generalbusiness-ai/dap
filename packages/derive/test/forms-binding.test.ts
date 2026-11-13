@@ -138,7 +138,7 @@ describe("18.53, at the validator: the index, the binding selector and `bound`",
   test("an opt-in bound settlement reserves its source and fields without charging forbidden rule state changes", () => {
     const checked = changed(M, bindingChanges.wholeSettlement);
     expect(checked.ok).toBe(true);
-    if (checked.ok) expect(checked.definition.reserving!.dec["stop"]).toEqual({ entries: 1, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
+    if (checked.ok) expect(checked.definition.reserving!.dec["stop"]).toEqual({ entries: 1, items: 0, records: 0, bytes: 5 * PROPOSED_BOUNDS.entryBytes, requests: 0 }); // Ruling a4a587c9: each foreign copy adds one birth of entryBytes.
   });
 
   test("C2 integer indexes preserve fixed required platform slots and exact selector ranges", () => {
