@@ -355,9 +355,9 @@ describe("a history that is not consistent is reported with the right result, at
       change: (w) => rewrite(w.I, 2, (entry) => { entry.input = preparing(w); }), result: "mismatch", at: ["I", 2], why: /bytes are not an entry/ },
     // I.0 used D.4, and D.2, on the way to it, used P.0: the entry named is the one that used the history that cannot be read.
     { name: "a source history that cannot be read", change: (w) => { w.P.entries.length = 0; }, result: "missing-dependency", at: ["D", 2], why: /cannot be read, and no anchor/ },
-    // HELD: the reason this replay now gives for a reference to another genesis is unknown until the test runs.
+    // The changed reference no longer names the fact its retained body records, so replay refuses the body at I.1.
     { name: "a wrong genesis in a reference: the source scope's genesis is another",
-      change: (w) => rewrite(w.I, 1, (entry) => { entry.input.from.at.genesis = w.P.scope.genesis; entry.uses[0].fact.at.genesis = w.P.scope.genesis; }), result: "mismatch", at: ["I", 1], why: /wrong incarnation/ },
+      change: (w) => rewrite(w.I, 1, (entry) => { entry.input.from.at.genesis = w.P.scope.genesis; entry.uses[0].fact.at.genesis = w.P.scope.genesis; }), result: "mismatch", at: ["I", 1], why: /a retained foreign body does not match its exact fact/ },
     { name: "a history cut short of the head the caller holds", change: (w) => { const head = w.I.entries.pop()!; return { head: { seq: head.seq, hash: head.hash } }; }, result: "mismatch", at: ["I", 1], why: /does not reach the expected head/ },
     { name: "a history that forks from the head the caller holds: sealed again, and consistent with itself",
       change: (w) => { const head = w.I.entries[2]!; rewrite(w.I, 2, (entry) => { entry.time = "2026-10-04T12:00:01Z"; }); return { head: { seq: 2, hash: head.hash } }; }, result: "mismatch", at: ["I", 2], why: /forks from the expected head/ },
