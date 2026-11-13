@@ -94,7 +94,7 @@ test("D1 metadata and G14 required checks retain actual decision provenance whil
     ] });
   if (!proposed.ok) throw new Error("the strict fixture policy must be valid");
   const policy = proposed.policy;
-  const destination = { ...statement.operation.at, kind: "destination" as const };
+  const destination = statement.operation.at;
   const certificate = { request: { ...fact(10), at: destination }, certificate: { ...fact(11), at: destination }, proof: d("d"), commit: HEAD };
   const envelope = { configured: true, policy, proposal: proposed.digest, certificate };
   const observed = { ...rulesObserved(t(0)), definition: "platform:rules@11" as const, content: {
