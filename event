@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:eab7cdf693d0ed46cc4eee3715f2043f4eaa77b0","text":"Merge retired a covered predecessor with no successor at its old path."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:eacc321bb568945e49ba40b187224eabed280959","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/evidence-audit-v17.test.ts."}
