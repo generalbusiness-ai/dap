@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d139b92ed00ffb2890b00ecbf092769ddfb20a5","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/canonical-spelling.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6dacbb2310f882f13103b79b9a645f57b91fe53d","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/archive-native-transport.test.ts."}
