@@ -1,7 +1,9 @@
 # One client for a declared scope
 
 Status: current. Hugh ratified this note on 13 November 2026, for request
-`e5b86654`. Nothing here is built. Section 13 lists the build steps.
+`e5b86654`. The review of the checker then added the rule of 5.1 for a
+record that holds 8 envelopes. Nothing here is built. Section 13 lists
+the build steps.
 
 A page shows a scope and lets a member act on it. Today the page author
 assembles that from parts: a signer, a handle, a fold, a store of sent
@@ -188,8 +190,15 @@ signing. `Custody` writes version 2 for each new record.
 
 `Custody` keeps the envelope of the latest signing while the record is
 open. It keeps the envelope of each earlier signing until that signing
-is closed. A record holds at most 8 envelopes and 64 signings. A further
-signing is refused `full`, reason `signings`, and nothing is signed.
+is closed. A record holds at most 8 envelopes and 64 signings.
+
+`Custody` checks both bounds before it signs. A record that holds 8
+envelopes or 64 signings refuses a further signing: `full`, reason
+`signings`. Nothing is signed, and the draft keeps the member's values
+(section 8). `Custody` drops no envelope to make room, because the
+scope can seal the signing of each envelope that is not closed. A
+submit signs again after one signing closes. A signing closes at the
+latest when a read after its death does not hold the key (5.3, 5.4).
 
 ### 5.2 A caller can permit a new signing
 
@@ -214,7 +223,10 @@ its place in the stored vocabulary and loses its finality.
 - `refused` stays terminal for capacity and for sending. `Custody` sends
   nothing for the record until the caller submits again, and the record
   does not count in the 256 unresolved records. A member cannot fill a
-  shared store with refusals.
+  shared store with refusals. A `refused` record keeps the envelope of
+  its latest signing, and of each earlier signing only until that
+  signing is closed. The store keeps the record as it keeps each
+  terminal record.
 - A record of phase `refused` moves to `accepted` on proof that the
   scope sealed one of its signings.
 - `settle` asks the scope for a `refused` record while one of its
@@ -527,8 +539,9 @@ A client with a replica reads which intent holds a key from
 `state.accepted(actor, key)`, with no request. A client with no replica
 settles each kept envelope, at most 8 reads. A new member on `mismatch`
 breaks each older client, because the client's check of an answer is a
-closed shape (`packages/client/src/answers.ts:72-74`). It also needs the
-review of `docs/kernel.md` section 7.
+closed shape (`packages/client/src/answers.ts:72-74`). That new member
+also needs the review of `docs/kernel.md` section 7. This note does not
+take it.
 
 This note adds no scope kind, no platform definition name, no
 capability, no tool family and no record model. It adds no file and no
