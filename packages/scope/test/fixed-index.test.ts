@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import { judgeGuardNode } from "../../derive/src/program/guard-value.ts";
 import { namedBody } from "../../derive/src/program/structure.ts";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
-import { PROPOSED_BOUNDS, type Entry } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type GenesisEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, utf8 } from "@generalbusiness/dap-bytes";
 import { applyEntry, clockOf, fixedRowsOf, stateDigest, type Item } from "@generalbusiness/dap-derive";
 import { fixtureSequence, variant } from "@generalbusiness/dap-derive/testing";
@@ -120,7 +120,7 @@ test("rollforward rebuilds a formerly ready index after a base writer advances t
   const lane = await create({}, {}, indexed), signed = lane.remark("TEST base-writer storage specimen");
   const advanced = await lane.inside(state => {
     const sql: Sql = { exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) };
-    const store = new SqliteStore(sql), before = store.scope()!, template = JSON.parse(store.stored(0)!.bytes) as Entry;
+    const store = new SqliteStore(sql), before = store.scope()!, template = JSON.parse(store.stored(0)!.bytes) as GenesisEntry;
     store.ensureFixed(indexed);
     expect(store.fixedReady(indexed.digest, before.at, before.head)).toBe(true);
     const marker = sql.exec("SELECT value FROM fixed_control WHERE id=1").toArray();
@@ -130,7 +130,7 @@ test("rollforward rebuilds a formerly ready index after a base writer advances t
     store.transaction(() => {
       for (const name of ["base-one", "base-two", "base-three"]) {
         const scope = store.scope()!, id = scope.head.seq + 1;
-        const entry: Entry = { ...template, seq: id, prev: scope.head.hash, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], sends: [],
+        const entry: Entry = { ...template, genesis: scope.at.genesis, seq: id, prev: scope.head.hash, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], sends: [],
           effects: [{ effect: "open", item: id, type: "job", state: "live" }, { effect: "value", item: id, slot: "name", value: name }] };
         const bytes = canonicalize(entry), hash = entryHash(entry);
         store.append(entry, hash, bytes, utf8(bytes).length);
@@ -169,7 +169,7 @@ test("native legacy rebuild batches hash metadata beside 34000 held payloads and
   const lane = await create({}, {}, indexed), signed = lane.remark(`TEST public rebuild payload ${"x".repeat(1024)}`);
   const prepared = await lane.inside(state => {
     const actual: Sql = { exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) };
-    const setup = new SqliteStore(actual), scope = setup.scope()!, template = JSON.parse(setup.stored(0)!.bytes) as Entry;
+    const setup = new SqliteStore(actual), scope = setup.scope()!, template = JSON.parse(setup.stored(0)!.bytes) as GenesisEntry;
     const payload = { at: scope.at, seq: 0, hash: scope.genesis.hash };
     // Storage scale fixture only: these Entry-shaped payloads have matching
     // hashes but bypass admission, grant checks and item maxima. This is no
@@ -179,7 +179,7 @@ test("native legacy rebuild batches hash metadata beside 34000 held payloads and
       for (let start = 1; start < heldRows; start += 100) {
         const batch: { seq: number; hash: string; time: string; bytes: string; size: number }[] = [];
         for (let seq = start; seq < Math.min(start + 100, heldRows); seq++) {
-          const entry: Entry = { ...template, seq, prev: previous, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
+          const entry: Entry = { ...template, genesis: scope.at.genesis, seq, prev: previous, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects: [], sends: [] };
           const bytes = canonicalize(entry), hash = entryHash(entry);
           batch.push({ seq, hash, time: entry.time, bytes, size: utf8(bytes).length }); previous = hash;
         }
@@ -383,7 +383,7 @@ for (const [orderIndex, commands] of historyOrders.entries()) for (const [values
             }
           });
         } else {
-          const scope = store.scope()!, template = JSON.parse(store.stored(0)!.bytes) as Entry;
+          const scope = store.scope()!, template = JSON.parse(store.stored(0)!.bytes) as GenesisEntry;
           expect(scope.head.seq + 1).toBe(nextSeq);
           const effects: Entry["effects"][number][] = [];
           if (opening) {
@@ -394,7 +394,7 @@ for (const [orderIndex, commands] of historyOrders.entries()) for (const [values
             expect(closing && target !== undefined && items.some(item => item.id === target && item.state === "live")).toBe(true);
             effects.push({ effect: "state", item: target!, state: "gone" });
           }
-          const entry: Entry = { ...template, seq: nextSeq, prev: scope.head.hash, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects, sends: [] };
+          const entry: Entry = { ...template, genesis: scope.at.genesis, seq: nextSeq, prev: scope.head.hash, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects, sends: [] };
           const bytes = canonicalize(entry), hash = entryHash(entry);
           const write = () => {
             store.append(entry, hash, bytes, utf8(bytes).length);

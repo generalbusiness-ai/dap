@@ -1,6 +1,6 @@
 import { scopeGenesisEligibility } from "../src/internal/room-hooks.ts";
 import { expect, test } from "vitest";
-import type { Entry, OperationId } from "@generalbusiness/dap-contract";
+import type { Entry, GenesisEntry, OperationId } from "@generalbusiness/dap-contract";
 import { admitSequenceGenesis, canonicalize, digestBytes, entryHash, isEntryBodyOf, isScopeId, utf8 } from "@generalbusiness/dap-bytes";
 import { ProofBytes, proofEntry, PROOF_BYTE_BOUNDS as B } from "../src/proof-bytes.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
@@ -68,8 +68,8 @@ test("native sender admits truthful UTF8 bytes at the hard bound and refuses B+1
   for (const size of [B.body, B.body + 1]) {
     const scope = await create();
     const got = await scope.inside(state => {
-      const sql = sqlOf(state), store = new SqliteStore(sql), original = JSON.parse(store.stored(0)!.bytes) as Entry;
-      const entry = { ...original, effects: [...original.effects, { effect: "record" as const, capability: "hold@1" as const, kind: "padding", key: [], state: "padded", values: { text: "é😀" } }] };
+      const sql = sqlOf(state), store = new SqliteStore(sql), original = JSON.parse(store.stored(0)!.bytes) as GenesisEntry;
+      const entry: GenesisEntry = { ...original, effects: [...original.effects, { effect: "record" as const, capability: "hold@1" as const, kind: "padding", key: [], state: "padded", values: { text: "é😀" } }] };
       const extra = size - utf8(canonicalize(entry)).length;
       entry.effects[entry.effects.length - 1] = { effect: "record", capability: "hold@1" as const, kind: "padding", key: [], state: "padded", values: { text: "é😀" + "x".repeat(extra) } };
       const bytes = canonicalize(entry), hash = entryHash(entry);
@@ -90,13 +90,13 @@ test("proof sender bounds scope metadata and retained bodies before transfer and
   const scope = await create();
   const got = await scope.inside(state => {
     const sql = sqlOf(state), store = new SqliteStore(sql), first = store.stored(0)!, proof = new ProofBytes(sql), fact = proof.identity()!.genesis;
-    const content = digestBytes(utf8(first.bytes)), use = { fact, content };
+    const content = digestBytes(utf8(first.bytes)), use = { fact, content, kind: store.scope()!.kind };
     store.retain({ kind: "entry", digest: content, bytes: first.bytes, under: "ignored-secret-bearing-label" });
     const valid = proof.retained(use, first.size);
     let bodies = 0;
     const traced = new ProofBytes({ exec(query, ...args) { if (query.startsWith("SELECT bytes FROM")) bodies++; return sql.exec(query, ...args); } });
     const small = traced.retained(use, first.size - 1);
-    const wrong = proof.retained({ fact: { ...fact, hash: `sha256:${"0".repeat(64)}` }, content }, first.size);
+    const wrong = proof.retained({ ...use, fact: { ...fact, hash: `sha256:${"0".repeat(64)}` } }, first.size);
     state.storage.sql.exec("UPDATE retained_input SET bytes=? WHERE kind='entry' AND digest=?", "x".repeat(B.body + 1), content);
     const oversized = traced.retained(use, B.body);
     const current = store.scope()!;

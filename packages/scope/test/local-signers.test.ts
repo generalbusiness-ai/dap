@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import type { Entry, Input } from "@generalbusiness/dap-contract";
+import type { Entry, Input, SequenceEntry } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isEntry, newGenesisNonce, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { timeMs } from "@generalbusiness/dap-derive";
 import { signerOf } from "../src/entry-signer.ts";
@@ -17,7 +17,7 @@ const resetLegacy = (state: DurableObjectState) => {
 test("native append signer evidence preserves every classifier variant, inclusive time and unknown versus negative", async () => {
   const scope = await create(); await scope.hold();
   const entries = await scope.entries(), genesis = entries[0]!, act = entries[1]!;
-  if (genesis.input.type !== "genesis" || act.input.type !== "act") return expect.fail("fixture lacks native signed entries");
+  if (genesis.input.type !== "genesis" || act.input.type !== "act" || !("genesis" in act)) return expect.fail("fixture lacks native signed entries");
   expect(signerOf(genesis)).toBe(rita.key);
   expect(scope.at).toEqual({ scope: scopeIdOf(genesis.input.seed), genesis: entryHash(genesis) });
   expect(scope.genesis.fact.hash).toBe(entryHash(genesis));
@@ -27,9 +27,9 @@ test("native append signer evidence preserves every classifier variant, inclusiv
     { type: "timed", item: 0, rule: "rule", due: at(0) },
     { type: "diagnosis", of: { seq: 0, n: 0 }, finding: "undelivered", attempts: [] },
     { type: "outcome", operation: "0:0", attempt: 1, owner: "hold@1", kind: "fixture", result: "unknown", evidence: { basis: "none", body: null } },
-    { type: "delivery", from: scope.genesis.fact, n: 0, message: { class: "advisory", type: "notify", body: null } },
+    { type: "delivery", from: scope.genesis.fact, sourceKind: genesis.input.seed.kind, n: 0, message: { class: "advisory", type: "notify", body: null } },
   ];
-  for (const input of unsigned) expect(signerOf({ ...act, input })).toBeNull(); // pure classifier variants, not judged histories
+  for (const input of unsigned) expect(signerOf({ ...act, input } as Entry)).toBeNull(); // pure classifier variants, not judged histories: a genesis input beside a later entry body
   expect(signerOf({ ...act, input: { type: "preparation", signed: act.input.signed, authority: [], capability: "hold@1", step: "fixture" } })).toBe(rita.key);
   const native = await scope.inside(state => {
     const index = new SqliteStore(sqlOf(state)).localSigners;
@@ -79,7 +79,7 @@ async function journal(count: number, padding = 0): Promise<Lane> {
   const scope = await create(); await scope.commitment();
   await scope.inside(state => {
     const store = new SqliteStore(sqlOf(state));
-    const sample = JSON.parse(store.stored(1)!.bytes) as Entry;
+    const sample = JSON.parse(store.stored(1)!.bytes) as SequenceEntry;
     store.transaction(() => {
       let current = store.scope()!;
       for (let seq = current.head.seq + 1; seq < count; seq++) {
@@ -216,7 +216,7 @@ test("signer migration rejects generation, version, missing, corrupt, backward a
 test("native history and signer maintenance roll back together and forged signer row metadata grants nothing", async () => {
   const scope = await create(); await scope.commitment();
   const got = await scope.inside(state => {
-    const store = new SqliteStore(sqlOf(state)), before = store.scope()!, sample = JSON.parse(store.stored(1)!.bytes) as Entry;
+    const store = new SqliteStore(sqlOf(state)), before = store.scope()!, sample = JSON.parse(store.stored(1)!.bytes) as SequenceEntry;
     try {
       store.transaction(() => {
         const entry: Entry = { ...sample, seq: 3, prev: before.head.hash };
