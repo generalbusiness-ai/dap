@@ -144,7 +144,7 @@ describe("founding a directory and creating a child (sections 7.1 and 7.2)", () 
     /** The creation that the outcome entry at D.5 sends at ordinal 0, of an attempt of that operation, as it reaches the child; and the child's judgment with those entries at hand. */
     const judge = (operation: `${number}:${number}`, facts: readonly Fetched[], to: Seed = seed, named = claim) => {
       const message = { class: "request", type: "create", body: { fields: { opener: rita.member, title: "By an outcome", claim: named } } } as const;
-      const source = forged(fixtureSequence(D), 5, { type: "outcome", operation, attempt: 1, owner: "platform:register@1", kind: "create-repository", result: "confirmed", evidence: { basis: "own-answer", body: { id: "r1" } } }, [{ n: 0, to, message }], fixtureSequence(D));
+      const source = forged(fixtureSequence(D), 5, { type: "outcome", operation, attempt: 1, owner: "platform:register@1", kind: "create-repository", result: "confirmed", evidence: { basis: "own-answer", body: { id: "r1" } } }, [{ n: 0, to, message }]);
       const s = new Ledger(child);
       const asked: Creation = { name: scopeIdOf(to), nonce: newGenesisNonce(new Uint8Array(16).fill(20)), to, from: sourceFact(source), n: 0, message };
       return { s, judgment: judgeGenesis(s.state, child, asked, { clock: clockOf(s.state, T0), bounds: PROPOSED_BOUNDS, facts, prepared: [], source }) };

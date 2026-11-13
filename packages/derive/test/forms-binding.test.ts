@@ -1,7 +1,7 @@
 import { bindingChanges, bindingBoundOperandsData, bindingLateGuardData, bindingLateEffectData, bindingPreFailureData, bindingClockData, bindingAuditData, bindingCountsData, bindingRequestData, bindingProtoData, bindingLocalFactData, bindingIntegerData } from "./definition-corpus/binding-variants.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { FactRef, FieldValue, Input, PlatformDefinition, ScopeRef, Send } from "@generalbusiness/dap-contract";
+import type { FactRef, FieldValue, Input, PlatformDefinition, Send } from "@generalbusiness/dap-contract";
 import { canonicalBytes, entryHash, factRefOf, parseStrictBytes, type CheckedSequence } from "@generalbusiness/dap-bytes";
 import { MemoryState, PROFILES, applyEntry, clockOf, decisionCounts, entryOf, fits, indexItems, itemAwaits, judgeDelivery, keyOf, owed, validateDefinition } from "../src/index.ts";
 import type { Counts, Draft, Fetched, Indexed, Judgment, PlatformRule, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
@@ -561,7 +561,7 @@ describe("18.51: a settlement by a mark, and a bound request, at a full scope", 
     expect(G.free(2).deliver(G.request(Q, "start", {}))).toBe("retry");
     expect(G.free(3).deliver(G.request(Q, "start", {}))).toBe("new work");
     const job = G.head.seq;
-    const of = (from: ScopeRef, message: string) => G.request(from, message, { job: G.fact(job) });
+    const of = (from: CheckedSequence, message: string) => G.request(from, message, { job: G.fact(job) });
     return { G, job, of };
   };
 

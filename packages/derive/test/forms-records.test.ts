@@ -288,7 +288,7 @@ describe("the records of `hold@1` (scope contract, section 6.11; authority note,
     // same after it. The number is then decided: the same number again is not bound. Its refusal is new work, with no effect.
     const asks = (fields: object) => {
       const send = { n: 0, to: s.at, message: { class: "request", type: "tell", body: { message: "export-license", fields } } } as const;
-      const source = { ...forged(task, 20 + s.head.seq, { type: "checkpoint", through: 0, state: d("0") }, [send], taskSequence), under: "platform:task" };
+      const source = { ...forged(taskSequence, 20 + s.head.seq, { type: "checkpoint", through: 0, state: d("0") }, [send]), under: "platform:task" };
       const arrival = { ...send, from: factRefOf(source.entry, task) };
       const judged = judgeDelivery(s.state, s.definition, arrival, { ...arriving(s, arrival, source), capabilities: cap });
       if (judged.result !== "write") throw new Error(`not decided: ${JSON.stringify(judged)}`);
@@ -303,7 +303,7 @@ describe("the records of `hold@1` (scope contract, section 6.11; authority note,
     ]);
 
     // `export-settled`: the final entry of the task scope, made by hand, whose own effects set the release to its final state.
-    const final = forged(task, 5, { type: "checkpoint", through: 4, state: d("0") }, [], taskSequence);
+    const final = forged(taskSequence, 5, { type: "checkpoint", through: 4, state: d("0") }, []);
     const finalEntry: Entry = { ...final.entry, effects: [{ effect: "state", item: 3, state: "withheld" }] };
     const F: Fetched = { fact: factRefOf(finalEntry, task), under: "platform:task", entry: finalEntry, sequence: taskSequence };
     const settled = (over: object = {}) => cap.guard("hold@1", "settled", { export: exported, from: task, final: "withheld", by: F.fact, ...over }, s.given({ source: F, kindContext: checkedTaskKind }));

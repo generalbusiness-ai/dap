@@ -4,7 +4,7 @@
 import type { Entry, OperationId } from "@generalbusiness/dap-contract";
 import { factRefOf, entryHash } from "@generalbusiness/dap-bytes";
 import { applyEntry, checkpointOf, clockOf, entryOf, fits, judgeDelivery, reserved, type Draft, type StateView, type ValidDefinition } from "../../src/index.ts";
-import { Scope, arriving, directory, directorySequence, forged, keys, on, otherLane, otherLaneSequence, valid, variant } from "../fixtures.ts";
+import { Scope, arriving, directory, directorySequence, forged, keys, on, otherLaneSequence, valid, variant } from "../fixtures.ts";
 import { Works, changed, opened, OWNER, TELL, works } from "../fixtures-holds.ts";
 import { M } from "../definition-corpus/forms-settles-data.ts";
 import { settlesChanges } from "../definition-corpus/settles-variants.ts";

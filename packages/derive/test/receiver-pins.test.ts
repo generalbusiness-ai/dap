@@ -44,7 +44,7 @@ test("native receiver pins reserve their full deciding amount, including an over
 
   const body = "\u0000".repeat(PIN_BOUNDS.textBytes);
   const send = { n: 0, to: s.at, message: { class: "request", type: "tell", body: { message: "export-license", fields: { export: 0, k: 2, body: textDigest(body) } } } } as const;
-  const source = { ...forged(task, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send], taskSource.sequence), under: "fixture-task" };
+  const source = { ...forged(taskSource.sequence, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]), under: "fixture-task" };
   const arrival = { ...send, from: factRefOf(source.entry, task) };
   const judged = judgeDelivery(s.state, definition, arrival, { ...arriving(s, arrival, source), bounds: PIN_BOUNDS, capabilities: owner, texts: digest => digest === textDigest(body) ? PIN_BOUNDS.textBytes : undefined });
   expect(judged.result).toBe("write");
@@ -72,7 +72,7 @@ test("an ACT pin's declared kind does not consume a differently typed actual del
   const unit = definition.pendingWorkAmounts.receiverPins!.byKind["task"]!;
   expect(amount).toEqual({ entries: 2 * unit.entries, items: 2 * unit.items, records: 2 * unit.records, bytes: 2 * unit.bytes, requests: 2 * unit.requests });
   const send = { n: 0, to: s.at, message: { class: "request", type: "tell", body: { message: "export-license", fields: { export: 0, k: 2 } } } } as const;
-  const source = { ...forged(peer.at, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send], peer.sequence), under: "fixture-directory" };
+  const source = { ...forged(peer.sequence, 100, { type: "checkpoint", through: 0, state: definition.digest }, [send]), under: "fixture-directory" };
   const arrival = { ...send, from: factRefOf(source.entry, peer.at) };
   const context = arriving(s, arrival, source);
   const kindContext = { source: { at: peer.at, kind: peer.sequence.kind }, declared: {} };
@@ -129,7 +129,7 @@ test("an ACT pin's declared kind does not consume a differently typed actual del
   const remaining = covered.lane.reserved(); // Legacy entry-count projection, not a complete Amount.
   const request = { n: 0, to: covered.lane.at, message: { class: "request", type: "tell", body: { message: "export-license",
     fields: { export: covered.exported, k: 2, checkpoint, hold: covered.target, instance: "i2" } } } } as const;
-  const actual = { ...forged(peer.at, 101, { type: "checkpoint", through: 0, state: guardedDefinition.digest }, [request], peer.sequence), under: "fixture-directory" };
+  const actual = { ...forged(peer.sequence, 101, { type: "checkpoint", through: 0, state: guardedDefinition.digest }, [request]), under: "fixture-directory" };
   const delivered = { ...request, from: factRefOf(actual.entry, peer.at) };
   const fetched: Fetched = { fact: delivered.from, entry: actual.entry, sequence: peer.sequence, under: actual.under };
   const ordinaryArgs = { export: covered.exported, from: peer.at, checkpoint, hold: covered.target, instance: "i2" };
@@ -149,7 +149,7 @@ test("an ACT pin's declared kind does not consume a differently typed actual del
 
   // Leave both judgments unconsumed while comparing the ordinary withheld
   // final-source guard. The association and by hash still need actual bytes.
-  const final = forged(peer.at, 102, { type: "checkpoint", through: 0, state: guardedDefinition.digest }, [], peer.sequence);
+  const final = forged(peer.sequence, 102, { type: "checkpoint", through: 0, state: guardedDefinition.digest }, []);
   const finalEntry: Entry = { ...final.entry, effects: [{ effect: "state", item: 3, state: "withheld" }] };
   const ended: Fetched = { fact: factRefOf(finalEntry, peer.at), entry: finalEntry, sequence: peer.sequence, under: actual.under };
   const settledArgs = { export: covered.exported, from: peer.at, final: "withheld", by: ended.fact };
