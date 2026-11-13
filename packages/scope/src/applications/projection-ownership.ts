@@ -3,7 +3,7 @@
  * selected definition alone grants no ownership. No application state is read. */
 import { same } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isScopeRef } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isScopeRef, resolveGenesisSelf } from "@generalbusiness/dap-bytes";
 import { readNativeBirth, type NativeBirthSource } from "../native-birth.ts";
 import type { PreparationRun } from "../preparation-flight.ts";
 import type { PreparedRead } from "../read-preparation.ts";
@@ -18,7 +18,9 @@ export async function projectionScopeOwned(frame: PreparedRead, root: ScopeRef, 
   let genesis = frame.genesis;
   const seen = new Set([canonicalize(frame.scope.at)]);
   for (let count = 0; count < APPLICATION_OWNERSHIP_BOUNDS.ancestors; count++) {
-    const parent = genesis.seed.creator;
+    // A scope that creates in its own genesis names itself by the genesis
+    // self reference; the birth's source fact resolves it.
+    const parent = genesis.source ? resolveGenesisSelf(genesis.seed.creator, genesis.source) : null;
     if (!isScopeRef(parent) || !genesis.source || !same(genesis.source.at, parent) || same(parent, directory) || seen.has(canonicalize(parent))) return "unowned";
     seen.add(canonicalize(parent));
     if (!run.active()) return "unavailable";

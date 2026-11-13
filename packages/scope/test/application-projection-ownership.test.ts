@@ -12,12 +12,13 @@ import type { PreparedRead } from "../src/read-preparation.ts";
 import { PreparationFlights, PREPARATION_MILLISECONDS } from "../src/preparation-flight.ts";
 const fixture = created(), original = fixture.entries[0]!.entry, digest = fixture.definition.digest;
 const run = { ends: 10_000, active: () => true, remaining: () => 10_000 };
-function node(parent: ScopeRef, tag: number, oversized = false, parentKind: ScopeKind = parent === directory ? "directory" : "lane") {
+function node(parent: ScopeRef, tag: number, oversized = false, parentKind: ScopeKind = parent === directory ? "directory" : "lane", inGenesis = false) {
   const entry = structuredClone(original);
   if (entry.input.type !== "genesis") throw Error("The protocol fixture needs genesis bytes.");
-  entry.input.seed = { ...entry.input.seed, kind: "lane", creator: parent, cause: textDigest(`TEST ancestry ${tag}`) };
+  // A creation in the parent's own genesis names the parent by the self reference.
+  entry.input.seed = { ...entry.input.seed, kind: "lane", creator: inGenesis ? { scope: parent.scope, genesis: null } : parent, cause: textDigest(`TEST ancestry ${tag}`) };
   entry.input.nonce = newGenesisNonce(new Uint8Array(16).fill(tag));
-  entry.input.founding = null; entry.input.source = { at: parent, seq: 0, hash: textDigest("TEST parent fact") }; entry.input.sourceKind = parentKind; entry.input.n = 0;
+  entry.input.founding = null; entry.input.source = { at: parent, seq: 0, hash: inGenesis ? parent.genesis : textDigest("TEST parent fact") }; entry.input.sourceKind = parentKind; entry.input.n = 0;
   if (oversized) entry.effects = [...entry.effects, { effect: "value", item: 0, slot: "text", value: "x".repeat(B.birthBytes) }];
   // The address follows from the changed genesis: its seed's scope ID and its hash.
   const at: ScopeRef = { scope: scopeIdOf(entry.input.seed), genesis: entryHash(entry) };
@@ -67,4 +68,12 @@ test("a late ancestry response retains its preparation flight and refuses before
   expect(owned).toBe(0);
   expect(await flights.run(current => projectionScopeOwned(child.frame, root.at, digest, directory, { read: async () => { reads++; return root.birth; } }, current))).toBe("owned");
   expect(reads).toBe(2);
+});
+
+// Invariant: a child born in its parent's genesis names the parent by the
+// genesis self reference, and the walk resolves it against the birth's source.
+test("projection ancestry resolves a parent named by the genesis self reference", async () => {
+  const root = node(directory, 110), child = node(root.at, 111, false, "lane", true);
+  expect(child.frame.genesis.seed.creator).toEqual({ scope: root.at.scope, genesis: null });
+  expect(await projectionScopeOwned(child.frame, root.at, digest, directory, { read: async () => root.birth }, run)).toBe("owned");
 });
