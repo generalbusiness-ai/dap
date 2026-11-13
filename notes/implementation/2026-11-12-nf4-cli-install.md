@@ -107,3 +107,9 @@ The seals come from `sourceSeal` and `namedSourceSeals` in `scripts/security-ent
 ## Evidence
 
 The working evidence is in `~/play/artroom-evidence/2026-11-12-nf4-working/`. It holds each compile and test run with its exit code, the digest script and output at `7ea170c9`, the MCP cases at `7ea170c9` and at this head, the rendered old command-line lines, and the module list of the control.
+
+## The gate and CI pass at `18ebc428`
+
+The gate at `18ebc42843c05dd3c532019c52d45e11a67a02c5` exited 0. Its START is `42f58bbe`. Node passed 172 tests and Counting passed 56. Plain passed 4,551 of 4,552 with 1 skip. Native passed 1,139 of 1,141 with 2 skips. The evidence is in `2026-11-12-nf4-gate-18ebc428`.
+
+Card browser scripts run `43362876648` passed at the same commit. No changed path is in the Page workflow filter. The Local Worker smoke workflow names `packages/cli/**`, but it runs on pushes to `main` only, so it runs when this head lands. Later commits on this head change only `notes/`.
