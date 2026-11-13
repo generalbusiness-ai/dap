@@ -36,11 +36,13 @@ export function proofEntry(value: ProofBody, fact: FactRef, maxBytes: number, se
 }
 
 /**
- * Sender/storage integrity only. This result supplies no address association.
- * A caller uses it only for a local retained use: a body that its own sealed
- * entry names by fact and content digest.
+ * Proves the body and the digest, and no address. The entry's bytes hash to
+ * the fact's hash and, when `content` is given, digest to that content. The
+ * result does not prove that the entry belongs to the scope that the fact
+ * names. A caller uses it only where its own sealed entry names the body by
+ * fact and content digest, so that entry is the authority for the address.
  */
-export function rawProofEntry(value: ProofBody, fact: FactRef, maxBytes: number, content?: FactUse["content"]): Entry | null {
+export function bodyAndDigestProofEntry(value: ProofBody, fact: FactRef, maxBytes: number, content?: FactUse["content"]): Entry | null {
   const entry = parsedProof(value, fact, maxBytes, content);
   return entry && isEntryBodyOf(entry, fact) ? entry : null;
 }
@@ -80,7 +82,7 @@ export class ProofBytes {
       const body = this.#one("SELECT bytes FROM entry WHERE seq=? AND octet_length(bytes)=?", seq, row["size"]);
       if (typeof body?.["bytes"] !== "string") return { kind: "unavailable" };
       const value = { fact, bytes: body["bytes"] };
-      return rawProofEntry(value, fact, cap(maxBytes)!) ? { kind: "body", value } : { kind: "unavailable" };
+      return bodyAndDigestProofEntry(value, fact, cap(maxBytes)!) ? { kind: "body", value } : { kind: "unavailable" };
     } catch { return { kind: "unavailable" }; }
   }
   /** Raw internal RPC sender: no address proof, turn, driver, origin or definition read. */
@@ -105,7 +107,7 @@ export class ProofBytes {
       const body = this.#one("SELECT bytes FROM retained_input WHERE kind='entry' AND digest=? AND octet_length(bytes)=?", use.content, row["size"]);
       if (typeof body?.["bytes"] !== "string") return { kind: "unavailable" };
       const value = { fact: use.fact, bytes: body["bytes"] };
-      return rawProofEntry(value, use.fact, cap(maxBytes)!, use.content) ? { kind: "body", value } : { kind: "unavailable" };
+      return bodyAndDigestProofEntry(value, use.fact, cap(maxBytes)!, use.content) ? { kind: "body", value } : { kind: "unavailable" };
     } catch { return { kind: "unavailable" }; }
   }
 }

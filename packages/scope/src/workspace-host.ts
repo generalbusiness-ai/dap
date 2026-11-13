@@ -7,7 +7,7 @@ import type { DestinationRepository, ReadCredential } from "./destination-host.t
 import type { OutsideGiven } from "./given.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
 import type { Sql } from "./sqlite.ts";
-import { rawProofEntry, PROOF_BYTE_BOUNDS } from "./proof-bytes.ts";
+import { bodyAndDigestProofEntry, PROOF_BYTE_BOUNDS } from "./proof-bytes.ts";
 import { ArtifactsProvider } from "./artifacts-host.ts";
 import { workspaceRepository, type WorkspaceRepository, type WorkspaceSources } from "./workspace-lineage.ts";
 import { report, toConsole } from "./diag.ts";
@@ -279,7 +279,7 @@ export class WorkspaceHost implements Outside {
         const use = opening.entry.uses.find(use => same(use.fact, report));
         const retained = use ? this.#given.retained("entry", use.content) : null;
         // A local retained use: this scope's sealed opening names the report by fact and content digest.
-        const entry = retained && use ? rawProofEntry({ fact: report, bytes: retained.bytes }, report, PROOF_BYTE_BOUNDS.body, use.content) : null;
+        const entry = retained && use ? bodyAndDigestProofEntry({ fact: report, bytes: retained.bytes }, report, PROOF_BYTE_BOUNDS.body, use.content) : null;
         if (!entry) return null;
         const commits = entry.effects.filter(effect => effect.effect === "value" && effect.item === report.seq && effect.slot === "commit");
         if (commits.length !== 1 || commits[0]?.effect !== "value" || !isObjectId(commits[0].value)) return null;
