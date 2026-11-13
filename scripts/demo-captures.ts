@@ -323,7 +323,7 @@ async function claimWitness(chromium: Chromium, executablePath: string, sitting:
     await dialog.getByRole("button", { name: "Create room", exact: true }).dblclick();
     await firstEntered;
     const originalOperation = await tab.evaluate(() => {
-      const key = Object.keys(localStorage).find((name) => name.startsWith("artroom-page-claim:"));
+      const key = Object.keys(localStorage).find((name) => name.startsWith("dap-page-claim-2:"));
       return key ? JSON.parse(localStorage.getItem(key)!).active as string : null;
     });
     if (!originalOperation) throw new Error("The browser submitted a claim before retaining its operation ID.");
@@ -348,7 +348,7 @@ async function claimWitness(chromium: Chromium, executablePath: string, sitting:
     await tab.waitForFunction(() => [...document.querySelectorAll("dialog[open] button")].some((button) => button.textContent === "Resume creation" && !button.hasAttribute("disabled")));
     if (Number(attempts.length) !== 3) throw new Error("Resume did not resubmit the exact saved claim envelope.");
     const pending = await tab.evaluate(() => {
-      const key = Object.keys(localStorage).find((name) => name.startsWith("artroom-page-claim:"));
+      const key = Object.keys(localStorage).find((name) => name.startsWith("dap-page-claim-2:"));
       if (!key) return null;
       const journal = JSON.parse(localStorage.getItem(key)!);
       if (journal.v !== 2 || typeof journal.claims[journal.active] !== "string") return null;
@@ -374,15 +374,15 @@ async function claimWitness(chromium: Chromium, executablePath: string, sitting:
     await firstTab.getByRole("dialog", { name: "Create room" }).getByRole("button", { name: "Create room", exact: true }).click();
     await guardFirst;
     const journalBefore = await firstTab.evaluate(() => {
-      const key = Object.keys(localStorage).find((name) => name.startsWith("artroom-page-claim:"));
+      const key = Object.keys(localStorage).find((name) => name.startsWith("dap-page-claim-2:"));
       return key ? localStorage.getItem(key) : null;
     });
     await queuedTab.getByRole("dialog", { name: "Create room" }).getByRole("button", { name: "Create room", exact: true }).click();
     if (!await queuedTab.getByRole("dialog", { name: "Create room" }).getByRole("button", { name: "Create room", exact: true }).isDisabled() || guardAttempts.length !== 1) throw new Error("The settings-change control did not enter the actual Web Lock queue.");
     await queuedTab.evaluate(() => {
-      const settings = JSON.parse(localStorage.getItem("artroom-page:v2")!);
+      const settings = JSON.parse(localStorage.getItem("dap-page-settings-2")!);
       settings.register.genesis = settings.place.membership.genesis;
-      localStorage.setItem("artroom-page:v2", JSON.stringify(settings));
+      localStorage.setItem("dap-page-settings-2", JSON.stringify(settings));
     });
     releaseGuard!();
     for (const page of [firstTab, queuedTab]) await page.waitForFunction(() => {
@@ -390,7 +390,7 @@ async function claimWitness(chromium: Chromium, executablePath: string, sitting:
       return submits.length === 1 && submits.every((button) => !button.hasAttribute("disabled"));
     });
     const journalAfter = await firstTab.evaluate(() => {
-      const key = Object.keys(localStorage).find((name) => name.startsWith("artroom-page-claim:"));
+      const key = Object.keys(localStorage).find((name) => name.startsWith("dap-page-claim-2:"));
       return key ? localStorage.getItem(key) : null;
     });
     if (guardAttempts.length !== 1 || !journalBefore || journalAfter !== journalBefore) throw new Error("Changed settings permitted a queued mutation or rewrote the original private journal.");
@@ -461,9 +461,9 @@ async function labelWitness(chromium: Chromium, executablePath: string, sitting:
       await tab.screenshot({ path: join(out, `local-label-${colorScheme}-320.png`) });
       // Change only the label's binding, not the actual configured native room.
       await tab.evaluate(() => {
-        const kept = JSON.parse(localStorage.getItem("artroom-page:v2")!);
+        const kept = JSON.parse(localStorage.getItem("dap-page-settings-2")!);
         kept.label.place.membership.genesis = kept.register.genesis;
-        localStorage.setItem("artroom-page:v2", JSON.stringify(kept));
+        localStorage.setItem("dap-page-settings-2", JSON.stringify(kept));
       });
       await tab.reload();
       await tab.getByRole("heading", { name: "Issues" }).waitFor({ state: "attached" });

@@ -85,7 +85,7 @@ export async function initializeCapture(context: CaptureSetupContext, kept: Capt
       });
       const work = Promise.resolve().then(() => navigator.locks.request("artroom-page-key-custody-1", async () => {
         current();
-        if (seed.length !== 32 || localStorage.getItem("artroom-page:v2") !== null) throw fail();
+        if (seed.length !== 32 || localStorage.getItem("dap-page-settings-2") !== null) throw fail();
         current();
         database = await new Promise<IDBDatabase>((resolve, reject) => {
           const request = indexedDB.open("artroom-page-private-1", 1);
@@ -157,10 +157,10 @@ export async function initializeCapture(context: CaptureSetupContext, kept: Capt
           current();
         } finally { publicBytes.fill(0); challenge.fill(0); signature?.fill(0); }
         current();
-        if (localStorage.getItem("artroom-page:v2") !== null) throw fail();
-        current(); localStorage.setItem("artroom-page:v2", input.settings);
+        if (localStorage.getItem("dap-page-settings-2") !== null) throw fail();
+        current(); localStorage.setItem("dap-page-settings-2", input.settings);
         current();
-        if (localStorage.getItem("artroom-page:v2") !== input.settings) throw fail();
+        if (localStorage.getItem("dap-page-settings-2") !== input.settings) throw fail();
         current();
       }));
       try { await Promise.race([work, deadline]); current(); }
