@@ -140,8 +140,12 @@ export class Lane extends Ledger {
     const retained: RetainedInput[] = [{ kind: "definition", digest: this.definition.digest, bytes: canonicalize(this.definition.declared) }];
     for (const { entry } of this.entries) {
       for (const use of entry.uses) {
-        const source = this.foreign.find((made) => factRefOf(made.entry, made.sequence.at).hash === use.fact.hash)!;
-        retained.push({ kind: "entry", digest: use.content, bytes: canonicalize(source.entry), under: source.under });
+        const source = this.foreign.find((made) => factRefOf(made.entry, made.sequence.at).hash === use.fact.hash);
+        // Ruling a140a1c6, Q-B1: a birth use names entry 0 of a sequence; the lane retains that sequence's genesis bytes.
+        const born = source ? undefined : this.foreign.find((made) => made.sequence.at.genesis === use.fact.hash);
+        if (!source && !born) throw new Error(`no fixture source for the use of entry ${use.fact.seq} of ${use.fact.at.scope}`);
+        retained.push(source ? { kind: "entry", digest: use.content, bytes: canonicalize(source.entry), under: source.under }
+          : { kind: "entry", digest: use.content, bytes: born!.sequence.birth, under: born!.under });
       }
     }
     for (const [digest, bytes] of snapshots) retained.push({ kind: "snapshot", digest: digest as RetainedInput["digest"], bytes });
