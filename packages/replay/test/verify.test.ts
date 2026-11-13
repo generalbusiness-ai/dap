@@ -15,7 +15,7 @@ import { View } from "../src/view.ts";
 import { IdentityEvidence, type IdentityFrame, type ReceiverIdentityCode } from "../src/identity.ts";
 import { Gate, Lane, OWNER, RULES_SCOPE } from "./staging.ts";
 import { VALUE, Weighing } from "./weighing.ts";
-import { entryOf, histories as ledgers, rewrite, served, sourceOf, unsupportedDefinitionHistory, world, type World } from "./world.ts";
+import { entryOf, histories as ledgers, reseal, rewrite, served, sourceOf, unsupportedDefinitionHistory, world, type World } from "./world.ts";
 
 /**
  * The fixture histories were written under the test authority of derive's fixtures, a STAND-IN whose grants hold no freshness
@@ -342,7 +342,7 @@ describe("a history that is not consistent is reported with the right result, at
       change: (w) => rewrite(w.I, 2, (entry) => { entry.input.decision = "superseded"; }), result: "mismatch", at: ["I", 2], why: /recorded input, with its decision/ },
     // Witness 18.26, case 6. P.3 used I.2, so I is replayed as a source, and its genesis is checked against the definition that I pins.
     { name: "a source's genesis that records another kind than the genesis act of the definition it pins: `genesis-kind`, at that genesis",
-      change: (w) => { rewrite(w.I, 0, (entry) => { entry.input.kind = "link"; }); return { scope: w.P.scope.scope }; }, result: "mismatch", at: ["I", 0], why: /^genesis-kind: / },
+      change: (w) => { reseal(w, "I", 0, (entry) => { entry.input.kind = "link"; }); return { scope: w.P.scope.scope }; }, result: "mismatch", at: ["I", 0], why: /^genesis-kind: / },
     // The member is always present, and is never the empty text (section 4.1). Without it, the bytes are no entry of the contract.
     { name: "a genesis whose kind is the empty text: its bytes are not an entry", change: (w) => rewrite(w.I, 0, (entry) => { entry.input.kind = ""; }), result: "mismatch", at: ["I", 0], why: /bytes are not an entry/ },
     // Section 9.3, point E13: a verifier that is given no code for the step of a preparation entry says so, and never reports `consistent`. The same entry without its step is no entry.
@@ -403,7 +403,8 @@ describe("integrity mode (section 9.5)", () => {
     expect((await replay(w)).report.result).toBe("mismatch");
     // Integrity mode reads no definition, so it does not check the kind that a genesis records (section 4.1).
     const k = world();
-    rewrite(k.I, 0, (entry) => { entry.input.kind = "link"; });
+    // The genesis is sealed again with the kind, and every history that names I is bound to the new genesis.
+    reseal(k, "I", 0, (entry) => { entry.input.kind = "link"; });
     expect((await replay(k, { mode: "integrity" })).report.result).toBe("consistent");
   });
 });
