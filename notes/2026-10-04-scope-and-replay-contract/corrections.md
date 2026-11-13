@@ -4004,3 +4004,11 @@ body keeps the old words. Read them as the new words.
 | `incarnation-conflict` | `genesis-conflict` |
 
 Each name keeps its position and its meaning.
+
+## The longest fact text is 262 bytes
+
+A fact's scope reference now holds the genesis hash and no kind. The
+longest fact text is 262 bytes, `FACT_TEXT_MOST` in the bytes package.
+Row D20-7 and section 3 say 237 bytes, with the kind `destination`. Read
+them as 262 bytes, with a genesis hash. Witness 18.48, case 2, states 262
+bytes.
